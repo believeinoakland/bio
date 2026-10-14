@@ -5,7 +5,7 @@
  * or the address (the reading and its passages, the grade note, the versions) is read once the document is read.
  * `release` and `retire` act on a selection (`ratification` takes a handle), so each makes its own selection of this
  * document (`op=select`) and sends itself, drawing its own outcome beside the act. Opening the original goes through
- * `open-file` (`screens-intake`). `pagetranscribe` is drawn only while the assistant is reachable (interface-shell R20;
+ * `open-file` (`screens-intake`) by the capture's SHA-256, never by the bundle id (R22). `pagetranscribe` is drawn only while the assistant is reachable (interface-shell R20;
  * DEC-190). "Watch for changes" (`monitorset`, `monitoring` R74) and "Check for a new version now" (`monitor`) are two
  * acts (R15). A choice among record data (a question, a page) is `cs.choice` over `{value, text}` options (R8). */
 
@@ -15,7 +15,7 @@ import { OWN, ownRows } from "./words.mjs";
 function reads(view) {
   const id = String(view.subject || "");
   return {
-    capture: { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+    capture: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     backlinks: { op: "backlinks", query: { target: id },
                  empty: (v) => !v || !Array.isArray(v.backlinks) || v.backlinks.length === 0 },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
@@ -34,6 +34,7 @@ function place(view) {
  *  versions, what cites it, and its acts. */
 function render(cs, view) {
   const id = String(view.subject || "");
+  if (!id) return "";
   const ui = view.ui;
   const d = view.data || {};
   const front = (text) => {
@@ -85,25 +86,33 @@ function render(cs, view) {
     return runs.map(([a, b]) => (a === b ? String(a) : a + "–" + b)).join(", ");
   };
   const own = (key) => (ui.outcome && ui.outcome[key]
-    ? `<p class="${ui.outcome[key].ok ? "cs-note" : "cs-refusal"}" role="${ui.outcome[key].ok ? "status" : "alert"}" data-outcome="${key}">${ui.outcome[key].html}</p>` : "");
+    ? `<p class="${ui.outcome[key].ok ? "mk-note" : "mk-msg"}" role="${ui.outcome[key].ok ? "status" : "alert"}" data-outcome="${key}">${ui.outcome[key].html}</p>` : "");
+  /* a section that holds nothing is not drawn (R20): a read answered empty, or a body that draws nothing, makes no
+     section; a read still pending or failed is drawn as such */
+  const secOf = (titleKey, r, inner) => {
+    const read = typeof r === "string" ? d[r] : r;
+    if (read && read.state === "empty") return "";
+    const body = cs.state(read, inner);
+    return body ? cs.sec(titleKey, body) : "";
+  };
   const doc = d.capture && d.capture.state === "ok" ? front(d.capture.value["bundle.md"]) : null;
   const sha = doc && /^sha256:[0-9a-f]{64}$/.test(String(doc.content_hash || "")) ? String(doc.content_hash).slice(7) : "";
   const locator = doc && doc.source ? String(doc.source.locator || "") : "";
   const out = [];
   out.push(cs.title(doc ? (doc.title || id) : id, { thing: "document" }));
   if (!doc) { out.push(cs.state("capture", view, () => "")); return out.join(""); }
-  out.push(`<p class="cs-sub">${cs.w("screen.document.captured", {
+  out.push(`<p class="mk-sub">${cs.w("screen.document.captured", {
     date: { html: doc.source.retrieved ? cs.date(String(doc.source.retrieved)) : doc.created ? cs.date(String(doc.created)) : "" },
     source: locator || (doc.source.authority || "") })}</p>`);
 
   /* this copy: its grade as one mark with "Why B?", its fingerprint, the original through open-file */
   const note = sha ? later("gradenote", "gradenote", { capture: sha }) : { state: "empty" };
   const letter = note.state === "ok" && note.value && note.value.note && note.value.note.grade ? String(note.value.note.grade) : "";
-  out.push(`<div class="cs-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
+  out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade("capture", letter) : cs.mark("gap", "unrated"))
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha }, tone: "quiet" }) + "</span></div>"
-    + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="cs-id" tabindex="0" data-means="screen.document.fingerprint.means">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
-    + `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(id)}">${cs.w("screen.document.open")}</a></div></div>`);
+    + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-means="screen.document.fingerprint.means">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
+    + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
     const n = ui.gradenote.note;
     out.push(cs.sec("screen.document.gradenote.head", n
@@ -115,27 +124,27 @@ function render(cs, view) {
   /* passages: the reading's, each citable in a question the member chooses (citation R1's `found`) */
   const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
-  out.push(cs.sec("screen.document.passages.head", cs.state(reading, (r) => {
+  out.push(secOf("screen.document.passages.head", reading, (r) => {
     const rd = r.reading || {};
     const passages = Array.isArray(rd.passages) ? rd.passages
       : Array.isArray(rd.units) ? rd.units
       : typeof rd.text === "string" ? rd.text.split(/\n\s*\n/).map((t) => ({ text: t })) : [];
     const list = passages.filter((p) => p && String(p.text || p.words || "").trim());
-    if (!list.length) return `<p>${cs.w("screen.document.passages.empty")}</p>`;
+    if (!list.length) return "";
     const pick = qs.length
       ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) })), {})
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
-      : `<p class="cs-meta">${cs.w("screen.document.cite.noquestion")}</p>`;
+      : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
     return list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       const page = extent && Number.isInteger(extent.page) ? extent.page : null;
-      return `<blockquote class="cs-passage cs-rec" data-passage="${i}">“${cs.esc(String(p.text || p.words).trim())}”`
-        + (page !== null ? `<span class="cs-meta">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
+      return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text || p.words).trim())}”`
+        + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
         + (extent && qs.length ? cs.act("cite", { label: "act.cite.label.document",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + own("cite");
-  }, { empty: "screen.document.passages.empty" })));
+  }));
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
   if (reading.state === "ok" && Array.isArray(reading.value.unread_pages) && reading.value.unread_pages.length) {
@@ -149,42 +158,40 @@ function render(cs, view) {
   }
   out.push(own("transcribe") + own("pagetranscribe"));
   if (reading.state === "ok" && reading.value.untested && reading.value.text_provenance && reading.value.text_provenance.transcribed)
-    out.push(`<p class="cs-label" data-label="untested">${cs.w("ai.label.untested")}</p>`);
+    out.push(`<p class="cs-draftlabel" data-label="untested">${cs.w("ai.label.untested")}</p>`);
 
   /* people it names: a name in its reading claimed as a person the record follows */
   if (reading.state === "ok") {
     const rd = reading.value.reading || {};
     const people = Array.isArray(rd.people) ? rd.people : Array.isArray(rd.entities) ? rd.entities.filter((e) => e && (e.kind === "person" || e.type === "person")) : [];
-    out.push(cs.sec("screen.document.people.head", people.length
-      ? cs.sheet(people.map((p) => cs.row("", cs.esc(p.name || p.words || ""), cs.act("identityclaim",
+    if (people.length) out.push(cs.sec("screen.document.people.head",
+      cs.sheet(people.map((p) => cs.row("", cs.esc(p.name || p.words || ""), cs.act("identityclaim",
           { label: "act.identityclaim.label.document", data: { entity: String(p.id || p.entity || "") } }))).join(""))
         + cs.field("document-claim-person", "screen.document.claim.label", {})
         + cs.choice("document-claim-basis", "screen.document.claim.basis",
             [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
-        + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim")
-      : `<p>${cs.w("screen.document.people.empty")}</p>`));
+        + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim")));
   }
 
   /* its versions (provenance's versionchain): a newer version than this copy marked changed */
   if (locator) {
     const vc = later("versions", "versionchain", { address: locator, ...(sha ? { at: sha } : {}) });
-    out.push(cs.sec("screen.document.versions.head", cs.state(vc, (v) => {
+    out.push(secOf("screen.document.versions.head", vc, (v) => {
       const list = Array.isArray(v.versions) ? v.versions : [];
-      if (list.length < 2) return `<p>${cs.w("screen.document.versions.empty")}</p>`;
+      if (list.length < 2) return "";
       const at = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
       const newer = at >= 0 && at < list.length - 1;
       return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
         + cs.sheet(list.map((x, i) => cs.row("", x && (x.at || x.retrieved) ? cs.date(String(x.at || x.retrieved), { year: true }) : "",
-            i === at ? `<span class="cs-meta">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
-    })));
+            i === at ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
+    }));
   }
 
   /* what cites it */
-  out.push(cs.sec("screen.document.backlinks.head", cs.state("backlinks", view, (b) =>
-    cs.sheet((b.backlinks || []).map((x) => cs.row("", cs.ref(x.from_type === "project" ? "project" : x.from_type === "inquiry" ? "question" : "document",
+  out.push(secOf("screen.document.backlinks.head", "backlinks", (b) =>
+    (b.backlinks || []).length ? cs.sheet((b.backlinks || []).map((x) => cs.row("", cs.ref(x.from_type === "project" ? "project" : x.from_type === "inquiry" ? "question" : "document",
       String(x.from || ""), x.from_title || x.from || "", [x.from_title || x.from || ""]), "")).join(""))
-    + (b.out_of_view ? `<p class="cs-meta">${cs.w("screen.document.backlinks.hidden")}</p>` : ""),
-  { empty: "screen.document.backlinks.empty" })));
+    + (b.out_of_view ? `<p class="mk-small">${cs.w("screen.document.backlinks.hidden")}</p>` : "") : ""));
 
   /* this copy's acts: vouch (by its weight), attest (signed), watch for changes and check now (R15), retire (terminal) */
   out.push(cs.sec("screen.document.copyacts.head",
@@ -303,7 +310,7 @@ const words = [
   "screen.document.name", "screen.document.purpose",
   ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe"]
     .flatMap((op) => ["act." + op + ".label.document", ...(op === "pagetranscribe" ? [] : ["act." + op + ".does"])]),
-  OWN["act.pagetranscribe.does"], "ai.label.untested", "document.unread.pages",
+  "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.grade.reading", "mark.gap.unrated.name", "mark.gap.unrated.means",
   "state.empty", "state.loading", "state.failed",
   OWN["screen.question.supports.head"], OWN["screen.question.against.head"], OWN["screen.document.cite.role"],

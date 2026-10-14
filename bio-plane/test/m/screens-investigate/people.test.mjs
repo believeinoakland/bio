@@ -13,7 +13,7 @@ test("R12 the directory is people's peopledirectory, read whole at first; the co
   assert.deepEqual(r[0].query.op, "peopledirectory");
   assert.deepEqual(Object.keys(r[0].query).filter((k) => k !== "op"), [], "nothing typed: the whole directory");
   const m = main(p);
-  assert.match(m.textContent, /The record follows 3 people and organisations; 1 are named in your projects/);
+  assert.match(m.textContent, /The record follows 3 people and organizations; 1 are named in your projects/);
   const secs = m.querySelectorAll("section");
   const heads = secs.map((s) => s.querySelector("h2").textContent);
   assert.ok(heads.indexOf("In your projects") < heads.indexOf("Everyone else the record follows"));
@@ -47,9 +47,10 @@ test("R13 each row: the kind's mark, the name opening person, who they are today
   assert.ok(rows[1].querySelector('[data-kind="organisation"]'));
   assert.equal(rows[0].querySelector(`a.cs-ref[href="/app/person/${ENT}"]`).textContent, "L. Chen");
   assert.match(rows[0].textContent, /Director of Public Works, Public Works Department/);
-  assert.match(rows[0].textContent, /named in 14 documents, 2 questions and 1 projects · newest added 2 October 2026/);
+  assert.match(rows[0].textContent, /named in 14 documents, 2 questions, 1 project · newest added 2 October 2026/);
   assert.match(rows[1].textContent, /A city department/);
-  assert.match(rows[1].textContent, /named in 11 documents, in no question or project yet/);
+  assert.match(rows[1].textContent, /named in 11 documents/);
+  assert.doesNotMatch(rows[1].textContent, /\b0 (questions|projects)|no question or project/, "R22: no count is drawn at zero");
   await press(p, "explore", { el: rows[0].querySelector('button[data-act="explore"]') });
   assert.equal(p.location.pathname, "/app/explore/" + ENT);
   assert.deepEqual(rawKeys(p.root()), []);
@@ -83,15 +84,37 @@ test("R13 the two empty states: a record that follows no one yet, and a search t
   assert.deepEqual(actsIn(main(q)).sort(), ["entitycreate", "search"]);
 });
 
-test("R13 a row never draws a record's machine note: an office seeded at setup reads \"Added at setup from your group's place\" (K3177); a member's own note is drawn as written (control)", async () => {
+test("R15 people draws \"Added at setup from your group's place\" for an organisation row exactly when its today.machine is true, never by matching the note's text (K3177, N1050); control: a member's note ending \"seeded at setup.\" is drawn as her words", async () => {
   const seeded = "An office an action may be addressed to, as the active jurisdiction profile oakland-alameda, counterparties[0] (basis: x) names it; seeded at setup.";
-  const rows = [{ entity: "ENT-2026-0400", kind: "office", name: "City Clerk", today: { kind: "office", sector: null, note: seeded }, documents: 0, questions: 0, projects: 0, newest_added: null, mine: false },
-    { entity: "ENT-2026-0401", kind: "body", name: "Public Works Department", today: { kind: "body", sector: "government", note: "A city department · repairs streets and sewers" }, documents: 1, questions: 0, projects: 0, newest_added: null, mine: false }];
-  const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 2, in_your_projects: 0 })) } });
+  const rows = [{ entity: "ENT-2026-0400", kind: "office", name: "City Clerk", today: { kind: "office", sector: null, note: seeded, note_by: "class:instance-setup", machine: true }, documents: 3, questions: 0, projects: 0, newest_added: null, mine: false },
+    { entity: "ENT-2026-0401", kind: "body", name: "Public Works Department", today: { kind: "body", sector: "government", note: "A city department · repairs streets and sewers", note_by: "member:mai", machine: false }, documents: 1, questions: 0, projects: 0, newest_added: null, mine: false },
+    { entity: "ENT-2026-0402", kind: "body", name: "Harbour Trust", today: { kind: "body", sector: null, note: "Run by the port; it is seeded at setup.", note_by: "member:dev", machine: false }, documents: 1, questions: 0, projects: 0, newest_added: null, mine: false }];
+  const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 3, in_your_projects: 0 })) } });
   const m = main(p);
-  const [a, b] = m.querySelectorAll(".cs-row");
+  const [a, b, c] = m.querySelectorAll(".cs-row");
   assert.match(a.textContent, /City Clerk · Added at setup from your group's place/);
-  assert.doesNotMatch(p.root().textContent + m.innerHTML, /seeded at setup|counterparties\[0\]|oakland-alameda|jurisdiction profile/, "no machine note anywhere, card included");
+  assert.doesNotMatch(p.root().textContent + m.innerHTML, /counterparties\[0\]|oakland-alameda|jurisdiction profile/, "no machine note anywhere, card included");
   assert.match(b.textContent, /A city department · repairs streets and sewers/);
+  assert.doesNotMatch(b.textContent, /Added at setup/);
+  assert.match(c.textContent, /Run by the port; it is seeded at setup\./, "a member's note is drawn as written, whatever it ends with");
+  assert.doesNotMatch(c.textContent, /Added at setup/);
   assert.deepEqual(rawKeys(p.root()), []);
+});
+
+test("R25 with nothing followed people draws only its empty state (follows no one yet, with Add and Capture): no search, filters or counts; control: one follow draws the full screen", async () => {
+  const none = ok({ ok: true, following: 0, in_your_projects: 0, rows: [], truncated: false });
+  const p = await open(at, { plane: { peopledirectory: none } });
+  const m = main(p);
+  assert.match(m.textContent, /Your group's record follows no one yet/);
+  assert.ok(m.querySelector('a[href="/app/capture"]'));
+  assert.ok(button(p, "entitycreate"));
+  assert.equal(p.doc.getElementById("people-q"), null, "no search box");
+  assert.equal(p.doc.getElementById("people-show"), null, "no filters");
+  assert.equal(button(p, "search"), null);
+  assert.doesNotMatch(m.textContent, /The record follows \d+ people|Organisations|organisations/);
+  const one = ok(DIRECTORY({ rows: [DIRECTORY().rows[0]], following: 1, in_your_projects: 1 }));
+  const q = await open(at, { plane: { peopledirectory: one } });
+  assert.ok(q.doc.getElementById("people-q"), "one follow draws the full screen");
+  assert.ok(button(q, "search"));
+  assert.match(main(q).textContent, /Organizations/, "DEC-221's spelling");
 });

@@ -83,63 +83,6 @@ test("R42 a credential minted before expiry was recorded is given expiresAt 90 d
   assert.equal(c.aiCredentialLook({ secretSha: SHA("e") }).credential.expiresAt, second(T + 90 * D));
 });
 
-test("R43 subscriptionConnected records that an active member is connected, with the instant, and nothing else; a call carrying any field but `member` SUBSCRIPTION_LOGIN_REFUSED (C-29.29), recording nothing; a member not active ACCOUNT_MEMBER_NOT_ACTIVE", async () => {
-  const w = await world().group("ann", "dee");
-  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
-  const before = w.snapshot();
-  for (const extra of [{ login: "ann@example.org" }, { code: "anthropic-code-123" }, { token: "sk-ant-oat01-x" },
-                       { digest: SHA("f") }, { by: "by-sentinel-91" }, { member: "ann", session: "session-sentinel-37" }])
-    for (const member of ["ann", "dee"]) {
-      const r = w.c.subscriptionConnected({ member, ...extra });
-      assert.deepEqual(shape(r), { ok: false, reason: "SUBSCRIPTION_LOGIN_REFUSED", code: "SUBSCRIPTION_LOGIN_REFUSED",
-        check: "C-29.29", translation: ACCOUNT_CHECKS.SUBSCRIPTION_LOGIN_REFUSED.translation }, JSON.stringify(extra));
-      for (const [k, v] of Object.entries(extra)) if (k !== "member") assert.ok(!JSON.stringify(r).includes(v), "the refusal echoes none of it");
-    }
-  /* (T47; R71 (3)) the claimed founder is connected as a member is: not refused here */
-  for (const member of ["dee", "ghost", "class:ai", null, ""])
-    assert.deepEqual(shape(w.c.subscriptionConnected({ member })), { ok: false, reason: "ACCOUNT_MEMBER_NOT_ACTIVE",
-      code: "ACCOUNT_MEMBER_NOT_ACTIVE", check: "C-29.15", translation: ACCOUNT_CHECKS.ACCOUNT_MEMBER_NOT_ACTIVE.translation }, String(member));
-  assert.equal(w.snapshot(), before, "recording nothing");
-  const r = w.c.subscriptionConnected({ member: "member:ann" });
-  assert.deepEqual(Object.keys(r).sort(), ["member", "ok", "since"]);
-  assert.deepEqual([r.ok, r.member], [true, "ann"]);
-  assert.deepEqual(w.rows(`SELECT member_id, since FROM subscription_connections`), [{ member_id: "ann", since: r.since }], "the fact and its instant");
-  assert.deepEqual(Object.keys(w.row(`SELECT * FROM subscription_connections`)).sort(), ["explore", "iv", "member_id", "refused_at",
-    "sealed", "since", "standing", "suggestions", "use_account", "use_ask", "use_draft", "use_enquire", "use_read", "use_run",
-    "use_transcribe", "valid_until"], "and the sign-in's own switches (R55), and (T47; R70) its token's columns");
-  const fact = w.row(`SELECT sealed, iv, valid_until, refused_at FROM subscription_connections`);
-  assert.deepEqual(fact, { sealed: null, iv: null, valid_until: null, refused_at: null }, "the fact alone: no login, code or token");
-  assert.equal(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription.connected, false,
-    "(T47; R70) a fact with no token held answers not connected");
-  assert.deepEqual(w.c.subscriptionConnected({ member: "ann" }).since, r.since, "connected since the first");
-  assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
-});
-
-test("R43 R23 R70 accountReferenceState answers it to the member alone as subscription {connected, since, held}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27); (T47) with its held token", async () => {
-  const w = await world().group("ann", "bob");
-  const since = (await w.signin("ann")).since;
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since, held: true,
-    uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false } });
-  assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null, held: false, uses: null });
-  for (const viewer of ["bob", "second", "admin"]) assert.equal(w.c.accountReferenceState({ member: "ann", viewer }).reason, "NOT_YOUR_ACCOUNT");
-  /* T38: served by her own sign-in (R35); bob, not connected, by nothing */
-  assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    { ok: true, kind: "signin", level: "member", member: "ann", key: SIGNIN_TOKEN("ann") });
-  assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason, "NO_ACCOUNT");
-  const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
-  assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).ok, true, "T38: the ask grant too (R27, K2275)");
-  const before = w.snapshot();
-  for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"],
-                            ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
-    assert.equal(w.c.subscriptionDisconnect({ member: "ann", by }).reason, code, String(by));
-  assert.equal(w.snapshot(), before);
-  assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "member:ann" }), { ok: true, disconnected: true });
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null, held: false, uses: null });
-  assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT", "disconnected: served by nothing");
-  assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: false });
-  assert.deepEqual(w.ops("by=bob", { member: "ann" }).subscriptiondisconnect(), { ok: true, disconnected: false }, "the route acts for the stamped member only");
-});
-
 test("R16 a member's revocation also spends their unspent recovery codes and clears their connected subscription, in the same act; no one else's", async () => {
   const w = await world().group("ann");
   const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
@@ -162,47 +105,14 @@ test("R16 a member's revocation also spends their unspent recovery codes and cle
     "spent for good, whatever the member's later standing");
 });
 
-test("R30 T35's tables are declared through declareTable, each never exported and exempt from purge: the window, the tally with its waiting places and key, the recovery codes and recoveries the group's; the connected subscriptions their owner's", () => {
+test("R30 T35's tables are declared through declareTable, each never exported and exempt from purge: the window, the tally with its waiting places and key, the recovery codes and recoveries the group's; (T48) the connected subscriptions are ai-accounts' (its R28), no longer declared here", () => {
   const w = world();
   const cls = (t) => w.core.declared.get(t)?.classes;
   for (const t of ["signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries"])
     assert.deepEqual([cls(t).module ?? "credentials", cls(t).purge, cls(t).export, cls(t).sight, cls(t).expunge],
       ["credentials", "exempt", "never", "group", "none"], t);
-  assert.deepEqual([cls("subscription_connections").purge, cls("subscription_connections").export, cls("subscription_connections").sight],
-    ["exempt", "never", "owner"]);
+  assert.equal(w.core.declared.get("subscription_connections").module, "ai-accounts");
   assert.ok(CREDENTIALS_TABLES.every((t) => t.export !== "yes" || t.name === "signers"));
-});
-
-test("R35 accountFor answers {ok, kind, level, key} and nothing else, the shape agent-worker R6 carries on the wire with `key` as `secret`", async () => {
-  const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ann", by: "ann" });
-  await w.c.groupKeySet({ key: "sk-group", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
-  for (const [m, level, kind, key] of [["ann", "member", "apikey", "sk-ant-api03-ann"], ["bob", "group", "apikey", "sk-group"]]) {
-    const r = await w.c.accountFor({ member: m, act: { kind: "run", member: m } });
-    assert.deepEqual(r, { ok: true, kind, level, key }, m);
-    const wire = { kind: r.kind, level: r.level, secret: r.key, member: m };
-    assert.deepEqual(Object.keys(wire), ["kind", "level", "secret", "member"]);
-  }
-});
-
-test("R37 groupKeySwitches answers {on, suggestions, standing} for the group key and never the key; reached by no route; writes nothing; never throws", async () => {
-  const w = await world().group("ann");
-  assert.deepEqual(w.c.groupKeySwitches(), { on: false, suggestions: false, standing: false });
-  await w.c.groupKeySet({ key: "sk-ant-api03-SWITCHES", by: "admin" });
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "second" });
-  const before = w.snapshot();
-  const r = w.c.groupKeySwitches();
-  assert.deepEqual(r, { on: true, suggestions: true, standing: false });
-  assert.ok(!JSON.stringify(r).includes("SWITCHES"));
-  assert.equal(w.snapshot(), before);
-  w.c.groupKeyRemove({ by: "admin" });
-  assert.deepEqual(w.c.groupKeySwitches(), { on: false, suggestions: false, standing: false });
-  assert.ok(!Object.keys(w.ops()).some((op) => /switches/.test(op)));
-  const broken = Object.create(Object.getPrototypeOf(w.c));
-  assert.deepEqual(w.c.groupKeySwitches.call(broken), { on: false, suggestions: false, standing: false });
 });
 
 test("R3 R38 R39 R43 R44 R45 R46 R47 R49 R53 T35's rows, T36's R49 row and T37's R3 and R53 rows: the new refusals take the next free numbers of C-29 and C-96, each `where` naming its one site, frozen; one id per row across the module", () => {
@@ -325,7 +235,7 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
   const keep = async (p) => { said.push(await p); };
   for (const f of [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS])
     for (const r of Object.values(f)) said.push({ translation: r.translation });
-  said.push({ detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED }, { detail: Credentials.GROUP_KEY_NOTICE_TEXT });
+  said.push({ detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED });
   const bare = await world({ sealSecret: null }).group("ann");
   for (const p of [
     w.c.signerAdd({ keyB64: "x", memberId: "ann", by: "admin" }), w.c.signerAdd({ keyB64: "AAAAk", memberId: "cal", by: "admin" }),

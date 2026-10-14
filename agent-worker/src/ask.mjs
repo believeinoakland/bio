@@ -35,6 +35,7 @@ import { ASK_BOUNDS, askBoundReached } from "../../bio-plane/src/run-rules/index
 import { ASK_OPS } from "./ops.mjs";
 import { toolContent } from "./reads.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
+import { doorTrace } from "./signin.mjs";
 
 /** The ask's bounds: `ASK_BOUNDS`' defaults, the figure an ask declares when it starts (run-rules R17). */
 export const ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
@@ -189,6 +190,8 @@ export async function handleAsk(req, env, deps) {
       + `without the pack's closed-book rule would answer from the model's own knowledge (${pack.why}).`, 502);
 
   const reference = (await cascadeToken(account)).reference;
+  /* R87: the door's trace and member reference, when sent, reach both conversations (`agent-model` R16). */
+  const traced = doorTrace(req);
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
   const model = modelHalf({ reference, runner: env.RUNNER ?? null, meter, suggestions: account.suggestions });
   model.pack = pack.pack;
@@ -242,7 +245,7 @@ export async function handleAsk(req, env, deps) {
       await emit({ event: "step", step: "interpreting" });
       const reading = await converse({
         reference, runner: model.runner, mode: "ask", meter, system, messages, tools: tools.reading,
-        finalTool: "done_reading", maxTurns: ASK_DECLARED.turns,
+        finalTool: "done_reading", maxTurns: ASK_DECLARED.turns, ...traced,
         onTool: async (name, input) => {
           if (name === "load_layer") return loadLayer(model, input);
           if (name !== "read") return { content: `'${String(name).slice(0, 40)}' is not a tool of this step`, error: true };
@@ -277,7 +280,7 @@ export async function handleAsk(req, env, deps) {
         + "the answers contract, resting every sentence on what was read." });
       const composed = await converse({
         reference, runner: model.runner, mode: "ask", meter, system, messages, tools: tools.composing,
-        finalTool: "answer", maxTurns: ASK_DECLARED.turns,
+        finalTool: "answer", maxTurns: ASK_DECLARED.turns, ...traced,
         onTool: async (name, input) => (name === "load_layer" ? loadLayer(model, input)
           : { content: "reading is closed; answer with the answer tool", error: true }),
       });

@@ -16,7 +16,8 @@
              with no trailing newline, SHA-256 over UTF-8, lowercase hex.
 
    SCRIPTS THAT RUN WHEN IMPORTED: R50 names, since N350 (T14), every fleet member's `scripts/` (agent-worker's build
-   writes its bundle when imported, measured; sheet-worker's too, T35) and `civicos-ui/deploy-ui.mjs` (it exits) beside its first three. They are
+   writes its bundle when imported, measured; sheet-worker's too, T35), `civicos-ui/deploy-ui.mjs` (it exits) and, since T48,
+   `bio-plane/src/journey-check/journey.mjs` (it runs its journey, then exits; N1056) beside its first three. They are
    left out as R50 leaves out `bio-plane/scripts/`, returned in `scripts`, and the suite fails by name if any of them
    holds a `check:` key, so leaving them out cannot move the census. Every other file is imported.
    A file node cannot import (it reaches `cloudflare:` or a browser global) is NOT skipped silently: it is returned in
@@ -33,7 +34,9 @@ export const CHECK_KEY = /\bcheck\s*:/;
 /* Every fleet member's `scripts/` by its shape, a top-level directory's own `scripts/` (bio-plane's is EXCLUDED below), never
    a hand-kept list of members: the list named before T35 missed `sheet-worker` and `agent-runner`, whose builds the
    census then imported and ran (PROMOTION #33, T35). */
-const SCRIPTS = [/^[^/]+\/scripts\//, /^civicos-ui\/deploy-ui\.mjs$/];
+/* N1056 (K3192, PROMOTION #46, T48): `journey-check`'s `journey.mjs` runs its journey and exits when imported, so the census
+   that imported it never reached its end (T47's close red T). */
+const SCRIPTS = [/^[^/]+\/scripts\//, /^civicos-ui\/deploy-ui\.mjs$/, /^bio-plane\/src\/journey-check\/journey\.mjs$/];
 const EXCLUDED = [/(^|\/)test\//, /\.test\.mjs$/, /\.control\.mjs$/, /^bio-plane\/scripts\//, /^bio-plane\/migrate\//,
                   /^civicos-ui\/check-[^/]*\.mjs$/];
 

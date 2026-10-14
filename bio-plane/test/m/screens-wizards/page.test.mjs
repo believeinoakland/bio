@@ -39,21 +39,23 @@ test("R2 R6 in the page: cs.wizard starts the guide in the dock, which opens the
   assert.equal(dock && dock.getAttribute("data-panel"), "guide");
   assert.ok(dock.textContent.includes("Submit your draft") && dock.textContent.includes("An owner approves it"));
   assert.equal(p.location.pathname, "/app/wizards");
-  const rung = p.root().querySelector("#cs-main .cs-ring");
+  const rung = p.root().querySelector("#cs-main .cs-target");
   assert.ok(rung, "the step's act is rung");
   assert.equal(rung.getAttribute("data-act"), "wizardsubmit");
   assert.equal(rung.closest("tr.cs-panel").hidden, false, "its row panel opened");
   // Alt+Shift+W rings again (the guide's `ring`)
   p.fire(p.doc, "keydown", { key: "W", altKey: true, shiftKey: true });
   await p.settle(40);
-  assert.ok(p.root().querySelector("#cs-main .cs-ring"));
+  assert.ok(p.root().querySelector("#cs-main .cs-target"));
   const sent = new Set(p.requests.map((r) => r.op));
   for (const op of ["wizardsubmit", "wizardretire", "wizarddraft", "wizardrevise", "wizardapprove"]) assert.ok(!sent.has(op), `${op} not sent`);
   assert.deepEqual(p.byOp("wizardprogress").map((r) => [r.body.event, r.body.step ?? null]), [["start", null], ["step", 1]]);
   // the marks of the screen sit directly under its path
   const main = p.root().querySelector("#cs-main");
   assert.ok(main.querySelector("[data-guide-marks]"));
-  assert.ok(main.querySelector("[data-guide-marks]").textContent.includes(SCRIPT.name));
+  await p.click(main.querySelector('[data-guide="chip"]'));
+  await p.settle(40);
+  assert.ok(p.root().querySelector("#cs-main [data-guide-marks]").textContent.includes(SCRIPT.name));
 });
 
 test("R3 in the page: \"Record a new wizard\" puts the dock's guide in recording, which hears each act pressed by its op and screen only", async () => {
@@ -80,7 +82,9 @@ test("R7 in the page: Home's marks offer the welcome first, then the first quest
   await p.settle(80);
   const marks = p.root().querySelector("#cs-main [data-guide-marks]");
   assert.ok(marks);
-  const starts = [...marks.querySelectorAll('[data-guide="start"]')].map((b) => b.getAttribute("data-script"));
+  await p.click(marks.querySelector('[data-guide="chip"]'));
+  await p.settle(40);
+  const starts = [...p.root().querySelectorAll("#cs-main [data-guide-marks]")[0].querySelectorAll('[data-guide="start"]')].map((b) => b.getAttribute("data-script"));
   assert.deepEqual(starts, ["WIZ-7db08189cc0e58c3", "WIZ-86b7f4007e3b0e3c"]);
 });
 
@@ -90,18 +94,19 @@ test("R2 R5 R6 in the page: a screen's wizard mark starts the guide; Next, Back 
   const dock = () => p.root().querySelector(".cs-dock");
   const ctl = (what) => dock().querySelector(`[data-guide="${what}"]`);
   // the mark under the path starts the script it names
+  await p.click(p.root().querySelector('#cs-main [data-guide="chip"]'));
   const mark = p.root().querySelector(`#cs-main [data-guide="start"][data-script="${SCRIPT.id}"]`);
   assert.ok(mark, "the screen's wizard mark");
   await p.click(mark);
   await p.settle(120);
   assert.equal(dock() && dock().getAttribute("data-panel"), "guide");
   assert.ok(dock().textContent.includes("Submit your draft"));
-  assert.equal(p.root().querySelector("#cs-main .cs-ring").getAttribute("data-act"), "wizardsubmit");
+  assert.equal(p.root().querySelector("#cs-main .cs-target").getAttribute("data-act"), "wizardsubmit");
   // Next: step 2, its act rung
   await p.click(ctl("next"));
   await p.settle(120);
   assert.ok(dock().textContent.includes("Or withdraw it"));
-  assert.equal(p.root().querySelector("#cs-main .cs-ring").getAttribute("data-act"), "wizardretire");
+  assert.equal(p.root().querySelector("#cs-main .cs-target").getAttribute("data-act"), "wizardretire");
   // Back: step 1 again, not counted again
   await p.click(ctl("back"));
   await p.settle(120);
@@ -131,5 +136,7 @@ test("R7 in the page: after join the welcome offer sits on Home; \"Not now\" fol
   await p.click(offer().querySelector('[data-guide="notnow"]'));
   await p.settle(40);
   assert.equal(offer(), null);
+  await p.click(p.root().querySelector('#cs-main [data-guide="chip"]'));
+  await p.settle(40);
   assert.ok(p.root().querySelector('#cs-main [data-guide="start"][data-script="WIZ-7db08189cc0e58c3"]'), "the mark stays");
 });

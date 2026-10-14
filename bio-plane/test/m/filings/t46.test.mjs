@@ -59,8 +59,8 @@ test("R50 filingsFor answers second_needed per draft: true exactly while project
   assert.equal(needs(f, B, comm(f, B, { voice: "self", text: "My notes." }).id), false);
 });
 
-test("R51 the rows C-115.45–.49 and C-115.51–.53 translate by words.json's refusal.<CODE>, read by key, each answered with it; SECOND_APPROVAL_NEEDED (C-115.50) keeps its own; HOLD_NOT_IN_PLACE is action-holds' row, relayed as it comes; codes and numbers unmoved", async () => {
-  const taken = { CONTRADICTED_HELD: "C-115.45", SELF_BENEFIT_ASK: "C-115.46", RFC_QUOTING_MISSING: "C-115.47", NOT_A_PARTNER: "C-115.48",
+test("R51 the rows C-115.45, .46, .48, .49 and C-115.51–.53 translate (C-115.47 is filing-templates', R57) by words.json's refusal.<CODE>, read by key, each answered with it; SECOND_APPROVAL_NEEDED (C-115.50) keeps its own; HOLD_NOT_IN_PLACE is action-holds' row, relayed as it comes; codes and numbers unmoved", async () => {
+  const taken = { CONTRADICTED_HELD: "C-115.45", SELF_BENEFIT_ASK: "C-115.46", NOT_A_PARTNER: "C-115.48",
                   JOINT_FINGERPRINT_MISMATCH: "C-115.49", SAME_APPROVER: "C-115.51", ASSERTION_UNRESOLVED: "C-115.52",
                   ASSERTION_RESOLUTION_REFUSED: "C-115.53" };
   for (const [code, check] of Object.entries(taken)) {
@@ -90,16 +90,15 @@ test("R51 the rows C-115.45–.49 and C-115.51–.53 translate by words.json's r
                    ["HOLD_NOT_IN_PLACE", ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE.check, ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE.translation]);
 });
 
-test("R52 each keyed sentence is words.json's words for its key, read by key, its placeholders as words.json names them and filled from the record; phrasing.no_list and rfc.quoting keep their sentences; filings.voice.self and filings.staff.not_run are replaced by voice.self.means and pointer.staff.notrun", () => {
+test("R52 each keyed sentence is words.json's words for its key, read by key, its placeholders as words.json names them and filled from the record; phrasing.no_list keeps its sentence (rfc.quoting is filing-templates', R57); filings.voice.self and filings.staff.not_run are replaced by voice.self.means and pointer.staff.notrun", () => {
   const taken = ["prepared.rests.held", "prepared.rests.accepted", "packet.privileged", "packet.privileged.warning", "filings.election.notice",
                  "recognition.staff_public", "pointer.record.supported", "pointer.record.unsupported", "pointer.record.contradicted",
                  "pointer.position", "pointer.selfbenefit", "pointer.staff", "pointer.staff.notrun", "voice.group", "voice.group.means",
                  "voice.self", "voice.self.means", "filings.secondapproval.given"];
   for (const k of taken) assert.equal(KEYED[k], WORDS.get(k), k);
-  for (const k of ["phrasing.no_list", "rfc.quoting"]) {
-    assert.ok(WORDS.has(k));
-    assert.notEqual(KEYED[k], WORDS.get(k), `${k}: kept in T46, returned to BOB`);
-  }
+  assert.ok(WORDS.has("phrasing.no_list"));
+  assert.notEqual(KEYED["phrasing.no_list"], WORDS.get("phrasing.no_list"), "phrasing.no_list: kept in T46, returned to BOB");
+  assert.equal("rfc.quoting" in KEYED, false, "rfc.quoting is filing-templates' since T48 (R57)");
   assert.equal("filings.secondapproval.waiting" in KEYED, false, "not taken in T46");
   for (const k of ["filings.voice.self", "filings.staff.not_run"]) assert.equal(k in KEYED, false, `${k} replaced`);
   for (const k of ["filings.review_copy.no_embargo", "filings.review_copy.terms"]) assert.equal(WORDS.has(k), false, `${k}: words.json holds none`);

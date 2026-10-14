@@ -56,7 +56,7 @@ import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
    action-clocks' and plan-work's. */
 const R51_ACTS = ["actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent",
   "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "actionbearingpropose", "arosefrom",
-  "escalationopen", "escalationattach", "filingprepare", "communicationprepare", "filingapprove", "filingsent",
+  "actionreplyquoting" /* R58 */, "escalationopen", "escalationattach", "filingprepare", "communicationprepare", "filingapprove", "filingsent",
   "counselpacket", "clockstate", "reminderset", "itemtakeup"];
 /* R52 (T46): the acts T45 deferred, offered on an action: escalation's stop and reopening, and `clockadopt`. */
 const R52_ACTS = ["escalationstoppursuing", "escalationreopen", "clockadopt"];
@@ -421,7 +421,8 @@ const T45_L9 = {
   actionRecords: { writes: ["actionreceipt", "actionscope", "actionpromise"], reads: [] },
   actions: { writes: [], reads: ["openitemswith"] },
   actionHolds: { writes: ["actionholdrelease", "holdnoticesent", "pressurerecord"], reads: ["actionholdpreview", "projectholds"] },
-  actionReplies: { writes: ["actionreplybearing", "actionbearingpropose", "arosefrom"], reads: [] },
+  /* T48 (R58; K3282): the quoting record, action-replies' R10 */
+  actionReplies: { writes: ["actionreplybearing", "actionbearingpropose", "arosefrom", "actionreplyquoting"], reads: [] },
   planWork: { writes: ["matteroutcomeset", "planreviewrhythm", "planreviewrecord", "prepitemadd", "prepitemtakeup",
     "prepitemdone", "plancomment", "statusreportsave", "itemtakeup"],
     reads: ["matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments", "whereitstands",
@@ -429,7 +430,8 @@ const T45_L9 = {
   caseCheck: { writes: ["publishcheck"], reads: ["casecheck"] },
   consequences: { writes: ["successrecord", "successrevise", "outcomecarry"], reads: ["successread", "successrecords"] },
   conformance: { writes: ["curelink", "cureunlink"], reads: ["cures"] },
-  actionPlans: { writes: ["scenariosetaside", "scenariorestore", "planpause", "planresume"], reads: [] },
+  /* T48 (K3278): `planask`, action-plans' R51: a member act on a plan, graded by op-grades R41, declared here with the rest */
+  actionPlans: { writes: ["scenariosetaside", "scenariorestore", "planpause", "planresume", "planask"], reads: [] },
   actionClocks: { writes: ["clockstate"], reads: [] },
   filings: { writes: ["filingsecondapprove", "jointsignatory", "holdnoticeprepare"], reads: ["templatesforaction"] },
   projectRoster: { writes: ["projectscopeset", "projectapprovalset"], reads: [] },
@@ -441,6 +443,9 @@ const T46_L9 = {
   actionClocks: { writes: [], reads: ["clockproposals"] },
 };
 const T46_L9_OPS = new Set(Object.values(T46_L9).flatMap((o) => [...o.writes, ...o.reads]));
+/* T48's layer 9 reads (op-grades R41; `standards` R57, `filings` R59; K3207), graded as reads by op-grades and driven, with the rest of
+   T48's ops, in t48.test.mjs. */
+const T48_L9_OPS = new Set(["standardproposals", "filingread"]);
 /* K2049 (B4) and K2121: standards' T35 and T36 ops, graded in op-grades' `t35.mjs` and `t36.mjs`, set aside as T33's are. */
 const STANDARDS_LATER = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
   "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat",
@@ -450,8 +455,8 @@ import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
 import { planWorkOps } from "../../../src/plan-work/index.mjs";
 import { caseCheckOps } from "../../../src/case-check/index.mjs";
 import { projectRosterOps } from "../../../src/project-roster/index.mjs";
-/* T47 (N961 §5): action-records holds the actions acts the split moved; its op map is read directly, never through the
-   spread actions' map carries until plane's L11 job (K3128). */
+/* T47 (N961 §5): action-records holds the actions acts the split moved; its op map is read directly. T48 (actions R103; K3280):
+   `actionsOps` no longer spreads it, so each module's map counts its own ops, once. */
 import { actionRecordsOps } from "../../../src/action-records/index.mjs";
 const MAPS = () => {
   const url = new URL("http://x/");
@@ -470,7 +475,7 @@ test("R1 R12: layer 9's op maps hold exactly its 41 writes, 19 ungated reads and
     ...m.actionClocks, ...["actioncreate", "action", "actions"].filter((op) => m.actions.includes(op)),
     ...["actionhold", "actionpressure"].filter((op) => m.actionHolds.includes(op))]
     .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_LATER.includes(op)
-      && !T45_L9_OPS.has(op) && !T46_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
+      && !T45_L9_OPS.has(op) && !T46_L9_OPS.has(op) && !T48_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
   assert.equal(LAYER9_WRITES.length, 41);
   assert.equal(LAYER9_READS.length, 19);
   assert.deepEqual([...ops].sort(), [...LAYER9_WRITES, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
@@ -494,6 +499,9 @@ test("R1 R12 R24 R51: T45's layer 8–9 ops — each owner's map holds them; eac
   const m = MAPS();
   for (const [owner, { writes, reads }] of Object.entries(T45_L9))
     assert.deepEqual([...writes, ...reads].filter((op) => !m[owner].includes(op)), [], owner);
+  /* actions R103: its map holds none of action-records' ops (each routed once); control: the owner's own map holds them */
+  assert.deepEqual(T45_L9.actionRecords.writes.filter((op) => m.actions.includes(op)), []);
+  assert.deepEqual(T45_L9.actionRecords.writes.filter((op) => !m.actionRecords.includes(op)), []);
   const writes = Object.values(T45_L9).flatMap((o) => o.writes);
   const acts = new Set(ACTS.map((a) => a.id));
   for (const op of writes) {

@@ -1,4 +1,4 @@
-/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27, R30, R31). DEC-49: every refusal
+/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27, R30, R31, R34). DEC-49: every refusal
  * this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-87.1–C-87.11
@@ -166,5 +166,12 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     where: at('caseApprove', 'is-approval-reason'),
     translation: 'The reason you gave is longer than 4000 characters. Nothing was recorded. What you have '
       + 'written is still yours to send once it is within that length.',
+  },
+  /* T48 (R34; N1038; DEC-100): a reader's end date that is no instant, or no later than the act. BOB's draft words,
+     re-wordable by the design stream. The family continues at C-87.17 (C-87.12 stays retired). */
+  REVIEW_BAD_UNTIL: {
+    check: 'C-87.17',
+    where: at('#grant', 'is-review-until'),
+    translation: 'Choose an end date after today for this reader\'s link. Nothing was shared.',
   },
 });

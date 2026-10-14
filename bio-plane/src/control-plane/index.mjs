@@ -26,7 +26,7 @@ import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalEr
          installationRow, dispatchRow, withPagePolicy, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
 import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSLATION_RECORD, STATUS_REPORT_ASSIST,
-         TEXT_CHECK } from "./draft.mjs";
+         TEXT_CHECK, READ_TRANSLATE, DRAFT_OPS } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
 /* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
@@ -49,8 +49,11 @@ const APP_SCREENS = Object.freeze([...ENTRY_SCREENS, ...SETTINGS_SCREENS, ...INT
 const APP_OPTIONS = Object.freeze({ guide: WIZARD_GUIDE });
 /* (T47; K3167) a member's own Claude sign-in, its disconnection, the revocation's sign-out, a refused held token and the
    test instance's trace are signin-door's (its R1–R5, were this module's R65, R78, R85–R87): the door routes to them. */
-import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, tokenRefusedSeen, signintrace }
-  from "../signin-door/index.mjs";
+import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, tokenRefusedSeen, signintrace, mintTrace,
+         memberRefOf } from "../signin-door/index.mjs";
+/* R95 (T48; K3254; walk C2 (a)): whether this is a test instance is `ai-runs`' own fact (its R78, as `bootstrap` answers
+   it), asked of the Worker environment alone. */
+import { AiRuns } from "../ai-runs/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -154,6 +157,27 @@ async function tallyOnTheWayOut(res, seen, req, env) {
    one site), which this door runs directly after admission R1 and before any other gate, public op, owner's door or
    store request; its refusal is relayed as given. */
 const addressGate = (url) => credentialAddressGate(url);
+
+/* R95 (T48; K3254; walk C2 (a); interface-shell R58): the page's `testInstance` option, `ai-runs.testInstance()` read over
+   this request's environment; a read that throws passes `false`. */
+function testInstanceOf(env) {
+  try { return AiRuns.prototype.testInstance.call({ env: env || {} }) === true; } catch { return false; }
+}
+const appOptions = (env) => ({ ...APP_OPTIONS, testInstance: testInstanceOf(env) });
+
+/* R93 (T48; N1015; K3103; agent-worker R87; plane R55): the requests that reach the plane's ask, run, draft or transcribe
+   call: the door mints each one's `trace` and member ref (signin-door R3's form) and hands both to that call in process. */
+const TRACED_OPS = Object.freeze(["ask", "airundispatch", "pagetranscribe", ...DRAFT_OPS, TEXT_CHECK, READ_TRANSLATE]);
+/* R93: the trace, answered in the request's answer (`interface-shell` R39): a JSON object answer gains `trace`. */
+async function withTrace(res, trace) {
+  if (!res || !trace || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
+  let body;
+  try { body = await res.clone().json(); } catch { return res; }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return res;
+  const headers = new Headers(res.headers);
+  headers.delete("content-length");
+  return new Response(JSON.stringify({ ...body, trace }), { status: res.status, headers });
+}
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -563,9 +587,10 @@ export function makeFetch(hooks = {}) {
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
      R51: every HTML answer leaves with the page policy. */
   const planeDoor = async function planeDoor(req, env) {
-    const seen = { session: null, credential: null, cred: null, op: null };
+    const seen = { session: null, credential: null, cred: null, op: null, trace: null };
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
+    res = await withTrace(res, seen.trace);
     await tallySessionRefusal(res, seen.session);
     res = await tallyOnTheWayOut(res, seen, req, env);
     return await withPagePolicy(res);
@@ -619,7 +644,7 @@ export function makeFetch(hooks = {}) {
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
       const pageAddress = addressGate(url);   /* R59: admission R20, before the page is built */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      return appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS });
+      return appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env) });
     }
 
     /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
@@ -633,7 +658,7 @@ export function makeFetch(hooks = {}) {
       /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
       if (appRoute === "asset" && logoAsked(url))
         return groupLogoAsset(env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", { json, storeSilent, storeRefusal, doAnswer });
-      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS })
+      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env) })
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 
@@ -2075,10 +2100,24 @@ export function makeFetch(hooks = {}) {
        `AGENT_WORKER_UNBOUND`, as R65's): nothing is sent */
     const unboundRun = (what) => json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
       detail: `your group's Civicsmith has no assistant bound to it, so ${what} and nothing was sent.` }, 503);
-    if (op === TEXT_CHECK) {
-      if (!viaSession || typeof stub.draft !== "function") return unboundRun("the text was not checked");
-      const text = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody.text : undefined;
-      const ask = { op: TEXT_CHECK, member: sessMember, session: credential.token, text: text ?? null };
+    /* R93 (T48; N1015; K3103): THE TRACE AND THE MEMBER REF of a request that reaches the plane's ask, run, draft or
+       transcribe call, minted here for each (a fresh trace; the member ref naming the session's member, signin-door R3's
+       form, never a handle or a credential) and handed to that call in process. Neither is taken from the caller: a
+       `trace` in the address or the body is read by nothing here. The trace is answered with the request (`withTrace`). */
+    const isTraced = viaSession && TRACED_OPS.includes(op);
+    const trace = isTraced ? mintTrace() : undefined;
+    const memberRef = isTraced ? await memberRefOf(env, stampOf.by) ?? undefined : undefined;
+    seen.trace = trace ?? null;
+    /* R90 (T48; N670): `readtranslate` is, like `textcheck`, a draft with no owner before it: the door asks the plane's draft
+       door with the body's `subject` and `language` alone; the plane reads the subject only as the member may and answers
+       the translation labelled (`plane` R50). */
+    if (op === TEXT_CHECK || op === READ_TRANSLATE) {
+      if (!viaSession || typeof stub.draft !== "function") return unboundRun(op === TEXT_CHECK ? "the text was not checked" : "nothing was translated");
+      const asked = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
+      const ask = op === TEXT_CHECK
+        ? { op, member: sessMember, session: credential.token, text: asked.text ?? null, trace, memberRef }
+        : { op, member: sessMember, session: credential.token, subject: asked.subject ?? null, language: asked.language ?? null,
+            trace, memberRef };
       const res = await stub.draft(ask);
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
@@ -2108,7 +2147,7 @@ export function makeFetch(hooks = {}) {
         ? reqBody.run : null;
       let out;
       try {
-        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, at: new Date().toISOString() });
+        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, at: new Date().toISOString(), trace, memberRef });
       } catch { return storeSilent(op); }
       if (!out || typeof out !== "object" || Array.isArray(out)) return storeSilent(op);
       /* a refusal by its code is a refusal (the envelope decorates it, admission's tally counts it); a withholding, an
@@ -2119,7 +2158,7 @@ export function makeFetch(hooks = {}) {
       return json({ ok: true, result: out, store: storeName, tokenClass: cls }, 200);
     }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe */
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);
@@ -2435,7 +2474,7 @@ export function makeFetch(hooks = {}) {
            from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
-                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session")];
+                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session" || k === "member")];   /* R92 (T48): `stepsource`'s member is the session's, never the body's */
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
@@ -3211,8 +3250,8 @@ export function makeFetch(hooks = {}) {
       /* (T46) a status report reads nothing and its task carries no pack */
       const pack = op === STATUS_REPORT_ASSIST ? null : await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
-      const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
-                                       firsthand: body.result.firsthand === true, pack, owner: body.result });
+      const ask = { ...draftAsk(op, asked, { member: sessMember, session: credential.token,
+                                       firsthand: body.result.firsthand === true, pack, owner: body.result }), trace, memberRef };   /* R93 */
       const res = await stub.draft(ask);
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }

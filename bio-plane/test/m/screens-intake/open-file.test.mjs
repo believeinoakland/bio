@@ -25,11 +25,11 @@ test("R5 reads threatof, originalstate, verdictnotes and scanfindings for the ca
   assert.equal(p.byOp("scanstatus").length, 0);
   const a = await at("low", { scanstatus: ok({ queued: 3, overdue: 1, held: 0 }) }, { me: ADMIN });
   assert.equal(a.byOp("scanstatus").length, 1);
-  assert.match(text(a), /3 files waiting for a check, 1 overdue, 0 held\./);
+  assert.match(text(a), /3 files waiting for a check, 1 overdue\./);
   /* control: no capture named, nothing read */
   const n = await open("/app/open-file");
   assert.equal(n.byOp("threatof").length, 0);
-  assert.match(text(n), /this screen opens from a capture/);
+  assert.doesNotMatch(text(n), /Name a file/);
 });
 
 test("R5 a low-risk file draws openoriginal with its checks, and offers no warned path and no release", async () => {

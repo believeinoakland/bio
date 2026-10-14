@@ -8,14 +8,14 @@
 
    Reached through `linesOf(ctx)` (K61). Acts and reads: `recordLine` (R1–R5), the bound cache (R6, R7),
    `withdrawLine`, `readLine`, `linesOf` (R8, R9), `structureAt` (R10), `holderAt` (R11, R12), `partiesOf` and
-   `proceedingLinks` (R13), the connection owner's `neighbours` (R14), the vocabularies (R15), the ops map (R16), the
+   `proceedingLinks` (R13, R23), the connection owner's `neighbours` (R14), the vocabularies (R15), the ops map (R16), the
    read contract (R17, `schema.mjs`), the store gate (R18), sight and the table classes (R19), and no conclusion drawn
    (R20). `entities` and `events` are the services this module reads its ends and its event bounds through. */
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { canonicalExtent, checkContentExtent, contentOf } from "../content/index.mjs";
-import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
+import { noSuchEntity, noEntity, notAProceeding, entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { isHypothesisId, isMachineIdentity, ISO_TS_RE, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { validAt, bounds as dtBounds, compare } from "../civil-time/index.mjs";
@@ -705,10 +705,12 @@ export class Lines {
 
   /* ---- partiesOf, proceedingLinks (R13) ---- */
 
+  /* R13, R23 (K231, K3207): a non-proceeding is refused through `entities.notAProceeding`, the one site minting
+     `NOT_A_PROCEEDING`; this module mints no such code. */
   #proceeding(id, what) {
     if (!filled(id)) return noEntity(`${what} is asked of one proceeding, named by its entity id`);
     if (!this.#entities.has(id)) return noSuchEntity(id);
-    if (this.#entityKind(id) !== "proceeding") return refuse("NOT_A_PROCEEDING", "this read is asked of an entity of kind proceeding");
+    if (this.#entityKind(id) !== "proceeding") return notAProceeding(`${what} is asked of an entity of kind proceeding`);
     return null;
   }
 

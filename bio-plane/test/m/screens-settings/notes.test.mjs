@@ -22,7 +22,7 @@ test("R6 reads the member's own notes; states who can see them (protected words)
   has(a, "screen.notes.turned.observation", { id: "OBS-0001" });
   assert.deepEqual(ops(a), ["notedelete", "noterevise", "noteturn", "notewrite"], "no writing help while the assistant is not reachable");
   const empty = await open("notes", { me: MEMBER, table: notesTable(MEMBER, { notes: env({ ok: true, notes: [], limit: 200, truncated: false, next: null }) }) });
-  has(empty, "screen.notes.empty");
+  lacks(empty, "screen.notes.empty"); // R28: no notes kept is told nothing
   // a member without `contribute` is offered no act on notes (op-declarations NEEDS)
   const r = await open("notes", { me: READER, table: notesTable(READER) });
   assert.deepEqual(ops(r), []);
@@ -78,11 +78,13 @@ test("R11 a writinghelp draft whose answer carries untested is drawn with ai.lab
   const a = await open("notes", { me: MEMBER, reachable: true, table: notesTable(MEMBER, { writinghelp: () => env({ ok: true, text: "A draft.", label: { kind: "machine", asked_by: "member:dev" }, withheld: [], untested: "untested" }) }) });
   await a.press("writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "x" } });
   has(a, "ai.label.untested");
-  // beside the draft's label: the label and the untested mark sit together, before the field
-  const label = all(a.tree, (e) => e.tag === "label" && e.attrs.for === "mn-new")[0];
-  const sib = label.parent.children.filter((c) => c.tag);
-  const mark = sib[sib.indexOf(label) + 1];
-  assert.ok(mark && /cs-label-untested/.test(mark.attrs.class || "") && textOf(mark) === said("ai.label.untested"), "beside the Draft label");
+  // beside the draft's label: the field draws its Draft label (cs.field's `draft`), the untested mark follows it at once
+  const field = ancestor(all(a.tree, (e) => e.tag === "textarea" && e.attrs.id === "mn-new")[0], (e) => /\bcs-field\b/.test(e.attrs.class || ""));
+  const dl = all(field, (e) => /cs-draftlabel/.test(e.attrs.class || ""))[0];
+  assert.ok(dl && textOf(dl).includes(said("screen.notes.draft.label", { handle: "dev" })), "the Draft label");
+  const sib = field.parent.children.filter((c) => c.tag);
+  const mark = sib[sib.indexOf(field) + 1];
+  assert.ok(mark && /mk-tag/.test(mark.attrs.class || "") && textOf(mark) === said("ai.label.untested"), "beside the Draft label");
   assert.equal(said("ai.label.untested"), String(said("ai.label.untested")), "by its key");
   // on a note being revised too
   await a.press("writinghelp", { data: { field: "note:2", id: "mn-r2" }, values: { "mn-r2": "y" } });

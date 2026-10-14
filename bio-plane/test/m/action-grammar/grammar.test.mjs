@@ -255,11 +255,6 @@ const T33_ROWS = {
     where: "src/actions/index.mjs #heldLinks > is-machine-set-proceeding",
     translation: "Which proceeding an action belongs to is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. Sign in to state it yourself.",
   },
-  NOT_A_PROCEEDING: {
-    check: "C-117.28",
-    where: "src/actions/index.mjs #proceedingRefusal > is-proceeding-kind",
-    translation: "An action belongs to a proceeding, such as a case before a court or a board, and the entity named is of another kind. Nothing was written. Name the proceeding itself.",
-  },
 };
 
 /* R13 (T41-46a; H30 (1), K2505): the row of what a records request seeks, minted by this module's seeksFindings alone;
@@ -284,11 +279,11 @@ const T41_ROWS = {
 const C117_19_NOW = "The reason the group acts without a determination is written in up to 500 characters with no quotation mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on its own.";
 const C94_5_NOW = "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none.";
 
-test("R9: the rows C-117.26 NO_SUBJECT (actions R62), C-117.27 MACHINE_CANNOT_SET_PROCEEDING and C-117.28 NOT_A_PROCEEDING (actions R65) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
+test("R9: the rows C-117.26 NO_SUBJECT (actions R62), and C-117.27 MACHINE_CANNOT_SET_PROCEEDING are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(T33_ROWS)) assert.deepEqual(C[code], row, code);
   const keys = Object.keys(C), at = keys.indexOf("SEEKS_REFUSED");
-  assert.deepEqual(keys.slice(at - 3, at), Object.keys(T33_ROWS));
+  assert.deepEqual(keys.slice(at - 2, at), Object.keys(T33_ROWS));
   for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
     for (const code of Object.keys(T33_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
   for (const row of Object.values(T33_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d|ENT-)/, row.check);
@@ -318,10 +313,10 @@ test("R9: every row is held as before the move, number and translation unchanged
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4, .6–.16, .19 and .26–.58 (.17, .18, .20–.25 retired), each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4, .6–.16, .19 and .26–.58 (.17, .18, .20–.25 and .28 retired), each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", "C-32.21", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 58, [5, 17, 18, 20, 21, 22, 23, 24, 25])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 58, [5, 17, 18, 20, 21, 22, 23, 24, 25, 28])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");

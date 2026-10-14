@@ -17,18 +17,18 @@ export const reset = {
     const ui = view.ui || {};
     const link = view.fragment && typeof view.fragment.reset === "string" ? view.fragment.reset : "";
     const look = (view.data || {}).look;
-    const back = (key) => `<p><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W(key)}</a></p>`;
-    if (ui.done) return cs.title() + `<p class="cs-sub">${W(S + "forhandle", { handle: ui.done.handle || "" })}</p><p class="cs-row" data-state="set">${W(S + "done")}</p>` + back("screen.entry.signin");
+    const back = (key) => `<div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W(key)}</a></div>`;
+    if (ui.done) return cs.title() + `<p class="mk-sub">${W(S + "forhandle", { handle: ui.done.handle || "" })}</p><p class="cs-row" data-state="set">${W(S + "done")}</p>` + back("screen.entry.signin");
     const dead = !link || ui.dead || (look && look.state === "failed" && look.refusal && look.refusal.code === "RESET_LINK_DEAD")
       || (look && look.state === "ok" && look.value && look.value.live === false);
     if (dead) return `<h1 class="t-title">${W(S + "dead")}</h1><p class="cs-row" data-state="dead">${W(S + "dead.what")}</p>` + back("screen.entry.backtofront");
     return cs.title() + cs.state(look, (v) => {
       const handle = v.handle || "";
       const until = v.until || v.expires || v.expires_at || "";
-      return `<p class="cs-sub">${until ? W(S + "for", { handle, date: { html: cs.date(until) } }) : W(S + "forhandle", { handle })}</p>`
+      return `<p class="mk-sub">${until ? W(S + "for", { handle, date: { html: cs.date(until) } }) : W(S + "forhandle", { handle })}</p>`
         + cs.field("rs-pw", "screen.entry.newpassword", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("rs-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
-        + `<div class="cs-actrow">${cs.act("passwordreset", { tone: "primary" })}</div><p class="cs-small">${W(S + "keeps")}</p>`;
+        + `<div class="mk-acts">${cs.act("passwordreset", { tone: "primary" })}</div><p class="mk-small">${W(S + "keeps")}</p>`;
     });
   },
 

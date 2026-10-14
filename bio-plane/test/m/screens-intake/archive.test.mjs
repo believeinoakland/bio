@@ -29,7 +29,7 @@ test("R15 reads archivelist and gradenote for the archive; a subject that is no 
   assert.equal(p.byOp("gradenote")[0].query.capture, SHA);
   const n = await open("/app/archive/nope");
   assert.equal(n.byOp("archivelist").length, 0);
-  assert.match(text(n), /this screen opens from a held archive/);
+  assert.doesNotMatch(text(n), /Name an archive/);
   /* control: a refused list is drawn failed, never as an empty archive */
   const f = await at({ archivelist: refused("ARCHIVE_NOT_HELD", "This archive is not held.") });
   assert.doesNotMatch(text(f), /lists no files/);

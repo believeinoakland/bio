@@ -29,26 +29,30 @@ export const identity = {
     const id = data.identity && data.identity.state === "ok" ? data.identity.value : null;
     if (id && id.display_name) out.push(`<p data-state="group">${W(S + "group", { name: id.display_name })}</p>`);
 
-    out.push(cs.sec(S + "now.heading", cs.state(data.description, (v) => {
+    // what the group has said of itself; a group that has not is told nothing of it (R28)
+    const now = cs.state(data.description, (v) => {
       const d = v.description || null;
-      if (!d) return `<p data-state="description">${W(S + "none")}</p>`;
+      if (!d) return "";
       const kinds = (d.kinds || []).filter((k) => KINDS.indexOf(k) >= 0).map((k) => (k === "other" && d.otherKind ? E(d.otherKind) : W(S + "kind." + k))).join(", ");
       return `<div data-state="description"><p>${kinds ? W(S + "kinds", { kinds: "" }) + kinds : ""}</p>${d.focus ? `<p><b>${W(S + "focus.field")}</b> <span class="rec">${E(d.focus)}</span></p>` : ""}${d.purpose ? `<p><b>${W(S + "purpose.field")}</b> <span class="rec">${E(d.purpose)}</span></p>` : ""}<p>${W(d.visibility === "public" ? S + "visibility.public" : S + "visibility.members")}</p></div>`;
-    })));
+    });
+    if (now) out.push(cs.sec(S + "now.heading", now));
 
     const set = admin ? cs.act("groupdescriptionset") : "";
     if (set) {
       const d = data.description && data.description.state === "ok" && data.description.value ? data.description.value.description || {} : {};
       const dr = ui.draft || null;
-      const draftLabel = (field) => (dr && dr[field] ? `<span class="cs-draft-label">${W(S + "draft.label", { handle: dr[field].askedBy })}</span>${dr[field].untested ? ` <span class="cs-label-untested">${W("ai.label.untested")}</span>` : ""}` : "");
-      let h = `<div class="cs-form"><fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}><label for="gi-k-${k}">${W(S + "kind." + k)}</label>`).join("")}</fieldset>
-<label for="gi-other">${W(S + "other.field")}</label><input id="gi-other" type="text" class="cs-input rec" maxlength="120" value="${E(d.otherKind || "")}" autocomplete="off">
-<label for="gi-focus">${W(S + "focus.field")}</label>${draftLabel("focus")}<textarea id="gi-focus" class="cs-input rec${dr && dr.focus ? " cs-draft" : ""}" maxlength="1000">${E(d.focus || "")}</textarea>
-<label for="gi-purpose">${W(S + "purpose.field")}</label>${draftLabel("purpose")}<textarea id="gi-purpose" class="cs-input rec${dr && dr.purpose ? " cs-draft" : ""}" maxlength="4000">${E(d.purpose || "")}</textarea>
-<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}><label for="gi-v-${x}">${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}</div>`;
+      // a field holding the assistant's draft says so beside its label, and as untested where its answer says so (R11)
+      const draftOf = (field) => (dr && dr[field] ? { draft: S + "draft.label", draftFills: { handle: dr[field].askedBy } } : {});
+      const untested = (field) => (dr && dr[field] && dr[field].untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : "");
+      let h = `<fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}><label for="gi-k-${k}">${W(S + "kind." + k)}</label>`).join("")}</fieldset>
+${cs.field("gi-other", S + "other.field", { rec: true, max: 120, value: d.otherKind || "", autocomplete: "off" })}
+${cs.field("gi-focus", S + "focus.field", { area: true, rec: true, max: 1000, value: d.focus || "", ...draftOf("focus") })}${untested("focus")}
+${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000, value: d.purpose || "", ...draftOf("purpose") })}${untested("purpose")}
+<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}><label for="gi-v-${x}">${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}`;
       // the assistant's draft, only while it is reachable, from the administrator's own answers
       const ask = view.reachable ? cs.act("groupdescriptiondraft") : "";
-      if (ask) h += `<div class="cs-form" data-form="draft"><p>${W(S + "ask.intro")}</p>${["what", "who", "why"].map((q) => `<label for="gi-q-${q}">${W(S + "ask.q." + q)}</label><textarea id="gi-q-${q}" class="cs-input rec" maxlength="1000"></textarea>`).join("")}${ask}</div>`;
+      if (ask) h += `<div data-form="draft"><p>${W(S + "ask.intro")}</p>${["what", "who", "why"].map((q) => cs.field("gi-q-" + q, S + "ask.q." + q, { area: true, rec: true, max: 1000 })).join("")}${ask}</div>`;
       out.push(cs.sec(S + "edit.heading", h));
     }
     return out.join("");

@@ -12,7 +12,11 @@ export const places = {
   reads(view) {
     const r = { profiles: { op: "profiles" }, offices: { op: "entitieskind", query: { kind: "office", limit: "500" } } };
     // the owner answers the place wanted to an administrator only (instance-setup R60)
-    if (view.me && view.me.administer === true) r.place = { op: "placewantedstate" };
+    if (view.me && view.me.administer === true) {
+      r.place = { op: "placewantedstate" };
+      // the list of where else to go is the places' rules' data (wizard-scripts R37): only how many are listed is drawn here (R25)
+      r.elsewhere = { op: "startfrom" };
+    }
     return r;
   },
 
@@ -24,18 +28,18 @@ export const places = {
     const ui = view.ui || {};
     const data = view.data || {};
     const out = [cs.title()];
-    if (!admin) out.push(`<p class="cs-note">${W(S + "admins")}</p>`);
+    if (!admin) out.push(`<p class="mk-note">${W(S + "admins")}</p>`);
 
     // the places whose rules apply, in the order they are read
     out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => {
       const act = Array.isArray(v.profiles) ? v.profiles : [];
-      let h = act.length ? `<ol class="cs-list" data-list="profiles">${act.map((p) => `<li>${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</li>`).join("")}</ol>` : `<p>${W(S + "profiles.none")}</p>`;
-      if ((v.conflicts || []).length) h += `<p class="cs-note">${W(S + "profiles.conflicts", { n: v.conflicts.length })}</p>`;
+      let h = act.length ? `<ol class="mk-list" data-list="profiles">${act.map((p) => `<li>${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</li>`).join("")}</ol>` : `<p>${W(S + "profiles.none")}</p>`;
+      if ((v.conflicts || []).length) h += `<p class="mk-note">${W(S + "profiles.conflicts", { n: v.conflicts.length })}</p>`;
       const set = admin ? cs.act("profilesset") : "";
       if (set) {
         const choices = Array.isArray(v.choices) ? v.choices : [];
         const on = new Set(act.map((p) => p.id));
-        h += `<div class="cs-form"><fieldset><legend>${W(S + "profiles.field")}</legend>${choices.map((p) => `<input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"${on.has(p.id) ? " checked" : ""}><label for="pl-p-${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="cs-notice" data-warning="profiles">${W(S + "profiles.warning")}</p>${set}</div>`;
+        h += `<div><fieldset><legend>${W(S + "profiles.field")}</legend>${choices.map((p) => `<input type="checkbox" id="pl-p-${E(p.id)}" data-profile="${E(p.id)}"${on.has(p.id) ? " checked" : ""}><label for="pl-p-${E(p.id)}">${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</label>`).join("")}</fieldset><p class="mk-msg" data-warning="profiles">${W(S + "profiles.warning")}</p>${set}</div>`;
       }
       return h;
     })));
@@ -43,16 +47,26 @@ export const places = {
     // the place the group wants that is not held yet
     if (admin) out.push(cs.sec(S + "wanted.heading", cs.state(data.place, (v) => {
       let h = `<p data-state="wanted">${v.name ? W(S + "wanted.now", { name: v.name, date: D(v.set_at) }) : W(S + "wanted.none")}</p>`;
-      for (const m of v.matches || []) h += `<p class="cs-notice">${W(S + "wanted.match", { profile: m.profile_name || m.profile })}</p>`;
+      for (const m of v.matches || []) h += `<p class="mk-msg">${W(S + "wanted.match", { profile: m.profile_name || m.profile })}</p>`;
       const pw = cs.act("placewanted");
-      if (pw) h += `<div class="cs-form"><label for="pl-want">${W(S + "wanted.field")}</label><span class="help">${W(S + "wanted.help")}</span><input id="pl-want" type="text" class="cs-input" maxlength="200" value="${E(v.name || "")}" autocomplete="off">${pw}</div>`;
+      if (pw) h += `${cs.field("pl-want", S + "wanted.field", { help: S + "wanted.help", max: 200, value: v.name || "", autocomplete: "off" })}${pw}`;
       return h;
+    })));
+
+    // R25 (N847; DEC-227 (1)): where else to go, how many are listed and the way to the list; the group neither chooses nor
+    // edits it, so no act. A pointer of null is drawn failed, never as none; with none listed only the reference is drawn.
+    if (admin && data.elsewhere) out.push(cs.sec("places.elsewhere.head", cs.state(data.elsewhere, (v) => {
+      const route = (Array.isArray(v.routes) ? v.routes : []).find((r) => r && r.route === "elsewhere");
+      const ptr = route ? route.pointer : null;
+      if (!ptr || typeof ptr !== "object" || !Array.isArray(ptr.pointers)) return cs.state({ state: "failed" }, () => "");
+      const n = ptr.pointers.length;
+      return (n >= 1 ? `<p data-state="elsewhere">${W("places.elsewhere.says", { n })}</p>` : "") + `<p><a class="cs-ref" href="/app/elsewhere" data-nav data-screen="elsewhere">${W("places.elsewhere.open")}</a></p>`;
     })));
 
     // the offices, every page read; a page that did not answer is said, never taken as the end
     const MACHINE = { authors: ["claude", "pwa-client", "daemon", "sweep", "session", "accelerator", "apps-script", "system", "agent", "ai"], classes: ["daemon", "session", "member"], prefixes: ["token:", "class:"] };
     const byMember = (o) => { const s = String(o.declared_by || "").trim().toLowerCase(); return s !== "" && !(MACHINE.prefixes.some((p) => s.startsWith(p)) || MACHINE.classes.indexOf(s) >= 0 || MACHINE.authors.indexOf(s) >= 0); };
-    out.push(cs.sec(S + "offices.heading", cs.state(data.offices, (v) => {
+    const officesHtml = (cs.state(data.offices, (v) => {
       const pages = [...(v.entities || []), ...(ui.more || [])];
       const next = ui.moreNext !== undefined ? ui.moreNext : v.next;
       // the next page, read on the page's clock (interface-shell R27's `cs.later`), until `next` is null
@@ -67,18 +81,20 @@ export const places = {
           k.set("moreNext", r.next || null);
         });
       }
-      let h = pages.length ? `<ul class="cs-list" data-list="offices">${pages.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}</li>`).join("")}</ul>` : next ? "" : `<p>${W(S + "offices.none")}</p>`;
+      let h = pages.length ? `<ul class="mk-list" data-list="offices">${pages.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}</li>`).join("")}</ul>` : "";
       if (next && !ui.moreFailed) h += `<p class="cs-state" data-state="loading">${W("state.loading")}</p>`;
       if (ui.moreFailed) h += `<p class="cs-state" data-state="failed">${W(S + "offices.rest")}</p>`;
       return h;
-    }, { empty: S + "offices.none" })));
+    }, { empty: S + "offices.none" }));
+    // R28: a section that holds nothing is not drawn
+    if (officesHtml) out.push(cs.sec(S + "offices.heading", officesHtml));
     if (admin) {
       const seed = cs.act("officesseed");
       const add = cs.act("entitycreate");
       let h = "";
       if (ui.seeded) h += `<p data-shown="seeded">${W(S + "seeded", { seeded: ui.seeded.seeded, already: ui.seeded.already, unseeded: ui.seeded.unseeded })}</p>`;
       if (seed) h += seed;
-      if (add) h += `<div class="cs-form"><label for="pl-label">${W(S + "add.label")}</label><input id="pl-label" type="text" class="cs-input rec" autocomplete="off"><label for="pl-note">${W(S + "add.note")}</label><span class="help">${W(S + "add.help")}</span><textarea id="pl-note" class="cs-input rec"></textarea>${add}</div>`;
+      if (add) h += `${cs.field("pl-label", S + "add.label", { rec: true, autocomplete: "off" })}${cs.field("pl-note", S + "add.note", { help: S + "add.help", area: true, rec: true })}${add}`;
       if (h) out.push(cs.sec(S + "add.heading", h));
     }
     return out.join("");

@@ -1,7 +1,8 @@
-/* The action plan (registry screen `plan`; screens-action R1, R7; K608 (4); v0.2 rules 18, 19). Projects › <project> ›
+/* The action plan (registry screen `plan`; screens-action R1, R7, R13; K608 (4); v0.2 rules 18, 19). Projects › <project> ›
    Action plan: the plan's matters (its subjects, each with its determination's support and its escalation's stage), its
    options (sorted and picked as rows, interface-shell R19), the standing offers and, while the assistant is reachable,
-   the proposals labelled machine work "not yet in the plan", its scenarios and their checkpoints, what each started
+   the proposals labelled machine work "not yet in the plan" and "Ask the assistant for options" (a planning run, drawn
+   running until it ends, R13), its scenarios and their checkpoints, what each started
    option became, and the checks. Every function here is self-contained (interface-shell R21 (1)): it refers only to its
    parameters, the kit `cs` and the language's own globals. The subject is the plan's id. */
 
@@ -47,6 +48,23 @@ export const plan = Object.freeze({
       const ds = Array.isArray(o.dates) ? o.dates.map(function (d) { return String(d && d.date || ""); }).filter(Boolean).sort() : [];
       return ds.length ? ds[ds.length - 1] : "";
     },
+    // R13: a read the page makes itself, once per query and token, kept in the page's memory (as `screens-inquiry` R8's dock).
+    later: function (cs, view, key, op, query, token) {
+      const L = view.ui.later || (view.ui.later = {});
+      const q = JSON.stringify(query) + "#" + (token || "");
+      if (!L[key] || L[key].q !== q) {
+        L[key] = { q: q, state: "loading" };
+        const settle = function (o) { L[key] = Object.assign({ q: q }, o); cs.set("later", L); };
+        cs.call(op, { query: query }).then(function (a) {
+          const r = a && a.result !== undefined ? a.result : a;
+          if (!r || r.ok === false) {
+            const code = String((r && (r.code || r.reason)) || "");
+            settle({ state: "failed", refusal: { code: code, words: cs.esc((r && r.translation) || code) } });
+          } else settle({ state: "ok", value: r });
+        }, function () { settle({ state: "failed", refusal: null }); });
+      }
+      return L[key];
+    },
     subjectKeys: function (o) {
       return (Array.isArray(o.subjects) ? o.subjects : []).map(function (x) {
         return typeof x === "string" ? x : x && x.kind === "outcome" ? "outcome:" + x.determination + "#" + x.standard : x && x.inquiry ? "inquiry:" + x.inquiry : "";
@@ -75,7 +93,7 @@ export const plan = Object.freeze({
         : "";
 
       // R1, R7: the plan's subjects, called matters.
-      const matters = cs.sec("screen.plan.matters", (subjects.length ? cs.sheet(subjects.map(function (s, i) {
+      const mattersIn = (subjects.length ? cs.sheet(subjects.map(function (s, i) {
         const esc = s.escalation && s.escalation.id
           ? cs.w("screen.plan.escalation", { stage: { html: cs.w("screen.matter.stage." + (Number(s.escalation.stage) >= 1 && Number(s.escalation.stage) <= 7 ? Number(s.escalation.stage) : 1)) } })
           : s.escalation && s.escalation.state === "undetermined" ? cs.w("screen.plan.escalation.undetermined") : "";
@@ -87,13 +105,13 @@ export const plan = Object.freeze({
         return cs.row("<b>" + cs.w("screen.plan.matter.n", { n: String(i + 1) }) + "</b>", P.matterName(cs, s)
           + '<span class="meta">' + cs.w("screen.plan.support." + (["hypothetical", "established", "short"].includes(s.support) ? s.support : "undetermined"))
           + (s.why ? " · " + cs.esc(s.why) : "") + live + (esc ? " · " + esc : "") + "</span>", take, "");
-      }).join("")) : '<p class="cs-state" data-state="empty">' + cs.w("screen.plan.nomatters") + "</p>")
-        + (open ? '<div class="mk-form">'
-          + cs.choice("plan-subject-kind", "screen.plan.subject.kind", [["inquiry", "screen.plan.subject.kind.inquiry"], ["outcome", "screen.plan.subject.kind.outcome"]])
+      }).join("")) : "")
+        + (open ? cs.choice("plan-subject-kind", "screen.plan.subject.kind", [["inquiry", "screen.plan.subject.kind.inquiry"], ["outcome", "screen.plan.subject.kind.outcome"]])
           + cs.field("plan-subject-id", "screen.plan.subject.id", { help: "screen.plan.subject.id.help" })
           + cs.field("plan-subject-standard", "screen.plan.subject.standard")
           + cs.field("plan-subject-reason", "screen.plan.subject.reason", { help: "screen.plan.subject.reason.help" })
-          + '<div class="mk-acts">' + cs.act("plansubjectadd", { label: "act.plansubjectadd.label.plan" }) + "</div></div>" : ""));
+          + '<div class="mk-acts">' + cs.act("plansubjectadd", { label: "act.plansubjectadd.label.plan" }) + "</div>" : "");
+      const matters = mattersIn ? cs.sec("screen.plan.matters", mattersIn) : "";
 
       // R1: the options, sorted by category, regulated end date, matter or disposition, picked as rows.
       const optionRows = cs.rows({
@@ -130,16 +148,15 @@ export const plan = Object.freeze({
         },
       });
       const subjectChoice = function (id) {
-        return '<div class="cs-field"><label for="' + id + '">' + cs.w("screen.plan.option.matter") + '</label><select id="' + id + '" class="cs-input">'
-          + subjects.map(function (s) { return '<option value="' + cs.esc(s.key) + '">' + cs.esc(s.key) + "</option>"; }).join("") + "</select></div>";
+        return cs.choice(id, "screen.plan.option.matter", subjects.map(function (s) { return { value: s.key, text: s.key }; }));
       };
       const catChoice = function (id) {
         return cs.choice(id, "screen.plan.option.category", CATS.map(function (c) { return [c, "screen.plan.category." + c]; }));
       };
-      const addOption = open ? '<div class="mk-form">' + cs.field("plan-opt-summary", "screen.plan.option.summary")
+      const addOption = open ? cs.field("plan-opt-summary", "screen.plan.option.summary")
         + catChoice("plan-opt-category") + subjectChoice("plan-opt-matter")
         + cs.field("plan-opt-detail", "screen.plan.option.detail", { area: true })
-        + '<div class="mk-acts">' + cs.act("optionadd", { label: "act.optionadd.label.plan" }) + "</div></div>" : "";
+        + '<div class="mk-acts">' + cs.act("optionadd", { label: "act.optionadd.label.plan" }) + "</div>" : "";
 
       // R1 (v0.2 rule 19; DEC-194): the standing offers, then the assistant's suggestions, each labelled and adopted
       // only by the member's own act.
@@ -151,25 +168,47 @@ export const plan = Object.freeze({
           open ? cs.act("optionadopt", { label: "screen.plan.adopt", data: { subject: g.key || "", offer: o.kind } }) : "", "");
         });
       });
+      // R13: "Ask the assistant for options" starts a planning run (`planask`), drawn running and read again on the page's
+      // clock until it ends; its proposals then reach the tray, read again, labelled machine work and adopted only by the
+      // member's own act.
       const pr = view.data.proposals;
-      const tray = view.reachable && pr ? '<div class="mk-tray" role="region" aria-label="' + cs.w("screen.plan.suggested") + '"><p class="eyebrow">'
-        + cs.w("screen.plan.suggested") + "</p>" + cs.state("proposals", function (v) {
-        return cs.sheet(v.proposals.filter(function (x) { return !x.adopted; }).map(function (x) {
+      const asked = view.ui.ask || null;
+      let askNote = "", fresh = null;
+      if (asked && asked.run) {
+        const st = P.later(cs, view, "run", "airun", { run: asked.run }, String(view.ui.seq || 0));
+        const session = st.state === "ok" && st.value && st.value.session ? st.value.session : null;
+        if (session) view.ui.askStatus = { run: asked.run, status: session.status };
+        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked.run ? view.ui.askStatus.status : "running";
+        if (status === "running") {
+          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
+          if (st.state !== "loading" && !view.ui.askPolling && (view.ui.askPolls || 0) < 60) {
+            view.ui.askPolling = true;
+            cs.later(10000, function (k, v) { v.ui.askPolling = false; v.ui.askPolls = (v.ui.askPolls || 0) + 1; k.set("seq", (v.ui.seq || 0) + 1); });
+          }
+        } else {
+          askNote = '<p class="mk-note" role="status" data-run="ended">' + cs.w("screen.plan.ask.ended") + "</p>";
+          fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked.run);
+        }
+      }
+      const trayRows = function (v) {
+        const rows = (Array.isArray(v.proposals) ? v.proposals : []).filter(function (x) { return !x.adopted; }).map(function (x) {
           return cs.row("", "<b>" + cs.esc(x.summary || "") + "</b>" + '<span class="meta">' + cs.esc(x.why || "") + (x.label ? " · " + cs.esc(x.label) : "") + "</span>",
             open ? cs.act("optionadopt", { label: "screen.plan.adopt", data: { proposal: x.id } }) : "", "");
-        }).join(""));
-      }, { empty: "screen.plan.nosuggestions" })
-        + (open ? '<div class="mk-form">' + cs.field("plan-prop-summary", "screen.plan.option.summary") + catChoice("plan-prop-category")
-          + subjectChoice("plan-prop-matter") + cs.field("plan-prop-why", "screen.plan.propose.why")
-          + '<div class="mk-acts">' + cs.act("optionpropose", { label: "act.optionpropose.label.plan" }) + "</div></div>" : "") + "</div>" : "";
+        });
+        return rows.length ? cs.sheet(rows.join("")) : "";
+      };
+      const trayList = fresh ? (fresh.state === "ok" ? trayRows(fresh.value) : cs.state(fresh)) : pr && pr.state !== "empty" ? cs.state("proposals", trayRows) : "";
+      const trayIn = askNote + trayList + (open ? '<div class="mk-acts">' + cs.act("planask", { label: "act.optionpropose.label.plan" }) + "</div>" : "");
+      const tray = view.reachable && pr && trayIn ? '<div class="mk-tray" role="region" aria-label="' + cs.w("screen.plan.suggested") + '"><p class="eyebrow">'
+        + cs.w("screen.plan.suggested") + "</p>" + trayIn + "</div>" : "";
 
-      const optionsSec = cs.sec("screen.plan.options", (options.length ? optionRows : '<p class="cs-state" data-state="empty">' + cs.w("screen.plan.nooptions") + "</p>")
-        + addOption + (offers.length ? cs.sheet(offers.join("")) : "") + tray);
+      const optionsIn = (options.length ? optionRows : "") + addOption + (offers.length ? cs.sheet(offers.join("")) : "") + tray;
+      const optionsSec = optionsIn ? cs.sec("screen.plan.options", optionsIn) : "";
 
       // R1: scenarios and their phases; a checkpoint judged by a member; take-up, never assignment (v0.2 rule 18).
       const scenarios = Array.isArray(p.scenarios) ? p.scenarios : [];
       const chosen = options.filter(function (o) { return o.disposition === "chosen"; });
-      const scen = cs.sec("screen.plan.scenarios", scenarios.map(function (s) {
+      const scenIn = scenarios.map(function (s) {
         return "<h3>" + cs.esc(s.name || "") + (s.set_aside ? " · " + cs.w("screen.plan.setaside") : "") + "</h3>"
           + cs.sheet((s.phases || []).map(function (ph) {
             const judged = ph.judgement ? cs.w("screen.plan.judged." + (ph.judgement.judged === "met" ? "met" : "not_met")) + (ph.judgement.note ? " · " + cs.esc(ph.judgement.note) : "") : "";
@@ -183,22 +222,25 @@ export const plan = Object.freeze({
               : "";
             return cs.row("<b>" + cs.esc(ph.name || ph.id) + "</b>", cs.esc((ph.options || []).join(", ")) + (judged ? '<span class="meta">' + judged + "</span>" : ""), due, form);
           }).join(""));
-      }).join("") + (open ? '<div class="mk-form">' + cs.field("plan-scen-name", "screen.plan.scenario.name")
+      }).join("") + (open ? cs.field("plan-scen-name", "screen.plan.scenario.name")
         + '<fieldset class="cs-field" id="plan-scen-options"><legend>' + cs.w("screen.plan.scenario.options") + "</legend>"
         + chosen.map(function (o, i) { return '<label><input type="checkbox" id="plan-scen-options-' + i + '" value="' + cs.esc(o.id) + '"> ' + cs.esc(o.summary || o.id) + "</label>"; }).join("")
         + "</fieldset>" + cs.field("plan-scen-days", "screen.plan.scenario.days", { type: "number" })
-        + '<div class="mk-acts">' + cs.act("scenarioset", { label: "act.scenarioset.label.plan", data: { next: String(scenarios.length + 1) } }) + "</div></div>" : ""));
+        + '<div class="mk-acts">' + cs.act("scenarioset", { label: "act.scenarioset.label.plan", data: { next: String(scenarios.length + 1) } }) + "</div>" : "");
+      const scen = scenIn ? cs.sec("screen.plan.scenarios", scenIn) : "";
 
       // R1: what each started option became.
       const started = options.filter(function (o) { return o.action && o.action.id; });
-      const startedSec = cs.sec("screen.plan.startedsec", started.length ? cs.sheet(started.map(function (o) {
+      const startedSec = !started.length ? "" : cs.sec("screen.plan.startedsec", cs.sheet(started.map(function (o) {
         return cs.row("", '<a class="cs-ref" href="/app/action/' + encodeURIComponent(o.action.id) + '" data-nav>' + cs.esc(o.summary || o.action.id) + "</a>",
           '<span class="meta">' + cs.w("screen.plan.actionstate." + (["planned", "active", "awaiting_response", "resolved", "abandoned"].includes(o.action.state) ? o.action.state : "planned")) + "</span>", "");
-      }).join("")) : '<p class="cs-state" data-state="empty">' + cs.w("screen.plan.nostarted") + "</p>");
+      }).join("")));
 
-      const close = open ? '<div class="mk-form">' + cs.field("plan-close-note", "plan.close.lessons", { area: true })
-        + '<div class="mk-acts">' + cs.act("planclose", { label: "screen.plan.close" }) + "</div></div>" : "";
-      return head + strip + matters + optionsSec + scen + startedSec + close;
+      const close = open ? cs.field("plan-close-note", "plan.close.lessons", { area: true })
+        + '<div class="mk-acts">' + cs.act("planclose", { label: "screen.plan.close" }) + "</div>" : "";
+      // R14: a plan with nothing in it to show draws its one empty state.
+      const body = strip + matters + optionsSec + scen + startedSec + close;
+      return head + (body || '<p class="cs-state" data-state="empty">' + cs.w("screen.plan.empty") + "</p>");
     });
   },
 
@@ -227,14 +269,15 @@ export const plan = Object.freeze({
       },
     },
     {
-      // R1: drawn only while the assistant is reachable; what is proposed is stored apart, never an option until adopted.
-      op: "optionpropose",
-      send: function (view, el, cs) {
-        const summary = String(cs.value("plan-prop-summary") || "").trim();
-        const why = String(cs.value("plan-prop-why") || "").trim();
-        if (!summary || !why) return { refuse: "screen.plan.propose.needed" };
-        return { body: { plan: view.subject, summary: summary, why: why, category: cs.value("plan-prop-category"), subjects: [cs.value("plan-prop-matter")].filter(Boolean) } };
+      // R13: "Ask the assistant for options" starts a planning run for this plan, drawn only while the assistant is reachable
+      // (the registry's `optionpropose` label; `interface-shell` R55 admits this op); it records no option and no proposal of
+      // the member's own. `existed` draws the run already asked.
+      op: "planask", label: "act.optionpropose.label.plan",
+      send: function (view) { return { body: { plan: view.subject } }; },
+      done: function (view, answer, cs) {
+        if (answer && answer.run) { cs.set("askPolls", 0); cs.set("ask", { run: answer.run, existed: answer.existed === true }); }
       },
+      rereads: [],
     },
     {
       // R1: a suggestion or a standing offer becomes an option only by the member's own act.

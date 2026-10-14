@@ -33,10 +33,13 @@ export const PARTS = Object.freeze({
     for (let i = 0; i < n; i++) if (!s[i]) return null;
     return s;
   },
-  nothing: function (cs) {
-    // K3179: the shell's own "Nothing is here" (interface-shell R35), its title over what it says
+  nothing: function (cs, to) {
+    // K3179: the shell's own "Nothing is here" (interface-shell R35), its title over what it says. R21: a public screen
+    // (`to` "public") offers the way an outsider can go, the group's public page, never "Go to Home".
     return '<h1 class="t-title">' + cs.w("shell.unavailable.nothing.title") + '</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">'
-      + cs.w("shell.unavailable.nothing.says") + '</p><p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>";
+      + cs.w("shell.unavailable.nothing.says") + "</p>"
+      + (to === "public" ? '<p><a class="cs-btn" data-tone="quiet" href="/" data-public-page>' + cs.w("screen.published.grouppage") + "</a></p>"
+        : '<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>");
   },
 
   /* After an act, the reads that wait on others are read again with the rest (interface-shell R10, this module's R10). */
@@ -65,7 +68,9 @@ export const PARTS = Object.freeze({
   /* What an act said once it was answered, beside the screen's own section: `{key, html, ok}` in `view.ui.said`. */
   said: function (view, key) {
     const s = view.ui.said && view.ui.said[key];
-    return s ? '<p class="' + (s.ok ? "cs-note" : "cs-refusal") + '" role="' + (s.ok ? "status" : "alert") + '" data-said="' + key + '">' + s.html + "</p>" : "";
+    // R20: the note is the design's `mk-note`; a refusal is drawn as the shell draws one (`cs-gap`, interface-shell R61).
+    return s ? (s.ok ? '<p class="mk-note" role="status" data-said="' + key + '">' : '<p class="cs-gap" data-gap="refused" role="alert" data-said="' + key + '">')
+      + s.html + "</p>" : "";
   },
   say: function (cs, view, key, html, ok) {
     const s = view.ui.said || (view.ui.said = {});
@@ -78,6 +83,55 @@ export const PARTS = Object.freeze({
   at: function (date, time) {
     const d = String(date || "").trim(), t = String(time || "").trim();
     return /^\d{4}-\d{2}-\d{2}$/.test(d) && /^\d{2}:\d{2}$/.test(t) ? { date: d, time: t } : null;
+  },
+
+  /* R20: a section that holds nothing is not drawn. */
+  sec: function (cs, key, inner) { return inner ? cs.sec(key, inner) : ""; },
+
+  /* R20: a later read's list, drawn only when it holds something: loading and failed are drawn as they are (interface-shell
+     R10); an empty read draws nothing. */
+  listed: function (cs, r, draw) { return r && r.state === "empty" ? "" : cs.state(r, draw); },
+
+  /* R18: the end of the local day `date` (`YYYY-MM-DD`) in the IANA zone `zone`, as an instant in the record's stamp form
+     (`YYYY-MM-DDTHH:MM:SSZ`, UTC); null when the date is no calendar day or the zone is unknown. */
+  endOfDay: function (date, zone) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ""));
+    if (!m || !zone) return null;
+    const wall = Date.UTC(+m[1], +m[2] - 1, +m[3], 23, 59, 59);
+    if (new Date(wall).getUTCDate() !== +m[3]) return null;
+    let fmt;
+    try {
+      fmt = new Intl.DateTimeFormat("en-US", { timeZone: String(zone), hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric",
+        hour: "numeric", minute: "numeric", second: "numeric" });
+    } catch (e) { return null; }
+    const offsetAt = function (ms) {
+      const p = {};
+      fmt.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+      return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000;
+    };
+    let t = wall - offsetAt(wall);
+    t = wall - offsetAt(t);
+    return new Date(t).toISOString().replace(/\.\d{3}Z$/, "Z");
+  },
+
+  /* R18: the local day (`YYYY-MM-DD`) in `zone` on which `instant` falls; "" when either is unusable. */
+  localDay: function (instant, zone) {
+    const t = Date.parse(String(instant || ""));
+    if (isNaN(t) || !zone) return "";
+    try {
+      const p = {};
+      new Intl.DateTimeFormat("en-US", { timeZone: String(zone), year: "numeric", month: "2-digit", day: "2-digit" })
+        .formatToParts(new Date(t)).forEach(function (x) { p[x.type] = x.value; });
+      return p.year + "-" + p.month + "-" + p.day;
+    } catch (e) { return ""; }
+  },
+
+  /* The group's IANA zone from `publishpreflight`'s answer (`case-authoring` R75's `publish_at.zone`); "" when none. */
+  zoneOf: function (pre) {
+    const steps = pre && Array.isArray(pre.steps) ? pre.steps : [];
+    const s = steps.find(function (x) { return x && typeof x === "object" && x.publish_at; });
+    const z = s && s.publish_at ? s.publish_at.zone || s.publish_at.time_zone : "";
+    return typeof z === "string" ? z : "";
   },
 
   /* The members, project and case `publish` and `publishpreflight` take for a draft, from its review copy's answer

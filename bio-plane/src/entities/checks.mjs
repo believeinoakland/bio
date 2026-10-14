@@ -94,4 +94,15 @@ export const ENTITY_CHECKS = Object.freeze({
     translation: 'A subject is registered with a note in your own words saying who or what it is and why it belongs '
       + 'in the registry, and this one has none. Nothing was written.',
   }),
+  /* R53 (T48; K231, K275, K3207): `NOT_A_PROCEEDING` is one condition, an entity is registered but is not of kind
+     `proceeding`, so it is minted at one site, `notAProceeding` (index.mjs), which events' R34, lines' R13, actions' R65
+     and following's R29 answer through; action-grammar's C-117.28 gives way to it. The next of C-91. The sentence names
+     no act, so it reads true wherever it is answered (BOB's to reword; the UX stream's to revise). New in T48 layer 5;
+     awaiting T49's stamp. */
+  NOT_A_PROCEEDING: Object.freeze({
+    check: 'C-91.9',
+    where: 'src/entities/index.mjs notAProceeding > is-proceeding-kind',
+    translation: 'This is asked of a proceeding, such as a case before a court or a board, and the subject named is '
+      + 'registered as another kind. Name the proceeding itself. Nothing was written.',
+  }),
 });

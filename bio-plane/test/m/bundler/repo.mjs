@@ -24,6 +24,10 @@ const OWN = ["fleet-bundle.mjs", "provenance.mjs", "build-plane.mjs", "deploy.mj
 
 export const hex = (b) => createHash("sha256").update(b).digest("hex");
 export const VERSION = "1.2.3";
+/** R32: a release's notes file, `release/notes/<version>.json`, as an operator commits it. */
+export const NOTES = { date: "2026-10-14", security: true,
+  notes: { members: "Searches now find words inside scanned pages.", administrators: "The daily check for updates is on.",
+    must_do: "Approve the update in Cloudflare when asked." } };
 export const ACCOUNT = "0123456789abcdef0123456789abcdef";
 
 const put = (root, rel, text) => { mkdirSync(dirname(join(root, rel)), { recursive: true }); writeFileSync(join(root, rel), text); };
@@ -195,7 +199,7 @@ function localClosure(rel) {
 /** A fixture repository: the plane, `members` (name → addMember options), the module's scripts, and the
  *  other modules' files the commands read. `build: true` writes every guarded bundle fresh. */
 export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": { assets: { "assets/model.bin": "MODEL-1" } } },
-  plane = {}, build = true, realPackageJson = false } = {}) {
+  plane = {}, build = true, realPackageJson = false, notes = NOTES } = {}) {
   const root = mkdtempSync(join(tmpdir(), "bundler-repo-"));
   for (const f of OWN) put(root, `bio-plane/scripts/${f}`, readFileSync(join(PLANE, "scripts", f)));
   put(root, "bio-plane/scripts/embed-signpage.mjs", readFileSync(join(PLANE, "scripts/embed-signpage.mjs")));
@@ -224,6 +228,8 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   }
   for (const [name, opts] of Object.entries(members)) addMember(root, name, opts);
   mkdirSync(join(root, "release"), { recursive: true });
+  /* R32: the release's notes, committed beside the release for its version (none when `notes` is null). */
+  if (notes) put(root, `release/notes/${version}.json`, JSON.stringify(notes, null, 2) + "\n");
   if (build) await buildAll(root);
   return root;
 }

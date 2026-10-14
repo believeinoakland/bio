@@ -1,6 +1,6 @@
 # case-inputs — requirements
 
-**Status** · Drafted 2026-10-12 on `tranche/T47` (the opening's act, plan rule 3; K3027). Split from `case-authoring` by copy (K617, K624, K531, K2982; N908; T47-31), for size (4,072 lines with comments after T45-21, M-T45-6), meaning unchanged. Each id names its `case-authoring` source, which retires the moved ids as "moved to case-inputs R<n>" (T47-32). The extraction map is `build/extraction/case-authoring-split-2.md`, its §4 table adopted (K2982, the wider cut). R17 is new (T47; N992; DEC-199): the sign step's no-window and not-laid-out lines, its unread sentence and C-136.5 read by key. Every requirement is not yet met (T47).
+**Status** · Drafted 2026-10-12 on `tranche/T47` (the opening's act, plan rule 3; K3027). Split from `case-authoring` by copy (K617, K624, K531, K2982; N908; T47-31), for size (4,072 lines with comments after T45-21, M-T45-6), meaning unchanged. Each id names its `case-authoring` source, which retires the moved ids as "moved to case-inputs R<n>" (T47-32). The extraction map is `build/extraction/case-authoring-split-2.md`, its §4 table adopted (K2982, the wider cut). R17 is new (T47; N992; DEC-199): the sign step's no-window and not-laid-out lines, its unread sentence and C-136.5 read by key. Every requirement is not yet met (T47). Last changed T48 (T48-43: R18 new, amending R8, R10 and R17, a source row's `quotable` and the no-quotation line at signing, its key `signing.openrequest.noquote` asked of UX-DESIGN, BOB's plain sentence until given; N880; Actions D13; K2744, K3190, K3195); marked not yet met (T48).
 
 | old (`case-authoring`) | new | |
 |---|---|---|
@@ -86,6 +86,15 @@ Terms are `case-authoring`'s and `publication`'s. A **statement** is a case docu
 
   Codes, numbers, `where`s and behaviour are unmoved; the changed row waits for T48's promotion stamp (plan rule 5 (2)). Controls: one row of each of the four shapes reads its key's sentence with the row's facts; an unread source reads `signing.openrequest.unread`'s words; C-136.5's translation equals its key's sentence with the field filled, for an absent and for a malformed field.
 
+#### A reply that asks not to be quoted (T48-43; N880; Actions D13, H17)
+
+- **R18** (T48; N880; Actions D13; amends R8, R10, R17; `action-replies` R11) A source row (R8) may also answer `quotable`, a boolean.
+  - A value that is not a boolean makes the row malformed, so R8 reads the source `undetermined`. A row not answering it reads as `true`.
+  - For a row answering `quotable: false`, `openRequestLine` (R10, R17) also answers `quoting: {key: "signing.openrequest.noquote", says}`, filled with `{whom}`. The words are read by key from `words.json` once the design stream gives the key (an ASK to UX-DESIGN). Until then `key` is null and `says` is BOB's plain sentence, "{whom}'s reply asks not to be quoted.", as `case-authoring` R34 kept its sentences until given.
+  - The line is shown once, with its row's line. It asks no reason and refuses nothing (a declaration, DEC-13).
+  - `case-authoring` R34 carries it unchanged: it spreads `openRequestLine`'s answer into each line, so `case-authoring` needs no job.
+  - Controls: a row answering `quotable: true`, or not answering it, carries no `quoting`; a row answering `quotable: "no"` makes the source `undetermined`.
+
 #### Its ops map; its instance
 
 - **R16** (new; K61; the map's §1; `case-account` R12's form) `caseInputsOf(host, deps)` answers the one instance for a host: every caller for the same host gets the same instance, and `deps` (`record`, `membership`, `publication`, `publishSchedule`, `account`, `now`) are each reached lazily on the host unless given. At its creation it creates the four tables with the DDL `case-authoring` created them by (`CREATE TABLE IF NOT EXISTS`, the `reason` column added where absent), so a running store's rows are kept with no data move, and declares them (R11); a declaration `record-core` refuses (`TABLE_DECLARED`) is thrown at creation and no instance is kept. `case-authoring`'s factory creates it at its own creation, as it creates `case-account` (`case-authoring`'s Uses), so the tables exist and are declared at every boot. `caseInputsOps(c, url, body)` publishes this module's ops map, one route arm per op: `statementack` (R1, R5: `draft`, `case`, `edition`, `bySecret` (`"1"`) and `reason` from the query, `secretSha` from the body only, `viewer` the query's stamp); `whatchangedpropose` (R6: `case` from the query, else the body; `text` from the body, else the query; `proposedBy` the `author` stamp); `whatchangeddrafts` (R6: `case` as above, `viewer` the stamp); each answering exactly what its service answers. The op names, their declarations, grades and help are unchanged; the plane spreads the map (`plane`'s L11 job), directly before `case-authoring`'s.
@@ -117,7 +126,7 @@ Terms are `case-authoring`'s and `publication`'s. A **statement** is a case docu
 
 - `docs/architecture/BIO_Publication_v0_1.md` §6A (the acknowledgements beside the review copy), §3 rule 13 (who wrote the statement) and §5A (the statement of what changed, its drafts): R1–R6; DEC-88 (the acknowledger's words, K1025), DEC-101 (1), DEC-84 (14) (K1019).
 - DEC-147 (2), (4) (a signed edition waits, not public, until its time; N681, K1833): R4. F1's rule for digests (K1874; N761, K2129, K2175): R5.
-- `BIO_Action_v0_2.md` §3 (Success record) and §4 rules 8, 17 (K2780; Actions D5, D6c, D13; T45, N893): R8, R9.
+- `BIO_Action_v0_2.md` §3 (Success record) and §4 rules 8, 17 (K2780; Actions D5, D6c, D13; T45, N893): R8, R9. Rule 8's "unless the reply itself says otherwise" (Actions D13, H17; K2744; T48, N880): R18.
 - DEC-194 (N913), DEC-198 (7) and DEC-199 (N992; the words read by key): R10, R17.
 - N908 (`case-authoring`'s split for size, K617; the map adopted, K2982): R7, R11, R16.
 

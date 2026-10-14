@@ -87,6 +87,11 @@ const CASES = {
   WATCH_NOT_ASKED: async (w) => [w.f.watchAnswer({ link: watched(w).open, stop: true, author: MEMBER }),
     w.f.watchAnswer({ link: watched(w).asked, stop: true, author: BOB })],
   WATCH_RELIED_ON: async (w) => [w.f.watchAnswer({ link: watched(w).relied, stop: true, author: MEMBER })],
+  BAD_PROCEEDING_DATES: async (w) => {
+    const p = w.proceeding("Ellery v. Marlow");
+    return [w.f.proceedingDates({ proceeding: p, from: "October", viewer: MEMBER }),
+      w.f.proceedingDates({ proceeding: p, from: "2026-11-01", to: "2026-10-01", viewer: MEMBER })];
+  },
 };
 
 /* A plan PL-1 of the project, open, and PL-C closed: a follow linked to PL-C (asked), one linked to PL-1 (not yet asked), one

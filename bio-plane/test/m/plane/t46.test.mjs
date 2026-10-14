@@ -19,6 +19,7 @@ import { MODULE_MAPS, ownMaps } from "./maps.mjs";
 import { assistantGateOf, draftOnObject, DRAFT_KIND_OF } from "../../../src/plane/ask.mjs";
 import { transcriberOf } from "../../../src/plane/transcribe.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
@@ -140,7 +141,8 @@ test("R40, R36 (T46; extraction R74): the transcriber's deployable() is partAdmi
    and every collaborator the gate must not reach before its time spied in order. */
 async function statusReport(w, { plan = "PLAN-2026-0007-harbour", project = "PROJ-2026-0007-harbour", keptAway = null, read = null } = {}) {
   const order = [];
-  const c = credentialsOf(w.ctx), a = answersOf(w.ctx);
+  /* R53 (T48): the keep-away read is ai-accounts' */
+  const c = aiAccountsOf(w.ctx), a = answersOf(w.ctx);
   const ka = c.aiKeptAway.bind(c), acc = a.askAccount.bind(a);
   /* the group's own keep-away (instance-setup's `assistantGate`, asked with no project) is answered as it stands */
   c.aiKeptAway = (q) => { if (q === undefined) return ka(); order.push(["aiKeptAway", q]); return keptAway ?? ka(q); };

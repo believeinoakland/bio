@@ -32,14 +32,14 @@ const BORROWS = {
   action: ["screen.plan.actionstate.", "screen.request.holder"],
   "help-records": ["screen.request.window."],
 };
-const SHARED_OWN = { plan: ["act.plansubjectadd.label.plan", "act.plansubjectadd.does"], "start-send": ["act.filingrecordsent.does"], request: ["act.filingrecordsent.does"] };
+const SHARED_OWN = { plan: ["act.plansubjectadd.label.plan", "act.plansubjectadd.does", "act.planask.does"], "start-send": ["act.filingrecordsent.does"], request: ["act.filingrecordsent.does"] };
 
 const wordsOf = (s) => {
   const id = s.id;
   const own = SCREEN_WORDS.filter((r) => r[0].startsWith(`screen.${id}.`) || (BORROWS[id] || []).some((p) => r[0].startsWith(p))
     || (SHARED_OWN[id] || []).includes(r[0]));
   const ownKeys = new Set(own.map((r) => r[0]));
-  const acts = s.acts.flatMap((a) => [`act.${a.op}.label.${id}`, `act.${a.op}.does`]);
+  const acts = s.acts.flatMap((a) => [a.label || `act.${a.op}.label.${id}`, `act.${a.op}.does`]);
   const keys = [...SHARED, `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id]].filter((k) => !ownKeys.has(k));
   return Object.freeze([...new Set(keys), ...own]);
 };

@@ -1,9 +1,9 @@
 /* screens-inquiry: the module's own keyed words (interface-shell R5; DEC-179 (5)). Each row is `[key, en, protected]`:
  * a screen's own sentence `screen.<id>.<part>`, with `{placeholders}` filled from the screen's data; and the row the
- * shell's R5 names for this module (a `WORD_ROWS` key whose English names the group's Civicsmith bare, held here in
- * DEC-149's form until `WORD_ROWS` carries a conformed word): `act.pagetranscribe.does`. Since T47 `WORD_ROWS` holds
- * `ai.label.untested` (R7), `ai.refused.keptaway`, `ai.refused.noaccount`, `ai.refused.notdeployed` and
- * `ai.refused.limit.unjudged` in their conformed words, so the screens draw those from it and hold no copy.
+ * shell's R5 names for this module. `WORD_ROWS` holds `act.pagetranscribe.does` (since PR #34's merge, `4664e8efd4`, in
+ * DEC-221's American spelling), `ai.label.untested` (R7), `ai.refused.keptaway`, `ai.refused.noaccount`,
+ * `ai.refused.notdeployed` and `ai.refused.limit.unjudged` in their conformed words, so the screens draw those from it
+ * and hold no copy (R19).
  * The English is the mockups' at the design stream's `3f40899950` (`mock-screens.js`, `mock-shell.js`) where they say
  * it, else BOB's wording in `build/requirements/screens-inquiry.md`. A protected row is a warning before a terminal or
  * signed act, or says who can see something (DEC-157 (4)). These rows go to the design stream as a HANDOFF. */
@@ -19,7 +19,9 @@ const PROJECT = [
   row("screen.project.stage.matured", "Matured"),
   row("screen.project.stage.closed", "Closed"),
   row("screen.project.stage.undetermined", "Undetermined, because {reason}"),
-  row("screen.project.stage.counts", "{read} questions · {with_legs} resting on something · {concluded} concluded"),
+  row("screen.project.stage.read", "{count} questions"),
+  row("screen.project.stage.legs", "{count} resting on something"),
+  row("screen.project.stage.concluded", "{count} concluded"),
   row("screen.project.bar.head", "The project's bar"),
   row("screen.project.bar.declared", "An answer must be at least this strong before the group relies on it."),
   row("screen.project.bar.axisnone", "No bar is set on the {axis} axis."),
@@ -34,7 +36,6 @@ const PROJECT = [
   row("screen.project.draw.note", "Why this project draws on it"),
   row("screen.project.draw.help", "In a sentence, without quotation marks."),
   row("screen.project.draw.empty", "Choose a question and say why this project draws on it."),
-  row("screen.project.draw.none", "There is no other question this project could draw on."),
   row("screen.project.draw.already", "This project already draws on that question."),
   row("screen.project.draw.done", "This project now draws on that question."),
   row("screen.project.question.label", "The question, in plain words"),
@@ -48,7 +49,6 @@ const PROJECT = [
   row("screen.project.members.head", "Members"),
   row("screen.project.members.owner", "{handle} (owner)"),
   row("screen.project.members.invited", "{handle} (invited)"),
-  row("screen.project.members.empty", "Nobody has joined yet."),
   row("screen.project.members.who", "Only this project's members see its work.", true),
   row("screen.project.invite.label", "The member's handle"),
   row("screen.project.invite.empty", "Name the member to invite by their handle."),
@@ -57,7 +57,6 @@ const PROJECT = [
   row("screen.project.plan.label", "The plan's title"),
   row("screen.project.plan.about", "For which question"),
   row("screen.project.plan.empty", "Give the plan a title and choose its question."),
-  row("screen.project.plan.opened", "Plan opened: {title}. Its screen comes later; it is in the project's record now."),
   row("screen.project.plan.head", "Plans opened here"),
 ];
 
@@ -79,14 +78,11 @@ const QUESTION = [
   row("screen.question.waits.since", "Set aside by {who}, {date} · each act stays on the record"),
   row("screen.question.supports.head", "Supports"),
   row("screen.question.against.head", "Cuts against"),
-  row("screen.question.legs.empty", "Nothing here yet."),
   row("screen.question.leg.severed", "Removed from the question"),
   row("screen.question.leg.severed.why", "Removed from the question: “{why}”"),
   row("screen.question.leg.unselectable", "This citation could not be picked out just now, so nothing was changed. Try again."),
-  row("screen.question.leg.version", "In “{version}”"),
   row("screen.question.hunches.head", "Hunches"),
   row("screen.question.hunch.by", "Hunch · {who}'s"),
-  row("screen.question.hunches.empty", "No hunches kept."),
   row("screen.question.hunch.label", "Your hunch"),
   row("screen.question.hunch.kind", "What kind of hunch"),
   row("screen.question.hunch.kind.other", "A suspicion"),
@@ -111,8 +107,6 @@ const QUESTION = [
   row("screen.question.narrow.name", "A name for the narrower question"),
   row("screen.question.narrow.description", "Why, in a sentence"),
   row("screen.question.narrow.empty", "Name the narrower question and say why."),
-  row("screen.question.versions.head", "What it rests on"),
-  row("screen.question.versions.count", "{count} ways of answering it, {current} current"),
 ];
 
 /** The document screen's sentences (R3, R15). */
@@ -122,7 +116,6 @@ const DOCUMENT = [
   row("screen.document.fingerprint", "Fingerprint"),
   row("screen.document.fingerprint.means", "A short code computed from this copy's exact bytes. Anyone can compute it again to check the copy is unchanged."),
   row("screen.document.passages.head", "Passages"),
-  row("screen.document.passages.empty", "This document has no passages its reading made out."),
   row("screen.document.passage.where", "Page {page}"),
   row("screen.document.cite.question", "In which question"),
   row("screen.document.cite.role", "How it bears on the question"),
@@ -134,14 +127,11 @@ const DOCUMENT = [
   row("screen.document.gradenote.head", "Why {letter}?"),
   row("screen.document.gradenote.none", "No grade note: this copy was handed to the group rather than fetched from its source."),
   row("screen.document.backlinks.head", "What cites it"),
-  row("screen.document.backlinks.empty", "Nothing cites this document yet."),
   row("screen.document.backlinks.hidden", "Some of what cites it is in projects you can't see."),
   row("screen.document.versions.head", "Its versions"),
   row("screen.document.versions.changed", "Changed: a newer version than this copy is held"),
   row("screen.document.versions.this", "This copy"),
-  row("screen.document.versions.empty", "Only this version is held."),
   row("screen.document.people.head", "People it names"),
-  row("screen.document.people.empty", "No names found in its reading."),
   row("screen.document.claim.label", "The person the record follows"),
   row("screen.document.claim.basis", "How sure, and from what"),
   row("screen.document.claim.basis.name", "The same name"),
@@ -158,8 +148,8 @@ const DOCUMENT = [
   row("screen.document.monitor.done", "Checked for changes just now."),
   row("screen.document.monitorset.done", "Watching this document's address: each new version found is kept beside this one, and you are told."),
   row("screen.document.attest.done", "A timestamp was recorded for this copy."),
-  row("screen.document.transcribe.done", "Your typing was recorded for page {page}, labelled as yours."),
-  row("screen.document.pagetranscribe.done", "The assistant read {pages}. Its words are labelled as its reading."),
+  row("screen.document.transcribe.done", "Your typing was recorded for page {page}, labeled as yours."),
+  row("screen.document.pagetranscribe.done", "The assistant read {pages}. Its words are labeled as its reading."),
 ];
 
 /** The assistant dock's sentences (R4, R6, R7, R13). */
@@ -177,7 +167,6 @@ const ASSISTANT = [
   row("screen.assistant.run.notready", "The assistant isn't ready to work here: its instructions could not be read."),
   row("screen.assistant.run.nocontext", "The assistant works on a question or a project; open one to ask it."),
   row("screen.assistant.productions.head", "What it produced"),
-  row("screen.assistant.productions.empty", "Nothing yet."),
   row("screen.assistant.production", "{what}"),
   row("screen.assistant.notevidence", "Machine work: it counts only once a member accepts it.", true),
   row("screen.assistant.suggest.name", "A name for the suggested reading"),
@@ -189,7 +178,6 @@ const ASSISTANT = [
   row("screen.assistant.dispatch.unbound", "The assistant's worker isn't connected to your group's Civicsmith, so the run can't start. An administrator can connect it."),
   row("screen.assistant.dispatch.notrunning", "This run has ended, so it can't be started again. Start a new run."),
   row("screen.assistant.dispatch.unknown", "The run could not be started: {reason}"),
-  row("act.pagetranscribe.does", "Has the assistant read up to 8 pages of this document that your group's Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are."),
 ];
 
 /** The project's AI account screen's sentences (R14). */

@@ -32,7 +32,9 @@
  * accepted finding (`IMPORTED_NOT_ACCEPTED` C-21.4, `ACCEPTED_WORK_UNREADABLE` C-21.5) are accepted-work's rows, minted
  * through its `acceptedLegRefusals`, never copied here. T46-29 (R38; DEC-194, N913): C-113.38–C-113.43 read their
  * translations by key from `CONFORMANCE_WORDS` below; C-113.7, .37 and .44 keep theirs (R38 names why each waits);
- * codes, numbers and `where`s unmoved; awaiting T47's promotion stamp (plan T46, accepted red 2). */
+ * codes, numbers and `where`s unmoved; awaiting T47's promotion stamp (plan T46, accepted red 2). T48-45 (R40; N1023,
+ * K3123): C-113.6 `NO_FINDINGS` names R2's three kinds of finding, BOB's draft until the design stream gives
+ * `refusal.NO_FINDINGS`, then read by key like R38's rows; code, number and `where` unmoved; awaiting T49's stamp. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -98,7 +100,8 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   NO_FINDINGS: {
     check: 'C-113.6', where: at("#pinFindings", "is-finding-named"),
-    translation: 'A determination rests on at least one published finding. Name the findings it rests on. Nothing was '
+    translation: 'A determination rests on at least one finding: one your group published, one checked and held for '
+      + 'publication, or another group\'s finding your group has accepted. Name the findings it rests on. Nothing was '
       + 'written.',
   },
   FINDING_NOT_PUBLISHED: {

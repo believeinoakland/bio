@@ -134,7 +134,7 @@ const member = async (id, caps, role = "member") => {
   const add = await post("memberadd", { memberId: id, cover: `cover for ${id}`, role, capabilities: caps }, "adm-d526");
   const en = await post("enroll", { invite: add && add.invite, handle: id, password: `${id}-passphrase-526` });
   if (!en || en.ok !== true) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
-  const lg = await post("login", { role: `member:${id}`, password: `${id}-passphrase-526` });
+  const lg = await post("login", { handle: id, password: `${id}-passphrase-526` });   /* N1052 (T48): by handle, as control-plane R83 signs in */
   if (!lg || !lg.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
@@ -238,7 +238,9 @@ for (const [label, env] of [["LABELLED", "inquiry"], ["UNLABELLED", undefined]])
                             title: "Where did it go", token: RUTH });
   const p = await get(`op=projection&id=${encodeURIComponent(id)}`);
   t(`${label}: LANDS with surfaced_by restamped to the actor class, not the caller's "agent"`,
-    [reasonOf(r), p?.fm_json ? JSON.parse(p.fm_json).surfaced_by : null], ["LANDED", "human"]);
+    [reasonOf(r), p?.fm_json ? JSON.parse(p.fm_json).surfaced_by : null], ["LANDED", "human"]);  /* PROMOTION #46 (T48): `landed` answers null for any non-bundle reply, so every "nothing landed" arm is only as good as
+     the reader: here it reads back a bundle that did land, by its id. */
+  t(`${label}: …and \`landed\` reads it back`, await landed(id), id);
 }
 
 /* ============================================= 6. C-26's bias gate (BIAS_REFUSED) */

@@ -21,6 +21,7 @@ import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
 import { assistantGateOf } from "../../../src/plane/ask.mjs";
@@ -277,13 +278,13 @@ test("R36 (credentials R57): keptAway({project, use}) is credentials.aiKeptAway 
   assert.deepEqual(away, credentialsOf(x.ctx).aiKeptAway({ project: null, use: "transcribe" }), "as given");
 });
 
-test("R36: transcription({member, project, at}) answers the object's own credentials and ai-use's useCheck, the act minted for it (`transcribe:<capture prefix>:<instant>`), and the AI path; with no AGENT_WORKER binding the path answers AGENT_WORKER_UNBOUND and reads nothing", async () => {
+test("R36: transcription({member, project, at}) answers the object's own ai-accounts (R53, was credentials) and ai-use's useCheck, the act minted for it (`transcribe:<capture prefix>:<instant>`), and the AI path; with no AGENT_WORKER binding the path answers AGENT_WORKER_UNBOUND and reads nothing", async () => {
   const x = await plane();
   const tx = transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", project: "PROJ-1", at: "2026-10-11T06:00:00Z" });
   /* (T46; R40, extraction R74) re-pinned: `untested`, the test-instance label, null when the part runs on the bar or not at all */
-  assert.deepEqual(Object.keys(tx).sort(), ["act", "at", "credentials", "member", "project", "transcribe", "untested", "useCheck"]);
+  assert.deepEqual(Object.keys(tx).sort(), ["accounts", "act", "at", "member", "project", "transcribe", "untested", "useCheck"]);
   assert.equal(tx.untested, null);
-  assert.equal(tx.credentials, credentialsOf(x.ctx));
+  assert.equal(tx.accounts, aiAccountsOf(x.ctx), "R53 (T48): the payer is ai-accounts' instance, never credentials' delegate");
   assert.deepEqual([tx.member, tx.project, tx.at], ["member:ann", "PROJ-1", "2026-10-11T06:00:00Z"]);
   const q = { owner: "member:ann", member: "member:ann", use: "transcribe", at: "2026-10-11T06:00:00Z" };
   assert.deepEqual(tx.useCheck(q), aiUseOf(x.ctx).useCheck(q));

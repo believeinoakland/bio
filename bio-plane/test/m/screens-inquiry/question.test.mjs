@@ -25,7 +25,7 @@ test("R2 the question drawn: its words, two grades and the phrase against the pr
   assert.equal(m.querySelector("h1").textContent, "Is the city repairing reported potholes within seven days?");
   assert.match(m.textContent, /Opened 3 October 2026 · Pothole repairs/);
   assert.equal(m.querySelector('a.cs-ref[href="/app/project/' + P + '"]').textContent, "Pothole repairs");
-  const box = m.querySelector(".cs-strengthbox");
+  const box = m.querySelector(".mk-strengthbox");
   assert.deepEqual(box.querySelectorAll(".cs-grade").map((g) => [g.getAttribute("data-scale"), g.textContent.slice(-1)]), [["capture", "B"], ["connection", "C"]],
     "two grades, never one score; an ungraded testimony axis is not drawn");
   assert.match(box.textContent, /Against the bar B\/B · Short of the bar on: Connection/);
@@ -39,7 +39,7 @@ test("R2 the question drawn: its words, two grades and the phrase against the pr
 test("R2 a question with no project is held against the group's bar; one that meets it says so", async () => {
   const p = await open(at, { inquiryProject: null, plane: { inquirystrength: ok({ capture: { state: "graded", grade: "A" }, connection: { state: "graded", grade: "B" } }) } });
   assert.equal(p.byOp("strengthbarof")[0].query.project, undefined);
-  assert.match(main(p).querySelector(".cs-strengthbox").textContent, /Against the bar C\/C · Meets the bar/);
+  assert.match(main(p).querySelector(".mk-strengthbox").textContent, /Against the bar C\/C · Meets the bar/);
   assert.match(main(p).textContent, /Opened 3 October 2026/);
 });
 

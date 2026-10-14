@@ -1,4 +1,4 @@
-/* capture — the information grammar, C-2.7 (K585 (3)'s capture ruling; `build/plan/draft-T18.md` §1b; R37). The type
+/* capture — the information grammar, C-2.7 (K585 (3)'s capture ruling; `build/plan/draft-T18.md` §1b; R89). The type
  * arm the catalogue's `checkBundle` runs over an `information` bundle: its two enumerations, the source and monitoring
  * blocks, the content hash (recomputed from the canonical dataset when both exist), what the verified state requires,
  * and the change records. Capture owns it because capture brings information into the record and is the earliest

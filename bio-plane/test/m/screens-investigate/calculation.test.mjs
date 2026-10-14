@@ -27,7 +27,8 @@ test("R5 the spot-check: the draw (the set, its size, the seed and method, that 
   assert.match(s.textContent, /3 of 812 picked at random · seed 2026-10-05-7f31/);
   assert.match(s.textContent, /Anyone can repeat it from the seed/);
   assert.match(s.textContent, /Was the pothole repaired\?/);
-  assert.match(s.textContent, /1 of 3 judged: 1 yes, 0 no, 0 could not tell, 1 in tension, 1 not visited/);
+  assert.match(s.textContent, /1 of 3 judged: 1 yes, 1 in tension, 1 not visited/);
+  assert.doesNotMatch(s.textContent, /\b0 (no|could not tell)/, "R22: no count is drawn at zero");
   assert.match(s.textContent, /81% of those judged · exact 95% range 65% to 92% · between 526 and 747 of all 812/);
   assert.match(s.textContent, /Item 17.*Yes, seen by mai/s);
   assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, 3, "every visit, graded as testimony");

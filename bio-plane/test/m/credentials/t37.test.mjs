@@ -175,7 +175,7 @@ test("R44 R3 a wrong current password is R44's `signin`, held without a place un
 
 /* ===== R35: aiKeptAway, the one site of AI_KEPT_AWAY ===== */
 
-test("R35 aiKeptAway answers null while the group does not keep its material away, and otherwise the one AI_KEPT_AWAY refusal (C-29.31, its `where` this function) with keep_away as R52 answers it; the refusal R35, R27 and R32 answer is exactly it; it writes nothing and is reached by no route", async () => {
+test("R27 R32 R63 (T48) the keep-away refusal R27, R32 and R63 answer is exactly ai-accounts' one AI_KEPT_AWAY (its R7, C-29.31, its `where` in ai-accounts) with keep_away as its R21 answers it, null while the group does not keep its material away; asking it writes nothing and no route reaches it", async () => {
   const w = await signedIn();
   assert.equal(w.c.aiKeptAway(), null, "off by default");
   w.c.aiKeepAwaySet({ on: false, reason: "not now", by: "admin" });
@@ -188,11 +188,13 @@ test("R35 aiKeptAway answers null while the group does not keep its material awa
   assert.deepEqual(k.keep_away, { reason: "A confidentiality order.", set_by: "second", set_at: set.set_at });
   const { on, uses, ...state } = w.c.aiKeepAwayState();
   assert.deepEqual([on, k.keep_away], [true, state]);
-  assert.equal(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, "src/credentials/index.mjs aiKeptAway > is-kept-away");
+  assert.deepEqual(k, w.c.accounts.aiKeptAway(), "ai-accounts' own answer");
+  assert.match(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, /^src\/ai-accounts\/index\.mjs /);
   for (const r of [await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
                    await w.c.accountReferenceFor({ member: "ann", act: { kind: "run", member: "ann" } }),
                    await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.s.ann1 }),
-                   await w.c.aiGrantMintStanding({ member: "ann", question: "q" })])
+                   await w.c.aiGrantMintStanding({ member: "ann", question: "q" }),
+                   w.c.aiRunCredentialMint({ member: "ann", run: "RUN-K", writes: ["airuntick"] })])
     assert.deepEqual(r, k, "the one refusal, through the one site");
   assert.equal(w.snapshot(), before, "it writes nothing");
   assert.ok(!Object.keys(w.ops()).some((op) => /keptaway/i.test(op)), "reached by no route (aikeepawaystate is R52's)");
@@ -200,25 +202,6 @@ test("R35 aiKeptAway answers null while the group does not keep its material awa
   assert.equal(w.c.aiKeptAway(), null, "turned off again");
 });
 
-test("R35 aiKeptAway fails closed: when the setting cannot be read it answers the AI_KEPT_AWAY refusal, saying so, with the three null; it never throws", async () => {
-  const w = await world().group("ann");
-  w.sql.exec(`DROP TABLE ai_keep_away`);
-  const k = w.c.aiKeptAway();
-  assert.deepEqual([shape(k), k.keep_away], [row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"), { reason: null, set_by: null, set_at: null }]);
-  assert.match(k.detail, /could not be read/);
-  const broken = Object.create(Object.getPrototypeOf(w.c));
-  const b = w.c.aiKeptAway.call(broken);
-  assert.deepEqual([shape(b), b.keep_away], [row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"), { reason: null, set_by: null, set_at: null }]);
-  assert.equal(w.c.aiKeptAway.length, 0);
-});
-
-/* ===== R51: a code of this module's own ===== */
-
-test("R51 keep-away's reason refusal is AI_KEEP_AWAY_NO_REASON on row C-29.32, its number unmoved; the module holds no `NO_REASON` code of its own, so progressions' NO_REASON (C-100.18) reads its own row", () => {
-  assert.deepEqual([ACCOUNT_CHECKS.AI_KEEP_AWAY_NO_REASON.check, ACCOUNT_CHECKS.AI_KEEP_AWAY_NO_REASON.where],
-    ["C-29.32", "src/credentials/index.mjs #keepAwayReason > is-keep-away-reason"]);   /* T40: shared with R57's project limit */
-  for (const f of [ACCOUNT_CHECKS, AI_CREDENTIAL_CHECKS, SIGN_IN_CHECKS]) assert.ok(!("NO_REASON" in f));
-});
 
 /* ===== R53: the mint's digest, from the body only ===== */
 

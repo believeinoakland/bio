@@ -1,6 +1,6 @@
 # setup-words — requirements
 
-**Status** · In force: split from `instance-setup` by copy for size (K617, K624; N807; K2337, K2343), meaning unchanged: R1–R3 carry `instance-setup` R68's list share, which is re-worded there and keeps the object form and its export. Layer 11, directly before `instance-setup`. Last changed T46 (T46-49: R5 new, amending R1 and R2, `WORD_ROWS` re-taken from `words.json` as PR #28 merged it, 1,503 words, 549 protected, `WORDS_COMMIT` that commit; N897, DEC-179, DEC-194, DEC-197; K2904, K2960); marked not yet met (T46). Last changed T47 (T47-52: R6 new, amending R1, R2 and R5, `WORD_ROWS` re-taken from `words.json` at PR #31's merge `a0fab7abf0`, 1,608 words, 570 protected; N992, DEC-198, DEC-199); marked not yet met (T47).
+**Status** · In force: split from `instance-setup` by copy for size (K617, K624; N807; K2337, K2343), meaning unchanged: R1–R3 carry `instance-setup` R68's list share, which is re-worded there and keeps the object form and its export. Layer 11, directly before `instance-setup`. Last changed T46 (T46-49: R5 new, amending R1 and R2, `WORD_ROWS` re-taken from `words.json` as PR #28 merged it, 1,503 words, 549 protected, `WORDS_COMMIT` that commit; N897, DEC-179, DEC-194, DEC-197; K2904, K2960); marked not yet met (T46). Last changed T47 (T47-52: R6 new, amending R1, R2 and R5, `WORD_ROWS` re-taken from `words.json` at PR #31's merge `a0fab7abf0`, 1,608 words, 570 protected; N992, DEC-198, DEC-199); marked not yet met (T47). Last changed T48 (T48-61: R8 new, amending R7, `WORD_ROWS` re-taken at PR #34's merge `4664e8efd4`, 1,895 words, 652 protected; N847, N1047; DEC-221, DEC-226, DEC-227; K3190, K3192 D1, K3195); marked not yet met (T48).
 
 **Size (P6).** 929 lines of generated data (`setup-words.mjs`:1–929), no code; `instance-setup` about 3,300 after its copy goes (4,228 at T38's close, K2337).
 
@@ -23,6 +23,10 @@ The interface's word list as frozen data: each word the screens show, with its k
 #### T47's L11 fold (K3100)
 
 - **R7** (K3062; amends R6) `WORD_ROWS` is `words.json` as merged into `tranche/T47` at L11's START (K3127; `WORDS_COMMIT` that merge's commit), its counts as read there (1,788 rows, 651 protected at 6f0d88d8d5; K3143), by R1's rule. Test: equal word by word.
+
+#### T48 (T48-61)
+
+- **R8** (T48; N847, N1047; DEC-221, DEC-226, DEC-227; K3190, K3192 D1; amends R7) `WORD_ROWS` is `words.json` as it stands on `main` at PR #34's merge, and `WORDS_COMMIT` is `"4664e8efd4"`: 1,895 rows, 652 of them protected, by R1's rule. This carries DEC-226's and DEC-227's words (`updates.*`, `queue.update.*`, `home.update.*`, `installer.update.*`, `elsewhere.*`, `door.front.elsewhere.*`, `wizard.guide.elsewhere*`, `places.elsewhere.*`) and replaces every row R7 carried in DEC-221's earlier spelling. The counts as read at that commit bind (R1's rule). Test: equal word by word; control: no row's `en` holds "labelled".
 
 ## Private
 

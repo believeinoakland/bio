@@ -13,7 +13,7 @@ import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
 /* The profile's shape (R1–R7, R23–R26, R31–R33, R39–R44; `locale` and `systems[].links`, N77 and N96; T33's R46–R54, T34's
-   R58–R60, T35's R63–R69, T37's R70, T45's R74–R87). */
+   R58–R60, T35's R63–R69, T37's R70, T45's R74–R87, T48's R89). */
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
@@ -24,7 +24,9 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   /* T37 (R70) */
   "local_names",
   /* T45 (R79, R80, R86) */
-  "legal_facts", "procedure_guides", "phrasings"]);
+  "legal_facts", "procedure_guides", "phrasings",
+  /* T48 (R89) */
+  "pointers"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
    institution scheme, N574, K1729). */
@@ -111,6 +113,11 @@ const RRULE_FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
 export const LOCAL_NAME_KINDS = Object.freeze(["office", "law", "program", "place"]);
 export const TIERS = Object.freeze([1, 2, 3]);
 export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+/* R89 (T48): the kinds of place outside Civicsmith a member is sent to, frozen (a new kind is a requirement change), and how
+   a pointer is reached: R32's means, and a street address, for a pointer only. */
+export const POINTER_KINDS = Object.freeze(["legalaid", "selfhelp", "service", "agency", "representative", "tipline"]);
+const POINTER_HOW = Object.freeze([...CONTACT_HOW, "address"]);
+const POINTER_NAME_MAX = 200, POINTER_DOES_MAX = 500;
 /* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
    letters of record-grammar's BASIS_GRADES (its R16; K624 (6)). */
 const EVIDENCE_STANDARD_MAX = 200;
@@ -151,6 +158,8 @@ const BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?
 const MEASUREMENT_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2})(?: [^\s,;]+)?$/;
 const RULING_REF = /^(?:D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
 const K_REF = /^K\d+(?: [^\s,;]+)?$/;
+/* R89: a dated measurement entry, so the day read can be shown with the pointer. */
+const DATED_REF = /^(\d{4}-\d{2}-\d{2})(?: [^\s,;]+)?$/;
 const basisParts = (b) => b.split(/[,;]\s*/).map((x) => x.trim());
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -257,7 +266,7 @@ function applyForm(form, raw, prefixes = []) {
 /* ------------------------------------------------------------------------------------------------ */
 /* validate (R10, R11, R28, R35).                                                                   */
 
-/** Judge a profile against R1–R7, R23–R26, R31–R33, R37–R44 and the later tranches' additions (R46–R87). `{ok, errors}`,
+/** Judge a profile against R1–R7, R23–R26, R31–R33, R37–R44 and the later tranches' additions (R46–R90). `{ok, errors}`,
  *  every error found. Never throws. */
 export function validate(profile) {
   const errors = [];
@@ -1385,6 +1394,39 @@ function validateInto(p, errors) {
     basis(at, x);
   });
 
+  /* R89, R90 (T48): the places outside Civicsmith a member is sent to, each read on the body's own page: its address or
+     citation is the source, and the day read is the dated basis. A pointer without a source is not written (R44). */
+  if (own(p, "pointers")) list("pointers", p.pointers).forEach((x, i) => {
+    const at = `pointers[${i}]`;
+    if (!entry(at, x)) return;
+    fields(at, x, ["kind", "name", "does", "contacts", "hours", "languages", "source", "status", "basis"]);
+    if (!POINTER_KINDS.includes(x.kind)) err(`${at}.kind`, "KIND_INVALID", `kind is one of ${POINTER_KINDS.join(", ")}`);
+    if (!isStr(x.name) || x.name.length > POINTER_NAME_MAX || /[\r\n]/.test(x.name))
+      err(`${at}.name`, "VALUE_INVALID", `name is the body's own name, 1 to ${POINTER_NAME_MAX} characters on one line`);
+    if (!isStr(x.does) || x.does.length > POINTER_DOES_MAX)
+      err(`${at}.does`, "VALUE_INVALID", `does says what the body does and for whom, 1 to ${POINTER_DOES_MAX} characters`);
+    if (!Array.isArray(x.contacts) || !x.contacts.length) err(`${at}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    else x.contacts.forEach((c, j) => {
+      const ca = `${at}.contacts[${j}]`;
+      if (!isObj(c)) { err(ca, "CONTACT_INVALID", "a contact is {how, value}"); return; }
+      fields(ca, c, ["how", "value"]);
+      if (!POINTER_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${POINTER_HOW.join(", ")}`);
+      if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
+    });
+    if (own(x, "hours")) hours(`${at}.hours`, x.hours);
+    if (own(x, "languages")) {
+      if (!Array.isArray(x.languages) || !x.languages.length) err(`${at}.languages`, "LOCALE_INVALID", "languages is a non-empty list of language tags");
+      else x.languages.forEach((l, j) => { if (!isLocale(l)) err(`${at}.languages[${j}]`, "LOCALE_INVALID", "a language is one well-formed BCP 47 tag"); });
+    }
+    if (!own(x, "source") || x.source === undefined || x.source === null || x.source === "")
+      err(`${at}.source`, "SOURCE_MISSING", "a pointer names the page it was read from, by address or citation");
+    else str(`${at}.source`, x.source, "source");
+    if (x.status !== "researched") err(`${at}.status`, "BASIS_INVALID", "a pointer's status is researched: it is read on the body's own page");
+    if (basis(at, x) && !(test && x.basis === "TEST")
+        && !basisParts(x.basis).every((b) => { const m = DATED_REF.exec(b); return !!m && isDate(m[1]); }))
+      err(`${at}.basis`, "BASIS_INVALID", "a pointer rests on the day its page was read, a dated entry YYYY-MM-DD");
+  });
+
   /* R70, R71: official local names (DEC-157 (6)), never translated as ordinary words. An explanation says what the
      name is, in a language; a translation is one an office publishes, with its source, resting on a measurement of
      that publication. One name of one kind once in the profile, and one explanation and one translation per
@@ -1484,7 +1526,7 @@ export function get(id) {
 }
 
 /* ------------------------------------------------------------------------------------------------ */
-/* combine (R12–R16, R29, R34, R41–R44, R55, R66, R72, R74–R87).                                   */
+/* combine (R12–R16, R29, R34, R41–R44, R55, R66, R72, R74–R87, R90).                                   */
 
 /* A stable key for "equal in everything but its basis and profile". Object keys are sorted so the
    order a profile writes its fields in never makes two equal entries differ. */
@@ -1713,6 +1755,21 @@ function merge(profiles) {
 
   for (const sec of ["search_terms", "legal_organisations", "phrasings"])
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
+  /* R90 (T48): pointers are unioned in the order given, as R14's lists are; a pointer's hours carry their own basis, so
+     the hours kept are tagged with every giver's (R13), as an office's are. */
+  if (has("pointers")) {
+    const v = [];
+    const hoursOf = new Map();
+    for (const p of profiles) for (const x of p.pointers || []) {
+      union(v, [x], p.id);
+      if (!own(x, "hours")) continue;
+      const k = canon(x);
+      if (!hoursOf.has(k)) hoursOf.set(k, []);
+      hoursOf.get(k).push({ profile: p.id, value: x.hours, basis: x.hours.basis });
+    }
+    for (const e of v) if (hoursOf.has(e.__k)) e.hours = keep(hoursOf.get(e.__k));
+    view.pointers = strip(v);
+  }
 
   /* records laws are unioned (R14); a law's stages and who may request under it are one value each under its name
      (R76): profiles that disagree have it withheld, so which stages the law has is undetermined. */

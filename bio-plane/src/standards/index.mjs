@@ -55,13 +55,16 @@
  * module (`actions`) tells this one through the check it registers at start (R53, `registerOwnSendingCheck`).
  *
  * T46 (T46-10; DEC-194, N913): the two refusals' translations are `words.json`'s `refusal.<CODE>`, read by key
- * (R55, `./checks.mjs` `REFUSAL_WORDS`); no code, number, `where` or behaviour moved. */
+ * (R55, `./checks.mjs` `REFUSAL_WORDS`); no code, number, `where` or behaviour moved.
+ *
+ * T48 (T48-21; N1029, K3145): a proposal may name the project it is made for, one its proposer sees whole (R56), and
+ * `proposalsFor` lists a project's proposals and what became of them, by the project's sight (R57). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
+import { Membership, membershipOf, viewerPredicate, listenerRefusal, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf, contentIdFor, canonicalExtent, describeExtent, extentRelation,
          CONTENT_EXTENT_KINDS } from "../content/index.mjs";
@@ -118,7 +121,13 @@ export const FOR_LIMIT_MAX = 500, FOR_LIMIT_DEFAULT = 100;
 const INTERNAL_READER = "class:daemon";
 /* R21: the most reference rows one reverse read scans; past it the answer says it is truncated. */
 const SCAN_FOR = 5000;
-const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
+const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "project", "proposer", "viewer"]);
+/** R57: the states `proposalsFor` lists, and its page: default 50, clamped 1 to 200 (R8's cap). */
+export const PROPOSAL_STATES = Object.freeze(["open", "adopted", "all"]);
+export const PROPOSALS_LIMIT_DEFAULT = 50;
+/* R9, R57: the sentence every proposal is answered with. */
+const PROPOSAL_SAYS = "this is a proposal and not a standard: it is not in the record's standards and no list of "
+  + "standards shows it. Only a member recording a standard, or adopting this proposal, enters one.";
 /* R35, R40: the fields of the T35 acts. */
 const FORCE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "reason", "author", "viewer"]);
 const FORCE_PROPOSE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "why", "proposer",
@@ -2332,6 +2341,12 @@ export class Standards {
   /** R9: a proposal, stored apart from standards and labelled with who proposed it and whether it is machine work. */
   standardPropose(args = {}) {
     const a = isObj(args) ? args : {};
+    /* R56: the project, asked before any other check (membership's terms: sight first), by the proposer's viewer */
+    const project = a.project == null || a.project === "" ? null : a.project;
+    if (project !== null) {
+      const unseen = this.#projectUnseen(project, a.viewer ?? (str(a.proposer) || null));
+      if (unseen) return unseen;
+    }
     const unknown = refuseFieldUnknown(a, PROPOSE_KEYS);
     if (unknown) return unknown;
     const who = str(a.proposer);
@@ -2364,11 +2379,10 @@ export class Standards {
       const id = this.record.allocId("STDP", at.slice(0, 4)).id;
       const kind = a.kind || null, issuer = str(a.issuer) || null;
       this.sql.exec(`INSERT INTO standard_proposals (proposal_id, cite, kind, issuer, text_json, why, act, proposed_by,
-                       proposed_at) VALUES (?,?,?,?,?,?,?,?,?)`,
-                    id, cite, kind, issuer, JSON.stringify(texts), why, act === null ? null : act.trim(), who, at);
+                       proposed_at, project) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    id, cite, kind, issuer, JSON.stringify(texts), why, act === null ? null : act.trim(), who, at, project);
       return { ok: true, proposal: this.#proposalAnswer(this.#proposal(id)), standard: false,
-               says: "this is a proposal and not a standard: it is not in the record's standards and no list of "
-                   + "standards shows it. Only a member recording a standard, or adopting this proposal, enters one."
+               says: PROPOSAL_SAYS
                    + (texts.length ? "" : " It is stored with no captured text, and cannot be adopted until a member "
                                           + "names the captured passages that hold the standard's words (R9)."),
                ...(texts.length ? {} : { text_held: false }) };
@@ -2383,7 +2397,7 @@ export class Standards {
     const adopted = this.#one(`SELECT standard_id, adopted_by, adopted_at FROM standard_adoptions WHERE proposal_id=?`,
                               p.proposal_id);
     return { id: p.proposal_id, cite: p.cite, kind: p.kind ?? null, issuer: p.issuer ?? null,
-             text: safeJson(p.text_json) || [], why: p.why, act: p.act ?? null, at: p.proposed_at,
+             text: safeJson(p.text_json) || [], why: p.why, act: p.act ?? null, project: p.project ?? null, at: p.proposed_at,
              ...proposalLabel(p.proposed_by, STANDARD),
              adoption: adopted ? { standard: adopted.standard_id, by: adopted.adopted_by, at: adopted.adopted_at } : null };
   }
@@ -2399,9 +2413,80 @@ export class Standards {
       const visible = !!p && viewer !== null && viewer !== undefined && viewerPredicate(viewer).scope !== "DENY";
       const a = visible ? this.#proposalAnswer(p).adoption : null;
       if (!visible || (a && !this.#readable(a.standard, viewer))) return refuseNoSuchProposal(str(proposal) || null);
-      return { ok: true, proposal: { id: p.proposal_id, kind: p.kind ?? null, adoption: a } };
+      /* R56: the project it was made for, named only to a viewer who sees that project whole */
+      const project = p.project && this.#projectUnseen(p.project, viewer) === null ? p.project : null;
+      return { ok: true, proposal: { id: p.proposal_id, kind: p.kind ?? null, project, adoption: a } };
     } catch {
       return refuseNoSuchProposal(typeof proposal === "string" ? proposal.trim().slice(0, 80) || null : null);
+    }
+  }
+
+  /* R56, R57: null when `viewer` sees `project` at `membership.sight`'s full level (R44) and it names a project; else
+     the refusal membership answers a read naming that project's id: `PROJECT_SEEN_NOT_A_PARTICIPANT` at existence
+     (membership R77, minted there), and at none, or for an id naming no project, as a project that does not exist
+     (membership R78). A viewer never named sees nothing (fail closed). */
+  #projectUnseen(project, viewer) {
+    const id = typeof project === "string" ? project.trim() : "";
+    if (!id || viewer === null || viewer === undefined) return noSuchProject(id || null);
+    const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+    if (!b || b.object_type !== "project") return noSuchProject(id);
+    const level = this.membership.sight(id, viewer);
+    if (level === Membership.SIGHT_FULL) return null;
+    if (level === Membership.SIGHT_EXISTENCE) return this.membership.existenceAct(id, viewer) || noSuchProject(id);
+    return noSuchProject(id);
+  }
+
+  /** R57: `proposalsFor({project, state?, after?, limit?, viewer})` (`op=standardproposals`): the proposals (R9) made for
+   *  `project` (R56), newest first (`proposed_at`, then id), each with its label, whether it names captured text and
+   *  what became of it (R54's adoption). `state` `open` (the default), `adopted` or `all`. A viewer below full sight of
+   *  the project is answered as R56 refuses, nothing listed or counted. An adoption whose standard the viewer may not
+   *  read (R37) is answered as R54 answers it, and that proposal is listed only as open. Writes nothing, never throws. */
+  proposalsFor({ project = null, state = null, after = null, limit = null, viewer = null } = {}) {
+    try {
+      const st = state == null || state === "" ? "open" : state;
+      if (!PROPOSAL_STATES.includes(st)) return refuseProposalsArgument("state", PROPOSAL_STATES.join(", "), st);
+      const unseen = this.#projectUnseen(project, viewer);
+      if (unseen) return unseen;
+      const pid = project.trim();
+      const n = Number.isInteger(Number(limit)) && limit !== null && limit !== ""
+        ? Math.min(PAGE_MAX, Math.max(1, Number(limit))) : PROPOSALS_LIMIT_DEFAULT;
+      let cursor = null;
+      if (after != null && after !== "") {
+        cursor = typeof after === "string"
+          ? this.#one(`SELECT proposal_id, proposed_at FROM standard_proposals WHERE proposal_id=? AND project=?`, after.trim(), pid)
+          : null;
+        if (!cursor) return refuseProposalsArgument("after", "the id of a proposal this read listed for the project", after);
+      }
+      const kept = [];
+      let from = cursor;
+      for (;;) {
+        const page = this.#rows(`SELECT * FROM standard_proposals WHERE project=?
+                                   ${from ? "AND (proposed_at < ? OR (proposed_at = ? AND proposal_id < ?))" : ""}
+                                 ORDER BY proposed_at DESC, proposal_id DESC LIMIT ?`,
+                                pid, ...(from ? [from.proposed_at, from.proposed_at, from.proposal_id] : []), n + 1);
+        for (const p of page) {
+          const a = this.#proposalAnswer(p).adoption;
+          /* R37, R54: an adoption the viewer may not read is not answered, and the proposal counts only as open */
+          const adoption = a && this.#readable(a.standard, viewer) ? a : null;
+          if ((st === "open" && adoption) || (st === "adopted" && !adoption)) continue;
+          kept.push({ p, adoption });
+          if (kept.length > n) break;
+        }
+        if (kept.length > n || page.length < n + 1) break;
+        from = page[page.length - 1];
+      }
+      const truncated = kept.length > n;
+      const items = kept.slice(0, n).map(({ p, adoption }) => {
+        const label = proposalLabel(p.proposed_by, STANDARD);
+        return { id: p.proposal_id, cite: p.cite, kind: p.kind ?? null, issuer: p.issuer ?? null, why: p.why, label,
+                 proposed_by: p.proposed_by, proposed_at: p.proposed_at, has_text: (safeJson(p.text_json) || []).length > 0,
+                 adoption, standard: false, says: PROPOSAL_SAYS };
+      });
+      return { ok: true, project: pid, state: st, items, count: items.length, limit: n, truncated,
+               cursor: truncated ? items[items.length - 1].id : null };
+    } catch {
+      return { ok: true, project: typeof project === "string" ? project.trim() : null, items: [], count: 0, truncated: false,
+               cursor: null, undetermined: { why: "the proposals could not be read here" } };
     }
   }
 
@@ -2544,6 +2629,15 @@ const OWN = "SELECT content_id FROM content WHERE capture_sha=?";
 
 /* R49: compare two strings for a stable order. */
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/* R57: the required-argument refusal (the control plane's C-61 shape, answered from the store as `capture`'s
+   store-side refusals are), naming the argument and the values it takes; nothing was read. */
+function refuseProposalsArgument(argument, shape, given) {
+  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "standardproposals", argument, shape, status: 400,
+           error: `${argument} must be ${argument === "state" ? "one of " : ""}${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
+           detail: `op=standardproposals needs '${argument}' in the shape ${shape}, and this request carried none the `
+                 + "operation could use. Nothing was read." };
+}
 
 /* R50, R51: a source capture extent in words: the capture's first twelve hex digits and the extent's human form. */
 function sourceWords(captureSha, extent) {
@@ -2719,6 +2813,9 @@ export function standardsOps(s, url, body) {
     standardinforcethroughwithdraw: () => s.inForceThroughWithdraw({ record: b.record ?? null, reason: b.reason ?? null,
                                                                      author: b.author ?? null, viewer: qp("viewer") }),
     inforcethroughof: () => s.inForceThroughOf({ standard: qp("id"), viewer: qp("viewer") }),
+    /* T48-21: R57 (declared by op-declarations and routed by control-plane at their L11 jobs) */
+    standardproposals: () => s.proposalsFor({ project: qp("project"), state: qp("state"), after: qp("after"), limit: qp("limit"),
+                                              viewer: qp("viewer") }),
   };
 }
 

@@ -118,6 +118,7 @@ export function world({ view = testView(), now = T0 } = {}) {
   /* ---- what bytes the network serves, and what capture did ---- */
   w.served = new Map();      /* address → string | {status} */
   w.store = new Map();       /* sha → bytes */
+  w.readings = new Map();    /* address → {content_type, facts}: the reading a landing of that address carries */
   w.fetches = [];            /* each capture-request arm call's options */
   w.serve = (address, body) => { w.served.set(address, typeof body === "string" ? body : JSON.stringify(body)); };
   const capture = {
@@ -134,6 +135,8 @@ export function world({ view = testView(), now = T0 } = {}) {
       return { status: 200, body: { ok: true, existed: false, document: { locator: q.locator, retrieved, file: `snapshots/${s.slice(0, 12)}`,
         authority_state: "undetermined", authority_basis: `${retrieved}: fetched for a follow; no authority asserted`,
         origin: { kind: "named_request" }, attestation_attempts: [],
+        ...(w.readings.has(q.locator) ? { reading: { content_type: w.readings.get(q.locator).content_type, reader_version: 1, found: true, at: retrieved,
+                                                     entities: [], facts: w.readings.get(q.locator).facts } } : {}),
         provenance_chain: [{ who: "instance test (Civicsmith/0.0.0)", asserts: `these bytes were served for ${q.locator} at ${retrieved}`, bound: false, via: "direct" }],
         capture: { method: q.render ? "rendered" : "direct", grade: "B", actor_class: opts.member ? "member" : "daemon", actor: opts.sessMember || null,
                    sha256: s, encoding: "binary", bytes: bytes.length, content_type: "application/json",
@@ -170,6 +173,15 @@ export function world({ view = testView(), now = T0 } = {}) {
     return id;
   };
   w.entity = (label, kind = "body") => ents.createEntity({ kind, label, note: "a subject the test registers", declaredBy: MEMBER }).entity_id;
+  /* a proceeding registered with its facet {forum, kind, number} by entities (its R45), as events' own fixture does */
+  let procN = 0;
+  w.proceeding = (label, kind = "commitment_suit") => {
+    const forum = w.entity(`${label}, its forum`, "institution");
+    const r = ents.createEntity({ kind: "proceeding", label, note: "a proceeding the test registers", declaredBy: MEMBER,
+                                  proceeding: { forum, kind, number: `MC-26-${String(1000 + procN++).slice(-4)}` } });
+    if (!r.ok) throw new Error(`fixture: createEntity refused ${r.reason}: ${r.detail}`);
+    return r.entity_id;
+  };
   w.identify = (entityId, scheme, id) => {
     const r = ents.addIdentifier({ entityId, scheme, id: String(id), basis: "the test's cited source", by: MEMBER });
     if (!r.ok) throw new Error(`fixture: addIdentifier refused ${r.reason}: ${r.detail}`);
@@ -306,9 +318,34 @@ export function world({ view = testView(), now = T0 } = {}) {
     a.until = until;
     return { ok: true, address, until };
   };
-  Object.assign(w, { actionPlans, duties, planWork, answers });
+  /* ---- actions' `actionsFor` (its R30, R65) and action-clocks' `ourDeadlines` (its R18), over the actions a test holds in
+     `w.actionRows`: {id, proceeding?, clock: [{status, owed_by, date, basis?, text?}]}. Both page in id order. ---- */
+  w.actionRows = [];
+  const actions = {
+    actionsFor({ proceeding = null, after = null, limit = 200 } = {}) {
+      const all = w.actionRows.filter((a) => (!proceeding || a.proceeding === proceeding) && (after === null || a.id > after)).sort((a, b) => (a.id < b.id ? -1 : 1));
+      const page = all.slice(0, limit);
+      return { ok: true, items: page.map((a) => ({ id: a.id })), limit, truncated: all.length > limit, cursor: page.length ? page.at(-1).id : null };
+    },
+  };
+  w.deadlineReads = [];
+  const actionClocks = {
+    ourDeadlines({ from = null, to = null, after = null, limit = 500, viewer = null } = {}) {
+      w.deadlineReads.push({ from, to, after, viewer });
+      const all = [];
+      for (const a of [...w.actionRows].sort((x, y) => (x.id < y.id ? -1 : 1)))
+        a.clock.forEach((e, i) => {
+          if (e.status !== "pending" || e.owed_by !== "group" || (from && e.date < from) || (to && e.date > to)) return;
+          all.push({ action: a.id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null, owed_by: "group", zone: "America/New_York", local_day: "2026-10-06", past: e.date < "2026-10-06" });
+        });
+      const from2 = after ? all.filter((d) => `${d.action}#${d.ord}` > after) : all;
+      const page = from2.slice(0, limit);
+      return { ok: true, items: page, limit, truncated: from2.length > limit, cursor: page.length ? `${page.at(-1).action}#${page.at(-1).ord}` : null };
+    },
+  };
+  Object.assign(w, { actionPlans, duties, planWork, answers, actions, actionClocks });
   w.f = followingOf(host, { record, membership, capture, entities: ents, events: ev, monitoring, standards, view: () => view,
-                            actionPlans, planWork, duties, answers, now: () => w.t, bytes: async (s) => w.store.get(s) || null });
+                            actionPlans, planWork, duties, answers, actions, actionClocks, now: () => w.t, bytes: async (s) => w.store.get(s) || null });
   w.capture = capture;
   w.monitoring = monitoring;
   w.sweepHost = sweepHost;
@@ -347,4 +384,19 @@ export function observedMeeting(w, bodyId, value, status = "EventScheduled") {
   const e = w.ev.createEvent({ kind: "meeting", status, concerns: [bodyId], attestations: [{ datedFactId: df.dated_fact.dated_fact_id }], by: MEMBER });
   if (!e.ok) throw new Error(`fixture: createEvent refused ${e.reason}: ${e.detail}`);
   return e.event_id ?? e.event?.event_id;
+}
+
+/** An event of a proceeding in `events`: a member's event concerning it, dated by a fact of a held capture (`value` a
+ *  local minute or day in the profile's zone). */
+export function proceedingEvent(w, proceedingId, value, kind = "hearing", status = "EventScheduled") {
+  const s = sha(`proceeding event ${kind} ${value} ${Math.random()}`);
+  w.bundle("INFO-2026-0901-docket");
+  w.st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, 'INFO-2026-0901-docket', 'snapshots/d', 'utf8', 1, '2026-10-01T00:00:00Z')`, s);
+  w.x.writeReading({ bundleId: "INFO-2026-0901-docket", captureSha: s, composed: true,
+    reading: { content_type: "text/html", reader_version: 1, found: true, at: "2026-10-01T00:00:00Z", entities: [], facts: {} } });
+  const df = w.ev.recordDatedFact({ captureSha: s, extent: { kind: "document" }, kind, value, method: "read by a member", by: MEMBER });
+  if (!df.ok) throw new Error(`fixture: dated fact refused ${df.reason}: ${df.detail}`);
+  const e = w.ev.createEvent({ kind, status, concerns: [proceedingId], attestations: [{ datedFactId: df.dated_fact.dated_fact_id }], by: MEMBER });
+  if (!e.ok) throw new Error(`fixture: createEvent refused ${e.reason}: ${e.detail}`);
+  return { event: e.event_id ?? e.event?.event_id, capture: s };
 }

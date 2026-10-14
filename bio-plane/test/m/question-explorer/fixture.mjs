@@ -1,4 +1,4 @@
-/* question-explorer over the modules it uses: the real record-core, membership and credentials on a real SQLite
+/* question-explorer over the modules it uses: the real record-core, membership and ai-accounts on a real SQLite
    database (node:sqlite) standing in for a Durable Object's storage, and stand-ins the test controls for the rest, each
    written to its requirements' Provides as `questionExplorerOf`'s deps take them (K61, K120): `steps` (R1 `stepCreate`,
    R5 `stepEnd`, R6 `stepDelete`, R9 `recordProduct`, R17 `findRecipients`), `ai-use` (R6 `exploreAllowed`, R9
@@ -15,6 +15,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
@@ -93,7 +94,10 @@ export function questionMd(id, { subject = null, surfacedBy = "human", state = "
 
 /* `migrate: false` builds the explorer through its factory alone, as a host that never calls its `migrate()` (R15);
    `w.tablesBefore` then names the explore tables the storage held just before the factory ran. */
-export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = {}) {
+/* `aiAccounts` hands question-explorer a stand-in for ai-accounts in place of the real one (the rest of the world
+   keeps the real one). */
+export function world({ gateOpen = true, testSet = TEST_SET, migrate = true, aiAccounts: standIn = null } = {}) {
+  const over = { aiAccounts: standIn };
   const st = storage();
   const host = { storage: st };
   for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
@@ -104,13 +108,17 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  /* ai-accounts holds the accounts, their uses and the material limits (T48, N996 §5); credentials, which the other
+     modules built here still take, reaches the same instance over the same storage (ai-accounts R32). */
+  const aiAccounts = aiAccountsOf(host, { record, membership, sealSecret: "test-seal-secret-0123456789" });
+  aiAccounts.migrate();
   const credentials = credentialsOf(host, { record, membership, sealSecret: "test-seal-secret-0123456789" });
   credentials.migrate();
 
   const calls = [];
   const note = (name, a) => calls.push({ name, a });
   const w = {
-    st, host, record, membership, credentials, clock, calls,
+    st, host, record, membership, aiAccounts, credentials, clock, calls,
     subjects: {}, units: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
     runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
@@ -250,8 +258,8 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
   const tablesBefore = [...st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'explore_%' ORDER BY name`)]
     .map((r) => r.name);
   const p = questionExplorerOf(host, {
-    record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
-    runProductions,
+    record, membership, aiAccounts: over.aiAccounts || aiAccounts, connections, retrieval, inquiry, legEarning, basisVersions,
+    aiRuns, captureRequests, runProductions,
     steps: realSteps, aiUse,
     held: () => { note("held", {}); return { verifications: w.verifications, testBars: w.testBars }; },
     testSet,
@@ -319,20 +327,20 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
   w.content = (id, bundleId, cap) =>
     st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale, minted_by)
                  VALUES (?, ?, ?, 'pdf-page', '{}', 'page 1', 0, 'member:alice')`, id, cap, bundleId);
-  /* The standard world: alice, bob and carol members; dana an administrator, who holds the group's key (credentials
-     R33; its explore switch at its default, no); Q open with alice following it. */
+  /* The standard world: alice, bob and carol members; dana an administrator, who holds the group's key (ai-accounts
+     R5; its explore switch at its default, no); Q open with alice following it. */
   w.standard = async () => {
     for (const m of ["alice", "bob", "carol"]) w.member(m);
     w.member("dana", "admin");
-    const k = await credentials.groupKeySet({ key: "sk-ant-group-test", by: "member:dana" });
+    const k = await aiAccounts.groupKeySet({ key: "sk-ant-group-test", by: "member:dana" });
     if (!k || k.ok === false) throw new Error(`group key: ${JSON.stringify(k)}`);
     w.doc(DOC, CAP);
     w.doc(DOC2, CAP2);
     w.question(Q, { recipients: ["alice"] });
     return w;
   };
-  /* An account's `explore` switch set by its owner's own act (credentials R55); a project gets an account first (its
-     key, R54, by its first owner, the first participant made one when it has none). */
+  /* An account's `explore` switch set by its owner's own act (ai-accounts R14); a project gets an account first (its
+     key, R10, by its first owner, the first participant made one when it has none). */
   w.setExplore = async (owner, value) => {
     let by = "member:dana";
     if (owner.startsWith("project:")) {
@@ -343,12 +351,12 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
         owners = membership.projectOwners(id);
       }
       by = `member:${owners[0]}`;
-      if (!credentials.projectAccountState({ project: id, viewer: by }).held) {
-        const k = await credentials.projectKeySet({ project: id, key: `sk-ant-${id}`, by });
+      if (!aiAccounts.projectAccountState({ project: id, viewer: by }).held) {
+        const k = await aiAccounts.projectKeySet({ project: id, key: `sk-ant-${id}`, by });
         if (!k || k.ok === false) throw new Error(`project key: ${JSON.stringify(k)}`);
       }
     } else if (owner.startsWith("member:")) by = owner;
-    const r = credentials.accountUsesSet({ owner, switch: "explore", on: value, by });
+    const r = aiAccounts.accountUsesSet({ owner, switch: "explore", on: value, by });
     if (!r || r.ok === false) throw new Error(`explore ${owner}: ${JSON.stringify(r)}`);
   };
   /* One of the account's owners approves exploring for today (ai-use R9). */

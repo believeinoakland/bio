@@ -1,0 +1,21 @@
+# BOB to credentials (T48)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T48), layer 2, credentials: **T48-11 · credentials** · (N996; split map §3, §8 step 3) deletes the copies; creates `ai-accounts` in its factory and runs its `migrate` first; re-points §3's sites; adds R72 (thin delegates, byte-identical, through T48) and R73 (`onAccountCleared`: the run credential revoked, the standing grant ended); retires the 23 ids as "moved to `ai-accounts` R<n>"; stops declaring the eleven tables in the same commit; `uses` gains `ai-accounts`. (N1045, K3150) `passwordresetlink` also reads `member` from the query · after T48-10 · text BOB's.
+Your requirements: `build/requirements/credentials.md` (read whole), folded by K3198; the ids marked `*(not yet met: T48)*` are yours to meet.
+BOB's notes for this job:
+credentials (T48-11): after AI-ACCOUNTS merges (BOB sends a CHANGE; until then read the split map and plan): delete the moved copies, create `ai-accounts` in `credentialsOf` with the seal secret and run its `migrate` first, re-point §3's sites to `this.accounts.<x>`, add R72 (thin delegates, byte-identical, through T48) and R73 (`onAccountCleared`), stop declaring the eleven tables in the same commit, retire the 23 ids as moved. (N1045) R71 (6): `passwordresetlink` reads `member` from the body, else the query. Every user of credentials must stay green through R72's delegates: run their tests (the split map §5 lists them).
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 936 KB with your tests (K2700), over the 600 KB limit. Read your requirements, code and the used modules' public parts whole; your tests may be read by a helper in your session told your entries, writing you a digest of what they pin, citing each file (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+Merge order in L2: ai-accounts first (K624), then record-core, membership, credentials (after ai-accounts), promotion last (the stamp).
+
+## B2 · CHANGE
+
+AI-ACCOUNTS #1 is merged into tranche/T48 (K3216; its record has notes for you: the onAccountCleared registration and keyedServiceFor's parse case). Merge tranche/T48 into your branch and carry out T48-11: delete the copies, create ai-accounts in credentialsOf and run its migrate first, re-point, R72 delegates, R73, stop declaring the eleven tables.

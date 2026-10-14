@@ -23,14 +23,15 @@
  *   signed:    byte[6] "SSHSIG" | string namespace | string reserved
  *              | string hash_algorithm | string H(message)
  *
- * No secrets appear anywhere in this module: it holds public keys and
- * verifies. Signing happens where the private key lives: in the operator's
+ * No secrets appear anywhere in this module: it holds public keys (among them
+ * RELEASE_KEYS, the one list of the keys that sign a release) and verifies.
+ * Signing happens where the private key lives: in the operator's
  * browser (src/sign-release.html, served as SIGN_HTML), in stock ssh-keygen,
  * or, for a release, in the release signer on the operator's machine
  * (scripts/sign-sshsig.mjs, which no bundle reaches).
  */
 
-import { ID_TABLE, idPattern } from "./record-grammar/index.mjs";
+import { ID_TABLE, idPattern, canonicalJson } from "./record-grammar/index.mjs";
 
 const te = new TextEncoder();
 
@@ -435,3 +436,125 @@ export const CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
 /* R41: the bytes a capturing member signs for their account of a capture. */
 export const captureAccountStatement = (captureSha, text) =>
   te.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}\n${String(text)}`);
+
+/* ------------------------------------------------- the release keys (R45) */
+
+/* N1047, K3158: THE ONE PLACE THE KEYS THAT SIGN A CIVICSMITH RELEASE ARE HELD.
+   The release key and the offline recovery key, both made at Bob's signer-page
+   sitting of 2026-10-12 (K2922, K2930), as public lines. A release, a fleet
+   statement and a release notice are each verified against this list: the
+   installer's ARMED_SIGNERS and every plane module that verifies one read it
+   from here, so the code a group runs and the notice that tells it of the next
+   release trust exactly the same keys, and a rotation (Distribution §10) is one
+   edit, here. Frozen: no caller can add a key to what it is told to trust. */
+export const RELEASE_KEYS = Object.freeze([
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release",
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdvnsYToN22fqksnV1gLYWEJJmQA6vMyXnThPJMm7yJ bio-release-recovery",
+]);
+
+/* ------------------------------------------ the release notice (R46–R48) */
+
+/* N1047 (draft-updates §1–2): A RELEASE NOTICE IS SIGNED IN ITS OWN NAMESPACE.
+   It is signed by the release key, the same key that signs the release and the
+   fleet, so the separation has to be in the namespace: a group's Civicsmith
+   acts on a notice (it tells every administrator an update is ready), and a
+   signature gathered over a release asset or a fleet statement must never
+   verify as one, nor a notice's as either of them. */
+export const NS_RELEASE_NOTICE = "bio-release-notice";
+
+/* The most characters (code points) each of a notice's three notes may hold.
+   It bounds what is signed; how much a screen shows is the caller's. */
+export const RELEASE_NOTES_MAX = 8000;
+
+const VERSION_RE = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/;
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const NOTES_KEYS = ["administrators", "members", "must_do"];
+
+/* A calendar date that exists, judged without a clock (R26). */
+const dateExists = (s) => {
+  const m = DATE_RE.exec(s);
+  if (!m) return false;
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  return days !== undefined && d >= 1 && d <= days;
+};
+
+const isPlainObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const codePoints = (s) => { let n = 0; for (const _ of s) n++; return n; };
+
+/* Each field read ONCE into the copy that is judged and signed, so a getter
+   cannot show the judge one value and the statement another. Answers the copy,
+   or the name of the first field refused. */
+function readNotice(notice) {
+  if (!isPlainObject(notice)) return { field: "notice" };
+  const { version, date, manifest, security, notes } = notice;
+  if (typeof version !== "string" || !VERSION_RE.test(version)) return { field: "version" };
+  if (typeof date !== "string" || !dateExists(date)) return { field: "date" };
+  if (typeof manifest !== "string" || !SHA256_HEX_RE.test(manifest)) return { field: "manifest" };
+  if (typeof security !== "boolean") return { field: "security" };
+  if (!isPlainObject(notes) || Object.keys(notes).sort().join(",") !== NOTES_KEYS.join(",")) return { field: "notes" };
+  const { members, administrators, must_do } = notes;
+  for (const [name, text, mayBeEmpty] of [["members", members, false], ["administrators", administrators, false],
+    ["must_do", must_do, true]]) {
+    if (typeof text !== "string" || (!mayBeEmpty && text === "") || codePoints(text) > RELEASE_NOTES_MAX)
+      return { field: `notes.${name}` };
+  }
+  return { copy: { version, date, manifest, security, notes: { members, administrators, must_do } } };
+}
+
+const renderNotice = (n) => te.encode(`${NS_RELEASE_NOTICE}/1\n`
+  + `version ${n.version}\n`
+  + `date ${n.date}\n`
+  + `manifest ${n.manifest}\n`
+  + `security ${n.security ? "yes" : "no"}\n`
+  + `notes ${canonicalJson(n.notes)}\n`);
+
+/* R47: the exact bytes a release notice is signed over. The notes are INSIDE
+   what is signed (draft-updates §1): text a member reads as Civicsmith's own
+   account of a release must be the publisher's, byte for byte, or a mirror
+   could rewrite "what an administrator must do". Anything it cannot state
+   exactly is refused by name before a byte is built. */
+export const releaseNoticeStatement = (notice) => {
+  let r;
+  try { r = readNotice(notice); } catch { r = { field: "notice" }; }
+  if (!r.copy) throw new Error(`REFUSED [NOTICE_FIELD]: ${r.field}`);
+  return renderNotice(r.copy);
+};
+
+/* `a` higher than `b`, both R47 versions: part by part, as numbers of any size
+   (no leading zeros, so the longer part is the larger, then by digits). */
+const versionHigher = (a, b) => {
+  const pa = a.split("."), pb = b.split(".");
+  for (let i = 0; i < 3; i++) {
+    if (pa[i].length !== pb[i].length) return pa[i].length > pb[i].length;
+    if (pa[i] !== pb[i]) return pa[i] > pb[i];
+  }
+  return false;
+};
+
+const deepFreezeNotice = (c) => Object.freeze({ ...c, notes: Object.freeze({ ...c.notes }) });
+
+/* R48: a release notice, judged as a group's Civicsmith must judge one fetched
+   from the network: well formed, signed by a release key in its own namespace
+   over exactly its fields, and newer than what runs. The signature is judged
+   before the version, so "not newer" is only ever said of a notice the
+   publisher really signed; an old notice replayed, or one naming the version
+   that runs, is refused, so no one serving the feed can walk a group back.
+   `allowedKeys` defaults to RELEASE_KEYS, the keys the running code carries.
+   Never throws. */
+export async function verifyReleaseNotice(notice, armored, running, allowedKeys = RELEASE_KEYS) {
+  try {
+    let r;
+    try { r = readNotice(notice); } catch { r = { field: "notice" }; }
+    if (!r.copy) return { ok: false, reason: "MALFORMED", field: r.field };
+    if (typeof running !== "string" || !VERSION_RE.test(running)) return { ok: false, reason: "MALFORMED", field: "running" };
+    const v = await verifySshsig(armored, renderNotice(r.copy), NS_RELEASE_NOTICE, allowedKeys);
+    if (!v.ok) return v.reason === "MALFORMED" ? { ...v, field: "signature" } : v;
+    if (!versionHigher(r.copy.version, running))
+      return { ok: false, reason: "NOT_NEWER", version: r.copy.version, running };
+    return { ok: true, notice: deepFreezeNotice(r.copy) };
+  } catch (e) {
+    return { ok: false, reason: "MALFORMED", field: "notice", detail: String((e && e.message) || e) };
+  }
+}

@@ -15,80 +15,98 @@ export const group = {
       court: { op: "courtnotice" },
       hosting: { op: "hostingaccess" },
       bar: { op: "strengthbarof" },
+      // the member's language, in which the languages are named (R31)
+      mine: { op: "memberlanguage" },
     };
   },
 
   render(cs, view) {
     const W = cs.w, E = cs.esc, S = "screen.group.";
+    const T = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     const me = view.me || {};
     const admin = me.administer === true;
     const data = view.data || {};
     // an administrator's act, drawn only to a session that administers
     const A = (op, o) => (admin ? cs.act(op, o) : "");
+    // a language by its name in the member's language, never as a tag (R31)
+    const mineLang = data.mine && data.mine.state === "ok" && data.mine.value ? data.mine.value.language || null : null;
+    const nameOf = (tag) => {
+      try { const n = new Intl.DisplayNames([mineLang || "en"], { type: "language" }).of(String(tag)); return n ? n.charAt(0).toUpperCase() + n.slice(1) : String(tag); } catch (e) { return String(tag); }
+    };
+    // a recorded actor: a value recorded at setup or by the system is "set at setup", never a credential's name (R33)
+    const byOf = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "" || id === "admin" || /^(token|class|daemon|system|seed|bootstrap)/.test(id) ? T("settings.set.setup") : id; };
     const out = [cs.title()];
-    if (!admin) out.push(`<p class="cs-note">${W(S + "admins")}</p>`);
+    if (!admin) out.push(`<p class="mk-note">${W(S + "admins")}</p>`);
+    // a section that holds nothing is not drawn (R28)
+    const section = (titleKey, inner) => { if (inner) out.push(cs.sec(titleKey, inner)); };
 
     // the name and the logo
-    out.push(cs.sec(S + "name.heading", cs.state(data.identity, (v) => {
-      let h = `<p data-state="name">${v.display_name ? W(S + "name.now", { name: v.display_name }) : W(S + "name.none")}</p>`;
-      h += `<p data-state="logo">${W(v.logo === true ? S + "logo.set" : S + "logo.none")}</p>`;
+    section(S + "name.heading", cs.state(data.identity, (v) => {
+      let h = v.display_name ? `<p data-state="name">${W(S + "name.now", { name: v.display_name })}</p>` : "";
+      if (v.logo === true) h += `<p data-state="logo">${W(S + "logo.set")}</p>`;
       const nm = A("groupnameset");
-      if (nm) h += `<div class="cs-form"><label for="gr-name">${W(S + "name.field")}</label><input id="gr-name" type="text" class="cs-input" maxlength="120" value="${E(v.display_name || "")}" autocomplete="off">${nm}</div>`;
+      if (nm) h += `${cs.field("gr-name", S + "name.field", { max: 120, value: v.display_name || "", autocomplete: "off" })}${nm}`;
       const lg = A("grouplogoset");
-      if (lg) h += `<div class="cs-form"><label for="gr-logo">${W(S + "logo.field")}</label><span class="help">${W(S + "logo.help")}</span><input id="gr-logo" type="file" class="cs-input" accept="image/png,image/jpeg">${lg}</div>`;
+      if (lg) h += `${cs.field("gr-logo", S + "logo.field", { type: "file", help: S + "logo.help", accept: "image/png,image/jpeg" })}${lg}`;
       return h;
-    })));
+    }));
 
     // the website, with the date it was verified
-    out.push(cs.sec(S + "domain.heading", cs.state(data.identity, (v) => {
+    section(S + "domain.heading", cs.state(data.identity, (v) => {
       const claim = v.domain_claim || null;
       const latest = claim && claim.latest ? claim.latest : null;
-      let h = `<p data-state="domain">${v.domain && v.domain_verified_at ? W(S + "domain.verified", { domain: v.domain, date: D(v.domain_verified_at) }) : claim ? W(S + "domain.unverified", { domain: claim.domain }) : W(S + "domain.none")}</p>`;
+      let h = v.domain && v.domain_verified_at ? `<p data-state="domain">${W(S + "domain.verified", { domain: v.domain, date: D(v.domain_verified_at) })}</p>` : claim ? `<p data-state="domain">${W(S + "domain.unverified", { domain: claim.domain })}</p>` : "";
       if (latest && latest.verdict && latest.verdict !== "verified") h += `<p>${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}</p>`;
       const dm = A("groupdomainset");
-      if (dm) h += `<div class="cs-form"><label for="gr-domain">${W(S + "domain.field")}</label><input id="gr-domain" type="text" class="cs-input" value="${E(claim ? claim.domain : v.domain || "")}" autocomplete="off">${dm}</div>`;
+      if (dm) h += `${cs.field("gr-domain", S + "domain.field", { value: claim ? claim.domain : v.domain || "", autocomplete: "off" })}${dm}`;
       return h;
-    })));
+    }));
 
-    // the languages members use
-    out.push(cs.sec(S + "languages.heading", cs.state(data.languages, (v) => {
+    // the languages members use, chosen by name (R31)
+    section(S + "languages.heading", cs.state(data.languages, (v) => {
       const L = Array.isArray(v.languages) ? v.languages : [];
-      let h = `<p data-state="languages">${L.length ? W(S + "languages.now", { languages: L.join(", ") }) : W(S + "languages.none")}</p>`;
+      let h = L.length ? `<p data-state="languages">${W(S + "languages.now", { languages: L.map(nameOf).join(", ") })}</p>` : "";
       const ls = A("grouplanguagesset");
-      if (ls) h += `<div class="cs-form"><label for="gr-langs">${W(S + "languages.field")}</label><span class="help">${W(S + "languages.help")}</span><input id="gr-langs" type="text" class="cs-input" value="${E(L.join(" "))}" autocomplete="off">${ls}</div>`;
+      if (ls) {
+        // the languages offered: the common ones and any already set, kept for the act to read (a function holds no shared constant)
+        const COMMON = ["en", "es", "zh", "yue", "vi", "tl", "ko", "ja", "fr", "ar", "ru", "pt", "hi", "so", "am", "ti", "fa", "uk", "hy", "km", "th", "ht", "de", "it", "pl", "sw", "mn", "lo"];
+        const offered = [...L, ...COMMON.filter((t) => L.indexOf(t) < 0)];
+        view.ui.offered = offered;
+        h += `<fieldset><legend>${W(S + "languages.field")}</legend><p class="mk-small">${W(S + "languages.help")}</p>${offered.map((t) => `<input type="checkbox" id="gr-lang-${E(t)}"${L.indexOf(t) >= 0 ? " checked" : ""}><label for="gr-lang-${E(t)}">${E(nameOf(t))}</label>`).join("")}</fieldset>${ls}`;
+      }
       return h;
-    })));
+    }));
 
     // the court notice
-    out.push(cs.sec(S + "court.heading", cs.state(data.court, (v) => {
+    section(S + "court.heading", cs.state(data.court, (v) => {
       const c = v.choice === "tell" || v.choice === "dont" ? v.choice : null;
       let h = `<p data-state="court">${W(c === "tell" ? S + "court.tell" : S + "court.dont")}</p>`;
       const ct = A("courtnoticeset");
-      if (ct) h += `<div class="cs-form"><fieldset><legend>${W(S + "court.field")}</legend>${["tell", "dont"].map((x) => `<input type="radio" id="gr-court-${x}" name="gr-court"${(c || "dont") === x ? " checked" : ""}><label for="gr-court-${x}">${W(S + "court.choice." + x)}</label>`).join("")}</fieldset>${ct}</div>`;
+      if (ct) h += `<fieldset><legend>${W(S + "court.field")}</legend>${["tell", "dont"].map((x) => `<input type="radio" id="gr-court-${x}" name="gr-court"${(c || "dont") === x ? " checked" : ""}><label for="gr-court-${x}">${W(S + "court.choice." + x)}</label>`).join("")}</fieldset>${ct}`;
       return h;
-    })));
+    }));
 
     // who holds the hosting account
-    out.push(cs.sec(S + "hosting.heading", cs.state(data.hosting, (v) => {
+    section(S + "hosting.heading", cs.state(data.hosting, (v) => {
       const cur = v.current || null;
-      let h = cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: cur.recorded_by || "", date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : `<p data-state="hosting">${W(S + "hosting.none")}</p>`;
+      let h = cur ? `<p data-state="hosting">${W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) })} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "";
       const hs = A("hostingaccessset");
-      if (hs) h += `<div class="cs-form"><label for="gr-holders">${W(S + "hosting.field")}</label><input id="gr-holders" type="text" class="cs-input rec" maxlength="500" value="${E(cur ? cur.holders : "")}" autocomplete="off"><label for="gr-hnote">${W(S + "hosting.note")}</label><input id="gr-hnote" type="text" class="cs-input rec" maxlength="280" value="${E(cur && cur.note ? cur.note : "")}" autocomplete="off">${hs}</div>`;
+      if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
-    })));
+    }));
 
     // the group's bar, reasoned
-    out.push(cs.sec(S + "bar.heading", cs.state(data.bar, (v) => {
+    section(S + "bar.heading", cs.state(data.bar, (v) => {
       const b = v.bar || null;
-      let h = `<p data-state="bar">${b ? W(S + "bar.now", { capture: b.capture || "–", connection: b.connection || "–", date: D(b.at) }) : W(S + "bar.none")}</p>${b && b.reason ? `<p><span class="rec">${E(b.reason)}</span></p>` : ""}`;
+      let h = b ? `<p data-state="bar">${W(S + "bar.now", { capture: b.capture || "–", connection: b.connection || "–", date: D(b.at) })}</p>${b.reason ? `<p><span class="rec">${E(b.reason)}</span></p>` : ""}` : "";
       const bs = A("strengthbarset");
       if (bs) {
-        const sel = (id, cur) => `<select id="${id}" class="cs-input"><option value=""${cur ? "" : " selected"}>${W(S + "bar.unset")}</option>${["A", "B", "C", "D"].map((g) => `<option value="${g}"${cur === g ? " selected" : ""}>${g}</option>`).join("")}</select>`;
-        h += `<div class="cs-form"><label for="gr-cap">${W(S + "bar.capture")}</label>${sel("gr-cap", b && b.capture)}<label for="gr-con">${W(S + "bar.connection")}</label>${sel("gr-con", b && b.connection)}<label for="gr-why">${W(S + "bar.reason")}</label><textarea id="gr-why" class="cs-input rec" maxlength="2000"></textarea>${bs}</div>`;
+        const opts = [["", S + "bar.unset"], ...["A", "B", "C", "D"].map((g) => ({ value: g, text: g }))];
+        h += `${cs.choice("gr-cap", S + "bar.capture", opts, { value: b && b.capture ? b.capture : "" })}${cs.choice("gr-con", S + "bar.connection", opts, { value: b && b.connection ? b.connection : "" })}${cs.field("gr-why", S + "bar.reason", { area: true, rec: true, max: 2000 })}${bs}`;
       }
       return h;
-    })));
+    }));
     return out.join("");
   },
 
@@ -108,7 +126,7 @@ export const group = {
       send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; } },
     { op: "grouplanguagesset", rereads: ["languages"],
       send(view, el, cs) {
-        const languages = String(cs.value("gr-langs") || "").split(/[\s,]+/).filter(Boolean);
+        const languages = ((view.ui && view.ui.offered) || []).filter((t) => cs.value("gr-lang-" + t) === true);
         return languages.length >= 1 && languages.length <= 20 ? { body: { languages } } : { refuse: "screen.group.languages.count" };
       } },
     { op: "courtnoticeset", rereads: ["court"],

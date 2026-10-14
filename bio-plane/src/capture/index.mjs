@@ -14,7 +14,7 @@
  * (its R4; R73, K1224). It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
  * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R78's batch examination,
  * R83's questions a document was captured for; `registerReader`). At its first construction for a
- * storage it registers its grammar (R37) and its figures (R75) with record-core.
+ * storage it registers its grammar (R89) and its figures (R75) with record-core.
  *
  * THE DOORBELL (T42, K2607; T43, N849; T44, N870). The doorbell (the knock, its rate and tallies, the inbox, the pull,
  * the knocker secret, the source fingerprint and its key; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72,
@@ -263,7 +263,7 @@ export function captureOf(ctx, opts = {}) {
   return c;
 }
 
-/** R37 (C-2.7; K585 (3)): the information grammar, registered with record-core's seam (its R67) once per storage, when
+/** R89 (C-2.7; K585 (3)): the information grammar, registered with record-core's seam (its R67) once per storage, when
  *  the instance is first made, so the audit and the gate run it in C-2.7's slot. Another module's grammar may claim the
  *  same slot (record-core R67, K766: their arms then run there in module order), so that is no refusal. A record with
  *  no seam (a test's stand-in) is left alone; a refusal is a defect of the wiring (capture registering twice, or a

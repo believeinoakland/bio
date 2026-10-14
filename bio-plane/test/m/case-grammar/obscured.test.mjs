@@ -376,7 +376,7 @@ test("R14 (T39) a member document carried as its cleaned copy is listed with the
                "910634ae4b5ee876b270213a84d13eafa65e717db54d8360ff5b1449e2c53a35", "a marked photo's edition, pinned before T38");
 });
 
-test("R14 (T39) negative controls: the cleaned-copy line is chosen by the copy's own bytes, a PDF or zip package, never by the row; an image copy with the same row, or a copy not handed, is listed as a photo's", () => {
+test("R14 (T39) negative controls: for a row stating no kind (R32), the cleaned-copy line is chosen by the copy's own bytes, a PDF or zip package; an image copy with the same row, or a copy not handed, is listed as a photo's", () => {
   const { manifest, files } = caseFileFixture({ memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
   const path = CG.caseFilePath("obscured", MEMBER_DOC);
   const lineOf = (m) => { const h = materialsSection(CG.completeEditionOf(editionInput(manifest, m)));

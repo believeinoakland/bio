@@ -19,7 +19,7 @@ test("R14 group-identity: reads groupdescription (the whole record) and groupide
   const off = await open("group-identity", { me: ADMIN, table: identityTable(), reachable: false });
   assert.deepEqual(ops(off), ["groupdescriptionset"]);
   const none = await open("group-identity", { me: ADMIN, table: identityTable({ groupdescription: env({ description: null, history: [] }) }) });
-  has(none, "screen.group-identity.none");
+  lacks(none, "screen.group-identity.none"); // R28: a group that has not said who it is is told nothing of it
 });
 
 test("R14 groupdescriptionset sends the whole record: kinds, the other kind, focus, purpose and who sees it", async () => {

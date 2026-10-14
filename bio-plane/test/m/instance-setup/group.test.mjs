@@ -133,13 +133,15 @@ test("R29 by, author and origin are the control plane's stamps: a body naming it
   assert.equal(seen.profilesSet.by, "q-by");
 });
 
-test("R30 C-64.2, C-64.3, C-64.5, C-64.6 and C-64.7 are this module's rows, each raised here with its check and translation, beside T34's C-64.8 (R60) and C-64.9, C-64.10 (R65), and T37's C-64.11–C-64.26 (R67–R73) but C-64.18, dropped and never reused (R75; T38, N793), T45's C-64.27 (R77), and T46's C-64.28, C-64.29 (R79; K2996), and T47's C-64.30 (R84)", async () => {
+test("R30 C-64.2, C-64.3, C-64.5, C-64.6 and C-64.7 are this module's rows, each raised here with its check and translation, beside T34's C-64.8 (R60) and C-64.9, C-64.10 (R65), and T37's C-64.11–C-64.26 (R67–R73) but C-64.18, dropped and never reused (R75; T38, N793), T45's C-64.27 (R77), and T46's C-64.28, C-64.29 (R79; K2996), and T47's C-64.30 (R84), and T48's C-64.31–C-64.33 (R87, R90)", async () => {
   const rows = Object.values(INSTANCE_SETUP_CHECKS).filter((r) => r.check.startsWith("C-64."));
   assert.deepEqual(rows.map((r) => r.check).sort(), ["C-64.10", "C-64.2", "C-64.3", "C-64.5", "C-64.6", "C-64.7", "C-64.8", "C-64.9",
-    ...Array.from({ length: 20 }, (_, i) => `C-64.${11 + i}`).filter((n) => n !== "C-64.18")].sort());
+    ...Array.from({ length: 23 }, (_, i) => `C-64.${11 + i}`).filter((n) => n !== "C-64.18")].sort());
   for (const r of rows) {
     assert.match(r.where, /^src\/setup\.mjs /);
-    assert.ok(r.translation.split(/\s+/).length >= 20, r.check);
+    /* BOB's drafts for T48's three rows (R87, R90) are shorter sentences; each still says what was not done */
+    assert.ok(r.translation.split(/\s+/).length >= (/^C-64\.3[123]$/.test(r.check) ? 10 : 20), r.check);
+    if (/^C-64\.3[123]$/.test(r.check)) assert.match(r.translation, /Nothing was (?:translated|recorded)\.$/, r.check);
   }
   const w = await boot({ env: {} });
   w.prov.admins = new Set(["admin"]);

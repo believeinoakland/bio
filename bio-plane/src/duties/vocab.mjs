@@ -15,6 +15,10 @@ export const BASIS_KINDS = Object.freeze(["rule", "commitment", "dependency", "w
 export const STATED_BASIS = "stated";
 /** Terms: an occurrence's states (K1466). */
 export const OCCURRENCE_STATES = Object.freeze(["met", "met_late", "overdue", "pending", "discharged", "undetermined"]);
+/** R33 (T48; N1044, K3150): the codes of an undetermined occurrence's member-facing reason, one per path of R10 that
+ *  leaves it undetermined; each read in words by key, `duty.reason.<code>` (`DUTIES_REASON_WORDS`). */
+export const OCCURRENCE_REASONS = Object.freeze(["trigger_undated", "deadline_not_held", "due_not_computed", "due_between_days",
+                                                 "match_undated", "order_unsettled"]);
 /** The entity kinds an obligation's obligor may be without a further line (Terms: an office or a body). */
 export const PUBLIC_KINDS = Object.freeze(["office", "body"]);
 /** `entities`' organisation kinds (its Terms, K1453), which carry a sector. */

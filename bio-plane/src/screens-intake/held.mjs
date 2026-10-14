@@ -4,9 +4,9 @@
 /* R4: one read, `heldcaptures` (capture R77): each row's title, project, age, source, batch eligibility (R78) and the
  * questions it was captured for; an archive's row with its held files beside it. */
 function heldReads() {
-  return { held: { op: "heldcaptures", query: { limit: 200 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+  return { held: { op: "heldcaptures", query: { limit: 50 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
-           aside: { op: "heldcaptures", query: { limit: 200, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+           aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
 }
 
 function renderHeld(cs, view) {
@@ -28,11 +28,13 @@ function renderHeld(cs, view) {
   const files = (r) => {
     const a = r.archive && r.archive.entries !== undefined ? r.archive : null;
     if (!a) return "";
-    return `<span class="meta">${cs.w("screen.held.archive", { filed: a.filed ?? 0, notfiled: a.not_filed ?? 0 })}</span>`
-      + `<ul class="mk-list" aria-label="${cs.w("screen.held.archivefiles")}">`
+    /* R17: each count drawn only above zero */
+    const parts = [["filed", a.filed], ["notfiled", a.not_filed]].filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.held.archive.${k}`, { count: n })).join(", ");
+    return (parts ? `<span class="meta">${cs.w("screen.held.archive", { parts })}</span>` : "")
+      + (Array.isArray(r.files) && r.files.length ? `<ul class="mk-list" aria-label="${cs.w("screen.held.archivefiles")}">`
       + (Array.isArray(r.files) ? r.files : []).map((f) => `<li>${cs.ref("capture", f.sha256, f.name || f.document, [])}`
         + (f.grade ? ` ${cs.grade("capture", f.grade)}` : "")
-        + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>"
+        + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>" : "")
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
   };
   /* R11 (capture R77's `capture`): the row's grade as one mark, as provenance states it (a received or authored capture
@@ -68,7 +70,7 @@ function renderHeld(cs, view) {
   { empty: "screen.held.empty" });
   /* R13: the "Set aside" list: who set each aside, when, and why, as `set_aside` answers it; `heldrestore` with a reason in
      its row's panel, and in the hold strip for picked rows */
-  const aside = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length
+  const asideSec = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length
       ? U.waiting.map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("") : "")
     + cs.state(view.data.aside, (v) => cs.rows({
       id: "aside",
@@ -87,6 +89,10 @@ function renderHeld(cs, view) {
       acts: (r) => cs.act("heldrestore", { data: { id: r.bundle_id } }),
     }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""),
     { empty: "screen.held.asideempty" }));
+  /* R19: "Set aside" is drawn only when it holds something (or a set-aside just made left a waiting question, or its read
+     failed, still drawn as failed); nothing is drawn for it while it loads or when it is empty */
+  const A = view.data.aside, W = Array.isArray(U.waiting) && U.waiting.length;
+  const aside = W || (A && (A.state === "failed" || (A.state === "ok" && Array.isArray(A.value.held) && A.value.held.length))) ? asideSec : "";
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
@@ -156,7 +162,7 @@ function doneRestore(view, answer, cs) {
 /* R4: "See held captures": the list asked again (a read, so nothing changes), then drawn by the reads made again. */
 function sendRefresh(view, el, cs) {
   cs.set("released", 0);
-  return { query: { limit: 200 } };
+  return { query: { limit: 50 } };
 }
 
 export { sendRelease };

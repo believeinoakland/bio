@@ -1,0 +1,25 @@
+# BOB to events (T48)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T48), layer 5, events: **T48-19 · events** · (N1031, K3145) the timeline's items carry participants and grades; a relation records "which came first" when no dated attestation orders two events · text BOB's.
+Your requirements: `build/requirements/events.md` (read whole), folded by K3203 (K3207 for entities and lines); R50, R51, R52 are yours to meet (the ids marked `*(not yet met: T48)*`).
+BOB's notes for this job:
+events (T48-19): R50, R51 (the timeline's items carry participants and grades; a `precedes` relation records which came first when no dated attestation orders two events; N1031) and R52 (answer `NOT_A_PROCEEDING` through `entities.notAProceeding`, after entities merges: BOB sends a CHANGE). Also N1063 (K3228, K279): `pages.test.mjs`' R35 test fails under 8-way concurrency and passes alone (a time budget): make it independent of load without loosening what it proves.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 740 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+Merge order in L5: entities, events, lines, connections, standards, duties, people, explore, calculations; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+entities (T48-82) is merged into tranche/T48 (K3247): `entities.notAProceeding` (R53, C-91.9) is there. Merge tranche/T48 into your branch and continue.
+
+## B3 · RESUME
+
+Your record shows RUNNING until 13:03 and nothing pushed since; your session is idle ("awaiting baseline comparison run"). Continue T48-19 from your record: finish the users' baseline comparison against tranche/T48 (entities and connections are now merged; merge tranche/T48 first), then post COMPLETE. Five jobs wait to merge after you.

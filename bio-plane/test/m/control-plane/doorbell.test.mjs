@@ -159,6 +159,13 @@ test("R28 (N364; admission R8–R11): the pull, the knock reads and a member's o
       refused(await call(env, { op, token: narrow, method: "POST", body: {} }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
       assert.equal(opCalls(env).length, 0);
       assert.equal((await call(w2.env, { op, token: wide, method: "POST", body: {} })).status, 200, op);
+    } else if (["sourceof", "sourcerung"].includes(op)) {
+      /* admission R26 (K3299): these two answer who a source is, so a member's reach alone never admits an `ai` credential:
+         the narrow agent is refused; negative control: an agent whose scope names the op reads it */
+      env.calls.length = 0;
+      refused(await call(env, { op, token: narrow, method: "POST", body: {} }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6");
+      assert.equal(opCalls(env).length, 0, `${op}: a read by the narrow agent forwarded`);
+      assert.equal((await call(w2.env, { op, token: wide, method: "POST", body: {} })).status, 200, `${op}: a read by an agent naming it`);
     } else assert.equal((await call(env, { op, token: narrow, method: "POST", body: {} })).status, 200, `${op}: a read by the narrow agent`);
     if (needs) {
       env.calls.length = 0;

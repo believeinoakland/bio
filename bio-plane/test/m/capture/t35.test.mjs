@@ -34,7 +34,7 @@ const scripted = (d, archived, replay = null) => network((url) => {
   return null;
 });
 
-test("DEC-149 M (index.mjs:1033): a co-archive whose locator is no raw replay reads undetermined, \"the archived locator is not a replay your group's Civicsmith can read raw\"", async () => {
+test("R68, DEC-149 M (`#replayMatches`): a co-archive whose locator is no raw replay reads undetermined, \"the archived locator is not a replay your group's Civicsmith can read raw\"", async () => {
   const w = reWorld();
   const net = scripted(w.d, "https://web.archive.org/web/2026100712/https://a.example/page");
   let r;
@@ -43,7 +43,7 @@ test("DEC-149 M (index.mjs:1033): a co-archive whose locator is no raw replay re
   assert.deepEqual([co.matches, co.match_basis], ["undetermined", "the archived locator is not a replay your group's Civicsmith can read raw"]);
 });
 
-test("DEC-149 M (index.mjs:1045): a replay over 256 MiB reads undetermined, \"the replay is larger than your group's Civicsmith compares\"", async () => {
+test("R68, DEC-149 M (`#replayMatches`): a replay over 256 MiB reads undetermined, \"the replay is larger than your group's Civicsmith compares\"", async () => {
   const w = reWorld();
   const chunk = new Uint8Array(4 << 20);
   let sent = 0;
@@ -55,7 +55,7 @@ test("DEC-149 M (index.mjs:1045): a replay over 256 MiB reads undetermined, \"th
   assert.deepEqual([co.matches, co.match_basis], ["undetermined", "the replay is larger than your group's Civicsmith compares"]);
 });
 
-test("DEC-149 M (index.mjs:1414): a render over the concurrency cap waits, \"<n> renders are running and your group's Civicsmith runs at most <cap> at once\"", () => {
+test("R39, DEC-149 M (`renderAdmit`): a render over the concurrency cap waits, \"<n> renders are running and your group's Civicsmith runs at most <cap> at once\"", () => {
   const { c } = fresh();
   const at = "2026-10-07T12:00:00Z";
   assert.equal(c.renderAdmit({ allowanceMs: 10000, reserveMs: 1000, cap: 1, at }).state, "admitted");
@@ -63,7 +63,7 @@ test("DEC-149 M (index.mjs:1414): a render over the concurrency cap waits, \"<n>
   assert.deepEqual([w.state, w.why], ["waiting", "1 renders are running and your group's Civicsmith runs at most 1 at once"]);
 });
 
-test("DEC-149 M (ops.mjs:150): op=acquire with no evidence storage answers the storage-absent refusal with \"your group's Civicsmith has no evidence storage configured\"", async () => {
+test("R73, DEC-149 M (`acquireOp`): op=acquire with no evidence storage answers the storage-absent refusal with \"your group's Civicsmith has no evidence storage configured\"", async () => {
   const said = [];
   const storageAbsent = (op, error) => { said.push([op, error]); return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503); };
   const out = await acquireOp(new Request("https://p/", { method: "POST", body: "{}" }), {}, null,

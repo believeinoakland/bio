@@ -14,6 +14,8 @@
  * C-125.34 keeps its own until `words.json`'s sentence names "your group's Civicsmith" (DEC-149); awaiting T47's stamp.
  * T47 (R30; N957, K231): C-125.4 `TEMPLATE_BLANK_UNKNOWN` minted at one site, now `blankUnknownRefusal` (R32), which both R2's text check
  * and R15's profile read call; its `where` re-pointed there, its code, number and translation unmoved; awaiting T48's stamp.
+ * T48 (R33; N880, K231): C-115.47 `RFC_QUOTING_MISSING` moved here from `filings` with its code, number and translation
+ * unchanged (the translation read by key, `FILING_TEMPLATES_WORDS`); its `where` names its one site, `rfcQuotingRefusal`.
  * R32 (K3124): that site is provided, `blankUnknownRefusal` (`filings` R56 calls it). */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
@@ -25,6 +27,9 @@ const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
    "Civicsmith" bare, where DEC-149 says "your group's Civicsmith" (R29). */
 export const FILING_TEMPLATES_WORDS = Object.freeze({
   "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
+  /* R33 (T48): moved from `filings`' `FILINGS_WORDS` (its R51) verbatim; `rfc.quoting` itself is not read (K2953) */
+  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that "
+    + "sentence before approving. Nothing was written.",
 });
 
 export const FILING_TEMPLATE_CHECKS = Object.freeze({
@@ -59,6 +64,11 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
     check: "C-115.38", where: at("#noTemplate", "is-no-such-template"),
     translation: "There is no template by that id in the group's library that you can read here. One you may not see "
       + "answers exactly as one that does not exist.",
+  },
+  /* ---- moved from filings in T48 (R33), unchanged ---- */
+  RFC_QUOTING_MISSING: {
+    check: "C-115.47", where: at("rfcQuotingRefusal", "is-rfc-quoting-missing"),
+    translation: FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"],
   },
   /* ---- new in T35 (R26; N702, K1869), in the C-115 family as R26 numbers them; awaiting promotion's stamp ---- */
   TEMPLATE_REF_REFUSED: {

@@ -323,7 +323,8 @@ test("R40 R38: an archive that cannot be opened never fails its capture: the ref
   const r = await capture(w, amb);
   assert.equal(r.status, 200);
   assert.equal(r.body.document.capture.sha256, sha(amb));
-  if (r.body.unpack) assert.deepEqual([r.body.unpack.ok, r.body.unpack.reason], [false, "ARCHIVE_AMBIGUOUS"]);
+  assert.ok(r.body.unpack, "the capture is profiled zip, so R38's answer is stated beside it");
+  assert.deepEqual([r.body.unpack.ok, r.body.unpack.reason], [false, "ARCHIVE_AMBIGUOUS"]);
   /* no acquisition instance handed in: the capture files and the unpack says why nothing was opened */
   const bare = world({ acquisition: false });
   const z = makeZip([{ name: "a", data: "a" }]);

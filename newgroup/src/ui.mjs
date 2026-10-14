@@ -241,7 +241,7 @@ ${LEFT_OUT}
    short name's act opens the permanence dialog; its confirming act draws "Before Cloudflare" and sends nothing; there,
    "Continue to Cloudflare" sends /begin with the name the dialog showed; "Back" returns. On the update page the one act
    sends /begin. */
-const pageScript = (mode) => `<script>
+const pageScript = (mode, version = null) => `<script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
@@ -252,7 +252,7 @@ async function begin(slug,btn,err){
   btn.disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#vpc")&&$("#vpc").value.trim()?{securityVpc:$("#vpc").value.trim()}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",${version ? `version:"${version}",` : ""}...($("#profiles")?{profiles:chosen}:{}),...($("#vpc")&&$("#vpc").value.trim()?{securityVpc:$("#vpc").value.trim()}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -329,12 +329,69 @@ ${pageScript("install")}
 </body>
 </html>`;
 
+/* R55 (T48; N1047; DEC-226 (4)): the release this page installs is the one chosen in Settings › Updates and no other. Its
+   address is `<installer>/update?version=<V>` (`instance-setup` R90); V is of `signatures`' R47 form, digits only, no
+   leading zero. Nothing else is read from the address. */
+export const VERSION_RE = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/;
+export const versionOk = (v) => typeof v === "string" && v.length <= 32 && VERSION_RE.test(v);
+
+/* R55: the update's words, the design stream's (`words-t48.json`, keys `installer.update.*`), held once here; `{x}` is the
+   key's own placeholder. The date of `chosen` is drawn only when the caller has a signed one (the address carries none,
+   and the manifest none, so the page draws the line without it; J1). */
+export const UPDATE_WORDS = Object.freeze({
+  running: (version) => `Your group's Civicsmith runs release ${version}`,
+  chosen: (version, date = null) => `This update: release ${version}${date ? `, ${date}` : ""}, the release chosen in your group's Settings › Updates`,
+  only: "this page installs that release and no other",
+  checked: "Signed by Civicsmith; the signature and the release notes checked",
+  progressTitle: "Updating your group's Civicsmith",
+  progressSays: (from, to, account) => `From release ${from} to ${to}, in the Cloudflare account \u201c${account}\u201d. A few minutes; leave this page open. Until the last step, your group's Civicsmith keeps running as it was.`,
+  progressVerified: (to) => `Checked the release is Civicsmith's own, signed and unaltered: ${to}`,
+  progressRead: (from) => `Read the release running: ${from}`,
+  progressPlacing: (to) => `Putting release ${to} in place\u2026`,
+  progressAnswers: "Checking it answers",
+  /* `installer.update.stopped`, in its three parts: the heading names what stopped it, then what is as before, then what to do. */
+  stoppedWhy: (why) => `Stopped: ${why}.`,
+  stoppedKept: (version = null) => `Your group's Civicsmith runs ${version ? `release ${version} ` : ""}as before; nothing changed.`,
+  stoppedDo: "Try again; if it stops again, the stop names the step and what to do.",
+  tryAgain: "Try again",
+  doneTitle: "Your group's Civicsmith is updated",
+  doneSays: (to, from) => `It runs release ${to}; it ran ${from}. Every record, member and setting is as it was.`,
+  doneAnswers: (to) => `It answers at its address, as release ${to}`,
+  doneKept: "Records, members and settings in place",
+  doneNote: (to) => `The to-do leaves every administrator's queue on its own, and Settings \u203a Updates now shows ${to} running. The installer keeps nothing of your group's Civicsmith.`,
+  back: "Back to your group's Civicsmith",
+});
+
 /* `GET /update` (R52): the release your group's Civicsmith runs is not known here (its address is the account's, which
    only Cloudflare's permission lets the installer read), so this page draws it as the line it becomes; the progress page
    and the last screen draw the version before and after once it is read (index.mjs, runUpdate). */
 export const UPDATE_TITLE = `Update your group's ${PRODUCT}`;
 export const UPDATE_KEEPS = "If a step stops, your group's Civicsmith keeps running as it was.";
-export const UPDATE_HTML = `${pageHead(UPDATE_TITLE, { description: `Bring your group's existing ${PRODUCT} up to the current release.` })}
+/* R55: `version` is the release chosen, or anything else for the page that says none was. */
+export const NO_RELEASE_CHOSEN = "No release was chosen.";
+const noReleaseHtml = () => `${pageHead(UPDATE_TITLE, { description: `Install the release your group chose in its Settings.` })}
+<body class="cs">
+<main class="cs-frame ng">
+${pageMark("update")}
+<div class="ng-stage" id="no-release">
+<h1>${UPDATE_TITLE}</h1>
+<p class="lede">${NO_RELEASE_CHOSEN} This page installs the release an administrator chooses in your group's Civicsmith, under
+Settings \u203a Updates, and no other.</p>
+<p>Open your group's Civicsmith, go to Settings \u203a Updates, and choose <b>Update</b> there: it brings you back here with the
+release chosen. Nothing was changed.</p>
+<div class="ng-acts"><a id="back-settings" class="cs-btn" data-tone="primary" href="/" hidden>Back to your group's Civicsmith, Settings \u203a Updates</a></div>
+</div>
+<p class="muted ng-small">Setting up your group's Civicsmith for the first time instead? That is
+<a href="/">the installer's first page</a>.</p>
+${publisherFooter()}
+</main>
+<script>try{const r=new URL(document.referrer);if(r.protocol==="https:"){const a=document.getElementById("back-settings");a.href=r.origin+"/";a.hidden=false;}}catch(e){}</script>
+</body>
+</html>`;
+/* `GET /update?version=<V>` (R52, R55): the release your group's Civicsmith runs is not known here (its address is the
+   account's, which only Cloudflare's permission lets the installer read), so this page draws it as the line it becomes; the
+   progress page and the last screen draw the version before and after once it is read (index.mjs, runUpdate). */
+export const updateHtml = (version) => !versionOk(version) ? noReleaseHtml() : `${pageHead(UPDATE_TITLE, { description: `Bring your group's existing ${PRODUCT} up to release ${version}.` })}
 <body class="cs">
 <main class="cs-frame ng">
 ${pageMark("update")}
@@ -345,8 +402,9 @@ changes only Civicsmith's own programs. Your passwords, your credentials and you
 enforced by how the update is applied, not by promise.</p>
 <div class="cs-sheet ng-log" id="versions">
 <div class="cs-row" id="version-before"><span class="mk">Now</span><span>Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it, and shown as the update starts.</span><span></span></div>
-<div class="cs-row" id="version-after"><span class="mk">Next</span><span>This update: release <b class="id">${escText(RELEASE_VERSION)}</b>, signed by Civicsmith, or a newer signed one if the public repository holds it.</span><span></span></div>
+<div class="cs-row" id="version-after"><span class="mk">Next</span><span>${escText(UPDATE_WORDS.chosen(version))}; ${UPDATE_WORDS.only}.</span><span></span></div>
 </div>
+<p id="update-checked">${UPDATE_WORDS.checked}.</p>
 <p>You go to Cloudflare's page to allow it, as when it was set up. ${UPDATE_KEEPS}</p>
 <section class="cs-section ng-sec">
 <h2>What Cloudflare will ask you to allow</h2>
@@ -378,6 +436,8 @@ ${securityBlock()}
 <a href="/">the installer's first page</a>.</p>
 ${publisherFooter()}
 </main>
-${pageScript("update")}
+${pageScript("update", version)}
 </body>
 </html>`;
+/* The page `GET /update` draws with no release chosen. */
+export const UPDATE_HTML = updateHtml(null);

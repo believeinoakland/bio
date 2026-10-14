@@ -2,7 +2,7 @@
    args)`, over a scripted network, an evidence bucket, and the store handed in (fixture.mjs). Carried from capture's
    tests of the moved Rs (capture R1–R7, R9–R14, R16–R20, R33–R36, R41, R42, R60–R62), each renamed to this module's id.
    Each test names the requirement ids it checks in its title. */
-import { test } from "node:test";
+import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, lookup, network, sha, HTML, page, text, wayback, WB, eligible, rendererEnv } from "./fixture.mjs";
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
@@ -52,22 +52,28 @@ test("R2 R27: the fetched address must be a public locator, and no caller-suppli
     assert.deepEqual([r.status, r.body.reason], [400, "BAD_LOCATOR"], String(bad));
     assert.equal(r.net.seen.length, 0);
   }
-  const r = await run(w, { "https://a.example/x": text("bytes") },
-    { locator: "https://a.example/x", provenance_chain: [{ who: "me" }], grade: "A", capture: { grade: "A" }, retrieval_locator: "https://evil/",
-      receipt: {}, document: { file: "x" }, retrieved: "1999-01-01T00:00:00Z", transport: {} });
+  /* N998: a capture reads the wall clock many times (retrieved, and each attestation attempt's own instant), so two
+     captures compared under a running clock differ wherever a read crosses a second. The clock is pinned to one instant
+     for both captures (Date only; timers stay real), and the comparison below is then exact, with nothing normalised. */
+  mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T05:06:07.500Z") });
+  let r, plain;
+  try {
+    r = await run(w, { "https://a.example/x": text("bytes") },
+      { locator: "https://a.example/x", provenance_chain: [{ who: "me" }], grade: "A", capture: { grade: "A" }, retrieval_locator: "https://evil/",
+        receipt: {}, document: { file: "x" }, retrieved: "1999-01-01T00:00:00Z", transport: {} });
+    plain = await run(world(), { "https://a.example/x": text("bytes") }, { locator: "https://a.example/x" });
+  } finally { mock.timers.reset(); }
   assert.equal(r.status, 200);
   const d = r.body.document;
   assert.equal(d.provenance_chain.length, 1);
   assert.match(d.provenance_chain[0].who, /^instance inst/);
   assert.equal(d.capture.grade, EARNED_CAPTURE_CEILING);
-  assert.notEqual(d.retrieved, "1999-01-01T00:00:00Z");
+  assert.equal(d.retrieved, "2026-03-04T05:06:07Z", "the instance's own clock, never the caller's");
   assert.equal(d.capture.transport.requested, "https://a.example/x");
   assert.equal(w.prov.receipts[0].retrievalLocator, "https://a.example/x");
   assert.ok(!JSON.stringify(r.body).includes("evil"), "the caller's retrieval locator is nowhere");
-  /* over-strictness: the same capture with no supplied facts answers the same document, byte for byte but the clock */
-  const plain = await run(world(), { "https://a.example/x": text("bytes") }, { locator: "https://a.example/x" });
-  const norm = (doc) => JSON.stringify(doc).replaceAll(doc.retrieved, "T");
-  assert.equal(norm(d), norm(plain.body.document));
+  /* over-strictness: the same capture with no supplied facts answers the same document, byte for byte */
+  assert.equal(JSON.stringify(d), JSON.stringify(plain.body.document));
   /* the archive arm: a caller's locator is never the retrieval locator */
   const arch = await run(w, {}, { via: "archive.org", locator: "https://web.archive.org/web/1id_/https://a.example/x" }, { cls: "admin" });
   assert.equal(arch.body.reason, "BAD_ADDRESS");
@@ -357,7 +363,10 @@ test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; e
   } finally { crypto.subtle.digest = orig; }
 });
 
-test("R11: existed for one part is whether it was held before this call; for several, true only when registered, else null with the stated reason", async () => {
+test("R11: existed for one part is whether it was held before this call; for several, true only when registered, else null with the stated reason", async (t) => {
+  /* N998: the clock pinned for the whole test (Date only; timers stay real), so the two captures compared below are
+     compared exactly, with nothing normalised */
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
   const w = world();
   const route = { "https://a.example/x": () => text("same bytes") };
   const first = await run(w, route, { locator: "https://a.example/x" });
@@ -381,9 +390,8 @@ test("R11: existed for one part is whether it was held before this call; for sev
   const silent = world({ prov: { recordReceipt() {}, registerHolds() { throw new Error("down"); } } });
   const s = await run(silent, mr, { locator: "https://a.example/big" });
   assert.equal(s.body.existed, null); assert.match(s.body.existed_undetermined, /could not be consulted/);
-  /* over-strictness: the document a capture files does not depend on what existed */
-  const n = (doc) => JSON.stringify({ ...doc, retrieved: null, provenance_chain: null, profile: { ...doc.profile, at: null } });
-  assert.equal(n(first.body.document), n(again.body.document));
+  /* over-strictness: the document a capture files does not depend on what existed, byte for byte */
+  assert.equal(JSON.stringify(first.body.document), JSON.stringify(again.body.document));
 });
 
 test("R12: a continuation resumes the session's outstanding files against the session's own primary and never fetches the primary again", async () => {
@@ -425,11 +433,15 @@ test("R13: one receipt per filed capture under the document address (the resolve
   assert.equal(w.prov.receipts.at(-1).address, "https://s.example/p");
   /* a failed receipt write does not fail the capture, and the capture is the same */
   const failing = world({ prov: { recordReceipt() { throw new Error("down"); }, registerHolds: () => ({}) } });
-  const f = await run(failing, { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
-  const plain = await run(world({ prov: { recordReceipt() {}, registerHolds: () => ({}) } }), { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+  /* N998: the clock pinned for both captures (as in R2's), so the comparison is exact, with nothing normalised */
+  mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T05:06:07.500Z") });
+  let f, plain;
+  try {
+    f = await run(failing, { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+    plain = await run(world({ prov: { recordReceipt() {}, registerHolds: () => ({}) } }), { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+  } finally { mock.timers.reset(); }
   assert.equal(f.status, 200);
-  const norm = (doc) => JSON.stringify(doc).replaceAll(doc.retrieved, "T");
-  assert.equal(norm(f.body.document), norm(plain.body.document), "over-strictness: the capture unchanged");
+  assert.equal(JSON.stringify(f.body.document), JSON.stringify(plain.body.document), "over-strictness: the capture unchanged");
 });
 
 test("R14 R16 R31: transport, the chain, the capture block, the origin and the file", async () => {
@@ -598,9 +610,20 @@ test("R19: the walk of a single HTML page's supporting files, its bookkeeping th
                        { locator: "https://s.example/p", subresources: true });
   assert.equal(lr.body.snapshot.complete, false); assert.ok(lr.body.snapshot.continuation.session);
   assert.equal(limited.store.state.sessions.size, 1, "capture R22: parked when anything is outstanding");
-  const fin = await run(limited, (u) => u.endsWith(".css") ? new Response("a{}", { headers: { "content-type": "text/css" } }) : null,
-                        { locator: "https://s.example/p", subresources: true, continue: lr.body.snapshot.continuation.session });
-  if (fin.body.snapshot.complete) assert.deepEqual([limited.store.state.sessions.size, limited.store.state.sessionDrops.length], [0, 1], "dropped when complete");
+  /* each tick takes what the observed ceiling allows; the session is continued until nothing is outstanding */
+  let fin = lr, ticks = 0;
+  while (!fin.body.snapshot.complete && ticks < 10) {
+    const outstanding = fin.body.snapshot.outstanding;
+    fin = await run(limited, (u) => u.endsWith(".css") ? new Response("a{}", { headers: { "content-type": "text/css" } }) : null,
+                    { locator: "https://s.example/p", subresources: true, continue: lr.body.snapshot.continuation.session });
+    ticks++;
+    if (!fin.body.snapshot.complete) {
+      assert.ok(fin.body.snapshot.outstanding < outstanding, "each continuation makes progress");
+      assert.equal(limited.store.state.sessions.size, 1, "still parked while anything is outstanding");
+    }
+  }
+  assert.equal(fin.body.snapshot.complete, true, "the continuations finish the walk");
+  assert.deepEqual([limited.store.state.sessions.size, limited.store.state.sessionDrops.length], [0, 1], "dropped when complete");
   /* the stagger is the store's setting */
   const slow = world(); slow.store.staggerMs = 60;
   const t0 = Date.now();

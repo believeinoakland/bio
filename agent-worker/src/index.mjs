@@ -58,7 +58,11 @@
  * `agent-runner` instance on the same `RUNNER` binding and holds nothing of it:
  * no plane call, no model turn; the token the sign-in mints passes to the door
  * once, only under its `hold` (R81), and comes back on each act as the `signin`
- * account's `secret` (R82).
+ * account's `secret` (R82). (T48; R87) `/ask`, `/run`, `/draft` and
+ * `/transcribe` pass the door's `x-civicsmith-trace` and
+ * `x-civicsmith-member-ref`, when sent in `/signin`'s shapes (R83), to every
+ * `agent-model` conversation they hold, so a member's runner receives them on
+ * its upgrade (`agent-model` R16); nothing else changes with them.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -162,7 +166,7 @@ import { handleAsk } from "./ask.mjs";
 /* R59 — `POST /draft`, in its own file. */
 import { handleDraft } from "./draft.mjs";
 /* R66, R67 — `POST /signin`, the relay of a member's own sign-in to their own runner instance, in its own file. */
-import { handleSignin } from "./signin.mjs";
+import { handleSignin, doorTrace } from "./signin.mjs";
 /* R72–R75 — `POST /transcribe`, the AI's reading of a page's picture the plane rendered, in its own file. */
 import { handleTranscribe } from "./transcribe.mjs";
 
@@ -542,7 +546,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       openRow(model.messages, state.step, row, facts);
       const got = await converse({
         reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, system: model.system,
-        messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`,
+        messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`, ...model.traced,
         onTool: async (name, input) => {
           if (name === "load_layer") return loadLayer(model, input);
           return { content: `this step is judged by judge_${state.step}`, error: true };
@@ -1374,7 +1378,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [], dropped = [];
   for (const contract of contracts) {
     const got = await converse({
-      reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter,
+      reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, ...model.traced,
       /* R61: the contract's fields from the record (the run, its context, mode, skill) reach the sub-session only as
          `read_facts`' result (`subsessionOpening`); its system carries the pack and the table's own fields. */
       system: subsessionSystem(model.pack, contract),
@@ -1453,12 +1457,13 @@ function loadLayer(model, input) {
 }
 
 /** A segment's or an ask's model half (R54, R58): the reference for the calls it serves (the account that serves the
- *  member's act, R33), the runner binding, the meter, and the usage of each conversation kept until it is reported
- *  (ai-runs R48). Nothing in it outlives the call that made it (R36). */
-function modelHalf({ reference, runner, meter, suggestions }) {
+ *  member's act, R33), the runner binding, the meter, the door's trace and member reference for every conversation
+ *  (R87, `{trace?, memberRef?}`), and the usage of each conversation kept until it is reported (ai-runs R48). Nothing
+ *  in it outlives the call that made it (R36). */
+function modelHalf({ reference, runner, meter, suggestions, traced = {} }) {
   const pending = [];
   return {
-    reference, runner, meter, suggestions: suggestions === true, pack: null, layers: [], messages: [],
+    reference, runner, meter, suggestions: suggestions === true, traced, pack: null, layers: [], messages: [],
     /* R26 (N588; K1621): one entry per conversation that reached the provider, `{mode, model, usage, calls}` (ai-runs
        R48's entry), `usage` and `calls` exactly as `agent-model` R6 answers them: `calls` the model calls that sum
        covers, so the plane counts each model call, never a conversation as one. A `calls` it did not state is passed
@@ -1659,7 +1664,7 @@ async function handleRun(req, env) {
   const modelMode = !Array.isArray(body.judgements);
   const model = modelMode
     ? modelHalf({ reference: (await cascadeToken(account)).reference, runner: env.RUNNER ?? null, meter,
-                  suggestions: account.suggestions })
+                  suggestions: account.suggestions, traced: doorTrace(req) })
     : null;
 
   const drive = await driveHarness(env, {

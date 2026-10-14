@@ -1,4 +1,4 @@
-/* capture R37 (C-2.7; K585 (3)): the information grammar, registered through record-core's grammar seam (its R67), at
+/* capture R89 (C-2.7; K585 (3)): the information grammar, registered through record-core's grammar seam (its R67), at
    the module's interface: what `captureOf` registers, that another module's claim on the same slot runs beside it
    (record-core R67 as worded, K766, K783), and what a bundle is judged to be by record-grammar's `checkBundle` given
    `record.grammars()` (what promotion's gate passes, its R27) and by record-core's audit (its R18), with capture's
@@ -103,7 +103,7 @@ function hosted({ capture }) {
   return w;
 }
 
-test("R37 (C-2.7): captureOf registers the information grammar with record-core once per storage, claiming C-2.7 whole; MONITOR_FREQ is the grammar's cadence list", () => {
+test("R89 (C-2.7): captureOf registers the information grammar with record-core once per storage, claiming C-2.7 whole; MONITOR_FREQ is the grammar's cadence list", () => {
   const { ctx, record } = world();
   assert.deepEqual(record.grammars(), [], "nothing before capture is reached");
   const c = captureOf(ctx, { record, provenance: provenance(ctx.storage) });
@@ -117,7 +117,7 @@ test("R37 (C-2.7): captureOf registers the information grammar with record-core 
   assert.ok(Object.isFrozen(MONITOR_FREQ));
 });
 
-test("R37 (C-2.7; record-core R67, K766): another module's grammar may claim C-2.7's slot too; capture's registration is accepted beside it and both arms run in the slot, in registration order; a refusal R67 still makes is loud, never a grammar silently unrun", async () => {
+test("R89 (C-2.7; record-core R67, K766): another module's grammar may claim C-2.7's slot too; capture's registration is accepted beside it and both arms run in the slot, in registration order; a refusal R67 still makes is loud, never a grammar silently unrun", async () => {
   const { ctx, record } = world();
   const ran = [];
   assert.equal(record.registerGrammar("elsewhere", { ids: ["C-2.7"], arm: () => { ran.push("elsewhere"); } }).ok, true);
@@ -142,7 +142,7 @@ test("R37 (C-2.7; record-core R67, K766): another module's grammar may claim C-2
   assert.ok(captureOf(bare, { record: stand, governor: {}, provenance: provenance(bare.storage) }));
 });
 
-test("R37 (C-2.7): with the grammar registered, record-grammar's checkBundle given record.grammars() (the gate's list) raises exactly C-2.7's findings for each case, in order, and every other finding is what it is without the grammar", async () => {
+test("R89 (C-2.7): with the grammar registered, record-grammar's checkBundle given record.grammars() (the gate's list) raises exactly C-2.7's findings for each case, in order, and every other finding is what it is without the grammar", async () => {
   const mine = hosted({ capture: true }), none = hosted({ capture: false });
   assert.deepEqual(mine.record.grammars().map((g) => [g.module, [...g.ids]]), [["capture", ["C-2.7"]]]);
   assert.deepEqual(none.record.grammars(), []);
@@ -161,7 +161,7 @@ test("R37 (C-2.7): with the grammar registered, record-grammar's checkBundle giv
   assert.deepEqual(c27(await judge("INFO-2026-0002-enums", CASES["INFO-2026-0002-enums"], decoy)), []);
 });
 
-test("R37 (C-2.7): record-core's audit over the same bundles tallies exactly the grammar's findings with capture's grammar registered, and is otherwise the report it makes without it", async () => {
+test("R89 (C-2.7): record-core's audit over the same bundles tallies exactly the grammar's findings with capture's grammar registered, and is otherwise the report it makes without it", async () => {
   const report = async (register) => {
     const { record } = hosted({ capture: register });
     for (const [id, image] of Object.entries(CASES))

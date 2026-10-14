@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
 import { AI_USE_WORDS, LIMIT_FIELD_WORD } from "../../../src/ai-use/index.mjs";
-import { USE_KINDS } from "../../../src/credentials/index.mjs";
+import { USE_KINDS } from "../../../src/ai-accounts/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
 const PLACEHOLDER = /\{[A-Za-z_]+\}/;
@@ -78,7 +78,7 @@ test("R3 (T43) a limit that cannot be judged (the counter unreadable, the use no
 
 test("R13 (T43) every fill is read by key: {use} from ai.use.<use>.inline (transcribe's included), {period} from ai.period.*, {when} from ai.when.day or ai.when.month with the next month from date.month.* for every month; a different period reads a different fill (negative control)", async () => {
   const w = await standard();
-  assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "explore", on: "yes", by: "ann" }).ok, true);
+  assert.equal(w.a.accountUsesSet({ owner: "member:ann", switch: "explore", on: "yes", by: "ann" }).ok, true);
   const sentence = (use, period, start) => {
     const next = MONTHS[Number(start.slice(5, 7)) % 12];
     const when = period === "day" ? WORDS["ai.when.day"] : WORDS["ai.when.month"].replace("{month}", WORDS[`date.month.${next}`]);
@@ -129,7 +129,7 @@ test("R13 (T43) {field} is read from ai.limitfield.<field> for every field AI_LI
 
 /* ===== Terms: the nine use kinds ===== */
 
-test("R2 (T43, Terms) a use is a credentials.USE_KINDS entry, its R55's nine: each is counted and each is a limit's scope; anything else is refused (negative control)", async () => {
+test("R2 (T43, Terms) a use is an ai-accounts.USE_KINDS entry, its R14's nine: each is counted and each is a limit's scope; anything else is refused (negative control)", async () => {
   assert.deepEqual(USE_KINDS, ["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe", "account"]);
   const w = await standard();
   for (const use of USE_KINDS) {

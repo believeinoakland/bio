@@ -1916,8 +1916,9 @@ export function captureRequestsOps(c, url, body) {
   const b = body && typeof body === "object" ? body : {};
   return {
     capturerequest: () => c.captureRequest(b, { viewer: q("viewer"), caller: q("principal") }),
-    capturerequestdrain: () => c.drain({ limit: b.limit ?? null, actor: b.actor || "consumer",
-                                         now: Number.isFinite(b.now) ? b.now : null }),
+    /* R12, R20: the tick's clock is this module's, never a body's (as R6's door reads no `at`): a caller stating one
+       could release every waiting request at once. Only an in-process caller (the scheduler, a test) states `now`. */
+    capturerequestdrain: () => c.drain({ limit: b.limit ?? null, actor: b.actor || "consumer" }),
     capturerequests: () => c.captureRequests({ run: q("run"), target: q("target"), state: q("state"),
                                                limit: q("limit"), viewer: q("viewer") }),
     capturerequestretry: () => c.captureRequestRetry({ request: b.request ?? q("request") },

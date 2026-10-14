@@ -1,5 +1,5 @@
 /* events as a connection owner (R35; connection-grammar R2, R6–R9; K1469, K1470). Its kinds: took part (one per
-   role), concerns, within and the five event links, each evidentiary (every one is cited). `neighbours` answers an
+   role), concerns, within and the event links (`precedes` among them since T48, R51), each evidentiary (every one is cited). `neighbours` answers an
    entity's or an event's connections in connection-grammar's shape, each with its evidence and both grade axes, valid at
    the event's own time, through the viewer's sight (R40), from the indexes on `event_participants (entity_id)`,
    `event_relations (from_event)`, `(to_event)` and `event_concerns (end_id)`; a connection to a use of a power carries its
@@ -15,7 +15,7 @@ const ROLE_WORDS = { actor: "acted in", organizer: "organised", mover: "moved", 
   signatory: "signed", decider: "decided", author: "wrote", implementer: "carried out", party: "was a party to",
   subject: "was the subject of" };
 const LINK_WORDS = { authorises: "authorises", answers: "answers", amends: "amends", reverses: "reverses",
-  stated_cause: "is stated by a source to cause", within: "took place within" };
+  stated_cause: "is stated by a source to cause", within: "took place within", precedes: "is cited as coming before" };
 
 export const OWNER_KINDS = Object.freeze([
   ...Object.entries(ROLE_WORDS).map(([role, word]) => ({ kind: `event_${role}`, word, class: "evidentiary" })),
@@ -108,7 +108,7 @@ function answersFor(k, nodes, ctx, start, keep) {
 }
 
 /* Each node's set: its candidates (kind, event, the attestation's sight) in the order the set is paged (took part,
-   concerns, then within and the five links), each valid at `at`; one out at `at` is no connection. */
+   concerns, then within and the event links), each valid at `at`; one out at `at` is no connection. */
 function liveSets(k, nodes, ctx) {
   const out = new Map(nodes.map((n) => [n, []]));
   if (!nodes.length) return out;
@@ -145,7 +145,7 @@ function liveSets(k, nodes, ctx) {
         .filter((c) => first.has(c.event_id)).map((c) => ({ type: "concerns", kind: "event_concerns", eventId: c.event_id, row: c, att: first.get(c.event_id) })));
   }
 
-  /* within and the five links, an event node's, from both ends */
+  /* within and the event links, an event node's, from both ends */
   const ls = kinds.filter((x) => LINK_WORDS[x.slice(6)]).map((x) => x.slice(6));
   if (ls.length)
     for (const col of ["from_event", "to_event"])

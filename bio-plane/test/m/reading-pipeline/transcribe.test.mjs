@@ -4,16 +4,20 @@
  * `read` with the `transcription` its caller hands in, and the pieces `tier4Pages` and `tier4Extend` (R23); and R30, the
  * re-read's seed (`tier3SeedFrom`, `tier3Extend`) keeping the pages the AI read.
  *
- * THE ACCOUNT IS REAL (K874's negative controls): record-core, membership and credentials over one SQLite database
- * (node:sqlite, the engine a Durable Object runs), and the account is asked of `credentials.accountFor` (its R56) as
- * the caller hands it in. The limits (`ai-use.useCheck`) and the AI itself are the caller's and are scripted here. */
+ * THE ACCOUNT IS REAL (K874's negative controls): record-core, membership and ai-accounts over one SQLite database
+ * (node:sqlite, the engine a Durable Object runs), and the account is asked of `ai-accounts.accountFor` (its R7, R11)
+ * as the caller hands it in, `transcription.accounts` (R31, T48; N996). `credentials`, later in the order than
+ * ai-accounts and no longer this module's dependency, is never built: the founder's claim it states to membership (its
+ * R17, membership R94) is a test fact here, and enrolment's password setter (membership R95) a test setter that
+ * stores nothing, as ai-accounts' own tests do. The limits (`ai-use.useCheck`) and the AI itself are the caller's and
+ * are scripted here. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { derivationCap, captureBound, checkChain, describeChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member, ocrAnswer } from "./fixture.mjs";
@@ -29,7 +33,8 @@ const P1_KEY = "sk-project-one-key-never-shown";
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 /* A group: the founder, a second administrator; `ann` holds her own API key; `dee` holds none and the group holds no
-   key; project P1 (owned by ann, `bob` joined) holds its own key; P2 (owned by ann) holds none. */
+   key; project P1 (owned by ann, `bob` joined) holds its own key; P2 (owned by ann) holds none. `acc` is ai-accounts'
+   instance on the group's storage. */
 async function group() {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) { const st = db.prepare(q);
@@ -41,8 +46,10 @@ async function group() {
   const ctx = { storage };
   const rc = recordOf(ctx); rc.migrate();
   const m = membershipOf(ctx); m.migrate();
-  const c = credentialsOf(ctx, { sealSecret: SEAL }); c.migrate();
-  await c.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  /* membership's two credentials seams (its R94, R95) as test facts: the founder has claimed the instance */
+  m.registerClaimed("test-claim", () => true);
+  m.registerPasswordSetter(() => ({ ok: true }), "test-password");
+  const acc = aiAccountsOf(ctx, { record: rc, membership: m, sealSecret: SEAL }); acc.migrate();
   const enrol = async (id, role = "member") => {
     const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
     await m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
@@ -54,10 +61,10 @@ async function group() {
   for (const p of ["P1", "P2"]) { bundle(p); m.projectCreated({ projectId: p, ownerId: "ann", by: "ann" }); }
   m.projectInvite({ projectId: "P1", handle: "bob", by: "ann", viewer: "member:ann" });
   m.projectJoin({ projectId: "P1", by: "bob", viewer: "member:bob" });
-  assert.equal((await c.accountReferenceSet({ member: "ann", kind: "apikey", secret: ANN_KEY, by: "ann" })).ok, true);
-  assert.equal((await c.projectKeySet({ project: "P1", key: P1_KEY, by: "ann" })).ok, true);
-  assert.equal(c.projectAccountSwitch({ project: "P1", on: true, by: "ann" }).ok, true, "a project's key is off when first set (R54)");
-  return { c, m };
+  assert.equal((await acc.accountReferenceSet({ member: "ann", kind: "apikey", secret: ANN_KEY, by: "ann" })).ok, true);
+  assert.equal((await acc.projectKeySet({ project: "P1", key: P1_KEY, by: "ann" })).ok, true);
+  assert.equal(acc.projectAccountSwitch({ project: "P1", on: true, by: "ann" }).ok, true, "a project's key is off when first set (ai-accounts)");
+  return { acc, m };
 }
 
 /* The caller's limits (`ai-use.useCheck`, its R3) and AI, scripted and recorded. */
@@ -88,10 +95,10 @@ async function readWith({ transcription = null, env = {}, pages = PAGES } = {}) 
 const leaks = (out, ...secrets) => secrets.filter((s) => JSON.stringify(out).includes(s));
 
 test("R29 R23: a member's act on her own account, within its limits: the pages Civicsmith's own text recognition could not read are the AI's reading, under pixels -> ai_transcription(<model>) at tier 4, uncapped and so undetermined; a folio page keeps its folio with the AI's reading appended; labelled the AI's reading; the key reaches the AI alone", async () => {
-  const { c } = await group();
+  const { acc } = await group();
   const lim = limits(null);
   const a = ai((q) => model(q.pages));
-  const out = await readWith({ transcription: { member: "ann", credentials: c, useCheck: lim.useCheck, transcribe: a.transcribe, at: "2026-10-09T12:00:00Z" } });
+  const out = await readWith({ transcription: { member: "ann", accounts: acc, useCheck: lim.useCheck, transcribe: a.transcribe, at: "2026-10-09T12:00:00Z" } });
   const r = out.reading;
   /* asked once, for exactly the unread pages, with the account the cascade chose, the digest and the store */
   assert.equal(a.calls.length, 1);
@@ -133,12 +140,12 @@ test("R29 R23: a member's act on her own account, within its limits: the pages C
 });
 
 test("R29: on a project's account the act names the project: the project's key pays (owner `project:<id>` asked of the limits), once the member has read its notice", async () => {
-  const { c } = await group();
-  const seen = c.projectKeyNoticeSeen({ member: "bob", project: "P1", by: "bob" });
+  const { acc } = await group();
+  const seen = acc.projectKeyNoticeSeen({ member: "bob", project: "P1", by: "bob" });
   assert.equal(seen.ok, true, JSON.stringify(seen));
   const lim = limits(null);
   const a = ai((q) => model(q.pages));
-  const out = await readWith({ transcription: { member: "bob", project: "P1", credentials: c, useCheck: lim.useCheck, transcribe: a.transcribe } });
+  const out = await readWith({ transcription: { member: "bob", project: "P1", accounts: acc, useCheck: lim.useCheck, transcribe: a.transcribe } });
   assert.equal(a.calls.length, 1, out.reading.basis);
   assert.deepEqual([a.calls.length, a.calls[0].account.level, a.calls[0].account.key], [1, "project", P1_KEY]);
   assert.deepEqual(lim.asked.map((q) => [q.owner, q.member, q.use]), [["project:P1", "bob", "transcribe"]]);
@@ -155,24 +162,24 @@ test("R29 (negative controls, K874): no account, the use switched off, the group
   };
   const cases = [
     ["no account", async (w) => ({ member: "dee" }), /NO_ACCOUNT/],
-    ["switched off", async (w) => { assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "transcribe", on: false, by: "ann" }).ok, true);
+    ["switched off", async (w) => { assert.equal(w.acc.accountUsesSet({ owner: "member:ann", switch: "transcribe", on: false, by: "ann" }).ok, true);
                                     return { member: "ann" }; }, /AI_USE_SWITCHED_OFF/],
-    ["group keeps it away", async (w) => { assert.equal(w.c.aiKeepAwaySet({ on: true, uses: ["transcribe"], reason: "no AI on our records", by: "admin" }).ok, true);
+    ["group keeps it away", async (w) => { assert.equal(w.acc.aiKeepAwaySet({ on: true, uses: ["transcribe"], reason: "no AI on our records", by: "admin" }).ok, true);
                                            return { member: "ann" }; }, /AI_KEPT_AWAY/],
-    ["project keeps it away", async (w) => { assert.equal(w.c.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" }).ok, true);
+    ["project keeps it away", async (w) => { assert.equal(w.acc.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" }).ok, true);
                                              return { member: "ann", project: "P1" }; }, /PROJECT_AI_KEPT_AWAY/],
     ["a project he cannot see", async (w) => ({ member: "dee", project: "P1" }), /NO_SUCH_PROJECT/],
     ["limit reached", async (w) => ({ member: "ann", useCheck: async () => ({ ok: false, code: "AI_LIMIT_REACHED", detail: "this month's use is spent" }) }), /AI_LIMIT_REACHED: this month's use is spent/],
     ["no limits checked", async (w) => ({ member: "ann", useCheck: null }), /limits of the account that would pay for it could not be checked/],
     ["no member's act", async (w) => ({ member: null }), /only at a member's own act/],
-    ["no credentials handed in", async (w) => ({ member: "ann", credentials: null }), /could not be checked/],
+    ["no accounts handed in", async (w) => ({ member: "ann", accounts: null }), /could not be checked/],
   ];
   for (const [label, setup, says] of cases) {
     const w = await group();
     const lim = limits(null);
     const a = ai(() => { throw new Error("the AI must not be asked"); });
     const extra = await setup(w);
-    const transcription = { credentials: w.c, useCheck: lim.useCheck, transcribe: a.transcribe, ...extra };
+    const transcription = { accounts: w.acc, useCheck: lim.useCheck, transcribe: a.transcribe, ...extra };
     const out = await readWith({ transcription });
     assert.equal(a.calls.length, 0, `${label}: nothing sent to the AI`);
     same(out.reading, label);
@@ -182,9 +189,9 @@ test("R29 (negative controls, K874): no account, the use switched off, the group
   }
   /* beside them, the positive: a group limit on another use only leaves transcription on */
   const w = await group();
-  w.c.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "no questions", by: "admin" });
+  w.acc.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "no questions", by: "admin" });
   const a = ai((q) => model(q.pages));
-  const out = await readWith({ transcription: { member: "ann", credentials: w.c, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
+  const out = await readWith({ transcription: { member: "ann", accounts: w.acc, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
   assert.deepEqual([a.calls.length, out.reading.text_tier], [1, 4]);
 });
 
@@ -195,15 +202,15 @@ test("R29 R21: without a member's act `read` is tiers 1-3's exactly (no key adde
   assert.doesNotMatch(without.reading.basis, /\bAI\b/);
   /* every page read by its layer: no account is read, the AI is not asked */
   let asked = 0;
-  const counting = { accountFor: async (q) => { asked++; return w.c.accountFor(q); } };
+  const counting = { accountFor: async (q) => { asked++; return w.acc.accountFor(q); } };
   const a = ai(() => { throw new Error("must not be asked"); });
-  const plain = await readWith({ pages: [{ page: 0, text: "all text" }], transcription: { member: "ann", credentials: counting, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
+  const plain = await readWith({ pages: [{ page: 0, text: "all text" }], transcription: { member: "ann", accounts: counting, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
   assert.deepEqual([asked, a.calls.length, plain.reading.text_tier], [0, 0, 1]);
   assert.match(plain.reading.basis, /no page was left that Civicsmith's own text recognition could not read/);
   /* tier 3 fills page 1; only the folio page OCR did not fill is the AI's */
   const ocr = member((body) => ocrAnswer(body.pages.filter((p) => p === 1)));
   const b = ai((q) => model(q.pages));
-  const both = await readWith({ env: { OCR_WORKER: ocr }, transcription: { member: "ann", credentials: w.c, useCheck: limits(null).useCheck, transcribe: b.transcribe } });
+  const both = await readWith({ env: { OCR_WORKER: ocr }, transcription: { member: "ann", accounts: w.acc, useCheck: limits(null).useCheck, transcribe: b.transcribe } });
   assert.deepEqual(b.calls.map((q) => q.pages), [[2]]);
   assert.deepEqual(both.reading.text_source.map((s) => [s.step, s.extent && s.extent.pages]),
                    [["layer", [0, 2]], ["pixels", [1]], ["ocr", [1]], ["pixels", [2]], ["ai_transcription", [2]]]);
@@ -216,8 +223,8 @@ test("R29 R6 R9 R23: tier4Pages and tier4Extend: the pages selected are the unre
   assert.deepEqual(tier4Pages(i2([...PAGES, { page: 4, text: "", undetermined: [{ page: null, reason: "encrypted", count: 1 }] }])), []);
   assert.deepEqual(tier4Pages(i2([{ page: 0, text: "x" }])), []);
   assert.deepEqual(tier4Pages(null), []);
-  const { c } = await group();
-  const go = (answer) => tier4Extend({ member: "ann", credentials: c, useCheck: async () => null, transcribe: async () => answer },
+  const { acc } = await group();
+  const go = (answer) => tier4Extend({ member: "ann", accounts: acc, useCheck: async () => null, transcribe: async () => answer },
                                      { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: rp.layerChainFor(i2(PAGES), { tier: 1, container: "pdf" }) });
   const unnamed = await go({ ok: true, pages: [{ page: 1, text: "x" }] });
   assert.deepEqual([unnamed.filled, unnamed.wiredTier], [[], 1]);
@@ -231,7 +238,7 @@ test("R29 R6 R9 R23: tier4Pages and tier4Extend: the pages selected are the unre
   assert.equal(mixed.i2text.pages[0].text, "Staff report on the capital plan", "a page with text is never replaced");
   const nothing = await go(model([]));
   assert.match(nothing.aiNote, /returned no text for any page/);
-  const thrown = await tier4Extend({ member: "ann", credentials: c, useCheck: async () => null, transcribe: async () => { throw new Error("down"); } },
+  const thrown = await tier4Extend({ member: "ann", accounts: acc, useCheck: async () => null, transcribe: async () => { throw new Error("down"); } },
                                    { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: null });
   assert.match(thrown.aiNote, /the AI could not be reached/);
   assert.equal((await tier4Extend(null, { i2text: i2(PAGES) })).aiNote, null, "no act: nothing said, nothing done");
@@ -252,69 +259,69 @@ test("R29 (N853a): a stub accountFor answering NO_ACCOUNT and a stub useCheck an
   const noAccount = { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" };
   const a1 = ai(() => { throw new Error("the AI must not be asked"); });
   const lim1 = limits(null);
-  const r1 = await t4On({ member: "ann", credentials: { accountFor: async () => noAccount }, useCheck: lim1.useCheck, transcribe: a1.transcribe });
+  const r1 = await t4On({ member: "ann", accounts: { accountFor: async () => noAccount }, useCheck: lim1.useCheck, transcribe: a1.transcribe });
   assert.equal(r1.aiRefusal, noAccount, "the refusal as given, not a copy or a re-wording");
   assert.deepEqual(r1.aiRefusal, { ok: false, code: "NO_ACCOUNT", check: "C-29.1", translation: "no account serves this act", detail: "nothing was used" });
   assert.match(r1.aiNote, /NO_ACCOUNT: nothing was used/);
   assert.deepEqual([a1.calls.length, lim1.asked.length], [0, 0], "no limit asked after the account refused");
   unchanged(r1, "NO_ACCOUNT");
 
-  const { c } = await group();
+  const { acc } = await group();
   const reached = { ok: false, code: "AI_LIMIT_REACHED", check: "C-29.9", translation: "this month's limit is reached",
                     whose: "member:ann", scope: "transcribe", unit: "pages", period: "month" };
   const a2 = ai(() => { throw new Error("the AI must not be asked"); });
-  const r2 = await t4On({ member: "ann", credentials: c, useCheck: async () => reached, transcribe: a2.transcribe });
+  const r2 = await t4On({ member: "ann", accounts: acc, useCheck: async () => reached, transcribe: a2.transcribe });
   assert.equal(r2.aiRefusal, reached);
   assert.match(r2.aiNote, /AI_LIMIT_REACHED/);
   assert.equal(a2.calls.length, 0);
   unchanged(r2, "AI_LIMIT_REACHED");
   /* the unjudged form of the limit's refusal (ai-use R3) is a refusal too */
   const unjudged = { ok: false, code: "AI_LIMIT_REACHED", unjudged: true, whose: "member:ann" };
-  assert.equal((await t4On({ member: "ann", credentials: c, useCheck: async () => unjudged, transcribe: a2.transcribe })).aiRefusal, unjudged);
+  assert.equal((await t4On({ member: "ann", accounts: acc, useCheck: async () => unjudged, transcribe: a2.transcribe })).aiRefusal, unjudged);
 });
 
-test("R29 (N853a): every refusal the real credentials.accountFor answers for the act is aiRefusal exactly as accountFor answers it: NO_ACCOUNT, AI_USE_SWITCHED_OFF, GROUP_KEY_NOTICE_DUE, AI_KEPT_AWAY, PROJECT_AI_KEPT_AWAY, a project the member cannot see; and read passes none of it into the reading", async () => {
+test("R29 (N853a): every refusal the real ai-accounts.accountFor answers for the act is aiRefusal exactly as accountFor answers it: NO_ACCOUNT, AI_USE_SWITCHED_OFF, GROUP_KEY_NOTICE_DUE, AI_KEPT_AWAY, PROJECT_AI_KEPT_AWAY, a project the member cannot see; and read passes none of it into the reading", async () => {
   const cases = [
     ["NO_ACCOUNT", async () => ({ member: "dee" })],
-    ["AI_USE_SWITCHED_OFF", async (w) => { assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "transcribe", on: false, by: "ann" }).ok, true);
+    ["AI_USE_SWITCHED_OFF", async (w) => { assert.equal(w.acc.accountUsesSet({ owner: "member:ann", switch: "transcribe", on: false, by: "ann" }).ok, true);
                                           return { member: "ann" }; }],
-    ["GROUP_KEY_NOTICE_DUE", async (w) => { assert.equal((await w.c.groupKeySet({ key: "sk-group-key-never-shown", by: "admin" })).ok, true);
-                                            assert.equal(w.c.groupKeySwitch({ on: true, by: "admin" }).ok, true);
+    ["GROUP_KEY_NOTICE_DUE", async (w) => { assert.equal((await w.acc.groupKeySet({ key: "sk-group-key-never-shown", by: "admin" })).ok, true);
+                                            assert.equal(w.acc.groupKeySwitch({ on: true, by: "admin" }).ok, true);
                                             return { member: "dee" }; }],
-    ["AI_KEPT_AWAY", async (w) => { w.c.aiKeepAwaySet({ on: true, uses: ["transcribe"], reason: "no AI on our records", by: "admin" }); return { member: "ann" }; }],
-    ["PROJECT_AI_KEPT_AWAY", async (w) => { w.c.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" });
+    ["AI_KEPT_AWAY", async (w) => { w.acc.aiKeepAwaySet({ on: true, uses: ["transcribe"], reason: "no AI on our records", by: "admin" }); return { member: "ann" }; }],
+    ["PROJECT_AI_KEPT_AWAY", async (w) => { w.acc.projectAiKeepAwaySet({ project: "P1", on: true, uses: ["transcribe"], reason: "not this matter", by: "ann" });
                                             return { member: "ann", project: "P1" }; }],
     ["NO_SUCH_PROJECT", async () => ({ member: "dee", project: "P1" })],
   ];
   for (const [code, setup] of cases) {
     const w = await group();
     const who = await setup(w);
-    const expected = await w.c.accountFor({ member: who.member, act: { kind: "transcribe", member: who.member, ...(who.project ? { project: who.project } : {}) } });
+    const expected = await w.acc.accountFor({ member: who.member, act: { kind: "transcribe", member: who.member, ...(who.project ? { project: who.project } : {}) } });
     assert.deepEqual([expected.ok, expected.code], [false, code], `${code}: the arm is real`);
     const a = ai(() => { throw new Error("the AI must not be asked"); });
-    const t4 = await t4On({ ...who, credentials: w.c, useCheck: limits(null).useCheck, transcribe: a.transcribe });
+    const t4 = await t4On({ ...who, accounts: w.acc, useCheck: limits(null).useCheck, transcribe: a.transcribe });
     assert.deepEqual(t4.aiRefusal, expected, code);
     assert.equal(a.calls.length, 0, code);
     unchanged(t4, code);
     assert.deepEqual(leaks(t4, ANN_KEY, P1_KEY, "sk-group-key-never-shown"), [], `${code}: no key`);
     /* `read` answers the reading only: the refusal is the caller's to answer, the basis names it as before */
-    const out = await readWith({ transcription: { ...who, credentials: w.c, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
+    const out = await readWith({ transcription: { ...who, accounts: w.acc, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
     assert.equal(JSON.stringify(out).includes("aiRefusal"), false, `${code}: read carries no aiRefusal`);
     assert.match(out.reading.basis, new RegExp(code), code);
   }
 });
 
-test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRefusal key: a declining AI, an unreachable AI, an answer naming no model, no text returned, no member's act, no credentials, an accountFor or useCheck that throws, no limits checked, no AI set up, no page left; and a filled reading carries none", async () => {
-  const { c } = await group();
-  const base = { member: "ann", credentials: c, useCheck: async () => null };
+test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRefusal key: a declining AI, an unreachable AI, an answer naming no model, no text returned, no member's act, no accounts, an accountFor or useCheck that throws, no limits checked, no AI set up, no page left; and a filled reading carries none", async () => {
+  const { acc } = await group();
+  const base = { member: "ann", accounts: acc, useCheck: async () => null };
   const stops = [
     ["a declining AI", { ...base, transcribe: async () => ({ ok: false, reason: "busy" }) }, /the AI declined \(busy\)/],
     ["an unreachable AI", { ...base, transcribe: async () => { throw new Error("down"); } }, /could not be reached/],
     ["no model named", { ...base, transcribe: async () => ({ ok: true, pages: [{ page: 1, text: "x" }] }) }, /did not name the model/],
     ["no text returned", { ...base, transcribe: async () => model([]) }, /returned no text/],
     ["no member's act", { ...base, member: null, transcribe: async () => model([1]) }, /only at a member's own act/],
-    ["no credentials", { ...base, credentials: null, transcribe: async () => model([1]) }, /could not be checked/],
-    ["accountFor throws", { ...base, credentials: { accountFor: async () => { throw new Error("x"); } }, transcribe: async () => model([1]) }, /could not be checked/],
+    ["no accounts", { ...base, accounts: null, transcribe: async () => model([1]) }, /could not be checked/],
+    ["accountFor throws", { ...base, accounts: { accountFor: async () => { throw new Error("x"); } }, transcribe: async () => model([1]) }, /could not be checked/],
     ["useCheck throws", { ...base, useCheck: async () => { throw new Error("x"); }, transcribe: async () => model([1]) }, /limits .* could not be checked/],
     ["no limits checked", { ...base, useCheck: null, transcribe: async () => model([1]) }, /limits .* could not be checked/],
     ["no AI set up", { ...base, transcribe: null }, /no AI is set up/],
@@ -333,6 +340,77 @@ test("R29 (N853a, control, K874): every other stop is aiNote alone, with no aiRe
   assert.equal("aiRefusal" in (await tier4Extend(null, { i2text: i2(PAGES) })), false, "no act at all");
 });
 
+/* R31 (T48; N996; K3101): the paying account is asked of `ai-accounts`, handed in as `transcription.accounts`. */
+const asking = (inner) => { const asked = []; return { asked, accountFor: async (q) => { asked.push(q); return inner(q); } }; };
+
+test("R31: a transcription whose accounts (ai-accounts) answers NO_ACCOUNT answers that refusal as given in aiRefusal and fills nothing; control: one whose accounts.accountFor answers an account transcribes the asked pages as before, the same act asked", async () => {
+  const { acc } = await group();
+  /* dee holds no key and the group holds none: the real ai-accounts.accountFor refuses */
+  const deeAcc = asking((q) => acc.accountFor(q));
+  const a1 = ai(() => { throw new Error("the AI must not be asked"); });
+  const refused = await t4On({ member: "dee", accounts: deeAcc, useCheck: limits(null).useCheck, transcribe: a1.transcribe });
+  assert.deepEqual(deeAcc.asked, [{ member: "dee", act: { kind: "transcribe", member: "dee" } }], "the act R29 asks");
+  const expected = await acc.accountFor({ member: "dee", act: { kind: "transcribe", member: "dee" } });
+  assert.deepEqual([expected.ok, expected.code], [false, "NO_ACCOUNT"], "the arm is real");
+  assert.deepEqual(refused.aiRefusal, expected);
+  assert.match(refused.aiNote, /NO_ACCOUNT/);
+  assert.equal(a1.calls.length, 0);
+  unchanged(refused, "NO_ACCOUNT from ai-accounts");
+  /* control: ann's own key serves the act; the asked pages are transcribed, on that account */
+  const annAcc = asking((q) => acc.accountFor(q));
+  const a2 = ai((q) => model(q.pages));
+  const served = await t4On({ member: "ann", project: "P2", accounts: annAcc, useCheck: limits(null).useCheck, transcribe: a2.transcribe });
+  assert.deepEqual(annAcc.asked, [{ member: "ann", act: { kind: "transcribe", member: "ann", project: "P2" } }]);
+  assert.equal("aiRefusal" in served, false);
+  assert.deepEqual([a2.calls.length, a2.calls[0].pages, a2.calls[0].account.level, a2.calls[0].account.key, served.filled, served.wiredTier],
+                   [1, [1, 2], "member", ANN_KEY, [1, 2], 4]);
+  assert.deepEqual(leaks(served, ANN_KEY, P1_KEY), [], "the key reaches the AI alone");
+  /* and through `read`, the reading is the AI's at tier 4 */
+  const out = await readWith({ transcription: { member: "ann", accounts: acc, useCheck: limits(null).useCheck, transcribe: ai((q) => model(q.pages)).transcribe } });
+  assert.deepEqual([out.reading.text_tier, out.reading.ai_transcription.pages], [4, [1, 2]]);
+});
+
+test("R31 (controls): an accounts that is absent, has no accountFor, or throws stops the AI tier with the aiNote for an account that could not be checked, no aiRefusal, nothing filled, the AI not asked", async () => {
+  const stops = [
+    ["accounts absent", { accounts: undefined }],
+    ["accounts null", { accounts: null }],
+    ["accounts with no accountFor", { accounts: {} }],
+    ["accountFor not a function", { accounts: { accountFor: "yes" } }],
+    ["accountFor throws", { accounts: { accountFor: async () => { throw new Error("down"); } } }],
+    ["accountFor throws synchronously", { accounts: { accountFor: () => { throw new Error("down"); } } }],
+  ];
+  for (const [label, extra] of stops) {
+    const a = ai(() => { throw new Error("the AI must not be asked"); });
+    const lim = limits(null);
+    const t4 = await t4On({ member: "ann", useCheck: lim.useCheck, transcribe: a.transcribe, ...extra });
+    assert.match(t4.aiNote, /^the AI was not asked to transcribe pages 2-3: the account that would pay for it could not be checked$/, label);
+    assert.equal("aiRefusal" in t4, false, label);
+    assert.deepEqual([a.calls.length, lim.asked.length], [0, 0], label);
+    unchanged(t4, label);
+  }
+});
+
+test("R31 (through T48): a transcription that hands credentials and no accounts is read the same way; when accounts is handed it alone is asked, credentials never", async () => {
+  const { acc } = await group();
+  /* credentials R72's delegate answers accountFor as ai-accounts does: modelled by a delegate over the same instance */
+  const delegate = { accountFor: (q) => acc.accountFor(q) };
+  for (const who of [{ member: "ann" }, { member: "dee" }, { member: "bob", project: "P1" }]) {
+    const run = (k, v) => t4On({ ...who, [k]: v, useCheck: limits(null).useCheck, transcribe: ai((q) => model(q.pages)).transcribe });
+    const viaAccounts = await run("accounts", acc);
+    const viaAlias = await run("credentials", delegate);
+    assert.deepEqual(viaAlias, viaAccounts, JSON.stringify(who));
+  }
+  /* both handed: accounts is the one asked */
+  const never = { accountFor: async () => { throw new Error("credentials must not be asked when accounts is handed"); } };
+  const annAcc = asking((q) => acc.accountFor(q));
+  const both = await t4On({ member: "ann", accounts: annAcc, credentials: never, useCheck: limits(null).useCheck, transcribe: ai((q) => model(q.pages)).transcribe });
+  assert.deepEqual([annAcc.asked.length, both.filled, both.wiredTier], [1, [1, 2], 4]);
+  /* an accounts handed with no accountFor stops, even beside a credentials that would answer */
+  const stopped = await t4On({ member: "ann", accounts: {}, credentials: delegate, useCheck: limits(null).useCheck, transcribe: ai((q) => model(q.pages)).transcribe });
+  assert.match(stopped.aiNote, /the account that would pay for it could not be checked/);
+  unchanged(stopped, "accounts without accountFor beside credentials");
+});
+
 test("R18 R19 (R29): readingProvenance credits a page an ai_transcription step covers to tier 4, named by the model, never to tier 3's OCR member for the pixels before it; compareProvenance attributes a change to it", async () => {
   const PIX = { step: "pixels", cap: null, measured_by: AI_TRANSCRIPTION_SOURCE, calibration: null };
   const AIT = { step: "ai_transcription", engine: "vision-model", version: "3", cap: null, measured_by: AI_TRANSCRIPTION_SOURCE, calibration: null };
@@ -349,11 +427,11 @@ test("R18 R19 (R29): readingProvenance credits a page an ai_transcription step c
 });
 
 test("R29 (N835, ai-use R1): the paying owner is spelled from the bare member id: a member handed stamped `member:ann` and one handed bare `ann` are both judged as owner `member:ann`, never `member:member:ann`, and both are served by her own account", async () => {
-  const { c } = await group();
+  const { acc } = await group();
   for (const handed of ["member:ann", "ann"]) {
     const lim = limits(null);
     const a = ai((q) => model(q.pages));
-    const t4 = await tier4Extend({ member: handed, credentials: c, useCheck: lim.useCheck, transcribe: a.transcribe, at: "2026-10-11T00:00:00Z" },
+    const t4 = await tier4Extend({ member: handed, accounts: acc, useCheck: lim.useCheck, transcribe: a.transcribe, at: "2026-10-11T00:00:00Z" },
                                  { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: rp.layerChainFor(i2(PAGES), { tier: 1, container: "pdf" }) });
     assert.deepEqual(lim.asked, [{ owner: "member:ann", member: handed, use: "transcribe", at: "2026-10-11T00:00:00Z" }], handed);
     assert.doesNotMatch(JSON.stringify(lim.asked), /member:member:/, handed);
@@ -362,9 +440,9 @@ test("R29 (N835, ai-use R1): the paying owner is spelled from the bare member id
   }
   /* a project's and the group's owner are not the member's, whatever the member's spelling */
   const w = await group();
-  w.c.projectKeyNoticeSeen({ member: "bob", project: "P1", by: "bob" });
+  w.acc.projectKeyNoticeSeen({ member: "bob", project: "P1", by: "bob" });
   const lim = limits(null);
-  await tier4Extend({ member: "member:bob", project: "P1", credentials: w.c, useCheck: lim.useCheck, transcribe: ai((q) => model(q.pages)).transcribe },
+  await tier4Extend({ member: "member:bob", project: "P1", accounts: w.acc, useCheck: lim.useCheck, transcribe: ai((q) => model(q.pages)).transcribe },
                     { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: null });
   assert.deepEqual(lim.asked.map((q) => q.owner), ["project:P1"]);
 });
@@ -374,15 +452,15 @@ test("R29 (N835, ai-use R1): the paying owner is spelled from the bare member id
    `pixels -> ocr`, page 1 under `pixels -> ai_transcription`, and page 3 unread. */
 const SCAN4 = [0, 1, 2, 3].map((p) => ({ page: p, text: "", undetermined: [noText(p)] }));
 async function storedReading() {
-  const { c } = await group();
+  const { acc } = await group();
   const ocr = member((body) => ocrAnswer(body.pages.filter((p) => p === 0 || p === 2)));
   const a = ai((q) => model(q.pages.filter((p) => p === 1)));
   const out = await readWith({ pages: SCAN4, env: { OCR_WORKER: ocr },
-    transcription: { member: "ann", credentials: c, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
+    transcription: { member: "ann", accounts: acc, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
   assert.deepEqual(a.calls.map((q) => q.pages), [[1, 3]], "the first reading asked the AI for the pages OCR left");
   const units = out.text_units.map((u) => ({ page: u.extent.page, text: u.text }));
   assert.deepEqual(units.map((u) => u.page), [0, 1, 2]);
-  return { c, reading: out.reading, units };
+  return { acc, reading: out.reading, units };
 }
 const stepsOf = (chain) => chain.map((s) => [s.step, s.extent ? s.extent.pages : null]);
 const reReadEnv = (answer) => ({ OCR_WORKER: member(answer) });
@@ -405,7 +483,7 @@ test("R30 R23: tier3SeedFrom seeds the stored reading's pixels -> ai_transcripti
 });
 
 test("R30 R6 R29: a re-read that asks the OCR member for the rest keeps the AI's page with its text and chain, asks neither the OCR member nor the AI for it again, and the reading it composes still carries it", async () => {
-  const { c, reading, units } = await storedReading();
+  const { acc, reading, units } = await storedReading();
   const seed = tier3SeedFrom(reading, units);
   const env = reReadEnv((body) => ocrAnswer(body.pages));
   const t3 = await tier3Extend(env, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed });
@@ -420,7 +498,7 @@ test("R30 R6 R29: a re-read that asks the OCR member for the rest keeps the AI's
   assert.deepEqual(tier4Pages(t3.i2text), []);
   let accounts = 0;
   const never = ai(() => { throw new Error("the AI must not be asked again"); });
-  const t4 = await tier4Extend({ member: "ann", credentials: { accountFor: async (q) => { accounts++; return c.accountFor(q); } },
+  const t4 = await tier4Extend({ member: "ann", accounts: { accountFor: async (q) => { accounts++; return acc.accountFor(q); } },
                                  useCheck: limits(null).useCheck, transcribe: never.transcribe },
                                { sha: "d", storeName: "bio", i2text: t3.i2text, wiredTier: t3.wiredTier, chain: t3.chain });
   assert.deepEqual([never.calls.length, accounts, t4.filled], [0, 0, []]);
@@ -438,7 +516,7 @@ test("R30 R6 R29: a re-read that asks the OCR member for the rest keeps the AI's
 });
 
 test("R30: the AI's page is never dropped when the OCR member has every page already, fails, or is not bound; with none bound only the page nobody read is left for the AI", async () => {
-  const { c, reading, units } = await storedReading();
+  const { acc, reading, units } = await storedReading();
   const seed = tier3SeedFrom(reading, units);
   const go = (env, s = seed, text = i2(SCAN4)) => tier3Extend(env, { sha: "d", storeName: "bio", i2text: text, wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed: s });
   const keepsAi = (t3, label) => {
@@ -465,7 +543,7 @@ test("R30: the AI's page is never dropped when the OCR member has every page alr
   keepsAi(n, "no member");
   assert.deepEqual(tier4Pages(n.i2text), [3]);
   const a = ai((q) => model(q.pages));
-  const t4 = await tier4Extend({ member: "ann", credentials: c, useCheck: limits(null).useCheck, transcribe: a.transcribe },
+  const t4 = await tier4Extend({ member: "ann", accounts: acc, useCheck: limits(null).useCheck, transcribe: a.transcribe },
                                { sha: "d", storeName: "bio", i2text: n.i2text, wiredTier: n.wiredTier, chain: n.chain });
   assert.deepEqual(a.calls.map((q) => q.pages), [[3]], "the AI is asked only for the page nobody read");
   assert.deepEqual(stepsOf(t4.chain).filter(([s]) => s === "ai_transcription"), [["ai_transcription", [1]], ["ai_transcription", [3]]],

@@ -1,21 +1,48 @@
 /* journey-check R1: the two arms. `runLocal` walks journey 28 from the installer through the hand-over into the copy and
    on, then journey 3, then sweeps the registry's screens; `runLive` signs in to a named test instance as its
-   administrator and as a member and sweeps every working screen. Each answers the walk (its steps, its failures, its
-   report); R3's guard runs before anything is written to the instance. */
-import { join, dirname } from "node:path";
+   administrator and as a member, each verified by `whoami`, and sweeps every working screen beside the design mock.
+   Each answers the walk (its steps, its failures, its report); R3's guard runs before anything is written. */
+import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Walk, StepFailed, FAIL } from "./walker.mjs";
+import http from "node:http";
+import https from "node:https";
+import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
-import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn } from "./journeys.mjs";
+import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs } from "./journeys.mjs";
 import { sweepScreens } from "./screens.mjs";
+import { designMock, pageLimits, pair, WIDTHS, viewportOf } from "./design.mjs";
 
 export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
 
-export async function browser() {
+/* R5: a Chromium that reaches every address directly, through no proxy the environment names. The headless shell
+   ignores `--no-proxy-server` alone and follows an environment proxy; `--proxy-server=direct://`, last, holds in both. */
+export const DIRECT_ARGS = Object.freeze(["--no-proxy-server", "--proxy-server=direct://"]);
+
+export async function browser({ direct = false, args = [] } = {}) {
   let chromium;
   try { ({ chromium } = await import("playwright-core")); }
   catch (e) { throw new Error(`playwright-core cannot be loaded (run \`npm ci\` in ${dirname(fileURLToPath(import.meta.url))}): ${e.message}`); }
-  return chromium.launch({ ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
+  return chromium.launch({ ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}),
+    args: [...args, ...(direct ? DIRECT_ARGS : [])] });
+}
+
+/* R5: a fetch that reaches the instance directly. Node's own fetch follows the environment's proxy (NODE_USE_ENV_PROXY);
+   a request on an agent of its own does not. */
+export async function directFetch(req) {
+  const u = new URL(req.url);
+  const lib = u.protocol === "https:" ? https : http;
+  const body = ["GET", "HEAD"].includes(req.method) ? null : Buffer.from(await req.arrayBuffer());
+  return new Promise((done, failed) => {
+    const q = lib.request(u, { method: req.method, headers: Object.fromEntries(req.headers), agent: new lib.Agent() }, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => done(new Response(res.statusCode === 204 ? null : Buffer.concat(chunks),
+        { status: res.statusCode, headers: Object.entries(res.headers).flatMap(([k, v]) => (Array.isArray(v) ? v.map((x) => [k, x]) : [[k, String(v)]])) })));
+      res.on("error", failed);
+    });
+    q.on("error", failed);
+    q.end(body);
+  });
 }
 
 /* What an arm's error says in its walk: a refusal, or a step that stopped (a StepFailed has said so already). */
@@ -72,9 +99,14 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
   return { walk, report: walk.report(), ok: walk.failures.length === 0 };
 }
 
-/* The live arm (R1 (b)): `base` a named test instance; the credentials are read from the environment and never printed:
-   JOURNEY_ADMIN_HANDLE, JOURNEY_ADMIN_PASSWORD, JOURNEY_MEMBER_HANDLE, JOURNEY_MEMBER_PASSWORD. */
-export async function runLive({ base, env = process.env, out = join(OUT, "live"), fetchOf = fetch, launch = browser } = {}) {
+/* The live arm (R1 (b), R5, R6): `base` a named test instance; the credentials are read from the environment and never
+   printed: JOURNEY_ADMIN_HANDLE, JOURNEY_ADMIN_PASSWORD, JOURNEY_MEMBER_HANDLE, JOURNEY_MEMBER_PASSWORD. It reaches the
+   instance directly (R5). Each role signs in, `whoami` must answer it as that role, and it walks every working screen;
+   on each, at 1280 and 390 px, the page's limits are measured and the page is paired with the design mock's drawing
+   (R6). The administrator must be drawn every act the member is, and somewhere an act the member is not. `screens`
+   narrows the sweep; `commit` names the mock's commit (the interface's ASSETS_COMMIT when not given). */
+export async function runLive({ base, env = process.env, out = join(OUT, "live"), fetchOf = directFetch, launch = browser,
+  screens = null, commit = undefined } = {}) {
   const walk = new Walk({ out, arm: "live" });
   const need = ["JOURNEY_ADMIN_HANDLE", "JOURNEY_ADMIN_PASSWORD", "JOURNEY_MEMBER_HANDLE", "JOURNEY_MEMBER_PASSWORD"];
   for (const k of need) if (env[k]) walk.keepSecret(env[k]);
@@ -84,11 +116,18 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
     if (missing.length) throw new WalkRefused("NO_CREDENTIALS", `the environment does not hold ${missing.join(", ")}`);
     await requireTestInstance(base, fetchOf);
     walk.copyHost = new URL(base).host;
-    const b = await launch();
+    /* the instance's own short name, never to be read on a screen */
+    const slugs = [walk.copyHost.split(".")[0]].filter((x) => !/^\d+$/.test(x) && x !== "localhost");
+    const b = await launch({ direct: true });
+    let mock = null;
     try {
-      const sweepAs = async (role, handle, password, screens) => {
+      mock = await designMock(b, { dir: join(out, "design"), ...(commit ? { commit } : {}) });
+      const working = screens || sweepScreens().filter((s) => s.frame === "working" || s.frame === "dock");
+      const acts = { administrator: new Map(), member: new Map() };
+      const sweepAs = async (role, handle, password, administer) => {
         walk.journey = `as ${role}`;
-        const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+        walk.whoami = null;
+        const ctx = await b.newContext({ viewport: viewportOf(1280) });
         try {
           await ctx.route("**/*", (r) => (new URL(r.request().url()).host === walk.copyHost ? r.continue()
             : (walk.foreign(r.request().url()), r.abort("blockedbyclient"))));
@@ -99,13 +138,44 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
             await p.waitForFunction(() => location.pathname === "/app" || location.pathname === "/", null, { timeout: 15000 });
             await requireDrawn(walk, p, "home");
           });
-          await sweep(walk, page, base, { screens });
-        } finally { await ctx.close().catch(() => {}); }
+          /* R5: the plane says who signed in; a credential that is not the role it is given for stops that role */
+          const who = walk.whoami;
+          if (!who) { walk.fail(FAIL.ROLE, `as ${role}: whoami answered no member session after sign-in`); return; }
+          if (!!who.administer !== administer) {
+            walk.fail(FAIL.ROLE, `the ${role}'s credential signs in a session whoami answers with administer: ${!!who.administer}`);
+            return;
+          }
+          await sweep(walk, page, base, { screens: working, journey: `as ${role}`, each: async (p, s, drawn) => {
+            acts[role].set(s.id, await drawnActs(p));
+            if (!drawn) return;
+            for (const width of WIDTHS) {
+              if (width !== 1280) { await p.setViewportSize(viewportOf(width)); await p.reload(); await settle(p); }
+              for (const l of await pageLimits(p, { width, slugs })) walk.fail(l.kind, `${s.id} at ${width}px: ${l.detail}`);
+              const live = await p.screenshot();
+              const design = await mock.draw(s.id, width);
+              if (!design) walk.fail(FAIL.DESIGN, `${s.id}: the design mock at ${mock.commit} draws no such screen`);
+              else walk.pairs.push(relative(out, await pair(b, live, design, join(out, "pairs", `${role}-${s.id}-${width}.png`),
+                { title: `${s.id}, ${width}px, as ${role}` })));
+            }
+            await p.setViewportSize(viewportOf(1280));
+          } });
+        } catch (e) { if (!(e instanceof StepFailed)) throw e; }
+        finally { await ctx.close().catch(() => {}); }
       };
-      const working = sweepScreens().filter((s) => s.frame === "working" || s.frame === "dock");
-      await sweepAs("administrator", env.JOURNEY_ADMIN_HANDLE, env.JOURNEY_ADMIN_PASSWORD, working);
-      await sweepAs("member", env.JOURNEY_MEMBER_HANDLE, env.JOURNEY_MEMBER_PASSWORD, working);
-    } finally { await b.close().catch(() => {}); }
+      await sweepAs("administrator", env.JOURNEY_ADMIN_HANDLE, env.JOURNEY_ADMIN_PASSWORD, true);
+      await sweepAs("member", env.JOURNEY_MEMBER_HANDLE, env.JOURNEY_MEMBER_PASSWORD, false);
+      /* R5: the acts only an administrator is drawn */
+      walk.journey = "roles";
+      if (acts.administrator.size && acts.member.size) {
+        let only = 0;
+        for (const [id, mine] of acts.member) {
+          const theirs = acts.administrator.get(id) || [];
+          for (const op of mine) if (!theirs.includes(op)) walk.fail(FAIL.ROLE, `${id}: the member is drawn ${op}, the administrator is not`);
+        }
+        for (const [id, theirs] of acts.administrator) only += theirs.filter((op) => !(acts.member.get(id) || []).includes(op)).length;
+        if (!only) walk.fail(FAIL.ROLE, "no screen draws the administrator an act it does not draw the member: the administrator's walk did not administer");
+      }
+    } finally { if (mock) await mock.close(); await b.close().catch(() => {}); }
   } catch (e) {
     failed(walk, e);
   }

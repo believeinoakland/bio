@@ -2,23 +2,26 @@
 /* explore (layer 5; T33-37; K1442, K1469, K1470, K1471, K1486, K1487): the one read across every owner of a
    relationship. A bounded, as-of exploration from a node over the owners registered with `connection-grammar`, each
    hop cited and graded in the one connection shape, the weakest hop governing; presets as kind sets; overlaps
-   between two persons; re-deriving a derived connection; a timeline over a set. It writes nothing, asserts no
-   connection, ranks nothing and records no one's exploring (R9, R16). The walk is synchronous on the instance's one
-   thread, so its time budget is checked between owner calls. */
+   between two persons; the connection graph's read, a centre two rings out (R21); re-deriving a derived connection or
+   a chain; a timeline over a set. It writes nothing, asserts no connection, ranks nothing and records no one's
+   exploring (R9, R16). The walk is synchronous on the instance's one thread, so its time budget is checked between
+   owner calls. */
 import { BOUNDS, defaultRegistry } from '../connection-grammar/index.mjs';
 import { checkWalkArgs, walk } from './walk.mjs';
 import { presets, chain, flowsFrom, relationsOf, pathBetween, overlaps } from './presets.mjs';
 import { rederive } from './rederive.mjs';
 import { timelineOver } from './timeline.mjs';
+import { neighbourhood } from './graph.mjs';
 import { eventsOf } from '../events/index.mjs';
 import { moneyOf } from '../money/index.mjs';
 
 export { exploreOps } from './ops.mjs';
 export { PRESET_RULES, OVERLAP_SENTENCE } from './presets.mjs';
-export { PATH_ORDER, QUANTITY_OF_PATH } from './walk.mjs';
+export { PATH_ORDER, QUANTITY_OF_PATH, DEPTH_SENTENCE, AT_DEPTH_MAX, STEP_SOURCE } from './walk.mjs';
+export { STOPPED_SENTENCE, RINGS } from './graph.mjs';
 export { HUB_WORDS } from './reader.mjs';
 export { LEAD_SENTENCE } from './answer.mjs';
-export { INPUT_NOT_READ } from './rederive.mjs';
+export { INPUT_NOT_READ, CHAIN_MAX } from './rederive.mjs';
 
 /** The time budget every exploration answers with (R5): connection-grammar's default, provisional until M-X1b. */
 export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;
@@ -43,6 +46,8 @@ export function exploreOf(host, deps = {}) {
       return walk(c, { from, to: to ?? undefined, at, sortBy: sortBy ?? undefined, scope: scope ?? null, viewer,
         kinds: /** @type {string[]} */ (k.kinds), depth: /** @type {number} */ (k.depth) });
     },
+    /** neighbourhood({centre, at, rings?, kinds?, scope?, viewer}) (R21): the connection graph's read. */
+    neighbourhood: (a) => neighbourhood(c, a),
     presets: () => presets(c.registry),
     chain: (a) => chain(c, a),
     flowsFrom: (a) => flowsFrom(c, a),

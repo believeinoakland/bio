@@ -221,6 +221,14 @@ CREATE TABLE IF NOT EXISTS handle_check_window (
   PRIMARY KEY (key, win)
 );
 
+-- R143 (T48; N1036; DEC-218, K3146, K3189): WHEN A MEMBER LAST LOOKED AT HOME, one row per member (an active member, or
+-- the founder as 'admin'), its instant replaced at each look. It holds the member and the instant and nothing else;
+-- declared through record-core's declareTable with export never and sight owner, exempt from purge as members are.
+CREATE TABLE IF NOT EXISTS home_looks (
+  member_id TEXT PRIMARY KEY,
+  at        TEXT NOT NULL
+);
+
 -- R107 (DEC-136 (1)): WHETHER MEMBERS ARE TOLD WHAT A COURT CAN REACH, an administrator's choice, append-only; the
 -- latest row is the setting and no row means nobody has chosen (nothing preselected). Exempt from purge (R111).
 CREATE TABLE IF NOT EXISTS court_notice (
@@ -255,7 +263,9 @@ export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_v
   /* R111 (T34): the doors, the group's description and the court-notice setting. */
   "join_doors", "group_description", "court_notice",
   /* R57, R16 (was R124's, T40) and R123: the handle history and the handle check's window. */
-  "handle_history", "handle_check_window"];
+  "handle_history", "handle_check_window",
+  /* R143 (T48): the members' Home marks. */
+  "home_looks"];
 /* R131 (T46; K2928): the tables declared through record-core's `declareTable` (its R21) with classes of their own rather
    than its default form. `join_doors` holds each door's `secret_hash`, so it is `export: never`: no export, an
    administrator's included, carries a door's secret or its hash (R130's read is the only way its settings and history
@@ -264,6 +274,10 @@ export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_v
    form's declaration. */
 export const MEMBERSHIP_DECLARED_TABLES = Object.freeze([
   Object.freeze({ name: "join_doors", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
+  /* R143 (T48; N1036): a member's Home mark is theirs alone (`sight: owner`), never exported, and kept by purge as the
+     members are (R115). */
+  Object.freeze({ name: "home_looks", purge: "exempt", expunge: "none", export: "never", sight: "owner", derive: "stored",
                   version_chain: false }),
 ]);
 /* R115 (T38): participation, visibility and the sight index, with R36's removals; the owner votes, decisions and requests

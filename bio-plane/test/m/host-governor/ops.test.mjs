@@ -271,13 +271,14 @@ before(async () => {
     outboundService() { return new Response("unscripted", { status: 500 }); },
   });
   /* Two enrolled administrators and two ordinary members, then the founder's claim and session (Membership
-     Architecture 4.2/4.3: the first two administrators are enrolled before anyone else). */
+     Architecture 4.2/4.3: the first two administrators are enrolled before anyone else). Each signs in by its
+     handle, the founder's `admin` (membership's sign-in since T47; N1052). */
   const enrol = async (id, role, capabilities) => {
     const add = await call(`op=memberadd`, T.admin, { memberId: id, cover: `cover for ${id}`, role, capabilities });
     if (!add?.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
     const en = await call("op=enroll", undefined, { invite: add.invite, handle: id, password: `${id}-passphrase-hg` });
     if (!en?.ok) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
-    const lg = await call("op=login", undefined, { role: `member:${id}`, password: `${id}-passphrase-hg` });
+    const lg = await call("op=login", undefined, { handle: id, password: `${id}-passphrase-hg` });
     if (!lg?.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
     return lg.token;
   };
@@ -287,7 +288,7 @@ before(async () => {
   S.dee = await enrol("dee", "member", []);   // the member class retired (C-38.11): a member reaches an op by session
   const claimed = await call("op=claim", undefined, { bootstrapToken: T.admin, password: "founder-passphrase-hg" });
   if (!claimed?.ok) throw new Error(`claim: ${JSON.stringify(claimed)}`);
-  const fl = await call("op=login", undefined, { password: "founder-passphrase-hg" });
+  const fl = await call("op=login", undefined, { handle: "admin", password: "founder-passphrase-hg" });
   if (!fl?.token) throw new Error(`founder login: ${JSON.stringify(fl)}`);
   S.founder = fl.token;
 });

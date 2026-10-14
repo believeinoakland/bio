@@ -1071,7 +1071,45 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    project-roster's T47 job added and changed no row.
    ROW_CENSUS (R50) re-pinned to this tree: 1882 rows. Rows a T47 job in layers 3–11 adds or changes (case-inputs' and
    action-records' moved `where`s among them) are T48's stamp (plan T47, rule 5 item 2). */
-export const CATALOG_VERSION = "1.74.0";
+/* 1.75.0 (PROMOTION #46, T48-12, 2026-10-14; T47's rule 5 item 2, T48's rules 5 (2) and 5 (6); N1018, N1052, N1056; K3192,
+   K3195): MINOR. The stamp of every row awaiting it at T47's close (T47's layers 3–11) and of T48's layers 1 and 2, read
+   by diffing R50's census lines of `tranche/T48` against 1.74.0's own (`test/fixtures/row-census-1.74.0.jsonl`: 1882 rows,
+   42d2890c…): fifty-nine lines, seventeen new rows, forty-one changed, one retired (K3192 counts the same fifty-nine).
+   Each is one a T47 job record names (ACTION-GRAMMAR's, ACTION-RECORDS', ACTION-PLANS', ACTION-REPLIES', ANSWER-ENVELOPE's,
+   CASE-INPUTS', CREDENTIALS', DOCKET's, ESCALATION's, FILE-SAFETY's, FILING-TEMPLATES', FILINGS', INSTANCE-SETUP's,
+   LOCAL-FACTS', MEMBERSHIP's, MONITORING's, RUN-RULES', STRENGTH's and TASKS').
+   THE FAMILIES THAT ARRIVED, in T47 and not stamped by 1.74.0's note: `case-inputs`' `CARRIED_OUTCOME_CHECKS`
+   (C-136.3–.8, taken by copy from case-authoring, T47-31) and its `STATEMENT_ACK_CHECKS` (C-82.2–.8); each row's line
+   is counted where it now lives, and only its `where` (and C-136.5's translation) moved.
+   ARRIVED (17): answer-envelope C-69.7 SIGNINTRACE_NOT_TEST; credentials C-29.42 REAUTH_DUE, C-29.43 SESSION_LOCKED,
+   C-29.44 SIGNIN_NOT_HELD, C-29.45 SUBSCRIPTION_TOKEN_MALFORMED, C-29.46 RESET_LINK_DEAD, C-29.47
+   RESET_LINK_MEMBER_NOT_ACTIVE and C-96.53 RECOVERY_CODES_NOT_A_MEMBER; file-safety C-140.43 RENDER_QUEUE_UNREADABLE;
+   filings C-115.57 SENT_REFERENCE_MALFORMED, C-115.58 FILL_UNKNOWN_BLANK; monitoring C-18.20
+   MACHINE_CANNOT_SET_MONITORING, C-18.21 MONITOR_SET_REFUSED; instance-setup C-64.30 LOGO_REFUSED; strength C-107.4
+   PROJECT_BAR_NO_REASON; tasks C-138.16 MACHINE_CANNOT_ASK_SIGN, C-138.17 SIGN_ALREADY_ASKED.
+   RETIRED (1), its number never reused: answer-envelope C-69.6 DISCLOSURE_DUE (T47-65 retired the door's copy, K3030;
+   credentials' C-29.40 holds the code).
+   CHANGED (41), code and number unmoved. `where` only (27): action-grammar C-73.2–.5, C-90.2, C-90.6, C-117.39,
+   C-117.48–.52 (action-records' sites, T47); case-inputs C-136.3, .4, .6–.8 and C-82.2–.8; filing-templates C-125.4;
+   local-facts C-126.7; strength C-32.9, C-107.2. `where` and translation (1): case-inputs C-136.5 BAD_CARRIED_OUTCOME.
+   Translation only (13): action-plans C-124.63; action-replies C-150.3; credentials C-96.41; docket C-129.29; escalation
+   C-116.14, C-116.41; file-safety C-140.2, .3, .13, .38; membership C-56.6; run-rules C-22.30.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T47 L3–L11 or T48 L1 job record names. T48's layer 1
+   (record-grammar, jurisdictions, signatures, bundler, court-citations, ooxml, file-scanner) added and changed no row.
+   THE CENSUS'S SCRIPTS (R50, N1056): `bio-plane/src/journey-check/journey.mjs` runs its journey and exits when imported,
+   so the census reads it as text only, beside the fleet members' `scripts/`; it holds no `check:` key, so the figures
+   are unmoved by it.
+   T48 LAYER 2, re-pinned in place after ai-accounts, record-core, membership and credentials merged (K3213, K3215,
+   K3216, K3218): THE FAMILY THAT ARRIVED is `ai-accounts`' `AI_ACCOUNT_CHECKS` (the credentials split by copy, T48-10,
+   K3101), into which credentials' C-29 rows moved, credentials' copies deleted (T48-11), so each is held once, as
+   before. CHANGED (21), `where` only, code, number and translation unmoved, each naming `src/ai-accounts/`: C-29.13–.15,
+   .17, .19–.22, .27, .29, .31 (`#keptAway > is-kept-away`), .32, .34–.40, .44, .45. No row arrived or departed. Record-core's
+   N1018 sentence for `WCD` and `OUTC` is `mintExhausted`'s detail, not C-59.6's line, so no row moved; membership's T48
+   job moved no row (its `MODULE_ORDER` gains `ai-accounts`, `signin-door` and `journey-check`, none of which registers a
+   gate step, so no gate's order moves).
+   ROW_CENSUS (R50) re-pinned to this tree: 1898 rows. Rows a T48 job in layers 3–11 adds or changes are T49's stamp
+   (plan T48, rule 5 item 2). */
+export const CATALOG_VERSION = "1.75.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1163,8 +1201,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1882,
-  digest: "42d2890cf6972389a59f858374e684662c2514d50b6768380774b6c83c3c5319" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1898,
+  digest: "c57e3cf866aa8b4982482de07a5c5d1a6d49409d00ecafd948fce4d8779195df" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

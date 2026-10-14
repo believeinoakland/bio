@@ -35,7 +35,9 @@ const editedOf = (edit, base = jurisdictions) => ({ ...base, get: (id) => { cons
 
 test("R29 C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT_REVIEWED by key from FILING_TEMPLATES_WORDS, never a copy; its code, number and where unmoved; T45's words answered no longer", () => {
   assert.ok(Object.isFrozen(ft.FILING_TEMPLATES_WORDS));
-  assert.deepEqual(Object.keys(ft.FILING_TEMPLATES_WORDS), ["refusal.TEMPLATE_NOT_REVIEWED"], "the table holds exactly the one row's key");
+  /* T48 (R33) adds the one key of C-115.47, which r33.test.mjs pins */
+  assert.deepEqual(Object.keys(ft.FILING_TEMPLATES_WORDS), ["refusal.TEMPLATE_NOT_REVIEWED", "refusal.RFC_QUOTING_MISSING"],
+                   "the table holds exactly the rows' keys");
   for (const [key, text] of Object.entries(ft.FILING_TEMPLATES_WORDS)) assert.equal(text, en(key), `${key} verbatim`);
   const row = rows.TEMPLATE_NOT_REVIEWED;
   assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"]);
@@ -55,7 +57,7 @@ test("R29 C-125.34 TEMPLATE_COURT_PETITION keeps its present translation, not wo
   assert.doesNotMatch(en("refusal.TEMPLATE_COURT_PETITION"), /your group's Civicsmith/);
   /* T47 (R30) moved C-125.4's `where` to its one site, which r30.test.mjs pins; read here at its T46 place, so this pin
      still proves no other check, where or translation moved */
-  const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED")
+  const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED" && c !== "RFC_QUOTING_MISSING")
     .map(([c, r]) => [c, c === "TEMPLATE_BLANK_UNKNOWN" ? { ...r, where: AT("#textRefusal", "is-template-text") } : r]));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
     "no other row's check, where or translation moved");

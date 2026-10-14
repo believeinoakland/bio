@@ -226,6 +226,6 @@ test("R73 the first profile holds only official translations a measurement found
   /* no Oakland translation is captured in the repository (T37-2's START): the section is absent, so a group's
      translation workspace finds no official form and shows each name unchanged (R27) */
   assert.equal(own(p, "local_names"), false);
-  const translations = (p.local_names || []).flatMap((n) => n.translations || []);
-  assert.ok(translations.every((x) => /^(?:M-\d+|\d{4}-\d{2}-\d{2})/.test(x.basis) && x.source));
+  /* absent, the view offers none either: no official form is invented for any name */
+  assert.equal(combine([FIRST]).view.local_names, undefined);
 });

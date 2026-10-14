@@ -1,4 +1,4 @@
-/* reading-pipeline (R1–R29): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R31): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
@@ -640,11 +640,13 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
    uncapped: the AI's reading, undetermined until its accuracy is measured (BIO_Investigation §6).
 
    The module stays pure and reaches none of it by import. The caller acting at the member's request hands in
-   `transcription = {member, project?, credentials, useCheck, transcribe, at?}`:
-   - `credentials`: the plane's credentials (`credentials.accountFor`, its R56), asked for the act
-     `{kind: "transcribe", member, project}`. It refuses a "no AI" material limit first (the group's, or the
-     project's, R57), then no account, the use switched off, a project the member has not joined; any refusal
-     sends nothing;
+   `transcription = {member, project?, accounts, useCheck, transcribe, at?}`:
+   - `accounts`: the paying account's service, an object whose `accountFor` is `ai-accounts.accountFor` (its R7, R11;
+     R31, T48), asked for the act `{kind: "transcribe", member, project}`. It refuses a "no AI" material limit first
+     (the group's, or the project's), then no account, the use switched off, a project the member has not joined; any
+     refusal sends nothing. Through T48 a `transcription` that hands `credentials` and no `accounts` is read the same
+     way (`credentials` R72's delegate answers `accountFor` as `ai-accounts` does), until the plane's transcriber
+     re-points; the alias is removed in the tranche after (R31);
    - `useCheck`: `ai-use.useCheck` (its R3), asked `{owner, member, use: "transcribe", at}` for the account chosen;
      a refusal, or none handed in, sends nothing (a limit nobody checked is not one the act is within);
    - `transcribe`: the caller's AI path, handed `{account, capture_sha, store, pages, use}`, answering
@@ -721,15 +723,18 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
                + "to transcribe";
     return out;
   }
-  const { member = null, project = null, credentials = null, useCheck = null, transcribe = null } = transcription;
+  const { member = null, project = null, accounts = null, credentials = null, useCheck = null, transcribe = null }
+    = transcription;
   if (!(typeof member === "string" && member))
     return not("the AI transcribes only at a member's own act, and none was named");
-  if (!(credentials && typeof credentials.accountFor === "function"))
+  /* R31 (T48): `accounts` when handed; `credentials` only in its place, through T48. */
+  const payer = accounts != null ? accounts : credentials;
+  if (!(payer && typeof payer.accountFor === "function"))
     return not("the account that would pay for it could not be checked");
   let account;
   try {
-    account = await credentials.accountFor({ member, act: { kind: TRANSCRIBE_USE, member,
-                                                            ...(project != null ? { project } : {}) } });
+    account = await payer.accountFor({ member, act: { kind: TRANSCRIBE_USE, member,
+                                                      ...(project != null ? { project } : {}) } });
   } catch { return not("the account that would pay for it could not be checked"); }
   if (!(account && account.ok === true)) return refused(account);
   /* N835 (ai-use R1): the paying owner is spelled from the bare member id, whether `member` was handed bare or

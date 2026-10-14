@@ -202,20 +202,27 @@ function declaredTotal(container) {
  * CRC-32 (ZIP polynomial) — for verifying a member actually round-trips
  * ------------------------------------------------------------------ */
 
-const CRC_TABLE = (() => {
+/* The byte table, built on the first CRC computed and kept (R34, N1039):
+ * evaluating the module computes no derived table, because the plane's global
+ * scope carries every module's import-time work against its start-up budget
+ * (bundler R31, K3147). */
+let crcTable = null;
+function crcTableOf() {
+  if (crcTable) return crcTable;
   const t = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
     let c = n;
     for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     t[n] = c >>> 0;
   }
-  return t;
-})();
+  return (crcTable = t);
+}
 
 /* The running register, so a streamed member is checked as it passes:
  * start at 0xffffffff, feed each chunk, finish with `^ 0xffffffff`. */
 function crcUpdate(c, u8) {
-  for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
+  const t = crcTableOf();
+  for (let i = 0; i < u8.length; i++) c = t[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
   return c;
 }
 
@@ -701,29 +708,26 @@ export const ODF_FLAVOURS = [
  * Each main content type is the one Office writes for that kind (Microsoft's
  * `vnd.ms-*.macroEnabled` types, as requirement R10 lists them); none is the
  * plain twin's, so a row can match only its own. */
-const MACRO_ROW = (flavour, variant, kind) => ({
-  partMap: "opc", flavour, variant,
-  mainContentType: `application/vnd.ms-${kind}.main+xml`,
-  conventionalMainPart: OOXML_FLAVOURS.find((r) => r.flavour === flavour).conventionalMainPart,
-});
-const MACRO_FLAVOURS = [
-  MACRO_ROW("docx", "docm", "word.document.macroEnabled"),
-  MACRO_ROW("docx", "dotm", "word.template.macroEnabledTemplate"),
-  MACRO_ROW("xlsx", "xlsm", "excel.sheet.macroEnabled"),
-  MACRO_ROW("xlsx", "xltm", "excel.template.macroEnabled"),
-  MACRO_ROW("xlsx", "xlam", "excel.addin.macroEnabled"),
-  MACRO_ROW("pptx", "pptm", "powerpoint.presentation.macroEnabled"),
-  MACRO_ROW("pptx", "potm", "powerpoint.template.macroEnabled"),
-  MACRO_ROW("pptx", "ppsm", "powerpoint.slideshow.macroEnabled"),
-  MACRO_ROW("pptx", "ppam", "powerpoint.addin.macroEnabled"),
-];
-
 /** The table `discriminate()` uses when a caller names none: both part-maps,
  *  OPC first (the plain rows, then the macro-enabled ones). Order matters
  *  only in that a container carrying BOTH `[Content_Types].xml` and a
  *  `mimetype` member is read as OPC — see the precedence note in
- *  `discriminate`. */
-export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...MACRO_FLAVOURS, ...ODF_FLAVOURS];
+ *  `discriminate`. Written out row by row, never spread or mapped, so
+ *  evaluating the module builds nothing (R34); the plain and ODF rows are the
+ *  very objects of `OOXML_FLAVOURS` and `ODF_FLAVOURS`, as they always were. */
+export const CONTAINER_FLAVOURS = [
+  OOXML_FLAVOURS[0], OOXML_FLAVOURS[1], OOXML_FLAVOURS[2],
+  { partMap: "opc", flavour: "docx", variant: "docm", mainContentType: "application/vnd.ms-word.document.macroEnabled.main+xml", conventionalMainPart: "word/document.xml" },
+  { partMap: "opc", flavour: "docx", variant: "dotm", mainContentType: "application/vnd.ms-word.template.macroEnabledTemplate.main+xml", conventionalMainPart: "word/document.xml" },
+  { partMap: "opc", flavour: "xlsx", variant: "xlsm", mainContentType: "application/vnd.ms-excel.sheet.macroEnabled.main+xml", conventionalMainPart: "xl/workbook.xml" },
+  { partMap: "opc", flavour: "xlsx", variant: "xltm", mainContentType: "application/vnd.ms-excel.template.macroEnabled.main+xml", conventionalMainPart: "xl/workbook.xml" },
+  { partMap: "opc", flavour: "xlsx", variant: "xlam", mainContentType: "application/vnd.ms-excel.addin.macroEnabled.main+xml", conventionalMainPart: "xl/workbook.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "pptm", mainContentType: "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "potm", mainContentType: "application/vnd.ms-powerpoint.template.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "ppsm", mainContentType: "application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  { partMap: "opc", flavour: "pptx", variant: "ppam", mainContentType: "application/vnd.ms-powerpoint.addin.macroEnabled.main+xml", conventionalMainPart: "ppt/presentation.xml" },
+  ODF_FLAVOURS[0], ODF_FLAVOURS[1], ODF_FLAVOURS[2],
+];
 
 /** Which office flavour, if any, this container is — MAGIC BYTES PLUS PARTS,
  *  never the caller-declared content type and never a filename extension
@@ -980,8 +984,8 @@ async function discriminateOdf(bytes, container, rows, signals) {
 }
 
 /* ------------------------------------------------------------------ *
- * The uniform _rels walker — one relationship grammar for all three
- * formats (and ODF's part-map, when built, parameterises around it)
+ * The uniform _rels walker — one relationship grammar for all three OPC
+ * formats (ODF carries no `_rels/*.rels`; its manifest is its part list)
  * ------------------------------------------------------------------ */
 
 /** The conventional .rels part for a part name (OPC): the package root's is
@@ -1472,8 +1476,11 @@ function verdictOf(row, agrees) {
  * a 128 MB Worker, so the cut hashes as the bytes pass: through the host's
  * own `crypto.DigestStream` where it has one (workerd), else through the
  * FIPS 180-4 compression function below. Both answer the same digest as
- * `crypto.subtle.digest` over the same bytes (the suite proves it). */
-const SHA_K = new Uint32Array([
+ * `crypto.subtle.digest` over the same bytes (the suite proves it). The round
+ * constants become a table on the first digest this module computes itself,
+ * and are kept (R34). */
+let shaK = null;
+const shaKOf = () => shaK ?? (shaK = new Uint32Array([
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -1482,8 +1489,9 @@ const SHA_K = new Uint32Array([
   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
-]);
+]));
 function sha256Js() {
+  const K = shaKOf();
   const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
   const W = new Uint32Array(64);
   const block = new Uint8Array(64);
@@ -1497,7 +1505,7 @@ function sha256Js() {
     }
     let [a, b, c, d, e, f, g, h] = H;
     for (let t = 0; t < 64; t++) {
-      const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[t] + W[t]) | 0;
+      const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[t] + W[t]) | 0;
       const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
       h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
     }
@@ -1748,16 +1756,22 @@ export const VBA_SUSPICIOUS_KEYWORDS = Object.freeze([
  * `\w`) and anything else, so the side condition depends on whether the name
  * itself starts or ends with one. */
 const WORD = "[\\p{L}\\p{N}_]";
-const isWordChar = (ch) => new RegExp(WORD, "u").test(ch);
+const WORD_CHAR = /^[\p{L}\p{N}_]$/u;
 const nameMatcher = (name) => {
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const before = isWordChar(name[0]) ? `(?<!${WORD})` : `(?<=${WORD})`;
-  const after = isWordChar(name[name.length - 1]) ? `(?!${WORD})` : `(?=${WORD})`;
+  const before = WORD_CHAR.test(name[0]) ? `(?<!${WORD})` : `(?<=${WORD})`;
+  const after = WORD_CHAR.test(name[name.length - 1]) ? `(?!${WORD})` : `(?=${WORD})`;
   return new RegExp(before + esc + after, "iu");
 };
-const AUTORUN_MATCHERS = VBA_AUTORUN_NAMES.map((n) => [n, nameMatcher(n)]);
-const SUSPICIOUS_MATCHERS = VBA_SUSPICIOUS_KEYWORDS.map((n) => [n, nameMatcher(n)]);
-const found = (matchers, source) => matchers.filter(([, re]) => re.test(source)).map(([n]) => n);
+/* Each table's matchers, compiled on the first project read and kept (R34):
+ * some 160 expressions the module's evaluation no longer pays for. */
+const MATCHERS = new Map();
+function matchersOf(table) {
+  let m = MATCHERS.get(table);
+  if (!m) MATCHERS.set(table, (m = table.map((n) => [n, nameMatcher(n)])));
+  return m;
+}
+const found = (table, source) => matchersOf(table).filter(([, re]) => re.test(source)).map(([n]) => n);
 
 /* MS-OVBA §2.4.1.3: a CompressedContainer from `start` to the end of `buf`,
  * or null when it is not one. Every copy token is checked against the chunk
@@ -1867,11 +1881,12 @@ function readCfb(b) {
   if (!dirChain || !dirChain.length) return null;
   const dirBytes = gather(dirChain, sector, ss, dirChain.length * ss);
   const entries = [];
+  const utf16 = new TextDecoder("utf-16le");
   for (let at = 0; at + 128 <= dirBytes.length; at += 128) {
     const e = dirBytes.subarray(at, at + 128);
     const nameLen = u16(e, 0x40);
     const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0
-      ? new TextDecoder("utf-16le").decode(e.subarray(0, nameLen - 2)) : "";
+      ? utf16.decode(e.subarray(0, nameLen - 2)) : "";
     const high = u32(e, 0x7c);
     entries.push({
       name, type: e[0x42], left: u32(e, 0x44), right: u32(e, 0x48), child: u32(e, 0x4c),
@@ -2002,7 +2017,7 @@ export async function readVbaProject(bytes, container, partName) {
       const code = dir.text.decode(source);
       modules.push({
         name: m.name, stream: m.stream, read: true, why: null,
-        autoRun: found(AUTORUN_MATCHERS, code), suspicious: found(SUSPICIOUS_MATCHERS, code),
+        autoRun: found(VBA_AUTORUN_NAMES, code), suspicious: found(VBA_SUSPICIOUS_KEYWORDS, code),
       });
     }
     const union = (table, key) => table.filter((n) => modules.some((m) => m[key].includes(n)));

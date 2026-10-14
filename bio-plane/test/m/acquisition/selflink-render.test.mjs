@@ -79,7 +79,10 @@ const renderAnswer = { ok: true, html: renderedHtml("/agendas/council-2026-09"),
 const arm = (w, routes, captureRequest) => run(w, routes, {}, { cls: "daemon", member: false, sessMember: null,
   captureRequest: { purpose: "investigate", agent: null, ...captureRequest } });
 
-test("R5 R6 R21: the capture-request arm with render: true renders once as the daemon, files the rendered document as primary with the shell held beside it, and a second render the day's allowance cannot hold is RENDER_DEFERRED with nothing fetched", async () => {
+test("R5 R6 R21: the capture-request arm with render: true renders once as the daemon, files the rendered document as primary with the shell held beside it, and a second render the day's allowance cannot hold is RENDER_DEFERRED with nothing fetched", async (t) => {
+  /* N998: the clock pinned for the whole test (Date only; timers stay real), so both renders fall in one UTC
+     day of the allowance */
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
   const RESERVE = renderReserveMs(RENDER_DEFAULTS);
   assert.ok(RESERVE > renderAnswer.elapsed_ms, "a reservation is positive and larger than the render's elapsed time: a zero would defer the success arm and prove nothing");
   assert.equal(/Council agenda/.test(SHELL), false, "the shell carries no content, so a capture holding it would be the defect");

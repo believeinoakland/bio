@@ -186,7 +186,7 @@ test("R1 every refusal is drawn beside its act, a check's refusal naming its ste
 test("R8 the path Settings › Wizards, the four states of each read, and the list read again after an act", async () => {
   const a = await open("wizards", { me: ADMIN, table: libraryTable() });
   const crumbs = all(a.tree, (e) => e.tag === "nav" && /cs-crumbs/.test(e.attrs.class || ""))[0];
-  assert.equal(t(crumbs), said("rail.settings.name") + said("screen.wizards.name"));
+  assert.equal(t(crumbs), said("rail.settings.name") + " › " + said("screen.wizards.name"));
   for (const [answer, word] of [["pending", "state.loading"], [env({ ok: true, state: "offered", scripts: [], truncated: false }), "screen.wizards.empty"]]) {
     const o = await open("wizards", { me: ADMIN, table: libraryTable({ wizards: answer }) });
     has(o, word);

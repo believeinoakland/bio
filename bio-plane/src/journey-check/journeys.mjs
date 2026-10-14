@@ -62,10 +62,10 @@ async function shown(page, selector, what, timeout = 15000) {
   try { await page.locator(selector).first().waitFor({ state: "visible", timeout }); }
   catch { throw new Error(`${what} is not shown on ${where(page)}`); }
 }
-/* Ten recovery codes, shown once (screens-entry's `cs-codes`). */
+/* Ten recovery codes, shown once (screens-entry's `pre[data-codes]`, K3306). */
 async function tenCodes(page) {
-  await shown(page, "pre.cs-codes", "the ten recovery codes");
-  const n = (await page.locator("pre.cs-codes").first().textContent()).trim().split(/\n/).filter(Boolean).length;
+  await shown(page, "pre[data-codes]", "the ten recovery codes");
+  const n = (await page.locator("pre[data-codes]").first().textContent()).trim().split(/\n/).filter(Boolean).length;
   if (n !== 10) throw new Error(`${n} recovery codes are shown, not ten`);
 }
 
@@ -187,9 +187,13 @@ export async function walkMember(walk, page, { base, invite, member, phone }) {
   });
   await walk.step(page, "home: what happened? a problem I live with", async (p) => {
     await open(walk, p, base, "/app", "home");
-    /* the door for "A problem I live with"; its first offered script starts in the wizard runner */
+    /* the door for "A problem I live with", opened as a person opens it (a door is a closed card, screens-daily R9); its
+       first offered script starts in the wizard runner */
     const door = '[data-door]:has-text("problem")';
-    await (await control(p, "startfrom", { within: (await p.locator(door).count()) ? door : null })).click();
+    if (!(await p.locator(door).count())) throw new Error(`no door for a problem she lives with on ${where(p)}`);
+    const card = p.locator(door).first();
+    if ((await card.evaluate((e) => e.tagName)) === "DETAILS" && !(await card.evaluate((e) => e.open))) await card.locator("summary").first().click();
+    await (await control(p, "startfrom", { within: door })).click();
     await settle(p);
   });
   await walk.step(page, "capture: her first testimony, labelled as hers", async (p) => {
@@ -274,17 +278,22 @@ export async function walkWelcome(walk, page, { base, link, member }) {
    "You can't open this" are its designed absence, expected; any other refusal fails the sweep. */
 export const ABSENCE = /^(?:NOT_FOUND|NO_SUCH_[A-Z_]+|[A-Z_]+_NOT_FOUND|NOT_VISIBLE|NOT_A_PARTICIPANT)$/;
 
-export async function sweep(walk, page, base, { screens = sweepScreens() } = {}) {
-  walk.journey = "screens";
+/* `each(page, screen, drawn)`, when given, is done on each screen within its step, once it is opened and judged. */
+export async function sweep(walk, page, base, { screens = sweepScreens(), journey = "screens", each = null } = {}) {
+  walk.journey = journey;
   for (const s of screens) {
     await walk.step(page, `screen ${s.id}`, async (p) => {
       await p.goto(new URL(addressOf(s.id), base).href);
       await settle(p);
       const st = await drawnState(p, s.id);
       if (!st.drawn) walk.fail(FAIL.NOT_DRAWN, `${s.id}: ${st.why}`);
+      if (each) await each(p, s, st.drawn);
     }, { expect: [ABSENCE] }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
   }
 }
+
+/* The acts the page draws, by op (interface-shell R13's `data-act`; an act a member may not do is absent from the page). */
+export const drawnActs = (page) => page.evaluate(() => [...new Set([...document.querySelectorAll("[data-act]")].map((e) => e.getAttribute("data-act")))].sort());
 
 export const credentials = () => ({
   founder: { password: "founder-" + rand(12) },

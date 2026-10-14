@@ -110,3 +110,14 @@ test("R3 negative controls: a non-null label with obscured_marked false keys pho
   const plain = publish([row(WHOLE)]).w.read("publishedcase", { id: CASE });
   assert.equal(plain.materials.materials.some((r) => Object.hasOwn(r, "label_key")), false);
 });
+
+test("R3 (T48; N1021; K3114) a photo's copy whose row states marked false keys photo.published.label under any non-null label; marked true keys photo.obscured.label under any label, null included; a label with no stated mark reads marked", () => {
+  const keys = (rows, marks) => keysOf(publish(rows, marks).w.read("publishedcase", { id: CASE }));
+  const A = "INFO-2026-0045-a", B = "INFO-2026-0046-b", C = "INFO-2026-0047-c", D = "INFO-2026-0048-d";
+  const k = keys([copy(A, OBSCURED_LABEL), copy(B, PUBLISHED_LABEL), copy(C, null), copy(D, OBSCURED_LABEL)],
+                 { [A]: false, [B]: false, [C]: true });
+  assert.equal(k[A], "photo.published.label", "marked false wins over a non-null label that once meant marked");
+  assert.equal(k[B], "photo.published.label");
+  assert.equal(k[C], "photo.obscured.label", "marked true wins over a null label");
+  assert.equal(k[D], "photo.obscured.label", "control: the same label stating no mark reads marked by the label");
+});

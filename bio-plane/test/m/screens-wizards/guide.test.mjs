@@ -34,8 +34,9 @@ test("R2 a wizard starts from a screen's wizard mark (wizardsat): each offered s
   const g = standIn({ plane: plane(), drawn: DRAWN });
   await g.enter("finder");
   assert.deepEqual(g.requests.map((r) => [r.op, r.query.screen]), [["wizardsat", "finder"]]);
+  assert.ok(unhtml(g.marks()).includes(said("wizard.marks.chip", { n: "2" })));
+  await g.control("chip");
   const m = unhtml(g.marks());
-  assert.ok(m.includes(said("screen.guide.marks", { n: "2" })));
   assert.ok(m.includes(said("screen.guide.mark.start", { name: WALK.name })) && m.includes(said("screen.guide.mark.finished", { n: "7" })));
   assert.ok(m.includes(said("screen.guide.mark.draft")));
   // control: a screen with no script draws no mark
@@ -68,7 +69,7 @@ test("R2 the guide walks a two-screen script: name, step i of n, what and why, B
   assert.deepEqual(g.nav.at(-1), ["finder", null]);
   // nothing the runner sent is an act: only reads and the tally
   assert.deepEqual(sentActs(g), []);
-  assert.deepEqual([...new Set(g.requests.map((r) => r.op))].sort(), ["wizardprogress", "wizardread", "wizardsat"]);
+  assert.deepEqual([...new Set(g.requests.map((r) => r.op))].sort(), ["startfrom", "wizardprogress", "wizardread", "wizardsat"]);
 });
 
 test("R2 a step whose act the screen does not draw for this member says so and offers Next", async () => {
@@ -258,6 +259,7 @@ test("R6 nothing names the member: no request beyond wizardprogress's unattribut
 test("R7 Home offers \"Welcome a new member\" first and \"Your first question\" after it, until each is finished on this device; offered, never forced", async () => {
   const g = standIn({ plane: plane(), drawn: DRAWN, me: { member: "mai", handle: "mai" } });
   await g.enter("home");
+  await g.control("chip");
   const m = unhtml(g.marks());
   const welcome = said("screen.guide.welcome.continue", { name: said(`wizard.${WELCOME}.name`) });
   const first = said("screen.guide.mark.start", { name: said(`wizard.${FIRST_QUESTION}.name`) });
@@ -273,11 +275,13 @@ test("R7 Home offers \"Welcome a new member\" first and \"Your first question\" 
   assert.equal(g.store.get(`bio-wizard-finished:mai:${WELCOME}`), "1");
   assert.ok(!JSON.stringify(g.requests).includes("bio-wizard-finished"));
   await g.enter("home");
+  if (!g.view.ui.marksOpen) await g.control("chip");
   const after = unhtml(g.marks());
   assert.ok(!after.includes(welcome) && after.includes(first));
   // the ceremony's required wizard is its own screen's mark (wizardsat on `ceremony`)
   const c = standIn({ plane: plane({ wizardsat: ok({ ok: true, screen: "ceremony", scripts: [{ id: "WIZ-426b9c2e8b128b6b", version: "WIZ-426b9c2e8b128b6b@2", name: "Publication ceremony", steps: [], finished: 0 }] }) }) });
   await c.enter("ceremony");
+  await c.control("chip");
   assert.ok(unhtml(c.marks()).includes(said("screen.guide.mark.start", { name: said("wizard.WIZ-426b9c2e8b128b6b.name") })));
 });
 
@@ -291,6 +295,7 @@ test("R7 after join the welcome continues at step 3: its join steps counted once
   let m = unhtml(g.marks());
   assert.ok(m.includes(said("screen.guide.welcome")) && m.includes(said("screen.guide.notnow")));
   await g.control("notnow");
+  await g.control("chip");
   m = unhtml(g.marks());
   assert.ok(!m.includes(said("screen.guide.welcome")), "the offer folds away");
   assert.ok(m.includes(said("screen.guide.welcome.continue", { name: said(`wizard.${WELCOME}.name`) })), "and is kept as Home's mark");
@@ -311,7 +316,7 @@ test("R9 nothing records which member walked, stopped or finished which wizard: 
   await g.control("next");
   await g.control("next");
   const ops = new Set(g.requests.map((r) => r.op));
-  for (const op of ops) assert.ok(["wizardsat", "wizardread", "wizardprogress"].includes(op), `${op} sent`);
+  for (const op of ops) assert.ok(["wizardsat", "wizardread", "wizardprogress", "startfrom"].includes(op), `${op} sent`);
   assert.deepEqual([...g.store.keys()], [], "a script other than the welcome or the first question leaves no device note");
   assert.ok(!JSON.stringify(g.requests).includes("mai"));
 });

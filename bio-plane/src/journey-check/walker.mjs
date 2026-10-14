@@ -14,7 +14,11 @@ export const SETUP_PAGE_TITLE = "Your accountability record";
 export const LEGACY_UI_WORKER = "civicos";
 
 export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "script", OLD_PAGE: "old-page", ADDRESS: "address",
-  NOT_DRAWN: "not-drawn", STEP: "step", REFUSAL: "refusal" });
+  NOT_DRAWN: "not-drawn", STEP: "step", REFUSAL: "refusal",
+  /* R5: a role signed in that `whoami` does not answer as that role, or acts only an administrator is drawn not drawn */
+  ROLE: "role",
+  /* R6: a working screen the design mock does not draw, and the limits of a live page (design.mjs' LIMIT) */
+  DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -34,6 +38,10 @@ export class Walk {
     this.out = out; this.arm = arm; this.ownHosts = new Set(ownHosts); this.copyHost = null;
     this.secrets = [...secrets]; this.failures = []; this.steps = []; this.n = 0; this.current = null; this.pending = [];
     this.journey = "walk";
+    /* R5: the latest member session `whoami` answered the browser, as the plane said it (`administer` and the rest) */
+    this.whoami = null;
+    /* R6: the LIVE and DESIGN pairs written, relative to `out`, put to BOB before a release is called ready */
+    this.pairs = [];
     /* Elements whose text is a secret (a one-time password, a probe credential, an invitation link): masked in every
        screenshot. */
     this.mask = [];
@@ -65,6 +73,7 @@ export class Walk {
     let body = null;
     const type = res.headers()["content-type"] || "";
     if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
+    if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
     const code = body && body.ok === false ? (body.code || body.reason || "ok:false") : null;
     /* A refusal the step expects excuses its own status; one it does not is one failure, naming both. */
     const excused = expect.some((e) => (e instanceof RegExp ? code !== null && e.test(code) : e === (code ?? res.status())));
@@ -107,9 +116,10 @@ export class Walk {
     const lines = [`journey-check (${this.arm}): ${this.steps.length} steps, ${this.failures.length} failures`];
     for (const s of this.steps) lines.push(`${s.ok ? "ok  " : "FAIL"} ${s.journey} · ${s.label} (${s.screenshot})`);
     for (const f of this.failures) lines.push(`  ${f.kind}: ${f.journey} · ${f.step ?? "between steps"}: ${f.detail}`);
+    if (this.pairs.length) lines.push(`${this.pairs.length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):`, ...this.pairs.map((p) => `  ${p}`));
     const text = this.redact(lines.join("\n")) + "\n";
     writeFileSync(join(this.out, "report.txt"), text);
-    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures }, null, 1)));
+    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs }, null, 1)));
     return text;
   }
 }
