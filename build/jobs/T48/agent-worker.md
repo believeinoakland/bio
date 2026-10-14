@@ -53,3 +53,7 @@ I read every test I changed in the parts I changed, plus `t47`'s harness whole. 
 - `run.mjs`: architecture 0 failures overall. Its 36 coverage failures are all other modules'.
 
 Size (session_01Cc4Xq7rwJJfpqbv93XkwvJ): test runs 15, module lines 3634
+
+## J1 · COMPLETE
+
+T48-37 done: R87 (trace and member ref through converse on /ask, /run, /draft, /transcribe), R86 (readtranslate), N1052 (5 sign-ins by {handle}), and REC-100's fixture fixed (reauth + disclosure; 5 pre-existing reds). t48 80/0, harness 261/0; checks format/architecture/coverage/ownership 0 failures. One red, expected: R45 bundle byte-identity, which is yours to regenerate at L6 close. It uses no unmerged same-layer change (readtranslate's grant refusal holds before and after run-rules R33). Record: build/jobs/T48/agent-worker.md.
