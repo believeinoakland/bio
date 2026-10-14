@@ -57,8 +57,10 @@ export async function world({ zone = "UTC", before = null } = {}) {
   if (before) before(db, sql);
   let z = zone;
   const u = aiUseOf(ctx, { record: rc, membership: m, accounts: a, connections, zone: () => z });
+  /* `c` is `a` under the name notice-producers' tests, which build on this world, read the accounts by (T48: what
+     they read of credentials is ai-accounts' since the split; N996 §5). */
   const w = {
-    db, sql, ctx, rc, m, a, u, fact,
+    db, sql, ctx, rc, m, a, c: a, u, fact,
     setZone(next) { z = next; },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
