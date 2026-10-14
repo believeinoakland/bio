@@ -1,0 +1,3562 @@
+{
+ "contradiction": {
+  "reads": [
+   "contradiction.cited",
+   "contradiction.claim",
+   "contradiction.concluded_stances",
+   "contradiction.content",
+   "contradiction.differing_amount",
+   "contradiction.differing_claim",
+   "contradiction.discriminator",
+   "contradiction.drawing_projects",
+   "contradiction.email_says.stated_verified",
+   "contradiction.fact.established_resolution_subject",
+   "contradiction.facts.held_claim_rests",
+   "contradiction.inquiry.question_scope_all",
+   "contradiction.leg",
+   "contradiction.money_fact",
+   "contradiction.name.entity_two_sources",
+   "contradiction.name.inquiry_opposite_roles",
+   "contradiction.name.question_two_projects",
+   "contradiction.name.referent_two_held",
+   "contradiction.name.subject_two_held",
+   "contradiction.name.two_amounts_transfer",
+   "contradiction.note.machine_work_names",
+   "contradiction.note.side_contradiction",
+   "contradiction.notes.basis_versions_reads",
+   "contradiction.notes.candidate_pair_formed",
+   "contradiction.notes.candidate_pair_formed_because",
+   "contradiction.notes.candidate_pair_formed_because_money",
+   "contradiction.notes.key_examined_first",
+   "contradiction.notes.money_facts_held",
+   "contradiction.notes.money_reconciliation_reachable",
+   "contradiction.notice_named_sentence",
+   "contradiction.notice_sentence",
+   "contradiction.push.money_fact_held",
+   "contradiction.push.money_states_value",
+   "contradiction.q",
+   "contradiction.reading",
+   "contradiction.referent",
+   "contradiction.resolution",
+   "contradiction.reveal_why",
+   "contradiction.role",
+   "contradiction.same_parties",
+   "contradiction.same_stage_period",
+   "contradiction.says.candidate_pair_over",
+   "contradiction.says.candidate_viewer_see",
+   "contradiction.says.candidate_written_proposed",
+   "contradiction.says.candidates_held_record",
+   "contradiction.says.candidates_shown_matches",
+   "contradiction.says.contradiction_already_taken",
+   "contradiction.says.contradiction_taken_up",
+   "contradiction.says.counts_bare_percentage",
+   "contradiction.says.fact_record_sides",
+   "contradiction.says.further_pair_formed",
+   "contradiction.says.key_run_request",
+   "contradiction.says.lead_dismissed_member",
+   "contradiction.says.machine_recommendation_respect",
+   "contradiction.says.machine_recommendation_respect_two",
+   "contradiction.says.member_explained_how",
+   "contradiction.says.member_found_named",
+   "contradiction.says.member_found_two",
+   "contradiction.says.member_named_side",
+   "contradiction.says.project_already_asked",
+   "contradiction.says.project_asked_resolve",
+   "contradiction.says.project_asked_resolve_projects",
+   "contradiction.says.proposed_machine_work",
+   "contradiction.says.question_concluded_resolution",
+   "contradiction.says.read_compared_because",
+   "contradiction.says.read_failed_claimed",
+   "contradiction.says.real_conflict_pursued",
+   "contradiction.says.response_held_reaches",
+   "contradiction.says.side_named_wrong",
+   "contradiction.says.tension_something_finding",
+   "contradiction.says.two_things_paired",
+   "contradiction.says_words",
+   "contradiction.shared_entity",
+   "contradiction.shared_question",
+   "contradiction.shared_referent",
+   "contradiction.shared_side",
+   "contradiction.shared_subject",
+   "contradiction.shared_transfer",
+   "contradiction.subject.questions_exist_names",
+   "contradiction.text.disclosure_itself",
+   "contradiction.text.held_claim_document",
+   "contradiction.text.held_claim_states",
+   "contradiction.text.member_found_two",
+   "contradiction.text.passage_held",
+   "contradiction.text.reader_states_date",
+   "contradiction.text.reader_states_kind",
+   "contradiction.text.row_table",
+   "contradiction.text.taken_up_contradiction",
+   "contradiction.undated_why",
+   "contradiction.viewer",
+   "contradiction.why.candidates_see_tension",
+   "contradiction.why.concluded_through_basis",
+   "contradiction.why.contradiction_instance_made",
+   "contradiction.why.contradiction_instances_made",
+   "contradiction.why.either_side_pair",
+   "contradiction.why.inquiry_already_holds",
+   "contradiction.why.money_reconciliation_reachable",
+   "contradiction.why.money_reconciliation_refused",
+   "contradiction.why.question_already_rests",
+   "contradiction.why.read_text_two",
+   "contradiction.why.referent_version",
+   "contradiction.why.rule_against_act",
+   "contradiction.why.text_finding_answers",
+   "contradiction.why.two_documents_record",
+   "contradiction.why.two_documents_record_established",
+   "contradiction.why.two_projects_answered",
+   "contradiction.why.two_projects_concluded",
+   "contradiction.why.two_questions_registered",
+   "contradiction.why.two_questions_whose",
+   "contradiction.why.two_questions_whose_accepted",
+   "contradiction.why.two_sources_state",
+   "contradiction.why.two_sources_state_amounts",
+   "contradiction.why.two_things_group",
+   "contradiction.word.tension",
+   "duties.why.read_names_member",
+   "refusal.ACCEPTANCE_NOT_STANDING",
+   "refusal.ACCEPTANCE_VALUE_DIFFERS",
+   "refusal.CANDIDATES_NO_SUBJECT",
+   "refusal.CANDIDATE_CLOSED",
+   "refusal.CANDIDATE_LABEL_UNKNOWN",
+   "refusal.CANDIDATE_NOT_HELD",
+   "refusal.CANDIDATE_NO_PROPOSALS",
+   "refusal.CANDIDATE_NO_PROPOSER",
+   "refusal.CANDIDATE_NO_REASON",
+   "refusal.CANDIDATE_NO_RUN",
+   "refusal.CANDIDATE_PAIR_NOT_FORMED",
+   "refusal.CANDIDATE_RUN_NOT_RUNNING",
+   "refusal.CANDIDATE_TAKEN_UP",
+   "refusal.CLARIFY_CHOICE_UNKNOWN",
+   "refusal.CLARIFY_COORDINATE_UNKNOWN",
+   "refusal.CLARIFY_NOT_A_TENSION",
+   "refusal.CLARIFY_NO_EXPLANATION",
+   "refusal.CONTRADICTION_KEY_UNKNOWN",
+   "refusal.DISCLOSURE_MALFORMED",
+   "refusal.DISCLOSURE_NOT_YOURS",
+   "refusal.DISMISSAL_REASON_UNKNOWN",
+   "refusal.EVIDENCE_NOT_SEEN",
+   "refusal.MACHINE_CANNOT_ACT_ON_CANDIDATE",
+   "refusal.NOT_A_CONTRADICTION_INQUIRY",
+   "refusal.NOT_A_PARTY",
+   "refusal.NOT_A_PROJECT_CONFLICT",
+   "refusal.NO_CANDIDATE",
+   "refusal.NO_SUCH_CANDIDATE",
+   "refusal.PLURALITY_HAS_NO_WRONG_SIDE",
+   "refusal.RECOMMEND_CANDIDATE_NOT_STANDING",
+   "refusal.RECOMMEND_COORDINATE_UNKNOWN",
+   "refusal.RECOMMEND_NO_COORDINATES",
+   "refusal.RECOMMEND_NO_REASON",
+   "refusal.RECORD_CANNOT_BE_DISMISSED",
+   "refusal.RESPONSE_BEFORE_OPT_IN",
+   "refusal.RESPONSE_NO_TEXT",
+   "refusal.TAKE_UP_NO_FRAME",
+   "refusal.TAKE_UP_NO_QUESTION",
+   "refusal.TENSIONS_TOO_MANY",
+   "refusal.WORDS_MALFORMED",
+   "refusal.WRONG_SIDE_NO_REASON",
+   "refusal.WRONG_SIDE_UNNAMED"
+  ],
+  "unkeyed": [
+   {
+    "file": "contradiction/index.mjs",
+    "line": 132,
+    "text": "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 136,
+    "text": "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 139,
+    "text": "two accepted readings, of different inquiries, whose legs rest on the SAME passage (or, where no passage is named, the same captured document)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 143,
+    "text": "two cited passages whose documents RESOLVE (established) to the same entity, of different doctypes AS THEIR READERS STATE THEM, or with own dates the record holds in a SETTLED ORDER",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 149,
+    "text": "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 154,
+    "text": "two money facts naming the same payer and payee entities, the same kind and phase or stage, and periods that overlap, whose amounts money's reconciliation does not find consistent",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 1923,
+    "text": "no contradiction you can see answers to that id",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 1930,
+    "text": "the candidate could not be read (${…})",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2116,
+    "text": "no contradiction you can see answers to that id",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2348,
+    "text": "two projects' conclusions have no wrong side",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2445,
+    "text": "a side of this contradiction is no longer held",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2500,
+    "text": "no question you can see answers to that id as one taken up from a contradiction",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2504,
+    "text": "two projects' conclusions have no wrong side and no double-speak",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2516,
+    "text": "the question's document is not held as text",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2830,
+    "text": "no contradiction you can see answers to that id",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "contradiction/index.mjs",
+    "line": 2987,
+    "text": "no contradiction you can see answers to that id for this project",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.DISCLOSURE_MALFORMED"
+ },
+ "case-grammar": {
+  "reads": [
+   "case-disclosures.finding_rests_side",
+   "case-disclosures.held_irreconcilable_reopened",
+   "case-disclosures.included_fingerprint_origin",
+   "case-disclosures.taken_question",
+   "case-grammar.account_heading",
+   "case-grammar.agrees",
+   "case-grammar.block_unreadable_sentence",
+   "case-grammar.blocks_predate_sentence",
+   "case-grammar.by.case_owner",
+   "case-grammar.calculations_heading",
+   "case-grammar.capture",
+   "case-grammar.citations_undetermined_sentence",
+   "case-grammar.connection",
+   "case-grammar.cover",
+   "case-grammar.differs",
+   "case-grammar.esc.group_finding",
+   "case-grammar.esc.passages_relies",
+   "case-grammar.explained_not_shown",
+   "case-grammar.flat_map.ones_stated",
+   "case-grammar.freeze.claims",
+   "case-grammar.freeze.declared_bias",
+   "case-grammar.freeze.disclosed_contradictions",
+   "case-grammar.freeze.documents_observations",
+   "case-grammar.freeze.everyone_investigates_looks",
+   "case-grammar.freeze.findings",
+   "case-grammar.freeze.group_declares_lens",
+   "case-grammar.freeze.how_check_case",
+   "case-grammar.freeze.how_grades_worked",
+   "case-grammar.freeze.searched",
+   "case-grammar.group",
+   "case-grammar.inference",
+   "case-grammar.lens_none_sentence",
+   "case-grammar.lens_undetermined_sentence",
+   "case-grammar.li.accepted_edition_because",
+   "case-grammar.li.approved",
+   "case-grammar.li.archived_copy",
+   "case-grammar.li.case_states_acceptance",
+   "case-grammar.li.chain_stops_finding",
+   "case-grammar.li.claim_undetermined",
+   "case-grammar.li.conclusion_recorded",
+   "case-grammar.li.extracted_text_fingerprint",
+   "case-grammar.li.finding_case_relies",
+   "case-grammar.li.frozen_strength_recorded",
+   "case-grammar.li.gaps_stated",
+   "case-grammar.li.included_whole_case",
+   "case-grammar.li.inputs_stated",
+   "case-grammar.li.justification_evidence_citations",
+   "case-grammar.li.level_subject_looked",
+   "case-grammar.li.method_version",
+   "case-grammar.li.open_flag_disclosed",
+   "case-grammar.li.origin",
+   "case-grammar.li.publisher_disclosure",
+   "case-grammar.li.recipe",
+   "case-grammar.li.recomputed_publication_outcome",
+   "case-grammar.li.recreated_grades_edition",
+   "case-grammar.li.result",
+   "case-grammar.li.result_key",
+   "case-grammar.li.results_stated",
+   "case-grammar.li.seen_side_state",
+   "case-grammar.li.source",
+   "case-grammar.li.source_2",
+   "case-grammar.li.statement_kind",
+   "case-grammar.li.supporting_findings_rest",
+   "case-grammar.li.text",
+   "case-grammar.line.asked_meet_project",
+   "case-grammar.line.meets_project_bar",
+   "case-grammar.line.project_bar",
+   "case-grammar.line.project_declared_bar",
+   "case-grammar.line.short_project_bar",
+   "case-grammar.line.standing_against_project",
+   "case-grammar.load_bearing",
+   "case-grammar.map.attributed_level_chosen",
+   "case-grammar.map.cite_kind_stated",
+   "case-grammar.map.level_chosen_edition",
+   "case-grammar.map.record_names_producing",
+   "case-grammar.name.name_author_chose",
+   "case-grammar.not_recomputed",
+   "case-grammar.one_line.received",
+   "case-grammar.p.account_publisher_sentence",
+   "case-grammar.p.already_shown_chain",
+   "case-grammar.p.approval_recorded",
+   "case-grammar.p.approval_rule_force",
+   "case-grammar.p.calculation_reached_case",
+   "case-grammar.p.calculation_stated_anyone",
+   "case-grammar.p.case",
+   "case-grammar.p.case_disclosed_contradiction",
+   "case-grammar.p.case_document_lists",
+   "case-grammar.p.case_document_state",
+   "case-grammar.p.case_document_state_grading",
+   "case-grammar.p.case_file_carries",
+   "case-grammar.p.case_file_carries_grading",
+   "case-grammar.p.case_file_read",
+   "case-grammar.p.case_graded_method",
+   "case-grammar.p.chain_goes_deeper",
+   "case-grammar.p.check_case_yourself",
+   "case-grammar.p.checked_under_catalog",
+   "case-grammar.p.computed_over_subject",
+   "case-grammar.p.did_did_two",
+   "case-grammar.p.document_observation_reached",
+   "case-grammar.p.finding_graded_capture",
+   "case-grammar.p.finding_recreated_recreated",
+   "case-grammar.p.get_checker_file",
+   "case-grammar.p.group_rule_force",
+   "case-grammar.p.how_many_reviewers",
+   "case-grammar.p.named",
+   "case-grammar.p.outcome_carried_edition",
+   "case-grammar.p.project_bar",
+   "case-grammar.p.published_signed",
+   "case-grammar.p.publisher_acknowledgment",
+   "case-grammar.p.publisher_included_reviewer",
+   "case-grammar.p.recreating_case_shows",
+   "case-grammar.p.rests",
+   "case-grammar.p.reviewer_comment_left",
+   "case-grammar.p.run_checker_part",
+   "case-grammar.p.stated_lane",
+   "case-grammar.pattern",
+   "case-grammar.project",
+   "case-grammar.review_comments_heading",
+   "case-grammar.said.record_establish_claim",
+   "case-grammar.said.stated",
+   "case-grammar.scrutiny",
+   "case-grammar.tension_depth_sentence",
+   "case-grammar.tensions_predate_sentence",
+   "case-grammar.tensions_unreadable_sentence",
+   "case-grammar.testimony",
+   "case-grammar.text.acknowledgment_stated",
+   "case-grammar.text.attestation_kind_rendering",
+   "case-grammar.text.attested",
+   "case-grammar.text.attested_member_group",
+   "case-grammar.text.bar_declared",
+   "case-grammar.text.case_produced_under",
+   "case-grammar.text.case_rests_directly",
+   "case-grammar.text.case_states_account",
+   "case-grammar.text.co_attested",
+   "case-grammar.text.framing_follows_declared",
+   "case-grammar.text.held_record",
+   "case-grammar.text.location_stated",
+   "case-grammar.text.made",
+   "case-grammar.text.outcome_kind_stated",
+   "case-grammar.text.person",
+   "case-grammar.text.rests",
+   "case-grammar.text.role_case_stated",
+   "case-grammar.text.unreadable_location",
+   "case-grammar.text.unreadable_value",
+   "case-grammar.text.vouched_group_under",
+   "case-grammar.timeline_heading",
+   "case-grammar.title.case_file_read",
+   "case-grammar.title.case_file_readable",
+   "case-grammar.two_strengths_sentence",
+   "case-grammar.unbound",
+   "case-grammar.withheld_source_reason",
+   "case.outcome.harm_addressed",
+   "case.outcomes.head",
+   "filings.date_stated",
+   "filings.group_named",
+   "screen.imported.result.no",
+   "screen.imported.result.part",
+   "screen.question.against.head",
+   "screen.start-send.rests",
+   "screen.timeline.lane.ours",
+   "screen.timeline.lane.world",
+   "sources.known_group_recorded"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-grammar/edition.mjs",
+    "line": 46,
+    "text": "## What Changed in This Edition, and Why",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-grammar/edition.mjs",
+    "line": 122,
+    "text": "## The Lens This Case Was Produced Under",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-grammar/index.mjs",
+    "line": 83,
+    "text": "## Whose Words These Are",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-grammar/outcomes.mjs",
+    "line": 32,
+    "text": "## Outcomes since the last edition",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   }
+  ],
+  "renamed": {}
+ },
+ "content": {
+  "reads": [
+   "content.candidate_at.candidate_passage_extent",
+   "content.candidate_at.candidate_passage_extent_capture",
+   "content.chain_unread",
+   "content.core_property",
+   "content.inner_unheld.record_holds_row",
+   "content.inner_unheld.record_holds_row_column",
+   "content.inner_unheld.record_holds_shape",
+   "content.kind_why.capture_reading_carries",
+   "content.kind_why.format_registry_determine",
+   "content.kind_why.office_container_bytes",
+   "content.kind_why.office_container_bytes_hold",
+   "content.kind_why.record_hold_capture",
+   "content.kind_why.record_holds_reading",
+   "content.kind_why.records_capture_format",
+   "content.kind_why.records_capture_format_build",
+   "content.newer_capture_matched",
+   "content.newer_capture_undetermined",
+   "content.no_newer_capture",
+   "content.out.cells_changed_past",
+   "content.out.cells_changed_word",
+   "content.out.cells_hold_byte",
+   "content.out.document_text_changed",
+   "content.out.document_text_changed_past",
+   "content.out.newer_version_text",
+   "content.out.newer_version_text_held",
+   "content.out.newer_version_typed",
+   "content.out.passage_text_byte",
+   "content.out.text_byte_identical",
+   "content.out.text_similar_passage",
+   "content.out.unit_newer_version",
+   "content.push.container_image_list",
+   "content.push.deck_slide_list",
+   "content.push.document_table_list",
+   "content.push.paragraph_count",
+   "content.push.workbook_sheet_list",
+   "content.says.change_touches_passage",
+   "content.says.checked_typing_against",
+   "content.says.derived_rendition_display",
+   "content.says.document_re_read",
+   "content.says.exact_typing_already",
+   "content.says.newer_version_text",
+   "content.says.passage_text_byte",
+   "content.says.passage_text_byte_identical",
+   "content.says.record_holds",
+   "content.says.text_similar_passage",
+   "content.says.typed_authored_text",
+   "content.says.typed_member_types",
+   "content.speaker_note",
+   "content.text.capture_container_holds",
+   "content.text.capture_deck_holds",
+   "content.text.capture_document_holds",
+   "content.text.capture_itemized_pdf",
+   "content.text.capture_office_container",
+   "content.text.capture_provenance_profile",
+   "content.text.capture_reading",
+   "content.text.capture_seen_addresses",
+   "content.text.capture_text_holds",
+   "content.text.capture_workbook_holds",
+   "content.text.carries_note",
+   "content.text.carries_note_2",
+   "content.text.carries_note_characters",
+   "content.text.carries_note_text",
+   "content.text.image_painted_pdf",
+   "content.text.least_address_version",
+   "content.text.page_capture_paints",
+   "content.text.page_capture_paints_image",
+   "content.text.page_capture_pt",
+   "content.text.page_shown_rotated",
+   "content.text.passage_cited_stood",
+   "content.text.read_bound_extent",
+   "content.text.record_holds_address",
+   "content.text.record_holds_box",
+   "content.text.record_holds_image",
+   "content.text.record_holds_list",
+   "content.text.record_holds_page",
+   "content.text.record_holds_paragraph",
+   "content.text.record_holds_sheet",
+   "content.text.record_holds_slide",
+   "content.text.record_holds_table",
+   "content.text.sheet_capture_holds",
+   "content.text.sheet_capture_holds_column",
+   "content.text.sheet_capture_holds_column_range",
+   "content.text.sheet_capture_holds_row",
+   "content.text.slide_capture_holds",
+   "content.text.table_capture_holds",
+   "content.text.table_capture_holds_column",
+   "content.tracked_change",
+   "content.why.attestation_raises_row",
+   "content.why.capture_document_resolves",
+   "content.why.capture_office_container",
+   "content.why.capture_reading_holds",
+   "content.why.capture_version_chain",
+   "content.why.cell_inside_held",
+   "content.why.checked_text_against",
+   "content.why.citation_whole_document",
+   "content.why.citation_whole_document_record",
+   "content.why.cited_passage_extent",
+   "content.why.cited_passage_text",
+   "content.why.exists_newer_capture",
+   "content.why.extent_cell_range",
+   "content.why.extent_covers_evaluated",
+   "content.why.extent_exists_tested",
+   "content.why.extent_names_cells",
+   "content.why.extent_test_asked",
+   "content.why.file_states_readable",
+   "content.why.leg_cites_refers",
+   "content.why.lies_inside_document",
+   "content.why.newer_capture_hold",
+   "content.why.nobody_read_newer",
+   "content.why.part_member_document",
+   "content.why.reading_holds_value",
+   "content.why.record_hold_capture",
+   "content.why.record_hold_kind",
+   "content.why.record_holds_capture",
+   "content.why.record_holds_page",
+   "content.why.record_holds_text",
+   "content.why.record_persists_list",
+   "content.why.region_page",
+   "content.why.row_cites_itself",
+   "content.why.text_row_cited",
+   "content.why.version_chain_capture",
+   "content.why.whole_document",
+   "reevaluation.version_chains_visible",
+   "refusal.ATTEST_NO_NOTE",
+   "refusal.CONTENT_EXTENT_NOT_A_CONTAINER",
+   "refusal.CONTENT_EXTENT_NOT_USER_SPACE",
+   "refusal.CONTENT_EXTENT_NO_CHAIN",
+   "refusal.CONTENT_EXTENT_NO_IMAGE_PAINTED",
+   "refusal.CONTENT_EXTENT_NO_PRODUCER",
+   "refusal.CONTENT_EXTENT_OUT_OF_RANGE",
+   "refusal.CONTENT_EXTENT_UNREADABLE",
+   "refusal.CONTENT_ROW_NOT_THIS_TARGET",
+   "refusal.CONTENT_ROW_UNKNOWN",
+   "refusal.TRANSCRIBE_NOT_A_MEMBER",
+   "refusal.TRANSCRIBE_NO_BYTES",
+   "refusal.TRANSCRIBE_NO_DOCUMENT",
+   "refusal.TRANSCRIBE_NO_PORTION",
+   "refusal.TRANSCRIBE_NO_TEXT",
+   "refusal.TRANSCRIBE_PORTION_UNREADABLE",
+   "refusal.TRANSCRIBE_TEXT_TOO_LONG",
+   "refusal.TRANSCRIPTION_NOT_FOUND",
+   "refusal.TRANSCRIPTION_SELF_ATTEST",
+   "refusal.VERSION_NOTICE_NO_CONTENT"
+  ],
+  "unkeyed": [
+   {
+    "file": "content/index.mjs",
+    "line": 410,
+    "text": "attestations are read by a capture sha256",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {}
+ },
+ "case-authoring": {
+  "reads": [
+   "bias.manifest_force",
+   "case-authoring.agrees.workbook_read_publication",
+   "case-authoring.body.adoption_pinned_proposed",
+   "case-authoring.body.case_cites_version",
+   "case-authoring.body.case_names_subject",
+   "case-authoring.body.case_produced_under",
+   "case-authoring.body.case_production_held",
+   "case-authoring.body.case_production_standard",
+   "case-authoring.body.case_project_cited",
+   "case-authoring.body.claim_adopted",
+   "case-authoring.body.claim_undetermined",
+   "case-authoring.body.concluded_question_bytes",
+   "case-authoring.body.concluded_reading",
+   "case-authoring.body.conclusion_belongs_project",
+   "case-authoring.body.conclusion_case_records",
+   "case-authoring.body.excluded_item",
+   "case-authoring.body.falsifier_recorded_conclusion",
+   "case-authoring.body.falsifier_stated_recorded",
+   "case-authoring.body.finding_strength_axis",
+   "case-authoring.body.findings_case",
+   "case-authoring.body.frozen_version",
+   "case-authoring.body.hash_effective_statement",
+   "case-authoring.body.least_member_entered",
+   "case-authoring.body.level_reported_undetermined",
+   "case-authoring.body.level_subject_recorded",
+   "case-authoring.body.load_bearing",
+   "case-authoring.body.load_bearing_finding",
+   "case-authoring.body.manifest_force_case",
+   "case-authoring.body.manifest_undetermined_claimed",
+   "case-authoring.body.material_excluded_case",
+   "case-authoring.body.pinned_revision_standing",
+   "case-authoring.body.pinned_written",
+   "case-authoring.body.position_putting_case",
+   "case-authoring.body.project_override_named",
+   "case-authoring.body.record_looked_measure",
+   "case-authoring.body.referent_case_rests",
+   "case-authoring.body.section_computed_observation",
+   "case-authoring.body.supporting",
+   "case-authoring.body.supporting_finding_travels",
+   "case-authoring.body.would_falsify",
+   "case-authoring.ceremony_highlight_sentence",
+   "case-authoring.cuts.map.did_stops_bound",
+   "case-authoring.cuts.map.list_did_stops",
+   "case-authoring.differs.workbook_read_publication",
+   "case-authoring.disclosed_without_words",
+   "case-authoring.document.adoption_scope_pinned",
+   "case-authoring.document.calculation_recomputed_case",
+   "case-authoring.document.frozen_case_published",
+   "case-authoring.document.group_act_marked",
+   "case-authoring.document.item_source_record",
+   "case-authoring.document.lane",
+   "case-authoring.document.row_adoption_scope",
+   "case-authoring.document.timeline_read_case",
+   "case-authoring.document.workbook_read_case",
+   "case-authoring.label.exclusion_list",
+   "case-authoring.label.subject_position_justification",
+   "case-authoring.name.becomes_permanent",
+   "case-authoring.name.edition_creates",
+   "case-authoring.name.leaving_out",
+   "case-authoring.name.rests",
+   "case-authoring.never_looked",
+   "case-authoring.no_capture",
+   "case-authoring.no_subjects",
+   "case-authoring.not_recomputed.workbook_read_publication",
+   "case-authoring.notice_seals_sentence",
+   "case-authoring.only_capture",
+   "case-authoring.pinned",
+   "case-authoring.publish_at_not_reached_sentence",
+   "case-authoring.publish_at_unanswered_sentence",
+   "case-authoring.republish_sentence",
+   "case-authoring.roster.map",
+   "case-authoring.rows.map",
+   "case-authoring.says.approval_group_requires",
+   "case-authoring.says.signing_publishes_case",
+   "case-authoring.says.signing_waits_until",
+   "case-authoring.searched",
+   "case-authoring.stated.approvals_group_rule",
+   "case-authoring.stated.effective_bias_set",
+   "case-authoring.stated.reached_members_roles",
+   "case-authoring.text.case_quotes_passage",
+   "case-authoring.text.case_use_standards",
+   "case-authoring.text.case_would_carry",
+   "case-authoring.text.rests_benchmarks_binds",
+   "case-authoring.unbound.recomputed_publication_least",
+   "case-authoring.unbound.workbook_read_publication",
+   "case-authoring.undetermined.version_undetermined_pin",
+   "case-authoring.why.ratification_offers_pre",
+   "case-authoring.why.ratification_pre_flight",
+   "case-authoring.why.searched_section_names",
+   "case-authoring.why.searched_section_names_subject",
+   "case-authoring.why.searched_section_requires",
+   "case-authoring.why.searched_section_requires_levels",
+   "case-authoring.why.searched_section_requires_subject",
+   "case-grammar.agrees",
+   "case-grammar.differs",
+   "refusal.CALCULATION_NOT_DISCLOSED",
+   "refusal.CASE_EDITION_WAITING",
+   "refusal.CASE_IDENTITY_AMBIGUOUS",
+   "refusal.MACHINE_CANNOT_PUBLISH",
+   "refusal.NO_STATEMENT",
+   "refusal.PUBLISH_DRAFT_ALREADY_BOUND",
+   "refusal.PUBLISH_DRAFT_NOT_FOUND",
+   "refusal.PUBLISH_DRAFT_NOT_THIS_CASE",
+   "refusal.STANDARDS_USE_REFUSED",
+   "review.stated.group_requires_approvals",
+   "workbooks.recomputed"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 288,
+    "text": "## Findings In This Case",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 303,
+    "text": "## The Conclusions This Case Records",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 352,
+    "text": "## What This Excludes",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 371,
+    "text": "## What Was Searched",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 402,
+    "text": "## What Each Finding Reached, As Read For This Case",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 470,
+    "text": "## Standard Of Evidence",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 483,
+    "text": "### Session ${…} | Case published | ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 484,
+    "text": "Trigger: op=publish, case ${…} edition ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 520,
+    "text": "## Calculations This Case Rests On",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 552,
+    "text": "### What they did",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/document.mjs",
+    "line": 552,
+    "text": "### What we did",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "case-authoring/index.mjs",
+    "line": 221,
+    "text": "case-authoring pre-flight rollback",
+    "why": "a diagnostic for builders and operators (a build note, a transaction marker, a file write), not drawn on a member's screen"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): review.stated.group_requires_approvals"
+ },
+ "consequences": {
+  "reads": [
+   "consequences.basis.reading_grade",
+   "consequences.basis.reading_grade_stated",
+   "consequences.form_not_read",
+   "consequences.grade_why",
+   "consequences.lacking.names_calculation_record",
+   "consequences.lacking.names_content_record",
+   "consequences.lacking.names_money_fact",
+   "consequences.no_unit",
+   "consequences.not_assessed",
+   "consequences.not_computable",
+   "consequences.not_in_record",
+   "consequences.nothing",
+   "consequences.says.calc_grammar_exact",
+   "consequences.says.computed_operands_shown",
+   "consequences.says.computed_operands_shown_2",
+   "consequences.says.inquiry_strength_read",
+   "consequences.says.machine_work_computed",
+   "consequences.says.machine_work_computed_operands",
+   "consequences.says.member_assessment_presented",
+   "consequences.says.member_assessment_resting",
+   "consequences.says.member_assessment_resting_record",
+   "consequences.says.member_recorded_consequence",
+   "consequences.says.part_computed_assessed",
+   "consequences.says.parts_added_parts",
+   "consequences.says.undetermined_known_read",
+   "consequences.success.cause_not_stated",
+   "consequences.success.sequence_not_cause",
+   "consequences.text.operand_capture_grade",
+   "consequences.text.operand_grade_undetermined",
+   "consequences.text.person_named_record",
+   "consequences.text.plain_words_carried",
+   "consequences.text.word",
+   "consequences.text.word_given_once",
+   "consequences.text.words",
+   "consequences.text.words_list",
+   "consequences.why.addressed_assessed_partial",
+   "consequences.why.calc_grammar_answers",
+   "consequences.why.causation_inquiry_reopened",
+   "consequences.why.causation_inquiry_superseded",
+   "consequences.why.figure_stated_read",
+   "consequences.why.inquiry_named_concluded",
+   "consequences.why.inquiry_named_concluded_finding",
+   "consequences.why.inquiry_named_record",
+   "consequences.why.inquiry_named_superseded",
+   "consequences.why.least",
+   "consequences.why.live_part_recorded",
+   "consequences.why.measure_zero_part",
+   "consequences.why.needs_operand_given",
+   "consequences.why.newer_capture_operand",
+   "consequences.why.operand_calculation_holds",
+   "consequences.why.operand_money_fact",
+   "consequences.why.operand_money_fact_holds",
+   "consequences.why.operand_passage_held",
+   "consequences.why.operand_passage_hold",
+   "consequences.why.operand_states_figure",
+   "consequences.why.state",
+   "consequences.why.takes_exactly_operands",
+   "consequences.why.text",
+   "consequences.why.undetermined_unproven_consequences",
+   "escalation.consequence_recorded",
+   "refusal.ADDRESSED_BAD_REASON",
+   "refusal.ADDRESSED_NO_EVIDENCE",
+   "refusal.ADDRESSED_NO_PERCENTAGE",
+   "refusal.ADDRESSED_NO_REASON",
+   "refusal.ADDRESSED_UNKNOWN_STATE",
+   "refusal.ADDRESSED_WORD_REFUSED",
+   "refusal.AFFECTED_NOT_A_PERSON",
+   "refusal.AFFECTED_PERSON_NOT_NAMED",
+   "refusal.AFFECTED_UNKNOWN_KIND",
+   "refusal.ALREADY_SUPERSEDED",
+   "refusal.BAD_RATIONALE",
+   "refusal.BAD_REASON",
+   "refusal.BASIS_UNREADABLE",
+   "refusal.CARRY_NOT_ADDRESSED",
+   "refusal.CARRY_NO_CURE",
+   "refusal.CONSEQUENCE_NOT_A_PARTICIPANT",
+   "refusal.CONSEQUENCE_NOT_NONCOMPLIANT",
+   "refusal.MACHINE_CANNOT_ADDRESS",
+   "refusal.MACHINE_CANNOT_ASSESS",
+   "refusal.MACHINE_CANNOT_CARRY",
+   "refusal.MACHINE_CANNOT_RECORD_SUCCESS",
+   "refusal.MEASURE_INVALID",
+   "refusal.MEASURE_UNKNOWN_UNIT",
+   "refusal.NO_RATIONALE",
+   "refusal.NO_REASON",
+   "refusal.NO_SUCH_EVIDENCE",
+   "refusal.NO_SUCH_PART",
+   "refusal.NO_SUCH_SUCCESS_RECORD",
+   "refusal.PERIOD_INVALID",
+   "refusal.SUCCESS_BAD_DATE",
+   "refusal.SUCCESS_BAD_REASON",
+   "refusal.SUCCESS_CAUSE_NOT_EVIDENCED",
+   "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY",
+   "refusal.SUCCESS_CAUSE_UNCHECKABLE",
+   "refusal.SUCCESS_CAUSE_UNSTATED",
+   "refusal.SUCCESS_FIGURE_NOT_COMPUTED",
+   "refusal.SUCCESS_NOT_A_PARTICIPANT",
+   "refusal.SUCCESS_NO_EVIDENCE",
+   "refusal.SUCCESS_NO_REASON",
+   "refusal.SUCCESS_NO_STATEMENT",
+   "refusal.SUCCESS_SUPERSEDED",
+   "refusal.SUCCESS_TOO_LARGE"
+  ],
+  "unkeyed": [
+   {
+    "file": "consequences/index.mjs",
+    "line": 218,
+    "text": "an affected is {kind, description, role?, person?}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 219,
+    "text": "\"${…}\" is not a kind of affected",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 220,
+    "text": "an affected is described",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 222,
+    "text": "a role is an office, {role, body}: the office and the body it belongs to",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 223,
+    "text": "a person is named only on kind \"person\", and this is ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 244,
+    "text": "a currency belongs to a measure of money, and this one is of ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 245,
+    "text": "a currency is named by its code, such as USD",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 249,
+    "text": "a measure carries a value or a range, not both",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 253,
+    "text": "the value does not read as an exact decimal, such as 1200.50",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 259,
+    "text": "a range's bounds are two exact decimals, {low, high}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 260,
+    "text": "the range is reversed: its low bound is above its high bound",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 280,
+    "text": "a period is {from, to}: the dates the consequence ran between",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 283,
+    "text": "a period's from and to are dates, YYYY-MM-DD, or instants",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 284,
+    "text": "the period is reversed: it ends before it starts",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 461,
+    "text": "no passage naming the person is given (named_in)",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 463,
+    "text": "named_in is not content of a held capture you may see",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 467,
+    "text": "the passage ${…} the person (${…})",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 467,
+    "text": "is held in a form this module does not read, so it cannot be shown to name",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 468,
+    "text": "does not name",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 634,
+    "text": "what an assessment rests on is a list of content ids or findings, possibly empty",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 651,
+    "text": "a computation names its op, one of ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 654,
+    "text": "a computation's operands are a list, each {content, figure} (the content id whose passage holds the figure, and the figure as read), {money} (a money fact) or {calculation, key} (a calculation's result, named by its key)",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 1544,
+    "text": "## Why It Was Revised",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 1546,
+    "text": "Changes: success record recorded${…}.",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 1694,
+    "text": "## Why It Was Revised",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "consequences/index.mjs",
+    "line": 1696,
+    "text": "Changes: consequence part recorded${…}.",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.BAD_REASON, refusal.NO_REASON, refusal.SUCCESS_CAUSE_UNCHECKABLE, refusal.SUCCESS_CAUSE_UNSTATED, refusal.SUCCESS_NO_STATEMENT"
+ },
+ "observation-log": {
+  "reads": [
+   "observation-log.acquire",
+   "observation-log.address",
+   "observation-log.arm_reason.index_notice_did",
+   "observation-log.arm_reason.record_hold_container",
+   "observation-log.capture",
+   "observation-log.capture_session_ttl_expiring",
+   "observation-log.description",
+   "observation-log.detail.text_extracted_record",
+   "observation-log.detail.unit_indexed_reading",
+   "observation-log.detail.unit_offered_address",
+   "observation-log.detail.unit_stored_per",
+   "observation-log.document.documents_store_holds",
+   "observation-log.entity",
+   "observation-log.indexed_full",
+   "observation-log.indexed_none",
+   "observation-log.indexed_partial",
+   "observation-log.internet",
+   "observation-log.invitation_spent_or_expired",
+   "observation-log.lead_list_empty",
+   "observation-log.lead_list_note",
+   "observation-log.link",
+   "observation-log.machine",
+   "observation-log.meaning.framework_layer_findings",
+   "observation-log.member",
+   "observation-log.never_followed",
+   "observation-log.no_leads_visible",
+   "observation-log.no_member",
+   "observation-log.no_text_detail",
+   "observation-log.not_earlier",
+   "observation-log.not_present",
+   "observation-log.objective",
+   "observation-log.other_authority",
+   "observation-log.partial.looked_got_part",
+   "observation-log.partial_capture_outstanding",
+   "observation-log.parts.push.document_pages_engine",
+   "observation-log.parts.push.tier_covered_pages",
+   "observation-log.parts.push.tier_recorded",
+   "observation-log.parts.push.tier_recorded_chain",
+   "observation-log.plane",
+   "observation-log.pre_log",
+   "observation-log.purged",
+   "observation-log.ratify",
+   "observation-log.says.derived_derivation_over",
+   "observation-log.says.derived_observation_log",
+   "observation-log.says.lead_recorded_somewhere",
+   "observation-log.says.look_recorded_against",
+   "observation-log.says.nobody_followed_lead",
+   "observation-log.says.recorded_followed_lead",
+   "observation-log.says.recorded_followed_lead_lead",
+   "observation-log.says.shared_joined_participants",
+   "observation-log.says.undetermined_derivation_over",
+   "observation-log.says.undetermined_derivation_over_subject",
+   "observation-log.step",
+   "observation-log.sweep",
+   "observation-log.text.container_indexing_unit",
+   "observation-log.text.entity_id_subject",
+   "observation-log.text.latest_derivation_cut",
+   "observation-log.text.latest_derivation_ran",
+   "observation-log.text.latest_derivation_read",
+   "observation-log.text.latest_derivation_recorded",
+   "observation-log.text.text_extracted_capture",
+   "observation-log.text.unrecorded_number",
+   "observation-log.text.unrecorded_number_documents",
+   "observation-log.text.unrecorded_type",
+   "observation-log.unresolved",
+   "observation-log.unstated",
+   "observation-log.why.capture_content_level",
+   "observation-log.why.capture_text_extracted",
+   "observation-log.why.derivation_over_entity",
+   "observation-log.why.index_notice_named",
+   "observation-log.why.reading_persisted_capture",
+   "observation-log.why.reading_persisted_capture_reader",
+   "observation-log.why.resolution_attempt_over",
+   "refusal.AI_LOG_GOVERNED_ABSENCE",
+   "refusal.AI_LOG_NEVER_LOOKED_STORED",
+   "refusal.AI_LOG_NOT_A_BUNDLE",
+   "refusal.AI_LOG_SHELL_PRESENT",
+   "refusal.AI_LOG_STATE_UNKNOWN",
+   "refusal.AI_RUN_CONDITION_UNKNOWN",
+   "refusal.LEAD_LOOK_NOT_A_MEMBER",
+   "refusal.LEAD_LOOK_NO_DETAIL",
+   "refusal.LEAD_LOOK_REFERENT",
+   "refusal.LEAD_LOOK_STATE",
+   "refusal.LEAD_NOT_A_MEMBER",
+   "refusal.LEAD_NOT_FOUND",
+   "refusal.LEAD_NO_WORDS",
+   "refusal.LEAD_SHARE_NOT_AUTHOR",
+   "refusal.LEAD_SHARE_NOT_A_PARTICIPANT",
+   "refusal.LEAD_SHARE_NO_REASON",
+   "refusal.LEAD_TOO_LONG",
+   "refusal.LOOKED_ABSENT",
+   "refusal.LOOKED_INDETERMINATE",
+   "refusal.NEVER_LOOKED",
+   "refusal.OBS_AUTHORITY_UNNAMED",
+   "refusal.OBS_PRESENT_NO_REFERENT",
+   "refusal.PRESENT"
+  ],
+  "unkeyed": [
+   {
+    "file": "observation-log/index.mjs",
+    "line": 353,
+    "text": "a ${…} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is a page, a paragraph, a slide or a sheet's used range, and HTML has no `dom` producer)",
+    "why": "a diagnostic for builders and operators (a build note, a transaction marker, a file write), not drawn on a member's screen"
+   },
+   {
+    "file": "observation-log/vocabulary.mjs",
+    "line": 125,
+    "text": "the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   }
+  ],
+  "renamed": {}
+ },
+ "queue-producers": {
+  "reads": [
+   "queue-producers.age.arrival_carries_instant",
+   "queue-producers.age.entry_carries_instant",
+   "queue-producers.detail.edition_signed_waits",
+   "queue-producers.detail.signed_publish_published",
+   "queue-producers.detail.time_came_check",
+   "queue-producers.edition",
+   "queue-producers.held_by",
+   "queue-producers.instant_age.edition_carries_publishing",
+   "queue-producers.instant_age.edition_carries_signing",
+   "queue-producers.instant_age.edition_carries_stopping",
+   "queue-producers.label.bring_change_copy",
+   "queue-producers.label.cancel_publishing_time",
+   "queue-producers.label.choose_how_case",
+   "queue-producers.label.choose_profile_under",
+   "queue-producers.label.decline_containing_redactions",
+   "queue-producers.label.move_time_publishes",
+   "queue-producers.label.place_case_docket",
+   "queue-producers.label.read_export_log",
+   "queue-producers.label.read_imported_case",
+   "queue-producers.label.read_wizard_script",
+   "queue-producers.label.read_wizard_script_2",
+   "queue-producers.label.revoke_signing_key",
+   "queue-producers.label.see_changed_wizard",
+   "queue-producers.label.set_publisher_address",
+   "queue-producers.label.stop_following_case",
+   "queue-producers.label.take_up_under",
+   "queue-producers.map.reason_recorded_words",
+   "queue-producers.recipients_stated",
+   "queue-producers.stated.force",
+   "queue-producers.stated.run_lens_now",
+   "queue-producers.summary.case_docket_missing",
+   "queue-producers.summary.case_prepared_uses",
+   "queue-producers.summary.changed_source",
+   "queue-producers.summary.cites_publisher_published",
+   "queue-producers.summary.cites_publisher_withdrawn",
+   "queue-producers.summary.concluded_reading",
+   "queue-producers.summary.document_changed_source",
+   "queue-producers.summary.entry_publisher_docket",
+   "queue-producers.summary.evidence_bearing_met",
+   "queue-producers.summary.finding_case_published",
+   "queue-producers.summary.follow",
+   "queue-producers.summary.full_export_taken",
+   "queue-producers.summary.gone_source",
+   "queue-producers.summary.later",
+   "queue-producers.summary.lens_assistant_run",
+   "queue-producers.summary.new_reading_proposed",
+   "queue-producers.summary.newer_approved_version",
+   "queue-producers.summary.newer_version_change",
+   "queue-producers.summary.objective_gap",
+   "queue-producers.summary.place_group_named",
+   "queue-producers.summary.profile_now_held",
+   "queue-producers.summary.project_conclusion_hold",
+   "queue-producers.summary.published_set_time",
+   "queue-producers.summary.published_set_time_2",
+   "queue-producers.summary.publisher_docket_follow",
+   "queue-producers.summary.record_noticed_two",
+   "queue-producers.summary.registered_signing_key",
+   "queue-producers.summary.response_docket_contests",
+   "queue-producers.summary.signed_publishes",
+   "queue-producers.summary.something_project_rests",
+   "queue-producers.summary.something_rests_case",
+   "queue-producers.summary.something_rests_marked",
+   "queue-producers.summary.stage_holds_documents",
+   "queue-producers.summary.stage_required_absent",
+   "queue-producers.summary.stands_reading",
+   "queue-producers.summary.submitted_wizard_script",
+   "queue-producers.summary.two_projects_conclusions",
+   "queue-producers.summary.two_things_record",
+   "queue-producers.summary.wizard_script_longer",
+   "queue-producers.summary.wizard_script_matches",
+   "queue-producers.tension",
+   "queue-producers.text.changed_publisher_words",
+   "queue-producers.text.docket_read_refused",
+   "queue-producers.text.entry",
+   "queue-producers.text.entry_kind",
+   "queue-producers.text.entry_readable_number",
+   "queue-producers.text.entry_signing_key",
+   "queue-producers.text.group",
+   "queue-producers.text.group_2",
+   "queue-producers.text.progression_thread_document",
+   "queue-producers.text.publisher_since_taken",
+   "queue-producers.text.reason_publisher_words",
+   "queue-producers.text.reason_recorded",
+   "queue-producers.text.text",
+   "queue-producers.text.time_moved",
+   "queue-producers.text.time_read",
+   "queue-producers.text.undetermined_check",
+   "queue-producers.text.withdrawal",
+   "queue-producers.text.wizard_copied",
+   "queue.source-removed.one"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "following": {
+  "reads": [
+   "following.bad.end_date_calendar",
+   "following.bad.end_date_day",
+   "following.bad.fee_bearing_register",
+   "following.not_public",
+   "following.note.daemon_paused_administrator",
+   "following.note.difference_between_two",
+   "following.note.difference_between_two_answers",
+   "following.note.proceeding_dates_group",
+   "following.note.since_instant_policy",
+   "following.notes",
+   "following.reason.capture_named_digest",
+   "following.reason.check_did_answer",
+   "following.reason.events_refused_import",
+   "following.static_only",
+   "following.summary",
+   "following.text.actions_read",
+   "following.text.deadlines_read",
+   "following.text.group_standing_watch",
+   "following.text.member_standing_act",
+   "following.title.followed",
+   "following.title.followed_body",
+   "following.title.followed_register",
+   "following.title.policy_watched",
+   "following.title.portal_snapshot",
+   "following.title.refreshed_member",
+   "following.unscheduled.read_member_act",
+   "following.unscheduled.watch_names_body",
+   "following.watch",
+   "following.why.active_profiles_hold",
+   "following.why.answer_markup_rows",
+   "following.why.answer_neither_json",
+   "following.why.answer_well_formed",
+   "following.why.body_stated_meeting",
+   "following.why.json_answer_list",
+   "following.why.key_repeated_row",
+   "following.why.notice_period_count",
+   "following.why.notice_period_due",
+   "following.why.period_counted_back",
+   "following.why.placed_nowhere_attestation",
+   "following.why.policy_read_member",
+   "following.why.profile_hold_primary",
+   "following.why.register_read_act",
+   "following.why.row_earlier_snapshot",
+   "following.why.row_later_snapshot",
+   "following.why.snapshot_bytes_read",
+   "following.why.snapshot_bytes_read_text",
+   "following.why.snapshot_read_rows",
+   "following.why.watch_names_notice",
+   "refusal.BAD_FOLLOW_CADENCE",
+   "refusal.BAD_GATE",
+   "refusal.BAD_PERIOD",
+   "refusal.BAD_PROCEEDING_DATES",
+   "refusal.BAD_RENDER",
+   "refusal.MACHINE_CANNOT_FOLLOW",
+   "refusal.MACHINE_CANNOT_LINK_WATCH",
+   "refusal.NOT_GATED",
+   "refusal.NOT_READ",
+   "refusal.NOT_THE_AUTHOR",
+   "refusal.NOT_THE_FOLLOWER",
+   "refusal.NO_CREDENTIAL",
+   "refusal.NO_KEY",
+   "refusal.NO_LEGISTAR_ID",
+   "refusal.NO_LOCATOR",
+   "refusal.NO_SUCH_BODY",
+   "refusal.NO_SUCH_FOLLOW",
+   "refusal.NO_SUCH_HOME",
+   "refusal.NO_SUCH_MEETING_ADDRESS",
+   "refusal.NO_SUCH_SNAPSHOT",
+   "refusal.NO_SUCH_WATCH",
+   "refusal.PERSON_QUERY_NOT_NAMED",
+   "refusal.PRICE_FIRST",
+   "refusal.WATCH_ENDED",
+   "refusal.WATCH_NOT_ASKED",
+   "refusal.WATCH_RELIED_ON"
+  ],
+  "unkeyed": [
+   {
+    "file": "following/index.mjs",
+    "line": 375,
+    "text": "following a register names the proceeding it is followed for",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 393,
+    "text": "${…}, an entity of kind proceeding; the entity named is of kind ${…}.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 414,
+    "text": "the query names one register and a scheme the active profiles list for it; a query by name alone or across registers is not followed",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 415,
+    "text": "the value is not an identifier of that scheme's form; a name is not an identifier",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 418,
+    "text": "the query is the register's own address for that identifier, on the register's host, carrying the value",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 419,
+    "text": "a person query's follow lives in its author's project: name its home",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 420,
+    "text": "the person named is not a registered entity",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/index.mjs",
+    "line": 1325,
+    "text": "a proceeding's dates are read of",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "following/legistar.mjs",
+    "line": 70,
+    "text": "EventBodyId eq ${…} and ${…}",
+    "why": "a Legistar OData query sent to another server, never shown to a member"
+   },
+   {
+    "file": "following/legistar.mjs",
+    "line": 77,
+    "text": "MatterBodyId eq ${…} and ${…}",
+    "why": "a Legistar OData query sent to another server, never shown to a member"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.NO_LOCATOR"
+ },
+ "retrieval": {
+  "reads": [
+   "monitoring.reason_given",
+   "refusal.MEANING_ROWS_NO_ARM",
+   "refusal.MEANING_ROWS_UNKNOWN_ARM",
+   "refusal.NO_SUCH_SELECTION",
+   "refusal.SET_MOVED",
+   "retrieval.capture_text_skipped_says",
+   "retrieval.column_why",
+   "retrieval.extent_why",
+   "retrieval.lead",
+   "retrieval.note.content_axis_read",
+   "retrieval.note.read_level_failed",
+   "retrieval.note.record_holds_capture",
+   "retrieval.recorded_none_registered",
+   "retrieval.syntax.bare_field_leg",
+   "retrieval.syntax.bare_words_ranked",
+   "retrieval.syntax.content_cap_apply",
+   "retrieval.syntax.content_cap_undetermined",
+   "retrieval.syntax.content_chain_apply",
+   "retrieval.syntax.field_asks_field",
+   "retrieval.syntax.field_value_filters",
+   "retrieval.syntax.fm_path_fm",
+   "retrieval.syntax.leg_asks_record",
+   "retrieval.syntax.leg_resolves_concerns",
+   "retrieval.syntax.near_finds_words",
+   "retrieval.syntax.parentheses_nest",
+   "retrieval.syntax.passage_searches_documents",
+   "retrieval.syntax.quoted_phrase_unit",
+   "retrieval.syntax.sort_field_sort",
+   "retrieval.syntax.term_prefix_match",
+   "retrieval.syntax.term_term_exclude",
+   "retrieval.text.capture_counted_scope",
+   "retrieval.text.capture_scope_read",
+   "retrieval.text.capture_scope_searched",
+   "retrieval.text.further_capture_scope",
+   "retrieval.text.matched_document_scope",
+   "retrieval.text.matched_over_document",
+   "retrieval.text.matched_over_document_scope",
+   "retrieval.text.matched_over_searchable",
+   "retrieval.text.matched_scope_searchable",
+   "retrieval.text.over_scope_capture",
+   "retrieval.text.passage_matched_over",
+   "retrieval.text.row_over_document",
+   "retrieval.text.tally_covers_first",
+   "retrieval.unread.read_followed_people",
+   "retrieval.unread.read_followed_people_offices",
+   "retrieval.why.answer_lists_indexed",
+   "retrieval.why.anybody_looked_all",
+   "retrieval.why.arm_answers_meaning",
+   "retrieval.why.document_scope_all",
+   "retrieval.why.document_scope_counted",
+   "retrieval.why.document_scope_hold",
+   "retrieval.why.document_scope_hold_rows",
+   "retrieval.why.document_scope_holds",
+   "retrieval.why.finding_rests_rows",
+   "retrieval.why.matching_unit_over",
+   "retrieval.why.names_day_calendar",
+   "retrieval.why.offers_recordedby_read",
+   "retrieval.why.reachable",
+   "retrieval.why.read_answered_promise",
+   "retrieval.why.read_refused",
+   "retrieval.why.read_threw",
+   "retrieval.why.words_name_month",
+   "retrieval.why.words_write_day",
+   "state.empty"
+  ],
+  "unkeyed": [
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 69,
+    "text": "no later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 69,
+    "text": "not later than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 69,
+    "text": "not more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 69,
+    "text": "no more than",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 76,
+    "text": "one hundred twenty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 76,
+    "text": "one hundred eighty",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 80,
+    "text": "is required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/findin.mjs",
+    "line": 80,
+    "text": "are required to",
+    "why": "a phrase of a matching lexicon: retrieval searches documents for it, it is never drawn"
+   },
+   {
+    "file": "retrieval/frontier.mjs",
+    "line": 317,
+    "text": "NEVER_LOOKED at the content level is a capture this record holds that nothing has ever tried to extract, and it is reported apart from the tally because it is the absence of a row — and a missing row is read through section 5.1's causes in order, so a capture extracted before this log carried the content level is NOT in that set and is named in `missing_unexplained` with its cause instead. An entry is the capture's latest EXTRACTION, and the re-extraction candidate list is every capture whose latest extraction is not a definitive PRESENT, plus every capture whose transcription rests on a calibration a worse measurement has superseded. `indexed` is read from the capture's latest index observation, and reads UNDETERMINED where the record holds none (a capture indexed before the index was observed), never where it holds one. The withholding fence applies ROW-WHOLE: a capture this viewer may not see is absent from every collection here, and `truncated` describes THE LISTS YOU WERE GIVEN and never the supply they were cut from — for a viewer entitled to every row those are the same list, and no count of what was withheld is reported, because that count is the leak",
+    "why": "a note describing the answer's own fields (backticked field names, its row-whole fence) for builders of readers; no member screen draws it"
+   },
+   {
+    "file": "retrieval/frontier.mjs",
+    "line": 436,
+    "text": "the three acts of section 4.3 have three subjects and are three partitions of one table: a CAPTURE (did anything read this document for entities), a REFERENCE (did anything try to match this name against the registry), an ENTITY (did anything derive the connections among the documents concerning this subject). A LOOKED_ABSENT row in `looked` is a look that RAN and produced nothing; a subject in `never_looked` is one nobody has looked at. NEVER_LOOKED is the absence of a row and is reported apart from the tally, read through section 5.1's causes in order — and at a reference or an entity the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in `missing_unexplained` rather than counted as nobody-looked. The withholding fence applies to capture and reference subjects, which name a document this group holds; an ENTITY subject is not withheld from a recognised viewer, because the subject registry is instance-wide and op=concerns already serves it; a viewer the plane does not recognise sees nothing",
+    "why": "a note describing the answer's own fields (backticked field names, its row-whole fence) for builders of readers; no member screen draws it"
+   },
+   {
+    "file": "retrieval/index.mjs",
+    "line": 364,
+    "text": "a registration names its module",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "retrieval/index.mjs",
+    "line": 366,
+    "text": "a registration names one of the query language's fields",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "retrieval/index.mjs",
+    "line": 368,
+    "text": "${…} is a projection column, which this module holds itself",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "retrieval/index.mjs",
+    "line": 371,
+    "text": "a relation is a table, a key and a column, each an SQL identifier",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "retrieval/index.mjs",
+    "line": 1378,
+    "text": "the criterion now answers differently; which rows moved is not recoverable because a query selection stores the criterion rather than the rows",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {}
+ },
+ "case-checker": {
+  "reads": [
+   "case-checker.captures_not_carried_statement",
+   "case-checker.departure.case_document_carried",
+   "case-checker.departure.case_re_weighed",
+   "case-checker.departure.lens_given_published",
+   "case-checker.departures",
+   "case-checker.detail.case_file_carries",
+   "case-checker.detail.checker_render_complete",
+   "case-checker.detail.complete_edition_compared",
+   "case-checker.detail.member_attestation_carries",
+   "case-checker.file_gap.finding_grading_facts",
+   "case-checker.file_gap.finding_passages",
+   "case-checker.file_gap.finding_published_bytes",
+   "case-checker.file_gap.finding_signature",
+   "case-checker.from.case_document",
+   "case-checker.from.grading_facts",
+   "case-checker.gap.group_attestation_case",
+   "case-checker.gap.signed_account_attesting",
+   "case-checker.keys_not_checked_statement",
+   "case-checker.lens_limit_statement",
+   "case-checker.not_recomputed_statement",
+   "case-checker.problem.part_bytes",
+   "case-checker.problem.part_central_directory",
+   "case-checker.problem.part_central_directory_cut",
+   "case-checker.problem.part_zip_archive",
+   "case-checker.push.compressed_case_file",
+   "case-checker.push.cut_short",
+   "case-checker.push.finding_outcome",
+   "case-checker.push.finding_outcome_2",
+   "case-checker.push.local_header",
+   "case-checker.push.manifest_json",
+   "case-checker.push.manifest_json_object",
+   "case-checker.push.part_case_file",
+   "case-checker.push.part_files_recompute",
+   "case-checker.push.part_given_carries",
+   "case-checker.push.part_given_carries_manifest",
+   "case-checker.push.part_given_carries_manifest_list",
+   "case-checker.push.part_names_twice",
+   "case-checker.recreation_statement",
+   "case-checker.rest_on_another_group_statement",
+   "case-checker.say.sentence_cites_among",
+   "case-checker.say.sentence_cites_marked",
+   "case-checker.say.sentence_marked_bias",
+   "case-checker.say.sentence_marked_following",
+   "case-checker.say.sentence_reads_supporting",
+   "case-checker.say.sentence_states_cites",
+   "case-checker.say.sentence_states_finding",
+   "case-checker.say.sentence_states_finding_conclusion",
+   "case-checker.text.carried_complete_edition",
+   "case-checker.text.made_key_case",
+   "case-checker.text.made_purpose",
+   "case-checker.text.publication_checks_ran",
+   "case-checker.text.read",
+   "case-checker.text.read_signature",
+   "case-checker.text.unnamed_document",
+   "case-checker.text.verify_over_signs",
+   "case-checker.where",
+   "case-checker.why.names_leg_case",
+   "case-checker.why.recorded_conclusion_claim",
+   "case-checker.why.statement_among_lens",
+   "screen.imported.result.no",
+   "screen.imported.result.part"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-checker/check.mjs",
+    "line": 260,
+    "text": "the check could not read this input: ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "/finding.md`: one finding's published bytes. - `finding_signature` at `findings/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "/finding.md.sig`: a member finding's signature. - `grading_facts` at `findings/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "/document`: a captured document's bytes, whole. - `extracted_text` at `materials/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "/observation.md`: an observation's text, whole. - `attestation` at `attestations/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "`: a signed account, a timestamp token or a co-archive record. - `calculation`, at three paths, one kind: `calculations/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "/calculation.json`, one calculation a member's chain reaches, its `calculations:` row (section 4) as canonical JSON, which must be what the signed row states; `calculations/",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "` is a finding's id, `",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "` a material's `ref` and `",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "` and a newline; - a member finding: `bio-ratify",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   },
+   {
+    "file": "case-checker/spec.mjs",
+    "line": 11,
+    "text": "` and a newline; - a member's account of a capture: `bio-capture-account",
+    "why": "a fragment of the case-file format specification (spec.mjs), a technical document in the file's own path and field grammar for builders of checkers"
+   }
+  ],
+  "renamed": {}
+ },
+ "membership": {
+  "reads": [
+   "court.statement",
+   "handle.changeable",
+   "handle.characters",
+   "handle.fixed",
+   "handle.formerly",
+   "handle.free",
+   "handle.refused.paused",
+   "handle.taken",
+   "membership.also_do",
+   "membership.door_warning",
+   "membership.handle_check_stated",
+   "membership.remedy.active_administrator_group",
+   "membership.remedy.active_administrator_group_confirm",
+   "membership.says.member_enrolled_under",
+   "membership.says.member_holds_reserved",
+   "membership.why.both_owners_agree",
+   "membership.why.majority_all_owners",
+   "membership.why.owner_floor_last",
+   "refusal.ADMIN_REQUIRES_VOTE",
+   "refusal.BAD_DAILY_CAP",
+   "refusal.BAD_EXPIRY",
+   "refusal.BAD_MEMBER_ID",
+   "refusal.CASE_SIGNER_NOT_AN_OWNER",
+   "refusal.CONSENSUS_REQUIRED",
+   "refusal.COURT_NOTICE_UNKNOWN_CHOICE",
+   "refusal.ENROL_NOT_RECORDED",
+   "refusal.EXISTS",
+   "refusal.EXPERTISE_NO_LABEL",
+   "refusal.FOUNDER_HANDLE_NOT_FOUNDER",
+   "refusal.GROUP_DESCRIPTION_TOO_LONG",
+   "refusal.GROUP_KIND_OTHER_EMPTY",
+   "refusal.GROUP_KIND_UNKNOWN",
+   "refusal.GROUP_VISIBILITY_UNKNOWN",
+   "refusal.HANDLE_FIXED",
+   "refusal.JOIN_LINK_DAILY_CAP",
+   "refusal.JOIN_LINK_OFF",
+   "refusal.JOIN_LINK_ON",
+   "refusal.LAST_ADMIN",
+   "refusal.LAST_COMMITTED_OWNER",
+   "refusal.LISTENER_DECLARED",
+   "refusal.LISTENER_MALFORMED",
+   "refusal.MEMBER_ID_RESERVED",
+   "refusal.NOT_AN_ADMIN",
+   "refusal.NOT_A_PARTICIPANT",
+   "refusal.NOT_PROPOSED",
+   "refusal.NO_COVER",
+   "refusal.NO_HOLDERS",
+   "refusal.NO_SUCH_JOIN_LINK",
+   "refusal.NO_SUCH_MEMBER",
+   "refusal.NO_SUCH_PROJECT",
+   "refusal.NO_UNUSED_INVITATION",
+   "refusal.NO_WEBSITE_KEY",
+   "refusal.PAIRING_NOT_YOURS",
+   "refusal.PROJECT_ACT_NOT_A_PARTICIPANT",
+   "refusal.PROJECT_ACT_NOT_THE_OWNER",
+   "refusal.PROJECT_GUARD_UNCHECKED",
+   "refusal.PROJECT_SEEN_NOT_A_PARTICIPANT",
+   "refusal.PROJECT_VISIBILITY_NOT_THE_OWNER",
+   "refusal.PROJECT_VISIBILITY_UNKNOWN_SETTING",
+   "refusal.TARGET_NOT_AN_ADMIN",
+   "refusal.TARGET_NOT_A_PARTICIPANT",
+   "refusal.WEBSITE_DAILY_CAP",
+   "refusal.WEBSITE_KEY_EXISTS",
+   "refusal.WEBSITE_KEY_UNKNOWN"
+  ],
+  "unkeyed": [
+   {
+    "file": "membership/index.mjs",
+    "line": 124,
+    "text": "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 180,
+    "text": "the caller holds no participation in this project, and this act is taken by one of its participants (Membership Architecture v2 §7). Nothing was changed.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 203,
+    "text": "no member of your group answers to that id here. Nothing was changed.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 228,
+    "text": "this is an act an owner of the project performs, and the caller is not one of its owners. Seeing a project is not directing it: an administrator directs no project, whatever it sees (Membership Architecture v2 §4.9, §7). Nothing was changed.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 337,
+    "text": "a listener names the module that registers it and its function",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 340,
+    "text": "${…} has already registered its listener",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 345,
+    "text": "this listener is already registered${…}, and it takes one registration",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 350,
+    "text": "the registration could not be read: ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 1977,
+    "text": "adding a member",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2442,
+    "text": "setting a member's status",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2668,
+    "text": "changing the website key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2681,
+    "text": "switching off the website key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2767,
+    "text": "changing the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2780,
+    "text": "replacing the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "membership/index.mjs",
+    "line": 2791,
+    "text": "switching off the join link",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.CONSENSUS_REQUIRED, refusal.NO_COVER, refusal.PROJECT_VISIBILITY_NOT_THE_OWNER"
+ },
+ "wizard-scripts": {
+  "reads": [
+   "filing-templates.says.retired_versions_offered",
+   "refusal.APPROVER_IS_AUTHOR",
+   "refusal.ASSISTANT_DRAFT_UNAVAILABLE",
+   "refusal.MACHINE_CANNOT_APPROVE_WIZARD",
+   "refusal.MACHINE_CANNOT_DRAFT_WIZARD",
+   "refusal.NOT_AN_APPROVER",
+   "refusal.NOT_A_DRAFT",
+   "refusal.NOT_SUBMITTED",
+   "refusal.NO_SUCH_WIZARD",
+   "refusal.START_RUMOUR_AS_QUESTION",
+   "refusal.TEMPLATE_ALREADY_ENDED",
+   "refusal.TEMPLATE_REASON_REFUSED",
+   "refusal.WIZARDS_STATE_REFUSED",
+   "refusal.WIZARD_ACT_UNKNOWN",
+   "refusal.WIZARD_ALREADY_REGISTERED",
+   "refusal.WIZARD_DRAFT_REFUSED",
+   "refusal.WIZARD_DUPLICATE",
+   "refusal.WIZARD_EDITOR_MEMBER_UNKNOWN",
+   "refusal.WIZARD_EDITOR_NOT_GRANTED",
+   "refusal.WIZARD_NAME_REFUSED",
+   "refusal.WIZARD_NOT_APPROVED",
+   "refusal.WIZARD_NOT_THE_GROUPS",
+   "refusal.WIZARD_NO_PROPOSER",
+   "refusal.WIZARD_NO_STEPS",
+   "refusal.WIZARD_NO_SUCH_GRANT",
+   "refusal.WIZARD_PROGRESS_REFUSED",
+   "refusal.WIZARD_RECORDING_CARRIES_VALUES",
+   "refusal.WIZARD_SCOPE_REFUSED",
+   "refusal.WIZARD_SCREEN_UNKNOWN",
+   "refusal.WIZARD_STEP_CONCLUDES",
+   "refusal.WIZARD_STEP_NO_WHY",
+   "refusal.WIZARD_STEP_REFUSED",
+   "refusal.WIZARD_TRIVIAL",
+   "refusal.WIZARD_USE_REFUSED",
+   "refusal.WIZARD_VIA_REFUSED",
+   "refusal.WIZARD_WHY_REFUSED",
+   "refusal.WRITING_HELP_DRAFT_HELD",
+   "refusal.WRITING_HELP_FACT_ADDED",
+   "refusal.WRITING_HELP_FIRSTHAND_READ",
+   "refusal.WRITING_HELP_NOTHING_TOLD",
+   "refusal.WRITING_HELP_REASON_FIELD",
+   "refusal.WRITING_HELP_REFUSED",
+   "refusal.WRITING_HELP_SUGGESTIONS_OFF",
+   "screen.ceremony.name",
+   "screen.members.invite.heading",
+   "screen.start-send.name",
+   "screen.update.name",
+   "wizard-scripts.says.approved_offered_member",
+   "wizard-scripts.says.draft_author_runs",
+   "wizard-scripts.says.proposed_steps_offered",
+   "wizard-scripts.says.proposed_steps_stored",
+   "wizard-scripts.text.script_offered_go",
+   "wizard-scripts.text.side_trip_go",
+   "wizard-scripts.text.side_trip_leads",
+   "wizard-scripts.why.act_op_name",
+   "wizard-scripts.why.draft",
+   "wizard-scripts.why.draft_text_characters",
+   "wizard-scripts.why.proposal_proposes_least",
+   "wizard-scripts.why.script_steps",
+   "wizard-scripts.why.side_trip_names",
+   "wizard-scripts.why.step",
+   "wizard-scripts.why.step_carries_screen",
+   "wizard-scripts.why.step_names_screen",
+   "wizard-scripts.why.steps_list",
+   "wizard-scripts.why.text_characters",
+   "wizard.WIZ-33b5887790b7561b.name",
+   "wizard.WIZ-33cece8a68e76f58.name",
+   "wizard.WIZ-74328804ddae3503.name",
+   "wizard.WIZ-7db08189cc0e58c3.name",
+   "wizard.WIZ-a15d174f7a2c1dc5.name",
+   "wizard.WIZ-a17835c4d8235f65.name",
+   "wizard.WIZ-bd7bde2c61b6badb.name",
+   "wizard.WIZ-c887066cc553dd41.name",
+   "wizard.WIZ-d0cdcee9437b213b.name",
+   "wizard.WIZ-f06504b9133b8d61.name"
+  ],
+  "unkeyed": [
+   {
+    "file": "wizard-scripts/build-data.mjs",
+    "line": 92,
+    "text": "the file's own",
+    "why": "a diagnostic for builders and operators (a build note, a transaction marker, a file write), not drawn on a member's screen"
+   },
+   {
+    "file": "wizard-scripts/index.mjs",
+    "line": 915,
+    "text": "a blank start needs the advanced editor, which an administrator grants",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "wizard-scripts/index.mjs",
+    "line": 979,
+    "text": "without the advanced editor a revision may reword, delete or reorder the steps, never add one",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.ASSISTANT_DRAFT_UNAVAILABLE, refusal.NOT_AN_APPROVER, refusal.NOT_A_DRAFT"
+ },
+ "store-door": {
+  "reads": [
+   "store-door.md.material_handed_group",
+   "store-door.md.received_fetched_address",
+   "store-door.title.material_handed_doorbell"
+  ],
+  "unkeyed": [
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 94,
+    "text": "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 95,
+    "text": "`id` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 95,
+    "text": "`id` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 95,
+    "text": "`id` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 96,
+    "text": "`id` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 96,
+    "text": "`id` is a transcription's content id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 97,
+    "text": "`id` is a THEME id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 97,
+    "text": "`id` is a LEAD id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 98,
+    "text": "`address` is a normalised source address, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 99,
+    "text": "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 100,
+    "text": "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 101,
+    "text": "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 103,
+    "text": "`run` is a RUN id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 104,
+    "text": "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 105,
+    "text": "`case` is a CASE id, answered by the case door's own fence",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 106,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 106,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 107,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 107,
+    "text": "`entity` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 108,
+    "text": "`id` is an ENTITY id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 108,
+    "text": "`id` is a RELATION id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 108,
+    "text": "`id` is an INBOX item's id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 109,
+    "text": "`address` is a source address",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 109,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 110,
+    "text": "`sha256` is a published artifact's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 111,
+    "text": "`id` is a PUBLISHED case — the published record, served to anybody",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 112,
+    "text": "`id` is a PUBLISHED case — the published record, served to anybody",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 113,
+    "text": "`case` and `target` name a case and its member finding, every field already published",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 115,
+    "text": "`address` is a source address",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 115,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 116,
+    "text": "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 117,
+    "text": "`sha256` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 119,
+    "text": "`id` is a comparison PROPOSAL id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 120,
+    "text": "`id` is a COUNSEL PACKET id — a thing inside a project, whose existence is contents",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 122,
+    "text": "`candidate` is a contradiction CANDIDATE id — a thing inside the record, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 123,
+    "text": "`referents` (in the body) are a case's claims, legs and extents at their versions, never a project's own id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 124,
+    "text": "`contradiction` is a contradiction CANDIDATE id and `standardSide` names its side, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 126,
+    "text": "`pseudonym` is a KNOCKER's pseudonym, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 127,
+    "text": "`capture` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 127,
+    "text": "`capture` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 128,
+    "text": "`capture` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 131,
+    "text": "`capture` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 132,
+    "text": "`source_id` is a SOURCE id, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 133,
+    "text": "`source_id` is a SOURCE id, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 134,
+    "text": "`source_id` is a SOURCE id, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 136,
+    "text": "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 137,
+    "text": "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 138,
+    "text": "`path` is a local FACT's path in a profile, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 139,
+    "text": "`paths` are local FACTs' paths in a profile, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 141,
+    "text": "`case` is a CASE id, answered by the case's own fence",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 142,
+    "text": "`case` is a CASE id and `edition` one of its editions, never a bundle id",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 159,
+    "text": "`captureSha` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 159,
+    "text": "`captureSha` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 160,
+    "text": "`captureSha` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 160,
+    "text": "`captureSha` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/dispatch.mjs",
+    "line": 161,
+    "text": "`captureSha` is a CAPTURE's digest",
+    "why": "store-door's dispatch table: what each read's id parameter names, an API note for builders, never drawn"
+   },
+   {
+    "file": "store-door/pull.mjs",
+    "line": 54,
+    "text": "Trigger: knock ${…} brought in",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "store-door/pull.mjs",
+    "line": 55,
+    "text": "Changes: created from the pulled knock.",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   }
+  ],
+  "renamed": {}
+ },
+ "case-import": {
+  "reads": [
+   "case-checker.lens_limit_statement",
+   "case-import.call.manifest_checked",
+   "case-import.departures",
+   "case-import.did_not_recreate",
+   "case-import.gaps_unstated",
+   "case-import.grades",
+   "case-import.group_fields_label",
+   "case-import.group_fields_none",
+   "case-import.lens_not_reweighed",
+   "case-import.lens_undetermined",
+   "case-import.no_move_seen",
+   "case-import.no_own_bar",
+   "case-import.own_lens",
+   "case-import.source_bar",
+   "case-import.source_calculation",
+   "case-import.source_lens",
+   "case-import.statement",
+   "case-import.text.copy_holds_check",
+   "case-import.text.manifest_found",
+   "case-import.unread.case_checker_composed",
+   "case-import.unread.case_checker_failed",
+   "case-import.unread.case_checker_gave",
+   "case-import.why.calc_grammar_evaluate",
+   "case-import.why.case_states_calculation",
+   "case-import.why.case_states_list",
+   "case-import.why.case_states_method",
+   "case-import.why.case_states_recipe",
+   "case-import.why.case_states_result",
+   "case-import.why.evaluated",
+   "case-import.why.file_carried_input",
+   "case-import.why.group_civicsmith_hold",
+   "case-import.why.input_bytes_canonical",
+   "case-import.why.input_over_bytes",
+   "refusal.IMPORT_ACCEPT_GAPS_UNSTATED",
+   "refusal.IMPORT_ACCEPT_NOT_RECREATED",
+   "refusal.IMPORT_ACCEPT_NO_REASON",
+   "refusal.IMPORT_DOCUMENT_NOT_MISSING",
+   "refusal.IMPORT_EDITION_DIFFERS",
+   "refusal.IMPORT_FLAG_NOT_OPEN",
+   "refusal.IMPORT_FLAG_NO_ISSUE",
+   "refusal.IMPORT_NOTHING_ACCEPTED",
+   "refusal.IMPORT_NOT_A_CASE_FILE",
+   "refusal.IMPORT_NOT_A_MEMBER",
+   "refusal.IMPORT_NOT_WATCHED",
+   "refusal.IMPORT_NO_SUCH_EDITION",
+   "refusal.IMPORT_NO_SUCH_FINDING",
+   "refusal.IMPORT_PART_TOO_LARGE",
+   "refusal.IMPORT_WATCH_BAD_ADDRESS",
+   "refusal.MACHINE_CANNOT_IMPORT"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-import/index.mjs",
+    "line": 1289,
+    "text": "no watch of this import is in force",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "case-import/index.mjs",
+    "line": 1292,
+    "text": "the watch ended meanwhile",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "case-import/index.mjs",
+    "line": 1409,
+    "text": "the watch in force names another docket address",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "case-import/index.mjs",
+    "line": 1409,
+    "text": "no watch of this import is in force",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "case-import/index.mjs",
+    "line": 1427,
+    "text": "the watch changed meanwhile",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {}
+ },
+ "ai-runs": {
+  "reads": [
+   "ai-runs.act.continuing_run",
+   "ai-runs.act.opening_question_under",
+   "ai-runs.fence.composing_half_carries",
+   "ai-runs.fence.search_half_receives",
+   "ai-runs.note.appended_budget_spent",
+   "ai-runs.note.assistant_opens_question",
+   "ai-runs.note.conversation_figures_calls",
+   "ai-runs.note.mode_deployed_group",
+   "ai-runs.note.re_run_runs",
+   "ai-runs.note.run_already_ended",
+   "ai-runs.note.run_budget_moves",
+   "ai-runs.note.run_context_kind",
+   "ai-runs.note.run_continued_principal",
+   "ai-runs.note.run_driven_principal",
+   "ai-runs.note.run_either_existed",
+   "ai-runs.note.run_either_existed_purged",
+   "ai-runs.note.run_ended_later",
+   "ai-runs.note.run_ended_log",
+   "ai-runs.note.run_ended_principal",
+   "ai-runs.note.run_id_already",
+   "ai-runs.note.run_needs_id",
+   "ai-runs.note.run_re_run",
+   "ai-runs.note.run_state_resumable",
+   "ai-runs.note.run_step_refused",
+   "ai-runs.note.sent",
+   "ai-runs.reason.answer_within_bound",
+   "ai-runs.reason.call_did_complete",
+   "ai-runs.reason.steps_did_answer",
+   "ai-runs.reason.steps_reachable",
+   "ai-runs.says.resumption_dispatched",
+   "ai-runs.says.resumption_handed_agent",
+   "ai-runs.stated.lens_force_run",
+   "ai-runs.stated.manifest_handed_run",
+   "ai-runs.stated.manifest_recorded_run",
+   "ai-runs.stated.question_opened_inside",
+   "ai-runs.text.group_civicsmith_resume",
+   "ai-runs.text.principal_opened_organization",
+   "bias.manifest_force",
+   "consequences.nothing"
+  ],
+  "unkeyed": [
+   {
+    "file": "ai-runs/index.mjs",
+    "line": 158,
+    "text": "proposing contradictions under a run",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-runs/schema.mjs",
+    "line": 15,
+    "text": "' added for a member's AI credential; 'class:",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   }
+  ],
+  "renamed": {}
+ },
+ "inquiry": {
+  "reads": [
+   "inquiry.message.entry_requirements_judged",
+   "inquiry.message.grammar_threw_judged",
+   "inquiry.message.registered_grammars_read",
+   "inquiry.next.child_open_carries",
+   "inquiry.next.group_strength_weakest",
+   "inquiry.next.question_reads_weakest",
+   "inquiry.projects_undetermined",
+   "inquiry.reevaluation_absent",
+   "inquiry.set_section.divided",
+   "inquiry.set_section.divided_out",
+   "inquiry.set_section.half_question_stays",
+   "inquiry.set_section.where_leg_went",
+   "inquiry.stated.recorded_migrated_drive",
+   "inquiry.strength_absent",
+   "inquiry.text.group_lens_force",
+   "inquiry.text.lens_force",
+   "inquiry.undetermined.documents_set_aside",
+   "inquiry.undetermined.documents_set_aside_question",
+   "inquiry.undetermined.question_history_set",
+   "inquiry.why.time_zone_held",
+   "question.refused.drawnon",
+   "refusal.BIAS_APPLICATION_NOT_IN_FORCE",
+   "refusal.CANDIDATE_ALREADY_TAKEN_UP",
+   "refusal.CONTRADICTION_ARM_FAILED",
+   "refusal.CONTRADICTION_LINK_MALFORMED",
+   "refusal.EXPLORES_MALFORMED",
+   "refusal.MACHINE_PASSAGE_UNCHECKED",
+   "refusal.PERSON_IN_NO_PUBLIC_ROLE",
+   "refusal.RESOLUTION_INCOMPLETE",
+   "refusal.RESOLUTION_KIND_UNKNOWN",
+   "refusal.RESOLUTION_MISSING",
+   "refusal.RESOLUTION_WITHOUT_CONTRADICTION",
+   "refusal.SURFACED_BY_REWRITTEN"
+  ],
+  "unkeyed": [
+   {
+    "file": "inquiry/contradiction.mjs",
+    "line": 128,
+    "text": "`contradiction` is `{candidate}` and nothing else, the candidate's id 64 lowercase hex characters; this link is not one, so this document is not a contradiction inquiry.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/contradiction.mjs",
+    "line": 134,
+    "text": "`resolution` is carried only by a contradiction inquiry (one whose `contradiction` names its candidate), and this document is not one.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/contradiction.mjs",
+    "line": 145,
+    "text": "this contradiction inquiry is concluded and its `resolution` names no kind: a contradiction is concluded by saying what the conflict turned out to be.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/contradiction.mjs",
+    "line": 152,
+    "text": "'${…}' is not a resolution kind; the kinds are ${…}.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/contradiction.mjs",
+    "line": 207,
+    "text": "`explores` names exactly one of `coordinate` (from ${…}), `canon` (from ${…}) or `hypothesis` (non-empty, at most ${…} characters), and nothing else.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 469,
+    "text": "the read of whether these passages were taken up (${…}) failed: ${…}. Nothing was written.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 476,
+    "text": "the read of whether these passages were taken up (${…}) answered neither null nor a refusal. Nothing was written.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 702,
+    "text": "${…} was divided${…}, and its children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. Nothing was written.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2205,
+    "text": "${…}'s children would be new documents that must name the group that produced them; this store records none and ${…}'s own document names none, so nothing was divided.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2330,
+    "text": "## What It Rests On",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2337,
+    "text": "## What Would Falsify This",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2339,
+    "text": "### Session ${…} | Divided out | ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2341,
+    "text": "Changes: created from ${…}, ${…} leg(s) apportioned here.",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2342,
+    "text": "Parent: ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2343,
+    "text": "Siblings: ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2344,
+    "text": "Reason: ${…}",
+    "why": "a session-log line in the project file's own grammar (record-grammar), which stays as written, like the session log's fields (DEC-258)"
+   },
+   {
+    "file": "inquiry/index.mjs",
+    "line": 2658,
+    "text": "this question was declared malformed and carried forward into children that supersede it. Re-deriving its strength now would move a number its children's own disclosure already points at. Restructure the CHILD that carries the half you mean.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {}
+ },
+ "money": {
+  "reads": [
+   "duties.why.read_names_member",
+   "entities.symbol.text",
+   "money.adjustments_says",
+   "money.citation",
+   "money.grade_basis",
+   "money.label.attributed_member_reason",
+   "money.label.paid_concerning_contract",
+   "money.push.canonical_table_row",
+   "money.push.party_identifier_held",
+   "money.push.party_named_registered",
+   "money.push.phase_stage",
+   "money.says.authorising_event_held",
+   "money.says.authorising_events_held",
+   "money.says.committed_paid_figure",
+   "money.says.fact_concerns_event",
+   "money.says.fact_held_side",
+   "money.says.facts_summed_sum",
+   "money.says.facts_total",
+   "money.says.held_apart_proposal",
+   "money.says.summed_through_calc",
+   "money.says.transfer_between_two",
+   "money.says.two_readings_consistent",
+   "money.says.two_readings_differ",
+   "money.take.change_order_amends",
+   "money.take.committed_award",
+   "money.text.within_coarser_fact",
+   "money.undetermined.event_date_undetermined",
+   "money.undetermined.event_placed_nowhere",
+   "money.undetermined.fact_concerns_event",
+   "money.undetermined.fact_concerns_events",
+   "money.undetermined_why",
+   "money.why.money_facts_name",
+   "money.why.side_holds_fact",
+   "money.why.side_sum_refused",
+   "screen.money.notstated",
+   "screen.money.proposed"
+  ],
+  "unkeyed": [
+   {
+    "file": "money/index.mjs",
+    "line": 501,
+    "text": "the money fact ${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 514,
+    "text": "a binding ${…} a member adopted for the table ${…}${…}",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 524,
+    "text": "the capture named",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 750,
+    "text": "an entity's money is read by the entity's id (moneyof&entity=ENT-...)",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 966,
+    "text": "events is not wired here, so no event the fact concerns is read",
+    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 1001,
+    "text": "committed against paid is read for one contract (committedagainstpaid&contract=ENT-...)",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 1014,
+    "text": "events is not wired here, so the award and its change orders are not read",
+    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 1080,
+    "text": "events is not wired here",
+    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
+   },
+   {
+    "file": "money/index.mjs",
+    "line": 1308,
+    "text": "money's read names no host and this isolate holds ${…} money stores",
+    "why": "a wiring diagnostic (which store instance answers a host), for builders; no member reaches it"
+   }
+  ],
+  "renamed": {}
+ },
+ "textchain.mjs": {
+  "reads": [
+   "content.why.whole_document",
+   "pdfstructure.image_page",
+   "refusal.TEXT_ATTEST_EXTENT",
+   "refusal.TEXT_ATTEST_MACHINE",
+   "refusal.TEXT_CHAIN_CAL_REF",
+   "refusal.TEXT_CHAIN_COLLAPSED",
+   "refusal.TEXT_CHAIN_EMPTY",
+   "refusal.TEXT_CHAIN_LETTER_ON_PERSON",
+   "refusal.TEXT_CHAIN_LETTER_UNCALIBRATED",
+   "refusal.TEXT_CHAIN_STEP_SHAPE",
+   "refusal.TEXT_CHAIN_STEP_UNKNOWN",
+   "refusal.TEXT_CHAIN_STEP_UNNAMED",
+   "refusal.TEXT_CHAIN_STRENGTHENS",
+   "refusal.TEXT_CONFIDENCE_PSEUDO",
+   "refusal.TEXT_CONFIDENCE_SHAPE",
+   "textchain.label.ai_reading_page",
+   "textchain.label.document_converted_host",
+   "textchain.label.document_text_layer",
+   "textchain.label.member_checked_against",
+   "textchain.label.member_typed_text",
+   "textchain.label.model_rewrote_text",
+   "textchain.label.optical_character_recognition",
+   "textchain.label.page_pixels",
+   "textchain.map.over_extent_record",
+   "textchain.say.push.document_text_layer",
+   "textchain.say.push.page_re_read",
+   "textchain.text.cell_spreadsheet",
+   "textchain.text.image_document",
+   "textchain.text.page_document",
+   "textchain.text.page_region",
+   "textchain.text.paragraph_document",
+   "textchain.text.part_document_record",
+   "textchain.text.range_cells_spreadsheet",
+   "textchain.text.shape_deck",
+   "textchain.text.table_document",
+   "textchain.text.text_provenance_recorded",
+   "textchain.tier_rule",
+   "textchain.undetermined_region.region_decoded_against",
+   "textchain.why.bounded_weakest_step",
+   "textchain.why.document_tier_reading",
+   "textchain.why.member_checked_text",
+   "textchain.why.step_text_provenance"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "ai-accounts": {
+  "reads": [
+   "ai-accounts.fault",
+   "ai-accounts.group_key_notice_text",
+   "ai.disclosure.projectkey",
+   "ai.refused.noticedue",
+   "ai.refused.notsole",
+   "ai.refused.off",
+   "ai.refused.projectkeptaway",
+   "ai.refused.signinnotconnected",
+   "ai.refused.switchvalue",
+   "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
+   "refusal.ACCOUNT_SEAL_UNAVAILABLE",
+   "refusal.AI_KEEP_AWAY_NO_REASON",
+   "refusal.AI_KEPT_AWAY",
+   "refusal.DISCLOSURE_DUE",
+   "refusal.GROUP_KEY_NOTICE_DUE",
+   "refusal.MACHINE_CANNOT_HOLD_ACCOUNT",
+   "refusal.NOT_YOUR_ACCOUNT",
+   "refusal.NO_ACCOUNT",
+   "refusal.NO_SECRET",
+   "refusal.SIGNIN_NOT_HELD",
+   "refusal.SUBSCRIPTION_LOGIN_REFUSED",
+   "refusal.SUBSCRIPTION_TOKEN_MALFORMED",
+   "refusal.UNKNOWN_ACCOUNT_KIND",
+   "refusal.UNKNOWN_SWITCH"
+  ],
+  "unkeyed": [
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 194,
+    "text": "a member's Claude account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 273,
+    "text": "the explore switch",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 316,
+    "text": "switching the group key's assistant settings",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 323,
+    "text": "setting a project's assistant settings",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 482,
+    "text": "a member's Claude account is seen only by that member. Nothing was read.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 592,
+    "text": "reading the group key's assistant settings",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 594,
+    "text": "reading a project's assistant settings",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 855,
+    "text": "kind, sealed, iv",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 874,
+    "text": "a member's Claude account serves only that member's own asks, runs and standing questions. Nothing was used.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 919,
+    "text": "setting the group's Anthropic API key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 943,
+    "text": "removing the group's Anthropic API key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 956,
+    "text": "switching the group's Anthropic API key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1049,
+    "text": "a Claude account serves only a member's own asks, runs and standing questions. Nothing was used.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1096,
+    "text": "asking the assistant in a project",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1107,
+    "text": "a project's key serves only acts of active members. Nothing was used.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1125,
+    "text": "the group's key serves only acts of active members. Nothing was used.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1195,
+    "text": "keeping the group's material away from every assistant",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1380,
+    "text": "setting a project's Anthropic API key",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1408,
+    "text": "making your sign-in a project's Claude account",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1440,
+    "text": "removing a project's Claude account",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1453,
+    "text": "switching a project's Claude account",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1496,
+    "text": "reading a project key's notice",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-accounts/index.mjs",
+    "line": 1546,
+    "text": "keeping a project's material away from the assistant",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.ACCOUNT_MEMBER_NOT_ACTIVE"
+ },
+ "plan-work": {
+  "reads": [
+   "action-plans.says.matter_option_serves",
+   "case-disclosures.why.read_failed",
+   "plan-work.basis.action_awaits_response",
+   "plan-work.label.re_examining_plan",
+   "plan-work.no.duties_recorded_readings",
+   "plan-work.no.duties_recorded_readings_read",
+   "plan-work.no.duty_occurrence_read",
+   "plan-work.no.reading_met_recorded",
+   "plan-work.says.assembled_system_where",
+   "plan-work.says.target_date_day",
+   "plan-work.why.action_plans_offers",
+   "plan-work.why.actions_offers_response",
+   "plan-work.why.assistant_instance",
+   "plan-work.why.duties_read",
+   "plan-work.why.holds_due_read",
+   "plan-work.why.holds_read",
+   "plan-work.why.instance_holds_litigation",
+   "plan-work.why.matter_cures_read",
+   "plan-work.why.matter_escalations_read",
+   "plan-work.why.phase_start_holds",
+   "plan-work.why.plan_read",
+   "plan-work.why.procedure_guide_next",
+   "plan-work.why.project_holds_read",
+   "plan-work.why.read_state_needs",
+   "plan-work.why.response_recorded_action",
+   "plan-work.why.response_recorded_member",
+   "plan-work.why.watch_reader_gave",
+   "plan-work.why.watch_reader_read",
+   "plan-work.why.watch_reader_registered",
+   "refusal.COMMENT_TARGET_REFUSED",
+   "refusal.MATTER_NOT_OF_PLAN",
+   "refusal.NO_SUCH_ITEM",
+   "refusal.NO_SUCH_PREP_ITEM",
+   "refusal.PLAN_WORK_PROVIDER_UNAVAILABLE",
+   "refusal.PLAN_WORK_TEXT_REFUSED",
+   "refusal.PREP_ITEM_DONE",
+   "refusal.REVIEW_RHYTHM_REFUSED"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "provenance-routes": {
+  "reads": [
+   "observation-log.partial.looked_got_part",
+   "provenance-routes.basis.derived_fields_capture",
+   "provenance-routes.completeness.captured_document_viewer",
+   "provenance-routes.completeness.captured_documents_assessed",
+   "provenance-routes.never_assessed",
+   "provenance-routes.no_documents_visible",
+   "provenance-routes.none_standing",
+   "provenance-routes.note.assessment_document_route",
+   "provenance-routes.note.document_route_assessed",
+   "provenance-routes.note.route_fact_captured",
+   "provenance-routes.page_exhausted",
+   "provenance-routes.says.document_record_carry",
+   "provenance-routes.text.rfc_token_binds",
+   "provenance-routes.who.instance_capture_method",
+   "refusal.LOOKED_ABSENT",
+   "refusal.LOOKED_INDETERMINATE",
+   "refusal.NEVER_LOOKED",
+   "refusal.PRESENT",
+   "refusal.ROUTE_MARK_NOT_A_DOCUMENT",
+   "refusal.ROUTE_MARK_NO_AUTHOR",
+   "refusal.ROUTE_MARK_NO_BUNDLE",
+   "refusal.ROUTE_MARK_NO_SUCH_BUNDLE"
+  ],
+  "unkeyed": [
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 111,
+    "text": "the document entry is not an object",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 149,
+    "text": "the knock's receipt it was received under (`source.receipt`, with `knock_id` and `received`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 173,
+    "text": "the upload's receipt it was received under (`source.receipt`, with `sha256` and `received`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 220,
+    "text": "a fetched address (`locator`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 221,
+    "text": "the instant it was retrieved (`retrieved`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 222,
+    "text": "how it was captured (`capture.method`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 223,
+    "text": "a named custodian (`custody.holder`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   },
+   {
+    "file": "provenance-routes/index.mjs",
+    "line": 224,
+    "text": "when the custodian obtained it (`custody.obtained`)",
+    "why": "an internal definition or field list in the record's own query terms (snake_case fields, backticked names), for builders; no member reads it"
+   }
+  ],
+  "renamed": {}
+ },
+ "case-carriage": {
+  "reads": [
+   "case-carriage.archive_holds_image",
+   "case-carriage.archive_supplied_by_member",
+   "case-carriage.copy_changed_since",
+   "case-carriage.document_history_unread",
+   "case-carriage.document_unread",
+   "case-carriage.marks_history_unread",
+   "case-carriage.marks_unread",
+   "case-carriage.member_document_only_as_copy",
+   "case-carriage.miss.group_civicsmith_holds",
+   "case-carriage.miss.group_civicsmith_holds_bytes",
+   "case-carriage.miss.group_civicsmith_holds_whole",
+   "case-carriage.photo_only_as_copy",
+   "case-carriage.since_unread",
+   "case-carriage.why.archive_held",
+   "case-carriage.why.container_record_name",
+   "case-carriage.why.document_copy_longer",
+   "case-carriage.why.group_civicsmith_record",
+   "case-carriage.why.mark_photo_added",
+   "case-carriage.why.obscured_copy_held",
+   "case-carriage.why.timestamp_token_held",
+   "document.cleaned.label",
+   "photo.obscured.label",
+   "photo.published.label",
+   "photo.withdraw.refused.already",
+   "photo.withdraw.refused.machine",
+   "photo.withdraw.refused.nomark",
+   "photo.withdraw.refused.noreason",
+   "refusal.AREA_OUTSIDE",
+   "refusal.DOCUMENT_COPY_NO_STORE",
+   "refusal.MACHINE_CANNOT_MARK_PHOTO",
+   "refusal.MARK_MALFORMED",
+   "refusal.NOT_A_PHOTO",
+   "refusal.NO_SUCH_PHOTO",
+   "refusal.STAFF_MARK_NO_REASON"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-carriage/index.mjs",
+    "line": 962,
+    "text": "the photo is ${…} bytes, over the ${…} a copy is made from",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.AREA_OUTSIDE"
+ },
+ "machinery-producers": {
+  "reads": [
+   "machinery-producers.age.notice_carries_instant",
+   "machinery-producers.age.notice_carries_instant_producer",
+   "machinery-producers.label.revise_notice_stop",
+   "machinery-producers.label.stop_notice_handoff",
+   "machinery-producers.map.grade_note_names",
+   "machinery-producers.summary.capture_did_finish",
+   "machinery-producers.summary.captured_daemon_investigative",
+   "machinery-producers.summary.closed_while_working",
+   "machinery-producers.summary.completed_unattended_writer",
+   "machinery-producers.summary.listing_page_sweep",
+   "machinery-producers.summary.monitored_check_scheduled",
+   "machinery-producers.summary.monthly_attestation_working",
+   "machinery-producers.summary.new_release_group",
+   "machinery-producers.summary.new_release_group_civicsmith",
+   "machinery-producers.summary.overdue_check_interval",
+   "machinery-producers.summary.pacing_holding_captures",
+   "machinery-producers.summary.render_performed_held",
+   "machinery-producers.summary.render_waiting",
+   "machinery-producers.summary.stopped_answering_often",
+   "machinery-producers.summary.sweep_filed_last",
+   "machinery-producers.summary.sweep_filed_unusual",
+   "machinery-producers.summary.sweep_held_captures",
+   "machinery-producers.summary.sweep_met_redirect",
+   "machinery-producers.summary.working_notice_will",
+   "machinery-producers.text.last_thing_recorded",
+   "machinery-producers.text.undetermined_number",
+   "machinery-producers.zone_undetermined"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "leg-earning": {
+  "reads": [
+   "content.why.record_holds_capture",
+   "leg-earning.capture_word",
+   "leg-earning.ceiling.grade_reachable_capture",
+   "leg-earning.freeze.received_through_doorbell",
+   "leg-earning.freeze.uploaded_member",
+   "leg-earning.map.received_route",
+   "leg-earning.unrecorded",
+   "leg-earning.why.derived_duties_leg",
+   "leg-earning.why.document_capture_support",
+   "leg-earning.why.duties_answers_undetermined",
+   "leg-earning.why.fetched_route_measures",
+   "leg-earning.why.letter_author_give",
+   "leg-earning.why.read_off_page",
+   "leg-earning.why.read_off_page_ai",
+   "leg-earning.why.record_support_leg",
+   "leg-earning.why.resolves_grade_strongest",
+   "leg-earning.why.served_route_ruling",
+   "leg-earning.why.strongest_capture_grade",
+   "leg-earning.why.strongest_route_group",
+   "leg-earning.why.text_held_capture",
+   "leg-earning.why_no_content"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "ai-use": {
+  "reads": [
+   "ai-use.fail_closed.kind_use_limits",
+   "ai-use.fail_closed.use_counted_far",
+   "ai-use.fail_closed.use_names_paying",
+   "ai.limitfield.amount",
+   "ai.limitfield.count",
+   "ai.limitfield.inclusive",
+   "ai.limitfield.owner",
+   "ai.limitfield.period",
+   "ai.limitfield.scope",
+   "ai.limitfield.unit",
+   "ai.limitfield.use",
+   "ai.period.day",
+   "ai.period.month",
+   "ai.queue.exploreask",
+   "ai.refused.exploreaskinvalid",
+   "ai.refused.explorenotenabled",
+   "ai.refused.exploreoutofscope",
+   "ai.refused.limit",
+   "ai.refused.limit.member",
+   "ai.refused.limit.overall",
+   "ai.refused.limit.unjudged",
+   "ai.refused.limitinvalid",
+   "ai.refused.unitunavailable",
+   "ai.use.account.inline",
+   "ai.use.account.name",
+   "ai.use.ask.inline",
+   "ai.use.ask.name",
+   "ai.use.draft.inline",
+   "ai.use.draft.name",
+   "ai.use.enquire.inline",
+   "ai.use.enquire.name",
+   "ai.use.explore.inline",
+   "ai.use.explore.name",
+   "ai.use.read.inline",
+   "ai.use.read.name",
+   "ai.use.run.inline",
+   "ai.use.run.name",
+   "ai.use.standing.inline",
+   "ai.use.standing.name",
+   "ai.use.transcribe.inline",
+   "ai.use.transcribe.name",
+   "ai.when.day",
+   "ai.when.month",
+   "ai.whose.group",
+   "ai.whose.own",
+   "ai.whose.project",
+   "date.month.april",
+   "date.month.august",
+   "date.month.december",
+   "date.month.february",
+   "date.month.january",
+   "date.month.july",
+   "date.month.june",
+   "date.month.march",
+   "date.month.may",
+   "date.month.november",
+   "date.month.october",
+   "date.month.september",
+   "question-explorer.known"
+  ],
+  "unkeyed": [
+   {
+    "file": "ai-use/index.mjs",
+    "line": 283,
+    "text": "the use is not an object {mode, usage, calls}.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 284,
+    "text": "the use names no mode.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 285,
+    "text": "its model is not a model's name.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 287,
+    "text": "its usage is not an object of the call's figures.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 291,
+    "text": "its usage names no '${…}' (null when the provider did not state it).",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 296,
+    "text": "its '${…}' is not ${…} of zero or more.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 296,
+    "text": "a whole number",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 299,
+    "text": "it names no 'calls', the model calls its usage covers (null when the runner stated none).",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 302,
+    "text": "its 'calls' is not a whole number of one or more, or null.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 325,
+    "text": "the use names no paying account: 'group', 'project:",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 327,
+    "text": "the use names no member whose act it was.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 328,
+    "text": "the use '${…}' is not a kind of use (${…}).",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 330,
+    "text": "its act is not a run's or an act's id.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 754,
+    "text": "an ask states what is worth exploring, a statement or a list of questions, at most ${…} characters.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 798,
+    "text": "approve exploring on",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 801,
+    "text": "an approval names its local day, YYYY-MM-DD.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 874,
+    "text": "reading an account's limits",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "ai-use/index.mjs",
+    "line": 919,
+    "text": "reading an account's use",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {}
+ },
+ "publication": {
+  "reads": [
+   "document.refused.changed",
+   "label.standardaccess.free",
+   "label.standardaccess.paywalled",
+   "label.standardaccess.reading_room",
+   "photo.refused.changed",
+   "photo.refused.changed.signed",
+   "public-read.criteria_recorded_edition",
+   "publication.label.benchmark_binding",
+   "publication.note.zip_carries_part",
+   "publication.super.store_did_answer",
+   "publication.why.case_document_carries",
+   "publication.why.case_document_held",
+   "publication.why.case_document_moved",
+   "publication.why.case_document_signed",
+   "publication.why.case_document_signed_waits",
+   "publication.why.photos_marks_read",
+   "refusal.ACCEPTANCE_WITHDRAWN_SINCE",
+   "refusal.CASE_FORMAT_SUPERSEDED",
+   "refusal.COUNSEL_MATTER_NOT_PUBLISHED",
+   "refusal.FLAG_OPENED_SINCE",
+   "refusal.SOURCE_CONSENT_WITHDRAWN",
+   "standard.binding.benchmark",
+   "standard.binding.binds"
+  ],
+  "unkeyed": [
+   {
+    "file": "publication/index.mjs",
+    "line": 1867,
+    "text": "## What This Excludes",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 478,
+    "text": "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 597,
+    "text": "this case file has ${…} part(s); ask for one by part=",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 597,
+    "text": "one of ${…} (1 by default)",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 637,
+    "text": "(with an optional &edition=N, latest by default) or sha256=",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 713,
+    "text": "## What Would Falsify This",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   },
+   {
+    "file": "publication/worker.mjs",
+    "line": 721,
+    "text": "## What This Excludes",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   }
+  ],
+  "renamed": {}
+ },
+ "link-sweep": {
+  "reads": [
+   "link-sweep.construct.expression_compile",
+   "link-sweep.construct.term",
+   "link-sweep.no.bundle_daemon_switched",
+   "link-sweep.no.daemon_paused",
+   "link-sweep.no.definition_run_read",
+   "link-sweep.no.project_closed",
+   "link-sweep.notes",
+   "link-sweep.summary",
+   "link-sweep.text.bundle_sweep_budget",
+   "link-sweep.title.swept",
+   "link-sweep.unread",
+   "link-sweep.why.promotion_filing_refused",
+   "link-sweep.why.sweep_bundle_already",
+   "link-sweep.why.sweep_bundle_capture",
+   "monitoring.claimed_tick_finish",
+   "monitoring.reason_given",
+   "refusal.SWEEP_NOT_A_MEMBER",
+   "refusal.SWEEP_RATIFY_NOT_AN_OWNER",
+   "refusal.SWEEP_TERM_REFUSED"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "answer-envelope": {
+  "reads": [
+   "publication.super.store_did_answer",
+   "refusal.BOOTSTRAP_CREDENTIAL_MISMATCH",
+   "refusal.BOOTSTRAP_CREDENTIAL_PUBLISHED",
+   "refusal.BOOTSTRAP_CREDENTIAL_UNSET",
+   "refusal.PLANE_INTERNAL_ERROR",
+   "refusal.PURGE_HOLD_IN_PLACE",
+   "refusal.REPLAY_UNVERIFIED",
+   "refusal.REQUIRED_ARGUMENT_MISSING",
+   "refusal.SIGNINTRACE_NOT_TEST",
+   "refusal.STORE_DID_NOT_ANSWER",
+   "refusal.STORE_INTERNAL_ERROR",
+   "refusal.UNKNOWN_OP"
+  ],
+  "unkeyed": [
+   {
+    "file": "answer-envelope/index.mjs",
+    "line": 21,
+    "text": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'",
+    "why": "an HTTP Content-Security-Policy header value, never shown to a member"
+   },
+   {
+    "file": "answer-envelope/index.mjs",
+    "line": 251,
+    "text": "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are answers, and this is the absence of one. The question stands unanswered; ask again.",
+    "why": "a refusal's `detail`, beside its code: the shell draws refusal.<CODE> (with its translation), never the detail (DEC-258 (3))"
+   }
+  ],
+  "renamed": {},
+  "note": "these read a key whose existing words govern over the module's own wording (same key, the design's text): refusal.SIGNINTRACE_NOT_TEST"
+ },
+ "browserrender.mjs": {
+  "reads": [
+   "browserrender.body_unavailable.body_bytes_over",
+   "browserrender.body_unavailable.browser_answered_body",
+   "browserrender.body_unavailable.browser_gave_request",
+   "browserrender.body_unavailable.browser_would_give",
+   "browserrender.body_unavailable.byte_body_budget",
+   "browserrender.body_unavailable.past_body_ceiling",
+   "browserrender.body_unavailable.redirect_hop_whose",
+   "browserrender.text.ms_body_collection",
+   "browserrender.text.refused_sent",
+   "browserrender.text.render_reserved_bound",
+   "refusal.NOT_A_PUBLIC_LOCATOR",
+   "refusal.OWN_HOST"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "corpus-export": {
+  "reads": [
+   "corpus-export.fdp",
+   "corpus-export.ftm_people",
+   "corpus-export.popolo",
+   "corpus-export.rebuild",
+   "corpus-export.recorded.export_append_export",
+   "corpus-export.recorded.rendering_append_export",
+   "corpus-export.verify",
+   "corpus-export.why.declared_export_named",
+   "events.text.member_testimony"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "case-account": {
+  "reads": [
+   "case-account.comments.map",
+   "case-account.document.comment_left_out",
+   "case-account.document.how_many_comments",
+   "case-account.document.publisher_carried_comment",
+   "case-account.document.publisher_chose_carry",
+   "refusal.ACCOUNT_CITES_COUNSEL_MATTER",
+   "refusal.ADVOCACY_NOT_OWN_PROJECT",
+   "refusal.MACHINE_CANNOT_CHECK_ADVOCACY"
+  ],
+  "unkeyed": [
+   {
+    "file": "case-account/document.mjs",
+    "line": 12,
+    "text": "## What Reviewers Said",
+    "why": "a markdown heading of the case or project document's own grammar, which readers and checkers find by its exact words (indexOf); it stays as written (DEC-258)"
+   }
+  ],
+  "renamed": {}
+ },
+ "queuestate.mjs": {
+  "reads": [
+   "queuestate.endorsement_owed",
+   "queuestate.expertise_confirmation_owed",
+   "queuestate.link_verdict_changed",
+   "queuestate.membership_request"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "csv.mjs": {
+  "reads": [
+   "csv.notes.csv_format_declares",
+   "csv.notes.url_cell_text"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "setup-fleet.mjs": {
+  "reads": [
+   "screen.forgot.help.heading",
+   "screen.forgot.help.s1",
+   "screen.forgot.help.s2",
+   "screen.hosting.guide",
+   "screen.hosting.heading",
+   "screen.hosting.s1",
+   "screen.hosting.s2",
+   "screen.hosting.s3",
+   "screen.hosting.s4",
+   "screen.hosting.s5",
+   "setup-fleet.hosting_recovery_deployer",
+   "setup-fleet.name.replace_time_password"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ },
+ "publish-schedule": {
+  "reads": [
+   "refusal.SCHEDULED_CHECK_UNAVAILABLE"
+  ],
+  "unkeyed": [],
+  "renamed": {}
+ }
+}

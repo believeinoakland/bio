@@ -123,21 +123,16 @@ export const T35_NON_ACTS = {
     + "credential, not a bundle",
 };
 
-/* ---- R21 (N623, DEC-142): `personexpunge`'s consequence statement. Its rung stays `reasoned` (people R12 refuses it
+/* ---- R21 (N623, DEC-142): `personexpunge`'s consequence entry. Its rung stays `reasoned` (people R12 refuses it
    without a reason, R13), its name honest; the full dialog states what the owner enforces: the value removed from the
    person's page, every question that cited it and every export, with no read answering it again (people R12), and a
-   marker in its place. The surface reads it by the act's id and fills `<date>` and `<member>`. ---- */
+   marker in its place. (R44, T49) The entry holds the sentence's key, never its English: the surface reads
+   `word("screen.person.expunge.statement", {date, member})` by the act's id. ---- */
 export const T35_CONSEQUENCE_STATEMENTS = Object.freeze({
-  personexpunge: Object.freeze({ friction: "dialog",
-    statement: "This removes the value for good: from the person's page, from every question that cited it and from "
-      + "every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law "
-      + "requires, <date>, by <member>\". Published cases change only through the docket. Confirm with a reason naming "
-      + "the law or order that requires it: \"Remove it for good, with this reason\"." }),
+  personexpunge: Object.freeze({ friction: "dialog", key: "screen.person.expunge.statement" }),
   /* K2049 (DEC-143 applied): releasing a policy held at its source's sight is never undone (standards R37), so it carries
      the Irreversible weight and DEC-143's full dialog stating that it is permanent; its rung stays `reasoned`. The
-     statement says what the owner enforces: the group's sight from then on, recorded with who, when and why. */
-  standardrelease: Object.freeze({ friction: "dialog",
-    statement: "Releasing this policy lets every member of your group see it, and every read of it, from now on. It "
-      + "cannot be undone: once released, it is never held back at its source's sight again. The release is recorded "
-      + "with your name, the time and your reason." }),
+     sentence (`consequence.standardrelease`) says what the owner enforces: the group's sight from then on, recorded with
+     who, when and why. */
+  standardrelease: Object.freeze({ friction: "dialog", key: "consequence.standardrelease" }),
 });
