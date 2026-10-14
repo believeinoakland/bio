@@ -42,6 +42,14 @@ export const USAGE = (owner) => ({ ok: true, owner, month: "2026-10", zone: "UTC
   { use: "run", calls: 41, tokens: 2700000, total_cost_usd: 16.5, cost_unstated: false },
 ] });
 
+/** `aiuseovertime` (ai-use R14): thirty local days, oldest first, and a period for each limit set. */
+export const OVER = (owner, over = {}) => ({ ok: true, owner,
+  days: Array.from({ length: 30 }, (_, i) => ({ day: new Date(Date.UTC(2026, 8, 15 + i)).toISOString().slice(0, 10), calls: i === 29 ? 12 : (i % 7) * 3, dollars: i === 29 ? 1.5 : (i % 7) * 0.4 })),
+  periods: [
+    { scope: "overall", unit: "usd", period: "month", period_start: "2026-10-01", used: 31.4, limit: 60 },
+    { scope: "overall", unit: "usd", period: "day", period_start: "2026-10-14", used: 1.5, limit: 1.8 },
+  ], ...over });
+
 export const HISTORY = (owner) => ({ ok: true, owner, count: 3, limit: 200, truncated: false, changes: [
   { at: "2026-10-06T08:00:00Z", by: "rosa", change: "key_set", kind: "apikey" },
   { at: "2026-10-06T08:01:00Z", by: "member:rosa", change: "switched", on: true },
@@ -52,6 +60,8 @@ export const HISTORY = (owner) => ({ ok: true, owner, count: 3, limit: 200, trun
 export function membersTable(over = {}) {
   return {
     memberlist: env({ members: ROSTER }),
+    // the founder holds the instance (membership R64, R86): an administrator beside the roster's
+    bootstrap: { ok: true, service: "bio-plane", claimed: true, part_signin: true, part_scanner: false, part_safe_view: false },
     adminrecoverystep: env({ ok: true, administrators: 1, codes_held: false, remaining: 0, met: false }),
     groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "member:rosa", suggestions: false, standing: false, uses: ALL_USES }),
     aikeepawaystate: env({ on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"] }),
@@ -60,6 +70,7 @@ export function membersTable(over = {}) {
     ailimits: () => env(LIMITS),
     aiusage: (q) => env(USAGE(q.owner)),
     accounthistory: (q) => env(HISTORY(q.owner)),
+    aiuseovertime: (q) => env(OVER(q.owner)),
     memberadd: (q, b) => env({ ok: true, memberId: b.memberId, invite: "0123456789abcdef0123456789abcdef", expires: "2026-10-19T10:00:00Z", role: b.role || "member", capabilities: b.capabilities, invited_by: "rosa" }),
     membercaps: (q, b) => env({ ok: true, memberId: b.memberId, capabilities: b.capabilities, by: "rosa" }),
     memberset: (q, b) => env({ ok: true, memberId: b.memberId, status: b.status, by: "rosa" }),
@@ -89,7 +100,7 @@ export function membersTableMember(over = {}) {
     memberlist: env({ members: ROSTER_MEMBER }),
     groupkeystate: env({ ok: true, on: true }),
     adminrecoverystep: refuse("NOT_AN_ADMIN"),
-    accountuses: refuse("NOT_AN_ADMIN"), ailimits: refuse("NOT_AN_ADMIN"), aiusage: refuse("NOT_AN_ADMIN"), accounthistory: refuse("NOT_AN_ADMIN"),
+    accountuses: refuse("NOT_AN_ADMIN"), ailimits: refuse("NOT_AN_ADMIN"), aiusage: refuse("NOT_AN_ADMIN"), accounthistory: refuse("NOT_AN_ADMIN"), aiuseovertime: refuse("NOT_AN_ADMIN"),
     ...over,
   });
 }
@@ -101,6 +112,7 @@ export function accountTable(me, over = {}) {
   return {
     whoami: env(me),
     memberlanguage: env({ ok: true, language: "es", set_at: "2026-10-03T00:00:00Z" }),
+    grouplanguages: env({ ok: true, languages: ["en", "es", "vi"] }),
     expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: [exp("Tenant organiser", true), exp("Interpreter", false)], gates: "nothing" }),
     signerlist: env({ signers: [
       { key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001", member_id: me.member, comment: "laptop", status: "active", added: "2026-10-04T00:00:00Z" },
@@ -140,6 +152,7 @@ export function connectTable(me, situation = "group", over = {}) {
     aiusage: (q) => q.owner ? env(USAGE(q.owner)) : env({ ok: true, member: "member:" + me.member, month: "2026-10", zone: "UTC", payers: [
       { owner: "group", whose: "group", uses: [{ use: "ask", calls: 9, tokens: 61000 }], limits: [{ scope: "overall", unit: "usd", period: "month", amount: 60, inclusive: null, reached: false }, { scope: "per_member", unit: "usd", period: "day", amount: 5, inclusive: null, reached: false }] },
     ] }),
+    aiuseovertime: (q) => env(OVER(q.owner)),
     accounthistory: (q) => env({ ...HISTORY(q.owner), changes: [{ at: "2026-10-06T08:00:00Z", by: "member:" + me.member, change: "key_set", account: "reference", kind: "apikey" }] }),
     groupkeynoticeseen: () => env({ ok: true, seen: true, already: false }),
     disclosureshown: (q, b) => env({ ok: true, member: b.member, version: b.version, shown_at: "2026-10-12T00:00:00Z", shown: true }),
@@ -179,6 +192,7 @@ export function groupTable(over = {}) {
     groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
       display_name_recorded: "East Oakland Watch", display_name_history: [], domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" } }, domain_history: [], domain_checks: [] }),
     grouplanguages: env({ ok: true, languages: ["en", "es"] }),
+    memberlanguage: env({ ok: true, language: null }),
     courtnotice: env({ choice: "tell", history: [] }),
     hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa and Lu", note: "the shared vault", recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }),
     strengthbarof: env({ ok: true, group: "eastoak", bar: { group_id: "eastoak", capture: "B", connection: "C", author: "rosa", at: "2026-10-05T00:00:00Z", reason: "Most of our sources are records." }, seeds_new_projects: true }),
@@ -202,6 +216,8 @@ export function placesTable(over = {}) {
     placewantedstate: env({ ok: true, name: "Alameda County", set_by: "rosa", set_at: "2026-10-04T00:00:00Z", matches: [] }),
     entitieskind: (q) => q.after === "ENT-0002" ? env({ ok: true, kind: "office", entities: [office(3, "lu")], count: 1, limit: 500, truncated: false, next: null })
       : env({ ok: true, kind: "office", entities: [office(1), office(2)], count: 2, limit: 500, truncated: true, next: "ENT-0002" }),
+    // wizard-scripts R37: the routes, the `elsewhere` one carrying the places' pointers (three listed)
+    startfrom: env({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }], routes: [{ route: "blank" }, { route: "elsewhere", pointer: { places: ["Oakland, California"], pointers: [{ kind: "legal-help" }, { kind: "courts-self-help" }, { kind: "city-line" }] } }], blank: true, matches: [] }),
     profilesset: (q, b) => env({ ok: true, profiles: b.profiles.map((id) => ({ id, name: id })), choices: [] }),
     placewanted: (q, b) => env({ ok: true, name: b.name, set_by: "rosa", set_at: "2026-10-12T00:00:00Z" }),
     officesseed: () => env({ ok: true, seeded: [{ what: "office" }], already: [{ what: "office" }, { what: "body" }], unseeded: [], by: "rosa" }),
@@ -272,6 +288,28 @@ export function translationsTable(over = {}) {
     translationgrant: (q, b) => env({ ok: true, existed: false, member: b.member, language: b.language, granted: !b.revoke }),
     translationdraft: (q, b) => b.direction === "to_english" ? env({ ok: true, key: b.key, language: b.language, english: "Outward: this goes outside", label: { kind: "machine", asked_by: "member:rosa" } })
       : env({ ok: true, language: b.language, drafted: b.keys.map((k) => ({ id: "D9", key: k, text: "x" })), not_drafted: [], offered_official: [] }),
+    ...over,
+  };
+}
+
+/** `updatenotice` (instance-setup R89): what Settings › Updates draws. */
+export const UPDATE = Object.freeze({ ok: true,
+  running: { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: "member:rosa" },
+  last_check: { at: "2026-10-14T06:10:00Z", outcome: "ok" },
+  ready: { version: "0.84.0", date: "2026-10-11", security: true, signed: true, found_at: "2026-10-11T06:00:00Z", decision: null,
+    notes: { members: "Searching the record now finds words inside scanned pages.", administrators: "New releases are checked for once a day.", must_do: "After it, open Translations once." } },
+  earlier: [
+    { version: "0.83.1", skipped_at: "2026-10-02T10:00:00Z", skipped_by: "member:rosa", reason: "Changes nothing for us; we wait for 0.84." },
+    { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: "member:rosa" },
+    { version: "0.82.0", installed_at: "2026-09-02T10:00:00Z", allowed_by: null },
+  ],
+  holder: { holders: "Rosa Medina", note: null, recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, viewer_holds: true });
+export function updatesTable(notice = {}, over = {}) {
+  return {
+    updatenotice: env({ ...UPDATE, ...notice }),
+    updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
+    updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),
+    updateskip: (q, b) => env({ ok: true, version: b.version, kind: "skip" }),
     ...over,
   };
 }

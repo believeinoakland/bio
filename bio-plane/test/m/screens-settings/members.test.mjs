@@ -32,7 +32,7 @@ test("R1 the roster: each member's handle, cover (to an administrator), role, ca
     for (const c of m.capabilities) assert.ok(t.includes(said("screen.members.cap." + c)));
     assert.ok(t.includes(said("screen.members.status." + m.status)));
   }
-  has(a, "screen.members.count", { members: 4, administrators: 2 });
+  has(a, "screen.members.count", { members: 4, administrators: 3 });
   assert.ok(!/formerly/i.test(a.html), "no formerly");
   assert.ok(textOf(rowOf(a.tree, "ana")).includes(said("screen.members.expertise.declared", { label: "CPA" })));
   // a member who does not administer: no cover column, no cover
@@ -173,7 +173,7 @@ test("R2 the group's key: groupkeyset sends the key in the body only, then group
 
 test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,000 characters, for every use or the ones chosen; off with its reason too (op-grades: reasoned)", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
-  const form = ancestor(btn(a.tree, "aikeepaway")[0], (e) => e.attrs.class === "cs-form");
+  const form = ancestor(btn(a.tree, "aikeepaway")[0], (e) => e.tag === "div" && texts(e)[0] === said("act.aikeepaway.does"));
   const words = texts(form);
   assert.ok(words.indexOf(said("act.aikeepaway.does")) === 0, "what it does, first");
   const spec = a.s.acts.find((x) => x.op === "aikeepaway");
@@ -247,4 +247,28 @@ test("R23 More for administrators links group, places and recovery; a row offers
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   lacks(m, "screen.members.more.heading");
   assert.ok(!m.p.requests.some((r) => r.op === "signerlist"));
+});
+
+/* R29: the counts agree with what they name */
+test("R29 Administrators counts the founder once claimed, with or without a roster row; the members count says it counts active members", async () => {
+  const one = [{ member_id: "rosa", handle: "rosa", role: "admin", status: "active", capabilities: [], cover: "R", expertise: [], invitation: "spent" }];
+  // a founder with no roster row and one roster administrator
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
+  has(a, "screen.members.count", { members: 1, administrators: 2 });
+  assert.ok(said("screen.members.count", { members: 1, administrators: 2 }).startsWith("Active members"), "it says it counts active members");
+  // the same count to a member who does not administer (the founder is public as claimed)
+  const m = await open("members", { me: MEMBER, table: membersTableMember({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
+  has(m, "screen.members.count", { members: 1, administrators: 2 });
+  // control: an unclaimed instance has no founder to count; a proposed or revoked administrator is not counted
+  const u = await open("members", { me: ADMIN, table: membersTable({ bootstrap: { ok: true, claimed: false } }) });
+  has(u, "screen.members.count", { members: 4, administrators: 2 });
+});
+
+test("R29 control: a member with no expertise shows no Expertise, and an empty cell draws nothing", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  const cells = (key) => all(rowOf(a.tree, key), (e) => e.tag === "td").map((c) => textOf(c).trim());
+  const last = (key) => cells(key)[cells(key).length - 1];
+  assert.equal(last("dev"), "", "dev declared nothing: the cell is empty");
+  assert.ok(last("ana").includes("CPA"), "ana declared CPA");
+  assert.ok(!textOf(rowOf(a.tree, "dev")).match(/undefined|null/));
 });

@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SCREENS, acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, connectTable, refuse, env, LIMITS } from "./fixtures.mjs";
+import { ADMIN, MEMBER, membersTable, membersTableMember, connectTable, refuse, env, LIMITS, OVER } from "./fixtures.mjs";
 
 const section = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
 
@@ -25,8 +25,9 @@ test("R9 what the account pays for: each use (ai.use.<u>.name) on or off with it
   assert.deepEqual(all(ex, (e) => e.tag === "option").map((o) => textOf(o)), ["ai.explore.no", "ai.explore.ask", "ai.explore.yes"].map((k) => said(k)));
   assert.deepEqual((await a.press("accountusesset", { data: { sw: "standing", to: "on" } })).sent[0].body, { owner: "group", switch: "standing", on: true });
   assert.deepEqual((await a.press("accountusesset", { data: { sw: "explore" }, values: { "aig-explore": "ask" } })).sent[0].body, { owner: "group", switch: "explore", on: "ask" });
+  // R28: with no account there is nothing to set, and a section that holds nothing is not drawn
   const none = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own", { accountuses: (q) => env({ ok: true, owner: q.owner, held: false, uses: null, keptAway: [] }) }) });
-  assert.ok(textOf(section(none, "screen.panel.uses.heading")).includes(said("screen.panel.uses.none")));
+  assert.equal(section(none, "screen.panel.uses.heading"), undefined);
 });
 
 test("R9 its limits as a table with one form: set (overall, a use within or on top, each member's use at group level) and remove", async () => {
@@ -75,4 +76,86 @@ test("R9 this month's use summed per use and in all, naming no member; the chang
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.key_set", { who: "rosa" }))));
   const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   assert.ok(textOf(section(c, "screen.panel.changes.heading")).includes(said("screen.panel.change.key_set", { who: said("screen.connect.you") })));
+});
+
+/* R26: thirty days of bars and a meter against each limit */
+const bars = (o) => all(o.tree, (e) => e.attrs.class === "mk-bars")[0];
+const meters = (o) => all(o.tree, (e) => /\bmk-meter\b/.test(e.attrs.class || ""));
+
+test("R26 thirty bars, oldest first, the newest marked today so far; the summary line; a meter for each limit, rust from four fifths", async () => {
+  for (const [screen, me, table, owner] of [["members", ADMIN, membersTable(), "group"], ["connect", MEMBER, connectTable(MEMBER, "own"), "member:dev"]]) {
+    const a = await open(screen, { me, table });
+    assert.ok(a.p.requests.some((r) => r.op === "aiuseovertime" && r.query.owner === owner), `${screen} reads aiuseovertime over ${owner}`);
+    const b = bars(a);
+    assert.ok(b, `${screen} draws the bars`);
+    const bar = all(b, (e) => e.tag === "i");
+    assert.equal(bar.length, 30);
+    assert.equal(all(b, (e) => e.tag === "i" && e.attrs.class === "now").length, 1);
+    assert.equal(bar[29].attrs.class, "now", "the newest is last and marked");
+    assert.ok(bar[29].attrs["data-tip"].includes(said("ai.usage.today")), "its tooltip says today, so far");
+    assert.ok(bar[28].attrs["data-tip"].includes("calls") && !bar[28].attrs["data-tip"].includes(said("ai.usage.today")));
+    assert.ok(bar[29].attrs["data-tip"].includes(said("ai.usage.day", { day: "", calls: 12, dollars: "$1.50" }).split("·")[1].trim().split(" ")[0]));
+    assert.ok(a.text.includes(said("ai.usage.bars")), "the heading line");
+    const tallest = bar.map((x) => Number(/height:(\d+)px/.exec(x.attrs.style)[1]));
+    assert.equal(Math.max(...tallest), 44, "the busiest day is the tallest");
+    assert.ok(a.text.includes("Last 30 days:"), "the summary");
+    const m = meters(a);
+    assert.equal(m.length, 2, "a meter for each limit");
+    assert.ok(a.text.includes(said("ai.usage.meter", { label: said("screen.panel.scope.overall") + " · " + said("screen.panel.unit.usd") + " · " + said("screen.panel.period.month"), used: "$31.40", limit: "$60.00" })), "used against the limit");
+    assert.equal(m[0].attrs["data-near"], undefined, "52% is not near");
+    assert.equal(m[1].attrs["data-near"], "1", "83% is near the limit");
+    assert.ok(textOf(m[1]).includes(said("ai.usage.meter.near")) && textOf(m[1]).includes("83%"));
+    assert.ok(!textOf(m[0]).includes(said("ai.usage.meter.near")));
+    // no member is named (K1450)
+    assert.ok(!all(b, () => true).some((e) => /rosa|lu\b|dev/.test(JSON.stringify(e.attrs))), "no bar names a member");
+  }
+});
+
+test("R26 a limit that is not set draws no limit, not a meter against nothing; a day with no use is a zero bar", async () => {
+  const days = OVER("group").days.map((d, i) => (i === 3 ? { ...d, calls: 0, dollars: 0 } : d));
+  const a = await open("members", { me: ADMIN, table: membersTable({ aiuseovertime: () => env(OVER("group", { days, periods: [{ scope: "overall", unit: "usd", period: "month", period_start: "2026-10-01", used: 31.4, limit: null }] })) }) });
+  const m = meters(a);
+  assert.equal(m.length, 1);
+  assert.ok(textOf(m[0]).includes(said("ai.usage.nolimit")));
+  assert.equal(all(m[0], (e) => e.attrs.class === "track")[0].children.length, 0, "no bar fills a meter with no limit");
+  const bar = all(bars(a), (e) => e.tag === "i");
+  assert.match(bar[3].attrs.style, /height:2px/, "a zero day is the least bar, not missing");
+  assert.equal(bar.length, 30);
+});
+
+test("R26 control: a read answering unreadable, or refused, is drawn failed, never as zeros", async () => {
+  for (const answer of [() => env(OVER("group", { unreadable: true, days: [], periods: [] })), () => env({ ok: false, reason: "UNREADABLE", code: "UNREADABLE" })]) {
+    const a = await open("members", { me: ADMIN, table: membersTable({ aiuseovertime: answer }) });
+    assert.equal(bars(a), undefined, "no bars");
+    assert.equal(meters(a).length, 0, "no meter");
+    const sec = section(a, "screen.panel.usage.heading");
+    assert.ok(all(sec, (e) => e.attrs["data-state"] === "failed").length >= 1, "drawn failed");
+  }
+});
+
+test("R26 control: a member who does not administer reads no group use over time", async () => {
+  const a = await open("members", { me: MEMBER, table: membersTableMember() });
+  assert.ok(!a.p.requests.some((r) => r.op === "aiuseovertime"));
+  assert.equal(bars(a), undefined);
+});
+
+test("R26 (K3293) aiUsageBars is a part of the module: it draws the bars and a meter per limit over an aiuseovertime answer already read, whether handed the answer or the screen's read of it", async () => {
+  const members = SCREENS.find((s) => s.id === "members");
+  assert.equal(typeof members.parts.aiUsageBars, "function");
+  assert.equal(members.parts.aiUsageBars, SCREENS.find((s) => s.id === "connect").parts.aiUsageBars, "one function for every screen that draws it");
+  // a screen's functions are self-contained in the page: the answer is written into the host's source
+  const hosted = (value) => ({ ...members, reads: () => ({}), render: new Function("cs", "view", `return cs.title() + view.parts.aiUsageBars(cs, view, { owner: "group", value: ${JSON.stringify(value)} });`) });
+  for (const value of [OVER("group"), { state: "ok", value: OVER("group") }]) {
+    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    assert.equal(all(bars(a), (e) => e.tag === "i").length, 30);
+    assert.equal(meters(a).length, 2);
+    assert.equal(a.p.requests.filter((r) => r.op === "aiuseovertime").length, 0, "it reads nothing itself");
+  }
+  // control: an answer that is unreadable, refused or failed to read is drawn failed, never as zeros
+  for (const value of [OVER("group", { unreadable: true, days: [] }), { state: "failed" }, { state: "ok", value: { ok: false, reason: "UNREADABLE" } }]) {
+    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    assert.equal(bars(a), undefined);
+    assert.equal(meters(a).length, 0);
+    assert.ok(all(a.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);
+  }
 });

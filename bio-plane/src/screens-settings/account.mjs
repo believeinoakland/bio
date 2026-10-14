@@ -14,6 +14,8 @@ export const account = {
     return {
       me: { op: "whoami" },
       language: { op: "memberlanguage" },
+      // the languages the group's profiles answer, among which the member's is chosen by name (R31)
+      languages: { op: "grouplanguages" },
       expertise: { op: "expertiselist", query: { memberId: me.member } },
       signers: { op: "signerlist" },
     };
@@ -30,45 +32,52 @@ export const account = {
     // the handle, fixed (DEC-197): no act changes it, and nothing says "formerly"
     out.push(cs.sec(S + "handle.heading", `<p><b>${E(me.handle || me.member || "")}</b></p><p>${W("handle.fixed")}</p>`));
 
-    // language, appearance and the explanation level
+    // language, appearance and the explanation level. Every language is shown by its name in the member's language and
+    // chosen by name, never as a tag (R31)
+    const langOf = data.language && data.language.state === "ok" && data.language.value ? data.language.value.language || null : null;
+    const nameOf = (tag) => {
+      try { const n = new Intl.DisplayNames([langOf || "en"], { type: "language" }).of(String(tag)); return n ? n.charAt(0).toUpperCase() + n.slice(1) : String(tag); } catch (e) { return String(tag); }
+    };
     let lang = cs.state(data.language, (v) => {
-      let h = `<p data-state="language">${v.language ? W(S + "language.now", { language: v.language }) : W(S + "language.device")}</p>`;
+      let h = `<p data-state="language">${v.language ? W(S + "language.now", { language: nameOf(v.language) }) : W(S + "language.device")}</p>`;
       const set = cs.act("memberlanguageset");
-      if (set) h += `<div class="cs-form"><label for="ma-lang">${W(S + "language.field")}</label><span class="help">${W(S + "language.help")}</span><input id="ma-lang" type="text" class="cs-input" value="${E(v.language || "")}" autocomplete="off">${set}</div>`;
+      if (set) {
+        const group = data.languages && data.languages.state === "ok" && data.languages.value && Array.isArray(data.languages.value.languages) ? data.languages.value.languages : [];
+        const tags = v.language && group.indexOf(v.language) < 0 ? [v.language, ...group] : group;
+        h += cs.choice("ma-lang", S + "language.field", [{ value: "", key: S + "language.device" }, ...tags.map((t) => ({ value: String(t), text: nameOf(t) }))], { value: v.language || "" }) + `<p class="mk-small">${W(S + "language.help")}</p>${set}`;
+      }
       return h;
     });
     // appearance is kept on the device (interface-shell R18): the kit's own control (R12; interface-shell R27)
     lang += cs.appearance();
     // the explanation level is the shell's (R17): its value, and its act through the shell's own setting
     const lv = cs.level() === "pause" ? "pause" : "prompt";
-    lang += `<div class="cs-form"><label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === lv ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${cs.act("infolevelset")}</div>`;
+    lang += cs.choice("ma-level", S + "level.field", ["prompt", "pause"].map((v) => [v, "level." + v + ".name"]), { value: lv }) + cs.act("infolevelset");
     out.push(cs.sec(S + "language.heading", lang));
 
     // what the member knows
     let ex = cs.state(data.expertise, (v) => {
       const list = (v.expertise || []).filter((e) => e.state !== "withdrawn");
-      return list.length === 0 ? `<p>${W(S + "expertise.none")}</p>` : `<ul class="cs-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
+      return list.length === 0 ? "" : `<ul class="mk-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
     });
     const dec = cs.act("expertisedeclare");
-    if (dec) ex += `<div class="cs-form"><label for="ma-exp">${W(S + "expertise.field")}</label><span class="help">${W(S + "expertise.help")}</span><input id="ma-exp" type="text" class="cs-input">${dec}</div>`;
+    if (dec) ex += `${cs.field("ma-exp", S + "expertise.field", { help: S + "expertise.help" })}${dec}`;
     out.push(cs.sec(S + "expertise.heading", ex));
 
     // the password, typed twice alike (setup-page R3's rule); no field is drawn with what was typed (R10)
     const pw = cs.act("setpassword");
     // the fields drawn anew, empty, after each change (the shell keeps a field's value by its id; R10)
     const g = ui.pwGen || 0;
-    if (pw) out.push(cs.sec(S + "password.heading", (ui.passwordChanged ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + `<div class="cs-form"><label for="ma-cur${g}">${W(S + "password.current")}</label><input id="ma-cur${g}" type="password" class="cs-input" autocomplete="current-password">
-<label for="ma-new${g}">${W(S + "password.new")}</label><span class="help">${W(S + "password.help")}</span><input id="ma-new${g}" type="password" class="cs-input" autocomplete="new-password">
-<label for="ma-again${g}">${W(S + "password.again")}</label><input id="ma-again${g}" type="password" class="cs-input" autocomplete="new-password">${pw}</div>`));
+    if (pw) out.push(cs.sec(S + "password.heading", (ui.passwordChanged ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + `${cs.field("ma-cur" + g, S + "password.current", { type: "password", autocomplete: "current-password" })}${cs.field("ma-new" + g, S + "password.new", { type: "password", help: S + "password.help", autocomplete: "new-password" })}${cs.field("ma-again" + g, S + "password.again", { type: "password", autocomplete: "new-password" })}${pw}`));
 
     // the member's own signing key: its public half, registered or revoked (friction by weight, interface-shell R11)
     out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
       const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
-      let h = mine.length === 0 ? `<p>${W(S + "key.none")}</p>` : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
+      let h = mine.length === 0 ? "" : `<ul class="mk-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
       // made in this browser by the kit's signer; only its public line is sent (R22)
       const reg = cs.act("signerregisterown");
       // kept on this device only when the member ticks it (interface-shell R40); else a key file is made
-      if (reg) h += `<div class="cs-form"><p class="help">${W(S + "key.help")}</p><input type="checkbox" id="ma-keep"><label for="ma-keep">${W("signing.ceremony.keepkey")}</label>${reg}</div>`;
+      if (reg) h += `<p class="mk-note">${W(S + "key.help")}</p><input type="checkbox" id="ma-keep"><label for="ma-keep">${W("signing.ceremony.keepkey")}</label>${reg}`;
       return h;
     })));
 
