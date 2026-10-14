@@ -47,3 +47,7 @@ Size (session_01Vne8TPUKPXS1TYhSQirKWK): test runs 6, module lines 1074
 ## J1 · REPORT
 
 Three things found while applying T48-35, none blocking: (a) my requirements' Uses line cites accountUses (ai-accounts R14, R15); the in-plane read it makes is accountUsesOf, ai-accounts R17 (as ai-use R3 cites); re-point the citation, meaning unchanged. (b) modules.json: credentials can leave question-explorer's uses at merge; no import of it remains in my paths. (c) ai-use and run-productions take no aiAccounts dep; they reach ai-accounts through credentials R72's delegates until their own re-pointing.
+
+## J2 · COMPLETE
+
+T48-35 applied: accountUsesOf (ai-accounts R17) and aiKeptAway (R22, with R34's KEPT_AWAY_UNREADABLE) read from ai-accounts; credentials no longer imported. Fixed in passing: the switch is no longer read as an owner the system is not, an unreadable account fails closed, and no copied refusal codes remain. Two new tests (R3, R13). Module tests 34/34 pass; format, architecture, coverage and ownership 0 failures; run.mjs architecture 0. Record: build/jobs/T48/question-explorer.md.
