@@ -1,11 +1,12 @@
-/* reading-pipeline (R1–R31): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R32): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
    took from the plane's old `index.mjs`), with the reasons kept where the reason is the code's; the rows applied here
    are named at their sites. It is pure: no record, no table, no catalogue row. It fetches nothing about the source:
    the bytes come from the evidence store the caller hands in (R24), and tiers 2 and 3 are reached only through their
-   bindings with the capture's digest (R16). T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
+   bindings with the capture's digest (R16). R32 (T49) gives text read as text through no format entry its text units
+   (`textUnitsOfText`). T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
    `read` never reaches. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
@@ -856,6 +857,60 @@ export function textUnitsFor(i2text) {
 }
 
 /* ===================================================================== *
+ * Text units of a capture read as text (R32).
+ * ===================================================================== */
+
+/* R32: a capture read as text through no format entry (R1) has no `paragraphs` list from an entry, so its units are
+   drawn here from the decoded text: one `doc-para` per paragraph, a paragraph being a run of text between blank lines,
+   numbered from 0 over all paragraphs in the text's order (`textUnitsFor` skips the ones with no glyph and keeps
+   `seq` as the position, R15). Nothing is added to the format registry: this is the one site. */
+const HTML_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ", copy: "©", reg: "®",
+  trade: "™", mdash: "—", ndash: "–", hellip: "…", lsquo: "‘", rsquo: "’", ldquo: "“",
+  rdquo: "”", bull: "•", middot: "·", sect: "§", para: "¶", deg: "°", times: "×",
+  laquo: "«", raquo: "»", eacute: "é", egrave: "è", aacute: "á", iacute: "í",
+  oacute: "ó", uacute: "ú", ntilde: "ñ", uuml: "ü", ouml: "ö", auml: "ä", ccedil: "ç" };
+const decodeReferences = (s) => s.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([A-Za-z][A-Za-z0-9]{1,8}));/g,
+  (whole, dec, hex, name) => {
+    if (name) return Object.prototype.hasOwnProperty.call(HTML_ENTITIES, name) ? HTML_ENTITIES[name] : whole;
+    const cp = dec !== undefined ? Number(dec) : parseInt(hex, 16);
+    if (!(cp > 0 && cp <= 0x10ffff) || (cp >= 0xd800 && cp <= 0xdfff)) return whole;
+    const ch = String.fromCodePoint(cp);
+    return /^\s$/.test(ch) ? " " : ch;   /* a referenced space or newline is a space, never a paragraph break */
+  });
+const BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form"
+  + "|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
+
+/* The page's visible text: comments, `head`, `script`, `style` and `template` contents are dropped (an unclosed one
+   drops to the end), every tag is removed (a block tag ends its paragraph, `br` its line), and character references
+   are decoded last, so a decoded `&lt;` is text, never a tag. */
+export function visibleTextOfHtml(html) {
+  const dropped = html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
+    .replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ")
+    .replace(/<![^>]*>|<\?[^>]*>/g, " ")
+    .replace(/\s+/g, " ");   /* the source's own line breaks and blank lines are no paragraph break in a page */
+  const bare = dropped
+    .replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n")
+    .replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n")
+    .replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
+  return decodeReferences(bare);
+}
+
+/* R32: the units of text read as text. `html` is true for a capture whose detected format is `html`. */
+export function textUnitsOfText(text, { html = false } = {}) {
+  if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+  const visible = html ? visibleTextOfHtml(text) : text;
+  /* Runs between blank lines; a run of no character (the text's edges, a markup-only block) is no paragraph, so `para`
+     counts the paragraphs the text has, from 0, and a page's leading blank does not shift it. */
+  const paragraphs = visible.split(/\r?\n[ \t\f\v ]*(?:\r?\n[ \t\f\v ]*)+/)
+    .map((p) => (html ? p.replace(/[ \t\f\v \r\n]+/g, " ") : p).trim())
+    .filter((p) => p.length)
+    .map((p, para) => ({ para, text: p }));
+  return textUnitsFor({ paragraphs });
+}
+
+/* ===================================================================== *
  * The reading (R1, R11).
  * ===================================================================== */
 
@@ -1175,6 +1230,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
     classifiedText = text; member = "plane";
+    /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
+       no glyph has none. The reader's outcome below does not change them. */
+    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html" }));
     if (typeof docType.type.parse === "function") {
       try {
         const parsed = docType.type.parse({ ...profCtx, handler: stackId.handler, at: retrieved, ...vw }) || {};
@@ -1295,7 +1353,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
         : { ...failed(doc, docType, [tier2note, ocrNote, `the ${fmt} entry produced no text from these bytes`]
               .filter(Boolean).join(" — ")) };
-      /* R29: the pages the AI read, labelled as its reading. */
+      /* R29: the pages the AI read, labeled as its reading. */
       if (aiRead) reading.ai_transcription = aiRead;
       /* R12: never zero. */
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
