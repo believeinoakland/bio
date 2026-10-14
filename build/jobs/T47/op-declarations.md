@@ -1,6 +1,6 @@
 # op-declarations (T47)
 
-**Status** · session_013zNbUpqqR8G8FJUPnd2dkD · depth 2 · COMPLETE · handled B6
+**Status** · session_013zNbUpqqR8G8FJUPnd2dkD · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -121,3 +121,22 @@ COMPLETE again at f56b3f500a, with `tranche/T47` merged at b7d0974f0f (setup-wor
   - affordances (T47-49), after which I re-pin the R34 lists.
 
 Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 25, module lines 3762
+
+## J6 · COMPLETE
+
+COMPLETE again at 25df7c4d37, with `tranche/T47` merged at a49cb78c37 (affordances, tasks and admission in; B7, K3152). The seven reds are re-pinned:
+
+- **R34 partitions** (t36, t41 R45, t42 R47, t46 R51, t47 R54 and R59): `ACT_HELP_ABSENT` is re-pinned to affordances' merged `ACT_HELP`.
+  - 26 ops it now explains leave their grounds: the R54, R55, R57 and R59 acts and reads with texts; `statusreportassist`, `airundispatch`, `joindoors`, `clockproposals`; `captureupload`, `ask`, `signout`, `signouteverywhere`, `subscriptiondisconnect`, `hostingaccessset`, `publishatmove`, `publishatcancel`, `recoverycodesissue`, `signerset`, `spotcheckvisit`.
+  - `capture` has had no text since the design withdrew its control (the capture screen names `captureupload`, R54). It joins the no-control ground, whose sentence now names it.
+  - t46's R51 test is re-pinned: all four ops are explained now.
+  - No op is both explained and named, and none is neither.
+- **R6/R19** (t33): `signrequest` is served by tasks' map now, so it leaves the list of ops another job serves. t47's R59 test drives its arm (`by` and `viewer` from the query).
+- **Tests:** op-declarations 169 tests, 169 pass, 0 fail. op-grades 94/94. affordances: 1 red, its R19 `reasoned` drive.
+- **Reds on `tranche/T47` itself, outside my five changed files:**
+  - control-plane: 20 reds, among them `declarations.test.mjs:45` "publishat: no handler and no store route answered it". These came in with admission's merge (R24 and R25, the lock and reauth gates).
+  - admission: 2 reds (R12, R19).
+  None of these reads `ACT_HELP_ABSENT` or a table this CHANGE touched. They belong to control-plane T47-65 and admission.
+- **Checks:** `checks/run.mjs` reports format 0, architecture 0 (3137 files) and channels 0 failures; coverage has 17 failures, none of them op-declarations'. Ownership: 5 files, 0 failures.
+
+Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 30, module lines 3761
