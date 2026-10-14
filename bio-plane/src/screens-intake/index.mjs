@@ -1,5 +1,5 @@
 /* screens-intake: bringing material in and deciding what enters the record (N897 (1); draft-T46-interface.md §2.4).
- * Four registry screens, `capture`, `held`, `open-file` and `inbox`, each met to interface-shell's screen contract (its
+ * Five registry screens, `capture`, `held`, `archive` (since T47), `open-file` and `inbox`, each met to interface-shell's screen contract (its
  * R21): `{id, reads, render, acts, words}`. Pure: it reads no table and writes nothing; every read and act is an op the
  * plane serves, called through the kit.
  *
@@ -17,21 +17,26 @@ import { CAPTURE_SCREEN } from "./capture.mjs";
 import { HELD_SCREEN } from "./held.mjs";
 import { OPEN_FILE_SCREEN } from "./open-file.mjs";
 import { INBOX_SCREEN } from "./inbox.mjs";
+import { ARCHIVE_SCREEN } from "./archive.mjs";
 
 export { SCREEN_WORDS };
 
 /* The keys of `setup-words`' `WORD_ROWS` each screen draws, beside its own `screen.<id>.` rows (interface-shell R5). */
 const SHARED_WORDS = Object.freeze({
-  capture: ["photo.reminder", "draft.machine.label", "ai.label.untested",
-            "act.acquire.label.capture", "act.capturerequest.label.capture", "act.monitor.label.capture",
-            "act.capture.label.capture", "act.testify.label.capture", "act.writinghelp.label.capture"],
+  capture: ["photo.reminder", "ai.label.untested",
+            "act.acquire.label.capture", "act.capturerequest.label.capture", "act.monitorset.label.capture", "act.monitor.label.capture",
+            "act.captureupload.label.capture", "act.testify.label.capture", "act.writinghelp.label.capture"],
   held: ["mark.gap.refused.name", "mark.gap.refused.means", "mark.gap.withheld.name", "mark.gap.withheld.means",
-         "mark.gap.undetermined.name", "mark.gap.undetermined.means",
+         "mark.gap.undetermined.name", "mark.gap.undetermined.means", "state.undetermined",
          "act.heldcaptures.label.held", "act.release.label.held", "act.heldsetaside.label.held", "act.heldrestore.label.held"],
   "open-file": ["mark.origin.machine.name", "mark.origin.machine.means",
                 "act.openoriginal.label.open-file", "act.openwithwarning.label.open-file", "act.safeview.label.open-file",
                 "act.deepercheck.label.open-file", "act.releasescanhold.label.open-file"],
-  inbox: ["act.inboxpull.label.inbox", "act.inboxresolve.label.inbox", "act.sourcelink.label.inbox"],
+  inbox: ["act.inboxpull.label.inbox", "act.inboxresolve.label.inbox", "act.sourcelink.label.inbox", "state.loading"],
+  archive: ["mark.gap.refused.name", "mark.gap.refused.means", "state.undetermined", "screen.held.ack", "screen.held.ackhelp",
+            "screen.held.mitigation", "screen.held.mitigationhelp", "screen.held.none", "screen.held.vouchmissing",
+            "screen.held.vouchbad", "screen.held.selectfailed", "screen.held.released",
+            "act.gradenote.label.archive", "act.archivelist.label.archive", "act.heldsetaside.label.archive", "act.release.label.archive"],
 });
 
 /* A screen's own rows (its `screen.<id>.` keys and the shared keys it re-holds, R5) as rows; the rest as `WORD_ROWS` keys. */
@@ -39,5 +44,5 @@ const ROW = new Map(SCREEN_WORDS.map((r) => [r[0], r]));
 const wordsOf = (id) => Object.freeze([...SCREEN_WORDS.filter(([k]) => k.startsWith(`screen.${id}.`)),
                                        ...SHARED_WORDS[id].map((k) => ROW.get(k) || k)]);
 
-export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN]
+export const SCREENS = Object.freeze([CAPTURE_SCREEN, HELD_SCREEN, ARCHIVE_SCREEN, OPEN_FILE_SCREEN, INBOX_SCREEN]
   .map((s) => Object.freeze({ ...s, words: wordsOf(s.id) })));
