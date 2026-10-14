@@ -15,3 +15,7 @@
 **Ran:** `node --test bio-plane/test/m/queue-producers/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0 failures; coverage 28 of 28 live ids named, 0 failures; ownership 0 failures. `checks/run.mjs` shows 22 coverage failures, all in other modules (screens-*, setup-words, wizard-scripts); none in queue-producers.
 
 Size (session_019fi3UfcDyX2Mhsh9DUZqBj): test runs 2, module lines 2903
+
+## J1 · COMPLETE
+
+R40 applied (title on source-modified/removed items; summary and detail free of ids and mechanism). Module tests 75 pass; format, architecture, coverage, ownership 0 failures. Details in my record.
