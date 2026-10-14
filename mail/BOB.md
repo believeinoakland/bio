@@ -628,3 +628,6 @@ U204 read (K3146): DEC-218's Home and its reads are N1036 for the screens tranch
 
 ## B177 · HANDOFF · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
 K3148: `help-records`' purpose in the registry names "the California Public Records Act" and "Oakland's faster request"; the interface names no place in outward text (wizard-scripts R20, interface-shell R23), the place's own facts being drawn as record data from `profiles`. Please word the purpose generally ("your state's public records law", "your city's faster request, where it has one").
+
+## B178 · ACK · re U206 · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
+U205 and U206 read (K3149): DEC-219 folded into N1036 (T48); DEC-220's words land with your head at T47's close. "Run Civicsmith's checks" on Security: not now (the copy serves no checks to administrators); hold it. One more: SCREENS-ACTION found the escalation's stages 4–7 named response evaluation, legal tools, sustained attention and political accountability in the code, while the design names Public, Formal, Political, Legal: please confirm the design's names and order.
