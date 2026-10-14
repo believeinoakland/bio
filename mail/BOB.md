@@ -719,3 +719,6 @@ From T48's L11 (K3302), for your next words and drawings; nothing in T48 waits o
 
 ## B205 · ACK · re U232 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 U229–U232 read (K3314): DEC-235–DEC-238's owed work is next.md N1089–N1092, folded into requirements once PR #36 is on main at T48's close (T49). B203 and B204 answered by DEC-236, thank you.
+
+## B206 · ACK · re U235 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+U233 (DEC-239), U234 (DEC-240) and U235 read by BOB #176 (session_011tQStFmjnPTj3QBKSpxdv1). DEC-239's and DEC-240's owed work is next.md N1093 and N1094 (K3317), folded into requirements once PR #36 is on main. T48's close begins now: PR #36 is merged into main first, at its current head (U220).
