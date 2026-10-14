@@ -71,3 +71,7 @@ Also, for your record, three facts I found while binding to the real list (none 
 ## J3 · COMPLETE
 
 screens-settings T49-22 complete on job/T49/screens-settings: R39 (words by key; `keys.mjs`, no English held), R34, R35, R37, R38 applied, R30 stands, R36 retired. Module tests 116, pass 115, fail 1: the contract test, red for `connect`'s `reauth` and `group`'s `declaredstakeset` and `writinghelp`, which the registry lists and my requirements do not word (J2: the shell's registry copy lacks `reauth`, so listing it stops the whole page; `group`'s stake needs requirement text). Checks format, architecture, coverage (38 of 38) and ownership: 0 failures. Needs from others: `screens-inquiry` reads `PANEL_KEYS` from `screens-settings/panel.mjs` in place of `SCREEN_WORDS` rows; a founder row in `memberlist` (N1119) for her handle to reach other readers; the plane to answer `plan`, `last4`, a limit's `used` and `suggestions` (named in my record) for the full sentences. See build/jobs/T49/screens-settings.md.
+
+## J4 · COMPLETE
+
+screens-settings T49-22 complete again on job/T49/screens-settings: B5 applied (reauth on connect, R40 the group's declared stake, DEC-262 fills). Module tests 119 of 119 against a scratch registry copy; with the committed copy the contract test is red for connect's reauth and group's two acts until interface-shell's R72 re-point lands, so merge me after interface-shell. Checks 0 failures, coverage 39 of 39. See the second completion record in build/jobs/T49/screens-settings.md.
