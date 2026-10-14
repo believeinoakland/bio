@@ -7,7 +7,8 @@ function captureReads() {
   return {};
 }
 
-/* R1–R3: the page. `view.subject` the tab; `view.ui` what the acts left (outcomes, a draft); `view.reachable` whether the
+/* R1–R3: the page. The tab body carries no class: the design's `st` is its mock's state switch (hidden unless a `main`
+ * carries `data-st`), which the served `shell.css` carries and which would hide every tab. `view.subject` the tab; `view.ui` what the acts left (outcomes, a draft); `view.reachable` whether the
  * assistant is reachable for this member (interface-shell R20). */
 function renderCapture(cs, view) {
   const tab = ["address", "file", "saw"].includes(view.subject) ? view.subject : "address";
@@ -70,7 +71,7 @@ function renderCapture(cs, view) {
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
     + `<nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav>`
-    + `<div class="st" data-tab="${tab}">${body}</div>`;
+    + `<div data-tab="${tab}">${body}</div>`;
 }
 
 /* R1: `acquire` with the address. Its five refusals each in its own sentence (`refusals`), any other by shell R13. */

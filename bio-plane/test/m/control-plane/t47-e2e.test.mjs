@@ -137,7 +137,8 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
 
   const p = await appAt("/app");
   /* the counts are read one after the list, each paged: wait for both to be drawn (or the time to run out) */
-  await until(p, () => main(p).querySelectorAll(".mk-count").length >= 2);
+  /* screens-daily R10, R21: a count is drawn in the row's meta, and never at zero, so wait for the busy project's */
+  await until(p, () => /2 questions/.test(text(main(p))));
   answered(p, "projectlist");
   const asked = answered(p, "projectquestions");
   assert.deepEqual([...new Set(asked.map((r) => r.query.project))].sort(), [busy, quiet].sort(), "each listed project's count is read");
@@ -148,9 +149,10 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
     assert.ok(a, `${id} is drawn as a reference`);
     assert.match(text(a), new RegExp(title));
   }
-  const countOf = (id) => { const r = row(id).closest(".cs-row") || row(id).parentElement.parentElement; return text(r.querySelector(".mk-count")); };
-  assert.match(countOf(busy), /\b2 questions\b/, "the busy project's two questions");
-  assert.match(countOf(quiet), /\b0 questions\b|no questions/i, "the quiet project's none");
+  const rowText = (id) => { const r = row(id).closest(".cs-row") || row(id).parentElement.parentElement; return text(r); };
+  assert.match(rowText(busy), /2 questions/, "the busy project's two questions");
+  /* screens-daily R21 (DEC-219 (3)): no reading at zero, so the quiet project's row draws no count (and none says 'loading' or 'failed') */
+  assert.doesNotMatch(rowText(quiet), /\bquestions?\b/i, "the quiet project's row draws no count at zero");
   assert.ok(m.querySelectorAll('[data-ladder="stage"]').length >= 2, "each row draws its stage");
   /* control: the same read with no session sees no project (the projects are the session's) */
   const bare = await (await toPlane("/api/?op=projectlist")).json();
@@ -183,7 +185,10 @@ test("R81 end to end: a wizard started from one of Home's front doors: the doors
 
   await p.click(button);
   await until(p, () => p.root().querySelector('[data-guide-state="running"]') && p.byOp("wizardprogress").length > 0);
-  assert.equal(p.byOp("startfrom").length, startfromBefore, "the script button sends no act of its own");
+  /* screens-daily R23: a script is started by the shell's `cs.wizard`; the press sends no act of its own. Home may read the
+     doors again as it redraws (a GET), but no `startfrom` is ever a POST */
+  assert.ok(p.byOp("startfrom").every((r) => r.method === "GET"), "the script button sends no act of its own");
+  assert.ok(startfromBefore >= 1);
   const [read] = answered(p, "wizardread");
   assert.equal(read.query.script, SCRIPT);
   assert.equal(String(read.query.version), String(script.version));
