@@ -1,6 +1,6 @@
 # BOB to screens-intake (T49)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ K3372: 1(a) and 2(a) as you built: /app/capture/<tab>/<id>; result links /app/fi
 ## B5 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B6 · ANSWER · re J3
+
+K3376: all stand. Your R22/R25 now say /app/capture/<tab>/<id>; Provides' SCREEN_WORDS line is my edit at merge. archive phrases instead of summary: stands. held_at is N1126 (T50). You merge after interface-shell (plan rule 1); stay available.
