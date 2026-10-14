@@ -50,3 +50,14 @@ Complete at `d115bc78e0` on `job/T47/signin-door` (with `tranche/T47` merged for
 - `node checks/run.mjs` (paths filled locally): architecture 3128 product files, 0 failures; coverage 25 failures, all other modules' open ids (queue, screens-*, setup-words, tasks, wizard-scripts), none mine; channels 0 failures.
 
 Size (session_01DHEqiW9nuJMTjMzmoo7o7T): test runs 3, module lines 336
+
+## J3 · COMPLETE
+
+Re-run after B3 (K3152): `tranche/T47` merged into `job/T47/signin-door` at `9d57591897`, no conflict, no code change. The files, interface and findings are as in J2.
+
+- `node --test bio-plane/test/m/signin-door/`: tests 15, pass 15, fail 0.
+- `format`: 168 modules, 0 failures.
+- With my paths filled into a local, uncommitted `modules.json` (the committed entry is still empty): architecture 4 files, 0 failures; coverage 5 of 5, 0 failures; ownership 5 files, 0 failures. `run.mjs` reports architecture at 3141 files with 0 failures, and coverage with 16 failures, all in other modules.
+- With the committed empty entry, `architecture` and `ownership` each count my 4 files as unowned (4 failures), and coverage reads 0 of 5. Both clear once BOB adds paths `bio-plane/src/signin-door/` and tests `bio-plane/test/m/signin-door/`.
+
+Size (session_01DHEqiW9nuJMTjMzmoo7o7T): test runs 4, module lines 336
