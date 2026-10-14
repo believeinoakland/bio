@@ -13,16 +13,16 @@
   "date": 14,
   "queue": 66,
   "transcribe": 19,
-  "capture": 4,
+  "capture": 8,
   "document": 45,
-  "question": 36,
+  "question": 66,
   "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 52,
-  "project": 32,
+  "project": 34,
   "grouprule": 1,
-  "refusal": 166,
+  "refusal": 172,
   "signing": 17,
   "case": 15,
   "docket": 2,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 153,
+  "screen": 158,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -71,13 +71,18 @@
   "law": 8,
   "action": 4,
   "review": 5,
-  "rail": 14,
+  "theme": 32,
+  "connect": 1,
+  "setup": 5,
+  "projects": 2,
+  "progression": 26,
+  "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 695,
+  "act": 728,
   "column": 33,
-  "total": 2324,
-  "protected": 719
+  "total": 2473,
+  "protected": 741
  },
  "words": [
   {
@@ -7583,6 +7588,769 @@
    "note": "DEC-240: N1049, the band's name before instance.test.notice"
   },
   {
+   "key": "screen.more.sub",
+   "en": "The places the tabs below do not hold.",
+   "protected": false,
+   "source": "DEC-241",
+   "note": "DEC-241: the More page's heading line"
+  },
+  {
+   "key": "theme.never.evidence",
+   "en": "A theme gathers documents and passages so members can see them together. It is never evidence: a finding cites the document or passage itself.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: every theme section's explanation; R39, R46"
+  },
+  {
+   "key": "theme.list.heading",
+   "en": "Every theme, newest first",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeread, R42"
+  },
+  {
+   "key": "theme.q.label",
+   "en": "Words in a theme's name or test",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeread q"
+  },
+  {
+   "key": "theme.declare",
+   "en": "Declare a theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the declare panel"
+  },
+  {
+   "key": "theme.name.label",
+   "en": "Its name",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare name"
+  },
+  {
+   "key": "theme.name.help",
+   "en": "A few words members will recognize, such as “Deferred maintenance”.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare name"
+  },
+  {
+   "key": "theme.test.label",
+   "en": "Belongs when",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare test; also before a theme's test"
+  },
+  {
+   "key": "theme.test.help",
+   "en": "The test a document or passage must meet to be placed in it, in a sentence a member who did not write it could apply.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare test"
+  },
+  {
+   "key": "theme.declare.go",
+   "en": "Declare the theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare"
+  },
+  {
+   "key": "theme.declared",
+   "en": "Declared by {who}, {date}.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R45: handles only"
+  },
+  {
+   "key": "theme.placed",
+   "en": "Placed in it",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 members"
+  },
+  {
+   "key": "theme.placed.by",
+   "en": "Placed by {who}, {date}: “{note}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R40, R45"
+  },
+  {
+   "key": "theme.hunches",
+   "en": "Hunches: not yet placed",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 hunches, never mixed"
+  },
+  {
+   "key": "theme.hunch.note",
+   "en": "A hunch is not membership. It counts for nothing until a member places it.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 says"
+  },
+  {
+   "key": "theme.hunch.by",
+   "en": "Proposed by {who}, {date}: “{note}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R41, R45"
+  },
+  {
+   "key": "theme.hunch.mark",
+   "en": "a hunch",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: beside a theme on a document"
+  },
+  {
+   "key": "theme.out",
+   "en": "Taken out",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43, R44 withdrawn"
+  },
+  {
+   "key": "theme.out.withdrawn",
+   "en": "Taken out by {who}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43"
+  },
+  {
+   "key": "theme.out.rejected",
+   "en": "Rejected by {who}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43"
+  },
+  {
+   "key": "theme.confirm",
+   "en": "It belongs",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace at a hunch"
+  },
+  {
+   "key": "theme.takeout",
+   "en": "Take it out…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themewithdraw, placer or administrator"
+  },
+  {
+   "key": "theme.reject",
+   "en": "Reject…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themewithdraw at a hunch, any member"
+  },
+  {
+   "key": "theme.place",
+   "en": "Place it in a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace on a document"
+  },
+  {
+   "key": "theme.propose",
+   "en": "Propose it for a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themepropose"
+  },
+  {
+   "key": "theme.section",
+   "en": "Themes",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the document's and Projects' section"
+  },
+  {
+   "key": "theme.question.section",
+   "en": "Themes its passages are in",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the question page"
+  },
+  {
+   "key": "theme.question.place",
+   "en": "Place a passage in a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace from a question"
+  },
+  {
+   "key": "theme.across",
+   "en": "Themes cut across projects: one gathers documents and passages from any of them.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Projects"
+  },
+  {
+   "key": "theme.every",
+   "en": "Every theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Projects → Themes"
+  },
+  {
+   "key": "theme.filter",
+   "en": "Theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter, themeread"
+  },
+  {
+   "key": "theme.filter.any",
+   "en": "Any theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter"
+  },
+  {
+   "key": "theme.filter.help",
+   "en": "With a theme chosen, Find lists what was placed in it, then its hunches apart.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter, R44"
+  },
+  {
+   "key": "refusal.BAD_LOCATOR",
+   "en": "That isn't an address Civicsmith can fetch. Check it starts with https:// and has no spaces.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1, acquire"
+  },
+  {
+   "key": "refusal.SOURCE_REFUSED",
+   "en": "The site refused to give the page to your group's Civicsmith. Try again later, or save the page yourself and add it as a file.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1"
+  },
+  {
+   "key": "refusal.FETCH_FAILED",
+   "en": "The page couldn't be fetched: the site didn't answer in time. Nothing was kept; try again.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1"
+  },
+  {
+   "key": "refusal.EMPTY",
+   "en": "The address answered with nothing to keep: an empty page.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1"
+  },
+  {
+   "key": "refusal.TOO_LARGE",
+   "en": "The file at that address is larger than your group's Civicsmith keeps. Ask an administrator, or add a smaller part of it as a file.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1"
+  },
+  {
+   "key": "capture.fieldneeded",
+   "en": "Fill in the {field} first: it is needed to capture.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R2"
+  },
+  {
+   "key": "connect.ifnot",
+   "en": "If it doesn't connect, you see one of these, beside the code",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-settings R24"
+  },
+  {
+   "key": "capture.ifnot",
+   "en": "If it can't be captured, you see one of these, beside the address",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-intake R1"
+  },
+  {
+   "key": "refusal.reference",
+   "en": "Reference: {ref}",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: interface-shell R39: beside every refusal"
+  },
+  {
+   "key": "setup.codes.once",
+   "en": "Shown once. Each works one time.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-entry R6"
+  },
+  {
+   "key": "setup.codes.copy",
+   "en": "Copy them",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: cs.copy"
+  },
+  {
+   "key": "setup.codes.save",
+   "en": "Save them as a file",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: cs.save"
+  },
+  {
+   "key": "setup.claimed.heading",
+   "en": "Already claimed",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-entry R15"
+  },
+  {
+   "key": "setup.claimed.sub",
+   "en": "Your group's Civicsmith already has its first administrator.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-entry R15"
+  },
+  {
+   "key": "question.ai.other",
+   "en": "Other reasons the assistant can't work here",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-inquiry R4"
+  },
+  {
+   "key": "question.ai.whose",
+   "en": "The dock and this page say whose account serves you: “On the group's key” or “On your own account”.",
+   "protected": false,
+   "source": "DEC-246",
+   "note": "DEC-246: screens-inquiry R4"
+  },
+  {
+   "key": "question.empty.heading",
+   "en": "Nothing cited yet",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: the new question, state c"
+  },
+  {
+   "key": "question.empty.note",
+   "en": "A question stands on passages the group holds. Bring in the first one any of three ways.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.capture",
+   "en": "Capture a document for it",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.capture.line",
+   "en": "Its address, a file, or what you saw yourself; the capture is held for you to vouch for, then you cite the passage that answers.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.find",
+   "en": "Find one the group already holds",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.find.line",
+   "en": "Search the group's documents; cite a passage from the one you open.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.findsource",
+   "en": "Find another source",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: screens-inquiry R1 search"
+  },
+  {
+   "key": "question.empty.ask",
+   "en": "Ask the assistant to look",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.ask.line",
+   "en": "It reads what the group holds and proposes passages and a reading; nothing counts until a member accepts it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.askassistant",
+   "en": "Ask the assistant",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: airunopen from the question"
+  },
+  {
+   "key": "question.empty.conclude",
+   "en": "Nothing to conclude on yet: a conclusion adopts a reading, and a reading stands on cited passages.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.run.heading",
+   "en": "The assistant is working on this question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state d, ai-runs"
+  },
+  {
+   "key": "question.run.leave",
+   "en": "You can leave this page; the run keeps going, and what it proposes waits here and in your queue. Nothing it finds counts until a member accepts it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state d"
+  },
+  {
+   "key": "question.run.stop",
+   "en": "Stop the run",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: airunclose"
+  },
+  {
+   "key": "question.proposal.heading",
+   "en": "What the assistant proposes",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state e, run-productions R4"
+  },
+  {
+   "key": "question.proposal.accept",
+   "en": "Accept this reading",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: versionaccept"
+  },
+  {
+   "key": "question.proposal.decline",
+   "en": "Decline…",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: versionreject"
+  },
+  {
+   "key": "question.limit.note",
+   "en": "Everything else here works as before. An administrator can change the limit under Settings, The assistant.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state f, beside ai.refused.limit"
+  },
+  {
+   "key": "question.conclude.reading",
+   "en": "The reading you conclude on",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude version"
+  },
+  {
+   "key": "question.conclude.falsifier",
+   "en": "What would change it",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude falsifier, NO_FALSIFIER"
+  },
+  {
+   "key": "question.conclude.falsifier.help",
+   "en": "Required. The finding that would make you withdraw this conclusion, such as “the city's own logs show repairs dated after the reports were closed”.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude falsifier"
+  },
+  {
+   "key": "question.conclude.nofalsifier",
+   "en": "Nothing could change it (you will be asked who decided that)",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude noFalsifier"
+  },
+  {
+   "key": "question.conclude.commentary",
+   "en": "Commentary",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude commentary"
+  },
+  {
+   "key": "question.conclude.commentary.help",
+   "en": "Optional. Your note beside the conclusion; it is marked as not evidence.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude commentary"
+  },
+  {
+   "key": "question.concluded.heading",
+   "en": "Concluded",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g"
+  },
+  {
+   "key": "question.concluded.by",
+   "en": "Concluded by {who}, {date}:",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g, R18"
+  },
+  {
+   "key": "question.concluded.falsifier",
+   "en": "What would change it: “{falsifier}”",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g"
+  },
+  {
+   "key": "question.withdraw",
+   "en": "Withdraw the conclusion…",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: withdrawconclusion, reason required"
+  },
+  {
+   "key": "project.firstquestion",
+   "en": "Your first question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: promote with its words, screens-inquiry R11"
+  },
+  {
+   "key": "project.firstquestion.help",
+   "en": "One question the record could answer, in words a stranger would understand, such as “How many pothole reports did the city close late in 2025?”.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: promote"
+  },
+  {
+   "key": "projects.empty.sub",
+   "en": "No projects yet. A project is one problem the group wants to get to the bottom of, such as the repair of potholes on your streets.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: Projects, a new group"
+  },
+  {
+   "key": "projects.empty.note",
+   "en": "Start one below; you become its owner, and you open its first question on its page.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: Projects, a new group"
+  },
+  {
+   "key": "capture.forquestion",
+   "en": "For which question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: capture: owed, capture R86 has no field"
+  },
+  {
+   "key": "capture.forquestion.help",
+   "en": "Optional. After you vouch for the capture, it opens beside this question so you can cite the passage that answers it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: capture"
+  },
+  {
+   "key": "progression.finding.never",
+   "en": "A finding reports what the record holds and never decides: it says which step has no document, never that anyone is late.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: R25; DEC-239's sweep: no \"overdue\""
+  },
+  {
+   "key": "progression.follows",
+   "en": "Progressions it follows",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance list on the timeline"
+  },
+  {
+   "key": "progression.followed",
+   "en": "Followed through “{progression}”, version {n}.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance header"
+  },
+  {
+   "key": "progression.steps",
+   "en": "Its steps",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance R9"
+  },
+  {
+   "key": "progression.threadedby",
+   "en": "its own date {date} · threaded by {who}, {when}",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread R6, R37"
+  },
+  {
+   "key": "progression.req.always",
+   "en": "required",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: stage required=always"
+  },
+  {
+   "key": "progression.req.usually",
+   "en": "usually present",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=usually"
+  },
+  {
+   "key": "progression.req.sometimes",
+   "en": "sometimes present",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=sometimes"
+  },
+  {
+   "key": "progression.req.unless",
+   "en": "required unless a lawful exception applies",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=unless_exception"
+  },
+  {
+   "key": "progression.req.never",
+   "en": "never expected",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=never"
+  },
+  {
+   "key": "progression.nodoc",
+   "en": "No document threaded.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: a stage with no placement"
+  },
+  {
+   "key": "progression.expects",
+   "en": "The progression expects one within {interval} of step {n}, by {date}.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: overdue_successor with a determined deadline, R16"
+  },
+  {
+   "key": "progression.expects.undetermined",
+   "en": "The progression expects one within {interval} of step {n}; step {n}'s document has no date of its own, so only the capture date bounds it.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: overdue undetermined, R16, R37"
+  },
+  {
+   "key": "progression.thread",
+   "en": "Thread a document…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread"
+  },
+  {
+   "key": "progression.thread.here",
+   "en": "Thread it to a step…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread from a document"
+  },
+  {
+   "key": "progression.discharge",
+   "en": "Record a lawful skip…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: discharge R14"
+  },
+  {
+   "key": "progression.setaside",
+   "en": "Set this finding aside…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: proposedispose R20 to R22"
+  },
+  {
+   "key": "progression.chain",
+   "en": "How sure the chain is",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance grade R9"
+  },
+  {
+   "key": "progression.chain.undetermined",
+   "en": "Not determined: fewer than two steps have a document. A chain is as sure as its weakest step.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: grade_determined false"
+  },
+  {
+   "key": "progression.findings",
+   "en": "Findings",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance findings R10 to R16"
+  },
+  {
+   "key": "progression.basis",
+   "en": "Its basis",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progression basis R1"
+  },
+  {
+   "key": "progression.revise",
+   "en": "Revise the steps…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine revision, citation required"
+  },
+  {
+   "key": "progression.define",
+   "en": "Define a progression",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine"
+  },
+  {
+   "key": "progression.define.go",
+   "en": "Declare the progression",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine"
+  },
+  {
+   "key": "progression.basis.help",
+   "en": "The rule or standard the steps come from, with its citation. Required.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: NO_BASIS"
+  },
+  {
+   "key": "progression.threadedto",
+   "en": "Steps it is threaded to",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: captureprogressions R19 on the document"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -7665,6 +8433,24 @@
    "en": "Settings: your account, your group's members, the assistant, translations, wizards and updates.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
+  },
+  {
+   "key": "rail.projects.line",
+   "en": "Your group's investigations, their questions, plans and cases.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
+  },
+  {
+   "key": "rail.people.line",
+   "en": "The people and organizations the record follows. Your own group's members are under Settings.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
+  },
+  {
+   "key": "rail.settings.line",
+   "en": "Your account, your group's members, the assistant, translations, wizards and updates.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
   },
   {
    "key": "tab.more.name",
@@ -7956,6 +8742,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.more.name",
+   "en": "More",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.more.purpose",
+   "en": "The places the tabs below do not hold: projects, people and settings.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.updates.name",
    "en": "Updates",
    "protected": false,
@@ -8024,6 +8822,18 @@
   {
    "key": "screen.projects.purpose",
    "en": "Every project you can see: its stage, who works on it, how busy it is, and when it last changed.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.theme.name",
+   "en": "Themes",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.theme.purpose",
+   "en": "The group's themes: lenses that gather documents and passages, never evidence.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -9186,6 +9996,36 @@
    "source": "registry.json"
   },
   {
+   "key": "act.themeread.label.projects",
+   "en": "Read the themes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeread.label.theme",
+   "en": "Read the themes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themedeclare.label.theme",
+   "en": "Declare a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeplace.label.theme",
+   "en": "Place it in the theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themewithdraw.label.theme",
+   "en": "Take out or reject, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.filingapprove.label.dash-action",
    "en": "Approve the text",
    "protected": true,
@@ -9306,6 +10146,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.release.label.queue",
+   "en": "Vouch for a capture",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.queue",
+   "en": "Approve a letter",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.search.label.finder",
    "en": "Search",
    "protected": true,
@@ -9350,6 +10202,12 @@
   {
    "key": "act.owed_secondlook.label.finder",
    "en": "Flag for a second look",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeread.label.finder",
+   "en": "Filter by theme",
    "protected": true,
    "source": "registry.json"
   },
@@ -9560,6 +10418,36 @@
   {
    "key": "act.explore.label.document",
    "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeplace.label.document",
+   "en": "Place it in a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themepropose.label.document",
+   "en": "Propose it for a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themewithdraw.label.document",
+   "en": "Reject a hunch, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.captureprogressions.label.document",
+   "en": "Read the steps it is threaded to",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.thread.label.document",
+   "en": "Thread it to a step",
    "protected": true,
    "source": "registry.json"
   },
@@ -9876,6 +10764,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.themeplace.label.question",
+   "en": "Place a passage in a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.airunopen.label.question",
+   "en": "Ask the assistant",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.airunclose.label.question",
+   "en": "Stop the assistant",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.ask.label.answers",
    "en": "Ask",
    "protected": true,
@@ -10052,6 +10958,42 @@
   {
    "key": "act.findin.label.timeline",
    "en": "Look for dates in this project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.instance.label.timeline",
+   "en": "Read a matter's steps",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.thread.label.timeline",
+   "en": "Thread a document to a step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.discharge.label.timeline",
+   "en": "Record a lawful skip, with reason and citation",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.proposedispose.label.timeline",
+   "en": "Set a finding aside",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.progression.label.timeline",
+   "en": "Read a progression",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.progressiondefine.label.timeline",
+   "en": "Declare or revise a progression",
    "protected": true,
    "source": "registry.json"
   },
@@ -12164,6 +13106,72 @@
   {
    "key": "act.hypothesishold.does",
    "en": "Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.instance.does",
+   "en": "Shows one matter followed through a progression: each step in order with the documents threaded to it, how sure the chain is, and any finding.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.progression.does",
+   "en": "Shows a progression: its steps, what each needs before it, how soon, whether it is required, its basis, and every version.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.progressiondefine.does",
+   "en": "Declares a progression, or a new version of one: its steps and their basis. A revision needs a citation; the old version stays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.thread.does",
+   "en": "Places a document the group holds on a step of a matter it concerns, with the document's own date. Each threading is a new version, so nothing is overwritten.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.discharge.does",
+   "en": "Records why a required step was lawfully skipped: the document that shows it, your reason and the citation. The finding then reads as a lawful skip.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.captureprogressions.does",
+   "en": "Shows every step of every matter this document is threaded to, with any finding there.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themeread.does",
+   "en": "Lists the group's themes, newest first, or what one theme gathers: what was placed in it, then its hunches apart. Documents you cannot open are left out.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themedeclare.does",
+   "en": "Declares a theme for the whole group: its name and the test something must meet to belong. A theme is a lens, never evidence.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themeplace.does",
+   "en": "Places this document or passage in a theme, with an optional note saying why. At a hunch, it confirms the hunch and keeps who proposed it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themepropose.does",
+   "en": "Proposes this document or passage for a theme as a hunch: it shows apart and counts for nothing until another member places it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themewithdraw.does",
+   "en": "Takes a placement out of a theme (the member who placed it, or an administrator) or rejects a hunch (any member). Your reason is required and stays on record.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

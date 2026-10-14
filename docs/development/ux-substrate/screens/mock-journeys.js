@@ -1,4 +1,4 @@
-/* The twenty-seven journeys of step 3 (journeys.html), and journey 28 (DEC-201: the founder's link to a new member's first work), walked through the mockups. A journey either walks a wizard from
+/* The twenty-seven journeys of step 3 (journeys.html), journey 28 (DEC-201: the founder's link to a new member's first work) and journey 29 (DEC-245, K3320: from installing to a first conclusion), walked through the mockups. A journey either walks a wizard from
    the library (its steps are the script's, unchanged) or lists its own steps. Each step: s (screen), act (the control
    it points at, an op of that screen), say (what happens, in Bob's words), only ('ai' or 'noai': a step that exists on
    one path only), alt (what the member without the assistant does instead), dock (open the assistant panel), v (the screen's variant, as "Find in this"'s scope). */
@@ -134,6 +134,23 @@ const J = [
    { s: 'capture', act: 'testify', say: 'Her first piece of work: she records what she saw on Seminary Avenue, where and when, with a photo. It is her testimony, labeled as hers.' },
    { s: 'account', act: 'signout', say: 'At the end of the day she signs out on the library computer she used.' },
    { s: 'front', v: 'signedout', act: 'login', say: 'Next morning, on her own phone, she opens the group\'s address, signs in, and keeps herself signed in on that phone.' } ] },
+ { n: 29, t: 'From installing to a first conclusion', who: 'The founder, as administrator and as member (DEC-245; Bob\'s K3320)', steps: [
+   { s: 'install', v: 'start', act: 'bootstrap', say: 'Bob installs his group\'s Civicsmith from civicsmith.org: a short name, the Cloudflare account it runs in.' },
+   { s: 'install', v: 'done', act: null, say: 'The installer\'s checks pass; the one-time password to claim it is shown once.' },
+   { s: 'setup', act: 'claim', say: 'He claims the group as its founder: his handle, his own password, the one-time password already filled in.' },
+   { s: 'setup', act: 'groupkeyset', only: 'ai', say: 'He gives the group\'s Claude key, so members can ask the assistant without an account of their own.' },
+   { s: 'home', v: 'newgroup', act: null, say: 'Home says nothing is here yet, and where to begin.' },
+   { s: 'projects', v: 'empty', act: 'promote', say: 'Projects has none yet. He starts one, “Pothole repairs”, and becomes its owner.' },
+   { s: 'project', v: 'empty', act: 'promote', say: 'On the new project he writes his first question, “How many pothole reports did the city close late in 2025?”, and opens it.' },
+   { s: 'question', v: 'new', act: 'airunopen', only: 'ai', say: 'The question has nothing cited yet. He asks the assistant to look through what the group holds.' },
+   { s: 'question', v: 'running', act: null, only: 'ai', say: 'The assistant is at work; he can leave, and what it proposes will wait for him.' },
+   { s: 'question', v: 'new', act: 'search', only: 'noai', say: 'The question has nothing cited yet. He looks for a source the group already holds; there is none, so he captures one.' },
+   { s: 'capture', act: 'acquire', say: 'He captures the city\'s 2026 performance report from its address, for this question.' },
+   { s: 'held', act: 'release', say: 'He vouches for the capture, standing behind the copy.' },
+   { s: 'document', act: 'cite', say: 'He selects the passage that answers and cites it on the question.' },
+   { s: 'question', v: 'proposal', act: 'versionaccept', only: 'ai', say: 'The assistant proposes a reading resting on two passages, marked as its work. He reads both and accepts it.' },
+   { s: 'question', act: 'conclude', say: 'He concludes on the reading, saying what would change it.' },
+   { s: 'question', v: 'concluded', act: null, say: 'The question shows the group\'s answer: who concluded it, when, and what would change it.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */
 function journeySteps(j, ai) {
@@ -176,4 +193,5 @@ const JBRIEF = {
  26: ["A stranger reads a published case, understands its strength, and checks it for themselves.", "The public page explains itself from zero; nothing assumes an account."],
  27: ["Adding a third administrator, or removing one.", "Administrators only."],
  28: ["From civicsmith.org to the group's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "civicsmith.org; then the invitation link the founder sends."],
+ 29: ["From installing the group's Civicsmith to a first conclusion on a real question: the release Bob must be able to use (K3320).", "civicsmith.org; then the group's own Civicsmith."],
 };

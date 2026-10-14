@@ -147,7 +147,7 @@ add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a 
 add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
 add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
-must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 14 October. It pauses runs until 1 November; its other uses go on.');
+must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 12 October. It pauses runs until 1 November; its other uses go on.');
 add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the group\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
@@ -277,6 +277,8 @@ for (const x of JSON.parse(R('words-t48.json'))) add(x.key, x.en, x.protected, (
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
+// DEC-241: the line beneath a place's name on the phone's More page: its rail.<k>.holds after the name, capitalized.
+for (const [k] of W.RAIL) if (W.RAIL_HELP[k] && !W.TABS.some(([t]) => t === k)) { const s = W.RAIL_HELP[k].replace(/^[^:]+:\s*/, ''); add(`rail.${k}.line`, s[0].toUpperCase() + s.slice(1), false, 'DEC-241: the More page, derived from rail.<k>.holds'); }
 for (const [k, name] of W.TABS) if (!W.RAIL.some(r => r[0] === k)) add(`tab.${k}.name`, name, false, 'mock-shell.js TABS');
 add('tab.more.holds', must(shell, 'mock-shell.js', 'projects, people and settings.'), false, 'mock-shell.js decorate');
 add('level.prompt.name', 'Explain promptly', false, 'DEC-175');

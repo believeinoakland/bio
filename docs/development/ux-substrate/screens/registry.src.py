@@ -49,6 +49,7 @@ screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time re
 screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar, what the group has at stake (DEC-201, DEC-231).',
   [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('grouplanguagesset','Save the languages'),('grouplogoset','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar'),('declaredstakeset','Save the statement'),('writinghelp','Help me write this')], [2])
 screen('settings', 'Settings', 'working', 'Every setting in one list: the member\'s own, then the group\'s for administrators (DEC-201).', [], [2,3])
+screen('more', 'More', 'working', 'The phone\'s More tab: the rail\'s places the tabs do not hold (Projects, People, Settings), each a row with its icon and name and a line saying what it holds; never a bare list. On a desktop the rail shows them (DEC-241; R63, K3250).', [], [2])
 screen('updates', 'Updates', 'working', 'Administrators: the release the group\'s Civicsmith runs; the release ready to install (version, date, a security mark when present, the signed release notes in three parts: for members, for administrators, what an administrator must do); the choice Update (the installer\'s page, set to that release), Not now, or Skip this version with a reason; the hand-off, with a link to copy, for an administrator who does not hold the group\'s Cloudflare account; the releases installed and skipped (K3158, DEC-226).', [('owed:updatestart K3158','Update'),('owed:updatelater K3158','Not now'),('owed:updateskip K3158','Skip this version, with a reason')], [19])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
@@ -60,7 +61,9 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
   [('wizards','See the library'),('wizarddraft','Record a new wizard'),('wizardrevise','Revise a draft'),('wizardsubmit','Submit for approval'),('wizardapprove','Approve'),('wizardretire','Retire')], [])
 
 # --- daily work
-screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
+screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201); the group\'s themes, which cut across projects (DEC-242).', [('promote','Start a project'),('themeread','Read the themes')], [6])
+screen('theme', 'Themes', 'working', 'The group\'s themes, newest first, searchable by name or test, and declaring one (state a); one theme with what was placed in it, its hunches apart, and what was taken out with the reasons (state b). A theme is never evidence (DEC-242; connections R39 to R46).',
+  [('themeread','Read the themes'),('themedeclare','Declare a theme'),('themeplace','Place it in the theme'),('themewithdraw','Take out or reject, with a reason')], [6])
 screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
   [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
 screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',
@@ -100,7 +103,7 @@ screen('question', 'Question', 'working', 'A question and what supports it or cu
    ('owed:versionreject DEC-235','Reject a reading'),('owed:versionrevert DEC-235','Undo the decision on a reading'),('owed:versioncurrent DEC-235','Stand on a reading for a project'),('owed:readtranslate DEC-240','Read in my language')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ask','Ask'),('ruleanswer','Show how this was counted'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
-screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',
+screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs on whichever account serves the member, the group\'s key or the member\'s own, and says which (screens-inquiry R4; DEC-246).',
   [('airunopen','Ask the assistant to work on this'),('suggest','Suggest'),('airunclose','Stop the run')], [17])
 
 # --- the record's subjects
@@ -108,7 +111,7 @@ screen('people', 'People', 'working', 'A directory of the people and organizatio
   [('search','Search people and organizations'),('explore','Explore connections'),('entitycreate','Add someone the record follows')], [10,13])
 screen('person', 'Person', 'working', 'A person or an organization the record follows: positions, career, credentials, memberships, interests, statements; same person?; what the group says about them (other names, declared ties, the documents that may name them) (DEC-233).',
   [('person','Open the person'),('explore','Explore connections'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires'),('entityalias','Add another name'),('relationdeclare','Declare a tie'),('resolve','Match a document to them'),('resolvetestify','Say from what you know that a document names them'),('connect','Connect the documents that name them'),('writinghelp','Help me write this')], [10])
-screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
+screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494); the matters the project follows through a progression, one matter\'s steps with its documents and findings (state b), and a progression\'s steps and basis (state c) (DEC-243; progressions R1 to R43).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('findin','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
   [('recordfact','Read a figure into a money fact'),('createset','Start a money trail'),('include','Include with a reason'),('exclude','Leave out with a reason'),('reconcile','Compare two sources'),('committedagainstpaid','Committed against paid'),('authoritychain','What authorized it'),
@@ -161,3 +164,32 @@ screen('inbox', 'Inbox', 'working', 'Material handed in through the doorbell.',
   [('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source')], [20])
 screen('doorbell', 'Hand material to the group', 'public', 'The doorbell page for someone outside, with no account.',
   [('knock','Hand it over')], [20])
+
+# DEC-242 (S4): themes on the document, the question and Find (connections R39 to R46).
+_THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose','Propose it for a theme'),('themewithdraw','Reject a hunch, with a reason')],
+  'question': [('themeplace','Place a passage in a theme')], 'finder': [('themeread','Filter by theme')]}
+for _s in S:
+    for _op, _l in _THEME_ACTS.get(_s['id'], []):
+        _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-243 (S3): progressions on the timeline and the document (progressions R1 to R43).
+_PROG_ACTS = {'timeline': [('instance','Read a matter\'s steps'),('thread','Thread a document to a step'),('discharge','Record a lawful skip, with reason and citation'),('proposedispose','Set a finding aside'),('progression','Read a progression'),('progressiondefine','Declare or revise a progression')],
+  'document': [('captureprogressions','Read the steps it is threaded to'),('thread','Thread it to a step')]}
+for _s in S:
+    _have = {a['op'] for a in _s['acts']}
+    for _op, _l in _PROG_ACTS.get(_s['id'], []):
+        if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-244: the queue holds the to-dos Home shows (vouching for photos, approving a letter).
+for _s in S:
+    if _s['id'] == 'queue':
+        _have = {a['op'] for a in _s['acts']}
+        for _op, _l in [('release','Vouch for a capture'),('filingapprove','Approve a letter')]:
+            if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-245 (K3320): the first investigation on the question: find a source, ask the assistant, stop it, accept its reading.
+for _s in S:
+    if _s['id'] == 'question':
+        _have = {a['op'] for a in _s['acts']}
+        for _op, _l in [('search','Find another source'),('airunopen','Ask the assistant'),('airunclose','Stop the assistant'),('versionaccept','Accept a proposed reading'),('owed:versionreject DEC-235','Decline a proposed reading'),('planopen','Plan what to do')]:
+            if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))

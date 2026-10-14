@@ -204,7 +204,7 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -212,7 +212,7 @@
      "label": "Hold the group's API key",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -220,7 +220,7 @@
      "label": "Switch the group's key on or off",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -258,17 +258,17 @@
     {
      "op": "memberadd",
      "label": "Invite a member or a second administrator",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
      "op": "recoverycodesissue",
      "label": "Show my recovery codes",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -438,9 +438,9 @@
     {
      "op": "memberadd",
      "label": "Invite a member",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
@@ -525,7 +525,7 @@
      "label": "Hold the group's API key",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -533,7 +533,7 @@
      "label": "Switch the group's key on or off",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -541,7 +541,7 @@
      "label": "Set what the group's key pays for",
      "status": "declared",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -557,7 +557,7 @@
      "label": "Remove the group's key",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -565,7 +565,7 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     }
    ],
@@ -705,7 +705,7 @@
      "label": "Read what the group's key means",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -730,7 +730,7 @@
      "label": "Connect with your own API key",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -746,7 +746,7 @@
      "label": "Set what your account pays for",
      "status": "declared",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -762,7 +762,7 @@
      "label": "Disconnect",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     }
    ],
@@ -823,9 +823,9 @@
     {
      "op": "recoverycodesissue",
      "label": "Get new recovery codes",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -925,6 +925,16 @@
    "journeys": [
     2,
     3
+   ]
+  },
+  {
+   "id": "more",
+   "name": "More",
+   "frame": "working",
+   "purpose": "The phone's More tab: the rail's places the tabs do not hold (Projects, People, Settings), each a row with its icon and name and a line saying what it holds; never a bare list. On a desktop the rail shows them (DEC-241; R63, K3250).",
+   "acts": [],
+   "journeys": [
+    2
    ]
   },
   {
@@ -1143,7 +1153,7 @@
    "id": "projects",
    "name": "Projects",
    "frame": "working",
-   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).",
+   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201); the group's themes, which cut across projects (DEC-242).",
    "acts": [
     {
      "op": "promote",
@@ -1154,6 +1164,57 @@
       "basis-versions",
       "control-plane",
       "promotion"
+     ]
+    },
+    {
+     "op": "themeread",
+     "label": "Read the themes",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    }
+   ],
+   "journeys": [
+    6
+   ]
+  },
+  {
+   "id": "theme",
+   "name": "Themes",
+   "frame": "working",
+   "purpose": "The group's themes, newest first, searchable by name or test, and declaring one (state a); one theme with what was placed in it, its hunches apart, and what was taken out with the reasons (state b). A theme is never evidence (DEC-242; connections R39 to R46).",
+   "acts": [
+    {
+     "op": "themeread",
+     "label": "Read the themes",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themedeclare",
+     "label": "Declare a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themeplace",
+     "label": "Place it in the theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themewithdraw",
+     "label": "Take out or reject, with a reason",
+     "status": "declared",
+     "modules": [
+      "connections"
      ]
     }
    ],
@@ -1353,7 +1414,7 @@
      "label": "Add an API key for a project",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -1370,6 +1431,23 @@
      "status": "declared",
      "modules": [
       "actions"
+     ]
+    },
+    {
+     "op": "release",
+     "label": "Vouch for a capture",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve a letter",
+     "status": "function",
+     "modules": [
+      "filings"
      ]
     }
    ],
@@ -1443,6 +1521,14 @@
      "op": "owed:secondlook DEC-238",
      "label": "Flag for a second look",
      "status": "owed"
+    },
+    {
+     "op": "themeread",
+     "label": "Filter by theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
     }
    ],
    "journeys": [
@@ -1799,6 +1885,46 @@
      "modules": [
       "explore"
      ]
+    },
+    {
+     "op": "themeplace",
+     "label": "Place it in a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themepropose",
+     "label": "Propose it for a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themewithdraw",
+     "label": "Reject a hunch, with a reason",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "captureprogressions",
+     "label": "Read the steps it is threaded to",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "thread",
+     "label": "Thread it to a step",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
     }
    ],
    "journeys": [
@@ -2042,7 +2168,7 @@
      "label": "Hold the project's API key",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2050,7 +2176,7 @@
      "label": "Use your own sign-in for the project",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2058,7 +2184,7 @@
      "label": "Switch the project's account on or off",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2066,7 +2192,7 @@
      "label": "Remove the project's account",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2074,7 +2200,7 @@
      "label": "Read what the project's key means",
      "status": "function",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2082,7 +2208,7 @@
      "label": "Set what the project's account pays for",
      "status": "declared",
      "modules": [
-      "credentials"
+      "ai-accounts"
      ]
     },
     {
@@ -2247,6 +2373,32 @@
      "op": "owed:readtranslate DEC-240",
      "label": "Read in my language",
      "status": "owed"
+    },
+    {
+     "op": "themeplace",
+     "label": "Place a passage in a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "airunopen",
+     "label": "Ask the assistant",
+     "status": "declared",
+     "modules": [
+      "ai-runs",
+      "run-rules"
+     ]
+    },
+    {
+     "op": "airunclose",
+     "label": "Stop the assistant",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "ai-runs"
+     ]
     }
    ],
    "journeys": [
@@ -2313,7 +2465,7 @@
    "id": "assistant",
    "name": "The assistant panel",
    "frame": "dock",
-   "purpose": "Docked beside the screen it serves; runs only on the member's own account.",
+   "purpose": "Docked beside the screen it serves; runs on whichever account serves the member, the group's key or the member's own, and says which (screens-inquiry R4; DEC-246).",
    "acts": [
     {
      "op": "airunopen",
@@ -2507,7 +2659,7 @@
    "id": "timeline",
    "name": "Timeline",
    "frame": "working",
-   "purpose": "What they did and what we did, in two lanes (K1462, K1494).",
+   "purpose": "What they did and what we did, in two lanes (K1462, K1494); the matters the project follows through a progression, one matter's steps with its documents and findings (state b), and a progression's steps and basis (state c) (DEC-243; progressions R1 to R43).",
    "acts": [
     {
      "op": "createevent",
@@ -2555,6 +2707,56 @@
      "status": "declared",
      "modules": [
       "retrieval"
+     ]
+    },
+    {
+     "op": "instance",
+     "label": "Read a matter's steps",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "thread",
+     "label": "Thread a document to a step",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "discharge",
+     "label": "Record a lawful skip, with reason and citation",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "proposedispose",
+     "label": "Set a finding aside",
+     "status": "declared",
+     "modules": [
+      "inquiry",
+      "progressions",
+      "queue"
+     ]
+    },
+    {
+     "op": "progression",
+     "label": "Read a progression",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "progressiondefine",
+     "label": "Declare or revise a progression",
+     "status": "declared",
+     "modules": [
+      "progressions"
      ]
     }
    ],
@@ -2827,7 +3029,6 @@
      "op": "stepsource",
      "label": "Attach a source to a declared step",
      "status": "declared",
-     "onTranche": "origin/tranche/T48",
      "modules": [
       "connections"
      ]
@@ -2998,7 +3199,6 @@
      "op": "planask",
      "label": "Ask the assistant for options",
      "status": "declared",
-     "onTranche": "origin/tranche/T48",
      "modules": [
       "action-plans"
      ]
