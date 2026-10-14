@@ -71,3 +71,7 @@ B3 (K3302) applied: tranche merged; forgot draws FORGOT_HELP (by key from setup-
 ## J5 · REPORT
 
 For journey-check: R56 left no hook class for the recovery codes (HOOK_CLASSES does not list cs-codes, and no design class fits), so setup and join now draw them as <pre data-codes>. journey-check's journeys.mjs (lines 65-68) reads 'pre.cs-codes' and must read 'pre[data-codes]'. Also: control-plane's t46-app and t46-e2e are red from screens-settings' cs-list, not from screens-entry.
+
+## J6 · COMPLETE
+
+B4 (K3304) applied: tranche merged; no class outside the served stylesheets (cs-codes replaced by data-codes; the rest mapped earlier in this job). R12 now tested through interface-shell's own checkClasses and interfacePage, no stand-in. Module tests 61/61; format, architecture, coverage 15/15, ownership, channels 0 failures. J5 reports journey-check's selector.
