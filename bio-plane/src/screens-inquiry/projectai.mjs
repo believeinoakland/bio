@@ -11,7 +11,9 @@
  * and her sign-in is connected (`credentials` R54); keep-away switched on only with a reason, saying first what it does.
  * Self-contained functions (interface-shell R21 (1)). */
 
-import { aiPanel, aiPanelSend } from "../screens-settings/panel.mjs";
+import * as settingsPanel from "../screens-settings/panel.mjs";
+
+const { aiPanel, aiPanelSend } = settingsPanel;
 
 /** R14: the reads, each as its owner documents it. */
 function reads(view) {
@@ -174,9 +176,9 @@ const acts = [
     } },
 ];
 
-/** The `words.json` keys the panel draws over the project's account that this module reads (words-reads.json); the
- *  panel's own `screen.panel.*` keys are `screens-settings`' (its R9), drawn by its render. */
-const PANEL = ["ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable",
+/** The keys the panel draws over the project's account: `screens-settings`' `PANEL_KEYS` (its R9; K3369), and the
+ *  `words.json` keys this module draws in its refusals. */
+const PANEL = [...(Array.isArray(settingsPanel.PANEL_KEYS) ? settingsPanel.PANEL_KEYS : []), "ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable",
   "ai.refused.switchvalue", ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
 
 /** The keys the screen may draw (R44: keys only). */
