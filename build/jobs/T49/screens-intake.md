@@ -20,3 +20,15 @@ M-T49-5 measured (START line 1). Result: the project half can be done from what 
 Recommendation: (a). It is what Bob's DEC-245/246 need (the held row names the question; once vouched for it opens beside that question), and it keeps `capturerequest` as "Ask for this later" only.
 
 **What I do meanwhile:** R21, R23, R24, R26, and R22's project filing by the front-matter line. I do not build "For which question" (R25 first part) or R22's `captured_for` expectation until you answer. R25's second part (refusals by key, `capture.fieldneeded`) I build now.
+
+## J2 · QUESTION
+
+Second question (it adds to J1, replaces nothing). R22 and R25 say the subject arrives as `/app/capture/<tab>?for=<id>`, and the result's "Cite a passage" opens `find-in` "with the question chosen". Neither can be done as written, from this module alone:
+
+**1. The subject cannot be read.** A screen's `view` carries `subject` (the path after `/app/capture/`, which is the tab), `fragment` (sign-in tokens only) and nothing of the query string; the shell's `parse` reads the path alone (`interface-shell/browser.mjs`:714–720). My own tab links would drop a `?for=` as well. Options: (a) the subject rides the path: `/app/capture/<tab>/<id>`, so `view.subject` is `address/<id>`; no shell change; screens-inquiry R38 builds that link; the id says project or question by its prefix (`PROJ-`), as `find-in` already does. (b) the shell adds `view.query` and keeps it across routes (interface-shell change).
+
+**2. `find-in` cannot be opened with a question chosen.** It takes its scope from its subject (a document id) and holds the chosen question in page memory (`find-in.mjs`:23, `ui.question`), lost on navigation. Options: (a) `/app/find-in/<document>/<question>`, screens-daily reads the second step into `ui.question` (a screens-daily change); (b) say nothing of the question and let the member choose it on `find-in`.
+
+**My best reading, built meanwhile:** 1(a) and 2(a): `capture` reads `address/<id>` (and `file/<id>`, `saw/<id>`), keeps it on its tab links, and the result links `/app/find-in/<document>/<question>`. If you choose differently I change the one function that reads the subject and the one link.
+
+**Words.** "Cite a passage" has no key for `capture`; `act.cite.label.question` and `act.cite.label.document` both hold that English. I draw it with `act.cite.label.document` (no key minted by me); say if the design wants a `capture` key instead.
