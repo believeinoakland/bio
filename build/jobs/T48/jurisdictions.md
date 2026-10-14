@@ -32,3 +32,7 @@
 **Checks** (process repository) · format: 168 modules, 166 requirements files; 0 failures · architecture jurisdictions: 16 product files, 26 relative imports; 0 failures · coverage jurisdictions: 92 of 92 live requirement ids named by a test; 0 failures · ownership jurisdictions tranche/T48: 9 files; 0 failures · `checks/run.mjs`: architecture 3256 product files, 0 failures; coverage reds only bundler R32, court-citations R11, file-scanner R32, ooxml R34, record-grammar R63, signatures R45 R48 (rule 5.1, not mine); channels 0 failures.
 
 Size (session_01KiRCNVjfgc28PWXvd9HUux): test runs 9, module lines 2118
+
+## J1 · REPORT
+
+Stale generated artifact (mechanics §14): installer's newgroup/dist/newgroup.bundled.mjs embeds this module's profiles, so T48-2 stales it; bio-plane/test/system/newgroup-bundle-fresh.test.mjs (C) fails (committed sha256 93be7abf…, fresh build d5784fb8…). Not rebuilt by me; regenerate at L1's close with the plane bundle and program.mjs (rule 5.5). No other user module's tests change (542 files: 20 failures identical before and after).
