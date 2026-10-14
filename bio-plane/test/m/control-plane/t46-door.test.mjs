@@ -1,4 +1,4 @@
-/* control-plane T46 (T46-59): R65's disclosure before a sign-in's `start` and the runner's absence in member words; R57's
+/* control-plane T46 (T46-59): R57's
    status report (`statusreportassist`), its text check (`textcheck`) and the `untested` label every draft passes; R20's group
    fields in the review copy's in-band quartet; R77's member-run door (`airundispatch`); R54's `joindoors`; R76's
    explanation level (`infolevelset`, `infolevel`). Driven through `makeFetch(hooks)` over the harness's store, which records
@@ -9,7 +9,6 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
 import { DRAFT_OPS, draftDue, draftAsk, untestedOf } from "../../../src/control-plane/draft.mjs";
-import { SIGNIN_WORDS } from "../../../src/control-plane/signin.mjs";
 const { inbandQuartet } = await import("../../../src/inband.mjs");
 
 const { OPS, OP_STAMPS } = O;
@@ -27,82 +26,6 @@ function withObject(w, methods) {
   w.env.STORE.get = (id) => ({ ...get(id), ...Object.fromEntries(Object.entries(methods).map(([k, f]) => [k, (args) => f(args, id)])) });
   return w;
 }
-
-/* ================================================================ R65 */
-
-function agentWorker(answer) {
-  const sent = [];
-  return { sent, fetch: async (url, init) => {
-    const body = JSON.parse(init.body);
-    sent.push({ path: new URL(String(url)).pathname, body });
-    return answer(body);
-  } };
-}
-const signinRunner = (body) => reply(body.step === "start" ? { ok: true, address: "https://claude.ai/oauth/x" }
-  : { ok: true, connected: body.step === "code" || body.step === "state", member: body.member });
-function disclosureWorld({ shown = false, away = false, silent = false, runner = signinRunner } = {}) {
-  const asked = [];
-  const c = callers({ answer: (q) => {
-    if (q.route === "aikeptaway") return ok(away ? { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", detail: "kept away" } : { ok: true });
-    if (q.route === "disclosureof") { asked.push(q.params.member); return silent ? new Response("not json") : ok({ ok: true, member: q.params.member, shown }); }
-    if (q.route === "subscriptionconnected") return ok({ ok: true, connected: true });
-    return null;
-  } });
-  const aw = agentWorker(runner);
-  c.w.env.AGENT_WORKER = aw;
-  return { ...c, aw, asked };
-}
-
-test("R65 (T46; N897 (3); instance-setup R54; C-69.6): `start` is refused DISCLOSURE_DUE while `disclosureOf` answers `shown: false` for the member the door stamps, nothing sent to the runner; `state`, `signout` and `code` are never refused for it and never ask it; once shown, the same `start` is sent (negative control); a store that does not answer the question sends nothing; the keep-away refusal comes first", async () => {
-  const due = disclosureWorld({ shown: false });
-  for (const s of due.sessions) {
-    due.aw.sent.length = 0;
-    const r = await call(due.w.env, { op: "subscriptionsignin", token: s.token, method: "POST", body: { step: "start", member: FORGED } });
-    refused(r, 409, "DISCLOSURE_DUE", "C-69.6");
-    assert.equal(r.json.translation, M.DOOR_WORDS?.["refusal.DISCLOSURE_DUE"] ?? r.json.translation);
-    assert.match(r.json.translation, /Read what connecting means first/);
-    assert.deepEqual(due.aw.sent, [], `${s.name}: nothing sent`);
-    assert.equal(due.asked.at(-1), s.by, `${s.name}: asked for the member the door stamps, never the caller's`);
-  }
-  for (const step of ["state", "signout", "code"]) {
-    due.aw.sent.length = 0; due.asked.length = 0;
-    const r = await call(due.w.env, { op: "subscriptionsignin", token: due.w.S.ann, method: "POST", body: { step, code: "C" } });
-    assert.equal(r.status, 200, `${step}: ${r.text.slice(0, 200)}`);
-    assert.deepEqual([due.aw.sent.length, due.asked.length], [1, 0], `${step}: sent, the disclosure not asked`);
-  }
-  /* negative control: after `disclosureshown`, the same start is sent */
-  const shown = disclosureWorld({ shown: true });
-  const r = await call(shown.w.env, { op: "subscriptionsignin", token: shown.w.S.ann, method: "POST", body: { step: "start" } });
-  assert.deepEqual([r.status, r.json.address, shown.aw.sent.map((x) => x.body)], [200, "https://claude.ai/oauth/x",
-    [{ member: "member:ann", step: "start" }]]);
-  /* fail closed */
-  const silent = disclosureWorld({ silent: true });
-  const s = await call(silent.w.env, { op: "subscriptionsignin", token: silent.w.S.ann, method: "POST", body: { step: "start" } });
-  refused(s, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
-  assert.deepEqual(silent.aw.sent, []);
-  /* keep-away first: a group keeping its material away answers AI_KEPT_AWAY, and the disclosure is not asked */
-  const away = disclosureWorld({ away: true });
-  const a = await call(away.w.env, { op: "subscriptionsignin", token: away.w.S.ann, method: "POST", body: { step: "start" } });
-  assert.deepEqual([a.status, a.json.reason, away.asked, away.aw.sent], [403, "AI_KEPT_AWAY", [], []]);
-});
-
-test("R65 (T46; N897 (4)): agent-worker's RUNNER_NOT_CONFIGURED (503) is relayed with its code and status unchanged, carrying the translation read by key `ai.refused.signinabsent`; any other refusal of the runner is relayed with no translation of the door's (negative control)", async () => {
-  const absent = { ok: false, reason: "RUNNER_NOT_CONFIGURED", code: "RUNNER_NOT_CONFIGURED", worker: "agent-worker",
-                   detail: "no runner is bound" };
-  const x = disclosureWorld({ shown: true, runner: () => reply(absent, 503) });
-  for (const step of ["start", "state", "code", "signout"]) {
-    const r = await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", body: { step, code: "C" } });
-    assert.deepEqual([r.status, r.json.ok, r.json.reason, r.json.code, r.json.detail, r.json.worker],
-                     [503, false, "RUNNER_NOT_CONFIGURED", "RUNNER_NOT_CONFIGURED", "no runner is bound", "agent-worker"], step);
-    assert.equal(r.json.translation, SIGNIN_WORDS["ai.refused.signinabsent"], step);
-    assert.equal(r.json.translation, "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed "
-      + "your group's Civicsmith can add it.");
-  }
-  const other = disclosureWorld({ shown: true, runner: () => reply({ ok: false, reason: "SIGNIN_REFUSED", code: "SIGNIN_REFUSED", detail: "no" }, 409) });
-  const r = await call(other.w.env, { op: "subscriptionsignin", token: other.w.S.ann, method: "POST", body: { step: "state" } });
-  assert.deepEqual([r.status, r.json.reason], [409, "SIGNIN_REFUSED"]);
-  assert.notEqual(r.json.translation, SIGNIN_WORDS["ai.refused.signinabsent"]);
-});
 
 /* ================================================================ R57 */
 
@@ -243,55 +166,58 @@ test("R20 (T46; N905; public-read R34, R7; K2999): the review copy's in-band qua
   assert.equal(d.status, 404);
 });
 
-/* ================================================================ R77 */
+/* ================================================================ R77, R80 */
 
+/* R80 (T47; N955): the member-run door takes no credential from the page. The object's `dispatchMemberRun` stand-in
+   records what it is handed and answers as ai-runs would: a run dispatched for its principal, refused to anyone else. */
 function runWorld({ answer } = {}) {
-  const agent = aik(), other = aik(), SENTINEL = agent;
-  const w = world({ creds: {
-    [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["airundispatch"] }),
-    [other]: cred({ tokenId: "agent-bea", principal: "member:bea", writes: ["airundispatch"] }),
-  } });
+  const agent = aik();
+  const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["airundispatch"] }) } });
   const asked = [];
   withObject(w, { dispatchMemberRun: async (args, id) => {
     asked.push({ ns: id, ...args });
-    return answer ? answer(args) : { run: args.run, found: true, dispatched: true, status: "running", dispatch: { state: "DISPATCHED" } };
+    return answer ? answer(args)
+      : args.by !== "member:ann" ? { run: args.run, dispatched: false, found: true, status: "running", code: "AI_RUN_NOT_PRINCIPAL",
+                                     check: "C-22.12", translation: "not yours", detail: "a run is continued by its principal alone" }
+      : { run: args.run, found: true, dispatched: true, status: "running", dispatch: { state: "DISPATCHED" } };
   } });
-  return { ...w, agent, other, asked, SENTINEL };
+  return { ...w, agent, asked };
 }
 
-test("R77 (T46; N919; K2892, K2952, K2999; ai-runs R18): `airundispatch` is declared for a member, mutating, with no `machineClasses`; a member's run opened on her own `ai` credential is dispatched once through the object's `dispatchMemberRun` with `run` from the body, `by` and `viewer` the member her principal names (never `class:ai/<tokenId>`) and `credential` the credential she presented, in process: it is in no address, header or body of any request the plane makes, nor in the answer; the answer is ai-runs', as given", async () => {
+test("R77, R80 (T47; N955; K2976, K2999, K3027; ai-runs R18, credentials R63): `airundispatch` is declared for a member, mutating, with no `machineClasses`; a member's `check` run opened by her session is dispatched once, under her session alone, through the object's `dispatchMemberRun` with exactly `{run, by, viewer, at}`: `run` from the body, `by` and `viewer` the member her session names, no `credential` argument; a sentinel credential sent with the request (body fields, a header) is in no request the plane makes, no argument of the dispatch and not in the answer; the answer is ai-runs', as given", async () => {
   const spec = OPS.airundispatch;
   assert.deepEqual([spec?.classes, Object.hasOwn(spec ?? {}, "machineClasses"), spec?.mutating], [["admin", "member"], false, true]);
   const x = runWorld();
-  const r = await call(x.env, { op: "airundispatch", token: x.agent, method: "POST", params: { by: FORGED, run: "RUN-forged" },
-                                body: { run: "RUN-1", by: FORGED, viewer: FORGED, credential: "forged" } });
+  const SENTINEL = aik();
+  const r = await call(x.env, { op: "airundispatch", token: x.S.ann, method: "POST", params: { by: FORGED, run: "RUN-forged" },
+                                headers: { "x-ai-credential": SENTINEL },
+                                body: { run: "RUN-1", by: FORGED, viewer: FORGED, credential: SENTINEL, aiCredential: SENTINEL } });
   assert.equal(r.status, 200, r.text.slice(0, 300));
-  assert.equal(x.asked.length, 1);
+  assert.equal(x.asked.length, 1, "dispatched once");
   const { at, ...rest } = x.asked[0];
-  assert.deepEqual(rest, { ns: "bio", run: "RUN-1", by: "member:ann", viewer: "member:ann", credential: x.agent });
+  assert.deepEqual(rest, { ns: "bio", run: "RUN-1", by: "member:ann", viewer: "member:ann" });
+  assert.equal(Object.hasOwn(x.asked[0], "credential"), false, "no credential argument");
   assert.ok(!Number.isNaN(Date.parse(at)));
   assert.deepEqual(r.json.result, { run: "RUN-1", found: true, dispatched: true, status: "running", dispatch: { state: "DISPATCHED" } });
-  assert.equal(r.text.includes(x.SENTINEL), false, "the credential is never answered");
-  for (const c of x.env.calls) {
-    assert.equal(c.url.href.includes(x.SENTINEL), false, `${c.route}: address`);
-    if (c.route !== "aicredentiallook")
-      assert.equal(JSON.stringify([c.headers, c.body]).includes(x.SENTINEL), false, `${c.route}: header or body`);
-  }
+  assert.equal(r.text.includes(SENTINEL), false, "the sentinel is never answered");
+  for (const c of x.env.calls)
+    assert.equal(JSON.stringify([c.url.href, c.headers, c.body]).includes(SENTINEL), false, `${c.route}: the sentinel crossed`);
 });
 
-test("R77 (controls): the same request by her session alone hands no credential and is withheld MEMBER_PRINCIPAL_RUN as ai-runs answers it; another member's credential is refused AI_RUN_NOT_PRINCIPAL as given; a binding class is stamped its machine form and refused by ai-runs; with no `dispatchMemberRun` on the object the door answers 503 AGENT_WORKER_UNBOUND, nothing sent", async () => {
-  const notPrincipal = { run: "RUN-1", dispatched: false, found: true, status: "running", code: "AI_RUN_NOT_PRINCIPAL", check: "C-22.12",
-                         translation: "not yours", detail: "a run is continued by its principal alone" };
-  const x = runWorld({ answer: (a) => (a.by !== "member:ann" ? notPrincipal
-    : !a.credential ? { run: a.run, found: true, dispatched: false, status: "running", withheld: "MEMBER_PRINCIPAL_RUN", note: "Nothing was sent" }
-    : { run: a.run, found: true, dispatched: true, status: "running" }) });
-  const s = await call(x.env, { op: "airundispatch", token: x.S.ann, method: "POST", body: { run: "RUN-1" } });
-  assert.deepEqual([s.status, s.json.result.withheld, x.asked.at(-1).credential, x.asked.at(-1).by], [200, "MEMBER_PRINCIPAL_RUN", null, "member:ann"]);
-  const o = await call(x.env, { op: "airundispatch", token: x.other, method: "POST", body: { run: "RUN-1" } });
-  assert.deepEqual([o.status, o.json.result.ok, o.json.result.reason, o.json.result.code, x.asked.at(-1).by, x.asked.at(-1).credential],
-                   [403, false, "AI_RUN_NOT_PRINCIPAL", "AI_RUN_NOT_PRINCIPAL", "member:bea", x.other]);
+test("R80 (controls): another member's session is refused AI_RUN_NOT_PRINCIPAL as ai-runs gives it; an `ai` credential, even her own, hands no credential and is stamped its machine form (refused by ai-runs, never her principal); a binding class likewise; with no `dispatchMemberRun` on the object the door answers 503 AGENT_WORKER_UNBOUND, nothing sent", async () => {
+  const x = runWorld();
+  const o = await call(x.env, { op: "airundispatch", token: x.S.bare, method: "POST", body: { run: "RUN-1" } });
+  assert.deepEqual([o.status, o.json.result.ok, o.json.result.reason, o.json.result.code, x.asked.at(-1).by],
+                   [403, false, "AI_RUN_NOT_PRINCIPAL", "AI_RUN_NOT_PRINCIPAL", "member:bea"]);
+  const n = x.asked.length;
+  const a = await call(x.env, { op: "airundispatch", token: x.agent, method: "POST", body: { run: "RUN-1" } });
+  assert.equal(x.asked.length, n + 1, "admitted by admission's member reach (op-declarations R51), then dispatched");
+  assert.equal(x.asked.at(-1).by, "class:ai/agent-ann", "an ai credential is the machine, never her principal");
+  assert.equal(Object.hasOwn(x.asked.at(-1), "credential"), false);
+  assert.deepEqual([a.status, a.json.result?.code], [403, "AI_RUN_NOT_PRINCIPAL"]);
   const m = await call(x.env, { op: "airundispatch", token: x.env.ADMIN_TOKEN, method: "POST", body: { run: "RUN-1" } });
-  assert.deepEqual([m.json.result?.code, x.asked.at(-1).by, x.asked.at(-1).credential], ["AI_RUN_NOT_PRINCIPAL", "class:admin", null]);
+  assert.deepEqual([m.json.result?.code, x.asked.at(-1).by, Object.hasOwn(x.asked.at(-1), "credential")],
+                   ["AI_RUN_NOT_PRINCIPAL", "class:admin", false]);
   const bare = world();
   const u = await call(bare.env, { op: "airundispatch", token: bare.S.ann, method: "POST", body: { run: "RUN-1" } });
   assert.deepEqual([u.status, u.json.reason], [503, "AGENT_WORKER_UNBOUND"]);
