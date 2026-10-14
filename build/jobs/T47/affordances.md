@@ -98,3 +98,7 @@ On (A) I do nothing but re-run control-plane's totality test once op-grades has 
 ## J8 · COMPLETE
 
 B7 applied: tranche merged; the case-inputs test re-pinned (statementack gated, its NON_ACTS row read; negative control: carried ungated, it reads stale). affordances plus control-plane's totality.test.mjs: 251/251; checks 0 failures.
+
+## J9 · COMPLETE
+
+B8 applied: tranche merged; the plane harness signs in by handle (founder admin, members by handle, device own; control-plane R83). affordances plus control-plane's totality.test.mjs: 251/251; checks 0 failures.
