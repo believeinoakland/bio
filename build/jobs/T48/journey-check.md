@@ -33,3 +33,7 @@ My readings of R5 and R6, on which I am building now (answer only if one is wron
 - `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage 21 failures, none journey-check's (`coverage.mjs … journey-check`: 6 of 6 live ids named, 0 failures); `ownership.mjs … journey-check tranche/T48`: 10 files, 0 failures.
 
 Size (session_01Dgr6P5RQPvQFE2ipVdCcfG): test runs 10, module lines 1135
+
+## J2 · COMPLETE
+
+T48-80 complete: R4 (main-module guard), R5 (direct live arm, whoami verifies each role, administrator-only acts), R6 (each working screen paired with the design mock at 1280 and 390 px; the five limits) met. journey-check tests: 27, all pass after one fix to the pair image; format, architecture, coverage (6/6), ownership 0 failures. For BOB: at today's ASSETS_COMMIT the mock draws none of 10 working screens, so R6 fails on them until T48-68 moves it (main draws all 54); the release needs a member credential in the environment. Details in the record.
