@@ -37,6 +37,9 @@ REWRITE.update({
   'screen.archive.folder': 'A folder · its {count} files are listed and filed below it',
   'screen.archive.refused.none': 'Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.',
 })
+# assistant (the dock)
+w('screen.assistant.alone', 'It works for you alone.', False, 'after "On your own account" in the dock: only when your own account serves you')
+w('screen.assistant.ask.label', 'Ask about this screen', False, "the dock's question field")
 # --- end DEC-259
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
