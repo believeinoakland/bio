@@ -2,7 +2,8 @@
    only by them: written, revised, deleted, and turned into an observation, a hunch or a question in the shapes the owner
    names (hypotheses R13); the assistant's help under the note's field only while it is reachable (interface-shell R20),
    its draft labelled "Draft · the assistant's, asked by <handle>" and kept only by the member's own act (DEC-153 (3)),
-   with the test-instance label when the answer carries it (screens-inquiry R7's words); the court sentence once, the
+   with the test-instance label `ai.label.untested` beside it when the answer carries `untested` (R11; wizard-scripts
+   R34); the court sentence once, the
    first time the member keeps a note while the group tells members what a court can reach (DEC-136; membership R108).
    Every function is self-contained (interface-shell R21). */
 
@@ -26,7 +27,8 @@ export const notes = {
       const dr = ui.draft && ui.draft.field === field ? ui.draft : null;
       const label = dr ? W(S + "draft.label", { handle: dr.askedBy }) : W(field === "new" ? S + "new.field" : S + "revise.field");
       const help = view.reachable ? cs.act("writinghelp", { data: { field, id } }) : "";
-      return `<label for="${id}">${label}</label>${dr && dr.untested ? `<p class="cs-label-untested">${W("ai.label.untested")}</p>` : ""}<textarea id="${id}" class="cs-input rec${dr ? " cs-draft" : ""}">${E(dr ? dr.text : value)}</textarea>${help}`;
+      // the test-instance label beside the draft's own, only where the answer carries `untested` (R11)
+      return `<label for="${id}">${label}</label>${dr && dr.untested ? ` <span class="cs-label-untested">${W("ai.label.untested")}</span>` : ""}<textarea id="${id}" class="cs-input rec${dr ? " cs-draft" : ""}">${E(dr ? dr.text : value)}</textarea>${help}`;
     };
     const out = [cs.title(), `<p>${W(S + "private")}</p><p class="cs-note">${W(S + "protects")}</p>`];
 

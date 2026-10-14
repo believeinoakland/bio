@@ -3,8 +3,7 @@
    summary and sentences with their support, the holdings each rests on, the looks, labelled machine work) and "Search
    instead" opens Find. While it is not, the screen is "Find and count": search, and `ruleanswer` "Show how this was
    counted". In both, the question can be kept asking (`standingquestionset`) and stopped (`standingquestionend`). The
-   registry's "Ask" names `ruleanswer`; it is re-pointed to `ask` (draft-T46-interface.md §3, item 3; interface-shell
-   R21). Every function is self-contained (interface-shell R21 (1)). */
+   registry names `ask` itself since T47 (interface-shell R28, R38; its own label `act.ask.label.answers`). Every function is self-contained (interface-shell R21 (1)). */
 
 export const answers = Object.freeze({
   id: "answers",
@@ -72,7 +71,7 @@ export const answers = Object.freeze({
       }
       return cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.answers.sub") + "</p>"
         + cs.field("answers-q", "screen.answers.question", { area: true, rec: true, value: ui.q || "" })
-        + '<div class="mk-acts">' + cs.act("ask", { label: "act.ruleanswer.label.answers", tone: "primary" })
+        + '<div class="mk-acts">' + cs.act("ask", { label: "act.ask.label.answers", tone: "primary" })
         + cs.act("search", { label: "act.search.label.answers" }) + "</div>"
         + drawn + keep;
     }
@@ -97,13 +96,13 @@ export const answers = Object.freeze({
       + '<div class="mk-search">' + cs.field("answers-q", "screen.finder.words", { value: ui.q || "" })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>"
       + results
-      + (ui.q ? '<div class="mk-acts">' + cs.act("ruleanswer", { label: "screen.answers.counted" }) + "</div>" : "")
+      + (ui.q ? '<div class="mk-acts">' + cs.act("ruleanswer", { label: "act.ruleanswer.label.answers" }) + "</div>" : "")
       + rule + keep;
   },
 
   acts: [
     // R6: the question through `op=ask`; the answer is a stream whose last event is the answer or the refusal.
-    { op: "ask", label: "act.ruleanswer.label.answers", rereads: [],
+    { op: "ask", label: "act.ask.label.answers", rereads: [],
       refusals: {
         AI_LIMIT_REACHED: "ai.refused.limit", AI_LIMIT_UNJUDGED: "ai.refused.limit.unjudged", AI_USE_SWITCHED_OFF: "ai.refused.off",
         AI_KEPT_AWAY: "ai.refused.projectkeptaway", NO_ACCOUNT: "ai.refused.signinnotconnected",
@@ -138,7 +137,7 @@ export const answers = Object.freeze({
         return { query: { q: q, limit: "50", snippet: "160" } };
       } },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
-    { op: "ruleanswer", label: "screen.answers.counted", rereads: [],
+    { op: "ruleanswer", label: "act.ruleanswer.label.answers", rereads: [],
       send: function (view, el, cs) {
         const q = String((view.ui || {}).q || "").trim();
         if (!q) return { refuse: "screen.finder.wordsfirst" };

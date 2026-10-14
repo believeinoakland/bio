@@ -41,7 +41,7 @@ test("R4: each result with its grade and where it matched (Found by search), a r
   assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((a) => a.textContent === "Administrative Instruction 4.12"));
   assert.equal(p.doc.getElementById("finder-pick-INF-1").getAttribute("aria-label"), "Pick Public Works work orders, FY2025");
   const none = await open("/app/finder/zz", { search: ok({ total: 0, hits: [], widen: { total: 4 } }) });
-  assert.match(text(none), /Nothing your group holds matches these words\./);
+  assert.match(text(none), /Nothing your group holds matches “zz”\./);
   assert.match(text(none), /4 hold at least one of them/);
 });
 
@@ -106,4 +106,16 @@ test("R4: \"Count\" makes a count over the held set as a calculation, asking wha
   await press(r, "select", { values: { "finder-pick-INF-1": true } });
   const b = await press(r, "calculationcreate", { values: { "fc-question": "q" }, reason: R });
   assert.match(beside(r, b), /period|NO_PERIOD/);
+});
+
+test("R12 (DEC-201 (13)): a search with no result says what search covers and offers \"Capture it\"", async () => {
+  const p = await open("/app/finder/rent board minutes 2019", { search: ok({ total: 0, hits: [] }) });
+  assert.match(text(p), /Nothing your group holds matches “rent board minutes 2019”\. Search finds only what has been captured\. Try fewer or other words, or capture the record from where it is published\./);
+  assert.equal(main(p).querySelector('a[data-nav][href="/app/capture"]').textContent, "Capture it");
+  // Controls: results, nothing searched yet, and a failed search say neither.
+  for (const [path, plane] of [["/app/finder/pothole", PLANE], ["/app/finder", PLANE], ["/app/finder/x", { search: refused("STORE_DID_NOT_ANSWER", null, 502) }]]) {
+    const q = await open(path, plane);
+    assert.doesNotMatch(text(q), /Search finds only what has been captured/, path);
+    assert.equal(main(q).querySelector('a[href="/app/capture"]'), null, path);
+  }
 });

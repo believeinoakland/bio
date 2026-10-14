@@ -1,4 +1,4 @@
-/* screens-intake R8, R9 and the screen contract (interface-shell R21, R5, R10, R12) over all four screens, on the real
+/* screens-intake R8, R9 and the screen contract (interface-shell R21, R5, R10, R12) over all five screens, on the real
  * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,7 +11,7 @@ import { pending } from "../interface-shell/harness.mjs";
 import { open, html, text, main, ok, refused, MEMBER, rawKeys, fill, press } from "./page.mjs";
 
 const SHA = "a".repeat(64);
-const PATHS = { capture: ["/app/capture/address", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"],
+const PATHS = { capture: ["/app/capture/address", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"], archive: [`/app/archive/${SHA}`],
                 "open-file": [`/app/open-file/${SHA}`], inbox: ["/app/inbox", "/app/inbox/KNOCK-2026-10-03-9c1f0a2b"] };
 const VALUES = {
   heldcaptures: { ok: true, held: [{ bundle_id: "INFO-1", title: "T", project: "P", age_days: 1, eligible: false, class: "contested",
@@ -20,13 +20,20 @@ const VALUES = {
   originalstate: { may_open: true, path: "warned" }, verdictnotes: { ok: true, notes: [{ tool: "t", engine: "e", result: "clean", scanned_at: "2026-10-01T00:00:00Z" }] },
   scanfindings: { ok: true, findings: [{ captureSha: SHA, findings: ["N"] }] }, scanstatus: { queued: 1, overdue: 0, held: 1 },
   inbox: { inbox: [{ knock_id: "KNOCK-2026-10-03-9c1f0a2b", bytes: 10, received: "2026-10-03T00:00:00Z", status: "new", note: "n", pseudonym: "p" }] },
-  inboxget: { ok: true, item: { knock_id: "KNOCK-2026-10-03-9c1f0a2b", bytes: 10, status: "new", note: "n" } },
+  inboxget: { ok: true, item: { knock_id: "KNOCK-2026-10-03-9c1f0a2b", bytes: 10, status: "pulled", note: "n", capture_sha: SHA } },
+  sourceof: { ok: true, captureSha: SHA, sourceId: "SRC-2026-0001", source: {}, history: [] },
+  sourcerung: { ok: true, source: "SRC-2026-0001", rung: "same_knocker" },
+  archivelist: { ok: true, archive: { sha256: SHA, grade: { grade: "B", determined: true }, bytes: 10, entries: 1, opened: true, refused: null },
+                 summary: { filed: 1, already_held: 0, not_filed: 0, folders: 0, waiting: 0 },
+                 entries: [{ index: 1, name: "a.pdf", state: "filed", sha256: SHA, bundle: "INFO-2026-0002-a" }] },
+  gradenote: { ok: true, note: "A note." },
 };
-const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] } };
+const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] },
+                archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
 const READS = Object.keys(VALUES);
 
-test("R8 SCREENS meets interface-shell R21: four registry screens, served by interfacePage without a throw", () => {
-  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "open-file", "inbox"]);
+test("R8 R15 SCREENS meets interface-shell R21: five registry screens, archive among them, served by interfacePage without a throw", () => {
+  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox"]);
   assert.ok(Object.isFrozen(SCREENS));
   assert.equal(checkScreens(SCREENS), true);
   assert.match(interfacePage(SCREENS), /<script nonce=/);
@@ -86,7 +93,7 @@ test("R8 (interface-shell R5) SCREEN_WORDS: frozen [key, en, protected] rows, ke
     assert.equal(r.length, 3);
     assert.equal(typeof r[1], "string");
     assert.equal(typeof r[2], "boolean");
-    assert.ok(/^screen\.(capture|held|open-file|inbox)\./.test(r[0]) || ["mark.gap.refused.means", "ai.label.untested"].includes(r[0]), r[0]);
+    assert.ok(/^screen\.(capture|held|archive|open-file|inbox)\./.test(r[0]) || ["mark.gap.refused.means", "ai.label.untested"].includes(r[0]), r[0]);
   }
   /* DEC-149: the re-held mark names the group's Civicsmith, never bare */
   assert.match(SCREEN_WORDS.find((r) => r[0] === "mark.gap.refused.means")[1], /your group's Civicsmith/);
@@ -110,7 +117,8 @@ test("R8 (interface-shell R12) an act is drawn only when the session may do it: 
 });
 
 test("R9 no act or read records which member opened which file: every request is an op naming no member, and the screens store nothing", async () => {
-  const FRAME = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
+  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band) */
+  const FRAME = new Set(["bootstrap", "whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
   const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
@@ -128,7 +136,7 @@ test("R9 no act or read records which member opened which file: every request is
   const h = await open(`/app/open-file/${SHA}`, { plane });
   await press(h, "releasescanhold", { reason: "r" });
   pages.push(h);
-  for (const path of [...PATHS.held, ...PATHS.inbox, ...PATHS.capture]) pages.push(await open(path, { plane, reachable: true }));
+  for (const path of [...PATHS.held, ...PATHS.archive, ...PATHS.inbox, ...PATHS.capture]) pages.push(await open(path, { plane, reachable: true }));
   for (const p of pages) {
     for (const r of p.requests) {
       if (FRAME.has(r.op)) continue;
@@ -138,8 +146,10 @@ test("R9 no act or read records which member opened which file: every request is
       if (["threatof", "originalstate", "verdictnotes", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold"].includes(r.op))
         assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
     }
-    /* the page's storage holds only the shell's own keys (the session handed over; its level, theme and width) */
-    assert.deepEqual([...p.store.keys()], ["bio-session"]);
-    for (const k of p.local.keys()) assert.match(k, /^cs-/, `local storage key ${k} is the shell's`);
+    /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
+       its level, theme and width; nothing of these screens */
+    assert.deepEqual([...p.store.keys()], [], "session storage holds nothing");
+    assert.ok(p.local.has("bio-session"), "the session record, in local storage");
+    for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/, `local storage key ${k} is the shell's`);
   }
 });

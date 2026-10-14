@@ -88,7 +88,7 @@ test("R2: due dates drawn with mark.due (overdue, near, later), and a hint with 
 test("R2: due dates are judged on the page's clock (cs.now(), K3002)", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], due: day(1) }] }) });
   assert.equal(main(p).querySelector(".cs-due").getAttribute("data-due"), "near");
-  await p.clock.tick(3 * 86400000);
+  await p.clock.tickActive(3 * 86400000); // an own device idle 30 minutes locks (interface-shell R33): the member keeps acting
   await p.click(main(p).querySelector('a[href="/app/queue/due"]'));
   assert.equal(main(p).querySelector(".cs-due").getAttribute("data-due"), "overdue");
 });
@@ -183,12 +183,12 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
 
 test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal beside its act; an item resolved or muted leaves the list on the re-read", async () => {
   const empty = await open("/app/queue", { queue: ok({ items: [] }) });
-  assert.match(text(empty), /Nothing is waiting on you\./);
+  assert.match(text(empty), /You are up to date\./);
   const loading = await open("/app/queue", { queue: { pending: true } });
   assert.ok(main(loading).querySelector('[data-state="loading"]'));
   const failed = await open("/app/queue/kind", { queue: (req) => (req.query.sort ? refused("QUEUE_SORT_UNKNOWN", "That sort is not one the queue knows.") : ok({ items: [] })) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));
-  assert.doesNotMatch(text(failed), /Nothing is waiting/);
+  assert.doesNotMatch(text(failed), /up to date/);
   let done = false;
   const p = await open("/app/queue", { queue: () => ok({ items: done ? ITEMS.slice(1) : ITEMS }), taskresolve: () => { done = true; return ok({ ok: true, id: "TSK-1", status: "resolved" }); } });
   await press(p, "taskresolve");
@@ -198,4 +198,52 @@ test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal besi
   assert.match(beside(r, b), /not yours|TASK_NOT_YOURS/);
   assert.ok(itemOf(r, "TSK-1"), "nothing on the screen changes but the refusal");
   assert.ok(CONTRIB);
+});
+
+test("R12 (DEC-201 (13)): with nothing waiting the queue says the member is up to date, one step from Home", async () => {
+  const p = await open("/app/queue", { queue: ok({ items: [] }) });
+  assert.match(text(p), /You are up to date\. When something needs your act, a reply arrives, or the record notices something you follow, it appears here, once\./);
+  assert.equal(main(p).querySelector('a[data-nav][href="/app"]').textContent, "Go to Home");
+  // Controls: a queue with items, and a failed read, say neither.
+  for (const plane of [PLANE, { queue: refused("STORE_DID_NOT_ANSWER", null, 502) }]) {
+    const q = await open("/app/queue", plane);
+    assert.doesNotMatch(text(q), /up to date/);
+    assert.equal(main(q).querySelector('a[data-nav][href="/app"]'), null);
+  }
+});
+
+// The unsent request (action-producers R25): its subject the action, homed under its project.
+const UNSENT = { id: "CONDITION::request-unsent::FIL-3", class: "CONDITION", kind: "request-unsent", case: PROJ("PROJ-1", "Pothole repairs"),
+  subject: { kind: "action", id: "ACT-9" }, summary: "You left a records request unsent", options: [], disposition: { available: false, instead: "queuemute" } };
+
+test("R13 (DEC-212): the unsent-request item draws \"Pick up where you left off\", \"Keep it for later\" and \"Drop the request, with a reason\"", async () => {
+  const p = await open("/app/queue", { queue: ok({ items: [UNSENT, ITEMS[0]] }) });
+  const row = itemOf(p, "CONDITION::request-unsent::FIL-3");
+  assert.deepEqual(opsOf(row), ["queuesnooze", "actionmove"], "its own acts only: no mute, no other door");
+  const pick = row.querySelector('a[data-nav][href="/app/request/ACT-9"]'); // the request screen, at its step (K3145)
+  assert.equal(pick.textContent, "Pick up where you left off");
+  assert.equal(row.querySelector('button[data-act="queuesnooze"]').closest("details").querySelector("summary").textContent, "Keep it for later");
+  assert.match(row.querySelector('button[data-act="actionmove"]').textContent, /^Drop the request, with a reason/);
+  // Control: actionmove is drawn on no other item.
+  assert.equal(itemOf(p, "TSK-1").querySelectorAll('button[data-act="actionmove"]').length, 0);
+  const other = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], options: [{ id: "actionmove" }] }] }) });
+  assert.ok(!ops(other).includes("actionmove"), "an item offering actionmove among its options does not draw it");
+});
+
+test("R13: \"Drop the request\" sends actionmove to abandoned with the member's reason; \"Keep it for later\" snoozes its case to the chosen day", async () => {
+  let gone = false;
+  const p = await open("/app/queue", { queue: () => ok({ items: gone ? [] : [UNSENT] }),
+    actionmove: () => { gone = true; return ok({ ok: true, target: "ACT-9", to: "abandoned" }); }, queuesnooze: ok({ ok: true }) });
+  const snooze = button(p, "queuesnooze");
+  const b = await press(p, "queuesnooze");
+  assert.equal(p.byOp("queuesnooze").length, 0, "control: no day, nothing sent");
+  assert.equal(beside(p, b), "Fill this in first.");
+  await press(p, "queuesnooze", { values: { [snooze.dataset.f + "-until"]: "2026-10-30" } });
+  assert.deepEqual(last(p, "queuesnooze").body, { case: "PROJ-1", until: "2026-10-30" });
+  await press(p, "actionmove", { reason: "We found the logs online" });
+  assert.deepEqual(last(p, "actionmove").body, { target: "ACT-9", to: "abandoned", reason: "We found the logs online" });
+  assert.equal(itemOf(p, "CONDITION::request-unsent::FIL-3"), undefined, "re-read after the act: the dropped request leaves the list");
+  const r = await open("/app/queue", { queue: ok({ items: [UNSENT] }), actionmove: refused("ACTION_NOT_FOUND", "No such action.") });
+  const c = await press(r, "actionmove", { reason: "x" });
+  assert.match(beside(r, c), /No such action|ACTION_NOT_FOUND/);
 });
