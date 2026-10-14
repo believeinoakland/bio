@@ -16,6 +16,10 @@ const PAGE = "docs/development/ux-substrate/screens/page.src.html";
 /* R7: which of the page's rules are product rules, and how they are rewritten. */
 const PHONE = '.mk-device[data-device="phone"] ';
 const PHONE_QUERY = "@media (max-width: 760px)";
+const PHONE_WEIGHT = ":root:root "; // K3295: the prefix's (0,2,0), matching every element, so each phone rule wins as in the design
+/* K3295: the design's unprefixed product classes that carried mk- components draw: the graph's edges (.e, .e-*) and
+   chips (.gchip), the areas' .cell, the front's states (.st and its .st-a…), and .row. */
+const PRODUCT = /^(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)$/;
 const MOCK_ONLY = ["mk-device", "mk-scaler", "mk-mockctl", "mk-osprompt", "vtabs", "vstage", "vhead", "vnav", "vdots", "vwhat", "vsay"];
 const PAGE_OWN = ["anat", "asfig", "viewer", "vlist"];
 const EXCLUDED = new Set([...MOCK_ONLY, ...PAGE_OWN]);
@@ -73,20 +77,21 @@ function selectors(prelude) {
 }
 
 const classes = (sel) => [...sel.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]);
-/* R7: a selector is carried when it names an mk- or cs- class and no mock-only or page class; `.mk-page` becomes
-   `.cs-frame`. Answers {phone, sel} or null. */
+/* R7: a selector is carried when it names an mk- or cs- class, or one of PRODUCT's, and no mock-only or page class;
+   `.mk-page` becomes `.cs-frame`, and a phone rule's prefix PHONE_WEIGHT. Answers {phone, sel} or null. */
 function carry(sel) {
   const phone = sel.startsWith(PHONE);
   const rest = phone ? sel.slice(PHONE.length).trim() : sel;
   const named = classes(rest);
-  if (!named.some((c) => /^(mk|cs)-/.test(c)) || named.some((c) => EXCLUDED.has(c))) return null;
-  return { phone, sel: rest.replace(/\.mk-page(?![\w-])/g, ".cs-frame") };
+  if (!named.some((c) => /^(mk|cs)-/.test(c) || PRODUCT.test(c)) || named.some((c) => EXCLUDED.has(c))) return null;
+  const out = rest.replace(/\.mk-page(?![\w-])/g, ".cs-frame");
+  return { phone, sel: phone ? PHONE_WEIGHT + out : out };
 }
 
 const decls = (block) => block.split("\n").map((l) => l.trim()).filter(Boolean).join(" ");
 
 /* R7: shell.css from the page's <style>: the product rules in source order, then every rule written under the phone
-   frame inside the 760 px query with that prefix removed. A rule whose selectors are not all carried is not carried; a
+   frame inside the 760 px query, its prefix PHONE_WEIGHT. A rule whose selectors are not all carried is not carried; a
    rule mixing phone and other selectors is carried as one rule of each. An @media block keeps its carried rules. */
 export function shellCss(html) {
   const general = [], phone = [];

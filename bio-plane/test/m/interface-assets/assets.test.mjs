@@ -315,11 +315,15 @@ test("R6 control: a module holding its faces as base64 literals in the global sc
 
 /* R7: shell.css is the generator's transform of the page's <style> at ASSETS_COMMIT. */
 const PHONE_QUERY = "@media (max-width: 760px)";
+const PHONE_WEIGHT = ":root:root "; // K3295: the design's phone prefix keeps its weight
+/* K3295: the unprefixed product classes R7 carries by name: .e, .e-*, .gchip, .cell, .st (with its .st-a…), .row. */
+const PRODUCT = /\.(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)(?![\w-])/;
 function r7Failures(css) {
   const out = [];
   for (const r of rules(css)) for (const s of sels(r)) {
     if (/\.(mk-device|mk-scaler|mk-mockctl|mk-osprompt|anat|asfig|viewer|vlist|mk-page)(?![\w-])/.test(s)) out.push(`${s}: names a mock-only or page class`);
-    if (!/\.(mk|cs)-[\w-]/.test(s)) out.push(`${s}: names no cs- or mk- class`);
+    if (!/\.(mk|cs)-[\w-]/.test(s) && !PRODUCT.test(s)) out.push(`${s}: names no cs- or mk- class nor one R7 lists`);
+    if (r.media === PHONE_QUERY && !s.startsWith(PHONE_WEIGHT)) out.push(`${s}: a phone rule without the prefix's weight`);
   }
   return out;
 }
@@ -331,12 +335,18 @@ test("R7: shell.css equals the generator's transform of page.src.html's <style> 
   const all = rules(e.body);
   for (const c of [".mk-door", ".mk-acts", ".mk-frontgrid", ".mk-avatar"])
     assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
-  assert.ok(all.some((r) => r.media === PHONE_QUERY && sels(r).includes(".cs-tabs")), ".cs-tabs inside the 760 px query");
+  assert.ok(all.some((r) => r.media === PHONE_QUERY && sels(r).includes(PHONE_WEIGHT + ".cs-tabs")), ".cs-tabs inside the 760 px query, weighted");
+  // K3295: the named product classes the carried components draw, each carried.
+  for (const c of [".e", ".e-pos", ".e-part", ".e-money", ".e-money-in", ".e-ment", ".e-lead", ".e-same", ".gchip rect", ".gchip.subject text", ".cell", ".cell h4", ".cell ul", ".st", ".cs-frame .row"])
+    assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
+  assert.ok(all.some((r) => !r.media && sels(r).includes("main[data-st=\"b\"] .st-b")), ".st's states carried");
+  // The weight keeps the design's cascade: the phone tab bar beats the frame's desktop hiding of it.
+  assert.ok(all.some((r) => !r.media && sels(r).includes(".cs-frame .cs-tabs")));
   assert.ok(all.some((r) => sels(r).some((s) => s.startsWith(".cs-frame"))), ".mk-page carried as .cs-frame");
   assert.deepEqual(r7Failures(e.body), []);
 });
 
-test("R7 control: the transform drops mock-only, page and unprefixed rules and rewrites the phone prefix and .mk-page; the scan refuses a stray rule", () => {
+test("R7 control: the transform drops mock-only, page and unlisted unprefixed rules, weights the phone prefix as :root:root and rewrites .mk-page; the scan refuses a stray rule", () => {
   const src = `<style>\n{{FACES}}\n{{CSS}}\n/* a comment { } */
 .doc { margin: 0; }
 .mk-door { cursor: pointer; } .mk-door b { font-size: 1px; }
@@ -356,7 +366,9 @@ test("R7 control: the transform drops mock-only, page and unprefixed rules and r
   assert.deepEqual(at(null), [".mk-door { cursor: pointer; }", ".mk-door b { font-size: 1px; }", ".cs-frame .cs-tabs { display: none; }",
     ".cs-frame.cs-shell { display: grid; }", '.mk-tl::before { content: ", ;"; }']);
   assert.deepEqual(at("@media (max-width: 560px)"), [".mk-facts { grid-template-columns: 1fr; }"]);
-  assert.deepEqual(at(PHONE_QUERY), [".cs-tabs { display: grid; }", ".cs-frame.cs-shell { grid-template-rows: auto; }"]);
+  assert.deepEqual(at(PHONE_QUERY), [":root:root .cs-tabs { display: grid; }", ":root:root .cs-frame.cs-shell { grid-template-rows: auto; }"]);
+  // K3295: a listed product class is carried, an unlisted unprefixed one is not.
+  assert.equal(rules(shellCss("<style>.e-money { stroke: red; } .cell h4 { margin: 0; } .seg { gap: 0; } .cellar { gap: 0; }</style>")).map((r) => r.sel).join("|"), ".e-money|.cell h4");
   assert.deepEqual(r7Failures(out), []);
   // A brace or comma inside a string never splits a rule or a selector list.
   assert.equal(shellCss('<style>.mk-q::after { content: "} {"; } .mk-q[title="a, b"] { gap: 0; }</style>').split("\n").slice(2).join("\n"),
@@ -364,5 +376,6 @@ test("R7 control: the transform drops mock-only, page and unprefixed rules and r
   assert.ok(r7Failures(".mk-device .mk-x { gap: 0; }").length > 0);
   assert.ok(r7Failures(".mk-scaler { gap: 0; }").length > 0);
   assert.ok(r7Failures(".anat .mk-x { gap: 0; }").length > 0);
-  assert.ok(r7Failures(".e-money { stroke: red; }").length > 0);
+  assert.ok(r7Failures(".seg { gap: 0; }").length > 0);
+  assert.ok(r7Failures(`${PHONE_QUERY} { .cs-tabs { display: grid; } }`).length > 0, "a phone rule that lost its weight");
 });
