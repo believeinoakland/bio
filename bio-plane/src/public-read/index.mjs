@@ -218,7 +218,7 @@ export const STAKE_NONE_SENTENCE = "the group has declared no stake: its adminis
 export const STAKE_UNDETERMINED_SENTENCE = "the group's declared stake could not be read, so it is undetermined, which "
   + "is not a statement that the group declared none";
 export const GROUP_FIELDS_CURRENT_SENTENCE = "the group's public identity and declared stake as they stand at this "
-  + "read, labelled current: they are not read from this edition's signed document or its case file, and a later "
+  + "read, labeled current: they are not read from this edition's signed document or its case file, and a later "
   + "declaration changes nothing published";
 
 export class PublicRead {
@@ -1215,7 +1215,7 @@ export class PublicRead {
              /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
              tensions_unread: disclosed.unread,
              captures: blocks.captures, sources: blocks.sources,
-             /* R26 (C:A-15): each calculation, its outputs labelled computed facts with their denominators; R27 (C11): the
+             /* R26 (C:A-15): each calculation, its outputs labeled computed facts with their denominators; R27 (C11): the
                 timeline, its two lanes apart. Both null where an order withholds the document they are read from. */
              calculations, timeline,
              method: six ? methodOf(signed.fm) : null, materials: six ? keyedMaterialsOf(signed.fm) : null,
@@ -1238,7 +1238,7 @@ export class PublicRead {
              edition_index: theCase ? editions.map((e) => ({ ...e, withdrawn: withdrawn.get(Number(e.edition)) ?? null }))
                                     : editions,
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
-             /* R34: the group's identity and declared stake as they stand now, labelled current; never read from or
+             /* R34: the group's identity and declared stake as they stand now, labeled current; never read from or
                 written into the signed document or the case file (R23). */
              group_fields: { ...this.groupFields(), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
@@ -1574,7 +1574,7 @@ export class PublicRead {
      count or share carries its denominator beside it inside the result, `calc-grammar` R8), lifted beside it, and a share
      whose row states no denominator answers `denominator: null` with the sentence that it is undetermined, never a share
      alone), its method version, its recompute status, the publisher's disclosure beside a differing or unbound one, and
-     every output labelled a computed fact. `[]` for a document without the block. */
+     every output labeled a computed fact. `[]` for a document without the block. */
   /* R23, R26: the document's `calculations:` rows as `case-grammar` reads them (its R18); `[]` without the block. */
   #calculationRows(fm) {
     return calculationsOf(fm).filter((r) => r && typeof r === "object");

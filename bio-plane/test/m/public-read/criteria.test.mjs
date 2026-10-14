@@ -88,7 +88,7 @@ test("R31 publishedCase answers criteria exactly as publication's R53 state froz
     [A, CLERK, "Standard · binds City Clerk", "Free to read"],
     [B, CLERK, "Benchmark · not binding on City Clerk", "Behind a paywall"],
     [A, BOARD, "Benchmark · not binding on Water Board", "Free to read"],
-  ], "member then leg order, each row labelled");
+  ], "member then leg order, each row labeled");
   /* a standard not freely readable: nothing of its text but the passages R72 holds */
   const paywalled = got.criteria.find((r) => r.standard === B);
   assert.deepEqual(paywalled.passages, [{ content: C4, text: "Turnout within 80 seconds." }]);
