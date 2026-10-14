@@ -102,3 +102,7 @@ B5–B7: merged tranche/T47 at 859511b6d3: 51 pass, 0 fail. Also 51/51 against j
 - Checks:
   - `format`: 0 failures.
   - With my paths entered in `modules.json` (temporarily, not committed): `architecture` 17 files, 0 failures; `coverage` 10 of 10, 0 failures; `ownership` 0 failures. On the committed `modules.json`, coverage and ownership fail only because my paths are not yet entered (K1043).
+
+## J7 · COMPLETE · re B8
+
+B8: tranche/T47 merged with no overlay: 53 pass, 0 fail. The paths now draw. request and action take their project step from the action's bundle.md. New tests cover R3 at the phone width (R50) and the path on every working screen. Checks are clean once my paths are in modules.json (still to enter).
