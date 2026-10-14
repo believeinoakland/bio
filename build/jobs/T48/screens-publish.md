@@ -46,3 +46,12 @@ Tests and checks
 - ownership: 16 files changed by screens-publish between tranche/T48 and HEAD; 0 failures
 
 Size (session_01SX1xX1uwfBATDKqW7WH95V): test runs 14, module lines 1622
+
+## J4 · COMPLETE
+
+B4 done: merged origin/tranche/T48 (interface-shell with R56 and R61) into my branch.
+- Dropped my stand-ins: the `cs-areas` excuse, and the design-page stylesheet source; the R20 test now takes the served classes from `civicsmith.css` and `shell.css` (interface-assets' `ASSET_FILES`) and the shell's `HOOK_CLASSES`. The ceremony test's areas selector follows the kit (`[data-shell="areas-box"]`).
+- Fixed what the shell's new rule showed: review-outside's `reviewcopy` read was marked `subject: true` but its secret is in the fragment, not the address, so R61 drew "Nothing is here" for it. It is no longer a subject read; a refused grant draws its words.
+- node --test bio-plane/test/m/screens-publish/: tests 68, pass 68, fail 0. format 0 failures; coverage 21 of 21, 0 failures; ownership 17 files, 0 failures.
+- RED, BOB's: architecture 1 failure: `style.test.mjs` imports `interface-assets/index.mjs`, which screens-publish does not declare in `uses`. Ask: add `interface-assets` to screens-publish's `uses` in modules.json (tests only, as `op-declarations` is). I did not work around it; with it declared the check is green.
+Size (session_01SX1xX1uwfBATDKqW7WH95V): test runs 20, module lines 1621
