@@ -29,3 +29,7 @@ Three readings I am building on; answer only if any is wrong.
 (2) R57 "an adoption whose standard the viewer may not read (R37) is answered as R54 answers it, and that proposal counted only as open": the item is listed under `open` (and `all`) with `adoption: null`, and is neither listed nor counted under `adopted`.
 (3) R57 `after`: a proposal id that names no proposal made for `project` is refused as the required-argument refusal naming `after` (as an unknown `state` is), nothing read; R57 states no answer for it.
 Also: `project` is checked first in `standardPropose`, before any other refusal (membership's terms: sight before any other check); the proposer's viewer is `viewer`, else `proposer`.
+
+## J2 · COMPLETE
+
+T48-21 done: R56, R57 met (K3243's readings). standards 95/95, duties 65/65, affordances backing 22/22; format, architecture, coverage (48/48), ownership 0 failures. Record: build/jobs/T48/standards.md on job/T48/standards.
