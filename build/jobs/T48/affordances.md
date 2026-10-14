@@ -43,3 +43,7 @@ Job complete; see the record's Completion section. Red here only on op-grades R3
 
 ## After B2 (K3297)
 Merged `tranche/T48` (op-grades in). Fixed in my tests: t34 (`groupdescriptiondraft` carried as mutating, R39's `RUNG_ABSENT` row), plane R19 list (`stepsource`, `stepsourcewithdraw` driven in t48-backing; `updateskip` named, backed at its owner's tests). Module run 258 tests: 3 red, all `planask`: op-grades' merged `t48.mjs` still holds it as an `ACTS` row (`MACHINE_REFUSALS`, no `NON_ACTS`), against BOB's ruling (not an `ACTS` row). Green once op-grades' CHANGE drops it: t33 R20 test, catalogue T45 test, t48 totality test. `actionreplyquoting` is an `ACTS` row here (R58) and passes.
+
+## J3 · REPORT
+
+B2 applied; merged tranche/T48. 3 tests red, all planask: op-grades t48.mjs still holds it as an ACTS row with MACHINE_CANNOT_PLAN and no NON_ACTS row, against your ruling. Needs an op-grades CHANGE; then they pass unchanged. Everything else green (actionreplyquoting passes as an ACTS row). Architecture edge to ai-accounts: see below.
