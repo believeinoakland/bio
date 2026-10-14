@@ -11,7 +11,6 @@ import { DatabaseSync } from "node:sqlite";
 import { store } from "./fixture.mjs";
 import { MACHINE_DRAFTS, wizardRegistration, irreversibleActs } from "../../../src/plane/wizards.mjs";
 import { caseCheckOf, caseCheckOps } from "../../../src/case-check/index.mjs";
-import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
@@ -72,8 +71,9 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   assert.deepEqual(wizardRegistration(), { screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
   assert.deepEqual(MACHINE_DRAFTS, drafts);
-  /* the irreversible acts are op-grades' grading, read whole (publish among them), never a copy of it */
-  assert.ok(graded.includes("publish"), graded.join());
+  /* the irreversible acts are op-grades' grading, read whole, never a copy of it: (T47; op-grades R37, K3147) `publish`
+     prepares and is re-graded, so the irreversible acts are the scheduled edition's two */
+  assert.deepEqual(graded, ["publishat", "publishatmove"], graded.join());
   assert.deepEqual(irreversibleActs(), graded);
   assert.deepEqual(irreversibleActs({ a: "irreversible", b: "reasoned", c: "irreversible" }), ["a", "c"], "follows the grading it is given");
   /* the registry's screens (K1869 (2)), each with at least the acts it carries (an owed act whose op is declared is

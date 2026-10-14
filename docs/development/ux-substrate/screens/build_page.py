@@ -19,7 +19,7 @@ summary = (f"<div class='cols2'><div class='cell'><h4>The screen registry</h4><p
   f"{k['declared']} acts the requirements already declare, {k['function']} named in the requirements whose act names the development process declares, "
   f"and {k['owed']} owed by your earlier rulings (who the group is, the website key, members' notes, languages and translations, asking for a check).</p></div>"
   f"<div class='cell'><h4>The wizard library</h4><p>{len(lib)} wizards, {sum(len(w['versions'][0]['steps']) for w in lib)} steps, {sum(w['required'] for w in lib)} required. "
-  f"Every step says what to do and why in at most 300 characters, names a real screen and act, and places only labelled drafts. None names a place, a law or a venue.</p></div></div>"
+  f"Every step says what to do and why in at most 300 characters, names a real screen and act, and places only labeled drafts. None names a place, a law or a venue.</p></div></div>"
   f"<div class='tw' style='margin-top:12px'><table class='tbl'><thead><tr><th>Wizard</th><th>Steps</th><th>Starts at</th><th>Journeys</th></tr></thead><tbody>{rows}</tbody></table></div>")
 js = '\n'.join(P(HERE, f) for f in ('mock-acts.js', 'mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js', 'mock-journeys.js'))
 page = P(HERE, 'page.src.html')

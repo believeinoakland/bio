@@ -45,20 +45,32 @@ function render(cs, view) {
     const org = k !== "person";
     return `<span class="cs-kind" data-kind="${org ? "organisation" : "person"}" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w(org ? S + "kind.organisation.means" : S + "kind.person.means"))}">${cs.w(org ? S + "kind.organisation" : S + "kind.person")}</span>`;
   };
-  const today = (r) => {
+  /* who they are today: the record's own data as plain text (posts, a member's note), else the screen's words */
+  const todayText = (r) => {
     const t = r.today || {};
     if (r.kind === "person") {
       const posts = (t.posts || []).map((p) => [p.title || (p.office && p.office.label) || "", p.body && p.body.label ? p.body.label : ""].filter(Boolean).join(", "));
-      return posts.length ? posts.join("; ") : cs.w(S + "today.none");
+      return posts.length ? posts.join("; ") : null;
     }
-    return t.note || t.kind || cs.w(S + "today.none");
+    /* never a record's machine note (K3177): an office, body or organisation seeded at setup from the group's place
+       carries setup's own sentence, naming profile ids and array indices; members read their own words for it */
+    const note = typeof t.note === "string" ? t.note.trim() : "";
+    return note && !/seeded at setup\.?$/.test(note) ? note : null;
+  };
+  const todayHtml = (r) => {
+    const text = todayText(r);
+    if (text !== null) return cs.esc(text);
+    const t = r.today || {};
+    if (r.kind !== "person" && typeof t.note === "string" && /seeded at setup\.?$/.test(t.note.trim())) return cs.w(S + "today.seeded");
+    const kinds = ["office", "body", "institution", "movement", "fund", "program"];
+    return r.kind !== "person" && kinds.includes(t.kind || r.kind) ? cs.w(S + "today.kind." + (t.kind || r.kind)) : cs.w(S + "today.none");
   };
   const counts = (r) => (r.questions || r.projects
     ? cs.w(S + "counts", { documents: String(r.documents || 0), questions: String(r.questions || 0), projects: String(r.projects || 0) })
     : cs.w(S + "counts.docsonly", { documents: String(r.documents || 0) }))
     + (r.newest_added ? " · " + cs.w(S + "newest", { date: cs.date(r.newest_added) }) : "");
   const line = (r) => cs.row(kindMark(r.kind),
-    `<b>${cs.ref("person", r.entity, r.name || r.entity, [today(r)])}</b> · ${cs.esc(today(r))}<span class="meta">${counts(r)}</span>`,
+    `<b>${cs.ref("person", r.entity, r.name || r.entity, [todayText(r)])}</b> · ${todayHtml(r)}<span class="meta">${counts(r)}</span>`,
     cs.act("explore", { label: "act.explore.label.people", data: { entity: r.entity } }));
   const typed = !!(f.q || f.office || (f.namedIn && f.namedIn !== "any") || f.since || (f.show && f.show !== "both"));
   if (d && d.state === "empty") {
@@ -148,6 +160,13 @@ export const PEOPLE_WORDS = [
   row(S + "kind.organisation", "Organisation"),
   row(S + "kind.organisation.means", "an organisation or public body the record follows: its page holds what the record holds on it and who holds its offices"),
   row(S + "today.none", "no current office recorded"),
+  row(S + "today.seeded", "Added at setup from your group's place"),
+  row(S + "today.kind.office", "An office"),
+  row(S + "today.kind.body", "A public body"),
+  row(S + "today.kind.institution", "An organisation"),
+  row(S + "today.kind.movement", "A movement or campaign"),
+  row(S + "today.kind.fund", "A fund"),
+  row(S + "today.kind.program", "A programme"),
   row(S + "counts", "named in {documents} documents, {questions} questions and {projects} projects"),
   row(S + "counts.docsonly", "named in {documents} documents, in no question or project yet"),
   row(S + "newest", "newest added {date}"),

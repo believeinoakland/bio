@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 89,
   "date": 14,
-  "queue": 47,
+  "queue": 50,
   "transcribe": 19,
   "capture": 1,
   "document": 5,
@@ -22,7 +22,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 156,
+  "refusal": 157,
   "signing": 16,
   "case": 11,
   "docket": 2,
@@ -53,11 +53,11 @@
   "tab": 2,
   "level": 2,
   "screen": 131,
-  "act": 610,
+  "act": 614,
   "column": 33,
-  "wizard": 306,
-  "total": 1788,
-  "protected": 651
+  "wizard": 313,
+  "total": 1803,
+  "protected": 652
  },
  "words": [
   {
@@ -386,7 +386,7 @@
   },
   {
    "key": "mark.hunch.means",
-   "en": "Hunch: a member's suspicion, labelled as one. Never evidence, and it never moves a finding.",
+   "en": "Hunch: a member's suspicion, labeled as one. Never evidence, and it never moves a finding.",
    "protected": true,
    "source": "page.src.html marks"
   },
@@ -1237,14 +1237,14 @@
    "en": "Found while looking into {question}: {what}",
    "protected": false,
    "source": "DEC-189",
-   "note": "FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member"
+   "note": "FINDING, Hint · machine work; labeled with ai.label.explored or ai.label.explored.member"
   },
   {
    "key": "queue.question-find.detail",
    "en": "The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.",
    "protected": false,
    "source": "DEC-189",
-   "note": "FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member"
+   "note": "FINDING, Hint · machine work; labeled with ai.label.explored or ai.label.explored.member"
   },
   {
    "key": "queue.step-later-found.summary",
@@ -1371,6 +1371,26 @@
    "protected": false,
    "source": "DEC-189",
    "note": "FINDING, to each reviewer who is a member"
+  },
+  {
+   "key": "queue.request-unsent.summary",
+   "en": "You left a request unsent: {what}",
+   "protected": false,
+   "source": "DEC-212",
+   "note": "to the member who approved it"
+  },
+  {
+   "key": "queue.request-unsent.summary.others",
+   "en": "A request was left unsent: {what}",
+   "protected": false,
+   "source": "DEC-212",
+   "note": "to every other member who can see the project"
+  },
+  {
+   "key": "queue.request-unsent.detail",
+   "en": "Approved on {date}, not yet sent: nothing has gone to the office.",
+   "protected": false,
+   "source": "DEC-212"
   },
   {
    "key": "transcribe.refused.notdeployed",
@@ -1620,7 +1640,7 @@
   },
   {
    "key": "connection.kind.lead.means",
-   "en": "a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed grey line.",
+   "en": "a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed gray line.",
    "protected": true,
    "source": "mock-screens.js KINDS"
   },
@@ -1638,7 +1658,7 @@
   },
   {
    "key": "connection.thing.org",
-   "en": "an organisation",
+   "en": "an organization",
    "protected": false,
    "source": "mock-screens.js NODE_KIND"
   },
@@ -1680,7 +1700,7 @@
   },
   {
    "key": "connection.graph.trail.means",
-   "en": "where you started and each thing you made the centre since. Click one to go back to it.",
+   "en": "where you started and each thing you made the center since. Click one to go back to it.",
    "protected": false,
    "source": "mock-screens.js GRAPH_WORDS"
   },
@@ -1691,14 +1711,14 @@
    "source": "mock-screens.js GRAPH_WORDS"
   },
   {
-   "key": "connection.graph.centre.means",
-   "en": "the centre: everything drawn is joined to it, directly or one step further out.",
+   "key": "connection.graph.center.means",
+   "en": "the center: everything drawn is joined to it, directly or one step further out.",
    "protected": false,
    "source": "mock-screens.js GRAPH_WORDS"
   },
   {
    "key": "connection.graph.click",
-   "en": "Click to make it the centre and follow its connections.",
+   "en": "Click to make it the center and follow its connections.",
    "protected": false,
    "source": "mock-screens.js GRAPH_WORDS"
   },
@@ -2136,7 +2156,7 @@
   },
   {
    "key": "refusal.GUIDE_KIND_UNKNOWN",
-   "en": "A guide is for one kind of action or document your group's places recognise, and this names another. Nothing was written.",
+   "en": "A guide is for one kind of action or document your group's places recognize, and this names another. Nothing was written.",
    "protected": false,
    "source": "DEC-194"
   },
@@ -2835,13 +2855,13 @@
   },
   {
    "key": "refusal.MACHINE_CANNOT_SET_PARTNERS",
-   "en": "Only a member names the organisations acting with your group. Nothing was written.",
+   "en": "Only a member names the organizations acting with your group. Nothing was written.",
    "protected": true,
    "source": "DEC-194"
   },
   {
    "key": "refusal.PARTNERS_REFUSED",
-   "en": "Each partner is a named organisation, listed once. Nothing was written.",
+   "en": "Each partner is a named organization, listed once. Nothing was written.",
    "protected": false,
    "source": "DEC-194"
   },
@@ -3302,7 +3322,7 @@
   },
   {
    "key": "refusal.NOT_A_PARTNER",
-   "en": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was written.",
+   "en": "That organization isn't one of this action's partners. Add it as a partner first. Nothing was written.",
    "protected": false,
    "source": "DEC-194"
   },
@@ -3771,11 +3791,11 @@
    "en": "A first draft by the assistant, from the plan's items. Each line cites what it rests on; edit it, then save it as yours.",
    "protected": true,
    "source": "DEC-198",
-   "note": "machine work, labelled until saved (statusReportSave's from)"
+   "note": "machine work, labeled until saved (statusReportSave's from)"
   },
   {
    "key": "ai.run.ownsignin",
-   "en": "This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.",
+   "en": "This run works on your own Claude sign-in, for you alone. What it produces is labeled machine work and changes nothing until a member acts on it.",
    "protected": true,
    "source": "DEC-198",
    "note": "shown before \"Work on this\" starts on a member's own sign-in"
@@ -4109,7 +4129,7 @@
   },
   {
    "key": "ref.here.machine",
-   "en": "What the assistant does with it is labelled machine work; only a member's act changes the record.",
+   "en": "What the assistant does with it is labeled machine work; only a member's act changes the record.",
    "protected": false,
    "source": "DEC-198",
    "note": "a card's Here: line"
@@ -4257,6 +4277,13 @@
    "note": "C-140.43; a safe view is installed but its queue could not be read"
   },
   {
+   "key": "refusal.SIGNINTRACE_NOT_TEST",
+   "en": "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-69.7; BOB's B174 (3)"
+  },
+  {
    "key": "refusal.SETTING_INVALID",
    "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
    "protected": false,
@@ -4293,7 +4320,7 @@
   },
   {
    "key": "refusal.SIGN_IN_PAUSED",
-   "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+   "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at {time}.",
    "protected": false,
    "source": "DEC-200",
    "note": "credentials R38; {time} the local time the pause ends"
@@ -4425,7 +4452,7 @@
    "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
    "protected": true,
    "source": "DEC-200",
-   "note": "device cancelled or failed"
+   "note": "device canceled or failed"
   },
   {
    "key": "signing.ceremony.signedat",
@@ -4477,7 +4504,7 @@
   },
   {
    "key": "rail.home.holds",
-   "en": "Home: what your group is working on and what is waiting on you.",
+   "en": "Home: what needs you, what needs the group, and every area at a glance.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
   },
@@ -4537,7 +4564,7 @@
   },
   {
    "key": "rail.people.holds",
-   "en": "People: the people and organisations the record follows. Your own group's members are under Settings.",
+   "en": "People: the people and organizations the record follows. Your own group's members are under Settings.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
   },
@@ -4549,7 +4576,7 @@
   },
   {
    "key": "rail.settings.holds",
-   "en": "Settings: your account, your group's members, the assistant, translations and wizards.",
+   "en": "Settings: your account, your group's members, the assistant, translations, wizards and updates.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
   },
@@ -4598,7 +4625,7 @@
   },
   {
    "key": "guide.draft",
-   "en": "This step places a labelled draft in the field. It becomes yours only when you keep or edit it.",
+   "en": "This step places a labeled draft in the field. It becomes yours only when you keep or edit it.",
    "protected": false,
    "source": "mock-shell.js wizardGuide"
   },
@@ -4646,7 +4673,7 @@
   },
   {
    "key": "screen.update.purpose",
-   "en": "Updates your group's Civicsmith to a new signed release. Records, members and settings are kept.",
+   "en": "Updates your group's Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4742,7 +4769,7 @@
   },
   {
    "key": "screen.home.purpose",
-   "en": "Your group's home: what it is working on and what is waiting on you. Start here each day.",
+   "en": "Your group's home, the nerve center: what needs you, what needs the group, every area at a glance, the projects and what changed since you last looked. Start here each day.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4843,6 +4870,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.updates.name",
+   "en": "Updates",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.updates.purpose",
+   "en": "Administrators only: the release your group's Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.ties.name",
    "en": "Your ties",
    "protected": false,
@@ -4850,7 +4889,7 @@
   },
   {
    "key": "screen.ties.purpose",
-   "en": "Your own ties to people or organisations the group may look into. Only you and the administrators see this list.",
+   "en": "Your own ties to people or organizations the group may look into. Only you and the administrators see this list.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4899,18 +4938,6 @@
   {
    "key": "screen.projects.purpose",
    "en": "Every project you can see: its stage, who works on it, how busy it is, and when it last changed.",
-   "protected": false,
-   "source": "mock-refs.js SCREEN_HELP"
-  },
-  {
-   "key": "screen.dash-home.name",
-   "en": "Home as a dashboard (three arrangements)",
-   "protected": false,
-   "source": "registry.json"
-  },
-  {
-   "key": "screen.dash-home.purpose",
-   "en": "Home drawn three ways for your choice (S20): what needs you first, a card per area, or an area under a strip.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -5108,7 +5135,7 @@
   },
   {
    "key": "screen.people.purpose",
-   "en": "The people and organisations your group's record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.",
+   "en": "The people and organizations your group's record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -5407,12 +5434,6 @@
    "source": "registry.json"
   },
   {
-   "key": "act.selftest.label.install",
-   "en": "Run the checks again",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
    "key": "act.bootstrap.label.update",
    "en": "Continue to Cloudflare to update",
    "protected": true,
@@ -5577,6 +5598,36 @@
   {
    "key": "act.joinlinkinvite.label.join",
    "en": "Join through the group's join link",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.release.label.home",
+   "en": "Vouch for photos",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adoptversion.label.home",
+   "en": "Adopt the newer version",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.keepversion.label.home",
+   "en": "Keep the version you cited",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.home",
+   "en": "Approve the text",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.taskresolve.label.home",
+   "en": "Act on an item",
    "protected": true,
    "source": "registry.json"
   },
@@ -5887,6 +5938,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_updatestart.label.updates",
+   "en": "Update",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updatelater.label.updates",
+   "en": "Not now",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updateskip.label.updates",
+   "en": "Skip this version, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.declaretie.label.ties",
    "en": "Add a tie",
    "protected": true,
@@ -6001,48 +6070,6 @@
    "source": "registry.json"
   },
   {
-   "key": "act.release.label.dash-home",
-   "en": "Vouch for photos",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.adoptversion.label.dash-home",
-   "en": "Adopt the newer version",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.keepversion.label.dash-home",
-   "en": "Keep the version you cited",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.filingapprove.label.dash-home",
-   "en": "Approve the text",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.taskresolve.label.dash-home",
-   "en": "Act on an item",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.promote.label.dash-home",
-   "en": "Open a question",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.startfrom.label.dash-home",
-   "en": "Start from…",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
    "key": "act.filingapprove.label.dash-action",
    "en": "Approve the text",
    "protected": true,
@@ -6093,6 +6120,12 @@
   {
    "key": "act.taskforward.label.queue",
    "en": "Forward to a member",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updatelater.label.queue",
+   "en": "Not now",
    "protected": true,
    "source": "registry.json"
   },
@@ -6638,7 +6671,7 @@
   },
   {
    "key": "act.search.label.people",
-   "en": "Search people and organisations",
+   "en": "Search people and organizations",
    "protected": true,
    "source": "registry.json"
   },
@@ -6770,7 +6803,7 @@
   },
   {
    "key": "act.authoritychain.label.money",
-   "en": "What authorised it",
+   "en": "What authorized it",
    "protected": true,
    "source": "registry.json"
   },
@@ -7435,8 +7468,8 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.selftest.does",
-   "en": "Runs Civicsmith's own checks on what was just installed, so you know it works before anyone joins.",
+   "key": "act.peopledirectory.does",
+   "en": "Lists the people and organizations your group's record follows: each with its role or office, how many documents, questions and projects name it and when the newest was added, those your projects touch first. A read: it changes nothing.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7472,7 +7505,7 @@
   },
   {
    "key": "act.entitycreate.does",
-   "en": "Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.",
+   "en": "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7513,8 +7546,26 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.owed_updatestart.does",
+   "en": "Opens the installer's update page for your group, set to the release you chose and no other. Nothing changes until whoever holds the group's Cloudflare account allows it there.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_updatelater.does",
+   "en": "Puts this release aside for every administrator. It comes back later, the next day for a security fix, and at once when a newer release replaces it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_updateskip.does",
+   "en": "Says your group will not install this release, with your reason kept on the record for every administrator to see. The next release is offered as usual.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.securitytooladd.does",
-   "en": "Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.",
+   "en": "Adds a security tool your organization uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7532,7 +7583,7 @@
   },
   {
    "key": "act.groupdescriptiondraft.does",
-   "en": "Asks the assistant for a draft of your group's description, labelled as its draft. Nothing is saved until you keep it.",
+   "en": "Asks the assistant for a draft of your group's description, labeled as its draft. Nothing is saved until you keep it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7748,13 +7799,13 @@
   },
   {
    "key": "act.writinghelp.does",
-   "en": "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.",
+   "en": "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.translationdraft.does",
-   "en": "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.",
+   "en": "Asks the assistant to draft translations of Civicsmith's words, labeled as drafts for a speaker to check.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7916,7 +7967,7 @@
   },
   {
    "key": "act.testify.does",
-   "en": "Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.",
+   "en": "Records what you saw or heard yourself as testimony: grade D, labeled as yours, never changed afterwards.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8192,13 +8243,13 @@
   },
   {
    "key": "act.infractiondraft.does",
-   "en": "Asks the assistant to draft a documentation of what happened from the record, labelled as its draft until you make it yours.",
+   "en": "Asks the assistant to draft a documentation of what happened from the record, labeled as its draft until you make it yours.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.bearingdraft.does",
-   "en": "Asks the assistant to propose how the reply bears on each claim, labelled as its proposal until you lay it out yourself.",
+   "en": "Asks the assistant to propose how the reply bears on each claim, labeled as its proposal until you lay it out yourself.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8270,7 +8321,7 @@
   },
   {
    "key": "act.actionbearingpropose.does",
-   "en": "Proposes a claim-by-claim layout of the reply, labelled as a proposal and kept apart until a member lays it out.",
+   "en": "Proposes a claim-by-claim layout of the reply, labeled as a proposal and kept apart until a member lays it out.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8294,7 +8345,7 @@
   },
   {
    "key": "act.jointsignatory.does",
-   "en": "Records that a partner organisation approved the same text in its own copy. Their copy must match word for word.",
+   "en": "Records that a partner organization approved the same text in its own copy. Their copy must match word for word.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8312,13 +8363,13 @@
   },
   {
    "key": "act.statusreportassist.does",
-   "en": "Asks the assistant for a first draft of this status report from the plan's items. The draft is labelled machine work, each line cites what it rests on, and nothing is saved until you save it as yours.",
+   "en": "Asks the assistant for a first draft of this status report from the plan's items. The draft is labeled machine work, each line cites what it rests on, and nothing is saved until you save it as yours.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.airundispatch.does",
-   "en": "Starts a run on your own Claude sign-in, for you alone: checking this, or planning how to look into it. What it produces is labelled machine work and changes nothing until a member acts on it.",
+   "en": "Starts a run on your own Claude sign-in, for you alone: checking this, or planning how to look into it. What it produces is labeled machine work and changes nothing until a member acts on it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8384,13 +8435,13 @@
   },
   {
    "key": "act.pagetranscribe.does",
-   "en": "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
+   "en": "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labeled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.transcribe.does",
-   "en": "Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.",
+   "en": "Types the words of a page yourself, from its image. Your typing is labeled as yours, and a second member can check it against the page.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8420,7 +8471,7 @@
   },
   {
    "key": "act.obscuremark.does",
-   "en": "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.",
+   "en": "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labeled. The original stays inside the group.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8528,7 +8579,7 @@
   },
   {
    "key": "act.hypothesishold.does",
-   "en": "Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.",
+   "en": "Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8558,19 +8609,19 @@
   },
   {
    "key": "act.airunopen.does",
-   "en": "Asks the assistant to work on what this screen shows. Its results are labelled as machine work and become the group's only when a member accepts them.",
+   "en": "Asks the assistant to work on what this screen shows. Its results are labeled as machine work and become the group's only when a member accepts them.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.suggest.does",
-   "en": "Asks the assistant for suggestions here. Each is labelled as its suggestion, for you to adopt or ignore.",
+   "en": "Asks the assistant for suggestions here. Each is labeled as its suggestion, for you to adopt or ignore.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.airunclose.does",
-   "en": "Stops the assistant's run. What it produced so far stays labelled as its draft.",
+   "en": "Stops the assistant's run. What it produced so far stays labeled as its draft.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8588,7 +8639,7 @@
   },
   {
    "key": "act.followregister.does",
-   "en": "Follows a public register (licences, filings) and tells you when an entry for this changes.",
+   "en": "Follows a public register (licenses, filings) and tells you when an entry for this changes.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8648,7 +8699,7 @@
   },
   {
    "key": "act.authoritychain.does",
-   "en": "Shows what authorised this money: the vote, contract or rule, each cited.",
+   "en": "Shows what authorized this money: the vote, contract or rule, each cited.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8690,7 +8741,7 @@
   },
   {
    "key": "act.explore.does",
-   "en": "Looks for chains of links between two people or organisations, each step cited and graded.",
+   "en": "Looks for chains of links between two people or organizations, each step cited and graded.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8768,7 +8819,7 @@
   },
   {
    "key": "act.optionpropose.does",
-   "en": "Asks the assistant for options. They wait in the tray, labelled, until a member adopts one.",
+   "en": "Asks the assistant for options. They wait in the tray, labeled, until a member adopts one.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8816,7 +8867,7 @@
   },
   {
    "key": "act.communicationprepare.does",
-   "en": "Prepares the text that will be sent, from the group's template or a labelled draft.",
+   "en": "Prepares the text that will be sent, from the group's template or a labeled draft.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8912,7 +8963,7 @@
   },
   {
    "key": "act.whatchangedpropose.does",
-   "en": "Asks the assistant to draft \"what changed\" since the last edition, labelled as its draft.",
+   "en": "Asks the assistant to draft \"what changed\" since the last edition, labeled as its draft.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -9290,13 +9341,13 @@
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step3.what",
-   "en": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.",
+   "en": "Your group's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step3.why",
-   "en": "The test proves it works before anyone relies on it.",
+   "en": "The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later.",
    "protected": false,
    "source": "library.json"
   },
@@ -10095,6 +10146,48 @@
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step4.why",
    "en": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.name",
+   "en": "Update your group's Civicsmith",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step1.what",
+   "en": "Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step1.why",
+   "en": "The notes are signed with the release itself, so what you read is what Civicsmith published.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step2.what",
+   "en": "Choose Update if you hold your group's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step2.why",
+   "en": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your group's Civicsmith cannot rewrite itself.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step3.what",
+   "en": "On the installer's page, check the release running and the release chosen, then continue to Cloudflare and allow the update.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step3.why",
+   "en": "If a step stops, your group's Civicsmith keeps running as it was; the stop says what to do.",
    "protected": false,
    "source": "library.json"
   },
@@ -11048,7 +11141,7 @@
   },
   {
    "key": "wizard.WIZ-a8c349d7d71b6bb0.step4.what",
-   "en": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.",
+   "en": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.",
    "protected": false,
    "source": "library.json"
   },

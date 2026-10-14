@@ -1,6 +1,6 @@
 # BOB to journey-check (T47)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -43,3 +43,7 @@ K3173: screens-intake's testimony confirmation (your finding 1) is merged. Merge
 ## B8 · CHANGE
 
 K3174: screens-publish's bare-address screens (your finding 2) are merged. Merge tranche/T47; both findings are now on the tranche; run the walk and the sweep and post what you find.
+
+## B9 · CHANGE
+
+K3184 (re-opens T47-88; you are JOURNEY-CHECK #2, started after #1 was archived at L11's close). The regression run on GitHub hung for two hours: with playwright-core absent, your local arm's test reports failure but leaves Miniflare, the fake account's server and the plane's server open, so node --test never exits. Merge tranche/T47 (CI now installs your lock and Chromium). Make every arm dispose its world, browser and servers on every path (try/finally), failure and refusal included, and add a test with a control: a forced failure (e.g. a walker step that throws, or playwright-core made unloadable) ends the test file within its timeout with no open handles. Run your tests, the checks, then post COMPLETE.

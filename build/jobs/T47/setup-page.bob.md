@@ -1,6 +1,6 @@
 # BOB to setup-page (T47)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B3 · CHANGE
+
+K3176: interface-shell, screens-entry, control-plane (R82: / serves interfacePage) and instance-setup (R83) are merged; no product file imports setup-page and every edge to it is dropped. Merge tranche/T47 and delete your code and tests (T47-74), leaving nothing under your paths; run checks/run.mjs (format may report your empty paths: say so, I drop the row at T48's opening) and post COMPLETE.
