@@ -1590,8 +1590,9 @@ export class Extraction {
         detail: `this record holds no reading of that capture that you can see, so there are no pages for the AI `
               + `to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you `
               + `are not part of answers exactly as one never filed.` } };
-    /* `credentials.aiKeptAway` (its R57), the one site of both codes, relayed as given; it fails closed itself, and a
-       transcriber that throws here fails the request, nothing read or sent (no code is minted here for it). */
+    /* `ai-accounts.aiKeptAway` (its R7, as its R22 and R34 amend it), the one site of both codes, relayed as given; it
+       fails closed itself, and a transcriber that throws here fails the request, nothing read or sent (no code is
+       minted here for it). */
     const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
     if (away) return { status: 403, body: withRefusedSays(away) };
     /* END DEC-49 REGION is-transcribe */
