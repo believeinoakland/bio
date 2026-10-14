@@ -107,34 +107,11 @@ test("R19 the module holds no copy of a words.json word, and no held text is spe
    stand-in that draws nothing leaves only this module's own */
 function noPanel() { return ""; }
 const OWN_ONLY = SCREENS.map((s) => (s.id === "projectai" ? { ...s, parts: { ...s.parts, aiPanel: noPanel } } : s));
-const defined = () => {
-  const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
-  /* the served stylesheets' sources: the visual language, and the design page's own `<style>` (what `shell.css` carries,
-     interface-assets R7), and the shell's own STYLE in the page */
-  const css = readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8")
-    + (page.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [, ""])[1]
-    + (interfacePage(SCREENS).match(/<style>([\s\S]*?)<\/style>/) || [, ""])[1];
-  return new Set([...css.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
-};
-const classesIn = (el) => el.querySelectorAll("[class]").flatMap((e) => String(e.getAttribute("class")).split(/\s+/).filter(Boolean));
 
-test("R20 every class the screens draw is one a served stylesheet defines, over full fixtures and the dock with a run", async () => {
-  const known = defined();
-  const drawn = new Set();
-  const AI = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }),
-    projectaccountstate: ok({ ok: true, held: true, kind: "apikey", on: true, set_at: "2026-10-05T09:00:00Z", by: "mai", serving: "project" }),
-    projectkeynotice: ok({ ok: true, due: true, text: "The notice." }), projectaikeepawaystate: ok({ ok: true, on: true, set_by: "member:mai", set_at: "2026-10-05T09:00:00Z", reason: "Sensitive" }),
-    accountuses: ok({ owner: "project:" + P, held: true, uses: { ask: true } }), ailimits: ok({ ok: true, limits: [], history: [] }), aiusage: ok({ ok: true, uses: [] }), accounthistory: ok({ ok: true, changes: [] }) };
-  for (const [path, extra] of [["/app/project/" + P, {}], ["/app/question/" + Q, {}], ["/app/document/" + D, {}], ["/app/projectai/" + P, AI]]) {
-    const p = await open(path, { plane: extra, boot: { screens: OWN_ONLY } });
-    for (const c of classesIn(main(p))) drawn.add(c);
-  }
-  const p = await dock(Q, { accountreference: ok({ held: true }), airuns: ok({ ok: true, runs: [{ id: RUN, status: "running", principal: { plane: "member:mai" } }] }),
-    airun: ok({ found: true, session: { id: RUN, status: "running", ticks: 2, untested: { kind: "untested" } } }),
-    airunlog: ok({ found: true, entries: [{ says: "Found the policy." }] }) });
-  for (const c of classesIn(panel(p))) drawn.add(c);
-  assert.ok(drawn.has("cs-machinework") && drawn.has("mk-sub") && drawn.has("rec"), "the dock's production and the screens' sentences are among them");
-  assert.deepEqual([...drawn].filter((c) => !known.has(c)).sort(), [], "every class is defined");
+test("R20 the module's real screens compose under interface-shell R56: every class they draw is one a served stylesheet defines", () => {
+  assert.equal(typeof interfacePage(OWN_ONLY), "string");
+  const stray = SCREENS.map((s) => (s.id === "question" ? { ...s, render: function render() { return `<p class="cs-nonesuch">x</p>`; } } : s));
+  assert.throws(() => interfacePage(stray), /question.*cs-nonesuch/, "control: an undefined class is refused");
 });
 
 test("R20 every labelled field is drawn with cs.field: no screen draws cs-form or a bare label", async () => {
