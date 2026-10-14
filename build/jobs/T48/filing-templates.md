@@ -23,6 +23,6 @@
 **Tests and checks run:**
 - `node --test bio-plane/test/m/filing-templates/`: tests 79, pass 79, fail 0.
 - Users of my services: filings 107 (1 inherited red), wizard-scripts 89/89, affordances 250 (4 inherited), action-producers 53/53, answer-envelope 19 (2 inherited), control-plane 257 (2 inherited), plane 233 (1 inherited).
-- `format`: 168 modules, 167 requirements files; 0 failures. `architecture` (filing-templates): 16 product files, 47 relative imports; 0 failures. `coverage`: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T48`: run after the commit, below.
+- `format`: 168 modules, 167 requirements files; 0 failures. `architecture` (filing-templates): 16 product files, 47 relative imports; 0 failures. `coverage`: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T48`: 6 files changed by filing-templates; 0 failures. `node checks/run.mjs` over the product: format 0 failures, architecture 0 failures for my files, channels 0 failures; coverage reports 28 failures, all in other modules (none in filing-templates: 33 of 33).
 
 Size (session_01XD5udRkvVGzMadrPiA7oha): test runs 9, module lines 1919
