@@ -1,4 +1,4 @@
-/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13). `dispatch(req, store)` is the one frame every Durable Object
+/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13–R15). `dispatch(req, store)` is the one frame every Durable Object
    request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R2), a purge's hold check (R4), the `{ok: true, result}` envelope, and the one catch (R6). Moved from
@@ -84,6 +84,8 @@ export const PROJECT_NAMING_READS = Object.freeze({
   matters: ["plan"], plantimeline: ["plan"], planreviewopen: ["plan"], planreviews: ["plan"], prepitems: ["plan"],
   plancomments: ["plan"], whereitstands: ["plan"], statusreportdraft: ["plan"], statusreports: ["plan"],
   matterpromiseduties: ["plan"],
+  /* R14 (T47; N970): plan-work's status-report items for the assistant name a plan, held as `statusreportdraft` is. */
+  statusreportassist: ["plan"],
   /* K2900: case-account's checks of a member's own text name her project (the query's, else the body's; plane's route). */
   advocacychecks: ["project"],
 });
@@ -168,6 +170,11 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
     + "(case-check R2)",
   ruleoffer: "`rule` is a GROUP RULE's id, never a bundle id (local-facts R13)",
   grouprules: "`section` is a profile's SECTION name, never a bundle id (local-facts R12)",
+  /* R14 (T47; N970): a project's questions answer a project the viewer does not see at FULL as an empty page, never
+     refused, as `projectholds` is (R3); the project list names no project. */
+  projectquestions: "`project` names a PROJECT, and one the viewer does not see at FULL is answered an empty page "
+    + "(basis-versions R50), never refused, so no existence answer is given for it",
+  projectlist: "names nothing: `limit` is a count, and it lists the projects the viewer sees at FULL (project-roster R26)",
 });
 
 /* R2 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
@@ -414,6 +421,16 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
        subscription fact, the member the stamped `by`. */
     aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
     subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q("by") }),
+    /* R15 (T47; K3143; admission R25, credentials R71 (2)): store-internal (op-declarations R6), the admission gate's
+       question whether an act asking the password again may run: `due` is `reauthDue`'s own answer, its `REAUTH_DUE`
+       refusal for the gate to relay, or null while the window is open (admission R25 reads null as open). The token is
+       the session header's, handed on as `session` (R9). A token naming no session answers `{due: false}`: the gate's
+       own session read refuses it. The session is read as no activity (`background`), so asking never keeps one alive. */
+    reauthdue: () => {
+      const C = credentialsOf(ctx), token = q("session");
+      if (!C.session(token, { background: true })) return { due: false };
+      return { due: C.reauthDue({ token }) };
+    },
     /* R11 (K1685; agent-worker R54; T41: K2500): the ask's own calls, each its owner's, the member the stamped viewer:
        before any model call, the account that serves the ask and its limit (answers R30's `askAccount`, kind `ask`: its
        refusal as given, `{ok: true}` when an account serves under its limits); each call's use counted (ai-use R1); and
