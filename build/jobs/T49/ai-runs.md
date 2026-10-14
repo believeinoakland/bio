@@ -30,3 +30,7 @@
 - `control-plane` stamps the bare id for these three verbs for a session (`control-plane/index.mjs`:2450), so the `planask` path through the door depends on `planAsk`'s `member:<id>` only for the open; no change owed there.
 
 Size (session_01BWtpcB4nYGzr7xN3cV6hsz): test runs 9, module lines 3677
+
+## J1 · COMPLETE
+
+ai-runs T49-8 complete on job/T49/ai-runs. R81 met: #aiRunProjectGate asks membership.participation with the bare member id for member:<id>, member:<id>/<tokenId> and <id> alike; a machine actor (class:/token:) is judged as before, an empty actor passes unapplied. M-T49-8 measured first: planAsk's actor is member:<id>, project_participants holds the bare id (record). R80 withdrawn: nothing built. N1073: rows.test.mjs reads run-rules' table (it found C-22.30, missing from the hand-list). Module tests 109/0; users' tests green except capture-requests' 6 'in the plane' reds, identical without my change. format/architecture/ownership 0 failures. COVERAGE: 1 failure, R80: requirements line 118 lacks the '*(retired' marker checks/lib.mjs reads (write '- **R80** *(retired: …)*, as R1-R8); that text is yours, I wrote no fake test. Stale for you at the layer close: bio-plane/dist/bio-plane.bundled.mjs. Details in build/jobs/T49/ai-runs.md.
