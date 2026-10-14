@@ -35,3 +35,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · ANSWER · re J2
 
 K3376: (1) leave the person/timeline acts unplaced in T49 (your R10 pin stands); N1127 places them in T50. (2) as built; the design lane has it. (3) no default: right. setup-words has merged: merge the tranche (CHANGE B-K3374 too), re-run, COMPLETE again. You merge after interface-shell.
+
+## B6 · CHANGE
+
+K3379: the design's DEC-262 (7ed8feb945) is merged into tranche/T49 with rows.mjs regenerated. It rewords four of your keys: `screen.calculation.counts` and `screen.calculation.range` take {answer} as "yes"/"no" (so `counts` can now be drawn); `screen.due-date.of` is "{who}'s reply"; `screen.due-date.step.counted` is "Counted {amount} {units}." Merge the tranche, fill exactly those placeholders, re-run, and COMPLETE again. Your two guessed fills (money.didnotmove's {date} as the figure's period start; timeline.order.evidence's {examples} as the event's keyed kind word) stand; I put both to the design lane. You merge after interface-shell (plan rule 1).
