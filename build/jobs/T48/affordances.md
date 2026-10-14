@@ -36,3 +36,7 @@ Two readings, both carried on my best reading; answer only if either is wrong.
 **Run:** t36 6 pass; full module run 258 tests, 256 pass, 2 red under simulation (R17 above; an artifact of my sim's R19 count). format 0 failures; coverage 43/43; ownership 0 failures; architecture 2 failures (the missing edge). `checks/run.mjs` not run: depends on the pending merges.
 
 Size (session_013rWFiEswSPebSrrG2bB1Kf): test runs 9, module lines 2,934
+
+## J2 · COMPLETE
+
+Job complete; see the record's Completion section. Red here only on op-grades R38-R41 and op-declarations R64 (pending merges; verified against a throwaway copy of the rows). For you: add modules.json edge affordances -> ai-accounts; op-declarations ACT_HELP_ABSENT: selftest now textless, peopledirectory now held. QUESTION J1 (planask not an ACTS row) stands on my reading.
