@@ -48,3 +48,9 @@ Ask: merge `interface-shell` first (it is before me in the L11 order), or tell m
 
 **Checks** (process repo): format 0 failures; architecture 0 failures (29 files); coverage 26 of 26 ids named; ownership 0 failures. `node --test test/m/screens-investigate/` with the local shell stand-in: 102 pass, 1 fail (R26 "Nothing is here", needs R61); on the tranche as it is: red as above.
 Size (session_017YXKkPS5xxERKVB65BPi3G): test runs 14, module lines 2559
+
+## J3 · COMPLETE
+
+COMPLETE. Merged origin/tranche/T48 (interface-shell in), no stand-in: `node --test test/m/screens-investigate/` 103 pass, 0 fail, R26's "Nothing is here" green. Checks: format 0 failures; architecture 0 failures (29 files); coverage 26 of 26 ids named; ownership 0 failures. Nothing stays red.
+Entries applied, judgment calls and R23's named leftovers (passage capture shas, content ids, table/workbook fingerprints, the money contract id: N1079) are as in J2; upstream finds are N1085 and N1086 (yours). Nothing deferred.
+Size (session_017YXKkPS5xxERKVB65BPi3G): test runs 16, module lines 2559
