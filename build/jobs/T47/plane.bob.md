@@ -59,3 +59,7 @@ K3167: store-door and signin-door are merged into tranche/T47. Merge tranche/T47
 ## B12 · ANSWER · re J7
 
 K3170: the edge plane → signin-door is in modules.json and your Uses names it. Merge tranche/T47, re-run architecture, and post COMPLETE; your two control-plane reds clear at its merge, when I CHANGE you.
+
+## B13 · CHANGE
+
+K3171: control-plane is merged into tranche/T47 (R81/R82, the signin-door routing, of.actionClocks for clockpropose). Merge tranche/T47; your two control-plane reds should clear; post COMPLETE.
