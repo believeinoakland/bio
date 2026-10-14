@@ -3,23 +3,25 @@
    op, query, body and whether it carried the session. `open(id, …)` draws a screen with its reads answered from a table
    (an answer, a refusal `{ok: false, code}`, `"none"` for no answer, `"pending"`), `press(op, …)` fills fields and runs
    the act as the shell runs it (`send`, the request, `refusals` or `done`, the re-reads), and `tree`/`text` read what
-   was drawn. The words are the shell's: `WORD_ROWS` with this module's own rows over it (interface-shell R5).
+   was drawn. The words are the shell's: `WORD_ROWS` (interface-shell R5), this module holding none of its own (R21);
+   `word` and `hasWord` are `setup-words`' (its R11, R12), which the tests read keys through, never English.
    The real page's frame (no header, no rail, the fragment taken from the address) is tested over the shell's harness
    in `page.test.mjs`. */
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-entry/index.mjs";
-import fs from "node:fs";
-export { SCREENS, SCREEN_WORDS };
+export { SCREENS, SCREEN_WORDS, word, hasWord };
 
-// ---- the words: WORD_ROWS, then words.json at the tranche's merge where WORD_ROWS does not yet carry a key, then ours ----
+// ---- the words: WORD_ROWS, as the shell carries them to the page (interface-shell R5) ----
 const WORDS = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-try {
-  const file = JSON.parse(fs.readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
-  for (const x of file.words || []) if (!WORDS.has(x.key)) WORDS.set(x.key, x.en);
-} catch { /* WORD_ROWS alone */ }
-for (const [k, en] of SCREEN_WORDS) WORDS.set(k, en);
 export { WORDS };
+/** A key's sentence read through `word`, each placeholder given as its own `{name}`. */
+const NAMES = new Proxy({}, {
+  get: (t, n) => (typeof n === "string" ? "{" + n + "}" : undefined),
+  has: () => true,
+  getOwnPropertyDescriptor: (t, n) => ({ value: "{" + String(n) + "}", writable: false, enumerable: true, configurable: true }),
+});
+export const sentence = (key) => word(key, NAMES);
 
 export const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", apos: "'" };
@@ -88,13 +90,19 @@ const answerOf = (a) => {
   if (a === "none" || a === null) return { kind: "silent" };
   if (a === "pending") return { kind: "pending" };
   if (a && a.ok === false) return { kind: "refused", code: String(a.code || a.reason), fields: a };
+  // the shell's reading: an `ok: true` answer whose result carries `ok: false` is refused (interface-shell R13; D29)
+  if (a && a.result && typeof a.result === "object" && a.result.ok === false) return { kind: "refused", code: String(a.result.code || a.result.reason), fields: a.result };
   return { kind: "ok", value: a && a.result !== undefined ? a.result : a, json: a && a.result !== undefined ? a : { ok: true, result: a } };
 };
 const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
 
-/** The member's session as whoami answers it, once the screen has handed one over (`cs.signin`). */
-export const FOUNDER = Object.freeze({ tokenClass: "admin", session: true, member: "admin", handle: "admin", administer: true, capabilities: ["contribute", "publish", "create_projects"] });
-export const JOINED = Object.freeze({ tokenClass: "member", session: true, member: "mai", handle: "mai", administer: false, capabilities: ["contribute"] });
+/** The member's session as whoami answers it, once the screen has handed one over (`cs.signin`): the founder holding the
+ *  handle she chose (membership R144), the founder of a group claimed before T49 holding none (R18), a member, and an
+ *  administrator who is not the founder (R19). */
+export const FOUNDER = Object.freeze({ tokenClass: "admin", session: true, member: "admin", handle: "rivera", rootOfTrust: true, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
+export const OLD_FOUNDER = Object.freeze({ ...FOUNDER, handle: null });
+export const JOINED = Object.freeze({ tokenClass: "member", session: true, member: "mai", handle: "mai", rootOfTrust: false, administer: false, capabilities: ["contribute"] });
+export const AN_ADMIN = Object.freeze({ tokenClass: "member", session: true, member: "dev", handle: "dev", rootOfTrust: false, administer: true, capabilities: ["contribute", "publish", "create_projects"] });
 
 /**
  * Draws screen `id` as the shell would: `session` the record's state (`view.session`), `fragment` what the shell took
@@ -145,7 +153,7 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       later(ms, fn) { o.timers.push({ at: o.now + ms, fn }); },
       now: () => o.now,
       async call(op, req = {}) { const a = await request(op, req); return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null; },
-      async signin(answer, opts = {}) { o.signins.push({ answer, opts }); if (answer && answer.token) o.token = answer.token; view.me = signinAs; },
+      async signin(answer, opts = {}) { o.signins.push({ answer, opts }); if (!(answer && answer.token)) return false; o.token = answer.token; view.me = signinAs; return true; },
       wizard(...a) { o.wizards.push(a); },
       // interface-shell R47: each answers its own control, bound by the shell
       save(name, text, opt = {}) { o.saves.push({ name, text }); return `<button type="button" class="cs-btn" data-shell="save" data-name="${esc(name)}">${w(opt.label)}</button>`; },
