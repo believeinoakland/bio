@@ -21,13 +21,28 @@
  * test; both await promotion's stamp (T37; plan T36 accepted red 4).
  *
  * T49-18 (R28; K3366, K3368; DEC-257, DEC-258): the rows hold no English. Each row is its check id and its site; the
- * member's sentence is the word `refusal.<CODE>` (words.json, read through setup-words' `word`), drawn by `rowOf` in
- * index.mjs. The comments below record why each sentence says what the design lane's key now says; they bind no wording. */
+ * member's sentence is the word `refusal.<CODE>` (words.json, read through setup-words' `word`), which `worded` below
+ * gives each row as its `translation` and `rowOf` in index.mjs puts on each refusal. The comments below record why each
+ * sentence said what it said; they bind no wording. */
+
+import { word } from "../setup-words/index.mjs";
+
+/* R28: a row's `translation` is the word `refusal.<CODE>`, read through setup-words' `word` each time it is read (the
+   getter holds no sentence and keeps the row's `{check, translation}` shape for the readers of the families: the
+   envelope's decoration, the door). DOOR_RATE_LIMITED's one placeholder is left as written, `{minutes}`, since a row
+   knows no wait; the refusal itself (index.mjs `doorRateLimited`) fills it. */
+function worded(rows) {
+  for (const code of Object.keys(rows)) {
+    const vars = code === "DOOR_RATE_LIMITED" ? { minutes: "{minutes}" } : {};
+    Object.defineProperty(rows[code], "translation", { enumerable: true, get: () => word(`refusal.${code}`, vars) });
+  }
+  return rows;
+}
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
    for what it requires, not what it forbids, and does not match the doctrine pack's `MACHINE_CANNOT_` prefix. */
-export const ADMISSION_CHECKS = {
+export const ADMISSION_CHECKS = worded({
   /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
      do rather than what happened, because a person reading this has not yet done
      anything wrong — they have simply not said who they are. */
@@ -165,10 +180,10 @@ export const ADMISSION_CHECKS = {
     check: 'C-38.11',
     where: 'src/admission/index.mjs admit > is-admission',
   },
-};
+});
 
 /* C-78 · A NAMESPACE (D-456, D-461, D-463). */
-export const NAMESPACE_CHECKS = {
+export const NAMESPACE_CHECKS = worded({
   NAMESPACE_UNKNOWN: {
     check: 'C-78.1',
     where: 'src/admission/index.mjs namespaceGate > is-namespace-gate',
@@ -191,11 +206,11 @@ export const NAMESPACE_CHECKS = {
     check: 'C-78.3',
     where: 'src/admission/index.mjs confinedNamespaceGate > is-confined-namespace-gate',
   },
-};
+});
 
 /* C-29.6–.10 · AN AGENT CREDENTIAL'S REACH (PL-11 / IS-5, D-199): the gate on every call (.6, .7) and the declaration
    judged at the mint (.8–.10). The mint's and the revocation's rows are credentials'. */
-export const AI_SCOPE_CHECKS = {
+export const AI_SCOPE_CHECKS = worded({
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
 
   /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
@@ -251,10 +266,10 @@ export const AI_SCOPE_CHECKS = {
     check: 'C-29.10',
     where: 'src/admission/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration',
   },
-};
+});
 
 /* C-32.17 · THE OPERATOR FENCE ON SECTION 4 GOVERNANCE (D-136). */
-export const OPERATOR_FENCE_CHECKS = {
+export const OPERATOR_FENCE_CHECKS = worded({
   /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
      the same doctrine rather than a new one: *the credential that delivers an
      act decides when the record changes, and the record names the actor.* A
@@ -274,14 +289,14 @@ export const OPERATOR_FENCE_CHECKS = {
     check: 'C-32.17',
     where: 'src/admission/index.mjs bearerFence > is-operator-governance-act',
   },
-};
+});
 
 /* C-64.4 · THE SAME FENCE FOR THE GROUP'S PUBLIC IDENTITY (REC-164). */
-export const GROUP_IDENTITY_FENCE_CHECKS = {
+export const GROUP_IDENTITY_FENCE_CHECKS = worded({
   /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
      administrator's own signed-in session, and the record names who set each one. */
   GROUP_IDENTITY_NEEDS_SESSION: {
     check: 'C-64.4',
     where: 'src/admission/index.mjs bearerFence > is-group-identity-session',
   },
-};
+});

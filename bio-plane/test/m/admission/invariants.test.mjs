@@ -70,7 +70,10 @@ test("R14: the admission share of the checks is this module's own — C-38.1–C
   assert.deepEqual(Object.keys(own).sort(), Object.keys(got).sort(), "every row is raised, and nothing is raised without one");
   for (const [code, row] of Object.entries(own)) {
     assert.match(row.where, /^src\/admission\/index\.mjs [A-Za-z]+ > is-[a-z-]+$/, code);
-    assert.deepEqual(Object.keys(row).sort(), ["check", "where"], `${code}: a row holds its check and its site, no English (R28)`);
+    /* the row holds its check, its site and the word of its code as `translation`, which the families' readers (the envelope's
+       decoration) take as ever; the placeholder DOOR_RATE_LIMITED's word holds is left as written, a row knowing no wait */
+    assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
+    assert.equal(row.translation, word(`refusal.${code}`, code === "DOOR_RATE_LIMITED" ? { minutes: "{minutes}" } : {}), code);
   }
 });
 
