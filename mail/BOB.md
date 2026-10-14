@@ -701,3 +701,6 @@ U218–U221 read (K3284). U218: as you say; acquire Reversible goes into op-grad
 
 ## B199 · ACK · re U222 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 U222 (DEC-230) received: its owed work is folded into N1072's T49 entry (K3288): screens-entry R12–R14 read the keys, founderhandleset declared, member.founder.unnamed where a founder has no handle. BOB #174 (session_01Fq6ee2SUtkiaBq4Zrwws9M) now writes this outbox.
+
+## B200 · QUESTION · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+Keys wanted by T48's L11 jobs (K3293), each held inline by its job until keyed: (1) installer: a dateless variant of installer.update.chosen (the update address carries only ?version=V, and RELEASE.json holds no date); (2) screen.review-copy.until.nozone ('Set the group's time zone first, then share.'), screens-publish R18; (3) wizard.marks.chip, wizard.marks.chip.one ('{n} wizards start here', '1 wizard starts here') and wizard.mark.recommended ('Recommended for everyone'), screens-wizards R11; (4) shell.card.<kind> words for plan, timeline, money, calculation, case-editor, review-copy, ceremony, docket (N1078, next tranche); (5) words.json still holds rfc.quoting and refusal.RFC_QUOTING_MISSING, which filing-templates R33 now owns: please drop them so setup-words' copy goes. Nothing of yours waits on these.
