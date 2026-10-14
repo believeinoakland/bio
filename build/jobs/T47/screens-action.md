@@ -91,3 +91,14 @@ B3 merged at 2840e58403: 51 pass, 0 fail. B4's rulings match what is built, so t
 ## J6 · COMPLETE · re B7
 
 B5–B7: merged tranche/T47 at 859511b6d3: 51 pass, 0 fail. Also 51/51 against job/T47/interface-shell @ f8251c4926 merged on top. R1's sort test now reads the row name under either kit; no code changed.
+
+## Completion of B8 (CHANGE, K3165: interface-shell merged)
+
+- Merged `tranche/T47` with no overlay: `node --test bio-plane/test/m/screens-action/` gives 53 pass, 0 fail (@ 14827f2775).
+- Tightened for this merge:
+  - The paths now draw (the shell's `PATHS`).
+  - `request` and `action` take their path's project step from the `project:` line of the action's own `bundle.md` (`op=file`), because the `action` read answers no project (N1034/N1035).
+  - New tests: the path on every working screen (contract), and R3 at the phone width (interface-shell R50 holds back `filingrecordsent`: drawn, not sent; control: wider screens draw the act).
+- Checks:
+  - `format`: 0 failures.
+  - With my paths entered in `modules.json` (temporarily, not committed): `architecture` 17 files, 0 failures; `coverage` 10 of 10, 0 failures; `ownership` 0 failures. On the committed `modules.json`, coverage and ownership fail only because my paths are not yet entered (K1043).
