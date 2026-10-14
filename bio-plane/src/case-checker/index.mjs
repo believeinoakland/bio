@@ -10,7 +10,7 @@
  *   reweigh              R23 (`./check.mjs`, `./lens.mjs`; K2529): each finding's pair re-weighed under another lens, pure
  *                        and synchronous, over an answer already checked; `checkCaseFile`'s lens arm and `case-import` R4;
  *   the program          R13 (`./main.mjs`, built by `./build-program.mjs` into `./program.mjs`): the same code, one
- *                        file anyone runs offline with nothing to install;
+ *                        file anyone runs offline with nothing to install; R25: held as data, read on first use;
  *   the specification    R14 (`./spec.mjs`): the readable text of each case-file format version;
  *   standards' use       R21 (`./standards.mjs`): `checkStandardsUse`, a pure check of how a case quotes the standards it
  *                        measures against and what it calls a benchmark; its caller with the record refuses (N717);
@@ -19,7 +19,7 @@
  *
  * Recreating shows a case intact and consistent, not true (R12). No place is named here (R17). */
 
-import { PROGRAM, PROGRAM_SHA256, PROGRAM_BODY_SHA256 } from "./program.mjs";
+import { programData } from "./program.mjs";
 import { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 
@@ -31,12 +31,25 @@ export { checkAccount, ACCOUNT_CODES, DETERMINATION_WORDS, SUPPORT_WORDS, CONTRA
 export { LENS_LIMIT_STATEMENT, LENS_NAMES } from "./lens.mjs";
 export { checkStandardsUse, STANDARDS_USE_CODES, NONCONFORMING_WORDS } from "./standards.mjs";
 export { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
-export { PROGRAM, PROGRAM_SHA256, PROGRAM_BODY_SHA256 } from "./program.mjs";
+
+let held = null;
+
+/** R13, R25: the program file, `{text, sha256, body_sha256}` (its text, its SHA-256 and the SHA-256 its first line
+ *  names), frozen. The program is held as data (`./program.mjs`), so importing this module builds none of it: it is read
+ *  and parsed on the first call, and the same object is answered after, reading nothing again. */
+export function caseCheckerProgramText() {
+  if (held === null) {
+    const p = JSON.parse(programData());
+    held = Object.freeze({ text: p.text, sha256: p.sha256, body_sha256: p.body_sha256, bytes: new TextEncoder().encode(p.text).length });
+  }
+  return held;
+}
 
 /** R13: the program file as served: its text, its SHA-256, the SHA-256 its first line names, and how to run it. */
 export function caseCheckerProgram() {
-  return { file: "case-checker.mjs", media_type: "text/javascript", sha256: PROGRAM_SHA256, body_sha256: PROGRAM_BODY_SHA256,
-           bytes: new TextEncoder().encode(PROGRAM).length, program: PROGRAM,
+  const p = caseCheckerProgramText();
+  return { file: "case-checker.mjs", media_type: "text/javascript", sha256: p.sha256, body_sha256: p.body_sha256,
+           bytes: p.bytes, program: p.text,
            run: "node case-checker.mjs <part> [<part> ...] [--document <file> ...] [--keys <file>]" };
 }
 
