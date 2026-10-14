@@ -1,7 +1,7 @@
 /* control-plane R75 (T46; N897 (1); DEC-122 (3); N559; `draft-T46-interface.md` §1.2): THE MEMBER INTERFACE'S TWO ROUTES,
    beside `/` (R1), answered before `path` and `op` exist, as `/` is.
      - `GET /app` and `GET /app/<path>` (any path below it but the assets) answer `interface-shell`'s page, built at each
-       request by `interfacePage` over the four screen modules' `SCREENS`, `text/html`, `cache-control: no-store`; the
+       request by `interfacePage` over the screen modules' `SCREENS` (R81: nine, with screens-wizards' guide), `text/html`, `cache-control: no-store`; the
        routing below `/app` is the page's own (interface-shell R9), so every such path answers the same page. The page
        policy and its nonce are `answer-envelope`'s (its R6), applied to every HTML answer on the way out. A page that
        cannot be built (a broken screen: `interfacePage` throws, naming it) is never served: the throw reaches the door's
@@ -26,9 +26,10 @@ export function appRouteOf(req, url) {
   return null;
 }
 
-/** The page, built at this request from the screens handed in (`interfacePage(screens)`). */
-export function appPage(req, { interfacePage, screens }) {
-  const html = interfacePage(screens);
+/** The page, built at this request from the screens handed in (`interfacePage(screens, options)`; R81: the nine screen
+ *  modules' screens and screens-wizards' guide). */
+export function appPage(req, { interfacePage, screens, options = {} }) {
+  const html = interfacePage(screens, options);
   return new Response(req.method === "HEAD" ? null : html,
     { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }

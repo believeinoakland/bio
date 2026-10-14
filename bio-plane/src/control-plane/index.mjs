@@ -29,16 +29,24 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
          TEXT_CHECK } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
-/* R75 (T46; N897 (1)): the member interface's page and its assets, beside `/`: interface-shell's page over the four screen
-   modules' screens, and interface-assets' files. */
+/* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
+   nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
+   interface-assets' files. */
 import { appRouteOf, appPage, appAsset, logoAsked } from "./app.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
+import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
 import { SCREENS as INTAKE_SCREENS } from "../screens-intake/index.mjs";
 import { SCREENS as DAILY_SCREENS } from "../screens-daily/index.mjs";
 import { SCREENS as INQUIRY_SCREENS } from "../screens-inquiry/index.mjs";
-const APP_SCREENS = Object.freeze([...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS]);
+import { SCREENS as WIZARDS_SCREENS, GUIDE as WIZARD_GUIDE } from "../screens-wizards/index.mjs";
+import { SCREENS as INVESTIGATE_SCREENS } from "../screens-investigate/index.mjs";
+import { SCREENS as PUBLISH_SCREENS } from "../screens-publish/index.mjs";
+import { SCREENS as ACTION_SCREENS } from "../screens-action/index.mjs";
+const APP_SCREENS = Object.freeze([...ENTRY_SCREENS, ...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS,
+  ...WIZARDS_SCREENS, ...INVESTIGATE_SCREENS, ...PUBLISH_SCREENS, ...ACTION_SCREENS]);
+const APP_OPTIONS = Object.freeze({ guide: WIZARD_GUIDE });
 /* (T47; K3167) a member's own Claude sign-in, its disconnection, the revocation's sign-out, a refused held token and the
    test instance's trace are signin-door's (its R1–R5, were this module's R65, R78, R85–R87): the door routes to them. */
 import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, tokenRefusedSeen, signintrace }
@@ -611,7 +619,7 @@ export function makeFetch(hooks = {}) {
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
       const pageAddress = addressGate(url);   /* R59: admission R20, before the page is built */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      return appPage(req, { interfacePage, screens: APP_SCREENS });
+      return appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS });
     }
 
     /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
@@ -625,7 +633,7 @@ export function makeFetch(hooks = {}) {
       /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
       if (appRoute === "asset" && logoAsked(url))
         return groupLogoAsset(env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", { json, storeSilent, storeRefusal, doAnswer });
-      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS })
+      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS })
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 

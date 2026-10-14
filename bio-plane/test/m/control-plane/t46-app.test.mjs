@@ -12,6 +12,13 @@ import { SCREENS as S1 } from "../../../src/screens-settings/index.mjs";
 import { SCREENS as S2 } from "../../../src/screens-intake/index.mjs";
 import { SCREENS as S3 } from "../../../src/screens-daily/index.mjs";
 import { SCREENS as S4 } from "../../../src/screens-inquiry/index.mjs";
+/* R81 (T47; K3137, K3169): the five screen modules T47 adds, and screens-wizards' guide (interface-shell R31) */
+import { SCREENS as E } from "../../../src/screens-entry/index.mjs";
+import { SCREENS as W, GUIDE } from "../../../src/screens-wizards/index.mjs";
+import { SCREENS as I } from "../../../src/screens-investigate/index.mjs";
+import { SCREENS as P } from "../../../src/screens-publish/index.mjs";
+import { SCREENS as A } from "../../../src/screens-action/index.mjs";
+const NINE = [...E, ...S1, ...S2, ...S3, ...S4, ...W, ...I, ...P, ...A];
 
 const SCRIPT = /<script\b[^>]*>/gi;
 const NONCE = /^'nonce-([A-Za-z0-9+/=]{22,})'$/;
@@ -27,9 +34,11 @@ const policyNonce = (r) => {
   return d["script-src"][0].match(NONCE)[1];
 };
 
-test("R75 (T46; N897 (1)): `GET /app` and `GET /app/<path>` answer interface-shell's page over the four screen modules' screens, `text/html`, `cache-control: no-store`, under the page policy with a nonce fresh per response that every script element carries; the same page for every path below `/app` (the routing is the page's own); no store is asked and no credential read, a presented session changing nothing", async () => {
+test("R75, R81 (T46, T47; N897 (1); K3137): `GET /app` and `GET /app/<path>` answer interface-shell's page over the nine screen modules' screens (entry, settings, intake, daily, inquiry, wizards, investigate, publish, action) with screens-wizards' guide, `text/html`, `cache-control: no-store`, under the page policy with a nonce fresh per response that every script element carries; the same page for every path below `/app` (the routing is the page's own); no store is asked and no credential read, a presented session changing nothing", async () => {
   const { env, S } = world();
-  const want = interfacePage([...S1, ...S2, ...S3, ...S4]);
+  const want = interfacePage(NINE, { guide: GUIDE });
+  /* control: the four T46 modules alone are not the page served */
+  const four = interfacePage([...S1, ...S2, ...S3, ...S4]);
   const strip = (html) => html.replace(/ nonce="[^"]*"/g, "").replace(/'nonce-[^']*'/g, "");
   const nonces = new Set();
   for (const [path, headers] of [["/app", {}], ["/app/", {}], ["/app/home", {}], ["/app/project/PRJ-1", {}], ["/app/no-such-screen", {}],
@@ -45,12 +54,28 @@ test("R75 (T46; N897 (1)): `GET /app` and `GET /app/<path>` answer interface-she
     assert.ok(tags.length > 0);
     for (const t of tags) assert.ok(t.includes(`nonce="${nonce}"`), t);
     assert.equal(r.text.includes("__CSP_NONCE__"), false);
-    assert.equal(strip(r.text), strip(want), `${path}: interface-shell's page over the four modules' screens`);
+    assert.equal(strip(r.text), strip(want), `${path}: interface-shell's page over the nine modules' screens and the guide`);
+    assert.notEqual(strip(r.text), strip(four));
     assert.ok(r.text.includes(`href="/app/assets/civicsmith.css"`));
     assert.deepEqual(env.calls, [], `${path}: no store asked, no credential read`);
     nonces.add(nonce);
   }
   assert.equal(nonces.size, 6, "a fresh nonce per response");
+});
+
+test("R81 (T47; interface-shell R30): a public-frame screen's address — `/app/doorbell`, `/app/published/<case>` — is served the same page, no credential read and no store asked, with or without a session presented; every screen id the nine modules register is drawn by that page", async () => {
+  const { env, S } = world();
+  const strip = (html) => html.replace(/ nonce="[^"]*"/g, "");
+  const page = strip((await call(env, { path: "/app" })).text);
+  for (const [path, headers] of [["/app/doorbell", {}], ["/app/published/CASE-2026-1", {}], ["/app/doorbell", { authorization: `Bearer ${S.ann}` }]]) {
+    env.calls.length = 0;
+    const r = await call(env, { path, headers });
+    assert.equal(r.status, 200, path);
+    assert.equal(strip(r.text), page, path);
+    assert.deepEqual(env.calls, [], `${path}: nothing read`);
+  }
+  for (const id of new Set(NINE.map((sc) => sc.id))) assert.ok(page.includes(JSON.stringify(id)), `${id} is in the page`);
+  for (const id of ["doorbell", "published", "front"]) assert.ok(NINE.some((sc) => sc.id === id), `${id} is registered`);
 });
 
 test("R75: `/app` takes the namespace and address gates `/` takes (admission R1, R20): an unknown `store=` is NAMESPACE_UNKNOWN (C-78.1) and a credential in the address CREDENTIAL_IN_ADDRESS (C-38.10), on the page and on an asset, nothing served; `store=scratch` serves the same page (negative control); a POST to `/app` is no page (it reaches the op door, an op named `app` there being unknown)", async () => {
