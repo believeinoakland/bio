@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { world, sqlOver } from "./fixture.mjs";
+import { world, sqlOver, FOUNDER_HANDLE } from "./fixture.mjs";
+import { installFounderHandle } from "./r144-shim.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 
@@ -163,10 +164,11 @@ test("R21 R8 a key registered before status_at existed reads null, never back-fi
   const core = { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; }, bundleInfo() { return null; } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
+  installFounderHandle(m);
   const c = credentialsOf(ctx, { record: core, membership: m });
   c.migrate();
   c.migrate();
-  await c.claim({ password: "x".repeat(12), tokenFp: "fp" });
+  await c.claim({ password: "x".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp" });
   for (const id of ["second", "ann"]) {
     const a = await m.memberAdd({ memberId: id, cover: `c ${id}`, role: id === "second" ? "admin" : "member", by: "admin" });
     assert.equal((await m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` })).ok, true, id);

@@ -153,7 +153,7 @@ test("R73 a reference removed ends her standing grants, and a sign-in cleared wh
   /* a reference removed */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
-  const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const s = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const ask = await w.c.aiGrantMint({ member: "ann", by: "ann", session: s });
   const g1 = await w.c.aiGrantMintStanding({ member: "ann", question: "q" });
   assert.equal(await held(g1.token), true);

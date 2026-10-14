@@ -101,7 +101,7 @@ test("R16 a member's revocation also spends their unspent recovery codes and cle
   assert.equal(w.c.recoveryCodesState({ by: "second" }).remaining, 10, "no one else's");
   assert.deepEqual(w.rows(`SELECT member_id FROM subscription_connections`).map((x) => x.member_id), ["ann"]);
   w.m.memberSet({ memberId: "third", status: "active", by: "admin" });
-  assert.equal((await w.c.recover({ role: "member:third", code: codes[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED",
+  assert.equal((await w.c.recover({ handle: "third", code: codes[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED",
     "spent for good, whatever the member's later standing");
 });
 
@@ -148,15 +148,15 @@ test("R1 R4 R39 R45 R46 R47 R43 the T35 routes: `source` and `country`, `by` and
   const w = await world().group("ann");
   /* the window counts the query's source, never the body's */
   for (let i = 0; i < 10; i++)
-    assert.equal((await w.ops("source=stamped&country=NL", { role: `member:r${i}`, password: "wrong-passphrase", source: `body-${i}` }).login()).reason,
+    assert.equal((await w.ops("source=stamped&country=NL", { handle: `r${i}`, password: "wrong-passphrase", source: `body-${i}` }).login()).reason,
       "SIGN_IN_REFUSED");
-  assert.equal((await w.ops("source=stamped", { role: "member:ann", password: PASSWORD("ann"), source: "elsewhere" }).login()).reason,
+  assert.equal((await w.ops("source=stamped", { handle: "ann", password: PASSWORD("ann"), source: "elsewhere" }).login()).reason,
     "SIGN_IN_PAUSED");
   assert.equal((await w.ops("source=stamped", { password: "x".repeat(12), source: "elsewhere" }).claim()).reason, "SIGN_IN_PAUSED");
-  assert.equal((await w.ops("source=stamped", { role: "member:second", code: "x", password: "x".repeat(12) }).recover()).reason, "SIGN_IN_PAUSED");
+  assert.equal((await w.ops("source=stamped", { handle: "second", code: "x", password: "x".repeat(12) }).recover()).reason, "SIGN_IN_PAUSED");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM security_pending WHERE country='NL'`).n, 10, "the query's country");
-  const tok = (await w.ops("source=other", { role: "member:ann", password: PASSWORD("ann") }).login()).token;
-  const tok2 = (await w.ops("source=other", { role: "member:ann", password: PASSWORD("ann") }).login()).token;
+  const tok = (await w.ops("source=other", { handle: "ann", password: PASSWORD("ann") }).login()).token;
+  const tok2 = (await w.ops("source=other", { handle: "ann", password: PASSWORD("ann") }).login()).token;
   assert.deepEqual(w.ops(`session=${tok}`, { token: tok2 }).signout(), { ok: true, ended: 1 });
   assert.equal(w.c.session(tok), null);
   assert.deepEqual(w.ops(`session=${tok2}`).signouteverywhere(), { ok: true, ended: 1 });
@@ -172,7 +172,7 @@ test("R1 R4 R39 R45 R46 R47 R43 the T35 routes: `source` and `country`, `by` and
   const issued = w.ops("by=second", { by: "ann" }).recoverycodesissue();
   assert.equal(issued.codes.length, 10);
   assert.deepEqual(w.ops("by=second").recoverycodesstate(), { ok: true, held: true, remaining: 10, issuedAt: issued.issuedAt });
-  assert.equal((await w.ops("source=r", { role: "member:second", code: issued.codes[0], password: "new-passphrase-1" }).recover()).ok, true);
+  assert.equal((await w.ops("source=r", { handle: "second", code: issued.codes[0], password: "new-passphrase-1" }).recover()).ok, true);
 });
 
 test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your group's Civicsmith\" where it said this instance, this copy or its seal secret, as answered at the interface", async () => {
@@ -206,7 +206,7 @@ test("R48 the 17 sweep rows (DEC-149): each member-facing string says \"your gro
   has((await w.c.accountReferenceSet({ member: "ann", kind: "oauth", secret: "sk", by: "ann" })).detail,
     "the kind your group's Civicsmith holds is apikey; a Claude subscription is connected through Claude Code's own sign-in");
   /* index :231, :237 (R4's SIGN_IN_REFUSED detail), re-worded to need no name and address no one (K2089; D-57) */
-  const refused = await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "s" });
+  const refused = await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "s" });
   has(refused.detail, "Either no active credential is held under that role");
   has(refused.detail, "which roles hold a credential.");
   assert.doesNotMatch(refused.detail, /\b(?:you|your|yours)\b/i, "D-57: it addresses no one");
@@ -255,8 +255,8 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     w.c.subscriptionConnected({ member: "ann", token: "t" }), w.c.subscriptionConnected({ member: "dee" }),
     w.c.securityCount({ kind: "x" }), w.c.securityMap({ from: "x", to: "y", by: "admin" }), w.c.securityMap({ by: "ann" }),
     w.c.signOut({ token: "x" }), w.c.recoveryCodesIssue({ by: "ann" }),
-    w.c.recover({ role: "member:ann", code: "x", password: "new-passphrase-1", source: "a" }),
-    w.c.login({ role: "member:x", password: "wrong-passphrase", source: "b" }),
+    w.c.recover({ handle: "ann", code: "x", password: "new-passphrase-1", source: "a" }),
+    w.c.login({ handle: "x", password: "wrong-passphrase", source: "b" }),
     bare.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "s", by: "ann" }),
     /* T37's refusals: R3's three of its own, R53's mint with no digest */
     w.c.passwordChange({ by: "class:admin" }), w.c.passwordChange({ by: "ann", session: "none" }),
@@ -270,8 +270,8 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
   await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
   w.sql.exec(`DROP TABLE ai_keep_away`);
   await keep(w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }));
-  for (let i = 0; i < 10; i++) await w.c.login({ role: "member:y", password: "wrong", source: `p${i}` });
-  await keep(w.c.login({ role: "member:y", password: "wrong", source: "p" }));
+  for (let i = 0; i < 10; i++) await w.c.login({ handle: "y", password: "wrong", source: `p${i}` });
+  await keep(w.c.login({ handle: "y", password: "wrong", source: "p" }));
   let n = 0;
   /* membership's NOT_AN_ADMIN (C-96.1), answered through its `notAnAdmin`, is membership's string (its R112) */
   for (const a of said.filter((x) => x?.check !== "C-96.1"))

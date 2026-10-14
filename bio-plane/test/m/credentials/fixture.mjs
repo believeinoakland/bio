@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { installFounderHandle } from "./r144-shim.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -24,6 +25,8 @@ export const PASSWORD = (id) => `${id}-passphrase-x`;
 /* R40: a session is held as its token's SHA-256, computed here independently of the module. */
 export const sha = (text) => createHash("sha256").update(String(text)).digest("hex");
 export const FOUNDER_PASSWORD = "founder-passphrase-1";
+/* (T49; R74) the handle the founder chooses at the claim in a test world */
+export const FOUNDER_HANDLE = "founder";
 /* (T47; R70) the sign-in token a member's Claude Code `setup-token` would print, one per member, a sentinel. */
 export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-${id}-0123456789`;
 
@@ -73,6 +76,7 @@ export function world({ sealSecret = SEAL } = {}) {
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
+  installFounderHandle(m);
   const c = credentialsOf(ctx, { record: core, membership: m, sealSecret });
   if (credentialsOf(ctx) !== c) throw new Error("credentialsOf answers one instance per storage");
   c.migrate();
@@ -81,7 +85,7 @@ export function world({ sealSecret = SEAL } = {}) {
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
     /* The founder claims the instance (R1). */
-    async claim() { return c.claim({ password: FOUNDER_PASSWORD, tokenFp: "fp-1" }); },
+    async claim() { return c.claim({ password: FOUNDER_PASSWORD, handle: FOUNDER_HANDLE, tokenFp: "fp-1" }); },
     /* Invite (membership) and enrol to active, then set the member's password here (R3). */
     async enrol(id, role = "member", by = "admin", caps = null) {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: caps, by });
@@ -141,6 +145,7 @@ export function realWorld() {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
+  installFounderHandle(m);
   const c = credentialsOf(ctx, { sealSecret: SEAL });
   c.migrate();
   return { db, sql, ctx, rc, m, c, row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };

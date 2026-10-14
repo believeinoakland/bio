@@ -2,7 +2,8 @@
    map, at the interface: each route answers its service, and the control plane's stamps in the query win over a body. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD, FOUNDER_PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, FOUNDER_PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, credentialsOps } from "../../../src/credentials/index.mjs";
 
 const credentialsOpsNoVersion = (w) => credentialsOps(w.c, new URL("http://x/"), null, {});
@@ -21,7 +22,8 @@ test("R6 R9 R12 R14 R15 R53 the rows: ids and words as copied, each where naming
     AI_CREDENTIAL_BAD_EXPIRY: ["C-29.28", W("aiCredentialMint", "is-ai-credential-expiry"), /from 1 to 365, and 90/],
     AI_CREDENTIAL_NO_SECRET: ["C-29.33", W("aiCredentialMint", "is-ai-credential-digest"), /could never be used/],
     /* (T47-9; R63) a run segment's credential's malformed request, the next free C-29 number after R64's */
-    AI_RUN_CREDENTIAL_MALFORMED: ["C-29.41", W("aiRunCredentialMint", "is-ai-run-credential-shape"), /did not name the run/],
+    /* (T49; N1075) the words of words.json's `refusal.AI_RUN_CREDENTIAL_MALFORMED`, read by key */
+    AI_RUN_CREDENTIAL_MALFORMED: ["C-29.41", W("aiRunCredentialMint", "is-ai-run-credential-shape"), /pass it needs to work for you was malformed/],
     BAD_KEY: ["C-96.8", W("signerAdd", "is-signer-key-shape"), /begins AAAA/],
     SIGNER_KEY_HELD_BY_ANOTHER: ["C-96.15", W("signerRegisterOwn", "is-signer-key-held"),
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
@@ -48,15 +50,15 @@ test("R1 R2 R3 R4 R5 the sign-in routes: bootstrap (with the store's build), cla
   const w = world();
   assert.deepEqual(w.ops("fp=fp-1").bootstrap(), { claimed: false, rearmed: false, consumedAt: null, storeVersion: "test-build" });
   assert.equal(credentialsOpsNoVersion(w).bootstrap().storeVersion, null, "no VERSION bound: null, never a default");
-  const c = await w.ops("fp=fp-1", { password: FOUNDER_PASSWORD, tokenFp: "fp-forged" }).claim();
+  const c = await w.ops("fp=fp-1", { password: FOUNDER_PASSWORD, handle: FOUNDER_HANDLE, tokenFp: "fp-forged" }).claim();
   assert.equal(c.ok, true);
   assert.deepEqual(w.ops("fp=fp-1").bootstrap().claimed, true, "the query's fingerprint was recorded, not the body's");
   assert.deepEqual(w.ops("fp=fp-forged").bootstrap().rearmed, true);
-  const l = await w.ops("", { role: "admin", password: FOUNDER_PASSWORD }).login();
+  const l = await w.ops("", { handle: FOUNDER_HANDLE, password: FOUNDER_PASSWORD }).login();
   assert.equal(l.ok, true);
-  assert.equal((await w.ops("", { role: "member:x", password: PASSWORD("x") }).setpassword()).reason, "MACHINE_CANNOT_SET_PASSWORD",
+  assert.equal((await w.ops("", { handle: "x", password: PASSWORD("x") }).setpassword()).reason, "MACHINE_CANNOT_SET_PASSWORD",
     "no stamp, no change; a body's role is no stamp");
-  assert.equal((await w.ops(`by=admin&session=${l.token}`, { role: "member:x", current: FOUNDER_PASSWORD, password: "founder-new-pass-1" })
+  assert.equal((await w.ops(`by=admin&session=${l.token}`, { handle: "x", current: FOUNDER_PASSWORD, password: "founder-new-pass-1" })
     .setpassword()).role, "admin", "the session's role, never the body's");
   assert.equal(w.row(`SELECT role FROM credentials WHERE role='member:x'`), null);
   assert.equal((await w.ops("", null).login()).reason, "SIGN_IN_REFUSED");
@@ -87,18 +89,17 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  assert.deepEqual(Object.keys(w.ops()).sort(), ["accounthistory", "accountreference", "accountreferenceremove", "accountreferenceset",
-    "accountuses", "accountusesset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
-    "aikeepaway", "aikeepawaystate", "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
-    "groupkeyswitch", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login",
-    "passwordreset", "passwordresetlink", "passwordresetlook",
-    "projectaccountremove", "projectaccountstate", "projectaccountswitch", "projectaikeepaway", "projectaikeepawaystate",
-    "projectkeynotice", "projectkeynoticeseen", "projectkeyset", "projectsigninset", "reauth", "recover",
-    "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
-    "signout", "signouteverywhere", "subscriptiondisconnect", "unlock"]);
+  /* (T49; N1073, K3268) this module's own routes, hand-listed; the ops that moved to ai-accounts (R72) are read from its
+     own declaration, never listed here */
+  const own = ["aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint", "bootstrap",
+    "claim", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "passwordreset", "passwordresetlink",
+    "passwordresetlook", "reauth", "recover", "recoverycodesissue", "recoverycodesstate", "securitycount", "securitymap",
+    "session", "setpassword", "signeradd", "signerlist", "signerset", "signout", "signouteverywhere", "unlock"];
+  const moved = Object.keys(aiAccountsOps(w.c.accounts, new URL("http://x/"), null, {}));
+  assert.deepEqual(Object.keys(w.ops()).sort(), [...own, ...moved].sort());
 });
 
-test("R27 R28 R29 R31 R32 R65 R66 R69 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
+test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
   const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/checks.mjs");
   const want = {
     GRANT_OP_REFUSED: ["C-29.23", W("aiGrantAdmit", "is-grant-op")],
@@ -110,6 +111,8 @@ test("R27 R28 R29 R31 R32 R65 R66 R69 the C-29 and keyed-service rows this modul
     SESSION_LOCKED: ["C-29.43", W("sessionLockedRefusal", "is-session-unlocked")],
     RESET_LINK_DEAD: ["C-29.46", W("#resetLinkDead", "is-reset-link-live")],
     RESET_LINK_MEMBER_NOT_ACTIVE: ["C-29.47", W("passwordResetLinkMake", "is-reset-link-member")],
+    /* (T49-3; R77) a claim that carries no fingerprint, the next free number of C-29 */
+    NO_TOKEN_FP: ["C-29.48", W("claim", "is-claim-fingerprint")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],
@@ -152,7 +155,7 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
   assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
   assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
   assert.equal(w.ops("by=ann", { owner: "member:ann", switch: "standing", on: true }).accountusesset().on, true, "T41: accountswitchset retired");
-  const tok = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const tok = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const g = await w.ops(`member=ann&by=ann&session=${tok}`).aigrantmint();
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).member, "ann");
   assert.equal((await w.ops("by=ann", { service: "courtlistener", key: "k" }).keyedserviceset()).reason, "NOT_AN_ADMIN");

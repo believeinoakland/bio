@@ -300,8 +300,13 @@ export class Credentials {
     const b = this.#one(`SELECT consumed_at, token_fp FROM bootstrap WHERE id=1`);
     const spent = !!(b && b.consumed_at);
     /* A different bootstrap secret than the one that was spent means the operator has rotated it in the dashboard,
-       which is the recovery gesture: re-arm rather than lock them out. */
-    const rearmed = spent && tokenFp !== null && b.token_fp !== tokenFp;
+       which is the recovery gesture: re-arm rather than lock them out. (T49; R77, N945) Only a claim that recorded what
+       it spent can be told from a rotated secret: a spent credential with no recorded fingerprint (a store from before
+       `token_fp`) reads claimed for every fingerprint presented, so a bootstrap secret never re-claims a store that
+       cannot tell. */
+    const presented = typeof tokenFp === "string" && tokenFp !== "";
+    const recorded = typeof b?.token_fp === "string" && b.token_fp !== "";
+    const rearmed = spent && presented && recorded && b.token_fp !== tokenFp;
     return {
       claimed: spent && !rearmed,
       rearmed,
@@ -310,26 +315,56 @@ export class Credentials {
   }
 
   /* R1: spending the bootstrap credential. Refused once spent, so a leaked ADMIN_TOKEN cannot silently re-claim a
-     running instance; a replaced one (a different fingerprint) re-arms it. R38's window is asked first, under the role
-     `admin`; each refused claim counts toward it and toward R44's tally. */
-  async claim({ role = ROOT, password, tokenFp = null, source = null, country = null } = {}) {
+     running instance; a replaced one (a different recorded fingerprint) re-arms it. R38's window is asked first, under
+     the role `admin`; each refused claim counts toward it and toward R44's tally. (T49; R77, N945) A claim given no
+     `tokenFp` is refused NO_TOKEN_FP, writing nothing. (R74, N1072) The founder chooses her handle at the claim: when
+     none is held (a first claim or a re-armed one) `handle` is required and is judged and recorded by membership's
+     `founderHandleSet` (its R144) in the claim's one act, after R1's own refusals, its refusal answered as given and
+     neither password nor handle written; when one is held, `handle` absent or equal to it is accepted and any other is
+     refused by that same service, HANDLE_FIXED. The success answers `handle`, the held one. */
+  async claim({ password, handle = null, tokenFp = null, source = null, country = null } = {}) {
     const gate = await this.#gate({ role: ROOT, source, country, password });
     if (gate.paused) return gate.paused;
-    if (typeof password !== "string" || password.length < 12) {
-      this.#refusedAttempt(gate, country);
-      return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    }
+    const refuse = (answer) => { this.#refusedAttempt(gate, country); return answer; };
+    /* DEC-49 REGION is-claim-fingerprint */
+    if (typeof tokenFp !== "string" || tokenFp === "")
+      return refuse(Credentials.#row(ACCOUNT_CHECKS, "NO_TOKEN_FP", "the claim named no fingerprint of the bootstrap "
+        + "credential, so there is nothing to record that a later rotated secret could be told from. Nothing was written."));
+    /* END DEC-49 REGION is-claim-fingerprint */
+    if (typeof password !== "string" || password.length < 12)
+      return refuse({ ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
     const st = this.bootstrapState(tokenFp);
-    if (st.claimed) {
-      this.#refusedAttempt(gate, country);
-      return { ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt };
-    }
-    await this.setPassword({ role, password });
-    const now = new Date().toISOString();
-    this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
-                   ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
-                     token_fp=excluded.token_fp`, now, tokenFp);
-    return { ok: true, role, consumedAt: now };
+    if (st.claimed) return refuse({ ok: false, reason: "ALREADY_CLAIMED", consumedAt: st.consumedAt });
+    const hashed = await Credentials.#hashFor(password);
+    const done = this.#tx(() => {
+      const chosen = this.#founderHandleChosen(handle);
+      if (chosen.ok !== true) return chosen;   /* nothing written yet: the handle is judged before the password */
+      this.#storePassword(ROOT, hashed);
+      const now = new Date().toISOString();
+      this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
+                     ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
+                       token_fp=excluded.token_fp`, now, tokenFp);
+      return { ok: true, role: ROOT, consumedAt: now, handle: chosen.handle };
+    });
+    return done.ok === true ? done : refuse(done);
+  }
+
+  /* R74: the founder's handle as membership holds it (its R144), or null. Never throws. */
+  #founderHandle() {
+    try {
+      const h = this.membership.founderHandle();
+      return typeof h === "string" && h !== "" ? h : null;
+    } catch { return null; }
+  }
+
+  /* R74: the handle the claim takes, inside its act: the one held when `handle` is absent or equal to it, else the
+     answer of membership's `founderHandleSet({handle, by: "admin"})`: the handle recorded, or its refusal (NO_HANDLE,
+     BAD_HANDLE, HANDLE_TAKEN with none held; HANDLE_FIXED with a different one held) as it gives it. */
+  #founderHandleChosen(handle) {
+    const held = this.#founderHandle();
+    if (held !== null && (handle === null || handle === undefined || handle === "" || handle === held))
+      return { ok: true, handle: held };
+    return this.membership.founderHandleSet({ handle, by: ROOT });
   }
 
   /* R3: a salted, derived hash for `role`, replacing any earlier one; never the password. An in-plane call reached
@@ -436,13 +471,13 @@ export class Credentials {
      well as the sessions; that arm never touches a password, so it pays the same cost first and answers the same
      words, byte for byte. R38's window is asked first; each refusal counts toward it and toward R44's tally. R40: the
      session is stored as its token's digest and the token answered once. R41: the derived hash is compared in
-     constant time. (T47; R67) `handle`, when given, names the role (`#roleByHandle`): a handle no member holds is a role
-     no credential is held under, the same refusal at the same cost. (R65) `device`, `own` or `shared` (anything else,
+     constant time. (T47; R67; T49 R75) `handle` names the role (`#roleByHandle`): a handle no one holds, or none, is a
+     role no credential is held under, the same refusal at the same cost; `role` is no longer read. (R65) `device`, `own` or `shared` (anything else,
      or none, `shared`), is recorded on the session; an `own` session ends `ownMax` after its sign-in at most, a `shared`
      one `ttlSeconds` after (12 hours unless said), each sooner when idle (`#stateOf`). */
-  async login({ role = ROOT, handle = null, password, ttlSeconds = 43200, device = "shared", source = null,
+  async login({ handle = null, password, ttlSeconds = 43200, device = "shared", source = null,
                 country = null } = {}) {
-    if (typeof handle === "string" && handle !== "") role = this.#roleByHandle(handle);
+    const role = this.#roleByHandle(handle);
     const gate = await this.#gate({ role, source, country, password });
     if (gate.paused) return gate.paused;
     const refuse = () => { this.#refusedAttempt(gate, country); return Credentials.#refused(); };
@@ -465,14 +500,21 @@ export class Credentials {
     return { ok: true, role, token, expires, device: own ? "own" : "shared" };
   }
 
-  /* R67 (T47; DEC-201 `front`): the role a handle names: the founder's for `admin`, `member:<id>` for the member who
-     holds it (membership R119, whatever their status: R4 judges it), else `handle:<handle>`, a role under which no
-     credential is ever held, so that arm costs and answers as every other refusal. */
+  /* R75 (T49; N1072, K3265; amends R67): the role a handle names. The founder's handle (`membership.founderHandle()`)
+     names the role `admin`; a member's names `member:<id>` (membership R119, whatever their status: R4 judges it);
+     `admin` names the founder only while no founder handle is held (a group claimed before T49, until its founder
+     chooses once; BOB's detail, N1072). Every other handle, an empty one and none included, names `handle:<as typed>`,
+     a role under which no credential is ever held and under which R38 counts the attempt, so that arm costs and answers
+     as every other refusal and attempts on `admin` never pause the founder's own handle. */
   #roleByHandle(handle) {
-    if (handle === ROOT) return ROOT;
+    const typed = typeof handle === "string" ? handle : "";
+    const founder = this.#founderHandle();
+    if (typed !== "" && founder !== null && typed === founder) return ROOT;
     let m = null;
-    try { m = this.membership.memberByHandle(handle); } catch { m = null; }
-    return m && typeof m.member_id === "string" ? `member:${m.member_id}` : `handle:${handle}`;
+    if (typed !== "") { try { m = this.membership.memberByHandle(typed); } catch { m = null; } }
+    if (m && typeof m.member_id === "string") return `member:${m.member_id}`;
+    if (typed === ROOT && founder === null) return ROOT;
+    return `handle:${typed}`;
   }
 
   /* R4, R41: whether `password` derives the hash stored for `role`, at one derivation's cost whether or not a
@@ -1313,7 +1355,7 @@ export class Credentials {
     if (away) return away;
     const id = Credentials.#memberOf(member);
     const s = this.#liveSession(session, { locked: true });
-    if (!s || s.role !== `member:${id}`)
+    if (!s || !this.#ownSession(s.role, id))
       return this.accounts.notYourAccount("an ask's grant is minted only under the member's own "
         + "live session. Nothing was minted.");
     if (s.state === "locked") return Credentials.sessionLockedRefusal();   /* R65 */
@@ -1349,6 +1391,17 @@ export class Credentials {
     return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1000, "standing");
   }
 
+  /* R76 (T49; D2, K3320; amends R27): whether the live session of role `role` is `id`'s own: a member's session is
+     `member:<id>`, and the founder's (the session whose role `membership.sessionRights` answers as the founder, its
+     R144: `rootOfTrust` and the founder's id) is her own for her own grant, exactly as a member's is for hers. A
+     session of any other role is not. */
+  #ownSession(role, id) {
+    if (typeof id !== "string" || id === "" || typeof role !== "string") return false;
+    if (id !== ROOT) return role === `member:${id}`;
+    const r = this.membership.sessionRights(role) || {};
+    return role === ROOT && r.rootOfTrust === true && r.member === ROOT;
+  }
+
   /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
      a standing question's needs no session (R32). Writes nothing. */
   async #liveGrant(token) {
@@ -1360,7 +1413,7 @@ export class Credentials {
     if (g.kind === "standing") return g;
     const s = this.#one(`SELECT role, expires, created, device, last_active FROM sessions WHERE token_sha=?`, g.session);   /* R40: the digest */
     /* R65: its session live and not locked */
-    return s && Credentials.#stateOf(s, now) === "live" && s.role === `member:${g.member_id}` ? g : null;
+    return s && Credentials.#stateOf(s, now) === "live" && this.#ownSession(s.role, g.member_id) ? g : null;
   }
 
   static #grantNotHeld() {
@@ -1700,11 +1753,10 @@ export class Credentials {
     /* END DEC-49 REGION is-recovery-code */
   }
 
-  /* R47: reached without a credential. (T47; R67) `handle`, when given, names the role as `login`'s does; (R68) any
-     active member's role recovers. */
-  async recover({ role = null, handle = null, code = null, password = null, source = null, country = null } = {}) {
-    const asked = typeof handle === "string" && handle !== "" ? this.#roleByHandle(handle)
-      : typeof role === "string" ? role : "";
+  /* R47: reached without a credential. (T47; R67; T49 R75) `handle` names the role as `login`'s does, and `role` is no
+     longer read; (R68) any active member's role recovers. */
+  async recover({ handle = null, code = null, password = null, source = null, country = null } = {}) {
+    const asked = this.#roleByHandle(handle);
     const gate = await this.#gate({ role: asked, source, country, password });
     if (gate.paused) return gate.paused;
     if (typeof password !== "string" || password.length < 12) {

@@ -2,7 +2,7 @@
    that registers them, at the interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realWorld, PASSWORD } from "./fixture.mjs";
+import { world, realWorld, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -13,7 +13,7 @@ const keysOf = (w, id) => w.rows(`SELECT key_b64, status, status_by FROM signers
 async function revocationWorld() {
   const w = await world().group("ann", "bob");
   for (const id of ["ann", "bob"]) {
-    for (let i = 0; i < 2; i++) assert.equal((await w.c.login({ role: `member:${id}`, password: PASSWORD(id) })).ok, true);
+    for (let i = 0; i < 2; i++) assert.equal((await w.c.login({ handle: `${id}`, password: PASSWORD(id) })).ok, true);
     w.c.signerAdd({ keyB64: `AAAA${id}1`, memberId: id, by: "admin" });
     w.c.signerRegisterOwn({ keyB64: `AAAA${id}2`, by: id });
   }
@@ -22,7 +22,7 @@ async function revocationWorld() {
 
 test("R16 a revocation (membership R20) ends every session of the member and revokes every key registered to them, in the same act, named for its actor; no one else's", async () => {
   const w = await revocationWorld();
-  const annTok = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const annTok = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   assert.equal(sessionsOf(w, "ann"), 3);
   const r = w.m.memberSet({ memberId: "ann", status: "revoked", by: "second" });
   assert.equal(r.ok, true);
@@ -51,7 +51,7 @@ test("R16 a carried administrator removal (membership R8) ends the target's sess
     assert.equal((await w.m.enroll({ invite: e.invite, handle: id, password: PASSWORD(id) })).ok, true);
     await w.c.setPassword({ role: `member:${id}`, password: PASSWORD(id) });
   }
-  assert.equal((await w.c.login({ role: "member:fourth", password: PASSWORD("fourth") })).ok, true);
+  assert.equal((await w.c.login({ handle: "fourth", password: PASSWORD("fourth") })).ok, true);
   w.c.signerAdd({ keyB64: "AAAAfourth", memberId: "fourth", by: "admin" });
   /* five administrators: three votes carry it; a vote short of it changes nothing here */
   assert.equal(w.m.adminRemove({ memberId: "fourth", by: "admin", reason: "r1" }).reason, "VOTES_SHORT");
@@ -69,7 +69,7 @@ test("R16 R17 start registers the listener and the claim fact once; a second sta
   assert.deepEqual([again.claimed.ok, again.claimed.reason, again.claimed.module], [false, "LISTENER_DECLARED", "credentials"]);
   assert.equal(credentialsOf(w.ctx), w.c, "one instance per storage: credentialsOf starts it once");
   /* the registration still stands and fires once: one revocation, one cascade */
-  assert.equal((await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).ok, true);
+  assert.equal((await w.c.login({ handle: "ann", password: PASSWORD("ann") })).ok, true);
   w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
   assert.equal(sessionsOf(w, "ann"), 0);
   assert.equal(w.m.isAdministrator("admin"), true);
@@ -84,11 +84,11 @@ test("R17 claimed() is true exactly when the founder's credential is held; membe
   const before = w.snapshot();
   assert.equal(w.c.claimed(), false);
   assert.equal(w.snapshot(), before, "writes nothing");
-  assert.equal((await w.c.claim({ password: "x".repeat(12), tokenFp: "fp-1" })).ok, true);
+  assert.equal((await w.c.claim({ password: "x".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" })).ok, true);
   assert.equal(w.c.claimed(), true);
   assert.deepEqual([w.m.isAdministrator("admin"), w.m.activeAdmins()], [true, ["admin"]], "membership R64, R86: claimed");
   /* a re-armed claim replaces the credential and the fact holds through it */
-  assert.equal((await w.c.claim({ password: "y".repeat(12), tokenFp: "fp-2" })).ok, true);
+  assert.equal((await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-2" })).ok, true);
   assert.equal(w.c.claimed(), true);
   /* never throws: a store it cannot read answers not claimed */
   const broken = credentialsOf({ storage: { sql: { exec() { throw new Error("no store"); } } } },
@@ -98,7 +98,7 @@ test("R17 claimed() is true exactly when the founder's credential is held; membe
 
 test("R18 R30 every credentials table is declared exempt from purge, and a whole-store purge clears none of them (through the real record-core), T35's tables included", async () => {
   const w = realWorld();
-  await w.c.claim({ password: "x".repeat(12), tokenFp: "fp-1" });
+  await w.c.claim({ password: "x".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" });
   const a = await w.m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
   await w.m.enroll({ invite: a.invite, handle: "second", password: PASSWORD("second") });
   await w.c.setPassword({ role: "member:second", password: PASSWORD("second") });
@@ -106,9 +106,9 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
      (R38, R44); (T48) the AI accounts' tables are ai-accounts' (its R28, R29), and a reference is set only so the
      grant is minted */
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
-  assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "recovered-passphrase", source: "fp-a" })).ok, true);
-  assert.equal((await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "fp-b", country: "US" })).ok, false);
-  const sess = (await w.c.login({ role: "member:second", password: "recovered-passphrase" })).token;
+  assert.equal((await w.c.recover({ handle: "second", code: codes[0], password: "recovered-passphrase", source: "fp-a" })).ok, true);
+  assert.equal((await w.c.login({ handle: "nobody", password: "wrong-passphrase", source: "fp-b", country: "US" })).ok, false);
+  const sess = (await w.c.login({ handle: "second", password: "recovered-passphrase" })).token;
   assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
   w.c.aiCredentialMint({ tokenId: "t1", secretSha: "a".repeat(64), principalKind: "member", who: "second" });
@@ -125,7 +125,7 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
   assert.deepEqual(count(), before);
-  assert.equal((await w.c.login({ role: "member:second", password: "recovered-passphrase" })).ok, true);
+  assert.equal((await w.c.login({ handle: "second", password: "recovered-passphrase" })).ok, true);
 });
 
 test("R18 R30 the declaration: (T48) its own fourteen tables declared once by credentials through declareTable, with their classes; the eleven AI-account tables declared by ai-accounts alone, never by this module; any refusal is thrown", () => {
@@ -195,6 +195,6 @@ test("R20 start registers setPassword as membership's password setter (its R95):
     await real.claim();
     const a = await real.m.memberAdd({ memberId: "second", cover: "c", role: "admin", by: "admin" });
     assert.equal((await real.m.enroll({ invite: a.invite, handle: "second", password: "second-passphrase-z" })).ok, true);
-    assert.equal((await real.c.login({ role: "member:second", password: "second-passphrase-z" })).ok, true);
+    assert.equal((await real.c.login({ handle: "second", password: "second-passphrase-z" })).ok, true);
   }
 });
