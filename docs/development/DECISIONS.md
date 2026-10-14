@@ -3547,6 +3547,7 @@ response: Bob's comment, folded. (1) The opening now names what a government's o
 decided: 2026-10-14 · Bob (his comment), drawn by the design session
 reasoning recorded in: this entry; `screens/mock-screens.js` (SITE_LINE1, SITE_LINE2), `screens/mock-shell.js` (the credit and wordmark cards), the swept sources, `screens/words.json`, `layouts.html`.
 owed: (BOB) the swept words reach the jobs by key at the next merge of this branch into the tranche (affordances' `ACT_HELP` and setup-words' counts are re-taken then, K3143); nothing else.
+amended: 2026-10-14 · Bob's three further comments on the site, the same night: "all laws", not only those the government passed (the opening and the credit line now say "the laws it must obey"); "its own copy of Civicsmith", said so; and a section "What Civicsmith is" at the top of the site, before "What a group gets", defining the words the site uses (the record, a question, evidence, a finding, a case, the assistant), so no term appears before its meaning.
 
 ### DEC-222 · answered
 raised: 2026-10-14 · the UX design session with Bob on his secondary account (session_01DyYKz1UJZVqVzz1E8F4Cyk) (BOB #168's B177, K3148: the help page's purpose names a place; and B178, K3149: the escalation screen's stage names differ from the code's)

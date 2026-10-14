@@ -199,8 +199,8 @@ function decorate(html, id, c) {
     tb.querySelectorAll('tbody tr.mk-r').forEach(r => [...r.cells].forEach((td, i) => { if (i > 1 && hs[i]) { td.dataset.label = hs[i]; td.innerHTML = `<span class="mk-cv">${td.innerHTML}</span>`; } })); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
-  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether a government keeps its own word: its laws, the court decisions that bind it, its rules and its promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
-  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for groups that check whether a government keeps its own word: its laws, the court decisions that bind it, its rules and its promises.', 2);
+  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
+  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.', 2);
   return t.innerHTML;
 }
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
