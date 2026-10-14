@@ -39,3 +39,7 @@ K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words,
 ## B7 · CHANGE
 
 K3156 (T47-94): merge tranche/T47. R6 now says the page policy's `img-src` is `'self' data: blob:` (INTERFACE-SHELL #2 J4: interface-shell R49's `cs.image` draws from a page-made object address, which names no other origin). Add `blob:` to PAGE_POLICY's img-src, test it (and that no other origin appears), and post COMPLETE with your other work.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
