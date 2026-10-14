@@ -67,3 +67,7 @@ COMPLETE (J5) after B5: merged the latest tranche/T49; 109 tests pass; nothing e
 
 ## After CHANGE B6 (DEC-262)
 Merged; `counts` is drawn again (its three counts, zero included, as the design's sentence has them; tension and not visited beside it), `range`, `due-date.of` and `step.counted` filled with exactly their placeholders (no `{answer}`, `{item}`, `{date}`); the kind-gated `of` line is gone, `of` is drawn whenever the action has a counterparty. 108 tests pass. Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 47, module lines 2077
+
+## J6 · COMPLETE
+
+COMPLETE (J6) after B6: merged tranche/T49 (DEC-262); counts, range, due-date.of and step.counted filled with exactly their placeholders; counts is drawn with its zeros as the design has it. 108 tests pass; format, architecture, coverage 30/30, ownership 0 failures.
