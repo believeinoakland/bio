@@ -26,3 +26,7 @@
 **Found in other modules:** none. No generated artifact was staled by this job beyond accepted red 5 (the plane bundle, regenerated at the layer's close).
 
 Size (session_01MmY6q7CBhN2ngQCGTaZqs8): test runs 3, module lines 2199
+
+## J1 · COMPLETE
+
+T48-23 done: R39 (personAt answers claims with their ids, claims_truncated; hidden-project claims neither listed nor counted) and R38 (organisation rows answer note_by and machine). people 56/56 pass; users' tests identical to tranche/T48 (2214 pass, 17 fail, same names); format, architecture, coverage (39/39), ownership 0 failures; run.mjs architecture 0. Details and Size line in the record.
