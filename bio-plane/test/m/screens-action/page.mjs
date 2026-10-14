@@ -23,6 +23,8 @@ export function servedClasses() {
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
 export const open = (path, plane = {}, o = {}) => boot({ screens: SCREENS, plane, path, ...o });
+/** The path's steps, as the kit draws them (a link or span per earlier step, the current page last). */
+export const crumbs = (p) => main(p).querySelector("nav.cs-crumbs").children.filter((e) => e.localName !== "i").map((e) => e.textContent.trim());
 export const main = (p) => p.doc.getElementById("cs-main");
 export const text = (p, el = main(p)) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();
 export const acts = (p) => main(p).querySelectorAll("button[data-act]").map((b) => [b.getAttribute("data-act"), b.dataset]);

@@ -37,7 +37,7 @@ export const helpRecords = Object.freeze({
     const does = cs.sec("screen.help-records.does", '<p class="mk-note">' + cs.w("screen.help-records.does.text") + "</p>");
     const sources = none ? "" : cs.sec("screen.help-records.sources", cs.state("profiles", function (p) {
       const cites = held(p).flatMap(function (d) { return [d.citation].concat(d.extension && d.extension.citation ? [d.extension.citation] : []); });
-      return '<p class="src">' + cs.esc(cites.filter(function (c, i) { return cites.indexOf(c) === i; }).join("; ")) + "</p>";
+      return '<p class="mk-note">' + cs.esc(cites.filter(function (c, i) { return cites.indexOf(c) === i; }).join("; ")) + "</p>";
     }));
     return cs.title(null) + must + faster + portal + does + sources;
   },

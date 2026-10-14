@@ -1,7 +1,7 @@
 /* screens-action R5, R10 (and R7 on `action`): one action, its replies, due dates, pressure, holds and scope. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, beside, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, PRESSURE, PROJECT, draft } from "./page.mjs";
+import { open, main, crumbs, text, ops, press, last, ok, beside, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, PRESSURE, PROJECT, draft } from "./page.mjs";
 
 test("R5: reads the action: what it is, to whom (by role, with who holds it today), when and by whom it was sent, its replies; 'Waiting on <office>'s reply' while one is owed", async () => {
   const p = await open(ROUTES.action, DATA_PLANE);
@@ -77,12 +77,12 @@ test("R10 (DEC-212): an action holding an approved, unsent text offers 'Pick up 
 test("R12: the action heads the screen with its title and its project as a reference, each as `action` answers them; control: a null is drawn absent, never as 'untitled'", async () => {
   const p = await open(ROUTES.action, DATA_PLANE);
   assert.equal(main(p).querySelector("h1").textContent, "Inspection logs, 2025");
-  assert.equal(main(p).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim()).join(" › "), "Projects › Pothole repairs › Action");
+  assert.equal(crumbs(p).join(" › "), "Projects › Pothole repairs › Action");
   assert.equal(p.byOp("file").length, 0, "the project comes from the action's own answer, not from its document");
   const bare = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, title: null, project: null }) });
   assert.equal(main(bare).querySelector("h1").textContent, "Action", "no title: the screen's own name");
   assert.doesNotMatch(text(bare), /untitled/i);
-  assert.equal(main(bare).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim()).join(" › "), "Projects › Action", "no project: no project step");
+  assert.equal(crumbs(bare).join(" › "), "Projects › Action", "no project: no project step");
 });
 
 test("R12: the pressure marks from pressurefor are drawn with where each arrived; control: a mark on another action is not drawn", async () => {

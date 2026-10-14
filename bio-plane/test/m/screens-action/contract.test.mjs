@@ -9,9 +9,9 @@ import { dirname, join } from "node:path";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-action/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { checkScreens, interfacePage } from "../../../src/interface-shell/index.mjs";
+import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
-import { open, main, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
+import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
   CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -147,7 +147,7 @@ test("R1–R6 (interface-shell R8): every working screen is drawn under its path
     request: "Projects › Pothole repairs › Request records", action: "Projects › Pothole repairs › Action", matter: "Projects › Pothole repairs › Matter" };
   for (const [id, path] of Object.entries(want)) {
     const p = await open(ROUTES[id], DATA_PLANE);
-    const steps = main(p).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim());
+    const steps = crumbs(p);
     assert.equal(steps.join(" › "), path, id);
   }
 });
@@ -169,8 +169,8 @@ const CLASS_PLANES = () => {
   ];
 };
 
-// drawn by the kit's own `cs.rows`, not by a screen of this module: interface-shell R56 and its job carry it
-const KIT_OWN = ["cs-pickc"];
+// the script-hook classes interface-shell R56 lists need no style
+const KIT_OWN = Object.keys(HOOK_CLASSES);
 
 test("R14: every element these screens draw uses a class a served stylesheet defines (civicsmith.css, the design page's product rules, the shell's own style); none of mk-form, mk-done, mk-grid, cs-form", async () => {
   const served = servedClasses();
