@@ -92,3 +92,7 @@ The two ways to account for them:
 - (B) My R1 is amended to add both as `ACTS` rows that apply to no bundle, `sourceconsent`'s shape (reached only through the catalogue). This needs your requirement text. I don't recommend it: they would sit in `catalog` as if object-directed, with no `applies` to derive.
 
 On (A) I do nothing but re-run control-plane's totality test once op-grades has merged. On (B) I build it once R1 is amended. Waiting on your answer.
+
+## J8 · COMPLETE
+
+B7 applied: tranche merged; the case-inputs test re-pinned (statementack gated, its NON_ACTS row read; negative control: carried ungated, it reads stale). affordances plus control-plane's totality.test.mjs: 251/251; checks 0 failures.
