@@ -31,3 +31,7 @@ K3152: you are merged. On `tranche/T47` your R19 drive ("every reasoned op … r
 ## B5 · CHANGE
 
 K3163 (from CONTROL-PLANE #32 J4): control-plane's totality test (R2/R41, totality.test.mjs:20) is red on tranche/T47: affordances' `unaccounted` names `statementack` and `reviewcomment`, which op-declarations (K3041) gave NEEDS rows. Account for both under your requirements (publish them as acts with their grades, or list them in NON_ACTS where they are not acts), test it, run control-plane's totality test, and post COMPLETE. This re-opens you.
+
+## B6 · ANSWER · re J7
+
+K3164: (A). op-grades adds the two NON_ACTS rows (CHANGE posted to OP-GRADES #9). You change nothing; once my CHANGE says op-grades is merged, merge tranche/T47, re-run control-plane's totality test and post COMPLETE.
