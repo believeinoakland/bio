@@ -26,7 +26,7 @@
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
-import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf, KEPT_AWAY_UNREADABLE } from "../ai-accounts/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
@@ -92,14 +92,14 @@ const parse = (s) => { try { return s == null ? null : JSON.parse(s); } catch { 
 const bareMember = (v) => { const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(String(v ?? "")); return m ? m[1] : null; };
 
 export class QuestionExplorer {
-  constructor({ storage, record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions,
+  constructor({ storage, record, membership, aiAccounts, connections, retrieval, inquiry, legEarning, basisVersions,
                 steps = null, aiUse = null, aiRuns, captureRequests = null, runProductions = null,
                 held = null, testSet = runRules.CIVICSMITH_TEST_SET, principal = EXPLORE_PRINCIPAL, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.credentials = credentials;
+    this.aiAccounts = aiAccounts;
     this.connections = connections;
     this.retrieval = retrieval;
     this.inquiry = inquiry;
@@ -350,15 +350,15 @@ export class QuestionExplorer {
   }
 
   /** R3 (N796, K2425): a member's account served by her sign-in explores only while that account's `explore` use is
-   *  on; whichever of her accounts serves, a switch at `no` is refused here as `ai-use` refuses it. */
+   *  on; whichever of her accounts serves, a switch at `no` is refused here as `ai-use` refuses it. Read through
+   *  `ai-accounts.accountUsesOf` (its R17), the in-plane read for an account this module does not own, never
+   *  `accountUses` as that member; an account that cannot be read is refused (fail closed: no switch reads as on). */
   #switchedOff(owner) {
-    if (!owner.startsWith("member:") || !this.credentials || typeof this.credentials.accountUses !== "function") return null;
-    const u = this.credentials.accountUses({ owner, viewer: owner });
-    if (!u || u.ok === false) return null;
-    if (u.uses && u.uses.explore === "no")
-      return { ok: false, code: "EXPLORE_NOT_ENABLED", reason: "EXPLORE_NOT_ENABLED", owner,
-               signin: !!(u.accounts && u.accounts.signin && u.accounts.signin.held && !(u.accounts.reference && u.accounts.reference.held)) };
-    return null;
+    if (!owner.startsWith("member:")) return false;
+    let u;
+    try { u = this.aiAccounts.accountUsesOf({ owner }); } catch { return true; }
+    if (!u || u.unreadable === true) return true;
+    return !!(u.uses && u.uses.explore === "no");
   }
 
   #considered(question, owner, day) {
@@ -422,8 +422,7 @@ export class QuestionExplorer {
       for (const owner of this.#ownersFor(w)) {
         const prior = this.#considered(w.question, owner, day);
         if (prior && prior.outcome === "refused") continue;
-        const off = this.#switchedOff(owner);
-        if (off) { this.#consider(w.question, owner, day, "refused", at); out.refused += 1; continue; }
+        if (this.#switchedOff(owner)) { this.#consider(w.question, owner, day, "refused", at); out.refused += 1; continue; }
         let a;
         try { a = this.aiUse.exploreAllowed({ owner, question: w.question, at }); }
         catch { a = { ok: false, code: "EXPLORE_ALLOWED_UNREADABLE" }; }
@@ -652,7 +651,7 @@ export class QuestionExplorer {
 
   /** R13: the run reads inside a held document through `run-productions` (its R24 `readPages`): a few pages at a time
    *  within the run's `pages` bound (`run-rules` R26), never a document under a "no AI" material limit on `read`
-   *  (`credentials` R57; run-productions asks `run-rules`' `checkPagesRead`, the one site), and says how far it read.
+   *  (`ai-accounts` R22; run-productions asks `run-rules`' `checkPagesRead`, the one site), and says how far it read.
    *  Asked here first: the document is within the paying account's sight (R3), and no limit keeps it from `explore`.
    *  What it proposes while reading is `run-productions` R21's, under the step this answer names. */
   read({ run, bundleId, from = null, caller = null, at = null } = {}) {
@@ -678,9 +677,10 @@ export class QuestionExplorer {
     if (!b || b.object_type !== "information" || !this.#ownerSees(r.owner, id))
       return { refusal: { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id,
                           detail: "no held document by that id is in the paying account's sight" } };
+    /* `ai-accounts` R22's one site; a call that throws is answered its R34 fail-closed refusal, never a copy. */
     let k = null;
-    try { k = this.credentials.aiKeptAway({ project: str(b.project), use: EXPLORE_USE }); }
-    catch { k = { code: "AI_KEPT_AWAY" }; }
+    try { k = this.aiAccounts.aiKeptAway({ project: str(b.project), use: EXPLORE_USE }); }
+    catch { k = KEPT_AWAY_UNREADABLE; }
     if (k) return { refusal: this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from exploring",
                                           { run: r.run, target: id, kept_away: { code: k.code ?? null, use: EXPLORE_USE } }) };
     return { r, id };
@@ -896,7 +896,7 @@ export function questionExplorerOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     p = new QuestionExplorer({
       storage: d.storage || host.storage, record, membership,
-      credentials: d.credentials || credentialsOf(host, { record, membership }),
+      aiAccounts: d.aiAccounts || aiAccountsOf(host, { record, membership }),
       connections: d.connections || connectionsOf(host),
       retrieval: d.retrieval || retrievalOf(host),
       inquiry: d.inquiry || inquiryOf(host),

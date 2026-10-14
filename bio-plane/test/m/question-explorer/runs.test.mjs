@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, Q, Q2, DOC, DOC2, HDOC, PROJ, HPROJ, ENT, PERSON, PERSON2, CAP, CAP2, HCAP, CALLER } from "./fixture.mjs";
 import { EXPLORE_PERSON_CAP, EXPLORE_CHECKS } from "../../../src/question-explorer/index.mjs";
+import { KEPT_AWAY_UNREADABLE } from "../../../src/ai-accounts/index.mjs";
 
 test("R3: it reads within its principal's sight: the group's, what every member may see; a project's, its participants'", async () => {
   const w = await world().standard();
@@ -136,7 +137,7 @@ test("R13: a run reads inside a held document through run-productions R24, a few
   /* Negative control: the group keeps its material from `read`: run-rules R26's refusal, nothing counted. */
   const w2 = await world().standard();
   const o2 = await w2.openRun("group");
-  assert.equal(w2.credentials.aiKeepAwaySet({ on: true, uses: ["read"], reason: "a privileged file", by: "member:dana" }).ok, true);
+  assert.equal(w2.aiAccounts.aiKeepAwaySet({ on: true, uses: ["read"], reason: "a privileged file", by: "member:dana" }).ok, true);
   assert.equal(w2.p.read({ run: o2.run, bundleId: DOC, caller: CALLER }).code, "AI_RUN_READ_NO_AI");
   assert.equal(w2.bounds.get(`${o2.run}|pages`).consumed, 0);
   /* A project's own limit on `explore` keeps its documents from exploring; on `read`, run-rules R26's refusal. */
@@ -147,10 +148,10 @@ test("R13: a run reads inside a held document through run-productions R24, a few
   await w3.setExplore("group", "no");
   const o3 = await w3.openRun(`project:${PROJ}`);
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, caller: CALLER }).ok, true);
-  assert.equal(w3.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
+  assert.equal(w3.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, caller: CALLER }).code, "EXPLORE_READ_KEPT_AWAY");
   assert.equal(w3.p.read({ run: o3.run, bundleId: DOC, caller: CALLER }).ok, true, "a document outside that project is not kept");
-  assert.equal(w3.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "kept", by: "member:alice" }).ok, true);
+  assert.equal(w3.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "kept", by: "member:alice" }).ok, true);
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, caller: CALLER }).code, "AI_RUN_READ_NO_AI");
   /* Outside the paying account's sight: answered as absent. */
   assert.equal(w.p.read({ run: o.run, bundleId: "INFO-2026-0099-z", caller: CALLER }).code, "NO_SUCH_BUNDLE");
@@ -187,7 +188,30 @@ test("R13: what an exploring run proposes while reading is run-productions R21's
   w2.draw(Q, PROJ);
   await w2.setExplore("group", "no");
   const o2 = await w2.openRun(`project:${PROJ}`);
-  assert.equal(w2.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
+  assert.equal(w2.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
   assert.equal(w2.p.propose({ run: o2.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER }).code,
                "EXPLORE_READ_KEPT_AWAY");
+});
+
+test("R13: the material limit is read from ai-accounts (its R22's aiKeptAway, asked with the document's project and the use explore); a read that throws is answered its fail-closed refusal (ai-accounts R34's KEPT_AWAY_UNREADABLE), nothing read", async () => {
+  const asked = [];
+  const stand = { real: null, throws: false,
+    accountUsesOf(a) { return stand.real.accountUsesOf(a); },
+    aiKeptAway(a) { asked.push(a); if (stand.throws) throw new Error("unreadable"); return stand.real.aiKeptAway(a); } };
+  const w = world({ aiAccounts: stand });
+  stand.real = w.aiAccounts;
+  await w.standard();
+  w.project(PROJ, ["alice"], { owners: ["alice"] });
+  w.doc(HDOC, HCAP, { project: PROJ });
+  w.draw(Q, PROJ);
+  await w.setExplore("group", "no");
+  const o = await w.openRun(`project:${PROJ}`);
+  assert.equal(w.p.read({ run: o.run, bundleId: HDOC, caller: CALLER }).ok, true, "negative control: nothing keeps it");
+  assert.deepEqual(asked.at(-1), { project: PROJ, use: "explore" });
+  stand.throws = true;
+  const consumed = w.bounds.get(`${o.run}|pages`).consumed;
+  const r = w.p.read({ run: o.run, bundleId: HDOC, caller: CALLER });
+  assert.deepEqual([r.code, r.kept_away.code, r.kept_away.use], ["EXPLORE_READ_KEPT_AWAY", KEPT_AWAY_UNREADABLE.code, "explore"]);
+  assert.equal(w.p.propose({ run: o.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", caller: CALLER }).code, "EXPLORE_READ_KEPT_AWAY");
+  assert.equal(w.bounds.get(`${o.run}|pages`).consumed, consumed, "nothing read");
 });
