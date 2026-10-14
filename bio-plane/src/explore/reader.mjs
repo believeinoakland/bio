@@ -33,7 +33,7 @@ export function kindsByOwner(registry, kinds) {
 export function makeReader(ctx, q) {
   const { registry, now, budget_ms } = ctx;
   const t0 = now();
-  const s = { hubs: [], fanout: [], refusals: [], unread: [], calls: 0, stop: /** @type {string|null} */ (null) };
+  const s = { hubs: [], fanout: [], refusals: [], unread: [], calls: 0, stop: /** @type {string|null} */ (null), stop_node: /** @type {string|null} */ (null) };
   const elapsed = () => Math.max(0, Math.round(now() - t0));
 
   const unreadSeen = new Set();
@@ -51,7 +51,7 @@ export function makeReader(ctx, q) {
     const most = kinds.reduce((n, k) => n + hubBoundOf(k), 0);
     let page;
     for (;;) {
-      if (now() - t0 > budget_ms) { s.stop = 'time'; return null; }
+      if (now() - t0 > budget_ms) { s.stop = 'time'; s.stop_node = node; return null; }
       s.calls++;
       const a = registry.neighbours({ owner, node, kinds, at, page, viewer: q.viewer, scope: q.scope, host: ctx.host });
       if (isRefusal(a)) { s.refusals.push({ owner, node, refused: a.refused, why: a.why }); return null; }

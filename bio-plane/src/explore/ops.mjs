@@ -1,6 +1,6 @@
 // @ts-check
 /* explore: the op handlers the control plane routes to (R14), reads only: `explore`, `explorepreset`,
-   `exploreverify`, `exploretimeline`. The viewer comes from the query string, where the control plane stamped it,
+   `exploreverify` (one derived connection, or a `chain`, R23), `exploretimeline` and `exploregraph` (R21). The viewer comes from the query string, where the control plane stamped it,
    never from the body (a body field a caller can fill is a name a machine can post). */
 import { refuse, isObj } from './answer.mjs';
 
@@ -21,5 +21,6 @@ export function exploreOps(explore, url, body) {
     },
     exploreverify: () => explore.rederive({ ...args, viewer }),
     exploretimeline: () => explore.timelineOver({ ...args, viewer }),
+    exploregraph: () => explore.neighbourhood({ ...args, viewer }),
   };
 }

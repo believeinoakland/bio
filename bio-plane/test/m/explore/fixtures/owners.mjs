@@ -37,7 +37,7 @@ export const OWNER_KINDS = {
   ],
   entities: [["proxy_for", "stands for"], ["member_of", "grouped under"], ["overlaps", "overlaps with"]].map(([kind, word]) => ({ kind, word, class: "declared" })),
   hypotheses: [{ kind: "hunch_tie", word: "a hunch about", class: "hunch" }],
-  connections: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" }],
+  connections: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" }, { kind: "step_source", word: "stated in a source", class: "evidentiary" }],
 };
 
 const OWNER_OF = Object.fromEntries(Object.entries(OWNER_KINDS).flatMap(([o, ks]) => ks.map((k) => [k.kind, o])));
@@ -47,7 +47,7 @@ let seq = 0;
 /**
  * One connection in the shape, for its kind's owner and class.
  * @param {string} kind @param {string} from @param {string} to
- * @param {{id?: string, valid?: any, grade?: any, seen_by?: string[], scope?: string, quantities?: any, as_of?: string, method?: string, inputs?: any[]}} [o]
+ * @param {{id?: string, valid?: any, grade?: any, seen_by?: string[], scope?: string, quantities?: any, as_of?: string, method?: string, inputs?: any[], relation?: string}} [o]
  */
 export function conn(kind, from, to, o = {}) {
   const owner = OWNER_OF[kind], cls = CLASS_OF[kind];
@@ -60,6 +60,10 @@ export function conn(kind, from, to, o = {}) {
   else if (cls === "derived") {
     const d = { method: o.method ?? "co-mention", inputs: o.inputs ?? ["INFO-2026-0001-a-source"], as_of: o.as_of ?? "2026-02-01" };
     c = { ...base, id: derivedId({ kind, from, to, as_of: d.as_of, method: d.method }), grade: o.grade ?? { assertion: "C", ends: ["B", "C"] }, derived: d };
+  } else if (kind === "step_source") {
+    // An attached source of a declared step (connections R69): its evidence names the capture and the relation it backs,
+    // and its cited source, which every evidence entry names (connection-grammar R1).
+    c = { ...base, id: o.id ?? `c-${++seq}`, evidence: [{ source: "INFO-2026-0001-a-source", capture_sha: "a".repeat(64), extent: { kind: "document" }, basis: "read by a member", relation: o.relation }] };
   } else c = { ...base, id: o.id ?? `c-${++seq}` };
   if (o.quantities) c.quantities = o.quantities;
   if (o.seen_by) c.seen_by = o.seen_by;
