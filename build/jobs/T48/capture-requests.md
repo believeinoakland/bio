@@ -1,6 +1,6 @@
 # capture-requests (T48)
 
-**Status** · session_016oH6wXmETbYJSgystoYKuc · depth 2 · WORKING · handled B0
+**Status** · session_016oH6wXmETbYJSgystoYKuc · depth 2 · COMPLETE · handled B0
 
 ## Completion (CAPTURE-REQUESTS #19, session_016oH6wXmETbYJSgystoYKuc)
 
