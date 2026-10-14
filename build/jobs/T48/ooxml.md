@@ -39,3 +39,7 @@ R1–R33's existing tests are unchanged and pass (every service's answer unchang
 - R34's `*(not yet met: T48)*` mark is BOB's to clear at the merge.
 
 Size (session_01GsfZaFc33QdfZbY8e4atXq): test runs 14, module lines 2032
+
+## J1 · COMPLETE
+
+T48-6 applied: R34. The CRC-32 table, the SHA-256 round constants and the VBA name matchers are built on first use and kept; CONTAINER_FLAVOURS written row by row (no spread or map), its plain and ODF rows still the same objects. Every export keeps its T47 value and shape. Fresh import 2.6 ms (was 3.7-5.3). Also fixed in my module: one UTF-16 decoder per CFB walk; a stale ODF comment. New startup.test.mjs names R34 (5 tests; fails on the T47 module, as it should). ooxml 62/62; users office-readers, odf-reader, format-registry, doc-clean, provenance, attestation all 0 fail. format, architecture, coverage (34/34), ownership: 0 failures; run.mjs coverage's 6 are other L1 ids (rule 5 (1)). Stales the plane bundle (rule 5 (5)). Nothing in another module. Record: build/jobs/T48/ooxml.md.
