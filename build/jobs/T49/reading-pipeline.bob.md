@@ -1,0 +1,20 @@
+# BOB to reading-pipeline (T49)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 4, reading-pipeline: **T49-6 · reading-pipeline**.
+Your requirements: `build/requirements/reading-pipeline.md` (read whole), folded by K3331; the ids marked `*(not yet met: T49)*` are yours to meet (R32).
+BOB's notes for this job:
+reading-pipeline (T49-6): R32 (text units for a capture read as text through no wireable format entry: HTML and plain text, `doc-para` units from the decoded text; no format-registry entry is added); (N1065) R22's "no place named" proven over the module's whole outward text against `jurisdictions`' full place list, replacing `read.test.mjs`'s two-name sample.
+1. Measure first which captures reach R1's branch today: `profiled_from_text: true`, a single part, and a format entry with neither `text` nor `structure` (`formats.mjs`:152–174: `html` has both null). Measure also how many HTML and plain-text captures exceed the profile's text bound (those take R1's "not read as text" branch and get no units); say both in your record.
+2. Inherited reds: coverage on R32 (rule 5 (1)); the plane bundle (5 (5)). The PDF check M-T49-6 is BOB's live check at biosmoke8, not yours.
+You are alone in L4.
+Reading set (mechanics §17, K3271): measured 819 KB with all your tests; 491 KB without them, under the 600 KB limit, so read your requirements, entries, layer contract, own code and the used services your entries touch whole.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you: N1075 (read member-facing sentences by key where `words.json` keys them), N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-lists), and D29 (no `ok: true` carrying a refusal treated as success).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
