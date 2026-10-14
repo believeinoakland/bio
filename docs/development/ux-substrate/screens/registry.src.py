@@ -8,7 +8,7 @@ def screen(id, name, frame, purpose, acts, journeys):
                   acts=[dict(op=a[0], label=a[1]) for a in acts], journeys=journeys))
 
 # --- the group's Civicsmith: setting up, joining, accounts
-screen('site', 'civicsmith.org', 'setup', 'Civicsmith\'s own website, where the founding journey starts (Bob\'s D6, K3060): what Civicsmith is (installer R42\'s two lines), what a group gets, a case a group published, the groups that chose to be listed (DEC-132), members sent to their own group\'s address; "Start your group": whether it fits, what is needed (Workers Paid), who holds the Cloudflare account, what the group will choose, then "Create your group" opens the installer (DEC-206).',
+screen('site', 'civicsmith.org', 'setup', 'Civicsmith\'s own website, one site of three pages joined by one menu (Bob\'s D6, K3060; DEC-206; rewritten for its readers, DEC-223): the front page, for someone who has never heard of Civicsmith (what it is, how a group uses it in five steps, what a group gets, what it does not do, a published case, members sent to their own group\'s address); "Start a group", for a member who has decided (whether it fits, what is needed, who holds the Cloudflare account, what happens step by step, what it costs, then "Create your group" opens the installer); "Groups at work", the groups that chose to be listed (DEC-132).',
   [], [1,28])
 screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare\'s permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).',
   [('bootstrap','Continue to Cloudflare')], [1,28])

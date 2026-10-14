@@ -3562,3 +3562,17 @@ response: **Answered to BOB, 2026-10-14 (U208).** (1) The purpose now reads "Wha
 decided: 2026-10-14 · the design session, under Bob's rulings (P17)
 reasoning recorded in: this entry; `screens/registry.src.py` (`help-records`), `screens/mock-screens.js` (the escalation ladder), `screens/words.json`, `layouts.html`.
 owed: (BOB) nothing: the stage names on the screen follow escalation's own terms.
+
+### DEC-223 · answered
+raised: 2026-10-14 · the UX design session with Bob on his secondary account (session_01DyYKz1UJZVqVzz1E8F4Cyk) (Bob in chat, 14 October: civicsmith.org "seems that there are 3 different versions. Which do users see first and how are they connected? Is there a tab users select from?"; and "the sentence structure of all 3 pages is rather sloppy. It needs to be written for the audience, which is primarily people who don't know what Civicsmith is", and for "a group member who's already decided that it's time that they create a copy for themselves")
+for: bob-session
+question: How civicsmith.org's pages are joined and what each says, for its reader.
+why it is Bob's: the public face's words and structure (DEC-125, DEC-206); drawn as design detail under his direction (P17).
+provisional: three states of one screen with no menu between them, reading as three versions; text that named terms before defining them and spoke to no particular reader.
+alternative: one long page.
+recommendation: as below.
+reversal cost: low: words and one menu.
+response: **Bob's direction, drawn by the design session, 2026-10-14.** civicsmith.org is one website of three pages, joined by one menu at the top of every page (What Civicsmith is · Start a group · Groups at work, the current page marked), the front page first; its two buttons lead to the other two, and the menu leads anywhere. Each page is written for its reader. **The front page**, for someone who has never heard of Civicsmith: what it is in two sentences (free software for a group that wants to know whether its government is doing what it must: the laws that bind it, the court decisions it is subject to, its own rules, its promises); how a group uses it, in five steps that define each word as it is first needed (gather the records, ask a question, weigh the evidence, reach a finding, publish a case); what a group gets; what Civicsmith does not do (no side on policy, no legal advice, nothing published unsigned, no email); one group's published case; where members sign in; where to write. **Start a group**, for a member who has decided: whether it fits and what it is not for; what is needed (a Cloudflare account on Workers Paid, twenty minutes, nothing else, no technical knowledge); who should hold the Cloudflare account and why it matters; what happens step by step, from the short name and places to inviting members; what it costs and to whom; then "Create your group". **Groups at work**: the groups that chose to be listed. The mockup's control now says "the page of civicsmith.org" so the three read as pages, not versions.
+decided: 2026-10-14 · Bob's direction, drawn by the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (`site`, SITE_LINE1, SITE_LINE2), `screens/page.src.html` (`.mk-sitenav`), `screens/registry.src.py` (`site`), `layouts.html`.
+owed: (BOB) nothing: the site is Bob's DNS and a Left-out row (N1011); installer R42's two lines follow SITE_LINE1 and SITE_LINE2 when it is built.
