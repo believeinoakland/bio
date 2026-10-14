@@ -407,6 +407,83 @@ w7('screen.site.groups.cases.one', '1 published case, in {editions} editions, th
 w7('screen.site.groups.case.one', '1 published case')
 # --- end DEC-257
 
+# --- DEC-258: the member-facing English still written inline in T49's L11 modules, keyed (K3366: words.json is generated into the
+# plane at build, setup-words exports word(key, vars), a module holds keys only). Each module's keys are listed in
+# words-reads.json (words-reads.src.mjs). Refusals say what happened, then what to do (DEC-83); a consequence statement keeps
+# op-grades' sentence word for word, since each says only what its owner enforces (op-grades R4, R8, R21, R24).
+def w8(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-258' + (': ' + note if note else '')))
+for code, t in [
+  ('NOT_AUTHENTICATED', "This request didn't say who you are. Sign in, or send a credential this group's Civicsmith issued, and try again." + NC),
+  ('CLASS_FORBIDDEN', "This doesn't accept the credential you sent: each credential here is issued for one purpose. Use the credential meant for this work." + NC),
+  ('MACHINE_CREDENTIAL_REQUIRED', "This is done by an automated writer, not by a person signed in, and your group's Civicsmith records the decision that says so. It needs a machine credential an administrator has issued." + NC),
+  ('SESSION_ROLE_CANNOT_REACH_OP', "A person does this, but from another kind of sign-in than yours: the founder's, or a member's own. Being an administrator doesn't reach the founder's. Ask the person who holds that sign-in." + NC),
+  ('SESSION_ROUTE_NOT_RECORDED', "No one signed in can do this, and your group's Civicsmith records no decision that it isn't meant for a person. That is a gap, not a rule: report it to whoever installed your group's Civicsmith." + NC),
+  ('ROOT_OF_TRUST_REQUIRED', "This needs the administrator token kept in the hosting account, not a signed-in session, even the founder's own. Use that token, or ask whoever holds the hosting account." + NC),
+  ('NOT_CAPABLE', "Your account can't do this: an administrator grants what each member may do. Ask an administrator." + NC),
+  ('SCOPE_REFUSED', "That credential may act only on its own part of the record, and this request reached outside it. Use a credential meant for that part." + NC),
+  ('CREDENTIAL_IN_ADDRESS', "A password, credential or secret was sent in the web address, where logs and browser history keep it, so it wasn't read. Send it in the request's Authorization header or its body instead. If it was in a link, treat it as seen by others: sign out everywhere, or ask for a new link." + NC),
+  ('MEMBER_TOKEN_RETIRED', "The shared member key is retired and no longer signs anyone in. Sign in with your own handle and password. Nothing was read or changed."),
+  ('AI_BEYOND_TASK_SCOPE', "This agent's credential was made for one piece of work, and this isn't part of it. Widening it is for a member to record, not for the agent to ask." + NC),
+  ('AI_CREDENTIAL_REVOKED', "A member withdrew this agent's credential, so it no longer reaches anything here. What it did while it worked stays readable. A member can create a new one if it is needed." + NC),
+  ('AI_CREDENTIAL_EXPIRED', "This agent's credential reached the end of its time, so it no longer reaches anything here. Credentials aren't renewed: a member creates a new one." + NC),
+  ('AI_SCOPE_UNKNOWN_OP', "The list of what this credential may do names something your group's Civicsmith doesn't do. Take it out of the list, or name what you meant." + NW),
+  ('AI_SCOPE_BEYOND_MEMBER_REACH', "An agent can be given only what a member could do, and this isn't one of those: it is the background worker's own job, or something a member does only when signed in. Leave it out of the credential." + NW),
+  ('AI_CONFINEMENT_NOT_SCRATCH', "A credential can be confined only to the test area, named exactly. Leave the confinement out for one that reaches the record itself." + NW),
+  ('GROUP_IDENTITY_NEEDS_SESSION', "Your group's public name and web address are set by an administrator, signed in, and the record names who set each. This came from an operator's access token, not a person. Sign in as an administrator and set it there." + NC),
+  ('NAMESPACE_UNKNOWN', "This request named a part of the record your group's Civicsmith doesn't have. It has two: the record itself, and a test area kept apart. Name one of them exactly. Nothing was read or changed."),
+  ('NAMESPACE_PINNED', "This always answers from the record itself and has no test version. Leave the test area out of the request, knowing it then reaches the real record. Nothing was read or changed."),
+  ('NAMESPACE_CONFINED', "This credential reaches only the test area kept apart for testing, and this request asked for another part of the record. Leave the part out, and it reaches the test area. Nothing was read or changed."),
+  ('OPERATOR_TOKEN_CANNOT_GOVERN', "Endorsing an administrator, voting to remove one and setting what a member may do are done by a named administrator, and the record names who did them. This came from an operator's access token, not a person. Sign in as that administrator and do it there." + NC),
+]: w8(f'refusal.{code}', t, False, "admission's translation (R14), keyed")
+for code, t in [
+  ('ASK_NOT_A_MEMBER', "Only a member asks the assistant, from their own sign-in. Sign in and ask again. Nothing was asked."),
+  ('AGENT_WORKER_SILENT', "The assistant didn't answer, so nothing was kept. Try again in a moment."),
+  ('PASSAGE_TOO_LONG', "This passage is longer than {max} characters, too long to translate here. Choose a shorter passage. Nothing was translated."),
+  ('NO_SUCH_NOTE', "None of your notes has that number. Choose the note again." + NC),
+]: w8(f'refusal.{code}', t, False, "plane's ask (R33, R50): its detail, keyed by its code")
+w8('ai.keepaway.unread', "Your group's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.", False, "plane's ask: UNDETERMINED keep-away, for a translation or a draft")
+w8('ai.draft.planunread', "The plan couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a status report's draft")
+w8('ai.draft.recordsunread', "The records this draft is about couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a bearing or infraction draft")
+w8('translate.undetermined.language', "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.", False, "plane's ask: readtranslate")
+
+# op-grades' consequence statements (R4, R8, R21 (K2049)): word for word; personexpunge's is screen.person.expunge.statement and
+# openwithwarning's screen.open-file.warn.ends, the design's words governing
+for op, t in [
+  ('attribute', "The level you choose is what this case edition publishes about who said your observation. Once the edition is signed and published, it says so permanently: a later edition may choose differently, but this one never stops saying it. Your reason is kept with the choice."),
+  ('leadshare', "Sharing puts what you were told in front of every joined participant of that project. A disclosure cannot be un-read: the share stays in the record with your reason, and what they have read stays read."),
+  ('entitycreate', "This names a person or a body in the group's registry, in your name and with your note. Documents that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, never erased."),
+  ('strengthbar', "This sets the strength the whole group's work is held to by default: every new project starts from it. It stands as the group's bar, in your name and with your reason, until it is set again."),
+  ('filingapprove', "Approving makes this text yours, recorded with your name, the time and its digest. A filing is approved once, and the approval is not walked back: what is sent is the text you approved."),
+  ('workobjective', "An assistant will work this project's objective within the run's budget and scope, shown beside this field. Your reason is recorded on the run's opening; the run proposes and never concludes."),
+  ('actionholdrelease', "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged again, and assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened. This cannot be undone."),
+  ('standardrelease', "Releasing this policy lets every member of your group see it, and every read of it, from now on. It cannot be undone: once released, it is never held back at its source's sight again. The release is recorded with your name, the time and your reason."),
+]: w8(f'consequence.{op}', t, True, "op-grades' consequence statement, read by the act's id")
+
+# values shown once (control-plane R-credentials): the review copy's is screen.review-copy.link.once
+w8('credential.token.once', "This is the only time your group's Civicsmith shows this value. It isn't stored and can't be recovered: the record keeps the credential's name and who created it, never the value. If it is lost, withdraw this credential and create another.", True, "control-plane: an agent credential minted")
+w8('template.review.secret.once', "This is the only time your group's Civicsmith shows this value. It is kept only as a fingerprint and can't be recovered. Give it to the reviewer: it lets them read this one template version, comment on it and review it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.", True, "control-plane: a template review grant")
+
+# the words a module writes into a project file a member opens; the file's own grammar (front matter, record-grammar's headings,
+# the session log's fields) stays as it is
+w8('file.archive.title', 'Archive captured from {source}', False, "control-plane's unpack: the archive's own file")
+w8('file.archive.entry.title', '{path}, from the archive {archive}', False, "control-plane's unpack: a file cut out of an archive")
+w8('file.archive.summary', 'An archive captured by the record, held beside the files cut out of it. Its bytes are filed exactly as captured; nothing here summarizes them.', False, "control-plane's unpack")
+w8('file.archive.entry.summary', 'A file cut out of the archive {archive} the record holds, as it sat in the archive. Its bytes are filed exactly as cut; nothing here summarizes them.', False, "control-plane's unpack")
+w8('file.archive.provenance', "Filed as collected and never higher: releasing it is a named member's decision.", False, "control-plane's unpack")
+w8('file.log.unpacked', 'created by unpacking the archive.', False, "control-plane's unpack: the session log's Changes")
+w8('file.trigger.home', "started from the group's home", False, "screens-daily: the session log's Trigger")
+w8('file.trigger.projects', 'started from the projects list', False, "screens-daily: the session log's Trigger")
+w8('file.trigger.queue', 'opened from a hint in the queue ({item})', False, "screens-daily: the session log's Trigger")
+w8('file.recheck.revisit', 'Revisit this', False, "screens-inquiry: a new question's recheck trigger")
+w8('file.recheck.none', 'A member set no specific trigger at creation; replace this with a real one.', False, 'screens-inquiry')
+w8('file.recheck.chain', 'Revisit this chain', False, "screens-investigate: a question opened from a chain")
+w8('file.recheck.chain.why', 'Opened from a chain found by exploring connections; explore again when its steps change.', False, 'screens-investigate')
+w8('file.chain.title', 'What does this chain show: {steps}', False, 'screens-investigate')
+w8('file.chain.question', 'What does this chain of connections show, and does each step hold? {steps}', False, 'screens-investigate')
+w8('file.chain.rests', 'Explored as of {at}, each step as the record cites it: {steps}', False, 'screens-investigate')
+w8('screen.timeline.method.member', "a member's reading of the passage", False, "screens-investigate: a dated fact's method")
+# --- end DEC-258
+
 # Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)

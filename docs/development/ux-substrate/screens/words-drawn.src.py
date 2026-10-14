@@ -16,7 +16,7 @@ REWRITE = {}
 # account
 w('screen.account.explain.help', 'Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.', False, 'under the Explanations choice')
 w('screen.account.signout.note', "Everywhere ends your sign-in on every phone and computer, this one included. Use it if you lost a device or signed in somewhere you shouldn't have.", False, 'under the two sign-out buttons')
-w('screen.account.password.heading', 'Password and signing key')
+w('screen.account.passwordkey.heading', 'Password and signing key')
 # answers
 w('screen.answers.count.line', '{rows} rows · {count} with {rule} (a count, method shown)', False, "a table's count without the assistant: {rule} the counting rule as written")
 # archive
@@ -40,6 +40,134 @@ REWRITE.update({
 # assistant (the dock)
 w('screen.assistant.alone', 'It works for you alone.', False, 'after "On your own account" in the dock: only when your own account serves you')
 w('screen.assistant.ask.label', 'Ask about this screen', False, "the dock's question field")
+# calculation
+w('screen.calculation.sub', 'A computed fact · method shown · recomputed when an input changes', False, "under a calculation's name")
+w('screen.calculation.checkedby', 'Checked by {name} ({expertise}, {standing}) on {date}.', False, "a second member's check; {standing} confirmed or declared")
+w('screen.calculation.spot.about', "The {count} is {whose} own count: {what}. A spot-check asks whether {claim} meant {meaning}, by visiting a random sample of {items} on the street.", False, "{what} the calculation's question, as written")
+w('screen.calculation.found.help', 'Each visit is recorded as what that member saw, with a photo where they took one.')
+w('screen.calculation.range.all', 'So of the {size} {items} marked {claim}, between about {lowc} and {highc} were really {answer}, if the {unsure} that could not be judged are like the rest.')
+REWRITE.update({
+  'screen.calculation.counts': '{visited} of {n} visited: {yes} {answer}, {no} not {answer}, {unsure} could not tell',
+  'screen.calculation.range': '{share}% of the {judged} that could be judged were {answer} · exact {confidence}% range {low}% to {high}%',
+  'screen.calculation.notsays': 'It does not recount the {size} ({whose} check did that), says nothing certain about any one {item} no one visited, and nothing about the {outside} {items} not {what}.',
+})
+# case-editor
+REWRITE.update({'screen.case-editor.changed': 'What changed since Edition {n}'})
+# ceremony
+w('screen.ceremony.disclosed.tension', 'An unresolved contradiction: {what}', True, 'disclosed with the case (protected: what readers are told)')
+w('screen.ceremony.disclosed.timeline', 'The timeline, frozen at signing ({n} events)', True, 'disclosed with the case')
+w('screen.ceremony.when.chosen', 'At a set time: {date}, {time} ({zone})', True, 'the choice of when it becomes public, once a time is set')
+w('screen.ceremony.when.note', "Until then the signed edition waits, not public. At {time} Civicsmith checks again; if anything changed since you signed (a source, a member's confirmation of their ties, a hold), it does not publish and tells you once. You can cancel or move the time until then.", True, 'under the choice of when')
+w('screen.ceremony.sign.edition', 'Sign and publish Edition {edition}', True, "the signing dialog's heading")
+w('screen.ceremony.signs.lines', '{n} lines like these, one for each piece of evidence the {findings} findings rest on: {list}', True, 'what your key signs, after the lines drawn')
+w('screen.ceremony.signs.linesabout', 'Each line names one thing and the fingerprint of its exact text. If anything in it changes before you sign, you are asked to sign again.', True)
+w('screen.ceremony.publishat.button', 'Sign and publish at {time} on {date}', True, "publishat's button, once a time is chosen")
+w('screen.ceremony.photos.rules', "A photo in a format whose areas can't be covered (some phones save HEIC or progressive JPEG) stops the signing, naming the photo: capture it again as an ordinary photo, or stop relying on it. If a mark changes after the case is prepared, prepare it again before signing; if it changes after signing, the case isn't published until it is prepared and signed again. Any member who can see a photo may mark it or withdraw a mark; only a member can, never the machine.", True)
+w('screen.ceremony.device.head', 'Confirm on your device', True)
+w('screen.ceremony.device.example', "Your device's own window (it looks different on each device)", False, "over a drawing of the device's own window; its words are the device's, not Civicsmith's")
+w('screen.ceremony.device.cancel', "If you cancel there, or your device doesn't confirm, nothing is signed or published, and you are back at the last step with everything as it was.", True)
+w('screen.ceremony.signed.evidence', 'The {n} pieces of evidence', False, 'a row of what was signed')
+w('screen.ceremony.signedat.note', 'The case page and your queue show this until it goes public; then your queue tells you once that it is live. The public page shows when it was signed and when it was published.')
+w('screen.ceremony.signednow.told', 'Members who follow this case are told once.')
+w('screen.ceremony.nokey.keyfile', 'Unless you keep it on this device, you save it as a key file, protected by a passphrase you choose.')
+w('screen.ceremony.nokey.elsewhere', 'Registered a key on another computer? Sign from that one, or register a key here too. Lost a key? Withdraw it under Settings › Your account and make a new one here; cases it already signed can still be checked. Your signing keys are listed there.')
+REWRITE.update({
+  'screen.ceremony.photo.facts': 'taken by {by}, {date} · relied on by {findings}',
+  'screen.ceremony.photos.copy': 'Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured, labeled “Faces, plates and camera details removed for publication; the group holds the original”, and the original stays inside the group. Every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), labeled “Camera details removed for publication; the group holds the original”. City staff at work are part of what the case is about; obscure one only with a reason.',
+  'screen.ceremony.signs.count': 'One confirmation signs all {n}: the edition, its {findings} findings, and the {evidence} pieces of evidence they rest on. Each signature can be checked on its own, so a reader can trust one finding without trusting the rest.',
+  'screen.ceremony.signs.case': 'Edition {edition} of {case}',
+})
+# dash-action
+w('screen.dash-action.sub', 'Every clock that is running, whose move it is, replies that came in, and what waits for a second approval.')
+w('screen.dash-action.tile.noreply', '{n} with no reply recorded', False, "under the Their move tile")
+w('screen.dash-action.nextready', "the plan's next step is ready")
+w('screen.dash-action.clock.due', 'The {office} must answer by {date}: {days} days under the {law}, rolled past a holiday.', False, "an action's clock, as a sentence with its rule and date")
+w('screen.dash-action.clock.sent', 'Sent {date}; the group gave until {due}.', False, "an action's clock where the group set the date")
+w('screen.dash-action.clock.approve', "Approve by {day}, the plan's checkpoint.")
+w('screen.dash-action.next.record', 'Record what came back', False, "an action's next step")
+w('screen.dash-action.next.escalate', 'Escalate, as the plan sets', False, "an action's next step")
+# dash-project
+w('screen.dash-project.next.heading', 'Next for you here')
+w('screen.dash-project.next.vouch', 'Vouch for the {count} photos you captured at {place}')
+w('screen.dash-project.next.newer', 'Decide on the newer version of {document}')
+w('screen.dash-project.next.prepare', 'Then Edition {edition} can be prepared: the {count} findings meet the bar')
+w('screen.dash-project.glance.heading', 'This project at a glance')
+w('screen.dash-project.story.heading', 'The story so far')
+w('screen.dash-project.story.undetermined', 'Undetermined order: {events}, both dated by {precision}.', False, '{precision} month or year')
+w('screen.dash-project.activity.events', '{name} added {count} events on {day}')
+# docket
+w('screen.docket.edition.published', 'Edition {n} published, superseding Edition {prior}', True, 'a docket entry (protected: public)')
+REWRITE.update({'screen.docket.sub': "The case's public record of corrections, withdrawals and orders."})
+# document
+w('screen.document.capturedby', 'captured by {name} from {source}, {date}', False, "under a document's name, after its office and revision")
+w('screen.document.pagetranscribe.button', 'Have the assistant read pages {pages}', False, "pagetranscribe's button, naming the pages")
+w('screen.document.citedby.standard', 'cites {passage} as the standard {office} is held to', False, 'how a question cites this document')
+w('screen.document.citedby.against', 'cites {passage}, cutting against {what}', False, 'how a question cites this document')
+w('screen.document.links.one', '{n} links on this page; 1 points at a document the group holds.', False, 'document.links.says, where one link is held')
+w('screen.document.theme.page', 'Page {page}, placed by {name}, {date}: “{note}”', False, "a theme placed on a page, with the member's note")
+w('screen.document.theme.whole', 'The whole {kind}, placed by {name}, {date}', False, '{kind} the kind of document, such as report')
+w('screen.document.theme.proposed', 'Page {page}, proposed by the assistant, {date}: “{note}”', False, "a theme the assistant proposed, with its note")
+# due-date
+w('screen.due-date.step.rolled', '{date} is {why} and {date2} {why2}, both from your profile: rolled to {due}, close of business.', False, 'two days skipped in a row, each from the group profile')
+REWRITE.update({
+  'screen.due-date.of': "{who}'s reply to your {item}",
+  'screen.due-date.step.counted': 'Counted {amount} {units}: to {date}.',
+})
+# explore
+w('screen.explore.sub', 'From {from} to {to}, through {kinds}, as of {date}', False, 'what the walk was asked: {kinds} the kinds followed, such as "money and votes"')
+w('screen.explore.graph.from', 'From {name}, as a graph')
+w('screen.explore.lead.short', 'a lead, not a finding', False, 'under a chain with a declared or suspected step')
+w('screen.explore.stopped.short', 'Stopped at the limit, undetermined beyond {depth} steps.')
+# finder
+w('screen.finder.named', 'named in {n} documents, among them {document}', False, 'a person or organization among the results')
+w('screen.finder.nobody.in', 'Nobody looked in {place} for this yet.', False, 'after the Nobody looked mark')
+# forgot
+w('screen.forgot.noadmin.heading', 'If no administrator can get in')
+w('screen.forgot.noadmin.what', "Whoever holds your group's Cloudflare account can set a new one-time password and an administrator can claim again from it. That is the way back in when every administrator has lost both their password and their codes.")
+# front
+w('screen.front.allpublished', 'All our published cases', False, 'a link to the published cases')
+w('screen.front.invited', 'Invited? Open the link you were sent: it brings you here to join.')
+# group
+w('screen.group.sub', 'Administrators only. The settings chosen at setup, all changeable here.')
+w('screen.group.name.help', 'What people read: at the head of your pages, invitations and published cases. Your short name, {short}, stays fixed.')
+w('screen.group.domain.help', 'Verified on {date}: readers can confirm a published case comes from your group. Remove it if your group would rather stay unnamed.')
+w('screen.group.court.show', 'Show members the notice, before their first note and in their settings', True, 'the court notice (protected)')
+w('screen.group.bar.line', 'Bar: {bar}, set by {name} on {date}')
+REWRITE.update({'screen.group.court.field': 'Tell members what a court can reach'})
+# group-identity
+w('screen.group-identity.other.help', "For example “a tenants' union”, “a students' newspaper”, “a retired auditors' circle”. It helps Civicsmith offer what fits first; it locks nothing.")
+w('screen.group-identity.ask.what', "It asks you a few questions about your group, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your group's.")
+REWRITE.update({
+  'screen.group-identity.other.field': 'Describe your kind of group, in a few words',
+  'screen.group-identity.focus.field': 'What you focus on',
+  'screen.group-identity.purpose.field': 'Why the group exists, in your own words',
+  'screen.group-identity.visibility.choice.public': 'Also our public page and the network directory',
+})
+# held
+w('screen.held.setaside.why', 'Why set it aside?', False, "the reason field for heldsetaside")
+REWRITE.update({
+  'screen.held.archive.filed': '{count} files held beside it',
+  'screen.held.ineligible': 'Not eligible for a batch: {reason}',
+  'screen.held.waiting': "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
+})
+# help-records: the law's particulars (its name, windows, reasons and sections) are the place's data, as placeholders
+w('screen.help-records.title', 'How a records request works')
+w('screen.help-records.sub', 'Help · for a request under the {law}, to an office in {place}')
+w('screen.help-records.faster.in', 'The faster request in {place}')
+w('screen.help-records.faster.what', "{place}'s {ordinance} adds the {request}: the office answers within {window}, and the ordinance sets the later limits when it needs more time ({cite}). It suits a small set of records you can describe exactly.", False, "the place's faster request, from its rules")
+w('screen.help-records.portal.where', '{place} takes requests through its public records portal ({portal}).')
+REWRITE.update({
+  'screen.help-records.must.1': 'Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).',
+  'screen.help-records.must.2': 'Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).',
+  'screen.help-records.must.3': 'Help you focus the request: identify the records that fit it, say where they are kept, and suggest ways past practical obstacles ({cite}).',
+  'screen.help-records.must.4': 'Release the rest of a record that is partly exempt ({cite}), and refuse only in writing, naming who decided ({cite2}).',
+  'screen.help-records.must.5': 'Give electronic records electronically, in a format it keeps them in, when you ask ({cite}).',
+  'screen.help-records.must.6': 'Charge only the direct cost of copying ({cite}); for electronic records, of producing the copy, unless it must compile, extract or program data ({cite2}). You may photograph records you inspect, with your own equipment, at no charge ({cite3}).',
+  'screen.help-records.must.7': "Never ask why you want them: access can't be limited because of the purpose of a request ({cite}).",
+  'screen.help-records.portal.2': "Each request's page shows its full text to anyone, with its dates, the department and the city's contact. Write the request so you are content for anyone to read it.",
+  'screen.help-records.portal.3': 'Contact details are optional. Without them you get no updates, and you can collect the records only if the department posts them publicly or you contact it yourself.',
+  'screen.help-records.does': 'What Civicsmith does with it',
+})
 # --- end DEC-259
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

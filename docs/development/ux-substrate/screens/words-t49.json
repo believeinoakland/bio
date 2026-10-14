@@ -2417,6 +2417,342 @@
    "en": "1 published case",
    "protected": false,
    "note": "DEC-257"
+  },
+  {
+   "key": "refusal.NOT_AUTHENTICATED",
+   "en": "This request didn't say who you are. Sign in, or send a credential this group's Civicsmith issued, and try again. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.CLASS_FORBIDDEN",
+   "en": "This doesn't accept the credential you sent: each credential here is issued for one purpose. Use the credential meant for this work. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.MACHINE_CREDENTIAL_REQUIRED",
+   "en": "This is done by an automated writer, not by a person signed in, and your group's Civicsmith records the decision that says so. It needs a machine credential an administrator has issued. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.SESSION_ROLE_CANNOT_REACH_OP",
+   "en": "A person does this, but from another kind of sign-in than yours: the founder's, or a member's own. Being an administrator doesn't reach the founder's. Ask the person who holds that sign-in. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.SESSION_ROUTE_NOT_RECORDED",
+   "en": "No one signed in can do this, and your group's Civicsmith records no decision that it isn't meant for a person. That is a gap, not a rule: report it to whoever installed your group's Civicsmith. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.ROOT_OF_TRUST_REQUIRED",
+   "en": "This needs the administrator token kept in the hosting account, not a signed-in session, even the founder's own. Use that token, or ask whoever holds the hosting account. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.NOT_CAPABLE",
+   "en": "Your account can't do this: an administrator grants what each member may do. Ask an administrator. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.SCOPE_REFUSED",
+   "en": "That credential may act only on its own part of the record, and this request reached outside it. Use a credential meant for that part. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.CREDENTIAL_IN_ADDRESS",
+   "en": "A password, credential or secret was sent in the web address, where logs and browser history keep it, so it wasn't read. Send it in the request's Authorization header or its body instead. If it was in a link, treat it as seen by others: sign out everywhere, or ask for a new link. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.MEMBER_TOKEN_RETIRED",
+   "en": "The shared member key is retired and no longer signs anyone in. Sign in with your own handle and password. Nothing was read or changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_BEYOND_TASK_SCOPE",
+   "en": "This agent's credential was made for one piece of work, and this isn't part of it. Widening it is for a member to record, not for the agent to ask. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_CREDENTIAL_REVOKED",
+   "en": "A member withdrew this agent's credential, so it no longer reaches anything here. What it did while it worked stays readable. A member can create a new one if it is needed. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_CREDENTIAL_EXPIRED",
+   "en": "This agent's credential reached the end of its time, so it no longer reaches anything here. Credentials aren't renewed: a member creates a new one. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_SCOPE_UNKNOWN_OP",
+   "en": "The list of what this credential may do names something your group's Civicsmith doesn't do. Take it out of the list, or name what you meant. Nothing was written.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_SCOPE_BEYOND_MEMBER_REACH",
+   "en": "An agent can be given only what a member could do, and this isn't one of those: it is the background worker's own job, or something a member does only when signed in. Leave it out of the credential. Nothing was written.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.AI_CONFINEMENT_NOT_SCRATCH",
+   "en": "A credential can be confined only to the test area, named exactly. Leave the confinement out for one that reaches the record itself. Nothing was written.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.GROUP_IDENTITY_NEEDS_SESSION",
+   "en": "Your group's public name and web address are set by an administrator, signed in, and the record names who set each. This came from an operator's access token, not a person. Sign in as an administrator and set it there. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.NAMESPACE_UNKNOWN",
+   "en": "This request named a part of the record your group's Civicsmith doesn't have. It has two: the record itself, and a test area kept apart. Name one of them exactly. Nothing was read or changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.NAMESPACE_PINNED",
+   "en": "This always answers from the record itself and has no test version. Leave the test area out of the request, knowing it then reaches the real record. Nothing was read or changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.NAMESPACE_CONFINED",
+   "en": "This credential reaches only the test area kept apart for testing, and this request asked for another part of the record. Leave the part out, and it reaches the test area. Nothing was read or changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.OPERATOR_TOKEN_CANNOT_GOVERN",
+   "en": "Endorsing an administrator, voting to remove one and setting what a member may do are done by a named administrator, and the record names who did them. This came from an operator's access token, not a person. Sign in as that administrator and do it there. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: admission's translation (R14), keyed"
+  },
+  {
+   "key": "refusal.ASK_NOT_A_MEMBER",
+   "en": "Only a member asks the assistant, from their own sign-in. Sign in and ask again. Nothing was asked.",
+   "protected": false,
+   "note": "DEC-258: plane's ask (R33, R50): its detail, keyed by its code"
+  },
+  {
+   "key": "refusal.AGENT_WORKER_SILENT",
+   "en": "The assistant didn't answer, so nothing was kept. Try again in a moment.",
+   "protected": false,
+   "note": "DEC-258: plane's ask (R33, R50): its detail, keyed by its code"
+  },
+  {
+   "key": "refusal.PASSAGE_TOO_LONG",
+   "en": "This passage is longer than {max} characters, too long to translate here. Choose a shorter passage. Nothing was translated.",
+   "protected": false,
+   "note": "DEC-258: plane's ask (R33, R50): its detail, keyed by its code"
+  },
+  {
+   "key": "refusal.NO_SUCH_NOTE",
+   "en": "None of your notes has that number. Choose the note again. Nothing was changed.",
+   "protected": false,
+   "note": "DEC-258: plane's ask (R33, R50): its detail, keyed by its code"
+  },
+  {
+   "key": "ai.keepaway.unread",
+   "en": "Your group's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.",
+   "protected": false,
+   "note": "DEC-258: plane's ask: UNDETERMINED keep-away, for a translation or a draft"
+  },
+  {
+   "key": "ai.draft.planunread",
+   "en": "The plan couldn't be read just now, so nothing was drafted. Try again in a moment.",
+   "protected": false,
+   "note": "DEC-258: plane's ask: a status report's draft"
+  },
+  {
+   "key": "ai.draft.recordsunread",
+   "en": "The records this draft is about couldn't be read just now, so nothing was drafted. Try again in a moment.",
+   "protected": false,
+   "note": "DEC-258: plane's ask: a bearing or infraction draft"
+  },
+  {
+   "key": "translate.undetermined.language",
+   "en": "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.",
+   "protected": false,
+   "note": "DEC-258: plane's ask: readtranslate"
+  },
+  {
+   "key": "consequence.attribute",
+   "en": "The level you choose is what this case edition publishes about who said your observation. Once the edition is signed and published, it says so permanently: a later edition may choose differently, but this one never stops saying it. Your reason is kept with the choice.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.leadshare",
+   "en": "Sharing puts what you were told in front of every joined participant of that project. A disclosure cannot be un-read: the share stays in the record with your reason, and what they have read stays read.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.entitycreate",
+   "en": "This names a person or a body in the group's registry, in your name and with your note. Documents that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, never erased.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.strengthbar",
+   "en": "This sets the strength the whole group's work is held to by default: every new project starts from it. It stands as the group's bar, in your name and with your reason, until it is set again.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.filingapprove",
+   "en": "Approving makes this text yours, recorded with your name, the time and its digest. A filing is approved once, and the approval is not walked back: what is sent is the text you approved.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.workobjective",
+   "en": "An assistant will work this project's objective within the run's budget and scope, shown beside this field. Your reason is recorded on the run's opening; the run proposes and never concludes.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.actionholdrelease",
+   "en": "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged again, and assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened. This cannot be undone.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "consequence.standardrelease",
+   "en": "Releasing this policy lets every member of your group see it, and every read of it, from now on. It cannot be undone: once released, it is never held back at its source's sight again. The release is recorded with your name, the time and your reason.",
+   "protected": true,
+   "note": "DEC-258: op-grades' consequence statement, read by the act's id"
+  },
+  {
+   "key": "credential.token.once",
+   "en": "This is the only time your group's Civicsmith shows this value. It isn't stored and can't be recovered: the record keeps the credential's name and who created it, never the value. If it is lost, withdraw this credential and create another.",
+   "protected": true,
+   "note": "DEC-258: control-plane: an agent credential minted"
+  },
+  {
+   "key": "template.review.secret.once",
+   "en": "This is the only time your group's Civicsmith shows this value. It is kept only as a fingerprint and can't be recovered. Give it to the reviewer: it lets them read this one template version, comment on it and review it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
+   "protected": true,
+   "note": "DEC-258: control-plane: a template review grant"
+  },
+  {
+   "key": "file.archive.title",
+   "en": "Archive captured from {source}",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack: the archive's own file"
+  },
+  {
+   "key": "file.archive.entry.title",
+   "en": "{path}, from the archive {archive}",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack: a file cut out of an archive"
+  },
+  {
+   "key": "file.archive.summary",
+   "en": "An archive captured by the record, held beside the files cut out of it. Its bytes are filed exactly as captured; nothing here summarizes them.",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack"
+  },
+  {
+   "key": "file.archive.entry.summary",
+   "en": "A file cut out of the archive {archive} the record holds, as it sat in the archive. Its bytes are filed exactly as cut; nothing here summarizes them.",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack"
+  },
+  {
+   "key": "file.archive.provenance",
+   "en": "Filed as collected and never higher: releasing it is a named member's decision.",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack"
+  },
+  {
+   "key": "file.log.unpacked",
+   "en": "created by unpacking the archive.",
+   "protected": false,
+   "note": "DEC-258: control-plane's unpack: the session log's Changes"
+  },
+  {
+   "key": "file.trigger.home",
+   "en": "started from the group's home",
+   "protected": false,
+   "note": "DEC-258: screens-daily: the session log's Trigger"
+  },
+  {
+   "key": "file.trigger.projects",
+   "en": "started from the projects list",
+   "protected": false,
+   "note": "DEC-258: screens-daily: the session log's Trigger"
+  },
+  {
+   "key": "file.trigger.queue",
+   "en": "opened from a hint in the queue ({item})",
+   "protected": false,
+   "note": "DEC-258: screens-daily: the session log's Trigger"
+  },
+  {
+   "key": "file.recheck.revisit",
+   "en": "Revisit this",
+   "protected": false,
+   "note": "DEC-258: screens-inquiry: a new question's recheck trigger"
+  },
+  {
+   "key": "file.recheck.none",
+   "en": "A member set no specific trigger at creation; replace this with a real one.",
+   "protected": false,
+   "note": "DEC-258: screens-inquiry"
+  },
+  {
+   "key": "file.recheck.chain",
+   "en": "Revisit this chain",
+   "protected": false,
+   "note": "DEC-258: screens-investigate: a question opened from a chain"
+  },
+  {
+   "key": "file.recheck.chain.why",
+   "en": "Opened from a chain found by exploring connections; explore again when its steps change.",
+   "protected": false,
+   "note": "DEC-258: screens-investigate"
+  },
+  {
+   "key": "file.chain.title",
+   "en": "What does this chain show: {steps}",
+   "protected": false,
+   "note": "DEC-258: screens-investigate"
+  },
+  {
+   "key": "file.chain.question",
+   "en": "What does this chain of connections show, and does each step hold? {steps}",
+   "protected": false,
+   "note": "DEC-258: screens-investigate"
+  },
+  {
+   "key": "file.chain.rests",
+   "en": "Explored as of {at}, each step as the record cites it: {steps}",
+   "protected": false,
+   "note": "DEC-258: screens-investigate"
+  },
+  {
+   "key": "screen.timeline.method.member",
+   "en": "a member's reading of the passage",
+   "protected": false,
+   "note": "DEC-258: screens-investigate: a dated fact's method"
   }
  ],
  "retired": [
