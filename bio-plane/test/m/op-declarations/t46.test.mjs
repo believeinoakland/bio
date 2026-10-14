@@ -102,8 +102,10 @@ test("R50 (T46; N897 (1); DEC-162; instance-setup R79): infolevelset — a membe
   assert.notDeepEqual(plain(OPS.infolevel), plain(OPS.memberlanguage));
 });
 
-test("R50, R21, R34: the registry's owed act owed:infolevelset DEC-162 is declared under its own name with no alias; infolevelset is in neither ground of ACT_HELP_ABSENT (affordances R53 explains it) and infolevel is named as a read a screen draws from (negative control: a named read is found)", () => {
-  assert.ok(regActs.some((a) => a.op === "owed:infolevelset DEC-162"));
+test("R50, R21, R34: the registry's owed act owed:infolevelset DEC-162 is declared under its own name with no alias; infolevelset is in neither ground of ACT_HELP_ABSENT (affordances R53 explains it) and infolevel is named as a read a screen draws from; (R54, R60, T47) at PR #33's head a declared act (negative control: a named read is found)", () => {
+  /* T47 (R54, R60): at PR #33's head the registry carries it as a `declared` act under its own name, owed no longer */
+  assert.ok(regActs.some((a) => a.op === "infolevelset" && a.status === "declared"));
+  assert.ok(!regActs.some((a) => a.op.startsWith("owed:infolevelset")));
   assert.ok(Object.hasOwn(OPS, "infolevelset") && !Object.hasOwn(OP_ALIASES, "infolevelset"));
   assert.deepEqual(ground("infolevelset"), []);
   assert.deepEqual(ground("infolevel"), ["read"]);
@@ -154,10 +156,12 @@ test("R51 (escalation R31, R33): escalationstoppursuing and escalationreopen —
   assert.deepEqual([...keysOf(escalationOps), "escalationnosuch"].filter((op) => !Object.hasOwn(OPS, op)), ["escalationnosuch"]);
 });
 
-test("R51, R21, R27, R34: the registry's and the library's owed act escalationstoppursuing K2780 is declared under its own name, no alias; escalationstoppursuing and escalationreopen are in no ground of ACT_HELP_ABSENT (affordances R53 explains them) (negative control: an unexplained act is named)", () => {
-  assert.ok(regActs.some((a) => a.op === "owed:escalationstoppursuing K2780"));
-  assert.ok(owedOf(library.scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => ({ op: st.act, status: /^owed:/.test(st.act) ? "owed" : "x" })))))
-    .includes("escalationstoppursuing") || JSON.stringify(library).includes("owed:escalationstoppursuing"));
+test("R51, R21, R27, R34: the registry's and the library's owed act escalationstoppursuing K2780 is declared under its own name, no alias; escalationstoppursuing and escalationreopen are in no ground of ACT_HELP_ABSENT (affordances R53 explains them); (R54, R60, T47) at PR #33's head a declared act and a library step under its own name (negative control: an unexplained act is named)", () => {
+  /* T47 (R54, R60): at PR #33's head the registry and the library carry it under its own name, owed no longer */
+  assert.ok(regActs.some((a) => a.op === "escalationstoppursuing" && a.status === "declared"));
+  assert.ok(!regActs.some((a) => a.op.startsWith("owed:escalationstoppursuing")));
+  assert.ok(library.scripts.some((s) => s.versions.some((v) => v.steps.some((st) => st.act === "escalationstoppursuing"))));
+  assert.ok(!JSON.stringify(library).includes("owed:escalationstoppursuing"));
   assert.ok(Object.hasOwn(OPS, "escalationstoppursuing") && !Object.hasOwn(OP_ALIASES, "escalationstoppursuing"));
   for (const op of ["escalationstoppursuing", "escalationreopen"]) assert.deepEqual(ground(op), [], op);
   /* negative control */
@@ -294,9 +298,10 @@ test("R51, R5, R7: t46.mjs is frozen data — each share names an owner whose fa
 
 /* ---------- R52 ---------- */
 
-test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the registry as PR #28 merged it — its function acts are 80, each an op or an alias; the nine new since PR #19 name declared ops by their own names, no alias; knock is no function act; every owed act (itemtakeup, actionscope, filingsecondapprove, subscriptionsignin, projectaikeepaway, infolevelset, escalationstoppursuing) is declared under its own name and no other owed act exists; Your account no longer lists handlechange, and its setpassword and memberlanguageset are declared acts (negative control: an undeclared owed act is seen)", () => {
+test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the registry as PR #28 merged it — its function acts are 80, each an op or an alias; the nine new since PR #19 name declared ops by their own names, no alias; knock is no function act; every owed act (itemtakeup, actionscope, filingsecondapprove, subscriptionsignin, projectaikeepaway, infolevelset, escalationstoppursuing) is declared under its own name and no other owed act exists; Your account no longer lists handlechange, and its setpassword and memberlanguageset are declared acts; (R54, R60, T47) re-pinned at PR #33's head: 89 function acts, the seven declared acts, passwordresetlink the one owed (negative control: an undeclared owed act is seen)", () => {
   const fnActs = regActs.filter((a) => a.status === "function");
-  assert.equal(fnActs.length, 80);
+  /* T47 (R54, R60): re-pinned at PR #33's head, whose screens carry 89 function acts (67 distinct functions) */
+  assert.equal(fnActs.length, 89);
   for (const a of fnActs) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: no spec`);
   for (const al of Object.keys(OP_ALIASES)) assert.ok(fnActs.some((a) => a.op === al), `${al}: an alias of no registry function`);
   const NEW = ["ailimitset", "archivelist", "exploreapprove", "projectaccountremove", "projectaccountswitch",
@@ -309,8 +314,11 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   const OWED = ["itemtakeup", "actionscope", "filingsecondapprove", "subscriptionsignin", "projectaikeepaway", "infolevelset",
                 "escalationstoppursuing"];
   const owed = owedOf(regActs);
-  assert.deepEqual([...owed].sort(), [...OWED].sort());
-  for (const op of OWED) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
+  /* T47 (R54, R60): at PR #33's head the seven are `declared` acts under their own names, and the one owed act is
+     R57's passwordresetlink (DEC-201) */
+  assert.deepEqual([...owed].sort(), ["passwordresetlink"]);
+  for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
+  for (const op of [...OWED, ...owed]) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
   const account = registry.screens.find((s) => s.id === "account");
   assert.ok(account, "no account screen");
   assert.ok(!account.acts.some((a) => a.op === "handlechange" || a.op.startsWith("owed:handlechange")));
@@ -320,10 +328,14 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op)), ["nosuchowedact"]);
 });
 
-test("R52 (wizard-scripts R30): R27 read against the library as PR #28 merged it — its owed acts are four, actionscope, itemtakeup, escalationstoppursuing and subscriptionsignin, each declared under its own name in both session sets with no alias (negative control: an undeclared act is in no table)", () => {
+test("R52 (wizard-scripts R30): R27 read against the library as PR #28 merged it — its owed acts are four, actionscope, itemtakeup, escalationstoppursuing and subscriptionsignin, each declared under its own name in both session sets with no alias; (R54, R60, T47) at PR #33's head none owed, the four named by their ops (negative control: an undeclared act is in no table)", () => {
   const owed = [...new Set([...JSON.stringify(library).matchAll(/owed:([a-z]+)/g)].map((m) => m[1]))];
-  assert.deepEqual(owed.sort(), ["actionscope", "escalationstoppursuing", "itemtakeup", "subscriptionsignin"]);
-  for (const op of owed) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
+  /* T47 (R54, R60): at PR #33's head the library marks no act owed; the four are named by their ops */
+  assert.deepEqual(owed.sort(), []);
+  const named = new Set(library.scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => st.act))));
+  const FOUR = ["actionscope", "escalationstoppursuing", "itemtakeup", "subscriptionsignin"];
+  for (const op of FOUR) assert.ok(named.has(op), `${op}: the library does not name it`);
+  for (const op of FOUR) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
   /* negative control */
   assert.ok(inNoTable("nosuchowedact"));
 });

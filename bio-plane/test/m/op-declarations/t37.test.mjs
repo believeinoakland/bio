@@ -177,7 +177,7 @@ test("R39 (N776; DEC-182 (4); K2175; credentials R3): setpassword — the caller
 
 /* ---------- R21, R27 (T37): the registry and library as PR #14 left them ---------- */
 
-test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry every function is an op or an alias, the four withdrawn functions and claimidentity are gone, and the eight owed acts T37 declares are each declared once under its own name, read as served with no alias; the comment naming setpassword a function served in process is gone; (T43, DEC-189 (3)) seven of the eight re-pointed to their declared ops, subscriptionsignin still owed; (R52, T46) no owed act is left without a spec, infolevelset R50's (negative control: an undeclared owed act is seen)", () => {
+test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry every function is an op or an alias, the four withdrawn functions and claimidentity are gone, and the eight owed acts T37 declares are each declared once under its own name, read as served with no alias; the comment naming setpassword a function served in process is gone; (T43, DEC-189 (3)) seven of the eight re-pointed to their declared ops, subscriptionsignin still owed; (R52, T46) no owed act is left without a spec, infolevelset R50's; (R54, R60, T47) at PR #33's head subscriptionsignin a declared act too (negative control: an undeclared owed act is seen)", () => {
   const fns = actsOf("function");
   for (const f of fns) assert.ok(Object.hasOwn(OPS, f), `${f}: no spec`);
   for (const f of ["projectcreated", "countask", "registerproceeding", "deadlinecompute", "setpassword", "claimidentity"])
@@ -187,10 +187,10 @@ test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry ever
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
   const T37 = ["obscuremark", "setpassword", "subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft",
                "translationgrant", "translationrevert"];
-  /* T43 (DEC-189 (3); K2704): seven are re-pointed to their declared ops; subscriptionsignin stays owed, read as served */
+  /* T43 (DEC-189 (3); K2704): seven are re-pointed to their declared ops; subscriptionsignin stayed owed, read as served,
+     until T47 (R54, R60): at PR #33's head it is a declared act too */
   for (const op of T37) {
-    if (op === "subscriptionsignin") assert.ok(owed.includes(op), `${op} is not owed in the registry`);
-    else assert.ok(actsOf("declared").includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
+    assert.ok(actsOf("declared").includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
     assert.ok(Object.hasOwn(OPS, op) && familyOf(op), `${op}: not declared in a family`);
   }
   /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's) */
@@ -222,7 +222,7 @@ test("R27 (T37; N701, N708, N669; K2134, K2200): the seven owed acts of DEC-148'
 
 /* ---------- R34 (T37): the explanation of T37's member ops ---------- */
 
-test("R34 (T37; N776; DEC-182 (5); K2159): ACT_HELP_ABSENT names the reads photomarks, translations and interfacewords under the read ground and translationmark under the last (an act the design has not yet explained); it names none of the eight owed acts T37 declares, whose texts PR #14's mock-acts.js gives, nor clockpropose, which it now explains, nor the withdrawn claimidentity; (T43, DEC-189 (3)) the texts keyed by the op, subscriptionsignin's still owed_ (negative control: a named op is found)", () => {
+test("R34 (T37; N776; DEC-182 (5); K2159): ACT_HELP_ABSENT names the reads photomarks, translations and interfacewords under the read ground and translationmark under the last (an act the design has not yet explained); it names none of the eight owed acts T37 declares, whose texts PR #14's mock-acts.js gives, nor clockpropose, which it now explains, nor the withdrawn claimidentity; (T43, DEC-189 (3)) the texts keyed by the op, (R54, R60, T47) subscriptionsignin's too (negative control: a named op is found)", () => {
   const ground = (op) => Object.entries(ACT_HELP_ABSENT).find(([, g]) => g.ops.includes(op))?.[0] ?? null;
   for (const op of ["photomarks", "translations", "interfacewords"]) assert.equal(ground(op), "read", op);
   assert.equal(ground("translationmark"), "unexplained");
@@ -232,8 +232,8 @@ test("R34 (T37; N776; DEC-182 (5); K2159): ACT_HELP_ABSENT names the reads photo
   for (const op of ["obscuremark", "setpassword", "subscriptionsignin", "translationdraft", "translationadopt", "translationgrant",
                     "translationconfirm", "translationrevert"]) {
     assert.equal(ground(op), null, op);
-    const key = op === "subscriptionsignin" ? `owed_${op}` : op;
-    assert.match(mock, new RegExp(`^  ${key}: '`, "m"), `${op}: no design text`);
+    /* T47 (R54, R60): at PR #33's head subscriptionsignin's text is keyed by the op too */
+    assert.match(mock, new RegExp(`^  ${op}: '`, "m"), `${op}: no design text`);
   }
   assert.match(mock, /^  clockpropose: '/m);
   assert.equal(ground("clockpropose"), null);
