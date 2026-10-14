@@ -32642,9 +32642,9 @@ var Provenance = class {
       if (j === null) unreadable2 = true;
       else docs = Array.isArray(j.documents) ? j.documents : [];
     }
-    const shaOf9 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
+    const shaOf10 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
     const regs = Array.isArray(register3) ? register3.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf9).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const asked = [.../* @__PURE__ */ new Set([...docs.map(shaOf10).filter(Boolean), ...regs.map((c) => c.sha256)])];
     const held3 = this.#rows(
       `SELECT capture_sha, bundle_id FROM register
         WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
@@ -32666,7 +32666,7 @@ var Provenance = class {
     for (let i = 0; i < docs.length; i++) {
       const d = docs[i];
       if (!d || typeof d !== "object") continue;
-      const s = shaOf9(d);
+      const s = shaOf10(d);
       const claims = d.authored !== void 0 && d.authored !== null && d.authored !== false;
       const authored = s != null && (here.has(s) || own12(s));
       if (claims && !authored)
@@ -32691,7 +32691,7 @@ var Provenance = class {
           { bundleId, index: i, origin: origin ?? null, actor_class: actor ?? null }
         );
     }
-    const stated3 = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf9).filter(Boolean));
+    const stated3 = new Set(docs.filter((d) => d && typeof d === "object" && d.authored === true).map(shaOf10).filter(Boolean));
     for (const s of here)
       if (!stated3.has(s))
         return refusal39(
@@ -117561,7 +117561,7 @@ var ACTION_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_CORRESPOND: {
     check: "C-32.4",
-    where: "src/actions/index.mjs actionCorrespond > is-machine-correspond",
+    where: "src/action-records/index.mjs correspondFence > is-machine-correspond",
     translation: "Recording that an exchange happened is testimony: on this path the entry itself is the evidence, so somebody has to be standing behind it. The credential that asked here is an automated one \u2014 it can capture bytes, and it cannot swear that a conversation took place. Sign in to record it."
   },
   /* D-149 (BIO_Case_Making_v0_1.md §2): stating which laws govern a records request is a member's authored
@@ -117586,27 +117586,27 @@ var ACTION_ACT_CHECKS = {
   },
   BAD_DIRECTION: {
     check: "C-33.5",
-    where: "src/actions/index.mjs actionCorrespond > is-correspond-entry",
+    where: "src/actions/index.mjs actionCorrespond > is-correspond-direction",
     translation: "Every entry in this ledger says which way the exchange went, and this one names something the record does not use. A reply that never came is recorded as a non-response with the date it was due, rather than left out."
   },
   BAD_DATE: {
     check: "C-33.6",
-    where: "src/actions/index.mjs actionCorrespond > is-correspond-entry",
+    where: "src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry",
     translation: "Every entry here carries a calendar date written as four digits, two digits and two digits. A non-response is dated too \u2014 by when the reply was due \u2014 because an undated exchange cannot be placed against anything else in the record."
   },
   CAPTURE_AND_TESTIMONY: {
     check: "C-33.7",
-    where: "src/actions/index.mjs actionCorrespond > is-correspond-entry",
+    where: "src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry",
     translation: "An entry holds either the captured material or a named person who can speak to the exchange, and never both. A summary sitting beside the real thing is what a reader would quote instead of the thing the group can actually defend."
   },
   NEITHER_CAPTURE_NOR_TESTIMONY: {
     check: "C-33.8",
-    where: "src/actions/index.mjs actionCorrespond > is-correspond-entry",
+    where: "src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry",
     translation: "This entry offers neither captured material nor a named person behind it, so there is no way for anyone to check that the exchange happened. An assertion with nothing to check it against is the one thing this ledger will not hold."
   },
   UNREGISTERED_ARTIFACT: {
     check: "C-33.9",
-    where: "src/actions/index.mjs actionCorrespond > is-correspond-artifact",
+    where: "src/action-records/index.mjs unregisteredArtifact > is-correspond-artifact",
     translation: "The material named here is not held in this store, so the entry would point at something nobody can open. Capture it first, or record a named person who can speak to the exchange instead \u2014 those are the two honest ways to hold one."
   }
 };
@@ -117806,8 +117806,8 @@ var ACTION_GRAMMAR_WORDS = Object.freeze({
   "refusal.DETERMINATION_NOT_NONCOMPLIANT": "An action that claims a breach rests on a determination that the act broke a standard, and this determination found no such breach. Nothing was written.",
   "refusal.OVERRIDE_NO_GROUND": "Acting before a determination needs one of two grounds: a legal deadline would pass first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
   "refusal.COPIED_IS_ADDRESSEE": "The office the action is addressed to can't also be copied. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organisations acting with your group. Nothing was written.",
-  "refusal.PARTNERS_REFUSED": "Each partner is a named organisation, listed once. Nothing was written.",
+  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organizations acting with your group. Nothing was written.",
+  "refusal.PARTNERS_REFUSED": "Each partner is a named organization, listed once. Nothing was written.",
   "refusal.MACHINE_CANNOT_SET_PRESS_TERMS": "Only a member sets the terms of talking to the press. Nothing was written.",
   "refusal.PRESS_TERMS_NOT_PRESS": "Press terms apply only to an action with the press. Nothing was written.",
   "refusal.PRESS_TERMS_REFUSED": "Press terms are on the record, on background or off the record, with any embargo as a real time and a note of at most 500 characters. Nothing was written.",
@@ -117964,11 +117964,6 @@ var ACTION_CATALOGUE_CHECKS = {
     check: "C-117.27",
     where: "src/actions/index.mjs #heldLinks > is-machine-set-proceeding",
     translation: "Which proceeding an action belongs to is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. Sign in to state it yourself."
-  },
-  NOT_A_PROCEEDING: {
-    check: "C-117.28",
-    where: "src/actions/index.mjs #proceedingRefusal > is-proceeding-kind",
-    translation: "An action belongs to a proceeding, such as a case before a court or a board, and the entity named is of another kind. Nothing was written. Name the proceeding itself."
   },
   /* R13 (T41; H30 (1), K2505): what a records request seeks. Minted here, by `seeksFindings` alone; `actions` refuses its
      write with it (its R70). New in T41 layer 9; awaiting T42's stamp. */
@@ -159450,9 +159445,9 @@ var AiRuns = class _AiRuns {
     const atOpenParsed = atOpenHeld ? safeJson26(String(row17.lens_at_open)) : null;
     const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
     const atOpenUnreadable = atOpenHeld && !atOpen;
-    const shaOf9 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
-    const openSha = atOpen ? shaOf9(atOpen) : null;
-    const nowSha = shaOf9(nowManifest);
+    const shaOf10 = (m) => m && m.in_force === true && typeof m.statements_sha === "string" ? m.statements_sha : null;
+    const openSha = atOpen ? shaOf10(atOpen) : null;
+    const nowSha = shaOf10(nowManifest);
     const nowBlock = {
       in_force: nowManifest.in_force === true,
       statements_sha: nowManifest.statements_sha ?? null,
@@ -174941,7 +174936,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   NO_FINDINGS: {
     check: "C-113.6",
     where: at29("#pinFindings", "is-finding-named"),
-    translation: "A determination rests on at least one published finding. Name the findings it rests on. Nothing was written."
+    translation: "A determination rests on at least one finding: one your group published, one checked and held for publication, or another group's finding your group has accepted. Name the findings it rests on. Nothing was written."
   },
   FINDING_NOT_PUBLISHED: {
     check: "C-113.7",
@@ -186399,6 +186394,60 @@ function withRow5(r) {
 }
 var refuse18 = (code, detail, extra) => withRow5({ ok: false, reason: code, detail, ...extra || {} });
 var findingsOf = (list6) => list6.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.code ? { code: x.code } : {}, ...x.repairs ? { repairs: x.repairs } : {} }));
+var RESERVED = ["ok", "reason", "code", "check", "translation"];
+function correspondRefusal(reason2, fields, detail, extra) {
+  const own12 = {};
+  for (const [k, v] of Object.entries(extra && typeof extra === "object" ? extra : {})) if (!RESERVED.includes(k)) own12[k] = v;
+  const said11 = own12.detail && typeof own12.detail === "object" ? own12.detail[reason2] : own12.detail;
+  delete own12.detail;
+  return withRow5({ ok: false, reason: reason2, ...fields, ...own12, detail: typeof said11 === "string" && said11 ? said11 : detail });
+}
+var RECEIPT_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: "a receipt is a named member's record that the group's sending reached its addressee. A machine credential may not record one. Sign in as a member.",
+  BAD_DATE: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
+  CAPTURE_AND_TESTIMONY: "a receipt is held as the captured bytes OR a named member's account, never both.",
+  NEITHER_CAPTURE_NOR_TESTIMONY: "a receipt is held as captured bytes the register holds, or as a named member's account.",
+  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture it first, or record a named account instead."
+});
+var shaOf8 = (v) => String(v ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+function correspondFence(author, extra) {
+  const who3 = String(author ?? "").trim();
+  if (!who3 || isMachineIdentity(who3))
+    return correspondRefusal(
+      "MACHINE_CANNOT_CORRESPOND",
+      {},
+      "a correspondence entry is a named member's statement that this exchange happened \u2014 and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member.",
+      extra
+    );
+  return null;
+}
+function correspondEntryRefusal({ at: at49 = "", artifactSha = "", account: account2 = "", dateTime: dateTime2 = false } = {}, extra) {
+  const day2 = String(at49 ?? "").trim();
+  const m = dateTime2 ? LOCAL_DT_RE2.exec(day2) : null;
+  if (!(isCalendarDate(day2) || m && isCalendarDate(m[1])))
+    return correspondRefusal(
+      "BAD_DATE",
+      { at: day2 },
+      dateTime2 ? "an entry is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has" : "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has",
+      extra
+    );
+  const sha2 = shaOf8(artifactSha), acct = String(account2 ?? "").trim();
+  if (sha2 && acct)
+    return correspondRefusal(
+      "CAPTURE_AND_TESTIMONY",
+      {},
+      "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13).",
+      extra
+    );
+  if (!sha2 && !acct)
+    return correspondRefusal(
+      "NEITHER_CAPTURE_NOR_TESTIMONY",
+      {},
+      "an entry carries either an artifact_sha that resolves in the register or an account with an author.",
+      extra
+    );
+  return null;
+}
 var ActionRecords = class {
   #deps;
   constructor({
@@ -186439,6 +186488,27 @@ var ActionRecords = class {
   /* R9: the held standards (`standardRead`, its R5). */
   get standards() {
     return this.#reach("standards", (h) => standardsOf(h));
+  }
+  /** R16: the correspondence entry's site, reached on the instance `actions` creates (its R101). The two pure judgments are
+   *  the module's own functions, answered unchanged; the third reads the register. */
+  correspondFence(author, extra) {
+    return correspondFence(author, extra);
+  }
+  correspondEntryRefusal(entry4, extra) {
+    return correspondEntryRefusal(entry4, extra);
+  }
+  /** R16: null when the register holds `sha`, else C-33.9 `UNREGISTERED_ARTIFACT` naming `artifact_sha`. Writes nothing. */
+  unregisteredArtifact(sha2, extra) {
+    const h = shaOf8(sha2);
+    if (h && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, h)) {
+      return correspondRefusal(
+        "UNREGISTERED_ARTIFACT",
+        { artifact_sha: h },
+        "this hash names no capture in this store. Capture the artifact first (op=capture), or record a named account instead \u2014 those are the two honest ways to hold an exchange.",
+        extra
+      );
+    }
+    return null;
   }
   /** R15: creates the tables (idempotent), `action_law_proposals`' `standard` column added where absent. */
   migrate() {
@@ -186862,38 +186932,15 @@ var ActionRecords = class {
     author = null
   } = {}) {
     const who3 = String(author ?? "").trim();
-    if (!who3 || isMachineIdentity(who3))
-      return withRow5({
-        ok: false,
-        reason: "MACHINE_CANNOT_CORRESPOND",
-        target: target ?? null,
-        detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine credential may not record one. Sign in as a member."
-      });
+    const asked = { target: target ?? null, detail: RECEIPT_DETAIL };
+    const fenced = correspondFence(who3, asked);
+    if (fenced) return fenced;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const when = String(at49 ?? "").trim();
-    const m = LOCAL_DT_RE2.exec(when);
-    if (!(isCalendarDate(when) || m && isCalendarDate(m[1])))
-      return withRow5({
-        ok: false,
-        reason: "BAD_DATE",
-        at: when,
-        target,
-        detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"
-      });
-    const sha2 = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account: account2, dateTime: true }, asked);
+    if (entryRefused) return entryRefused;
+    const sha2 = shaOf8(artifactSha);
     const acct = String(account2 ?? "").trim();
-    if (sha2 && acct) return withRow5({
-      ok: false,
-      reason: "CAPTURE_AND_TESTIMONY",
-      target,
-      detail: "a receipt is held as the captured bytes OR a named member's account, never both."
-    });
-    if (!sha2 && !acct) return withRow5({
-      ok: false,
-      reason: "NEITHER_CAPTURE_NOR_TESTIMONY",
-      target,
-      detail: "a receipt is held as captured bytes the register holds, or as a named member's account."
-    });
     if (sha2 && !/^[0-9a-f]{64}$/.test(sha2)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     const k = String(kind2 ?? "").trim() || "receipt";
     const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
@@ -186913,14 +186960,8 @@ var ActionRecords = class {
     const entry4 = Array.isArray(ledger) && Number.isInteger(n2) ? ledger[n2] : void 0;
     if (!entry4 || typeof entry4 !== "object" || entry4.direction !== "sent" || !RECEIPT_KINDS.includes(k))
       return refuse18("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; the entry named is not a sent one. Nothing was written.`, { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
-    if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-      return withRow5({
-        ok: false,
-        reason: "UNREGISTERED_ARTIFACT",
-        target,
-        artifact_sha: sha2,
-        detail: "this hash names no capture in this store. Capture it first, or record a named account instead."
-      });
+    const unregistered = this.unregisteredArtifact(sha2, { target, detail: RECEIPT_DETAIL });
+    if (unregistered) return unregistered;
     const recorded = stampInstant("second", this.#nowMs(null));
     const seq = this.record.transact(() => {
       const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n2).n;
@@ -188057,7 +188098,7 @@ var Actions = class _Actions {
   /* R64 (K1446), R65 (C1): the records-request law's held standard (`law_standard`) and the `proceeding`, each set or
      changed only by a member and naming a record the author may see: a standard through `standards.standardRead`
      (`NO_SUCH_STANDARD`, minted by `standards.noSuchStandard`), a proceeding through the registry (`NO_SUCH_ENTITY`,
-     minted by `entities.noSuchEntity`; another kind `NOT_A_PROCEEDING`). Asked only when the value moved. */
+     minted by `entities.noSuchEntity`; another kind through `entities.notAProceeding`, R104). Asked only when the value moved. */
   #heldLinks(heldFm, nextFm, who3, viewer) {
     const val5 = (fm, k) => fm && typeof fm[k] === "string" && fm[k].trim() ? fm[k].trim() : fm && fm[k] !== void 0 && fm[k] !== null && fm[k] !== "" ? fm[k] : null;
     const lawStd = val5(nextFm, "law_standard");
@@ -188096,7 +188137,7 @@ var Actions = class _Actions {
     const kind2 = pid ? this.#entityKind(pid) : null;
     if (!kind2) return noSuchEntity(pid || null, { end: "proceeding" });
     if (kind2 !== "proceeding")
-      return refuse19("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind2}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind: kind2 });
+      return notAProceeding(`proceeding names an entity of kind ${kind2}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind: kind2 });
     return null;
   }
   /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
@@ -188836,12 +188877,8 @@ Reason: ${why2}
     author = null
   } = {}) {
     const who3 = String(author ?? "").trim();
-    if (!who3 || isMachineIdentity(who3))
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_CORRESPOND",
-        detail: "a correspondence entry is a named member's statement that this exchange happened \u2014 and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member."
-      };
+    const fence4 = this.records.correspondFence(who3, { detail: CORRESPOND_DETAIL.MACHINE_CANNOT_CORRESPOND });
+    if (fence4) return fence4;
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
     if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
@@ -188853,29 +188890,13 @@ Reason: ${why2}
         detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came is recorded as no_response with the date it was due, not omitted (DEC-13).`
       };
     const day2 = String(at49 ?? "").trim();
-    if (!isCalendarDate(day2))
-      return {
-        ok: false,
-        reason: "BAD_DATE",
-        at: day2,
-        detail: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a non-response, which is dated by when the reply was due"
-      };
     const sha2 = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account2 ?? "").trim();
-    if (sha2 && acct)
-      return {
-        ok: false,
-        reason: "CAPTURE_AND_TESTIMONY",
-        target,
-        detail: "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the group can defend."
-      };
-    if (!sha2 && !acct)
-      return {
-        ok: false,
-        reason: "NEITHER_CAPTURE_NOR_TESTIMONY",
-        target,
-        detail: "an entry carries either an artifact_sha that resolves in the register or an account with an author. Neither is an entry that asserts an exchange and offers no way to check that it happened."
-      };
+    const entryRefusal = this.records.correspondEntryRefusal(
+      { at: day2, artifactSha: sha2, account: acct },
+      { target, detail: CORRESPOND_DETAIL }
+    );
+    if (entryRefusal) return entryRefusal;
     if (sha2 && !/^[0-9a-f]{64}$/.test(sha2))
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     if (sha2 && direction === "no_response")
@@ -188973,14 +188994,8 @@ Reason: ${why2}
         object_type: b.object_type,
         detail: "a correspondence ledger belongs to an action: it records what that ask sent and what came back."
       };
-    if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-      return {
-        ok: false,
-        reason: "UNREGISTERED_ARTIFACT",
-        target,
-        artifact_sha: sha2,
-        detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or record a named account instead \u2014 those are the two honest ways to hold an exchange."
-      };
+    const unregistered = this.records.unregisteredArtifact(sha2, { target, detail: CORRESPOND_DETAIL.UNREGISTERED_ARTIFACT });
+    if (unregistered) return unregistered;
     const lease = this.record.acquireLease(target, who3, CORRESPOND_LEASE_MS);
     if (!lease.ok)
       return {
@@ -190307,11 +190322,19 @@ Changes: responds_to edge added to ${actionId}.
       return { ok: false, reason: "NOT_AN_ACTION", target: id, object_type: b.object_type };
     const fm = this.#heldFm(id) || {};
     const d = this.derived({ bundle_id: id }, now, viewer);
+    let project = null;
+    try {
+      project = this.record.bundleInfo(id)?.project ?? null;
+    } catch {
+      project = null;
+    }
     return {
       ok: true,
       id,
       current_state: b.current_state,
       ...d,
+      project,
+      title: typeof fm.title === "string" ? fm.title : null,
       counterparty: fm.counterparty ?? null,
       clock: Array.isArray(fm.clock) ? fm.clock : [],
       legs: d.basis.map((l2) => ({
@@ -190766,14 +190789,18 @@ function actionsOf(host, deps) {
   }
   return a;
 }
+var CORRESPOND_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: "a correspondence entry is a named member's statement that this exchange happened \u2014 and on the testimony arm it IS the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member.",
+  BAD_DATE: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a non-response, which is dated by when the reply was due",
+  CAPTURE_AND_TESTIMONY: "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader would quote instead of the thing the group can defend.",
+  NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carries either an artifact_sha that resolves in the register or an account with an author. Neither is an entry that asserts an exchange and offers no way to check that it happened.",
+  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture the artifact first (op=capture), or record a named account instead \u2014 those are the two honest ways to hold an exchange."
+});
 function actionsOps(a, url, body) {
   const q10 = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    /* T47 (N961): the six acts moved to `action-records` (its R1–R6) keep their ops, spread here from its map (its R15)
-       until the plane spreads that map itself (its L11 job); the same arms, so a second spread changes nothing. An owner
-       handed with no `action-records` instance of its own (a stand-in in a test of the map) is handed the arms itself. */
-    ...actionRecordsOps(a.records instanceof ActionRecords ? a.records : a, url, body),
+    /* R103 (T48; N1040, K3147): this module's own arms only; the plane spreads `actionRecordsOps` (its R45) beside them. */
     actionmove: () => a.actionMove({
       target: q10("target"),
       to: q10("to"),
@@ -193315,7 +193342,9 @@ __export(checks_exports57, {
 });
 var at33 = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 var FILING_TEMPLATES_WORDS = Object.freeze({
-  "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}."
+  "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
+  /* R33 (T48): moved from `filings`' `FILINGS_WORDS` (its R51) verbatim; `rfc.quoting` itself is not read (K2953) */
+  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written."
 });
 var FILING_TEMPLATE_CHECKS = Object.freeze({
   /* ---- moved from filings (C-115) ---- */
@@ -193353,6 +193382,12 @@ var FILING_TEMPLATE_CHECKS = Object.freeze({
     check: "C-115.38",
     where: at33("#noTemplate", "is-no-such-template"),
     translation: "There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."
+  },
+  /* ---- moved from filings in T48 (R33), unchanged ---- */
+  RFC_QUOTING_MISSING: {
+    check: "C-115.47",
+    where: at33("rfcQuotingRefusal", "is-rfc-quoting-missing"),
+    translation: FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"]
   },
   /* ---- new in T35 (R26; N702, K1869), in the C-115 family as R26 numbers them; awaiting promotion's stamp ---- */
   TEMPLATE_REF_REFUSED: {
@@ -193795,6 +193830,16 @@ function blankUnknownRefusal(text7, extra = null, why2 = "") {
     { ...extra && typeof extra === "object" ? extra : {}, blank: unknown }
   );
 }
+var RFC_QUOTING_SENTENCE = "Your reply may be quoted unless it says otherwise.";
+var RFC_KIND = PRODUCT_KINDS.find((k) => k === "request_for_comment");
+function rfcQuotingRefusal(text7, extra = null) {
+  if (typeof text7 === "string" && text7.includes(RFC_QUOTING_SENTENCE)) return null;
+  return refuse21(
+    "RFC_QUOTING_MISSING",
+    "a request for comment carries the sentence that the reply may be quoted unless it says otherwise",
+    { ...extra && typeof extra === "object" ? extra : {}, sentence: RFC_QUOTING_SENTENCE, key: "rfc.quoting" }
+  );
+}
 function templateHandle(name3) {
   if (typeof name3 !== "string") return null;
   const h = name3.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -193995,6 +194040,7 @@ var FilingTemplates = class _FilingTemplates {
         `the profile's template is not offered: its attribution lacks ${lacks.join(", ")}`,
         { template: t2.id, lacks }
       );
+    if (t2.use === "file" && t2.kind === RFC_KIND) return rfcQuotingRefusal(t2.profileTemplate.text, { template: t2.id });
     return null;
   }
   /* ================================================================ templates and their sight (R24) */
@@ -194840,6 +194886,8 @@ var FilingTemplates = class _FilingTemplates {
         blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
         { version: versionId(t2.id, n2), tier, needs, reviews: _FilingTemplates.#summary(standing, sha2) }
       );
+    const quoting = t2.use === "file" && t2.kind === RFC_KIND ? rfcQuotingRefusal(this.#latestRevision(t2.id, n2).text, { version: versionId(t2.id, n2) }) : null;
+    if (quoting) return quoting;
     const at49 = this.#when();
     const prev = this.#latestApproved(t2, events);
     return this.record.transact(() => {
@@ -196426,17 +196474,16 @@ var ActionHolds = class _ActionHolds {
   #heldAs({ artifactSha, account: account2, medium }) {
     const sha2 = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account2 ?? "").trim();
-    if (sha2 && acct)
-      return { refusal: { ok: false, reason: "CAPTURE_AND_TESTIMONY", detail: "it is held as the captured bytes OR a named account, never both. Nothing was written." } };
-    if (!sha2 && !acct)
-      return { refusal: { ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", detail: "it is held as an artifact_sha that resolves in the register or as an account by its author. Nothing was written." } };
     if (sha2 && !/^[0-9a-f]{64}$/.test(sha2))
       return { refusal: { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" } };
     for (const [name3, v] of [["account", acct], ["medium", String(medium ?? "").trim()]])
       if (v.length > NOTE_MAX6 || /["\\\r\n]/.test(v))
         return { refusal: { ok: false, reason: `BAD_${name3.toUpperCase()}`, detail: `${name3} is at most ${NOTE_MAX6} characters and cannot contain a quote, a backslash, or a newline` } };
-    if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-      return { refusal: { ok: false, reason: "UNREGISTERED_ARTIFACT", artifact_sha: sha2, detail: "this hash names no capture in this store. Capture it first (op=capture), or record a named account instead." } };
+    if (sha2) {
+      const records = actionRecordsOf(this.#deps.host, { storage: { sql: this.sql }, record: this.record, membership: this.membership });
+      const unregistered = records.unregisteredArtifact(sha2);
+      if (unregistered) return { refusal: unregistered };
+    }
     return { sha: sha2 || null, account: acct || null };
   }
   /** R11 (T45; N858 D10; v0.2 rules 10, 12): a member records that she sent the hold notice for the hold at `place`
@@ -196461,8 +196508,8 @@ var ActionHolds = class _ActionHolds {
     const latest3 = this.#one(`SELECT hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`, pl.bundle, pl.ord);
     if (!latest3 || latest3.hold !== "in_place") return holdNotInPlace(where);
     const day2 = String(at49 ?? "").trim();
-    if (!isCalendarDate(day2))
-      return withRow9({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the notice was sent is a YYYY-MM-DD the calendar has. Nothing was written." });
+    const entry4 = correspondEntryRefusal({ at: day2, artifactSha, account: account2 }, where);
+    if (entry4) return entry4;
     const held3 = this.#heldAs({ artifactSha, account: account2, medium });
     if (held3.refusal) return withRow9({ ...held3.refusal, ...where });
     const med = String(medium ?? "").trim() || null;
@@ -196508,8 +196555,8 @@ var ActionHolds = class _ActionHolds {
     const p3 = str46(String(project ?? ""));
     if (!PROJECT_ID_RE.test(p3) || !this.#seesFull(p3, viewer)) return noSuchProject(p3 || null);
     const day2 = String(at49 ?? "").trim();
-    if (!isCalendarDate(day2))
-      return withRow9({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the pressure arrived is a YYYY-MM-DD the calendar has. Nothing was written." });
+    const entry4 = correspondEntryRefusal({ at: day2, artifactSha, account: account2 }, { project: p3 });
+    if (entry4) return entry4;
     const held3 = this.#heldAs({ artifactSha, account: account2, medium: null });
     if (held3.refusal) return withRow9({ ...held3.refusal, project: p3 });
     const recorded = stampInstant("second", this.#nowMs());
@@ -196725,6 +196772,14 @@ function actionHoldsOps(h, url, body) {
       at: pick4("at"),
       viewer: q10("viewer"),
       author: q10("author")
+    }),
+    /* R16 (T48; N1035; K3145): the pressure marks and records, read as an op; exactly R12's read, `viewer` the plane's stamp. */
+    pressurefor: () => h.pressureFor({
+      project: q10("project") || null,
+      action: q10("action") || null,
+      after: q10("after") || null,
+      limit: q10("limit") || null,
+      viewer: q10("viewer")
     })
   };
 }
@@ -196956,8 +197011,7 @@ var at35 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 var FILINGS_WORDS = Object.freeze({
   "refusal.CONTRADICTED_HELD": "The record contradicts a sentence in this text. Rewrite it, or release it with a reason, before approving. Nothing was written.",
   "refusal.SELF_BENEFIT_ASK": "A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
-  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.",
-  "refusal.NOT_A_PARTNER": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was written.",
+  "refusal.NOT_A_PARTNER": "That organization isn't one of this action's partners. Add it as a partner first. Nothing was written.",
   "refusal.JOINT_FINGERPRINT_MISMATCH": "The partner's copy isn't the same text your group approved. They sign the same words, or none. Nothing was written.",
   "refusal.SAME_APPROVER": "The second approval comes from a member other than the one who approved first. Nothing was written.",
   "refusal.ASSERTION_UNRESOLVED": "A sentence that reads as saying the body broke a rule is still open. Rewrite it, confirm the act only asks, or treat the act as a breach claim. Nothing was written.",
@@ -197147,11 +197201,8 @@ var FILINGS_CHECKS = Object.freeze({
     where: at35("#outwardRefusal", "is-self-benefit-ask"),
     translation: word("SELF_BENEFIT_ASK")
   },
-  RFC_QUOTING_MISSING: {
-    check: "C-115.47",
-    where: at35("#outwardRefusal", "is-rfc-quoting-missing"),
-    translation: word("RFC_QUOTING_MISSING")
-  },
+  /* C-115.47 `RFC_QUOTING_MISSING` is `filing-templates`' row since T48 (R57; its R33): refused at R6 through its
+     `rfcQuotingRefusal`, answered as it gives it. */
   NOT_A_PARTNER: {
     check: "C-115.48",
     where: at35("jointSignatory", "is-joint-signatory"),
@@ -197291,7 +197342,6 @@ var KEYED = Object.freeze({
   /* R42 */
   "filings.secondapproval.given": "Second approval given by {member} on {date}.",
   /* kept in T46 (R52) */
-  "rfc.quoting": "Your reply may be quoted unless it says otherwise.",
   "phrasing.no_list": "Nothing could be pointed out: no phrasing list is held for this language.",
   "filings.review_copy.no_embargo": "No embargo is stated for this copy.",
   "filings.review_copy.terms": "Review copy. Embargoed until {embargo}; for release at {release}."
@@ -197416,6 +197466,7 @@ var TIER_WORDS = Object.freeze({
   3: "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the group names.",
   undetermined: "The risk tier is undetermined: neither the profile nor a member has stated it."
 });
+var COUNSEL_OFFER = Object.freeze(["counsel_packet"]);
 var CLOSED2 = Object.freeze(["resolved", "abandoned"]);
 var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
@@ -197452,7 +197503,8 @@ var SERVICES2 = Object.freeze([
   "filingSecondApprove",
   "holdNoticePrepare",
   "templatesForAction",
-  "approvedUnsent"
+  "approvedUnsent",
+  "filingRead"
 ]);
 var Filings = class _Filings {
   #deps;
@@ -198086,9 +198138,9 @@ var Filings = class _Filings {
     const filled21 = this.#fill(own12 ? text7 : used.text, values, mf.fills);
     const { blanks, unfilled } = filled21;
     const rfc = _Filings.#isRfc(a, mk.marks, null);
-    const content = rfc && !filled21.text.includes(KEYED["rfc.quoting"]) ? `${filled21.text}
+    const content = rfc && !filled21.text.includes(RFC_QUOTING_SENTENCE) ? `${filled21.text}
 
-${KEYED["rfc.quoting"]}` : filled21.text;
+${RFC_QUOTING_SENTENCE}` : filled21.text;
     const review = _Filings.#reviewCopy(a);
     let body = review ? `${review.text}
 
@@ -198178,7 +198230,7 @@ ${body}`;
         text: body,
         blanks,
         unfilled,
-        ...gov.tier === 2 ? { advisory } : {},
+        ...gov.tier === 2 ? { advisory, offers: COUNSEL_OFFER } : {},
         venue,
         template: tpl,
         ...used ? { template_version: {
@@ -198289,9 +198341,9 @@ ${body}`;
     const rfc = _Filings.#isRfc(a, mk.marks, why2);
     const parts = assembled ? this.#assembled(why2, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
     let content = parts ? parts.map((x) => x.text).join("\n") : words24;
-    if (rfc && !content.includes(KEYED["rfc.quoting"])) content = `${content}
+    if (rfc && !content.includes(RFC_QUOTING_SENTENCE)) content = `${content}
 
-${KEYED["rfc.quoting"]}`;
+${RFC_QUOTING_SENTENCE}`;
     const review = _Filings.#reviewCopy(a);
     let body = review ? `${review.text}
 
@@ -198684,7 +198736,7 @@ ${body}`;
   }
   /* R34, R38, R40, R43: the approval's refusals over the check of the approved text, in order after R6's own:
      `ASSERTION_RESOLUTION_REFUSED`, `ASSERTION_UNRESOLVED` (R43), `CONTRADICTED_HELD` unless released (R34),
-     `SELF_BENEFIT_ASK` (R38), `RFC_QUOTING_MISSING` (R40). Answers `{refusal}` or `{released, resolutions, breach}`. */
+     `SELF_BENEFIT_ASK` (R38), `RFC_QUOTING_MISSING` (R40, R57: `filing-templates`'). Answers `{refusal}` or `{released, resolutions, breach}`. */
   #outwardRefusal(o, { filing: filing3, release: release2, resolutions, rfc, body }) {
     const sentences = o.sentences;
     const pointed = _Filings.#assertionPointed(o);
@@ -198736,15 +198788,8 @@ ${body}`;
         sentences: [...new Set(own12.map((p3) => p3.index))].map((i) => ({ index: i, text: sentences[i] })),
         detail: "rewrite each sentence that asks for the benefit of the group or its members; there is no override"
       } };
-    if (rfc && !String(body ?? "").includes(KEYED["rfc.quoting"]))
-      return { refusal: {
-        ok: false,
-        reason: "RFC_QUOTING_MISSING",
-        filing: filing3,
-        sentence: KEYED["rfc.quoting"],
-        key: "rfc.quoting",
-        detail: "a request for comment carries the sentence that the reply may be quoted unless it says otherwise"
-      } };
+    const unquoted2 = rfc ? rfcQuotingRefusal(String(body ?? ""), { filing: filing3 }) : null;
+    if (unquoted2) return { refusal: unquoted2 };
     return { released, resolutions: recorded, breach };
   }
   /* R43: a `breach_claim` resolution makes the action a breach action through `actions`' revision: its `bundle.md`
@@ -199026,6 +199071,67 @@ ${body}` : body;
       ...gate.breach ? { breach_claim: true } : {},
       ...checked.no_list ? { no_list: checked.no_list } : {},
       says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it by the venue's own means and records that it was sent"
+    };
+  }
+  /* ---------------------------------------------------------------- R59: filingRead */
+  /** R59 (T48; N1034, K3145): one prepared draft or communication as it was stored, so a reload between preparing and
+   *  approving loses nothing: its text, blanks with their sources, unfilled blanks with why, the member's own fills
+   *  (R55, each labelled the member's), template (R29), advisory and offers (R4, R58), notices, label (R5) and action,
+   *  beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
+   *  record and nothing is written; a draft that is absent, or whose action or basis the viewer may not see (R13, R27),
+   *  is `NO_SUCH_FILING`, one answer. */
+  filingRead({ filing: filing3 = null, viewer = null } = {}) {
+    const d = this.#draft(filing3, viewer);
+    if (!d) return this.#noFiling(filing3);
+    const comm = d.form === "communication";
+    const marks2 = parse11(d.marks) || {};
+    const { notices = [], ...checked } = parse11(d.outward) || {};
+    const blanks = comm ? Array.isArray(marks2.blanks) ? marks2.blanks : [] : parse11(d.blanks) || [];
+    const own12 = (b) => isObj46(b) && isObj46(b.label) && b.label.kind === "member_fill";
+    const ap = this.#one(`SELECT approved_by, at, sha, text FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    const second4 = this.#one(`SELECT approved_by, at FROM filing_second_approvals WHERE filing_id=?`, d.filing_id);
+    const sent = this.#one(`SELECT ord, sent_on, recorded_by, recorded_at, review_copy, reference FROM filing_sendings WHERE filing_id=?`, d.filing_id);
+    const review = isObj46(marks2.review_copy) ? marks2.review_copy : null;
+    return {
+      ok: true,
+      id: d.filing_id,
+      filing: d.filing_id,
+      action: d.action_id,
+      form: d.form,
+      ...comm ? { purpose: d.purpose } : { tier: d.tier, venue: parse11(d.venue) },
+      text: d.text,
+      blanks,
+      unfilled: comm ? [] : parse11(d.unfilled) || [],
+      fills: blanks.filter(own12),
+      template: comm ? null : parse11(d.template),
+      ...!comm && d.tier === 2 ? { advisory: d.advisory ?? null, offers: COUNSEL_OFFER } : {},
+      disclosure: d.disclosure ?? null,
+      notices,
+      outward: checked,
+      marks: {
+        voice: marks2.voice ?? null,
+        audience: marks2.audience ?? null,
+        language: marks2.language ?? null,
+        own_doing: Array.isArray(marks2.own_doing) ? marks2.own_doing : [],
+        names_pending: marks2.names_pending === true
+      },
+      ...review ? { review_copy: review } : {},
+      ..._Filings.#voiceSays(marks2.voice ?? null),
+      label: proposalLabel(d.preparer, comm ? "communication" : "filing_draft"),
+      prepared_by: d.preparer,
+      at: d.prepared_at,
+      approval: ap ? { approved_by: ap.approved_by, at: ap.at, sha: ap.sha, text: ap.text } : null,
+      second_approval: second4 ? { approved_by: second4.approved_by, at: second4.at, given: _Filings.#secondGiven(second4.approved_by, second4.at) } : null,
+      sending: sent ? {
+        ord: sent.ord,
+        sent_on: sent.sent_on,
+        recorded_by: sent.recorded_by,
+        at: sent.recorded_at,
+        reference: sent.reference ?? null,
+        ...sent.review_copy ? { review_copy: parse11(sent.review_copy) } : {}
+      } : null,
+      evidence: false,
+      ...ap ? {} : { says: DRAFT_SAYS }
     };
   }
   /* ---------------------------------------------------------------- R7: filingRecordSent */
@@ -200882,6 +200988,7 @@ function filingsOps(f17, url, body) {
       viewer: q10("viewer")
     }),
     filingsfor: () => f17.filingsFor({ action: q10("action"), viewer: q10("viewer") }),
+    filingread: () => f17.filingRead({ filing: b.filing ?? q10("filing"), viewer: q10("viewer") }),
     theorypropose: () => f17.theoryPropose({
       packet: b.packet ?? null,
       action: b.action ?? null,
@@ -204150,6 +204257,11 @@ var DAY_UNDETERMINED = "no time zone is held for this place, so the plan's local
 var PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and its own checkpoints are not due until it is resumed. Every act stays open to members.";
 var PREVIEW = Symbol("action-plans start preview");
 var PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the reminders it would set. Nothing was written: no action, no id, no reminder.";
+var ASK_SKILL = "planning@1";
+var ASK_BOUNDS2 = Object.freeze([
+  Object.freeze({ bound: "proposals", allowed: 20 }),
+  Object.freeze({ bound: "wallclock", allowed: 6e5 })
+]);
 var DAY_MS6 = 864e5;
 var ACT2 = Symbol("action-plans act");
 var WITHHELD = Symbol("action-plans withheld");
@@ -204173,6 +204285,9 @@ var ok = (r) => r && r.ok !== false;
 var ActionPlans = class {
   /* R44: the one reader of a plan's closing summary, `{module, fn}`. */
   #closeHolder = null;
+  /* R51: the planning runs being opened by a member's ask right now, by plan, each a promise of its run id (or null), so
+     two asks at once open one run. */
+  #asking = /* @__PURE__ */ new Map();
   constructor(deps) {
     this.record = deps.record;
     this.membership = deps.membership;
@@ -206414,6 +206529,68 @@ var ActionPlans = class {
       ...see.withheld ? { out_of_view: true } : {}
     };
   }
+  /** R51: a member asks the assistant for options on one plan. It opens the plan's planning run (`ai-runs.open`, mode
+   *  `plan`, its R46; the run's proposals reach the tray, R31, R34), over the plan's project, the member its actor, as
+   *  `plan-work` opens its re-examination run. While a planning run of this plan is running it opens none and answers
+   *  that run (`existed: true`). It records no option, proposal or disposition: a member's own proposal is
+   *  `optionPropose` (R11). A refusal of `ai-runs.open` is passed through unchanged. */
+  async planAsk(args = {}) {
+    const { plan: plan2, author, viewer } = args;
+    const m = this.#member(author);
+    if (m) return m;
+    const p3 = this.#plan(plan2, viewer);
+    if (!p3) return noSuchPlan(plan2);
+    if (p3.state === "closed") return refusePlanClosed(p3.id);
+    let held3 = this.#runningRun(p3.id);
+    if (!held3 && this.#asking.has(p3.id)) {
+      const run3 = await this.#asking.get(p3.id);
+      if (run3) held3 = run3;
+    }
+    if (held3) {
+      const fence4 = this.membership.projectAuthority(p3.project, author, "joined", "planAsk");
+      if (fence4) return fence4;
+      return { ok: true, plan: p3.id, run: held3, started: false, existed: true };
+    }
+    const ai = this.aiRuns;
+    const who3 = str49(author);
+    const run2 = `RUN-${hex82()}${hex82()}`;
+    const opening = ai.open({
+      run: run2,
+      contextType: "project",
+      contextId: p3.project,
+      mode: "plan",
+      plan: p3.id,
+      label: "asking the assistant for options on a plan",
+      principalPlane: who3,
+      principalClaude: who3,
+      skillVersion: ASK_SKILL,
+      bounds: ASK_BOUNDS2.map((b) => ({ ...b })),
+      actor: who3,
+      viewer: who3
+    });
+    this.#asking.set(p3.id, Promise.resolve(opening).then((r2) => r2 && r2.started === true && r2.ok !== false ? run2 : null, () => null));
+    let r;
+    try {
+      r = await opening;
+    } finally {
+      this.#asking.delete(p3.id);
+    }
+    if (!r || r.started !== true || r.ok === false) return r;
+    return { ok: true, plan: p3.id, run: r.run ?? run2, started: true };
+  }
+  /* R51: a planning run of the plan that is running now (recorded at its open, R32), or null. */
+  #runningRun(planId2) {
+    for (const r of this.#rows(`SELECT run FROM plan_runs WHERE plan_id=? ORDER BY opened_at DESC, run DESC`, planId2)) {
+      let live7 = null;
+      try {
+        live7 = this.aiRuns.runFor(r.run, null);
+      } catch (e2) {
+        if (e2 instanceof ProviderAbsent2) throw e2;
+      }
+      if (live7 && live7.status === "running") return r.run;
+    }
+    return null;
+  }
   /** R30 (fills ai-runs R47): a planning run is opened over an open plan of its project, by a member who has joined it. */
   planRunCheck({ contextType, contextId, plan: plan2, actor, viewer } = {}) {
     const p3 = this.#plan(plan2, viewer);
@@ -206690,9 +206867,9 @@ for (const name3 of [
     }
   } });
 }
-{
-  const f17 = ActionPlans.prototype.optionPropose;
-  Object.defineProperty(ActionPlans.prototype, "optionPropose", { configurable: true, writable: true, value: async function(...a) {
+for (const name3 of ["optionPropose", "planAsk"]) {
+  const f17 = ActionPlans.prototype[name3];
+  Object.defineProperty(ActionPlans.prototype, name3, { configurable: true, writable: true, value: async function(...a) {
     try {
       return await f17.apply(this, a);
     } catch (e2) {
@@ -206794,7 +206971,8 @@ function actionPlansOps(m, url, body) {
     scenariosetaside: () => m.scenarioSetAside(stamped3({ plan: pick4("plan"), scenario: pick4("scenario"), reason: pick4("reason") })),
     scenariorestore: () => m.scenarioRestore(stamped3({ plan: pick4("plan"), scenario: pick4("scenario"), reason: pick4("reason") })),
     planpause: () => m.planPause(stamped3({ id: pick4("id") ?? pick4("plan"), reason: pick4("reason"), look_again: pick4("look_again") })),
-    planresume: () => m.planResume(stamped3({ id: pick4("id") ?? pick4("plan"), reason: pick4("reason") }))
+    planresume: () => m.planResume(stamped3({ id: pick4("id") ?? pick4("plan"), reason: pick4("reason") })),
+    planask: () => m.planAsk(stamped3({ plan: pick4("plan") }))
   };
 }
 
@@ -206862,6 +207040,24 @@ var ACTION_REPLY_CHECKS = {
     check: "C-150.7",
     where: "src/action-replies/index.mjs #arising > is-arising-shape",
     translation: "What arose from the response is named as a project, or as a plan with one of its matters, each by its id. This request named neither in that form, so nothing was linked."
+  },
+  /* R10, R4 (T48; N880; Actions D13, H17): what a reply says about being quoted is a member's record. The translations of
+     C-150.8 to .10 are BOB's drafts in DEC-83's form (`words.json` holds no key yet: an ASK to UX-DESIGN); they wait for
+     T49's promotion stamp (plan rule 5 (2)). */
+  MACHINE_CANNOT_RECORD_QUOTING: {
+    check: "C-150.8",
+    where: "src/action-replies/index.mjs actionReplyQuoting > is-machine-quoting",
+    translation: "Only a member records what a reply says about being quoted. Nothing was written."
+  },
+  QUOTING_NOT_RFC: {
+    check: "C-150.9",
+    where: "src/action-replies/index.mjs #quotingTarget > is-quoting-rfc",
+    translation: "Only a reply received to a request for comment can ask not to be quoted. Nothing was written."
+  },
+  QUOTING_REFUSED: {
+    check: "C-150.10",
+    where: "src/action-replies/index.mjs #quotingShape > is-quoting-shape",
+    translation: "Say whether the reply may be quoted, and when it may not, give the reply's own words that say so, on one line of at most 500 characters. Nothing was written."
   }
 };
 
@@ -206905,8 +207101,21 @@ CREATE TABLE IF NOT EXISTS action_arose_from (
 CREATE INDEX IF NOT EXISTS action_arose_from_entry ON action_arose_from(bundle_id, ord);
 CREATE INDEX IF NOT EXISTS action_arose_from_project ON action_arose_from(project);
 CREATE INDEX IF NOT EXISTS action_arose_from_plan ON action_arose_from(plan, matter);
+
+-- R10: A MEMBER'S RECORD THAT A REPLY ASKS NOT TO BE QUOTED, or its withdrawal. Appended,
+-- never edited; the latest per received entry stands.
+CREATE TABLE IF NOT EXISTS action_reply_quoting (
+  seq         INTEGER PRIMARY KEY,
+  bundle_id   TEXT NOT NULL,   -- the request for comment
+  ord         INTEGER NOT NULL,-- the received entry's position
+  quotable    INTEGER NOT NULL, -- 0 the reply says it may not be quoted, 1 that record is withdrawn
+  words       TEXT,            -- the reply's own words that say so (null with quotable 1)
+  recorded_by TEXT NOT NULL,
+  recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS action_reply_quoting_entry ON action_reply_quoting(bundle_id, ord, seq);
 `;
-var ACTION_REPLIES_TABLES = Object.freeze(["action_reply_bearings", "action_bearing_proposals", "action_arose_from"]);
+var ACTION_REPLIES_TABLES = Object.freeze(["action_reply_bearings", "action_bearing_proposals", "action_arose_from", "action_reply_quoting"]);
 function migrateActionReplies(sql) {
   const bare5 = ACTION_REPLIES_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).map((l2) => l2.replace(/\s--.*$/, "")).join("\n");
   for (const s of bare5.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
@@ -206918,6 +207127,7 @@ var MATTER_MAX = 200;
 var CLOSED_STATES = Object.freeze(["resolved", "abandoned"]);
 var NOT_ADDRESSED = "not_addressed";
 var PAGE2 = 200;
+var QUOTING_WORDS_MAX = 500;
 function withRow11(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
   const row17 = ACTION_REPLY_CHECKS[r.reason];
@@ -207019,13 +207229,30 @@ var ActionReplies = class _ActionReplies {
     return (Array.isArray(a.legs) ? a.legs : []).filter((l2) => l2 && (l2.kind === "advances" || l2.kind === "rests_on") && typeof l2.target === "string").map((l2) => l2.target);
   }
   /* R1: the action and the received entry a layout or a proposal is on, or the refusal. */
-  #bearingTarget(target, ord, viewer) {
+  #bearingTarget(target, ord, viewer, quoting = false) {
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const e2 = _ActionReplies.#entry(a, ord);
+    if (quoting) return this.#quotingTarget(a, e2, target, ord);
     if (a.kind !== "request_for_comment" || !e2 || e2.direction !== "received")
       return refuse23("BEARING_NOT_RFC", a.kind !== "request_for_comment" ? "this action is not a request for comment; only a reply to one is laid out claim by claim" : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
     return { ok: true, a, ord: e2.ord };
+  }
+  /* R10: the received entry of a request for comment a quoting record is on, or the refusal. */
+  #quotingTarget(a, e2, target, ord) {
+    if (a.kind !== "request_for_comment" || !e2 || e2.direction !== "received")
+      return refuse23("QUOTING_NOT_RFC", a.kind !== "request_for_comment" ? "this action is not a request for comment; only a reply to one can ask not to be quoted" : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
+    return { ok: true, a, ord: e2.ord };
+  }
+  /* R10: `quotable` a boolean; `words` (the reply's own, one line, no quote or backslash) given with `false`. Null for
+     `words` when withdrawn. */
+  #quotingShape(quotable2, words24, target) {
+    const given6 = words24 !== void 0 && words24 !== null;
+    const w = typeof words24 === "string" ? words24.trim() : null;
+    const wordsOk = w !== null && w.length >= 1 && w.length <= QUOTING_WORDS_MAX && !/["\\\r\n\u2028\u2029]/.test(w);
+    if (typeof quotable2 !== "boolean" || quotable2 === false && !wordsOk || given6 && !wordsOk)
+      return refuse23("QUOTING_REFUSED", "quotable is true or false, and with false the reply's own words that say so", { target });
+    return { ok: true, quotable: quotable2, words: quotable2 ? null : w };
   }
   /* R1 (action-grammar R24): the layout's shape, its claims among the legs; the claims as stored, or the refusal. */
   #bearingShape(claims, a, target) {
@@ -207129,6 +207356,49 @@ var ActionReplies = class _ActionReplies {
       says: "this is a proposed layout of the reply and not the reply's layout; it changed nothing. " + (latest3 ? "The layout a member stated stands beside it." : "No member has laid the reply out.")
     };
   }
+  /** R10: a member records that the reply at `ord` says it may not be quoted (`quotable: false`, with its own `words`), or
+   *  withdraws that record (`quotable: true`). Appended, never edited; the latest per entry stands. A declaration. */
+  actionReplyQuoting({ target, ord = null, quotable: quotable2 = null, words: words24 = null, author = null, viewer = null } = {}) {
+    const who3 = typeof author === "string" ? author.trim() : "";
+    if (!who3 || isMachineIdentity(who3))
+      return refuse23("MACHINE_CANNOT_RECORD_QUOTING", "what a reply says about being quoted is recorded by a member");
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const t2 = this.#bearingTarget(target, ord, viewer, true);
+    if (t2.ok === false) return t2;
+    const s = this.#quotingShape(quotable2, words24, target);
+    if (s.ok === false) return s;
+    const at49 = this.#at();
+    const w = this.record.transact(() => {
+      this.sql.exec(
+        `INSERT INTO action_reply_quoting (bundle_id, ord, quotable, words, recorded_by, recorded_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        target,
+        t2.ord,
+        s.quotable ? 1 : 0,
+        s.words,
+        who3,
+        at49
+      );
+      return { ok: true };
+    });
+    if (w && w.ok === false) return w;
+    return {
+      ok: true,
+      target,
+      ord: t2.ord,
+      quotable: s.quotable,
+      words: s.words,
+      by: who3,
+      at: at49,
+      weight: "single",
+      says: s.quotable ? "the record that this reply asks not to be quoted is withdrawn. Nothing else changed." : "this reply is recorded as asking not to be quoted, in its own words. Nothing else changed."
+    };
+  }
+  /* R10: an entry's latest quoting record, or null when none is held. */
+  #quoting(id, ord) {
+    const r = this.#one(`SELECT quotable, words, recorded_by, recorded_at FROM action_reply_quoting WHERE bundle_id=? AND ord=?
+      ORDER BY seq DESC LIMIT 1`, id, ord);
+    return r ? { quotable: r.quotable === 1, words: r.words ?? null, by: r.recorded_by, at: r.recorded_at } : null;
+  }
   /* R1: an entry's layouts, newest first. */
   #layouts(id, ord) {
     return this.#rows(`SELECT seq, claims_json, laid_by, laid_at FROM action_reply_bearings WHERE bundle_id=? AND ord=?
@@ -207152,7 +207422,16 @@ var ActionReplies = class _ActionReplies {
     const want = ord === null || ord === void 0 || ord === "" ? null : ordOf5(ord);
     const entries = (Array.isArray(a.correspondence) ? a.correspondence : []).filter((e2) => e2 && e2.direction === "received" && (want === null || e2.ord === want)).map((e2) => {
       const all = this.#layouts(target, e2.ord);
-      return { ord: e2.ord, at: e2.at ?? null, latest: all[0] || null, earlier: all.slice(1), proposals: this.#proposals(target, e2.ord) };
+      const q10 = this.#quoting(target, e2.ord);
+      return {
+        ord: e2.ord,
+        at: e2.at ?? null,
+        latest: all[0] || null,
+        earlier: all.slice(1),
+        proposals: this.#proposals(target, e2.ord),
+        quotable: q10 ? q10.quotable : true,
+        quoting: q10
+      };
     });
     return { ok: true, target, kind: a.kind ?? null, entries };
   }
@@ -207303,10 +207582,14 @@ var ActionReplies = class _ActionReplies {
       if (Array.isArray(claims) && claims.length)
         answers2 = { answered: claims.filter((c) => c && c.bearing !== NOT_ADDRESSED).length, claims: claims.length };
     }
-    return { whom, asked_at: asked, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0 };
+    const quotable2 = !received.some((o) => {
+      const q10 = this.#quoting(a.id, o);
+      return q10 && q10.quotable === false;
+    });
+    return { whom, asked_at: asked, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0, quotable: quotable2 };
   }
 };
-for (const m of ["actionReplyBearing", "actionBearingPropose", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
+for (const m of ["actionReplyBearing", "actionBearingPropose", "actionReplyQuoting", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
   const fn = ActionReplies.prototype[m];
   ActionReplies.prototype[m] = function(...a) {
     return withRow11(fn.apply(this, a));
@@ -207357,6 +207640,15 @@ function actionRepliesOps(r, url, body) {
       claims: b.claims ?? null,
       viewer: q10("viewer"),
       proposer: q10("proposer")
+    }),
+    /* R10: `quotable` is a boolean in the body, or `true`/`false` in the query; anything else is refused by the act */
+    actionreplyquoting: () => r.actionReplyQuoting({
+      target: q10("target") || b.target,
+      ord: q10("ord") ?? b.ord ?? null,
+      quotable: b.quotable !== void 0 ? b.quotable : q10("quotable") === "true" ? true : q10("quotable") === "false" ? false : q10("quotable"),
+      words: b.words ?? q10("words"),
+      viewer: q10("viewer"),
+      author: q10("author")
     }),
     arosefrom: () => r.aroseFromLink({
       target: q10("target") || b.target,
@@ -280784,7 +281076,7 @@ var parse20 = (s, fallback) => {
     return fallback;
   }
 };
-var shaOf8 = (x) => typeof x === "string" ? x.trim().toLowerCase().replace(/^sha:/, "") : "";
+var shaOf9 = (x) => typeof x === "string" ? x.trim().toLowerCase().replace(/^sha:/, "") : "";
 var clamp11 = (n2, d, max) => {
   const v = Math.floor(Number(n2));
   return Number.isFinite(v) && v >= 1 ? Math.min(v, max) : d;
@@ -280920,7 +281212,7 @@ var FileSafety = class _FileSafety {
      queues its copy (R32). It runs inside the receipt's own transaction and never refuses, delays or fails it. */
   #onReceipt(event2) {
     try {
-      const sha2 = shaOf8(event2 && event2.capture_sha);
+      const sha2 = shaOf9(event2 && event2.capture_sha);
       if (!HEX6423.test(sha2)) return { ok: true, queued: false };
       const at49 = second3(this.now());
       const fresh = !this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha2);
@@ -280981,7 +281273,7 @@ var FileSafety = class _FileSafety {
      hidden capture from one never held (DEC-36); else null. A viewer left out is an in-plane caller, which sees every
      capture. */
   #held(captureSha, viewer) {
-    const sha2 = shaOf8(captureSha);
+    const sha2 = shaOf9(captureSha);
     if (!HEX6423.test(sha2)) return { sha: sha2, refused: refusal37("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
     const absent = () => ({ sha: sha2, refused: refusal37("FILE_NOT_HELD", "No capture this viewer may see is held under this digest. Nothing was read.", { captureSha: sha2 }) });
     const home2 = this.#home(sha2);
@@ -281362,7 +281654,7 @@ var FileSafety = class _FileSafety {
         if (by("link").length) add2("archive_link", { count: by("link").length });
         let cycle = false;
         for (const e2 of [...by("filed"), ...by("already_held")]) {
-          const m = shaOf8(e2.sha256);
+          const m = shaOf9(e2.sha256);
           if (!HEX6423.test(m)) {
             archive.members_high++;
             continue;
@@ -281543,7 +281835,7 @@ var FileSafety = class _FileSafety {
       if (h.refused) return h.refused;
       return { ok: true, captureSha: h.sha, ...await this.#stateOf(h.sha) };
     } catch {
-      return { ok: true, captureSha: shaOf8(captureSha) || null, may_open: false, path: null, why: "NOT_SCANNED" };
+      return { ok: true, captureSha: shaOf9(captureSha) || null, may_open: false, path: null, why: "NOT_SCANNED" };
     }
   }
   async #stateOf(sha2) {

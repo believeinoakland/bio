@@ -97,17 +97,17 @@ Rows (T45), C-115's next numbers at the job's stamp, translations BOB's drafts a
 
 #### T48 (T48-51; N880, N882, N1034)
 
-- **R57** (T48; N880; Actions D13, H17; amends R40, R51, R52; `filing-templates` R33) R40's check is `filing-templates.rfcQuotingRefusal`, asked at R6 on the approved text of every text R40 and R37 name. *(not yet met: T48)*
+- **R57** (T48; N880; Actions D13, H17; amends R40, R51, R52; `filing-templates` R33) R40's check is `filing-templates.rfcQuotingRefusal`, asked at R6 on the approved text of every text R40 and R37 name.
   - The sentence that preparation adds is `filing-templates`' `RFC_QUOTING_SENTENCE`.
   - This module no longer holds the sentence or C-115.47's row: both are `filing-templates`' (its R33). R51's C-115.47 clause and R52's `rfc.quoting` clause now read "held by `filing-templates`".
   - The refusal's code, number, translation and place among R6's refusals are unchanged.
   - Control: an approved text holding the sentence passes; one without it is refused with the provider's row, equal field for field.
-- **R58** (T48; N882; Actions D9, D15, H13, H19; v0.2 rule 13; K2748) A filing prepared at governing tier 2 (R1, R2) also answers `offers: ["counsel_packet"]`, beside `advisory` (R4). *(not yet met: T48)*
+- **R58** (T48; N882; Actions D9, D15, H13, H19; v0.2 rule 13; K2748) A filing prepared at governing tier 2 (R1, R2) also answers `offers: ["counsel_packet"]`, beside `advisory` (R4).
   - The offer is R8's packet: offered, never required, and no act refuses for it.
   - A Tier 1 filing answers no `offers`.
   - No answer of this module says whether the group should take an action, becoming a party included.
   - Control: a Tier 1 draft answers no `offers`.
-- **R59** (T48; N1034; K3145; amends R5, R23; `screens-action` R3) `filingRead({filing, viewer})` (`op=filingread`; a read) answers one prepared draft or communication as it was stored, so a reload between preparing and approving loses nothing: its `text`, `blanks` (each filled blank with its source), `unfilled` (each with why), the member's `fills` (R55, each labelled the member's), `template` (R29), `advisory` (R4), `offers` (R58), `notices`, `label` (R5) and the action, beside its approval (R6) and sending (R7) when recorded. *(not yet met: T48)*
+- **R59** (T48; N1034; K3145; amends R5, R23; `screens-action` R3) `filingRead({filing, viewer})` (`op=filingread`; a read) answers one prepared draft or communication as it was stored, so a reload between preparing and approving loses nothing: its `text`, `blanks` (each filled blank with its source), `unfilled` (each with why), the member's `fills` (R55, each labelled the member's), `template` (R29), `advisory` (R4), `offers` (R58), `notices`, `label` (R5) and the action, beside its approval (R6) and sending (R7) when recorded.
   - Nothing is re-filled from the record at the read: it answers the stored draft, never a new preparation.
   - An absent draft, or one the viewer may not see by R13's and R27's rule, answers `NO_SUCH_FILING`, alike. It writes nothing.
   - Controls: a draft prepared with fills answers the same text, blanks and fills as `filingPrepare` answered; a draft drawing on a determination in a project the viewer may not see answers `NO_SUCH_FILING`.
