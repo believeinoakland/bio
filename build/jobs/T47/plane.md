@@ -97,3 +97,14 @@ Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 26, module lines 2130
 - R49 still waits on signin-door's CHANGE.
 
 Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 27, module lines 2130
+
+## J7 · QUESTION
+
+**R49 is built** (commit "R49 signin-door's store-internal map ..."): `signinDoorOps(credentialsOf(ctx), url, body, env)` is spread directly after credentials' map. Its test is green (`t47.test.mjs` R49: the five ops sit directly after credentials' map; `signindisclosuredue` answers DISCLOSURE_DUE and then `{ok: true}` once the disclosure is shown; `signintokenhold` holds without answering the token; `signintokenrefused` drops it; none of the five has an op spec).
+
+**One thing only you can do:** `build/modules.json` has no edge plane → `signin-door`, so `checks/architecture.mjs plane` reports 3 failures. The imports are `src/plane/store.mjs`, plus `test/m/plane/maps.mjs` and `t47.test.mjs`. Please add `signin-door` to plane's `uses`. Both modules are layer 11, and signin-door is earlier in the order. My requirements' Uses should name it too (`signinDoorOps`, R49).
+
+**Otherwise:**
+- Plane tests: 233 tests, 231 pass, 2 fail. The two are the control-plane-dependent tests (`clockpropose`, R48's page), as in J6.
+- Format, coverage (49 of 49) and ownership show 0 failures.
+- I post COMPLETE once the edge is in and architecture shows 0.
