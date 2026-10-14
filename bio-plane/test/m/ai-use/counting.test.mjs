@@ -123,7 +123,7 @@ test("R1 rows from before T40 are kept with owner not recorded, their use read f
   await w.group("ann");
   assert.deepEqual(counter(w).map((r) => [r.owner, r.member, r.use, r.mode, r.calls, r.input_tokens]),
     [[NOT_RECORDED, "ann", "ask", "ask", 4, 900], [NOT_RECORDED, "ann", "draft", "draft", 1, 50], [NOT_RECORDED, "ann", "run", "investigate", 2, 800]]);
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.a.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   assert.equal(w.u.aiLimitSet({ owner: "member:ann", scope: "overall", unit: "tokens", period: "day", amount: 100, by: "ann" }).ok, true);
   assert.equal(w.u.useCheck({ owner: "member:ann", member: "ann", use: "ask", at: AT }), null, "1,750 tokens not recorded count toward no limit");
   /* negative control: the same figure counted to her account reaches it */

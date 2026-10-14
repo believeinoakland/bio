@@ -1,13 +1,16 @@
-/* ai-use over a real SQLite database (node:sqlite), with the real record-core, membership and credentials beside it (the
-   services ai-use reads: declareTable, transact, bundleInfo; isAdministrator, isProjectOwner, projectOwners,
-   activeAdmins, notAnAdmin, notTheOwner; accountUses, aiKeptAway, projectsKeptAway, USE_KINDS), a `connections` stub
-   answering `citesInto` from a table of cites the test writes, and the group's zone handed in. Members, projects and
-   accounts are made through those modules' own acts, so each test drives ai-use at its interface. */
+/* ai-use over a real SQLite database (node:sqlite), with the real record-core, membership and ai-accounts beside it
+   (the services ai-use reads: declareTable, transact, bundleInfo; isAdministrator, isProjectOwner, projectOwners,
+   activeAdmins, notAnAdmin, notTheOwner; accountUses, accountUsesOf, aiKeptAway, projectsKeptAway, USE_KINDS), a
+   `connections` stub answering `citesInto` from a table of cites the test writes, and the group's zone handed in. It
+   never builds credentials, which ai-use no longer uses (T48; N996 §5): the founder's claim, which credentials states to
+   membership (membership R94), is a test fact registered here, and enrolment's password setter (membership R95) a test
+   setter that stores nothing, as ai-accounts' own fixture does. Members, projects and accounts are made through those
+   modules' own acts, so each test drives ai-use at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -43,16 +46,19 @@ export async function world({ zone = "UTC", before = null } = {}) {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
-  const c = credentialsOf(ctx, { sealSecret: SEAL });
-  c.migrate();
+  const fact = { claimed: false };
+  m.registerClaimed("test-claim", () => fact.claimed === true);
+  m.registerPasswordSetter(() => ({ ok: true }), "test-password");
+  const a = aiAccountsOf(ctx, { record: rc, membership: m, sealSecret: SEAL });
+  a.migrate();
   db.exec(`CREATE TABLE test_cites (citer TEXT NOT NULL, target TEXT NOT NULL)`);
   const connections = { citesInto: (id) => ({ confirmed: sql.exec(`SELECT citer FROM test_cites WHERE target=? ORDER BY citer`, id)
     .map((r) => r.citer), severed: [] }) };
   if (before) before(db, sql);
   let z = zone;
-  const u = aiUseOf(ctx, { record: rc, membership: m, credentials: c, connections, zone: () => z });
+  const u = aiUseOf(ctx, { record: rc, membership: m, accounts: a, connections, zone: () => z });
   const w = {
-    db, sql, ctx, rc, m, c, u,
+    db, sql, ctx, rc, m, a, u, fact,
     setZone(next) { z = next; },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
@@ -61,9 +67,10 @@ export async function world({ zone = "UTC", before = null } = {}) {
       if (!a.ok) return a;
       return m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
     },
-    /* The founder claims; a second administrator; then each member, enrolled. */
+    /* The founder claims the instance (the test's fact, membership R94); a second administrator; then each member,
+       enrolled. */
     async group(...members) {
-      await c.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+      fact.claimed = true;
       await w.enrol("second", "admin");
       for (const id of members) await w.enrol(id);
       return w;
@@ -103,8 +110,8 @@ export async function standard(opts) {
   const w = await (await world(opts)).group("ann", "bob", "cy");
   w.project("P", "ann");
   w.join("P", "ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
-  await w.c.groupKeySet({ key: "sk-group", by: "admin" });
-  await w.c.projectKeySet({ project: "P", key: "sk-project", by: "ann" });
+  await w.a.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
+  await w.a.groupKeySet({ key: "sk-group", by: "admin" });
+  await w.a.projectKeySet({ project: "P", key: "sk-project", by: "ann" });
   return w;
 }
