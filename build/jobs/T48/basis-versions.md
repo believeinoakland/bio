@@ -44,3 +44,7 @@ REPORT items (detail in my record): (1) requirements R28 header and R30 still na
 Merged `tranche/T48`. R25's extract arm now reads "the candidate source `run-productions` registers, R40": a wording change only. The module's own comment on that arm (`#narrowCandidateList`, `index.mjs`) said "ai-runs"; it now names `run-productions` and R40, matching. No behaviour changed. Re-run: module tests 155 pass, 0 fail; format, architecture (29 files, 99 imports), coverage (47 of 47) and ownership: 0 failures each.
 
 Size (session_01KjNrjv7CqBp7Kcsh6vw11D): test runs 3, module lines 3782
+
+## J3 · COMPLETE
+
+B2 processed: merged tranche/T48; R25's extract-arm comment in index.mjs now names run-productions (R40). No behaviour change. 155 pass, 0 fail; format, architecture, coverage (47/47) and ownership: 0 failures.
