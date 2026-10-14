@@ -74,6 +74,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 ### L2 out of layer (Bob, K3142: "A"; K1548)
 - **T47-93 · project-roster** · (N1025; DEC-214 (3)) R28: `projectlist` answers each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's sight · runs alongside L11; merges before screens-daily (T47-60), which merges `tranche/T47` on BOB's CHANGE.
+- **T47-94 · interface-shell, answer-envelope** (L11, joined K3156) · interface-shell: R33 counts activity only while a session record exists (SCREENS-ENTRY #1 J5); R50's phone hold scoped to weighted acts (INTERFACE-SHELL #2 J5); R51 `data-guide` controls call `GUIDE.control` (SCREENS-WIZARDS #1 J3 (14)) · answer-envelope: R6's `img-src` admits `blob:` (INTERFACE-SHELL #2 J4) · each by CHANGE to the running job
 
 ### L5 out of layer (Bob, K3104: "Add the People job now"; K1548)
 - **T47-92 · people** · (DEC-203 (1)–(4); K3061 D8; draft-T47-L11-fold doubt 1) R37 `peopleDirectory`/`op=peopledirectory`, the directory's rows, counts and order (screens-investigate R12) · text BOB's · merges as soon as complete; uses edges to earlier modules as the job finds them, named in its record.
