@@ -347,6 +347,13 @@ const DEFAULTS = {
 };
 const DEFAULT_BY_FILE = { "plane/screens.mjs": "legacy", "plane/unpack.mjs": "diag", "plane/wiring.mjs": "diag", "plane/wizards.mjs": "diag" };
 /* A key a module names that the design holds under another name: the design's governs. */
+/* DEC-265 (B226 (5)): reads a module's requirements name ahead of its source: screens-settings R32 draws each section's
+   name and purpose (the settings index's thirteen sections and its own), R38 connect.ifnot and the refusal reference. */
+const REQUIREMENT_READS = {
+  "screens-settings": [...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members",
+    "places", "security", "updates", "translations", "wizards"].flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`]),
+    "connect.ifnot", "screen.connect.refusal.reference"],
+};
 const RENAMED = {
   "screens-action": { "act.optionpropose.label.plan": "act.planask.label.plan" },
   "screens-investigate": { "act.connectionassert.label.explore": "act.stepsource.label.explore" },
@@ -436,6 +443,8 @@ for (const m of MODULES) {
   }
   for (const k of lits) if (!RETIRED.has(k)) reads.add(k);
   c.literalKeys = lits.size;
+  /* DEC-265 (B226 (5)): keys a module's requirements name that its merged source does not read yet */
+  for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
   if (m === "affordances") {
     const { ACT_HELP } = await import(pathToFileURL(path.join(dir, "act-help.mjs")).href);

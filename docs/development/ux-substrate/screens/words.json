@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3219,
+  "screen": 3220,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11897,
+  "total": 11898,
   "protected": 864
  },
  "words": [
@@ -10054,7 +10054,7 @@
   },
   {
    "key": "screen.plan.opened",
-   "en": "opened {date} by {name}, when {why}",
+   "en": "opened {date} by {name}",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-action's own rows; DEC-259: reworded"
@@ -19014,7 +19014,7 @@
   },
   {
    "key": "screen.timeline.order.evidence",
-   "en": "More evidence could order them: a passage that gives either one its day ({examples}), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.",
+   "en": "More evidence could order them: a passage that gives either one its day (a ledger entry, a meeting's agenda, a letter's date), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -19539,7 +19539,7 @@
   },
   {
    "key": "screen.money.didnotmove",
-   "en": "did not move: a {phase} figure, adopted {date}",
+   "en": "did not move: a {phase} figure",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -22878,7 +22878,7 @@
   },
   {
    "key": "screen.ceremony.photo.facts",
-   "en": "taken by {by}, {date} · relied on by {findings}",
+   "en": "taken by {by} · relied on by {findings}",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-publish's own rows; DEC-259: reworded"
@@ -31628,6 +31628,13 @@
    "protected": false,
    "source": "DEC-264",
    "note": "affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word"
+  },
+  {
+   "key": "screen.ceremony.photo.facts.dated",
+   "en": "taken by {by}, {date} · relied on by {findings}",
+   "protected": false,
+   "source": "DEC-265",
+   "note": "screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)"
   },
   {
    "key": "screen.account.explain.help",

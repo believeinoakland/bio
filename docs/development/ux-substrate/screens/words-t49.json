@@ -3287,6 +3287,12 @@
    "en": "Civicsmith has no explanation of this refusal in its words yet, so its code is shown as the act gave it.",
    "protected": false,
    "note": "DEC-264: affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word"
+  },
+  {
+   "key": "screen.ceremony.photo.facts.dated",
+   "en": "taken by {by}, {date} · relied on by {findings}",
+   "protected": false,
+   "note": "DEC-265: screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)"
   }
  ],
  "retired": [

@@ -602,6 +602,12 @@ w12('refusal.uncatalogued', "Civicsmith has no explanation of this refusal in it
 AFFORDANCES_NAMES['refusal.uncatalogued'] = 'This refusal is not in the catalogue of refusals'
 # --- end DEC-264
 
+# --- DEC-265 (BOB's B226, K3379): L11's further words; the rewordings are words-drawn.src.py's (screen.ceremony.photo.facts,
+# screen.money.didnotmove, screen.plan.opened, screen.timeline.order.evidence)
+def w13(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-265' + (': ' + note if note else '')))
+w13('screen.ceremony.photo.facts.dated', 'taken by {by}, {date} · relied on by {findings}', False, "screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)")
+# --- end DEC-265
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',

@@ -4150,3 +4150,17 @@ response: **The design session, 2026-10-14.** `words-reads.src.mjs` now walks a 
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-264, `AFFORDANCES_NAMES`), `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
 owed: (BOB, T50, N1125) affordances reads these keys: each act's label by `act.<op>.name` (`.selected` for `PER_ITEM_ACTS`), the three prompts and `refusal.uncatalogued` through `word`, `attestFence` filling `{ceiling}` and `{unreachable}`; `ACT_HELP_OPS` gains `reauth`. (design) none.
+
+### DEC-265 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B226, K3379: more words L11's jobs need; B225's note on `refusal.TEMPLATE_BLANK_UNKNOWN`)
+for: bob-session
+question: The plane's old screen titles; fills no provider answers (a photo's date, a plan's reason, a figure's adoption date, a timeline's examples); screens-settings' reads.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: each job draws without the sentence meanwhile, or fills by guess.
+alternative: keep each fill for T50's providers. Rejected where no provider answers it (a plan records no reason; a figure no adoption date).
+recommendation: as below.
+reversal cost: low: words and drawings only.
+response: **The design session, 2026-10-14.** (1) The plane's titles ("Subjects", "Progressions", "Themes", "Projects", "Review", "Case files", "Your accountability record") stay unkeyed: they are the old interface's screen list (plane R24, K1475), which no T49 screen draws, the reason DEC-260 gave its other entries; when the plane's list gives way to the design's registry, each screen reads `screen.<id>.name` and `screen.<id>.purpose`, all words already. (2) `screen.ceremony.photo.facts` "taken by {by} · relied on by {findings}"; `screen.ceremony.photo.facts.dated` keeps the date for when `photosOf` answers one (T50). The `verify` hit that is no finding's evidence is `published.check.elsewhere` (DEC-263). (3) `screen.plan.opened` "opened {date} by {name}": `planopen` records no reason. (4) `screen.money.didnotmove` "did not move: a {phase} figure" (the figure carries no adoption date; its period start is not one); `screen.timeline.order.evidence` holds its examples in its own words ("a ledger entry, a meeting's agenda, a letter's date"), no `{examples}`. (5) `words-reads.json` lists the reads screens-settings' requirements name before its source does: each section's `screen.<id>.name` and `.purpose` (R32: the settings index's thirteen sections and its own), `connect.ifnot` and `screen.connect.refusal.reference` (R38). (6) Noted: the group's stake is screens-settings R40. B225: `refusal.TEMPLATE_BLANK_UNKNOWN` holds no brace since DEC-263 (`6a589b5a33`).
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (its rewrites), `screens/words-t49.src.py` (DEC-265), `screens/mock-screens.js`, `screens/words-reads.src.mjs` (`REQUIREMENT_READS`); `words.json`, `words-reads.json`.
+owed: (BOB) the jobs draw these as reworded; screens-publish draws `.dated` when a photo's date is answered (T50); the plane's list replaced by the design's registry when BOB plans it (K1475). (design) none.
