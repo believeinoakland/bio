@@ -238,7 +238,9 @@ for (const [label, env] of [["LABELLED", "inquiry"], ["UNLABELLED", undefined]])
                             title: "Where did it go", token: RUTH });
   const p = await get(`op=projection&id=${encodeURIComponent(id)}`);
   t(`${label}: LANDS with surfaced_by restamped to the actor class, not the caller's "agent"`,
-    [reasonOf(r), p?.fm_json ? JSON.parse(p.fm_json).surfaced_by : null], ["LANDED", "human"]);
+    [reasonOf(r), p?.fm_json ? JSON.parse(p.fm_json).surfaced_by : null], ["LANDED", "human"]);  /* PROMOTION #46 (T48): `landed` answers null for any non-bundle reply, so every "nothing landed" arm is only as good as
+     the reader: here it reads back a bundle that did land, by its id. */
+  t(`${label}: …and \`landed\` reads it back`, await landed(id), id);
 }
 
 /* ============================================= 6. C-26's bias gate (BIAS_REFUSED) */

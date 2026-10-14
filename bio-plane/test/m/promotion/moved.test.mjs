@@ -168,8 +168,11 @@ test("R1, R4, R5, R7, R13, R15, R19, R20, R21, R33, R39, R40, R41, R47: the rows
   /* C-64.1's copy names the region of #promote that mints it. */
   assert.equal(P.PROMOTION_ROW_CHECKS.GROUP_UNDETERMINED.where, "src/promotion/index.mjs #promote > is-group-undetermined");
   /* Each code the module answers carries its moved row, whole. */
-  const carries = (r, row) => assert.deepEqual([r.ok, r.code ?? r.reason, r.check, r.translation],
-                                               [false, r.reason, row.check, row.translation], r.reason);
+  /* PROMOTION #46 (T48): the expected code is the row's own key in its table, so a refusal answered under another
+     reason carrying the right row fails (the comparison was `r.reason` against itself). */
+  const codeOf = (row) => [R, M, G].flatMap((t) => Object.entries(t)).find(([, v]) => v === row)?.[0];
+  const carries = (r, row) => assert.deepEqual([r.ok, r.reason, r.code ?? r.reason, r.check, r.translation],
+                                               [false, codeOf(row), codeOf(row), row.check, row.translation], r.reason);
   const R = P.PROMOTION_ROW_CHECKS, M = P.PROJECT_MINT_CHECKS, G = P.PROMOTION_REGISTRATION_CHECKS;
   const env = makePromotion();
   const h = env.p.promote(create(ID, infoDoc(ID)));
