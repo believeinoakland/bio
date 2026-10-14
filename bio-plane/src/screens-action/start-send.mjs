@@ -3,7 +3,7 @@
    refusal it would meet, each resolved in place; nothing runs before the member's confirm. Step 2 (subject the action
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, PREPARE, PREPARE_FILING, APPROVE, SECOND, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, PREPARE, PREPARE_FILING, APPROVE, SECOND, RECORD_SENT } from "./send-steps.mjs";
 
 export const startSend = Object.freeze({
   id: "start-send",
@@ -36,7 +36,7 @@ export const startSend = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
     isRequest: function () { return false; },
     kinds: function () { return ["records_request", "request_for_comment", "other"]; },
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
@@ -85,16 +85,16 @@ export const startSend = Object.freeze({
       const head = cs.title(null) + '<p class="mk-sub">' + cs.w("screen.start-send.title", { option: o.summary || o.id }) + "</p>"
         + '<p class="mk-sub">' + cs.w("screen.start-send.nothingruns") + "</p>";
       if (o.action && o.action.id)
-        return head + '<p class="mk-done">' + cs.w("screen.start-send.alreadystarted") + "</p>"
+        return head + '<p class="mk-note">' + cs.w("screen.start-send.alreadystarted") + "</p>"
           + '<a class="cs-ref" href="/app/start-send/' + encodeURIComponent(o.action.id) + '" data-nav>' + cs.w("screen.start-send.tostep2") + "</a>";
       const pv = view.ui.preview || null;
       const shown = pv ? P.preview(cs, view, pv) : cs.state("preview", function (v) { return P.preview(cs, view, v); });
       const kinds = P.kinds().map(function (k) { return [k, "screen.start-send.kind." + k]; });
-      const form = '<div class="mk-form">' + cs.choice("start-kind", "screen.start-send.kind", kinds, { value: view.ui.kind || "records_request" })
-        + '<div class="cs-field"><label><input type="checkbox" id="start-breach"' + (view.ui.breach ? " checked" : "") + "> " + cs.w("screen.start-send.breach.tick") + "</label></div>"
+      const form = cs.choice("start-kind", "screen.start-send.kind", kinds, { value: view.ui.kind || "records_request" })
+        + cs.checks("start-breach", "screen.start-send.breach", [["yes", "screen.start-send.breach.tick", view.ui.breach === true]])
         + cs.field("start-override", "screen.start-send.override", { help: "screen.start-send.override.help", value: view.ui.override || "" })
         + '<div class="mk-acts">' + cs.act("optionstartpreview", { data: { option: option } })
-        + cs.act("optionstart", { tone: "primary", data: { option: option } }) + "</div></div>";
+        + cs.act("optionstart", { tone: "primary", data: { option: option } }) + "</div>";
       return head + cs.sec("screen.start-send.step1", shown + form);
     });
   },
@@ -106,7 +106,7 @@ export const startSend = Object.freeze({
       send: function (view, el, cs) {
         const s = String(view.subject);
         const kind = cs.value("start-kind") || "records_request";
-        const breach = cs.value("start-breach") === true;
+        const breach = (cs.value("start-breach") || []).includes("yes");
         const override = String(cs.value("start-override") || "").trim();
         const body = { plan: s.slice(0, s.indexOf("~")), option: el.dataset.option, kind: kind, breach: breach };
         if (override) body.premise_override = { reason: override };
@@ -124,7 +124,7 @@ export const startSend = Object.freeze({
         const s = String(view.subject);
         const override = String(cs.value("start-override") || "").trim();
         const body = { plan: s.slice(0, s.indexOf("~")), option: el.dataset.option, kind: cs.value("start-kind") || "records_request",
-          breach: cs.value("start-breach") === true };
+          breach: (cs.value("start-breach") || []).includes("yes") };
         if (override) body.premise_override = { reason: override };
         if (extra && typeof extra.reason === "string" && extra.reason.trim()) body.why_first = extra.reason.trim().slice(0, 500);
         return { body: body };

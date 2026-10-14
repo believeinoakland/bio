@@ -2,7 +2,7 @@
    limit sent as `fills`, the portal's warning and number, and an action opened at the step it has reached. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, button, beside, DATA_PLANE, ACTION, ACTION_ID, PROJECT, FILING, FILINGS, draft } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, button, beside, DATA_PLANE, ACTION, ACTION_ID, PROJECT, FILING, FILINGS, READ, draft } from "./page.mjs";
 
 const NEW = `/app/request/${PROJECT}`;
 const AT = `/app/request/${ACTION_ID}`;
@@ -75,4 +75,14 @@ test("R4: control: an action already sent draws its sending and offers no act of
   const p = await open(AT, { ...DATA_PLANE, action: ok(ACTION), filingsfor: ok(FILINGS([done])) });
   assert.match(text(p), /Recorded as sent on 2 October 2026 · reference 26-11902/);
   assert.deepEqual(ops(p), ["actionlaws"]);
+});
+
+/* R11 (T48; N1034; K3145; filings R59) on `request`: a draft prepared and not yet approved is read again on load. */
+test("R11: a request reloaded between preparing and approving draws the same text and fills; control: nothing is prepared again by reading", async () => {
+  const prepared = READ({ text: "We request inspection logs for 2025 – 2026.", blanks: [], unfilled: [] });
+  const p = await open(AT, { ...DATA_PLANE, filingsfor: ok(FILINGS([draft()])), filingread: ok(prepared), communicationprepare: ok(prepared) });
+  assert.equal(p.byOp("filingread")[0].query.filing, FILING);
+  assert.equal(p.doc.getElementById("send-text-1").value, "We request inspection logs for 2025 – 2026.");
+  assert.deepEqual(ops(p).filter((o) => o === "filingapprove" || o === "communicationprepare"), ["filingapprove"]);
+  assert.equal(p.byOp("communicationprepare").length, 0);
 });
