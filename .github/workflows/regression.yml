@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: "26.10.0"
       - name: install
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           for pkg in bio-plane pdf-worker ocr-worker newgroup agent-runner sheet-worker; do
@@ -35,7 +36,10 @@ jobs:
             (cd "$pkg" && npm ci --no-audit --no-fund --loglevel=error)
           done
           # journey-check's walk drives Chromium through playwright-core (K3146, K3184): its own lock, and the browser.
-          (cd bio-plane/src/journey-check && npm ci --no-audit --no-fund --loglevel=error && npx playwright-core install --with-deps chromium)
+          (cd bio-plane/src/journey-check && npm ci --no-audit --no-fund --loglevel=error)
+          # Bounded (K3191): run 38522006895 hung after Chromium's download until the job's limit. Without the
+          # browser journey-check's arms report their failures and end (K3185), so the rest of the battery still runs.
+          (cd bio-plane/src/journey-check && timeout 600 npx playwright-core install --with-deps chromium) || echo "::warning::Chromium not installed; journey-check's browser arms will fail by name"
       - name: test every package
         run: |
           set -uo pipefail
