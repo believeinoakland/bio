@@ -18,7 +18,7 @@ const day = (value) => ({ value, precision: "day", zone: ZONE });
 const KIND = "temporal-expectation-due";
 function setup() {
   const w = world();
-  const n = producers(w.host, { membership: w.membership, duties: w.duties });
+  const n = producers(w.host, { membership: w.membership, duties: w.duties, entities: w.entities });
   return { w, n, ...reader(n) };
 }
 
@@ -347,19 +347,24 @@ test("R21 told means at or before the end's instant: an occurrence possibly over
 
 /* R20 (T47; N889; DEC-198 (3)): R5's sentences by key, `.overdue.*` or `.undetermined.*`, the item answering the keys
    beside its text, the placeholders filled from duties' own facts; every date as R16's `{date}`. */
-test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expectation-due.overdue.summary and .detail filled: {duty} and {what} the duty's act, {office} its obligor, {basis} its due's citation, {date} the due day by date.daymonth; an undetermined one's .undetermined.*, {reason} duties' why and {from}, {to} its candidates", () => {
+test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expectation-due.overdue.summary and .detail filled: {duty} and {what} the duty's act, {office} its obligor's registered name (K3144), {basis} its due's citation, {date} the due day by date.daymonth; an undetermined one's .undetermined.*, {reason} duties' why and {from}, {to} its candidates", () => {
   const { w, read } = setup();
   const a = w.declare();
   const it = ofKind(read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
   const obligor = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty.obligor;
-  assert.match(obligor, /^ENT-/);
-  const fills = { duty: "respond to the records request", what: "respond to the records request", office: obligor, basis: "Test Code §7922",
+  assert.equal(obligor, E.clerk);
+  assert.equal(w.entities.readEntity({ entityId: obligor }).entity.label, "Town Clerk");
+  const fills = { duty: "respond to the records request", what: "respond to the records request", office: "Town Clerk", basis: "Test Code §7922",
                   date: say("date.daymonth", { day: "12", month: say("date.month.february") }) };
   assert.equal(it.summary_key, "queue.temporal-expectation-due.overdue.summary");
   assert.equal(it.detail_key, "queue.temporal-expectation-due.overdue.detail");
   assert.equal(it.summary, say(it.summary_key, fills));
   assert.equal(it.detail, say(it.detail_key, fills));
   assert.equal(it.summary, "Nothing recorded by 12 February: respond to the records request");
+  assert.equal(it.detail, "Town Clerk was due to respond to the records request by 12 February (Test Code §7922). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.");
+  /* control (K3144): an obligor the registry answers no entity for is named by its id */
+  const bare = ofKind(reader(fresh(w.host, { membership: w.membership, duties: w.duties })).read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
+  assert.equal(bare.fills.office, obligor);
   assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
   /* negative control (K874): not the undetermined sentence */
   assert.notEqual(it.detail, say("queue.temporal-expectation-due.undetermined.detail", fills));

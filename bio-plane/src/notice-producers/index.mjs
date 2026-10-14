@@ -42,7 +42,7 @@
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
- * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards,
+ * lazily when first asked): membership, people, moneyChecks, duties, entities (R20's `{office}`, K3144), answers, inquiry, credentials, following, standards,
  * fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's to R17's dates are read in (the profile's, when not given; read
  * once a read of `noticeItems`).
@@ -60,6 +60,7 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { credentialsOf, SECURITY_THRESHOLD, SECURITY_DAYS } from "../credentials/index.mjs";
@@ -164,7 +165,6 @@ const filled = (v) => typeof v === "string" && v.trim() !== "";
 const keyed = (cls, kind, key) => (String(key).startsWith(`${cls}::${kind}::`) ? String(key) : `${cls}::${kind}::${key}`);
 /* R16, R17: a source's list cut to its bound, and whether it was. */
 const cut = (list, bound) => ({ list: list.slice(0, bound), truncated: list.length > bound });
-const capital = (t) => (typeof t === "string" && t ? t[0].toUpperCase() + t.slice(1) : t);
 const bare = (m) => { const t = typeof m === "string" ? m.trim() : ""; const x = /^member:(.+)$/.exec(t); return x ? x[1] : t || null; };
 const isMachine = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 const instantOf = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -208,6 +208,7 @@ export class NoticeProducers {
   get #people() { return this.#dep("people", () => peopleOf(this.#host)); }
   get #moneyChecks() { return this.#dep("moneyChecks", () => moneyChecksOf(this.#host)); }
   get #duties() { return this.#dep("duties", () => dutiesOf(this.#host)); }
+  get #entities() { return this.#dep("entities", () => entitiesOf(this.#host)); }
   get #answers() { return this.#dep("answers", () => answersOf(this.#host)); }
   get #inquiry() { return this.#dep("inquiry", () => inquiryOf(this.#host)); }
   get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
@@ -602,10 +603,16 @@ export class NoticeProducers {
     return { rule: "administrators", members: (this.#membership.activeAdmins() || []).map(bare) };
   }
 
-  /** R20's `{office}`: the duty's obligor, as `duties` answers it (its id; see the job record, J1), capitalised to begin
-   *  the sentence. */
+  /** R20's `{office}` (K3144): the duty's obligor by its registered name (`entities.readEntity`, its R5: the entity's
+   *  label, else its canonical alias standing), else its id as `duties` answers it. A registry that throws or answers no
+   *  entity leaves the id: the name is a fill, never the item's failure. */
   #officeOf(d) {
-    return capital(filled(d.obligor) ? d.obligor : d.duty_id);
+    const id = filled(d.obligor) ? d.obligor : null;
+    if (!id) return d.duty_id;
+    let e = null;
+    try { const r = this.#entities.readEntity({ entityId: id }); e = r && r.ok !== false && r.found ? r.entity : null; } catch { e = null; }
+    const alias = e && Array.isArray(e.aliases) ? e.aliases.find((a) => a && a.canonical && !a.withdrawn && filled(a.alias)) : null;
+    return e && filled(e.label) ? e.label : alias ? alias.alias : id;
   }
 
   #occurrenceItem(d, occ, to, asOf, viewer, now) {
