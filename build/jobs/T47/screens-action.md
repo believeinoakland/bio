@@ -31,3 +31,39 @@ Findings in other modules, beyond those in J1 (5) that B2 has placed as N1034 an
 3. **`interface-shell` R11 versus `op-grades` R18 (`filingrecordsent` at the phone width).** The shell holds back only signed and irreversible acts. `LARGER_SCREEN_ACTS` (`filingsent`) is not held back, so R3's "read, not done, at the phone width" is unmet by any screen (J2 item 1).
 4. **`action-plans` R37 (`optionstartpreview`).** The preview's addressee carries the role and body but not who holds the office today. R2 asks for that, and `actions`' read answers it (`holder_on_date`) only once the action exists. Step 1 draws the office by its role alone.
 5. **`interface-shell` (T47 kit, R31).** No wizard-mark API exists yet for R4's "Get a record" mark (J2 item 2).
+
+## Completion (SCREENS-ACTION #1)
+
+**Entry applied.** T47-64: `plan`, `start-send`, `request`, `action`, `matter` (R1–R7), with L11's fold: R8 (the period, form and cost limit as `fills`, the portal's warning and request number), R9 (`help-records`) and R10 (an action opens at its step). Built fresh to interface-shell R21's contract, on the readings of J1 that B2 (K3145) confirmed.
+
+**Files** (for BOB to enter in `modules.json`, K1043):
+- Code, `bio-plane/src/screens-action/`: `index.mjs`, `words.mjs`, `send-steps.mjs`, `plan.mjs`, `start-send.mjs`, `request.mjs`, `action.mjs`, `matter.mjs`, `help-records.mjs`.
+- Tests, `bio-plane/test/m/screens-action/`: `page.mjs`, `contract.test.mjs`, `plan.test.mjs`, `start-send.test.mjs`, `request.test.mjs`, `action.test.mjs`, `matter.test.mjs`, `help-records.test.mjs`.
+- Uses (as in `modules.json`): interface-shell, setup-words, op-declarations. Tests also use interface-shell's harness.
+
+**Readings taken (each tested):**
+- Subjects: `plan` is addressed by the plan id. `start-send` by `<plan>~<option>`, and after the start by the action. `request` by the project (a new request) or the action (opened at its step). `action` by the action. `matter` by the determination, then `<determination>~<escalation>` once one is opened.
+- Shared steps: `send-steps.mjs` holds prepare, approve, second approval and record-the-sending, for both screens. The step comes from `filingsfor`. A prepared text is kept in page memory only, because no read answers it (N1034).
+- Words: 3 rows share a `WORD_ROWS` key. `act.plansubjectadd.label.plan` and `.does` call a plan's subject a matter (R7). `act.filingrecordsent.does` follows DEC-149. `help-records` names no place: the profile's laws are drawn as data (interface-shell R23).
+- Acts the owners weigh as `undetermined` (`optionadd`, `optionstart`, `communicationprepare`, `actioncreate`, `actionpressure`, and others) are reasoned in the browser (interface-shell R11, DEC-87), so the shell asks a reason. `optionstart` sends it also as `why_first`.
+
+**Deferred:**
+- R4's "Get a record" wizard mark, until the kit offers a mark (J2 item 2).
+- R3's phone-width hold of `filingrecordsent`, the shell's by my reading (J2 item 1).
+- R2's "who holds the office today" in Step 1: the preview does not carry it (J3 item 4). It is drawn on `request` and `action` from the action's read.
+- J2 is unanswered at this COMPLETE; a ruling there re-opens the job by CHANGE.
+
+**Found in another module:** J1 (5) (N1034, N1035) and J3 items 1–5.
+
+**Tests and checks:**
+- On `job/T47/screens-action` as pushed (5b187f9fab): `node --test bio-plane/test/m/screens-action/` gives 4 pass, 47 fail. Every failure is `interfacePage` refusing `matter`'s `escalationreopen` and the missing `help-records`, because the registry on `tranche/T47` predates wizard-scripts R35. This is the inherited red B2 named (it clears at that merge, by a CHANGE).
+- On a scratch copy of the same commit, with `SCREEN_REGISTRY` and `WORD_ROWS` re-taken from `registry.json` and `words.json` at PR #33's head (what wizard-scripts R35 and setup-words R7 do): 51 pass, 0 fail.
+- Checks, from civicos-process `d547b03e00`, on that scratch copy with my paths entered in `modules.json`:
+  - `format`: 0 failures.
+  - `architecture screens-action`: 17 product files, 0 failures.
+  - `coverage screens-action`: 10 of 10 ids named, 0 failures.
+  - `run.mjs`: architecture 0 failures; coverage fails only other modules' ids, none of mine.
+- On the job branch itself: `ownership screens-action tranche/T47` gives 0 failures.
+- No layer tests are named in `build/manifest.md`. I provide no service, so there are no users' tests to run.
+
+Size (session_01HXdBS4CDZAKqJEhJHkH1oj): test runs 14, module lines 1467
