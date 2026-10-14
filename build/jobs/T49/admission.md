@@ -45,3 +45,12 @@ Tests and checks (from /home/user/bio and /home/user/civicos-process)
 - `node checks/format.mjs`: 170 modules, 169 requirements files; 0 failures. `node checks/architecture.mjs bio admission`: 21 product files, 47 relative imports; 0 failures. `node checks/coverage.mjs bio admission`: 28 of 28 live ids named by a test; 0 failures. `node checks/ownership.mjs bio admission tranche/T49`: 16 files changed by admission; 0 failures. `node checks/run.mjs bio`: format 0, architecture 0 (3,360 files), coverage 14 failures in other modules' words ids and new modules (none admission's), channels 0.
 
 Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 14, module lines 1544
+
+## J4 · COMPLETE
+
+COMPLETE (again, after B4 and B5; supersedes J3's test line, rest of J3 stands).
+- Merged tranche/T49 (later words; DEC-262). R27's session-window refusal now reads the word `refusal.DOOR_RATE_LIMITED.session` with `{minutes}` (the source window keeps `refusal.DOOR_RATE_LIMITED`); tested in t49 and words.test.
+- Finding fixed in my own test: op-declarations now declares `founderhandleset` (founder's session only); my derived list of administrator's acts in doors.test.mjs now also requires that every session reaches the op.
+- Not changed: words-reads.json's admission `reads` still lists 22 keys without the `.session` key; the words test asserts it with hasWord separately. Design lane may add it to the list.
+- admission tests: 54, pass 54, fail 0. format 0 failures; architecture 0 (21 files); coverage 28 of 28; ownership 0 (16 files).
+Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 19, module lines 1547
