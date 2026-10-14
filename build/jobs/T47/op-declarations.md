@@ -108,3 +108,16 @@ COMPLETE again at 2198e671e1, with `tranche/T47` merged at a20150d0f8 (wizard-sc
   - The R34 lists are re-pinned after affordances (T47-49).
 
 Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 22, module lines 3762
+
+## J5 · COMPLETE
+
+COMPLETE again at f56b3f500a, with `tranche/T47` merged at b7d0974f0f (setup-words T47-52 and instance-setup T47-75 in; B6). No code change was needed.
+
+- **instance-setup serves R59's three ops now** (`setup.mjs` `grouplogoset`, `grouplanguagesset`, `grouplanguages`), each with its spec here. `grouplogo` is its store-internal route, in no table (R63, tested). t33's list of ops another job serves still names the three under instance-setup, as it names that owner's earlier family ops: that test reads no instance-setup map.
+- **Tests:** op-declarations 169 tests, 169 pass, 0 fail. control-plane and admission have the same 8 reds as at J3 and J4 (J2).
+- **Checks:** `checks/run.mjs` reports format 0, architecture 0 (3132 files) and channels 0 failures; coverage has 21 failures, none of them op-declarations'. Ownership: 0 failures.
+- **Still waiting:**
+  - tasks (T47-89) for `signrequest`'s arm, which t33 still names under tasks;
+  - affordances (T47-49), after which I re-pin the R34 lists.
+
+Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 25, module lines 3762
