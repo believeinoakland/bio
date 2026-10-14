@@ -19,7 +19,9 @@ export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "s
   /* R5: a role signed in that `whoami` does not answer as that role, or acts only an administrator is drawn not drawn */
   ROLE: "role",
   /* R6: a working screen the design mock does not draw, and the limits of a live page (design.mjs' LIMIT) */
-  DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words" });
+  DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words",
+  /* R7: `admin` drawn as a person's name or handle */
+  ADMIN_NAME: "admin-name" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 

@@ -8,6 +8,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { FAIL } from "./walker.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const MOCK_PATH = "docs/development/ux-substrate/layouts.html";
@@ -132,9 +133,51 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
       kept.set(key, png);
       return png;
     },
+    /* R13: a design journey's steps as the mock walks them (`stepsNow`), with the assistant or without */
+    async steps(journey, { ai = true } = {}) {
+      return page.evaluate(([n, ai]) => {
+        const W = window.CS_WALK; Object.assign(W.st, { mode: "journey", id: n, ai, step: 0 });
+        return W.stepsNow().map((x) => ({ s: x.s, v: x.v ?? null, act: x.act ?? null }));
+      }, [journey, ai]);
+    },
+    /* R13: the mock's drawing of step `i` (from 0) of design journey `journey`, at `width`; `null` when it has no such step */
+    async drawStep(journey, i, width, { ai = true } = {}) {
+      const ok = await page.evaluate(([n, i, ai, dev]) => {
+        const W = window.CS_WALK; Object.assign(W.st, { mode: "journey", id: n, ai, dev, step: 0 });
+        if (!(i >= 0 && i < W.stepsNow().length)) return false;
+        W.st.step = i; W.draw();
+        const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
+        sc.style.transform = "none";
+        Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
+        return true;
+      }, [journey, i, ai, width <= PHONE ? "phone" : "desktop"]);
+      return ok ? page.locator("#vscale").screenshot() : null;
+    },
     close: () => ctx.close().catch(() => {}),
   };
 }
+
+/* R13: design journey 29 ("From installing to a first conclusion", DEC-245), each step paired: the LIVE screenshot of the
+   walk's step that walks it (`liveOf(step, i)` answers its file, or null when the walk did not reach it) beside the
+   mock's drawing of the step, at 1280 px, into `out/pairs/`. A step with no LIVE screenshot, or one the mock does not
+   draw, fails the walk by name: a missing pair is a failure, never a gap in the comparison. Answers the pairs written. */
+export const JOURNEY_29 = 29;
+export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURNEY_29, width = 1280 }) {
+  const written = [];
+  const steps = await mock.steps(journey, { ai: true });
+  for (const [i, st] of steps.entries()) {
+    const name = `journey ${journey} step ${i + 1} (${st.s}${st.v ? ", " + st.v : ""})`;
+    const live = liveOf(st, i);
+    const design = await mock.drawStep(journey, i, width, { ai: true });
+    if (!live) { walk.fail(FAIL.DESIGN, `${name}: no LIVE screenshot of it, so no pair`); continue; }
+    if (!design) { walk.fail(FAIL.DESIGN, `${name}: the design mock at ${mock.commit} draws no such step`); continue; }
+    const file = await pair(b, readFileSync(live), design, join(out, "pairs", `journey-${journey}-step-${String(i + 1).padStart(2, "0")}-${st.s}.png`),
+      { title: name });
+    written.push(file);
+  }
+  return written;
+}
+
 
 /* One image of `live` beside `design` (PNG bytes), LIVE on the left and DESIGN on the right, written to `file`. */
 export async function pair(b, live, design, file, { title = "" } = {}) {

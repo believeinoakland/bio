@@ -4,9 +4,9 @@
    wizard guide's own controls, `[data-guide]`), the installer's own page; no op is called by the walker. Journey 28's
    first two steps (civicsmith.org, `site`) wait on Bob's DNS act (N1011) and start here at the installer. */
 import { StepFailed, settle } from "./walker.mjs";
-import { drawnState, sweepScreens, addressOf } from "./screens.mjs";
+import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
-import { requireWord } from "./words.mjs";
+import { requireWord, wordPattern } from "./words.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -383,3 +383,15 @@ export const credentials = () => ({
   member: { handle: "mai-k", password: "member-" + rand(12) },
   newcomer: { handle: "teo-r", password: "newcomer-" + rand(12) },
 });
+
+/* R7: the sweep as the founder, her handle held or with none: no screen draws `admin` as a person's name or handle. With
+   no handle, DEC-230's own words are excepted (they say she signs in as admin until she chooses); with one, nothing is. */
+export function sweepAsFounder(walk, page, base, { handle }) {
+  const except = handle ? [] : ADMIN_WORDS.map((k) => wordPattern(k));
+  return sweep(walk, page, base, { journey: handle ? "R7 as the founder, her handle held" : "R7 as the founder, with no handle",
+    each: async (p, s, drawn) => {
+      if (!drawn) return;
+      for (const a of adminAsName(await p.locator("body").innerText(), { except }))
+        walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: …${a.at}…`);
+    } });
+}

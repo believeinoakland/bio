@@ -46,7 +46,11 @@ async function signinCode(walk, page, codeOf) {
   const link = page.locator('#cs-main a[href^="https://"][target="_blank"]').first();
   try { await link.waitFor({ state: "visible", timeout: 10000 }); }
   catch { throw new Error(`the screen shows no link to Anthropic's sign-in page on ${where(page)}`); }
-  if (codeOf) return walk.keepSecret(await codeOf(await link.getAttribute("href")));
+  if (codeOf) {
+    const code = await codeOf(await link.getAttribute("href"));
+    if (typeof code !== "string" || !code) throw new Error("the sign-in was not completed: no code from Anthropic's page was typed");
+    return walk.keepSecret(code);
+  }
   const tab = page.context().waitForEvent("page", { timeout: 15000 });
   await link.click();
   const t = await tab;
@@ -267,3 +271,35 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
   return { question };
 }
 
+
+/* R13: which of the walk's steps walks each step of design journey 29 (with the assistant), by the step's screen and act
+   (`s:act`): the label its LIVE screenshot is paired under. The design's `groupkeyset` step (the group's API key) is
+   walked by the person's own subscription on `connect` since K3347; the question's running and concluded states are
+   what steps 9 and 12 leave drawn. */
+export const JOURNEY_29_STEPS = Object.freeze({
+  "install:bootstrap": "install: the installer's first page",
+  "install:null": "install: each step finishes, the checks pass",
+  "setup:claim": "1 · setup: claim",
+  "setup:groupkeyset": "4 · connect an assistant",
+  "home:null": "home: a new group's home",
+  "projects:promote": "2 · start a project",
+  "project:promote": "3 · open a question",
+  "question:airunopen": "9 · run the assistant",
+  "question:null": "9 · run the assistant",
+  "capture:acquire": "5 · capture by address",
+  "held:release": "6 · see both held",
+  "document:cite": "8 · cite it",
+  "question:versionaccept": "10 · read its run's answer",
+  "question:conclude": "12 · accept a reading",
+});
+/* The LIVE screenshot (its path) for a step of journey 29: the last screenshot of the walk's step whose label begins as
+   the table says; the running state's own shot is step 9's, the concluded state's step 12's. */
+export function journey29Live(walk, step) {
+  const key = `${step.s}:${step.act}`;
+  const concluded = step.s === "question" && step.v === "concluded";
+  const label = concluded ? JOURNEY_29_STEPS["question:conclude"] : JOURNEY_29_STEPS[key];
+  if (!label) return null;
+  const core = label.replace(/^\d+ · /, "");
+  const hit = walk.steps.filter((x) => x.label.includes(core)).pop();
+  return hit ? join(walk.out, hit.screenshot) : null;
+}

@@ -30,7 +30,8 @@ after(() => rmSync(dir, { recursive: true, force: true }));
 
 async function walked(plane, opts = {}) {
   const fp = await fakePlane(plane);
-  try { return await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, ...opts }); }
+  /* R5 and R6 are the sweeps' own: R12's journeys are walked by their own tests below */
+  try { return await runLive({ base: fp.base, env: ENV, out: join(dir, String(Math.random()).slice(2)), commit: COMMIT, investigate: false, ...opts }); }
   finally { await fp.close(); }
 }
 
@@ -166,4 +167,42 @@ test("R6: text a person must never read: a slug, a language tag, a record id, a 
   assert.deepEqual(found("Sign in, kept signed in. A well-known step-by-step guide. Explain promptly. 0 TO DO. Page 3 of 7. Since 2026-10-14."), []);
   assert.deepEqual(found("Your address: https://believe-in-oakland.civic7.workers.dev/app, or mail ops-team-2@example.org", { slugs: ["believe-in-oakland"] }), []);
   assert.deepEqual(found("biosmoke7s is another word", { slugs: ["biosmoke7"] }), []);
+});
+
+/* R12: the live arm walks R9 and R10 through the real sign-in, whose code the person types (`codeOf`). Against the fake
+   plane, which draws R9's steps 2 to 4 only, the walk reaches the sign-in and goes no further than the plane draws. */
+async function investigated(codeOf) {
+  const fp = await fakePlane({ admins: { ada: true } });
+  try {
+    const out = join(dir, String(Math.random()).slice(2));
+    const r = await runLive({ base: fp.base, env: ENV, out, commit: COMMIT, screens: only("members"), codeOf });
+    return { r, fp, printed: r.report + readFileSync(join(out, "report.json"), "utf8") };
+  } finally { await fp.close(); }
+}
+
+test("R12: with no sign-in completed, step 4 fails by name before any later act", { timeout: 300000 }, async () => {
+  const asked = [];
+  const { r, fp } = await investigated(async (role, address) => { asked.push([role, new URL(address).host]); return null; });
+  const steps = r.walk.steps.filter((s) => s.journey === "R9 as administrator");
+  assert.deepEqual(steps.map((s) => s.label.split(" · ")[0]), ["1", "2", "3", "4"], r.report);
+  assert.deepEqual(steps.map((s) => s.ok), [true, true, true, false], r.report);
+  const f = r.walk.failures.find((x) => x.step && x.step.startsWith("4 · connect"));
+  assert.ok(f && /the sign-in was not completed/.test(f.detail), r.report);
+  /* the person was asked as the administrator, on Anthropic's own page */
+  assert.deepEqual(asked, [["administrator", "claude.ai"]]);
+  assert.deepEqual(fp.codes, [], "nothing was sent as a code");
+  assert.ok(!r.walk.steps.some((s) => /^(?:[5-9]|1[0-2]) · /.test(s.label)), "no later act");
+});
+
+test("R12 control: the code the person types connects, and no token or code is in any output", { timeout: 300000 }, async () => {
+  const CODE = "sentinel-code-" + "7".repeat(24) + "#state-sentinel";
+  const { r, fp, printed } = await investigated(async () => CODE);
+  const four = r.walk.steps.find((s) => s.label.startsWith("4 · connect"));
+  assert.ok(four && four.ok, r.report);
+  assert.deepEqual(fp.codes, [CODE], "the code reached the plane once, as typed");
+  assert.equal(printed.includes(CODE), false, "the code printed");
+  assert.equal(printed.includes("sentinel-code"), false);
+  for (const v of Object.values(ENV)) assert.equal(printed.includes(v), false, "a credential printed");
+  /* the walk goes on to step 5, which this plane does not draw */
+  assert.ok(r.walk.steps.some((s) => s.label.startsWith("5 · ")), r.report);
 });
