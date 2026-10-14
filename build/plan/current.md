@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #177 · session_01D5nWnUwh7sTvRjQeaMvvXb · depth 1
 
-**Jobs** · (none started)
+**Jobs** · membership: MEMBERSHIP #39 session_01195GX87EMHUXKVysBHVQkZ
 
 **Adopted** · from `draft-T49-final.md` (a worker's consolidation for BOB #176), reviewed whole by BOB #177 and settled in K3327 (§ "Settled by BOB #177" at the foot, which governs where it differs). Branch `tranche/T49` from `main` @ f498560a37 (T48's close and PR #37, DEC-241–DEC-246). Ids are re-checked against each file's next free id at the fold (rule 1).
 
