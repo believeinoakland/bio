@@ -1,3 +1,28 @@
 # filing-templates (T49)
 
 **Status** · session_01DLu9hNhnNY3UX3zTHQrEQY · depth 2 · WORKING · handled B0
+
+## Record (T49-11, test only, claude-haiku-5-5)
+
+**Reading (step 2).** Read whole: `roles/JOB.md`; `build/requirements/filing-templates.md`; `bio-plane/test/m/filing-templates/r33.test.mjs` and `t46-words.test.mjs` (the tests that name R29 and R33); `bio-plane/src/filing-templates/checks.mjs` (the rows R29 and R33 translate by); `build/layers.md`, layer 9. START (B1) read whole. **Not read whole:** the plan (`build/plan/current.md`: entry T49-11 and the opening rules, found by search) and the module's `index.mjs` (1,440 lines), `schema.mjs` and `blanks.mjs`, read only where the job touches them (the R33 check, the machine-identity message). That is a gap against step 2. It is disclosed here and not closed in this job.
+
+**Entries applied.**
+- N1068 ("labeled"): `bio-plane/src/filing-templates/index.mjs` line 211, the member-facing machine-identity refusal, re-spelled. The other "labelled" words in the module are comments, schema notes and test titles, not member-facing, and are left.
+- Test only: `r33.test.mjs`, the R33 approval test: removed a literal copy of the RFC row's translation. The read by key (`en("refusal.RFC_QUOTING_MISSING")`) stays.
+- The `admin` grep (N1072): no `admin` reaches reader-facing text in `src/filing-templates/`. Its tests use `admin` as a viewer id only (`fixture.mjs`, `reads.test.mjs`). No change.
+
+**Deferred.** Nothing in the entry is deferred. The three tests below stay red for a reason outside this job (next section).
+
+**Found, not in this job's scope.**
+1. `docs/development/ux-substrate/screens/words.json` holds neither `rfc.quoting` nor `refusal.RFC_QUOTING_MISSING`. Commit `0fd6562c1e` (DEC-234, the design session, 2026-10-14) removed both; `main` (`f498560a37`) and `tranche/T49` agree. R33 requires the row to translate by key from `words.json`, and R29 says a row never holds a copy. The module's `FILING_TEMPLATES_WORDS` (`checks.mjs` lines 30–32) holds a verbatim copy, which R29 forbids. Whether the removal was deliberate is for the design stream to say.
+2. `bio-plane/src/setup-words/index.mjs` line 516 still carries `refusal.RFC_QUOTING_MISSING` (and `rfc.quoting` at line 480). T49-15 re-takes `WORD_ROWS` from `main`, which no longer has them.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/filing-templates/*.test.mjs`: 79 tests, 76 pass, 3 fail. The failures are `r33.test.mjs:49` (R33 RFC_QUOTING_SENTENCE), `r33.test.mjs:69` (R33 the row moves) and `t46-words.test.mjs:36` (R29 C-125.33). All three fail on the same cause: `words.json` has no `rfc.quoting` or `refusal.RFC_QUOTING_MISSING`, so `en()` returns undefined.
+- `checks/format.mjs`: 0 failures.
+- `checks/architecture.mjs filing-templates`: 0 failures.
+- `checks/coverage.mjs filing-templates`: 33 of 33 live requirement ids named by a test.
+- `checks/ownership.mjs T49`: 0 failures (after the commit `d7c70fd531`).
+- `checks/run.mjs` is not run: it is required before COMPLETE, and this job is BLOCKED.
+
+Size (session_01DLu9hNhnNY3UX3zTHQrEQY): test runs 3, module lines 1919
