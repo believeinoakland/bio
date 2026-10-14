@@ -48,3 +48,7 @@ B3 done: tranche/T47 merged (setup-words, instance-setup, wizard-scripts, op-gra
 **Checks:** `format: 168 modules, 167 requirements files; 0 failures` · `architecture: 30 product files, 51 relative imports; 0 failures` · `coverage: 1 modules, 24 of 24 live requirement ids named by a test; 0 failures` · `ownership: 29 files changed by screens-settings between tranche/T47 and HEAD; 0 failures`. `checks/run.mjs` over the product: architecture 0 failures; coverage's 16 failures are other modules' T47 ids (interface-shell, the screen modules, plane, queue, journey-check, signin-door), none of mine.
 
 Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 18, module lines 2,069
+
+## J5 · COMPLETE
+
+B6 re-run: tranche/T47 merged (action-producers, op-declarations again). On this branch: ℹ pass 66 · ℹ fail 17, every failure interface-shell's unmerged kit (R27, R39, R46), as J4. With origin/job/T47/interface-shell merged into a scratch worktree: ℹ pass 83 · ℹ fail 0, twice, after one test fix (R8's pending check now presses as a member does, answering the shell's reason, so the reason field is not taken for a change). Checks: format, architecture, coverage 24/24, ownership: 0 failures. Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 22, module lines 2,069
