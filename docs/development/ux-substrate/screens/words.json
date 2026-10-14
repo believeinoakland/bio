@@ -16,7 +16,7 @@
   "capture": 1,
   "document": 45,
   "question": 36,
-  "connection": 30,
+  "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 52,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 141,
+  "screen": 153,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 6,
   "duty": 6,
   "published": 1,
-  "shell": 10,
+  "shell": 11,
   "settings": 1,
   "entity": 33,
   "rail": 14,
@@ -71,7 +71,7 @@
   "level": 2,
   "act": 667,
   "column": 33,
-  "total": 2178,
+  "total": 2193,
   "protected": 689
  },
  "words": [
@@ -1644,6 +1644,18 @@
   {
    "key": "connection.kind.same.means",
    "en": "a member's claim that two records are one person, graded on the subject-match scale: \"claimed the same person, grade B, because…\". The records stay linked, never merged. Drawn as a thin line with an equals sign.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.step_source.name",
+   "en": "Stated in a source",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.step_source.means",
+   "en": "a step someone declared that a member has backed with a passage of a held document stating it; graded like that document. Drawn as a bold line.",
    "protected": true,
    "source": "mock-screens.js KINDS"
   },
@@ -5956,20 +5968,6 @@
    "note": "DEC-232"
   },
   {
-   "key": "connection.kind.step_source.name",
-   "en": "Stated in a source",
-   "protected": true,
-   "source": "DEC-232",
-   "note": "DEC-232: B189; connections R69, K1469"
-  },
-  {
-   "key": "connection.kind.step_source.means",
-   "en": "a step someone declared that a member has backed with a passage of a held document stating it; graded like that document.",
-   "protected": true,
-   "source": "DEC-232",
-   "note": "DEC-232"
-  },
-  {
    "key": "refusal.UPDATE_NOT_READY",
    "en": "That release isn't the one ready to install. Nothing was recorded.",
    "protected": false,
@@ -6752,6 +6750,111 @@
    "protected": true,
    "source": "DEC-235",
    "note": "DEC-235: K960 out_of_view; says nothing of what or how many"
+  },
+  {
+   "key": "screen.members.count",
+   "en": "Active members: {members} · Administrators: {administrators}",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203; screens-settings R29, counts active members only and says so"
+  },
+  {
+   "key": "screen.connect.way.field",
+   "en": "How do you want to connect the assistant?",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203; screens-settings R30"
+  },
+  {
+   "key": "screen.connect.way.subscription",
+   "en": "My Claude subscription (Pro or Max)",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203; preselected"
+  },
+  {
+   "key": "screen.connect.way.apikey",
+   "en": "My own Claude API key",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203"
+  },
+  {
+   "key": "screen.connect.way.later",
+   "en": "Not now",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203; draws nothing more"
+  },
+  {
+   "key": "screen.updates.admins",
+   "en": "Only your group's administrators install updates. If something needs updating, ask one of them.",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees"
+  },
+  {
+   "key": "shell.unread",
+   "en": "This could not be read. Try again in a moment.",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B204 (1); interface-shell R61, a failure with no words of its own"
+  },
+  {
+   "key": "screen.imported.list",
+   "en": "Imported cases",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B204 (2), N1087; Projects' link and the list's title"
+  },
+  {
+   "key": "screen.imported.list.says",
+   "en": "Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236"
+  },
+  {
+   "key": "screen.imported.list.row",
+   "en": "{group} · Edition {edition} · imported by {who}, {date} · {recreated} of {findings} findings recreated",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236; case-import R4"
+  },
+  {
+   "key": "screen.imported.list.row.part",
+   "en": "{n} in part",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: appended to the row when some findings recreated in part"
+  },
+  {
+   "key": "screen.imported.list.none",
+   "en": "No case imported yet. Choose a case file to import the first.",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236"
+  },
+  {
+   "key": "screen.imported.list.tip",
+   "en": "Cases other groups published that your group brought in to check, each read-only",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: the card on Projects' link"
+  },
+  {
+   "key": "connection.node.unnamed",
+   "en": "Not yet named",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236: B204 (3), N1086; a node the record holds with no name yet, drawn with its kind's icon"
+  },
+  {
+   "key": "connection.node.unnamed.tip",
+   "en": "The record holds this {kind} but no name for it yet. Open it to see the documents that mention it.",
+   "protected": false,
+   "source": "DEC-236",
+   "note": "DEC-236"
   },
   {
    "key": "rail.home.name",

@@ -198,7 +198,8 @@ SCR.projects = c => ({ rail: 'projects', title: 'Projects', crumbs: ['Projects']
   ${h1('Projects', 'Each project is one problem the group wants to get to the bottom of. These are the ones you can see.')}
   ${projTable()}
   ${note('Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.')}
-  ${acts(btn('promote', 'Start a project', { tone: 'primary' }))}` });
+  ${acts(btn('promote', 'Start a project', { tone: 'primary' }))}
+  <p class="mk-small">${ref('Imported cases', 'imported', '<b>Imported cases</b> · cases other groups published that your group brought in to check, each read-only')}</p>` });
 
 /* DEC-214: dashboards drawn as treatments to compare for S20 (Bob's direction of 11 October, K2803; the research on the
    dashboards page). Three arrangements of Home, then two area dashboards: the three tiers (status, what needs you,
@@ -1025,6 +1026,7 @@ const KINDS = {
   money: { word: 'Money', means: 'money moved: who paid whom, with the amount, stage and period the source gives. Drawn as a double line, like a ledger\'s rule.' },
   ment: { word: 'Mentioned together', means: 'named in the same document, and nothing more: the weakest tie the record holds. Drawn as a dash-dot line.' },
   same: { word: 'Same person?', means: 'a member\'s claim that two records are one person, graded on the subject-match scale: "claimed the same person, grade B, because…". The records stay linked, never merged. Drawn as a thin line with an equals sign.' },
+  step_source: { word: 'Stated in a source', means: 'a step someone declared that a member has backed with a passage of a held document stating it; graded like that document. Drawn as a bold line.' },
   lead: { word: 'Declared or hunch', means: 'a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed gray line.' },
 };
 const GRAPH_WORDS = {
@@ -1381,12 +1383,26 @@ SCR.published = c => ({ frame: 'published', title: 'The Coliseum lease · Editio
   <article class="mk-finding"><span class="eyebrow">People named</span><p>The City Administrator, by title: signed the March 2024 adjustment (finding 1).</p></article>
   ${acts(btn('verify', 'Check the signature'), btn('publishedcase', 'Download the complete edition'))}` });
 
-SCR.imported = c => ({ rail: 'projects', title: 'Another group\'s case', band: 'imported', crumbs: ['Imported', 'West Oakland Neighbors · Port lease revenue'], main: `
+// DEC-236 (B204 (2), N1087): the list of imported cases (case-import R4, `importedcases`) as states b and c; the case itself is state a.
+SCR.imported = c => { const st = ({ list: 'b', none: 'c' })[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: st === 'a' ? 'Another group\'s case' : 'Imported cases', st, band: st === 'a' ? 'imported' : undefined, crumbs: st === 'a' ? ['Imported cases', 'West Oakland Neighbors · Port lease revenue'] : ['Projects', 'Imported cases'], main: `
+  <div class="mk-mockctl"><label for="mk-impst">In this mockup, show</label> <select id="mk-impst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>one imported case</option><option value="b"${sel('b')}>the list of imported cases</option><option value="c"${sel('c')}>the list, before any import</option></select></div>
+  <div class="st st-b">
+  ${h1('Imported cases', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.')}
+  ${sheet(row(I('case'), ref('Port lease revenue', 'imported', '<b>Port lease revenue</b> · West Oakland Neighbors · Edition 2'), '', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October · 1 of 3 findings recreated, 1 in part') + row(I('case'), ref('School bus contracts', 'imported', '<b>School bus contracts</b> · Fruitvale Parents · Edition 1'), '', 'Fruitvale Parents · Edition 1 · imported by Ana, 22 September · 4 of 4 findings recreated'))}
+  ${acts(btn('caseimport', 'Import a case', { tone: 'primary' }))}
+  </div>
+  <div class="st st-c">
+  ${h1('Imported cases', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.')}
+  ${note('No case imported yet. Choose a case file to import the first.')}
+  ${acts(btn('caseimport', 'Import a case', { tone: 'primary' }))}
+  </div>
+  <div class="st st-a">
   ${h1('Port lease revenue', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October')}
   ${sheet(row(I('finding'), '<span class="rec">Port lease revenue fell short of the adopted budget in three years</span>', `<span class="cs-recreate" data-r="yes">${I('accepted')}Recreated</span>`) +
     row(I('finding'), '<span class="rec">The shortfall was not reported to council</span>', `<span class="cs-recreate" data-r="part">${I('elsewhere')}Recreated in part</span>`) +
     row(I('finding'), '<span class="rec">The 2025 calculation of arrears</span>', `<span class="cs-recreate" data-r="no">${I('refused')}Did not recreate</span>`))}
-  ${acts(btn('caseimport', 'Import a case'), btn('importaccept', 'Accept what recreated, with a reason', { tone: 'primary' }), btn('importflag', 'Flag an issue'), btn('importwatch', 'Watch the publisher\'s docket'))}` });
+  ${acts(btn('caseimport', 'Import a case'), btn('importaccept', 'Accept what recreated, with a reason', { tone: 'primary' }), btn('importflag', 'Flag an issue'), btn('importwatch', 'Watch the publisher\'s docket'))}
+  </div>` }; };
 
 SCR.docket = c => ({ rail: 'projects', title: 'Docket', crumbs: ['The Coliseum lease', 'Docket'], main: `
   ${h1('Docket', 'The case\'s public record of corrections, withdrawals and orders.')}

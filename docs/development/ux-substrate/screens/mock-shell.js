@@ -71,7 +71,7 @@ const PATH = {
   proceeding: ['Projects', 'The Coliseum lease', 'Proceeding'], matter: ['Projects', 'The Coliseum lease', 'Matter'],
   'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
   ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
-  imported: ['Projects', 'Imported', "Another group's case"],
+  imported: ['Projects', 'Imported cases', "Another group's case"],
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;

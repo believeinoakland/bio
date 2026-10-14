@@ -662,6 +662,7 @@ body:not(.show-src) .src { display: none; }
 .e-money-in { stroke:var(--c-surface); stroke-width:2; }
 .e-ment { stroke:var(--c-kind-mention); stroke-dasharray:9 4 2 4; }
 .e-lead { stroke:var(--c-muted); stroke-dasharray:7 5; }
+.e-step_source { stroke:var(--c-ink); stroke-width:3; }
 .e-same { stroke:var(--c-ink); stroke-width:1.25; }
 .mk-graph .edge { outline:none; }
 .mk-graph .edge:hover .e:not(.e-money):not(.e-money-in), .mk-graph .edge:focus-visible .e:not(.e-money):not(.e-money-in) { stroke-width:3.5; }
@@ -827,6 +828,16 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-lanes.small .mk-ev { font-size: var(--t-xs); }
 .mk-passage { margin: 0; padding: 10px 14px; border-left: 3px solid var(--c-capture); background: var(--c-surface); font-size: var(--t-lg); line-height: 1.5; }
 /* DEC-233: a sub-heading inside a section */
+/* DEC-236 (B204 (1)): what the shell needs and the mockup did not draw, as design classes: an account menu under the avatar, an act with
+   its refusal slot, a row's name cell, a scrim behind a blocking dialog, an image at its width, areas marked on an image, the avatar as a
+   button, the group's name on one line. */
+.mk-menuwrap { position: relative; } .mk-menu { position: absolute; right: 0; top: 100%; z-index: 40; min-width: 220px; padding: var(--s-3); display: grid; gap: var(--s-2); } .mk-menu[hidden] { display: none; }
+.mk-actwrap { display: inline-grid; gap: var(--s-2); justify-items: start; } .mk-slot:empty { display: none; }
+.mk-rowname { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.mk-scrim { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--s-4); background: color-mix(in srgb, var(--c-ground) 82%, transparent); } .mk-scrim > .cs-dialog { max-width: 440px; width: 100%; display: grid; gap: var(--s-3); }
+.mk-image { max-width: 100%; height: auto; display: block; }
+.mk-imgareas { position: relative; display: inline-block; max-width: 100%; touch-action: none; cursor: crosshair; } .mk-imgarea { position: absolute; border: 2px solid var(--c-accent); background: color-mix(in srgb, var(--c-accent) 18%, transparent); padding: 0; min-width: 8px; min-height: 8px; } .mk-imgarea:focus-visible { outline: 3px solid var(--c-ink); outline-offset: 2px; }
+button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk-h3 { margin: 14px 0 6px; font: 600 var(--t-sm) var(--f-sans); color: var(--c-ink); } .mk-h3:first-child { margin-top: 0; }
 /* DEC-229: the document page: the reader by page, the comparison, the versions, the links it carries */
 .mk-pagebar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: var(--t-sm); color: var(--c-muted); } .mk-pagebar .mk-pageno { font-weight: 600; color: var(--c-ink); }
@@ -2008,7 +2019,8 @@ SCR.projects = c => ({ rail: 'projects', title: 'Projects', crumbs: ['Projects']
   ${h1('Projects', 'Each project is one problem the group wants to get to the bottom of. These are the ones you can see.')}
   ${projTable()}
   ${note('Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.')}
-  ${acts(btn('promote', 'Start a project', { tone: 'primary' }))}` });
+  ${acts(btn('promote', 'Start a project', { tone: 'primary' }))}
+  <p class="mk-small">${ref('Imported cases', 'imported', '<b>Imported cases</b> · cases other groups published that your group brought in to check, each read-only')}</p>` });
 
 /* DEC-214: dashboards drawn as treatments to compare for S20 (Bob's direction of 11 October, K2803; the research on the
    dashboards page). Three arrangements of Home, then two area dashboards: the three tiers (status, what needs you,
@@ -2835,6 +2847,7 @@ const KINDS = {
   money: { word: 'Money', means: 'money moved: who paid whom, with the amount, stage and period the source gives. Drawn as a double line, like a ledger\'s rule.' },
   ment: { word: 'Mentioned together', means: 'named in the same document, and nothing more: the weakest tie the record holds. Drawn as a dash-dot line.' },
   same: { word: 'Same person?', means: 'a member\'s claim that two records are one person, graded on the subject-match scale: "claimed the same person, grade B, because…". The records stay linked, never merged. Drawn as a thin line with an equals sign.' },
+  step_source: { word: 'Stated in a source', means: 'a step someone declared that a member has backed with a passage of a held document stating it; graded like that document. Drawn as a bold line.' },
   lead: { word: 'Declared or hunch', means: 'a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed gray line.' },
 };
 const GRAPH_WORDS = {
@@ -3191,12 +3204,26 @@ SCR.published = c => ({ frame: 'published', title: 'The Coliseum lease · Editio
   <article class="mk-finding"><span class="eyebrow">People named</span><p>The City Administrator, by title: signed the March 2024 adjustment (finding 1).</p></article>
   ${acts(btn('verify', 'Check the signature'), btn('publishedcase', 'Download the complete edition'))}` });
 
-SCR.imported = c => ({ rail: 'projects', title: 'Another group\'s case', band: 'imported', crumbs: ['Imported', 'West Oakland Neighbors · Port lease revenue'], main: `
+// DEC-236 (B204 (2), N1087): the list of imported cases (case-import R4, `importedcases`) as states b and c; the case itself is state a.
+SCR.imported = c => { const st = ({ list: 'b', none: 'c' })[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: st === 'a' ? 'Another group\'s case' : 'Imported cases', st, band: st === 'a' ? 'imported' : undefined, crumbs: st === 'a' ? ['Imported cases', 'West Oakland Neighbors · Port lease revenue'] : ['Projects', 'Imported cases'], main: `
+  <div class="mk-mockctl"><label for="mk-impst">In this mockup, show</label> <select id="mk-impst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>one imported case</option><option value="b"${sel('b')}>the list of imported cases</option><option value="c"${sel('c')}>the list, before any import</option></select></div>
+  <div class="st st-b">
+  ${h1('Imported cases', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.')}
+  ${sheet(row(I('case'), ref('Port lease revenue', 'imported', '<b>Port lease revenue</b> · West Oakland Neighbors · Edition 2'), '', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October · 1 of 3 findings recreated, 1 in part') + row(I('case'), ref('School bus contracts', 'imported', '<b>School bus contracts</b> · Fruitvale Parents · Edition 1'), '', 'Fruitvale Parents · Edition 1 · imported by Ana, 22 September · 4 of 4 findings recreated'))}
+  ${acts(btn('caseimport', 'Import a case', { tone: 'primary' }))}
+  </div>
+  <div class="st st-c">
+  ${h1('Imported cases', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.')}
+  ${note('No case imported yet. Choose a case file to import the first.')}
+  ${acts(btn('caseimport', 'Import a case', { tone: 'primary' }))}
+  </div>
+  <div class="st st-a">
   ${h1('Port lease revenue', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October')}
   ${sheet(row(I('finding'), '<span class="rec">Port lease revenue fell short of the adopted budget in three years</span>', `<span class="cs-recreate" data-r="yes">${I('accepted')}Recreated</span>`) +
     row(I('finding'), '<span class="rec">The shortfall was not reported to council</span>', `<span class="cs-recreate" data-r="part">${I('elsewhere')}Recreated in part</span>`) +
     row(I('finding'), '<span class="rec">The 2025 calculation of arrears</span>', `<span class="cs-recreate" data-r="no">${I('refused')}Did not recreate</span>`))}
-  ${acts(btn('caseimport', 'Import a case'), btn('importaccept', 'Accept what recreated, with a reason', { tone: 'primary' }), btn('importflag', 'Flag an issue'), btn('importwatch', 'Watch the publisher\'s docket'))}` });
+  ${acts(btn('caseimport', 'Import a case'), btn('importaccept', 'Accept what recreated, with a reason', { tone: 'primary' }), btn('importflag', 'Flag an issue'), btn('importwatch', 'Watch the publisher\'s docket'))}
+  </div>` }; };
 
 SCR.docket = c => ({ rail: 'projects', title: 'Docket', crumbs: ['The Coliseum lease', 'Docket'], main: `
   ${h1('Docket', 'The case\'s public record of corrections, withdrawals and orders.')}
@@ -3293,7 +3320,7 @@ const PATH = {
   proceeding: ['Projects', 'The Coliseum lease', 'Proceeding'], matter: ['Projects', 'The Coliseum lease', 'Matter'],
   'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
   ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
-  imported: ['Projects', 'Imported', "Another group's case"],
+  imported: ['Projects', 'Imported cases', "Another group's case"],
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;

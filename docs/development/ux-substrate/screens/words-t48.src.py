@@ -227,8 +227,6 @@ w('duty.reason.due_not_computed', 'The due date couldn\'t be worked out from wha
 w('duty.reason.due_between_days', 'The due date depends on a day the record doesn\'t settle, so it falls on one of two days.', False, 'DEC-232')
 w('duty.reason.match_undated', 'The event that met the duty has no settled date, so whether it was on time is open.', False, 'DEC-232')
 w('duty.reason.order_unsettled', 'The dates the record holds aren\'t precise enough to say whether it was on time.', False, 'DEC-232')
-w('connection.kind.step_source.name', 'Stated in a source', True, 'DEC-232: B189; connections R69, K1469')
-w('connection.kind.step_source.means', 'a step someone declared that a member has backed with a passage of a held document stating it; graded like that document.', True, 'DEC-232')
 w('refusal.UPDATE_NOT_READY', 'That release isn\'t the one ready to install. Nothing was recorded.', False, 'DEC-232: B190; instance-setup R90')
 w('refusal.UPDATE_SKIP_NO_REASON', 'Say why your group skips this release, on one line: every administrator will see it. Nothing was recorded.', False, 'DEC-232: B190; instance-setup R90')
 w('home.welcome.title', 'Welcome, {name}', False, 'DEC-232: B190; Home\'s blocks (screens-daily R17), in their order')
@@ -314,7 +312,6 @@ w('screen.held.empty', 'Nothing is held: every capture here has been vouched for
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]
 assert len(keys) == len(set(keys)), 'duplicate key'
-print(f'words-t48.json: {len(W)} entries, {sum(x["protected"] for x in W)} protected')
 
 # DEC-235: the question page (DEC-228 (3), census V1 to V5): DEC-32's consequence question per cited passage, what the answer rests on read back,
 # the readings (basis-versions R12 to R15; strength R7, R8, R11), what relies on the question (connections R20, K960). None uses AND, OR or
@@ -355,4 +352,22 @@ w('question.relies.project', 'project · stands on "{reading}"', False, 'DEC-235
 w('question.relies.cites', '{kind} · cites this question', False, 'DEC-235')
 w('question.relies.outofview', 'Other work you can\'t see also relies on this question.', True, 'DEC-235: K960 out_of_view; says nothing of what or how many')
 
+# DEC-236: B203 (K3297) and B204 (K3302): keys held inline by T48's L11 jobs; the imported cases' list (N1087); the unnamed node (N1086).
+w('screen.members.count', 'Active members: {members} · Administrators: {administrators}', False, 'DEC-236: B203; screens-settings R29, counts active members only and says so')
+w('screen.connect.way.field', 'How do you want to connect the assistant?', False, 'DEC-236: B203; screens-settings R30')
+w('screen.connect.way.subscription', 'My Claude subscription (Pro or Max)', False, 'DEC-236: B203; preselected')
+w('screen.connect.way.apikey', 'My own Claude API key', False, 'DEC-236: B203')
+w('screen.connect.way.later', 'Not now', False, 'DEC-236: B203; draws nothing more')
+w('screen.updates.admins', 'Only your group\'s administrators install updates. If something needs updating, ask one of them.', False, 'DEC-236: B203; screens-settings R27, what a member who is not an administrator sees')
+w('shell.unread', 'This could not be read. Try again in a moment.', False, 'DEC-236: B204 (1); interface-shell R61, a failure with no words of its own')
+w('screen.imported.list', 'Imported cases', False, 'DEC-236: B204 (2), N1087; Projects\' link and the list\'s title')
+w('screen.imported.list.says', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.', False, 'DEC-236')
+w('screen.imported.list.row', '{group} · Edition {edition} · imported by {who}, {date} · {recreated} of {findings} findings recreated', False, 'DEC-236; case-import R4')
+w('screen.imported.list.row.part', '{n} in part', False, 'DEC-236: appended to the row when some findings recreated in part')
+w('screen.imported.list.none', 'No case imported yet. Choose a case file to import the first.', False, 'DEC-236')
+w('screen.imported.list.tip', 'Cases other groups published that your group brought in to check, each read-only', False, 'DEC-236: the card on Projects\' link')
+w('connection.node.unnamed', 'Not yet named', False, 'DEC-236: B204 (3), N1086; a node the record holds with no name yet, drawn with its kind\'s icon')
+w('connection.node.unnamed.tip', 'The record holds this {kind} but no name for it yet. Open it to see the documents that mention it.', False, 'DEC-236')
+
 json.dump(W, open(os.path.join(HERE, 'words-t48.json'), 'w'), indent=1, ensure_ascii=False)
+print(f'words-t48.json: {len(W)} entries, {sum(x["protected"] for x in W)} protected')
