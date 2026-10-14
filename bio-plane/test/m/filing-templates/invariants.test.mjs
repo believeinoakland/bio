@@ -123,12 +123,14 @@ test("R22 a machine writes only a proposal and a labelled comment: it never draf
   }
 });
 
-test("R23 each refusal carries its row {check, where, translation} from this module's table: C-115.31–.33, .35–.38 moved with their numbers (.31 and .36 re-keyed), R26's C-115.45 and .46, every other code a C-125 row; each where names a site of this module", () => {
+test("R23 each refusal carries its row {check, where, translation} from this module's table: C-115.31–.33, .35–.38 moved with their numbers (.31 and .36 re-keyed), R26's C-115.45 and .46, R33's C-115.47, every other code a C-125 row; each where names a site of this module", () => {
   const rows = ft.FILING_TEMPLATE_CHECKS;
   const moved = { MACHINE_CANNOT_DRAFT_TEMPLATE: "C-115.31", TEMPLATE_NAME_REFUSED: "C-115.32", TEMPLATE_KIND_REFUSED: "C-115.33",
                   TEMPLATE_TEXT_REFUSED: "C-115.35", TEMPLATE_TIER3_FILE: "C-115.36", TEMPLATE_NAME_TAKEN: "C-115.37", NO_SUCH_TEMPLATE: "C-115.38",
                   /* R26 (N702), numbered by R26 in the C-115 family */
-                  TEMPLATE_REF_REFUSED: "C-115.45", TEMPLATE_NAME_AMBIGUOUS: "C-115.46" };
+                  TEMPLATE_REF_REFUSED: "C-115.45", TEMPLATE_NAME_AMBIGUOUS: "C-115.46",
+                  /* R33 (T48), moved from filings with its number */
+                  RFC_QUOTING_MISSING: "C-115.47" };
   for (const [c, n] of Object.entries(moved)) assert.equal(rows[c].check, n, c);
   /* R26's rows, their translations as BOB worded them */
   assert.equal(rows.TEMPLATE_REF_REFUSED.translation, "Name one template, by its id or as @ and its name. Nothing was drafted.");
