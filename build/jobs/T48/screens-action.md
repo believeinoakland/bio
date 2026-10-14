@@ -24,6 +24,6 @@
 
 **Depends on unmerged same-layer work (merge order puts both before me):** `op-declarations` (T48-63: `planask`, `filingread`, `pressurefor` in `OPS` and the session sets) and `interface-shell` (R55: `planask` a re-point on `plan`). Until both are on `tranche/T48`, `interfacePage(SCREENS)` throws "act names planask, which OPS does not hold" and every page test of this module fails at `checkScreens`. I ran the module's tests in a scratch worktree with those two edits stood in (a three-line change to each file, never committed): 68 pass, 0 fail. After they merge, `tranche/T48` merged into this branch and a re-run should show the same; send CHANGE when they are in. R14's class test reads the design page's product rules from `docs/` as the stand-in for `shell.css` (`interface-assets` R7, not yet merged).
 
-**Tests and checks:** `node --test bio-plane/test/m/screens-action/` in the scratch worktree 68 pass, 0 fail (53 before this job). format 0 failures; architecture 0 failures (17 files); coverage 14 of 14 live ids named, 0 failures.
+**Tests and checks:** `node --test bio-plane/test/m/screens-action/` in the scratch worktree 68 pass, 0 fail (53 before this job). format 0 failures; architecture 0 failures (17 files); coverage 14 of 14 live ids named, 0 failures; ownership 0 failures (18 files). `checks/run.mjs` over the product: format 0, architecture 0, ownership 0; coverage 21 failures, none in screens-action.
 
-Size (session_01Y4r4SkWUhFeH2s4ocMcMLc): test runs 14, module lines 1659
+Size (session_01Y4r4SkWUhFeH2s4ocMcMLc): test runs 14, module lines 1626
