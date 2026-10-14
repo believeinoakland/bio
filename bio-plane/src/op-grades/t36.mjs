@@ -36,9 +36,11 @@ export const T36_RUNGS = {
 
 /* ---- the stated absences ---- */
 export const T36_RUNG_ABSENT = {
-  /* R24. file-safety R13, R33, on R3's rule: a member's request on a file asks no authored reason and no act takes it
-     back; who asked is not kept (its R10) */
-  deepercheck:        { ground: "undetermined", is: "a member who may see a file asks for a deeper check of its bytes by the group's outside tools; asks no authored reason, no act takes it back, and who asked is not kept (file-safety R13, R10)" },
+  /* R35 (T47; N987; K3014): its one write is a verdict note naming no member, corrected forward by checking again
+     (file-safety R3, R10, R13), and it asks no reason: `observational`, as deeperbatch, no longer `undetermined` */
+  deepercheck:        { ground: "observational", is: "a member who may see a file asks for a deeper check of its bytes by the group's outside tools; its one write is a verdict note naming no member, corrected by checking again, and who asked is not kept (file-safety R3, R10, R13)" },
+  /* R24. file-safety R33, on R3's rule: a member's request on a file asks no authored reason and no act takes it back;
+     who asked is not kept (its R10) */
   safecopyrequest:    { ground: "undetermined", is: "a member who may see a file asks the group's safe-copy maker for a rebuilt, derived copy of it; asks no authored reason, no act takes it back, and who asked is not kept (file-safety R33, R10)" },
   /* file-safety R8, R10: each answers the original's bytes; its one write is the scan before first opening, an
      unattributed note naming no member */

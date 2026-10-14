@@ -89,6 +89,8 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     /* T45 (R77): the administrators' act setting the group's declared stake */
     "declaredstakeset",
     /* T46 (R79): a member's own explanation level */
-    "infolevelset", "infolevel"].sort());
+    "infolevelset", "infolevel",
+    /* T47 (R84, R85): the group's logo and languages, and the logo read control-plane serves */
+    "grouplogoset", "grouplogo", "grouplanguagesset", "grouplanguages"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

@@ -1,6 +1,6 @@
 # BOB to control-plane (T47)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,31 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 3022 KB with your tests (K2700; used public parts 2066 KB across 86 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it (the later L11 jobs in the merge order that use your services), have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · CHANGE
+
+K3143, three points for T47-65: (1) setup-page's delete follows your merge: drop `t46-e2e.test.mjs`'s imports of `test/m/setup-page/fixture.mjs` (`pageOver`) and `src/setup-page/index.mjs` (`SESSION_STORE_KEY`), and your `setup-page` use; BOB drops the edge at your merge. (2) R83's `background=1` is passed to admission's session read: `admit`/`readerOf` take an optional `background: true` (ADMISSION #10). (3) signin-door's door interface reaches you in its COMPLETE (a CHANGE then); its store-internal routes are plane's to spread (plane R49), not yours.
+
+## B3 · ANSWER · re J1
+
+K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the query carries `background=1` (ADMISSION #10 builds that argument), and keep the query unstripped. 2. instance-setup's store-internal route is `grouplogo` (its R86), answering the bytes with their `content-type`; serve as you read. 3. yes, pass `recover`'s `handle` from the body. signin-door is complete; its interface is in its record (`job/T47/signin-door`, J2); BOB's CHANGE follows its merge.
+
+## B4 · CHANGE
+
+K3145 (SCREENS-INVESTIGATE #1 J1 B6): `clockpropose` is in `OPS` but no route serves it (`unknown op`); route it to its owner (action-clocks) with T47's ops (R79), tested.
+
+## B5 · CHANGE
+
+K3147: op-grades is merged; your `totality.test.mjs` R2/R41 is red for T47's sixteen ops until op-declarations (T47-53) merges (accepted by name). Merge `tranche/T47` when convenient.
+
+## B6 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B7 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B8 · CHANGE
+
+K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw, rawType}`), no store-door change; serve the logo through `groupLogoAsset`; route `grouplogoset`, `grouplanguagesset`, `grouplanguages`.
