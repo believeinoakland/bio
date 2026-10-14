@@ -77,3 +77,7 @@ T47-64 applied: plan, start-send, request, action, matter, help-records (R1–R1
 B4: every reading of J2 stands, so nothing changes in code. R3's phone hold is the shell's (interface-shell R50), the wizard mark is screens-wizards R2's, the due-date link is `/app/due-date/<action>~<position>` as built, and R6's stage names stand.
 
 B3: merged `tranche/T47` (wizard-scripts, setup-words, instance-setup, op-grades) at 2840e58403. `node --test bio-plane/test/m/screens-action/` gives 51 pass, 0 fail. The format check gives 0 failures. Coverage and ownership fail on the branch only because my paths are not yet in `modules.json` (K1043): with them entered, as on the scratch copy, both pass (10 of 10 ids, 0 failures).
+
+## J5 · COMPLETE · re B3
+
+B3 merged at 2840e58403: 51 pass, 0 fail. B4's rulings match what is built, so the code is unchanged. My files still need entering in modules.json (listed in the record's Completion section).
