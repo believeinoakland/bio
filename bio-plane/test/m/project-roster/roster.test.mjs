@@ -34,6 +34,13 @@ test("R1 projectParticipants: a participant (any state), or an administrator at 
   w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") });
   assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants.map((x) => x.handle),
     ["ann", "bob", "cal"]);
+  /* T47 (P8): the founder invited is a participant with no roster row, listed by its handle `admin` (as R27, R28) */
+  w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+                VALUES ('PROJ-P','admin','invited',0,'t','t')`);
+  assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants.map((x) => [x.handle, x.state]),
+    [["ann", "joined"], ["bob", "joined"], ["admin", "invited"], ["cal", "invited"]]);
+  assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by: "admin" }).ok, true, "the founder reads it as a participant");
+  w.sql.exec(`DELETE FROM project_participants WHERE project_id='PROJ-P' AND member_id='admin'`);
   /* anyone else: the absent answer, byte for byte as an id naming nothing (membership R78) */
   for (const by of ["dee", "zed", null, undefined, "class:admin"])
     assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by }), noSuchProject("PROJ-P"), String(by));
