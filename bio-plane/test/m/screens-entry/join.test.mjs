@@ -48,6 +48,8 @@ test("R7 walked by invitation: enroll, login on an own device, memberlanguageset
   assert.deepEqual(o.wizards, [["WIZ-7db08189cc0e58c3", null, { joined: true }]]);
   has(o, "screen.join.joined", { handle: "mai" }); has(o, "screen.entry.codes.heading");
   assert.deepEqual(all(o.tree, (e) => e.tag === "pre")[0].children.map((c) => c.text).join("").split("\n"), CODES);
+  assert.deepEqual(o.saves.at(-1).text.trim().split("\n"), CODES);
+  assert.deepEqual(o.copies.at(-1).split("\n"), CODES);
   assert.ok(links(o.tree).includes("/app")); has(o, "screen.join.home");
 });
 

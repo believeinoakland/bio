@@ -55,6 +55,11 @@ test("R6 claim, then login as admin on an own device, the session handed over, t
   has(o, "screen.setup.claimed"); has(o, "screen.entry.codes.heading"); has(o, "screen.entry.codes.what");
   const pre = all(o.tree, (e) => e.tag === "pre")[0];
   assert.deepEqual(pre.children.map((c) => c.text).join("").split("\n"), CODES);
+  // saved as a file made in the page, or copied (interface-shell R47), the codes and nothing else
+  assert.ok(all(o.tree, (e) => e.attrs["data-shell"] === "save").length === 1 && all(o.tree, (e) => e.attrs["data-shell"] === "copy").length === 1);
+  assert.equal(o.saves.at(-1).name, "recovery-codes.txt");
+  assert.deepEqual(o.saves.at(-1).text.trim().split("\n"), CODES);
+  assert.deepEqual(o.copies.at(-1).split("\n"), CODES);
   assert.ok(!("pending" in o.view.ui), "the password left the page's memory");
 });
 

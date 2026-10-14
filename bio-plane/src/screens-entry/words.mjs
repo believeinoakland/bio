@@ -29,6 +29,8 @@ const rows = [
   ["screen.entry.codes.what", "These ten codes are shown once. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. Save them with your password, somewhere only you can reach. Each works once.", false],
   ["screen.entry.codes.none", "No recovery codes were answered, so none are shown. You can get them later in Settings › Recovery codes.", false],
   ["screen.entry.codes.list", "Your ten recovery codes", false],
+  ["screen.entry.codes.save", "Save them as a file", false],
+  ["screen.entry.codes.copy", "Copy them", false],
 
   // ---- front (R1, R2) ----
   ["screen.front.published", "What we have published", false],
@@ -49,7 +51,8 @@ const rows = [
   ["screen.front.forgot", "Forgot your password?", false],
   ["screen.front.notmember", "Not a member yet? Members join by an invitation from one of the group's administrators: open the link you were sent and it brings you to join.", false],
   ["screen.front.welcomeback", "Welcome back, {handle}", false],
-  ["screen.front.notyou", "Not {handle}? Sign in as someone else", false],
+  ["screen.front.notyou", "Not {handle}?", false],
+  ["screen.front.other", "Sign in as someone else", false],
   ["screen.front.nopassword", "Type your password first. Nothing was sent.", false],
 
   // ---- tour (R3) ----

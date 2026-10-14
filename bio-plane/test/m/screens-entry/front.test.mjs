@@ -134,7 +134,7 @@ test("R2 signed out and ended are drawn from the record's state, and neither in 
 
 test("R2 locked: the handle, the password, Unlock sending unlock under the locked session, and 'Not <handle>?' signing out", async () => {
   const o = await open("front", { table: { ...TABLE, unlock: { ok: true, result: { ok: true } } }, session: { state: "locked", handle: "mai" } });
-  has(o, "session.locked"); has(o, "screen.front.welcomeback", { handle: "mai" }); has(o, "screen.front.notyou", { handle: "mai" });
+  has(o, "session.locked"); has(o, "screen.front.welcomeback", { handle: "mai" }); has(o, "screen.front.notyou", { handle: "mai" }); has(o, "screen.front.other");
   assert.deepEqual(actOps(o.tree), ["unlock"], "no sign-in form while locked");
   const out = all(o.tree, (e) => e.tag === "button" && e.attrs["data-shell"] === "signout");
   assert.equal(out.length, 1);

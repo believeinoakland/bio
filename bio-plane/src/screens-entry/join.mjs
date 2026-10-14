@@ -3,8 +3,9 @@
    invitation is read with `invitelook`; a join link first asks the name the group will know the person by and sends
    `joinlinkinvite`. A dead link draws "This link no longer works" and no form. Then the language among the group's
    (`grouplanguages`), the handle checked as it is typed (`handlecheck`; fixed for good, DEC-197), the password twice;
-   `enroll`, `login` on an own device, `memberlanguageset` and `recoverycodesissue`, the codes shown once; then Home, the welcome
-   wizard's join steps counted (screens-wizards R7). The invitation, the link and the password travel only in request bodies (R8). Self-contained (interface-shell R21). */
+   `enroll`, `login` on an own device, `memberlanguageset` and `recoverycodesissue`, the codes shown once; then Home,
+   the welcome wizard's join steps counted (screens-wizards R7). The invitation, the link and the password travel only
+   in request bodies (R8). Self-contained (interface-shell R21). */
 
 export const join = {
   id: "join",
@@ -34,7 +35,7 @@ export const join = {
     // joined: the codes shown once, then Home
     if (ui.joined) {
       return cs.title() + `<p class="cs-row" data-state="joined">${W(ui.joined.signed ? S + "joined" : S + "joined.nosignin", { handle: ui.joined.handle })}</p>`
-        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre>`)
+        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="cs-actrow">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
           : ui.joined.signed ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "")
         + `<p><a class="cs-btn" data-tone="primary" href="${ui.joined.signed ? "/app" : "/app/front"}" data-nav>${W(ui.joined.signed ? S + "home" : "screen.entry.signin")}</a></p>`;
     }

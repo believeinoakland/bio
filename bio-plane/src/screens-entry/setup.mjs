@@ -41,7 +41,7 @@ export const setup = {
       return `<div class="cs-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${p.join("")}<p>${W("screen.hosting.guide")}</p></div>`;
     };
     const codes = () => (ui.codes
-      ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre>`)
+      ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="cs-actrow">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
       : ui.nocodes ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "");
     const out = [cs.title(), `<p class="cs-sub">${W(S + "lede")}</p>`];
 

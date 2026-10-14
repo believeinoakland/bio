@@ -3,8 +3,8 @@
    (`groupdescription`'s public parts), what it has published (`publishedlist`), the doorbell and the tour, and members'
    sign-in as a panel: `login` with the handle, the password and the device in the body only, the session handed to the
    shell (`cs.signin`, interface-shell R32); the signed-out, ended and locked states from the record the shell reads
-   (`view.session`), the lock's `unlock` and its "Not <handle>?" sign-out. Every function is self-contained
-   (interface-shell R21). */
+   (`view.session`), the lock's `unlock` and its "Not <handle>?" sign-out (`cs.signout`, interface-shell R47). Every
+   function is self-contained (interface-shell R21). */
 
 export const front = {
   id: "front",
@@ -41,7 +41,7 @@ export const front = {
       const handle = session.handle || "";
       out.push(cs.sec("screen.front.welcomeback", `<p class="cs-row" data-state="locked">${W("session.locked")}</p>`
         + cs.field("fl-lock", "screen.entry.password", { type: "password", autocomplete: "current-password" })
-        + `<div class="cs-actrow">${cs.act("unlock", { tone: "primary" })}<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout">${W(S + "notyou", { handle })}</button></div>`,
+        + `<div class="cs-actrow">${cs.act("unlock", { tone: "primary" })}</div><p>${W(S + "notyou", { handle })} ${String(cs.signout({ label: S + "other" }) || "")}</p>`,
       { fills: { handle } }));
       out.push(`<p class="cs-small">${W("screen.entry.uses", { group: group || W("screen.entry.group") })}</p>`);
       return out.join("");

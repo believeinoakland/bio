@@ -104,7 +104,7 @@ export const JOINED = Object.freeze({ tokenClass: "member", session: true, membe
 export async function open(id, { table = {}, session = { state: "none" }, fragment = {}, me = null, subject = null, signinAs = FOUNDER } = {}) {
   const spec = SCREENS.find((s) => s.id === id);
   if (!spec) throw new Error("no screen " + id);
-  const o = { spec, requests: [], signins: [], gone: [], wizards: [], timers: [], now: 0, refused: null, token: session.state === "live" || session.state === "locked" ? "tok-locked" : null };
+  const o = { spec, requests: [], signins: [], gone: [], wizards: [], saves: [], copies: [], timers: [], now: 0, refused: null, token: session.state === "live" || session.state === "locked" ? "tok-locked" : null };
   const ui = {};
   const data = {};
   const view = { subject, data, ui, me, session, fragment: { ...fragment }, origin: "https://group.example", parts: {} };
@@ -147,6 +147,10 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
       async call(op, req = {}) { const a = await request(op, req); return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null; },
       async signin(answer, opts = {}) { o.signins.push({ answer, opts }); if (answer && answer.token) o.token = answer.token; view.me = signinAs; },
       wizard(...a) { o.wizards.push(a); },
+      // interface-shell R47: each answers its own control, bound by the shell
+      save(name, text, opt = {}) { o.saves.push({ name, text }); return `<button type="button" class="cs-btn" data-shell="save" data-name="${esc(name)}">${w(opt.label)}</button>`; },
+      copy(text, opt = {}) { o.copies.push(text); return `<button type="button" class="cs-btn" data-shell="copy">${w(opt.label)}</button>`; },
+      signout(opt = {}) { return `<button type="button" class="cs-btn" data-shell="signout">${w(opt.label)}</button>`; },
       state(r, inner, opt = {}) {
         if (typeof r === "string") r = data[r];
         if (!r || r.state === "loading") return `<p class="cs-state" data-state="loading">${w("state.loading")}</p>`;
