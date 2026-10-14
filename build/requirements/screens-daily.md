@@ -39,7 +39,7 @@ Where a member starts and works each day: the group's home, their queue, finding
 
 #### T47's L11 fold (K3100)
 
-- **R10** (DEC-201 (8)) **projects**: `projectlist` (each project's name, owner, stage on the ladder) with each one's question count (`projectquestions`, paged), `truncated` said; "Start a project" (`promote`); (DEC-214 (3), K3127) each row also draws its members (`cs.initials`), activity over eight weeks (`cs.activity`) and last change when `projectlist` answers them (project-roster, N1025, T48), and draws none of the three until then, saying nothing of them. *(not yet met: T47)*
+- **R10** (DEC-201 (8)) **projects**: `projectlist` (each project's name, owner, stage on the ladder) with each one's question count (`projectquestions`, paged), `truncated` said; "Start a project" (`promote`); (DEC-214 (3), K3127) each row also draws its members (`cs.initials`), activity over eight weeks (`cs.activity`) and last change, as `projectlist` answers them (`project-roster` R28, Bob's K3142). *(not yet met: T47)*
 - **R11** (DEC-201 (7), DEC-202 (4)) Home: with no project and one member, the new-group state ("Nothing is here yet", inviting members, saying who the group is); the welcome offer per `screens-wizards` R7. *(not yet met: T47)*
 - **R12** (DEC-201 (13)) Queue's empty state ("You are up to date"); Find's no-result state (what search covers, "Capture it"). *(not yet met: T47)*
 - **R13** (DEC-212; `action-producers` R25) R3's registered acts gain `actionmove`; the unsent-request item draws "Pick up where you left off" (opening the action's screen at its step), "Keep it for later" (`queuesnooze`) and "Drop the request, with a reason" (`actionmove` to `abandoned`). *(not yet met: T47)*
