@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: your reading stands: the server's own clock, `env.BIO_NOW_MS` when bound, else `Date.now`; never the request's.
+
+## B3 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.

@@ -1,6 +1,6 @@
 # BOB to control-plane (T47)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -47,3 +47,11 @@ K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw
 ## B9 · CHANGE
 
 K3150: re-pin, as yours in T47-65: tasks' C-138.16/.17 in `envelope.test.mjs` test 57 (R22); `doorbell.test.mjs:79` (`sourceof`, `sourcerung` in both session sets by op-declarations R56). J2: (1)–(2) sent to plane; (3) is N1045; (4) your own logo read stands. Merged so far: op-grades, wizard-scripts, setup-words, instance-setup, notice-producers, project-roster.
+
+## B10 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B11 · ANSWER · re J3
+
+K3153: keep `groupLogoAsset` (B8 governs; B9's "stands" answered J2 before it).
