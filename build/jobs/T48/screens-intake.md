@@ -17,3 +17,7 @@
 **Tests and checks:** node --test bio-plane/test/m/screens-intake/: 64 pass, 0 fail (new t48.test.mjs: R17 ×2, R18, R19 ×2, R20). format: 0 failures. architecture screens-intake: 14 files, 0 failures. coverage screens-intake: 20 of 20 ids named, 0 failures. ownership vs tranche/T48: 1 file changed... 0 failures. checks/run.mjs over the product: format, architecture, channels 0 failures; coverage failures are other modules' open ids only (none of screens-intake's).
 
 Size (session_01AsreeRSDo9rX7WgGKSQiar): test runs 6, module lines 1190
+
+## J1 · REPORT
+
+Found outside my module: (1) capture heldCaptures (L3, capture/index.mjs 1041-1054) awaits per row, with no time bound, #archiveRow (an archiveList on every capture of the row's document) and #eligibility; the unfiltered heldcaptures the walk saw stall is per-row cost (the empty set_aside read answered). I could not read biosmoke7 (401), so it is unconfirmed; I cut the screen's page from 200 to 50 rows. A CHANGE to capture to bound or batch that work is yours to decide. (2) screen.held.empty does not name a first step, which R17's single empty state asks; the wording is BOB's. (3) cs-pickc, drawn by the shell's cs.rows, is on R17's rename list (interface-shell's job).
