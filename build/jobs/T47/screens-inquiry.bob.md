@@ -23,3 +23,7 @@ K3145 (SCREENS-INVESTIGATE #1 J1 C11): "Open a question" sends `files[].content`
 ## B3 · ANSWER · re J1
 
 K3147: your reading stands: closing the dock or leaving the page stops nothing; the run ends by itself, by "Stop the run", or by its bounds. BOB's CHANGEs follow the merges you need.
+
+## B4 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
