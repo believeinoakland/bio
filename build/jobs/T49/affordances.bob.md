@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 K3369 (OP-GRADES #11 J1): op-grades replaces IRREVERSIBLE_CORRECTION_PATH with IRREVERSIBLE_CORRECTION_KEY ("screen.ceremony.permanent") and makes CONSEQUENCE_STATEMENTS[op] {friction, key} (no .statement). Re-point affordances.mjs:137, :509 (rung_correction_path → the key, published as rung_correction_key or the key under the old field; your choice, stated in your record) and :512 (rung_consequences carries {friction, key}), with your catalogue and plane tests. Build against that shape now; merge the tranche branch when BOB's CHANGE says op-grades has merged. A reader drawing these words reads word(key, vars).
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
