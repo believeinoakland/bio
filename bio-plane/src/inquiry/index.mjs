@@ -197,6 +197,23 @@ export function machinePassageUnchecked(detail, extra = {}) {
   /* END DEC-49 REGION is-machine-passage-checked */
 }
 
+/** R64, R27 (T48; N1012; K231, K3092, K3102): the one spelling of `DIVIDED_CANNOT_RESTRUCTURE`: the question was divided
+ *  and its children carry it on, so its document is closed. `ground` (R27) and R11's check of every revision of a
+ *  divided question (R64) answer through it. It carries `target` (the caller's `extra.target`, else null) and
+ *  `from: "divided"`; `detail` is the caller's, saying to work on the child that carries the part meant. `extra` adds the
+ *  caller's fields and never replaces these. The code has no catalogue row, so no check or translation travels with it.
+ *  Pure; never throws. */
+export function dividedCannotRestructure(detail, extra = {}) {
+  const x = extra && typeof extra === "object" && !Array.isArray(extra) ? extra : {};
+  /* DEC-49 REGION is-divided-closed */
+  return { ...x, ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", code: "DIVIDED_CANNOT_RESTRUCTURE",
+           target: typeof x.target === "string" && x.target ? x.target : null, from: "divided",
+           detail: typeof detail === "string" && detail ? detail
+             : "this question was divided and its children carry it on, so its document is closed: nothing in it is "
+               + "revised now. Work on the child that carries the part you mean. Nothing was written." };
+  /* END DEC-49 REGION is-divided-closed */
+}
+
 /* R62: the fields of a leg that name the passage it cites (its target, its content row, the capture its part was made
    against, and its part), each as the leg states it; what the machine-passage read is asked about. */
 const passageOf = (leg, ord) => {
@@ -527,6 +544,16 @@ export class Inquiry {
     const basisFm = isInquiry ? docFm : null;
     const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
     const replay = !!(pkg && pkg.replay);
+    /* R64 (T48; N1012; K3092, K3102): a divided question's document is closed. `divided` is terminal (R1), so every
+       revision of an inquiry whose HELD state is `divided` is refused, whatever it changes and whichever door sends it
+       (a sever or reinstatement through `citation`, a leg added, a conclusion, a re-grouping), before any other arm and
+       before anything is written. Decided on the held head, never on the revision's bytes. `divide`'s own write of the
+       parent moves it from a state that is not `divided` (R24), and its children are creations, so neither is asked; a
+       migration replay is not asked, as R11's other judging arms are not. */
+    const held = c && c.head;
+    if (held && c.base !== null && c.base !== undefined && !replay && normalizeType(held.type) === "inquiry"
+        && held.currentState === "divided")
+      return this.#dividedClosed(bundleId);
     /* R11 (K681; `inquiry-grammar` R1, R2, R4): the entry arm at the WRITE, judged synchronously by inquiry-grammar's
        own `checkInquiryExtension` over the document: the entry requirements, the division block, the subject's shape and
        the leg grammar, with the published and earned registries injected (C-21.2, REC-18). The version block is
@@ -661,6 +688,21 @@ export class Inquiry {
       /* END DEC-49 REGION is-candidate-taken-up */
     }
     return this.#surfacedByCarried(c);
+  }
+
+  /* R64: the refusal of a revision of a divided question, naming the children its held document records (its
+     `division.into`) as where the work goes on. */
+  #dividedClosed(bundleId) {
+    let into = [];
+    try {
+      const md = this.record.readFile(bundleId, "bundle.md");
+      const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+      into = fm && fm.division && Array.isArray(fm.division.into) ? fm.division.into.filter((x) => typeof x === "string") : [];
+    } catch { into = []; }
+    return dividedCannotRestructure(`${bundleId} was divided${into.length ? ` into ${into.join(", ")}` : ""}, and its `
+      + "children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg "
+      + "severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. "
+      + "Nothing was written.", { target: bundleId, ...(into.length ? { children: into } : {}) });
   }
 
   /* R11 (T33-45): the new leg kinds' record checks, after the grammar (`inquiry-grammar` R13–R15) judged their shape.
@@ -2611,11 +2653,11 @@ export class Inquiry {
                      + "composing to something the edition on the record contradicts. Reopen it "
                      + "(op=reopen), restructure, and publish what changed as a new edition — the route "
                      + "DEC-12 built for exactly this." };
+    /* R27, R64 (K231): one condition, one code, minted by the one helper the write's check answers through too */
     if (b.current_state === "divided")
-      return { ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", target, from: b.current_state,
-               detail: "this question was declared malformed and carried forward into children that "
-                     + "supersede it. Re-deriving its strength now would move a number its children's own "
-                     + "disclosure already points at. Restructure the CHILD that carries the half you mean." };
+      return dividedCannotRestructure("this question was declared malformed and carried forward into children that "
+        + "supersede it. Re-deriving its strength now would move a number its children's own disclosure already points "
+        + "at. Restructure the CHILD that carries the half you mean.", { target });
 
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
