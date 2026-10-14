@@ -42,3 +42,12 @@ CHANGE B3 processed: merged `origin/tranche/T48` (interface-shell R55–R64 in),
 **Red, and whose:** the whole module's tests (71 of 77) fail to boot, with `interface-shell: screen projectai draws the class cs-list, which no served stylesheet defines`. The class is in `screens-settings`' AI account panel (`panel.mjs`; then `cs-note`, `cs-form`, `cs-table`, …), which `projectai` draws as `view.parts`, so R56 refuses the page for every screen. That is screens-settings' own R20 (unmerged; it merges before me in L11's order); nothing in my files. Evidence: `interfacePage` over my screens with only that panel stood in composes ("own classes ok"), and with the panel stood in, 74 of 77 pass; the other 3 (`projectai` R5 pending/refused and two R14 tests) need the real panel. They should go green when screens-settings merges with its classes defined. Also pending from screens-settings: `aiUsageBars` (R17's dock bars; tested here through a stand-in).
 
 Checks: format 0 failures; architecture 0; coverage 22 of 22 named; ownership 0. Size (session_01QWcbBxH6PyVrtBPVA5u3fy): test runs 16, module lines 1719
+
+## J4 · COMPLETE
+
+CHANGE B4 processed: merged `origin/tranche/T48` (screens-settings' real panel in). The one red was mine: my test pressed `ailimitset` inside `.cs-form`, which screens-settings R20 no longer draws (a plain block), so the press fell to the first `ailimitset` button, the per-row "remove" act (`amount: null`). Fixed in `projectai.test.mjs` only: the press is scoped to the form holding the `aio-amount` field. No code change, nothing for screens-settings.
+
+`aiUsageBars` is now real (`panel.mjs`), so the dock's R17 bars draw through it; my R17 tests still use a stand-in of its shape (the dock test does not depend on its markup).
+
+`node --test test/m/screens-inquiry/`: 77 pass, 0 fail. Checks: format 0, architecture 0, coverage 22 of 22, ownership 0. Nothing red.
+Size (session_01QWcbBxH6PyVrtBPVA5u3fy): test runs 20, module lines 1719
