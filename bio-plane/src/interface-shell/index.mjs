@@ -105,11 +105,31 @@ export const ADDRESSES = Object.freeze({ review: "review-outside" });
    until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2);
    R55: `planask` on `plan` (`screens-action` R13), `stepsource` and `stepsourcewithdraw` on `explore` (`screens-investigate`
    R17). */
+/* R72 (K3373): until the screen registry is re-taken from the design's `registry.json` (N1122, T50), the acts that file lists
+   at fa3c8b7e8e and the generated registry (4664e8efd4) lacks, each admitted on its screen; R71: `founderhandleset` on
+   `setup`. Each entry goes when the registry lists it. */
 export const RE_POINTS = Object.freeze({
+  connect: Object.freeze(["reauth"]),
+  group: Object.freeze(["declaredstakeset", "writinghelp"]),
+  projects: Object.freeze(["themeread", "projectjoin"]),
+  theme: Object.freeze(["themeread", "themedeclare", "themeplace", "themewithdraw"]),
+  queue: Object.freeze(["projectjoin", "release", "filingapprove"]),
+  finder: Object.freeze(["themeread"]),
+  document: Object.freeze(["adoptversion", "keepversion", "connectionchoose", "explore", "themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"]),
+  project: Object.freeze(["projectvisibilityset", "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue", "writinghelp"]),
+  projectai: Object.freeze(["projectjoin"]),
+  question: Object.freeze(["inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "themeplace", "airunopen", "airunclose"]),
+  person: Object.freeze(["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]),
+  timeline: Object.freeze(["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"]),
+  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
+  plan: Object.freeze(["planask"]),
+  "start-send": Object.freeze(["writinghelp"]),
+  action: Object.freeze(["actionrisktier", "actionlaws", "actionlawspropose"]),
+  "review-outside": Object.freeze(["statementack"]),
+  home: Object.freeze(["projectjoin"]),
   ceremony: Object.freeze(["ratify"]),
   front: Object.freeze(["unlock"]),
-  plan: Object.freeze(["planask"]),
-  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
+  setup: Object.freeze(["founderhandleset"]),
 });
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
 

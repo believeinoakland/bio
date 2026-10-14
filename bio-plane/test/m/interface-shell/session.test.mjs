@@ -147,7 +147,7 @@ test("R3 driving every screen and act with a sentinel token, the token is in eac
     for (const b of p.root().querySelectorAll("button[data-act]")) { await p.click(b); for (const c of p.root().querySelectorAll('[data-shell="confirm"], [data-shell="reason-send"]')) { const ta = p.root().querySelector("textarea"); if (ta) ta.value = "because"; await p.click(c); } }
     for (const a of p.root().querySelectorAll("a[data-nav]").slice(0, 4)) await p.click(a);
     for (const r of p.requests) {
-      if (r.op === "bootstrap") { assert.equal(r.headers.Authorization, undefined); continue; }
+      if (r.op === "bootstrap") { assert.equal(r.headers.Authorization, "Bearer " + SENTINEL, "R71: the bootstrap carries the page's session"); assert.ok(!r.url.includes(SENTINEL)); continue; }
       assert.equal(r.headers.Authorization, "Bearer " + SENTINEL, r.op);
       assert.ok(!r.url.includes(SENTINEL), r.url);
       assert.ok(!JSON.stringify(r.body ?? "").includes(SENTINEL), r.op);

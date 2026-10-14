@@ -3,10 +3,12 @@
    expected refusal writes no console line. Every sentence is read through `setup-words`' `word` (R70). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, classLiterals } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, classLiterals, RE_POINTS, checkScreens } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
+import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { boot, ok, refused, bytes } from "./harness.mjs";
+import { boot, ok, refused, bytes, SESSION } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
 
@@ -150,4 +152,31 @@ test("R68 an expected refusal writes no console line: an act answered REAUTH_DUE
     assert.ok(p.root().querySelector('[data-overlay="reauth"]'), "the shell asks the password again (R34)");
   } finally { for (const m of Object.keys(was)) console[m] = was[m]; }
   assert.deepEqual(calls, [], "no console line from the page's own script");
+});
+
+test("R71 the startup bootstrap carries the page's session whenever the page holds one, and none when it holds none; setup's acts admit founderhandleset; control: an act on none of R72's lists still throws, and each R72 act is admitted on its screen", async () => {
+  const signedIn = await boot({ screens: ALL, plane: { bootstrap: ok({ test_instance: false }) } });
+  assert.equal(signedIn.byOp("bootstrap")[0].headers.Authorization, "Bearer " + SESSION.t);
+  const signedOut = await boot({ screens: ALL, session: null, path: "/app/home", plane: { bootstrap: ok({ test_instance: false }) } });
+  assert.equal(signedOut.byOp("bootstrap")[0].headers.Authorization, undefined);
+  assert.equal(RE_POINTS.setup.includes("founderhandleset"), true);
+  const s = (id, op) => ({ id, reads: () => ({}), acts: [{ op }], render: () => "" });
+  /* composes once op-declarations declares the op (its R71) */
+  if (Object.hasOwn(OPS, "founderhandleset")) assert.equal(checkScreens([s("setup", "founderhandleset")]), true);
+});
+
+test("R72 until the registry is re-taken, RE_POINTS admits the acts the design's registry lists that the generated one lacks, on their screens; control: an act on none of them throws", () => {
+  const s = (id, op) => ({ id, reads: () => ({}), acts: [{ op }], render: () => "" });
+  const admitted = { connect: ["reauth"], group: ["declaredstakeset", "writinghelp"], projects: ["themeread", "projectjoin"], theme: ["themeread", "themedeclare", "themeplace", "themewithdraw"],
+    queue: ["projectjoin", "release", "filingapprove"], finder: ["themeread"], document: ["adoptversion", "keepversion", "connectionchoose", "explore", "themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"],
+    project: ["projectvisibilityset", "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue", "writinghelp"], projectai: ["projectjoin"],
+    question: ["inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "themeplace", "airunopen", "airunclose"],
+    person: ["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"], timeline: ["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"],
+    explore: ["stepsource"], plan: ["planask"], "start-send": ["writinghelp"], action: ["actionrisktier", "actionlaws", "actionlawspropose"], "review-outside": ["statementack"], home: ["projectjoin"] };
+  for (const [id, ops] of Object.entries(admitted)) for (const op of ops) {
+    assert.ok(RE_POINTS[id].includes(op), id + " " + op + " is listed");
+    /* composes where the screen is in the registry and the owner declares the op (a screen the stale registry lacks, and an op not yet declared, wait for N1122 and their owners) */
+    if (SCREEN_REGISTRY.some((r) => r.id === id) && Object.hasOwn(OPS, op)) assert.equal(checkScreens([s(id, op)]), true, id + " " + op);
+  }
+  assert.throws(() => checkScreens([s("members", "projectjoin")]), /members.*projectjoin/);
 });

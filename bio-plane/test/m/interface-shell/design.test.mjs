@@ -236,7 +236,7 @@ test("R61 absence: a subject read refused with an absence code draws only Nothin
   assert.equal(bare.byOp("calculation").length, 0);
   /* a refusal's own words alone; a failure without words, "could not be read" with its reference and no code */
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(await words(refused("NOT_AN_ADMIN", "Only an administrator can do this.")), "Only an administrator can do this.");
+  assert.equal(await words(refused("NOT_AN_ADMIN", "Only an administrator can do this.")), word("refusal.NOT_AN_ADMIN"));
   assert.equal(await words(refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" })), word("shell.unread") + " " + word("refusal.reference", { ref: "01234567" }));
   /* control: a 5xx still draws can't be reached */
   const down = await boot({ screens: [calc], path: "/app/calculation/c9", plane: { calculation: httpError(503) } });

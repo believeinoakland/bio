@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs } from "./harness.mjs";
+import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -298,7 +298,7 @@ test("R30 a screen of the public or published frame is drawn without a session: 
     assert.equal(p.root().querySelector("#cs-main").getAttribute("data-screen"), screen, path);
     assert.equal(p.byOp("whoami").length, 0, path);
     for (const sel of [".cs-rail", ".cs-tabs", ".cs-dock", '[data-shell="menu"]', ".cs-mast"]) assert.equal(p.root().querySelector(sel), null, sel);
-    for (const r of p.requests) assert.equal(r.headers.Authorization, undefined, r.op);
+    for (const r of p.requests.filter((x) => x.op !== "bootstrap")) assert.equal(r.headers.Authorization, undefined, r.op);
   }
   const p = await boot({ screens: [...ALL, DOORBELL], path: "/app/doorbell", session: null });
   p.doc.getElementById("d-what").value = "a leaked memo";
@@ -357,7 +357,7 @@ test("R36 while bootstrap answers test_instance true every frame shows the test-
     assert.ok(band, path);
     assert.equal(p.root().contains(band), false, path);
     assert.ok(band.getAttribute("data-band") === "test" && band.textContent.includes(word("instance.test.band")), path);
-    assert.equal(p.byOp("bootstrap")[0].headers.Authorization, undefined);
+    assert.equal(p.byOp("bootstrap")[0].headers.Authorization, session === null ? undefined : "Bearer " + SESSION.t, "R71: under the page's session when it holds one, else none");
   }
   for (const b of [ok({ test_instance: false }), ok({}), silent, refused("NO")]) {
     const q = await boot({ screens: ALL, plane: { bootstrap: b } });

@@ -55,3 +55,13 @@ REPORT (T49-20 interface-shell), findings in other modules; each is also in my r
 ## J2 · COMPLETE
 
 COMPLETE: T49-20 interface-shell. R65 to R70 applied (record has the detail): the design's classes and a trimmed STYLE, the eight new reference kinds, the design's test band, explanations that close and long text that wraps (the third R68 clause dropped: D28 is Chromium's network log), the More page and refusal.reference, words by key (words.mjs deleted). N1073 lines and rule 6 done. Module tests 147 pass, 0 fail; format, architecture, coverage (68 of 68) and ownership 0 failures. Needs setup-words and interface-assets merged first. Findings in the REPORT.
+
+## CHANGE B2–B5 (J3)
+
+Merged `tranche/T49` (real `setup-words` and `interface-assets`, `WORDS_COMMIT` 8a54848a9e, DEC-259–261 words); the module's tests ran against them, not the stand-ins: 149 pass, 0 fail.
+- **R71** the startup `bootstrap` is sent under the page's session when the record holds one (`Authorization: Bearer`, via `bearer`), without one when it holds none; `RE_POINTS.setup` is `["founderhandleset"]`. Tests: signed-in and signed-out loads; the composed page admits `founderhandleset` once op-declarations declares it (its R71): until then OPS lacks the op, so that check is conditional.
+- **R72** `RE_POINTS` admits exactly BOB's list per screen (with R55's `stepsourcewithdraw` kept). Test: each entry is listed and composes where the screen is in the stale registry and OPS holds the op; control: `projectjoin` on `members` throws. The screen `theme` is not in `SCREEN_REGISTRY` (4664e8efd4) at all, so its entries cannot compose until N1122 re-takes it.
+- Words: `refusal.NOT_AN_ADMIN` now has its own words; a test that compared an answer's translation reads the word instead. Placeholders changed in DEC-259 are for words this module does not draw.
+- Checks: coverage 70 of 70; architecture 0 failures; ownership 0 failures; `format` fails only on `site`'s two empty paths (not mine).
+
+Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 40, module lines 2310

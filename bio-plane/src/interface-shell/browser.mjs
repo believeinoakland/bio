@@ -1916,8 +1916,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (GUIDE) GUIDEI = instance(GUIDE, null, "g", null);
     /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
        record opens Home */
-    /* R36: the test-instance band, read once without a session */
-    call("bootstrap", { public: true }).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    /* R36, R71: the test-instance band, read once; under the page's session when it holds one (so the load is counted in her window), else without */
+    call("bootstrap", (() => { const rec = readRecord(); return rec ? { bearer: rec.t } : { public: true }; })()).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
     await route();
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };
