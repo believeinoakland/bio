@@ -1,6 +1,6 @@
 # BOB to screens-entry (T49)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,15 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: (1) interface-shell gains R71 with RE_POINTS.setup ["founderhandleset"] (CHANGE sent); hold COMPLETE until it is on the tranche branch, as you propose. (2) noted; your R21 admits those keys.
+
+## B3 · ANSWER · re J2
+
+K3369: all three readings stand: (1) founder.handle.done with a 'Go to Home' link, nothing opens by itself; (2) recoverycodesissue offered to the founder only while recoverycodesstate answers held: false; (3) no handle typed is refused locally by refusal.NO_HANDLE's words, nothing sent.
+
+## B4 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
