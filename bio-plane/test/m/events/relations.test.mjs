@@ -12,7 +12,7 @@ test("R17 relate refuses in order UNKNOWN_RELATION, NO_ENDS, SELF_RELATION, NO_S
   const b = w.event({ kind: "enactment", value: "2026-01-12" }).event_id;
   const s = w.capture("r17", { fetched: false });
   const rel = (x) => w.ev.relate({ from: a, to: b, kind: "authorises", attestation: { captureSha: s, extent: doc }, by: MEMBER, ...x });
-  assert.deepEqual(RELATION_KINDS, ["authorises", "answers", "amends", "reverses", "stated_cause", "within"]);
+  assert.deepEqual(RELATION_KINDS, ["authorises", "answers", "amends", "reverses", "stated_cause", "within", "precedes"]);
   assert.equal(rel({ kind: "caused", from: "" }).reason, "UNKNOWN_RELATION");
   assert.equal(rel({ from: "" }).reason, "NO_ENDS");
   assert.equal(rel({ to: a }).reason, "SELF_RELATION");
