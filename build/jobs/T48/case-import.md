@@ -17,3 +17,5 @@ Size (session_0169HjyompyzcnhKjxAYLzRy): test runs 3, module lines 1765
 ## J1 · COMPLETE
 
 T48-42 done. R16's null-to-non-member clause already held in code (findingFacts, openFlagsFacts, flagHistoryFacts null; withdrawals and moves take no viewer); added the missing R16 test, respelled labelled to labeled. Module tests 110/110; format, architecture, coverage (24/24), ownership 0 failures. Full run.mjs coverage failures are in other modules, none in case-import. Details in my record.
+
+**B2 (CHANGE, K3271):** reading-set fix noted; I had already read my code whole and no helpers were started, so nothing changes in the work above.
