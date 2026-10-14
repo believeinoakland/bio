@@ -184,6 +184,11 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "(op=planreviewrecord) — LIVE: action-producers R12",
   "plan-look-again":             "a paused plan's look-again date has come; look again, resume it (op=planresume) or "
                               + "close it — LIVE: action-producers R12",
+  /* T48 (R1, R12, R54; N1047, K3189; DEC-226 (1); machinery-producers R11): a release of the group's Civicsmith is ready to
+     install. Every active administrator is asked, and it leaves every one's list when one of them acts on it, so it is an
+     OBLIGATION, never muted; its door is `updatelater` (R12) and its section is "Your group's Civicsmith" (R54). */
+  "update-ready":                "a release of your group's Civicsmith is ready to install; read what changes, then update, "
+                              + "put it aside, or skip it with a reason — LIVE: machinery-producers R11",
 };
 
 export const QUEUE_FINDING_KINDS = {
