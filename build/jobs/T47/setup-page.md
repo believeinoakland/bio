@@ -1,6 +1,6 @@
 # setup-page (T47)
 
-**Status** · session_01VvQEKrSFUtxdAB7G8fe5Mv · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01VvQEKrSFUtxdAB7G8fe5Mv · depth 2 · COMPLETE · handled B3
 
 ## Work
 
