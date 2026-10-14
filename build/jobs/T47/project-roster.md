@@ -120,3 +120,7 @@ No new Uses edge: `manifest`, `bundles.project` (R37), `members`, `project_parti
 **Found in other modules.** None new. Generated artifact staled: the plane bundle (rule 5.4). screens-daily's R10 can draw `members`, `activity` and `lastChange` once this merges.
 
 Size (session_01M7P1Jnd6PBhjfkna7wgTS6): test runs 12, module lines 1327
+
+## J8 · COMPLETE
+
+T47-93 complete (code ee79352337, record 57cb5c1ebf). R28: projectlist answers each listed project's members (every participant in any state as R1 shows a viewer at FULL, {member, handle}, owners first then handle, the founder as admin), activity (eight weekly counts of manifest entries on the project and the records its bundles.project names, each through membership's viewerPredicate, week k back (now-(k+1)7d, now-k7d], oldest first, now the server's clock, never a query) and lastChange (newest such act's created, null when none); J7's reading, B6 (K3144). Additive: R26/R27 fields unchanged. Fixed in my module (P8): R1 now lists a founder participant (handle admin). New project-activity.test.mjs (4 tests naming R28, controls: an act on a record the viewer may not see moves neither field; eight zeros with no act in eight weeks). project-roster 54/54; users' suites identical to base (1738 tests, the same 41 inherited reds); format, architecture, coverage 28/28, ownership 0 failures; run.mjs coverage 25, none mine (rule 5.1). Plane bundle staled (5.4), worker bundles PASS. No new Uses edge. Deferred: none.
