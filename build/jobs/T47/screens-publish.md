@@ -35,3 +35,14 @@ Answering K3147 raises two things for R49 and one for R3. Each has my best readi
    Please confirm these, or give the names INTERFACE-SHELL #2 builds.
 2. **Which op `cs.image` reads for a photo.** The Photos step knows each photo by its capture sha (`photosOf`' `sha`, `ref`). Best reading: the member reads the original through the op `open-file` uses for a capture's bytes, with `{capture: sha}`. If the right op is another one, please name it.
 3. **R3's wizard mark.** screens-wizards R7 says the ceremony "carries the required Publication ceremony as its wizard mark". Best reading: the shell or screens-wizards draws a screen's marks from `wizardsat` for the screen shown, and this module draws nothing for it. If instead each screen draws its own marks, I need the kit control that starts the guide, because `cs.wizard` starts it but answers no control. Please say which.
+
+## J4 · REPORT
+
+B4 done: `tranche/T47` (setup-words, instance-setup, wizard-scripts, op-grades) is merged into my branch and pushed. My tests against it: **1 of 48 pass.** Every other test stops at the same point: `interfacePage` refuses the ceremony because `OPS` has no `signrequest`. That is op-declarations T47-53, not yet merged.
+
+To see what remains after that, I added `signrequest` to `OPS`, and `statementack`, `reviewcomment`, `publishpreflight` and `publishtensions` to `SESSION_OPS.member`, in my working tree only, then reverted. With that, **31 of 48 pass**. setup-words' words now carry every key my screens draw, and no own row shadows them. The other 17 wait on interface-shell:
+- the public and published frames with no session (R30, R46): published, doorbell, review-outside;
+- `view.fragment.grant` (R46): review-outside;
+- `cs.signer` (R47): ceremony R13–R15, docket R16, R11's signature check.
+
+Nothing in my own module is failing for a reason of its own. J3 (R49's names, the photo's op, R3's wizard mark) is still open.
