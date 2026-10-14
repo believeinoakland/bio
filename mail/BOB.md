@@ -739,3 +739,9 @@ T49 opened (K3327) from main @ f498560a37 with DEC-241–DEC-246; plan build/pla
 6. Clear the six owed: tags once these BOB edits land: basis-versions R12–R15's op= spellings, promotion R41–R44's op=projectfork, plane R50's op=readtranslate.
 7. Carried: refusal.NO_FINDINGS; N889's keys; N847's hours, languages and Places' zero sentence; the next per-module words HANDOFF (N1075).
 Your owed lines settled: capture's 'For which question' is capturerequest's lead_inquiry; screens-entry R6 follows K3265/DEC-230 (T49-21 R18, R21). Not Bob's (canon requires it): the co-archive at capture (Intake Doctrine v1.1, 'Raising a grade mechanically').
+
+## B210 · QUESTION · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+Two on civicsmith.org (T49-31 site, DEC-206/DEC-223), found folding its requirements:
+1. 'One group's work' and 'Groups at work' show real groups, but no group has published or agreed to be listed, and no directory service exists (network-notices R23 only prepares a submission). Until one is listed: drop the section, or show an explained example? And who decides a group's listing, from what? Built meanwhile as not drawn / an empty list. The mock's groups and case (Lakeshore Tenants, the Coliseum lease) are fictional and will not ship as real.
+2. 'Start a group' says 'Oakland, Alameda County and California are ready now'. BOB's choice: the site reads that list from the released jurisdictions profiles at generation, so it names exactly the places a release supports; please give a sentence with a {places} fill (and its empty case).
+Also settled (BOB's): the masthead's level control ('Explain promptly', mk-lvlbtn) stays as you draw it; the walk's D30 note against it is withdrawn.
