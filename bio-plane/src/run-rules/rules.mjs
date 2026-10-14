@@ -207,7 +207,7 @@ export const RUN_BOUNDS = {
   /* R26 (T41-21; D2): THE READING BOUND, on `mints`' rule. The number of pages of held documents a run may read; a run in
      mode `extract` or `investigate` reading inside a document declares it at the open, and the plane counts it as each
      page is read (PLANE_COUNTED_BOUNDS below), never the caller. A page of a document under a "no AI" material limit
-     (`credentials` R57) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
+     (`ai-accounts` R22) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
      `mints`' tie-break reason: appending it renames no existing ending. */
   pages:       "pages of documents the group holds that the run may read inside — the run's reading bound",
   lease:      "the run stopped heartbeating and its lease lapsed: it died rather than finished",
@@ -771,7 +771,7 @@ export function originAllowed(asked) {
 }
 
 /** R26 (T41-21; D2) — MAY THE RUN READ INSIDE THIS DOCUMENT? `limits` is the material limits held for the document
- *  (`credentials` R57, each `{on, uses, reason}`, `uses` naming USE_KINDS entries and meaning all of them when absent).
+ *  (`ai-accounts` R22, each `{on, uses, reason}`, `uses` naming USE_KINDS entries and meaning all of them when absent).
  *  A limit that is on (`on` anything but exactly `false`) and covers the use `read` keeps the document from the AI: the
  *  read is refused `AI_RUN_READ_NO_AI` (C-22.23), whatever the run's `pages` bound allows — the bound is not consulted.
  *  Null otherwise: the bound is then judged by `finishedBound` as every bound is. A limit that is not an object is no
