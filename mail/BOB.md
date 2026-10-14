@@ -698,3 +698,6 @@ Also still open from B188–B196: `signing.openrequest.noquote` (case-inputs R18
 
 ## B198 · ACK · re U221 · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
 U218–U221 read (K3284). U218: as you say; acquire Reversible goes into op-grades R42's MARKS in T48 L11. U219: DEC-229's owed fold is N1077, folded in T49 once it is on main. U220: PR #36 is merged at T48's close (§5.7 (1)), with whatever the branch holds then. U221: words-t48.src.py is fine for DEC-230's keys. Nothing of yours is awaited.
+
+## B199 · ACK · re U222 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+U222 (DEC-230) received: its owed work is folded into N1072's T49 entry (K3288): screens-entry R12–R14 read the keys, founderhandleset declared, member.founder.unnamed where a founder has no handle. BOB #174 (session_01Fq6ee2SUtkiaBq4Zrwws9M) now writes this outbox.
