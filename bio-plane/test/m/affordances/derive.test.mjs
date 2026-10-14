@@ -85,6 +85,7 @@ const R51 = {
   actionscope: (f, t) => t === "action" && !!f.action,
   actionpromise: (f, t) => t === "action" && !!f.action,
   actionreplybearing: (f, t) => t === "action" && f.action?.request_for_comment === true && has(f.action?.entries?.received),
+  actionreplyquoting: (f, t) => t === "action" && f.action?.request_for_comment === true && has(f.action?.entries?.received),
   actionbearingpropose: (f, t) => t === "action" && f.action?.request_for_comment === true && has(f.action?.entries?.received),
   arosefrom: (f, t) => t === "action" && has(f.action?.entries?.received),
   escalationopen: (f, t) => t === "action" && f.action?.escalation?.openable === true,
