@@ -1,14 +1,17 @@
-/* answer-envelope R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881): every `text/html` response the plane serves
-   (the signer page and the setup page among them) leaves `withPagePolicy` with a policy under which a browser loads no
+/* answer-envelope R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881), R16 (T47; N1002, N1001): every `text/html`
+   response the plane serves (the signer page, and since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the
+   setup page no longer served) leaves `withPagePolicy` with a policy under which a browser loads no
    script, style, font, image or connection from another origin and sends nothing elsewhere, and a `script-src` of the
    response's own fresh nonce alone; every script element of the page served carries that nonce. The policy is parsed
    and judged directive by directive, never matched as text. Driven at this module's interface over the pages' real
-   bytes; the door's routes call it from control-plane (its T35 job). */
+   bytes; the door's routes call it from control-plane (its T35 job). `interfacePage` is a later module's (`interface-shell`,
+   after this one in `build/modules.json`), so it cannot be imported here: its page is driven in the shape its R1-R3 give it
+   (one stylesheet of its own origin, one inline style, one script carrying `NONCE_SLOT`, its own `</script` escaped), and
+   the policy over its real bytes at `/` is `control-plane` R82's test. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M } from "./load.mjs";
 import { SIGN_HTML } from "../../../src/signpage.mjs";
-import { setupPage } from "../../../src/setup.mjs";
 
 /* A policy's directives, `{name: [sources]}`. */
 const parse = (header) => Object.fromEntries(String(header || "").split(";").map((d) => d.trim()).filter(Boolean)
@@ -49,10 +52,28 @@ function judge(header, body, where) {
 
 const html = (text, init = {}) => new Response(text, { status: init.status ?? 200,
   headers: { "content-type": "text/html; charset=utf-8", ...(init.headers || {}) } });
-const pages = () => [["the signer page", SIGN_HTML], ["the setup page", setupPage({ ok: true })],
-                     ["the setup page, nothing recorded", setupPage(undefined)]];
+/* `interfacePage`'s document as `interface-shell` R1 composes it: the program inline under the slot, any `</script` and
+   `<!--` inside it escaped. */
+const interfaceShaped = (screen) => `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title></title>
+<link rel="stylesheet" href="/app/assets/civicsmith.css">
+<style>.cs{margin:0}</style>
+</head>
+<body class="cs">
+<div id="cs-root"></div>
+<div class="cs-tip" id="cs-tip" role="tooltip" hidden></div>
+<script nonce="${M.NONCE_SLOT}">((d, s, w) => ({ start() { w.cs = { screen: ${JSON.stringify(screen)}, t: "<\\/script>" }; } }))({}, [], window).start();</script>
+</body>
+</html>
+`;
+const pages = () => [["the signer page", SIGN_HTML], ["interfacePage at /", interfaceShaped("front")],
+                     ["interfacePage at /app/home", interfaceShaped("home")], ["interfacePage at /app/settings", interfaceShaped("settings")]];
 
-test("R6: the signer page and the setup page, each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
+test("R6, R16: the signer page and `interfacePage` (at `/` and at `/app/*`; the setup page no longer served), each served twice, carry a policy naming no other origin, a script-src of a fresh nonce alone (no 'unsafe-inline', no 'self', no host), two different nonces, and every script element of each body carrying its response's nonce; the pages are otherwise byte for byte as shipped (negative controls: the judge refuses another origin, an inline allowance, a second source and a script without the nonce)", async () => {
   for (const [where, page] of pages()) {
     const before = scriptTags(page).length;
     assert.ok(before >= 1, `${where} ships a script`);
@@ -65,7 +86,7 @@ test("R6: the signer page and the setup page, each served twice, carry a policy 
       const body = await r.text();
       const { nonce, scripts } = judge(r.headers.get("content-security-policy"), body, `${where} #${i + 1}`);
       assert.equal(scripts, before, `${where}: no script element added or lost`);
-      /* only the nonce moved: the script elements' nonce attributes, and setup-page R28's slot wherever it stands */
+      /* only the nonce moved: the script elements' nonce attributes, and the page's NONCE_SLOT wherever it stands */
       assert.equal(body.includes(M.NONCE_SLOT), false, `${where}: no slot left unfilled`);
       assert.equal(unNonced(body), unNonced(page.replaceAll(M.NONCE_SLOT, nonce)), `${where}: nothing else of the page changed`);
       seen.push(nonce);
@@ -103,7 +124,7 @@ test("R6: each nonce is 128 bits from the CSPRNG, fresh for every response (no t
   }
 });
 
-test("R6: every script element of any page is given the response's nonce, whatever it carried (a slot such as setup-page R28's NONCE_SLOT, another nonce, an unquoted or bare nonce), with its other attributes kept; a comment and a script's own text are passed over, so a string spelling `<script` inside a script is not a tag (negative control: an HTML answer a hook serves, at any status, is stamped the same)", async () => {
+test("R6: every script element of any page is given the response's nonce, whatever it carried (a slot such as interfacePage's NONCE_SLOT (interface-shell R1, was setup-page R28), another nonce, an unquoted or bare nonce), with its other attributes kept; a comment and a script's own text are passed over, so a string spelling `<script` inside a script is not a tag (negative control: an HTML answer a hook serves, at any status, is stamped the same)", async () => {
   const page = '<!doctype html><!-- <script>not a tag</script> --><SCRIPT type="module" nonce="NONCE_SLOT">'
     + 'const s = "<script>"; document.write("<script nonce=x>")</SCRIPT>'
     + "<p data-x='<script>'>t</p><script nonce=old src=\"/a.js\" defer></script><script nonce></script>"
@@ -123,7 +144,7 @@ test("R6: every script element of any page is given the response's nonce, whatev
   judge(plain.headers.get("content-security-policy"), "", "no script");
 });
 
-test("R6 (setup-page R28, K2038): every NONCE_SLOT (`__CSP_NONCE__`) in an HTML body served is the response's nonce, in a script element's nonce attribute and wherever else the page holds it, and no slot is left (negative control: a JSON answer holding the literal is not touched)", async () => {
+test("R6 (interface-shell R1, R2, was setup-page R28; K2038): every NONCE_SLOT (`__CSP_NONCE__`) in an HTML body served is the response's nonce, in a script element's nonce attribute and wherever else the page holds it, and no slot is left (negative control: a JSON answer holding the literal is not touched)", async () => {
   assert.equal(M.NONCE_SLOT, "__CSP_NONCE__");
   const page = `<!doctype html><script nonce="${M.NONCE_SLOT}">const s = document.createElement("script"); s.nonce = "${M.NONCE_SLOT}";</script>`
     + `<p>${M.NONCE_SLOT}</p><script type="module" nonce='${M.NONCE_SLOT}'>1</script>`;
