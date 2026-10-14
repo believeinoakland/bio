@@ -1637,8 +1637,8 @@ export function writingHelpLayer(catalog) {
  * alone, labelled and adopting nothing) are reported, never authored (K921's
  * pattern, SKILLS #16 J1): the layer's note names the code that holds each.
  * None holds a gate: which member is granted a language, which account serves
- * the member (`credentials.accountFor`, its R35; K1755) and whether the group
- * keeps the assistant away (`credentials` R51) are read elsewhere, never here,
+ * the member (`ai-accounts.accountFor`, its R7; K1755) and whether the group
+ * keeps the assistant away (`ai-accounts` R20) are read elsewhere, never here,
  * and the words, keys, notes and protected marks reach the run from
  * `instance-setup`'s workspace through `agent-worker`'s `POST /draft` (its
  * R68–R70), so the pack is the same for every member and every language.
@@ -1648,6 +1648,17 @@ export function writingHelpLayer(catalog) {
 export const DECISIONS_SOURCE = "docs/development/DECISIONS.md";
 /** The section of the Interaction Constructs headed "L · ACCESS AND LANGUAGE". */
 export const LANGUAGE_SECTION = "§L";
+
+/** DEC-157 (6): official local names are never translated as ordinary words. Held once: the reading translation layer
+ *  carries the same object (R49), so the two never differ. */
+export const OFFICIAL_LOCAL_NAMES = Object.freeze({ text: "local words: official names of offices, laws, programs and "
+    + "places stay as they are, with an explanation in the member's language beside them on first use and on hover; where "
+    + "the place publishes an official translation of a name, it is used with its source, held with the place's "
+    + "researched rules and arriving with releases",
+  source: DECISIONS_SOURCE, section: "DEC-157" });
+/** DEC-157 (6): only the group's own local words are ordinary words; held once, as the one above. */
+export const GROUP_LOCAL_WORDS = Object.freeze({ text: "the group's own local words are its to translate as ordinary words.",
+  source: DECISIONS_SOURCE, section: "DEC-157" });
 
 /** The clauses a run drafting interface words, or reading one back into English, works under (R39 (a)–(e)). */
 export const INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
@@ -1672,13 +1683,8 @@ export const INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
       + "so cases read the same from group to group.",
     source: DECISIONS_SOURCE, section: "DEC-127" }),
   /* (c): official local names stay as they are; a published official translation is used with its source. */
-  Object.freeze({ text: "local words: official names of offices, laws, programs and places stay as they are, with an "
-      + "explanation in the member's language beside them on first use and on hover; where the place publishes an official "
-      + "translation of a name, it is used with its source, held with the place's researched rules and arriving with "
-      + "releases",
-    source: DECISIONS_SOURCE, section: "DEC-157" }),
-  Object.freeze({ text: "the group's own local words are its to translate as ordinary words.",
-    source: DECISIONS_SOURCE, section: "DEC-157" }),
+  OFFICIAL_LOCAL_NAMES,
+  GROUP_LOCAL_WORDS,
   /* (d), (e): a protected word kept unchanged shows once one speaker keeps it; changed or typed, it waits for the
      second check, an administrator's reading of the assistant's translation back into English among them. */
   Object.freeze({ text: "protected words (the fixed terms, the weights, every warning and dialog before an outward, signed "
@@ -1853,6 +1859,86 @@ export function actionDraftingLayer(catalog) {
         + "and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that "
         + "serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every "
         + "word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE READING TRANSLATION LAYER (R49; T48-34; N670; DEC-127 (3), (4),
+ * DEC-157 (6); K3190)
+ *
+ * The doctrine a draft works under when a member asks to read a note, question,
+ * finding or notice of the group's own writing in her language. Each clause is
+ * `{text, source, section}`, a span found by R21's normaliser in the Interaction
+ * Constructs' §L ("Translation by groups") or in a DEC's ruling, as R39's are;
+ * nothing here rewords one, and the local-names clauses are R39's own objects.
+ * The task's description is this module's own words, not a clause (R48's form).
+ * None holds a gate: the translation is answered to the member who asked,
+ * labelled and held nowhere, by the plane's draft door (`plane` R50), and which
+ * account serves her (`ai-accounts` R7) and the language she reads in are read
+ * there for each call, never here, so the pack is the same for every member.
+ * ========================================================================= */
+
+/** The clauses a draft translating the group's own writing for a member works under (R49): the label and the original
+ *  one tap away, never replacing the original, a member's own words staying theirs, signed records staying in the
+ *  language they were signed in, and official local names staying as they are. */
+export const READING_TRANSLATION_CLAUSES = Object.freeze([
+  Object.freeze({ text: "The group's own writing (notes, questions, findings, notices) can be read in a member's language "
+      + "on request: the assistant drafts the translation, labelled \"Machine translation · original in English\", with "
+      + "the original one tap away; it never replaces the original.",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+  Object.freeze({ text: "the assistant drafts the translation, labelled \"Machine translation · original in English\", the "
+      + "original one tap away; a translation never replaces the original, and a member's own words stay theirs.",
+    source: DECISIONS_SOURCE, section: "DEC-127" }),
+  Object.freeze({ text: "Signed and published records stay in the language they were signed in.",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+  Object.freeze({ text: "Signed and published records stay in the language they were signed in; a translation of a "
+      + "published case is labelled unofficial and links the signed original (principle 8.5).",
+    source: DECISIONS_SOURCE, section: "DEC-127" }),
+  Object.freeze({ text: "official local names stay as they are with an explanation beside them",
+    source: INTERACTION_SOURCE, section: LANGUAGE_SECTION }),
+  OFFICIAL_LOCAL_NAMES,
+  GROUP_LOCAL_WORDS,
+]);
+
+/* THE ACT THE LAYER NAMES (R49), named once here as a SELECTOR over the published catalogue, as R28's are: the plane's
+   draft door that takes it (`plane` R50) is later in the order (P4). It is a draft a member asks for, and commits
+   nothing. */
+export const READING_TRANSLATION_ACT = Object.freeze({ id: "readtranslate", defined_by: "plane R50" });
+
+/** What the draft does (R49), this module's own words and not a clause (R21 binds the clauses only; R48's form). */
+export const READING_TRANSLATION_TASK = "the assistant translates the passage it is handed into the member's language "
+  + "whole, adding nothing and summarizing nothing, and leaves quotations, figures, dates, ids and citations as they "
+  + "stand. The translation is a labelled machine draft for the member who asked, held nowhere; the original stays as "
+  + "it was written.";
+
+/** THE `reading_translation` LAYER over the published catalogue (R49). R9's stated absence while the catalogue holds no
+ *  `READING_TRANSLATION_ACT`; with it, `authored`, its clauses, the task and the act, the catalogue's own entry. */
+export function readingTranslationLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(READING_TRANSLATION_ACT.id)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${READING_TRANSLATION_ACT.id} act, the one act through `
+      + "which a member asks to read the group's own writing in her language, so this layer carries no doctrine for "
+      + "work no draft can do.",
+  };
+  const read = actReader(byId, "reading translation", "the reading translation act");
+  return {
+    load_when: "a member asks to read a note, question, finding or notice in her language",
+    sourcing: "authored",
+    body: {
+      clauses: READING_TRANSLATION_CLAUSES,
+      task: READING_TRANSLATION_TASK,
+      /* The mode a draft is answered in, run-rules' (its R21), read and never typed, as writing help's. */
+      mode: DRAFT_MODE.mode,
+      acts: { drafts: [read(READING_TRANSLATION_ACT)] },
+      note: "this layer is INSTRUCTION, and this pack reads no account, language or passage: which account serves the "
+        + "member, the language she reads in and the passage she asked about are read for each call by the modules "
+        + "that serve it. The translation is answered to her alone, labelled as machine work and stored nowhere, and "
+        + "the original is never changed. A run ignoring every word here gets past nothing.",
     },
   };
 }
