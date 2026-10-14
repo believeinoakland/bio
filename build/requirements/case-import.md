@@ -88,7 +88,7 @@ Terms.
 
 **The registration it fills** (K31's pattern; `accepted-work` R1; N522)
 
-- **R16** At start, the module registers with `accepted-work` (its R1) the following, each read as the plane: *(not yet met: T48)*
+- **R16** At start, the module registers with `accepted-work` (its R1) the following, each read as the plane:
   - `finding` (R4's facts for one finding at one edition, with R9's `acceptanceOf`);
   - `openFlags` (R9's `openFlagsOn`, the edition's own flags and the finding's);
   - `withdrawals` (R7's records, in order, paged);
