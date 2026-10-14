@@ -237,18 +237,18 @@ test("R42: MARKS is frozen and total over the registry's rungless acts — a rea
 });
 
 test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` key for an owed act), an op the kit does not "
-   + "name Reasoned, the kit's default; `acquire` is Reversible by K3284, its source naming the ruling; the kit is read "
-   + "at the commit the marks name", () => {
-  assert.equal(MARKS_KIT_COMMIT, "4664e8efd4");
+   + "name Reasoned, the kit's default; the kit and the registry are read at the commit the marks name", () => {
+  assert.equal(MARKS_KIT_COMMIT, "fa3c8b7e8e");
   for (const op of Object.keys(MARKS)) {
-    if (op === "acquire") continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
-    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at 4664e8efd4$/ : /^kit default at 4664e8efd4/, op);
+    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at fa3c8b7e8e$/ : /^kit default at fa3c8b7e8e/, op);
   }
+  /* the kit now names acquire Reversible (K3284), so it is read from the kit like any other and no override remains */
+  assert.equal(KIT_WEIGHT.acquire, 1);
   assert.equal(MARKS.acquire, "Reversible");
-  assert.match(MARK_SOURCES.acquire, /^K3284 \(UX-DESIGN U218\)/);
-  assert.equal(KIT_WEIGHT.acquire, 2, "the kit still names acquire Reasoned, so the override is K3284's and stands");
+  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at fa3c8b7e8e$/);
+  assert.ok(Object.values(MARK_SOURCES).every((s) => !s.startsWith("K3284")), "no entry still names the retired override");
   /* the examples R42 names: login is reversible, promote reasoned; and the interface-shell R64 examples */
   assert.equal(MARKS.login, "Reversible");
   assert.equal(MARKS.promote, "Reasoned");
@@ -257,7 +257,7 @@ test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` 
   assert.equal(MARKS.queuemute, "Reversible");
   assert.equal(MARKS.claim, "Signed");
   /* an op the kit does not name is Reasoned (control) */
-  const unnamed = Object.keys(MARKS).filter((op) => op !== "acquire" && KIT_WEIGHT[op] === undefined && KIT_WEIGHT[`owed_${op}`] === undefined);
+  const unnamed = Object.keys(MARKS).filter((op) => KIT_WEIGHT[op] === undefined && KIT_WEIGHT[`owed_${op}`] === undefined);
   assert.ok(unnamed.length > 0);
   for (const op of unnamed) assert.equal(MARKS[op], "Reasoned", op);
 });
