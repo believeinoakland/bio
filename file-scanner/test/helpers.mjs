@@ -59,7 +59,7 @@ export function putCapture(bucket, bytes, { store = 'bio', split } = {}) {
   return { capture_sha, parts };
 }
 
-/** Stores `bytes` as a derived copy (a safe view or safe copy file-safety wrote under `derived/`) and answers its
+/** Stores `bytes` as a derived copy (a safe view file-safety wrote under `derived/`, rendered or rebuilt) and answers its
  *  target, `area: "derived"` (R2). */
 export function putDerived(bucket, bytes, { store = 'bio', split } = {}) {
   const capture_sha = sha(bytes);
