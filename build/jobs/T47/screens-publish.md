@@ -2,6 +2,36 @@
 
 **Status** · session_01H1xqnxGLp6rmKJGKxAwv2Z · depth 2 · WORKING · handled B8
 
+## Completion (SCREENS-PUBLISH #1)
+
+**Read whole:** `build/requirements/screens-publish.md`; the public parts of `interface-shell`, `setup-words` and `op-declarations` (my Uses); `build/layers.md`' layer-11 contract; my entry T47-63 and the plan's L11 rules; `draft-T47-interface.md`, and for the sections named `draft-T47-wayin.md`, `draft-T47-L11-fold.md` §B, C, D and `draft-T47-L6-connect.md` §3; `registry.json`, `words.json` and `mock-screens.js`/`mock-shell.js` for my eight screens; `interface-shell`'s `index.mjs`, `browser.mjs` and test harness (the kit I build on). Each op's inputs, answer and refusals were taken from its owner's handler by a helper's survey (file:line), cross-read where my screens depend on them (`case-inputs` R6, `case-disclosures` R29, `ratification` R52 and RATIFICATION #25 J2, `tasks` R19).
+
+**Entries applied (T47-63, with K3145, K3147, K3150, K3153, K3165):** a new module, `bio-plane/src/screens-publish/`, eight registry screens on `interface-shell` R21's contract:
+- `case-editor` (R1): the project's drafts; the chosen draft's ladder (`casecheck`, the copy's `gates`, published), scope and statement (`casedraft`), what it leaves out with each acknowledgement and its reason (`statementack`, `reasonField`), the people it names with their reason or "reason missing" (`attribute`), what changed (`whatchangeddrafts`, `whatchangedpropose` only while reachable, labelled machine work, `untested`); `writinghelp` under the scope and "what changed" only. The draft's text is read with `reviewcopy` (K3147 (5)).
+- `review-copy` (R2): named readers with "Stop sharing"; "Share for review" (name, role, end date in the recipient line, K3147 (4)), outward, the secret shown once as `<origin>/app/review#grant=…` with "Civicsmith sends no email", page memory only, gone on leaving; comments and "Reply".
+- `ceremony` (R3–R5, R12–R15): the ten steps, the current marked; the checks (`publishpreflight`, each refusal by its words, "Check again"); what is disclosed (`publishtensions`, the whole list on demand); the Photos step on `cs.image`/`cs.areas` (the original read by `openoriginal`, K3150), areas named person, plate or staff with a reason, "Nothing to obscure", marks withdrawn with a reason, the uncoverable format named; the Ties step's `publish` with `tieAttested: true`, Sign offered only after it answers; the Sign step with `signing.ceremony.who`, one button following "Now" or "At a set time" (`cs.choice` with `acts`), "What your key signs, exactly" listed, one sitting over the case statement (`casedocument`'s `sign`), each pinned finding and each cited piece of evidence, sent as one `caseratify`/`publishat` with `members` (ratification R52); declined, nothing sent; signed and waiting (`signedat`, `publishatmove`, `publishatcancel`) or published (`signednow`, the public page); `NO_ATTESTING_KEY` (and `NO_SIGNERS`, `SIG_UNKNOWN_KEY`) → `nokey` with the keep tick and `signerregisterown`; the phone sentence; `CASE_SIGNER_NOT_AN_OWNER` → `notowner` and `signrequest`. The wizard mark is the guide's (K3150 (3)).
+- `published` (R6): public frame, no credential; the edition dated, its other editions (from `publishedcase`'s `editions`, K3147 (3)), whose work it is and how to read it, findings with two strengths and the bar, timeline, people named, evidence; "Check the signature" (`verify` on the manifest's sha), "Read the case".
+- `imported` (R7): the imports, each finding recreated / in part / not, the four acts (the case file's bytes as one part).
+- `docket` (R8, R16): entries drafted or posted; "File a docket entry" with the reason; "Post it, signed": `docketStatement` from `docketprepare`, prepared again past its hour, signed by `cs.signer` in `bio-docket`, posted with its digest.
+- `doorbell` (R9): public frame, the group's public name, what happens to what is sent, file, note, secret phrase (a password field, cleared), `knock` with no credential, its refusals by this module's words, received said.
+- `review-outside` (R17): published frame, `view.fragment.grant` (R46), the secret only in `reviewcopy`'s and `reviewcomment`'s bodies, the end date or "until the group stops sharing", "Send your comment".
+- R10, R11: four read states everywhere (including the reads that wait on another, `parts.later`), re-reads after every act, nothing drawn prepared or signed before its answer; no secret in storage, an address or a later request.
+
+**Readings (all answered):** J1 → K3145 (B2), J2 → K3147 (B3), J3 → K3150 (B5). Size: 1,494 module lines against an estimate of 2,600–3,200; the shell's kit carries more of the drawing than the estimate assumed.
+
+**Deferred:** nothing of mine.
+
+**Found in other modules:**
+- `review` (R2's end date): `reviewgrant` takes no end date, so nothing ends a reader's link but "Stop sharing" (N1038, T48; K3147 (4)).
+- `answer-envelope`: `img-src` lacks `blob:`, so `cs.image`'s photos are blocked in a browser until it is added (INTERFACE-SHELL #2 J4; it affects this module's Photos step).
+- `screens-publish` R1 names no `reviewcopy` and R6 names `publishededitions` (not public): wording points, K3147 (3), (5).
+
+**Files (for `modules.json`):** paths `bio-plane/src/screens-publish/` (`index.mjs`, `parts.mjs`, `words.mjs`, `case-editor.mjs`, `review-copy.mjs`, `ceremony.mjs`, `published.mjs`, `imported.mjs`, `docket.mjs`, `doorbell.mjs`, `review-outside.mjs`); tests `bio-plane/test/m/screens-publish/` (`fixtures.mjs`, `common.test.mjs`, `case-editor.test.mjs`, `review.test.mjs`, `ceremony.test.mjs`, `public.test.mjs`).
+
+**Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B9, no overlay): `node --test bio-plane/test/m/screens-publish/` 48 pass, 0 fail. With my paths registered in a local, uncommitted `modules.json`: `format` 0 failures; `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 18 files, 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 12 failures are other modules' (none mine).
+
+Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 22, module lines 1,494
+
 ## J1 · QUESTION
 
 Three questions, each with my best reading; I carry on building on these readings and stop only if an answer changes what I build.
