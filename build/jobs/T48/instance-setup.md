@@ -1,6 +1,6 @@
 # instance-setup (T48)
 
-**Status** · session_015ApP9xtN4HPUemxYssrhFs · depth 2 · WORKING · handled B2
+**Status** · session_015ApP9xtN4HPUemxYssrhFs · depth 2 · COMPLETE · handled B2
 
 ## Completion record (T48-62)
 
