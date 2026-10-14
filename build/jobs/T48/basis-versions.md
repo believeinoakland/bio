@@ -29,3 +29,8 @@
 - `checks/run.mjs` over the product: format 0, architecture 0 (3286 files), channels 0. Coverage shows 37 failures, all other modules' (plane, queue, review, run-rules, screens-*, setup-words, skills, wizard-scripts, …); none is basis-versions'.
 
 Size (session_01KjNrjv7CqBp7Kcsh6vw11D): test runs 2, module lines 3782
+
+## J1 · COMPLETE
+
+T48-27 complete. R28's documented `appendVersion` call now names `version.author`. The code already wrote it on the row, and R49's accept arm already keyed on it, so there was no behaviour change: the doc comment was updated, and a stale "through ai-runs" in the module header was fixed. New test `append-author.test.mjs` (R28): a machine `version.author` accepted by a member asks onMachinePassage exactly once with its legs; control: a member's is not asked. Module tests: 155 pass, 0 fail (baseline 152). format, architecture, coverage (47/47) and ownership: 0 failures. run.mjs: architecture 0; coverage's 37 failures are all other modules'.
+REPORT items (detail in my record): (1) requirements R28 header and R30 still name `ai-runs` for op=suggest (run-productions' since K82), which is BOB's text; (2) reevaluation's adoptVersion appends with no `version.author`. Deferred: tests for R28's NO_DOCUMENT and UNSPLICEABLE_BASIS (needs fixture work).
