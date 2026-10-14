@@ -12,3 +12,7 @@
 - **Deferred / found elsewhere:** none. `case-authoring` R34 needs no change (spreads `openRequestLine`'s answer); its open-request tests, `action-replies`' and `plane`'s t45 (27 tests) pass.
 - **Tests:** `node --test bio-plane/test/m/case-inputs/`: 48 pass, 0 fail (two new, R18). Checks (`node checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; coverage names no case-inputs failure (32 failures are other modules'); ownership case-inputs 0 failures.
 - Size (session_01HMHhJQ1EUTLxeEzLN3Ze7j): test runs 6, module lines 1336
+
+## J1 · COMPLETE
+
+R18 applied (quotable; quoting line with key null and BOB's plain sentence). Key signing.openrequest.noquote is still missing from words.json: needs UX-DESIGN; R18's key clause stays unmet until then. Tests 48 pass; checks clean for case-inputs; record on job/T48/case-inputs.
