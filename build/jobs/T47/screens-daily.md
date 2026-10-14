@@ -1,8 +1,29 @@
 # screens-daily (T47)
 
-**Status** · session_0162xmsCFHXbjgNsPJ9QiCQ2 · depth 2 · WAITING ON BOB (J2) · handled B6
+**Status** · session_0162xmsCFHXbjgNsPJ9QiCQ2 · depth 2 · WAITING ON BOB (J2) · handled B9
 
-**Progress (2026-10-14 00:20 UTC).** Read whole: my requirements, my code and tests (all of `src/screens-daily/`, `test/m/screens-daily/`), interface-shell's public part and kit, the layer and plan entries, the T47 drafts' sections named at START, the registry, words, library and mockup drawings of `home`, `projects`, `queue`, `finder`. Built R8–R13 on my readings and B2/B3 (K3143): Home's projects from `projectlist` with paged counts, the front doors, the new-group state; the new `projects` screen (owner R27, members/activity/last change R28); the queue's up-to-date state and unsent-request item; Find's no-result state. Checks: format, architecture, coverage (13 of 13), ownership: 0 failures. Tests: 64 of 64 pass in a scratch worktree with local stand-ins for the unmerged providers (registry re-take, words R7, `projectlist`/`projectquestions` in `OPS`, `cs.wizard`/`cs.initials`/`cs.activity`); on this branch they wait on those merges. Next: on each CHANGE, merge `tranche/T47`, re-point the R9 and R10 tests from the stand-ins to the kit as built (`p.wizards`, `p.initials`, `p.activity` are the stand-ins' hooks), run, then COMPLETE.
+## Completion (SCREENS-DAILY #2)
+
+**Read whole:** `build/requirements/screens-daily.md`; my module's code (`src/screens-daily/`, all seven files) and tests (`test/m/screens-daily/`, all seven) as they stood at START (P20); interface-shell's public part and its kit (`browser.mjs`' `cs`), and at B8 its record's Completion and the kit's `initials`, `activity`, `spark` and `wizard` on `job/T47/interface-shell`; my entry T47-60 and the plan's L11 rules; `draft-T47-interface.md`; `draft-T47-L11-fold.md` §A, §B (screens-daily, interface-shell, screens-settings), §C; the registry's, words', library's and `mock-screens.js`' entries for `home`, `projects`, `queue`, `finder`; project-roster R26–R28, basis-versions R41 and R50, wizard-scripts R11 and R23, R33, action-producers R25, queue R12 and R21, actions' `actionMove`, screens-wizards R2 and R7. Of `draft-T47-wayin.md` and `draft-T47-L6-connect.md` §3 I read only what grep finds of Home and the daily screens (nothing binding them beyond the L11 fold's text). No flaw found in my own code beyond those fixed below.
+
+**Entries applied (T47-60, with B2–B9):**
+- R8: Home's "What the group is working on" reads `projectlist`; each project a reference opening `project`, its count paged from `projectquestions` to a null cursor (loading while read, failed drawn failed), its stage on the ladder (`null` drawn `state.undetermined`), `truncated` said. The rows are one screen part (`project-rows.mjs`) shared with Projects.
+- R9: "What happened?" from `startfrom`: each door's words and its offered scripts, each a `startfrom` button whose `send` calls `cs.wizard(script, version)` and sends nothing; no doors, no section; the member's words kept in page memory and searched as a read (`door.front.matching`); the blank start `door.front.blank` beside R1's "Start a project".
+- R10: the new `projects` screen: name, count, stage, owner (R27, by handle, else member id, `null` "No active owner"), members (`cs.initials(handles)`), eight weeks' activity (`cs.activity(weeks, word)`), last change (R28), `truncated`, "Start a project". The word the bars say is mine (K3157's kit leaves it to the screen): busy when the last four weeks hold at least 1.5 times the four before, quiet when they hold under half or none, else steady.
+- R11: the new-group state when `projectlist` answers none and the viewer administers (K3143 (2)), with "Invite your first members" and "Say who your group is"; no welcome offer of Home's own (K3143 (1): the guide's marks).
+- R12: the queue's "You are up to date" with "Go to Home"; Find's no-result state naming the words, what search covers, and "Capture it".
+- R13: `actionmove` registered; the `request-unsent` item draws "Pick up where you left off" (`/app/request/<action>`, B4, K3145), "Keep it for later" (`queuesnooze` over its case, a day asked in place) and "Drop the request, with a reason" (`actionmove` `{target, to: "abandoned"}`, the shell's reason); no other item draws `actionmove`.
+- Also (P8): `ask` and `ruleanswer` drawn by the registry's own labels (`act.ask.label.answers`, `act.ruleanswer.label.answers`), my `screen.answers.counted` row dropped; the contract test reads the registry at 6f0d88d8d5 and holds each screen's acts equal to it, no re-point left; the queue's three-day clock test ticks as an active member (B8).
+
+**Deferred:** nothing.
+
+**Found in other modules:** none outstanding (J1 (2)'s "no member count for a session" answered by K3143 (2)).
+
+**Tests:** `node --test bio-plane/test/m/screens-daily/` on this branch (tranche/T47 at B9 merged): 56 pass, 8 fail, all eight waiting on interface-shell's merge (`cs.wizard` and the `guide` option, `cs.initials`, `cs.activity`, `tickActive`). With `job/T47/interface-shell` merged into a scratch worktree (never committed): 64 of 64. No layer tests are named for layer 11.
+
+**Checks:** `format` 0 failures; `architecture` (screens-daily) 0 failures; `coverage` 13 of 13; `ownership` 0 failures; `checks/run.mjs`: format, architecture, channels 0 failures, coverage's 14 failures all other modules' ids.
+
+Size (session_0162xmsCFHXbjgNsPJ9QiCQ2): test runs 18, module lines 1,370
 
 ## J1 · QUESTION
 
