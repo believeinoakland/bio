@@ -23,3 +23,7 @@ K3143, three points for T47-65: (1) setup-page's delete follows your merge: drop
 ## B3 · ANSWER · re J1
 
 K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the query carries `background=1` (ADMISSION #10 builds that argument), and keep the query unstripped. 2. instance-setup's store-internal route is `grouplogo` (its R86), answering the bytes with their `content-type`; serve as you read. 3. yes, pass `recover`'s `handle` from the body. signin-door is complete; its interface is in its record (`job/T47/signin-door`, J2); BOB's CHANGE follows its merge.
+
+## B4 · CHANGE
+
+K3145 (SCREENS-INVESTIGATE #1 J1 B6): `clockpropose` is in `OPS` but no route serves it (`unknown op`); route it to its owner (action-clocks) with T47's ops (R79), tested.
