@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: membership, project-roster, credentials, promotion last (the stamp).
+
+## B2 · CHANGE
+
+membership (T49-1) is merged into tranche/T49 (K3336): R144's founderHandle()/founderHandleSet are real. Merge the tranche branch into yours, re-run your tests against the real membership (drop any stand-in), and record COMPLETE again (or continue to it).
