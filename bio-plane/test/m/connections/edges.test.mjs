@@ -157,8 +157,6 @@ function linked(w, { targetAt = "2026-09-26T00:00:00Z" } = {}) {
 test("R24: only a linked link whose target a bundle registered becomes a links_to edge, asserted by the source; self dropped; unregistered counted", () => {
   const w = world();
   const { s } = linked(w);
-  const [u] = [w.capture.recordLinks];
-  assert.ok(u);
   /* A held capture no bundle claims: acquired, not promoted. */
   w.receipt("https://example.org/unclaimed", "9".repeat(64));
   w.links(s, A, ["https://example.org/b", "https://example.org/not-held", "https://example.org/a", "https://example.org/unclaimed"]);

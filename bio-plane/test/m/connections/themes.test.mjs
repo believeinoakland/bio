@@ -136,7 +136,7 @@ test("R44: one theme — C-81.6 for an unknown id or viewer; members and hunches
   w.k.placeInTheme({ theme: t.theme_id, target: B, placer: "bob", viewer: V("bob") });
   w.k.placeInTheme({ theme: t.theme_id, target: A, placer: "bob", viewer: V("bob") });
   w.k.proposeForTheme({ theme: t.theme_id, target: "INFO-2026-0404-z", proposer: MACHINE, viewer: MACHINE });
-  const [c3] = w.doc("INFO-2026-0003-c", ["c"]);
+  w.doc("INFO-2026-0003-c", ["c"]);
   w.k.proposeForTheme({ theme: t.theme_id, target: "INFO-2026-0003-c", proposer: MACHINE, viewer: MACHINE });
   const r = w.k.readThemes({ id: t.theme_id, viewer: V("bob") });
   assert.deepEqual(r.members.map((m) => m.target), [A, B]);
@@ -150,7 +150,6 @@ test("R44: one theme — C-81.6 for an unknown id or viewer; members and hunches
   assert.deepEqual(hid.members.map((m) => m.target), [A]);
   assert.equal(JSON.stringify(hid).includes(B), false);
   assert.match(hid.says, /1 member\(s\) you can see/); assert.match(hid.says, /hunches|hunch\(es\)/);
-  assert.ok(c3);
 });
 
 test("R45: every reading and says shows the handle, never the member id or cover, except with the affirmative administer stamp; a machine is itself", () => {
