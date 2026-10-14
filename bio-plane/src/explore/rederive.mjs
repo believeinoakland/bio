@@ -4,8 +4,8 @@
    with the hops it rests on and whether any is declared or a hunch. The derivation's ends, and the hops its inputs
    name, are read with the leg's inquiry as `scope`, so a hunch of that inquiry the viewer may see is reported as a
    hunch; an input naming a hop that is not read is undetermined, and the answer is then never a match. It never
-   guesses and writes nothing. */
-import { derivedId, isRecordId } from '../connection-grammar/index.mjs';
+   guesses and writes nothing. Over a `chain` (R23), each derived step is re-derived so, and each other step cited. */
+import { derivedId, isRecordId, chainLabel, DECLARED_LABEL, HUNCH_LABEL } from '../connection-grammar/index.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
 import { isObj, filled, refuse, viewerRefusal, nodeRefusal } from './answer.mjs';
 
@@ -22,6 +22,12 @@ export const INPUT_NOT_READ = 'no connection by this id is read at either end of
  */
 export function rederive(ctx, arg) {
   const a = isObj(arg) ? arg : {};
+  if (a.chain !== undefined) return rederiveChain(ctx, a);
+  return rederiveOne(ctx, a);
+}
+
+/** One derived connection (R12, R19). @param {{registry: any, now: () => number, budget_ms: number}} ctx @param {any} a */
+function rederiveOne(ctx, a) {
   const r0 = viewerRefusal(a.viewer) || nodeRefusal(a.from, 'from', true) || nodeRefusal(a.to, 'to', true);
   if (r0) return r0;
   if (a.scope !== undefined && a.scope !== null && !(isObj(a.scope) && filled(a.scope.inquiry))) {
@@ -90,4 +96,69 @@ function restsOn(ctx, reader, held, ends) {
     if (hop) return { input: id, class: null, undetermined: true, why: INPUT_NOT_READ };
     return { input: id ?? input, class: null };
   });
+}
+
+/** The most hops a chain may hold (R23): a path's depth at most. */
+export const CHAIN_MAX = 10;
+const DERIVED_FIELDS = ['kind', 'from', 'to', 'as_of', 'method', 'id'];
+
+/**
+ * One hop of a chain, by its form (R23): a derived connection's parameters, a hop of another class, or neither.
+ * @param {any} registry @param {unknown} h
+ */
+function formOf(registry, h) {
+  if (!isObj(h)) return null;
+  const cls = filled(h.kind) ? registry.kindOf(h.kind)?.class ?? null : null;
+  if (filled(h.method) || filled(h.as_of)) {
+    return DERIVED_FIELDS.every((f) => filled(h[f])) && isRecordId(h.from) && isRecordId(h.to) ? 'derived' : null;
+  }
+  if (!filled(h.id) || !filled(h.kind) || !filled(h.owner) || cls === 'derived') return null;
+  return 'other';
+}
+
+/**
+ * rederive over a chain (R23): each derived hop re-derived as R12 and R19 say, with the scope passed to every owner;
+ * each other hop cited, not recomputed. A match only when every derived hop matches and none is undetermined.
+ * @param {{registry: any, now: () => number, budget_ms: number}} ctx @param {any} a
+ */
+function rederiveChain(ctx, a) {
+  const v = viewerRefusal(a.viewer);
+  if (v) return v;
+  if (a.scope !== undefined && a.scope !== null && !(isObj(a.scope) && filled(a.scope.inquiry))) {
+    return refuse('BAD_SCOPE', 'a scope is {inquiry}: the inquiry the leg naming the chain belongs to');
+  }
+  const chain = a.chain;
+  if (!Array.isArray(chain) || chain.length < 1 || chain.length > CHAIN_MAX) {
+    return refuse('BAD_CHAIN', `a chain is a path's steps in order, 1 to ${CHAIN_MAX}`);
+  }
+  const forms = chain.map((h) => formOf(ctx.registry, h));
+  const bad = forms.indexOf(null);
+  if (bad !== -1) {
+    return refuse('BAD_CHAIN', `step ${bad + 1} is neither a derived connection's parameters {kind, from, to, as_of, method, id} nor a step of another class {id, kind, owner}`);
+  }
+  for (let i = 1; i < chain.length; i++) {
+    const p = chain[i - 1], h = chain[i];
+    if (![p.from, p.to, h.from, h.to].every(filled)) continue; // a step that states no ends cannot be shown apart
+    if (![p.from, p.to].some((n) => n === h.from || n === h.to)) {
+      return refuse('CHAIN_BROKEN', `step ${i + 1} shares no record with step ${i}`);
+    }
+  }
+  const hops = chain.map((h, i) => {
+    if (forms[i] === 'derived') {
+      const { kind, from, to, as_of, method, id } = h;
+      return { rederived: true, ...rederiveOne(ctx, { kind, from, to, as_of, method, id, scope: a.scope ?? null, viewer: a.viewer }) };
+    }
+    const k = ctx.registry.kindOf(h.kind);
+    if (!k) return { id: h.id, rederived: false, class: null, undetermined: true, why: `no owner registered the kind ${String(h.kind).slice(0, 60)}` };
+    if (k.owner !== h.owner) return { id: h.id, rederived: false, class: k.class, undetermined: true, why: `the kind ${h.kind} is ${k.owner}'s, not ${String(h.owner).slice(0, 60)}'s` };
+    return { id: h.id, rederived: false, class: k.class };
+  });
+  const labelled = chain.map((h, i) => {
+    const cls = forms[i] === 'derived' ? 'derived' : ctx.registry.kindOf(h.kind)?.class;
+    return { id: h.id, label: cls === 'declared' ? DECLARED_LABEL : cls === 'hunch' ? HUNCH_LABEL : null };
+  });
+  const lead = chainLabel(labelled).label === 'lead';
+  const undetermined = hops.some((h) => h.undetermined === true);
+  const matches = !undetermined && hops.every((h) => !h.rederived || h.matches === true);
+  return { ok: true, matches, lead, hops, scope: a.scope ?? null, ...(undetermined ? { undetermined: true } : {}) };
 }

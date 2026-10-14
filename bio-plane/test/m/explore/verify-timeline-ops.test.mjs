@@ -74,12 +74,12 @@ test("R13 timelineOver composes the real events.timeline over the set with the p
   assert.equal(x.timelineOver({ set: [s.contract], from: "not a date", viewer }).reason, "BAD_DATE");
 });
 
-test("R14 exploreOps publishes route arms for explore, explorepreset, exploreverify and exploretimeline, reads only, the viewer from the query string and never the body", () => {
+test("R14 exploreOps publishes route arms for explore, explorepreset, exploreverify, exploretimeline and exploregraph (T48), reads only, the viewer from the query string and never the body", () => {
   const { registry } = world(byOwner([conn("line:part_of", A, B, { id: "h" }), conn("line:seat_on", A, C), conn("line:seat_on", B, C)]));
   const x = exploreOf(null, { registry, events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } });
   const url = new URL(`https://instance.example/?viewer=${V}`);
   const ops = exploreOps(x, url, { from: A, at: AT, viewer: "mallory" });
-  assert.deepEqual(Object.keys(ops).sort(), ["explore", "explorepreset", "exploretimeline", "exploreverify"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["explore", "exploregraph", "explorepreset", "exploretimeline", "exploreverify"]);
   const e = ops.explore();
   const direct = x.explore({ from: A, at: AT, viewer: V });
   assert.deepEqual({ ...e, elapsed_ms: 0 }, { ...direct, elapsed_ms: 0 }, "the arm is explore with the stamped viewer");

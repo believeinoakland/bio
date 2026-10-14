@@ -1,8 +1,9 @@
 // @ts-check
 /* explore: the one walk across every owner of a relationship (R2–R9, R15). Breadth-first from a node over the owners
    registered with `connection-grammar`, as of a stated date, within its bounds; each hop is the owner's answer,
-   unchanged; a path's grade is its weakest hop's; it writes nothing and records no one's exploring (R9). Every preset
-   is this walk over a kind set (R10). */
+   unchanged; a path's grade is its weakest hop's; it writes nothing and records no one's exploring (R9). A declared
+   step with an attached source is walked as that source (R24); a walk stopped at its depth says so (R22). Every preset
+   and the connection graph's read are this walk over a kind set (R10, R21). */
 import { BOUNDS, chainGrade, chainLabel, orderPaths, exhausted } from '../connection-grammar/index.mjs';
 import { OBSERVATION_STATES } from '../observation-log/index.mjs';
 import { kindsByOwner, makeReader } from './reader.mjs';
@@ -31,11 +32,11 @@ export function resolveKinds(registry, kinds) {
 
 /**
  * The arguments every walk checks, in R1's order after the viewer (which fails closed before anything is read).
- * @param {any} registry @param {any} a
+ * @param {any} registry @param {any} a @param {string} [fromName] what the start is called in refusals (R21: `centre`)
  */
-export function checkWalkArgs(registry, a) {
+export function checkWalkArgs(registry, a, fromName = 'from') {
   const arg = isObj(a) ? a : {};
-  const r = viewerRefusal(arg.viewer) || nodeRefusal(arg.from, 'from', true) || nodeRefusal(arg.to, 'to', false) || dateRefusal(arg.at);
+  const r = viewerRefusal(arg.viewer) || nodeRefusal(arg.from, fromName, true) || nodeRefusal(arg.to, 'to', false) || dateRefusal(arg.at);
   if (r) return { refusal: r };
   const k = resolveKinds(registry, arg.kinds);
   if (k.refusal) return k;
@@ -48,13 +49,50 @@ export function checkWalkArgs(registry, a) {
   return { kinds: k.kinds, depth: d.depth };
 }
 
+/** The kind an attached source of a declared step is registered as (`connections` R69; R24). */
+export const STEP_SOURCE = 'step_source';
+/** What a walk stopped at its depth says (R22): the nodes there were not asked about. */
+export const DEPTH_SENTENCE = 'The walk stopped at its depth: what lies beyond the records it reached there was not asked, so it is undetermined, not absent.';
+/** How many nodes at the depth an answer names (R22). */
+export const AT_DEPTH_MAX = 500;
+
 /**
- * The walk itself, over already-checked arguments.
- * @param {{registry: any, now: () => number, budget_ms: number}} ctx
- * @param {{from: string, to?: string, kinds: string[], at: any, depth: number, sortBy?: string, scope?: {inquiry: string} | null, viewer: any, direction?: 'out'}} w
+ * A declared step backed by a standing attached source the viewer may see is walked as that source (R24): the
+ * `step_source` hop whose `evidence[0].relation` is the declared hop's id takes its place, carrying `backs`. The
+ * sources are read at the node through the registry even when the asked kinds do not name them, so a sourced step is
+ * never shown as a lead; one the viewer may not see is never answered by its owner, so the declared hop stands (R6, R7).
+ * @param {any} registry @param {any} r a reader @param {string} node @param {any[]} items @param {string[]} kinds
  */
-export function walk(ctx, w) {
-  const { registry, budget_ms } = ctx;
+function sourcedSteps(registry, r, node, items, kinds) {
+  const sk = registry.kindOf(STEP_SOURCE);
+  if (!sk) return items;
+  const declared = new Set(items.filter((h) => registry.kindOf(h.kind)?.class === 'declared').map((h) => h.id));
+  if (!declared.size) return items;
+  const asked = kinds.includes(STEP_SOURCE);
+  const sources = asked ? items.filter((h) => h.kind === STEP_SOURCE) : (r.read(sk.owner, node, [STEP_SOURCE]) ?? []);
+  const relationOf = (h) => (Array.isArray(h.evidence) && isObj(h.evidence[0]) ? h.evidence[0].relation : undefined);
+  const backing = sources.filter((h) => declared.has(relationOf(h)));
+  if (!backing.length) return items;
+  const backed = new Set(backing.map(relationOf));
+  const marked = new Map(backing.map((h) => [h, { ...h, backs: relationOf(h) }]));
+  const out = [];
+  for (const h of items) {
+    if (backed.has(h.id) && registry.kindOf(h.kind)?.class === 'declared') continue;
+    out.push(marked.get(h) ?? h);
+  }
+  if (!asked) out.push(...marked.values());
+  return out;
+}
+
+/**
+ * The one traversal (R2, R4, R5, R7, R15, R24): breadth-first from `from` to `depth`, each node read once per owner of
+ * the asked kinds. It answers the reader's state, the level each node was reached at, every path found, how many nodes
+ * were visited, and the nodes at the last level reached and whether that level is the depth (R22).
+ * @param {{registry: any, now: () => number, budget_ms: number}} ctx
+ * @param {{from: string, to?: string, kinds: string[], at: any, depth: number, scope?: {inquiry: string} | null, viewer: any, direction?: 'out'}} w
+ */
+export function traverse(ctx, w) {
+  const { registry } = ctx;
   const scope = w.scope ? w.scope.inquiry : null;
   const byOwner = kindsByOwner(registry, w.kinds);
   const r = makeReader(ctx, { at: w.at, viewer: w.viewer, scope });
@@ -75,39 +113,63 @@ export function walk(ctx, w) {
     }
   };
 
-  let frontier = [w.from];
+  let frontier = [w.from], levels = 0, reachedTo = false;
   for (let d = 0; d < w.depth && frontier.length && !r.s.stop; d++) {
     const next = [];
     /** @type {Map<string, {parent: string, hop: any}[]>} */
     const into = new Map();
     level: for (const node of frontier) {
+      let items = [];
       for (const [owner, kinds] of byOwner) {
-        const items = r.read(owner, node, kinds);
+        const got = r.read(owner, node, kinds);
         if (r.s.stop) break level;
-        if (!items) continue;
-        for (const hop of items) {
-          if (w.direction === 'out' && hop.from !== node) continue; // a money trail follows payer to payee
-          const other = hop.from === node ? hop.to : hop.from;
-          if (other === node) continue;
-          const lv = level.get(other);
-          if (lv !== undefined && lv <= d) continue; // reached already by a shorter path
-          if (lv === undefined) {
-            if (visited >= BOUNDS.nodes) { r.s.stop = 'nodes'; break level; }
-            level.set(other, d + 1);
-            visited++;
-            next.push(other);
-            into.set(other, []);
-          }
-          /** @type {any[]} */ (into.get(other)).push({ parent: node, hop });
+        if (got) items.push(...got);
+      }
+      items = sourcedSteps(registry, r, node, items, w.kinds);
+      if (r.s.stop) break level;
+      for (const hop of items) {
+        if (w.direction === 'out' && hop.from !== node) continue; // a money trail follows payer to payee
+        const other = hop.from === node ? hop.to : hop.from;
+        if (other === node) continue;
+        const lv = level.get(other);
+        if (lv !== undefined && lv <= d) continue; // reached already by a shorter path
+        if (lv === undefined) {
+          if (visited >= BOUNDS.nodes) { r.s.stop = 'nodes'; r.s.stop_node = node; break level; }
+          level.set(other, d + 1);
+          visited++;
+          next.push(other);
+          into.set(other, []);
         }
+        /** @type {any[]} */ (into.get(other)).push({ parent: node, hop });
       }
     }
     // A level cut short by a bound still answers the paths it found: each is whole, and the answer says the set is not.
     settle(next, into);
     frontier = next;
-    if (w.to !== undefined && w.to !== null && level.has(w.to)) break; // every shortest path into `to` is found
+    levels = d + 1;
+    if (w.to !== undefined && w.to !== null && level.has(w.to)) { reachedTo = true; break; } // every shortest path into `to` is found
   }
+  // The nodes at the depth were reached and never asked about (R22), in the order of their best paths (R3).
+  const atDepth = levels === w.depth && frontier.length
+    ? /** @type {any[]} */ (orderPaths(frontier.map((n) => ({ n, hops: best.get(n) })))).map((x) => x.n)
+    : [];
+  return { r, level, best, found, visited, atDepth, reachedTo };
+}
 
+/** What every walk answers about its depth (R22). @param {string[]} atDepth */
+export function depthStop(atDepth) {
+  if (!atDepth.length) return { depth_stopped: false };
+  return { depth_stopped: true, at_depth: atDepth.slice(0, AT_DEPTH_MAX), ...(atDepth.length > AT_DEPTH_MAX ? { at_depth_truncated: true } : {}), depth_sentence: DEPTH_SENTENCE };
+}
+
+/**
+ * The walk itself, over already-checked arguments.
+ * @param {{registry: any, now: () => number, budget_ms: number}} ctx
+ * @param {{from: string, to?: string, kinds: string[], at: any, depth: number, sortBy?: string, scope?: {inquiry: string} | null, viewer: any, direction?: 'out'}} w
+ */
+export function walk(ctx, w) {
+  const { registry, budget_ms } = ctx;
+  const { r, found, visited, atDepth } = traverse(ctx, w);
   const elapsed_ms = r.elapsed();
   const { hubs, fanout, refusals, unread, stop } = r.s;
   let paths = found.map((hops) => describePath(registry, hops, w.sortBy));
@@ -122,7 +184,7 @@ export function walk(ctx, w) {
     ok: true, from: w.from, ...(w.to ? { to: w.to } : {}), at: w.at, kinds: w.kinds, scope: w.scope ?? null,
     order: w.sortBy ? { by: w.sortBy, quantity: QUANTITY_OF_PATH, then: PATH_ORDER } : { by: PATH_ORDER },
     paths, hubs, fanout_truncated: fanout, owner_refusals: refusals,
-    visited, depth: w.depth, budget_ms, elapsed_ms, owner_calls: r.s.calls, complete, note: NOT_ASSERTED,
+    visited, depth: w.depth, ...depthStop(atDepth), budget_ms, elapsed_ms, owner_calls: r.s.calls, complete, note: NOT_ASSERTED,
     ...(stop ? exhausted({ visited, reason: stop }) : {}),
   };
   if (!paths.length) answer.absence = absence(w, complete, unread);
