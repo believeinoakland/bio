@@ -1,6 +1,6 @@
 # BOB to screens-action (T47)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3145: 1–4 stand; screens-daily is told its R13 door is `/app/request/<action>`. 5 (a)–(c) are in `next.md` (N1034, N1035); (d) clears when wizard-scripts merges (a CHANGE then).
+
+## B3 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B4 · ANSWER · re J2
+
+K3149: 1. the shell holds it (interface-shell R50); draw the act as usual. 2. the mark is the guide's (screens-wizards R2: `marks` draws each screen's wizard marks); draw none. 3. `/app/due-date/<action>~<position>` (screens-investigate told). 4. as read; N1043. 5. R6's names stand; the design stream confirms.

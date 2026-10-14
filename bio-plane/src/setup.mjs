@@ -1,14 +1,13 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R81).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R85).
  *
- * THE PAGE AT THE ROOT is `setup-page`'s (K1851): the template, its group line and its script. This module composes it,
- * placing R47's block on who controls the group's Civicsmith in the template's one slot (setup-page R14), and re-exports
- * it as `setupPage`, `groupLine` and `SETUP_HTML`, so control-plane's `/` route and every other importer read it here as
- * before (K624 (1)). REC-163: the page is not served byte-for-byte as built: its one line saying whose record this is
- * carries the record's own producing group, read when the page is served (`setupPage` below).
+ * THE PAGE AT THE ROOT is going (R83; N1002): `/` answers the interface, so this module composes no page of its own;
+ * `SETUP_HTML` and `groupLine` are gone, and `setupPage` stays exported, retiring, only until `control-plane` drops its
+ * import (R86; K3144, T47-65), then goes with the use of `setup-page`. What stays is R47's one holder of the words on
+ * who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`, re-exported here), which
+ * `screens-entry` and the installer read.
  */
 
-/* R47 (F10; K2038): the block's guide name links to setup-page's guide to replacing the one-time password (its R14,
-   R27), at the address setup-page exports as `ROTATION_GUIDE_HREF`. */
+/* RETIRING (R86; K3144): setup-page's template, read only for the retiring `setupPage` below until T47-65. */
 import { PAGE_HTML, HOSTING_SLOT, GROUP_LINE_UNREAD, groupLine, ROTATION_GUIDE_HREF } from "./setup-page/index.mjs";
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
@@ -33,7 +32,7 @@ import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
-import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-fleet.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* R67 (K2200, rule 5): a draft translation's label is record-grammar's (its R50); a machine is told apart by its one
    predicate, never by a reading of this module's own. */
 import { proposalLabel, isMachineIdentity } from "./record-grammar/index.mjs";
@@ -47,14 +46,18 @@ import { publicReadOf, DECLARED_STAKE_SETTING } from "./public-read/index.mjs";
 /* R80 (T46; ai-runs R78): whether this is a test instance is ai-runs' one computation, asked of its own method. */
 import { AiRuns } from "./ai-runs/index.mjs";
 
-/* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
-export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
-/** The page as served: the composed page, its unread group line replaced by what one read of the record said
- *  (setup-page R1's `groupLine`, re-exported). */
+/* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
+   the screens that show them (`screens-entry`). */
+export { HOSTING_CONTROL, hostingControlBlock };
+
+/* RETIRING (R86; K3144): `control-plane` still serves the setup page at `/` until its T47-65 answers the interface there
+   (its R82), so `setupPage` stays exported, composed as before, only until then; it is removed (R83) on BOB's CHANGE
+   after that merge. Nothing else here serves or composes a page. */
+const RETIRING_SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
+/** RETIRING (R86): the setup page as `control-plane`'s `/` route serves it until T47-65; removed on BOB's CHANGE. */
 export function setupPage(read) {
-  return SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
+  return RETIRING_SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
 }
-export { groupLine };
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -79,7 +82,7 @@ export { GROUP_SLUG_RE, FLEET_BINDINGS };
  *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
  *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
  * Read whole only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to every member;
- * since T46 (R81) that answer asks the two members whose parts the setup page shows before sign-in (agent-worker for the
+ * since T46 (R81, R82) that answer asks the two members whose parts the screens show before sign-in (agent-worker for the
  * sign-in's runner, file-scanner for scanning and the safe view), each within the same bound. */
 const MEMBER_VERSION_WAIT_MS = 4000;
 /* One member's own `/version`, asked through its binding within the bound: `{report, body}`, `report` its state as
@@ -136,10 +139,13 @@ export async function memberVersions(env) {
   return out;
 }
 
-/* R81 (T46; N897 (4); trial §3.2): which optional parts this Civicsmith has installed, each `present` `true`, `false`
-   or `null` (could not be read), from the member that carries it: `signin` from R17's `agent-runner` answer, `scanner`
-   and `safe_view` from `file-scanner`'s (`SERVING` true, `UNBOUND` false, otherwise null). No reason beyond the part. */
-export const PARTS = Object.freeze([["signin", RUNNER_MEMBER], ["scanner", "file-scanner"], ["safe_view", "file-scanner"]]);
+/* R81, R82 (T47; N989, N982; K3027): which optional parts this Civicsmith has installed, answered as three flat scalar
+   keys, `part_signin`, `part_scanner` and `part_safe_view`, each `true`, `false` or `null` (could not be read), and no
+   nested value, so membership R132's pre-auth invariants hold whole. `part_signin` follows R17's `agent-runner`
+   answer; `part_scanner` and `part_safe_view` are one part today (`file-scanner` both scans and renders the safe view,
+   and its `/version` names no separate renderer), so both follow `FILE_SCANNER`'s answer and are always alike. Each:
+   `SERVING` true, `UNBOUND` false, otherwise null. No reason beyond the part. */
+export const PARTS = Object.freeze([["part_signin", RUNNER_MEMBER], ["part_scanner", "file-scanner"], ["part_safe_view", "file-scanner"]]);
 const presentOf = (report) => (report && report.state === "SERVING" ? true : report && report.state === "UNBOUND" ? false : null);
 export async function partsReport(env, versions = null) {
   const v = versions || {};
@@ -153,7 +159,7 @@ export async function partsReport(env, versions = null) {
       v[m] = pair ? (await askMemberVersion(env, pair[0], pair[1])).report : null;
     }));
   }
-  return PARTS.map(([part, m]) => ({ part, present: presentOf(v[m]) }));
+  return Object.fromEntries(PARTS.map(([key, m]) => [key, presentOf(v[m])]));
 }
 
 /* R80 (T46; N897 (2); ai-runs R78): whether this is a test instance, asked of `ai-runs`' own `testInstance` over this
@@ -399,6 +405,14 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'Explanations open either promptly or on a longer pause, and what was sent is neither. Nothing is ever '
       + 'hidden at either. Nothing was changed.',
   },
+  /* R84 (T47; DEC-205 (2), DEC-201 (8)): the group's logo, a PNG or a JPEG of at most 200 KB; the next free C-64 number,
+     awaiting T48's stamp. */
+  LOGO_REFUSED: {
+    check: 'C-64.30',
+    where: 'src/setup.mjs groupLogoSet > is-group-logo',
+    translation: 'A logo is a PNG or JPEG picture of at most 200 KB, or nothing to remove it. What was sent is not one. '
+      + 'Nothing was changed.',
+  },
   /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
      T46's stamp. */
   STAKE_MALFORMED: {
@@ -452,6 +466,16 @@ export const DECLARED_STAKE_MAX = 1000;
 export const INFO_LEVELS = Object.freeze(["prompt", "pause"]);
 export const INFO_LEVEL_DEFAULT = "prompt";
 export { DECLARED_STAKE_SETTING };
+/* R84 (DEC-205 (2)): the logo's bound in bytes (200 KB read as 200,000, the stricter reading), and the two pictures it may
+   be, each known by its magic bytes alone, never by what the sender says it is. */
+export const GROUP_LOGO_MAX_BYTES = 200_000;
+export const GROUP_LOGO_TYPES = Object.freeze([
+  Object.freeze({ type: "image/png", magic: Object.freeze([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) }),
+  Object.freeze({ type: "image/jpeg", magic: Object.freeze([0xff, 0xd8, 0xff]) }),
+]);
+/* R85 (DEC-205 (1)): the languages a group's members use, record-core's setting of that name, 1 to 20 tags. */
+export const GROUP_LANGUAGES_SETTING = "group_languages";
+export const GROUP_LANGUAGES_MAX = 20;
 
 /* ============================================================================================================
  * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
@@ -467,7 +491,9 @@ export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_ide
   "translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations", "translation_undos",
   "translation_marks", "translation_readings",
   /* R77, R11 (T45): who set the declared stake and when, each act appended beside record-core's setting. */
-  "declared_stake_history"]);
+  "declared_stake_history",
+  /* R84 (T47): the group's logo, each set or clear appended. */
+  "group_logos"]);
 /* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
    one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
    R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
@@ -500,6 +526,8 @@ const TABLE_CLASSES = Object.freeze({
   translation_readings: { export: "never", version_chain: true },
   /* R77: the group's settings' class, exempt from purge; the stake is public, who set it is the administrators'. */
   declared_stake_history: { export: "admin-only", version_chain: true },
+  /* R84: the group's settings' class, exempt from purge; the logo is public once set, who set it the administrators'. */
+  group_logos: { export: "admin-only", version_chain: true },
 });
 /* R50–R52: the seeding ledgers name entities and lines of the registry (`entities`, `lines`), which a whole-store purge
    clears, so a whole-store purge clears them with it and a later seeding starts afresh; a bundle's purge touches none. */
@@ -783,6 +811,17 @@ CREATE TABLE IF NOT EXISTS declared_stake_history (
   set_by  TEXT NOT NULL,
   set_at  TEXT NOT NULL
 );
+-- R84 (T47; DEC-205 (2)): the group's logo, each set or clear by an administrator appended; the latest row is the logo,
+-- and a row with data NULL clears it. 'data' is the picture's bytes in base64, 'type' read from its magic bytes.
+CREATE TABLE IF NOT EXISTS group_logos (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  data    TEXT,
+  type    TEXT,
+  bytes   INTEGER,
+  sha256  TEXT,
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
 CREATE TABLE IF NOT EXISTS assistant_disclosures (
@@ -816,10 +855,60 @@ const samePlaceholders = (a, b) => JSON.stringify(placeholdersOf(a)) === JSON.st
 const oneLine = (t) => !/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(t);
 /* A language tag in its canonical form, so `pt-br` and `pt-BR` are one language; the tag as given when it has none. */
 const canonicalTag = (t) => { try { return Intl.getCanonicalLocales(t)[0] || t; } catch { return t; } };
-async function sha256Hex(text) {
-  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text)));
+async function sha256Hex(text) { return sha256OfBytes(new TextEncoder().encode(String(text))); }
+async function sha256OfBytes(bytes) {
+  const d = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+/* R84, R86: a logo as sent, read: `{raw, type, bytes}` or `{why}`. `raw` is the file's bytes (a Uint8Array, an
+   ArrayBuffer, or the request's own stream, read only up to the bound), or, where the bytes reach the store inside JSON,
+   their base64; `rawType` is the type the sender declared, which must agree with the magic bytes when given. The type is
+   the magic bytes' alone. */
+const BASE64_RE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+async function bytesOfLogo(raw) {
+  if (raw instanceof Uint8Array) return raw;
+  if (raw instanceof ArrayBuffer) return new Uint8Array(raw);
+  if (ArrayBuffer.isView(raw)) return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+  if (raw && typeof raw.getReader === "function") {
+    const reader = raw.getReader();
+    const parts = [];
+    let held = 0;
+    try {
+      while (held <= GROUP_LOGO_MAX_BYTES) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
+        parts.push(chunk);
+        held += chunk.length;
+      }
+    } finally { try { await reader.cancel(); } catch { /* already closed */ } }
+    const all = new Uint8Array(held);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.length; }
+    return all;
+  }
+  if (typeof raw === "string") {
+    const b64 = raw.replace(/\s+/g, "");
+    if (b64.length > Math.ceil((GROUP_LOGO_MAX_BYTES + 1) / 3) * 4 + 4) return new Uint8Array(GROUP_LOGO_MAX_BYTES + 1);
+    if (!BASE64_RE.test(b64)) return null;
+    try { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { return null; }
+  }
+  return null;
+}
+async function readLogo(raw, rawType) {
+  if (raw === undefined) return { why: "the logo is sent as the file's bytes, and none was sent" };
+  const bytes = await bytesOfLogo(raw);
+  if (!bytes) return { why: "the logo sent is not a file's bytes" };
+  if (!bytes.length) return { why: "the logo sent is empty" };
+  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: `the logo is over ${GROUP_LOGO_MAX_BYTES} bytes` };
+  const kind = GROUP_LOGO_TYPES.find((t) => bytes.length > t.magic.length && t.magic.every((b, i) => bytes[i] === b));
+  if (!kind) return { why: "the logo is neither a PNG nor a JPEG picture" };
+  const said = typeof rawType === "string" ? rawType.split(";")[0].trim().toLowerCase() : rawType == null ? "" : null;
+  if (said === null || (said && said !== kind.type))
+    return { why: `the logo is a ${kind.type === "image/png" ? "PNG" : "JPEG"} picture sent as ${String(rawType).slice(0, 40)}` };
+  return { raw: bytes, type: kind.type, bytes: bytes.length };
+}
+const base64Of = (bytes) => { let t = ""; for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(t); };
 
 /* R54 (D311): the assistant's disclosure. Its words are the design stream's (NOTICE to UX-DESIGN) and are shown by the
    surface; this module holds the version a shown disclosure is recorded against, and the meaning the words carry. A new
@@ -1285,6 +1374,8 @@ export class InstanceSetup {
              display_name: slug && name ? name.value : null,
              domain: verified ? dom.value : null,
              domain_verified_at: verified ? last.checked_at : null,
+             /* R84: whether the group has a logo set; its bytes are served at /app/assets/group-logo. */
+             logo: this.#logoCurrent() !== null,
              ...(slug ? {} : { detail: NO_GROUP_RECORDED }) };
   }
 
@@ -1357,6 +1448,113 @@ export class InstanceSetup {
                  + "Nothing already sent or published changes."
                : "carried beside your group's public identity on everything it sends or publishes from now on. Nothing "
                  + "already signed, sent or published changes." };
+  }
+
+  /* =====================================================================
+   * THE GROUP'S LOGO (R84; T47; DEC-205 (2), DEC-201 (8)). Shown beside the group's name on its page, its masthead and
+   * its published cases; optional, and with none the name stands alone. An administrator sets it (a PNG or a JPEG, known
+   * by its magic bytes, at most 200 KB) or clears it with `image: null`; each act is appended with who and when, and
+   * the latest is the logo. `groupidentity` answers `logo: true|false` (R10, R11), and control-plane serves the bytes in
+   * public at `/app/assets/group-logo` (its R84) through `groupLogo()`.
+   * ===================================================================== */
+
+  #logoCurrent() {
+    const r = this.#one(`SELECT data, type, bytes, sha256, set_by, set_at FROM group_logos ORDER BY seq DESC LIMIT 1`);
+    return r && typeof r.data === "string" && r.data ? r : null;
+  }
+
+  /** R84, R86, op=grouplogoset: an administrator sets the group's logo, `raw` the file's bytes as the request body and
+   *  `rawType` its declared type, or clears it with `raw: null`. `by` is the control plane's stamp (R29). Refusals, each
+   *  writing nothing: `NOT_AN_ADMIN` (a machine included); `LOGO_REFUSED` for anything that is not a PNG or a JPEG of at
+   *  most `GROUP_LOGO_MAX_BYTES`, or whose declared type is not what its magic bytes say. */
+  async groupLogoSet({ raw = undefined, rawType = null, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
+      return notAnAdmin(by ?? null, "setting your group's logo");
+    let logo = null;
+    if (raw !== null) {
+      const read = await readLogo(raw, rawType);
+      /* DEC-49 REGION is-group-logo */
+      if (read.why) return refusal("LOGO_REFUSED", `${read.why}. Nothing was changed.`);
+      /* END DEC-49 REGION is-group-logo */
+      logo = { ...read, data: base64Of(read.raw), sha256: await sha256OfBytes(read.raw) };
+    }
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO group_logos (data, type, bytes, sha256, set_by, set_at) VALUES (?, ?, ?, ?, ?, ?)`,
+                   logo ? logo.data : null, logo ? logo.type : null, logo ? logo.bytes : null, logo ? logo.sha256 : null, who, at);
+    return { ok: true, logo: !!logo, ...(logo ? { type: logo.type, bytes: logo.bytes, sha256: logo.sha256 } : {}),
+             set_by: who, set_at: at,
+             note: logo ? "shown beside your group's name on its page, its masthead and its published cases from now on."
+                        : "no logo from now on: your group's name stands alone." };
+  }
+
+  /** R84, in-process: `{ok: true, logo: {type, bytes, sha256, data, set_at}}` with the picture in base64, or `logo: null`
+   *  when none is set. Writes nothing. */
+  groupLogo() {
+    const r = this.#logoCurrent();
+    return { ok: true, logo: r ? { type: r.type, bytes: r.bytes, sha256: r.sha256, data: r.data, set_at: r.set_at } : null };
+  }
+
+  /** R86, the store-internal route `grouplogo` (no spec): the logo's bytes with their `content-type`, `no-store` and
+   *  `nosniff`, or 404 with no body when none is set; `control-plane` R84 serves it at `/app/assets/group-logo`. */
+  groupLogoResponse() {
+    const r = this.#logoCurrent();
+    if (!r) return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
+    return new Response(Uint8Array.from(atob(r.data), (c) => c.charCodeAt(0)), { status: 200,
+      headers: { "content-type": r.type, "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+  }
+
+  /* =====================================================================
+   * THE LANGUAGES THE GROUP'S MEMBERS USE (R85; T47; DEC-205 (1)). Civicsmith's own words are shown in each, and members
+   * choose among them when they join. The places whose rules apply (the profiles, R12–R14) are not changed. The list is
+   * record-core's setting `group_languages`, set by an administrator; while none is set, the active profiles' languages
+   * (each profile's `locale`, jurisdictions R37) are answered.
+   * ===================================================================== */
+
+  /** R85, op=grouplanguagesset: an administrator sets the languages, 1 to 20 tags `jurisdictions.isLocale` accepts, kept
+   *  in their canonical form, in order, each once. `by` is the control plane's stamp (R29). Refusals, each writing
+   *  nothing: `NOT_AN_ADMIN` (a machine included); `LANGUAGE_MALFORMED`. Recorded through `setSetting` with `by`. */
+  groupLanguagesSet({ languages = undefined, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
+      return notAnAdmin(by ?? null, "setting the languages your group's members use");
+    const tags = Array.isArray(languages) ? languages.map((t) => (typeof t === "string" ? t.trim() : t)) : null;
+    const bad = tags ? tags.find((t) => typeof t !== "string" || !isLocale(t)) : undefined;
+    if (!tags || tags.length < 1 || tags.length > GROUP_LANGUAGES_MAX || bad !== undefined)
+      return refusal("LANGUAGE_MALFORMED", `${!tags ? "the languages are sent as a list of" : tags.length < 1
+        ? "an empty list names no language, and the languages are" : tags.length > GROUP_LANGUAGES_MAX
+        ? `a list of ${tags.length} names too many, and the languages are` : `'${String(bad).slice(0, 40)}' is not one of`} `
+        + `1 to ${GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.`);
+    const list = [...new Set(tags.map(canonicalTag))];
+    const set = this.#record().setSetting(GROUP_LANGUAGES_SETTING, list, who);
+    if (!set || set.ok !== true) return set;
+    return { ...this.groupLanguages(), set_by: who,
+             note: "Civicsmith's own words are shown in each of these languages, and members choose among them when they "
+               + "join. The places whose rules apply are not changed." };
+  }
+
+  /** R85, R86, op=grouplanguages (public): `{ok: true, languages: [tags]}`, the list an administrator set, or, while none
+   *  is set, the active profiles' languages in their order, each once (`[]` when no profile states one). Writes nothing;
+   *  never throws. */
+  groupLanguages() {
+    try {
+      const held = this.#record().getSetting(GROUP_LANGUAGES_SETTING);
+      if (Array.isArray(held) && held.length && held.every((t) => typeof t === "string"))
+        return { ok: true, languages: [...held] };
+      const out = [];
+      for (const { p } of this.#activeProfiles()) {
+        const l = p && p.locale;
+        const v = l && typeof l === "object" ? l.value : l;
+        if (typeof v === "string" && isLocale(v.trim())) {
+          const tag = canonicalTag(v.trim());
+          if (!out.includes(tag)) out.push(tag);
+        }
+      }
+      return { ok: true, languages: out };
+    } catch (e) {
+      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
+               detail: `the languages could not be read (${String(e && e.message || e).slice(0, 160)}).` };
+    }
   }
 
   /* =====================================================================
@@ -1959,8 +2157,10 @@ export class InstanceSetup {
   /** R54: whether the disclosure at the current version (or `version`) was recorded as shown to `member`. A member with
    *  none recorded is `shown: false`, never assumed. (T46; N897 (3)) It answers alike before a reference is set and
    *  before a sign-in to her own Claude subscription starts (credentials R43): it reads only what `disclosureShown`
-   *  recorded, never whether an account is connected, so `control-plane` R65 refuses a sign-in's `start`
-   *  `DISCLOSURE_DUE` while it answers `shown: false`. Writes nothing and never throws. */
+   *  recorded, never whether an account is connected. (T47; N981; K3030) The disclosure-first order is held by
+   *  `credentials` (its R64), which asks this read through the registration the composition root makes
+   *  (`disclosureReadOf`), so its R22 and `control-plane` R65 refuse `DISCLOSURE_DUE` while it answers `shown: false`.
+   *  Writes nothing and never throws. */
   disclosureOf({ member = null, version = ASSISTANT_DISCLOSURE.version } = {}) {
     const m = typeof member === "string" ? member.trim() : "";
     const v = typeof version === "string" && version.trim() ? version.trim() : ASSISTANT_DISCLOSURE.version;
@@ -2990,6 +3190,16 @@ export function instanceSetupOf(ctx, env = null, deps = {}) {
   return m;
 }
 
+/** R54 (T47; N981; K3030; `credentials` R64): the one read `credentials` asks before a member's own account is
+ *  connected, `disclosureOf({member})` of this module's instance on the storage. This module registers nothing with
+ *  `credentials` itself: the composition root registers it, `credentials.registerDisclosureRead(DISCLOSURE_READER,
+ *  disclosureReadOf(m))` (`plane`'s T47-66), and `credentials` R22 and `control-plane` R65 then refuse `DISCLOSURE_DUE`
+ *  through `credentials.disclosureDue` while it answers `shown: false`. */
+export const DISCLOSURE_READER = "instance-setup";
+export function disclosureReadOf(m) {
+  return ({ member = null } = {}) => m.disclosureOf({ member });
+}
+
 /** This module's Durable Object routes (the `membershipOps` pattern). The stamps (`author`, `by`, `origin`) are the
  *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29).
  *  The map joins `control-plane`'s one route map (its R35; N348), so every route passes its frame: R26's body read,
@@ -3024,6 +3234,16 @@ export function instanceSetupOps(m, url, body) {
     infolevelset: () => m.infoLevelSet({ ...(body || {}), by: q("by") }),
     infolevel: () => m.infoLevel({ viewer: q("viewer") }),
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
+    /* R84, R85 (T47; DEC-205): the group's logo and languages; `grouplogo` is the read control-plane serves. */
+    /* R86: the logo's bytes are the request's body (a stream or bytes as the door hands them on, with `rawType` its
+       content-type stamped in the query), or a JSON `{raw, rawType}` (`raw` base64, or null to clear). */
+    grouplogoset: () => (body && typeof body === "object" && !ArrayBuffer.isView(body) && !(body instanceof ArrayBuffer)
+      && typeof body.getReader !== "function"
+      ? m.groupLogoSet({ raw: body.raw, rawType: body.rawType ?? null, by: q("by") })
+      : m.groupLogoSet({ raw: body ?? undefined, rawType: q("rawType"), by: q("by") })),
+    grouplogo: () => m.groupLogoResponse(),
+    grouplanguagesset: () => m.groupLanguagesSet({ ...(body || {}), by: q("by") }),
+    grouplanguages: () => m.groupLanguages(),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
     declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
     /* R67–R74 (T37; N669): the translation ops, and the door's store-internal record route (no spec). */
@@ -3057,7 +3277,7 @@ function notAnswered(out, op, { json, storeSilent, storeRefusal }) {
 }
 
 /* REC-163 / IC-174 / D-596 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE SURFACES THAT SHOW IT TO A
-   STRANGER: op=instancegroup's and op=groupidentity's public arms and the setup page served at `/` (R3, R10, R20).
+   STRANGER: op=instancegroup's and op=groupidentity's public arms (R3, R10).
    Exactly two projections may be named; any other value is answered as a silence rather than forwarded, so a typo
    cannot reach a Durable Object path. An instance with no store binding cannot be asked, and that is a silence too. */
 export const PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "groupidentitypublic"]);
@@ -3092,6 +3312,20 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
 }
 
+/** R84, R86 (control-plane R84): the group's logo as served in public at `/app/assets/group-logo`, the store-internal
+ *  route `grouplogo`'s bytes and headers relayed as given; 404 with no body when none is set; any other answer, or none,
+ *  is a silence (R43). */
+export async function groupLogoAsset(env, storeName, io) {
+  let res = null;
+  try { res = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo"); } catch { res = null; }
+  const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim() : "";
+  if (res && res.status === 200 && GROUP_LOGO_TYPES.some((t) => t.type === type))
+    return new Response(res.body, { status: 200, headers: { "content-type": type, "cache-control": "no-store",
+                                                            "x-content-type-options": "nosniff" } });
+  if (res && res.status === 404) return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
+  return io.storeSilent("grouplogo");
+}
+
 /** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
  *  `bootstrapState` and the store's own `storeVersion` from the Durable Object's route, and with `members` each
  *  member's own build (D-116: THREE BUILDS, EACH READ FROM WHERE IT RUNS — `storeVersion` is never written here). */
@@ -3099,9 +3333,13 @@ export async function bootstrapReport(env, fp, { members = false, stub, json, st
   const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
   if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
   const versions = members ? await memberVersions(env) : null;
+  /* R80, R82: the deployment's facts are this isolate's alone, so a store answer naming any of them sets nothing, and
+     the retired nested `parts` (R81) is never relayed. */
+  const { parts: _retired, test_instance: _t, part_signin: _s, part_scanner: _c, part_safe_view: _v, ...store } =
+    out.result && typeof out.result === "object" ? out.result : {};
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
-                bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
-                test_instance: testInstanceOf(env), parts: await partsReport(env, versions ? { ...versions } : null),
+                bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...store,
+                test_instance: testInstanceOf(env), ...(await partsReport(env, versions ? { ...versions } : null)),
                 ...(members ? { memberVersions: versions } : {}) }, 200);
 }
 
