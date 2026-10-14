@@ -76,6 +76,10 @@ export const T47_NON_ACTS = {
     + "given a To do; moves no bundle",
   signintrace: R("the sign-in door's last trace lines on a test instance, to an administrator, never a token, secret "
     + "or code"),
+  /* K3164 (AFFORDANCES #32 J7): two publish-screen ops K3041 put in SESSION_OPS.member, by R5's rule; their grades stay
+     (`statementack` reasoned, `reviewcomment` reversible, R1) */
+  statementack: "case-directed: keyed by a case edition; a member acknowledges what the case does not cover",
+  reviewcomment: "review-directed: keyed by a review copy; a reader's comment for the case's owner",
   /* K3104 (people R37) */
   peopledirectory: R("the people and organisations the record follows, each with what the viewer may see naming it, "
     + "never the group's members"),

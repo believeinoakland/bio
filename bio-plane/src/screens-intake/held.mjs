@@ -4,7 +4,9 @@
 /* R4: one read, `heldcaptures` (capture R77): each row's title, project, age, source, batch eligibility (R78) and the
  * questions it was captured for; an archive's row with its held files beside it. */
 function heldReads() {
-  return { held: { op: "heldcaptures", query: { limit: 200 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
+  return { held: { op: "heldcaptures", query: { limit: 200 }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+           /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
+           aside: { op: "heldcaptures", query: { limit: 200, state: "set_aside" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
 }
 
 function renderHeld(cs, view) {
@@ -33,6 +35,18 @@ function renderHeld(cs, view) {
         + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>"
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
   };
+  /* R11 (capture R77's `capture`): the row's grade as one mark, as provenance states it (a received or authored capture
+     never drawn as measured); its thumbnail opens `open-file` for the capture. No capture: undetermined, no thumbnail. */
+  const grade = (r) => {
+    const c = r.capture, g = c && c.grade;
+    if (!c || !g || typeof g !== "object") return `<span class="meta">${cs.w("state.undetermined", { reason: cs.w(c ? "screen.held.grade.unread" : "screen.held.grade.nocapture") })}</span>`;
+    if (g.grade && g.determined === true) return cs.grade("capture", g.grade);
+    if (g.grade) return `${cs.grade("capture", g.grade)} <span class="meta">${cs.w("screen.held.grade.stated")}</span>`;
+    const basis = { CAPTURE_RECEIVED_NOT_FETCHED: "screen.held.grade.received", CAPTURE_AXIS_AUTHORED: "screen.held.grade.testimony" }[g.basis];
+    return `<span class="meta">${basis ? cs.w(basis) : cs.w("state.undetermined", { reason: cs.w("screen.held.grade.ungraded") })}</span>`;
+  };
+  const thumb = (r) => r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256
+    ? `<span class="mk-thumb">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],
@@ -45,21 +59,39 @@ function renderHeld(cs, view) {
     items: v.held,
     key: (r) => r.bundle_id,
     pick: true,
-    cells: (r) => [`${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
-      + `<span class="meta">${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
+    cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
+      + `<span class="meta">${grade(r)} ${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
       + (r.source && r.source.address ? ` · ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>"
       + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
     ,
   { empty: "screen.held.empty" });
-  const aside = Array.isArray(U.setAside) && U.setAside.length
-    ? cs.sec("screen.held.setaside", said("screen.held.setasidecount", { count: U.setAside.length })
-      + (Array.isArray(U.waiting) ? U.waiting : []).map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("")
-      + `<div class="mk-acts">${cs.act("heldrestore")}</div>`) : "";
+  /* R13: the "Set aside" list: who set each aside, when, and why, as `set_aside` answers it; `heldrestore` with a reason in
+     its row's panel, and in the hold strip for picked rows */
+  const aside = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length
+      ? U.waiting.map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("") : "")
+    + cs.state(view.data.aside, (v) => cs.rows({
+      id: "aside",
+      cols: ["screen.held.col"],
+      name: (r) => r.title || cs.w("screen.held.untitled"),
+      hold: () => cs.act("heldrestore"),
+      items: v.held,
+      key: (r) => r.bundle_id,
+      pick: true,
+      cells: (r) => {
+        const a = r.set_aside || {};
+        return [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
+          + `<span class="meta">${grade(r)} ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}</span>`
+          + `<span>${cs.w("screen.held.asideby", { author: a.author || "", reason: a.reason || "" })}${a.at ? ` ${cs.date(a.at)}` : ""}</span>`];
+      },
+      acts: (r) => cs.act("heldrestore", { data: { id: r.bundle_id } }),
+    }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""),
+    { empty: "screen.held.asideempty" }));
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
     + (U.released ? said("screen.held.released", { count: U.released }) : "")
+    + (U.setAside ? said("screen.held.setasidecount", { count: U.setAside }) : "")
     + (U.restored ? said("screen.held.restored", { count: U.restored }) : "")
     + aside;
 }
@@ -78,45 +110,47 @@ async function sendRelease(view, el, cs, extra) {
   const sel = await cs.call("select", { body: { ids } });
   const s = sel && (sel.result || sel);
   if (!s || s.ok === false || typeof s.handle !== "string") return { refuse: "screen.held.selectfailed" };
-  /* ratification's map reads the three from the query (K3017); the body repeats them, for the shell's own-words check of
-     `reasonField` (R11) and as control-plane's end-to-end suite reads the request */
+  /* ratification reads the three from the body, else the query (its R51; K3114): both carry them, the body also for the
+     shell's own-words check of `reasonField` (interface-shell R11) */
   return { query: { handle: s.handle, acknowledgment: ack, mitigation }, body: { handle: s.handle, acknowledgment: ack, mitigation } };
 }
 function doneRelease(view, answer, cs) {
   cs.set("released", answer && Array.isArray(answer.released) ? answer.released.length : 0);
   cs.set("restored", 0);
+  cs.set("setAside", 0);
 }
 
 /* R4: "Set aside with a reason" (`heldsetaside`, capture R79): one reason for every picked row, asked by the shell's
- * reason field (a reasoned act, R11), never with writing help (K1841). The rows set aside leave the list, so this view
- * keeps them with "Restore" (K2996 Q6). */
+ * reason field (a reasoned act, R11), never with writing help (K1841). The rows set aside move to the "Set aside" list
+ * (R13), read again after the act. */
 function sendSetAside(view, el, cs, extra) {
   const ids = (extra && Array.isArray(extra.picked) ? extra.picked : []).filter((x) => typeof x === "string" && x);
   if (!ids.length) return { refuse: "screen.held.none" };
-  cs.set("pendingAside", ids);
   return { body: { ids } };
 }
 function doneSetAside(view, answer, cs) {
   const a = answer || {};
   const waiting = [];
   for (const d of (Array.isArray(a.documents) ? a.documents : [])) for (const q of (d && Array.isArray(d.waiting) ? d.waiting : [])) waiting.push(q);
-  cs.set("setAside", Array.isArray(a.ids) ? a.ids : (view.ui && view.ui.pendingAside) || []);
+  cs.set("setAside", Array.isArray(a.ids) ? a.ids.length : 0);
   cs.set("waiting", waiting);
   cs.set("released", 0);
   cs.set("restored", 0);
 }
 
-/* R4: "Restore" (`heldrestore`, capture R81) for the rows this view set aside, with one reason (the shell's field). */
-function sendRestore(view) {
-  const ids = view.ui && Array.isArray(view.ui.setAside) ? view.ui.setAside : [];
+/* R13 (capture R81): "Restore" with one reason (the shell's field): the row its panel opened from, or the picked rows of
+ * the "Set aside" list, whenever they were set aside. */
+function sendRestore(view, el, cs, extra) {
+  const one = el && el.dataset && el.dataset.id;
+  const ids = one ? [one] : (extra && Array.isArray(extra.picked) ? extra.picked : []).filter((x) => typeof x === "string" && x);
   if (!ids.length) return { refuse: "screen.held.none" };
   return { body: { ids } };
 }
 function doneRestore(view, answer, cs) {
-  const n = view.ui && Array.isArray(view.ui.setAside) ? view.ui.setAside.length : 0;
-  cs.set("setAside", []);
+  cs.set("restored", answer && Array.isArray(answer.ids) ? answer.ids.length : 0);
+  cs.set("setAside", 0);
   cs.set("waiting", []);
-  cs.set("restored", n);
+  cs.set("released", 0);
 }
 
 /* R4: "See held captures": the list asked again (a read, so nothing changes), then drawn by the reads made again. */
@@ -124,6 +158,8 @@ function sendRefresh(view, el, cs) {
   cs.set("released", 0);
   return { query: { limit: 200 } };
 }
+
+export { sendRelease };
 
 export const HELD_SCREEN = Object.freeze({
   id: "held",

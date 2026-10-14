@@ -98,6 +98,12 @@ const DRIVES = [
      the viewer's own, alike on both objects */
   ["infolevelset?by=token:admin", "POST", { level: "pause" }],
   ["infolevel?viewer=member:nobody", "GET"],
+  /* (T47; DEC-205; instance-setup R84, R85; plane R48) the group's logo and languages: a member's set is refused
+     NOT_AN_ADMIN alike on both objects; the reads answer the group's own (no logo held: `grouplogo` answers 404) */
+  ["grouplogoset?by=member:nobody", "POST", { raw: null }],
+  ["grouplanguagesset?by=member:nobody", "POST", { languages: ["en"] }],
+  ["grouplanguages", "GET"],
+  ["grouplogo", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -125,9 +131,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-six routes (T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty routes (T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 36);
+  assert.equal(ops.length, 40);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);
@@ -144,6 +150,11 @@ test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-six routes (T
     const url = new URL(`http://do/${drive[0]}`);
     const direct = await S.instanceSetupOps(m, url, drive[2] === undefined ? null : drive[2])[url.pathname.slice(1)]();
     const at = await a.text();
+    /* (T47; instance-setup R86) `grouplogo` answers a Response, the logo's bytes; the door relays it as it is */
+    if (direct instanceof Response) {
+      assert.deepEqual([a.status, at], [direct.status, await direct.text()], drive[0]);
+      continue;
+    }
     assert.equal(a.status, 200, drive[0]);
     assert.deepEqual(JSON.parse(mask(at)), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), drive[0]);
     assert.equal(JSON.parse(at).ok, true, `${drive[0]}: ${at.slice(0, 200)}`);

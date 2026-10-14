@@ -206,7 +206,7 @@ test("R36 R37: every write carries its grade, each reversible one taken back by 
   for (const op of Object.keys(WRITES)) assert.ok(NON_ACTS[op].length > 30 && !isRead(op), op);
   assert.deepEqual(Object.keys(T47).sort(), ["T47_NON_ACTS", "T47_RUNGS", "T47_RUNG_ABSENT"]);
   assert.deepEqual([...Object.keys(T47.T47_RUNGS), ...Object.keys(T47.T47_RUNG_ABSENT)].sort(), Object.keys(WRITES).sort());
-  assert.deepEqual(Object.keys(T47.T47_NON_ACTS).sort(), [...ALL].sort());
+  assert.deepEqual(Object.keys(T47.T47_NON_ACTS).sort(), [...ALL, "statementack", "reviewcomment"].sort());
   for (const [op, v] of Object.entries(T47.T47_RUNGS)) assert.equal(RUNGS[op], v, op);
   for (const [op, e] of Object.entries(T47.T47_RUNG_ABSENT)) { assert.equal(RUNG_ABSENT[op], e, op); assert.ok(e.is.length > 60, op); }
   for (const [op, w] of Object.entries(T47.T47_NON_ACTS)) assert.equal(NON_ACTS[op], w, op);
@@ -240,4 +240,19 @@ test("R36 R37: affordances R12's totality holds over a stand-in of op-declaratio
     ["peopledirectory"]);
   assert.deepEqual(unaccountedOver(STAND_IN.map((r) => r.op === "monitorset" ? { ...r, mutating: false } : r)).stale,
     ["monitorset"]);
+});
+
+/* ---- R5 (K3164) ---------------------------------------------------------------------------------------------------- */
+test("R5 R1 (K3164): statementack and reviewcomment carry NON_ACTS rows by R5's rule, case-directed and review-directed, "
+   + "their grades unchanged; neither is a capture act or a machine refusal", () => {
+  assert.equal(NON_ACTS.statementack, "case-directed: keyed by a case edition; a member acknowledges what the case does "
+    + "not cover");
+  assert.equal(NON_ACTS.reviewcomment, "review-directed: keyed by a review copy; a reader's comment for the case's owner");
+  assert.deepEqual([RUNGS.statementack, RUNGS.reviewcomment], ["reasoned", "reversible"]);
+  for (const op of ["statementack", "reviewcomment"]) {
+    assert.ok(!NON_ACTS[op].startsWith("capture-directed:") && !isRead(op), op);
+    assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
+  }
+  /* negative control: the publish-screen reads beside them stay reads */
+  assert.ok(isRead("publishpreflight") && isRead("publishtensions"));
 });

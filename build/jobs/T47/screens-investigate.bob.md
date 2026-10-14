@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T47)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -39,3 +39,11 @@ K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends
 ## B7 · CHANGE
 
 K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B8 · CHANGE
+
+K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
+
+## B9 · CHANGE
+
+K3177 (JOURNEY-CHECK #1 J6 (a)): People shows an office seeded at setup with its internal record note ('as the active jurisdiction profile oakland-alameda, counterparties[0] (basis: …) names it; seeded at setup'): profile ids and array indices a member reads. Ruled: the screen never draws a record's machine note; for an office seeded at setup it draws members' words ('Added at setup from your group's place', or the words.json key you find for it, else this sentence). Merge tranche/T47, build it with a test and control, post COMPLETE. This re-opens you.

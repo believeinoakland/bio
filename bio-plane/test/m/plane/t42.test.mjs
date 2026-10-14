@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { store, storage, Store } from "./fixture.mjs";
+import { store, storage, Store, disclosed } from "./fixture.mjs";
 import { Miniflare } from "miniflare";
 import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
@@ -79,6 +79,7 @@ async function plane({ testSet = null, worker = null, evidence = bucket(), accou
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   if (account) {
+    await disclosed(ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
     const r = await credentialsOf(ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: SENTINEL, by: "member:ann" });
     assert.equal(r.ok, true, JSON.stringify(r));
   }
@@ -206,7 +207,10 @@ test("R38 (N839; K2608, K2656): case-account is built before review and case-aut
   assert.equal(reviewOf(x.ctx).caseAccount, ca, "review's");
   assert.equal(caseAuthoringOf(x.ctx).account, ca, "case-authoring's");
   const order = declarers(x.ctx);
-  assert.ok(order.includes("case-account") && order.indexOf("case-account") < order.indexOf("case-authoring"), order.join(","));
+  /* T47 (N908): case-authoring declares no table since the split; case-inputs, created at its creation (R45), marks it */
+  assert.equal(order.includes("case-authoring"), false, order.join(","));
+  assert.ok(order.includes("case-account") && order.includes("case-inputs")
+            && order.indexOf("case-account") < order.indexOf("case-inputs"), order.join(","));
   /* negative control: another host's case-account is another instance, and holds other runs */
   const bare = storage();
   assert.notEqual(caseAccountOf(bare.ctx, { runs: { runFor: () => null } }), ca);

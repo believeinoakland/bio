@@ -1,14 +1,11 @@
 /* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R85).
  *
- * THE PAGE AT THE ROOT is going (R83; N1002): `/` answers the interface, so this module composes no page of its own;
- * `SETUP_HTML` and `groupLine` are gone, and `setupPage` stays exported, retiring, only until `control-plane` drops its
- * import (R86; K3144, T47-65), then goes with the use of `setup-page`. What stays is R47's one holder of the words on
- * who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`, re-exported here), which
- * `screens-entry` and the installer read.
+ * THE PAGE AT THE ROOT is gone (R83, R86; N1002, K3171): `/` answers the interface, so this module composes and serves no
+ * page and exports none (`setupPage`, `groupLine` and `SETUP_HTML` removed, with every use of `setup-page`). What stays
+ * is R47's one holder of the words on who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`,
+ * re-exported here), which `screens-entry` and the installer read.
  */
 
-/* RETIRING (R86; K3144): setup-page's template, read only for the retiring `setupPage` below until T47-65. */
-import { PAGE_HTML, HOSTING_SLOT, GROUP_LINE_UNREAD, groupLine, ROTATION_GUIDE_HREF } from "./setup-page/index.mjs";
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
@@ -49,15 +46,6 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
-
-/* RETIRING (R86; K3144): `control-plane` still serves the setup page at `/` until its T47-65 answers the interface there
-   (its R82), so `setupPage` stays exported, composed as before, only until then; it is removed (R83) on BOB's CHANGE
-   after that merge. Nothing else here serves or composes a page. */
-const RETIRING_SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
-/** RETIRING (R86): the setup page as `control-plane`'s `/` route serves it until T47-65; removed on BOB's CHANGE. */
-export function setupPage(read) {
-  return RETIRING_SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
-}
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and

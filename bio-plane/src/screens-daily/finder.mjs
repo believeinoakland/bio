@@ -1,8 +1,9 @@
-/* Find (registry screen `finder`; screens-daily R4, R7). Search with the member's words; each result with its grade and
+/* Find (registry screen `finder`; screens-daily R4, R7, R12). Search with the member's words; each result with its grade and
    where it matched; hold picked results together (retrieval's selection, a handle that lives while it is used), let the
    set go, open "Find in these" over it, see where nobody looked, and count over the held set. The words searched are the
    route's subject (`/app/finder/<words>`) or the member's last search on this page; the held set's handle is kept in the
-   screen's page memory (`view.ui`). Every function is self-contained (interface-shell R21 (1)). */
+   screen's page memory (`view.ui`). A search that finds nothing says what search covers and offers "Capture it" (R12).
+   Every function is self-contained (interface-shell R21 (1)). */
 
 export const finder = Object.freeze({
   id: "finder",
@@ -38,7 +39,13 @@ export const finder = Object.freeze({
     const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>";
 
-    const results = view.data.search ? cs.state("search", function (s) {
+    // R12 (DEC-201 (13)): no result: the words searched, what search covers, and "Capture it" (the capture screen).
+    const sr = view.data.search;
+    const none = sr && sr.state === "empty"
+      ? '<div class="mk-note" data-state="empty"><p><b>' + cs.w("screen.finder.noresult", { q: q }) + "</b> " + cs.w("screen.finder.covers") + "</p>"
+        + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
+      : "";
+    const results = view.data.search ? (none || cs.state("search", function (s) {
       const hits = Array.isArray(s.hits) ? s.hits : [];
       const total = typeof s.total === "number" ? s.total : hits.length;
       return '<p class="mk-sub">' + (total === 1 ? cs.w("screen.finder.total.one") : cs.w("screen.finder.total.many", { n: String(total) })) + "</p>"
@@ -50,7 +57,7 @@ export const finder = Object.freeze({
           const where = h.snippet ? cs.esc(String(h.snippet)) : "";
           return cs.row(pick, cs.ref("document", id, h.title || id, []) + '<span class="meta">' + grade + cs.mark("origin", "search") + (where ? " <span>" + where + "</span>" : "") + "</span>", "", "");
         }).join(""));
-    }, { empty: "screen.finder.none" }) + (function () {
+    })) + (function () {
       const s = view.data.search;
       const w = s && (s.state === "ok" || s.state === "empty") && s.value && s.value.widen;
       return w && typeof w.total === "number" && w.total > 0 && (!s.value.hits || !s.value.hits.length)
