@@ -33,7 +33,7 @@
   "phrasing": 4,
   "assertion": 3,
   "packet": 2,
-  "filings": 261,
+  "filings": 260,
   "pointer": 7,
   "voice": 4,
   "recognition": 1,
@@ -125,17 +125,17 @@
   "intent": 49,
   "run-productions": 21,
   "action-clocks": 58,
-  "signpage": 58,
+  "signpage": 3,
   "promotion": 2,
   "money-checks": 29,
   "reevaluation": 41,
   "public-read": 23,
   "civil-time": 29,
-  "hypotheses": 5,
+  "hypotheses": 4,
   "steps": 5,
   "action-producers": 24,
   "network-notices": 11,
-  "law-relations": 19,
+  "law-relations": 18,
   "workbooks": 21,
   "tasks": 7,
   "answers": 3,
@@ -150,7 +150,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 8821,
+  "total": 8763,
   "protected": 862
  },
  "words": [
@@ -45598,7 +45598,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.determination_states_act_2",
+   "key": "filings.the_determination_states_no_act",
    "en": "the determination states no act",
    "protected": false,
    "source": "DEC-260"
@@ -45994,7 +45994,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.determination_action_rests_2",
+   "key": "filings.the_determination_the_action_rests",
    "en": "the determination the action rests on",
    "protected": false,
    "source": "DEC-260"
@@ -46252,7 +46252,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.trusted_timestamp_archive_2",
+   "key": "filings.neither_a_trusted_timestamp_nor",
    "en": "neither a trusted timestamp nor a co-archive",
    "protected": false,
    "source": "DEC-260"
@@ -46342,7 +46342,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.act_event_2",
+   "key": "filings.the_act_s_event",
    "en": "the act's event",
    "protected": false,
    "source": "DEC-260"
@@ -46696,12 +46696,6 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.says.reason_stated",
-   "en": "no reason stated",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
    "key": "filings.counsel_packet_version",
    "en": "# Counsel packet {id}, version {version}",
    "protected": false,
@@ -46804,7 +46798,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "filings.stated_2",
+   "key": "filings.stated_by_at",
    "en": "{override_head} {reason}{grade} (stated by {by} at {at})",
    "protected": false,
    "source": "DEC-260"
@@ -47664,7 +47658,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "case-disclosures.signature_2",
+   "key": "case-disclosures.with_their_signature",
    "en": "with their signature",
    "protected": false,
    "source": "DEC-260"
@@ -48462,7 +48456,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "conformance.text_2",
+   "key": "conformance.the",
    "en": "The {kind} {event}, {when}.",
    "protected": false,
    "source": "DEC-260"
@@ -49476,116 +49470,8 @@
    "source": "DEC-260"
   },
   {
-   "key": "signpage.civicsmith_signing_keys",
-   "en": "Civicsmith signing keys",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.runs_entirely_tab",
-   "en": "Runs entirely in this tab. Nothing is sent anywhere.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_release",
-   "en": "Sign a release",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_ratification",
-   "en": "Sign a ratification",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_notice",
-   "en": "Sign a notice",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_docket_entry",
-   "en": "Sign a docket entry",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.make_keys",
-   "en": "Make your keys",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.press_makes_keys",
-   "en": "One press makes both keys. Copy the two public keys into the session, and keep the private keys wherever you keep things.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.passphrase_leave_empty",
-   "en": "Passphrase (leave empty for development keys)",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.passphrase_private_key",
-   "en": "With a passphrase, every private key this page gives you is locked with it, and loading one back asks for it. Keep the passphrase apart from the keys: without it they cannot be used.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.generate_keys",
-   "en": "Generate my keys",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.make_recovery_key",
-   "en": "Make a recovery key",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.second_release_key",
-   "en": "A second release key, kept offline. It signs one release only: the one that replaces a lost or stolen release key. Make it once, copy its public key into the session, and keep its private key apart from the release key.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.load_key_already",
-   "en": "Load a key you already have",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.paste_private_key",
-   "en": "Paste a private key from a previous run. The key says which job it is for, so there is nothing to choose.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.load_key",
-   "en": "Load this key",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.forget_everything",
-   "en": "Forget everything",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.key_protected_passphrase",
-   "en": "This key is protected with a passphrase",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
    "key": "signpage.release.choose",
-   "en": "Choose the release asset ({asset}). The signature covers the exact bytes of that file, so a rebuilt asset needs a new signature.",
+   "en": "). The signature covers the exact bytes of that file, so a rebuilt asset needs a new signature.",
    "protected": false,
    "source": "DEC-260"
   },
@@ -49596,230 +49482,8 @@
    "source": "DEC-260"
   },
   {
-   "key": "signpage.sign_bytes",
-   "en": "Sign these bytes",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.copy_record_current",
-   "en": "Copy the record id and its current hash from its page in your group's Civicsmith. The signature covers both, so it authorizes publishing that exact revision and no other.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
    "key": "signpage.ratification_key_loaded",
    "en": "No ratification key loaded.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.record",
-   "en": "Record id",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.record_hash",
-   "en": "Record hash",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_ratification_2",
-   "en": "Sign this ratification",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.copy_notice_revision",
-   "en": "Copy the notice id, its revision number and its hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact revision of the notice and no other. It is signed with your ratification key.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.notice",
-   "en": "Notice id",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.notice_hash",
-   "en": "Notice hash",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_notice_2",
-   "en": "Sign this notice",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.copy_case_entry",
-   "en": "Copy the case id, the entry number and the entry hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact entry on that case's public docket and no other. It is signed with your ratification key.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.case",
-   "en": "Case id",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.entry_number",
-   "en": "Entry number",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.entry_hash",
-   "en": "Entry hash",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.sign_docket_entry_2",
-   "en": "Sign this docket entry",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.signing",
-   "en": "Signing as",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.making_keys",
-   "en": "Making your keys…",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.copy_everything_keys",
-   "en": "Copy everything, keys and all",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.download_file",
-   "en": "Download as a file",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.private_keys_locked",
-   "en": "Both private keys are locked with your passphrase. Loading one asks for it, and refuses any other.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.show_release_key",
-   "en": "Show the release key's raw form, once, for the secret store that signs releases",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.development_keys_passphrase",
-   "en": "These are development keys with no passphrase. When Civicsmith goes to real groups, generate fresh keys and protect them. Nothing here carries over.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.hide",
-   "en": "Hide it",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.hidden_page_show",
-   "en": "Hidden. This page will not show it again.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.making_recovery_key",
-   "en": "Making your recovery key…",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.forgotten_nothing_signing",
-   "en": "Forgotten. Nothing signing-related is left in this tab.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.choose_release_asset",
-   "en": "Choose the release asset first.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.paste_record",
-   "en": "Paste the record id.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.record_hash_hex",
-   "en": "The record hash is 64 hex characters.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.ratify.signed",
-   "en": "Authorizes publishing {id} at exactly that hash. If the record changes before you submit it, your group's Civicsmith refuses this signature and you sign the new hash.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.paste_notice_group",
-   "en": "Paste the notice id, as your group's Civicsmith shows it.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.revision_whole_number",
-   "en": "The revision is a whole number, 1 or more.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.notice_hash_hex",
-   "en": "The notice hash is 64 hex characters.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.notice.signed",
-   "en": "Signs revision {rev} of {id} at exactly that hash. If the notice changes before you post it, your group's Civicsmith refuses this signature and you sign the new hash.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.paste_case_group",
-   "en": "Paste the case id, as your group's Civicsmith shows it.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.entry_number_whole",
-   "en": "The entry number is a whole number, 1 or more.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.entry_hash_hex",
-   "en": "The entry hash is 64 hex characters.",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "signpage.docket.signed",
-   "en": "Signs entry {seq} on the docket of {id} at exactly that hash. If the entry changes before you post it, your group's Civicsmith refuses this signature and you prepare and sign it again.",
    "protected": false,
    "source": "DEC-260"
   },
@@ -50586,12 +50250,6 @@
    "source": "DEC-260"
   },
   {
-   "key": "hypotheses.why.read_names_member",
-   "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
    "key": "hypotheses.why.node_hunches_inquiry",
    "en": "this node is in more than {hub} hunches of this inquiry, so it is named, never expanded",
    "protected": false,
@@ -50924,12 +50582,6 @@
   {
    "key": "law-relations.label.service_answer_verified",
    "en": "the service's answer, never verified",
-   "protected": false,
-   "source": "DEC-260"
-  },
-  {
-   "key": "law-relations.why.undetermined_date_asked",
-   "en": "undetermined at the date asked",
    "protected": false,
    "source": "DEC-260"
   },
@@ -51300,7 +50952,7 @@
    "source": "DEC-260"
   },
   {
-   "key": "drive.register_profile_says_2",
+   "key": "drive.the_register_s_profile_says",
    "en": "the register's profile says {format}",
    "protected": false,
    "source": "DEC-260"
