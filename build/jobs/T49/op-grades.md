@@ -47,3 +47,7 @@ op-grades T49-13 is complete on job/T49/op-grades. Details are in my record's "C
 - Checks: format, architecture, coverage and ownership are all 0 failures. Module tests: 114, 113 pass.
 - The one red is `words.test.mjs`, which imports `word` and `hasWord` from setup-words; neither exists on the tranche yet. I ran it against a temporary local shim of R11–R12 (3 of 3 pass) and removed the shim. Send CHANGE after setup-words merges, and I will merge the tranche and re-run.
 - Others affected: affordances fails at import until it publishes the keys; screens-investigate `person.test.mjs`:95 holds the old expunge sentence; the dist bundles are stale (rule 5 (5)).
+
+**Re-run after B3/B4 (setup-words merged).** Merged tranche/T49; `words.test.mjs` runs against the real `word`/`hasWord`: `node --test bio-plane/test/m/op-grades/`: tests 116, pass 116, fail 0. format, architecture, coverage (44 of 44) and ownership: 0 failures. The red noted above is cleared.
+
+Size (session_01GyPizYCx5oYUAC7EgbB2ao): test runs 14, module lines 3311
