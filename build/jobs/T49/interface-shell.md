@@ -75,3 +75,7 @@ COMPLETE (CHANGE B2–B5): R71 (bootstrap under the page's session; RE_POINTS.se
 Merged `tranche/T49` (op-declarations, control-plane, plane, site; DEC-262 words). `connect: ["reauth"]` was already in `RE_POINTS` (R72). Module tests 149 pass, 0 fail; coverage 70 of 70; architecture and ownership 0 failures.
 
 Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 41, module lines 2310
+
+## J4 · COMPLETE
+
+COMPLETE (CHANGE B6): tranche merged; R71/R72 were already pushed; connect: [reauth] is in RE_POINTS already. 149 tests pass, coverage 70 of 70, architecture and ownership 0 failures. The screen jobs can merge the job branch.
