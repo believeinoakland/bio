@@ -231,7 +231,7 @@ It is the only module marked `legacy` in `modules.json`.
 | `investigate`, `extract` on the test instance (N647) | a deployment and measurement: `check`'s live run verified on 0.83.0 (`op=airunverify`) first; joins L6 if verified by its START |
 | `legal_facts` triggers detected at their moment | a dependency not yet built: no registry screen for attending or recording (doubt 10) |
 | the v0.2 constructs' screens not yet drawn | the design stream's: not drawn |
-| the installer's deploy | a deployment: its OAuth client lacks `connectivity-directory.bind`, Bob's dashboard act (K2164) |
+| the installer's deploy | at T47's release: the OAuth client's scopes are registered (K3159), the deploy itself Bob's approval in session (K1715) |
 | N757 (later) | Bob's: "N757: A" (K2425), members mark photo areas by hand; no AI proposals |
 | N563, N579, N632, N641, N643, N645, N652, N698 (part) | a measurement (each as T37's table names it) |
 | N703 (part: Cloudflare's blocked-request counts) | a deployment or measurement: a zone and read token per group |
