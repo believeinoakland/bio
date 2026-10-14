@@ -23,8 +23,8 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS, pageHead, pageMark,
-  ASSET_PREFIX, UPDATE_KEEPS } from "./ui.mjs";
+import { WIZARD_HTML, updateHtml, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS, pageHead, pageMark,
+  ASSET_PREFIX, UPDATE_KEEPS, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN } from "./ui.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
@@ -162,6 +162,43 @@ async function selectRelease(emit) {
   }
   emit.ok("rel", said);
   return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
+}
+
+/* R55 (T48; N1047; DEC-226 (4); K3158) — THE UPDATE INSTALLS THE RELEASE CHOSEN AND NO OTHER. `V` is the version the group's
+   administrator chose in Settings › Updates (`GET /update?version=<V>` through `/begin`'s cookie). The release installed is the
+   repository's, when its manifest names exactly V, or the built-in one, when V is the version this installer carries. The
+   repository's is held to R8's checks (its bytes hash to its manifest's `sha256`, its `sig` verifies in the release namespace
+   against ARMED_SIGNERS, which are `signatures`' RELEASE_KEYS, R43) and to R20's (it states its limits). R8's "newer than the
+   built-in" does not choose: V does. A release of any other version, or one failing a check, is not installed, and the answer
+   says why in words; nothing is uploaded. Answers `{version, source, from, man, limits}` like selectRelease, or `{stop}`. */
+async function selectChosen(emit, V) {
+  emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
+  const stop = (why) => { emit.no("rel"); return { stop: why }; };
+  let man = null, unreachable = false;
+  try { man = await fetchRepoManifest(); } catch { unreachable = true; }
+  const builtIn = V === RELEASE_VERSION;
+  /* An update is never installed on hashes alone: with no key to verify against, nothing is a signed release. */
+  if (!ARMED_SIGNERS.length) return stop(`this installer lists no keys to check release ${V}'s signature against`);
+  if (!builtIn) {
+    if (unreachable) return stop(`the public repository was not reachable just now, so release ${V} could not be fetched`);
+    if (!man || String(man.version) !== V) return stop(`the public repository holds no release ${V}`);
+    let source;
+    try { source = await fetchRepoAsset(man); }
+    catch (e) {
+      return stop(e && e.integrity ? `release ${V} did not pass its integrity check, so it was not used`
+        : e && e.unsigned ? `release ${V} carries no signature, and this installer only installs signed releases`
+        : e && e.signature ? `release ${V} is signed, but not by a key ${PRODUCT} releases are signed with (${e.reason || "invalid"})`
+        : `release ${V} could not be fetched`);
+    }
+    const lim = planeLimits(source);
+    if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
+    emit.ok("rel", UPDATE_WORDS.progressVerified(V));
+    return { version: V, source, from: "repository", man, limits: lim.limits };
+  }
+  const lim = planeLimits(RELEASE_SOURCE);
+  if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
+  emit.ok("rel", UPDATE_WORDS.progressVerified(V));
+  return { version: V, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -1281,14 +1318,16 @@ const UNDETERMINED_BUILDS = "This release cannot report which version the record
    your group's Civicsmith keeps running as it was. The shell holds exactly one script, before every streamed one. */
 
 const STATE_WORD = Object.freeze({ go: "Now", ok: "Done", no: "Not done" });
-function progressShell(title, slug) {
+function progressShell(title, slug, retry = null) {
   return `${pageHead(esc(title), { noindex: true })}
 <body class="cs"><main class="cs-frame ng">
 ${pageMark()}
 <h1>${esc(title)}</h1>
 <p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. This takes a few minutes; leave this page open.</p>
+<p class="small" id="says" hidden></p>
 <div id="log" class="cs-sheet ng-log"></div>
-<div id="fail" class="ng-stop" role="alert" hidden><h2 id="fail-h"></h2><p class="small" id="fail-s"></p><p id="fail-p"></p><p id="fail-d"></p></div>
+<div id="fail" class="ng-stop" role="alert" hidden><h2 id="fail-h"></h2><p class="small" id="fail-s"></p><p id="fail-p"></p><p id="fail-d"></p>${retry
+  ? `<div class="ng-acts" id="fail-acts"><a class="cs-btn" data-tone="primary" id="try-again" href="${esc(retry)}">${UPDATE_WORDS.tryAgain}</a></div>` : ""}</div>
 <div id="done" class="ng-stage" hidden></div>
 ${publisherFooter()}
 <script>
@@ -1296,6 +1335,7 @@ const $=s=>document.querySelector(s);const rows={};const W=${JSON.stringify(STAT
 function mark(d,r,label){d.dataset.r=r;d.firstChild.textContent=W[r];if(label)d.children[1].textContent=label;}
 function step(id,label){const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
  d.innerHTML='<span class="mk"></span><span></span><span></span>';mark(d,"go",label);$("#log").appendChild(d);rows[id]=d;}
+function says(t){$("#says").textContent=t;$("#says").hidden=false;}
 function ok(id,label){const d=rows[id];if(d)mark(d,"ok",label);}
 function no(id,label){const d=rows[id];if(d)mark(d,"no",label);}
 function fail(h,p,d,s){$("#fail").hidden=false;$("#fail-h").textContent=h;$("#fail-s").textContent=s?"Stopped at the step: "+s:"";
@@ -1331,6 +1371,7 @@ function streamPage(headers, shell, run) {
       return write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`); },
     /* `at`: the step a stop names when it is not the line in progress (a stop said after later lines were drawn). */
     fail: (h, p, d, at = current) => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)},${jsStr(at ? lines.get(at) : "")})</script>\n`),
+    says: (text)      => write(`<script>says(${jsStr(text)})</script>\n`),
     done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
   };
   (async () => {
@@ -1790,10 +1831,14 @@ function versionLines(before, after) {
 }
 
 async function runUpdate(emit0, code, saved) {
-  const slug = saved.slug;
+  const slug = saved.slug, V = saved.r;
   /* R52 (DEC-201 (8)): every stop of an update, each before its upload changed anything, says your group's Civicsmith
      keeps running as it was. */
-  const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, p + " " + UPDATE_KEEPS, d, ...at) };
+  const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, /nothing changed\.$/.test(p) ? p : p + " " + UPDATE_KEEPS, d, ...at) };
+  /* R55: a stop of the update, in `installer.update.stopped`'s three parts; what is said of the release running is said only
+     once it has been read. */
+  const stopped = (why, running = null, detail = "") => emit.fail(UPDATE_WORDS.stoppedWhy(why), UPDATE_WORDS.stoppedKept(running),
+    UPDATE_WORDS.stoppedDo + detail);
   let token, scope;
 
   emit.step("auth", "Confirming your permission with Cloudflare");
@@ -1835,15 +1880,9 @@ async function runUpdate(emit0, code, saved) {
       tryAgain("update", e.message));
   }
 
-  let withR2 = false;
-  try { await ensureBuckets(token, acct.id); withR2 = true; } catch {}
-
-  const release = await selectRelease(emit);
-  if (release.refused) {
-    return emit.fail("This update cannot say which limits your group's Civicsmith runs under",
-      "Your group's Civicsmith is still running the version it had before. Nothing about it changed. " + release.refused,
-      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`);
-  }
+  /* R55: the release chosen, and no other; any failure of its checks is a stop, and nothing is uploaded. */
+  const release = await selectChosen(emit, V);
+  if (release.stop) return stopped(release.stop);
 
   /* What is it running now? Asked before the upload, so an update that changes
      nothing can say so instead of reading as a success. A no-op reported as
@@ -1851,6 +1890,7 @@ async function runUpdate(emit0, code, saved) {
      work happened and moves on. Observed live on 2026-07-24, a 0.3.10 over
      0.3.10 update where the only honest line was easy to skim past. */
   let before = null, sub0 = null;
+  emit.step("read", "Reading the release your group's Civicsmith runs");
   try {
     sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain || null;
     if (sub0) {
@@ -1858,15 +1898,21 @@ async function runUpdate(emit0, code, saved) {
       if (r.ok) before = (await r.json())?.version || null;
     }
   } catch { /* not knowing is fine; it only costs the comparison */ }
+  if (before !== null && !SEMVER.test(String(before))) before = null;
+  if (before) emit.ok("read", UPDATE_WORDS.progressRead(before));
+  else emit.no("read", "The release your group's Civicsmith runs could not be read, so it is not compared with release " + release.version + ".");
+  await emit.says(UPDATE_WORDS.progressSays(before || "(not read)", release.version, acct.name));
   const noop = before !== null && before === release.version;
+
+  /* R17: the buckets are created where possible. After every check that can stop the update (R55), so a stop changes nothing. */
+  let withR2 = false;
+  try { await ensureBuckets(token, acct.id); withR2 = true; } catch {}
   /* R47: the copy's own hosts, restated from the address found; none found, none written (and the page says so). */
   const ownHosts = sub0 ? [`${slug}.${sub0}.workers.dev`] : null;
 
   emit.step("up", noop
     ? `Your group's Civicsmith already runs ${release.version}. Re-uploading the same version`
-    : before
-      ? `Updating the software from ${before} to ${release.version}`
-      : `Updating the software to ${release.version}`);
+    : UPDATE_WORDS.progressPlacing(release.version));
   /* DIST-6, step 1: restate the members the account already holds, so the update never un-binds a working copy's
      members — not for its duration, and not for good when the fleet step below cannot run. */
   const present = await membersPresent(token, acct.id);
@@ -1877,9 +1923,7 @@ async function runUpdate(emit0, code, saved) {
   try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal, ownHosts }); emit.ok("up"); }
   catch (e) {
     emit.no("up");
-    return emit.fail("The update was refused",
-      "Your group's Civicsmith is still running the version it had before. Nothing about it changed.",
-      tryAgain("update", e.message));
+    return stopped("Cloudflare refused the upload", before, ` (Cloudflare said: ${e.message})`);
   }
 
   /* R33: as on install, the uploaded plane is read back and hashed against the release. */
@@ -1920,7 +1964,7 @@ async function runUpdate(emit0, code, saved) {
   const capable = reportsBuilds(release.source);
   let verdict = null;
   if (base) {
-    emit.step("verify", "Checking the new version answers");
+    emit.step("verify", UPDATE_WORDS.progressAnswers);
     verdict = withByteLags(await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []),
       [...byteLags, ...logLags], capable);
     if (verdict.confirmed) emit.ok("verify", capable ? undefined : "The address of your group's Civicsmith answers " + release.version
@@ -1937,7 +1981,7 @@ async function runUpdate(emit0, code, saved) {
   const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
 
   emit.done(versionLines(before, release.version) + (noop
-    ? `<div class="notice"><p style="margin:0"><b>Nothing changed: your group&#39;s Civicsmith was already running ${esc(release.version)}.</b>
+    ? `<div class="notice"><p style="margin:0"><b>Nothing changed: ${esc(UPDATE_WORDS.running(release.version))}, so release ${esc(release.version)} was already in place.</b>
 The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
 verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
@@ -1950,16 +1994,20 @@ The upload finished, but not everything about your group&#39;s Civicsmith runnin
 ${lagList(verdict)}<p>A part can take a few minutes to start running a new version after an update, so
 open your group&#39;s Civicsmith a little later and check again; if the same part is still named, run this update again. Your
 passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>`
-    : `<div class="okbox"><p style="margin:0"><b>Updated ${before ? "from " + esc(before) + " " : ""}to ${esc(release.version)}.</b>
-${confirmed
-  ? (capable ? "Every part of your group's Civicsmith answers " + esc(release.version) + ": its address, its record store, and each capability worker it is connected to."
-             : "The new version is answering. " + esc(UNDETERMINED_BUILDS))
-  : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your group's Civicsmith a little later and its page will show " + esc(release.version) + "."}
-Your passwords, your credentials, and everything in the record are exactly as they were.
-Updates never touch them.</p></div>`)
+    /* R55: finished, in `installer.update.done.*`: the release now running, what is as it was, and the way back. Said only
+       once every part answers the release (a part not yet confirmed is the notice above, never this). */
+    : `<div class="okbox" id="update-done"><h2 style="margin:0">${esc(UPDATE_WORDS.doneTitle)}</h2>
+<p style="margin:0">${esc(UPDATE_WORDS.doneSays(release.version, before || "(not read)"))}</p>
+<p style="margin:0">${confirmed
+  ? esc(UPDATE_WORDS.doneAnswers(release.version)) + ". " + (capable
+    ? "Every part of your group's Civicsmith answers " + esc(release.version) + ": its address, its record store, and each capability worker it is connected to."
+    : esc(UNDETERMINED_BUILDS))
+  : "The upload finished successfully. The address can take a few minutes to start serving the new version, so open your group&#39;s Civicsmith a little later and its page will show " + esc(release.version) + "."}</p>
+<p style="margin:0">${esc(UPDATE_WORDS.doneKept)}.</p>
+<p style="margin:0" class="small">${esc(UPDATE_WORDS.doneNote(release.version))}</p></div>`)
     + told
     + securityToolsNote(saved.vpc)
-    + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" href="${esc(base)}/">Open your group&#39;s Civicsmith</a></div>` : "")));
+    + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" id="update-back" href="${esc(base)}/">${esc(UPDATE_WORDS.back)}</a></div>` : "")));
 }
 
 /* ---------------------------------------------------------------- routes */
@@ -1985,8 +2033,10 @@ export default {
     if (req.method === "GET" && (url.pathname === "/" || url.pathname === ""))
       return html(WIZARD_HTML);
 
+    /* R55: `version` alone is read from the address, and only in the form a release's version has; nothing else, and no
+       credential, is read from it. Any other value draws the page that says no release was chosen. */
     if (req.method === "GET" && url.pathname === "/update")
-      return html(UPDATE_HTML);
+      return html(updateHtml(url.searchParams.get("version")));
 
     /* R53 (and R1's one further route): interface-assets' files, byte for byte, at the path the stylesheet names them by. */
     if (req.method === "GET" && url.pathname.startsWith(ASSET_PREFIX)) {
@@ -2004,6 +2054,11 @@ export default {
       const slug = typeof body.slug === "string" ? body.slug.trim() : "";
       if (!slugOk(slug))
         return json({ ok: false, error: "The name needs 3 to 40 characters: lower-case letters, digits, and hyphens, starting and ending with a letter or digit." }, 400);
+      /* R55: an update is of the one release chosen, V of `signatures`' R47 form; none, or any other value, is refused by
+         name before any sign-in. An install takes no version. */
+      const chosen = typeof body.version === "string" ? body.version : "";
+      if (mode === "update" && !versionOk(chosen))
+        return json({ ok: false, error: NO_RELEASE_CHOSEN + " Open your group's Civicsmith, go to Settings \u203a Updates and choose Update there; it brings you back with the release chosen." }, 400);
       const v = rand(32), s = rand(16);
       const q = new URLSearchParams({
         response_type: "code", client_id: CFG.CLIENT_ID, redirect_uri: CFG.REDIRECT,
@@ -2027,7 +2082,7 @@ export default {
       /* R36, R37 (T36): nothing else /begin is sent is kept: no field carries a Claude credential, and the install takes no
          choice about the assistant (an `assistant` field is taken nowhere). */
       const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}),
-        ...(vpc ? { vpc } : {}) })));
+        ...(vpc ? { vpc } : {}), ...(mode === "update" ? { r: chosen } : {}) })));
       return json({ ok: true, authorize: `${CFG.AUTHORIZE}?${q}` }, 200,
         { "set-cookie": setCookie(cookie, CFG.COOKIE_MAX_AGE_S) });
     }
@@ -2058,8 +2113,12 @@ export default {
           "The reply from Cloudflare does not match a request this browser made recently. Nothing was created. "
           + "Start again from the beginning, in this same tab.", ""), 200, clear);
 
-      const title = saved.mode === "update" ? "Updating your group's Civicsmith" : "Setting up your group's Civicsmith";
-      return streamPage(clear, progressShell(title, saved.slug),
+      /* R55: a cookie that names no release for an update is not one /begin wrote. */
+      if (saved.mode === "update" && !versionOk(saved.r))
+        return html(plainPage(NO_RELEASE_CHOSEN, "Nothing was changed. Open your group's Civicsmith, go to Settings \u203a Updates and choose Update there.", ""), 200, clear);
+
+      const title = saved.mode === "update" ? UPDATE_WORDS.progressTitle : "Setting up your group's Civicsmith";
+      return streamPage(clear, progressShell(title, saved.slug, saved.mode === "update" ? `/update?version=${saved.r}` : null),
         (emit) => saved.mode === "update" ? runUpdate(emit, code, saved) : runInstall(emit, code, saved));
     }
 

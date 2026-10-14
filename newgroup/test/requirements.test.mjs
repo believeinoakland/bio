@@ -28,6 +28,8 @@ import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b6
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
+/* R55: the update page is drawn for the release chosen (the address `instance-setup` R90 answers). */
+const UPDATE_PATH = "/update?version=" + NEXT;
 const text = async (path) => (await req(path)).text();
 const secretsOf = (put) => (put?.meta?.bindings || []).filter((b) => b.type === "secret_text");
 /* Every page this suite renders, for R19, R22, R31 and R35, which hold over all of them: its words, and (R35) each page
@@ -46,7 +48,7 @@ const INVITATION = readFileSync(new URL("../../bio-plane/public/newgroup/index.h
 
 test("R1 GET / serves the install page and GET /update the update page; any other path or method is a 404 plain page; no route stores anything", async () => {
   const calls = script([]);
-  const home = await req("/"), up = await req("/update");
+  const home = await req("/"), up = await req(UPDATE_PATH);
   const hb = seen(await home.text()), ub = seen(await up.text());
   assert.deepEqual([home.status, up.status], [200, 200]);
   assert.match(home.headers.get("content-type"), /text\/html/);
@@ -83,7 +85,7 @@ test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in 
     assert.match(j.error, /organisation AI credential/);
   }
   const AI = "aik-" + "7".repeat(20);
-  const a = await begin("oak-watch", "update", { instanceAi: AI });
+  const a = await begin("oak-watch", "update", { instanceAi: AI, version: NEXT });
   const b = await begin("oak-watch", "something-else");
   const u = new URL(a.j.authorize);
   assert.equal(u.origin + u.pathname, CFG.AUTHORIZE);
@@ -104,7 +106,7 @@ test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in 
   assert.equal(saved.s, a.state);
   assert.notEqual(a.state, b.state, "a fresh state each time");
   assert.notEqual(saved.v, savedB.v, "a fresh verifier each time");
-  assert.deepEqual([saved.slug, saved.mode, saved.ai, typeof saved.t], ["oak-watch", "update", AI, "number"]);
+  assert.deepEqual([saved.slug, saved.mode, saved.ai, typeof saved.t, saved.r], ["oak-watch", "update", AI, "number", NEXT]);
   assert.deepEqual([savedB.mode, "ai" in savedB], ["install", false], "mode is update, or else install");
   assert.ok(Math.abs(saved.t - Date.now()) < 5000);
   const sc = a.r.headers.get("set-cookie");
@@ -572,13 +574,14 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.equal(Buffer.from(by.DAEMON_TOKEN.text, "base64url").length, 32);
   const kept = Object.fromEntries(w.acct.get("upd").filter((b) => b.type === "secret_text").map((b) => [b.name, b.text]));
   assert.deepEqual([kept.ADMIN_TOKEN, kept.PROBE_TOKEN], ["admin-kept", "probe-kept"]);
-  assert.match(w.page.done, new RegExp(`Updated from 0\\.1\\.0 to ${DEFAULT_VERSION.replace(/\./g, "\\.")}`));
+  assert.match(w.page.done, new RegExp(`It runs release ${DEFAULT_VERSION.replace(/\./g, "\\.")}; it ran 0\\.1\\.0`));
   const noR2 = seen(await run({ slug: "upd-nor2", mode: "update", pre: { "upd-nor2": planeBase("upd-nor2") }, r2: "refused" }));
   const mm = noR2.planePuts[0].meta;
   assert.ok(mm.keep_bindings.includes("r2_bucket") && !mm.bindings.some((b) => b.type === "r2_bucket"), "buckets kept, not re-bound");
   assert.equal(noR2.page.status("up"), "ok", "never refused over storage");
   const refused = seen(await run({ slug: "upd-ref", mode: "update", pre: { "upd-ref": planeBase("upd-ref") }, refuseUpdate: true }));
-  assert.match(refused.page.failed.p, /still running the version it had before. Nothing about it changed/);
+  assert.equal(refused.page.failed.h, "Stopped: Cloudflare refused the upload.");
+  assert.match(refused.page.failed.p, /runs release 0\.1\.0 as before; nothing changed\./);
   assert.deepEqual(refused.acct.get("upd-ref"), planeBase("upd-ref"));
   armWith(SIGNER.line);
   const fl = seen(await run({ slug: "upd-fleet", mode: "update", pre: { "upd-fleet": planeBase("upd-fleet") }, rel: await release({ version: NEXT }) }));
@@ -589,7 +592,7 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   restoreSigners();
   const same = seen(await run({ slug: "upd-same", mode: "update", pre: { "upd-same": planeBase("upd-same", DEFAULT_VERSION) } }));
   assert.match(same.page.label("up") ?? same.page.events.find((e) => e.id === "up").label, /already runs/);
-  assert.match(same.page.done, /Nothing changed: your group&#39;s Civicsmith was already running/);
+  assert.match(same.page.done, /Nothing changed: Your group&#39;s Civicsmith runs release /);
   assert.ok(!/<b>Updated (from|to)/.test(same.page.done));
 });
 
@@ -708,7 +711,7 @@ test("R21 the install offers the held non-test jurisdiction profiles by name and
   const offered = held.filter((p) => !p.test);
   assert.ok(offered.length > 0 && held.some((p) => p.test), "both kinds are held, so the filter is exercised");
   assert.deepEqual(PROFILE_CHOICES.map((p) => [p.id, p.name, [...p.covers]]), offered.map((p) => [p.id, p.name, p.covers]));
-  const home = await text("/"), upd = await text("/update");
+  const home = await text("/"), upd = await text(UPDATE_PATH);
   const boxes = [...home.matchAll(/<input type="checkbox" name="profile" value="([^"]*)"([^>]*)>/g)];
   assert.deepEqual(boxes.map((m) => m[1]), offered.map((p) => p.id));
   assert.ok(boxes.every((m) => !/checked/.test(m[2])), "none preselected");
@@ -728,7 +731,7 @@ test("R21 the install offers the held non-test jurisdiction profiles by name and
       [[testId], "install", new RegExp(`Not a jurisdiction profile this installer offers: "${testId}"`)],
       [[ids[0], ids[0]], "install", /chosen twice/], [ids[0], "install", /must be a list/], [[7], "install", /offers: 7/],
       [ids, "update", /An update never changes which jurisdiction profiles/]]) {
-    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "prof-refused", mode, profiles }) });
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "prof-refused", mode, profiles, version: NEXT }) });
     const j = await r.json();
     assert.deepEqual([r.status, j.ok], [400, false], JSON.stringify(profiles));
     assert.match(j.error, says);
@@ -764,7 +767,7 @@ test("R21 the install offers the held non-test jurisdiction profiles by name and
 });
 
 test("R22 every page names Civicsmith and the installing group, by its chosen name once chosen, and never the old name; Believe in Oakland is named on no page (K262), the installer's own address staying where it runs; its pages say it is run by the publisher of Civicsmith releases; the example name is not a place", async () => {
-  const before = { "/": await text("/"), "/update": await text("/update"), "404": await text("/nowhere"), invitation: INVITATION };
+  const before = { "/": await text("/"), "/update": await text(UPDATE_PATH), "404": await text("/nowhere"), invitation: INVITATION };
   assert.equal(PUBLISHER, "This installer is run by the publisher of Civicsmith releases.");
   for (const [where, page] of Object.entries(before)) {
     assert.match(page, /Civicsmith/, where);
@@ -877,7 +880,7 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
 });
 
 test("R37 the install page states the assistant is optional and that its two settings are made in your group's Civicsmith at its setup, separately, nothing preselected (whether the group pays for it with its own API key, set by an administrator; whether it keeps its material away from AI, off unless an administrator turns it on with a reason); that a member may always connect their own account, serving only them, unless the group keeps its material away; that each member is told what goes to Anthropic first; the install takes no choice and writes no ASSISTANT_ENABLED, and an update never writes one", async () => {
-  const home = await text("/"), upd = await text("/update");
+  const home = await text("/"), upd = await text(UPDATE_PATH);
   assert.ok(home.includes(ASSISTANT_OFFER), "the install page states it");
   const words = ASSISTANT_OFFER.replace(/\s+/g, " ");
   assert.match(words, /^The assistant is optional\./);
@@ -891,7 +894,7 @@ test("R37 the install page states the assistant is optional and that its two set
   for (const page of [home, upd]) assert.ok(!/name="assistant"/.test(page) && !/assistant:/.test(page), "no choice is offered or sent");
   /* /begin takes none: an `assistant` field is kept nowhere and refuses nothing. */
   for (const [mode, v] of [["install", "on"], ["install", "off"], ["update", "on"], ["install", "maybe"]]) {
-    const b = await begin("as-" + mode, mode, { assistant: v });
+    const b = await begin("as-" + mode, mode, { assistant: v, version: NEXT });
     assert.equal(b.j.ok, true, `${mode} ${v}`);
     assert.ok(!("as" in cookieValue(b.cookie)) && !JSON.stringify(cookieValue(b.cookie)).includes(`"${v}"`), "kept nowhere");
   }
@@ -1017,7 +1020,7 @@ test("R17 (T36) the update writes no MEMBER_TOKEN and no ASSISTANT_ENABLED and l
 });
 
 test("R23 (T36) the install and invitation pages state that the Containers permission installs the built-in file scanner and safe view, without which files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made", async () => {
-  for (const [where, page] of [["install page", await text("/")], ["invitation page", INVITATION], ["update page", await text("/update")]]) {
+  for (const [where, page] of [["install page", await text("/")], ["invitation page", INVITATION], ["update page", await text(UPDATE_PATH)]]) {
     const w = words(page);
     assert.match(w, /Workers Containers/, where);
     assert.match(w, /built-in file scanner and safe view/, where);
@@ -1129,7 +1132,7 @@ test("R23 (T46) when the release this installer carries names, for a container m
   /* The pages: the statement for the release this installer carries (its signed fleet's classes, recorded by the embed),
      before the act that begins the install, on the install page and the update page alike. */
   assert.equal(LEFT_OUT, leftOutNotice(RELEASE_CONTAINERS, RELEASE_VERSION));
-  for (const [where, page] of [["install page", seen(await text("/"))], ["update page", seen(await text("/update"))]]) {
+  for (const [where, page] of [["install page", seen(await text("/"))], ["update page", seen(await text(UPDATE_PATH))]]) {
     const named = partsLeftOut(RELEASE_CONTAINERS).map((p) => p.member);
     for (const m of named) {
       const at = page.indexOf(`id="left-out-${m}"`);
@@ -1189,7 +1192,6 @@ test("R43 the installer verifies against exactly the armed public lines, the fre
   assert.match(m.page.label("fleet"), /The fleet signature did not verify \(UNKNOWN_KEY\)/);
   restoreSigners();
 });
-test.todo("R43 the shipped ARMED_SIGNERS holds exactly the fresh release key and the offline recovery key, and not the development key (not yet met: the two lines come from Bob's signer-page sitting, T36-1; this job enters no key, and the built-in release is still signed by the development key)");
 
 test("R44 the install and the update install file-scanner with exactly the bindings its signed statement names: the copy's CAPTURES bucket by role (from its `Worker` part), its two classes, SECURITY_VPC only as R45 says; its schedule as the part gives it; a release without that part installs it without them and the page names what it lacks; the plane is bound to it as FILE_SCANNER; a member left out is named and the install never fails", async () => {
   armWith(SIGNER.line);
@@ -1232,7 +1234,7 @@ test("R44 the install and the update install file-scanner with exactly the bindi
 });
 
 test("R45 the final panel and the update's last screen say the organization's own security tools are added in your group's Civicsmith and the installer takes none; a Workers VPC service the operator names (optional, nothing preselected) binds file-scanner as SECURITY_VPC, none named writes none and the page says a tunnelled tool answers REACH_NOT_BOUND", async () => {
-  const home = await text("/"), upd = await text("/update");
+  const home = await text("/"), upd = await text(UPDATE_PATH);
   for (const page of [home, upd]) {
     const field = page.match(/<input id="vpc"[^>]*>/)?.[0];
     assert.ok(field && !/\svalue=/.test(field), "offered, nothing filled in");
@@ -1387,7 +1389,7 @@ test("R49 the installer never writes, reads or names CIVICSMITH_TEST_INSTANCE: n
   }
   assert.deepEqual(u.acct.get("r49-upd").filter((x) => x.name === NAME), [held], "the update leaves it as its deployer set it");
   assert.deepEqual(u.deleted, [], "and removes nothing");
-  for (const page of [await text("/"), await text("/update")]) assert.equal(page.includes(NAME), false, "no page offers it");
+  for (const page of [await text("/"), await text(UPDATE_PATH)]) assert.equal(page.includes(NAME), false, "no page offers it");
   /* The source: every file of the installer's own code, and the generated release.mjs but for the plane it embeds. */
   const src = new URL("../src/", import.meta.url);
   const files = readdirSync(src).filter((f) => f.endsWith(".mjs"));
@@ -1542,7 +1544,7 @@ test("R30 the slug grammar and the member binding names are instance-setup's, im
 test("R31 no place is named in the installer's behaviour: no page it serves or streams names a place a held profile covers", async () => {
   const places = new Set(jurisdictions.list().flatMap((p) => p.covers).flatMap((c) => c.toLowerCase().split(/\W+/)).filter((x) => x.length > 2));
   assert.ok(places.size > 0);
-  const pages = [...PAGES, await text("/"), await text("/update"), await text("/elsewhere"), INVITATION];
+  const pages = [...PAGES, await text("/"), await text(UPDATE_PATH), await text("/elsewhere"), INVITATION];
   assert.ok(pages.length > 40, "the pages this suite rendered");
   for (const page of pages.map(withoutChoices)) {
     const words = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "")
@@ -1635,10 +1637,10 @@ test("R33 the install and the update read back the uploaded plane's content and 
   const base = (slug) => ({ [slug]: planeBase(slug) });
   const good = seen(await run({ slug: "rb-upd", mode: "update", rel, pre: base("rb-upd") }));
   assert.ok(good.reads.includes("rb-upd"));
-  assert.match(good.page.done, /<b>Updated from 0\.1\.0 to/);
+  assert.match(good.page.done, /it ran 0\.1\.0\./);
   for (const [readBack, named] of [["differ", MISMATCH], ["multipart", null]]) {
     const w = seen(await run({ slug: "rb-upd", mode: "update", rel, readBack, pre: base("rb-upd") }));
-    if (!named) { assert.match(w.page.done, /<b>Updated from 0\.1\.0 to/, readBack); continue; }
+    if (!named) { assert.match(w.page.done, /it ran 0\.1\.0\./, readBack); continue; }
     assert.match(w.page.done, named, readBack);
     assert.ok(!/<b>Updated (from|to)/.test(w.page.done), "no success claimed");
     assert.equal(w.page.status("verify"), "no");
@@ -1690,7 +1692,7 @@ test("R35 every page the installer serves, and the invitation page, names no res
 
   /* Every page: the install and update pages, a 404, every page the suite above streamed or answered (the progress pages
      of every install and update, with their panels, and the callback's refusals), and the invitation page. */
-  const pages = [await text("/"), await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  const pages = [await text("/"), await text(UPDATE_PATH), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
   assert.ok(RAW.length > 40, "the pages this suite rendered");
   for (const page of pages) assert.deepEqual(loadsIn(page).filter(elsewhere), [], page.slice(0, 160));
   /* Typefaces are the device's or carried beside the page: no page declares a face of its own; the installer's pages take
@@ -1782,7 +1784,7 @@ test("R40 every member- or founder-facing string the installer serves (the insta
     assert.doesNotMatch(memberWords(`<p>${fine}</p>`), /\b(copy|instance|plane|servers?)\b/i, fine);
   /* Every page: the install and update pages, a 404, every page the suite above streamed or answered (the progress pages
      of every install and update with their steps, refusals and panels, the callback's refusals), and the invitation page. */
-  const pages = [await text("/"), await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  const pages = [await text("/"), await text(UPDATE_PATH), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
   assert.ok(RAW.length > 40, "the pages this suite rendered");
   for (const page of pages) {
     const words = memberWords(page);
@@ -1791,7 +1793,7 @@ test("R40 every member- or founder-facing string the installer serves (the insta
   }
   /* Each changed string by name: the pages' titles, the last screen's hand-over, R32's sentence, R14's address step, the
      refusal pages, the assistant's words, and the limits' refusal. */
-  const home = await text("/"), upd = await text("/update");
+  const home = await text("/"), upd = await text(UPDATE_PATH);
   for (const [page, want] of [[home, "<title>Create your Civicsmith group</title>"], [home, "<h2>Your group's short name</h2>"],
       [home, "<h1>Let this installer into your Cloudflare account</h1>"], [home, `<h2>${BEFORE_CLOUDFLARE_CONTROL}</h2>`],
       [upd, "<title>Update your group's Civicsmith</title>"], [upd, "The name your group's Civicsmith was installed under"],
@@ -1811,7 +1813,7 @@ test("R40 every member- or founder-facing string the installer serves (the insta
   assert.match(up.raw, /<title>Updating your group&#39;s Civicsmith<\/title>/);
   assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "find").label, `Finding your group's Civicsmith, installed as "r40-up"`);
   assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "addr").label, "Finding the address of your group's Civicsmith");
-  assert.ok(up.page.done.includes(">Open your group&#39;s Civicsmith</a>"));
+  assert.ok(up.page.done.includes(">Back to your group&#39;s Civicsmith</a>"));
   /* "Copy" keeps its other meaning: the release the installer carries is still its built-in copy. */
   armWith(SIGNER.line);
   const tamper = await release({ version: NEXT, fleet: false }); tamper.assets["bio-plane.bundled.mjs"] = "tampered";
@@ -1823,7 +1825,7 @@ test("R40 every member- or founder-facing string the installer serves (the insta
 /* ------------------------------------------------------------------------------------------------ the short name and the description */
 
 test("R41 the install page's act that chooses the short name shows the Irreversible weight (its word beside its mark); before /begin is sent in install mode a full dialog states the choice is permanent and names the short name typed; only the confirming act sends /begin, closing sends nothing; the update page shows neither", async () => {
-  const home = await text("/"), upd = await text("/update");
+  const home = await text("/"), upd = await text(UPDATE_PATH);
   const PIPS = /<span class="cs-pips" aria-hidden="true">(?:<i class="on"><\/i>){5}<\/span>Irreversible<\/span>/;
   /* The weight: five pips, the word beside them, on the button that chooses the short name and on the dialog's confirming act. */
   const go = home.match(/<button id="go" class="cs-btn" data-tone="primary">([\s\S]*?)<\/button>/)[1];
@@ -1895,7 +1897,7 @@ test("R42 where the installer's pages and the invitation page say in one line wh
     assert.ok(!/accountability record|tamper-evident record/.test(page), where);
   }
   /* Every page this suite rendered, and the update page and a 404. */
-  const pages = [home, await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  const pages = [home, await text(UPDATE_PATH), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
   assert.ok(RAW.length > 40, "the pages this suite rendered");
   for (const page of pages) {
     const words = page.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
