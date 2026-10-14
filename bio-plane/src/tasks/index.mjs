@@ -72,6 +72,11 @@ export const SIGN_TASK_KIND = "sign-requested";
 const normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
 /* A text the member wrote, trimmed; empty reads as null. */
 const trimmed = (v) => { const t = v === null || v === undefined ? "" : String(v).trim(); return t || null; };
+/* R10, R13–R15, R19 (K3145): the member a `by` stamp names. The control plane stamps a session's `by` in the viewer's
+   form, `member:<id>` (admission's `resolveSession`; the founder's bare `admin`, a machine's `class:<cls>`), so the
+   `member:` prefix is folded here and every sight, ownership and fact is asked of `member:<id>` once, never
+   `member:member:<id>`. A bare id (a caller in process) is taken as it is. */
+const memberOfStamp = (by) => (typeof by === "string" && by.startsWith("member:") ? by.slice("member:".length) : by);
 /* An opaque id for a request or a check: 16 characters drawn at random, telling no reader how many exist. */
 const opaque = (prefix) => {
   const A = "abcdefghijklmnopqrstuvwxyz0123456789", u = new Uint8Array(16);
@@ -783,7 +788,8 @@ export class Tasks {
   }
 
   /** R13: ask for a check on `target`, by expertise `label` or of the named `member`, with an optional `note`. */
-  checkRequest({ target = null, label, member, note = null, by = null, now = null } = {}) {
+  checkRequest({ target = null, label, member, note = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const info = typeof target === "string" && target ? this.#record.bundleInfo(target) : null;
@@ -843,7 +849,8 @@ export class Tasks {
   }
 
   /** R14: take the request. Exactly one take succeeds: the take is one conditional write under the request's key. */
-  checkTake({ request = null, by = null, now = null } = {}) {
+  checkTake({ request = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const { row: req, facts, refused } = this.#requestFor(request, by);
@@ -875,12 +882,13 @@ export class Tasks {
       if (e && e.exhausted) return mintExhausted("TASK");
       throw e;
     }
-    if (!todo) return this.checkTake({ request, by, now });     /* another take landed first: answer as it stands */
+    if (!todo) return this.checkTake({ request, by: stamp, now });     /* another take landed first: answer as it stands */
     return { ok: true, request: req.request, target: req.target, taken: { handle, at }, todo };
   }
 
   /** R15: the taker records a check or a reasoned concern; one record per request; it gates nothing. */
-  checkRecord({ request = null, verdict = null, reason = null, by = null, now = null } = {}) {
+  checkRecord({ request = null, verdict = null, reason = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const { row: req, facts, refused } = this.#requestFor(request, by);
@@ -1035,7 +1043,8 @@ export class Tasks {
   /** R19: ask the owners of the case's project to sign the prepared `edition` of `case`. Refusals, each writing nothing:
    *  `MACHINE_CANNOT_ASK_SIGN` (an empty or machine `by`); `NO_SUCH_CASE_EDITION` (absent, invisible to `by`, or not
    *  prepared: one answer); `SIGN_ALREADY_ASKED`, answered with the first request. */
-  signRequest({ case: caseId = null, edition = null, by = null, now = null } = {}) {
+  signRequest({ case: caseId = null, edition = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     if (typeof by !== "string" || !by || isMachineStamp(by))
       /* DEC-49 REGION is-machine-sign */
       return Tasks.#checkRefusal("MACHINE_CANNOT_ASK_SIGN",

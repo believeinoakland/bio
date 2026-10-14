@@ -228,3 +228,19 @@ test("R19: its two refusals of its own carry their rows in this module's family 
   for (const code of Object.keys(rows)) assert.equal(places.test(CHECK_REQUEST_CHECKS[code].translation), false, code);
   assert.equal(places.test(JSON.stringify(w.all(`SELECT subject_text FROM tasks`))), false);
 });
+
+test("R19, R10 (K3145): through the door's stamping, `by=member:<id>` asks as that member, never as `member:member:<id>`", () => {
+  const w = seeded();
+  const door = (by, body) => tasksOps(w.t, new URL(`http://do/x?by=${encodeURIComponent(by)}&viewer=${encodeURIComponent(by)}`), body).signrequest();
+  const r = door("member:mia", { case: CASE, edition: 2 });
+  assert.deepEqual([r.ok, r.asked], [true, 2], JSON.stringify(r));
+  assert.equal(w.all(`SELECT by FROM sign_requests`)[0].by, "mia", "recorded under the member, folded once");
+  assert.deepEqual(todos(w, r.request).map((t) => JSON.parse(t.history)[0].actor), ["mia", "mia"]);
+  refused(door("member:olga", { case: CASE, edition: 2 }), "SIGN_ALREADY_ASKED");
+  // controls: a machine's stamp refused; a doubled prefix names no member; one who may not see it answered as absent
+  refused(door("class:daemon", { case: FRESH, edition: 1 }), "MACHINE_CANNOT_ASK_SIGN");
+  refused(door("member:", { case: FRESH, edition: 1 }), "MACHINE_CANNOT_ASK_SIGN");
+  assert.equal(door("member:member:mia", { case: FRESH, edition: 1 }).code, "NO_SUCH_CASE_EDITION");
+  assert.equal(door("member:out", { case: FRESH, edition: 1 }).code, "NO_SUCH_CASE_EDITION");
+  assert.equal(door("member:dev", { case: FRESH, edition: 1 }).ok, true);
+});

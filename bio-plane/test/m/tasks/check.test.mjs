@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, NOW, iso } from "./world.mjs";
-import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, TASKS_TABLES } from "../../../src/tasks/index.mjs";
+import { CHECK_REQUEST_CHECKS, TASK_ACTOR_CHECKS, TASKS_TABLES, tasksOps } from "../../../src/tasks/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const PRJ = "PROJ-2026-0001-team", FIND = "INFO-2026-0001-finding", PRJ2 = "PROJ-2026-0002-other", OTHER = "INFO-2026-0002-hidden",
@@ -533,4 +533,42 @@ test("R17: no place is named in the check acts' behaviour or outward text", () =
   const text = JSON.stringify([w.all(`SELECT subject_text, subject_desc FROM tasks`), w.t.checkRequests({ viewer: "member:olga" }),
     w.t.checksOf({ target: FIND, viewer: "member:olga" })]);
   assert.equal(places.test(text), false);
+});
+
+/* ---- R10 (K3145): through the door's stamping ---- */
+
+/* The control plane stamps a session's `by` in the viewer's form (`member:<id>`; the founder's bare `admin`, a machine's
+   `class:<cls>`; admission's resolveSession, control-plane R53's `stampOf.by`) and the viewer likewise, in the address. */
+const door = (w, op, by, body) => {
+  const q = new URLSearchParams(); if (by !== null) { q.set("by", by); q.set("viewer", by); }
+  return tasksOps(w.t, new URL(`http://do/x?${q}`), body)[op]();
+};
+
+test("R13–R16, R10 (K3145): through the door's stamping, `by=member:<id>` asks, takes and records as that member, never as `member:member:<id>`", () => {
+  const w = seeded();
+  const r = door(w, "checkrequest", "member:olga", { target: FIND, label: "CPA", note: "please" });
+  assert.deepEqual([r.ok, r.addressed], [true, 2], JSON.stringify(r));
+  assert.equal(w.all(`SELECT by FROM check_requests WHERE request=?`, r.request)[0].by, "olga", "recorded under the member, folded once");
+  assert.equal(JSON.parse(todos(w, r.request)[0].history)[0].actor, "olga");
+  const took = door(w, "checktake", "member:cpa1", { request: r.request });
+  assert.deepEqual([took.ok, took.taken.handle], [true, "h-cpa1"], JSON.stringify(took));
+  assert.equal(w.all(`SELECT taker FROM check_takes WHERE request=?`, r.request)[0].taker, "cpa1");
+  assert.equal(door(w, "checktake", "member:cpa1", { request: r.request }).already, true, "the taker again, by the same stamp");
+  refused(door(w, "checktake", "member:cpa2", { request: r.request }), "CHECK_ALREADY_TAKEN");
+  const rec = door(w, "checkrecord", "member:cpa1", { request: r.request, verdict: "concern", reason: "the sum" });
+  assert.deepEqual([rec.ok, rec.checker, rec.handle, rec.expertise], [true, "cpa1", "h-cpa1", "self-declared"], JSON.stringify(rec));
+  // the reads, under the viewer stamp the door sets beside it
+  assert.deepEqual(door(w, "checkrequests", "member:olga", {}).requests.map((q) => q.request), [r.request]);
+  assert.equal(door(w, "checksof", null, {}).length, 0, "unstamped: nothing");
+  assert.equal(tasksOps(w.t, new URL(`http://do/x?viewer=member%3Aolga&target=${FIND}`), {}).checksof().length, 1);
+  // the stamp and a bare id (a caller in process) are one member: each refusal answers alike
+  for (const a of [{ target: FIND, label: "CPA" }, { target: OTHER, label: "CPA" }, { target: FIND, label: null }])
+    assert.deepEqual({ ...door(w, "checkrequest", "member:cpa1", a), request: null },
+      { ...w.t.checkRequest({ ...a, by: "cpa1" }), request: null }, JSON.stringify(a));
+  // controls: a machine's stamp and an empty one are refused; only one `member:` is folded, so a doubled prefix names no member
+  for (const by of ["class:daemon", "member:", null]) refused(door(w, "checkrequest", by, { target: FIND, label: "CPA" }), "MACHINE_CANNOT_CHECK");
+  refused(door(w, "checkrequest", "member:member:olga", { target: FIND, label: "CPA" }), "NO_SUCH_CHECK_TARGET");
+  refused(door(w, "checktake", "member:member:cpa2", { request: ask(w).request }), "NO_SUCH_CHECK_REQUEST");
+  // the founder's bare `admin` is taken as it is (the K2575 rules over it unchanged)
+  assert.deepEqual(door(w, "checkrequest", "admin", { target: FIND, label: "CPA" }), w.t.checkRequest({ target: FIND, label: "CPA", by: "admin" }));
 });
