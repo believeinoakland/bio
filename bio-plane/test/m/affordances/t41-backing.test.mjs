@@ -22,14 +22,14 @@ function backed(op, code, refused, accepted) {
   assert.equal(accepted?.ok, true, `${op}: refused with its reason: ${JSON.stringify(accepted).slice(0, 300)}`);
 }
 
-/* ---- credentials (R57) ---- */
-import * as crFix from "../credentials/fixture.mjs";
+/* ---- ai-accounts (its R20, R22; was credentials R57: the account ops moved with the split, N996) ---- */
+import * as aaFix from "../ai-accounts/fixture.mjs";
 
-test("R19: credentials' projectaikeepaway, graded `reasoned` (op-grades R30), is refused when turned on without its "
-   + "reason with AI_KEEP_AWAY_NO_REASON (credentials R57, R51's rule), in JUSTIFICATION_REFUSALS, and accepted with it", async () => {
-  const w = await crFix.world().group("ann", "bob");
+test("R19: ai-accounts' projectaikeepaway, graded `reasoned` (op-grades R30), is refused when turned on without its "
+   + "reason with AI_KEEP_AWAY_NO_REASON (ai-accounts R22, R20's rule), in JUSTIFICATION_REFUSALS, and accepted with it", async () => {
+  const w = await aaFix.world().group("ann", "bob");
   w.project("P", "ann");
-  const set = (x) => w.c.projectAiKeepAwaySet({ project: "P", on: true, by: "ann", ...x });
+  const set = (x) => w.a.projectAiKeepAwaySet({ project: "P", on: true, by: "ann", ...x });
   backed("projectaikeepaway", "AI_KEEP_AWAY_NO_REASON", set({ reason: "  " }), set({ reason: "The case's papers are sealed." }));
 });
 

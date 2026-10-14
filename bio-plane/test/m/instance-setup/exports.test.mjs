@@ -9,7 +9,7 @@ test("N234 (K405): the installer's names come from a leaf that loads alone, impo
   /* Loaded as a data: module, where no import can resolve: a leaf that imported anything would fail to load here. */
   const text = readFileSync(new URL("../../../src/setup-fleet.mjs", import.meta.url), "utf8");
   const alone = await import("data:text/javascript;base64," + Buffer.from(text).toString("base64"));
-  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "GROUP_SLUG_RE", "HOSTING_CONTROL", "hostingControlBlock"]);
+  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "FORGOT_HELP", "GROUP_SLUG_RE", "HOSTING_CONTROL", "HOSTING_RECOVERY_DEPLOYER", "hostingControlBlock"]);
   assert.deepEqual(alone.HOSTING_CONTROL, leaf.HOSTING_CONTROL);
   assert.equal(alone.hostingControlBlock("notice"), leaf.hostingControlBlock("notice"));
   assert.equal(alone.hostingControlBlock("notice", { guideHref: "#g" }), leaf.hostingControlBlock("notice", { guideHref: "#g" }));
@@ -91,6 +91,8 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     /* T46 (R79): a member's own explanation level */
     "infolevelset", "infolevel",
     /* T47 (R84, R85): the group's logo and languages, and the logo read control-plane serves */
-    "grouplogoset", "grouplogo", "grouplanguagesset", "grouplanguages"].sort());
+    "grouplogoset", "grouplogo", "grouplanguagesset", "grouplanguages",
+    /* T48 (R89, R90): the update notice and the administrators' three choices */
+    "updatenotice", "updatestart", "updatelater", "updateskip"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

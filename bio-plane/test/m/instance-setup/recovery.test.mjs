@@ -5,10 +5,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, frame } from "./fixture.mjs";
 import { world } from "../credentials/fixture.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 
 /* This module over the real membership and credentials, the step read for `viewer`. */
 async function over(w) {
-  const s = await boot({ more: { membership: w.m, credentials: w.c } });
+  const s = await boot({ more: { membership: w.m, credentials: w.c, aiAccounts: aiAccountsOf(w.ctx) } });
   return s.m;
 }
 const writes = (w) => w.snapshot();
@@ -79,7 +80,7 @@ test("R66 DEC-134 (6) the step gates nothing: while it is open every other act o
   await w.claim();
   const m = await over(w);
   assert.equal(m.adminRecoveryStep({ viewer: "admin" }).met, false);
-  assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "Kept here.", by: "admin" }).ok, true);
+  assert.equal(aiAccountsOf(w.ctx).aiKeepAwaySet({ on: true, reason: "Kept here.", by: "admin" }).ok, true);   // ai-accounts R21 (N996)
   assert.equal(m.assistantState().on, false);
   assert.equal(m.placeWantedSet({ name: "River Town", by: "admin" }).ok, true);
   assert.equal(m.profilesSet({ profiles: [], by: "admin" }).ok, true);

@@ -7,9 +7,9 @@
  * and `membership`'s mark of when a member last looked at Home. Data only: no op's behaviour is decided here (P6).
  *
  * `./index.mjs` spreads the tables into `RUNGS`, `RUNG_ABSENT`, `NON_ACTS` and `MACHINE_REFUSALS`. This file imports
- * nothing, so the spread closes no cycle. `actionreplyquoting` and `planask` are `ACTS` rows on an action target
- * (`affordances` R58, R51), so each has no `NON_ACTS` row and enters `MACHINE_REFUSALS` with its owner's code; every other
- * op takes a `NON_ACTS` row, which gives `op-declarations` its `NEEDS` row. No vocabulary, prompt, consequence statement
+ * nothing, so the spread closes no cycle. `actionreplyquoting` is an `ACTS` row on an action target (`affordances` R58),
+ * so it has no `NON_ACTS` row and enters `MACHINE_REFUSALS` with its owner's code; every other op, `planask` included
+ * (K3297: its subject is a plan), takes a `NON_ACTS` row, which gives `op-declarations` its `NEEDS` row. No vocabulary, prompt, consequence statement
  * or Irreversible weight is added. By R18 `phone` follows the rung or ground: every op here answers true (advisory;
  * nothing refuses by device).
  *
@@ -56,7 +56,8 @@ export const T48_RUNG_ABSENT = {
 /* ---- the refusals of a machine by name (R5; `affordances` R20) ---- */
 export const T48_MACHINE_REFUSALS = {
   actionreplyquoting: "MACHINE_CANNOT_RECORD_QUOTING", // action-replies R10, as actionreplybearing
-  planask:            "MACHINE_CANNOT_PLAN",            // action-plans R51, as itemtakeup
+  /* `planask` has none (K3297): its subject is a plan, so it is a NON_ACTS row, as T45 left the plan acts; action-plans R51
+     refuses a machine by its own code. */
 };
 
 /* ---- every op's NON_ACTS reason (R5; R32: a read "read: …" and a draft "draft: …") ---- */
@@ -88,6 +89,8 @@ export const T48_NON_ACTS = {
     + "approval and sending when recorded (filings R59)"),
   pressurefor: R("the pressure marks and pressure records of an action or project the viewer may see, each with where it "
     + "arrived (action-holds R16)"),
+  planask: "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose "
+    + "proposals reach the member's tray; writes no option and moves no bundle",
   stepsource: "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of "
     + "a declared step, withdrawn only by a reasoned act and never erased; moves no bundle",
   stepsourcewithdraw: "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited "
