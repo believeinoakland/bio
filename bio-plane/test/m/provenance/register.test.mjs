@@ -12,7 +12,8 @@ test("R1: one row per capture, with the module's clock, and a revision updates i
   assert.equal(r.ok, true);
   const row = w.row(`SELECT * FROM register WHERE capture_sha=?`, a.sha);
   assert.deepEqual({ ...row }, { capture_sha: a.sha, bundle_id: "INFO-2026-0001-a", path: a.path, encoding: "utf8",
-    bytes: Buffer.byteLength(a.text), registered: "2026-09-27T03:00:00.000Z", authored: 0, author: null, observed_at: null });
+    bytes: Buffer.byteLength(a.text), registered: "2026-09-27T03:00:00.000Z", last_registered: "2026-09-27T03:00:00.000Z",
+    authored: 0, author: null, observed_at: null });
   /* The clock is the module's, never a caller's: a caller's `registered` in the entry is not read. */
   w.clock.now = "2026-09-27T04:00:00.000Z";
   const head = w.head("INFO-2026-0001-a");
@@ -29,10 +30,82 @@ test("R1: one row per capture, with the module's clock, and a revision updates i
   const row2 = w.row(`SELECT * FROM register WHERE capture_sha=?`, a.sha);
   assert.equal(row2.path, "snapshots/moved.txt");
   assert.equal(row2.encoding, "utf8", "encoding defaults to utf8");
-  assert.equal(row2.registered, "2026-09-27T04:00:00.000Z");
+  assert.equal(row2.registered, "2026-09-27T03:00:00.000Z", "the first registration's instant (T48)");
+  assert.equal(row2.last_registered, "2026-09-27T04:00:00.000Z", "the latest write's, the module's clock");
   assert.equal(row2.authored, 0, "a caller's entry never sets authored");
   assert.equal(row2.author, null);
   assert.equal(w.count("register"), 1, "one row per capture");
+});
+
+/* A revision of `id` re-registering its live captures as they stand, through promotion's own `promote`. */
+function revise(w, id, snapKey) {
+  const files = w.record.livePaths(id).map((p) => ({ path: p, text: w.record.readFile(id, p).text }));
+  return w.promotion.promote({ bundleId: id, base: w.head(id).bundleSha, snapKey, author: "member:alice", files,
+    meta: { object_type: "information" },
+    register: w.prov.registeredFor(id).map((r) => ({ sha256: r.capture_sha, path: r.path, encoding: r.encoding, bytes: r.bytes })) });
+}
+
+test("R1 (T48): registered is the first registration's instant, never moved by a re-registration under the same bundle; last_registered is the latest", () => {
+  const w = world({ now: "2026-09-27T03:00:00.000Z" });
+  const a = w.cap("a");
+  assert.equal(w.promoteInfo("INFO-2026-0001-a", { captures: [a] }).ok, true);
+  const first = "2026-09-27T03:00:00.000Z";
+  /* Control: a capture registered once holds both equal. */
+  assert.deepEqual({ ...w.row(`SELECT registered, last_registered FROM register WHERE capture_sha = ?`, a.sha) },
+                   { registered: first, last_registered: first });
+  /* Re-registered by two later revisions of the same bundle: registered stays the first write's instant. */
+  for (const [k, at] of [["r2", "2026-09-27T04:00:00.000Z"], ["r3", "2026-09-28T01:02:03.000Z"]]) {
+    w.clock.now = at;
+    const r = revise(w, "INFO-2026-0001-a", k);
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.equal(w.prov.homeOf(a.sha).registered, first, `homeOf after ${k}`);
+    assert.equal(w.row(`SELECT last_registered FROM register WHERE capture_sha = ?`, a.sha).last_registered, at,
+                 `last_registered after ${k} is that write's instant`);
+  }
+  assert.equal(Date.parse(w.row(`SELECT last_registered FROM register`).last_registered) > Date.parse(first), true);
+  /* Every reader of the row reads the first instant: R11's registeredFor and R12's capturesOf ("first held"). */
+  assert.equal(w.prov.registeredFor("INFO-2026-0001-a")[0].registered, first);
+  assert.deepEqual(w.prov.capturesOf("INFO-2026-0001-a"), [{ capture_sha: a.sha, held_at: first }]);
+  assert.equal(w.count("register"), 1, "still one row per capture");
+});
+
+test("R1 (T48): a capture whose home is gone and that registers afresh starts registered and last_registered anew", () => {
+  const w = world({ now: "2026-09-27T03:00:00.000Z" });
+  /* A row left by another bundle that no longer exists (R2: a gone home does not count). */
+  const o = w.cap("o", "orphaned bytes");
+  w.st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered)
+                 VALUES (?,?,?,?,?,?,?)`, o.sha, "INFO-2026-0099-gone", o.path, "utf8", 1, "2026-01-01T00:00:00Z",
+                "2026-02-01T00:00:00Z");
+  assert.equal(w.promoteInfo("INFO-2026-0002-e", { captures: [o] }).ok, true);
+  assert.deepEqual({ ...w.row(`SELECT bundle_id, registered, last_registered FROM register WHERE capture_sha = ?`, o.sha) },
+                   { bundle_id: "INFO-2026-0002-e", registered: w.clock.now, last_registered: w.clock.now });
+  /* A row left under this very id by a home that is gone (nothing is held under it before this creation). */
+  const s = w.cap("s", "stale bytes");
+  w.st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered)
+                 VALUES (?,?,?,?,?,?,?)`, s.sha, "INFO-2026-0003-f", s.path, "utf8", 1, "2026-01-01T00:00:00Z",
+                "2026-01-01T00:00:00Z");
+  w.clock.now = "2026-09-27T05:00:00.000Z";
+  assert.equal(w.head("INFO-2026-0003-f"), null);
+  assert.equal(w.promoteInfo("INFO-2026-0003-f", { captures: [s] }).ok, true);
+  assert.deepEqual({ ...w.row(`SELECT registered, last_registered FROM register WHERE capture_sha = ?`, s.sha) },
+                   { registered: w.clock.now, last_registered: w.clock.now });
+});
+
+test("R1 (T48): a row written before last_registered existed keeps the registered it holds and takes it as its last_registered", () => {
+  const w = world();
+  /* A store whose register predates the column, holding a row: a boot brings it up to shape. */
+  w.st.db.exec(`ALTER TABLE register DROP COLUMN last_registered`);
+  const a = w.cap("a");
+  w.st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
+                a.sha, "INFO-2026-0001-a", a.path, "utf8", 3, "2026-03-04T05:06:07.000Z");
+  assert.deepEqual(w.prov.migrate(), { ok: true });
+  assert.deepEqual(w.prov.migrate(), { ok: true }, "idempotent");
+  assert.deepEqual({ ...w.row(`SELECT registered, last_registered FROM register WHERE capture_sha = ?`, a.sha) },
+                   { registered: "2026-03-04T05:06:07.000Z", last_registered: "2026-03-04T05:06:07.000Z" });
+  /* Control: a row written since keeps its own last_registered through a boot. */
+  w.st.sql.exec(`UPDATE register SET last_registered = ? WHERE capture_sha = ?`, "2026-03-05T00:00:00.000Z", a.sha);
+  w.prov.migrate();
+  assert.equal(w.row(`SELECT last_registered FROM register`).last_registered, "2026-03-05T00:00:00.000Z");
 });
 
 test("R1: an authored row keeps its flag, author and observed_at through a revision that gives none", () => {
@@ -290,6 +363,38 @@ test("R48: register and captured_locators keep their read-contract columns, join
                           JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ?`, "e.org/a");
   assert.deepEqual({ ...joined }, { bundle_id: "INFO-2026-0001-a", path: a.path, address: "https://e.org/a",
                                     retrieval_locator: "https://e.org/a?x" });
+});
+
+test("R48 (T48): after a re-registration, a join on register.registered orders the captures by their first registration; last_registered is later", () => {
+  const w = world({ now: "2026-09-27T01:00:00.000Z" });
+  const a = w.cap("a"), b = w.cap("b");
+  assert.equal(w.promoteInfo("INFO-2026-0001-x", { captures: [a] }).ok, true);
+  w.clock.now = "2026-09-27T02:00:00.000Z";
+  const files = w.record.livePaths("INFO-2026-0001-x").map((p) => ({ path: p, text: w.record.readFile("INFO-2026-0001-x", p).text }));
+  const withB = w.promotion.promote({ bundleId: "INFO-2026-0001-x", base: w.head("INFO-2026-0001-x").bundleSha, snapKey: "b",
+    author: "member:alice", meta: { object_type: "information" },
+    files: [...files.filter((f) => f.path !== "data/provenance.json"), { path: b.path, text: b.text },
+            { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(a), provDoc(b)] }) }],
+    register: [a, b].map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
+  assert.equal(withB.ok, true, JSON.stringify(withB));
+  /* a is re-registered later still, by a third revision. */
+  w.clock.now = "2026-09-27T03:00:00.000Z";
+  assert.equal(revise(w, "INFO-2026-0001-x", "c").ok, true);
+  assert.equal(PROVENANCE_TABLES.includes("register"), true);
+  const cols = w.rows(`PRAGMA table_info(register)`).map((r) => r.name);
+  assert.equal(cols.includes("last_registered"), true, "last_registered joins the read contract");
+  /* A later module's own SQL (capture R77's "first registered under a document"): the first is a, then b. */
+  const order = w.rows(`SELECT r.capture_sha FROM register r JOIN bundles bd ON bd.bundle_id = r.bundle_id
+                         WHERE r.bundle_id = ? ORDER BY r.registered, r.capture_sha`, "INFO-2026-0001-x").map((r) => r.capture_sha);
+  assert.deepEqual(order, [a.sha, b.sha]);
+  assert.deepEqual({ ...w.row(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY registered LIMIT 1`, "INFO-2026-0001-x") },
+                   { capture_sha: a.sha });
+  /* Control: the latest write's instant is held apart, later than the first. */
+  const row = w.row(`SELECT registered, last_registered FROM register WHERE capture_sha = ?`, a.sha);
+  assert.deepEqual({ ...row }, { registered: "2026-09-27T01:00:00.000Z", last_registered: "2026-09-27T03:00:00.000Z" });
+  assert.equal(row.last_registered > row.registered, true, "compared as text, as a later module's SQL compares them");
+  assert.deepEqual(w.rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY last_registered DESC, capture_sha`,
+                          "INFO-2026-0001-x").map((r) => r.capture_sha), [a.sha, b.sha]);
 });
 
 test("R48: register.authored is 1 exactly for a member's authored observation, and register.author names that member alone", () => {

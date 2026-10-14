@@ -15,7 +15,12 @@ CREATE TABLE IF NOT EXISTS register (
   path        TEXT NOT NULL,
   encoding    TEXT NOT NULL,
   bytes       INTEGER NOT NULL,
+  -- R1, R48 (T48; N1009, K3065): the instant the capture was FIRST registered, this module's clock, never moved by
+  -- a re-registration under the same bundle, so a reader asking which capture was first registered reads it here.
   registered  TEXT NOT NULL,
+  -- The instant of the LATEST register write, this module's clock; equal to registered after the first. NULL only
+  -- for an instant: a row written before the column existed is given its registered at migration, below.
+  last_registered TEXT,
   -- MK-1 / D-184 / IC-134 (MEMBER-KNOWLEDGE-DESIGN.md section 2). 1 when these
   -- bytes are a MEMBER'S OWN WORDS authored through op=testify, never a capture
   -- of something published. ONLY the testimony path writes 1, and promote's
@@ -114,13 +119,16 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
    value for every row that can exist before the column did, since no route could author a bundle until
    op=testify existed; `author` and `observed_at` are NULL on every row that is not authored. A receipt's
    `reputation` (R61): NULL on every receipt written before acquisition asked one, which is the truth about it. A
-   receipt's `uploads` (R63): NULL on every receipt written before the upload route existed, none of which is one. */
+   receipt's `uploads` (R63): NULL on every receipt written before the upload route existed, none of which is one.
+   The register's `last_registered` (R1, R48; T48): a row written before it existed keeps the `registered` it holds
+   and takes that as its `last_registered` (`backfillLastRegistered`), the one instant the row knows it was written. */
 export const REGISTER_ADDITIVE = [
   ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
   ["register", "author", "TEXT"],
   ["register", "observed_at", "TEXT"],
   ["captured_locators", "reputation", "TEXT"],
   ["captured_locators", "uploads", "TEXT"],
+  ["register", "last_registered", "TEXT"],
 ];
 
 /* Creates this module's tables on `sql` (the Durable Object's storage). Idempotent, run at every boot.
@@ -140,6 +148,14 @@ export function migrateProvenance(sql) {
   const bare = PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";")) { const t = s.trim(); if (t) sql.exec(t); }
   respellReceiptInstants(sql);
+  backfillLastRegistered(sql);
+}
+
+/* R1 (T48; N1009, K3065): a register row written before `last_registered` existed takes its `registered` as its
+   `last_registered`; nothing else about it moves. Idempotent: only a row with none is touched, and every write since
+   the column existed states one. */
+function backfillLastRegistered(sql) {
+  sql.exec(`UPDATE register SET last_registered = registered WHERE last_registered IS NULL`);
 }
 
 /* R48 (N133): `first_retrieved` and `last_retrieved` are spelled whole-second UTC, `YYYY-MM-DDTHH:MM:SSZ`, on every

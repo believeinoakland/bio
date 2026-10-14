@@ -21,8 +21,9 @@
  * `deps`:
  *   record, membership, promotion  the modules it uses, `recordOf(host)`, `membershipOf(host)`, `promotionOf(host)`
  *                                  unless a test passes its own.
- *   now           the module's clock, an ISO instant (default: the wall clock). R1's `registered`, R13's receipts
- *                 when a caller gives none, R28's `recorded_at` and R29's `at` read it, never a caller's time.
+ *   now           the module's clock, an ISO instant (default: the wall clock). R1's `registered` and
+ *                 `last_registered`, R13's receipts when a caller gives none, R28's `recorded_at` and R29's `at`
+ *                 read it, never a caller's time.
  *   order         the modules' total order (ids) R47's listeners run in: membership's `MODULE_ORDER`, the one list
  *                 promotion's steps run in too, unless a test passes its own. */
 
@@ -518,10 +519,11 @@ class Provenance {
     };
   }
 
-  /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
-     authored columns are written from the testimony path's own key and never from the entry a caller sent. */
+  /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock at the
+     capture's FIRST registration and `last_registered` its clock at this write; the authored columns are written from
+     the testimony path's own key and never from the entry a caller sent. */
   #project(c) {
-    const { pkg, bundleId, register } = c;
+    const { pkg, bundleId, register, head } = c;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     /* MK-1 / IC-134: the three authored columns are written FROM THE
        TESTIMONY PATH'S OWN KEY and never from the entry a caller sent — `c`
@@ -533,22 +535,29 @@ class Provenance {
        under a DIFFERENT bundle that still exists cannot reach here for ANY row:
        the fence above refuses it (C-53.8 for an authored row, C-53.13 for every
        other, D-179), so the UPDATE arm moves a row only within its own bundle or
-       off a home that no longer exists. */
+       off a home that no longer exists.
+       R1, R48 (T48; N1009, K3065): `registered` is the FIRST registration's instant, so a re-registration by a
+       revision of the same bundle keeps it and moves only `last_registered`; `capture` R77's "first registered" reads
+       it. A row whose home is gone (another bundle's, or this id's before this creation: `head` is null, nothing was
+       held) is a capture registering afresh (R2), and both instants start anew. */
     const at = this.#now();
+    const revising = head ? 1 : 0;
     for (const r of Array.isArray(register) ? register : []) {
       if (!r || typeof r.sha256 !== "string") continue;
       const own = !!(testimony && testimony.captureSha === r.sha256);
       this.#sql.exec(
-        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
-         VALUES (?,?,?,?,?,?,?,?,?)
+        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(capture_sha) DO UPDATE SET
+           registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
+                           THEN register.registered ELSE excluded.registered END,
            bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
-           bytes=excluded.bytes, registered=excluded.registered,
+           bytes=excluded.bytes, last_registered=excluded.last_registered,
            authored=MAX(register.authored, excluded.authored),
            author=COALESCE(excluded.author, register.author),
            observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
-        r.sha256, bundleId, r.path, r.encoding ?? "utf8", r.bytes, at,
-        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null);
+        r.sha256, bundleId, r.path, r.encoding ?? "utf8", r.bytes, at, at,
+        own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, revising);
     }
     return null;
   }
