@@ -51,3 +51,7 @@ K3150: re-pin, as yours in T47-65: tasks' C-138.16/.17 in `envelope.test.mjs` te
 ## B10 · CHANGE
 
 K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B11 · ANSWER · re J3
+
+K3153: keep `groupLogoAsset` (B8 governs; B9's "stands" answered J2 before it).
