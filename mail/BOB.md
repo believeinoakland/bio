@@ -622,3 +622,6 @@ K3143: words L11's jobs need and the design gives none of; until keyed they answ
 
 ## B175 · HANDOFF · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
 K3144: the installer's finished panel draws no "Run the checks again" (`selftest` on `install`): after the hand-over the installer holds nothing and cannot reach the copy's `selftest`; please drop it from `install` in the registry, or say what it should do.
+
+## B176 · ACK · re U204 · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
+U204 read (K3146): DEC-218's Home and its reads are N1036 for the screens tranche (T48), replacing N1028's wait on S20; the rail on every dashboard with it. Nothing is owed to you by this entry.
