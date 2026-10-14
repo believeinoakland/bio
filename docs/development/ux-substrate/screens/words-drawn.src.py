@@ -47,8 +47,8 @@ w('screen.calculation.spot.about', "The {count} is {whose} own count: {what}. A 
 w('screen.calculation.found.help', 'Each visit is recorded as what that member saw, with a photo where they took one.')
 w('screen.calculation.range.all', 'So of the {size} {items} marked {claim}, between about {lowc} and {highc} were really {answer}, if the {unsure} that could not be judged are like the rest.')
 REWRITE.update({
-  'screen.calculation.counts': '{visited} of {n} visited: {yes} {answer}, {no} not {answer}, {unsure} could not tell',
-  'screen.calculation.range': '{share}% of the {judged} that could be judged were {answer} · exact {confidence}% range {low}% to {high}%',
+  'screen.calculation.counts': '{visited} of {n} visited: {yes} yes, {no} no, {unsure} could not tell',   # DEC-262
+  'screen.calculation.range': '{share}% of the {judged} that could be judged were yes · exact {confidence}% range {low}% to {high}%',   # DEC-262
   'screen.calculation.notsays': 'It does not recount the {size} ({whose} check did that), says nothing certain about any one {item} no one visited, and nothing about the {outside} {items} not {what}.',
 })
 # case-editor
@@ -110,8 +110,8 @@ w('screen.document.theme.proposed', 'Page {page}, proposed by the assistant, {da
 # due-date
 w('screen.due-date.step.rolled', '{date} is {why} and {date2} {why2}, both from your profile: rolled to {due}, close of business.', False, 'two days skipped in a row, each from the group profile')
 REWRITE.update({
-  'screen.due-date.of': "{who}'s reply to your {item}",
-  'screen.due-date.step.counted': 'Counted {amount} {units}: to {date}.',
+  'screen.due-date.of': "{who}'s reply",   # DEC-262
+  'screen.due-date.step.counted': 'Counted {amount} {units}.',   # DEC-262
 })
 # explore
 w('screen.explore.sub', 'From {from} to {to}, through {kinds}, as of {date}', False, 'what the walk was asked: {kinds} the kinds followed, such as "money and votes"')
