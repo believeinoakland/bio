@@ -63,3 +63,7 @@ K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-decla
 ## B13 · ANSWER · re J4
 
 K3163: the five uses edges are added to modules.json on tranche/T47 (case-inputs, project-roster, citation, strength, people); merge tranche/T47. The totality red is affordances': forwarded to AFFORDANCES #32. R78/R87 retire at signin-door's merge, with my CHANGE then. Post COMPLETE when plane's run is in.
+
+## B14 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again. For you (T47-65): (1) re-pin the two C-69.6 pins (t46-door.test.mjs R65 and the R32/R39/R46 wire-check) to C-29.40; (2) your page-policy judges (page-policy.test.mjs R51 x3, t46-app.test.mjs R75) admit blob: in img-src alone, nowhere else.
