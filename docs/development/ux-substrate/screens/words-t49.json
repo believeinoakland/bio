@@ -1141,6 +1141,90 @@
    "note": "DEC-256: screens-investigate R29: explore opened with no centre"
   },
   {
+   "key": "screen.projects.progress.spotcheck",
+   "en": "a spot-check under way",
+   "protected": false,
+   "note": "DEC-257: a project's progress, after its questions"
+  },
+  {
+   "key": "screen.projects.invited.hidden",
+   "en": "hidden: only the members invited know it exists",
+   "protected": false,
+   "note": "DEC-257: beside a hidden project you were invited to"
+  },
+  {
+   "key": "screen.projects.columns.note",
+   "en": "Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.",
+   "protected": false,
+   "note": "DEC-257: under the projects' table"
+  },
+  {
+   "key": "screen.capture.title",
+   "en": "Add to the record",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.address.later",
+   "en": "Ask for this later",
+   "protected": false,
+   "note": "DEC-257: capturerequest's button"
+  },
+  {
+   "key": "screen.capture.address.watchhead",
+   "en": "Once it is captured: watching the address",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.address.from",
+   "en": "from {office}'s own site",
+   "protected": false,
+   "note": "DEC-257: a capture fetched from the office's own site"
+  },
+  {
+   "key": "screen.capture.address.watchbutton",
+   "en": "Watch this address for changes",
+   "protected": false,
+   "note": "DEC-257: monitorset's button"
+  },
+  {
+   "key": "screen.capture.file.taken",
+   "en": "taken {date}, {time}, by the phone that took it",
+   "protected": false,
+   "note": "DEC-257: a photo's own record of when it was taken"
+  },
+  {
+   "key": "screen.capture.file.location",
+   "en": "location in the photo: {place}",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.file.zip",
+   "en": "A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive's grade.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.photo",
+   "en": "Add a photo or recording you made then",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.photo.optional",
+   "en": "optional; it is kept beside your account",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.record",
+   "en": "Record what you saw",
+   "protected": false,
+   "note": "DEC-257: testify's button"
+  },
+  {
    "key": "screen.project.account.exploring",
    "en": "exploring: {frequency}.",
    "protected": false,
@@ -1266,6 +1350,7 @@
  "rewrite": {
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
   "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
+  "screen.capture.file.wherehelp": "Filled from the photo where it says; correct it if it is wrong.",
   "screen.setup.otp.help": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   "screen.setup.security.scanner": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
   "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -1286,6 +1371,7 @@
   "screen.question.strength.raise": "What raises it: {raise}"
  },
  "rewrite_dec": {
+  "screen.capture.file.wherehelp": "DEC-257",
   "screen.setup.otp.help": "DEC-257",
   "screen.setup.security.scanner": "DEC-257",
   "screen.setup.assistant.own": "DEC-257",

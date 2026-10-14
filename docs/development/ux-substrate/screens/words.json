@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2743,
+  "screen": 2757,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5470,
+  "total": 5484,
   "protected": 792
  },
  "words": [
@@ -16368,10 +16368,10 @@
   },
   {
    "key": "screen.capture.file.wherehelp",
-   "en": "Where you were and when, as you would tell it. Correct it if it is wrong.",
+   "en": "Filled from the photo where it says; correct it if it is wrong.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.capture.file.what",
@@ -29176,6 +29176,98 @@
    "protected": false,
    "source": "DEC-256",
    "note": "screens-investigate R29: explore opened with no centre"
+  },
+  {
+   "key": "screen.projects.progress.spotcheck",
+   "en": "a spot-check under way",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "a project's progress, after its questions"
+  },
+  {
+   "key": "screen.projects.invited.hidden",
+   "en": "hidden: only the members invited know it exists",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "beside a hidden project you were invited to"
+  },
+  {
+   "key": "screen.projects.columns.note",
+   "en": "Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "under the projects' table"
+  },
+  {
+   "key": "screen.capture.title",
+   "en": "Add to the record",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.address.later",
+   "en": "Ask for this later",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "capturerequest's button"
+  },
+  {
+   "key": "screen.capture.address.watchhead",
+   "en": "Once it is captured: watching the address",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.address.from",
+   "en": "from {office}'s own site",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "a capture fetched from the office's own site"
+  },
+  {
+   "key": "screen.capture.address.watchbutton",
+   "en": "Watch this address for changes",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "monitorset's button"
+  },
+  {
+   "key": "screen.capture.file.taken",
+   "en": "taken {date}, {time}, by the phone that took it",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "a photo's own record of when it was taken"
+  },
+  {
+   "key": "screen.capture.file.location",
+   "en": "location in the photo: {place}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.file.zip",
+   "en": "A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive's grade.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.photo",
+   "en": "Add a photo or recording you made then",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.photo.optional",
+   "en": "optional; it is kept beside your account",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.capture.saw.record",
+   "en": "Record what you saw",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "testify's button"
   },
   {
    "key": "screen.project.account.exploring",

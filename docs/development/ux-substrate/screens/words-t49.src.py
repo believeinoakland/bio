@@ -135,6 +135,7 @@ w6('screen.explore.nocentre', 'Choose where to start: a person, an organization,
 # carries sample data is keyed as a template, the drawing an instance of it.
 def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
 REWRITE7 = {
+  'screen.capture.file.wherehelp': 'Filled from the photo where it says; correct it if it is wrong.',
   'screen.setup.otp.help': "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   'screen.setup.security.scanner': 'Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.',
   'screen.setup.assistant.own': "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -154,6 +155,22 @@ REWRITE7 = {
   'screen.question.opened.noproject': 'Opened by {name}, {date}',
   'screen.question.strength.raise': 'What raises it: {raise}',
 }
+# projects
+w7('screen.projects.progress.spotcheck', 'a spot-check under way', False, "a project's progress, after its questions")
+w7('screen.projects.invited.hidden', 'hidden: only the members invited know it exists', False, 'beside a hidden project you were invited to')
+w7('screen.projects.columns.note', 'Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.', False, "under the projects' table")
+# capture
+w7('screen.capture.title', 'Add to the record')
+w7('screen.capture.address.later', 'Ask for this later', False, "capturerequest's button")
+w7('screen.capture.address.watchhead', 'Once it is captured: watching the address')
+w7('screen.capture.address.from', "from {office}'s own site", False, "a capture fetched from the office's own site")
+w7('screen.capture.address.watchbutton', 'Watch this address for changes', False, "monitorset's button")
+w7('screen.capture.file.taken', 'taken {date}, {time}, by the phone that took it', False, "a photo's own record of when it was taken")
+w7('screen.capture.file.location', 'location in the photo: {place}')
+w7('screen.capture.file.zip', "A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive's grade.")
+w7('screen.capture.saw.photo', 'Add a photo or recording you made then')
+w7('screen.capture.saw.photo.optional', 'optional; it is kept beside your account')
+w7('screen.capture.saw.record', 'Record what you saw', False, "testify's button")
 # project
 w7('screen.project.account.exploring', 'exploring: {frequency}.', False, "after the uses the project's account pays for")
 w7('screen.project.account.open', 'Open AI for this project')
