@@ -22,3 +22,17 @@
 **Words, labeled, admin grep, D29, N1073.** Words: this module holds no member-facing English (`words-reads.json` lists `reads: []` and seven provenance quotes for builders as unkeyed; they stay in source). N1068: the word "labelled" occurs only in code comments, none in a member-facing word. `admin` grep: the module holds the session kind `admin` (the founder's password session) and no reader receives the founder's id; no finding. D29: no `ok: true` in the module. N1073: the four registries wait on N1074.
 
 **Waiting.** op-capabilities (T49-16) is COMPLETE on `job/T49/op-capabilities` and not yet on `tranche/T49`; this job built against a local, untracked copy of its `index.mjs` (excluded from git). Architecture shows 5 imports naming no tracked file until it merges. The `ACT_HELP_ABSENT` re-pin (rule 5 (8)) waits for affordances' merge (its job is WORKING).
+
+## J1 · REPORT
+
+op-declarations (T49-17) is built and green on my side, except the two steps that wait on merges that have not reached `tranche/T49`.
+
+Done and pushed on `job/T49/op-declarations`: R3 (`NEEDS` composed from `op-capabilities.needsRows()` with `composeNeeds`, which refuses an overlap by name; measured equal to today's table before the delete: 323 + 500 + 27 = 850 keys); R71 (`founderhandleset`, a new `founder` kind, the founder's set alone); R72 (`projectownervotes`); K3321 (B)'s ten reds re-pinned against PR #36's registry (five owed acts T49 leaves out are named in each test); rule 5 (3)'s census and `tables.test.mjs`:75. 197 module tests pass; format, coverage (71 of 71) and ownership show 0 failures.
+
+Waiting on you (nothing for Bob):
+1. `op-capabilities` (T49-16) is COMPLETE on its job branch but not on `tranche/T49`. I built against an untracked local copy of its `index.mjs`. When you merge it, tell me (CHANGE or RESUME), and I merge the tranche, rerun the module's tests and `architecture`, and the import resolves.
+2. `affordances` (T49-14) is still WORKING. Rule 5 (8): I re-pin `ACT_HELP_ABSENT` against its merged `ACT_HELP` (it will then hold `founderhandleset` and the 13 ops whose texts `mock-acts.js` now gives), and drop `founderhandleset` from the absent list. I cannot do this before it merges.
+
+Two readings of mine (the record states both): R71 says R34 holds over `founderhandleset`, which is not a member-set op, so the partition test covers the member set plus that op; `projectownervotes` reads its project from the query as `projectId`, which is project-roster's own arm.
+
+No sentence for a key: this module holds no member-facing English.
