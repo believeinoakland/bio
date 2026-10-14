@@ -20,3 +20,45 @@ R43's test (`t47.test.mjs`, median of five fresh imports ≤ 500 ms, each run pr
 Two readings, best reading first, carrying on with each:
 1. **R43's test.** My reading: a test named R43 builds the plane, measures its global scope by bundler's `measureStart` (median of five fresh imports) and asserts the median within 500 ms, printing each run. Today it is red (509 ms) and will stay red or flap near the line until you rule on the cause (my REPORT). If you prefer the test to assert the measure is taken and printed, with the budget a printed warning as bundler R31 does, say so and I re-word it.
 2. **R48 and R45's re-pin before the merges.** `grouplogoset`, `grouplanguagesset`, `grouplanguages` (instance-setup) and `signrequest` (tasks) are served by no map on `tranche/T47` yet, and the page served at `/app` and `/` still composes four screen modules (control-plane R81/R82 unmerged; five of the nine modules do not exist on the tranche). My tests pin them now (`t47.test.mjs`: the T47 ops through the door; every screen of the nine modules drawn by the page at `/app` and `/`), red until those jobs merge and you send the CHANGE to merge `tranche/T47`. `signintrace` is the Worker door's own (control-plane R87), never a store route, so it is not in the route map's list.
+
+## J3 · COMPLETE
+
+**Completion record (T47-66), against `tranche/T47` as merged through B5 (wizard-scripts, op-grades, setup-words, instance-setup).**
+
+**How the reading set was read (§17).** Read whole: `build/requirements/plane.md`, every file under `src/plane/` (store, ask, door, index, screens, stats, transcribe, unpack, wiring, wizards), and the tests I changed (accepted, door, roster, t45, t46, t47). The other tests (the rest of `test/m/plane/`, fixture, maps, r42-entry, `test/system/migrate-released.test.mjs`) were read whole by a helper in this session, which wrote a digest citing file:line. For each used module I read only the services my Uses name: credentials R63–R71, answers R30/R35, case-inputs R16, action-records R15, instance-setup R54, control-plane R81/R82, bundler R31, and the entry's drafts (L11 fold §B, connect §3).
+
+**Entries applied:**
+- **R44:** instance-setup's `disclosureOf` is registered with `credentials.registerDisclosureRead` at start, once. Test: through the door, refused `DISCLOSURE_DUE`, then admitted after `disclosureshown`; a second registration is `LISTENER_DECLARED`. Every test world that sets an API key now records the disclosure first (fixture `disclosed()`).
+- **R45:** `caseInputsOps` is spread directly before case-authoring's map, and `actionRecordsOps` directly before actions' map, each over its source module's one instance. `maps.mjs` is updated to match. The route map's tests are re-pinned to T47's ops: `projectlist`, `projectquestions`, `drawquestion`, `projectbarset`, `monitorset`, `peopledirectory`, the credentials ops, and instance-setup's four.
+- **R46:** the Store RPC `dispatchMemberRun` hands ai-runs only `run`, `by`, `viewer` and `at`. A sentinel credential reaches no request. t46's T46 test is re-pinned to match.
+- **R47:** every account carries its `key` as `secret`, so a sign-in sends its held token for ask, draft and transcription. An answer `SIGNIN_TOKEN_REFUSED` (an ask's NDJSON `refused` event, read as the stream passes through unchanged, or a draft's or transcription's JSON) calls `credentials.subscriptionTokenRefused` once, for a sign-in only. Control: an API key drops nothing. R33's "no secret" is retired.
+- **K3089 (answers R35):** the plane stamps `use` on `op=rule` under a grant: `draft` for a draft-minted grant, else `ask`. A caller's own `use` is replaced. Only `rule` is stamped, because filing-templates' `templates` has its own `use`.
+- **R43 (K3147):** the test measures and prints the median of five fresh imports beside the 500 ms budget, as a warning (`startVerdict`), never a failure. Last runs: 571–826 ms, median 674 ms, taken with other tests running; J1's quiet runs had a median of 509 ms.
+- **R48:**
+  - The route-map part: instance-setup's four ops are drawn through the door. door.test is now at forty routes, with `grouplogo` relayed as a Response.
+  - The page: a test checks that every screen of the nine modules is drawn at `/app` and at `/`, through the plane's Worker.
+- **Inherited reds cleared:** R5/R9, R17, R33, R38, R39.
+- **Small flaws fixed in my tests:** stale step names in titles (store-door's, was control-plane's), t36's consumer count, the maps.mjs header, and two unused imports.
+- **Op-grades re-pin (B3):** the irreversible acts are now exactly `publishat` and `publishatmove`.
+
+**Still red, each waiting on a merge (no code of mine to add):**
+- **wizards.test R19:** the merged registry names acts op-declarations does not yet declare (`unlock`, `passwordreset`, `grouplogoset`, `grouplanguagesset`, `monitorset`, `drawquestion`, `projectbarset`, `signrequest`), so wizard-scripts registers those screens without them. Clears at T47-53.
+- **t47 R45/R48, the ops test:** `signrequest` is served by no map until tasks (R19) merges. The others listed pass.
+- **t47 R48, the page test:** the page composes four screen modules until control-plane R81/R82 and the five new screen modules merge.
+- **R49 (K3143):** not built. `signinDoorOps` does not exist on the tranche; I will spread it beside `credentialsOps` when you send its CHANGE. Coverage counts R49 as named only through t45's title "op-declarations R49" (a false match); its own test comes with the code.
+
+**Found in other modules (also J1):**
+- actions still spreads `actionRecordsOps` itself (your N1040).
+- R43's reductions: court-data, op-declarations, answer-envelope families, ooxml, court-citations index, case-checker program, interface-assets (your N1039).
+- I made no generated artifact stale beyond the plane bundle (accepted red 5(4)).
+
+**Tests and checks:**
+- plane module tests: 231 tests, 228 pass, 3 fail (the three above).
+- `test/system/migrate-released.test.mjs`: 606 pass, 0 fail.
+- `checks/format`: 0 failures.
+- `checks/architecture plane`: 0 failures.
+- `checks/coverage plane`: 49 of 49, 0 failures.
+- `checks/ownership plane tranche/T47`: 0 failures.
+- `checks/run.mjs`: architecture 0 failures (3,125 files); coverage 24 failures, all other modules' not-yet-met ids (accepted red 5(1)), none plane's.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 21, module lines 2128
