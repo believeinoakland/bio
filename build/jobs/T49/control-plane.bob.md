@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 K3369 (ADMISSION #12 J1 (2)): at control-plane/index.mjs:723 call doorWindowGate({ req, env, op, spec, doAnswer, credential, background }) — both names are in scope in makeFetch (credential at the queryGate call, background at :611), so a body-borne session is counted in its session's window (admission R27). Not blocking; part of your job.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
