@@ -87,6 +87,68 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
 
+/* ================================================================ the correspondence entry's one site (R16; T48-47)
+   Five conditions, each minted here and nowhere else: C-32.4 (the machine fence) and C-33.6–C-33.9 (the entry's own shape
+   and its capture). `actions.actionCorrespond` (its R101) and R4's `actionReceipt` both answer them through these, so a
+   change to what an entry must be cannot reach one act and miss the other. Each function's region below is its row's
+   `where` (`action-grammar` R29). The caller's own fields ride in `extra` and never replace `reason`, `code`, `check` or
+   `translation`; its `detail` is a sentence, or an object keyed by reason code where one call can refuse in several. */
+const RESERVED = ["ok", "reason", "code", "check", "translation"];
+function correspondRefusal(reason, fields, detail, extra) {
+  const own = {};
+  for (const [k, v] of Object.entries(extra && typeof extra === "object" ? extra : {})) if (!RESERVED.includes(k)) own[k] = v;
+  const said = own.detail && typeof own.detail === "object" ? own.detail[reason] : own.detail;
+  delete own.detail;
+  return withRow({ ok: false, reason, ...fields, ...own, detail: typeof said === "string" && said ? said : detail });
+}
+/* R4's sentences for the five conditions, field for field as `actionReceipt` answered them before R16. */
+const RECEIPT_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: "a receipt is a named member's record that the group's sending reached its addressee. A machine "
+    + "credential may not record one. Sign in as a member.",
+  BAD_DATE: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has",
+  CAPTURE_AND_TESTIMONY: "a receipt is held as the captured bytes OR a named member's account, never both.",
+  NEITHER_CAPTURE_NOR_TESTIMONY: "a receipt is held as captured bytes the register holds, or as a named member's account.",
+  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture it first, or record a named account instead.",
+});
+const shaOf = (v) => String(v ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+
+/** R16: C-32.4 `MACHINE_CANNOT_CORRESPOND` for an empty or machine author stamp (`isMachineIdentity`), else null. Pure. */
+export function correspondFence(author, extra) {
+  const who = String(author ?? "").trim();
+  /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
+  if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
+    return correspondRefusal("MACHINE_CANNOT_CORRESPOND", {},
+      "a correspondence entry is a named member's statement that this exchange happened — and on the testimony arm it IS "
+      + "the evidence. A machine credential may capture bytes and may not testify to an exchange. Sign in as a member.", extra);
+  /* END DEC-49 REGION is-machine-correspond */
+  return null;
+}
+
+/** R16: the first of C-33.6 `BAD_DATE` (`at` not a real `YYYY-MM-DD`; with `dateTime`, `YYYY-MM-DDTHH:MM` on a real date is
+ *  also one), C-33.7 `CAPTURE_AND_TESTIMONY` (a capture hash and an account both) and C-33.8 `NEITHER_CAPTURE_NOR_TESTIMONY`
+ *  (neither), else null. Pure. */
+export function correspondEntryRefusal({ at = "", artifactSha = "", account = "", dateTime = false } = {}, extra) {
+  /* DEC-49 REGION is-correspond-entry — REC-64/C-33.6-8. The conditions on the ENTRY's own shape. The target guard and
+     the hash checks around it refuse with codes minted at other sites, so they are outside this span: a `where` claims ONE
+     span, and a code enforced in eight places cannot honestly name one of them as the site. */
+  const day = String(at ?? "").trim();
+  const m = dateTime ? LOCAL_DT_RE.exec(day) : null;
+  if (!(isCalendarDate(day) || (m && isCalendarDate(m[1]))))
+    return correspondRefusal("BAD_DATE", { at: day },
+      dateTime ? "an entry is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"
+               : "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has", extra);
+  const sha = shaOf(artifactSha), acct = String(account ?? "").trim();
+  if (sha && acct)
+    return correspondRefusal("CAPTURE_AND_TESTIMONY", {},
+      "an entry carries the captured bytes OR a named account, never both: what comes back is CAPTURED, not summarised "
+      + "(DEC-13).", extra);
+  if (!sha && !acct)
+    return correspondRefusal("NEITHER_CAPTURE_NOR_TESTIMONY", {},
+      "an entry carries either an artifact_sha that resolves in the register or an account with an author.", extra);
+  /* END DEC-49 REGION is-correspond-entry */
+  return null;
+}
+
 export class ActionRecords {
   #deps;
 
@@ -112,6 +174,23 @@ export class ActionRecords {
   get progressions() { return this.#reach("progressions", (h) => progressionsOf(h)); }
   /* R9: the held standards (`standardRead`, its R5). */
   get standards() { return this.#reach("standards", (h) => standardsOf(h)); }
+
+  /** R16: the correspondence entry's site, reached on the instance `actions` creates (its R101). The two pure judgments are
+   *  the module's own functions, answered unchanged; the third reads the register. */
+  correspondFence(author, extra) { return correspondFence(author, extra); }
+  correspondEntryRefusal(entry, extra) { return correspondEntryRefusal(entry, extra); }
+  /** R16: null when the register holds `sha`, else C-33.9 `UNREGISTERED_ARTIFACT` naming `artifact_sha`. Writes nothing. */
+  unregisteredArtifact(sha, extra) {
+    const h = shaOf(sha);
+    /* DEC-49 REGION is-correspond-artifact — REC-64/C-33.9. */
+    if (h && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, h)) {
+      return correspondRefusal("UNREGISTERED_ARTIFACT", { artifact_sha: h },
+        "this hash names no capture in this store. Capture the artifact first (op=capture), or record a named account "
+        + "instead — those are the two honest ways to hold an exchange.", extra);
+    }
+    /* END DEC-49 REGION is-correspond-artifact */
+    return null;
+  }
 
   /** R15: creates the tables (idempotent), `action_law_proposals`' `standard` column added where absent. */
   migrate() { migrateActionRecords(this.sql); }
@@ -465,22 +544,15 @@ export class ActionRecords {
   actionReceipt({ target, ord = null, kind = "receipt", at = "", how = "", party = "", artifactSha = "", account = "",
                   viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    if (!who || isMachineIdentity(who))
-      return withRow({ ok: false, reason: "MACHINE_CANNOT_CORRESPOND", target: target ?? null,
-               detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine "
-                     + "credential may not record one. Sign in as a member." });
+    const asked = { target: target ?? null, detail: RECEIPT_DETAIL };
+    const fenced = correspondFence(who, asked);
+    if (fenced) return fenced;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const when = String(at ?? "").trim();
-    const m = LOCAL_DT_RE.exec(when);
-    if (!(isCalendarDate(when) || (m && isCalendarDate(m[1]))))
-      return withRow({ ok: false, reason: "BAD_DATE", at: when, target,
-               detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has" });
-    const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account, dateTime: true }, asked);
+    if (entryRefused) return entryRefused;
+    const sha = shaOf(artifactSha);
     const acct = String(account ?? "").trim();
-    if (sha && acct) return withRow({ ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
-      detail: "a receipt is held as the captured bytes OR a named member's account, never both." });
-    if (!sha && !acct) return withRow({ ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
-      detail: "a receipt is held as captured bytes the register holds, or as a named member's account." });
     if (sha && !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     const k = String(kind ?? "").trim() || "receipt";
     const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
@@ -499,9 +571,8 @@ export class ActionRecords {
       return refuse("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; `
         + "the entry named is not a sent one. Nothing was written.", { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
     /* END DEC-49 REGION is-receipt-on-sent */
-    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-      return withRow({ ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
-               detail: "this hash names no capture in this store. Capture it first, or record a named account instead." });
+    const unregistered = this.unregisteredArtifact(sha, { target, detail: RECEIPT_DETAIL });
+    if (unregistered) return unregistered;
     const recorded = stampInstant("second", this.#nowMs(null));
     const seq = this.record.transact(() => {
       const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n).n;
