@@ -111,7 +111,6 @@ const rows = [
   ["shell.glance.quiet", "quiet", false],
   ["shell.glance.people", "{n} members: {names}", false],
   ["shell.glance.more", "+{n}", false],
-  ["shell.glance.now", "Now", false],
   ["shell.glance.timeline", "Open the timeline", false],
   ["shell.glance.strip", "What can't wait", false],
   ["shell.glance.strip.sum", "{n} can't wait", false],

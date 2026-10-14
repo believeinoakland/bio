@@ -490,7 +490,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const head = "<thead><tr>" + (t.pick ? '<th class="cs-pickc"></th>' : "") + cols.map((c, i) => {
           const s = sort && sort.col === i ? (sort.dir === "desc" ? "descending" : "ascending") : "none";
           return '<th aria-sort="' + s + '">' + (typeof t.sortKey === "function"
-            ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="sort" data-table="' + esc(id) + '" data-col="' + i + '"' + tipAttr(w("shell.sort.holds"), 2) + ">" + w(c) + "</button>" : w(c)) + "</th>";
+            ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="sort" data-table="' + esc(id) + '" data-col="' + i + '" aria-label="' + w("shell.sort", { column: html(w(c)) }) + '"' + tipAttr(w("shell.sort.holds"), 2) + ">" + w(c) + "</button>" : w(c)) + "</th>";
         }).join("") + "</tr></thead>";
         const body = items.map((it) => {
           const key = String(t.key(it));
