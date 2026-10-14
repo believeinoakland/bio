@@ -32,6 +32,7 @@
  * THE BOUNDS are `run-rules`' `ASK_BOUNDS` (its R17), their provisional defaults (M-Q7 measures them): `turns` model
  * turns, `bytes` of the record's answers read into the model, `wall_ms` from start to answer, `reads` of the record. */
 import { ASK_BOUNDS, askBoundReached } from "../../bio-plane/src/run-rules/index.mjs";
+import { ANSWER_FIELDS, ANSWER_LABEL } from "../../bio-plane/src/answers/check.mjs";
 import { ASK_OPS } from "./ops.mjs";
 import { toolContent } from "./reads.mjs";
 import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
@@ -59,7 +60,7 @@ export function readTool() {
 
 /** The ask's model tools: `read` (only `ASK_OPS`) and `done_reading` for the first conversation; `answer` (answers
  *  R3's shape) for the second; `load_layer` in both, gated by the switch that governs the ask (R56). */
-export function askTools(layers) {
+export function askTools(layers, contract = { fields: ANSWER_FIELDS, label: ANSWER_LABEL }) {
   const load = {
     name: "load_layer", description: "load one of the skill pack's disclosed layers when the work needs it",
     input_schema: { type: "object", properties: { name: { type: "string", enum: layers } }, required: ["name"],
@@ -74,16 +75,18 @@ export function askTools(layers) {
       question_as_read: { type: "string" }, clarifying: { type: ["string", "null"] } },
       required: ["question_as_read"], additionalProperties: false },
   };
+  /* R89: the tool asks for the whole contract. Its fields and the label are `answers`' own, read from its export and
+     never listed here; the type hints below only describe a field, they add and drop none. */
+  const hint = { question_as_read: { type: "string" }, clarifying: { type: ["string", "null"] },
+    sentences: { type: "array" }, holdings: { type: "array" }, rules: { type: "array" }, looks: { type: "array" },
+    label: { type: "string", enum: [contract.label] } };
   const answer = {
     name: "answer",
     description: "the answer, in the answers contract: every sentence rests on what was read, quotes are exact, an "
       + "absence names its level, and every rule is the plane's",
-    input_schema: { type: "object", properties: {
-      question_as_read: { type: "string" }, clarifying: { type: ["string", "null"] }, summary: {},
-      sentences: { type: "array" }, holdings: { type: "array" }, rules: { type: "array" }, looks: { type: "array" },
-      bound: {}, truncated: {}, out_of_view: {}, lens: {}, not_established: {}, query: {}, next_acts: {},
-      label: { type: "string", enum: ["machine work"] } },
-      required: ["question_as_read"], additionalProperties: false },
+    input_schema: { type: "object",
+      properties: Object.fromEntries(contract.fields.map((k) => [k, hint[k] ?? {}])),
+      required: [...contract.fields], additionalProperties: false },
   };
   return { reading: [load, read, done], composing: [load, answer] };
 }
