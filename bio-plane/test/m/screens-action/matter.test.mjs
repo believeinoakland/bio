@@ -2,14 +2,19 @@
    asserted by its key through `setup-words` (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { escalationOps } from "../../../src/escalation/index.mjs";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import { open, main, text, ops, press, last, ok, button, W, DATA_PLANE, DET, ESC, ESCALATION, STATUS_NONE, CONSEQUENCES } from "./page.mjs";
 
-/* N1073 (K3268): the acts the screen draws are read against the owner's own declaration of its ops (`escalation`'s ops map), never
-   a list of them written here: each is one of its ops, and a state's acts are checked one by one. */
-const OWNED = new Set(Object.keys(escalationOps({}, new URL("http://x/"), {})));
+/* N1073 (K3268): the acts the screen draws are read against the declarations that own them, never a list of them written here:
+   the design's registry for this screen and `op-declarations`' `OPS`; a state's acts are then checked one by one. (Reading
+   `escalation`'s own ops map takes a `uses` edge to it, which `build/modules.json` does not hold: reported to BOB.) */
+const REG = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../docs/development/ux-substrate/screens/registry.json"), "utf8"))
+  .screens.find((s) => s.id === "matter").acts.map((a) => a.op);
 const drawn = (p) => ops(p);
-const draws = (p, op) => { assert.ok(OWNED.has(op), `${op} is an op the escalation module declares`); return drawn(p).includes(op); };
+const draws = (p, op) => { assert.ok(REG.includes(op) && OPS[op], `${op} is an act the registry declares for this screen and OPS holds`); return drawn(p).includes(op); };
 const AT = `/app/matter/${DET}~${ESC}`;
 const BARE = `/app/matter/${DET}`;
 
