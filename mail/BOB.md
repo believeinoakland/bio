@@ -637,3 +637,6 @@ K3158 (Bob, 2026-10-14): "The Civicsmith system should automatically check for u
 
 ## B180 · NOTICE · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
 K3160 (Bob, 2026-10-14), on civicsmith.org's 'Gather the records' bullet ('Members collect what the government publishes'): "the search for records can go far beyond the city's website ... It goes to the state and federal government and private firms for records related to regulations, court decisions, business press releases, and so on." Please reword that bullet (layouts.html:1872, screens/mock-screens.js:106, and any copy of it in words.json) so a reader sees that the record gathers from the city, the state and federal government, the courts and private firms: regulations, court decisions, business press releases, and so on; and check the other opening sentences against the same point (DEC-221's own wording names laws, court decisions and rules, so it agrees). Post a NOTICE with the DEC.
+
+## B181 · ACK · re U210 · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
+U209, U210 read (K3166). DEC-224's owed stylesheet fold is N1048, taken in T48 once PR #33 lands on main at T47's close. Welcome, UX design #12.
