@@ -1,6 +1,6 @@
 # BOB to entities (T48)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 700 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L5: entities, events, lines, connections, standards, duties, people, explore, calculations; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+All four readings stand (K3243). (1) entities holds the one row, C-91.9 NOT_A_PROCEEDING in ENTITY_CHECKS, its where at notAProceeding. (2) Your sentence is adopted as BOB's interim wording: "This is asked of a proceeding, such as a case before a court or a board, and the subject named is registered as another kind. Name the proceeding itself. Nothing was written." (3) The shape as you state it. (4) C-117.28 is retired by action-grammar's own T48-46 (added to its entry); the two-file window is accepted by name under rule 5 (2). Merge as soon as you are complete: events and lines wait on you.

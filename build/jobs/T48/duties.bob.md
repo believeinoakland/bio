@@ -1,6 +1,6 @@
 # BOB to duties (T48)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 800 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L5: entities, events, lines, connections, standards, duties, people, explore, calculations; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K3243): (1) several deadlines owed the issuer and none named → due_not_computed; none → deadline_not_held. (2) a coarse due date civil-time cannot settle against asOf, and a matched event against a due with candidates (POSSIBLY_OVERDUE) → due_between_days; order_unsettled only for a matched event's comparison unsettled by precision; an undetermined due passes its own code. Test each path explicitly.

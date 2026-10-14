@@ -3,7 +3,8 @@
    reads (R14–R16), the name lookup (R17–R19), the identifier-space judgement (R20–R25) and the defect report (R38),
    each collection keyed on one entity bounded (R39), reached through
    `entitiesOf(ctx)` (K61); the grade order (R33–R34) and the one `NO_SUCH_ENTITY` answer (R36, `noSuchEntity`) are
-   module-level, as is the one `NO_ENTITY` answer (R37, `noEntity`). R35's read contract is the `entities` and
+   module-level, as are the one `NO_ENTITY` answer (R37, `noEntity`) and, since T48, the one `NOT_A_PROCEEDING` answer
+   (R53, `notAProceeding`). R35's read contract is the `entities` and
    `resolutions` columns `schema.mjs` names; the ops map (R40, `entitiesOps`) and the count figures (R41) close it.
    T35 (T35-27): the sector list is jurisdictions' `SECTORS` (R50), and `entitiesOfKind` reads the group's entities of
    one kind (R51); `namingIn` answers R17's candidates for every entity of some kinds over named captures in one read
@@ -147,6 +148,29 @@ export function noEntity(detail = null) {
   return { ok: false, reason: "NO_ENTITY", code: "NO_ENTITY", check: row.check, translation: row.translation,
            detail: typeof detail === "string" && detail.trim() ? detail : NO_ENTITY_DETAIL };
   /* END DEC-49 REGION is-entity-named */
+}
+
+/* R53 (T48; K231, K275, K3207): THE ONE ANSWER TO ONE CONDITION, an entity is registered but is not of kind `proceeding`.
+   Every act of any module that refuses a non-proceeding answers through here (events' R34, lines' R13, actions' R65,
+   following's R29), so `NOT_A_PROCEEDING` is minted at one site and its one row is this module's (C-91.9). `detail` is
+   the caller's sentence naming what was asked of a proceeding, else the fixed default; `extra` adds a caller's own
+   fields (such as `entity_id` or `kind`) beside these and never replaces one of them (R36's rule). Writes nothing and
+   never throws. */
+export const NOT_A_PROCEEDING_DETAIL = "this is asked of an entity of kind proceeding, and the entity named is of another kind";
+const NOT_A_PROCEEDING_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
+
+export function notAProceeding(detail = null, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NOT_A_PROCEEDING_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-proceeding-kind */
+  const row = ENTITY_CHECKS.NOT_A_PROCEEDING;
+  return { ok: false, reason: "NOT_A_PROCEEDING", code: "NOT_A_PROCEEDING", check: row.check,
+           translation: row.translation, ...Object.fromEntries(own),
+           detail: typeof detail === "string" && detail.trim() ? detail : NOT_A_PROCEEDING_DETAIL };
+  /* END DEC-49 REGION is-proceeding-kind */
 }
 
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
