@@ -19,7 +19,7 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.ok(g.querySelector(".gwrap .e-ment"), "a mentioned-together line in its class");
   assert.ok(g.querySelector(".gwrap .e-pos"), "a position line in its class");
   assert.equal(g.querySelector(".gwrap .e-money"), null, "no line of a class the walk did not meet");
-  assert.match(g.textContent, /an organisation/, "the far end of a position is an organisation, by its kind's word");
+  assert.match(g.textContent, /an organization/, "the far end of a position is an organization, by its kind's word");
   assert.match(g.textContent, /a person/, "the near end of a position is a person");
   assert.deepEqual(g.querySelectorAll("svg .gchip text").map((t) => t.textContent).sort(), ["B", "C"], "each line carries its grade's letter");
   assert.match(g.textContent, /mentioned together/);

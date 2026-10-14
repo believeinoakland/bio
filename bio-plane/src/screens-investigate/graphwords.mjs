@@ -12,7 +12,7 @@ export const graphRows = (prefix) => [
 export const graphKeys = (prefix) => ({ cited: prefix + "g.cited", declared: prefix + "g.declared", hunch: prefix + "g.hunch", nosource: prefix + "g.nosource" });
 export const GRAPH_SHARED = Object.freeze([
   ...["pos", "part", "money", "ment", "same", "lead"].flatMap((k) => ["connection.kind." + k + ".name", "connection.kind." + k + ".means"]),
-  "connection.graph.limit", "connection.graph.limit.means", "connection.graph.trail.means", "connection.graph.grade.means", "connection.graph.centre.means",
+  "connection.graph.limit", "connection.graph.limit.means", "connection.graph.trail.means", "connection.graph.grade.means", "connection.graph.center.means",
   "connection.graph.click", "connection.graph.trail.label", "connection.graph.legend.grade",
   "connection.thing.person", "connection.thing.office", "connection.thing.org", "connection.thing.fund", "connection.thing.doc", "connection.thing.pay", "connection.thing.gap",
 ]);

@@ -158,7 +158,7 @@ export const PARTS = Object.freeze({
       const t = thingOf(n.id);
       return cs.row("", `<b>${cs.ref(/^ENT-/.test(n.id) ? "person" : /^(INFO|INF)-/.test(n.id) ? "document" : "record", n.id, label(n.id), [])}</b>${t ? ` <span class="mk-small">${cs.w("connection.thing." + t)}</span>` : ""}`
         + (limit.has(n.id) && n.id !== centre ? ` <span class="mk-small" data-limit="${cs.esc(n.id)}"><b>${cs.w("connection.graph.limit")}</b> · ${cs.w("connection.graph.limit.means")}</span>` : ""),
-        n.id === centre ? `<span class="mk-small">${cs.w("connection.graph.centre.means")}</span>` : press(n.id));
+        n.id === centre ? `<span class="mk-small">${cs.w("connection.graph.center.means")}</span>` : press(n.id));
     }).join("");
     const stepList = drawn.map((s) => {
       const c = classOf(s);
