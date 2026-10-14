@@ -3590,3 +3590,17 @@ response: **Bob's direction, 2026-10-14.** The cursor never announces an explana
 decided: 2026-10-14 · Bob's direction, recorded by the design session (P17)
 reasoning recorded in: this entry; `visual-language/components.css` (the explanations block's rule; `.cs-grade`, `[data-tip]`, `.cs-card`), `visual-language/civicsmith.css`, `visual-language/page.src.html` (Explanations; Keyboard, focus and touch), `screens/page.src.html` (`.cs-mast .cs-mark`, `.mk-bars .run i`, `.mk-trail .k`, `.mk-graph .edge`, `.mk-glegend .li`, `.mk-readerlink`), `measures-map.html` (`.mark`, `.bar`), `layouts.html`, `visual-language.html`.
 owed: (BOB) interface-shell folds the stylesheet when it next takes the visual language: `civicsmith.css` with no `cursor: help` anywhere and `.cs-card` without `cursor: pointer`; nothing before.
+
+### DEC-225 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_013WPLBoMoEqgg3wdk3KMaPa) (B180 / K3160: Bob, 14 October: "the search for records can go far beyond the city's website ... It goes to the state and federal government and private firms for records related to regulations, court decisions, business press releases, and so on.")
+for: bob-session
+question: What civicsmith.org says about where a group's record comes from.
+why it is Bob's: the public face's words (DEC-125, DEC-206, DEC-223) and the meaning of his ruling K3160; drawn as design detail (P17).
+provisional: "Gather the records. Members collect what the government publishes: minutes, budgets, contracts, reports, letters. Civicsmith keeps each one exactly as the office published it, with where and when it came from."
+alternative: name the sources in a sentence of their own on the front page's second line.
+recommendation: as below.
+reversal cost: low: words.
+response: **Bob's ruling K3160, drawn by the design session, 2026-10-14.** The bullet now reads: "Gather the records. Members collect the records that bear on the question, from wherever they were published: the city's minutes, budgets, contracts and letters; state and federal regulations and reports; court decisions; the press releases and filings of private firms. Civicsmith keeps each one exactly as its source published it, with where and when it came from. Together these are the group's record." The other opening sentences agree with it: the front page's first line names the laws that bind the government and the court decisions it is subject to (DEC-221, DEC-223); its second says only that the group gathers the records; the evidence bullet's "a copy fetched straight from the office" means whichever source published the passage. No other sentence on the three pages names a source. No requirement changes (K3160: capture fetches any public source, K1880; the record holds law, court and organization sources).
+decided: 2026-10-14 · Bob's ruling (K3160), drawn by the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (`site`, "How a group uses it"), `layouts.html`.
+owed: (BOB) nothing: K3160 changes no requirement; installer R42's lines follow SITE_LINE1 and SITE_LINE2, which did not change.
