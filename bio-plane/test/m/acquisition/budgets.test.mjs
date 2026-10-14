@@ -124,7 +124,10 @@ test("R40: an archive opens only at a depth of at most ARCHIVE_DEPTH_MAX, the ou
   assert.equal(w.rows("SELECT depth FROM archive_entries WHERE archive_sha=? AND idx=-1", seen[ARCHIVE_DEPTH_MAX - 1])[0].depth, ARCHIVE_DEPTH_MAX);
 });
 
-test("R40: automatic opening is held to UNPACK_DAILY_ENTRIES and UNPACK_DAILY_BYTES each UTC day over every archive; past either, the run stops and waits on that name and figure; a member's op=unpack goes past it and counts towards the day", async () => {
+test("R40: automatic opening is held to UNPACK_DAILY_ENTRIES and UNPACK_DAILY_BYTES each UTC day over every archive; past either, the run stops and waits on that name and figure; a member's op=unpack goes past it and counts towards the day", async (t) => {
+  /* N998: the day is read from the clock by the module and by `today()` here; pinned to one instant so a run that
+     crosses midnight UTC cannot set up one day and count another. */
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
   for (const [col, name, figure] of [["entries", "UNPACK_DAILY_ENTRIES", UNPACK_DAILY_ENTRIES], ["bytes", "UNPACK_DAILY_BYTES", UNPACK_DAILY_BYTES]]) {
     const w = world();
     w.rows("INSERT INTO unpack_days (day, entries, bytes) VALUES (?, 0, 0)", today());
@@ -146,4 +149,33 @@ test("R40: automatic opening is held to UNPACK_DAILY_ENTRIES and UNPACK_DAILY_BY
   const r = await capture(w, z);
   assert.deepEqual([r.body.unpack.documents.length, r.body.unpack.complete], [3, true]);
   assert.equal(w.rows("SELECT entries FROM unpack_days WHERE day=?", today())[0].entries, 3);
+});
+
+test("R40 (N998): the day an unpack counts its cuts towards is the UTC day of the instant it records for them, read from the clock once, so a run that crosses midnight counts every cut to the day its documents state", async () => {
+  const w = world();
+  const z = many(3, "midnight");
+  /* the day's automatic budget is spent, so the capture opens nothing and the member's own op=unpack does the cutting */
+  const RealDate = Date;
+  const pin = RealDate.parse("2026-03-04T12:00:00.000Z");
+  class Pinned extends RealDate { constructor(...a) { if (a.length) super(...a); else super(pin); } static now() { return pin; } }
+  globalThis.Date = Pinned;
+  try {
+    w.rows("INSERT INTO unpack_days (day, entries, bytes) VALUES (?, ?, 0)", "2026-03-04", UNPACK_DAILY_ENTRIES);
+    assert.equal((await capture(w, z)).body.unpack.documents.length, 0);
+  } finally { globalThis.Date = RealDate; }
+  /* a clock that moves on an hour at every read, from half an hour before midnight: any second read of the clock in
+     the unpack lands on the next day */
+  let tick = RealDate.parse("2026-03-04T23:30:00.000Z") - 3600e3;
+  class Stepping extends RealDate { constructor(...a) { if (a.length) super(...a); else super(Stepping.now()); } static now() { return (tick += 3600e3); } }
+  const before = Object.fromEntries(w.rows("SELECT day, entries FROM unpack_days").map((r) => [r.day, r.entries]));
+  let m;
+  globalThis.Date = Stepping;
+  try { m = await unpack(w.store, { archiveSha: sha(z), ...MEMBER }); }
+  finally { globalThis.Date = RealDate; }
+  assert.deepEqual([m.ok, m.documents.length, m.complete], [true, 3, true]);
+  const stated = [...new Set(m.documents.map((d) => d.retrieved.slice(0, 10)))];
+  assert.equal(stated.length, 1, "one instant for the call's cuts");
+  const after = Object.fromEntries(w.rows("SELECT day, entries FROM unpack_days").map((r) => [r.day, r.entries]));
+  const grew = Object.keys(after).filter((d) => after[d] !== (before[d] ?? 0)).map((d) => [d, after[d] - (before[d] ?? 0)]);
+  assert.deepEqual(grew, [[stated[0], 3]], "every cut counted to the day its documents state, and to no other");
 });
