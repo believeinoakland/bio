@@ -35,7 +35,7 @@ export const recovery = {
     const issue = cs.act("recoverycodesissue");
     if (issue) {
       const shown = Array.isArray(ui.codes) && ui.codes.length
-        ? `<div class="mk-msg" data-shown="codes"><p>${W(S + "shown")}</p><ol class="cs-list">${ui.codes.map((c) => `<li><code>${E(c)}</code></li>`).join("")}</ol></div>` : "";
+        ? `<div class="mk-msg" data-shown="codes"><p>${W(S + "shown")}</p><ol class="mk-list">${ui.codes.map((c) => `<li><code>${E(c)}</code></li>`).join("")}</ol></div>` : "";
       out.push(cs.sec(S + "issue.heading", `<p>${W(S + "spends")}</p>${shown}${issue}`));
     }
     return out.join("");

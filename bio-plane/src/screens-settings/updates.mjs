@@ -58,12 +58,12 @@ export const updates = {
           const go = cs.act("updatestart", { label: "updates.act.update", tone: "primary", outward: true, data: { version: r.version } });
           // the installer's page, opened in a new browsing context once the act answers (no opener, no referrer)
           const open = ui.address ? `<p data-shown="update"><a href="${E(ui.address)}" target="_blank" rel="noopener noreferrer">${W("updates.act.update")}</a></p>` : "";
-          body += `<div class="cs-actrow">${go}${later}</div>${open}`;
+          body += `<div>${go}${later}</div>${open}`;
         } else {
           // any other administrator: the address to pass to whoever holds the hosting account
-          const link = ui.address ? `<div class="cs-sheet"><span class="id">${E(ui.address)}</span>${cs.copy(ui.address, { label: "updates.handoff.copy" })}</div>`
+          const link = ui.address ? `<div class="cs-sheet"><span>${E(ui.address)}</span>${cs.copy(ui.address, { label: "updates.handoff.copy" })}</div>`
             : cs.act("updatestart", { label: "updates.handoff.copy", data: { version: r.version, handoff: "1" } });
-          body += `<h3>${W("updates.handoff.head")}</h3>${holder ? `<p class="mk-note">${W("updates.handoff.says", { holder })}</p>` : ""}${link}${holder ? `<p class="mk-small">${W("updates.handoff.for", { holder })}</p>` : ""}<p class="mk-small">${W("updates.handoff.explain", { version: r.version })}</p><div class="cs-actrow">${later}</div>`;
+          body += `<h3>${W("updates.handoff.head")}</h3>${holder ? `<p class="mk-note">${W("updates.handoff.says", { holder })}</p>` : ""}${link}${holder ? `<p class="mk-small">${W("updates.handoff.for", { holder })}</p>` : ""}<p class="mk-small">${W("updates.handoff.explain", { version: r.version })}</p><div>${later}</div>`;
         }
         // skipping, under a disclosure: reasoned
         const skip = cs.act("updateskip", { label: "updates.act.skip_with_reason", data: { version: r.version } });

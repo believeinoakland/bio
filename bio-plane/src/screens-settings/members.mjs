@@ -122,7 +122,7 @@ export const members = {
     }, { empty: S + "empty" }));
 
     // more for administrators (R23): the group's other settings
-    if (admin) out.push(cs.sec(S + "more.heading", `<ul class="cs-list" data-list="more">${["group", "places", "recovery"].map((id) => `<li><a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a></li>`).join("")}</ul>`));
+    if (admin) out.push(cs.sec(S + "more.heading", `<ul class="mk-list" data-list="more">${["group", "places", "recovery"].map((id) => `<li><a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a></li>`).join("")}</ul>`));
 
     // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once
     const add = cs.act("memberadd");

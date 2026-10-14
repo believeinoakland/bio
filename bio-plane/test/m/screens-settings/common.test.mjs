@@ -169,8 +169,8 @@ const RUNS = [
   ["group-identity", { me: ADMIN, table: identityTable(), reachable: true }], ["group-identity", { me: MEMBER, table: identityTable() }],
   ["security", { me: ADMIN, table: securityTable() }], ["translations", { me: ADMIN, table: translationsTable(), subject: "es", reachable: true }],
 ];
-// what the kit itself draws and interface-shell R56 re-spells (`cs.rows`' pick box, `cs-pickc`; not a class this module writes)
-const KIT_DRAWN = new Set(["cs-pickc"]);
+// what the kit itself draws (`cs.rows`, the crumbs; interface-shell owns them and its R56 lists them), not a class this module writes
+const KIT_DRAWN = new Set(["cs-panel", "cs-r", "cs-rows", "cs-crumbs", "cs-pickc"]);
 // a state each read can be in: answering, or not at all (failed)
 const FAILING = (table) => Object.fromEntries(Object.keys(table).map((k) => [k, "none"]));
 

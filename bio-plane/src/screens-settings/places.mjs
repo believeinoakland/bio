@@ -33,7 +33,7 @@ export const places = {
     // the places whose rules apply, in the order they are read
     out.push(cs.sec(S + "profiles.heading", cs.state(data.profiles, (v) => {
       const act = Array.isArray(v.profiles) ? v.profiles : [];
-      let h = act.length ? `<ol class="cs-list" data-list="profiles">${act.map((p) => `<li>${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</li>`).join("")}</ol>` : `<p>${W(S + "profiles.none")}</p>`;
+      let h = act.length ? `<ol class="mk-list" data-list="profiles">${act.map((p) => `<li>${E(p.name || p.id)}${(p.covers || []).length ? ` · ${E(p.covers.join(", "))}` : ""}</li>`).join("")}</ol>` : `<p>${W(S + "profiles.none")}</p>`;
       if ((v.conflicts || []).length) h += `<p class="mk-note">${W(S + "profiles.conflicts", { n: v.conflicts.length })}</p>`;
       const set = admin ? cs.act("profilesset") : "";
       if (set) {
@@ -81,7 +81,7 @@ export const places = {
           k.set("moreNext", r.next || null);
         });
       }
-      let h = pages.length ? `<ul class="cs-list" data-list="offices">${pages.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}</li>`).join("")}</ul>` : "";
+      let h = pages.length ? `<ul class="mk-list" data-list="offices">${pages.map((o) => `<li><span class="rec">${E(o.label)}</span> · ${W(byMember(o) ? S + "offices.bygroup" : S + "offices.seeded")}</li>`).join("")}</ul>` : "";
       if (next && !ui.moreFailed) h += `<p class="cs-state" data-state="loading">${W("state.loading")}</p>`;
       if (ui.moreFailed) h += `<p class="cs-state" data-state="failed">${W(S + "offices.rest")}</p>`;
       return h;

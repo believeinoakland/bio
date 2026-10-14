@@ -58,7 +58,7 @@ export const account = {
     // what the member knows
     let ex = cs.state(data.expertise, (v) => {
       const list = (v.expertise || []).filter((e) => e.state !== "withdrawn");
-      return list.length === 0 ? "" : `<ul class="cs-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
+      return list.length === 0 ? "" : `<ul class="mk-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
     });
     const dec = cs.act("expertisedeclare");
     if (dec) ex += `${cs.field("ma-exp", S + "expertise.field", { help: S + "expertise.help" })}${dec}`;
@@ -73,7 +73,7 @@ export const account = {
     // the member's own signing key: its public half, registered or revoked (friction by weight, interface-shell R11)
     out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
       const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
-      let h = mine.length === 0 ? "" : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
+      let h = mine.length === 0 ? "" : `<ul class="mk-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
       // made in this browser by the kit's signer; only its public line is sent (R22)
       const reg = cs.act("signerregisterown");
       // kept on this device only when the member ticks it (interface-shell R40); else a key file is made

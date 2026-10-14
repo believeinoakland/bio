@@ -73,7 +73,7 @@ export const security = {
     }), { empty: S + "tools.none" })));
 
     // what happened to them
-    if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="cs-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
+    if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="mk-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
 
     // the catalogue: each entry's panel says what the tool is sent and keeps, then asks what its config lists
     if (!data.catalogue || data.catalogue.state !== "empty") out.push(cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({

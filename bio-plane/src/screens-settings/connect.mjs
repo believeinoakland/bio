@@ -121,7 +121,7 @@ export const connect = {
             if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
             if (start || code) {
               const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
-              h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
+              h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
             }
           } else h += `<p data-state="signin">${part === false ? W("instance.part.signin.absent") : W("instance.part.unknown", { part: T(S + "signin.part") })}</p>`;
         } else if (way === "apikey") {

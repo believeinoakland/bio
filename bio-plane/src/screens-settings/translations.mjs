@@ -40,7 +40,7 @@ export const translations = {
     // the group's languages, each opening its words; the group's source English is not a language to translate into (R31)
     const langs = cs.state(data.languages, (v) => {
       const L = Array.isArray(v.languages) ? v.languages.filter((t) => String(t).split("-")[0].toLowerCase() !== "en") : [];
-      return L.length ? `<ul class="cs-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : "";
+      return L.length ? `<ul class="mk-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : "";
     });
     if (langs) out.push(cs.sec(S + "languages.heading", langs));
     if (!lang) { if (langs) out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }

@@ -31,7 +31,7 @@ export function aiPanel(cs, view, o) {
   section(S + "uses.heading", cs.state(data.uses, (v) => {
     if (!v.uses) return "";
     const u = v.uses;
-    let h = `<ul class="cs-list">${USES.map((k) => `<li><span>${W("ai.use." + k + ".name")}</span> · <span>${W(u[k] ? S + "on" : S + "off")}</span> ${cs.act("accountusesset", { label: u[k] ? S + "switch.off" : S + "switch.on", data: { sw: k, to: u[k] ? "off" : "on" } })}</li>`).join("")}</ul>`;
+    let h = `<ul class="mk-list">${USES.map((k) => `<li><span>${W("ai.use." + k + ".name")}</span> · <span>${W(u[k] ? S + "on" : S + "off")}</span> ${cs.act("accountusesset", { label: u[k] ? S + "switch.off" : S + "switch.on", data: { sw: k, to: u[k] ? "off" : "on" } })}</li>`).join("")}</ul>`;
     if (o.explore) {
       const x = u.explore || "no";
       h += cs.choice(p + "-explore", "ai.use.explore.name", ["no", "ask", "yes"].map((y) => [y, "ai.explore." + y]), { value: x }) + cs.act("accountusesset", { label: S + "explore.save", data: { sw: "explore" } });
@@ -73,7 +73,7 @@ export function aiPanel(cs, view, o) {
     const lh = data.limits && data.limits.state === "ok" && data.limits.value ? data.limits.value.history || [] : [];
     for (const h of lh) items.push({ at: h.at, html: W(S + "change.limit." + (h.change === "removed" ? "removed" : "set"), { who: name(h.by), scope: scopeName(h.scope), amount: h.amount === null || h.amount === undefined ? "" : amountOf(h.amount, h.unit), unit: unitName(h.unit), period: T(S + "period." + h.period) }) });
     items.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-    return items.length === 0 ? "" : `<ul class="cs-list">${items.map((i) => `<li>${i.html} · ${cs.date(i.at, { year: true })}</li>`).join("")}</ul>`;
+    return items.length === 0 ? "" : `<ul class="mk-list">${items.map((i) => `<li>${i.html} · ${cs.date(i.at, { year: true })}</li>`).join("")}</ul>`;
   }));
   return out.join("");
 }
