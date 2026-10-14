@@ -63,3 +63,7 @@
   - coverage 46 failures, every one another module's not-yet-met T48 ids (rule 5 (1)); none is reading-pipeline's.
 
 Size (session_01T7UhAbiPhxxWq4Nm3MKfcU): test runs 13, module lines 1666
+
+## J1 · COMPLETE
+
+T48-17 complete on job/T48/reading-pipeline. R31 met: tier4Extend reads transcription.accounts (ai-accounts.accountFor), credentials read in its place only through T48 (plane/transcribe.mjs still hands credentials until T48-78). transcribe test builds ai-accounts, never credentials; no import of credentials remains in my paths or tests, so uses can drop it (architecture 0 failures with it dropped, tried locally and reverted). Three tests sign in by {handle}. Own tests strengthened (R1, R7/R8, R8 N253, R23 exports). Tests: mine 115/115; extraction + plane transcriber 211/211. Checks: format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0 failures, coverage reds are other modules' T48 ids only. Details and items for BOB in my record.
