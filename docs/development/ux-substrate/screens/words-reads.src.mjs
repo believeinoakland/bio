@@ -453,6 +453,16 @@ for (const m of MODULES) {
     unkeyed, ...(retired.size ? { retired: [...retired].sort() } : {}), ...(Object.keys(renamed).length ? { renamed } : {}) };
 }
 DECISIONS.forEach((d, i) => { if (!used.has(i)) problems.push(`decision ${i} (${d[0]}, ${d[1]}, ${d[2].slice(0, 60)}) found no string`); });
+// DEC-260: the other modules, keyed in batches; each batch's words-reads-mod-<n>.json gives its modules' reads, unkeyed
+// and renamed, and every key it lists must be a word as here.
+for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/.test(f)).sort()) {
+  for (const [m, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(HERE, f), "utf8")))) {
+    if (out.modules[m]) { problems.push(`${f}: ${m} is already listed`); continue; }
+    for (const k of v.reads || []) if (!KEYS.has(k)) problems.push(`${f}: ${m} reads ${k}, which is not a word`);
+    out.modules[m] = { reads: [...(v.reads || [])].sort(), counts: { reads: (v.reads || []).length, unkeyed: (v.unkeyed || []).length }, unkeyed: v.unkeyed || [],
+      ...(v.renamed && Object.keys(v.renamed).length ? { renamed: v.renamed } : {}), ...(v.note ? { note: v.note } : {}), batch: "DEC-260" };
+  }
+}
 fs.writeFileSync(path.join(HERE, "words-reads.json"), JSON.stringify(out, null, 1) + "\n");
 const tot = Object.values(out.modules).reduce((a, v) => ({ reads: a.reads + (Array.isArray(v.reads) && v.reads[0] !== "*" ? v.reads.length : 0), unkeyed: a.unkeyed + v.unkeyed.length }), { reads: 0, unkeyed: 0 });
 for (const [m, v] of Object.entries(out.modules)) console.log(m.padEnd(20), JSON.stringify(v.counts), v.retired ? "retired " + v.retired.length : "", v.renamed ? "renamed " + Object.keys(v.renamed).length : "");

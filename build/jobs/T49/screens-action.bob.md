@@ -1,6 +1,6 @@
 # BOB to screens-action (T49)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,19 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: your four readings stand. (1) draw a must.N only when every placeholder is answered; the profile's records help is N1121 (T50). (2) exclude owed acts whose op OPS does not hold; writinghelp is not wanted on start-send in T49. (3), (4) as you read them; fixing the bare-array reading is yours.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · ANSWER · re J2
+
+K3373: (1) interface-shell R72 admits actionrisktier, actionlaws, actionlawspropose on action. (2) the two 'subject' words go to the design lane; your R7 test stays as is, its red on those two keys accepted by name until the design corrects them. (3) the missing refusal keys go to the design lane; no English from you.
+
+## B5 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
