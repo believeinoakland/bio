@@ -178,6 +178,8 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
   - for an administrator who does not hold the group's Cloudflare account, the hand-off link, which carries no credential.
 
   Text BOB's.
+- **T48-87 · screens-settings** · (WALK-084 #3, K3258) Members' counts agree with what they name: "Administrators" counts the group's administrators as `membership` R64/R86 define them (the founder first, once claimed), never roster rows alone, so a founder with no roster row is counted; the members count says it counts active members (the design stream's word, asked through the channel if `words.json` lacks one). Folded into screens-settings R1 before L11's START (the read that answers R86's administrators named there). Text BOB's.
+
 - **T48-72 · screens-daily** · (N1036; DEC-218, DEC-219, K3146) Home as every member's nerve centre, arrangement C, as drawn: the strip; what needs you; what needs the group; each area at a glance; the projects table; members' acts since the viewer last looked; "What happened?"; and the new member's and the new group's homes. Each read it draws is named at START. Also:
   - (K3190, census Q1) `queue`'s "Mute a kind" sends the case form `{case, kinds}`;
   - (N847) R14–R16: Home's sixth door, and the screen `elsewhere`;
