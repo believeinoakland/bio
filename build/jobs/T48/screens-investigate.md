@@ -1,3 +1,12 @@
 # screens-investigate (T48)
 
 **Status** · session_017YXKkPS5xxERKVB65BPi3G · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+QUESTION (J1, R23 and the words): I carry on with everything else (R15, R16, R17-R22, R24-R26) on these readings; R23's data-fed choices wait on your answer.
+
+1. R23, people: every field that now asks an entity id (tie's person, a timeline participant, a proceeding party/obligor/forum, a money payer/payee, an identity claim's other record, explore's "To") becomes `cs.choice` over `peopledirectory` rows (value = `entity`, text = `name`), read once per screen with limit 500. A person not in the directory (not followed) cannot be chosen: she adds them on People first. Reading is sound?
+2. R23, passages: the passage fields ("document's fingerprint" + page) have no read in my Uses that lists documents WITH their capture sha: `heldcaptures` answers `bundle_id` (INFO-...), `title`, `project`, not the capture sha. Best reading: the member chooses a document by title from `heldcaptures` (filtered by the screen's project where it has one), and the screen sends the document's capture sha as `captureSha`, read from the document with `capture`/`content` at the act. Please say which read answers a held document's capture sha (or whether `heldcaptures` rows gain `capture_sha`, a `capture` R77 change, not mine).
+3. R23, ids with no read: `calculation` (set/table/workbook fingerprints, content ids), `standard` (the law's standard id, passage content ids), `money` (contract id, question id) all ask ids. I read each from its own list where one exists (`standards` for laws, `list` type inquiry for questions as `timeline` already does); for the content-id and table/workbook fingerprints no list op exists in my Uses. Best reading: those fields move to choices over `heldcaptures` titles too, resolved to the sha at the act; a table's/set's fingerprint only where `calculation` answers it as an input. Tell me if you would rather scope R23 to the fields a read of my module's own answers.
+4. R18, words: `connection.thing.*` has person/office/org/fund/doc/pay/gap but the graph's nodes carry only `id_kind` (ENT for both a person and an organisation). I draw a word only where the id kind or the step makes it certain (INFO->doc, MNY->pay, the far end of a position step->office/org, a step's near end->person) and nothing otherwise; a word `connection.thing.entity` ("a person or organisation") would let every node say one. Please add it to words.json if you want that (REPORT follows if I need it).
