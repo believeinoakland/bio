@@ -241,8 +241,9 @@ const acts = [
                         who: r.who || "", for_uses: r.for_uses || "", member: r.member || kept.set_by || "",
                         date: r.date || (kept.set_at ? { html: cs.date(String(kept.set_at), { year: true }) } : ""),
                         reason: kept.reason || r.why || r.detail || code };
-        const html = words[code] ? cs.w(words[code], fills)
-          : r.withheld && !withheldKeys.includes(code) ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>`
+        const html = r.withheld && withheldKeys.includes(code) ? cs.w("dock.withheld." + code)
+          : words[code] ? cs.w(words[code], fills)
+          : r.withheld ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>`
           : r.translation ? cs.esc(r.translation) : cs.w("screen.assistant.dispatch.unknown", { reason: code });
         cs.set("said", { op, code, html });
       };

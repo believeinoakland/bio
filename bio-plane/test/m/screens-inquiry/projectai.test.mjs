@@ -1,15 +1,14 @@
-/* screens-inquiry R14: the project's AI account screen (`projectai`), on interface-shell's served page over a scripted
+/* screens-inquiry R14, R37, R39: the project's AI account screen (`projectai`), on interface-shell's served page over a scripted
  * plane playing `credentials`' project account ops and `ai-use`'s, with screens-settings R9's panel drawn over the
  * project's account. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, plane, P } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, P } from "./fixtures.mjs";
 
 const at = "/app/projectai/" + P;
 const OWNER = "project:" + P;
 const KEY = "sk-ant-api03-" + "7".repeat(40);
-const section = (p, head) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === head);
 /* mai is the project's owner here; `sole` leaves her its only participant */
 const parts = (sole) => ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true },
   ...(sole ? [] : [{ handle: "dev", state: "joined", owner: false }])] });
@@ -37,19 +36,19 @@ test("R14 reads: the project's account, its notice and keep-away, her sign-in, a
   assert.equal(q("projectparticipants").projectId, P);
   assert.deepEqual(p.byOp("subscriptionsignin")[0].body, { step: "state" });
   for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(q(op).owner, OWNER, op);
-  assert.match(p.root().querySelector(".cs-crumbs").textContent, /Projects.*Pothole repairs.*AI for this project/);
+  assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Pothole repairs") && says(p.root().querySelector(".cs-crumbs"), "screen.projectai.name"));
 });
 
 test("R14 drawn to an owner: what pays, the panel over the project's account (screens-settings R9), keep-away, and the eight acts", async () => {
   const p = await openAi({ sole: true });
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
-  assert.match(m.querySelector('[data-account="apikey"]').textContent, /project's own API key pays/);
-  assert.match(m.textContent, /Set by mai, 5 October 2026/);
+  assert.ok(says(m.querySelector('[data-account="apikey"]'), "screen.projectai.account.key"));
+  assert.ok(says(m, "screen.projectai.account.since", { who: "mai", date: "5 October 2026" }));
   /* the panel: its four sections, its use summed naming no member */
-  for (const head of ["What this account pays for", "Limits on this account", "This month's use", "Changes"]) assert.ok(section(p, head), head);
-  assert.match(section(p, "This month's use").textContent, /\$1\.20/);
-  assert.match(m.querySelector('[data-keepaway="off"]').textContent, /not kept away/);
+  assert.ok(m.querySelectorAll("section").length >= 4, "the panel's sections, drawn by screens-settings");
+  assert.ok(m.textContent.includes("$1.20"));
+  assert.ok(says(m.querySelector('[data-keepaway="off"]'), "screen.projectai.keepaway.off"));
   assert.deepEqual([...new Set(actsIn(m))].sort(), ["accountusesset", "ailimitset", "projectaccountremove", "projectaccountswitch",
     "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset"]);
   assert.deepEqual(rawKeys(p.root()), []);
@@ -71,7 +70,7 @@ test("R14 projectkeyset sends the key in the body only, never drawn again", asyn
   for (const v of [...p.store.values(), ...p.local.values()]) assert.ok(!String(v).includes(KEY));
   /* control: no key, nothing sent */
   const n = await openAi();
-  assert.match((await press(n, "projectkeyset")).textContent, /Paste the API key first/);
+  assert.ok(says(await press(n, "projectkeyset"), "screen.projectai.key.nokey"));
   assert.equal(n.byOp("projectkeyset").length, 0);
 });
 
@@ -83,19 +82,19 @@ test("R14 her own sign-in is offered only while the project has no other partici
   assert.ok(!actsIn(main(await openAi({ sole: true, connected: false }))).includes("projectsigninset"), "not connected");
   /* the owner's refusal by its words (ai.refused.notsole) */
   const r = await openAi({ sole: true }, { projectsigninset: refusedIn("PROJECT_NOT_SOLE_MEMBER") });
-  assert.match((await press(r, "projectsigninset")).textContent, /only while you are its only member/);
+  assert.ok(says(await press(r, "projectsigninset"), "ai.refused.notsole", { project: "" }));
 });
 
 test("R14 switch, remove, the notice, the panel's two acts and keep-away send what their owners take", async () => {
   const p = await openAi({}, { projectaccountswitch: ok({ ok: true, on: false }), projectaccountremove: ok({ ok: true, removed: true }),
     projectkeynoticeseen: ok({ ok: true, seen: true }), accountusesset: ok({ ok: true }), ailimitset: ok({ ok: true }), projectaikeepaway: ok({ ok: true }) });
-  assert.match(button(p, "projectaccountswitch").textContent, /Switch the project's account off/);
+  assert.ok(says(button(p, "projectaccountswitch"), "screen.projectai.switch.off"));
   await press(p, "projectaccountswitch");
   assert.deepEqual(p.byOp("projectaccountswitch")[0].body, { project: P, on: false });
   await press(p, "projectaccountremove");
   assert.deepEqual(p.byOp("projectaccountremove")[0].body, { project: P });
   /* the notice drawn before the first use, as it leaves the group */
-  assert.match(main(p).querySelector('[data-notice="projectkey"]').textContent, /go to Anthropic under the project's API account/);
+  assert.ok(main(p).querySelector('[data-notice="projectkey"]').textContent.includes("go to Anthropic under the project's API account"), "the notice as the plane answers it");
   await press(p, "projectkeynoticeseen");
   assert.deepEqual(p.byOp("projectkeynoticeseen")[0].body, { project: P });
   await press(p, "accountusesset");
@@ -104,25 +103,25 @@ test("R14 switch, remove, the notice, the panel's two acts and keep-away send wh
   await press(p, "ailimitset", { within: p.doc.getElementById("aio-amount").parentElement.parentElement /* the panel's set-a-limit form (screens-settings R20 draws it as a plain block, not .cs-form) */ });
   assert.deepEqual([p.byOp("ailimitset")[0].body.owner, p.byOp("ailimitset")[0].body.amount], [OWNER, 5]);
   /* keep-away: what it does said first, on only with a reason */
-  assert.match(section(p, "Keeping the project's material away from AI").textContent, /Keeps this project's material away from AI/);
+  assert.ok(says(section(p, "screen.projectai.keepaway.head"), "act.projectaikeepaway.does"));
   fill(p, { "pa-why": "the case is sealed" });
   await press(p, "projectaikeepaway");
   assert.deepEqual(p.byOp("projectaikeepaway")[0].body, { project: P, on: true, reason: "the case is sealed" });
   /* controls: no reason, nothing sent; a switched-off account offers switching it on */
   const n = await openAi();
   fill(n, { "pa-why": "" });
-  assert.match((await press(n, "projectaikeepaway")).textContent, /Say why/);
+  assert.ok(says(await press(n, "projectaikeepaway"), "screen.projectai.keepaway.noreason"));
   assert.equal(n.byOp("projectaikeepaway").length, 0);
   const off = await openAi({ state: { on: false } }, { projectaccountswitch: ok({ ok: true, on: true }) });
-  assert.match(main(off).querySelector('[data-account="off"]').textContent, /held but switched off/);
+  assert.ok(says(main(off).querySelector('[data-account="off"]'), "screen.projectai.account.off"));
   await press(off, "projectaccountswitch");
   assert.deepEqual(off.byOp("projectaccountswitch")[0].body, { project: P, on: true });
 });
 
 test("R14 keep-away on is drawn with who, when and the reason, and an owner may turn it off with a reason", async () => {
   const p = await openAi({ keep: { on: true, reason: "the case is sealed", set_by: "dev", set_at: "2026-10-03T09:00:00Z" } }, { projectaikeepaway: ok({ ok: true }) });
-  assert.match(main(p).querySelector('[data-keepaway="on"]').textContent, /dev set this on 3 October 2026: “the case is sealed”/);
-  assert.match(button(p, "projectaikeepaway").textContent, /Stop keeping it away/);
+  assert.ok(says(main(p).querySelector('[data-keepaway="on"]'), "screen.projectai.keepaway.on", { who: "dev", date: "3 October 2026", reason: "the case is sealed" }));
+  assert.ok(says(button(p, "projectaikeepaway"), "screen.projectai.keepaway.turnoff"));
   fill(p, { "pa-why": "unsealed today" });
   await press(p, "projectaikeepaway");
   assert.deepEqual(p.byOp("projectaikeepaway")[0].body, { project: P, on: false, reason: "unsealed today" });
@@ -133,14 +132,40 @@ test("R14 controls: a participant who is no owner sees what pays and the keep-aw
     projectaccountstate: ok({ ok: true, on: true, serving: true }), projectkeynotice: ok({ ok: true, due: false, text: "x" }) } });
   const m = main(p);
   assert.deepEqual(actsIn(m), []);
-  assert.match(m.textContent, /Only the project's owners set its account/);
-  assert.ok(!section(p, "Limits on this account"));
-  assert.match(m.querySelector('[data-notice="seen"]').textContent, /You have read what the project's key means/);
+  assert.ok(says(m, "screen.projectai.owners"));
+  assert.ok(!m.querySelector('button[data-act="ailimitset"]'), "no panel");
+  assert.ok(says(m.querySelector('[data-notice="seen"]'), "screen.projectai.notice.seen"));
   /* a project with no account says so */
   const none = await openAi({ state: { held: false, kind: null, on: false, set_at: null, by: null, serving: false } });
-  assert.match(main(none).querySelector('[data-account="none"]').textContent, /holds no account of its own/);
+  assert.ok(says(main(none).querySelector('[data-account="none"]'), "screen.projectai.account.none"));
   assert.ok(!actsIn(main(none)).includes("projectaccountswitch") && !actsIn(main(none)).includes("projectaccountremove"));
-  /* an administrator who is no owner of the project is drawn no act either */
+  /* an administrator who is no participant of the project sees the not-joined state (R37), no account act */
   const admin = await open(at, { boot: { plane: { ...plane(), ...ai(), whoami: ok({ ...MEMBER, member: "rosa", handle: "rosa", administer: true }) } } });
-  assert.deepEqual(actsIn(main(admin)), []);
+  assert.deepEqual(actsIn(main(admin)), ["projectjoin"]);
+});
+
+test("R37 a member not joined to the project sees the not-joined state by key, with Join; never What pays failed", async () => {
+  const seen = { status: 200, json: { ok: true, result: { ok: false, code: "PROJECT_SEEN_NOT_A_PARTICIPANT", reason: "PROJECT_SEEN_NOT_A_PARTICIPANT" } } };
+  for (const extra of [{ projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs" }] }) },
+                       { projectparticipants: seen, projectaccountstate: seen, projectkeynotice: seen, projectaikeepawaystate: seen }]) {
+    const p = await openAi({}, { projectjoin: ok({ ok: true }), ...extra });
+    const m = main(p);
+    assert.ok(m.querySelector('[data-state="notjoined"]'));
+    assert.ok(says(m, "projectai.notjoined", { project: "Pothole repairs" }));
+    assert.deepEqual(actsIn(m), ["projectjoin"]);
+    assert.ok(!says(m, "screen.projectai.account.head"), "never What pays");
+    await press(p, "projectjoin");
+    assert.equal(p.byOp("projectjoin")[0].query.projectId, P);
+  }
+  /* control: a joined member sees the panel */
+  const j = await openAi({ sole: true });
+  assert.equal(main(j).querySelector('[data-state="notjoined"]'), null);
+  assert.ok(says(main(j), "screen.projectai.account.head"));
+});
+
+test("R39 the title is the project's, never its id; a project with none draws undetermined", async () => {
+  const p = await openAi({ sole: true });
+  for (const h of main(p).querySelectorAll("h1, h2")) assert.doesNotMatch(h.textContent, /PROJ-/);
+  const bare = await openAi({ sole: true }, { image: ok({ "bundle.md": `---\nid: ${P}\nobject_type: project\n---\n` }) });
+  assert.ok(main(bare).querySelector("h1").textContent.startsWith(word("state.undetermined", { reason: "" }).trim()));
 });

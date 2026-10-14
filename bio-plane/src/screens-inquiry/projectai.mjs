@@ -12,6 +12,7 @@
  * Self-contained functions (interface-shell R21 (1)). */
 
 import * as settingsPanel from "../screens-settings/panel.mjs";
+import { SCREEN_WORDS as SETTINGS_ROWS } from "../screens-settings/index.mjs";
 
 const { aiPanel, aiPanelSend } = settingsPanel;
 
@@ -177,8 +178,12 @@ const acts = [
 ];
 
 /** The keys the panel draws over the project's account: `screens-settings`' `PANEL_KEYS` (its R9; K3369), and the
- *  `words.json` keys this module draws in its refusals. */
-const PANEL = [...(Array.isArray(settingsPanel.PANEL_KEYS) ? settingsPanel.PANEL_KEYS : []), "ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable",
+ *  `words.json` keys this module draws in its refusals and the panel's uses. */
+const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
+const PANEL = [...(Array.isArray(settingsPanel.PANEL_KEYS) ? settingsPanel.PANEL_KEYS
+  /* until screens-settings answers PANEL_KEYS (K3369), the keys of its own panel rows, read as keys only */
+  : SETTINGS_ROWS.map((r) => (Array.isArray(r) ? r[0] : r)).filter((k) => typeof k === "string" && k.startsWith("screen.panel."))),
+  ...USES.map((u) => `ai.use.${u}.name`), "ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable",
   "ai.refused.switchvalue", ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
 
 /** The keys the screen may draw (R44: keys only). */
