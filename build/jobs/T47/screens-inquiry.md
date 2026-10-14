@@ -13,3 +13,7 @@ One reading to confirm, and where the job stands.
 ## J2 · REPORT
 
 B3 applied (no change needed: built so). B4: tranche/T47 merged (95dc803a7f). Against it, the words test passes: every WORD_ROWS key my screens name is held at 6f0d88d8d5, and my own rows shadow none but act.pagetranscribe.does (interface-shell R5's named row). The other 63 tests cannot run yet: interfacePage refuses the page because OPS holds no drawquestion (op-declarations R55); interface-shell R27 (cs.choice over {value,text}, cs.later) and its projectai path are also still needed. I wait for those CHANGEs.
+
+## J3 · REPORT
+
+B5, B6 applied: tranche/T47 merged (0891b8c3a0); my one test comparing every request's header now leaves out the page's public bootstrap read (K3153). On my branch as it is: 38 pass, 26 fail, all for interface-shell's T47 kit not yet on tranche/T47 (cs.choice over {value,text}, cs.later). Merged in a scratch copy with origin/job/T47/interface-shell: 64 pass, 0 fail, the merge clean. Checks on my branch: format, architecture, coverage (16 of 16 ids), ownership, each 0 failures. I wait for your CHANGE announcing interface-shell's merge, then re-run and post COMPLETE.
