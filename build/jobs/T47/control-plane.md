@@ -1,6 +1,6 @@
 # control-plane (T47)
 
-**Status** · session_01M87yGfszMDMfmEwotYyttN · depth 2 · WAITING ON BOB (J3) · handled B9
+**Status** · session_01M87yGfszMDMfmEwotYyttN · depth 2 · WAITING ON BOB (J3) · handled B12
 
 ## J1 · QUESTION
 
