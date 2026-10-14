@@ -33,6 +33,10 @@
 
 Size (session_01LGyJtZ45XatgTxY114jhrD): test runs 5, module lines 3095
 
+**Re-run after B3 (CHANGE, K3152).** Merged `tranche/T47` (with wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster, affordances, tasks, op-declarations, admission). `node --test test/m/queue/ test/conclude-project.test.mjs` → tests 147, pass 147, fail 0. `node --test test/m/plane/` → tests 223, pass 216, fail 7; the same 7 titles fail on `tranche/T47` without my change (worktree run): instance-setup R1/R5, case-import R17, R19, R33, case-account R38, R39, project-roster R5/R9. Checks: format 0 failures (168 modules); architecture 31 files, 92 imports, 0 failures; coverage 43 of 43; ownership 6 files, 0 failures.
+
+Size (session_01LGyJtZ45XatgTxY114jhrD, re-run): test runs 3, module lines 3095
+
 ## J1 · QUESTION
 
 R53 says the clock is `queueOf`'s option `now`, "`Date.now` by default". Today, with no `now` given, queue falls back to the instance binding `env.BIO_NOW_MS` before the wall clock (as tasks, actions, action-holds, network-notices and progressions do), and plane tests (`test/m/plane/watch.test.mjs`, `docket.test.mjs`, `accepted.test.mjs`) set the whole store's clock through that binding.
