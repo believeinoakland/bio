@@ -17,3 +17,7 @@ B3 applied (no change needed: built so). B4: tranche/T47 merged (95dc803a7f). Ag
 ## J3 · REPORT
 
 B5, B6 applied: tranche/T47 merged (0891b8c3a0); my one test comparing every request's header now leaves out the page's public bootstrap read (K3153). On my branch as it is: 38 pass, 26 fail, all for interface-shell's T47 kit not yet on tranche/T47 (cs.choice over {value,text}, cs.later). Merged in a scratch copy with origin/job/T47/interface-shell: 64 pass, 0 fail, the merge clean. Checks on my branch: format, architecture, coverage (16 of 16 ids), ownership, each 0 failures. I wait for your CHANGE announcing interface-shell's merge, then re-run and post COMPLETE.
+
+## J4 · REPORT
+
+B7 applied: tranche/T47 merged (90e2197e51). Unchanged from J3: on my branch 38 pass, 26 fail, all for interface-shell's T47 kit not yet on tranche/T47; with origin/job/T47/interface-shell merged in a scratch copy, 64 pass, 0 fail. I wait for interface-shell's merge, then COMPLETE.
