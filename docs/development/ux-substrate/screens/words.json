@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2757,
+  "screen": 2801,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,8 +96,8 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5484,
-  "protected": 792
+  "total": 5528,
+  "protected": 794
  },
  "words": [
   {
@@ -12952,10 +12952,10 @@
   },
   {
    "key": "screen.find-in.scope.project",
-   "en": "Everything in this project",
+   "en": "Everything in {project} ({count} documents)",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.find-in.scope.none",
@@ -13526,10 +13526,10 @@
   },
   {
    "key": "screen.entry.codes.what",
-   "en": "These ten codes are shown once. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. Save them with your password, somewhere only you can reach. Each works once.",
+   "en": "Once you have claimed, you get ten one-time codes. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. They are shown once: save them with your password, somewhere only you can reach.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.entry.codes.none",
@@ -13932,10 +13932,10 @@
   },
   {
    "key": "screen.setup.lede",
-   "en": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Every part below can be skipped and done later in Settings.",
+   "en": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Seven short parts; you can leave and come back.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.steps",
@@ -14044,10 +14044,10 @@
   },
   {
    "key": "screen.setup.own.help",
-   "en": "At least 12 characters. From now on you sign in with this, never the one-time password.",
+   "en": "At least 12 characters. From now on you sign in with your handle and this, never the one-time password.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.again.help",
@@ -14114,10 +14114,10 @@
   },
   {
    "key": "screen.setup.domain.help",
-   "en": "Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.",
+   "en": "Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you: Civicsmith gives you one small file to place on the site, then checks it. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.domain.empty",
@@ -14163,10 +14163,10 @@
   },
   {
    "key": "screen.setup.places.help",
-   "en": "The places Civicsmith holds the rules for: their deadlines, holidays, offices and records laws, each with its source. Choosing none is allowed: everything else works, and you enter due dates and offices yourself.",
+   "en": "The places Civicsmith holds the rules for: their deadlines, holidays, offices and records laws, each with its source. Your place not listed? Choose “Other”: everything else works, and you enter due dates and offices yourself. New places arrive with Civicsmith's releases.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.place.wanted",
@@ -14247,10 +14247,10 @@
   },
   {
    "key": "screen.setup.assistant.what",
-   "en": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. Everything in Civicsmith also works without it.",
+   "en": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds; it can suggest questions and documents, and draft translations. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. What it does is labeled as the assistant's. Everything in Civicsmith also works without it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.assistant.own",
@@ -14261,10 +14261,10 @@
   },
   {
    "key": "screen.setup.assistant.paid",
-   "en": "The group's key: one Anthropic API key, held by your group, serves every member who has no account of their own, and your group pays for each use. It is off until an administrator switches it on. Administrators see its use summed over members, never who used it or what was asked.",
+   "en": "The group's API key. One Anthropic API key, held by your group, serves every member who has no account of their own. Anthropic bills the key's owner for each use, so your group pays. It is off until an administrator switches it on. Each member is told once, before their first question under it, that their questions and the material read to answer them go to Anthropic under the group's account. Administrators see the key's use summed over members, never who used it or what was asked, and set the daily limit and whether the assistant may make suggestions unprompted.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.keepaway",
@@ -14359,17 +14359,17 @@
   },
   {
    "key": "screen.setup.limit",
-   "en": "Each member's daily use of the group's key, in dollars (optional)",
+   "en": "Each member's daily use of the group's key (optional)",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.limit.help",
-   "en": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account. More limits are in Settings › Members.",
+   "en": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.limit.bad",
@@ -14394,10 +14394,10 @@
   },
   {
    "key": "screen.setup.court.what",
-   "en": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. A group doing work that could draw one should make sure its members understand the risk. The explanation is always one tap away for every member; you choose whether members are also told when they join and the first time they record something not public.",
+   "en": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.court.legend",
@@ -29270,6 +29270,100 @@
    "note": "testify's button"
   },
   {
+   "key": "screen.find-in.scope.this",
+   "en": "This document: {document}",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "a choice of where to look"
+  },
+  {
+   "key": "screen.find-in.office.heldby",
+   "en": "{office}, held today by {name}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.date.period",
+   "en": "a period, counted from each {item}",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "what kind of date a match is"
+  },
+  {
+   "key": "screen.find-in.date.own",
+   "en": "the document's own date",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "what kind of date a match is"
+  },
+  {
+   "key": "screen.find-in.date.table",
+   "en": "a table: its dates are counted through a calculation, never read in one by one",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.standard.held",
+   "en": "Held as a standard by {name} on {date}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.money.none.one",
+   "en": "This document has no money figures.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.money.none.all",
+   "en": "Neither document has money figures.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "when it looked in two documents"
+  },
+  {
+   "key": "screen.find-in.person.named",
+   "en": "named in {count} of the {total} documents",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.person.first",
+   "en": "first in {document}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.seeall",
+   "en": "See all {count} in Find",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.proposed.head",
+   "en": "Proposed by the assistant",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.proposed.notyet",
+   "en": "Not in the first release.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.proposed.later",
+   "en": "Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can't match, such as \"{example}\" in {document}, a person your group doesn't follow yet.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.find-in.proposed.labeled",
+   "en": "Each is labeled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
    "key": "screen.project.account.exploring",
    "en": "exploring: {frequency}.",
    "protected": false,
@@ -29397,6 +29491,189 @@
    "protected": false,
    "source": "DEC-257",
    "note": "machine work run at another member's request; at your own, screen.answers.machine"
+  },
+  {
+   "key": "screen.setup.claim.button",
+   "en": "Claim it and become its administrator",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "claim's button"
+  },
+  {
+   "key": "screen.setup.logo.add",
+   "en": "Add your logo (optional)",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.places.chosen",
+   "en": "You chose {place} when you created your group's Civicsmith. Change it here if you need to.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.place.example",
+   "en": "For example “{place}”.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "before screen.setup.place.wanted.help"
+  },
+  {
+   "key": "screen.setup.languages",
+   "en": "Languages your members use",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.places.save",
+   "en": "Save places and languages",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "profilesset's button"
+  },
+  {
+   "key": "screen.setup.office.heldby",
+   "en": "held by {name}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.office.heldsince",
+   "en": "held by {name} since {year}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.office.roster",
+   "en": "From {office}'s roster",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "where an office filled in for you came from"
+  },
+  {
+   "key": "screen.setup.offices.none",
+   "en": "Nothing is filled in here: Civicsmith does not hold the offices and seats for {place} yet. Add the offices your group deals with yourself, now or at any time; each is marked as added by your group. When an update brings {place}'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.people.head",
+   "en": "Who sees what about people",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.people.what",
+   "en": "Facts that come from public documents follow those documents. A project's own notes about a person stay inside that project.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.choice.head",
+   "en": "What each choice means",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.choice.own",
+   "en": "Members' own accounts. Each member who wants the assistant connects their own Claude subscription or their own API key, and it serves only them, at their own cost. Civicsmith uses a subscription only for its own member, and the subscription path needs the Workers Paid plan.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.choice.both",
+   "en": "Both. A member's own account comes first; the group's key serves the rest.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.choice.none",
+   "en": "No assistant. Every journey still works. Members lose asking in plain words, suggestions, translation drafts, and the assistant reading new results for their standing questions; searching, counting and the group's own templates take its place.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.setting.head",
+   "en": "Setting one up",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.setting.groupkey",
+   "en": "The group's key: an administrator creates an API key in Anthropic's Console (console.anthropic.com), under an account that belongs to the group and has a payment method, and pastes it below. Civicsmith seals it and never shows it again. Setting a monthly spending limit in the Console as well is wise.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.setting.own",
+   "en": "A member's own account: each member connects it themselves, from the assistant panel, with a step-by-step guide.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.leaves.head",
+   "en": "What leaves your group's Civicsmith",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.leaves.what",
+   "en": "When a member asks, their question and the material read to answer it go to Anthropic, under whichever account serves them. Nothing goes unless a member asks. You can change this choice at any time in your group's settings.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.keepaway.head",
+   "en": "Keeping your material away from AI",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.keepaway.example",
+   "en": "For example: “{example}”",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after the reason field's first sentence"
+  },
+  {
+   "key": "screen.setup.key.told",
+   "en": "Each member is told once, before their first question under it, that their questions go to Anthropic under the group's account.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.court.matters",
+   "en": "Work done in Civicsmith can matter. Checking whether officials and agencies keep their own rules can show money misspent, deadlines ignored or promises broken, and a published case can lead to a correction, an audit or a lawsuit. People and organizations a group looks into sometimes go to court to see the work behind it.",
+   "protected": true,
+   "source": "DEC-257",
+   "note": "the court notice (protected)"
+  },
+  {
+   "key": "screen.setup.court.choice",
+   "en": "The explanation is always one tap away for every member. You choose whether members are also told when they join and the first time they record something not public.",
+   "protected": true,
+   "source": "DEC-257",
+   "note": "the court notice (protected)"
+  },
+  {
+   "key": "screen.setup.security.add",
+   "en": "Add a tool now",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "securitytooladd's button"
+  },
+  {
+   "key": "screen.setup.finished.title",
+   "en": "Your group's Civicsmith is set up.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.setup.handle.after",
+   "en": "Once chosen, the step says: “{done}” Then it opens Home.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "{done} is founder.handle.done"
   },
   {
    "key": "rail.home.name",

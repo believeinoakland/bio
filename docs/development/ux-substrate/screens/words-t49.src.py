@@ -149,11 +149,22 @@ REWRITE7 = {
   'screen.connect.apikey.help': "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
   'screen.capture.file.choosehelp': 'on a phone, the camera opens',
   'screen.home.strip.group': 'Needs the group',
+  'screen.find-in.scope.project': 'Everything in {project} ({count} documents)',
   'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
   'screen.project.account.project': "Paid for by the project's own API key",
   'screen.question.opened': 'Opened by {name}, {date} · {project}',
   'screen.question.opened.noproject': 'Opened by {name}, {date}',
   'screen.question.strength.raise': 'What raises it: {raise}',
+  'screen.setup.lede': 'You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Seven short parts; you can leave and come back.',
+  'screen.setup.own.help': 'At least 12 characters. From now on you sign in with your handle and this, never the one-time password.',
+  'screen.entry.codes.what': 'Once you have claimed, you get ten one-time codes. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. They are shown once: save them with your password, somewhere only you can reach.',
+  'screen.setup.domain.help': 'Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you: Civicsmith gives you one small file to place on the site, then checks it. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.',
+  'screen.setup.places.help': "The places Civicsmith holds the rules for: their deadlines, holidays, offices and records laws, each with its source. Your place not listed? Choose “Other”: everything else works, and you enter due dates and offices yourself. New places arrive with Civicsmith's releases.",
+  'screen.setup.assistant.what': "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds; it can suggest questions and documents, and draft translations. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. What it does is labeled as the assistant's. Everything in Civicsmith also works without it.",
+  'screen.setup.assistant.paid': "The group's API key. One Anthropic API key, held by your group, serves every member who has no account of their own. Anthropic bills the key's owner for each use, so your group pays. It is off until an administrator switches it on. Each member is told once, before their first question under it, that their questions and the material read to answer them go to Anthropic under the group's account. Administrators see the key's use summed over members, never who used it or what was asked, and set the daily limit and whether the assistant may make suggestions unprompted.",
+  'screen.setup.limit': "Each member's daily use of the group's key (optional)",
+  'screen.setup.limit.help': "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
+  'screen.setup.court.what': "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk.",
 }
 # projects
 w7('screen.projects.progress.spotcheck', 'a spot-check under way', False, "a project's progress, after its questions")
@@ -171,6 +182,22 @@ w7('screen.capture.file.zip', "A ZIP archive is opened as it is captured: its fi
 w7('screen.capture.saw.photo', 'Add a photo or recording you made then')
 w7('screen.capture.saw.photo.optional', 'optional; it is kept beside your account')
 w7('screen.capture.saw.record', 'Record what you saw', False, "testify's button")
+# find-in
+w7('screen.find-in.scope.this', 'This document: {document}', False, 'a choice of where to look')
+w7('screen.find-in.office.heldby', '{office}, held today by {name}')
+w7('screen.find-in.date.period', 'a period, counted from each {item}', False, 'what kind of date a match is')
+w7('screen.find-in.date.own', "the document's own date", False, 'what kind of date a match is')
+w7('screen.find-in.date.table', 'a table: its dates are counted through a calculation, never read in one by one')
+w7('screen.find-in.standard.held', 'Held as a standard by {name} on {date}')
+w7('screen.find-in.money.none.one', 'This document has no money figures.')
+w7('screen.find-in.money.none.all', 'Neither document has money figures.', False, 'when it looked in two documents')
+w7('screen.find-in.person.named', 'named in {count} of the {total} documents')
+w7('screen.find-in.person.first', 'first in {document}')
+w7('screen.find-in.seeall', 'See all {count} in Find')
+w7('screen.find-in.proposed.head', 'Proposed by the assistant')
+w7('screen.find-in.proposed.notyet', 'Not in the first release.')
+w7('screen.find-in.proposed.later', 'Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can\'t match, such as "{example}" in {document}, a person your group doesn\'t follow yet.')
+w7('screen.find-in.proposed.labeled', 'Each is labeled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.')
 # project
 w7('screen.project.account.exploring', 'exploring: {frequency}.', False, "after the uses the project's account pays for")
 w7('screen.project.account.open', 'Open AI for this project')
@@ -193,6 +220,36 @@ w7('screen.question.proposal.rests', 'It rests on {count} passages: {passages}.'
 w7('screen.question.proposal.testinstance', 'On a test instance, its work also reads: “{label}”', False, '{label} is ai.label.untested')
 # ai
 w7('ai.machine.request', "Machine work · the assistant, at {who}'s request", False, "machine work run at another member's request; at your own, screen.answers.machine")
+# setup
+w7('screen.setup.claim.button', 'Claim it and become its administrator', False, "claim's button")
+w7('screen.setup.logo.add', 'Add your logo (optional)')
+w7('screen.setup.places.chosen', "You chose {place} when you created your group's Civicsmith. Change it here if you need to.")
+w7('screen.setup.place.example', 'For example “{place}”.', False, 'before screen.setup.place.wanted.help')
+w7('screen.setup.languages', 'Languages your members use')
+w7('screen.setup.places.save', 'Save places and languages', False, "profilesset's button")
+w7('screen.setup.office.heldby', 'held by {name}')
+w7('screen.setup.office.heldsince', 'held by {name} since {year}')
+w7('screen.setup.office.roster', "From {office}'s roster", False, 'where an office filled in for you came from')
+w7('screen.setup.offices.none', "Nothing is filled in here: Civicsmith does not hold the offices and seats for {place} yet. Add the offices your group deals with yourself, now or at any time; each is marked as added by your group. When an update brings {place}'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.")
+w7('screen.setup.people.head', 'Who sees what about people')
+w7('screen.setup.people.what', "Facts that come from public documents follow those documents. A project's own notes about a person stay inside that project.")
+w7('screen.setup.choice.head', 'What each choice means')
+w7('screen.setup.choice.own', "Members' own accounts. Each member who wants the assistant connects their own Claude subscription or their own API key, and it serves only them, at their own cost. Civicsmith uses a subscription only for its own member, and the subscription path needs the Workers Paid plan.")
+w7('screen.setup.choice.both', "Both. A member's own account comes first; the group's key serves the rest.")
+w7('screen.setup.choice.none', "No assistant. Every journey still works. Members lose asking in plain words, suggestions, translation drafts, and the assistant reading new results for their standing questions; searching, counting and the group's own templates take its place.")
+w7('screen.setup.setting.head', 'Setting one up')
+w7('screen.setup.setting.groupkey', "The group's key: an administrator creates an API key in Anthropic's Console (console.anthropic.com), under an account that belongs to the group and has a payment method, and pastes it below. Civicsmith seals it and never shows it again. Setting a monthly spending limit in the Console as well is wise.")
+w7('screen.setup.setting.own', "A member's own account: each member connects it themselves, from the assistant panel, with a step-by-step guide.")
+w7('screen.setup.leaves.head', "What leaves your group's Civicsmith")
+w7('screen.setup.leaves.what', "When a member asks, their question and the material read to answer it go to Anthropic, under whichever account serves them. Nothing goes unless a member asks. You can change this choice at any time in your group's settings.")
+w7('screen.setup.keepaway.head', 'Keeping your material away from AI')
+w7('screen.setup.keepaway.example', 'For example: “{example}”', False, "after the reason field's first sentence")
+w7('screen.setup.key.told', "Each member is told once, before their first question under it, that their questions go to Anthropic under the group's account.")
+w7('screen.setup.court.matters', 'Work done in Civicsmith can matter. Checking whether officials and agencies keep their own rules can show money misspent, deadlines ignored or promises broken, and a published case can lead to a correction, an audit or a lawsuit. People and organizations a group looks into sometimes go to court to see the work behind it.', True, 'the court notice (protected)')
+w7('screen.setup.court.choice', 'The explanation is always one tap away for every member. You choose whether members are also told when they join and the first time they record something not public.', True, 'the court notice (protected)')
+w7('screen.setup.security.add', 'Add a tool now', False, "securitytooladd's button")
+w7('screen.setup.finished.title', "Your group's Civicsmith is set up.")
+w7('screen.setup.handle.after', 'Once chosen, the step says: “{done}” Then it opens Home.', False, '{done} is founder.handle.done')
 # --- end DEC-257
 
 # Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop

@@ -65,7 +65,7 @@ if (errs.length) { for (const e of errs) console.log('SCRIPT ERROR:', e); consol
 
 // 2. The keyed words: exact sentences, and {placeholder} templates
 const norm = t => String(t).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
-const SPL = /(?<=[.!?])\s+(?=[A-Z"(])/;
+const SPL = /(?<=[.!?])(?<!\b(?:[A-Z]|Prof|Gov|Dr|Mr|Ms|Mrs|St|No)\.)\s+(?=[A-Z"(])/;   // never after an initial ("L. Chen")
 const sents = t => t.split(SPL).map(x => x.trim()).filter(Boolean);
 const bare = t => t.replace(/[.:…]$/, '');   // a closing period or colon, or the ellipsis of a button that asks more
 const PH = /\{[A-Za-z_][\w.]*\}/;
@@ -87,7 +87,7 @@ for (const w of JSON.parse(fs.readFileSync(path.join(here, 'words.json'), 'utf8'
   }
 }
 // a placeholder's text is not the template's data when it is words people wrote (quoted, or drawn as such) or is itself
-// a keyed word; the rest may be at most 65% of the sentence, so a template cannot pass off a sentence of other words
+// a keyed word; the rest may be at most 70% of the sentence, so a template cannot pass off a sentence of other words
 const free = x => /^"[^"]*"$/.test(x) || /^[\s"'.,:;…]*$/.test(x.split(REC).join('')) || exact.has(x) || exact.has(bare(x));
 const matched = s => {
   if (exact.has(s) || exact.has(bare(s))) return true;
@@ -95,7 +95,7 @@ const matched = s => {
     const m = t.re.exec(s) || t.re.exec(bare(s));
     if (!m) continue;
     const g = m.slice(1), skip = g.reduce((a, x) => a + (free(x) ? x.length : 0), 0);
-    if (g.reduce((a, x) => a + (free(x) ? 0 : x.length), 0) <= 0.65 * (s.length - skip)) return true;
+    if (g.reduce((a, x) => a + (free(x) ? 0 : x.length), 0) <= 0.7 * (s.length - skip)) return true;
   }
   return false;
 };
@@ -111,14 +111,16 @@ const nwords = s => (s.match(/[A-Za-z][\w'’-]*/g) || []).length;
 const unmatched = {};
 for (const [sid, segs] of Object.entries(drawn)) {
   const um = new Set();
+  const ok = x => nwords(x) < 4 || matched(x) || sample(x);
+  // words people wrote may sit between keyed words ("Concluded by {who}, {date}:" then the claim): each side is matched
+  const okRec = x => ok(x) || (x.includes(REC) && x.split(REC).every(y => ok(y.trim())));
   for (const seg0 of segs) {
     const seg = norm(seg0);
     if (matched(seg)) continue;
-    for (const part of seg.split(/(?:^|\s)[·›](?:\s|$)/).map(x => x.trim()).filter(Boolean)) {
-      if (matched(part) || sample(part)) continue;
-      const ok = x => nwords(x) < 4 || matched(x) || sample(x);
-      // words people wrote may sit between keyed words ("Concluded by {who}, {date}:" then the claim): each side is matched
-      for (const s of sents(part)) if (!ok(s) && !(s.includes(REC) && s.split(REC).every(x => ok(x.trim())))) um.add(s);
+    // each sentence, whole; failing that, each of its parts joined by " · " or " › " ("Settings › Security" stays whole)
+    for (const s of sents(seg)) {
+      if (okRec(s)) continue;
+      for (const part of s.split(/(?:^|\s)[·›](?:\s|$)/).map(x => x.trim()).filter(Boolean)) if (!okRec(part)) um.add(part);
     }
   }
   unmatched[sid] = [...um];
