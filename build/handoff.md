@@ -27,7 +27,7 @@
 
 ## Open with Bob
 
-- His weekly meter reading on the secondary (a seven-day usage warning showed).
+- (answered: 32%, K3155)
 - The stewards' contact address (K2799; civicsmith.org's email, K3060 D14).
 - The reviewer for the records-request template (N858, K3081).
 - The installer's Cloudflare dashboard act (K2164, N1003): walk him through it now that INSTALLER #12 is merged.

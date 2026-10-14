@@ -55,3 +55,7 @@ K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words,
 ## B11 · ANSWER · re J3
 
 K3153: keep `groupLogoAsset` (B8 governs; B9's "stands" answered J2 before it).
+
+## B12 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again. Also: the 20 control-plane reds now on the tranche came in with admission's R24/R25 lock and re-ask gates (e.g. declarations.test.mjs:45, publishat: no handler and no store route answered it); they are yours under T47-65: fix them in this job.
