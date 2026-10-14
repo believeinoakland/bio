@@ -1,6 +1,6 @@
 # BOB to interface-shell (T47)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -55,3 +55,11 @@ K3150: R49's signatures, as SCREENS-PUBLISH #1 builds to them: `cs.image(op, par
 ## B11 · CHANGE
 
 K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B12 · CHANGE
+
+K3156 (T47-94): re-opens you. Merge tranche/T47 (your requirements changed) and build: (1) R33: activity counts only while a session record exists; with none (public frame) store nothing, `bio-session:active` included (SCREENS-ENTRY #1 J5). (2) R50, answering your J5 reading: not confirmed. The hold covers every act carrying a weight (R11) that `phoneOf` answers false for (terminal, attested, irreversible rungs, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS through OP_ALIASES), never an op R11 runs on press (a read, or RUNG_ABSENT under a ground other than undetermined): knock, enroll, recover are never held. (3) New R51: an element the guide draws with `data-guide="<control>"` is handled on click and Enter/Space by `GUIDE.control(cs, view, control, dataset)`, its data-* as dataset, nothing else, no op sent (SCREENS-WIZARDS #1 J3 (14)). Your J4 (blob:) is ruled yes and sent to answer-envelope. You merge after op-declarations is merged again; post COMPLETE when done.
+
+## B13 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.

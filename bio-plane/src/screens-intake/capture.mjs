@@ -18,16 +18,23 @@ function renderCapture(cs, view) {
   let body = "";
   if (tab === "address") {
     const got = U.captured;
+    const freqs = ["daily", "weekly", "monthly", "hourly", "per_meeting"];
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
-      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}`
-      + (got && got.bundleId ? cs.act("monitor", { data: { bundle: got.bundleId } }) : "") + "</div>"
+      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}</div>`
+      /* R14, R16 (DEC-200 (2)): watching and checking are two acts, each on the document the address was captured into */
+      + (cs.can("monitorset") || cs.can("monitor") ? cs.sec("screen.capture.address.watch",
+        `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
+        + (cs.can("monitorset") ? cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
+        + `<div class="mk-acts">${cs.act("monitorset")}${cs.act("monitor")}</div>`) : "")
       + (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title })) : "")
       + (U.promoteRefused ? `<p class="cs-refusal" role="alert">${cs.esc(U.promoteRefused)}</p>` : "")
-      + (U.requested ? said("screen.capture.address.requested", { address: U.requested }) : "")
-      + (U.watching ? said("screen.capture.address.watching", { title: U.watching }) : "")
+      + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
+        { address: U.requested.address }) : "")
+      + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
+      + (U.checked ? said("screen.capture.address.checked", { title: U.checked }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.address.note")}</p>`;
   } else if (tab === "file") {
     const how = [["made", "screen.capture.file.how.made"], ["handed", "screen.capture.file.how.handed"],
@@ -42,16 +49,17 @@ function renderCapture(cs, view) {
       + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address" data-nav>${cs.w("screen.capture.file.toaddress")}</a></p>`
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
-      + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.capture.label.capture" })}</div>`
+      + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.captureupload.label.capture" })}</div>`
       + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
     const draft = U.draft;
-    /* a draft is drawn into a field of a new id: the shell keeps what was typed into a field it redraws (K3002) */
+    /* R10 (N987): the draft is filled into the words field it asks for (`cs.fill`, in `doneWritingHelp`), labelled as
+       the assistant's, asked by this member; the field keeps its id, and only the member's own `testify` keeps it */
     body = `<p class="mk-note">${cs.w("screen.capture.saw.note")}</p>`
-      + cs.field(U.wordsId || "ci-words", "screen.capture.saw.words", { area: true, rec: true, value: draft ? draft.text : (U.words || "") })
-      + (draft ? `<p class="cs-draftlabel">${cs.w("draft.machine.label")}</p>`
-        + (draft.untested ? `<p class="cs-untested" data-label="untested">${cs.w("ai.label.untested")}</p>` : "") : "")
+      + cs.field("ci-words", "screen.capture.saw.words", { area: true, rec: true, value: U.words || "",
+        ...(draft ? { draft: "screen.capture.saw.draft", draftFills: { handle: draft.handle } } : {}) })
+      + (draft && draft.untested ? `<p class="cs-untested" data-label="untested">${cs.w("ai.label.untested")}</p>` : "")
       + (view.reachable ? `<div class="mk-acts">${cs.act("writinghelp", { label: "act.writinghelp.label.capture" })}</div>`
         + `<p class="mk-small muted">${cs.w("screen.capture.help.only")}</p>` : "")
       + cs.field("ci-where", "screen.capture.saw.where", { value: U.where || "" })
@@ -85,10 +93,11 @@ async function doneAcquire(view, answer, cs) {
   const title = String(doc.title || last || address).slice(0, 200);
   cs.set("promoteRefused", null);
   if (Array.isArray(a.promoted)) {
-    cs.set("captured", { archive: true, filed: a.promoted.length, notPromoted: Array.isArray(a.not_promoted) ? a.not_promoted.length : 0, title });
+    cs.set("captured", { archive: true, filed: a.promoted.length, notPromoted: Array.isArray(a.not_promoted) ? a.not_promoted.length : 0, title, address,
+                         bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
     return;
   }
-  if (a.existed === true) { cs.set("captured", { existed: true, title }); return; }
+  if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null }); return; }
   const why = (r) => (r && (r.translation || r.detail || r.reason || r.code)) || "";
   const now = new Date(cs.now ? cs.now() : Date.now()).toISOString().split(".")[0] + "Z";
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
@@ -127,28 +136,61 @@ async function doneAcquire(view, answer, cs) {
     files, register } });
   const p = done && (done.result || done);
   if (!p || p.ok === false) { cs.set("promoteRefused", why(p)); return; }
-  cs.set("captured", { title, bundleId: p.bundleId || id });
+  cs.set("captured", { title, address, bundleId: p.bundleId || id });
 }
 
-/* R1: "Ask for this later" (`capturerequest`, the address). Refusals by shell R13 (N969: no member path yet). */
+/* R14 (capture-requests R56): "Ask for this later" is the member's own request: `capturerequest` with the address and no
+ * `run`. Its answer's `drains: false` is said: the request waits until the group's Civicsmith captures unattended. */
 function sendCaptureRequest(view, el, cs) {
   const address = String(cs.value("ci-address") || "").trim();
   if (!address) return { refuse: "screen.capture.address.empty" };
   return { body: { address } };
 }
 function doneCaptureRequest(view, answer, cs) {
-  cs.set("requested", String(cs.value("ci-address") || "").trim());
+  cs.set("requested", { address: String(cs.value("ci-address") || "").trim(), drains: !(answer && answer.drains === false) });
 }
 
-/* R1: "Watch this address": `monitor` names the bundle the address was captured into (`data.bundle`), so it is drawn
- * once a capture landed. Refusals by shell R13 (`NOT_MONITORED` among them; N969). */
-function sendMonitor(view, el) {
-  const bundleId = el && el.dataset && el.dataset.bundle;
-  if (!bundleId) return { refuse: "screen.capture.address.watchafter" };
-  return { body: { bundleId } };
+/* R14, R16: the document the address was captured into: this visit's capture of it (the acquire's bundle), else the held
+ * document whose source is that address (`heldcaptures`). Null when none is known: watching asks a captured address. */
+async function bundleFor(view, cs, address) {
+  const got = view.ui && view.ui.captured;
+  if (got && got.address === address && typeof got.bundleId === "string" && got.bundleId) return { bundleId: got.bundleId, title: got.title };
+  const a = await cs.call("heldcaptures", { query: { limit: 1000 } });
+  const v = a && a.result && typeof a.result === "object" ? a.result : a;
+  const rows = v && Array.isArray(v.held) ? v.held : [];
+  const r = rows.find((x) => x && x.source && (x.source.address === address || x.source.locator === address));
+  return r && typeof r.bundle_id === "string" ? { bundleId: r.bundle_id, title: r.title || address } : null;
+}
+
+/* R14, R16: "Watch this address": `monitorset` with `enabled: true` and the frequency chosen (a word of `MONITOR_FREQ`).
+ * Its refusals (`NOT_MONITORED`, `NO_LOCATOR`, `MONITOR_SET_REFUSED`) are the shell's (R13). */
+async function sendMonitorSet(view, el, cs) {
+  const address = String(cs.value("ci-address") || "").trim();
+  if (!address) return { refuse: "screen.capture.address.empty" };
+  const freq = ["daily", "weekly", "monthly", "hourly", "per_meeting"].find((f) => f === cs.value("ci-freq")) || "weekly";
+  const found = await view.parts.bundleFor(view, cs, address);
+  if (!found) return { refuse: "screen.capture.address.watchafter" };
+  cs.set("frequency", freq);
+  cs.set("target", found);
+  return { body: { bundleId: found.bundleId, enabled: true, frequency: freq } };
+}
+function doneMonitorSet(view, answer, cs) {
+  const t = (view.ui && view.ui.target) || {};
+  cs.set("watching", { title: t.title || "", frequency: (answer && answer.frequency) || (view.ui && view.ui.frequency) || "weekly" });
+  cs.set("checked", null);
+}
+
+/* R16: "Check it now": `monitor` alone, on the same document. */
+async function sendMonitor(view, el, cs) {
+  const address = String(cs.value("ci-address") || "").trim();
+  if (!address) return { refuse: "screen.capture.address.empty" };
+  const found = await view.parts.bundleFor(view, cs, address);
+  if (!found) return { refuse: "screen.capture.address.watchafter" };
+  cs.set("target", found);
+  return { body: { bundleId: found.bundleId } };
 }
 function doneMonitor(view, answer, cs) {
-  cs.set("watching", view.ui && view.ui.captured ? view.ui.captured.title : "");
+  cs.set("checked", (view.ui && view.ui.target && view.ui.target.title) || "");
 }
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
@@ -174,7 +216,7 @@ function doneUpload(view, answer, cs) {
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
 function sendTestify(view, el, cs) {
-  const words = String(cs.value((view.ui && view.ui.wordsId) || "ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
+  const words = String(cs.value("ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
   const when = String(cs.value("ci-when") || "").trim();
   const missing = [!words && "screen.capture.saw.words", !where && "screen.capture.saw.where", !when && "screen.capture.saw.when"].filter(Boolean);
   if (missing.length) return { refuse: "screen.capture.saw.missing", fills: { fields: missing.map((k) => cs.w(k)).join(", ").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") } };
@@ -185,14 +227,16 @@ function sendTestify(view, el, cs) {
 }
 function doneTestify(view, answer, cs) {
   cs.set("draft", null);
-  cs.set("testified", (answer && (answer.id || answer.bundleId)) || "");
+  /* provenance testify answers `{ok, bundle_id, bundle_sha, capture_sha, …}` (K3171) */
+  cs.set("testified", (answer && typeof answer.bundle_id === "string" && answer.bundle_id) || "");
 }
 
-/* R3: help wording the member's own account (`writinghelp`, DEC-153 (2)), drawn only while the assistant is reachable;
- * told only what the member typed. Its draft fills the field labelled as its draft, with the test-instance label when
- * the answer carries `untested` (K2816 (2); screens-inquiry R7). */
+/* R3, R10: help wording the member's own account (`writinghelp`, DEC-153 (2)), drawn only while the assistant is
+ * reachable; told only what the member typed. Its draft is filled into the words field by `cs.fill` (interface-shell
+ * R27), labelled "Draft · the assistant's, asked by <handle>", with the test-instance label when the answer carries
+ * `untested` (wizard-scripts R34). Nothing is kept until the member's own `testify`. */
 function sendWritingHelp(view, el, cs) {
-  const told = String(cs.value((view.ui && view.ui.wordsId) || "ci-words") || "").trim();
+  const told = String(cs.value("ci-words") || "").trim();
   if (!told) return { refuse: "screen.capture.help.empty" };
   cs.set("where", cs.value("ci-where") || "");
   cs.set("when", cs.value("ci-when") || "");
@@ -200,24 +244,25 @@ function sendWritingHelp(view, el, cs) {
 }
 function doneWritingHelp(view, answer, cs) {
   const a = answer || {};
-  const untested = a.untested === true || a.label === "untested" || (Array.isArray(a.labels) && a.labels.includes("untested"));
-  const n = Number(String((view.ui && view.ui.wordsId) || "ci-words-0").split("-").pop()) || 0;
-  cs.set("wordsId", `ci-words-${n + 1}`);
-  cs.set("draft", { text: String(a.text || ""), untested });
+  const untested = a.untested === true || (typeof a.untested === "string" && a.untested !== "");
+  cs.fill("ci-words", String(a.text || ""));
+  cs.set("draft", { handle: (view.me && view.me.handle) || "", untested });
 }
 
 export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
+  parts: Object.freeze({ bundleFor }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, rereads: [],
                     refusals: Object.freeze({ BAD_LOCATOR: "screen.capture.refusal.BAD_LOCATOR", SOURCE_REFUSED: "screen.capture.refusal.SOURCE_REFUSED",
                                               FETCH_FAILED: "screen.capture.refusal.FETCH_FAILED", EMPTY: "screen.capture.refusal.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.TOO_LARGE" }) }),
     Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest, rereads: [] }),
+    Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet, rereads: [] }),
     Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor, rereads: [] }),
-    Object.freeze({ op: "captureupload", label: "act.capture.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
+    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),

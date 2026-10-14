@@ -97,8 +97,11 @@ export function world(opts = {}) {
   const allCaps = opts.caps ?? ["contribute", "publish", "create_projects"];
   const S = { founder: hex64(), ann: hex64(), bare: hex64() };
   const K = { ann: aik(), revoked: aik(), confined: aik(), org: aik() };
-  const sessions = { [S.founder]: founder(allCaps), [S.ann]: member("ann", allCaps), [S.bare]: member("bea", []),
-                     ...(opts.sessions || {}) };
+  /* (T47; R25) each signed-in caller here has given its password again within the window (credentials R66), so an
+     act op-declarations' REAUTH_ACTS names reaches the gates the other tests judge; t47.test.mjs drives the window shut */
+  const open = { reauthUntil: Date.now() + 60 * 60e3 };
+  const sessions = { [S.founder]: { ...founder(allCaps), ...open }, [S.ann]: { ...member("ann", allCaps), ...open },
+                     [S.bare]: { ...member("bea", []), ...open }, ...(opts.sessions || {}) };
   const creds = {
     [K.ann]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: opts.writes ?? [] }),
     [K.revoked]: cred({ tokenId: "agent-old", revoked: true, revokedAt: "2026-09-01", revokedBy: "ann" }),

@@ -1,15 +1,16 @@
 /* screens-inquiry: the module's own keyed words (interface-shell R5; DEC-179 (5)). Each row is `[key, en, protected]`:
- * a screen's own sentence `screen.<id>.<part>`, with `{placeholders}` filled from the screen's data; and the rows the
+ * a screen's own sentence `screen.<id>.<part>`, with `{placeholders}` filled from the screen's data; and the row the
  * shell's R5 names for this module (a `WORD_ROWS` key whose English names the group's Civicsmith bare, held here in
- * DEC-149's form until `WORD_ROWS` carries a conformed word): `act.pagetranscribe.does`, `ai.refused.limit.unjudged`.
- * `ai.label.untested` (R7) is held here until `words.json` holds it; the design stream owes it (plan T46, BOB's acts).
+ * DEC-149's form until `WORD_ROWS` carries a conformed word): `act.pagetranscribe.does`. Since T47 `WORD_ROWS` holds
+ * `ai.label.untested` (R7), `ai.refused.keptaway`, `ai.refused.noaccount`, `ai.refused.notdeployed` and
+ * `ai.refused.limit.unjudged` in their conformed words, so the screens draw those from it and hold no copy.
  * The English is the mockups' at the design stream's `3f40899950` (`mock-screens.js`, `mock-shell.js`) where they say
  * it, else BOB's wording in `build/requirements/screens-inquiry.md`. A protected row is a warning before a terminal or
  * signed act, or says who can see something (DEC-157 (4)). These rows go to the design stream as a HANDOFF. */
 
 const row = (key, en, prot = false) => Object.freeze([key, en, prot]);
 
-/** The project screen's sentences (R1). */
+/** The project screen's sentences (R1, R9–R11, R14, R16). */
 const PROJECT = [
   row("screen.project.objective", "What the project wants to get to the bottom of"),
   row("screen.project.stage.head", "Where it stands"),
@@ -20,11 +21,22 @@ const PROJECT = [
   row("screen.project.stage.undetermined", "Undetermined, because {reason}"),
   row("screen.project.stage.counts", "{read} questions · {with_legs} resting on something · {concluded} concluded"),
   row("screen.project.bar.head", "The project's bar"),
-  row("screen.project.bar.declared", "Bar: {capture}/{connection}. An answer must be at least this strong before the group relies on it."),
+  row("screen.project.bar.declared", "An answer must be at least this strong before the group relies on it."),
+  row("screen.project.bar.axisnone", "No bar is set on the {axis} axis."),
   row("screen.project.bar.none", "This project has set no bar of its own."),
+  row("screen.project.bar.unset", "No bar on this axis"),
+  row("screen.project.bar.help", "Choose neither axis to withdraw the project's bar. It never changes the group's bar, and it holds nothing back."),
   row("screen.project.questions.head", "Questions"),
   row("screen.project.questions.empty", "No questions yet. Open the first one: it is what the group will answer with the record."),
-  row("screen.project.questions.notcited", "A question you opened appears here once the project draws on it."),
+  row("screen.project.questions.notdrawn", "Your question was opened and stays open on its own screen, but this project could not draw on it: {reason}"),
+  row("screen.project.draw.head", "Questions from elsewhere"),
+  row("screen.project.draw.choose", "The question to draw on"),
+  row("screen.project.draw.note", "Why this project draws on it"),
+  row("screen.project.draw.help", "In a sentence, without quotation marks."),
+  row("screen.project.draw.empty", "Choose a question and say why this project draws on it."),
+  row("screen.project.draw.none", "There is no other question this project could draw on."),
+  row("screen.project.draw.already", "This project already draws on that question."),
+  row("screen.project.draw.done", "This project now draws on that question."),
   row("screen.project.question.label", "The question, in plain words"),
   row("screen.project.question.help", "One question the record can answer. It is opened in this project, with you as its author."),
   row("screen.project.question.empty", "Ask the question first."),
@@ -32,7 +44,7 @@ const PROJECT = [
   row("screen.project.account.project", "The project's own account pays for the assistant here."),
   row("screen.project.account.member", "No project account: each member's own account, or the group's key, pays as usual."),
   row("screen.project.account.off", "The project's own account is held but switched off; it pays for nothing until an owner switches it on."),
-  row("screen.project.account.later", "Who pays, for which uses and up to what limits, is set on the project's AI screen, which comes later."),
+  row("screen.project.account.where", "Who pays, for which uses and up to what limits:"),
   row("screen.project.members.head", "Members"),
   row("screen.project.members.owner", "{handle} (owner)"),
   row("screen.project.members.invited", "{handle} (invited)"),
@@ -49,7 +61,7 @@ const PROJECT = [
   row("screen.project.plan.head", "Plans opened here"),
 ];
 
-/** The question screen's sentences (R2). */
+/** The question screen's sentences (R2, R12). */
 const QUESTION = [
   row("screen.question.opened", "Opened {date} · {project}"),
   row("screen.question.opened.noproject", "Opened {date}"),
@@ -69,6 +81,8 @@ const QUESTION = [
   row("screen.question.against.head", "Cuts against"),
   row("screen.question.legs.empty", "Nothing here yet."),
   row("screen.question.leg.severed", "Removed from the question"),
+  row("screen.question.leg.severed.why", "Removed from the question: “{why}”"),
+  row("screen.question.leg.unselectable", "This citation could not be picked out just now, so nothing was changed. Try again."),
   row("screen.question.leg.version", "In “{version}”"),
   row("screen.question.hunches.head", "Hunches"),
   row("screen.question.hunch.by", "Hunch · {who}'s"),
@@ -101,7 +115,7 @@ const QUESTION = [
   row("screen.question.versions.count", "{count} ways of answering it, {current} current"),
 ];
 
-/** The document screen's sentences (R3). */
+/** The document screen's sentences (R3, R15). */
 const DOCUMENT = [
   row("screen.document.captured", "Captured {date} · {source}"),
   row("screen.document.copy", "This copy"),
@@ -142,12 +156,13 @@ const DOCUMENT = [
   row("screen.document.retire.reason", "Why stop using it?"),
   row("screen.document.open", "Open the original"),
   row("screen.document.monitor.done", "Checked for changes just now."),
+  row("screen.document.monitorset.done", "Watching this document's address: each new version found is kept beside this one, and you are told."),
   row("screen.document.attest.done", "A timestamp was recorded for this copy."),
   row("screen.document.transcribe.done", "Your typing was recorded for page {page}, labelled as yours."),
   row("screen.document.pagetranscribe.done", "The assistant read {pages}. Its words are labelled as its reading."),
 ];
 
-/** The assistant dock's sentences (R4, R6, R7). */
+/** The assistant dock's sentences (R4, R6, R7, R13). */
 const ASSISTANT = [
   row("screen.assistant.says", "It finds, reads and checks; it never concludes, signs or sends."),
   row("screen.assistant.serves", "The assistant serves you here on:"),
@@ -158,7 +173,7 @@ const ASSISTANT = [
   row("screen.assistant.run.dispatched", "Started: the assistant is working on this."),
   row("screen.assistant.run.ended", "The run ended: {why}."),
   row("screen.assistant.run.none", "No run yet. Ask it to work on this, and it reads what the group holds about it."),
-  row("screen.assistant.run.lost", "This page no longer holds the run's credential, so it can't continue that run; it stays on the record. Start a new run."),
+  row("screen.assistant.run.yours", "A run of yours is working on this. Ask the assistant again to continue it."),
   row("screen.assistant.run.notready", "The assistant isn't ready to work here: its instructions could not be read."),
   row("screen.assistant.run.nocontext", "The assistant works on a question or a project; open one to ask it."),
   row("screen.assistant.productions.head", "What it produced"),
@@ -167,22 +182,47 @@ const ASSISTANT = [
   row("screen.assistant.notevidence", "Machine work: it counts only once a member accepts it.", true),
   row("screen.assistant.suggest.name", "A name for the suggested reading"),
   row("screen.assistant.suggest.description", "What it would answer"),
-  row("screen.assistant.dispatch.principal", "The assistant can't start this run: it was not opened on your own credential. Start a new run."),
-  row("screen.assistant.dispatch.mode", "Only a check or a plan can be started on your own sign-in."),
+  row("screen.assistant.dispatch.principal", "This run starts only on your own Claude sign-in, and another account serves you here. Nothing was sent."),
+  row("screen.assistant.dispatch.notactive", "The run can't start: your membership is not active. Nothing was sent."),
+  row("screen.assistant.dispatch.silent", "The run can't start: your group's Civicsmith couldn't record the pass the assistant works under just now. Nothing was sent. Try again in a moment."),
   row("screen.assistant.dispatch.notprincipal", "This run is not yours to start."),
   row("screen.assistant.dispatch.unbound", "The assistant's worker isn't connected to your group's Civicsmith, so the run can't start. An administrator can connect it."),
   row("screen.assistant.dispatch.notrunning", "This run has ended, so it can't be started again. Start a new run."),
   row("screen.assistant.dispatch.unknown", "The run could not be started: {reason}"),
-  row("ai.refused.modenotdeployed", "The assistant can't do this kind of work yet: it is switched on once it has been measured. Everything else works as usual.", true),
-  row("ai.refused.keptaway", "Your group keeps its material away from AI, so no assistant can be used here, the group's or your own.", true),
-  row("ai.refused.noaccount", "No account serves you for the assistant: your group offers no key, and you have connected no account of your own. Connect one in Settings › The assistant.", true),
-  row("ai.refused.limit.unjudged", "The assistant stopped here: your group's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.", true),
-  row("ai.label.untested", "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.", true),
   row("act.pagetranscribe.does", "Has the assistant read up to 8 pages of this document that your group's Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are."),
 ];
 
+/** The project's AI account screen's sentences (R14). */
+const PROJECTAI = [
+  row("screen.projectai.purpose", "Who pays for the assistant's work in this project, what it pays for, its limits, and keeping the project's material away from AI. Every owner sees every change."),
+  row("screen.projectai.account.head", "The project's account"),
+  row("screen.projectai.account.none", "This project holds no account of its own: each member's own account, or the group's key, pays as usual."),
+  row("screen.projectai.account.key", "The project's own API key pays for members' acts here, before their own accounts or the group's key."),
+  row("screen.projectai.account.signin", "An owner's own Claude sign-in pays for members' acts here, while that owner is the project's only member."),
+  row("screen.projectai.account.off", "The project's account is held but switched off: members' own accounts, then the group's key, serve here."),
+  row("screen.projectai.account.suspended", "The sign-in stopped serving when another member joined. Hold an API key for the project instead."),
+  row("screen.projectai.account.since", "Set by {who}, {date}."),
+  row("screen.projectai.owners", "Only the project's owners set its account; you see what it is.", true),
+  row("screen.projectai.key.field", "The project's Anthropic API key"),
+  row("screen.projectai.key.replace", "A new API key, replacing the account held"),
+  row("screen.projectai.key.nokey", "Paste the API key first."),
+  row("screen.projectai.key.never", "The key is sealed when held and never shown again, to anyone.", true),
+  row("screen.projectai.signin.help", "Your own Claude sign-in can pay only while you are this project's only member and your sign-in is connected."),
+  row("screen.projectai.switch.on", "Switch the project's account on"),
+  row("screen.projectai.switch.off", "Switch the project's account off"),
+  row("screen.projectai.notice.head", "Before the project's key pays"),
+  row("screen.projectai.notice.seen", "You have read what the project's key means."),
+  row("screen.projectai.keepaway.head", "Keeping the project's material away from AI"),
+  row("screen.projectai.keepaway.on", "This project keeps its material away from AI. {who} set this on {date}: “{reason}”", true),
+  row("screen.projectai.keepaway.off", "This project's material is not kept away from AI beyond what the group decides."),
+  row("screen.projectai.keepaway.reason", "Why, in your words"),
+  row("screen.projectai.keepaway.noreason", "Say why, in 1 to 2,000 characters."),
+  row("screen.projectai.keepaway.turnoff", "Stop keeping it away, with a reason"),
+  row("screen.projectai.keepaway.unread", "Whether this project keeps its material away from AI could not be read."),
+];
+
 /** Every row this module holds, frozen (interface-shell R5's `SCREEN_WORDS`). */
-export const SCREEN_WORDS = Object.freeze([...PROJECT, ...QUESTION, ...DOCUMENT, ...ASSISTANT]);
+export const SCREEN_WORDS = Object.freeze([...PROJECT, ...QUESTION, ...DOCUMENT, ...ASSISTANT, ...PROJECTAI]);
 
 /** The rows by key, for the screens' `words` lists. */
 export const OWN = Object.freeze(Object.fromEntries(SCREEN_WORDS.map((r) => [r[0], r])));

@@ -1,6 +1,6 @@
 # affordances (T47)
 
-**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · COMPLETE · handled B3
+**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · COMPLETE · handled B8
 
 ## Completion
 
@@ -40,9 +40,15 @@ I will re-run both once op-grades has merged and `tranche/T47` is merged in.
   - op-declarations 140/16: the tranche has 12; the 4 new ones are those above.
 - `checks/format.mjs`: 0 failures. `architecture.mjs . affordances`: 0 failures. `coverage.mjs . affordances`: 40 of 40; 0 failures. `ownership.mjs . affordances tranche/T47`: 0 failures. `run.mjs`: architecture 0 failures; coverage 25 failures, none affordances' (other L11 modules, rule 5 (1)); channels 0.
 
-Size (session_01UKhMnGPjg8Y3PBnYKh2w1U): test runs 25, module lines 2729
+Size (session_01UKhMnGPjg8Y3PBnYKh2w1U): test runs 32, module lines 2729
 
 **After B3 (CHANGE, K3147):** `tranche/T47` merged with op-grades (T47-48). The two reds waiting on it are cleared. R19 is re-pinned to op-grades' new grades: `irreversible` is only `publishat` and `publishatmove`; `publish` and `publishcheck` are `terminal`; `IRREVERSIBLE_WEIGHT` holds `personexpunge`, `publishat`, `publishatmove` and `standardrelease`. A new `t47-backing.test.mjs` drives `projectbarset` at strength's interface: refused `PROJECT_BAR_NO_REASON` for an absent, empty or blank reason, writing nothing, and accepted with one. plane's every-reasoned-op-driven test now counts T47's ops. Wording for BOB: R19's text still says `irreversible` goes "to the op that publishes"; since K3147 that op is `terminal`. Re-run: affordances 249/249; format, architecture, coverage (40/40) and ownership each 0 failures.
+
+**After B4 (CHANGE, K3152):** `tranche/T47` merged. plane's R19 drive was red because `adminremove` answered `STORE_DID_NOT_ANSWER`: since op-declarations R58 it is one of `REAUTH_ACTS`, admission (R25) asks the store `reauthdue` first, and the plane does not route that to its store yet (plane's L11 job). Fix in my tests: `adminremove` leaves the plane drive, with a comment. Its reason refusal is now driven at membership's interface (`backing.test.mjs`, membership R7): three administrators; the second vote is refused `NO_REASON` for an absent, empty or blank reason, writing nothing, and carries with one. Found for plane / store-door (T47-66): the `reauthdue` route is owed, or every `REAUTH_ACTS` op is silent on the plane. Re-run: affordances 250/250; format, architecture and coverage each 0 failures.
+
+**After B5–B7 (K3163, K3164, K3168):** control-plane's totality test found `statementack` and `reviewcomment` unaccounted. `NON_ACTS` is op-grades' table, so BOB chose option (A) of my J7: op-grades added both rows. With `tranche/T47` merged, my case-inputs test now carries `statementack` as gated (it has had a `NEEDS` row since K3041), and its negative control reads the `NON_ACTS` row as stale when the op is carried ungated. Re-run: affordances plus control-plane's `totality.test.mjs`, 251/251; format, architecture, coverage and ownership each 0 failures.
+
+**After B8 (K3171):** `tranche/T47` merged with control-plane. Under its R83 (credentials R65), `login` names a handle, never a role, so the plane harness now signs in by handle: the founder as `admin` and each member by their own handle, with `device: "own"`. Re-run: affordances plus control-plane's `totality.test.mjs`, 251/251; format, architecture, coverage and ownership each 0 failures.
 
 ## J1 · QUESTION
 
@@ -72,3 +78,27 @@ T47-49 complete; see the Completion section of my record. Two reds remain, waiti
 ## J5 · COMPLETE
 
 B3 applied: op-grades merged in, both waiting reds cleared, R19's rung sets re-pinned, projectbarset's backing driven (t47-backing). affordances 249/249; checks 0 failures. R19's wording ('irreversible to the op that publishes') is now stale against K3147; see the record. I use no new wizard-scripts service.
+
+## J6 · COMPLETE
+
+B4 applied: tranche merged; adminremove (a REAUTH_ACTS op since op-declarations R58) answered STORE_DID_NOT_ANSWER on the plane because admission's reauthdue question is not routed to the store yet (owed by plane/store-door, T47-66). Its reason backing is now driven at membership's interface (backing.test.mjs), and it is out of the plane drive. affordances 250/250; checks 0 failures. Details in my record.
+
+## J7 · QUESTION
+
+B5 (K3163): confirmed. On `tranche/T47` (merged here), `unaccounted` over control-plane's table answers `unpublished: [reviewcomment, statementack]`. Both are gated now (K3041) and graded (`statementack` `reasoned`, `reviewcomment` `reversible`), but neither has a `NON_ACTS` row.
+
+`NON_ACTS` is op-grades' table, not mine (K1974; my R1 and R12 read it by reference and hold no copy), so I cannot list them there; ownership would refuse it.
+
+The two ways to account for them:
+- (A, recommended) op-grades adds `NON_ACTS` rows, by its R5's rule, as for the other publish-screen ops K3041 moved (`publishpreflight` and `publishtensions` already hold "read: …" rows). Neither op is an act on a bundle in a state: `statementack` is keyed by a case and its edition (case-inputs R1), and `reviewcomment` by a review copy (review). Suggested reasons: "case-directed: keyed by a case edition; a member acknowledges what the case does not cover" and "review-directed: keyed by a review copy; a reader's comment for the case's owner". That is a one-line CHANGE to op-grades, and nothing changes on my side.
+- (B) My R1 is amended to add both as `ACTS` rows that apply to no bundle, `sourceconsent`'s shape (reached only through the catalogue). This needs your requirement text. I don't recommend it: they would sit in `catalog` as if object-directed, with no `applies` to derive.
+
+On (A) I do nothing but re-run control-plane's totality test once op-grades has merged. On (B) I build it once R1 is amended. Waiting on your answer.
+
+## J8 · COMPLETE
+
+B7 applied: tranche merged; the case-inputs test re-pinned (statementack gated, its NON_ACTS row read; negative control: carried ungated, it reads stale). affordances plus control-plane's totality.test.mjs: 251/251; checks 0 failures.
+
+## J9 · COMPLETE
+
+B8 applied: tranche merged; the plane harness signs in by handle (founder admin, members by handle, device own; control-plane R83). affordances plus control-plane's totality.test.mjs: 251/251; checks 0 failures.

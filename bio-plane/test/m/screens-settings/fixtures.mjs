@@ -75,6 +75,10 @@ export function membersTable(over = {}) {
     accountusesset: (q, b) => env({ ok: true, owner: b.owner, switch: b.switch, on: b.on }),
     ailimitset: (q, b) => env({ ok: true, ...b, change: b.amount === null ? "removed" : "set", set_at: "2026-10-12T00:00:00Z" }),
     aikeepaway: (q, b) => env({ ok: true, on: b.on, reason: b.reason || null, set_by: "rosa", set_at: "2026-10-12T00:00:00Z", uses: b.uses || [] }),
+    // T47 (R23): the signing keys an administrator withdraws, and the reset link (credentials R10, R69)
+    signerlist: env({ signers: [{ key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001", member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z" }] }),
+    signerset: (q, b) => env({ ok: true, keyB64: b.keyB64, status: b.status, by: "rosa" }),
+    passwordresetlink: (q, b) => env({ ok: true, member: b.member, link: "rl-0123456789", expiresAt: "2026-10-19T00:00:00Z" }),
     ...over,
   };
 }
@@ -125,11 +129,12 @@ export function connectTable(me, situation = "group", over = {}) {
     groupkeystate: env({ ok: true, on: situation === "group" || ownKey }),
     groupkeynotice: env({ ok: true, due: true, text: "notice" }),
     disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: true, shown_at: "2026-10-05T00:00:00Z" }),
-    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: null, uses: null } }),
+    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: sub ? "2026-10-04T00:00:00Z" : null, held: sub, valid_until: sub ? "2026-11-04T00:00:00Z" : undefined, uses: null } }),
     subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: sub, member: "member:" + me.member }
       : b.step === "start" ? { ok: true, address: "https://claude.ai/oauth/authorize?code=true&state=s" }
       : { ok: true, connected: true, member: "member:" + me.member },
-    bootstrap: { ok: true, service: "bio-plane", version: "0.82.0", parts: [{ part: "signin", present: true }, { part: "scanner", present: false }, { part: "safe_view", present: false }] },
+    // instance-setup R82: the parts as three flat keys
+    bootstrap: { ok: true, service: "bio-plane", version: "0.83.0", part_signin: true, part_scanner: false, part_safe_view: false },
     accountuses: (q) => env({ ok: true, owner: q.owner, held: ownKey || sub, uses: ownKey || sub ? ALL_USES : null, keptAway: [] }),
     ailimits: (q) => env({ ...LIMITS, owner: q.owner, limits: [{ scope: "overall", use: null, unit: "tokens", period: "day", amount: 100000, inclusive: null, on_top: null, used: 4000, reached: false, set_by: "member:" + me.member, set_at: "2026-10-06T09:00:00Z" }], history: [] }),
     aiusage: (q) => q.owner ? env(USAGE(q.owner)) : env({ ok: true, member: "member:" + me.member, month: "2026-10", zone: "UTC", payers: [
@@ -162,6 +167,111 @@ export function notesTable(me, over = {}) {
     notedelete: (q, b) => env({ ok: true, note: b.note, deleted: true }),
     noteturn: (q, b) => env({ ok: true, note: b.note, into: b.into, id: b.made || "HYP-0001", at: "2026-10-12T00:00:00Z" }),
     writinghelp: () => env({ ok: true, text: "The potholes on Seminary Avenue between 59th and 62nd reopened three times since spring.", label: { kind: "machine", asked_by: "member:" + me.member }, withheld: [], note: "" }),
+    ...over,
+  };
+}
+
+// ---- T47: the new screens (R14–R20) ----
+
+/** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
+export function groupTable(over = {}) {
+  return {
+    groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
+      display_name_recorded: "East Oakland Watch", display_name_history: [], domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" } }, domain_history: [], domain_checks: [] }),
+    grouplanguages: env({ ok: true, languages: ["en", "es"] }),
+    courtnotice: env({ choice: "tell", history: [] }),
+    hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa and Lu", note: "the shared vault", recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }),
+    strengthbarof: env({ ok: true, group: "eastoak", bar: { group_id: "eastoak", capture: "B", connection: "C", author: "rosa", at: "2026-10-05T00:00:00Z", reason: "Most of our sources are records." }, seeds_new_projects: true }),
+    groupnameset: (q, b) => env({ ok: true, display_name: b.name, set_at: "2026-10-12T00:00:00Z", set_by: "rosa" }),
+    grouplogoset: () => env({ ok: true, logo: true }),
+    groupdomainset: (q, b) => env({ ok: true, domain: b.domain, check: { verdict: "absent" } }),
+    grouplanguagesset: (q, b) => env({ ok: true, languages: b.languages }),
+    courtnoticeset: (q, b) => env({ ok: true, choice: b.choice, by: "rosa", at: "2026-10-12T00:00:00Z" }),
+    hostingaccessset: (q, b) => env({ ok: true, holders: b.holders, note: b.note || null, recorded_by: "rosa", at: "2026-10-12T00:00:00Z" }),
+    strengthbarset: (q, b) => env({ ok: true, group: "eastoak", capture: b.capture, connection: b.connection, author: "rosa", at: "2026-10-12T00:00:00Z", reason: b.reason }),
+    ...over,
+  };
+}
+
+const OFFICES = ["", "Office of the City Clerk", "Department of Public Works", "Office of the City Auditor"];
+const office = (i, by = "class:daemon") => ({ entity_id: "ENT-" + String(i).padStart(4, "0"), kind: "office", label: OFFICES[i], note: "n", declared_by: by, at: "2026-10-01T00:00:00Z" });
+/** places: two pages of offices, the second answered only when asked `after` the first's last. */
+export function placesTable(over = {}) {
+  return {
+    profiles: env({ ok: true, profiles: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }], conflicts: [], choices: [{ id: "us-ca-oakland", name: "Oakland, California", covers: ["Oakland"] }, { id: "us-ca", name: "California", covers: ["California"] }], view: "main" }),
+    placewantedstate: env({ ok: true, name: "Alameda County", set_by: "rosa", set_at: "2026-10-04T00:00:00Z", matches: [] }),
+    entitieskind: (q) => q.after === "ENT-0002" ? env({ ok: true, kind: "office", entities: [office(3, "lu")], count: 1, limit: 500, truncated: false, next: null })
+      : env({ ok: true, kind: "office", entities: [office(1), office(2)], count: 2, limit: 500, truncated: true, next: "ENT-0002" }),
+    profilesset: (q, b) => env({ ok: true, profiles: b.profiles.map((id) => ({ id, name: id })), choices: [] }),
+    placewanted: (q, b) => env({ ok: true, name: b.name, set_by: "rosa", set_at: "2026-10-12T00:00:00Z" }),
+    officesseed: () => env({ ok: true, seeded: [{ what: "office" }], already: [{ what: "office" }, { what: "body" }], unseeded: [], by: "rosa" }),
+    entitycreate: (q, b) => env({ ok: true, entity_id: "ENT-0009", kind: b.kind, label: b.label, alias_count: 0, at: "2026-10-12T00:00:00Z" }),
+    ...over,
+  };
+}
+
+/** recovery, read by `me`. */
+export function recoveryTable(over = {}) {
+  return {
+    recoverycodesstate: env({ ok: true, held: true, remaining: 7, issuedAt: "2026-10-02T00:00:00Z" }),
+    adminrecoverystep: env({ ok: true, administrators: 1, codes_held: true, remaining: 7, met: false }),
+    recoverycodesissue: () => env({ ok: true, codes: Array.from({ length: 10 }, (_, i) => "CODE-" + String(i).padStart(4, "0") + "-SENTINEL"), issuedAt: "2026-10-12T00:00:00Z" }),
+    ...over,
+  };
+}
+
+/** group-identity (membership R109, R110; instance-setup R65). */
+export function identityTable(over = {}) {
+  return {
+    groupdescription: env({ description: { kinds: ["community", "other"], otherKind: "a tenants' union", focus: "Street repair on Seminary.", purpose: "We keep the city to its word.", visibility: "members", by: "rosa", at: "2026-10-02T00:00:00Z" }, history: [] }),
+    groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_verified_at: null }),
+    groupdescriptionset: (q, b) => env({ ok: true, ...b, by: "rosa", at: "2026-10-12T00:00:00Z" }),
+    groupdescriptiondraft: () => env({ focus: { text: "Potholes and street repair in East Oakland.", label: { kind: "machine", asked_by: "member:rosa" } }, purpose: { text: "To hold the city to its repair promises.", label: { kind: "machine", asked_by: "member:rosa" } } }),
+    ...over,
+  };
+}
+
+export const CATALOGUE_ENTRY = { provider_id: "acme-scan", vendor: "Acme", product: "Scan", kinds: ["scan"], transport: "https", reach: "file", template: false,
+  credentials: ["api_key"], config: [{ name: "region", label: "The region your account is in", required: true }, { name: "tag", label: "A tag for its reports", required: false }],
+  handling: { sends: ["file_bytes"], never_sends: ["member_identity"], recipient: "Acme Inc.", sub_processors: [], region: "EU", file_retention: "30 days", result_retention: "1 year", sample_sharing: "vendor_internal_research" },
+  handling_digest: "d".repeat(64) };
+export const OWN_ENTRY = { ...CATALOGUE_ENTRY, provider_id: "own-scan", vendor: "Our", product: "Scanner", credentials: [], config: [],
+  handling: { ...CATALOGUE_ENTRY.handling, recipient: "the organization's own servers", sample_sharing: "none" }, handling_digest: "e".repeat(64) };
+/** security (credentials R45; file-safety R5, R27–R31; instance-setup R82). */
+export function securityTable(over = {}) {
+  return {
+    securitymap: (q) => env({ ok: true, from: q.from, to: q.to, step: "day", level: "Raised", levelAt: q.to, note: "",
+      buckets: [{ start: q.from, counts: { signin: 4, credential: 1, rate: 2, handover: 0, through: 3, total: 10 }, usual: { signin: 1, credential: 0, rate: 1, handover: 0, through: 1, total: 3 } }],
+      totals: { count: 10, usual: 3, busiest: q.from }, countries: [{ country: "XX-SENTINEL-COUNTRY", count: 9 }], unplaced: 1 }),
+    bootstrap: { ok: true, service: "bio-plane", part_signin: true, part_scanner: true, part_safe_view: true },
+    scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 3, overdue: 0, held: 1, tools: [] }),
+    securitytools: env({ ok: true, tools: [{ tool_id: "T1", provider_id: "acme-scan", kinds: ["scan"], use: "on_request", state: "on", handling_digest: "d".repeat(64), added_by: "rosa", added_at: "2026-10-03T00:00:00Z" }] }),
+    securitytoolevents: env({ ok: true, events: [{ tool_id: "T1", event: "test_passed", at: "2026-10-03T00:00:00Z", reason: null }], cursor: null, truncated: false }),
+    securitytoolcatalogue: env({ ok: true, offered: [CATALOGUE_ENTRY, OWN_ENTRY], refused: [], held: [] }),
+    securitytooladd: (q, b) => env({ ok: true, tool_id: "T2", state: "added" }),
+    securitytooltest: (q, b) => env({ ok: true, tool_id: b.toolId, state: "on", passed: true, detail: "", tested_at: "2026-10-12T00:00:00Z" }),
+    securitytoolremove: (q, b) => env({ ok: true, tool_id: b.toolId, state: "removed" }),
+    ...over,
+  };
+}
+
+/** translations, for `es` (instance-setup R67–R74). */
+export const TWORDS = [
+  { key: "rail.home.name", en: "Home", note: "The first place", means: null, protected: false, state: "shown", text: "Inicio", adopted_by: "ana", adopted_by_name: "ana", adopted_at: "2026-10-03T00:00:00Z", english_changed: false, drafts: [], acts: [{ act: "adopt", seq: 1 }], marks: [] },
+  { key: "mark.outward.means", en: "Outward: this leaves…", note: null, means: null, protected: true, state: "awaiting", text: "Hacia fuera", adopted_by: "ana", adopted_by_name: "ana", adopted_at: "2026-10-04T00:00:00Z", english_changed: true, drafts: [], acts: [{ act: "adopt", seq: 2 }], marks: [] },
+  { key: "rail.queue.name", en: "Queue", note: null, means: null, protected: false, state: "missing", text: null, adopted_by: null, adopted_at: null, english_changed: false, drafts: [{ id: "D1", text: "Cola", label: "Draft", asked_by: "member:ana", asked_by_name: "ana", at: "2026-10-05T00:00:00Z" }], acts: [], marks: [] },
+];
+export function translationsTable(over = {}) {
+  return {
+    grouplanguages: env({ ok: true, languages: ["en", "es", "vi"] }),
+    translations: (q) => env({ ok: true, language: q.language, words_commit: "x", counts: { missing: 1, shown: 1, awaiting: 1 }, local_names: [], words: TWORDS }),
+    interfacewords: (q) => env({ ok: true, language: q.language, words: [] }),
+    translationadopt: (q, b) => env({ ok: true, language: b.language, key: b.key, state: "shown" }),
+    translationconfirm: (q, b) => env({ ok: true, language: b.language, key: b.key, state: "shown", confirmed_by: "rosa" }),
+    translationrevert: (q, b) => env({ ok: true, language: b.language, key: b.key, state: "missing" }),
+    translationgrant: (q, b) => env({ ok: true, existed: false, member: b.member, language: b.language, granted: !b.revoke }),
+    translationdraft: (q, b) => b.direction === "to_english" ? env({ ok: true, key: b.key, language: b.language, english: "Outward: this goes outside", label: { kind: "machine", asked_by: "member:rosa" } })
+      : env({ ok: true, language: b.language, drafted: b.keys.map((k) => ({ id: "D9", key: k, text: "x" })), not_drafted: [], offered_official: [] }),
     ...over,
   };
 }

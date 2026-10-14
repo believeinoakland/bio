@@ -1,4 +1,4 @@
-/* screens-inquiry R3: the document screen (Projects › <project> › Document; registry screen `document`, its 10 acts).
+/* screens-inquiry R3: the document screen (Projects › <project> › Document; registry screen `document`, its 11 acts).
  *
  * Self-contained functions (interface-shell R21 (1)). The document is the INFO bundle `view.subject` its capture is
  * filed in; its capture's digest is the document's `content_hash`, its address `source.locator`. What needs the digest
@@ -6,7 +6,8 @@
  * `release` and `retire` act on a selection (`ratification` takes a handle), so each makes its own selection of this
  * document (`op=select`) and sends itself, drawing its own outcome beside the act. Opening the original goes through
  * `open-file` (`screens-intake`). `pagetranscribe` is drawn only while the assistant is reachable (interface-shell R20;
- * DEC-190). */
+ * DEC-190). "Watch for changes" (`monitorset`, `monitoring` R74) and "Check for a new version now" (`monitor`) are two
+ * acts (R15). A choice among record data (a question, a page) is `cs.choice` over `{value, text}` options (R8). */
 
 import { OWN, ownRows } from "./words.mjs";
 
@@ -122,7 +123,7 @@ function render(cs, view) {
     const list = passages.filter((p) => p && String(p.text || p.words || "").trim());
     if (!list.length) return `<p>${cs.w("screen.document.passages.empty")}</p>`;
     const pick = qs.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => [q.bundle_id, q.title || q.bundle_id]), {})
+      ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) })), {})
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="cs-meta">${cs.w("screen.document.cite.noquestion")}</p>`;
@@ -142,7 +143,7 @@ function render(cs, view) {
     out.push(cs.sec("screen.document.unread.head",
       `<p>${cs.w("document.unread.pages", { pages: pagesText(un) })}</p>`
       + (view.reachable ? cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } }) : "")
-      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => [String(p), String(p)]), { value: String(un[0]) })
+      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => ({ value: String(p), text: String(p) })), { value: String(un[0]) })
       + cs.field("document-unread-words", "screen.document.unread.words", { area: true, rec: true })
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
@@ -185,18 +186,19 @@ function render(cs, view) {
     + (b.out_of_view ? `<p class="cs-meta">${cs.w("screen.document.backlinks.hidden")}</p>` : ""),
   { empty: "screen.document.backlinks.empty" })));
 
-  /* this copy's acts: vouch (by its weight), attest (signed), watch for changes, retire (terminal) */
+  /* this copy's acts: vouch (by its weight), attest (signed), watch for changes and check now (R15), retire (terminal) */
   out.push(cs.sec("screen.document.copyacts.head",
     cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
     + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
     + cs.act("release", { label: "act.release.label.document", data: { document: id } }) + own("release")
     + cs.act("attest", { label: "act.attest.label.document", data: { sha } }) + own("attest")
+    + cs.act("monitorset", { label: "act.monitorset.label.document", data: { document: id } }) + own("monitorset")
     + cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor")
     + cs.act("retire", { label: "act.retire.label.document", data: { document: id } }) + own("retire")));
   return out.join("");
 }
 
-/** R3's ten acts. */
+/** R3's and R15's eleven acts. */
 const acts = [
   { op: "gradenote", label: "act.gradenote.label.document",
     send(view, el) { return { query: { capture: el.dataset.capture || "" } }; },
@@ -253,6 +255,10 @@ const acts = [
       }, () => said(null));
       return null;
     } },
+  /* R15: watching asked by the member (`monitoring` R74: `enabled`, the bundle's own frequency kept) */
+  { op: "monitorset", label: "act.monitorset.label.document",
+    send(view) { return { body: { bundleId: String(view.subject || ""), enabled: true } }; },
+    done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { monitorset: { ok: true, html: cs.w("screen.document.monitorset.done") } })); } },
   { op: "monitor", label: "act.monitor.label.document",
     send(view) { return { body: { bundleId: String(view.subject || "") } }; },
     done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { monitor: { ok: true, html: cs.w("screen.document.monitor.done") } })); } },
@@ -295,9 +301,9 @@ const acts = [
 /** The keys the document screen may draw. */
 const words = [
   "screen.document.name", "screen.document.purpose",
-  ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitor", "identityclaim", "transcribe", "pagetranscribe"]
+  ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe"]
     .flatMap((op) => ["act." + op + ".label.document", ...(op === "pagetranscribe" ? [] : ["act." + op + ".does"])]),
-  OWN["act.pagetranscribe.does"], OWN["ai.label.untested"], "document.unread.pages",
+  OWN["act.pagetranscribe.does"], "ai.label.untested", "document.unread.pages",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.grade.reading", "mark.gap.unrated.name", "mark.gap.unrated.means",
   "state.empty", "state.loading", "state.failed",
   OWN["screen.question.supports.head"], OWN["screen.question.against.head"], OWN["screen.document.cite.role"],

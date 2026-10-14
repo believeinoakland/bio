@@ -26,14 +26,14 @@ const FEED = { ok: true, member: "alice", limit: 200, item_count: 1, truncated: 
   items: [{ id: "T-1", class: "OBLIGATION", kind: "authority-undetermined",
             options: [{ id: "linkproject", label: "Link", weight: "single" }] }] };
 
-test("R6, R37: the store is asked for the feed with the control plane's member and viewer, and only now and limit from the caller", async () => {
+test("R6, R37, R53: the store is asked for the feed with the control plane's member and viewer, and only limit from the caller: a request's now is not passed on", async () => {
   const d = door({ queue: { answered: true, result: FEED } });
   const url = new URL("http://plane/?op=queue&now=123&limit=7&member=mallory&viewer=class%3Aadmin&store=x");
   const out = await queueOp("queue", url, () => d.store, d.helpers);
   assert.equal(out.status, 200);
   const q = d.asked[0];
   assert.equal(q.pathname, "/queue");
-  assert.deepEqual(Object.fromEntries(q.searchParams), { viewer: "member:alice", member: "alice", now: "123", limit: "7" });
+  assert.deepEqual(Object.fromEntries(q.searchParams), { viewer: "member:alice", member: "alice", limit: "7" });
   assert.equal(d.asked.length, 1, "one store call: no actionkinds (R17; K1863)");
   /* A machine credential's stamps: member empty, viewer its class. Absent now and limit are not sent. */
   const m = door({ queue: { answered: true, result: FEED } });

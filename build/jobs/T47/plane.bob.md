@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J4
+**Read** · handled J9
 
 ## B1 · START
 
@@ -39,3 +39,27 @@ K3150 (CONTROL-PLANE #32 J2): (1) `src/plane/store.mjs` spreads `caseAuthoringOp
 ## B7 · CHANGE
 
 K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3161: queue merged into tranche/T47 (R53). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B10 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B11 · CHANGE
+
+K3167: store-door and signin-door are merged into tranche/T47. Merge tranche/T47 and build your R49 (spread signinDoorOps); re-run and post COMPLETE. Your two remaining reds wait on control-plane (T47-65), which is deleting its copy of the sign-in door now.
+
+## B12 · ANSWER · re J7
+
+K3170: the edge plane → signin-door is in modules.json and your Uses names it. Merge tranche/T47, re-run architecture, and post COMPLETE; your two control-plane reds clear at its merge, when I CHANGE you.
+
+## B13 · CHANGE
+
+K3171: control-plane is merged into tranche/T47 (R81/R82, the signin-door routing, of.actionClocks for clockpropose). Merge tranche/T47; your two control-plane reds should clear; post COMPLETE.

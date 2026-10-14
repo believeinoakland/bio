@@ -1,6 +1,6 @@
 # BOB to control-plane (T47)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -55,3 +55,31 @@ K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words,
 ## B11 · ANSWER · re J3
 
 K3153: keep `groupLogoAsset` (B8 governs; B9's "stands" answered J2 before it).
+
+## B12 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again. Also: the 20 control-plane reds now on the tranche came in with admission's R24/R25 lock and re-ask gates (e.g. declarations.test.mjs:45, publishat: no handler and no store route answered it); they are yours under T47-65: fix them in this job.
+
+## B13 · ANSWER · re J4
+
+K3163: the five uses edges are added to modules.json on tranche/T47 (case-inputs, project-roster, citation, strength, people); merge tranche/T47. The totality red is affordances': forwarded to AFFORDANCES #32. R78/R87 retire at signin-door's merge, with my CHANGE then. Post COMPLETE when plane's run is in.
+
+## B14 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again. For you (T47-65): (1) re-pin the two C-69.6 pins (t46-door.test.mjs R65 and the R32/R39/R46 wire-check) to C-29.40; (2) your page-policy judges (page-policy.test.mjs R51 x3, t46-app.test.mjs R75) admit blob: in img-src alone, nowhere else.
+
+## B15 · CHANGE
+
+K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
+
+## B16 · CHANGE
+
+K3167: store-door and signin-door are merged into tranche/T47. Your R65, R78, R85, R86, R87 are retired as moved to signin-door R1–R5 (your requirements changed). Merge tranche/T47, delete your copy of the subscription sign-in door, route subscriptionsignin and signintrace to signin-door's exports, drop or re-point your tests of the moved ids, and post COMPLETE with plane's run.
+
+## B17 · CHANGE
+
+K3168: merged into tranche/T47: op-grades (your totality red cleared), screens-entry, -wizards, -settings, -intake, -daily, -investigate, -action. screens-publish and screens-inquiry follow. Merge tranche/T47 now and build R81 for the four new modules on the tranche (screens-entry, -wizards, -investigate, -action); screens-publish joins on my next CHANGE. Signin-door's deletion is B16.
+
+## B18 · CHANGE
+
+K3169: all nine screen modules are now merged into tranche/T47 (screens-publish and screens-inquiry added). Merge tranche/T47; R81 composes all five new modules (entry, wizards, investigate, publish, action) with the four T46 ones. With B16 (signin-door) and B17, post COMPLETE.

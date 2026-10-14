@@ -16,8 +16,14 @@ const projectMd = (refs) => ["---", `id: ${P}`, "object_type: project", "title: 
   "objective: \"Is the city repairing reported potholes as its own policy requires?\"", "references:",
   ...refs.flatMap(([t, rel, st]) => [`  - target: ${t}`, `    rel: ${rel}`, `    status: ${st}`]), "---", "", "## Summary", ""].join("\n");
 export const PROJECT_MD = projectMd([[Q, "cites", "active"], [Q2, "cites", "confirmed"], ["INQ-2026-0003-gone", "cites", "severed"], ["INFO-2026-0009", "cites", "active"]]);
-export const inquiryMd = (project = P) => ["---", `id: ${Q}`, "object_type: inquiry", "title: \"Seven days\"", "created: 2026-10-03T10:00:00Z",
-  ...(project ? [`project: ${project}`] : []), "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## What It Rests On", ""].join("\n");
+/* the inquiry's own references: the policy cited live, the work orders severed with a reason, Mai's observation proposed
+   (citation R15: a leg is live or severed as its reference is) */
+export const INQUIRY_REFS = [[D, "cites", "confirmed", null], ["INFO-2026-0005", "cites", "severed", "\"Severed 2026-10-07T09:00:00Z: the wrong year's orders\""],
+  ["INFO-2026-0006", "cites", "proposed", null]];
+export const inquiryMd = (project = P, refs = INQUIRY_REFS) => ["---", `id: ${Q}`, "object_type: inquiry", "title: \"Seven days\"", "created: 2026-10-03T10:00:00Z",
+  ...(project ? [`project: ${project}`] : []), "references:",
+  ...refs.flatMap(([t, rel, st, note]) => [`  - target: ${t}`, `    rel: ${rel}`, `    status: ${st}`, ...(note ? [`    note: ${note}`] : [])]),
+  "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## What It Rests On", ""].join("\n");
 export const DOCUMENT_MD = ["---", `id: ${D}`, "object_type: information", "title: \"Pothole repair policy, Administrative Instruction 4.12\"",
   `content_hash: sha256:${SHA}`, `project: ${P}`, "source:", "  locator: https://example.org/ai-4-12.pdf", "  authority: Public Works",
   "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
@@ -35,6 +41,9 @@ export const READING = (o = {}) => ({ ok: true, found: true, capture_sha: SHA, r
 const STRENGTH = { [Q]: { capture: { state: "graded", grade: "B", weakest: { title: "Administrative Instruction 4.12" } },
                          connection: { state: "graded", grade: "C", detail: "a work-order number on both would raise it to B" }, testimony: { state: "unrated" } },
                    [Q2]: { capture: { state: "unrated" }, connection: { state: "unrated" } } };
+/* the project's questions (basis-versions R50), one page; and every question the member may see (`list`) */
+export const PROJECT_QUESTIONS = { ok: true, project: P, items: [{ inquiry: Q, title: "Is the city repairing reported potholes within seven days?" },
+  { inquiry: Q2, title: "Does closed mean repaired?" }], cursor: null };
 const QUESTIONS = { bundles: [{ bundle_id: Q, title: "Is the city repairing reported potholes within seven days?" }, { bundle_id: Q2, title: "Does closed mean repaired?" },
                               { bundle_id: "INQ-2026-0003-gone", title: "Severed" }, { bundle_id: "INQ-2026-0099-other", title: "Another project's" }] };
 
@@ -49,6 +58,7 @@ export function plane(o = {}) {
     strengthbarof: (r) => ok(r.query.project ? { ok: true, project: r.query.project, bar: { declared: true, source: "project", capture: "B", connection: "B" } }
                                              : { ok: true, group: "g", bar: { capture: "C", connection: "C" } }),
     list: ok(QUESTIONS),
+    projectquestions: ok(PROJECT_QUESTIONS),
     projectaccountstate: ok({ ok: true, on: true, serving: "member" }),
     projectdirectory: ok({ ok: true, projects: [{ id: "PROJ-2026-0042", name: "Elsewhere" }] }),
     inquirystrength: (r) => ok({ ok: true, target: r.query.id, ...(STRENGTH[r.query.id] || {}) }),
