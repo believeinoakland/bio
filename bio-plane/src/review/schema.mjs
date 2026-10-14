@@ -1,4 +1,4 @@
-/* review's tables (requirements: `build/requirements/review.md`, R4, R6, R7, R18, R21, R24, R30, R31, R33). Moved from `schema.mjs`
+/* review's tables (requirements: `build/requirements/review.md`, R4, R6, R7, R18, R21, R24, R30, R31, R33, R34). Moved from `schema.mjs`
  * with their comments (K4). Working data: each is declared to record-core's purge as a whole-store table (K23, R24), so
  * only a whole-store purge clears it. */
 
@@ -54,7 +54,11 @@ CREATE TABLE IF NOT EXISTS review_grants (
   issued_by   TEXT NOT NULL,
   issued_at   TEXT NOT NULL,
   revoked_by  TEXT,
-  revoked_at  TEXT
+  revoked_at  TEXT,
+  -- T48 (R34; N1038; DEC-100): THE READER'S END DATE, an instant in record-core's stamp form, or NULL for a grant live
+  -- until revoked (every grant before T48). From this instant the grant is dead exactly as a revoked one; nothing is
+  -- written when it lapses.
+  until       TEXT
 );
 CREATE INDEX IF NOT EXISTS review_grants_draft ON review_grants(draft_id);
 
@@ -112,9 +116,10 @@ export const REVIEW_TABLES = Object.freeze([
 
 /* REC-193: `case_drafts.statement_by` arrived after the table did. A store created before it holds the table without
    the column; it is added, never back-filled (NULL reads back as UNDETERMINED, R4). So are `review_comments`' identity
-   columns (T41, R33): a comment made before them has edition NULL and belongs to no case edition. */
+   columns (T41, R33): a comment made before them has edition NULL and belongs to no case edition. So is
+   `review_grants.until` (T48, R34): a grant made before it has none, and stays live until revoked. */
 const ADDED_COLUMNS = [["case_drafts", "statement_by", "TEXT"], ["review_comments", "case_id", "TEXT"],
-                       ["review_comments", "edition", "INTEGER"]];
+                       ["review_comments", "edition", "INTEGER"], ["review_grants", "until", "TEXT"]];
 
 /** Creates the tables and the columns added since; idempotent. */
 export function migrateReview(sql) {
