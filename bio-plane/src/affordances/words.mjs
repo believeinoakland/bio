@@ -27,6 +27,42 @@ import { CLAIM_KINDS } from "../people/index.mjs";
 const MONEY_WORDS = Object.freeze({ proposed: "proposed", adopted: "adopted", adjusted: "amended",
   encumbered: "committed", incurred: "spent", paid: "paid", assessed: "billed", collected: "collected" });
 
+/* R59 (K3250, K3254; walk row 15; `screens-investigate` R24): each connection kind's design group, the design's five (the Follow
+ * choices of `mock-screens.js`'s graph, its `KINDS`): `pos` "Positions and memberships", `part` "Took part", `money` "Money", `ment`
+ * "Mentioned together", `same` "Same person?". A frozen map in this module, never the owners': the groups are the design's, the
+ * kinds the owners'. Every kind the registry holds is in it (the test is total over the registry); the design gives no group to the
+ * kinds below that no screen draws as people's ties, so each takes the design group its own meaning is nearest, BOB's to re-rule:
+ *   pos    a post, a membership or a standing relation of bodies and offices: `line:*` (the posts held, `line:holds:*`, and the
+ *          structure between bodies), `entities`' three, and the standing duties (`owes`, `owed_to`, `holds_power`);
+ *   part   a recorded event or decision a party took part in: every `event_*` kind, the duty's meeting and use (`met_by`,
+ *          `used_in`), the law and court links between instruments (`law_*`, `court_*`, `in_force_at_event`), and a stage placed on
+ *          a declared flow;
+ *   money  `money_flow`;
+ *   ment   the weakest ties, a lead and never a finding: `mentioned_together`, a member's `hunch`, a `step_source`, `in_tension_with`;
+ *   same   a member's claim about whether two records are one person (`same_as`, `not_same_as`, `unsure`). */
+const GROUP_KINDS = {
+  pos: ["proxy_for", "member_of", "overlaps", "owes", "owed_to", "holds_power", "line:part_of", "line:post_in", "line:reports_to",
+    "line:oversees", "line:appoints", "line:seat_on", "line:funds", "line:contracts_with", "line:acts_for", "line:responsible_for",
+    "line:custodian_of", "line:successor_of", "line:belongs_to", "line:educated_at", "line:credentialed_by", "line:owns_interest_in",
+    "line:related_to", "line:associate_of", "line:party_to", "line:appeal_of", "line:consolidated_with", "line:remanded_to",
+    "line:arises_from", "line:holds:employee", "line:holds:elected", "line:holds:appointed", "line:holds:acting", "line:holds:interim",
+    "line:holds:ex_officio", "line:holds:board_member", "line:holds:officer_or_director", "line:holds:partner",
+    "line:holds:military_service", "line:holds:volunteer", "line:holds:contractor", "line:holds:other"],
+  part: ["event_actor", "event_organizer", "event_mover", "event_seconder", "event_voted", "event_present", "event_speaker",
+    "event_sender", "event_recipient", "event_copied", "event_signatory", "event_decider", "event_author", "event_implementer",
+    "event_party", "event_subject", "event_concerns", "event_authorises", "event_answers", "event_amends", "event_reverses",
+    "event_stated_cause", "event_within", "event_precedes", "met_by", "used_in", "law_amends", "law_repeals", "law_renumbers",
+    "law_recodifies", "law_refers_to", "law_defines", "law_excepts", "law_implements", "law_incorporates", "court_interprets",
+    "court_applies", "court_holds_invalid", "court_requires", "in_force_at_event", "placed_on_flow"],
+  money: ["money_flow"],
+  ment: ["mentioned_together", "hunch", "step_source", "in_tension_with"],
+  same: ["same_as", "not_same_as", "unsure"],
+};
+export const CONNECTION_GROUPS = Object.freeze(Object.fromEntries(
+  Object.entries(GROUP_KINDS).flatMap(([group, kinds]) => kinds.map((k) => [k, group]))));
+/** The design's five groups, in the design's order (the Follow choices). */
+export const CONNECTION_GROUP_NAMES = Object.freeze(["pos", "part", "money", "ment", "same"]);
+
 /** A plain word made from a value: `stated_cause` → "stated cause", `procuringEntity` → "procuring entity",
  *  `EventMovedOnline` → "moved online". */
 export const plainWord = (v) => String(v).replace(/^Event(?=[A-Z])/, "").replace(/_/g, " ")
@@ -85,12 +121,12 @@ export function composedVocabularies() {
   }
   if (composed.has("people")) out.identity_claim_kinds = vocabulary(CLAIM_KINDS, registered);
   /* N695 (K1864): each kind carried once, in the others' shape: `values` the kind names in `owners()`'s order, `words`
-     each kind's word, class and owner; the registry entries themselves are not carried beside them. */
+     each kind's word, class, owner and design group (R59); the registry entries themselves are not carried beside them. */
   if (reg.length) {
     const values = [], words = {};
     for (const o of reg) for (const k of o.kinds) {
       values.push(k.kind);
-      words[k.kind] = { word: k.word, class: k.class, owner: o.owner };
+      words[k.kind] = { word: k.word, class: k.class, owner: o.owner, group: CONNECTION_GROUPS[k.kind] ?? null };
     }
     out.connection_kinds = { values, words };
   }

@@ -132,7 +132,7 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 
   No element the shell draws shows a slug, language tag, record id or code to a member. Test: zero To-do items draw no count, and `display_name: null` draws "Your group". Control: a set name is drawn.
 - **R61** (T48; K3250, K3254; walk C7, C8, rows 6, 16, 20; amends R13, R35) Three rules: *(not yet met: T48)*
-  1. **Absence.** A read marked `subject: true` that is refused with an absence code draws only R35's "Nothing is here", with the way back to its place, and nothing else of the screen. The absence codes are: `NO_SUCH_*`, `*_NOT_FOUND`, `NOT_FOUND`, `NO_ENTITY`, `NO_CALC`, `NO_NODE`, and any code a screen module lists in its `ABSENT_CODES`. The same applies when a subject screen is opened with no subject.
+  1. **Absence.** A read marked `subject: true` that is refused with an absence code draws only R35's "Nothing is here", with the way back to its place, and nothing else of the screen. The absence codes are: `NO_SUCH_*`, `*_NOT_FOUND`, `NOT_FOUND`, `NO_ENTITY`, `NO_CALC`, `NO_NODE`, and any code a screen lists in its screen object's own `ABSENT_CODES` property (a list of codes; K3302). The same applies when a subject screen is opened with no subject.
   2. **A refusal with its own words.** It is drawn as those words alone (the `refusal.<code>` word, or the answer's `translation`), never wrapped in `state.failed`'s "Could not read this, because …".
   3. **A failure without words.** It is drawn as "could not be read" with R39's reference, and names no code.
 

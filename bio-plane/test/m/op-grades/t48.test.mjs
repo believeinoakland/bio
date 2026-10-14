@@ -140,18 +140,18 @@ test("R41: aiuseovertime, exploregraph, standardproposals, filingread and pressu
   assert.ok(!isRead("planask") && !isRead("stepsource") && !isRead("lookedsince"));
 });
 
-test("R41: planask `reversible` as airunopen, an ACTS row on a plan's action with no NON_ACTS row, a machine refused it by "
-   + "MACHINE_CANNOT_PLAN as itemtakeup; optionpropose keeps its grade", () => {
+test("R41 (K3297): planask `reversible` as airunopen; not an ACTS row (its subject is a plan), so it has a plan-directed "
+   + "NON_ACTS row and no MACHINE_REFUSALS row; optionpropose keeps its grade", () => {
   assert.equal(RUNGS.planask, "reversible");
   assert.equal(gradeOf("planask"), gradeOf("airunopen"), "as airunopen");
   assert.equal(RUNGS.airunclose, "reversible", "the act that ends the run it opens is graded");
-  assert.equal(MACHINE_REFUSALS.planask, "MACHINE_CANNOT_PLAN");
-  assert.equal(MACHINE_REFUSALS.planask, MACHINE_REFUSALS.itemtakeup);
-  assert.ok(!Object.hasOwn(NON_ACTS, "planask"));
+  assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "planask"));
+  assert.match(NON_ACTS.planask, /^plan-directed: keyed by a plan; a member asks the assistant for options on it/);
+  assert.match(NON_ACTS.optionpropose, /^plan-directed: /, "as the plan acts T45 left");
   assert.equal(phoneOf("planask"), true);
   assert.equal(RUNG_ABSENT.optionpropose.ground, "undetermined", "optionpropose keeps its grade");
-  /* control: no other op of R41 enters MACHINE_REFUSALS */
-  for (const op of ["stepsource", "stepsourcewithdraw", "lookedsince", "aiuseovertime", "exploregraph", "standardproposals",
+  /* control: no op of R41 enters MACHINE_REFUSALS */
+  for (const op of ["planask", "stepsource", "stepsourcewithdraw", "lookedsince", "aiuseovertime", "exploregraph", "standardproposals",
     "filingread", "pressurefor"]) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
 });
 
@@ -192,9 +192,9 @@ test("R38 R39 R40 R41: T48's tables hold exactly these ops, none both graded and
   for (const [op, e] of Object.entries(T48.T48_RUNG_ABSENT)) assert.ok(e.is.length > 40, op);
   /* every other op of T48 carries a NON_ACTS row, a read or a draft, or is an ACTS row with a machine refusal */
   const nonActs = Object.keys(T48.T48_NON_ACTS).sort();
-  assert.deepEqual(nonActs, [...READS, "readtranslate", "stepsource", "stepsourcewithdraw", "lookedsince", "updateskip",
+  assert.deepEqual(nonActs, [...READS, "readtranslate", "planask", "stepsource", "stepsourcewithdraw", "lookedsince", "updateskip",
     "updatelater", "updatestart"].sort());
-  assert.deepEqual(Object.keys(T48.T48_MACHINE_REFUSALS).sort(), ["actionreplyquoting", "planask"]);
+  assert.deepEqual(Object.keys(T48.T48_MACHINE_REFUSALS).sort(), ["actionreplyquoting"]);
   for (const op of Object.keys(T48.T48_MACHINE_REFUSALS)) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   for (const [op, s] of Object.entries(NON_ACTS)) assert.ok(typeof s === "string" && s.length > 10, op);
   /* none of the grades is reached through an alias */

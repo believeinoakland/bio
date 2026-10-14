@@ -26,7 +26,7 @@ const DEC_109 = [
   /Use a group account for it, not anyone's personal login\./,
   /Add at least one other trusted person to that account\./,
   /Where possible, let someone other than the group's administrators hold it\./,
-  /The same account is the way back in if the password you choose is lost[^<]*your group's Civicsmith can be claimed again\./,
+  /The same account is the way back in if the password you choose is lost[^<]*your group's Civicsmith to be claimed again\./,
 ];
 function r47Fails(block) {
   const fails = [];
