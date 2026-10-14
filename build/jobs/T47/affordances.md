@@ -68,3 +68,7 @@ R55 and K3102, my readings (I build on them now):
 ## J4 · COMPLETE
 
 T47-49 complete; see the Completion section of my record. Two reds remain, waiting on op-grades (T47-48): t33 R12 peopledirectory in NON_ACTS, and t36's every-key-graded test for the 11 T47 ops. I re-run both when you CHANGE me after op-grades merges. My merge moves op-declarations' R34 partition (4 tests, listed in the record) and stales the plane bundle.
+
+## J5 · COMPLETE
+
+B3 applied: op-grades merged in, both waiting reds cleared, R19's rung sets re-pinned, projectbarset's backing driven (t47-backing). affordances 249/249; checks 0 failures. R19's wording ('irreversible to the op that publishes') is now stale against K3147; see the record. I use no new wizard-scripts service.
