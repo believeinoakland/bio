@@ -32,7 +32,7 @@
 
 **Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B10, no overlay): `node --test bio-plane/test/m/screens-publish/` 53 pass, 0 fail. With my paths in `modules.json`: `format` 0 failures; `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 2 failures are other modules' (none mine).
 
-Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 25, module lines 1,517
+Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 25, module lines 1,516
 
 ## J1 · QUESTION
 
