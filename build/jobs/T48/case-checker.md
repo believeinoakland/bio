@@ -42,3 +42,7 @@ R25 asks the program to be read "on the first read of `PROGRAM`, `PROGRAM_SHA256
 My best reading, which I am building now: `program.mjs` (generated) holds the program as one JSON text `{sha256, body_sha256, text}` returned from inside a function, so evaluating the module builds no program text. `index.mjs` replaces the three constants with one accessor, `caseCheckerProgramText()`, which parses that JSON on its first call, freezes it, and returns the same object after that. `caseCheckerProgram()` (R15's read) reads through it. The served bytes and SHA-256s stay unchanged.
 
 R25's "first read of PROGRAM, PROGRAM_SHA256 or PROGRAM_BODY_SHA256" would then read as "the first call of that accessor", and R1/R13 say nothing about the three names. Please confirm, or name the form you want; the requirement's wording is yours to amend.
+
+## J2 · COMPLETE
+
+T48-41 done: R25 met as J1/B3 (program.mjs holds the program as JSON data inside programData(); index's one accessor caseCheckerProgramText() parses it once on first call, frozen, reused; R13 bytes and SHAs unchanged, R15 serves the same). K3261: labelled -> labeled in spec.mjs (R14's own text still says labelled; yours). case-checker 82/82, users accepted + case-import 116/116; format, architecture, coverage 25/25, ownership 0 failures; run.mjs architecture 0, coverage failures none mine. Stale for you at layer close (K1540 order): bio-plane/dist bundle + .bundle.json, newgroup/src/release.mjs, release/bio-plane.bundled.mjs. Details in my record's Completion.
