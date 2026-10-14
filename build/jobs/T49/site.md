@@ -47,3 +47,7 @@ Built and tested everything but the generated pages (record, Progress). My paths
 - **Checks** (process repository): `format` 0 failures; `architecture … site` 9 product files, 0 failures; `coverage … site` 12 of 12 live ids named, 0 failures; `ownership … site tranche/T49` 10 files, 0 failures. `checks/run.mjs`: format 0, architecture 0 failures (3370 files), channels 0; coverage 12 failures, none of them site's (other L11 modules' new ids, plan rule 5 (1) and (10)).
 - Reading: my own code whole after each change; no other module's tests name a requirement this job changed.
 - Size (session_01J8PEzpB2y4LnPqzdpgRfCn): test runs 9, module lines 423
+
+## J3 · COMPLETE
+
+T49-31 complete on job/T49/site (record, Completion): R1–R12 met; site/src/pages.mjs generated and committed. One detail for you: SITE_COMMIT is dc267da296 (DEC-261's commit), not K3372's fa3c8b7e8e, because DEC-261 re-worded site.groups.rule in both the words and SCR.site, so only dc267da296 matches the words in the tree. Tests 24 pass 0 fail; format, architecture, coverage (12/12) and ownership 0 failures for site.
