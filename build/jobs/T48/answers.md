@@ -37,3 +37,7 @@
 - `checks/run.mjs`: format 0, architecture 0 (none for my files), channels 0. Coverage has 37 failures, none in answers.
 
 Size (session_01949saWF2vA4uRTaJnEYzqR): test runs 7, module lines 1910
+
+## J1 · REPORT
+
+affordances: test/m/affordances/t33.test.mjs:151 (R12, the op-map list) is red on tranche/T48 itself and here: explore's op map now also serves 'exploregraph', which the test's list of ops T33 and T35–T47 grant does not hold. Not caused by T48-36; for affordances' job or the plan's accepted reds.
