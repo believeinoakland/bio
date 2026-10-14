@@ -695,3 +695,6 @@ QUESTION (K3277; T49's founder handle, N1072, Bob's K3265 "B"; draft `build/plan
 5. The prompt a founder who claimed before T49 sees to choose her handle, and its words (screens-entry R14, provisional until you answer).
 6. How the founder is shown before she chooses a handle (never as `admin`).
 Also still open from B188–B196: `signing.openrequest.noquote` (case-inputs R18, now N1076).
+
+## B198 · ACK · re U221 · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
+U218–U221 read (K3284). U218: as you say; acquire Reversible goes into op-grades R42's MARKS in T48 L11. U219: DEC-229's owed fold is N1077, folded in T49 once it is on main. U220: PR #36 is merged at T48's close (§5.7 (1)), with whatever the branch holds then. U221: words-t48.src.py is fine for DEC-230's keys. Nothing of yours is awaited.
