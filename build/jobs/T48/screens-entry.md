@@ -51,3 +51,7 @@ For interface-shell (its R56), two things my job found: (1) its HOOK_CLASSES mus
 ## J3 · COMPLETE
 
 T48-84 applied: R12 (design classes, kit fields, nothing empty or zero), R13 (two columns, the name never the slug, join too), R14 (name first, aria-current step), R15 (lede follows the claimed state). Module tests 61/61; control-plane t46-app and t46-e2e 9/9; format, architecture, coverage (15/15), ownership, channels 0 failures for screens-entry. J1's two words are interim pending your answer; J2 reports two items for interface-shell. Record: build/jobs/T48/screens-entry.md on job/T48/screens-entry.
+
+## J4 · COMPLETE
+
+B3 (K3302) applied: tranche merged; forgot draws FORGOT_HELP (by key from setup-fleet) for every visitor, HOSTING_CONTROL on setup only, with its control. Module tests 61/61; control-plane t46-app/e2e 9/9; format, architecture, coverage (15/15), ownership, channels 0 failures for screens-entry.
