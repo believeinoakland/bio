@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3369: (1) project-roster (L2) is closed. If any read the member can make answers her invited state (project-roster R1's participants for a project she can see, or membership's participation through an op), use it and meet R29; if none does, report R29 not met and build nothing on a guess: N1118 adds participation to projectlist in T50. (2) Your reading stands: {project: <question>, question: <question>, found, role}. (3) Yes, title: beside objective:.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
