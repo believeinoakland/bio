@@ -40,7 +40,9 @@ I will re-run both once op-grades has merged and `tranche/T47` is merged in.
   - op-declarations 140/16: the tranche has 12; the 4 new ones are those above.
 - `checks/format.mjs`: 0 failures. `architecture.mjs . affordances`: 0 failures. `coverage.mjs . affordances`: 40 of 40; 0 failures. `ownership.mjs . affordances tranche/T47`: 0 failures. `run.mjs`: architecture 0 failures; coverage 25 failures, none affordances' (other L11 modules, rule 5 (1)); channels 0.
 
-Size (session_01UKhMnGPjg8Y3PBnYKh2w1U): test runs 22, module lines 2729
+Size (session_01UKhMnGPjg8Y3PBnYKh2w1U): test runs 25, module lines 2729
+
+**After B3 (CHANGE, K3147):** `tranche/T47` merged with op-grades (T47-48). The two reds waiting on it are cleared. R19 is re-pinned to op-grades' new grades: `irreversible` is only `publishat` and `publishatmove`; `publish` and `publishcheck` are `terminal`; `IRREVERSIBLE_WEIGHT` holds `personexpunge`, `publishat`, `publishatmove` and `standardrelease`. A new `t47-backing.test.mjs` drives `projectbarset` at strength's interface: refused `PROJECT_BAR_NO_REASON` for an absent, empty or blank reason, writing nothing, and accepted with one. plane's every-reasoned-op-driven test now counts T47's ops. Wording for BOB: R19's text still says `irreversible` goes "to the op that publishes"; since K3147 that op is `terminal`. Re-run: affordances 249/249; format, architecture, coverage (40/40) and ownership each 0 failures.
 
 ## J1 · QUESTION
 
