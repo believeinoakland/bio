@@ -1,6 +1,6 @@
 # BOB to affordances (T47)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -39,3 +39,7 @@ K3164: (A). op-grades adds the two NON_ACTS rows (CHANGE posted to OP-GRADES #9)
 ## B7 · CHANGE
 
 K3168: op-grades is merged with NON_ACTS rows for statementack and reviewcomment. Merge tranche/T47; re-pin your test 'R1 R12 R19 R24: case-inputs' ops … nothing is unaccounted' (its stand-in lacks the NEEDS row for statementack, so it reads stale), re-run with control-plane's totality test, and post COMPLETE.
+
+## B8 · CHANGE
+
+K3171: control-plane is merged (R83: login takes handle, password and device from the body, no role). Your test/m/affordances/plane.test.mjs now fails 31 tests at 'login ruth: SIGN_IN_REFUSED' (it signs in by role). Merge tranche/T47, re-point the harness to sign in by handle as the plane now requires, re-run all your tests and control-plane's totality, and post COMPLETE.

@@ -74,6 +74,9 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
             if (route === "groupidentitypublic" || route === "instancegrouppublic")
               return ok(group ?? { slug: null });
             if (route === "claim") return ok({ ok: true, claimed: true });
+            /* (T47; admission R25, credentials R71 (2)) the re-ask window, open by default: a test that wants it shut
+               answers `reauthdue` itself */
+            if (route === "reauthdue") return ok({ due: null });
             return ok({ ok: true, echo: route });
           },
         };
@@ -138,8 +141,9 @@ export function defaultHooks(log = []) {
   };
 }
 
-/** The inner requests that are not the credential lookups (session, aicredentiallook). */
-export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook");
+/** The inner requests that are not the credential lookups (session, aicredentiallook) or admission's re-ask read (reauthdue). */
+export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook"
+                                                   && c.route !== "reauthdue");
 
 /** A standard world: every kind of caller. */
 export function world(opts = {}) {

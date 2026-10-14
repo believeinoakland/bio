@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R68). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R89). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -29,22 +29,32 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
          TEXT_CHECK } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
-/* R75 (T46; N897 (1)): the member interface's page and its assets, beside `/`: interface-shell's page over the four screen
-   modules' screens, and interface-assets' files. */
-import { appRouteOf, appPage, appAsset } from "./app.mjs";
+/* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
+   nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
+   interface-assets' files. */
+import { appRouteOf, appPage, appAsset, logoAsked } from "./app.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
+import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
 import { SCREENS as INTAKE_SCREENS } from "../screens-intake/index.mjs";
 import { SCREENS as DAILY_SCREENS } from "../screens-daily/index.mjs";
 import { SCREENS as INQUIRY_SCREENS } from "../screens-inquiry/index.mjs";
-const APP_SCREENS = Object.freeze([...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS]);
-/* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
-import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
+import { SCREENS as WIZARDS_SCREENS, GUIDE as WIZARD_GUIDE } from "../screens-wizards/index.mjs";
+import { SCREENS as INVESTIGATE_SCREENS } from "../screens-investigate/index.mjs";
+import { SCREENS as PUBLISH_SCREENS } from "../screens-publish/index.mjs";
+import { SCREENS as ACTION_SCREENS } from "../screens-action/index.mjs";
+const APP_SCREENS = Object.freeze([...ENTRY_SCREENS, ...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS,
+  ...WIZARDS_SCREENS, ...INVESTIGATE_SCREENS, ...PUBLISH_SCREENS, ...ACTION_SCREENS]);
+const APP_OPTIONS = Object.freeze({ guide: WIZARD_GUIDE });
+/* (T47; K3167) a member's own Claude sign-in, its disconnection, the revocation's sign-out, a refused held token and the
+   test instance's trace are signin-door's (its R1–R5, were this module's R65, R78, R85–R87): the door routes to them. */
+import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, tokenRefusedSeen, signintrace }
+  from "../signin-door/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
-import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
+import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
 import { publicReadDoorRead } from "../public-read/door.mjs";
@@ -239,7 +249,8 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
     digest = await sha256Hex(credential.secret || "");
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
-                                   method: req.method, presented: presentedAi, doAnswer, credential });
+                                   method: req.method, presented: presentedAi, doAnswer, credential,
+                                   background: url.searchParams.get("background") === "1" });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
     inner.searchParams.set("viewer", admitted.caller.viewer);
@@ -266,7 +277,9 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
    shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
 async function caseReader(url, env, storeName, presentedAi, credential = null) {
-  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential);
+  /* R83 (T47; K3144): a background request's session read is no activity */
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential,
+                           { background: url.searchParams.get("background") === "1" });
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
 
@@ -569,10 +582,12 @@ export function makeFetch(hooks = {}) {
       try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
     const credential = presentedCredential({ req, url, body: reqBody });
     seen.credential = credential;
+    /* R83 (T47; K3144): the page's mark of a background request, read once */
+    const background = url.searchParams.get("background") === "1";
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
 
-    /* The API lives under /api so the instance can serve its own setup UI at
+    /* The API lives under /api so the instance can serve its own interface at
        the root. A bare GET of / with no op parameter is a person in a browser
        and gets the page. The legacy root query API (/?op=...) still answers,
        for the one deployment that predates this, and should be dropped once
@@ -593,38 +608,18 @@ export function makeFetch(hooks = {}) {
                      "access-control-allow-origin": "*" } });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-    /* REC-163 / IC-174: the page names whose record this is — the group ITS record records, read when the page is
-       SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
-       or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
-       never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
-       seed would go on saying none is recorded. D-596: the read is op=groupidentity's PUBLIC projection, so the line
-       carries the display name beside the slug and a verified domain with its date (`setup.mjs` `groupLine`).
-
-       D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
-       HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
-       `pinnedNamespaceGate`, both of which run at the op front door a few lines down, never see it. MEASURED: the
-       read was written `publicInstanceGroup(env, "bio")`, so `/?store=scratch` served `bio`'s slug as this copy's
-       own — a live verification whose whole no-write guarantee is naming its namespace (D-325) read
-       production while believing it was in scratch — and `/?store=nonsense` did the same, which is D-456's own
-       defect surviving at the one route D-456 did not reach. Found by D-461's worker.
-
-       THE RULE IS op=instancegroup's, NOT A NEW ONE, and that is the decision rather than a convenience: this page
-       and that op are ONE READER (`publicInstanceGroup` — its own header says so) shown to a stranger, so a
-       namespace that does not exist is refused BY NAME through the very gate every other caller meets,
-       `store=scratch` reads scratch, and everything else reads `bio`. The page is deliberately NOT added to
-       D-461's pinned set: pinning one of two surfaces over one reader would make `store=scratch` mean two things on
-       the same copy — refused on the page, honoured on the op — and the op is exempt because it reads `store=`
-       itself, which is now exactly what the page does. `/version` and `/sign` are left alone on purpose: they
-       address no namespace, and a gate on a route that reads no record would be a fence tighter than its rule. */
+    /* R82 (T47; N1002; amends R1, R81): `GET /` with no `op` is a person in a browser, and gets the interface's page
+       (`interfacePage`; the page draws `front` or Home, interface-shell R32), under R75's gates and policy, `no-store`.
+       No route serves the setup page. The namespace and address gates run first, as on `/app` (admission R1, R20; D-475:
+       `/?store=nonsense` is refused by name, and nothing below reaches this route). `/version` and `/sign` address no
+       namespace and are left ungated. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);   /* admission R1 */
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
-      const pageAddress = addressGate(url);   /* R59: admission R20, before the page's read */
+      const pageAddress = addressGate(url);   /* R59: admission R20, before the page is built */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
-        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      return appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS });
     }
 
     /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
@@ -635,7 +630,10 @@ export function makeFetch(hooks = {}) {
       if (appNamespace) return json(appNamespace.body, appNamespace.status);
       const appAddress = addressGate(url);   /* R59: admission R20 */
       if (appAddress) return json(appAddress.body, appAddress.status);
-      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS })
+      /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
+      if (appRoute === "asset" && logoAsked(url))
+        return groupLogoAsset(env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", { json, storeSilent, storeRefusal, doAnswer });
+      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS, options: APP_OPTIONS })
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 
@@ -777,8 +775,8 @@ export function makeFetch(hooks = {}) {
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
-        /* DEC-88 (case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
-           the query as case-authoring's `statementack` arm reads them: the caller's `reason=`, else a POST body's string
+        /* DEC-88 (case-inputs R1, was case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
+           the query as case-inputs' `statementack` arm reads them: the caller's `reason=`, else a POST body's string
            `reason`, verbatim. Nothing else of the caller's crosses; an absent reason stays absent, refused there. */
         if (op === "statementack") {
           let reason = url.searchParams.get("reason");
@@ -803,10 +801,14 @@ export function makeFetch(hooks = {}) {
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
          the caller names (`invStub` above). Moved from legacy-index at T19 (its door share). */
+      /* R83 (T47; K3084; credentials R65, R67): `login` takes the body's `handle`, `password` and `device` alone and
+         sends no `role` (the founder signs in by the handle `admin`, credentials R67); nothing else of the body crosses,
+         and the password is relayed once and never logged, kept or echoed here (R30). */
       if (op === "login") {
-        const body = await req.json().catch(() => ({}));
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
         return relayAnswer(stub.fetch(new Request(`http://do/login${doorStamps ? `?${doorStamps}` : ""}`, {
-          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })), "login");
+          method: "POST", body: JSON.stringify({ handle: o.handle, password: o.password, device: o.device }) })), "login");
       }
       /* R58 (credentials R47; K1888): `recover`, credential-free as `login` is, pinned to `bio`: its `role`, `code` and
          `password` from the body alone, relayed once and never logged, kept or echoed here (R30); `source` and `country`
@@ -814,14 +816,29 @@ export function makeFetch(hooks = {}) {
       if (op === "recover") {
         const b = await req.json().catch(() => null);
         const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        /* (T47; credentials R67, amending its R47) and its `handle`, from the body alone, so a member recovers by handle */
         return relayAnswer(stub.fetch(new Request(`http://do/recover${doorStamps ? `?${doorStamps}` : ""}`, {
-          method: "POST", body: JSON.stringify({ role: o.role, code: o.code, password: o.password }) })), "recover");
+          method: "POST", body: JSON.stringify({ role: o.role, handle: o.handle, code: o.code, password: o.password }) })),
+          "recover");
+      }
+      /* R83 (T47; K3084; credentials R69, R71 (6)): the administrator's reset link looked at and used, credential-free as
+         `recover` is, pinned to `bio`: the `link` and the new `password` from the body alone, never the address, relayed
+         once and never logged, kept or echoed here (R30); `source` and `country` the door's. */
+      if (op === "passwordresetlook" || op === "passwordreset") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        const pass = op === "passwordreset" ? { link: o.link, password: o.password } : { link: o.link };
+        return relayAnswer(stub.fetch(new Request(`http://do/${op}${doorStamps ? `?${doorStamps}` : ""}`, {
+          method: "POST", body: JSON.stringify(pass) })), op);
       }
       if (op === "invitelook" || op === "enroll") {
         const body = await req.json().catch(() => ({}));
         return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
           method: "POST", body: JSON.stringify(body) })), op);
       }
+      /* R84 (T47; DEC-205; instance-setup R85, R86): the languages the group's members use, a public read, answered from
+         the store the caller names as the invitation's two steps are; nothing of the caller crosses. */
+      if (op === "grouplanguages") return relayAnswer(invStub.fetch(new Request("http://do/grouplanguages", { method: "GET" })), op);
       /* R54 (membership R101, R104; admission R17): the group website's and the join page's calls, answered as the
          invitation's two steps are, from the store the caller names (admission R3 lists them among the public ops that
          address `scratch`: each namespace holds its own key and link). Only the body's key (or link), cover and the
@@ -873,7 +890,11 @@ export function makeFetch(hooks = {}) {
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
        refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
        as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
-    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential });
+    /* R83 (T47; K3084, K3144; credentials R71 (7); admission R23–R25): a request the page makes on its own timer carries
+       `background=1`, handed to admission's session read as `background: true` (no activity), and kept in the query the
+       store is asked with; the request's parsed body is handed for the run a write names and the re-ask's argument. */
+    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential,
+                                 body: reqBody, background });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED") {   /* R53: an ask's grant */
       const granted = await grantAdmit(env, url, op, spec, credential.token);
@@ -1082,7 +1103,10 @@ export function makeFetch(hooks = {}) {
        (`#positionalMember`). `affordances` and `queue` build their own inner requests
        in their owners' handlers, reached through plane's hooks (`gatedOp`), and stamp it there. A new reader of `identity` joins this list. */
     /* D-681 (T5-11): `leadlist` joins, `leadread`'s reach asked of the same positional stamp. */
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
+    /* R88 (T47; K3099; strength R40): `projectbarset` joins, so the project's bar is asked of its author's position by
+       the identity stamp (strength's `projectAuthority`), never the author's bare id; it takes the viewer beside it (the
+       project's sight, absent and unseen one answer). */
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier", "projectbarset"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -1423,7 +1447,7 @@ export function makeFetch(hooks = {}) {
            tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
            call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
-        /* R45 (K1168; op-declarations R10): case-authoring's draft of what changed and its read (R39) and network-notices'
+        /* R45 (K1168; op-declarations R10): case-inputs' draft of what changed and its read (its R6, was case-authoring R39) and network-notices'
            act and reads (R1, R4, R22, R23) each answer by the caller's sight, and fail closed without the stamp
            (escalation's `escalationreasondraft` and link-sweep's `sweeps`, its R9 (N506), take it as `ACTION_LAYER_READS`). */
         || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op)
@@ -1438,7 +1462,7 @@ export function makeFetch(hooks = {}) {
         /* R50 (op-declarations R15; wizard-scripts R20): every wizard act but the editor grant's and every wizard read
            answers a script the viewer may not see as absent, so each takes the stamp. */
         || WIZARD_VIEWER_OPS.includes(op)
-        || REC30_VIEWER_READS.includes(op)) {
+        || REC30_VIEWER_READS.includes(op) || IDENTITY_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
          An `ai` credential does NOT stamp `class:ai`. It stamps the PRINCIPAL
@@ -1891,6 +1915,11 @@ export function makeFetch(hooks = {}) {
        and the store refuses it BY SHAPE (CONNECTION_ASSERT_NOT_A_MEMBER, FILE_MEMBERSHIP_NOT_A_MEMBER). */
     if (op === "connectionassert" || op === "filemembershipjudge")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* R79, R88 (T47; op-declarations R55; strength R40): a project's own bar is declared as the group's is
+       (`DECLARATION_ACTIONS`' `author`, by its expression), so a caller's `author` names nobody and a machine arrives
+       honestly named, refused by strength by name (C-32.9). */
+    if (op === "projectbarset")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* N345 (case-authoring R32): the ceremony's read asks the owner test op=publish asks, of the same `author`, so it
        takes publish's stamp by publish's expression (`STATE_ACTIONS`' author above), in a statement of its own so the
        span pinned above is not lengthened; a caller's `author` is overwritten. */
@@ -2019,27 +2048,24 @@ export function makeFetch(hooks = {}) {
         : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) })), op,
         { store: storeName, tokenClass: cls });
     }
-    /* R65 (T37; N708, DEC-156; agent-worker R66): a member's own Claude sign-in goes to their own runner, `member` the
-       door's `by` stamp and `step` and `code` the body's (`signin.mjs`); only a member's session reaches the op (its
-       spec). Nothing of it reaches the record but the fact `credentials` R43 keeps. */
+    /* R2 (T47; K3167; signin-door R1–R5): the subscription sign-in door is signin-door's. The door hands it the member
+       its session names (`by`, never a value the caller sends), the request's parsed body and an ask of the store
+       addressed; who reaches each op (a member's own session; `signintrace` an administrator's) is admission's, above.
+       Each answer is signin-door's `{status, body}`, sent as JSON (answer-envelope decorates a refusal with its row). */
+    const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
     if (op === "subscriptionsignin") {
-      const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
-      /* (T46; N897 (3); instance-setup R54) `start` waits on the disclosure: asked of the store's `disclosureof` for the
-         member the door stamps (the form `disclosureshown` records), fail closed as the keep-away question is. */
-      const disclosureDue = async () => {
-        const seen = await stored(`disclosureof?member=${encodeURIComponent(stampOf.by)}`, { method: "POST", body: "{}" });
-        if (seen.refused || !seen.answered) return { unread: seen };
-        if (seen.result && seen.result.ok === true && seen.result.shown === true) return null;
-        /* DEC-49 REGION is-disclosure-due
-           C-69.6 (answer-envelope's row): a sign-in started before the member was shown what connecting means. */
-        return { status: 409, body: { ok: false, reason: "DISCLOSURE_DUE", ...dispatchRow("DISCLOSURE_DUE"),
-          detail: "you have not yet been shown what connecting your own Claude account means, so the sign-in was not "
-                + "started and nothing was sent. Read it, then start again." } };
-        /* END DEC-49 REGION is-disclosure-due */
-      };
-      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored, disclosureDue });
-      if (signed.unread) return signed.unread.refused ? storeRefusal(signed.unread) : storeSilent(op, signed.unread.correlation);
+      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored });
       return json(signed.body, signed.status);
+    }
+    if (op === "signintrace") {
+      const traced = await signintrace({ env, store: stored });
+      return json(traced.body, traced.status);
+    }
+    if (op === "subscriptiondisconnect") {
+      const out = await subscriptionDisconnect({ env, member: stampOf.by, store: stored });
+      if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
+      if (!out.answered) return storeSilent(op, out.correlation);
+      return json({ ...out.reply.body, store: storeName, tokenClass: cls }, out.reply.status);
     }
     /* R57 (T46; N917; plane R40, R41; agent-worker R76): `textcheck` has no owner before the draft: the door asks the
        plane's draft door with the body's `text` alone (no told, grant or firsthand, no `checkDraft`), which gates it and
@@ -2057,6 +2083,8 @@ export function makeFetch(hooks = {}) {
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
       if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* signin-door R4: a held sign-in Anthropic refused is dropped */
+      await tokenRefusedSeen({ member: stampOf.by, answer: drafted, store: stored });
       if (drafted.ok === true)
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
           headers: { "content-type": "application/json" },
@@ -2065,23 +2093,22 @@ export function makeFetch(hooks = {}) {
       return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
     }
-    /* R77 (T46; N919; Bob's K2892, K2947, K2952, K2976; ai-runs R18): THE MEMBER-RUN DOOR. A member's own run, opened on
-       her own sign-in, is dispatched at her act by `ai-runs.dispatchMemberRun`, in the store object addressed (plane's
-       `dispatchMemberRun` on the object, as its `draft` and `ask` are), with `by` and `viewer` the member (a session's as
-       R17 stamps it; an `ai` credential's its principal, `member:<id>`, never `class:ai/<tokenId>`, since ai-runs compares
-       `by` with the run's principal), `run` from the body alone, and `credential` the `ai` credential the caller presented
-       (admission R20), handed in process: it crosses no query, body or fetch and is never logged, kept or answered (R30).
-       Any other caller is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and
-       refusals are ai-runs', as given. */
+    /* R77, R80 (T46, T47; N919, N955; Bob's K2892, K2947, K2952; K2976, K2999, K3027; ai-runs R18, credentials R63): THE
+       MEMBER-RUN DOOR, WITH NO CREDENTIAL FROM THE PAGE. A member's own run, opened on her own sign-in, is dispatched at her
+       act by `ai-runs.dispatchMemberRun`, in the store object addressed (plane's `dispatchMemberRun` RPC on the object, as
+       its `draft` and `ask` are), with `by` and `viewer` the member her session names (R17), `run` from the body alone. No
+       credential is read for it or passed on: a credential presented in a header, body or query reaches nothing here, and
+       the segment's credential is minted in the plane (credentials R63, at ai-runs R18's call). Any caller not arriving by
+       a session is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and refusals are
+       ai-runs', as given. */
     if (op === "airundispatch") {
       if (typeof stub.dispatchMemberRun !== "function") return unboundRun("the run was not started");
-      const who = viaSession ? sessViewer : cls === "ai" && !aiCred?.grant ? aiCred.principal : actor;
+      const who = viaSession ? sessViewer : actor;
       const run = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.run === "string"
         ? reqBody.run : null;
-      const presented = cls === "ai" && !aiCred?.grant && typeof credential.token === "string" ? credential.token : null;
       let out;
       try {
-        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, credential: presented, at: new Date().toISOString() });
+        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, at: new Date().toISOString() });
       } catch { return storeSilent(op); }
       if (!out || typeof out !== "object" || Array.isArray(out)) return storeSilent(op);
       /* a refusal by its code is a refusal (the envelope decorates it, admission's tally counts it); a withholding, an
@@ -2100,6 +2127,13 @@ export function makeFetch(hooks = {}) {
       let body;
       try { body = await res.clone().json(); } catch { return res; }
       return tieToStep({ body, status: res.status }, captureStep ?? url.searchParams.get("step"));
+    }
+    /* signin-door R4: an ask answered SIGNIN_TOKEN_REFUSED (plane's ask arm) drops the member's held sign-in; the answer
+       is unchanged */
+    if (armed && op === "ask" && viaSession) {
+      let asked = null;
+      try { asked = await armed.clone().json(); } catch { asked = null; }
+      await tokenRefusedSeen({ member: stampOf.by, answer: asked, store: stored });
     }
     if (armed) return armed;
     /* The forward's answer, read once through `doAnswer`: the store's refusal at its status, a silence a silence. */
@@ -2292,10 +2326,10 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* R45 (case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
+    /* R45 (case-inputs R6, was case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
        labelled machine work), so the stamp is the label, by `actionlawspropose`'s expression (a session its member, a
        machine `class:<cls>`, an `ai` credential `class:ai/<tokenId>`); set as `proposedBy`, the stamp op-declarations
-       names, and as `author`, the key case-authoring's map reads it from. A caller's copy of either is overwritten. */
+       names, and as `author`, the key case-inputs' map reads it from. A caller's copy of either is overwritten. */
     if (WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op)) {
       const proposer = viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
@@ -2397,9 +2431,11 @@ export function makeFetch(hooks = {}) {
            R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
         /* R29, R67 (T38): an op whose `by` or `viewer` the door stamps in the address (`OP_STAMPS`) takes neither from
            the caller's body either, so its owner's map never holds a caller's statement of who is acting */
+        /* (T47; R83, R59) and an op whose `session` the door carries (`signout`'s, `unlock`'s, `reauth`'s) takes none
+           from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
-                       ...declared.filter((k) => k === "by" || k === "viewer")];
+                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session")];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
@@ -3153,8 +3189,8 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
-    /* R65 (credentials R16, R43): a member who disconnects their subscription, or is revoked, is signed out of their own
-       runner, after the act and whatever the runner answers; the act's answer is unchanged. */
+    /* (signin-door R1, R4; credentials R16): a member who is revoked is signed out of their own runner, after the act
+       and whatever the runner answers; the act's answer is unchanged. */
     const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
     if (leaver) await signoutLeaver(env, leaver);
     /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
@@ -3181,6 +3217,8 @@ export function makeFetch(hooks = {}) {
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
       if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* signin-door R4: a held sign-in Anthropic refused is dropped */
+      await tokenRefusedSeen({ member: stampOf.by, answer: drafted, store: stored });
       /* ai-runs R48: whatever the check answers, a conversation that reached the model is counted to the member's day */
       if (drafted.ok === true)
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",

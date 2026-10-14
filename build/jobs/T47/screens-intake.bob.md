@@ -39,3 +39,7 @@ K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-decla
 ## B7 · CHANGE
 
 K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
+
+## B8 · CHANGE
+
+K3171 (JOURNEY-CHECK #1 J4 (1)): R3: `testify` answers {ok, bundle_id, …} but capture.mjs's doneTestify reads answer.id || answer.bundleId, so 'Recorded as your testimony: {id}' is never drawn. Merge tranche/T47 (control-plane merged), read bundle_id, add a test at the interface naming R3, and post COMPLETE. This re-opens you.

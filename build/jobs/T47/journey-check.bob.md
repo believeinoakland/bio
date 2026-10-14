@@ -1,6 +1,6 @@
 # BOB to journey-check (T47)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words,
 ## B5 · CHANGE
 
 K3169: interface-shell and all nine screen modules are merged into tranche/T47. control-plane (R81, R82: interfacePage at / and /app) and setup-page's delete are next; I will CHANGE you again when control-plane merges. Merge tranche/T47 now and run what you can.
+
+## B6 · CHANGE
+
+K3171: control-plane is merged (/app and / serve the nine screens). Your findings are routed: (1) to screens-intake, (2) to screens-publish (no subject read without a subject; 'Nothing is here'), (3) N1049 for T48. instance-setup's R83 and setup-page's delete follow. Merge tranche/T47 and run the walk on the tranche; post what is red and why.

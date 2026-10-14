@@ -5,7 +5,7 @@
 
    `plane` spreads this map into its route map (R5) beside the owners' own, handing it each owner's one instance through
    `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
-   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`), each asked only when its op is served. */
+   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, and since T47 `of.actionClocks()`), each asked only when its op is served. */
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
    owners that compare a bare member id with their roster are handed the bare id, and a machine stamp unchanged, so the
@@ -44,6 +44,11 @@ export function controlPlaneOwnerOps(of, url, body) {
     reviewcomments: () => of.review().reviewCommentsFor({ case: f("case"), edition: f("edition"), viewer: q("viewer"),
                                                           draft: f("draft") ?? null,
                                                           limit: f("limit") === null || f("limit") === undefined ? null : Number(f("limit")) }),
+    /* action-clocks R2 (T47; K3145, R79): a clock proposed for an action under a profile's rule. Any credential may
+       propose (op-declarations' `proposal` posture), so `proposer` is the door's label stamp and `viewer` its sight;
+       `action-clocks` exports the service and no arm, so this one calls it by name. */
+    clockpropose: () => of.actionClocks().clockPropose({ target: f("target"), rule: f("rule"), proposer: q("proposer"),
+                                                         viewer: q("viewer") }),
     /* leg-earning R14 (K2569): the projects a question is shown on, as the viewer may see them. */
     projectsshownon: () => of.legEarning().projectsShownOn({ id: f("id"), viewer: q("viewer") }),
 
