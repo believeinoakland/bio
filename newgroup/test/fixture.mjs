@@ -54,7 +54,8 @@ export function parsePage(raw) {
     step: (id, label) => events.push({ k: "step", id, label }),
     ok: (id, label) => events.push({ k: "ok", id, label: label ?? null }),
     no: (id, label) => { if (id !== undefined) events.push({ k: "no", id, label: label ?? null }); },
-    fail: (h, p, d) => { failed = { h, p, d }; },
+    /* R51 (T47): a stop names the step in progress, its fourth argument. */
+    fail: (h, p, d, s) => { failed = { h, p, d, s }; },
     done: (html) => { done = html; },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
@@ -401,3 +402,34 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
 
 /* The binding a plane PUT carried, by name. */
 export const bindingOf = (put, name) => (put?.meta?.bindings || []).find((b) => b.name === name) ?? null;
+
+/* R41: a page's own script, run as a browser runs it, against a stand-in for the few elements it touches: each element
+   with an id, and each checkbox and radio by name. `fetch` and `location` are recorded; a click runs its listeners. */
+export function pageWorld(page) {
+  const els = new Map(), inputs = [];
+  const make = (tag, attrs) => {
+    const el = { tag, attrs, value: "", checked: false, disabled: false, textContent: "", dataset: {}, open: false, on: {},
+      selectionStart: 0, addEventListener(k, f) { (this.on[k] ||= []).push(f); }, focus() {}, setSelectionRange() {},
+      showModal() { this.open = true; }, close() { this.open = false; },
+      async click() { if (this.disabled) return; for (const f of this.on.click || []) await f({ target: this }); } };
+    return el;
+  };
+  for (const [, tag, attrs] of page.matchAll(/<([a-z]+)\b([^>]*)>/g)) {
+    const id = attrs.match(/\bid="([^"]+)"/)?.[1], name = attrs.match(/\bname="([^"]+)"/)?.[1];
+    const el = make(tag, attrs);
+    if (id) els.set(id, el);
+    if (tag === "input" && name) inputs.push(Object.assign(el, { name, value: attrs.match(/\bvalue="([^"]*)"/)?.[1] ?? "" }));
+  }
+  const document = {
+    querySelector: (q) => q.startsWith("#") ? els.get(q.slice(1)) ?? null
+      : inputs.find((i) => q === `input[name="${i.name}"]:checked` && i.checked) ?? null,
+    querySelectorAll: (q) => inputs.filter((i) => q === `input[name="${i.name}"]`),
+    getElementById: (id) => els.get(id) ?? null,
+  };
+  const sent = [], location = { href: null };
+  const fetch = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) });
+    return { json: async () => ({ ok: true, authorize: "https://dash.cloudflare.com/oauth2/auth?x=1" }) }; };
+  const [js] = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  new Function("document", "fetch", "location", js)(document, fetch, location);
+  return { el: (id) => els.get(id), sent, location };
+}

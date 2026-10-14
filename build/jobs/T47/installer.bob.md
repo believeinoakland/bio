@@ -1,6 +1,6 @@
 # BOB to installer (T47)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B4 · CHANGE
 
 K3149: `newgroup/test/requirements.test.mjs` imports `setupPage`/`SETUP_HTML` from instance-setup, which are gone or retiring (R83): drop those imports. Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
