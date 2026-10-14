@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T47)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 763 KB with your tests (K2700; used public parts 265 KB across 6 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it (the later L11 jobs in the merge order that use your services), have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · ANSWER · re J1
+
+K3143: both readings stand (R34's `untested` on `writingHelp`'s answer past every refusal, read as you state; R36 carried as version 3 of each, version 2 `updated`).
+
+## B3 · ANSWER · re J2
+
+K3145: A. The edge `wizard-scripts → run-rules` is added on `tranche/T47`; add the Uses line (`run-rules`: `untestedLabel`, its R29) to your record's COMPLETE and BOB writes it into your requirements at the merge. Merge `tranche/T47`.

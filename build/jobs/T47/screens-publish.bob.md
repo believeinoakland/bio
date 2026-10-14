@@ -1,6 +1,6 @@
 # BOB to screens-publish (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 118 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · ANSWER · re J1
+
+K3145: 1 and 3 stand (no stand-ins; R13's re-point no longer needed). 2: your `cs.signer` shape is interface-shell R47 (`sign([{label, bytes, namespace}])` → `{ok, signatures}` or `{ok: false, declined: true}`; `register({keep})` → `{ok, keyB64}`).
+
+## B3 · ANSWER · re J2
+
+K3147: (1) not deferred: the kit gains interface-shell R49 (`cs.image` fetched with the session's header, `cs.areas` drawing rectangles on it by pointer, touch and keyboard, and a `cs.choice` driving one switching button); build R4 and R12 as designed on it, with your typed fallback only until the shell merges. (2) `view.fragment` is R46's (`{… grant? }` read once, removed from the address). (3) yes: `published` reads `publishedcase`'s `editions`. (4) the end date is N1038 (review, T48): draw the end date in the recipient line and say the link works until "Stop sharing". (5) yes: read `reviewcopy`.

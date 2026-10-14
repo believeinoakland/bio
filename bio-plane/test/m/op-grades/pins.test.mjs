@@ -52,12 +52,12 @@ const T41_UNDETERMINED = ["stepdelete", "steprefer", "stepproduct", "costmessage
 test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one a requirement ranks, in its band, and no other; "
    + "DEC-88's three bands word for word among them; a misbanded op, or one of the 57 left out, is seen", () => {
   const want = {
-    irreversible: ["publish", "publishat", "publishatmove" /* R14 */],
+    irreversible: ["publishat", "publishatmove" /* R14 */],
     attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount", "noticepost" /* R7 */, "docketpost" /* R9 */],
-    terminal: ["retire", "actionholdrelease" /* R8 */],
+    terminal: ["retire", "actionholdrelease" /* R8 */, "publish" /* R37 (T47; K3100 doubt 9) */],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert", "sourceconsentwithdraw", "scenarioset", "importwatch", "importunwatch" /* R12 */,
-      "publishatcancel" /* R14 */, ...DEC88.reversible],
+      "publishatcancel" /* R14 */, "inboxpull" /* R35 (T47) */, ...DEC88.reversible],
     reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
       "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "determine", "discharge",
       "dispose", "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge",
@@ -81,10 +81,13 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
     "projectapprovalset", "successrevise", "cureunlink", "ruledraft", "rulewithdraw");
   want.reversible.push("followend", "actionpromise", "actionreplybearing", "actionbearingpropose", "curelink",
     "matteroutcomeset", "plancomment", "declaredstakeset" /* B6, K2896 */);
-  want.irreversible.push("publishcheck");
+  want.terminal.push("publishcheck" /* graded as publish (K2883), so terminal with it since R37 */);
   /* R33 (T46) */
   want.reasoned.push("escalationstoppursuing", "escalationreopen");
   want.terminal.push("filingsecondapprove");
+  /* R36, R37 (T47) */
+  want.reversible.push("drawquestion", "monitorset", "grouplogoset", "grouplanguagesset", "signrequest");
+  want.reasoned.push("projectbarset");
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -98,26 +101,29 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
   assert.notDeepEqual(bandsOf(withoutOne), want);
 });
 
-test("R1 R8 R14 R32 R33 (N891): the closed `terminal` set is retire, DEC-88's two, actionholdrelease and (T45) "
-   + "filingsecondapprove; `irreversible` is publish, the two that set when a signed edition publishes, and publishcheck", () => {
+test("R1 R8 R14 R32 R33 R37 (N891): the closed `terminal` set is retire, DEC-88's two, actionholdrelease, (T45) "
+   + "filingsecondapprove and (T47, R37) publish and publishcheck, which prepare; `irreversible` is the two that set when a "
+   + "signed edition publishes", () => {
   const of = (r) => Object.keys(RUNGS).filter((op) => RUNGS[op] === r && !Object.hasOwn(OP_ALIASES, op)).sort();
-  assert.deepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "filingsecondapprove", "retire"]);
-  assert.deepEqual(of("irreversible"), ["publish", "publishat", "publishatmove", "publishcheck"]);
+  assert.deepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "filingsecondapprove", "publish",
+    "publishcheck", "retire"]);
+  assert.deepEqual(of("irreversible"), ["publishat", "publishatmove"]);
   /* negative control */
   assert.notDeepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "retire"]);
 });
 
 /* ---- R3: the `undetermined` ground, closed, with its tally ----------------------------------------------------------- */
-const R3_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
+/* R3's 21, less inboxpull, which R35 (T47) moves to `reversible` */
+const R3_LEFT = ["contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
   "templatesave", "actioncreate", "actionpressure", "planopen", "optionadd", "optionpropose", "optionadopt",
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
-test("R3 R33 (N891): the `undetermined` ground is closed — exactly R3's 21 and the ops ruled onto it later on R3's rule, and "
-   + "no other; the 78 held before DEC-88 are the 21 and DEC-88's 57; a later op left out, or one of the 57 left there, "
-   + "is seen", () => {
+test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21 less inboxpull (R35) and the ops ruled onto "
+   + "it later on R3's rule, deepercheck no longer among them, and no other; the 78 held before DEC-88 are the 21 and "
+   + "DEC-88's 57; a later op left out, or one of the 57 left there, is seen", () => {
   const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument", "wizarddraft", "wizardrevise",
     "wizardpropose", "wizardsubmit", "wizardapprove", ...undeterminedOf(T33_RUNG_ABSENT), ...undeterminedOf(T34_RUNG_ABSENT),
-    ...undeterminedOf(T35_RUNG_ABSENT), "deepercheck", "safecopyrequest", "translationdraft", "translationmark",
+    ...undeterminedOf(T35_RUNG_ABSENT), "safecopyrequest", "translationdraft", "translationmark",
     ...T41_UNDETERMINED, "pagetranscribe",
     /* R32 (T45), named by hand */
     "dutyfromresponse", "actionreceipt", "holdnoticesent", "pressurerecord", "watchlink", "watchanswer", "jointsignatory",
@@ -127,15 +133,16 @@ test("R3 R33 (N891): the `undetermined` ground is closed — exactly R3's 21 and
     "airundispatch",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   assert.equal(new Set(LATER).size, LATER.length);
-  assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
+  assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["safecopyrequest"]);
   assert.deepEqual(undeterminedOf(T41_RUNG_ABSENT), [...T41_UNDETERMINED].sort());
   assert.equal(undeterminedOf(T45_RUNG_ABSENT).length, 18);
   const left = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   assert.deepEqual(left, [...R3_LEFT].sort());
-  assert.equal(left.length, 21, "R3's count: DEC-88 moved 57 of the 78 into RUNGS");
-  assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21);
-  /* the 78 held before DEC-88: the 21 and the 57 together */
-  const before78 = [...R3_LEFT, ...Object.values(DEC88).flat()];
+  assert.equal(left.length, 20, "R3's count: DEC-88 moved 57 of the 78 into RUNGS, and R35 inboxpull");
+  assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 20);
+  assert.ok(!undeterminedOf(RUNG_ABSENT).includes("inboxpull") && !undeterminedOf(RUNG_ABSENT).includes("deepercheck"));
+  /* the 78 held before DEC-88: the 21 (inboxpull among them then) and the 57 together */
+  const before78 = [...R3_LEFT, "inboxpull", ...Object.values(DEC88).flat()];
   assert.equal(before78.length, 78);
   assert.equal(new Set(before78).size, 78);
   for (const op of Object.values(DEC88).flat()) assert.ok(Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
@@ -324,7 +331,7 @@ test("R2 R5 (N891): every owner's read this module names writes nothing and take
     assert.ok(ungraded(op), op);
   }
   /* the stated absences whose sentences the reads stand beside */
-  for (const op of ["signerregister", "signerrevoke", "knockerconsent", "inboxpull", "contradictionrecommend",
+  for (const op of ["signerregister", "signerrevoke", "knockerconsent", "contradictionrecommend",
     "contradictionoptin", "contradictionrespond", "whatchangedpropose", "docketpressure", "caseimport",
     "caseimportdocument", "notewrite", "noteturn", "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit",
     "wizardapprove", "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "templatereviewgrant",
