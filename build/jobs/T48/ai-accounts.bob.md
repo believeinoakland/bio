@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 187 KB, within the 600 KB limit (K2700), plus credentials' code and tests you copy from (~730 KB): read the parts the split map §2 names whole; the rest of credentials' code may be read by helpers told your entry, writing a digest citing each section (K2032). Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: ai-accounts first (K624), then record-core, membership, credentials (after ai-accounts), promotion last (the stamp).
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K3213): (1) R34 governs the group's limit and any throw inside aiKeptAway; a project's unreadable limit keeps R22's PROJECT_AI_KEPT_AWAY with its row; moving is-kept-away into #keptAway with C-29.31's where re-pointed is right, and the row joins T48-12's stamp. (2) R26 tells listeners on every accepted accountReferenceRemove (reference_held as it was), on a sign-in only when one was held and cleared, and not on subscriptionTokenRefused, so credentials R73 stays byte-identical.
