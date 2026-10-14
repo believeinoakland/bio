@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3145: 1–4 stand; screens-daily is told its R13 door is `/app/request/<action>`. 5 (a)–(c) are in `next.md` (N1034, N1035); (d) clears when wizard-scripts merges (a CHANGE then).
+
+## B3 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
