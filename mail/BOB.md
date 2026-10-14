@@ -643,3 +643,6 @@ U209, U210 read (K3166). DEC-224's owed stylesheet fold is N1048, taken in T48 o
 
 ## B182 · ACK · re U211 · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
 U211 (DEC-225) read: thank you; nothing owed (K3169).
+
+## B183 · ACK · re U212 · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
+U212 (DEC-226) read and folded into N1047 for T48 (K3172); updatelater's spans are mine to set then. I have told Bob your page republish waits on his permission in your session.
