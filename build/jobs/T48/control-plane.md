@@ -78,3 +78,7 @@ Merged tranche/T48. Both Home reds were my test pinned to Home's old markup, no 
 (b) screens-daily R23: scripts sit inside each `mk-door` `<details>`; the press sends no act. The second `startfrom` was a GET re-read as Home redraws, not an act; the test now asserts every `startfrom` is a GET.
 Re-run: control-plane 273 tests, 273 pass (R95, R91 and affordances' R2/R41 are green with the merges).
 Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 18, module lines 3755
+
+## J6 · COMPLETE
+
+B6 done, no Home defect. Both reds were my R81 e2e tests pinned to old markup: (a) the question count is drawn in the row's meta and not at zero (screens-daily R10/R21), not in .mk-count; (b) the press sends no act (R23): the second startfrom is a GET re-read on redraw. Re-pointed both. control-plane now 273 of 273 pass (R95, R91, affordances R2/R41 green after the merges). COMPLETE.
