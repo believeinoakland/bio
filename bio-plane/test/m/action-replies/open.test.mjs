@@ -52,8 +52,8 @@ test("R3 control: each open request for comment on the case's members is answere
   const before = w.counts();
   const rows = w.r.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M });
   assert.deepEqual(rows, [
-    { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 2 }, replied: true },
-    { whom: WHOM, asked_at: "2026-09-12", window_closes: "2026-10-20", answers: null, replied: false },
+    { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 2 }, replied: true, quotable: true },
+    { whom: WHOM, asked_at: "2026-09-12", window_closes: "2026-10-20", answers: null, replied: false, quotable: true },
   ]);
   /* through the seam, as case-authoring R34's sign step reads it */
   assert.deepEqual(w.ci.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M }), { ok: true, rows });
@@ -125,7 +125,7 @@ test("R8 control: a request with a reply recorded and no claims laid out answers
   assert.deepEqual(on().map((r) => [r.asked_at, r.answers, r.replied]), [["2026-09-10", null, true], ["2026-09-12", null, false]]);
   /* laid out: answers set, still replied */
   assert.equal(w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "new_evidence" }], author: M, viewer: M }).ok, true);
-  assert.deepEqual(on()[0], { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 1 }, replied: true });
+  assert.deepEqual(on()[0], { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 1 }, replied: true, quotable: true });
   /* a sent entry or a non-response is not a reply */
   w.a.actionCorrespond({ target: RFC2, direction: "no_response", at: "2026-09-25", account: "nothing came", viewer: M, author: M });
   assert.equal(on()[1].replied, false);
