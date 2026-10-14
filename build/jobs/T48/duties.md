@@ -23,3 +23,7 @@ R33's mapping, two paths that fit no code exactly; my best readings, on which I 
 - `node checks/run.mjs /home/user/bio` — format 0, architecture 0 failures (none in duties), coverage 45 failures (none in duties), channels 0.
 
 Size (session_01XVQxUC4jHBQE5EcYVKTZdU): test runs 9, module lines 2242
+
+## J2 · COMPLETE
+
+T48-22 applied: R33 met (reason on every occurrence; OCCURRENCE_REASONS frozen; interim words duty.reason.* by key, DEC-149 form; K3243's mapping tested path by path). duties 74/74; users' tests: only inherited reds, identical on tranche/T48 (20 in 13 files: affordances, answer-envelope, control-plane, following, op-declarations, scheduler). Checks 0 failures for duties; run.mjs architecture 0. Record: build/jobs/T48/duties.md. Provider for T48-59: notice-producers reads reason.says. BOB: name the six duty.reason.* keys to the design stream.
