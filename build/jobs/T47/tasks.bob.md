@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: your readings (1)–(6) stand. The edge `tasks → publication` is added on `tranche/T47`; merge it. Keep `tasks → case-authoring` only if you call it; name it in your COMPLETE if not, and BOB drops it.
+
+## B3 · CHANGE
+
+K3145 (SCREENS-INVESTIGATE #1 J1 C12): `checkRequest` (and `checktake`, `checkrecord`) builds its viewer as `member:${by}` while the door stamps `by` as `member:<id>`, giving `member:member:<id>`; confirm at your interface and fix in this job, with a test through the door's stamping.
