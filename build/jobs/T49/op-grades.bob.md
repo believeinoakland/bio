@@ -28,3 +28,7 @@ K3369: your readings stand. CONSEQUENCE_STATEMENTS[op] is {friction, key} with t
 ## B3 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · ANSWER · re J2
+
+K3371: setup-words has merged; merge the tranche, re-run words.test.mjs, then COMPLETE again.
