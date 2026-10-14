@@ -2,7 +2,7 @@
 
 **Status** · session_01MDeDZmkgwHShmUu5piZFAA · depth 2 · WAITING ON BOB (J2) · handled B3
 
-## Work (T48-69), to be completed once the same-layer services merge
+## Completion (T48-69)
 
 **Read, whole:** `roles/JOB.md`; `build/manifest.md`; `build/requirements/interface-shell.md`; my two T48-69 entries and BOB's START; `build/layers.md` (layer 11's contract); all of `bio-plane/src/interface-shell/` (`index.mjs`, `browser.mjs`, `words.mjs`). Of the modules I use, only what my entries touch: `interface-assets`' `ASSET_FILES` and its R5–R7; `op-grades`' R42 (`MARKS`) and the tables R11 reads; `wizard-scripts`' R37–R38 (the registry's `elsewhere`, `updates`); `control-plane` R95 (`testInstance`); `setup-words`' words for the band, the level and the new paths. The design inputs my entries cite: `page.src.html`'s `<style>`, `mock-shell.js`, `mock-kit.js`, `civicsmith.css`, `words.json` (at `4664e8efd4`, as on this branch), and `draft-T48-live-vs-design.md`'s C1–C9 rows. The tests naming a requirement my entries change: `page`, `frame`, `kit`, `acts`, `rows`, `words`, `sweep` tests and the harness, fixture and DOM stand-in.
 
@@ -20,9 +20,9 @@
 - **R63** More, and the shell's settings list, are rail rows (`cs-row`: icon, the name as a reference, what it holds beneath); no bare `<ul>`.
 - **R64** an act R11 draws with no weight carries `MARKS[op]`'s pips and name (`.w[data-mark]`) and its explanation; it still runs on press.
 
-**Contract decisions (BOB's level, mine as the shell's owner; for BOB to record):** (1) a screen lists its own absence codes as `absent: [codes]` on the screen object (R61's "`ABSENT_CODES`"); `checkScreens` refuses a non-list. (2) R56's "class literal" is read from the screens' and guide's serialised functions and the shell's program; a class made at run time is not checked (a literal cut open, as `cs-tag-` + kind, is skipped).
+**Contract decisions (BOB's level, mine as the shell's owner; for BOB to record):** (1) a screen lists its own absence codes in its screen object's `ABSENT_CODES` (B4, K3302 (2); first built as `absent`, renamed); `checkScreens` refuses a non-list. (2) R56's "class literal" is read from the screens' and guide's serialised functions and the shell's program; a class made at run time is not checked (a literal cut open, as `cs-tag-` + kind, is skipped).
 
-**Tests and checks so far:** with local stand-ins (never committed) for the unmerged same-layer services (`interface-assets`' `shell.css`, `op-grades`' `MARKS`, `op-declarations`' `planask`/`stepsource`/`stepsourcewithdraw`, `wizard-scripts`' `elsewhere`/`updates` rows) and setup-words' finished re-take: `node --test test/m/interface-shell/*.test.mjs` 134 pass, 0 fail (new `design.test.mjs`, 14 tests, R52–R64 each with a control; amended tests renamed to the ids that amend them). `format` 0 failures; `architecture` 0; `coverage` interface-shell 62 of 62; `ownership` 0 failures (13 files).
+**Tests and checks at J1 (with stand-ins, superseded below):** with local stand-ins (never committed) for the unmerged same-layer services (`interface-assets`' `shell.css`, `op-grades`' `MARKS`, `op-declarations`' `planask`/`stepsource`/`stepsourcewithdraw`, `wizard-scripts`' `elsewhere`/`updates` rows) and setup-words' finished re-take: `node --test test/m/interface-shell/*.test.mjs` 134 pass, 0 fail (new `design.test.mjs`, 14 tests, R52–R64 each with a control; amended tests renamed to the ids that amend them). `format` 0 failures; `architecture` 0; `coverage` interface-shell 62 of 62; `ownership` 0 failures (13 files).
 
 ## J1 · REPORT
 
@@ -55,3 +55,13 @@ B2 and B3 are done. The tranche is merged.
 - After the merge, the real `shell.css`, `MARKS`, registry and words are in. `MARKS` names weights capitalised ("Reasoned"), so the shell now reads them in lower case.
 
 My tests: 135 pass, 0 fail, with one local stand-in left (never committed). That stand-in is op-declarations' `planask`, `stepsource` and `stepsourcewithdraw`, which `tranche/T48` does not yet hold. Without it, R55's test fails, because `checkScreens` finds those ops are not in `OPS`. Format, architecture, coverage (62 of 62) and ownership all show 0 failures. When op-declarations merges, send me a CHANGE. I will then merge, re-run and post COMPLETE. J1's other points stand.
+
+**CHANGEs:** B2 (K3295): the kit draws `mk-pickc`, not `cs-pickc` (done at J1). B3 (K3297): `Intl` admitted in R21's contract; nothing in the shell restricted a screen's globals; a test names the clause (`page.test`, R21 (K3297)). B4 (K3302): `ABSENT_CODES` read; the section explanation's escaping checked: `data-tip` holds the word's HTML escaped once, as every explanation does, and the opened explanation reads the word exactly (new test, `explain.test` R14 (K3302 (4))); no double escape exists, so no code changed for it. After the tranche merge `MARKS` names weights capitalised; the shell reads them in lower case.
+
+**Deferred:** none.
+
+**Found in other modules (reported, J1):** the screen modules' undefined classes under R56 (each screen job maps them); three screen tests read the kit's old markup (`cs-ring`, `cs-crumbs li`, `cs-spark`/`cs-people`); control-plane's page test composes the real screens and is red until they map.
+
+**Final tests and checks** (on `tranche/T48` merged, no stand-in): `node --test test/m/interface-shell/*.test.mjs`: 136 pass, 0 fail. `format` 0 failures; `architecture` 0 failures (18 product files); `coverage` interface-shell 62 of 62; `ownership` 13 files, 0 failures; `checks/run.mjs`: format, architecture, channels 0 failures, coverage's 12 failures are other modules' not-yet-built ids.
+
+Size (session_01MDeDZmkgwHShmUu5piZFAA): test runs 26, module lines 2414

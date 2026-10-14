@@ -225,10 +225,10 @@ test("R61 absence: a subject read refused with an absence code draws only Nothin
     assert.equal(main.querySelector(".cs-crumbs a").getAttribute("href"), "/app/projects");
   }
   /* a screen's own absence codes */
-  const own = { ...calc, absent: ["CALC_GONE_ZZ"] };
+  const own = { ...calc, ABSENT_CODES: ["CALC_GONE_ZZ"] };
   const o = await boot({ screens: [own], path: "/app/calculation/c9", plane: { calculation: refused("CALC_GONE_ZZ") } });
   assert.equal(only(o).kind, "nothing");
-  assert.throws(() => interfacePage([{ ...calc, absent: "NO" }]), /calculation.*absent/);
+  assert.throws(() => interfacePage([{ ...calc, ABSENT_CODES: "NO" }]), /calculation.*ABSENT_CODES/);
   /* a bare subject screen: nothing is read */
   const bare = await boot({ screens: [calc], path: "/app/calculation" });
   assert.equal(only(bare).kind, "nothing");

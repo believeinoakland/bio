@@ -240,9 +240,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     Object.defineProperty(inst, "pub", { get: () => key !== "g" && (sessionless(spec.id) || !S) });
     return inst;
   }
-  /* R61: the absence codes, and those a screen lists as its own (`absent`) */
+  /* R61: the absence codes, and those a screen lists as its own (`ABSENT_CODES`) */
   const ABSENCE = new RegExp(D.absence);
-  const absent = (inst, code) => ABSENCE.test(code) || (Array.isArray(inst.spec.absent) && inst.spec.absent.includes(code));
+  const absent = (inst, code) => ABSENCE.test(code) || (Array.isArray(inst.spec.ABSENT_CODES) && inst.spec.ABSENT_CODES.includes(code));
   /* R61: a screen whose reads name a subject (`subject: true`), opened with none */
   const subjectless = (inst, specs) => (inst.subject === null || inst.subject === undefined || inst.subject === "") && Object.values(specs).some((x) => x && x.subject);
   const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;

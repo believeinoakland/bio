@@ -155,7 +155,7 @@ export function checkScreens(screens) {
       if (sessionless(id) && OPS[op].classes !== null && !(RE_POINTS[id] || []).includes(op)) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
     }
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
-    if (s.absent !== undefined && !(Array.isArray(s.absent) && s.absent.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s absent is not a list of codes`);
+    if (s.ABSENT_CODES !== undefined && !(Array.isArray(s.ABSENT_CODES) && s.ABSENT_CODES.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s ABSENT_CODES is not a list of codes`);
   }
   return true;
 }
@@ -214,7 +214,7 @@ function pageWords(screens, ops) {
 export const IDLE_LOCK_MS = 30 * 60 * 1000;
 export const IDLE_END_MS = 15 * 60 * 1000;
 /* R35 (DEC-201 (8)): a subject read refused with one of these is "You can't open this"; an absence code (R61: `NO_SUCH_*`,
-   `*_NOT_FOUND`, `NOT_FOUND`, `NO_ENTITY`, `NO_CALC`, `NO_NODE`, and the codes a screen lists as its `absent`), or an empty
+   `*_NOT_FOUND`, `NOT_FOUND`, `NO_ENTITY`, `NO_CALC`, `NO_NODE`, and the codes a screen lists as its `ABSENT_CODES`), or an empty
    answer, is "Nothing is here"; no answer, or a 5xx, is "can't be reached", tried again every `RETRY_MS`. */
 export const ABSENCE = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$|^NO_ENTITY$|^NO_CALC$|^NO_NODE$/;
 export const NOT_YOURS = Object.freeze(["NOT_VISIBLE", "NOT_A_PARTICIPANT"]);
