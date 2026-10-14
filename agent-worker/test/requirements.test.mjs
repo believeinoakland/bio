@@ -31,6 +31,7 @@ import { MEMBER, withAccount } from "./account.mjs";
 import { SURFACE } from "../src/index.mjs";
 import { meaningRowsBranch } from "./plane-meaning.mjs";
 import { versionReadBranches } from "./plane-versions.mjs";
+import { PLANE_OPS_PINNED } from "./owners.mjs";
 import { suggestBranch } from "./plane-suggest.mjs";
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 
@@ -1366,9 +1367,7 @@ section("R37 · it judges no scope; PLANE_OPS is exactly its ops, and it calls n
   /* R53 (K660) adds mode plan's: plan, plans, the R51 reads, and the write optionpropose. */
   t("R37, R53, R78: PLANE_OPS is exactly the reads and the writes the plane makes",
     [Object.keys(PLANE_OPS).filter((o) => !PLANE_OPS[o].mutating).sort(), Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).sort()],
-    [["action", "agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
-      "meaningrows", "plan", "plans", "procedureguides", "profiles", "publishededitions", "reading", "search", "standard", "versionchain", "whoami"],
-     ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"]]);
+    PLANE_OPS_PINNED);  /* N1073: ai-runs', capture-requests' and action-plans' ops are read from their owners (owners.mjs) */
   await seen(mf);
   t("R37: the ops the member called across this suite's last run are all in PLANE_OPS",
     [...OPS_SEEN].filter((o) => !PLANE_OPS[o]), []);
