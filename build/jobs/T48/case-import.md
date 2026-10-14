@@ -13,3 +13,7 @@
 **Ran:** `node --test test/m/case-import/`: 110 tests, 110 pass, 0 fail. Layer tests: none named for the module. From the process repository: format 0 failures; architecture (module) 0 failures; coverage (module) 24 of 24 live ids named, 0 failures; ownership 0 failures; `checks/run.mjs`: format 0, architecture 0 failures; coverage shows 33 failures in other modules (screens-*, op-declarations, op-grades, plane, queue, review, setup-words, wizard-scripts), none in case-import: inherited.
 
 Size (session_0169HjyompyzcnhKjxAYLzRy): test runs 3, module lines 1765
+
+## J1 · COMPLETE
+
+T48-42 done. R16's null-to-non-member clause already held in code (findingFacts, openFlagsFacts, flagHistoryFacts null; withdrawals and moves take no viewer); added the missing R16 test, respelled labelled to labeled. Module tests 110/110; format, architecture, coverage (24/24), ownership 0 failures. Full run.mjs coverage failures are in other modules, none in case-import. Details in my record.
