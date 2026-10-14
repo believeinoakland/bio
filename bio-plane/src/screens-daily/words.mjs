@@ -196,7 +196,6 @@ export const SCREEN_WORDS = Object.freeze([
   row("screen.answers.legal", "Legal information, not legal advice."),
   row("screen.answers.offtitle", "Find and count"),
   row("screen.answers.offsub", "Search what your group holds and count what matches."),
-  row("screen.answers.counted", "Show how this was counted"),
   row("screen.answers.rule.value", "{label}: {value}"),
   row("screen.answers.rule.basis", "Basis: {basis}"),
   row("screen.answers.rule.notheld", "Not held: {reason}"),

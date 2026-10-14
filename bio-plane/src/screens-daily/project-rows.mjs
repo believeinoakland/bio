@@ -58,10 +58,10 @@ export function projectRows(cs, view, w, glance) {
   // R10: who owns it, who works on it, how busy it has been, when it last changed.
   const glanceOf = function (p) {
     if (!glance) return "";
+    // An owner answered with no handle is drawn by its member id; `null` is an opener no longer active (R27).
+    const who = p.owner && (p.owner.handle || p.owner.member) ? String(p.owner.handle || p.owner.member) : "";
     const owner = !("owner" in p) ? ""
-      : '<span class="mk-owner">' + (p.owner && p.owner.handle
-        ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", String(p.owner.handle), String(p.owner.handle), [])
-        : cs.w(w + ".owner.none")) + "</span>";
+      : '<span class="mk-owner">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, []) : cs.w(w + ".owner.none")) + "</span>";
     const members = Array.isArray(p.members) ? p.members.map(function (m) { return String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
     const activity = Array.isArray(p.activity) && p.activity.length === 8 ? p.activity.map(function (n) { return Number(n) || 0; }) : null;
     const last = "lastChange" in p

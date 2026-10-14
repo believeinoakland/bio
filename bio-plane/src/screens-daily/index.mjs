@@ -38,7 +38,7 @@ const WORDS_FROM = {
     ...["findin", "standingquestionset", "recordpersonfact", "recorddatedfact", "standarddeclare", "recordfact", "tabledeclare", "cite", "search"]
       .flatMap((op) => [`act.${op}.label.find-in`, `act.${op}.does`])],
   answers: [...SHARED, "screen.answers.name", "screen.answers.purpose", "screen.finder.words", "screen.finder.none", "mark.origin.search.name",
-    "act.ruleanswer.label.answers", "act.ruleanswer.does", "act.search.label.answers", "act.search.label.finder", "act.search.does",
+    "act.ask.label.answers", "act.ask.does", "act.ruleanswer.label.answers", "act.ruleanswer.does", "act.search.label.answers", "act.search.label.finder", "act.search.does",
     "act.standingquestionset.label.answers", "act.standingquestionset.does", "act.standingquestionend.label.answers", "act.standingquestionend.does",
     "ai.refused.limit", "ai.refused.off", "ai.refused.projectkeptaway", "ai.refused.signinnotconnected"],
 };

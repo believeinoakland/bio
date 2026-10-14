@@ -28,7 +28,7 @@ const R = "looking";
 test("R6: while the assistant is reachable, \"Ask\" sends the question through op=ask, and \"Search instead\" opens Find", async () => {
   const p = await open("/app/answers", { ...REACH, ask: answered(EVENT) });
   assert.deepEqual(ops(p), ["ask", "search", "standingquestionset"]);
-  assert.match(button(p, "ask").textContent, /^Ask/, "the registry's \"Ask\", re-pointed to ask");
+  assert.match(button(p, "ask").textContent, /^Ask/, "the registry's \"Ask\", its own act");
   const none = await press(p, "ask", { values: { "answers-q": "" } });
   assert.equal(beside(p, none), "Write your question first.");
   await press(p, "ask", { values: { "answers-q": " How many? " } });

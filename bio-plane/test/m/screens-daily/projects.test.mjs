@@ -66,6 +66,10 @@ test("R10 (DEC-201 (8); project-roster R27): each row draws its owner by handle,
   assert.match(text(p, a), /Owner: dev/);
   assert.ok(a.querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "dev"));
   assert.match(text(p, b), /No active owner/);
+  // An owner answered with no handle (project-roster R27's form when the handle is unknown) is drawn by its member id.
+  const nohandle = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-8", name: "N", stage: "forming", owner: { member: "M-7", handle: null } }] }) });
+  assert.match(text(nohandle, rows(nohandle)[0]), /Owner: M-7/);
+  assert.doesNotMatch(text(nohandle), /No active owner/);
   // Control: a row answering no owner says nothing of one.
   const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
   assert.doesNotMatch(text(bare, rows(bare)[0]), /Owner|owner/);
