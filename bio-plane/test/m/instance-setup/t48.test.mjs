@@ -330,11 +330,12 @@ test("R89 updateNoticeState is the in-process read for the administrators' to-do
     ready: null, decisions: [] });
   await found(w);
   let s = w.m.updateNoticeState();
-  assert.deepEqual([s.ready.version, s.ready.security, s.ready.found_at, s.decisions], ["0.85.0", false, "2026-10-14T20:00:00.000Z", []]);
+  assert.deepEqual([s.ready.version, s.ready.security, s.ready.found_at, s.ready.decision, s.decisions], ["0.85.0", false, "2026-10-14T20:00:00.000Z", null, []]);
   assert.equal("viewer" in s, false);
   w.m.updateLater({ version: "0.85.0", by: "admin" });
   s = w.m.updateNoticeState();
-  assert.deepEqual(s.decisions.map((d) => [d.kind, d.by, d.until]), [["later", "admin", new Date(T0 + 14 * DAY).toISOString()]]);
+  assert.deepEqual(s.decisions.map((d) => [d.version, d.kind, d.by, d.until]), [["0.85.0", "later", "admin", new Date(T0 + 14 * DAY).toISOString()]]);
+  assert.deepEqual(s.ready.decision, s.decisions[0], "ready.decision is the latest of the decisions (machinery-producers R11 reads both)");
   w.m.updateSkip({ version: "0.85.0", reason: "We wait for the next one.", by: "second" });
   assert.deepEqual([w.m.updateNoticeState().ready, w.m.updateNoticeState().decisions], [null, []]);
 });
@@ -367,8 +368,8 @@ test("R90 updateStart records the choice and answers the installer's update page
   const sent = JSON.stringify(r.address);
   for (const secret of ["river-town", "a-live-admin-token-0123456789", "second"]) assert.equal(sent.includes(secret), false, secret);
   assert.equal(w.prov.fetched.length, fetched, "nothing was fetched or installed");
-  assert.deepEqual(w.m.updateNotice({ viewer: "admin" }).ready.decision, { kind: "start", by: "second", by_name: "second",
-    at: "2026-10-14T20:00:05.000Z", until: null, reason: null });
+  assert.deepEqual(w.m.updateNotice({ viewer: "admin" }).ready.decision, { version: "0.85.0", kind: "start", by: "second",
+    by_name: "second", at: "2026-10-14T20:00:05.000Z", until: null, reason: null });
   /* the release stays ready until it is the one running, and a later choice stands in its place */
   assert.equal(w.m.updateNotice({ viewer: "admin" }).ready.version, "0.85.0");
   w.m.updateLater({ version: "0.85.0", by: "admin" });

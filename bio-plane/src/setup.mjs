@@ -3344,8 +3344,8 @@ export class InstanceSetup {
   }
   /* A release's decisions, oldest first. */
   #decisionsOf(version) {
-    return this.#rows(`SELECT kind, by_member, by_name, at, until_at, reason FROM update_decisions WHERE version = ? ORDER BY seq`, version)
-      .map((d) => ({ kind: d.kind, by: d.by_member, by_name: d.by_name ?? d.by_member, at: d.at,
+    return this.#rows(`SELECT version, kind, by_member, by_name, at, until_at, reason FROM update_decisions WHERE version = ? ORDER BY seq`, version)
+      .map((d) => ({ version: d.version, kind: d.kind, by: d.by_member, by_name: d.by_name ?? d.by_member, at: d.at,
                      until: d.until_at ?? null, reason: d.reason ?? null }));
   }
   /* The newest release held, when it is newer than the running one and not skipped: the one ready to install (R89). A
@@ -3354,6 +3354,11 @@ export class InstanceSetup {
     const newest = this.#noticeRows()[0] ?? null;
     if (!newest || cmpVersion(newest.version, this.#runningVersion()) <= 0) return null;
     return this.#decisionsOf(newest.version).some((d) => d.kind === "skip") ? null : newest;
+  }
+  /* R89: the ready release as both reads answer it: the notice, and `decision`, the latest decision on it or null. */
+  #readyOut(row) {
+    const ds = this.#decisionsOf(row.version);
+    return { ...this.#noticeOut(row), decision: ds.length ? ds[ds.length - 1] : null };
   }
   /* R89: the version running, when it was first seen, and the administrator whose `updatestart` chose it. */
   #runningOut() {
@@ -3379,11 +3384,7 @@ export class InstanceSetup {
       const running = this.#runningOut();
       const last = this.#one(`SELECT at, outcome FROM update_checks ORDER BY seq DESC LIMIT 1`);
       const readyRow = this.#readyNotice();
-      let ready = null;
-      if (readyRow) {
-        const ds = this.#decisionsOf(readyRow.version);
-        ready = { ...this.#noticeOut(readyRow), decision: ds.length ? ds[ds.length - 1] : null };
-      }
+      const ready = readyRow ? this.#readyOut(readyRow) : null;
       const newest = this.#noticeRows();
       const rest = newest.filter((r) => !readyRow || r.version !== readyRow.version);
       const earlier = rest.slice(0, UPDATE_EARLIER_MAX).map((r) => {
@@ -3420,12 +3421,14 @@ export class InstanceSetup {
   }
 
   /** R89, in-process, for `machinery-producers` R12 through the plane's composition: `{ok, running, ready, decisions}`
-   *  for the newest release ready to install, naming no viewer (`ready: null` and `decisions: []` when none). A store
+   *  for the newest release ready to install, naming no viewer: `ready` as `updateNotice` answers it (with `decision`),
+   *  `decisions` every decision on it oldest first, each `{version, kind, by, by_name, at, until, reason}` (`ready: null`
+   *  and `decisions: []` when none). A store
    *  that does not answer is the store's silence (R43). Writes nothing; never throws. */
   updateNoticeState() {
     try {
       const readyRow = this.#readyNotice();
-      return { ok: true, running: this.#runningOut(), ready: readyRow ? this.#noticeOut(readyRow) : null,
+      return { ok: true, running: this.#runningOut(), ready: readyRow ? this.#readyOut(readyRow) : null,
                decisions: readyRow ? this.#decisionsOf(readyRow.version) : [] };
     } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
   }
