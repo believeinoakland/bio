@@ -73,4 +73,23 @@ export const ACTION_REPLY_CHECKS = {
     translation: 'What arose from the response is named as a project, or as a plan with one of its matters, each by '
       + 'its id. This request named neither in that form, so nothing was linked.',
   },
+  /* R10, R4 (T48; N880; Actions D13, H17): what a reply says about being quoted is a member's record. The translations of
+     C-150.8 to .10 are BOB's drafts in DEC-83's form (`words.json` holds no key yet: an ASK to UX-DESIGN); they wait for
+     T49's promotion stamp (plan rule 5 (2)). */
+  MACHINE_CANNOT_RECORD_QUOTING: {
+    check: 'C-150.8',
+    where: 'src/action-replies/index.mjs actionReplyQuoting > is-machine-quoting',
+    translation: 'Only a member records what a reply says about being quoted. Nothing was written.',
+  },
+  QUOTING_NOT_RFC: {
+    check: 'C-150.9',
+    where: 'src/action-replies/index.mjs #quotingTarget > is-quoting-rfc',
+    translation: 'Only a reply received to a request for comment can ask not to be quoted. Nothing was written.',
+  },
+  QUOTING_REFUSED: {
+    check: 'C-150.10',
+    where: 'src/action-replies/index.mjs #quotingShape > is-quoting-shape',
+    translation: 'Say whether the reply may be quoted, and when it may not, give the reply\'s own words that say so, on one '
+      + 'line of at most 500 characters. Nothing was written.',
+  },
 };

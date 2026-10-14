@@ -9,6 +9,8 @@
  * R6 states them; six rows read their words by key (R7, `./checks.mjs`); each open-request row answers `replied` (R8).
  * T47: the source registers with `case-inputs` (its R8), split from `case-authoring` (N908; R3); `BEARING_REFUSED` answers
  * DEC-199's sentence with its `{item}` filled (R9).
+ * T48: a member records that a reply asks not to be quoted, or withdraws it (R10); `bearingsOf` answers it per entry and
+ * each open-request row answers `quotable` (R11); a machine records none (R4).
  *
  * REACHED as `actionRepliesOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
  * creates its tables and declares them to record-core's purge (R4), and registers its open-requests source once with
@@ -22,7 +24,8 @@
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
- * Its own tables only: `action_reply_bearings`, `action_bearing_proposals`, `action_arose_from` (`./schema.mjs`). */
+ * Its own tables only: `action_reply_bearings`, `action_bearing_proposals`, `action_arose_from`, `action_reply_quoting`
+ * (`./schema.mjs`). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
@@ -46,6 +49,8 @@ export const CLOSED_STATES = Object.freeze(["resolved", "abandoned"]);
 const NOT_ADDRESSED = "not_addressed";
 /** R3: the actions one `actionsFor` page lists (its R30's bound). */
 const PAGE = 200;
+/* R10: the longest of a reply's own words that say it may not be quoted. */
+export const QUOTING_WORDS_MAX = 500;
 
 /* The catalogue-backed refusals: each carries its code, check and translation. */
 export function withRow(r) {
@@ -141,10 +146,11 @@ export class ActionReplies {
   }
 
   /* R1: the action and the received entry a layout or a proposal is on, or the refusal. */
-  #bearingTarget(target, ord, viewer) {
+  #bearingTarget(target, ord, viewer, quoting = false) {
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const e = ActionReplies.#entry(a, ord);
+    if (quoting) return this.#quotingTarget(a, e, target, ord);
     /* DEC-49 REGION is-bearing-rfc */
     if (a.kind !== "request_for_comment" || !e || e.direction !== "received")
       return refuse("BEARING_NOT_RFC", a.kind !== "request_for_comment"
@@ -153,6 +159,29 @@ export class ActionReplies {
     /* END DEC-49 REGION is-bearing-rfc */
     return { ok: true, a, ord: e.ord };
   }
+  /* R10: the received entry of a request for comment a quoting record is on, or the refusal. */
+  #quotingTarget(a, e, target, ord) {
+    /* DEC-49 REGION is-quoting-rfc */
+    if (a.kind !== "request_for_comment" || !e || e.direction !== "received")
+      return refuse("QUOTING_NOT_RFC", a.kind !== "request_for_comment"
+        ? "this action is not a request for comment; only a reply to one can ask not to be quoted"
+        : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
+    /* END DEC-49 REGION is-quoting-rfc */
+    return { ok: true, a, ord: e.ord };
+  }
+  /* R10: `quotable` a boolean; `words` (the reply's own, one line, no quote or backslash) given with `false`. Null for
+     `words` when withdrawn. */
+  #quotingShape(quotable, words, target) {
+    const given = words !== undefined && words !== null;
+    const w = typeof words === "string" ? words.trim() : null;
+    /* DEC-49 REGION is-quoting-shape */
+    const wordsOk = w !== null && w.length >= 1 && w.length <= QUOTING_WORDS_MAX && !/["\\\r\n\u2028\u2029]/.test(w);
+    if (typeof quotable !== "boolean" || (quotable === false && !wordsOk) || (given && !wordsOk))
+      return refuse("QUOTING_REFUSED", "quotable is true or false, and with false the reply's own words that say so", { target });
+    /* END DEC-49 REGION is-quoting-shape */
+    return { ok: true, quotable, words: quotable ? null : w };
+  }
+
   /* R1 (action-grammar R24): the layout's shape, its claims among the legs; the claims as stored, or the refusal. */
   #bearingShape(claims, a, target) {
     const findings = [];
@@ -230,6 +259,37 @@ export class ActionReplies {
                  + (latest ? "The layout a member stated stands beside it." : "No member has laid the reply out.") };
   }
 
+  /** R10: a member records that the reply at `ord` says it may not be quoted (`quotable: false`, with its own `words`), or
+   *  withdraws that record (`quotable: true`). Appended, never edited; the latest per entry stands. A declaration. */
+  actionReplyQuoting({ target, ord = null, quotable = null, words = null, author = null, viewer = null } = {}) {
+    const who = typeof author === "string" ? author.trim() : "";
+    /* DEC-49 REGION is-machine-quoting */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_RECORD_QUOTING", "what a reply says about being quoted is recorded by a member");
+    /* END DEC-49 REGION is-machine-quoting */
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const t = this.#bearingTarget(target, ord, viewer, true);
+    if (t.ok === false) return t;
+    const s = this.#quotingShape(quotable, words, target);
+    if (s.ok === false) return s;
+    const at = this.#at();
+    const w = this.record.transact(() => {
+      this.sql.exec(`INSERT INTO action_reply_quoting (bundle_id, ord, quotable, words, recorded_by, recorded_at) VALUES (?, ?, ?, ?, ?, ?)`,
+        target, t.ord, s.quotable ? 1 : 0, s.words, who, at);
+      return { ok: true };
+    });
+    if (w && w.ok === false) return w;
+    return { ok: true, target, ord: t.ord, quotable: s.quotable, words: s.words, by: who, at, weight: "single",
+             says: s.quotable ? "the record that this reply asks not to be quoted is withdrawn. Nothing else changed."
+                              : "this reply is recorded as asking not to be quoted, in its own words. Nothing else changed." };
+  }
+  /* R10: an entry's latest quoting record, or null when none is held. */
+  #quoting(id, ord) {
+    const r = this.#one(`SELECT quotable, words, recorded_by, recorded_at FROM action_reply_quoting WHERE bundle_id=? AND ord=?
+      ORDER BY seq DESC LIMIT 1`, id, ord);
+    return r ? { quotable: r.quotable === 1, words: r.words ?? null, by: r.recorded_by, at: r.recorded_at } : null;
+  }
+
   /* R1: an entry's layouts, newest first. */
   #layouts(id, ord) {
     return this.#rows(`SELECT seq, claims_json, laid_by, laid_at FROM action_reply_bearings WHERE bundle_id=? AND ord=?
@@ -254,7 +314,9 @@ export class ActionReplies {
       .filter((e) => e && e.direction === "received" && (want === null || e.ord === want))
       .map((e) => {
         const all = this.#layouts(target, e.ord);
-        return { ord: e.ord, at: e.at ?? null, latest: all[0] || null, earlier: all.slice(1), proposals: this.#proposals(target, e.ord) };
+        const q = this.#quoting(target, e.ord);   /* R10: `true` with nothing recorded */
+        return { ord: e.ord, at: e.at ?? null, latest: all[0] || null, earlier: all.slice(1), proposals: this.#proposals(target, e.ord),
+                 quotable: q ? q.quotable : true, quoting: q };
       });
     return { ok: true, target, kind: a.kind ?? null, entries };
   }
@@ -406,13 +468,15 @@ export class ActionReplies {
       if (Array.isArray(claims) && claims.length)
         answers = { answered: claims.filter((c) => c && c.bearing !== NOT_ADDRESSED).length, claims: claims.length };
     }
+    /* R11 (T48): `false` when the latest record on any received reply says it may not be quoted. */
+    const quotable = !received.some((o) => { const q = this.#quoting(a.id, o); return q && q.quotable === false; });
     /* R8 (K2964): whether a reply is recorded at all, so `answers: null` is never read as no reply when one is held. */
-    return { whom, asked_at: asked, window_closes: win ? dayOf(win.date) : null, answers, replied: received.length > 0 };
+    return { whom, asked_at: asked, window_closes: win ? dayOf(win.date) : null, answers, replied: received.length > 0, quotable };
   }
 }
 
 /* The acts answer their catalogue-backed refusals with code, check and translation. */
-for (const m of ["actionReplyBearing", "actionBearingPropose", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
+for (const m of ["actionReplyBearing", "actionBearingPropose", "actionReplyQuoting", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
   const fn = ActionReplies.prototype[m];
   ActionReplies.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -467,6 +531,10 @@ export function actionRepliesOps(r, url, body) {
                                                      claims: b.claims ?? null, viewer: q("viewer"), author: q("author") }),
     actionbearingpropose: () => r.actionBearingPropose({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
                                                          claims: b.claims ?? null, viewer: q("viewer"), proposer: q("proposer") }),
+    /* R10: `quotable` is a boolean in the body, or `true`/`false` in the query; anything else is refused by the act */
+    actionreplyquoting: () => r.actionReplyQuoting({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
+      quotable: b.quotable !== undefined ? b.quotable : q("quotable") === "true" ? true : q("quotable") === "false" ? false : q("quotable"),
+      words: b.words ?? q("words"), viewer: q("viewer"), author: q("author") }),
     arosefrom: () => r.aroseFromLink({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
       arising: b.arising ?? (q("project") ? { project: q("project") }
         : q("plan") || q("matter") ? { plan: q("plan"), matter: q("matter") } : null),
