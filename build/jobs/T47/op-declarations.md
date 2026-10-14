@@ -88,3 +88,23 @@ COMPLETE at 282dad4bc5 (job/T47/op-declarations, tranche/T47 merged at 117542b2d
 - checks/run.mjs over the product: format 0, architecture 0 (3126 files), channels 0. Coverage has 25 failures, none of them op-declarations' (rule 5 (1)).
 
 Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 16, module lines 3760
+
+## J4 · COMPLETE
+
+COMPLETE again at 2198e671e1, with `tranche/T47` merged at a20150d0f8 (wizard-scripts T47-47 and op-grades T47-48 in; B4 and B5).
+
+- **B4 (K3147):** every T47 op op-grades names in NON_ACTS now has a NEEDS row.
+  - `passwordresetlook` and `grouplanguages` now have the `publicread` kind (public, a present null row, stamped only `source` and `country` for the look). Their specs are unchanged.
+  - `passwordreset` (kind `door`) has an explicit present null, as `recover` has; t33's kind test names it beside `recover`.
+  - The other T47 ops already had rows.
+  - `publishedlist` is neither graded nor in NON_ACTS in op-grades, so it has no row.
+- **B5 (K3148):** my tests now run against the merged registry, at f90b187c7b with 66 screens.
+  - op-declarations: 169 tests, 169 pass, 0 fail.
+  - op-grades and affordances: the same 13 reds with and without my module's change (affordances, T47-49, is not merged yet).
+  - control-plane and admission: the same 8 reds as at J3. The two from my change are in J2: (1) doorbell:79, and (2) unaccounted until T47-49.
+- **Checks:** `checks/run.mjs` reports format 0, architecture 0 (3131 files), channels 0 failures; coverage has 23 failures, none of them op-declarations'. Ownership: 0 failures.
+- **Still waiting, as in J3:**
+  - `grouplogoset`, `grouplanguagesset`, `grouplanguages` (instance-setup T47-75) and `signrequest` (tasks T47-89) stay in t33's list of ops another job serves until those jobs merge.
+  - The R34 lists are re-pinned after affordances (T47-49).
+
+Size (session_013zNbUpqqR8G8FJUPnd2dkD): test runs 22, module lines 3762
