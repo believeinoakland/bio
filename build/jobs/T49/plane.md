@@ -33,3 +33,24 @@ COMPLETE for T49-30 · plane. Commit dbaa7cd381 on job/T49/plane, pushed.
 **Found in another module.** None new. The `control-plane` R96–R99 coverage gap is its own open job (T49-29).
 
 **Size (session_012h3BBihPG3oRtYmVkx9DcV):** test runs 2, module lines 2282.
+
+## J2 · COMPLETE
+
+COMPLETE again for T49-30 · plane (after ANSWER B2). Commits on job/T49/plane: e5063109e9 (R56 by key), pushed; the tranche (T49, with setup-words merged) merged in first.
+
+**R56, built (K3372).** Read setup-words' Provides R10–R13 whole and its `word`/`hasWord` in `src/setup-words/index.mjs`. Keyed sentences now go through `word(key, vars)`; the unkeyed strings stay as `words-reads.json` marks them.
+- `src/plane/ask.mjs`: the refusal and detail sentences of ask and draft: `refusal.ASK_NOT_A_MEMBER` (both paths), `refusal.AGENT_WORKER_SILENT` (four places), `ai.refused.notdeployed` (AGENT_WORKER_UNBOUND, both paths, as BOB ruled), `refusal.PASSAGE_TOO_LONG` (with `{max}`), `translate.undetermined.language`, `ai.keepaway.unread` (two places), `ai.draft.planunread`, `ai.draft.recordsunread`, `refusal.NO_SUCH_NOTE`. Where the sentence carried a diagnostic (the records read's thrown message) the diagnostic moves to a separate `cause` field, so no information is lost.
+- `src/plane/screens.mjs`: the titles and purposes the words list keys for the plane's screens: queue, finder, subjects' purpose (`screen.people.purpose`), themes, projects, review (`screen.held.purpose`), members, add (`screen.capture`), bundle (`screen.document`), inquiry (`screen.question`), project, action, review-copy, and published-case (`screen.published`). Mappings are my reading by meaning; a registry screen with no key keeps its own English (see the report below).
+- Keys used: 33 of the 35 `reads`. `screen.front.name` and `screen.front.purpose` are read by no plane screen: the registry has no front screen. Left unused, not invented.
+
+**Tests.** `test/m/plane/words.test.mjs` (new), R56 in the titles: each key the plane reads is `hasWord` and a key `words-reads.json` lists for plane; the registry draws `word(key)` for each keyed title and purpose; the passage limit is filled with its maximum; controls: `WORD_VAR_MISSING` for a missing placeholder and `UNKNOWN_WORD` for an unknown key. No test holds a sentence's English. `ask.test.mjs` (B2 control) and `release.test.mjs` (the members purpose) compare `word(key)` instead of the old sentence.
+
+**REPORT to BOB: titles with no key.** These titles are member-facing English that no key in `words-reads.json` holds, so they stay in source as the inventory marks them, not as inline keys: "Subjects", "Progressions", "Themes" (title), "Projects" (title), "Review" (title), "Case files" (title and purpose, the `published` screen), and "Your accountability record" (already unkeyed). Requested: keys from the design lane for these, or confirmation that they stay. This is the rule that "a sentence no key holds is a REPORT, never inline English."
+
+**Checks.** `checks/format.mjs`: 0 failures. `checks/architecture.mjs plane`: 0 failures (58 files; the new `setup-words` import is accepted). `checks/coverage.mjs plane`: 56 of 56 live ids named (R56 now named). `checks/ownership.mjs plane origin/tranche/T49`: 9 files, 0 failures. `checks/run.mjs` over the product: format 0, architecture 0, channels 0; coverage failures remain only in other modules' open L11 work (control-plane R96–R99 among them).
+
+**Tests run.** Full plane suite: 250 tests, 249 pass, 1 fail: `store.test.mjs:85` (R2, R10), the inherited red accepted by name in plan rule 5 (10) until N1115 (T50). Everything else passes, including the new R56 tests.
+
+**Still deferred, as in the first COMPLETE:** the N1073 hand-lists beyond `t41:124` and `roster`, which B2 says wait for plane's next substantive entry (K3268).
+
+**Size (session_012h3BBihPG3oRtYmVkx9DcV):** test runs 4, module lines 2300 (src/plane, counted after this job's edits).
