@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K3297: the edge op-declarations -> action-records is in modules.json on tranche/T48; merge it. Also from wizard-scripts (merged, its registry re-take at 4664e8efd4): your tests reading its carried registry and library at PR #33's head now fail (8: R21/R27's T35, T37, T38 sentences, R52's R29/R30, R54/R60); your R65 owns the re-take: re-take them against the merged files.
