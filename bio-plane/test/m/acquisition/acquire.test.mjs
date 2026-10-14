@@ -363,7 +363,10 @@ test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; e
   } finally { crypto.subtle.digest = orig; }
 });
 
-test("R11: existed for one part is whether it was held before this call; for several, true only when registered, else null with the stated reason", async () => {
+test("R11: existed for one part is whether it was held before this call; for several, true only when registered, else null with the stated reason", async (t) => {
+  /* N998: the clock pinned for the whole test (Date only; timers stay real), so the two captures compared below are
+     compared exactly, with nothing normalised */
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
   const w = world();
   const route = { "https://a.example/x": () => text("same bytes") };
   const first = await run(w, route, { locator: "https://a.example/x" });
@@ -387,9 +390,8 @@ test("R11: existed for one part is whether it was held before this call; for sev
   const silent = world({ prov: { recordReceipt() {}, registerHolds() { throw new Error("down"); } } });
   const s = await run(silent, mr, { locator: "https://a.example/big" });
   assert.equal(s.body.existed, null); assert.match(s.body.existed_undetermined, /could not be consulted/);
-  /* over-strictness: the document a capture files does not depend on what existed */
-  const n = (doc) => JSON.stringify({ ...doc, retrieved: null, provenance_chain: null, profile: { ...doc.profile, at: null } });
-  assert.equal(n(first.body.document), n(again.body.document));
+  /* over-strictness: the document a capture files does not depend on what existed, byte for byte */
+  assert.equal(JSON.stringify(first.body.document), JSON.stringify(again.body.document));
 });
 
 test("R12: a continuation resumes the session's outstanding files against the session's own primary and never fetches the primary again", async () => {

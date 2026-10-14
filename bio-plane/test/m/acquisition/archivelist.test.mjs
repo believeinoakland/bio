@@ -119,7 +119,10 @@ test("R41: an archive held but never opened is answered from its listing now, `o
   assert.deepEqual([t.archive.refused.code, t.archive.refused.limit, t.entries.map((e) => e.code)], ["ARCHIVE_TOTAL_MAX", over, ["ARCHIVE_TOTAL_MAX", "ARCHIVE_TOTAL_MAX"]]);
 });
 
-test("R41: a waiting entry names the limit or budget it waits on with its figure, or none when it waits only for the next call; an archive past the depth bound waits on ARCHIVE_DEPTH_MAX", async () => {
+test("R41: a waiting entry names the limit or budget it waits on with its figure, or none when it waits only for the next call; an archive past the depth bound waits on ARCHIVE_DEPTH_MAX", async (t) => {
+  /* N998: the clock pinned for the whole test (Date only; timers stay real), so the day the budget is spent for
+     and the day the unpack counts are one day */
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T12:00:00.000Z") });
   const w = world();
   const z = makeZip(Array.from({ length: 103 }, (_, i) => ({ name: `f${i}`, data: `d${i}` })));
   await capture(w, z);
