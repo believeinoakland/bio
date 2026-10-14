@@ -1,6 +1,6 @@
 # journey-check (T47)
 
-**Status** · session_01BwKVcuP4ZCR6FppN1MM9Zx · depth 2 · WAITING ON BOB (J2) · handled B4
+**Status** · session_01BwKVcuP4ZCR6FppN1MM9Zx · depth 2 · WAITING ON BOB (J3) · handled B4
 
 ## J1 · QUESTION
 
