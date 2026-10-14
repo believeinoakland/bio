@@ -13,14 +13,14 @@
   "date": 14,
   "queue": 66,
   "transcribe": 19,
-  "capture": 4,
+  "capture": 6,
   "document": 45,
-  "question": 36,
+  "question": 64,
   "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 52,
-  "project": 32,
+  "project": 34,
   "grouprule": 1,
   "refusal": 166,
   "signing": 17,
@@ -72,14 +72,15 @@
   "action": 4,
   "review": 5,
   "theme": 32,
+  "projects": 2,
   "progression": 26,
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 726,
+  "act": 728,
   "column": 33,
-  "total": 2421,
-  "protected": 739
+  "total": 2457,
+  "protected": 741
  },
  "words": [
   {
@@ -7816,6 +7817,244 @@
    "note": "DEC-242: Find's filter, R44"
   },
   {
+   "key": "question.empty.heading",
+   "en": "Nothing cited yet",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: the new question, state c"
+  },
+  {
+   "key": "question.empty.note",
+   "en": "A question stands on passages the group holds. Bring in the first one any of three ways.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.capture",
+   "en": "Capture a document for it",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.capture.line",
+   "en": "Its address, a file, or what you saw yourself; the capture is held for you to vouch for, then you cite the passage that answers.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.find",
+   "en": "Find one the group already holds",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.find.line",
+   "en": "Search the group's documents; cite a passage from the one you open.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.findsource",
+   "en": "Find another source",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: screens-inquiry R1 search"
+  },
+  {
+   "key": "question.empty.ask",
+   "en": "Ask the assistant to look",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.empty.ask.line",
+   "en": "It reads what the group holds and proposes passages and a reading; nothing counts until a member accepts it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.askassistant",
+   "en": "Ask the assistant",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: airunopen from the question"
+  },
+  {
+   "key": "question.empty.conclude",
+   "en": "Nothing to conclude on yet: a conclusion adopts a reading, and a reading stands on cited passages.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state c"
+  },
+  {
+   "key": "question.run.heading",
+   "en": "The assistant is working on this question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state d, ai-runs"
+  },
+  {
+   "key": "question.run.leave",
+   "en": "You can leave this page; the run keeps going, and what it proposes waits here and in your queue. Nothing it finds counts until a member accepts it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state d"
+  },
+  {
+   "key": "question.run.stop",
+   "en": "Stop it",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: airunclose"
+  },
+  {
+   "key": "question.proposal.heading",
+   "en": "What the assistant proposes",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state e, run-productions R4"
+  },
+  {
+   "key": "question.proposal.accept",
+   "en": "Accept this reading",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: versionaccept"
+  },
+  {
+   "key": "question.proposal.decline",
+   "en": "Decline…",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: versionreject"
+  },
+  {
+   "key": "question.limit.note",
+   "en": "Everything else here works as before. An administrator can change the limit under Settings, The assistant.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state f, beside ai.refused.limit"
+  },
+  {
+   "key": "question.conclude.reading",
+   "en": "The reading you conclude on",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude version"
+  },
+  {
+   "key": "question.conclude.falsifier",
+   "en": "What would change it",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude falsifier, NO_FALSIFIER"
+  },
+  {
+   "key": "question.conclude.falsifier.help",
+   "en": "Required. The finding that would make you withdraw this conclusion, such as “the city's own logs show repairs dated after the reports were closed”.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude falsifier"
+  },
+  {
+   "key": "question.conclude.nofalsifier",
+   "en": "Nothing could change it (you will be asked who decided that)",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude noFalsifier"
+  },
+  {
+   "key": "question.conclude.commentary",
+   "en": "Commentary",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude commentary"
+  },
+  {
+   "key": "question.conclude.commentary.help",
+   "en": "Optional. Your note beside the conclusion; it is marked as not evidence.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: conclude commentary"
+  },
+  {
+   "key": "question.concluded.heading",
+   "en": "Concluded",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g"
+  },
+  {
+   "key": "question.concluded.by",
+   "en": "Concluded by {who}, {date}:",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g, R18"
+  },
+  {
+   "key": "question.concluded.falsifier",
+   "en": "What would change it: “{falsifier}”",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: state g"
+  },
+  {
+   "key": "question.withdraw",
+   "en": "Withdraw the conclusion…",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: withdrawconclusion, reason required"
+  },
+  {
+   "key": "project.firstquestion",
+   "en": "Your first question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: promote with its words, screens-inquiry R11"
+  },
+  {
+   "key": "project.firstquestion.help",
+   "en": "One question the record could answer, in words a stranger would understand, such as “How many pothole reports did the city close late in 2025?”.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: promote"
+  },
+  {
+   "key": "projects.empty.sub",
+   "en": "No projects yet. A project is one problem the group wants to get to the bottom of, such as the repair of potholes on your streets.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: Projects, a new group"
+  },
+  {
+   "key": "projects.empty.note",
+   "en": "Start one below; you become its owner, and you open its first question on its page.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: Projects, a new group"
+  },
+  {
+   "key": "capture.forquestion",
+   "en": "For which question",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: capture: owed, capture R86 has no field"
+  },
+  {
+   "key": "capture.forquestion.help",
+   "en": "Optional. After you vouch for the capture, it opens beside this question so you can cite the passage that answers it.",
+   "protected": false,
+   "source": "DEC-245",
+   "note": "DEC-245: capture"
+  },
+  {
    "key": "progression.finding.never",
    "en": "A finding reports what the record holds and never decides: it says which step has no document, never that anyone is late.",
    "protected": false,
@@ -10413,6 +10652,18 @@
   {
    "key": "act.themeplace.label.question",
    "en": "Place a passage in a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.airunopen.label.question",
+   "en": "Ask the assistant",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.airunclose.label.question",
+   "en": "Stop the assistant",
    "protected": true,
    "source": "registry.json"
   },

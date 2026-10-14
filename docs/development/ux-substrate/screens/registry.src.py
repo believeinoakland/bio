@@ -186,3 +186,10 @@ for _s in S:
         _have = {a['op'] for a in _s['acts']}
         for _op, _l in [('release','Vouch for a capture'),('filingapprove','Approve a letter')]:
             if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-245 (K3320): the first investigation on the question: find a source, ask the assistant, stop it, accept its reading.
+for _s in S:
+    if _s['id'] == 'question':
+        _have = {a['op'] for a in _s['acts']}
+        for _op, _l in [('search','Find another source'),('airunopen','Ask the assistant'),('airunclose','Stop the assistant'),('versionaccept','Accept a proposed reading'),('owed:versionreject DEC-235','Decline a proposed reading'),('planopen','Plan what to do')]:
+            if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))

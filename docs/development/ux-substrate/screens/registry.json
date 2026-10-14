@@ -2381,6 +2381,24 @@
      "modules": [
       "connections"
      ]
+    },
+    {
+     "op": "airunopen",
+     "label": "Ask the assistant",
+     "status": "declared",
+     "modules": [
+      "ai-runs",
+      "run-rules"
+     ]
+    },
+    {
+     "op": "airunclose",
+     "label": "Stop the assistant",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "ai-runs"
+     ]
     }
    ],
    "journeys": [
