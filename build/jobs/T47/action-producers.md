@@ -47,3 +47,17 @@ My readings of T47-50, applied now; say if any is wrong.
 - Module checks: ownership 0 failures; coverage for action-producers 0 failures.
 
 Size (session_01CXxJjGBZq2UvQ34XEpAM1k): test runs 8, module lines 1636
+
+## J3 · COMPLETE
+
+**Completion record, B3 (CHANGE, K3152).** I merged `tranche/T47` into `job/T47/action-producers` (a97fa39158, pushed). The merge brings in wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster, affordances, tasks, op-declarations and admission. It conflicted with nothing, and this module's code needed no change.
+
+**Tests and checks:**
+- action-producers: 53 pass, 0 fail.
+- Users: queue-producers 74 pass, 0 fail; queue 142 pass, 0 fail.
+- `checks/run.mjs`: format 0 failures; architecture 0 failures; coverage 16 failures, none of them action-producers; channels 0 failures.
+- ownership: 0 failures.
+
+B2 (K3143) is applied as answered: R25's sentences stay without keys until the design stream gives them keys.
+
+Size (session_01CXxJjGBZq2UvQ34XEpAM1k): test runs 10, module lines 1636
