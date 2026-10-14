@@ -1,33 +1,31 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #178 (`session_01FtFaeSuYFdZBqRurhFtqH4`, secondary account, depth 1), 2026-10-14 ~21:37 UTC, at 38% context, T49 open with L8 running and no step half done. Read `build/rulings-active.md` whole first; K3338–K3353 are this session's rulings.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #179 (`session_019snoQfPk8CGH9fPKHEn3Pj`, **primary** account, depth 1), 2026-10-14 ~22:30 UTC, at ~28% context, T49 open, **no layer running** (L11 held by Bob). Read `build/rulings-active.md` whole first; K3356–K3366 are this session's rulings.
 
 ## Where things stand
 
-- **T49 is open** on `tranche/T49`. L2 to L6 are merged and closed (K3338–K3353); L7 has no job. **L8 running:** CASE-INPUTS #3 (`session_015ACfzc2kakEh8pKoGWg4BC`, Haiku), START B1 posted, address recorded. BOB's cursors: every earlier job read to its last entry.
-- **Bob's ruling K3347 (2026-10-14), never asked again:** no API-key support until subscription support is fully running and debugged. Applied: ai-runs R80, agent-worker R88, screens-settings R36 retired; journey-check R9 (4), R10, R11, R12 connect by subscription; the release's live walk must prove the subscription sign-in end to end (N780's images pullable before "ready"). Withdrawn work is N1105. `rulings-active.md` §1 carries it. **Meter 71%** (Bob, during L4).
-- **Doubt 11 settled (K3351):** journey-check's fake model and subscription sign-in are one stub of agent-runner's contract bound as agent-worker's `RUNNER`; no model address added.
-- **L11 is folded and ready:** requirements K3339 (with K3347's and K3351's edits), START bodies for all 20 L11 jobs in `build/plan/starts-T49/` (K3340; journey-check, screens-settings, ai-runs, agent-worker edited for K3347/K3351). Plan rule 5 now has items 8 (K3334's two reds) and 9 (bundler's fleetbundles pin of agent-worker's inputs, N1107).
-- **Remaining layers:** L8 case-inputs (running), L9 filing-templates (Haiku), L10 scheduler (Sonnet), L11 (20 jobs, merge order in `current.md`). Their START files are written; post each with `mail post --kind START --body-file`, push `job/T49/<module>` from the tranche tip first, then `create_session` with the plan's model (rule 3) and `mail addjob`. Job numbers: next of each lane from `grep -rhoE "<LANE> #[0-9]+" build/plan/archive build/rulings.md build/metrics | sort -V | tail -1`.
-- **Layer close routine** (each time): strike marks; `node bio-plane/src/case-checker/build-program.mjs`; `node bio-plane/scripts/bundles.mjs`; newgroup `npm run build`; `fleetbundles` (one accepted red, K3353) and `newgroup-bundle-fresh`; `checks/run.mjs`; archive sessions; rows in `build/metrics/T49.csv`.
-- **Channel:** UX-DESIGN read through U252 (B212 ACK). DEC-247 to DEC-252 are on PR #39 (MERGE U251), owed lines in T50 as N1106. The design session (#16) handed over; its successor rewrites its Writer line. Lanes unchanged (investigation H43, actions H31).
-- **Timers:** backstop `trig_013K7zfusyr6NRLFEKKJjNW5` (21:55Z, into BOB #178), WATCH #178 `trig_01DWChxC9FjEdmf8171C1JKL` (into ROOT #6, 22:35Z). Delete both at takeover and arm your own.
-- **T50's next.md** gained N1104 (acquisition `archiveList`), N1105 (API keys withdrawn), N1106 (DEC-247–252 owed), N1107 (bundler pin).
+- **T49 is open** on `tranche/T49`. L2–L10 merged and closed (L8 K3355, L9 K3360, L10 K3364). **L11 is held by Bob (K3365):** "Hold off starting L11. The UX design lane is working on moving all text strings out of the source so that a tiny word change doesn't cause 50 jobs to run in subsequent tranches." No L11 session exists. Before the hold, `job/T49/op-capabilities` was pushed and its START B1 posted (no session): when L11 starts, post a CHANGE to op-capabilities superseding B1 with its revised START, or re-push its branch from the tranche tip.
+- **The words move (K3366, U257, DEC-257 in progress):** the design lane keys every member-facing sentence of the 20 L11 modules in `words.json` on PR #39 (branch `claude/gallant-brown-zg0wc1`) with per-module key lists, and posts a **MERGE** (re U251) when ready, "tonight (UTC), a few hours". BOB's ruling on the mechanism (K3366): `words.json` generated into `setup-words` at build; `setup-words` exports `word(key, vars)`; modules hold keys only; tests assert key existence and reader use; `setup-words` moves first in L11 now (membership MODULE_ORDER entry, K657), to L1 in T50 (N1115). K3362's inline-English instruction is withdrawn.
+- **Bob's aim stands (K3320):** a release he can install, sign into, with usable screens, create a project, connect an assistant by subscription (K3347, never API keys), and do a real investigation. He checked on it tonight; keep every L11 decision pointed at it.
+- **Channel:** UX-DESIGN read through U257 (B218 ANSWER). DEC-253–DEC-256 owed as N1108, N1109, N1110, N1112 (T50). Lanes: investigation H43, actions H31, unchanged.
+- **Accepted reds:** fleetbundles' bundler pin (K3353, N1107); plane R12 until N1113 (instance-setup, T50; K3363); coverage's 17 are L11 modules' ids.
+- **Process fix (K3358, K3361):** `mail bob` now also writes BOB's Writer line; `xcheck` warns on a stale one. **Your takeover proves WL3** (`dryrun/CERTIFICATION.md`): `mail bob` should print "BOB's Writer line written"; record it in `dryrun/RUNS.md` (W2). If it warns, run the `xwriter` it names.
+- **Timers:** WATCH #179 `trig_01DbQQjNqR7kBG9egtkW6Qqt` (into ROOT #6, 23:04Z); backstop `trig_01HCyXQfcpdHh2sMHL8eYuzp` (22:24Z, may have fired). Delete both at takeover; arm a WATCH; arm a backstop once a layer runs.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1); archive BOB #178 and write its BOB-final row under T49.
-2. **L8–L10:** merge each job as it completes, close each layer, start the next (L9 filing-templates, L10 scheduler: their START files are written).
-3. **L11:** start all 20 jobs concurrently from their START files, after confirming the design's commit for setup-words, interface-assets and affordances is still `main`'s (`f498560a37` unless `main` moved). Merge in the L11 order.
-4. **At T49's close** (`current.md` "BOB's acts"): merge PR #39 into `main` first (§5.7 (1), MERGE U251), then `main` into the tranche; release cut, N780 images, biosmoke8 installed with the test mark as a secret, biosmoke7 removed, journey-check R12 live **by subscription**, BOB's own live walk as administrator and member including the subscription sign-in, then "ready" to Bob; the site to `workers.dev`.
+1. **Take over** (§5.1); archive BOB #179 and write its BOB-final row under T49.
+2. **Wait for UX-DESIGN's MERGE** (read the channel; it rings BOB). Meanwhile prepare: read `setup-words`' requirements and code and plan its rewrite (R1–R9 → generated list + `word`), and the manifest's generated-artifact row for it.
+3. **On MERGE:** merge `origin/claude/gallant-brown-zg0wc1` into `tranche/T49` (never a rebase; keep the design's text in any conflict; never `main`, K3366 (5)); move `setup-words` first in L11 in `modules.json` with its membership entry; re-word the 20 L11 requirement files to name keys from the lane's lists (BOB's wording; workers may draft, BOB reviews); rewrite the 20 STARTs (keys only, no inline English; the K3362 paragraph removed from the six screen STARTs); then start all 20 (launch table: `build/plan/current.md` rule 3 for models; next session numbers: op-capabilities 1, op-grades 11, affordances 34, setup-words 6, op-declarations 24, admission 12, interface-assets 3, interface-shell 5, screens-entry 3, screens-settings 4, screens-intake 4, screens-daily 4, screens-inquiry 4, screens-investigate 3, screens-publish 3, screens-action 3, control-plane 34, plane 37, site 1, journey-check 4). Merge in the L11 order, setup-words now first.
+4. **At T49's close** (`current.md` "BOB's acts"): PR #39 is already in the tranche, so the tranche PR carries it (PR #39 then shows merged); release cut, N780 images, biosmoke8 installed, biosmoke7 removed, journey-check R12 live **by subscription**, BOB's own live walk as administrator and member including the subscription sign-in, then "ready" to Bob; the site to `workers.dev`.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - T49's close: PR `tranche/T49` → `main` with the GitHub merge tool, method merge (§5.7 (3), K2273); no refusal recorded.
-- PR #39 (design stream, DEC-247–252) merged at T49's close on its MERGE U251 (§13.1 (5); K1177).
-- Deploys and Cloudflare removals (biosmoke8, biosmoke7, the site's Worker): Bob's approval in session each time (K1715; never on the standing list). The live subscription sign-in needs Bob to enter its code once (walk him through it then).
+- PR #39's branch merged into `tranche/T49` (K3366 (5)), not `main`; no refusal recorded for merging a design branch into a tranche branch.
+- Deploys and Cloudflare removals (biosmoke8, biosmoke7, the site's Worker): Bob's approval in session each time (K1715). The live subscription sign-in needs Bob to enter its code once.
 
 ## Open with Bob
 
-- S24 (a member's own reading, D8) and S25 (whether the stewards may decline a listing on civicsmith.org): with Bob through the design stream; answers arrive as NOTICEs.
+- The stewards' published rule text (Publication §5E, DEC-255): Bob approves it through the design lane.
 - The stewards' contact address (N923); translations (N670's R88); civicsmith.org's DNS and email (after the site is proven); the records-request template's reviewer (N858).
