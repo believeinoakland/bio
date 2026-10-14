@@ -67,3 +67,7 @@ COMPLETE.
 ## B5 (K3302)
 Merged tranche/T48. `doorbell.test.mjs` R28 re-pointed to admission R26 (only `sourceof` and `sourcerung` refuse a narrow agent: AI_BEYOND_TASK_SCOPE, nothing forwarded; control: an agent whose scope names the op reads it; other reads unchanged). R91 now passes. Re-run: 273 tests, 271 pass, 2 red: affordances-pack R2/R41 (affordances' R12, `stale: groupdescriptiondraft, securitymap`: sent to affordances) and R95 (waits on interface-shell R58). The three miniflare e2e files were not run red here.
 Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 14, module lines 3755
+
+## J5 · COMPLETE
+
+B5 done. Merged tranche; R28 re-pointed to admission R26 (sourceof, sourcerung only; control included). R91 passes. 273 tests, 271 pass, 2 red: affordances-pack R2/R41 (affordances' R12, stale groupdescriptiondraft and securitymap; not mine) and R95 (waits on interface-shell R58). COMPLETE.
