@@ -48,12 +48,12 @@ import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalend
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
 import { relate } from "../calc-grammar/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { DUTIES_CHECKS, refusal } from "./checks.mjs";
+import { DUTIES_CHECKS, refusal, reasonWords } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
          ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
 
-export { DUTIES_CHECKS, DUTIES_WORDS } from "./checks.mjs";
+export { DUTIES_CHECKS, DUTIES_WORDS, DUTIES_REASON_WORDS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
 export * from "./vocab.mjs";
 
@@ -1070,45 +1070,48 @@ export class Duties {
   /* R9, R18 (K1431): the due date of one instance, `{due, basis_kind, law_set, trace}` or undetermined. */
   #dueOf(fields, date, view) {
     const tm = fields.time || {};
-    if (!date) return { undetermined: true, why: "the trigger has no date: it is placed nowhere" };
-    if (isUndet(date)) return { undetermined: true, why: `the trigger's date is undetermined: ${date.why}` };
+    if (!date) return { undetermined: true, why: "the trigger has no date: it is placed nowhere", rc: "trigger_undated" };
+    if (isUndet(date)) return { undetermined: true, why: `the trigger's date is undetermined: ${date.why}`, rc: "trigger_undated" };
     try {
       if (tm.basis === "rule") {
         const rules = Array.isArray(view.deadlines) ? view.deadlines : [];
         let rule;
         if (said(tm.rule)) {
           rule = rules.find((d) => d && d.rule === tm.rule && (!said(tm.applies_to) || d.applies_to === tm.applies_to));
-          if (!rule) return { undetermined: true, why: `the active jurisdiction profiles hold no rule ${tm.rule}${said(tm.applies_to) ? ` for ${tm.applies_to}` : ""}`, basis_kind: "rule", law_set: true };
+          if (!rule) return { undetermined: true, why: `the active jurisdiction profiles hold no rule ${tm.rule}${said(tm.applies_to) ? ` for ${tm.applies_to}` : ""}`, basis_kind: "rule", law_set: true, rc: "deadline_not_held" };
         } else {
           /* R30: a report's required response, its rule chosen on each read from the governing view (R5): the deadlines
              a body owes, started by the report's issuer; one is used, several or none leave the date undetermined */
           const c = responseRules(view, tm.response_to);
+          /* R33: none held is `deadline_not_held`; several held and none named, `due_not_computed` (J1) */
           if (c.length !== 1) return { undetermined: true, basis_kind: "rule", law_set: true, ...(c.length ? { candidates: c.map((d) => d.rule) } : {}),
+            rc: c.length ? "due_not_computed" : "deadline_not_held",
             why: c.length ? `the active jurisdiction profiles hold ${c.length} deadlines a body owes in response to ${responseWho(tm.response_to)} (${c.map((d) => d.rule).join(", ")}), and none is named for this office`
                           : `the active jurisdiction profiles hold no deadline a body owes in response to ${responseWho(tm.response_to)}` };
           rule = c[0];
         }
-        return civilDue({ basis: "rule", rule, anchor: date, view, office: tm.office ?? null, factOf: this.factOf });
+        return computed(civilDue({ basis: "rule", rule, anchor: date, view, office: tm.office ?? null, factOf: this.factOf }));
       }
       if (tm.basis === "commitment" || tm.basis === "window") {
         const d = tm.date !== undefined ? this.#dt(tm.date) : date;
-        return civilDue({ basis: tm.basis, date: d, citation: tm.citation ?? null });
+        return computed(civilDue({ basis: tm.basis, date: d, citation: tm.citation ?? null }));
       }
-      if (tm.basis === "dependency") return civilDue({ basis: "dependency", precedes: date, lead: tm.lead, why: tm.why, view, factOf: this.factOf });
-    } catch (e) { return { undetermined: true, why: `the due date could not be computed: ${String(e && e.message || e).slice(0, 200)}` }; }
-    return { undetermined: true, why: "the due date's basis is unknown" };
+      if (tm.basis === "dependency") return computed(civilDue({ basis: "dependency", precedes: date, lead: tm.lead, why: tm.why, view, factOf: this.factOf }));
+    } catch (e) { return { undetermined: true, why: `the due date could not be computed: ${String(e && e.message || e).slice(0, 200)}`, rc: "due_not_computed" }; }
+    return { undetermined: true, why: "the due date's basis is unknown", rc: "due_not_computed" };
   }
 
   /* R10: met, met late, or undetermined, for a match dated `when` against `due`. */
   static #metState(when, due) {
-    if (!when || isUndet(when)) return { state: "undetermined", why: when ? `the matched event's date is undetermined: ${when.why}` : "the matched event is placed nowhere" };
+    if (!when || isUndet(when)) return { state: "undetermined", why: when ? `the matched event's date is undetermined: ${when.why}` : "the matched event is placed nowhere", rc: "match_undated" };
     const b = bounds(when);
-    if (isUndet(b) || b.earliest === null || b.latest === null) return { state: "undetermined", why: "the matched event's date has an open end" };
+    if (isUndet(b) || b.earliest === null || b.latest === null) return { state: "undetermined", why: "the matched event's date has an open end", rc: "match_undated" };
     const onTime = overdueOn({ due, at: minusSecond(b.latest), side: "body" });
     if (onTime === "not_overdue") return { state: "met", why: "the matching event falls on or before the due date" };
     const late = overdueOn({ due, at: b.earliest, side: "body" });
     if (late === "overdue") return { state: "met_late", why: "the matching event falls after the due date" };
-    return { state: "undetermined", why: `whether the matching event falls on or before the due date is not settled: ${isObj(onTime) ? onTime.why : isObj(late) ? late.why : "the precision held does not say"}` };
+    return { state: "undetermined", why: `whether the matching event falls on or before the due date is not settled: ${isObj(onTime) ? onTime.why : isObj(late) ? late.why : "the precision held does not say"}`,
+             rc: hasCandidates(due) ? "due_between_days" : "order_unsettled" };
   }
 
   /** R9–R12: each occurrence in the window, its state as of `asOf`, why, its evidence and its recorded transitions. */
@@ -1166,7 +1169,7 @@ export class Duties {
       const when = ev ? this.#whenOf(ev) : { undetermined: true, why: "the matched event is not readable" };
       occ.evidence.push({ kind: "event", event_id: latest.event_id, when, by: latest.by_member, at: latest.at, reason: latest.reason,
                           corrects: acts.length > 1 ? acts.slice(0, -1).map((x) => x.seq) : [] });
-      state = dueUndet ? { state: "undetermined", why: `an event is matched, and the due date is undetermined: ${due.why}` } : Duties.#metState(when, due.due);
+      state = dueUndet ? { state: "undetermined", why: `an event is matched, and the due date is undetermined: ${due.why}`, rc: due.rc } : Duties.#metState(when, due.due);
     }
     if (!state) {
       for (const { module, fn } of this.#evidence) {
@@ -1176,21 +1179,25 @@ export class Duties {
         for (const g of Array.isArray(got) ? got : got ? [got] : []) {
           const when = g.when ? this.#dt(g.when) : null;
           occ.evidence.push({ kind: "measured", source: module, evidence: g.evidence ?? null, when, says: "measured evidence, cited as such" });
-          if (!state && when) state = dueUndet ? { state: "undetermined", why: `measured evidence is held, and the due date is undetermined: ${due.why}` } : Duties.#metState(when, due.due);
+          if (!state && when) state = dueUndet ? { state: "undetermined", why: `measured evidence is held, and the due date is undetermined: ${due.why}`, rc: due.rc } : Duties.#metState(when, due.due);
         }
       }
     }
     if (!state) {
-      if (dueUndet) state = { state: "undetermined", why: due.why };
+      if (dueUndet) state = { state: "undetermined", why: due.why, rc: due.rc };
       else {
         const o = overdueOn({ due: due.due, at: asOf, side: "body" });
         if (o === "not_overdue") state = { state: "pending", why: "the due date has not passed and no matching event is held" };
         else if (o === "overdue") state = { state: "overdue", why: "the due date has passed and no matching event is held, as known on the day asked" };
-        else state = { state: "undetermined", why: o && o.why ? o.why : "whether the due date has passed is not settled" };
+        /* R10, R33: between candidate days (the "possibly overdue" band), or a due held at a precision that does not
+           settle the day asked: either way the due date's day is what the record does not settle (J1) */
+        else state = { state: "undetermined", why: o && o.why ? o.why : "whether the due date has passed is not settled", rc: "due_between_days" };
       }
     }
     occ.state = state.state;
     occ.why = state.why;
+    /* R33: beside `why`, which stays for the record, the member-facing reason of an undetermined occurrence */
+    occ.reason = state.state === "undetermined" ? reasonWords(state.rc) : null;
     if (occ.state === "overdue" && isObj(fields.review) && basis === "commitment") {
       /* R28 (K1431, D241): the body's own review date passed with no review recorded: noticed, never a legal deadline */
       occ.label = NOTICED;
@@ -1752,6 +1759,11 @@ function responseRules(view, rt) {
     && [d.starter.body, d.starter.role].some((n) => said(n) && names.has(n.trim().toLowerCase())));
 }
 const responseWho = (rt) => (isObj(rt) && Array.isArray(rt.issuer) && rt.issuer.length ? rt.issuer[0] : "the report's issuer");
+
+/* R33: a computed due date as civil-time answers it; an undetermined one (its R16 causes) is `due_not_computed`. */
+function computed(r) { return isUndet(r) ? { ...r, rc: "due_not_computed" } : r; }
+/* R33: a due date uncertain between candidate days (civil-time R17). */
+const hasCandidates = (due) => isObj(due) && Array.isArray(due.candidates) && due.candidates.length > 0;
 
 function validAtOf(c, at) { return civilValidAt({ valid: c.valid, basis: null }, at); }
 

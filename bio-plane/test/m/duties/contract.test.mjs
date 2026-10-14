@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, fictionalView, E, BOB, CAROL, MACHINE, evt, ZONE, SHA } from "./fixture.mjs";
 import { DUTIES_CHECKS, DUTIES_TABLES, CONNECTION_KINDS, MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES,
-         dutiesOps } from "../../../src/duties/index.mjs";
+         OCCURRENCE_REASONS, DUTIES_REASON_WORDS, dutiesOps } from "../../../src/duties/index.mjs";
 import { ownerConformance, derivedId, BOUNDS, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -200,7 +200,9 @@ test("R23 the group's own checkpoints are never occurrences of a body's duty; no
   const occ = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-03-02T12:00:00Z", viewer: BOB }).occurrences;
   assert.deepEqual(occ.map((o) => o.trigger.ref), ["ACT-2026-0001-req"]);
   /* no place in any vocabulary, translation or default: every name a held real profile covers is absent */
-  const words = JSON.stringify({ DUTIES_CHECKS, CONNECTION_KINDS, MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES }).toLowerCase();
+  /* (T48) with R33's reason codes and their words */
+  const words = JSON.stringify({ DUTIES_CHECKS, CONNECTION_KINDS, MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES,
+                                 OCCURRENCE_REASONS, DUTIES_REASON_WORDS }).toLowerCase();
   const real = profiles().filter((p) => !p.test).map((p) => profile(p.id));
   assert.ok(real.length >= 1);
   for (const p of real) for (const c of [p.name, ...p.covers]) for (const part of String(c).toLowerCase().split(/[^a-z]+/).filter((x) => x.length > 4))
