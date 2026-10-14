@@ -58,6 +58,10 @@ const send = (q, init = {}) => {
 };
 const GET = async (q) => (await send(q)).json();
 const POST = async (q, body) => (await send(q, { method: "POST", body: JSON.stringify(body) })).json();
+/* T48-9 (N1052; credentials R67): a member signs in by her handle, `{handle, password}`, as the front screen does; the
+   founder's handle is `admin`. The `{role}` form is no longer how anyone signs in. `login` answers the op's result, or
+   `{}` when the answer carries none, so a missing envelope fails a pin rather than throwing. */
+const login = async (handle, password) => (await POST("op=login", { handle, password })).result ?? {};
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -91,16 +95,28 @@ t("enrollment succeeds", en.result.ok, true);
 t("the invite is spent, and says nothing about what it addressed", (await POST("op=enroll", { invite: add.result.invite, handle: "ruth2", password: "another-passphrase" })).result.reason, "NO_SUCH_INVITATION");
 
 console.log("\n--- member sign-in and the intake powers ---");
-const lg = await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" });
-t("member logs in", lg.result.ok, true);
+const lg = { result: await login("ruth", "ruth-passphrase-1") };
+t("member logs in by her handle", [lg.result.ok, lg.result.role, typeof lg.result.token], [true, "member:ruth", "string"]);
 const S = "token=" + lg.result.token;
 /* CORRECTED 2026-08-05 (REC-41): both were pinned to their own code —
    BAD_PASSWORD and NO_SUCH_ROLE. The codes are collapsed into one, so the pins
    assert the ONE code from both callers; the reason is at credentials'
    `Credentials.LOGIN_REFUSAL_DETAIL` and the inverted distinguishability assertion
    is below. */
-t("wrong password refused", (await POST("op=login", { role: "member:ruth", password: "wrong-passphrase-x" })).result.reason, "SIGN_IN_REFUSED");
-t("unknown member refused", (await POST("op=login", { role: "member:nobody", password: "whatever-whatever" })).result.reason, "SIGN_IN_REFUSED");
+/* T48-9 (N1052): each refusal DISCRIMINATES. It is pinned beside the acceptance it differs from by one thing, so a door
+   that refused every sign-in (a body it no longer reads, an unknown field) fails here instead of passing both pins:
+   the wrong password beside the same handle with her own password, accepted; the unknown handle beside a handle that
+   is held, with its own password, accepted. */
+{
+  const right = await login("ruth", "ruth-passphrase-1");
+  const wrong = await login("ruth", "wrong-passphrase-x");
+  t("wrong password refused, where the same handle with her own password signs in",
+    [right.ok, wrong.ok, wrong.reason], [true, false, "SIGN_IN_REFUSED"]);
+  const held = await login("ruth", "ruth-passphrase-1");
+  const unknown = await login("nobody", "ruth-passphrase-1");
+  t("unknown member refused, where a held handle with its own password signs in",
+    [held.ok, unknown.ok, unknown.reason], [true, false, "SIGN_IN_REFUSED"]);
+}
 
 /* REC-39 — THE REFUSED SIGN-IN'S WORDS, asserted AT THE OP because that is
    where a member meets them.
@@ -118,8 +134,8 @@ t("unknown member refused", (await POST("op=login", { role: "member:nobody", pas
  * who is asking. So the instrument is: no second person anywhere in either
  * sentence. A wording that starts characterising the caller trips it before
  * anybody reads the diff. */
-const badPw = (await POST("op=login", { role: "member:ruth", password: "wrong-passphrase-x" })).result;
-const noRole = (await POST("op=login", { role: "member:nobody", password: "whatever-whatever" })).result;
+const badPw = await login("ruth", "wrong-passphrase-x");
+const noRole = await login("nobody", "whatever-whatever");
 /* EVERY READ OF A DETAIL BELOW GOES THROUGH THIS. The first version of this
    block read `.detail.length` directly, and the negative control that strips a
    detail made the SUITE THROW instead of fail — D-93's lesson (a chain that
@@ -145,7 +161,7 @@ t("D-57: neither sentence addresses the caller — the detail is about the mecha
  * facts are now carried by ONE sentence returned from every arm, so they are
  * asserted of that one sentence, reached through BOTH callers. Splitting them
  * back into two would re-open exactly what REC-41 closed. */
-for (const [who, r] of [["the wrong-password caller", badPw], ["the unknown-role caller", noRole]]) {
+for (const [who, r] of [["the wrong-password caller", badPw], ["the unknown-handle caller", noRole]]) {
   t(`the one sentence says what the mechanism did, to ${who}: a stored credential and a derivation that did not match`,
     [/credential/i.test(det(r)), /derive/i.test(det(r))], [true, true]);
   t(`the one sentence says there is no ACTIVE credential, and SAYS it does not distinguish the ways that happens, to ${who}`,
@@ -318,7 +334,7 @@ t("and answers with a signer roster rather than an exception", Array.isArray(sl.
 
 console.log("\n--- admin session manages the roster ---");
 await POST("op=claim", { bootstrapToken: "t-admin-1", password: "steward-passphrase-1" });
-const alg = await POST("op=login", { role: "admin", password: "steward-passphrase-1" });
+const alg = { result: await login("admin", "steward-passphrase-1") };
 t("admin logs in", alg.result.ok, true);
 const A = "token=" + alg.result.token;
 const add2 = await POST(`op=memberadd&${A}`, { memberId: "meilan", cover: "Meilan" });
@@ -326,7 +342,7 @@ t("admin session invites a member", add2.result.ok, true);
 t("admin session still cannot purge", (await GET(`op=purge&confirm=bio&${A}`)).error, "this operation requires a machine credential, not a signed-in session");
 /* D-270: and THIS is the arm that makes the line above mean what it says. `purge`
    is refused to a REAL administrator's session — `op=claim` + `op=login` with
-   `role: "admin"`, not an enrolled member whose roster row reads administrator —
+   the founder's handle `admin`, not an enrolled member whose roster row reads administrator —
    so it is genuinely on the unattended path rather than merely role-gated, and
    the code says which of those two facts refused the caller. Until D-270 the
    plane could not tell them apart and neither could this suite. */
@@ -348,22 +364,20 @@ t("an administrator cannot be revoked directly (4.4)",
 const men = await POST("op=enroll", { invite: add2.result.invite,
   handle: "meilan", password: "meilan-passphrase-1" });
 t("the ordinary member enrols", men.result.ok, true);
-const mlg = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
+const mlg = { result: await login("meilan", "meilan-passphrase-1") };
 const M = "token=" + mlg.result.token;
 t("and holds a live session", Array.isArray((await GET(`op=list&${M}`)).result), true);   /* T47-82 (P8): a check that can fail */
 t("revoke", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "revoked" })).result.ok, true);
 t("revoked member's session is dead", (await GET(`op=list&${M}`)).error, "unauthenticated");
-const revoked = (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result;
+const revoked = await login("meilan", "meilan-passphrase-1");
 /* CORRECTED 2026-08-05 (REC-41): was NO_SUCH_ROLE. One code now. */
 t("revoked member cannot log in", revoked.reason, "SIGN_IN_REFUSED");
-/* WHICH ARM ANSWERED, measured rather than assumed, and the first version of the
-   pin below was wrong because of it. EVERY `member:` role is judged by the DO
-   dispatch's wrapper — it runs before `login()` and refuses an absent row as
-   well as an inactive one — so `member:nobody` and `member:meilan` both come
-   from the SAME arm and comparing them proves nothing about the other one.
-   `login()`'s own NO_SUCH_ROLE is reached by a role with no `member:` prefix and
-   no credentials row, which is what this is. Corrected, not exempted. */
-const noCred = (await POST("op=login", { role: "operator", password: "whatever-whatever" })).result;
+/* WHICH ARM ANSWERED, measured rather than assumed. T48-9 (N1052; credentials R67): a handle names its role. A handle a
+   member holds names `member:<id>`, judged by her standing first (meilan, revoked, above); a handle nobody holds names a
+   role under which no credential is ever held, judged by the derivation arm (`nobody`, and `operator` here). So the
+   revoked member and the unheld handle still come from two different arms, and comparing them still proves the one
+   answer. Corrected, not exempted. */
+const noCred = await login("operator", "whatever-whatever");
 /* CORRECTED 2026-08-05 (REC-41): was NO_SUCH_ROLE. One code now. */
 t("a role with no credential row at all is refused by login() itself", noCred.reason, "SIGN_IN_REFUSED");
 /* REC-39 — THE TWO-ARM PIN, and it is the whole reason the sentence says "no
@@ -416,7 +430,7 @@ t("REC-39: no login refusal echoes the role string it was handed",
   [det(revoked).includes("meilan"), det(noRole).includes("nobody"),
    det(badPw).includes("ruth")], [false, false, false]);
 t("reinstate", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "active" })).result.ok, true);
-const mlg2 = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
+const mlg2 = { result: await login("meilan", "meilan-passphrase-1") };
 t("reinstated member logs in again", mlg2.result.ok, true);
 
 console.log("\n--- REC-41: what a STRANGER is told by op=bootstrap ---");
@@ -555,18 +569,18 @@ console.log("\n--- REC-41: and the refusals COST the same, or a stopwatch undoes
  * machine: the arms land within a few percent of each other, and with the
  * equaliser removed the no-credential arm runs ~50x faster. */
 const median = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-const timeLogin = async (role, password) => {
+const timeLogin = async (handle, password) => {
   const runs = [];
   for (let i = 0; i < 5; i++) {
     const t0 = performance.now();
-    await POST("op=login", { role, password });
+    await POST("op=login", { handle, password });
     runs.push(performance.now() - t0);
   }
   return median(runs);
 };
-const tBadPw   = await timeLogin("member:ruth", "wrong-passphrase-x");   /* live member, real derivation */
-const tNoCred  = await timeLogin("operator", "whatever-whatever");       /* login()'s own arm */
-const tNoMember= await timeLogin("member:nobody", "whatever-whatever");  /* the wrapper's arm */
+const tBadPw   = await timeLogin("ruth", "wrong-passphrase-x");          /* live member, real derivation */
+const tNoCred  = await timeLogin("operator", "whatever-whatever");       /* an unheld handle: no credential row */
+const tNoMember= await timeLogin("nobody", "whatever-whatever");         /* a handle no member holds */
 const ratio = (x) => tBadPw > 0 ? x / tBadPw : 0;
 t("REC-41: a role with no credential row costs what a wrong password costs (no stopwatch oracle)",
   ratio(tNoCred) > 0.5, true);
