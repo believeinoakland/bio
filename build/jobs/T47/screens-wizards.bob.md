@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T47)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
