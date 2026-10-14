@@ -9,7 +9,7 @@ const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' 
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
   cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
-  importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1,
+  importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1, connectionchoose:1,
   calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, pagetranscribe:2, escalationstoppursuing:3, escalationreopen:2, monitorset:1, recoverycodesissue:1, login:1, unlock:1, recover:2, signout:1, signouteverywhere:2, joinlinkinvite:1, owed_passwordresetlink:2, projectbarset:2, drawquestion:2, spotcheckvisit:2, projectquestions:1, projectlist:1, statusreportassist:1, airundispatch:2, actionscope:3, outcomecarry:3, filingsecondapprove:3, jointsignatory:3, holdnoticesent:2, casecheck:1, dutiesarising:1, procedureguides:1, openitemswith:1, textcheck:1, infractiondraft:1, bearingdraft:1, ruleoffer:1, advocacycheck:1, actionbearingpropose:1, transcribe:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
   airunopen:2, airunclose:1, wizards:1, person:1, heldcaptures:1, gradenote:1, invitelook:1, publishedcase:1, verify:1, disclosureshown:1,
   projectjoin:1, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
@@ -21,7 +21,7 @@ const WEIGHT = {
   calculationcreate:2, calculationaccept:2, recordcheck:2, actioncreate:2, actionlaws:2, communicationprepare:2, filingprepare:2, optionstart:2,
   actionmove:2, actioncorrespond:2, actionpressure:2, actionhold:2, escalationopen:2, escalationadvance:2, declinetoescalate:2, standarddeclare:2,
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
-  testify:2, acquire:2, captureupload:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
+  testify:2, acquire:1, captureupload:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
   taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, hostingaccessset:2, grouplanguagesset:2, grouplogoset:2, passwordreset:2, signrequest:1, publishatmove:2, publishatcancel:2, enroll:2,
   bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,

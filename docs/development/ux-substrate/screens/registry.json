@@ -26,7 +26,7 @@
      "modules": [
       "installer",
       "instance-setup",
-      "setup-page"
+      "membership"
      ]
     }
    ],
@@ -48,7 +48,7 @@
      "modules": [
       "installer",
       "instance-setup",
-      "setup-page"
+      "membership"
      ]
     }
    ],
@@ -65,16 +65,15 @@
     {
      "op": "login",
      "label": "Sign in",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "unlock",
      "label": "Unlock",
-     "status": "declared",
-     "onTranche": "origin/tranche/T47",
+     "status": "function",
      "modules": [
       "credentials"
      ]
@@ -104,8 +103,7 @@
     {
      "op": "passwordreset",
      "label": "Set my new password",
-     "status": "declared",
-     "onTranche": "origin/tranche/T47",
+     "status": "function",
      "modules": [
       "credentials"
      ]
@@ -124,9 +122,9 @@
     {
      "op": "recover",
      "label": "Set a new password with a recovery code",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -167,9 +165,9 @@
     {
      "op": "profilesset",
      "label": "Choose places and languages",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -185,8 +183,7 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     },
     {
@@ -194,8 +191,7 @@
      "label": "Name a place not yet listed",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -203,24 +199,23 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials",
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyset",
      "label": "Hold the group's API key",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyswitch",
      "label": "Switch the group's key on or off",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
@@ -234,17 +229,17 @@
     {
      "op": "courtnoticeset",
      "label": "Choose whether members are told what a court can reach",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
@@ -252,8 +247,7 @@
      "label": "Add a security tool (optional)",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -289,8 +283,7 @@
      "label": "Save who your group is, and who sees it",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -298,8 +291,7 @@
      "label": "Ask the assistant to help write it",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     }
    ],
@@ -318,8 +310,7 @@
      "label": "Read the invitation",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     },
     {
@@ -327,8 +318,7 @@
      "label": "Choose your language",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -345,8 +335,7 @@
      "label": "Join with a handle and password",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     },
     {
@@ -354,8 +343,7 @@
      "label": "Join through the group's join link",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     }
    ],
@@ -530,17 +518,17 @@
     {
      "op": "groupkeyset",
      "label": "Hold the group's API key",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyswitch",
      "label": "Switch the group's key on or off",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
@@ -572,8 +560,7 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials",
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -601,8 +588,7 @@
      "label": "Add a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -610,8 +596,7 @@
      "label": "Test a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -619,8 +604,7 @@
      "label": "Remove a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     }
    ],
@@ -687,8 +671,7 @@
      "label": "Choose your language",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -792,9 +775,9 @@
     {
      "op": "profilesset",
      "label": "Choose the places whose rules apply",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -802,8 +785,7 @@
      "label": "Save the place you want",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -819,8 +801,7 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     }
    ],
@@ -873,7 +854,6 @@
      "op": "grouplanguagesset",
      "label": "Save the languages",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "instance-setup"
      ]
@@ -882,7 +862,6 @@
      "op": "grouplogoset",
      "label": "Change the logo",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "instance-setup"
      ]
@@ -890,17 +869,17 @@
     {
      "op": "courtnoticeset",
      "label": "Show the court notice",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
@@ -1489,7 +1468,6 @@
      "op": "monitorset",
      "label": "Watch this address",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "monitoring"
      ]
@@ -1665,7 +1643,7 @@
    "id": "document",
    "name": "Document",
    "frame": "working",
-   "purpose": "One captured document: its copy, grade note, passages, versions and what cites it.",
+   "purpose": "One captured document: its copy and grade note, its words by page with citing, its versions set beside each other, the links it carries, the people and organizations it names, and what cites it.",
    "acts": [
     {
      "op": "gradenote",
@@ -1721,7 +1699,6 @@
      "op": "monitorset",
      "label": "Watch for changes",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "monitoring"
      ]
@@ -1758,6 +1735,38 @@
      "status": "declared",
      "modules": [
       "content"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Move my citations to this copy",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep citing the version I cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "connectionchoose",
+     "label": "Choose the mention that counts",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
      ]
     }
    ],
@@ -1874,7 +1883,6 @@
      "op": "drawquestion",
      "label": "Draw on a question from elsewhere",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "citation"
      ]
@@ -1891,7 +1899,6 @@
      "op": "projectbarset",
      "label": "Set this project's bar",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "strength"
      ]
@@ -2224,8 +2231,7 @@
      "label": "Add someone the record follows",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     }
    ],
@@ -2656,8 +2662,7 @@
      "label": "Register the proceeding",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     },
     {
@@ -3040,7 +3045,7 @@
      "label": "Make the action confidential, or not",
      "status": "declared",
      "modules": [
-      "actions"
+      "action-records"
      ]
     }
    ],
@@ -3127,7 +3132,7 @@
      "label": "Draft \"what changed\"",
      "status": "declared",
      "modules": [
-      "case-authoring"
+      "case-inputs"
      ]
     },
     {
@@ -3136,6 +3141,7 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "case-inputs",
       "review"
      ]
     },
@@ -3237,6 +3243,7 @@
      "modules": [
       "case-authoring",
       "case-check",
+      "case-inputs",
       "review"
      ]
     },
@@ -3245,6 +3252,7 @@
      "label": "Sign now and publish at a set time, checked again then",
      "status": "declared",
      "modules": [
+      "case-authoring",
       "publication",
       "publish-schedule",
       "ratification"
@@ -3278,7 +3286,6 @@
      "op": "signrequest",
      "label": "Ask an owner to sign",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "tasks"
      ]
@@ -3447,7 +3454,6 @@
      "status": "declared",
      "modules": [
       "control-plane",
-      "setup-page",
       "store-door"
      ]
     },

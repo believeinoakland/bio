@@ -785,7 +785,7 @@ SCR['open-file'] = c => { const st = OPEN_ST[c.v] || 'b'; const sel = v => v ===
     <div class="cs-reason">${field('mk-rel', 'Why release it?', 'The city\'s own budget file from its meeting site; the finding is a link to the city\'s own data portal, which we checked.', { rec: true, reason: true, act: 'releasescanhold' })}${acts(btn('releasescanhold', 'Release, with this reason', { tone: 'primary' }))}<p class="mk-small muted" style="margin:0">Ana gave a reason on 6 October; a second member's releases it. The machine never can.</p></div>`)}
   </div></div>` }; };
 
-SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
+SCR.document = c => { const st = c.v === 'compare' ? 'b' : 'a'; return { rail: 'projects', title: 'Document', st, crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
   ${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}
   <div class="mk-facts">
    <div><span class="k">Where it stands</span><span class="v">${pathm(0)}</span></div>
@@ -793,14 +793,45 @@ SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole re
    <div><span class="k">Fingerprint</span><span class="v"><span class="id" tabindex="0" data-tip="<b>Fingerprint</b>: a short code computed from this copy's exact bytes. Anyone can compute it again to check the copy is unchanged.">3b9f…c210</span></span></div>
   </div>
   ${acts(btn('findin', 'Find in this', { icon: 'search' }))}
-  ${sec('Passages', `<blockquote class="mk-passage rec" data-act="cite">"3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."</blockquote>${acts(btn('cite', 'Cite this passage', { tone: 'primary' }))}
-    <blockquote class="mk-passage rec">"5. Repairs are recorded as closed when the crew reports the work complete."</blockquote>`)}
-  ${sec('Pages Civicsmith couldn\'t read', `${note('Pages 7 to 9 are pictures of text that Civicsmith\'s own reading couldn\'t make out, so their words can\'t be found or cited yet. The page images are kept as they are.')}
-   ${c.ai ? acts(btn('pagetranscribe', 'Have the assistant read pages 7–9')) : ''}
-   ${acts(btn('transcribe', 'Type a page\'s words yourself'))}`, { help: 'Shown only when a document has pages its reading couldn\'t make out. It says which pages, and the ways to get their words.' })}
-  ${sec('People it names', `${sheet(row(I('subject'), 'L. Chen, Director of Public Works', btn('identityclaim', 'Say this is a person we follow…')))}`)}
-  ${sec('This copy', acts(btn('release', 'Vouch for this copy'), btn('attest', 'Attest'), btn('monitorset', 'Watch for changes'), btn('monitor', 'Check for a new version now'), btn('retire', 'Retire')))}
-  ${c.ai ? machine('Mai', '<p>This instruction sets the seven-day standard. The city\'s 2026 performance report counts reports "closed", which passage 5 defines as the crew reporting the work complete, not an inspection.</p>') : ''}` });
+  ${sec('Read it', `<div class="mk-tabs2" role="tablist">${tab(st, 'a', 'By page')}${tab(st, 'b', 'Beside the version your question cites')}</div>
+   <div class="st st-a">
+    <div class="mk-pagebar"><span class="mk-pageno">Page 3 of 12</span>${link('Previous page')}${link('Next page', 'next')}<span>Select any words to cite them.</span>${ref('Open the original file', 'open-file', '<b>The original file</b> · the PDF exactly as captured, 1.2 MB · opens on your device after Civicsmith\'s file check')}</div>
+    <div class="mk-pagetext">
+     <p>2. Reports are received through the city\'s service line and logged with the date received.</p>
+     <p><mark class="mk-sel" data-act="cite">3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.</mark>${btn('cite', 'Cite this', { tone: 'primary', help: 'Cites the words you selected in a question, as support or as cutting against it. The citation points at this copy, this page and these words.' })}</p>
+     <p>4. Where a repair would close a traffic lane, the work is scheduled with the Department of Transportation.</p>
+     <p>5. Repairs are recorded as closed when the crew reports the work complete and a supervisor confirms it.</p>
+    </div>
+    ${note('Pages 7 to 9 are pictures of text that Civicsmith\'s own reading couldn\'t make out, so their words can\'t be found or cited yet. The page images are kept as they are.')}
+    ${c.ai ? acts(btn('pagetranscribe', 'Have the assistant read pages 7–9')) : ''}
+    ${acts(btn('transcribe', 'Type a page\'s words yourself'))}
+   </div>
+   <div class="st st-b">
+    <div class="mk-compare">
+     <div><h3>The version your question cites</h3><span class="mk-date">Captured 14 September 2026 by Mai</span><p>3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.</p><p>5. Repairs are recorded as closed when the crew reports the work complete.</p></div>
+     <div><h3>This copy</h3><span class="mk-date">Captured 2 October 2026 by Dev</span><p>3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.</p><p>5. Repairs are recorded as closed when the crew reports the work complete <ins>and a supervisor confirms it</ins>.</p></div>
+    </div>
+    ${note('Passage 3, which your question cites, reads the same in both, letter for letter. Passage 5 changed. Your citations stay on the version you cited until you move them.')}
+    ${acts(btn('adoptversion', 'Move my citations to this copy'), btn('keepversion', 'Keep citing the version I cited'))}
+   </div>`, { help: 'The words of this copy, page by page, as Civicsmith read them from the capture; the original file stays exactly as captured. Select any words to cite them in a question, or set this copy beside the version your question cites.' })}
+  ${sec('Versions', `<div class="mk-versions">
+   <div class="mk-ev"><span class="mk-date">Captured 2 October 2026 by Dev · this copy</span><span><span class="cs-changed" tabindex="0" data-tip="<b>Changed</b>: this copy differs from the version your question cites. Compare them to see where, then move your citations or keep them.">${I('changed')}Changed since the version your question cites</span> · passage 5 reads differently; passage 3 does not. <a href="#" class="cs-btn" data-tone="quiet" onclick="var m=this.closest('main');m.dataset.st='b';var t=m.querySelector('[role=tablist]');if(t){[].forEach.call(t.children,function(x){x.removeAttribute('aria-selected')});t.children[1].setAttribute('aria-selected','true');t.scrollIntoView({block:'start'})}return false">Compare them</a></span></div>
+   <div class="mk-ev"><span class="mk-date">Captured 14 September 2026 by Mai</span><b>The version your question cites</b></div>
+   <div class="mk-ev"><span class="mk-date">Captured 3 June 2026 by Dev</span><span>Reads the same as the 14 September copy, letter for letter.</span></div>
+  </div>${acts(btn('monitor', 'Check for a new version now'), btn('monitorset', 'Watch for changes'))}`, { help: 'Every copy the record holds of this document\'s address, newest first. A newer copy never replaces an older one: it sits beside it, and your citations stay on the version you cited until you move them.' })}
+  ${sec('Links this page carries', `${note('6 links on this page; 1 points at a document the group holds. An outward link opens the site as it is today, in a new window, which may differ from what was captured; it takes you outside Civicsmith. The site\'s own navigation links are left out.')}
+   <div class="mk-outlinks">
+    <div>${I('capture')}<span>2026 performance report</span><span class="addr">held · captured 2 October 2026</span></div>
+    <div>${link('Report a pothole', 'outward')}<span class="addr">oaklandca.gov/311</span></div>
+    <div>${link('Public Works standards manual', 'outward')}<span class="addr">oaklandca.gov/…/standards.pdf</span></div>
+    <div>${link('Oakland Municipal Code 12.08', 'outward')}<span class="addr">library.municode.com/…</span></div>
+    <div>${link('Council resolution 88213', 'outward')}<span class="addr">oakland.legistar.com/…</span></div>
+    <div>${link('Department of Transportation', 'outward')}<span class="addr">oaklandca.gov/departments/transportation</span></div>
+   </div>`, { help: 'The links this page carries, as the capture recorded them: the source\'s own pointers, not Civicsmith\'s.' })}
+  ${sec('People and organizations it names', `${sheet(row(I('subject'), 'L. Chen, Director of Public Works', btn('connectionchoose', 'Choose the mention that counts') + btn('identityclaim', 'Say this is a person we follow…'), '4 mentions · the mention that counts: page 1, chosen by the record (strongest grade)') + row(I('group'), 'Public Works', btn('connectionchoose', 'Choose the mention that counts'), '9 mentions · the mention that counts: page 1, chosen by Dev on 3 October: "the department that issued it"') + row(I('group'), 'Oakland City Council', btn('connectionchoose', 'Choose the mention that counts'), '2 mentions · the mention that counts: page 6, chosen by the record (strongest grade)'))}
+   ${acts(btn('explore', 'Explore connections', { help: 'Starts the connection graph from this document: everyone it names, what it links to, and what cites it.' }))}`, { help: 'Everyone the record follows that this copy names, with the mention the record reads as the one that connects them. Say a name is a person the record follows, or choose which mention counts.' })}
+  ${sec('This copy', acts(btn('release', 'Vouch for this copy'), btn('attest', 'Attest'), btn('retire', 'Retire')))}
+  ${c.ai ? machine('Mai', '<p>This instruction sets the seven-day standard. The city\'s 2026 performance report counts reports "closed", which passage 5 defines as the crew reporting the work complete, not an inspection.</p>') : ''}` }; };
 
 /* DEC-164: "Find in this", one control on a document, a held set and a project. Search finds words as written, figures,
    dates, requirement words and names the group already follows; it records nothing. Each result becomes a fact only by the

@@ -538,5 +538,245 @@
   "en": "See the list",
   "protected": false,
   "note": "DEC-227"
+ },
+ {
+  "key": "document.read.title",
+  "en": "Read it",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.help",
+  "en": "The words of this copy, page by page, as Civicsmith read them from the capture; the original file stays exactly as captured. Select any words to cite them in a question, or set this copy beside the version your question cites.",
+  "protected": false,
+  "note": "DEC-229: the section heading's explanation"
+ },
+ {
+  "key": "document.read.tab.page",
+  "en": "By page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.tab.compare",
+  "en": "Beside the version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.page",
+  "en": "Page {n} of {count}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.prev",
+  "en": "Previous page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.next",
+  "en": "Next page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.select",
+  "en": "Select any words to cite them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.cite",
+  "en": "Cite this",
+  "protected": false,
+  "note": "DEC-229: the button on a selection"
+ },
+ {
+  "key": "document.read.cite.help",
+  "en": "Cites the words you selected in a question, as support or as cutting against it. The citation points at this copy, this page and these words.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.original",
+  "en": "Open the original file",
+  "protected": false,
+  "note": "DEC-229: a reference link to the open-file screen"
+ },
+ {
+  "key": "document.read.original.card",
+  "en": "The original file · the {kind} exactly as captured, {size} · opens on your device after Civicsmith's file check",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.cited",
+  "en": "The version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.this",
+  "en": "This copy",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.captured",
+  "en": "Captured {date} by {who}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.same",
+  "en": "{what}, which your question cites, reads the same in both, letter for letter.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.changed",
+  "en": "{what} changed.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.stay",
+  "en": "Your citations stay on the version you cited until you move them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.title",
+  "en": "Versions",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.help",
+  "en": "Every copy the record holds of this document's address, newest first. A newer copy never replaces an older one: it sits beside it, and your citations stay on the version you cited until you move them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.captured",
+  "en": "Captured {date} by {who}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.thiscopy",
+  "en": "this copy",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.cited",
+  "en": "The version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.changed",
+  "en": "Changed since the version your question cites",
+  "protected": true,
+  "note": "DEC-229: the changed mark's words"
+ },
+ {
+  "key": "document.versions.changed.tip",
+  "en": "Changed: this copy differs from the version your question cites. Compare them to see where, then move your citations or keep them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.where",
+  "en": "{changed} reads differently; {same} does not.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.compare",
+  "en": "Compare them",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.same",
+  "en": "Reads the same as the {date} copy, letter for letter.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.title",
+  "en": "Links this page carries",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.help",
+  "en": "The links this page carries, as the capture recorded them: the source's own pointers, not Civicsmith's.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.says",
+  "en": "{n} links on this page; {held} point at documents the group holds. An outward link opens the site as it is today, in a new window, which may differ from what was captured; it takes you outside Civicsmith. The site's own navigation links are left out.",
+  "protected": true,
+  "note": "DEC-229: the one-line warning, D2"
+ },
+ {
+  "key": "document.links.held",
+  "en": "held · captured {date}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.none",
+  "en": "This page carries no links.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.title",
+  "en": "People and organizations it names",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.help",
+  "en": "Everyone the record follows that this copy names, with the mention the record reads as the one that connects them. Say a name is a person the record follows, or choose which mention counts.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.row",
+  "en": "{n} mentions · the mention that counts: page {page}, {chosen}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.chosen.record",
+  "en": "chosen by the record (strongest grade)",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.chosen.member",
+  "en": "chosen by {who} on {date}: \"{why}\"",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.explore.help",
+  "en": "Starts the connection graph from this document: everyone it names, what it links to, and what cites it.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.none",
+  "en": "This copy names no one the record follows yet. A name becomes a link when a member says it is a person the record follows.",
+  "protected": false,
+  "note": "DEC-229"
  }
 ]
