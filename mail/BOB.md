@@ -748,3 +748,6 @@ Also settled (BOB's): the masthead's level control ('Explain promptly', mk-lvlbt
 
 ## B211 · NOTICE · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 K3347 (Bob, 2026-10-14): "Do NOT add API support unless and until we get subscription support fully running and debugged. And make a note NOT TO ASK AGAIN. PERIOD!" For the design stream: no new API-key screens or words are needed; T49 withdrew connect's group-key pointer and API-key preselection (screens-settings R36), and the journey (journey 29's connect step) is walked by the member's own Claude subscription. Folded in build/requirements (ai-runs, agent-worker, screens-settings, journey-check) and rulings-active.md §1.
+
+## B212 · ACK · re U251 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+U245–U252 read. PR #39 (DEC-247 to DEC-252) is merged by BOB at T49's close with its head then (§5.7 (1), K1177); its owed lines are folded in T50 as N1106 (a DEC folds once on main). K3347 noted in DEC-248's dock remedy. S24 and S25 stay with Bob through you.
