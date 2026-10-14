@@ -16,6 +16,13 @@ export const FIXTURE_WORDS = Object.freeze([
   ["screen.members.t.roster.holds", "Everyone in your group.", false],
   ["screen.assistant.t.panel", "What it does", false],
   ["screen.assistant.t.panel.holds", "It finds, reads and checks; it never concludes, signs or sends.", false],
+  ["screen.front.t.handle", "Your handle", false],
+  ["screen.front.t.password", "Password", false],
+  ["screen.front.t.state", "State: {state}", false],
+  ["screen.join.t.handle", "Choose a handle", false],
+  ["screen.join.t.password", "Choose a password", false],
+  ["screen.join.t.codes", "Your recovery codes", false],
+  ["screen.doorbell.t.what", "What you hand over", false],
 ].map((r) => Object.freeze(r)));
 
 const own = (prefix) => FIXTURE_WORDS.filter((r) => r[0].startsWith(prefix));
@@ -90,4 +97,61 @@ export const ASSISTANT = {
   acts: [{ op: "airunopen", send(view) { return { body: { context: view.serves } }; } }],
 };
 
+/* T47: the public frame's `front` (screens-entry R2's sign-in, as the shell's R46 hands it over) and `doorbell`, the
+   published frame's `published`, and the setup frame's `join` (R45, R46). */
+export const FRONT = {
+  id: "front",
+  words: own("screen.front."),
+  reads() { return { group: { op: "groupidentity" } }; },
+  render(cs, view) {
+    return cs.title() + "<p id=state>" + cs.w("screen.front.t.state", { state: view.session.state }) + "</p>"
+      + cs.field("f-handle", "screen.front.t.handle", { value: view.session.handle || "" }) + cs.field("f-pass", "screen.front.t.password", { type: "password" })
+      + cs.act("login") + cs.act("unlock") + (view.session.state === "locked" ? cs.signout() : "");
+  },
+  acts: [
+    { op: "login", send(view, el, cs) { return { body: { handle: cs.value("f-handle"), password: cs.value("f-pass"), device: "own" } }; },
+      async done(view, answer, cs) { await cs.signin(answer, { device: "own", handle: cs.value("f-handle") }); } },
+    { op: "unlock", send(view, el, cs) { return { body: { password: cs.value("f-pass") } }; } },
+  ],
+};
+export const DOORBELL = {
+  id: "doorbell",
+  words: own("screen.doorbell."),
+  reads() { return { group: { op: "groupidentity" } }; },
+  render(cs) { return cs.title() + cs.field("d-what", "screen.doorbell.t.what", { area: true }) + cs.act("knock"); },
+  acts: [{ op: "knock", send(view, el, cs) { return { body: { text: cs.value("d-what") } }; } }],
+};
+export const PUBLISHED = {
+  id: "published",
+  reads(view) { return { c: { op: "publishedcase", query: { case: view.subject }, subject: true } }; },
+  render(cs, view) { return cs.state("c", view, (c) => cs.title(c.title)); },
+  acts: [{ op: "verify" }],
+};
+export const JOIN = {
+  id: "join",
+  words: own("screen.join."),
+  reads(view) { return view.fragment.invite ? { invite: { op: "invitelook", body: { invite: view.fragment.invite } } } : {}; },
+  render(cs, view) {
+    return cs.title() + cs.field("j-handle", "screen.join.t.handle") + cs.field("j-pass", "screen.join.t.password", { type: "password" })
+      + cs.act("enroll") + cs.act("memberlanguageset") + (view.ui.codes ? cs.sec("screen.join.t.codes", cs.save("codes.txt", view.ui.codes) + cs.copy(view.ui.codes)) : "");
+  },
+  acts: [
+    { op: "enroll", send(view, el, cs) { return { body: { invite: view.fragment.invite, handle: cs.value("j-handle"), password: cs.value("j-pass") } }; },
+      async done(view, answer, cs) {
+        const login = await cs.call("login", { body: { handle: "newbie", password: "pw-pw-pw-pw-pw", device: "own" } });
+        await cs.signin(login, { device: "own", handle: "newbie", stay: true });
+        cs.set("codes", "code-1\ncode-2");
+        return { stay: true };
+      } },
+    { op: "memberlanguageset", send() { return { body: { language: "en" } }; } },
+  ],
+};
+export const PERSON = {
+  id: "person",
+  reads(view) { return { p: { op: "person", query: { id: view.subject }, subject: true } }; },
+  render(cs, view) { return cs.state("p", view, (p) => cs.title(p.name, { kind: "person" })) + cs.act("personexpunge"); },
+  acts: [{ op: "personexpunge" }],
+};
+
 export const ALL = [HOME, HELD, DOCUMENT, MEMBERS, ASSISTANT];
+export const ENTRY = [FRONT, DOORBELL, PUBLISHED, JOIN];

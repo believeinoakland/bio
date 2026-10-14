@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -43,3 +43,11 @@ K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words,
 ## B8 · CHANGE
 
 K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3161: queue merged into tranche/T47 (R53). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B10 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
