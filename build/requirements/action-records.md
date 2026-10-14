@@ -49,7 +49,7 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 
 #### The correspondence entry's one site (T48-47; N1024; K231, K3125)
 
-- **R16** (T48; N1024; K231, K3125; amends R4; `actions` R101; `action-grammar` R29) This module holds the one site of five codes, each minted nowhere else in `actions` or here, and each refusal carrying its row (`withRow`, `action-grammar`'s R9): *(not yet met: T48)*
+- **R16** (T48; N1024; K231, K3125; amends R4; `actions` R101; `action-grammar` R29) This module holds the one site of five codes, each minted nowhere else in `actions` or here, and each refusal carrying its row (`withRow`, `action-grammar`'s R9):
   - `correspondFence(author, extra?)` answers null for a member's stamp, and C-32.4 `MACHINE_CANNOT_CORRESPOND` for an empty or machine one (`isMachineIdentity`). Pure.
   - `correspondEntryRefusal({at, artifactSha, account, dateTime?}, extra?)` answers, first found, C-33.6 `BAD_DATE` (`at` not a real calendar date, `YYYY-MM-DD`; with `dateTime: true`, also accepted as `YYYY-MM-DDTHH:MM` on a real date), C-33.7 `CAPTURE_AND_TESTIMONY` (both a capture hash and an account), C-33.8 `NEITHER_CAPTURE_NOR_TESTIMONY` (neither), else null. Pure.
   - `unregisteredArtifact(sha, extra?)` answers null when the register holds `sha` (the `register` read contract, as R4 reads it), and C-33.9 `UNREGISTERED_ARTIFACT` naming `artifact_sha` otherwise. It writes nothing.
