@@ -348,7 +348,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
    the scale's color and icon name the scale; the letter gives the value.
    ============================================================ */
 .cs-grade { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px 3px 5px; border: 1.5px solid currentColor;
-            border-radius: var(--r-1); font: 700 var(--t-sm)/1 var(--f-sans); white-space: nowrap; cursor: help; }
+            border-radius: var(--r-1); font: 700 var(--t-sm)/1 var(--f-sans); white-space: nowrap; }
 .cs-grade svg { width: 13px; height: 13px; }
 .cs-grade[data-scale="capture"]    { color: var(--c-capture);    background: var(--c-capture-tint); }
 .cs-grade[data-scale="connection"] { color: var(--c-connection); background: var(--c-connection-tint); }
@@ -511,13 +511,15 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
    it explains. Timing (DEC-161, after Nielsen Norman Group's timing guidelines): on hover it waits 0.5 s with the pointer
    still, then shows; it stays while the pointer is on the thing or on the tip, and closes 0.5 s after the pointer has left
    both. Keyboard focus and a tap show it at once. Escape closes it (WCAG 2.2 1.4.13: dismissible, hoverable, persistent).
+   The cursor never announces an explanation (DEC-224, Bob, 14 October): no help or hand cursor on a mark, a name or any
+   element that explains itself on hover; the cursor changes only over a control (a button, a link, a node in a graph).
    ============================================================ */
 .cs-tip { position: fixed; z-index: 50; max-width: 300px; background: var(--c-sheet); color: var(--c-ink); border: var(--hair-strong);
   box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); }
 .cs-tip b { font-weight: 600; } .cs-tip .more { display: block; margin-top: 4px; color: var(--c-muted); font-size: var(--t-xs); }
 .cs-tip[hidden] { display: none; }
-[data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
-.cs-card { text-decoration: underline dotted var(--c-rule-strong); text-underline-offset: 3px; cursor: pointer; }
+[data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.cs-card { text-decoration: underline dotted var(--c-rule-strong); text-underline-offset: 3px; }
 .cs-tip .why { display: block; margin-top: 4px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
@@ -569,7 +571,7 @@ html, body { background: var(--c-ground); }
 .src { font: 12.5px/1.45 var(--f-mono); color: var(--c-muted); }
 body:not(.show-src) .src { display: none; }
 /* DEC-214: the elements that read at a glance */
-.cs-mast .cs-mark { display:inline-flex; align-items:center; margin-right:-4px; cursor:help; }
+.cs-mast .cs-mark { display:inline-flex; align-items:center; margin-right:-4px; }
 .cs-mast .cs-mark svg { height:20px; width:auto; color:var(--c-accent); }
 .mk-spark { display:inline-flex; align-items:flex-end; gap:2px; height:20px; vertical-align:middle; }
 .mk-spark i { display:block; width:5px; background:color-mix(in srgb, var(--c-stage) 40%, var(--c-surface)); border-radius:1px 1px 0 0; }
@@ -618,7 +620,7 @@ body:not(.show-src) .src { display: none; }
 .mk-device[data-device="phone"] .mk-usage { grid-template-columns:minmax(0,1fr); }
 .mk-bars .k { display:inline-block; font:600 var(--t-xs) var(--f-sans); letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--c-muted); margin-bottom:6px; }
 .mk-bars .run { display:flex; align-items:flex-end; gap:3px; height:48px; border-bottom:1px solid var(--c-rule-strong); }
-.mk-bars .run i { flex:1 1 0; min-width:4px; max-width:14px; display:block; background:color-mix(in srgb, var(--c-stage) 45%, var(--c-surface)); border-radius:1px 1px 0 0; cursor:help; }
+.mk-bars .run i { flex:1 1 0; min-width:4px; max-width:14px; display:block; background:color-mix(in srgb, var(--c-stage) 45%, var(--c-surface)); border-radius:1px 1px 0 0; }
 .mk-bars .run i.now { background:var(--c-stage); }
 .mk-bars .run i:hover, .mk-bars .run i:focus-visible { outline:2px solid var(--c-focus); outline-offset:1px; }
 .mk-bars .ax { display:flex; justify-content:space-between; font-size:var(--t-xs); color:var(--c-muted); margin:3px 0 4px; }
@@ -633,7 +635,7 @@ body:not(.show-src) .src { display: none; }
 .mk-meter.small { margin-top:4px; } .mk-meter.small .track { height:7px; } .mk-meter.small .l { font-size:var(--t-xs); }
 .mk-graph { display:grid; gap:8px; }
 .mk-trail { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; font-size:var(--t-sm); }
-.mk-trail .k { color:var(--c-muted); margin-right:4px; cursor:help; }
+.mk-trail .k { color:var(--c-muted); margin-right:4px; }
 .mk-trailbtn { font:500 var(--t-sm) var(--f-sans); padding:3px 8px; border:1px solid var(--c-rule-strong); border-radius:var(--r-1); background:var(--c-surface); color:var(--c-ink); cursor:pointer; }
 .mk-trailbtn.now { font-weight:700; border-color:var(--c-ink); }
 .mk-trail .arr { color:var(--c-muted); }
@@ -661,7 +663,7 @@ body:not(.show-src) .src { display: none; }
 .e-ment { stroke:var(--c-kind-mention); stroke-dasharray:9 4 2 4; }
 .e-lead { stroke:var(--c-muted); stroke-dasharray:7 5; }
 .e-same { stroke:var(--c-ink); stroke-width:1.25; }
-.mk-graph .edge { cursor:help; outline:none; }
+.mk-graph .edge { outline:none; }
 .mk-graph .edge:hover .e:not(.e-money):not(.e-money-in), .mk-graph .edge:focus-visible .e:not(.e-money):not(.e-money-in) { stroke-width:3.5; }
 .mk-graph .edge:hover .e-money, .mk-graph .edge:focus-visible .e-money { stroke-width:8; }
 .mk-graph .edge:focus-visible .e { stroke:var(--c-focus); }
@@ -670,7 +672,7 @@ body:not(.show-src) .src { display: none; }
 .gchip.subject rect { fill:var(--c-subject-tint); stroke:var(--c-subject); }
 .gchip.subject text { fill:var(--c-subject); }
 .mk-glegend { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:var(--t-xs); color:var(--c-ink-2); }
-.mk-glegend .li { display:inline-flex; align-items:center; gap:6px; cursor:help; }
+.mk-glegend .li { display:inline-flex; align-items:center; gap:6px; }
 .mk-glegend svg { width:36px; height:12px; flex:none; overflow:visible; }
 /* DEC-216, DEC-218: the home as a nerve center (arrangement C for everyone); the rail on every dashboard */
 .mk-ablocks { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
@@ -681,7 +683,7 @@ body:not(.show-src) .src { display: none; }
 .mk-ablock .need.quiet { color:var(--c-muted); border-color:var(--c-rule); font-weight:500; }
 .mk-ablock .rd { display:flex; flex-wrap:wrap; gap:4px 14px; }
 .mk-rd { font-size:var(--t-sm); color:var(--c-ink-2); } .mk-rd b { font-size:var(--t-lg); color:var(--c-ink); margin-right:2px; }
-.mk-readerlink { display:grid; gap:6px; padding:10px 12px; cursor:help; }
+.mk-readerlink { display:grid; gap:6px; padding:10px 12px; }
 .mk-readerlink .id { overflow-wrap:anywhere; }
 .mk-abitem { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 0 4px; border-top:var(--hair); font-size:var(--t-sm); }
 .mk-abitem .t { flex:1 1 140px; }

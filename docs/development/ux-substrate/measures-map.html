@@ -44,7 +44,7 @@ thead th { font:600 11px var(--f-body); text-transform:uppercase; letter-spacing
 td.q { font-weight:600 }
 .never { color:var(--muted); font-style:italic }
 /* evidence marks: one shape for every scale; colour and icon name the scale, the letter gives the value */
-.mark { display:inline-flex; align-items:center; gap:4px; font:700 13px/1 var(--f-mono); padding:4px 7px 4px 6px; border:1.5px solid currentColor; border-radius:4px; cursor:help; white-space:nowrap; vertical-align:middle; background:none }
+.mark { display:inline-flex; align-items:center; gap:4px; font:700 13px/1 var(--f-mono); padding:4px 7px 4px 6px; border:1.5px solid currentColor; border-radius:4px; white-space:nowrap; vertical-align:middle; background:none }
 .mark:focus-visible, .bar:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
 .mark svg { width:12px; height:12px; flex:none }
 .m-cap { color:var(--cap); background:var(--cap-bg) }
@@ -68,7 +68,7 @@ td.q { font-weight:600 }
 .lrow { display:grid; grid-template-columns:minmax(0,190px) minmax(0,1fr); gap:6px 12px; align-items:start }
 @media (max-width:560px) { .lrow { grid-template-columns:1fr } }
 .bars { display:flex; flex-wrap:wrap; gap:4px }
-.bar { flex:1 1 90px; min-width:0; padding:6px 8px; font:600 12px var(--f-body); text-align:left; border-radius:2px; color:var(--ink); background:var(--bar-off); border:1.5px solid transparent; cursor:help }
+.bar { flex:1 1 90px; min-width:0; padding:6px 8px; font:600 12px var(--f-body); text-align:left; border-radius:2px; color:var(--ink); background:var(--bar-off); border:1.5px solid transparent }
 .bar.on { cursor:pointer }
 .stage .on { background:color-mix(in srgb, var(--stage) 28%, var(--panel)); border-color:var(--stage) }
 .ready .on { background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--ready) 30%, var(--panel)) 0 6px, color-mix(in srgb, var(--ready) 16%, var(--panel)) 6px 12px); border-color:var(--ready) }

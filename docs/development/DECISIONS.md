@@ -3576,3 +3576,17 @@ response: **Bob's direction, drawn by the design session, 2026-10-14.** civicsmi
 decided: 2026-10-14 · Bob's direction, drawn by the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (`site`, SITE_LINE1, SITE_LINE2), `screens/page.src.html` (`.mk-sitenav`), `screens/registry.src.py` (`site`), `layouts.html`.
 owed: (BOB) nothing: the site is Bob's DNS and a Left-out row (N1011); installer R42's two lines follow SITE_LINE1 and SITE_LINE2 when it is built.
+
+### DEC-224 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_013WPLBoMoEqgg3wdk3KMaPa; given to UX design #11, session_01DyYKz1UJZVqVzz1E8F4Cyk, in chat at 01:10 UTC: "the cursor changes to a question mark whenever there's mouseover info. The cursor shouldn't change like that. Not in Civicsmith, and not on the civicsmith.org website or anywhere else.")
+for: bob-session
+question: Whether the pointer may change over an element that explains itself on hover.
+why it is Bob's: UX: a rule of the visual language (DEC-138) beneath his rulings on explanations (DEC-129 rule 4, DEC-159, DEC-161).
+provisional: `cursor: help` (the question mark) on every element carrying an explanation (`[data-tip]`, the grade chip, the masthead's plumb bob, the usage bars, the trail's key, the graph's edges and legend, the reader's link) and on the measures map's marks and bars; `cursor: pointer` (the hand) on a name that opens a card.
+alternative: keep the question mark as the hint that there is something to hover.
+recommendation: none needed: Bob's direction.
+reversal cost: low: one stylesheet rule and nine others.
+response: **Bob's direction, 2026-10-14.** The cursor never announces an explanation. No help or hand cursor on a mark, a name or any element that explains itself on hover, in Civicsmith, on civicsmith.org or on any design page; the cursor changes only over a control (a button, a link, a node in the connection graph, a resize grip). An explanation still opens on hover, on focus and on tap, as DEC-159 and DEC-161 say; the dotted underline stays the sign that a name opens a card.
+decided: 2026-10-14 · Bob's direction, recorded by the design session (P17)
+reasoning recorded in: this entry; `visual-language/components.css` (the explanations block's rule; `.cs-grade`, `[data-tip]`, `.cs-card`), `visual-language/civicsmith.css`, `visual-language/page.src.html` (Explanations; Keyboard, focus and touch), `screens/page.src.html` (`.cs-mast .cs-mark`, `.mk-bars .run i`, `.mk-trail .k`, `.mk-graph .edge`, `.mk-glegend .li`, `.mk-readerlink`), `measures-map.html` (`.mark`, `.bar`), `layouts.html`, `visual-language.html`.
+owed: (BOB) interface-shell folds the stylesheet when it next takes the visual language: `civicsmith.css` with no `cursor: help` anywhere and `.cs-card` without `cursor: pointer`; nothing before.
