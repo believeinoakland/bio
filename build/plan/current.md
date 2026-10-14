@@ -46,6 +46,8 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
       - E, 1: test-support R2 fails only as root under a 0700 directory. It is not owed: environment only, and it fails the same way at T47's opening;
    8. **the release check of 0.84.0:** journey-check's sweep of `updates` and `elsewhere`. Both are registered on `main` but drawn only in T48 (T48-71, T48-72), so they are accepted by name for this release.
 
+   9. **affordances** `t33.test.mjs`:151 (R12's op-map list lacks explore's `exploregraph`; found by ANSWERS #11 J1, red on the tranche itself), until T48-57 (K3261).
+
    Any other red a merge opens is named at that merge (K2704).
 
 ## Entries
@@ -156,6 +158,7 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
 - **T48-55 · wizard-scripts** · (N996 §5) `aiKeptAway` is read from `ai-accounts`; `uses` drops `credentials`. (N847; DEC-227 (1); K2591) R37: the sixth door `elsewhere`, always answered, carried as frozen data unless `library.json` holds it at START, and the pointer's answered shape. R38: the registry and library re-taken at PR #34's merge (`main` @ 4664e8efd4; 67 screens): `elsewhere`, DEC-226's `updates` and its wizard "Update your group's Civicsmith", and no `dash-home` (N1036's item, DEC-218). `civicsmith-library.mjs`' DEC-221 texts follow (K3192 D1) · text BOB's.
 - **T48-56 · op-grades** · (N1042, K3149) `translationdraft` graded; `groupdescriptiondraft` and `securitymap` given rows. (N1047) the update ops graded, with `updateskip` a reasoned act. (N880, N882, N670) R38: `actionreplyquoting`, `proceedingdates` and `readtranslate` graded; (N1026, K3206) `aiuseovertime` graded · text BOB's.
 - **T48-57 · affordances** · (N996 §5) `t36-backing` and `t41-backing` follow the moved services. (N1054) ACT_HELP re-pinned to the design after PR #33: 285 texts, with DEC-226's three. (N1053) "labelled" becomes "labeled" in `act-help.mjs` · after T48-56.
+- **T48-57 · affordances** also (K3261, ANSWERS #11 J1): `t33.test.mjs`:151's op-map list holds explore's `exploregraph`, clearing rule 5 (9).
 - **T48-58 · machinery-producers** · (N1047, K3189; DEC-226 (1)) the administrators' to-do, derived on read from instance-setup's notice read. The read is passed in by the plane's composition and never imported. There is one to-do per verified newer release, for every administrator; a newer release replaces an unanswered older one; the to-do leaves every queue when one administrator acts or when the running version answers it · text BOB's. (Was the fold's T48-58, queue-producers.)
 - **T48-59 · notice-producers** · (N996 §5) `projectAccountsSuspended` is read from `ai-accounts`; it keeps `credentials` for `securityMap` and `securityLevel`. (N1044) the undetermined queue item shows duties' member-facing reason (T48-22) instead of `why` · text BOB's.
 - **T48-60 · queue** · (N1047, K3189) R1 classes the update to-do's kind under "Your group's Civicsmith" (DEC-226 (1)). (N1036, K3189) its line for Home's "what needs the group" (items by kind, and whose move) is re-tested at START. (N1052) `conclude-project.test.mjs` signs in by `{handle}` · text BOB's.
@@ -237,6 +240,7 @@ No edge points later. **Module dropped:** `setup-page` (rule 3).
   - each deploy (the plane to `biosmoke7`, the installer) is Bob's approval in session (K1715, K1716): walk him through each;
   - point Bob at `newgroup.believeinoakland.workers.dev`, because civicsmith.org is not live.
 - **The fresh trial instance (Bob, K3260):** the release after L11 is installed as a new instance, `biosmoke8`, founded by Bob, and `biosmoke7`'s Cloudflare resources (workers, Durable Objects, containers, storage) are removed first from an inventory BOB takes now (read-only); each removal and deploy is Bob's approval in session (K1715). The journey's `JOURNEY_ADMIN_*` then name the founder of `biosmoke8`.
+- **DEC-221's "labeled" (K3261, READING-GUIDES #5 J1):** every T48 job not yet started re-spells "labelled" as "labeled" in its own module's member-facing words (each START says so); the modules whose T48 jobs have merged are N1068.
 - **N1047's workflow step** (signing and publishing the release notice, `.github/`, not_product): BOB's, between T48 and T49 (P3).
 - **N898:** `mail done --as bob` refuses a `--through` past the job's last entry. In the process repository, between tranches, certified on a dry run (P3).
 - **N945:** BOB's study of `bootstrap`'s `rearmed: true` on `biosmoke7`. A credentials entry joins T48-11 only if a requirement changes before L2's START.
