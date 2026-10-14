@@ -1,4 +1,4 @@
-/* interface-assets at its interface (R1–R7; DEC-138; N897 (1); N559; N1039; K3254): `ASSET_FILES` read against the
+/* interface-assets at its interface (R1–R8; DEC-138; N897 (1); N559; N1039; K3254): `ASSET_FILES` read against the
    design stream's docs/development/ux-substrate/visual-language/ and screens/page.src.html at ASSETS_COMMIT, read from
    git so the working copy never moves it.
    Each check is a function returning its failures, so a negative control shows it refusing a wrong map. */
@@ -11,13 +11,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import * as assets from "../../../src/interface-assets/index.mjs";
 import { ASSET_FILES, ASSETS_COMMIT } from "../../../src/interface-assets/index.mjs";
-import { shellCss } from "../../../src/interface-assets/generate.mjs";
+import { pageStyle, shellCss } from "../../../src/interface-assets/generate.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const MODULE = join(ROOT, "bio-plane/src/interface-assets/index.mjs");
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
-const COMMIT = "4664e8efd4"; // R5: main at PR #34's merge (PR #33's visual language); START named no later commit
+const COMMIT = "f498560a37"; // R8: main at PR #37's merge (DEC-236's classes, DEC-240's band); R5 named 4664e8efd4 before it
 const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
 const atCommit = (path) => git(["show", `${ASSETS_COMMIT}:${DIR}/${path}`]);
 const bytesOf = (e) => (e.encoding === "base64" ? Buffer.from(e.body, "base64") : Buffer.from(e.body, "utf8"));
@@ -139,7 +139,7 @@ function r4Failures(loaded) {
   return out;
 }
 
-test("R1, R5: ASSETS_COMMIT is 4664e8efd4 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
+test("R1, R5, R8: ASSETS_COMMIT is f498560a37 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
   const { faces } = expected();
   assert.equal(faces.length, 15);
   assert.equal(Object.keys(ASSET_FILES).length, 21);
@@ -161,6 +161,7 @@ test("R1 control: a wrong commit, a changed byte, a lost face, an extra name, a 
   c = copy(); delete c[face]; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["page.src.html"] = { type: "text/html", body: "" }; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["icons.svg"].type = "text/xml"; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
+  assert.ok(r1Failures(ASSET_FILES, "4664e8efd4").length > 0, "R8: the commit before R8 no longer holds");
   c = copy(); delete c[face].encoding; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["fonts/OFL-source-sans-3.txt"].encoding = "base64"; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
 });
@@ -255,7 +256,7 @@ function r5Failures(css) {
   return out;
 }
 
-test("R5: civicsmith.css at 4664e8efd4 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
+test("R5, R8: civicsmith.css at f498560a37 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
   assert.equal(ASSETS_COMMIT, COMMIT);
   const css = ASSET_FILES["civicsmith.css"].body;
   assert.deepEqual(r5Failures(css), []);
@@ -318,12 +319,19 @@ const PHONE_QUERY = "@media (max-width: 760px)";
 const PHONE_WEIGHT = ":root:root "; // K3295: the design's phone prefix keeps its weight
 /* K3295: the unprefixed product classes R7 carries by name: .e, .e-*, .gchip, .cell, .st (with its .st-a…), .row. */
 const PRODUCT = /\.(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)(?![\w-])/;
-function r7Failures(css) {
+/* The selectors the page's own @media (max-width: 760px) block holds at the commit, as R7 carries them: those rules are
+   not phone rules, so they keep their own query and need no prefix's weight. */
+function sourceQuerySels() {
+  const page = git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8");
+  return new Set(rules(pageStyle(page)).filter((r) => r.media === PHONE_QUERY).flatMap(sels)
+    .map((s) => s.replace(/\.mk-page(?![\w-])/g, ".cs-frame")));
+}
+function r7Failures(css, sourceQuery = new Set()) {
   const out = [];
   for (const r of rules(css)) for (const s of sels(r)) {
     if (/\.(mk-device|mk-scaler|mk-mockctl|mk-osprompt|anat|asfig|viewer|vlist|mk-page)(?![\w-])/.test(s)) out.push(`${s}: names a mock-only or page class`);
     if (!/\.(mk|cs)-[\w-]/.test(s) && !PRODUCT.test(s)) out.push(`${s}: names no cs- or mk- class nor one R7 lists`);
-    if (r.media === PHONE_QUERY && !s.startsWith(PHONE_WEIGHT)) out.push(`${s}: a phone rule without the prefix's weight`);
+    if (r.media === PHONE_QUERY && !s.startsWith(PHONE_WEIGHT) && !sourceQuery.has(s)) out.push(`${s}: a phone rule without the prefix's weight`);
   }
   return out;
 }
@@ -343,7 +351,7 @@ test("R7: shell.css equals the generator's transform of page.src.html's <style> 
   // The weight keeps the design's cascade: the phone tab bar beats the frame's desktop hiding of it.
   assert.ok(all.some((r) => !r.media && sels(r).includes(".cs-frame .cs-tabs")));
   assert.ok(all.some((r) => sels(r).some((s) => s.startsWith(".cs-frame"))), ".mk-page carried as .cs-frame");
-  assert.deepEqual(r7Failures(e.body), []);
+  assert.deepEqual(r7Failures(e.body, sourceQuerySels()), []);
 });
 
 test("R7 control: the transform drops mock-only, page and unlisted unprefixed rules, weights the phone prefix as :root:root and rewrites .mk-page; the scan refuses a stray rule", () => {
@@ -378,4 +386,41 @@ test("R7 control: the transform drops mock-only, page and unlisted unprefixed ru
   assert.ok(r7Failures(".anat .mk-x { gap: 0; }").length > 0);
   assert.ok(r7Failures(".seg { gap: 0; }").length > 0);
   assert.ok(r7Failures(`${PHONE_QUERY} { .cs-tabs { display: grid; } }`).length > 0, "a phone rule that lost its weight");
+});
+
+/* R8: the classes DEC-236 and DEC-241 added to shell.css, and the test band in civicsmith.css, each named by a rule. */
+const R8_SHELL = [".mk-menuwrap", ".mk-menu", ".mk-actwrap", ".mk-slot", ".mk-rowname", ".mk-scrim", ".mk-image", ".mk-imgareas",
+  ".mk-imgarea", "button.mk-avatar", ".mk-grp", ".e-step_source", ".mk-morerows", ".mk-morerow"];
+const R8_BAND = '.cs-band[data-band="test"]';
+/* A selector names a class when the class is one of its tokens: `.mk-slot:empty` names `.mk-slot`, `.mk-morerows` not `.mk-morerow`. */
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const namedBy = (list, name) => list.some((s) => new RegExp(`(^|[\\s>+~,])${escapeRe(name)}(?![\\w-])`).test(s));
+function r8Failures(shell, civicsmith) {
+  const out = [];
+  const shellSels = rules(shell).flatMap(sels);
+  for (const c of R8_SHELL) if (!namedBy(shellSels, c)) out.push(`shell.css: no rule for ${c}`);
+  if (!namedBy(rules(civicsmith).flatMap(sels), R8_BAND)) out.push(`civicsmith.css: no rule for ${R8_BAND}`);
+  return out;
+}
+
+test("R8: ASSETS_COMMIT is f498560a37; shell.css carries DEC-236's classes, .e-step_source and DEC-241's .mk-morerows and .mk-morerow; civicsmith.css carries .cs-band[data-band=\"test\"]", () => {
+  assert.equal(ASSETS_COMMIT, "f498560a37");
+  assert.deepEqual(r8Failures(ASSET_FILES["shell.css"].body, ASSET_FILES["civicsmith.css"].body), []);
+  // Each named rule is in the page's source at the commit, so the carried rules are not invented here.
+  const page = git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8");
+  for (const c of R8_SHELL) assert.ok(page.includes(c), `${c} in page.src.html at the commit`);
+  assert.ok(atCommit("civicsmith.css").toString("utf8").includes(R8_BAND));
+  // R8 is met by the R1 bytes too: the carried stylesheet is the generator's transform of the page at the commit.
+  assert.deepEqual(r1Failures(ASSET_FILES, ASSETS_COMMIT), []);
+  assert.deepEqual(r7Failures(ASSET_FILES["shell.css"].body, sourceQuerySels()), []);
+});
+
+test("R8 control: a shell.css without one named class, a civicsmith.css without the band, and a shell rule naming mk-device or mk-scaler are refused", () => {
+  const shell = ASSET_FILES["shell.css"].body;
+  const civ = ASSET_FILES["civicsmith.css"].body;
+  assert.ok(r8Failures(shell.split(".mk-morerow").join(".mk-morerowx"), civ).some((f) => f.includes(".mk-morerow")));
+  assert.ok(r8Failures(shell.split(".e-step_source").join(".e-stepx"), civ).some((f) => f.includes(".e-step_source")));
+  assert.ok(r8Failures(shell, civ.split(R8_BAND).join('.cs-band[data-band="x"]')).some((f) => f.includes("cs-band")));
+  assert.ok(r7Failures(shell + "\n.mk-device .mk-menu { gap: 0; }").length > 0);
+  assert.ok(r7Failures(shell + "\n.mk-scaler .mk-grp { gap: 0; }").length > 0);
 });
