@@ -64,3 +64,7 @@ Also disclosed: I did not read the module's index.mjs, schema.mjs and blanks.mjs
 - `checks/run.mjs` coverage over the product: 17 failures, all in other modules (above).
 
 Size (session_01DLu9hNhnNY3UX3zTHQrEQY): test runs 4, module lines 1919
+
+## J2 · REPORT
+
+REPORT, found in other modules (not this job's; not fixed here). After the merge of tranche/T49, `checks/run.mjs` over the product reports 17 coverage failures: live requirement ids named by no test. admission R27; affordances R61; control-plane R96, R97, R98; interface-assets R8; interface-shell R65–R69; journey-check R7–R13; op-capabilities R1–R3; screens-action R17; screens-daily R24, R29, R30, R32; screens-entry R16–R20; screens-inquiry R23–R43 (19 ids); screens-intake R22–R25; screens-investigate R27–R29; screens-publish R22, R23; screens-settings R34; setup-words R9; site R1–R11 (all 11). Architecture is 0 failures overall. filing-templates is clean: 79/79 tests, coverage 33/33.
