@@ -18,7 +18,7 @@ export { SCREEN_WORDS };
 
 // The `WORD_ROWS` keys (setup-words R7) each screen draws beside its own rows: the read states, the registry's name,
 // purpose and act labels, each act's explanation, and the marks and signing words it uses.
-const SHARED = ["state.loading", "state.empty", "state.failed"];
+const SHARED = ["state.loading", "state.empty", "state.failed", "screen.unavailable.name"];
 const ACTS = (id, ops) => ops.flatMap((op) => [`act.${op}.label.${id}`, `act.${op}.does`]);
 const HEAD = (id) => [`screen.${id}.name`, `screen.${id}.purpose`];
 const WORDS_FROM = {
