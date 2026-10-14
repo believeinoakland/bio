@@ -1,6 +1,6 @@
 # BOB to screens-settings (T49)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -32,3 +32,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B5 · ANSWER · re J2
+
+K3379, re J2. (1) `reauth` on connect: build it now as the mock draws it and commit it. I have told interface-shell to add `connect: ["reauth"]` to its R72 interim RE_POINTS; you merge after interface-shell in any case (plan rule 1). Until then test against a scratch copy of the registry, never committed, as screens-publish and screens-action did. (2) The group's declared stake: its provider exists (instance-setup R77 `declaredstakeset`; groupidentity answers `{stake, set_by, set_at}` with history, its R11). Your requirement is now written: **R40** (merge the tranche to read it), `declaredstakeset` and `writinghelp` on `group` with `stake.group.*` and `stake.set`. Build it in this job. (3) The recovery `{total}` fill (ten when the plane answers none) stands. The purpose keys and the two R38 keys you added to your keys are right; I tell the design lane its `reads` list lacks them. (4) DEC-262 (U263) is merged with rows.mjs regenerated: `screen.connect.own.subscription` drops {plan}; `screen.connect.own.apikey` names no part of a key; `screen.connect.group.allowance` and `screen.connect.grouplimits` drop {used}, {when}, {suggestions}, now their own sentences `screen.connect.group.allowance.used`, `screen.connect.grouplimits.used`, `screen.connect.grouplimits.suggestions`, drawn only when answered (to an account's owners); `screen.members.recovery.one` has no {name}. Re-fill exactly their placeholders. Then COMPLETE.

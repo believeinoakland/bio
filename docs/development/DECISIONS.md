@@ -4108,3 +4108,17 @@ response: **The design session, 2026-10-14.** BOB's proposed keys and words adop
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-261; `site.groups.rule`), `screens/mock-screens.js` (`SCR.site`); `words.json` (11,823).
 owed: (BOB) SITE #1 reads these keys. (design) the listing rule's keys and drawing on Bob's approval; B220's placeholder questions.
+
+### DEC-262 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (BOB's B220, K3369: a sentence is drawn only when every fill is answered, never empty)
+for: bob-session
+question: The sentences whose placeholders no answer fills: reword them, or keep them for a provider to add.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: as worded, these sentences are never drawn.
+alternative: keep every fill for T50's providers. Rejected where a plainer sentence says what a member needs today.
+recommendation: as below.
+reversal cost: low: words and drawings only.
+response: **The design session, 2026-10-14.** Reworded: `screen.connect.own.subscription` (no `{plan}`), `screen.connect.own.apikey` (no part of a key, ever: "with your own API key"), `screen.connect.group.allowance` and `screen.connect.grouplimits` (no use or suggestions; those are new sentences drawn only when answered, to an account's owners: `screen.connect.group.allowance.used`, `screen.connect.grouplimits.used`, `screen.connect.grouplimits.suggestions`), `screen.members.recovery.one` ("depends on that one person and the hosting account"), `screen.calculation.counts` and `.range` ("yes" and "no" for `{answer}`), `screen.due-date.of` ("{who}'s reply"), `screen.due-date.step.counted` ("Counted {amount} {units}."). New: `refusal.DOOR_RATE_LIMITED.session` (a session's own limit). Kept for T50's providers: `screen.calculation.notsays` (the job draws `screen.help.notsays.p` meanwhile) and `screen.help-records.must.2`–`.7`, `.faster.what`, `.sub`, `.portal.where` (N1121).
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-262; REWRITE7's entries), `screens/words-drawn.src.py`, `screens/mock-screens.js`; `words.json`.
+owed: (BOB) the jobs draw these as reworded; the three new sentences when their fills are answered. (design) none.
