@@ -1,5 +1,5 @@
-/* notice-producers' words (R16, R17; DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; DEC-191 (3), DEC-192 (3), (5); N869, N876): every sentence and every fill this
- * module's AI-account and investigation items say, each read by key from the design stream's `words.json`
+/* notice-producers' words (R16, R17, R20; DEC-198 (3), N889; DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; DEC-191 (3), DEC-192 (3), (5); N869, N876): every sentence and every fill this
+ * module's AI-account, investigation, duty, wait, policy, scan and tool items say (R12's alone keeps its plain sentence), each read by key from the design stream's `words.json`
  * (`docs/development/ux-substrate/screens/words.json`), its `en` verbatim. No sentence or fill is written here. A key the
  * words file lacks, or an `en` that differs, fails this module's test (`words.test.mjs`), never a fallback sentence.
  * `{placeholders}` are filled by `index.mjs` from its sources' own facts. */
@@ -54,6 +54,19 @@ export const NOTICE_WORDS = Object.freeze({
   "ai.label.explored": "Machine work · found while exploring · enabled by {owner}",
   "ai.label.explored.member": "Machine work · found while exploring",
   "ai.owner.group": "the group",
+  /* R20 (T47; N889; DEC-198 (3)): R5's, R6's, R13's, R14's and R15's summary and detail */
+  "queue.temporal-expectation-due.overdue.summary": "Nothing recorded by {date}: {duty}",
+  "queue.temporal-expectation-due.overdue.detail": "{office} was due to {what} by {date} ({basis}). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.",
+  "queue.temporal-expectation-due.undetermined.summary": "Possibly overdue: {duty}",
+  "queue.temporal-expectation-due.undetermined.detail": "Possibly overdue: undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+  "queue.inquiry-recheck-due.summary": "Look again: {question}",
+  "queue.inquiry-recheck-due.detail": "You set today to look again at what {question} waits on: {what}, from {who}, by {date}. Record a look, set a new date, or remove the wait. Only you are told.",
+  "queue.policy-changed-noticed.summary": "Changed without notice: {policy}",
+  "queue.policy-changed-noticed.detail": "Changed without notice: the text differs from the copy captured on {date}, and no amendment was announced.",
+  "queue.scan-found.summary": "A scan found something in {document}",
+  "queue.scan-found.detail": "{engine} found {names} in this file on {date}: {meanings}. The file is held: its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean. The machine never can.",
+  "queue.security-tool-off.summary": "Switched off: {tool}",
+  "queue.security-tool-off.detail": "{tool} was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.",
   /* R17: the ten kinds' summary and detail (DEC-189 (2)) */
   "queue.question-find.summary": "Found while looking into {question}: {what}",
   "queue.question-find.detail": "The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.",
@@ -95,7 +108,7 @@ export function monthName(m) {
   return Number.isInteger(m) && m >= 1 && m <= 12 ? wordsOf(`date.month.${MONTHS[m - 1]}`) : null;
 }
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
-/** A local day `YYYY-MM-DD` as a sentence names it (R16's and R17's `{date}`; DEC-191 (3), DEC-192 (3)): `date.daymonth`,
+/** A local day `YYYY-MM-DD` as a sentence names it (R16's, R17's and R20's `{date}`; DEC-191 (3), DEC-192 (3)): `date.daymonth`,
  *  `{day}` the day of the month with no leading zero and `{month}` from `date.month.*`; or `date.daymonthyear`, `{year}` in
  *  four digits, when the day is not in the year of `today` (the current local day, `YYYY-MM-DD`; a `today` that is no day
  *  names the year). Null for no day. */
