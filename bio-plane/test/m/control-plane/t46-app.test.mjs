@@ -19,7 +19,10 @@ const policyNonce = (r) => {
   const csp = r.headers.get("content-security-policy") || "";
   const d = Object.fromEntries(csp.split(";").map((x) => x.trim()).filter(Boolean).map((x) => { const [n, ...v] = x.split(/\s+/); return [n, v]; }));
   for (const k of ["default-src", "style-src", "font-src", "img-src", "connect-src"])
-    assert.ok((d[k] ?? d["default-src"]).every((s) => ["'self'", "'unsafe-inline'", "data:", "'none'"].includes(s)), `${k}: ${d[k]}`);
+    assert.ok((d[k] ?? d["default-src"]).every((s) => ["'self'", "'unsafe-inline'", "data:", "'none'", ...(k === "img-src" ? ["blob:"] : [])]
+      .includes(s)), `${k}: ${d[k]}`);
+  /* (T47; K3164; answer-envelope R6) `blob:` in `img-src` alone */
+  for (const [k, v] of Object.entries(d)) if (k !== "img-src") assert.equal(v.includes("blob:"), false, `${k} admits blob:`);
   assert.equal(d["script-src"]?.length, 1);
   return d["script-src"][0].match(NONCE)[1];
 };

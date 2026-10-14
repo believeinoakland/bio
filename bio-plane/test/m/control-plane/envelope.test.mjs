@@ -6,6 +6,7 @@ import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUE
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
 import * as CP_CHECKS from "../../../src/answer-envelope/checks.mjs";
 import * as ADMISSION_CHECKS from "../../../src/admission/checks.mjs";
+import * as CREDENTIALS_CHECKS from "../../../src/credentials/checks.mjs";
 import { aiScopeDeclaration, aiConfinementDeclaration } from "../../../src/admission/index.mjs";
 const D = await import("../../../src/store-door/dispatch.mjs");
 
@@ -458,7 +459,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   await d({ op: "adminendorse", token: env.ADMIN_TOKEN });                      /* C-32.17 */
   await d({ op: "groupnameset", token: env.ADMIN_TOKEN });                      /* C-64.4 */
   await d({ op: "claim", body: { bootstrapToken: "x" } });                      /* C-68.4 */
-  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-69.6 (R65, T46): no disclosure recorded */
+  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-29.40 (R65, R78; K3164: C-69.6 retired, credentials' row) no disclosure recorded */
   const unset = world({ omit: ["ADMIN_TOKEN"] });
   note(await call(unset.env, { op: "claim", method: "POST", body: {} }));       /* C-68.2 */
   const { PUBLISHED_TOKEN_HASHES } = await import("../../../src/tokens.mjs");
@@ -479,7 +480,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7",
     UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3", STORE_INTERNAL_ERROR: "C-69.4",
-    PURGE_HOLD_IN_PLACE: "C-69.5", DISCLOSURE_DUE: "C-69.6",
+    PURGE_HOLD_IN_PLACE: "C-69.5", DISCLOSURE_DUE: "C-29.40",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
@@ -497,7 +498,10 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   };
   const own = rowsOf(CP_CHECKS), admission = rowsOf(ADMISSION_CHECKS);
   for (const code of Object.keys(own)) assert.equal(admission[code], undefined, `${code} is held by both`);
-  const both = { ...own, ...admission };
+  /* (T47; K3164; credentials R64) DISCLOSURE_DUE's row is credentials' C-29.40, which the door relays */
+  const disclosure = Object.values(CREDENTIALS_CHECKS).find((t) => t && typeof t === "object" && t.DISCLOSURE_DUE?.check)?.DISCLOSURE_DUE;
+  assert.equal(disclosure?.check, "C-29.40");
+  const both = { ...own, ...admission, DISCLOSURE_DUE: disclosure };
   assert.deepEqual(Object.fromEntries(Object.entries(got).filter(([c]) => c in own)),
                    Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), "every row of the module's own is raised");
   for (const [code, check] of Object.entries(got)) {

@@ -53,12 +53,12 @@ function disclosureWorld({ shown = false, away = false, silent = false, runner =
   return { ...c, aw, asked };
 }
 
-test("R65 (T46; N897 (3); instance-setup R54; C-69.6): `start` is refused DISCLOSURE_DUE while `disclosureOf` answers `shown: false` for the member the door stamps, nothing sent to the runner; `state`, `signout` and `code` are never refused for it and never ask it; once shown, the same `start` is sent (negative control); a store that does not answer the question sends nothing; the keep-away refusal comes first", async () => {
+test("R65 (T46; N897 (3); instance-setup R54; C-29.40, C-69.6 retired, K3164): `start` is refused DISCLOSURE_DUE while `disclosureOf` answers `shown: false` for the member the door stamps, nothing sent to the runner; `state`, `signout` and `code` are never refused for it and never ask it; once shown, the same `start` is sent (negative control); a store that does not answer the question sends nothing; the keep-away refusal comes first", async () => {
   const due = disclosureWorld({ shown: false });
   for (const s of due.sessions) {
     due.aw.sent.length = 0;
     const r = await call(due.w.env, { op: "subscriptionsignin", token: s.token, method: "POST", body: { step: "start", member: FORGED } });
-    refused(r, 409, "DISCLOSURE_DUE", "C-69.6");
+    refused(r, 409, "DISCLOSURE_DUE", "C-29.40");
     assert.equal(r.json.translation, M.DOOR_WORDS?.["refusal.DISCLOSURE_DUE"] ?? r.json.translation);
     assert.match(r.json.translation, /Read what connecting means first/);
     assert.deepEqual(due.aw.sent, [], `${s.name}: nothing sent`);
