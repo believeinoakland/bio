@@ -333,7 +333,25 @@ class AffordanceFacts {
              rested_on: { working: null, frozen: null, severed: null }, basis_version_states: null, basis_versions: null,
              cites_in: { confirmed: null, severed: null },
              cites_out: { confirmed: null, severed: null, severed_reinstatable: null },
-             cited_by_case: { confirmed: null, severed: null }, action: null };
+             cited_by_case: { confirmed: null, severed: null }, legs_in: { live: null, severed: null }, action: null };
+  }
+
+  /* R14, R55 (T47; N977; citation R15): THE QUESTIONS HOLDING A LEG ON THIS INFORMATION, counted by the leg's status, among
+     those the viewer may see — `sever` and `reinstate` act on a question's own legs (citation R15), and ask no joined
+     project. Asked through `inquiry.restsOnLive` (leg-earning R5), which reads a leg's status as citation R15 does
+     (`connections.edgeSevered` over the question's references, whatever the entry's relation) and skips a divided
+     question. A question whose document cannot be revised (divided, or frozen in a case) is refused there as any write
+     to it is (inquiry R11), so it is counted in neither: `frozen` legs are not live, and a severed leg's question is
+     counted only when no case pins it (`case-tensions.caseRelation`, the predicate inquiry's refusal runs). Counts of
+     questions, never ids (R16). */
+  #legsIn(id, viewer) {
+    const m = this.membership();
+    const rests = this.inquiry().restsOnLive(id);
+    const seen = (q) => m.inSight(q, viewer);
+    const live = new Set(rests.confirmed.map((l) => l.bundle_id).filter(seen));
+    const severed = new Set(rests.severed.map((l) => l.bundle_id).filter(seen)
+      .filter((q) => !this.caseTensions().caseRelation(q).member));
+    return { live: live.size, severed: severed.size };
   }
 
   /** R13–R16: the facts for one target as the caller stands. `viewer` is what the caller may see, `identity` who it
@@ -426,6 +444,8 @@ class AffordanceFacts {
              basis_versions: versions.filter((v) => v && typeof v === "object").length,
              cites_in: { confirmed: citesIn.confirmed.length, severed: citesIn.severed.length },
              cites_out: citesOut, cited_by_case: citedByCase,
+             /* R55 (T47): the questions holding a leg on an information target, by the leg's status; null on any other type */
+             legs_in: type === "information" ? this.#legsIn(id, viewer) : { live: null, severed: null },
              /* R51 (T45): an action's own facts, null on any other type */
              action: type === "action" ? this.#actionFacts(id, viewer, author) : null };
   }

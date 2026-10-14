@@ -415,7 +415,9 @@ const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */,
 /* T45's layer 8–9 ops (K2781, K2839, K2857; op-grades R32 grades them, op-declarations R49 declares them), by owner:
    the writes, and the reads (whose gating is op-declarations'). */
 const T45_L9 = {
-  actions: { writes: ["actionreceipt", "actionscope", "actionpromise"], reads: ["openitemswith"] },
+  /* T47 (N961 §5; action-records R1–R3): the receipt, scope and promise are action-records' since the actions split */
+  actionRecords: { writes: ["actionreceipt", "actionscope", "actionpromise"], reads: [] },
+  actions: { writes: [], reads: ["openitemswith"] },
   actionHolds: { writes: ["actionholdrelease", "holdnoticesent", "pressurerecord"], reads: ["actionholdpreview", "projectholds"] },
   actionReplies: { writes: ["actionreplybearing", "actionbearingpropose", "arosefrom"], reads: [] },
   planWork: { writes: ["matteroutcomeset", "planreviewrhythm", "planreviewrecord", "prepitemadd", "prepitemtakeup",
@@ -446,13 +448,17 @@ import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
 import { planWorkOps } from "../../../src/plan-work/index.mjs";
 import { caseCheckOps } from "../../../src/case-check/index.mjs";
 import { projectRosterOps } from "../../../src/project-roster/index.mjs";
+/* T47 (N961 §5): action-records holds the actions acts the split moved; its op map is read directly, never through the
+   spread actions' map carries until plane's L11 job (K3128). */
+import { actionRecordsOps } from "../../../src/action-records/index.mjs";
 const MAPS = () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}, {}));
   return { standards: keys(standardsOps), conformance: keys(conformanceOps), consequences: keys(consequencesOps),
     filings: keys(filingsOps), actions: keys(actionsOps), actionHolds: keys(actionHoldsOps), actionPlans: keys(actionPlansOps),
     actionClocks: keys(actionClocksOps), escalation: keys(escalationOps), actionReplies: keys(actionRepliesOps),
-    planWork: keys(planWorkOps), caseCheck: keys(caseCheckOps), projectRoster: keys(projectRosterOps) };
+    planWork: keys(planWorkOps), caseCheck: keys(caseCheckOps), projectRoster: keys(projectRosterOps),
+    actionRecords: keys(actionRecordsOps) };
 };
 test("R1 R12: layer 9's op maps hold exactly its 41 writes, 19 ungated reads and two gated reads from before T45 "
    + "(K264, K705, K709, K727, K902; the holds now action-holds'), beside T45's, T33's and standards' later ops; with the "
@@ -590,6 +596,9 @@ import { captureOps } from "../../../src/capture/index.mjs";
 /* T42 (N826; K2656): the doorbell's routes are `doorbell`'s map (its R3, R13, R15, R18, R19), capture's copy deleted in T43 */
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+/* T47 (N908 §5): case-inputs, split from case-authoring by copy (K3112, K3116): its namespace, op map and checks. */
+import * as caseInputs from "../../../src/case-inputs/index.mjs";
+const { caseInputsOps } = caseInputs;
 const N364_WRITES = ["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw", "reattest", "captureaccount",
   "signerregister", "signerrevoke", "knockerconsent", "inboxpull"];
 const N364_READS = ["sourceof", "sourcerung", "sourcereadlog", "sourcepublishable", "knocksof", "pulledknocks",
@@ -737,7 +746,8 @@ test("R12: T22's new ops — escalation's, capture's, the doorbell's and monitor
 });
 
 /* op-grades R7 (N485: K1025, K1035; K1094; DEC-111, K1100; T23): the ops T23 adds, and R12's totality with them.
-   case-authoring's and escalation's are read from their op maps; `sweeps` left monitoring's for link-sweep's at T24's L10
+   case-inputs' (T47, N908 §5: `whatchangedpropose` and `whatchangeddrafts` left case-authoring's map with the split) and
+   escalation's are read from their op maps; `sweeps` left monitoring's for link-sweep's at T24's L10
    (N506, link-sweep R1–R12), and link-sweep is not in this module's uses, so it is named as op-grades R7 names it;
    network-notices is not in this module's uses, so its four ops (its op map: `noticeprepare`, `noticepost`, `notices`,
    `directorysubmission`) and its three public reads (registered through public-read R18) are named as its record states
@@ -746,11 +756,12 @@ test("R12: T22's new ops — escalation's, capture's, the doorbell's and monitor
 const T23_WRITES = ["whatchangedpropose", "noticepost"];
 const T23_READS = ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"];
 const T23_PUBLIC = ["activitymethod", "noticespublic", "groupkeyspublic"];
-test("R1 R12 R24: T23's ops — case-authoring's and escalation's op maps hold theirs, each write decorates with a rung "
+test("R1 R12 R24: T23's ops — case-inputs' and escalation's op maps hold theirs, each write decorates with a rung "
    + "or a stated absence, none is an act — and with the control plane's rows for them nothing is unaccounted; an "
    + "ungated read and an op left out are each seen", () => {
   const url = new URL("http://x/");
-  const ca = Object.keys(caseAuthoringOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {}));
+  const ca = Object.keys(caseInputsOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {}));
+  for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(!Object.keys(caseAuthoringOps({}, url, {})).includes(op), op);
   for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(ca.includes(op), op);
   assert.ok(esc.includes("escalationreasondraft"));
   /* R24: each write decorates with a rung or a stated absence, never both and never neither */
@@ -773,6 +784,40 @@ test("R1 R12 R24: T23's ops — case-authoring's and escalation's op maps hold t
     assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "noticeunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["noticeunnamed"], ["noticeunnamed"]]);
+});
+
+/* T47 (N908 §5; split map `case-authoring-split-2.md` §5): case-inputs' namespace, op map and checks, split from
+   case-authoring by copy (K3112) and its copies deleted there (K3116). Its three ops keep their names, grades and reasons
+   (op-grades' rows are unchanged by the split); none is an act. The reasoned acknowledgement's backing is driven at
+   case-inputs' interface in backing.test.mjs. */
+test("R1 R12 R19 R24: case-inputs' ops — its op map holds exactly whatchangedpropose, whatchangeddrafts and statementack, "
+   + "case-authoring's none of them; STATEMENT_ACK_NO_REASON is a row of case-inputs' checks in the justification family; each "
+   + "write decorates with a rung or a stated absence, none is an act — and with the control plane's rows nothing is "
+   + "unaccounted; an op left out is seen", () => {
+  const url = new URL("http://x/");
+  assert.deepEqual(Object.keys(caseInputsOps({}, url, {})).sort(), ["statementack", "whatchangeddrafts", "whatchangedpropose"]);
+  const left = Object.keys(caseAuthoringOps({}, url, {}));
+  for (const op of ["statementack", "whatchangeddrafts", "whatchangedpropose"]) assert.ok(!left.includes(op), op);
+  assert.equal(typeof caseInputs.caseInputsOf, "function", "the namespace answers its factory");
+  assert.ok(Object.hasOwn(caseInputs.STATEMENT_ACK_CHECKS, "STATEMENT_ACK_NO_REASON"), "a row of case-inputs' checks");
+  assert.ok(JUSTIFICATION_REFUSALS.includes("STATEMENT_ACK_NO_REASON"));
+  const WRITES = ["statementack", "whatchangedpropose"], READS = ["whatchangeddrafts"];
+  for (const op of WRITES) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+  }
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => [...WRITES, ...READS].includes(a.id)));
+  /* the control plane's rows (op-declarations): both writes mutating; `statementack` has no NEEDS row in op-declarations'
+     table, so it is ungated and named in no NON_ACTS row; the read is gated */
+  const table = [{ op: "statementack", mutating: true, gated: false }, { op: "whatchangedpropose", mutating: true, gated: true },
+    ...READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => [...WRITES, ...READS].includes(op)), []);
+  /* carried gated, statementack would read unpublished */
+  assert.deepEqual(A.unaccounted([{ op: "statementack", mutating: true, gated: true }]).unpublished, ["statementack"]);
+  const out = A.unaccounted([...table, { op: "inputsunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([out.unpublished, out.unranked], [["inputsunnamed"], ["inputsunnamed"]]);
 });
 
 /* N512 (T25): the provenance split. `provenancechain`, `provenanceroute` and the read `provenanceroutes` left
@@ -825,7 +870,8 @@ import * as strengthChecks from "../../../src/strength/checks.mjs";
 import * as intentChecks from "../../../src/intent/checks.mjs";
 import * as standardsChecks from "../../../src/standards/checks.mjs";
 import * as filingsChecks from "../../../src/filings/checks.mjs";
-import * as caseAuthoringChecks from "../../../src/case-authoring/checks.mjs";
+/* T47 (N908 §5): STATEMENT_ACK_NO_REASON's row moved with `statementack` to case-inputs (its checks, K3116). */
+import * as caseInputsChecks from "../../../src/case-inputs/checks.mjs";
 import * as reevaluationChecks from "../../../src/reevaluation/checks.mjs";
 import * as consequencesChecks from "../../../src/consequences/checks.mjs";
 /* NO_BASIS is a shared act row, held by record-grammar (C-33.40), which progressions and entities answer with. */
@@ -838,7 +884,7 @@ test("R19: the justification family holds DEC-88's and T22's codes, each a row i
     SET_ASIDE_NO_REASON: captureChecks, FREQUENCY_NO_REASON: monitoringChecks, BIAS_ADOPTION_NO_REASON: biasChecks,
     ATTRIBUTION_NO_REASON: caseTensionsChecks, BAR_NO_REASON: strengthChecks, PURSUIT_UNSTATED: intentChecks,
     NO_NOTE: intentChecks, INTENT_NO_REASON: intentChecks, STANDARD_NO_REASON: standardsChecks,
-    PACKET_NO_REASON: filingsChecks, STATEMENT_ACK_NO_REASON: caseAuthoringChecks,
+    PACKET_NO_REASON: filingsChecks, STATEMENT_ACK_NO_REASON: caseInputsChecks,
     VERSION_ADOPT_NO_REASON: reevaluationChecks, NO_RATIONALE: consequencesChecks,
   };
   const rowIn = (mod, code) => Object.values(mod).some((t) => t && typeof t === "object" && Object.hasOwn(t, code));
