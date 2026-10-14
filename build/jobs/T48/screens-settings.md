@@ -50,3 +50,5 @@ Size (session_016pGtSfZzasM34bygFE6WEP): test runs 24, module lines 2305
 ## J3 · COMPLETE
 
 COMPLETE: R25–R33, T48-87 and B2 applied; 108 tests pass; format, architecture, coverage (this module), ownership 0 failures. Details in the record.
+
+**Completion after B5 (K3303):** `tranche/T48` merged (interface-shell, R56 enforced). `cs-list` re-spelled `mk-list`; `cs-actrow` dropped. Module tests 108 pass, 0 fail. format, architecture, ownership, this module's coverage: 0 failures. Red that stays and is not mine: coverage failures of screens-inquiry, screens-intake, screens-investigate and screens-publish (ids named by no test). My R28 test lists the classes the shell itself draws (`cs-panel`, `cs-r`, `cs-rows`, `cs-crumbs`, `cs-pickc`) as the shell's.
