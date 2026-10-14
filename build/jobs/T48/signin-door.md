@@ -15,3 +15,7 @@
 **Ran:** `node --test bio-plane/test/m/signin-door/`: 15 pass, 0 fail. format 0 failures; architecture (signin-door) 4 product files, 0 failures; coverage (signin-door) 5 of 5 live ids named; ownership 1 module's files changed, 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0, coverage 22 failures in other modules only.
 
 Size (session_01LjaUgcDfFDSvmRLinTonZ5): test runs 1, module lines 275+61
+
+## J1 · COMPLETE
+
+T48-67 applied: citations of credentials re-pointed to ai-accounts (R7, R18, R19, R23, R27) in signin-door's comments and test titles; wording only. Module tests 15/15; format, architecture, coverage, ownership 0 failures; run.mjs coverage reds are other modules' (inherited). Deferred: modules.json edge signin-door -> ai-accounts (BOB's; code does not import it yet). Record: build/jobs/T48/signin-door.md.
