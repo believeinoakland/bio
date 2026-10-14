@@ -187,7 +187,12 @@ export async function frame(m, req) {
       catch { return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 }); }
     }
   }
-  try { return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() }); }
+  try {
+    const answer = await instanceSetupOps(m, url, body)[op]();
+    /* store-door R13 (K2157): a byte answer (R86's `grouplogo`) is a Response, returned as its owner made it */
+    if (answer instanceof Response) return answer;
+    return Response.json({ ok: true, result: answer });
+  }
   catch {
     return Response.json({ ok: false, error: "internal error", reason: "STORE_INTERNAL_ERROR", code: "STORE_INTERNAL_ERROR",
                            correlation: webcrypto.randomUUID() }, { status: 500 });

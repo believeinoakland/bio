@@ -122,19 +122,25 @@ test("R80 op=bootstrap answers test_instance true exactly when ai-runs.testInsta
                      { INSTANCE_NAME: 7, CIVICSMITH_TEST_INSTANCE: 7 }])
     assert.equal((await bootBody(env)).test_instance, false, JSON.stringify(env));
   /* a store answer carrying the key does not set it: the fact is the deployment's alone */
-  const lying = { async fetch() { return Response.json({ ok: true, result: { test_instance: true, parts: "x" } }); } };
+  const lying = { async fetch() { return Response.json({ ok: true, result: { test_instance: true, parts: "x", part_signin: true } }); } };
   const b = (await read(await bootstrapReport({ INSTANCE_NAME: "biosmoke7" }, "fp", { stub: lying, ...io }))).body;
   assert.equal(b.test_instance, false);
-  assert.equal(Array.isArray(b.parts), true);
+  /* R82: nor do the parts: the retired nested key is never relayed, and the flat keys are the deployment's */
+  assert.deepEqual(["parts" in b, b.part_signin], [false, false]);
   /* it names no value of the variable */
   const t = JSON.stringify(await bootBody({ INSTANCE_NAME: "biosmoke7", CIVICSMITH_TEST_INSTANCE: "biosmoke7" }));
   assert.equal(t.includes("CIVICSMITH_TEST_INSTANCE"), false);
 });
 
-const partsOf = async (env) => (await bootBody(env)).parts;
-const P = (signin, scan) => [{ part: "signin", present: signin }, { part: "scanner", present: scan }, { part: "safe_view", present: scan }];
+const PART_KEYS = ["part_signin", "part_scanner", "part_safe_view"];
+const partsOf = async (env, opts) => {
+  const b = await bootBody(env, opts);
+  assert.equal("parts" in b, false, "R82: no nested parts key");
+  return Object.fromEntries(PART_KEYS.map((k) => [k, b[k]]));
+};
+const P = (signin, scan) => ({ part_signin: signin, part_scanner: scan, part_safe_view: scan });
 
-test("R81 op=bootstrap answers parts [signin, scanner, safe_view] without members=1: a fleet with no agent-runner and no FILE_SCANNER answers all three false; signin follows R17's agent-runner answer, scanner and safe_view FILE_SCANNER's", async () => {
+test("R81 R82 op=bootstrap answers the parts as three flat scalar keys part_signin, part_scanner, part_safe_view, without members=1: a fleet with no agent-runner and no FILE_SCANNER answers all three false; part_signin follows R17's agent-runner answer, part_scanner and part_safe_view FILE_SCANNER's, always alike", async () => {
   assert.deepEqual(await partsOf({}), P(false, false));
   assert.deepEqual(await partsOf({ AGENT_WORKER: worker(false) }), P(false, false), "agent-worker without its runner: no sign-in");
   assert.deepEqual(await partsOf({ AGENT_WORKER: worker(true), FILE_SCANNER: scanner() }), P(true, true));
@@ -146,16 +152,15 @@ test("R81 op=bootstrap answers parts [signin, scanner, safe_view] without member
   assert.deepEqual(await partsOf({ AGENT_WORKER: member({ error: "x" }, 500), FILE_SCANNER: member({ name: "pdf-worker", version: "p" }) }), P(null, null));
   assert.deepEqual(await partsOf({ AGENT_WORKER: worker(undefined) }), P(null, false), "an agent-worker that says nothing of its runner");
   assert.deepEqual(await partsOf({ AGENT_WORKER: worker("yes") }), P(null, false));
-  /* each part names no reason beyond the part */
-  for (const p of await partsOf({ AGENT_WORKER: worker(true) })) assert.deepEqual(Object.keys(p).sort(), ["part", "present"]);
+  /* each part names no reason beyond the part: a scalar, never a nested value */
+  for (const v of Object.values(await partsOf({ AGENT_WORKER: worker(true) }))) assert.ok([true, false, null].includes(v));
   /* asked once each, also with members=1 (the members' own answers are read for both) */
   const aw = worker(true), fs = scanner();
-  const b = await bootBody({ AGENT_WORKER: aw, FILE_SCANNER: fs }, { members: true });
-  assert.deepEqual(b.parts, P(true, true));
+  assert.deepEqual(await partsOf({ AGENT_WORKER: aw, FILE_SCANNER: fs }, { members: true }), P(true, true));
   assert.deepEqual([aw.calls, fs.calls], [1, 1]);
 });
 
-test("R81 a FILE_SCANNER that does not answer in time answers scanner: null and safe_view: null (control: one that answers is true)", { timeout: 20000 }, async () => {
+test("R81 R82 a FILE_SCANNER that does not answer in time answers part_scanner: null and part_safe_view: null (control: one that answers is true)", { timeout: 20000 }, async () => {
   const t0 = Date.now();
   assert.deepEqual(await partsOf({ AGENT_WORKER: worker(true), FILE_SCANNER: never() }), P(true, null));
   assert.ok(Date.now() - t0 < 10000, "bounded by R17's wait");
@@ -186,6 +191,18 @@ test("R17 (T46) memberVersions reads agent-runner from agent-worker's /version r
   assert.deepEqual(all["agent-worker"], { binding: "AGENT_WORKER", state: "SERVING", version: "aw-9" });
   assert.equal(aw.calls, 1);
   assert.equal(aw.url, "https://agent-worker/version");
+});
+
+test("R82 the pre-auth answer holds no nested object or array, and its key set is exactly membership R132's (control: with members=1 the credentialed memberVersions is the one nested addition)", async () => {
+  const R132_KEYS = ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "storeVersion", "version",
+    "test_instance", "part_signin", "part_scanner", "part_safe_view"];
+  for (const env of [{}, { AGENT_WORKER: worker(true), FILE_SCANNER: scanner() }, { AGENT_WORKER: member({}, 503) }]) {
+    const b = await bootBody(env);
+    assert.deepEqual(Object.keys(b).sort(), [...R132_KEYS].sort(), JSON.stringify(Object.keys(env)));
+    for (const [k, v] of Object.entries(b)) assert.ok(v === null || typeof v !== "object", `${k} is not nested`);
+  }
+  const withMembers = await bootBody({}, { members: true });
+  assert.deepEqual(Object.keys(withMembers).filter((k) => !R132_KEYS.includes(k)), ["memberVersions"]);
 });
 
 /* ---- R54: the disclosure before a sign-in ---- */

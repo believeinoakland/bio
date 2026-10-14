@@ -206,7 +206,7 @@ test("R30, R6: every op of R30 is served — by its owner's map (capture's for t
                     "subscriptiondisconnect"];
   for (const op of credsT35) assert.ok(keysOf(credentialsOps).includes(op) && Object.hasOwn(OPS, op), op);
   /* negative control */
-  assert.deepEqual([...keysOf(credentialsOps), "signoutall"].filter((op) => !Object.hasOwn(OPS, op) && credsT35.length)
+  assert.deepEqual([...keysOf(credentialsOps), "signoutall"].filter((op) => !Object.hasOwn(OPS, op))
     .filter((op) => !["aicredentiallook", "session", "securitycount"].includes(op)), ["signoutall"]);
 });
 

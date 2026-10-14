@@ -1,6 +1,6 @@
 # project-roster (T47)
 
-**Status** · session_01EqRQSrvFHgecXk4RLmgHTk · depth 2 · COMPLETE · handled B4
+**Status** · session_01M7P1Jnd6PBhjfkna7wgTS6 · depth 2 · COMPLETE · handled B6
 
 ## Completion (PROJECT-ROSTER #5)
 
@@ -84,3 +84,43 @@ Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 14, module lines 1248
 ## J6 · COMPLETE · re B4
 
 B4 (K3074) applied (code 17772d8278): merged tranche/T47; a project the founder opened (first manifest author 'admin') answers owner {member: "admin", handle: "admin"}; other arms as J5. Tests assert the founder arm (stub and real record-core), a founder's later entry opens nothing, member:admin as author is no opener. project-roster 50/50; format, architecture, coverage 27/27, ownership 0 failures; run.mjs coverage 46 none mine; plane bundle staled (5.4), workers PASS. Deferred: none. This supersedes J5.
+
+## J7 · QUESTION
+
+R28, my reading (proceeding on it; answer only if wrong).
+(1) `members`: every participant of the listed project as R1 lists them (`project_participants`, any state, joined to `members`, membership R120), `{member, handle}`, owners first then by handle. The viewer's sight is applied by R26 itself: a project is listed only at FULL, and at FULL R1 already shows that viewer every participant, so no member of a listed project is one the viewer may not see; a project not listed shows no one.
+(2) An "act" is one `manifest` entry (record-core R37: one per commit, R33), at its `created`. A project's acts are those on its own bundle and on every bundle whose `bundles.project` names it (record-core R34), each counted only when membership's `viewerPredicate` (R43) admits that bundle to the viewer: so an act on a hidden project recorded as belonging to a listed one is not counted for a viewer outside it. Membership's own acts (invitations, joins, visibility) are not record acts and are not counted.
+(3) `activity[7]` counts acts in (now − 7 days, now], `activity[6]` in (now − 14 d, now − 7 d], … `activity[0]` in (now − 56 d, now − 49 d]; acts after now or unreadable instants are not counted. "now" is the server's clock (a clock the host may configure, `Date.now()` by default), never a query parameter.
+(4) `lastChange`: the `created` of the newest counted-kind act (any age, instants compared as instants, ties by recorded order), as recorded; null when none.
+No new Uses edge: `manifest`, `bundles.project` (R37), `members`, `project_participants` (R120) and `viewerPredicate` are already named.
+
+## Completion (PROJECT-ROSTER #7, T47-93)
+
+**Reading set** (mechanics §17, 425 KB at START): read whole myself: `build/requirements/project-roster.md`; my entry T47-93 in `build/plan/current.md`; the public parts (Purpose, Provides) of `membership` and `record-core`; layer 2's row and its membership-split section in `build/layers.md`; every file of `bio-plane/src/project-roster/` (3) and every file of `bio-plane/test/m/project-roster/` (12 test files and `fixture.mjs`), not only what I changed (P20). For the gate I also read membership's `viewerPredicate`/`hiddenBundles` code. No snapshot-branch work named. My reading of R28 is J7 (QUESTION); BOB's B6 (K3144): (1)–(4) stand. `tranche/T47` was already merged at START (0245700fdb); no file I read changed since.
+
+**Entry applied** (T47-93).
+- **R28**: `projectList` / `op=projectlist` answers, beside R26's and R27's fields (unchanged, so every caller keeps working), each listed project's:
+  - `members`: every participant in any state, as R1 lists them to a viewer at FULL (`project_participants` joined to `members`, membership R120), `{member, handle}`, owners first then by handle; the founder as R27 names it. A project is listed only at FULL, where R1 already shows that viewer every participant, so no member shown is one the viewer may not see.
+  - `activity`: eight integers, oldest first; week k back (0 the newest) counts the `manifest` entries (record-core R37; one per commit) in (now − (k+1)·7d, now − k·7d] on the project's own bundle and on every bundle its `bundles.project` names (record-core R34), each counted only when membership's compiled `viewerPredicate` (R43) admits that bundle. Instants compared as instants (`julianday`), never as strings; an act after now or with an unreadable instant is in no week.
+  - `lastChange`: the newest such act's `created`, as recorded (ties to the later recorded), null when none.
+  - "now" is the server's instant: a host clock (`projectRosterOf(ctx, {clock})`, `Date.now()` by default; a clock that throws or reads as no number falls back to now), never a query parameter. No new Uses edge: `manifest`, `bundles.project`, `members`, `project_participants` and `viewerPredicate` were already named.
+
+**Fixed in my own module (P8).** R1 (`projectParticipants`) dropped a participant with no roster row, so a founder invited to a project (D54) was missing from "every participant": it now lists the founder by the handle `admin` (credentials R67, as R27 names it); every other row and the order unchanged. Test added to R1's battery (`roster.test.mjs`). No other flaw found.
+
+**Tests.** New `project-activity.test.mjs`, four tests naming R28: members equal R1's roster for every viewer of a battery (any state, revoked member, the founder, owners first, moving with ownership, removal and invitation), control: no member of a project the viewer may not see; activity's eight weeks at each edge (now, now − 7d, now − 56d + 1 ms in; now − 56d, after now, unreadable out), records of the project counted, instants compared as instants, ties, a later clock shifting every week, a query `now` ignored, the op answering the same; control: an act on a record the viewer may not see (a hidden project recorded as belonging to the listed one) moves neither activity nor lastChange while a viewer who sees it counts it, eight zeros for no act in eight weeks, writes nothing, never throws over a bad clock, the cap cuts with the projects; over the real record-core (commits as acts, R26/R27 fields unchanged). `project-list.test.mjs` R26's item-shape test now states the R28 keys (no assertion weakened). Fixture: a host clock (`w.time.now`). Mutation check: without the record-level gate 1 R28 test fails; with the weeks reversed 3 fail.
+
+**Ran.**
+- `node --test bio-plane/test/m/project-roster/`: tests 54, pass 54, fail 0. No layer tests named in the manifest.
+- Users (P11): no module's code or tests call `projectlist` yet (only the UX substrate's mocks and registry). For R1's fix, the suites that use this module (screens-inquiry, plane, affordances, membership, case-account, filings, publication, op-declarations, record-core, op-grades, control-plane, screens-daily, d526), on my branch and on the tranche base side by side: tests 1738, pass 1696, fail 41 on both, the identical 41 by name (inherited reds, rule 5); no new red.
+- Generated artifacts: `fleetbundles.test.mjs`: the plane bundle FAILs (rule 5.4; it bundles `src/project-roster/`, staled again); every worker bundle PASS; `newgroup-bundle-fresh.test.mjs` pass 1, fail 0.
+- Checks: `format` 0 failures (168 modules, 167 requirements files); `architecture project-roster` 15 files, 0 failures; `coverage project-roster` 28 of 28, 0 failures; `ownership project-roster tranche/T47` 6 files, 0 failures; `checks/run.mjs`: format 0, architecture 0 (3125 files), channels 0, coverage 25 failures, none of them this module's (other modules' not-yet-met ids, rule 5.1).
+
+**Deferred.** None.
+
+**Found in other modules.** None new. Generated artifact staled: the plane bundle (rule 5.4). screens-daily's R10 can draw `members`, `activity` and `lastChange` once this merges.
+
+Size (session_01M7P1Jnd6PBhjfkna7wgTS6): test runs 12, module lines 1327
+
+## J8 · COMPLETE
+
+T47-93 complete (code ee79352337, record 57cb5c1ebf). R28: projectlist answers each listed project's members (every participant in any state as R1 shows a viewer at FULL, {member, handle}, owners first then handle, the founder as admin), activity (eight weekly counts of manifest entries on the project and the records its bundles.project names, each through membership's viewerPredicate, week k back (now-(k+1)7d, now-k7d], oldest first, now the server's clock, never a query) and lastChange (newest such act's created, null when none); J7's reading, B6 (K3144). Additive: R26/R27 fields unchanged. Fixed in my module (P8): R1 now lists a founder participant (handle admin). New project-activity.test.mjs (4 tests naming R28, controls: an act on a record the viewer may not see moves neither field; eight zeros with no act in eight weeks). project-roster 54/54; users' suites identical to base (1738 tests, the same 41 inherited reds); format, architecture, coverage 28/28, ownership 0 failures; run.mjs coverage 25, none mine (rule 5.1). Plane bundle staled (5.4), worker bundles PASS. No new Uses edge. Deferred: none.

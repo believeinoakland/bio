@@ -91,10 +91,11 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 
 #### T47's L11 fold (K3100)
 
-- **R50** (N1003; DEC-201 (4), DEC-206 (4)) `GET /` asks only the permanent short name (R41's dialog) and the places (R21), with what is needed stated in one block (R23; doubt 7), then "Before Cloudflare": what will be allowed in plain words and R34's words; "Continue to Cloudflare" sends `POST /begin`. *(not yet met: T47)*
-- **R51** (DEC-201 (4)) The progress page draws one plain line per step as it starts and ends; a stop names the step, what to do, and "nothing was created" where R4 holds; the finished panel shows the checks, the one-time password and address once, the probe key behind "most groups never need it", and hands over to `<address>/app/setup#boot=<password>`. *(not yet met: T47)*
-- **R52** (DEC-201 (8)) `GET /update` draws the version before and after and "Continue to Cloudflare to update"; a stop says the group's Civicsmith keeps running as it was. *(not yet met: T47)*
-- **R53** (DEC-122 (3)) The pages use `interface-assets`' stylesheet and faces, carried in the installer's bundle; no other origin (R35). *(not yet met: T47)*
+- **R50** (N1003; DEC-201 (4), DEC-206 (4)) `GET /` asks only the permanent short name (R41's dialog) and the places (R21), with what is needed stated in one block (R23; doubt 7), then "Before Cloudflare": what will be allowed in plain words and R34's words; "Continue to Cloudflare" sends `POST /begin`.
+- **R51** (DEC-201 (4)) The progress page draws one plain line per step as it starts and ends; a stop names the step, what to do, and "nothing was created" where R4 holds; the finished panel shows the checks, the one-time password and address once, the probe key behind "most groups never need it", and hands over to `<address>/app/setup#boot=<password>`.
+- **R52** (DEC-201 (8)) `GET /update` draws the version before and after and "Continue to Cloudflare to update"; a stop says the group's Civicsmith keeps running as it was.
+- **R53** (DEC-122 (3)) The pages use `interface-assets`' stylesheet and faces, carried in the installer's bundle; no other origin (R35).
+- **R54** (T47; K3144; amends R1, R41) R1's 404 excepts `GET /app/assets/<name>` for exactly the names of `interface-assets`' `ASSET_FILES`, answered byte for byte with their type and an immutable cache header, nothing stored. R41's dialog: nothing sends `/begin` before the founder's confirming act in it; `/begin` is sent by R50's "Continue to Cloudflare". `GET /update` draws the release it installs; the version before and after is drawn on the progress page and the finished panel from R17's read. The finished panel draws no "Run the checks again".
 
 ## Private
 
@@ -103,7 +104,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - `interface-assets`: its stylesheet and faces, carried in the bundle (R53; K3100).
 - `signatures`: `verifySshsig`, `NS_RELEASE`, `NS_FLEET`, `fleetStatement` (R8, R11, R26).
 - `jurisdictions`: `list` (R21). *(declared)*
-- `instance-setup`: `GROUP_SLUG_RE` (R2), `FLEET_BINDINGS` (R12's binding names). *(not declared)*
+- `instance-setup`: `GROUP_SLUG_RE` (R2), `FLEET_BINDINGS` (R12's binding names), `HOSTING_CONTROL` (`hostingControlBlock`; R34, R50; K3144). *(not declared)*
 - `runtime-limits`: declared, but nothing calls it (Decided by BOB).
 
 ### Invariants
