@@ -73,3 +73,11 @@ Also, registry acts this module does not draw (no requirement here names them): 
 - `checks/format`: 0 failures (my module); `architecture screens-inquiry`: 16 product files, 35 relative imports, 0 failures; `coverage screens-inquiry`: 44 of 44 live ids named; `ownership screens-inquiry tranche/T49`: 0 failures; `checks/run.mjs`: architecture 0 failures; no failure names my module (others' unmet ids and `site`'s paths, inherited).
 
 Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 24, module lines 2186
+
+## J6 · COMPLETE
+
+CHANGE B9 processed (K3379): merged `origin/tranche/T49` (op-declarations, control-plane, plane, site; DEC-262 words). `project` and `projectai` ask `projectdirectory` only for a member `whoami` names who is not the founder (`admin`) and only once `whoami` has answered; the founder's page sends none and draws no failure for it. Test (project.test.mjs, R1, K3379): the founder's page sends no `projectdirectory`; control: a member's sends one.
+
+`node --test test/m/screens-inquiry/` with `test/m/control-plane/t46-app.test.mjs`, with the local registry loader (B6): 117 pass, 0 fail. Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures. Everything else in J5 stands.
+
+Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 27, module lines 2194
