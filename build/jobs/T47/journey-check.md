@@ -36,3 +36,7 @@ B5 applied: tranche/T47 merged (0186d4ad1e), steps fitted to the merged screens,
 3. A look, not a failure: in the working frame the test-instance band (interface-shell R36) is drawn as a narrow block above the rail rather than across the frame (see any working screenshot); for interface-shell or UX-DESIGN if worth it.
 
 Walker readings (mine, P17 details, stated for the record): the member's sign-in "next morning" is on a second device (a phone-width browser), as journey 28 says, so the lock and unlock are walked there; the sweep opens each screen at its bare address and expects only R35's absence answers. journey-check tests: 15 pass, 1 fail (R1 (a) end to end on the tranche). Waiting for your CHANGE after control-plane.
+
+## J5 · REPORT
+
+B6 applied: tranche/T47 merged (435fb2ed7c); the local walk on the tranche runs journey 28 green through 17 steps (install, hand-over into /app/setup, claim, ten codes, the group's name, Home, invitation, join, her codes, the welcome, expertise, 'What happened?') and is red at one step only: 'capture: her first testimony' (finding 1, screens-intake: testify answers bundle_id, the confirmation reads id/bundleId, so nothing says it was recorded). It stops there, so journey 3 and the sweep do not run on the tranche yet; in the scratch preview they were green but for finding 2 (screens-publish, four bare-address screens). Nothing red is journey-check's own. I re-run on your next CHANGE.
