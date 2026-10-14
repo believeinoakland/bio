@@ -47,3 +47,7 @@ T49-14 done: R60 (step_source its own group), R61 (ACT_HELP regenerated at f4985
 **B3.** Tranche merged in; real setup-words. `node --test bio-plane/test/m/affordances/`: 262 tests, 262 pass. format 0 failures; architecture 0 failures; coverage 46 of 46.
 
 Size (session_01Sg9Baej6PovaKSxFXZivNf): test runs 10, module lines 2,614
+
+## J3 · COMPLETE
+
+B2 and B3 applied: rung_correction_key published (old rung_correction_path removed), tests re-run against the real setup-words, 262/262, checks 0 failures. NOTE: op-grades has not merged; at its merge affordances needs IRREVERSIBLE_CORRECTION_KEY from it or the module fails to load. Details in my record.
