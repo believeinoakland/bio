@@ -41,3 +41,17 @@ T48-72 applied: R14–R23 met, on BOB's B2 (all four J1 readings) and B3 (`tranc
 - `format`: 0 failures. `architecture … screens-daily`: 0 failures. `coverage … screens-daily`: 23 of 23 live ids named; 0 failures. `ownership … tranche/T48`: 19 files; 0 failures. `checks/run.mjs`: architecture 0 failures; coverage reds are other modules' only.
 
 Size (session_01FKF8W1LZTJpRsMsyXEBorV): test runs 24, module lines 1802
+
+## J3 · COMPLETE
+
+B4 applied: `tranche/T48` merged (interface-shell in); no stand-in remains (the scratch copy was removed at J2). Nothing stays red.
+
+**What the merge changed for this module:** only my tests. The kit now draws the design's classes (`mk-strip`, `mk-people`, `mk-spark`), and "Start a project" carries its weight mark (interface-shell R11, R64). My R21 test now asks the shell's own `checkClasses` whether each drawn class is defined, rather than importing `interface-assets` (not one of my uses). It also asserts that `interfacePage(SCREENS)` composes under R56. The R23 "Your group" test is green with R60's `shell.group.unnamed`. No product file changed. One fix to my own tests: an `assert.equal` on two DOM nodes hung while formatting its failure message, so such checks now compare by `===` or `!`.
+
+**Tests and checks** (on `job/T48/screens-daily` @ `5a1f0a2772`):
+- `node --test bio-plane/test/m/screens-daily/`: 87 tests, 87 pass, 0 fail.
+- `format`: 0 failures. `architecture … screens-daily`: 0 failures. `coverage … screens-daily`: 23 of 23; 0 failures. `ownership … tranche/T48`: 19 files; 0 failures. `checks/run.mjs`: format, architecture and channels 0 failures; coverage reds are other modules' only.
+
+Still for BOB, unchanged from J2: R20's `imported` takes a subject, so "Imported cases" opens "Nothing is here" until a list exists. DEC-218's other readings are T49 rows. A section's `data-tip` holds its words escaped twice: that is the kit's.
+
+Size (session_01FKF8W1LZTJpRsMsyXEBorV): test runs 31, module lines 1802
