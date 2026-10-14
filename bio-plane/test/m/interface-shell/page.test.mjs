@@ -3,6 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, NONCE_SLOT, SHELL_WORDS, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import { randomBytes } from "node:crypto";
 import { boot, ok, scriptOf } from "./harness.mjs";
 import { ALL, HOME, DOCUMENT } from "./screens.fixture.mjs";
@@ -85,7 +87,7 @@ test("R2 served as the door serves it, every script element carries the response
   assert.equal(interfacePage(ALL).split(NONCE_SLOT).length - 1, 1, "the slot is nowhere but in the script's nonce");
 });
 
-test("R21 interfacePage throws, naming the screen, for a screen whose id is not in SCREEN_REGISTRY, an act naming an op OPS does not hold, or an op neither the registry's for that screen nor a named re-point; a valid set and the three re-points pass", () => {
+test("R21 interfacePage throws, naming the screen, for a screen whose id is not in SCREEN_REGISTRY, an act naming an op OPS does not hold, or an op neither the registry's for that screen nor a named re-point; a valid set passes", () => {
   const bad = (s, re) => assert.throws(() => interfacePage([s]), re);
   bad({ ...HOME, id: "nowhere" }, /nowhere.*SCREEN_REGISTRY/);
   bad({ ...HOME, acts: [{ op: "notanop" }] }, /home.*notanop.*OPS/);
@@ -94,10 +96,34 @@ test("R21 interfacePage throws, naming the screen, for a screen whose id is not 
   assert.throws(() => interfacePage([HOME, HOME]), /home.*twice/);
   assert.ok(interfacePage(ALL).length > 1000);
   const r = (id, op) => ({ id, render: () => "", acts: [{ op }] });
-  assert.equal(checkScreens([r("capture", "captureupload"), r("connect", "subscriptionsignin"), r("answers", "ask")]), true);
-  assert.equal(checkScreens([r("connect", "subscriptiondisconnect")]), true);
   assert.throws(() => checkScreens([r("home", "captureupload")]), /home.*captureupload/);
   assert.equal(checkScreens([{ ...DOCUMENT }]), true);
+});
+
+test("R38 R21 admits only the registry's ops, infolevelset, and two re-points until the registry lists them (ratify on ceremony, unlock on front); R28's four re-points and R21's three T46 ones are retired: a screen naming an unlisted op throws at interfacePage", () => {
+  const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
+  const listed = (id, op) => SCREEN_REGISTRY.find((s) => s.id === id).acts.includes(op);
+  assert.equal(checkScreens([r("ceremony", "ratify")]), true);
+  assert.equal(checkScreens([r("account", "infolevelset"), r("home", "infolevelset")]), true);
+  assert.equal(checkScreens([r("front", "unlock", "login")]), true);
+  /* each T46 and T47 re-point stands only where the registry itself now lists it */
+  for (const [id, op] of [["capture", "captureupload"], ["connect", "subscriptionsignin"], ["connect", "subscriptiondisconnect"], ["answers", "ask"], ["capture", "monitorset"], ["project", "projectbarset"], ["project", "drawquestion"], ["calculation", "spotcheckvisit"]]) {
+    if (listed(id, op)) assert.equal(checkScreens([r(id, op)]), true, id + " " + op);
+    else assert.throws(() => checkScreens([r(id, op)]), new RegExp(id + ".*" + op), id + " " + op);
+  }
+  /* control: an op OPS holds, listed on no screen it names, throws naming both */
+  assert.throws(() => interfacePage([r("project", "strengthbarset")]), /project.*strengthbarset/);
+  assert.throws(() => interfacePage([r("home", "ratify")]), /home.*ratify/);
+  assert.throws(() => interfacePage([r("doorbell", "cite")]), /doorbell/);
+});
+
+test("R30 a screen of the public or published frame naming an act that is not a public op throws at interfacePage", () => {
+  const r = (id, op) => ({ id, render: () => "", acts: [{ op }] });
+  assert.equal(checkScreens([r("doorbell", "knock")]), true);
+  const pub = SCREEN_REGISTRY.find((s) => s.id === "published");
+  const member = pub.acts.find((op) => OPS[op] && OPS[op].classes !== null);
+  if (member) assert.throws(() => checkScreens([r("published", member)]), /published.*public/);
+  assert.equal(SCREEN_REGISTRY.find((s) => s.id === "doorbell").acts.includes("knock"), true);
 });
 
 test("R23 no place is named in the shell's behaviour or words: its words, paths and program name none", () => {
