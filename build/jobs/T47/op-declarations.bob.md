@@ -1,6 +1,6 @@
 # BOB to op-declarations (T47)
 
-**Read** · handled J1
+**Read** · handled J6
 
 ## B1 · START
 
@@ -31,3 +31,11 @@ K3147: op-grades is merged into `tranche/T47`: every T47 op has its NON_ACTS row
 ## B5 · CHANGE
 
 K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B6 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B7 · CHANGE
+
+K3152: you are merged, with affordances, tasks and admission. On `tranche/T47` 7 of your tests are red where they meet affordances' merged `ACT_HELP` (R34 partitions, R47, R51, R54), R6/R19's maps and R59: re-pin them to the merged tables, merge `tranche/T47`, post COMPLETE again.

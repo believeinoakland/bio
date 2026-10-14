@@ -50,10 +50,13 @@ const R8 = {
 const R9 = {
   cite: (f, t) => (t === "information" && f.current_state !== "retired")
     || (t === "project" && f.project_participant !== false) || t === "inquiry",
+  /* R55: on an information target, also a visible question's own leg, live to sever and severed to reinstate */
   sever: (f, t) => ((t === "information" || t === "inquiry") && n(f.cited_by_case?.confirmed) > 0)
+    || (t === "information" && n(f.legs_in?.live) > 0)
     || (t === "project" && n(f.cites_out?.confirmed) > 0 && f.project_participant !== false),
   reinstate: (f, t) => (((t === "information" && f.current_state !== "retired") || t === "inquiry")
       && n(f.cited_by_case?.severed) > 0)
+    || (t === "information" && f.current_state !== "retired" && n(f.legs_in?.severed) > 0)
     || (t === "project" && n(f.cites_out?.severed_reinstatable) > 0 && f.project_participant !== false),
   projectinvite: (f, t) => t === "project" && f.roster?.owner === true,
   projectremove: (f, t) => t === "project" && f.roster?.owner === true,
@@ -155,6 +158,9 @@ const DIMS = {
     .concat([{ cited_by_case: undefined }]),
   cites_out: COUNT.flatMap((c) => COUNT.map((r) => ({ cites_out: { confirmed: c, severed: 1, severed_reinstatable: r } })))
     .concat([{ cites_out: undefined }]),
+  /* R55: the questions holding a leg on an information target, by status */
+  legs_in: COUNT_OR_IDS.flatMap((l) => COUNT_OR_IDS.map((s) => ({ legs_in: { live: l, severed: s } })))
+    .concat([{ legs_in: undefined }]),
   project_participant: B.map((v) => ({ project_participant: v })),
   project_target_owner: B.map((v) => ({ project_target_owner: v })),
   roster: ROSTERS.map((roster) => ({ roster })),
@@ -179,8 +185,8 @@ const NAMES = {
   versionconsider: ["basis_version_states"], versionrevert: ["basis_version_states"],
   versioncurrent: ["basis_version_states"], withdrawconclusion: ["basis_version_states"],
   versionhide: ["basis_versions"],
-  cite: ["project_participant"], sever: ["cited_by_case", "cites_out", "project_participant"],
-  reinstate: ["cited_by_case", "cites_out", "project_participant"],
+  cite: ["project_participant"], sever: ["cited_by_case", "cites_out", "project_participant", "legs_in"],
+  reinstate: ["cited_by_case", "cites_out", "project_participant", "legs_in"],
   projectinvite: ["roster"], projectremove: ["roster"], projectowneradd: ["roster"], projectjoin: ["roster"],
   projectleave: ["roster"], projectownerremove: ["roster"], projectownerrescue: ["roster"],
   projectvisibilityset: ["project_target_owner"],
@@ -191,7 +197,7 @@ const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_
   edition_warranted_for_project: true, project_owner: true, basis_legs: 2,
   rested_on: { working: 0, frozen: 0, severed: 0 }, cites_in: { confirmed: 0, severed: 0 },
   cited_by_case: { confirmed: 1, severed: 1 }, cites_out: { confirmed: 1, severed: 1, severed_reinstatable: 1 },
-  project_participant: true, project_target_owner: true,
+  legs_in: { live: 1, severed: 1 }, project_participant: true, project_target_owner: true,
   roster: { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: true },
   basis_version_states: ["suggested", "considering", "accepted", "rejected"], basis_versions: 4, actor_is_machine: false,
   contradiction_inquiry: false, contradiction_sides_seen: true };
@@ -199,7 +205,7 @@ const RESTRICTIVE = { case_member: true, concludes_for_project: false, concluded
   edition_warranted_for_project: false, project_owner: false, basis_legs: 0,
   rested_on: { working: 3, frozen: 1, severed: 0 }, cites_in: { confirmed: 2, severed: 0 },
   cited_by_case: { confirmed: 0, severed: 0 }, cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
-  project_participant: false, project_target_owner: false,
+  legs_in: { live: 0, severed: 0 }, project_participant: false, project_target_owner: false,
   roster: { owner: false, state: null, owner_floor_clear: false, other_owner_committed: false, rescue_open: false },
   basis_version_states: [], basis_versions: 0, actor_is_machine: true, contradiction_inquiry: true,
   contradiction_sides_seen: false };
@@ -305,6 +311,7 @@ const NULL_AS = {
   concludes_for_project: false, concluded_for_project: false, edition_warranted_for_project: false,
   project_target_owner: false, actor_is_machine: false, contradiction_inquiry: false,
   contradiction_sides_seen: true /* N365: only a stated false narrows */,
+  legs_in: { live: 0, severed: 0 } /* R55: a null offers neither */,
 };
 test("R10: a null fact never narrows an act, and never widens one: null (or absent) answers exactly as the value "
    + "that neither narrows nor widens", () => {

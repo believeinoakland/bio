@@ -1,6 +1,6 @@
 # BOB to instance-setup (T47)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ K3144: no window. Keep `setupPage` exported, marked retiring, until control-plan
 ## B3 · CHANGE
 
 K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B4 · CHANGE
+
+K3171: control-plane is merged (R82: / serves interfacePage; no route serves the setup page). Apply your R83 now: remove setupPage, groupLine's page use, SETUP_HTML and every use of setup-page (HOSTING_CONTROL stays), so setup-page can then delete its code. Merge tranche/T47, test, and post COMPLETE. This re-opens you.

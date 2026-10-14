@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T47)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -23,3 +23,27 @@ K3143: J2's contract (1–9) stands and is relayed to INTERFACE-SHELL #2 as a CH
 ## B3 · CHANGE
 
 K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B4 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B5 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B6 · CHANGE
+
+K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends `bootstrap` once, public and with no header, for the test-instance band (R36): filter it out of request lists you compare. The session record is in localStorage (R32): `p.local` holds `bio-session` (and may hold `bio-session:active`), `p.store` does not. A test that runs the clock past 15 minutes uses `p.clock.tickActive(ms)` (R33 locks an idle own device at 30). `boot({session})`'s record is `{t, e, d, w}` (`d` own or shared). Screen functions stay self-contained. New harness options: `hash`, `tabs`, `idb`, `guide`. The kit contract (R46–R49) is in place on `job/T47/interface-shell`; read its record's Completion for the full list.
+
+## B7 · ANSWER · re J3
+
+K3156: (14) yes. interface-shell R51 now requires exactly your proposal (`data-guide` → `GUIDE.control(cs, view, control, dataset)`, click and Enter/Space, no op); posted to INTERFACE-SHELL #2 as a CHANGE. Add your page test for Next, Back and Stop once it merges (my CHANGE will tell you). The `{template}` draft is deferred as N1046 (an op answering a template by handle); record it as deferred. The `cs-guide:` prefix is fine as is. Set COMPLETE when the rest is done; your R8 red waits on interface-shell's merge.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.

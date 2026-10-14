@@ -27,6 +27,7 @@ import { projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { localFactsOps } from "../../../src/local-facts/index.mjs";
 import { caseAccountOps } from "../../../src/case-account/index.mjs";
 import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
+import { T47_SHARES } from "../../../src/op-declarations/t47.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_KINDS, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT, PLAN_RUN_SCOPE } = O;
@@ -270,8 +271,10 @@ test("R49, R5, R7, R51: t45.mjs is frozen data — each share names an owner who
   for (const f of T45.T45_FAMILIES) {
     assert.ok(Object.isFrozen(f) && Object.isFrozen(f.ops) && Object.isFrozen(f.actor), f.owner);
     assert.ok(!BASE.includes(f.owner), `${f.owner} has a family already`);
-    /* T46 (R50, R51): a family T45 gave an owner also holds that owner's T46 share (`t46.mjs`) */
-    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds), plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}) }), f.owner);
+    /* T46 (R50, R51): a family T45 gave an owner also holds that owner's T46 share (`t46.mjs`), and T47 (R55) its T47
+       share (`t47.mjs`: project-roster's `projectlist`) */
+    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds),
+      plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}), ...(T47_SHARES[f.owner]?.ops ?? {}) }), f.owner);
   }
   for (const k of ["owners", "publishgate"]) assert.ok(Object.isFrozen(OP_KINDS[k]), k);
   for (const op of ["infractiondraft", "bearingdraft"]) {
