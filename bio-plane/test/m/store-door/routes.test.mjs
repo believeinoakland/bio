@@ -304,7 +304,7 @@ test("R10 (K2238; control-plane R65; credentials R35, R43): the store-internal r
   assert.deepEqual(r.db.prepare("SELECT member_id FROM subscription_connections").all().map((x) => x.member_id), ["bea"]);
 });
 
-test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal route `reauthdue` answers `{due}` from `credentials.reauthDue({token})`, the token the `x-bio-session` header the door hands on as `session` — `due` credentials' own REAUTH_DUE refusal, as given, for a live session outside its re-ask window (a fresh sign-in, a window lapsed) and `false` inside it; a token naming no session (absent, unknown, signed out) answers `{due: false}`; asking reads the session as no activity and writes nothing (controls: the same session after `reauth` answers `false`; the header's token is read over one in the query)", async () => {
+test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal route `reauthdue` answers `{due}` from `credentials.reauthDue({token})`, the token the `x-bio-session` header the door hands on as `session` — `due` credentials' own REAUTH_DUE refusal, as given, for a live session outside its re-ask window (a fresh sign-in, a window lapsed) and null inside it, as `reauthDue` answers (admission R25 reads null as open); a token naming no session (absent, unknown, signed out) answers `{due: false}`; asking reads the session as no activity and writes nothing (controls: the same session after `reauth` answers null; the header's token is read over one in the query)", async () => {
   const { SESSION_HEADER } = D;
   const r = await record({ sealSecret: "store-door-test-seal-secret-00006" });
   const C = credentialsOf(r.ctx);
@@ -328,7 +328,8 @@ test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal r
   assert.deepEqual(sessions(), before, "asking writes nothing, not even the session's activity");
   /* control: the password given again opens the window, and the same session answers false */
   assert.equal((await C.reauth({ token: T, password: "founder-passphrase-1" })).ok, true);
-  assert.deepEqual(await ask(T), { due: false });
+  assert.deepEqual(await ask(T), { due: null });
+  assert.equal(C.reauthDue({ token: T }), null);
   /* the window lapsed: due again */
   r.db.prepare("UPDATE sessions SET reauth_until = ?").run(Date.now() - 1);
   assert.equal((await ask(T)).due.reason, "REAUTH_DUE");

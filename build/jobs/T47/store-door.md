@@ -60,3 +60,13 @@ Merged `tranche/T47` (d2d7a2222c: setup-words T47-52, instance-setup T47-75, aft
 ## J5 · COMPLETE
 
 B4 (K3149): tranche/T47 merged (d2d7a2222c, setup-words and instance-setup); store-door 47/47 (R10 over instance-setup's handlers included); format, architecture, coverage 15/15, ownership 0 failures. No module change needed.
+
+## B5 · CHANGE (K3152)
+
+Merged `tranche/T47` (1524778995: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster, affordances, tasks, op-declarations, admission).
+
+**R15 corrected against admission as merged.** Admission R25's reader (`admission/index.mjs` `reauthDuePresented`) takes `due: null` as the window open, credentials' `REAUTH_DUE` row as the refusal, and anything else, `false` included, as a silence, which refuses. My B2 reading answered `false` inside the window, so admission would have refused every re-ask act with its window open. Now `due` is `reauthDue`'s own answer, null or the row, and `{due: false}` is kept only for a token naming no session, as R15 says (admission's gate refuses that through its own session read before asking). The B2 "reading taken" note is withdrawn. The test asserts `{due: null}` inside the window and that it equals `reauthDue`'s answer.
+
+**Runs.** `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0. `test/m/admission/`: 46 pass, 2 fail (R12 `adminendorse`, R19 `groupkeyset`), the same 2 with and without this change. Admission's tests stub the store (`harness.mjs`), so they are not about store-door; reported. format, architecture (store-door), coverage (15 of 15), ownership: 0 failures.
+
+Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 21, module lines 153

@@ -422,14 +422,14 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
     subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q("by") }),
     /* R15 (T47; K3143; admission R25, credentials R71 (2)): store-internal (op-declarations R6), the admission gate's
-       question whether an act asking the password again may run: `due` is credentials' `REAUTH_DUE` refusal as
-       `reauthDue` answers it, for the gate to relay, or `false` while the window is open. The token is the session
-       header's, handed on as `session` (R9). A token naming no session answers `{due: false}`: the gate's own session
-       read refuses it. The session is read as no activity (`background`), so asking never keeps a session alive. */
+       question whether an act asking the password again may run: `due` is `reauthDue`'s own answer, its `REAUTH_DUE`
+       refusal for the gate to relay, or null while the window is open (admission R25 reads null as open). The token is
+       the session header's, handed on as `session` (R9). A token naming no session answers `{due: false}`: the gate's
+       own session read refuses it. The session is read as no activity (`background`), so asking never keeps one alive. */
     reauthdue: () => {
       const C = credentialsOf(ctx), token = q("session");
       if (!C.session(token, { background: true })) return { due: false };
-      return { due: C.reauthDue({ token }) ?? false };
+      return { due: C.reauthDue({ token }) };
     },
     /* R11 (K1685; agent-worker R54; T41: K2500): the ask's own calls, each its owner's, the member the stamped viewer:
        before any model call, the account that serves the ask and its limit (answers R30's `askAccount`, kind `ask`: its
