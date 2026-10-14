@@ -39,7 +39,7 @@ test("R10: each project's question count from projectquestions, paged to its end
   const one = await open("/app/projects", PLANE);
   await settle();
   assert.match(text(one, rows(one)[0]), /The Coliseum lease2 questions/);
-  assert.match(text(one, rows(one)[1]), /Sewer fund transfers0 questions/);
+  assert.doesNotMatch(text(one, rows(one)[1]), /\d+ questions?/, "R21: no count at zero");
   const failed = await open("/app/projects", { ...PLANE, projectquestions: refused("STORE_DID_NOT_ANSWER", null, 502) });
   await settle();
   assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 2, "a failed count is drawn failed, never as none");
@@ -108,4 +108,24 @@ test("R10: \"Start a project\" sends promote with the member's title as a new fo
   assert.match(body.files[0].text, /^---\nobject_type: project\nobjective: "Park bond oversight"\ncurrent_state: forming\n/);
   assert.equal(p.location.pathname, "/app/project/PROJ-77");
   assert.deepEqual(ops(await open("/app/projects", { ...PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) })), [], "drawn only to a session that may contribute");
+});
+
+test("R20 (DEC-228 (4)): projects offers \"Imported cases\", a reference opening imported", async () => {
+  const p = await open("/app/projects", PLANE);
+  const link = main(p).querySelectorAll("a.cs-ref").find((a) => a.getAttribute("href") === "/app/imported");
+  assert.ok(link);
+  assert.equal(link.textContent, "Another group's case");
+  await p.click(link);
+  assert.equal(p.location.pathname, "/app/imported");
+});
+
+test("R23: \"Start a project\" opens its title field on press, as the act's own words, never an always-open field; the definition is said once", async () => {
+  const p = await open("/app/projects", { ...PLANE, ...CREATOR });
+  const start = main(p).querySelector('details[data-start="project"]');
+  assert.equal(text(p, start.querySelector("summary")), "Start a project");
+  assert.equal(start.getAttribute("open"), null);
+  assert.ok(start.querySelector("#projects-title"));
+  assert.equal((text(p).match(/one problem the group wants to get to the bottom of/g) || []).length, 1, "the definition once");
+  const none = await open("/app/projects", { ...PLANE, ...CREATOR, projectlist: ok({ ok: true, projects: [] }) });
+  assert.equal((text(none).match(/one problem the group wants to get to the bottom of/g) || []).length, 1, "and once in the empty state");
 });

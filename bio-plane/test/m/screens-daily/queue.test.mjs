@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, ok, refused, text, ops, acts, button, press, beside, last, main } from "./page.mjs";
+import { ADMIN } from "../interface-shell/harness.mjs";
 
 const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
 const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -11,10 +12,10 @@ const ITEMS = [
   { id: "TSK-1", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), subject: { kind: "bundle", id: "INF-7" },
     summary: "Ana asked you to check a calculation", detail: "812 of 903 reports", due: day(-1),
     options: [{ id: "cite", label: "Cite" }], disposition: { available: false, instead: "taskresolve" } },
-  { id: "FINDING::source-modified::PROJ-2::x", class: "FINDING", kind: "source-modified", case: PROJ("PROJ-2", "The Coliseum lease"),
+  { id: "FINDING::tension::PROJ-2::x", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"),
     subject: { kind: "bundle", id: "INF-8" }, summary: "Two documents give different dates",
     hint: { matched: "Form 700 against votes", how: "the check matched names", false_alarm_rate: 0.12 },
-    options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "FINDING::source-modified::PROJ-2::x", projects: ["PROJ-2"] } },
+    options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "FINDING::tension::PROJ-2::x", projects: ["PROJ-2"] } },
   { id: "FINDING::newer::1", class: "FINDING", kind: "newer-capture-affects-reference", case: PROJ("PROJ-2", "The Coliseum lease"),
     subject: { kind: "capture", id: "abc123" }, summary: "A newer version", options: [],
     disposition: { available: true, scope: "notice", notice: "VN-5", acts: ["versionadopt", "versionkeep"] } },
@@ -38,13 +39,13 @@ test("R2: the queue is read with the member's chosen sort (time added, time due,
   for (const s of ["added", "due", "case", "kind"]) {
     const p = await open("/app/queue/" + s, PLANE);
     assert.deepEqual(mainQueue(p).at(-1).query, { op: "queue", sort: s });
-    assert.equal(main(p).querySelector("nav.mk-sorts b[aria-current]").textContent, { added: "time added", due: "time due", case: "case", kind: "kind" }[s]);
+    assert.equal(main(p).querySelector("nav.mk-sortrow b[aria-current]").textContent, { added: "time added", due: "time due", case: "case", kind: "kind" }[s]);
   }
   const d = await open("/app/queue", PLANE);
   assert.deepEqual(mainQueue(d).at(-1).query, { op: "queue" });
   const bogus = await open("/app/queue/bogus", PLANE);
   assert.deepEqual(mainQueue(bogus).at(-1).query, { op: "queue" });
-  const links = main(d).querySelectorAll("nav.mk-sorts a[data-nav]").map((a) => a.getAttribute("href"));
+  const links = main(d).querySelectorAll("nav.mk-sortrow a[data-nav]").map((a) => a.getAttribute("href"));
   assert.deepEqual(links, ["/app/queue/added", "/app/queue/due", "/app/queue/kind"]);
   // A sort is a route: following it keeps the browser's history and re-reads in that sort.
   await d.click(main(d).querySelector('a[href="/app/queue/due"]'));
@@ -110,7 +111,7 @@ test("R2: the three-kinds note is shown once per member on the device", async ()
 test("R3: an item's acts are its options and disposition's doors among the registered acts; any other option is \"Open\", a link to its subject's screen", async () => {
   const p = await open("/app/queue", PLANE);
   assert.deepEqual(opsOf(itemOf(p, "TSK-1")), ["taskresolve"]);
-  assert.deepEqual(opsOf(itemOf(p, "FINDING::source-modified::PROJ-2::x")), ["proposedispose", "queuemute"]);
+  assert.deepEqual(opsOf(itemOf(p, "FINDING::tension::PROJ-2::x")), ["proposedispose", "queuemute"]);
   assert.deepEqual(opsOf(itemOf(p, "FINDING::newer::1")), ["adoptversion", "keepversion", "queuemute"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::action-reminder::ACT-1::0::d")), ["reminderanswer"]);
   assert.deepEqual(opsOf(itemOf(p, "OBLIGATION::explore-ask::x")), ["exploreapprove"]);
@@ -132,10 +133,11 @@ test("R3: each act sends its op's body for the item it was drawn on; an act aski
   assert.deepEqual(last(p, "taskresolve").body, { id: "TSK-1" });
   const fwd = button(p, "taskforward");
   assert.equal(fwd, null, "forwarding is not this item's option");
+  // R18: "Mute a kind" mutes the item's kind for its nearest home case.
   await press(p, "queuemute", { nth: 1 });
-  assert.deepEqual(last(p, "queuemute").body, { item: "FINDING::newer::1" });
+  assert.deepEqual(last(p, "queuemute").body, { case: "PROJ-2", kinds: ["newer-capture-affects-reference"] });
   await press(p, "proposedispose", { reason: "Not relevant to us" });
-  assert.deepEqual(last(p, "proposedispose").body, { project: "PROJ-2", finding: "FINDING::source-modified::PROJ-2::x", to: "dismissed", reason: "Not relevant to us" });
+  assert.deepEqual(last(p, "proposedispose").body, { project: "PROJ-2", finding: "FINDING::tension::PROJ-2::x", to: "dismissed", reason: "Not relevant to us" });
   const snooze = button(p, "queuesnooze");
   const f = snooze.dataset.f;
   assert.equal(snooze.closest("details").querySelector("summary").textContent, "Snooze to a date");
@@ -246,4 +248,81 @@ test("R13: \"Drop the request\" sends actionmove to abandoned with the member's 
   const r = await open("/app/queue", { queue: ok({ items: [UNSENT] }), actionmove: refused("ACTION_NOT_FOUND", "No such action.") });
   const c = await press(r, "actionmove", { reason: "x" });
   assert.match(beside(r, c), /No such action|ACTION_NOT_FOUND/);
+});
+
+test("R18 (queue R19, R20): \"Mute a kind\" sends the case form {case, kinds}: the item's kind for its nearest home case; an item with no case offers the item mute", async () => {
+  const nested = { state: "determined", ungrouped: false, ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs", depth: 2 }, { id: "INQ-4", type: "inquiry", title: "Which streets?", depth: 1 }] };
+  const p = await open("/app/queue", { queue: ok({ items: [
+    { id: "FINDING::tension::1", class: "FINDING", kind: "tension", case: nested, summary: "Two dates", options: [], disposition: {} },
+    { id: "CONDITION::quiet::2", class: "CONDITION", kind: "project-quiet", case: { ungrouped: true, ancestors: [] }, summary: "Quiet", options: [], disposition: {} },
+  ] }), queuemute: ok({ ok: true }) });
+  await press(p, "queuemute");
+  assert.deepEqual(last(p, "queuemute").body, { case: "INQ-4", kinds: ["tension"] }, "the nearest home case, a question");
+  await press(p, "queuemute", { nth: 1 });
+  assert.deepEqual(last(p, "queuemute").body, { item: "CONDITION::quiet::2" }, "no case: the item");
+});
+
+test("R18: control: a to-do offers no mute (queue R31)", async () => {
+  const p = await open("/app/queue", { queue: ok({ items: [ITEMS[0]] }) });
+  assert.equal(button(p, "queuemute"), null);
+});
+
+const UPDATE = (security) => ({ id: "OBLIGATION::update-ready::0.84.0", class: "OBLIGATION", kind: "update-ready", assignee_role: "admin", case: { ungrouped: true, ancestors: [] },
+  detail: { version: "0.84.0", date: "2026-10-13", security }, options: [{ id: "updatelater" }], disposition: {} });
+
+test("R19 (DEC-226 (1)): the update to-do is drawn under its own section with its release and date, \"See what changes\" and Not now; the security mark when marked", async () => {
+  // An administrator's act (instance-setup R90): drawn to an administrator's session.
+  const p = await open("/app/queue", { queue: ok({ items: [UPDATE(true), ITEMS[0]] }), updatelater: ok({ ok: true }), whoami: ok({ ...ADMIN, capabilities: ["contribute"] }) });
+  const sec = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === "Your group's Civicsmith");
+  assert.ok(sec, "its section");
+  assert.match(sec.querySelector("h2").getAttribute("data-tip"), /To-dos about the running of your group/);
+  assert.match(text(p, sec), /Security fix.*An update is ready: release 0\.84\.0, 13 October 2026/);
+  assert.match(sec.querySelector(".mk-tag").getAttribute("data-tip"), /closes a weakness in Civicsmith itself/);
+  assert.equal(sec.querySelector('a[href="/app/updates"]').textContent, "See what changes");
+  assert.match(button(p, "updatelater").textContent, /^Not now/);
+  await press(p, "updatelater", { reason: "Later this week" });
+  assert.deepEqual(last(p, "updatelater").body.version, "0.84.0");
+  assert.ok(p.byOp("queue").length >= 2, "re-read: when one administrator acts, it leaves on the next read");
+  const plain = await open("/app/queue", { queue: ok({ items: [UPDATE(false)] }) });
+  assert.doesNotMatch(text(plain), /Security fix/);
+  assert.match(text(plain), /An update is ready: release 0\.84\.0/);
+});
+
+test("R19: on Home's \"Needs you\" the update is drawn as home.update.ready, with and without the security mark; control: a member who is not an administrator is answered no such item and none is drawn", async () => {
+  const mine = (security) => ({ ...UPDATE(security), assignee: "mai" });
+  const p = await open("/app", { queue: ok({ items: [mine(true)] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
+  assert.match(text(p), /Needs you.*An update to your group's Civicsmith is ready: release 0\.84\.0, with a security fix/);
+  const plain = await open("/app", { queue: ok({ items: [mine(false)] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
+  assert.match(text(plain), /ready: release 0\.84\.0See what changes/);
+  const none = await open("/app", { queue: ok({ items: [] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
+  assert.doesNotMatch(text(none), /An update/);
+  assert.doesNotMatch(text(await open("/app/queue", { queue: ok({ items: [] }) })), /Your group's Civicsmith\b(?! is)/, "no section with no item");
+});
+
+const SOURCE = (i, kind = "source-modified", title = `Doc ${i}`) => ({ id: `FINDING::${kind}::B-${i}`, class: "FINDING", kind, title,
+  summary: `B-${i} changed at its source (HTTP 404, a monitoring check)`, detail: "raw", subject: { kind: "bundle", id: `INF-${i}` },
+  case: { ungrouped: true, ancestors: [] }, options: [], disposition: { available: true, op: "proposedispose", finding: `FINDING::${kind}::B-${i}`, projects: ["PROJ-1"] } });
+
+test("R22: five source-modified items draw one item reading \"5 documents changed at their source\", with the keyed detail, opening the list of its documents, each a reference with its own options", async () => {
+  const p = await open("/app/queue", { queue: ok({ items: [1, 2, 3, 4].map((i) => SOURCE(i)).concat([SOURCE(5, "source-modified", null)]) }) });
+  const rows = main(p).querySelectorAll(".cs-row");
+  assert.equal(rows.length, 1, "one item");
+  assert.match(text(p, rows[0]), /^Noticed.*5 documents changed at their source/);
+  assert.match(text(p, rows[0]), /Your group's Civicsmith noticed this when it checked\. Open each one to see what changed; nothing has been decided\./);
+  assert.doesNotMatch(text(p), /B-\d|HTTP|404|monitoring/, "never the producer's English");
+  const list = rows[0].querySelector('details[data-sources="source-modified"]');
+  assert.ok(list);
+  assert.deepEqual(list.querySelectorAll("li").map((li) => li.querySelector(".cs-card, a.cs-ref").textContent), ["Doc 1", "Doc 2", "Doc 3", "Doc 4", "A document with no title"]);
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]').length, 5, "each document with its own options");
+  assert.equal(list.querySelectorAll('button[data-act="proposedispose"]')[4].dataset.finding, "FINDING::source-modified::B-5");
+});
+
+test("R22: control: a single item draws .one; source-removed is its own item; on Home the same items are one item too", async () => {
+  const p = await open("/app/queue", { queue: ok({ items: [SOURCE(1), SOURCE(2, "source-removed"), SOURCE(3, "source-removed")] }) });
+  assert.match(text(p), /A document changed at its source/);
+  assert.match(text(p), /2 documents are gone from their source/);
+  assert.equal(main(p).querySelectorAll(".cs-row").length, 2);
+  const h = await open("/app", { queue: ok({ items: [1, 2, 3, 4, 5].map((i) => SOURCE(i)) }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
+  assert.match(text(h), /Needs the group.*5 documents changed at their source/);
+  assert.equal(main(h).querySelectorAll("section .cs-row").length, 1);
 });
