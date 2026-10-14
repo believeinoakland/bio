@@ -2,8 +2,9 @@
  * harness, `harness.mjs`, and document stand-in, `dom.mjs`). Each fixture answers its screen's reads in their owners'
  * documented shapes (review, case-inputs, case-authoring, case-check, case-tensions, case-carriage, ratification,
  * publish-schedule, public-read, case-import, docket, doorbell); a test overrides any op. */
+import { webcrypto } from "node:crypto";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
-import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, MEMBER } from "../interface-shell/harness.mjs";
+import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
 export { SCREENS, SCREEN_WORDS, ok, refused, refusedIn, silent, pending, settle };
 
@@ -49,6 +50,7 @@ export function plane(o = {}) {
   return {
     whoami: ok({ ...MEMBER, member: "dev", handle: "dev", capabilities: ["contribute", "create_projects", "publish"] }),
     image: ok({ "bundle.md": projectMd }),
+    openoriginal: bytes("PNG", "image/png"),
     casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" }, created_by: "dev", updated_by: "dev" }] }),
     reviewcopy: ok(COPY()),
     casecheck: ok({ state: "held", case: C, edition: 2 }),
@@ -86,15 +88,23 @@ export function plane(o = {}) {
   };
 }
 
-/** A signer as the kit's `cs.signer` answers (interface-shell R47's shape), recording what it was asked. */
-export function signer({ decline = false } = {}) {
-  const asked = [];
-  return {
-    asked,
-    async sign(list) { asked.push(list.map((x) => ({ label: x.label, text: new TextDecoder().decode(x.bytes), namespace: x.namespace })));
-      return decline ? { ok: false, declined: true } : { ok: true, signatures: list.map((x, i) => "-----BEGIN SSH SIGNATURE-----SIG" + i) }; },
-    async register(o) { asked.push({ register: o }); return decline ? { ok: false, declined: true } : { ok: true, keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAIKEY" }; },
-  };
+/** An IndexedDB holding a signing key kept on this device (interface-shell R40's form), and its public wire key. */
+export async function keptKey() {
+  const pair = await webcrypto.subtle.generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+  const raw32 = new Uint8Array(await webcrypto.subtle.exportKey("raw", pair.publicKey));
+  const idb = new Map([["civicsmith-signer", new Map([["keys", new Map([["own", { priv: pair.privateKey, raw32: raw32.buffer.slice(0), label: "bio-ratify" }]])]])]]);
+  return idb;
+}
+/** Waits for the page's own work (WebCrypto, the kit's dialogs) until `f()` holds. */
+export async function until(p, f) { for (let i = 0; i < 400 && !f(); i++) await new Promise((r) => setTimeout(r, 10)); await p.settle(); }
+/** The kit's "What your key signs, exactly" dialog (interface-shell R41): its listed lines, then confirmed or declined. */
+export const signDialog = (p) => p.root().querySelector('[data-overlay="sign"]');
+export async function answerSign(p, yes = true, sent = null) {
+  await until(p, () => signDialog(p));
+  const lines = signDialog(p) ? signDialog(p).textContent : "";
+  await p.click(`[data-shell="${yes ? "dialog-yes" : "dialog-no"}"]`);
+  await until(p, () => (sent ? p.byOp(sent).length > 0 : !signDialog(p)));
+  return lines;
 }
 
 /** The served page at `path` with this module's screens, over the plane. */

@@ -37,10 +37,8 @@ const WORDS_FROM = {
   doorbell: [...SHARED, ...HEAD("doorbell"), ...ACTS("doorbell", ["knock"])],
   "review-outside": [...SHARED, ...HEAD("review-outside"), ...ACTS("review-outside", ["reviewcomment"])],
 };
-// The ceremony's words the docket's signing also draws (its refusal when the browser cannot sign).
-const BORROWED = { docket: ["screen.ceremony.sign.nosigner"] };
 const wordsOf = (id) => {
-  const own = SCREEN_WORDS.filter((r) => r[0].startsWith(`screen.${id}.`) || (BORROWED[id] || []).includes(r[0]));
+  const own = SCREEN_WORDS.filter((r) => r[0].startsWith(`screen.${id}.`));
   const ownKeys = new Set(own.map((r) => r[0]));
   return Object.freeze([...WORDS_FROM[id].filter((k) => !ownKeys.has(k)), ...own]);
 };

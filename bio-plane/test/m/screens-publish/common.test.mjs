@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { open, main, text, press, rawKeys, signer, tick, ok, refusedIn, silent, pending, SCREENS, SCREEN_WORDS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
+import { open, main, text, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, SCREENS, SCREEN_WORDS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const PAGES = {
@@ -64,11 +64,11 @@ test("R10 after an act the screen reads again what it changed and draws it; noth
 });
 
 test("R11 no secret is written to storage, an address or a later request: the grant's secret, the outside reader's, the signatures", async () => {
-  const sig = signer();
-  const p = await open(`/app/ceremony/${P}/${DR}`, { boot: { signer: sig } });
+  const p = await open(`/app/ceremony/${P}/${DR}`, { boot: { idb: await keptKey() } });
   tick(p, "ce-tie", "yes");
   await press(p, "publish", { reason: "r" });
   await press(p, "caseratify", { reason: "r" });
+  await answerSign(p, true, "caseratify");
   const sigReq = p.requests.find((r) => r.op === "caseratify");
   assert.ok(sigReq, "signed");
   for (const r of p.requests.filter((x) => x !== sigReq)) assert.ok(!JSON.stringify([r.url, r.body]).includes("SSH SIGNATURE"), `${r.op} carries no signature`);

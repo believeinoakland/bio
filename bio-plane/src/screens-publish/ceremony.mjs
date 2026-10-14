@@ -88,7 +88,6 @@ export const CEREMONY = Object.freeze({
     }) + '<div class="cs-actrow">' + cs.act("publishtensions") + "</div>"));
 
     // R4: the Photos step.
-    const drawn = typeof cs.areas === "function" && typeof cs.image === "function";
     out.push(cs.sec("screen.ceremony.photos", '<p>' + cs.w("screen.ceremony.photos.copy") + "</p><p>" + cs.w("screen.ceremony.photos.gate") + "</p>"
       + (photos.length ? photos.map(function (ph, i) {
         const sha = ph.sha || ph.capture || "";
@@ -108,12 +107,12 @@ export const CEREMONY = Object.freeze({
               }).join("");
           })
           // R4 (K3147, K3150): the member draws the areas on the photo itself (interface-shell R49's `cs.image`, `cs.areas`,
-          // the original read as `open-file` reads it); until the kit has them, each area is typed in the photo's pixels.
-          + (drawn ? cs.areas(cs.image("openoriginal", { capture: sha }, { alt: cs.w("screen.ceremony.photo.name", { n: String(i + 1) }) }),
-            { id: "ce-areas-" + i, areas: [], label: "screen.ceremony.areas.label" }) : "")
-          + '<fieldset class="cs-field"><legend>' + cs.w(drawn ? "screen.ceremony.areas.legend" : "screen.ceremony.area.legend") + "</legend>"
+          // the original read as `open-file` reads it), then names what they cover.
+          + cs.areas(cs.image("openoriginal", { capture: sha }, { alt: { key: "screen.ceremony.photo.name", fills: { n: String(i + 1) } } }),
+            { id: "ce-areas-" + i, areas: [], label: "screen.ceremony.areas.label" })
+          + '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.areas.legend") + "</legend>"
           + cs.choice("ce-kind-" + i, "screen.ceremony.area.kind", [["person", "screen.ceremony.area.person"], ["plate", "screen.ceremony.area.plate"], ["staff", "screen.ceremony.area.staff"]])
-          + (drawn ? "" : ["x", "y", "w", "h"].map(function (k) { return cs.field("ce-" + k + "-" + i, "screen.ceremony.area." + k, { type: "number" }); }).join(""))
+
           + cs.field("ce-staff-" + i, "screen.ceremony.area.reason", { area: true, help: "screen.ceremony.area.reason.help" }) + "</fieldset>"
           + '<div class="cs-actrow">' + cs.act("obscuremark", { data: { capture: sha, index: String(i) } })
           + cs.act("obscuremark", { label: "screen.ceremony.photo.nothing", data: { capture: sha, index: String(i), nothing: "1" } }) + "</div></div>";
@@ -126,8 +125,7 @@ export const CEREMONY = Object.freeze({
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
     // signing finishes (R15; DEC-181), the kit drawing a signed act there as what it does, never sent.
-    const now = cs.act("caseratify", { tone: "primary", icon: "signed" });
-    const phone = /data-phone-act/.test(now);
+    const phone = /data-phone-act/.test(cs.act("caseratify"));
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
       const zone = signStep && signStep.publish_at && (signStep.publish_at.zone || signStep.publish_at.time_zone) || "";
@@ -144,11 +142,9 @@ export const CEREMONY = Object.freeze({
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id }) + "</li>";
               }).join("") + "</ul></details><p>" + cs.w("screen.ceremony.signs.count", { n: String(list.length) }) + "</p>";
           })
-          // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`);
-          // until the kit has it, the two buttons side by side.
-          + '<div class="cs-actrow">' + (typeof cs.areas === "function"
-            ? cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]], { acts: { now: "caseratify", at: "publishat" } })
-            : now + cs.act("publishat", { icon: "signed" })) + "</div>"
+          // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
+          + '<div class="cs-actrow">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
+            { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
           + '<p class="muted">' + cs.w("screen.ceremony.device.next") + "</p>";
       }
       if (ui.nokey) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
@@ -208,18 +204,13 @@ export const CEREMONY = Object.freeze({
         const reason = String(cs.value("ce-staff-" + i) || "").trim();
         if (kind === "staff" && !reason) return { refuse: "screen.ceremony.area.reason.needed" };
         const named = function (rect) { const a = { rect: rect, kind: kind }; if (kind === "staff") a.reason = reason; return a; };
-        // interface-shell R49: the rectangles drawn on the photo, `[{left, top, width, height}]`, each named by the kind chosen.
-        if (typeof cs.areas === "function") {
-          const drawnAreas = cs.value("ce-areas-" + i);
-          const list = (Array.isArray(drawnAreas) ? drawnAreas : []).filter(function (r) { return r && r.width >= 1 && r.height >= 1; });
-          if (!list.length) return { refuse: "screen.ceremony.areas.needed" };
-          return { query: { capture: el.dataset.capture }, body: { areas: list.map(function (r) {
-            return named([Math.round(r.left), Math.round(r.top), Math.round(r.left + r.width), Math.round(r.top + r.height)]); }) } };
-        }
-        const n = function (k) { const v = Number(cs.value("ce-" + k + "-" + i)); return Number.isFinite(v) ? Math.round(v) : NaN; };
-        const x = n("x"), y = n("y"), w = n("w"), h = n("h");
-        if (![x, y, w, h].every(function (v) { return v >= 0; }) || w < 1 || h < 1) return { refuse: "screen.ceremony.area.needed" };
-        return { query: { capture: el.dataset.capture }, body: { areas: [named([x, y, x + w, y + h])] } };
+        // interface-shell R49: the rectangles drawn on the photo, `[{left, top, width, height}]` in its pixels, each named by
+        // the kind chosen, sent as case-carriage's `{rect: [x0, y0, x1, y1], kind, reason?}`.
+        const drawnAreas = cs.value("ce-areas-" + i);
+        const list = (Array.isArray(drawnAreas) ? drawnAreas : []).filter(function (r) { return r && r.width >= 1 && r.height >= 1; });
+        if (!list.length) return { refuse: "screen.ceremony.areas.needed" };
+        return { query: { capture: el.dataset.capture }, body: { areas: list.map(function (r) {
+          return named([Math.round(r.left), Math.round(r.top), Math.round(r.left + r.width), Math.round(r.top + r.height)]); }) } };
       },
       done: function (view) { view.parts.forget(view); },
     },
@@ -270,7 +261,6 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        if (!cs.signer || typeof cs.signer.sign !== "function") return { refuse: "screen.ceremony.sign.nosigner" };
         const signed = await cs.signer.sign(list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0],
@@ -303,7 +293,6 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        if (!cs.signer || typeof cs.signer.sign !== "function") return { refuse: "screen.ceremony.sign.nosigner" };
         const signed = await cs.signer.sign(list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0], at: at,
@@ -319,7 +308,6 @@ export const CEREMONY = Object.freeze({
       // R15: no signing key in this browser: one made on this device by the signer kit, kept only when the member ticks.
       op: "signerregisterown", label: "act.signerregisterown.label.ceremony",
       send: async function (view, el, cs) {
-        if (!cs.signer || typeof cs.signer.register !== "function") return { refuse: "screen.ceremony.sign.nosigner" };
         const tick = cs.value("ce-keep");
         const keep = Array.isArray(tick) ? tick.includes("keep") : tick === true;
         const k = await cs.signer.register({ keep: keep });

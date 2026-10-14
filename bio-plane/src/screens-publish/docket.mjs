@@ -81,7 +81,6 @@ export const DOCKET = Object.freeze({
           pr = P.value(await cs.call("docketprepare", { query: { case: caseId, entry: el.dataset.entry, kind: el.dataset.kind } }));
           if (!pr || pr.ok === false || typeof pr.statement !== "string") return { refuse: "screen.docket.prepare.failed" };
         }
-        if (!cs.signer || typeof cs.signer.sign !== "function") return { refuse: "screen.ceremony.sign.nosigner" };
         const signed = await cs.signer.sign([{ label: "docket " + caseId, bytes: P.bytes(pr.statement), namespace: "bio-docket" }]);
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== 1) return { refuse: "signing.ceremony.declined" };
         return { body: { digest: pr.digest, signature: signed.signatures[0], acknowledged: true } };

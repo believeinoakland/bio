@@ -3,7 +3,7 @@
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, fill, last, ok, refused, refusedIn, signer, choose, P, C, SHA, DIGEST } from "./fixtures.mjs";
+import { open, main, text, ops, press, fill, last, ok, refused, refusedIn, keptKey, answerSign, choose, P, C, SHA, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -76,28 +76,31 @@ test("R8 the docket's entries, each drafted or posted; \"File a docket entry\" w
 });
 
 test("R8 R16 \"Post it, signed\": docketStatement in NS_DOCKET through the signer kit, posted with its digest; declined, nothing is sent", async () => {
-  const s = signer();
-  const p = await open(`/app/docket/${P}/${C}`, { boot: { signer: s } });
+  const p = await open(`/app/docket/${P}/${C}`, { boot: { idb: await keptKey() } });
   await press(p, "docketpost", { reason: R });
-  assert.deepEqual(s.asked[0], [{ label: "docket " + C, text: `bio-docket ${C} 3 ${DIGEST}\n`, namespace: "bio-docket" }]);
-  carries(last(p, "docketpost").body, { digest: DIGEST, signature: "-----BEGIN SSH SIGNATURE-----SIG0", acknowledged: true });
-  const q = await open(`/app/docket/${P}/${C}`, { boot: { signer: signer({ decline: true }) } });
+  const lines = await answerSign(p, true, "docketpost");
+  assert.ok(lines.includes(`bio-docket ${C} 3 ${DIGEST}`), "the prepared statement is what the key signs");
+  carries(last(p, "docketpost").body, { digest: DIGEST, acknowledged: true });
+  assert.match(last(p, "docketpost").body.signature, /^-----BEGIN SSH SIGNATURE-----/);
+  const q = await open(`/app/docket/${P}/${C}`, { boot: { idb: await keptKey() } });
   await press(q, "docketpost", { reason: R });
+  await answerSign(q, false);
   assert.equal(q.byOp("docketpost").length, 0);
 });
 
 test("R16 a prepared statement past its hour is prepared again before it is signed (control: within it, it is not)", async () => {
   let prepared = 0;
   const expired = { docketprepare: () => { prepared += 1; return ok({ entry: "{}", digest: DIGEST, statement: `bio-docket ${C} ${2 + prepared} ${DIGEST}\n`, warning: "", expires: prepared === 1 ? "2000-01-01T00:00:00Z" : "2999-01-01T00:00:00Z" }); } };
-  const s = signer();
-  const p = await open(`/app/docket/${P}/${C}`, { boot: { signer: s }, plane: expired });
+  const p = await open(`/app/docket/${P}/${C}`, { boot: { idb: await keptKey() }, plane: expired });
   await press(p, "docketpost", { reason: R });
-  assert.equal(s.asked[0][0].text, `bio-docket ${C} 4 ${DIGEST}\n`, "the fresh statement is the one signed");
+  const lines = await answerSign(p, true, "docketpost");
+  assert.ok(lines.includes(`bio-docket ${C} 4 ${DIGEST}`), "the fresh statement is the one signed");
+  assert.ok(!lines.includes(`bio-docket ${C} 3 ${DIGEST}`), "not the stale one");
   const between = (q, n) => q.requests.slice(n, q.requests.indexOf(last(q, "docketpost"))).filter((r) => r.op === "docketprepare").length;
-  assert.equal(between(p, p.requests.indexOf(p.byOp("docketprepare")[0]) + 1), 1, "prepared again before the post");
-  const q = await open(`/app/docket/${P}/${C}`, { boot: { signer: signer() } });
+  const q = await open(`/app/docket/${P}/${C}`, { boot: { idb: await keptKey() } });
   const n = q.requests.length;
   await press(q, "docketpost", { reason: R });
+  await answerSign(q, true, "docketpost");
   assert.equal(between(q, n), 0, "within its hour, not prepared again");
 });
 
