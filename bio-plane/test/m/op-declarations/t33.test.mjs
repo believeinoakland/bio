@@ -130,6 +130,10 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* T46 (R50, R51): how much is explained, built by instance-setup's job beside this one (its R79); the member-run
      door, control-plane's route calling ai-runs' `dispatchMemberRun` in process (no arm in `aiRunsOps`, K2952) */
   infolevelset: "instance-setup (T46-50)", infolevel: "instance-setup (T46-50)",
+  /* T47 (R59): the group's logo and languages, built by instance-setup's job (its R84, R85), and the request to sign,
+     built by tasks' (its R19), each merging before this one in L11's order */
+  grouplogoset: "instance-setup (T47-75)", grouplanguagesset: "instance-setup (T47-75)",
+  grouplanguages: "instance-setup (T47-75)", signrequest: "tasks (T47-89)",
   airundispatch: "control-plane (T46-59)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
@@ -141,7 +145,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "wizard-scripts", "workbooks",
     /* T45 (R49): the owners T45 gives a family */
     "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",
-    "plan-work", "project-roster"].sort());
+    "plan-work", "project-roster",
+    /* T47 (R55, R59): the owners T47 gives a family */
+    "basis-versions", "signin-door"].sort());
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
     "sessionread", "sessionrunact",
@@ -221,8 +227,9 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     n++;
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.deepEqual(plain(OPS[op]), want[k][0], op);
-    /* K2038: the credit page and `recover`, public, carry a present null row (op-grades' NON_ACTS, its R22) */
-    if (["credit", "recover"].includes(op)) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
+    /* K2038: the credit page and `recover`, public, carry a present null row (op-grades' NON_ACTS, its R22); T47 (R57;
+       K3147) the reset link's use, as `recover` */
+    if (["credit", "recover", "passwordreset"].includes(op)) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
     else if (want[k][1] === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
     else {
       assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);

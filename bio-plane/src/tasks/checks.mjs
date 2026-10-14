@@ -213,6 +213,9 @@ export function checkInboxGrammar(ctx, findings) {
  * C-138 — "Ask for a check" (T34, N557; DEC-135, Bob's; R3, R13–R17). This module's own family (R17): each refusal the
  * five check acts answer, and the two R3 adds to the task acts, with its code, its row and the member's sentence (DEC-49).
  * `EXPERTISE_NO_LABEL` is membership's row (its R21, R106), answered as membership gives it, so it has none here.
+ * (T47; DEC-207 (8)) R19's "Ask an owner to sign" adds its two refusals of its own here, C-138.16 and C-138.17.
+ * `NO_SUCH_CASE_EDITION` has no row: it is publication's answer under that code too, and a row keyed by it would put
+ * this act's sentence on publication's answers wherever a door finds rows by code (N382's hazard).
  * --------------------------------------------------------------------------------------------------------------- */
 const checkRow = (n, fn, region, translation) => Object.freeze({ check: `C-138.${n}`, where: at(fn, region), translation });
 
@@ -256,4 +259,10 @@ export const CHECK_REQUEST_CHECKS = Object.freeze({
     + 'member its owner named. Nothing was changed. Anyone who can see the item may take it.'),
   CHECK_CLOSES_BY_RECORD: checkRow(15, "taskResolve", "is-check-closes-by-record",
     'You took this check, so this To do closes when you record the check or a concern. Nothing was changed.'),
+  MACHINE_CANNOT_ASK_SIGN: checkRow(16, "signRequest", "is-machine-sign",
+    'Asking the project\'s owners to sign is a person\'s act, and the credential that asked here is an automated one. '
+    + 'Nothing was written. Sign in as a member to ask.'),
+  SIGN_ALREADY_ASKED: checkRow(17, "signRequest", "is-sign-asked",
+    'The owners have already been asked to sign this edition, and it is in their queues. Nothing was written. The '
+    + 'answer shows who asked and when.'),
 });

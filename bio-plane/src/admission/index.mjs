@@ -34,10 +34,18 @@
    T41 (T41-59, was T40-18a; N797, K2394; DEC-188 (8)): `handlecheck` is a public op that addresses scratch (R3) and its
    `NO_SUCH_INVITATION` is counted as a refused key (R22); `groupswitchset`, retired to `accountusesset`
    (op-declarations R24, R41), is no longer among R19's session-only ops (no code here named it: R19 is read from the
-   op table). */
+   op table).
+
+   T47 (T47-77; K3043, K3084; credentials R63, R65, R66, R71): an `ai` credential minted for one segment of a run
+   writes only to that run (R23); a locked session is admitted only to `unlock`, `reauth` and `signout`, any other op
+   answered credentials' `SESSION_LOCKED` as given (R24); and an act op-declarations' `REAUTH_ACTS` names is admitted
+   only while the session's password re-ask window is open, else answered credentials' `REAUTH_DUE` as given (R25).
+   Both codes are credentials' rows, minted there once (K231): this module relays them and mints neither. */
 import { liveToken, sha256hex } from "../tokens.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../op-declarations/index.mjs";
+import * as OP_DECLARATIONS from "../op-declarations/index.mjs";
+import { Credentials } from "../credentials/index.mjs";
 import { ADMISSION_CHECKS, NAMESPACE_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS, GROUP_IDENTITY_FENCE_CHECKS } from "./checks.mjs";
 
 export const SCRATCH = "scratch";
@@ -289,8 +297,8 @@ const bioStore = (env) => env.STORE.get(env.STORE.idFromName("bio"));
 /* R6, R20 (K2038) — HOW A LOOKUP REACHES THE STORE: in a header, never the address. `x-bio-session` carries the token
    `session` resolves, `x-bio-credential-sha` the digest `aicredentiallook` resolves; `store-door` hands each to
    credentials' map (its R9), so nothing of the credential is in the address of the store's request. */
-const lookup = (env, route, header, value) =>
-  bioStore(env).fetch(new Request(`http://do/${route}`, { method: "GET", headers: { [header]: value } }));
+const lookup = (env, route, header, value, query = "") =>
+  bioStore(env).fetch(new Request(`http://do/${route}${query}`, { method: "GET", headers: { [header]: value } }));
 
 /* R6 (D-199 (2), D-463) — THE PRESENTED `ai` CREDENTIAL, RESOLVED ONCE PER REQUEST against `bio`'s credential rows,
    through `credentials.aiCredentialLook` (its R15) by the store's route `aicredentiallook`, by its SHA-256 (the value
@@ -310,9 +318,10 @@ export async function aiCredentialPresented(url, env, doAnswer, { credential = n
 
 /* R6 — A SIGNED-IN SESSION, RESOLVED THROUGH `credentials.session` (its R5, which owns sessions since T19, K637)
    against `bio` by the store's route `session`, the token in a header (R20). `{ sess }` (null for none) or
-   `{ silent }`. */
-async function sessionPresented(t, env, doAnswer) {
-  const out = await doAnswer(lookup(env, "session", "x-bio-session", t));
+   `{ silent }`. (T47; credentials R65, R71 (7)) `background`, the door's mark of a request the page makes on its own
+   timer, is passed on as `background=1`, so the read is no activity; it is not a credential and names none. */
+async function sessionPresented(t, env, doAnswer, background = false) {
+  const out = await doAnswer(lookup(env, "session", "x-bio-session", t, background === true ? "?background=1" : ""));
   if (!out.answered) return { silent: { op: "session", correlation: out.correlation } };
   return { sess: out.result?.session ?? null };
 }
@@ -351,8 +360,12 @@ export function aiReachesAsMember(spec, op) {
    op a member reaches (what it SEES is bounded by the viewer stamped from its principal), and a mutating op must also
    be among its declared writes. The floor is re-evaluated here on every call, with the gate's own code, because a row
    can outlive the rule that admitted it. THERE IS NO OP NAME IN THIS FUNCTION: the fence is a shape. `{ refusal }`
-   (built whole, `op` and `cls` included, so the admission passes it on unchanged: N411) or `{ ok, viewer }`. */
-export function aiTaskScope(cred, op, spec) {
+   (built whole, `op` and `cls` included, so the admission passes it on unchanged: N411) or `{ ok, viewer }`.
+   T47 (R23; K3043, credentials R63): a credential whose row carries a `run` (minted for one segment of a member's run)
+   writes only to that run: a mutating op is admitted only when the request names that run, and every place it names
+   one (`named`, the body's `run` and the query's) names the same; a write naming another run, or none, is refused
+   AI_BEYOND_TASK_SCOPE. Its reads are the floor above, as every agent's. */
+export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
   /* DEC-49 REGION is-ai-task-scope */
   if (cred.revoked)
     return { refusal: { status: 403, body: { ok: false, reason: "AI_CREDENTIAL_REVOKED", ...aiScopeRow("AI_CREDENTIAL_REVOKED"),
@@ -384,9 +397,34 @@ export function aiTaskScope(cred, op, spec) {
       + `authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding `
       + `it can ask for.`,
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
+
+  if (spec.mutating && boundRun(cred) !== null && !namesOnly(named, boundRun(cred)))
+    return { refusal: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", ...aiScopeRow("AI_BEYOND_TASK_SCOPE"),
+      detail: `credential '${String(cred.tokenId).slice(0, 60)}' was made for one run, and writes only to it. This `
+      + `request ${named.length ? "names another run" : "names no run"}, so nothing was written. A run's `
+      + `credential is made by the plane when the member starts that run, and ends with it.`,
+      op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai", run: boundRun(cred) } } };
   /* END DEC-49 REGION is-ai-task-scope */
 
   return { ok: true, viewer: cred.principal };
+}
+
+/* R23: the run a credential's row is bound to, or null for a credential bound to none. */
+const boundRun = (cred) => (cred && typeof cred.run === "string" && cred.run !== "" ? cred.run : null);
+/* R23: true exactly when at least one run is named and every one named is `run`. */
+const namesOnly = (named, run) => Array.isArray(named) && named.length > 0 && named.every((n) => n === run);
+/* R23: every run a request names, the body's `run` and the query's (a body's value that is not a string is named
+   as itself, so it never equals a run). Absent, null or empty names none. */
+export function runsNamed({ url = null, body = null } = {}) {
+  const out = [];
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : null;
+  if (b && Object.hasOwn(b, "run") && b.run !== null && b.run !== undefined && b.run !== "")
+    out.push(b.run);
+  try {
+    const q = url && url.searchParams ? url.searchParams.getAll("run") : [];
+    for (const v of q) if (v !== "") out.push(v);
+  } catch { /* an address that cannot be read names none */ }
+  return out;
 }
 
 /* R13 — THE DECLARATION, judged once when a member AUTHORS it, apart from the gate (PL-4: one predicate at two points
@@ -561,8 +599,17 @@ export function projectCreationGate(caps) {
      `{ cls, viaSession, member, viewer, identity, rights, caps, aiCred, storeName }` — the session's halves and
      capabilities only for a session (`caps` a Set), `aiCred` only for an agent, `storeName` the namespace it lands in.
    `tables`, as `sessionOpGate`'s. `credential` is the door's `presentedCredential` answer (R20), the one credential
-   judged here; absent, the URL's alone. */
-export async function admit({ url, env, op, spec, method, presented, doAnswer, tables = DECLARED, credential = null }) {
+   judged here; absent, the URL's alone.
+   T47 (R23–R25): `body` is the request's parsed JSON body, which the door already reads (R20), for the run a write
+   names (R23) and the argument that makes an act ask the password again (R25); `background` marks a request the page
+   makes on its own timer (the session read is then no activity, credentials R71 (7)); `reauthActs` is
+   op-declarations' `REAUTH_ACTS` (its R58), and a caller may hand in another of the same shape, as `tables`. In order,
+   after the session resolves: a locked session asking any op but `unlock`, `reauth` and `signout` is answered
+   credentials' `SESSION_LOCKED` (R24), before `export`'s refusal and the session gate; after the capability (R11), an
+   act `reauthActs` names with its argument is answered credentials' `REAUTH_DUE` unless the session's re-ask window is
+   open (R25), asked of the store as `reauthdue` with the token in a header, a silence when it does not answer. */
+export async function admit({ url, env, op, spec, method, presented, doAnswer, tables = DECLARED, credential = null,
+                              body = null, background = false, reauthActs = declaredReauthActs() }) {
   const t = credentialOf(credential, url).token;
   const bound = await bindingOf(t, env);
   let cls = bound === RETIRED ? null : bound;
@@ -584,10 +631,15 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
             + "agent credential a member creates for it." } } };
   if (!cls) {
     if (t && SESSION_TOKEN_SHAPE.test(t)) {
-      const looked = await sessionPresented(t, env, doAnswer);
+      const looked = await sessionPresented(t, env, doAnswer, background);
       if (looked.silent) return { silent: looked.silent };
       if (looked.sess) {
         const kind = looked.sess.role === "admin" ? "admin" : "member";
+        /* R24 (K3084; credentials R65, R71 (1)): a locked session serves only its unlocking and its signing out; any
+           other op, a read included, is answered credentials' refusal as it gives it. 401: the session authenticates
+           nobody for it until it is unlocked. */
+        if (looked.sess.locked === true && !LOCKED_SESSION_OPS.includes(op))
+          return { refusal: { status: 401, body: Credentials.sessionLockedRefusal() } };
         /* Section 8.1, before the session gate so the answer states the actual rule: the root of trust is the token in
            the hosting account, and a session (the founder's own browser included) is not it. */
         if (op === "export")
@@ -612,7 +664,7 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
   /* PL-11 / D-199 (1): CLASS PLUS SCOPE, and for the `ai` class the scope is the whole of it (no row names `ai`). Its
      refusal is built whole inside `aiTaskScope`'s own region and passed on as it is (N411). */
   if (cls === "ai") {
-    const scoped = aiTaskScope(aiCred, op, spec);
+    const scoped = aiTaskScope(aiCred, op, spec, { named: runsNamed({ url, body }) });
     if (scoped.refusal) return { refusal: scoped.refusal };
   } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {
     /* REC-159: a row carrying `machineClasses` judges a caller that did NOT arrive by a session against THAT list. */
@@ -628,6 +680,12 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
       return { refusal: notCapable(op, needs, caps,
         `this account does not hold the ${needs} capability. Capabilities are set by an `
         + `administrator, so ask one to grant it rather than looking for another route.`) };
+    /* R25 (K3084; credentials R66, R71 (2); op-declarations R58): the password asked again */
+    if (reauthAsked(reauthActs, op, { url, body })) {
+      const due = await reauthDuePresented(t, env, doAnswer);
+      if (due.silent) return { silent: due.silent };
+      if (due.refusal) return { refusal: { status: 403, body: due.refusal } };
+    }
   }
   const scope = scopeFor(cls, url);
   if (scope.error) return { refusal: { status: 403, body: { ok: false, reason: "SCOPE_REFUSED", ...admissionRow("SCOPE_REFUSED"),
@@ -636,6 +694,54 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
 
   return { caller: { cls, viaSession, member: halves.member, viewer: halves.viewer, identity: halves.identity,
                      rights: sess, caps, aiCred, storeName: scope.name } };
+}
+
+/* R24 — THE OPS A LOCKED SESSION IS ADMITTED TO: its unlocking with the password, the password asked again (which
+   also unlocks, credentials R71 (2)) and its signing out. */
+export const LOCKED_SESSION_OPS = Object.freeze(["unlock", "reauth", "signout"]);
+
+/* R25 — WHICH ACTS ASK THE PASSWORD AGAIN: op-declarations' `REAUTH_ACTS` (its R58, R62, R63; K3143), read live from
+   its module (a namespace import, so this module loads whether or not the table is declared yet), an empty table
+   while it declares none. An entry is `op → null` (every call of the op asks) or `op → { field, values }` (the body's
+   `field`, else the query's, being one of `values`; `values: null` the field given at all, any value). */
+function declaredReauthActs() {
+  const t = OP_DECLARATIONS.REAUTH_ACTS;
+  return t && typeof t === "object" ? t : {};
+}
+function argumentOf({ url, body }, field) {
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : null;
+  if (b && Object.hasOwn(b, field) && b[field] !== null && b[field] !== undefined && b[field] !== "") return b[field];
+  try {
+    const q = url && url.searchParams ? url.searchParams.get(field) : null;
+    return q !== null && q !== "" ? q : undefined;
+  } catch { return undefined; }
+}
+/* R25: true exactly when `acts` names `op` with the request's argument. Never throws: an entry of any other shape asks
+   the password (the weighty reading). */
+export function reauthAsked(acts, op, { url = null, body = null } = {}) {
+  if (!acts || typeof acts !== "object" || typeof op !== "string" || !Object.hasOwn(acts, op)) return false;
+  const e = acts[op];
+  try {
+    if (e && typeof e === "object" && typeof e.field === "string") {
+      const v = argumentOf({ url, body }, e.field);
+      if (v === undefined) return false;
+      return !Array.isArray(e.values) || e.values.map(String).includes(String(v));
+    }
+  } catch { return true; }
+  return true;
+}
+/* R25: credentials' `reauthDue({token})` (its R71 (2)), asked of `bio`'s store by the internal route `reauthdue`, the
+   session's token in the `x-bio-session` header and nothing in the address (R20). `{ refusal }` (credentials' row as
+   it gives it), `{}` while the window is open, or `{ silent }` when the store does not answer or answers in no form
+   credentials gives (REC-52: never taken as the window open). */
+async function reauthDuePresented(t, env, doAnswer) {
+  const out = await doAnswer(lookup(env, "reauthdue", "x-bio-session", t));
+  if (!out.answered || !out.result || typeof out.result !== "object" || !Object.hasOwn(out.result, "due"))
+    return { silent: { op: "reauthdue", correlation: out.correlation } };
+  const due = out.result.due;
+  if (due === null) return {};
+  if (due && typeof due === "object" && due.ok === false && due.code === "REAUTH_DUE") return { refusal: due };
+  return { silent: { op: "reauthdue", correlation: out.correlation } };
 }
 
 /* R12 (D-136 applying D-421; REC-164) — THE BEARER FENCES. A bearer (any caller not arriving by a session) asking for a
@@ -694,7 +800,7 @@ export function callerViewer(caller, { carry = true } = {}) {
    would carry through the gate. The only non-answer is a store silence, `{ silent }`. `presented` is the front door's
    `aiCredentialPresented` answer's `cred` (one lookup, one row); `undefined` asks the store here. `credential`, as
    `admit`'s (R20). */
-export async function readerOf(url, env, storeName, presented, doAnswer, credential = null) {
+export async function readerOf(url, env, storeName, presented, doAnswer, credential = null, { background = false } = {}) {
   const c = credentialOf(credential, url);
   const t = c.token;
   if (!t) return { viewer: "" };
@@ -718,9 +824,10 @@ export async function readerOf(url, env, storeName, presented, doAnswer, credent
     return { viewer: scoped && !scoped.refusal ? scoped.viewer : "", cls: "ai" };
   }
   if (SESSION_TOKEN_SHAPE.test(t)) {
-    const looked = await sessionPresented(t, env, doAnswer);
+    const looked = await sessionPresented(t, env, doAnswer, background);
     if (looked.silent) return { silent: looked.silent };
-    if (!looked.sess) return { viewer: "" };
+    /* R24 (T47): a locked session reads nothing until it is unlocked, so it is no one here */
+    if (!looked.sess || looked.sess.locked === true) return { viewer: "" };
     return { viewer: resolveSession(looked.sess).viewer, cls: looked.sess.role === "admin" ? "admin" : "member" };
   }
   return { viewer: "" };

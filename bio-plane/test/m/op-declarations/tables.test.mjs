@@ -34,13 +34,15 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
     /* No spec names `ai`, anywhere in it: an agent credential is admitted by its task scope alone. */
     assert.ok(!JSON.stringify(s).includes('"ai"'), `${op} names ai`);
   }
-  /* The public surface is exactly the ops that gate themselves. */
+  /* The public surface is exactly the ops that gate themselves. T47 (R57, R59): the reset link's look and use
+     (credentials R69, R71) and the group's languages (instance-setup R85) join it, and the published cases' list (R63). */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
     ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "credit", "docketfeed",
      "docketpublic", "enroll", "groupdescription",
-     "groupidentity", "groupkeyspublic", "handlecheck",
-     "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
-     "publishedcase", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
+     "groupidentity", "groupkeyspublic", "grouplanguages", "handlecheck",
+     "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "passwordreset",
+     "passwordresetlook", "publicread", "publishedbytes",
+     "publishedcase", "publishedlist", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
      "templatecomments", "templateread", "templatereview", "verify", "websiteinvite"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
@@ -433,7 +435,8 @@ test("R9, R4: the act lists name each of T22's ops, so its stamps are named — 
   assert.deepEqual(listsHolding("escalationstatus"), listsHolding("escalationsdue"));
   assert.deepEqual([...O.CAPTURE_VIEWER_ACTIONS], ["heldsetaside", "heldrestore"]);
   assert.deepEqual([...O.CAPTURE_READS], ["heldcaptures", "gradenote", "doorbelltally"]);
-  assert.deepEqual([...O.MONITORING_ACTIONS], ["addressfrequencyset"]);
+  /* T47 (R55; monitoring R74): `monitorset` joins monitoring's act list, `addressfrequencyset`'s stamps. */
+  assert.deepEqual([...O.MONITORING_ACTIONS], ["addressfrequencyset", "monitorset"]);
   /* Negative control: an op in no list is stamped nothing. */
   assert.deepEqual(stampsOf("nosuchop"), []);
 });
