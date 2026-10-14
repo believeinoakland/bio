@@ -31,7 +31,7 @@
 - `node checks/ownership.mjs … provenance tranche/T48`: 5 files; 0 failures.
 - `node checks/run.mjs`: format 0, architecture 0 (product-wide), channels 0. Coverage shows 46 failures, none of them provenance's: other modules' ids under rule 5 (1).
 
-Size (session_01PqqkBRacNLFApQsCjtWdyA): test runs 9, module lines 2868
+Size (session_01PqqkBRacNLFApQsCjtWdyA): test runs 9, module lines 2874
 
 ## J1 · COMPLETE
 
