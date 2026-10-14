@@ -27,3 +27,7 @@ K3144: 1. as read, and see R46's last sentence. 2. edge `interface-shell → sig
 ## B4 · CHANGE
 
 K3145: new R47 on `tranche/T47`: `cs.save`, `cs.copy`, `cs.signout` each answer their own bound control (`{label}`); `cs.signer.sign([{label, bytes, namespace}])` → `{ok: true, signatures}` or `{ok: false, declined: true}`, `cs.signer.register({keep})` → `{ok: true, keyB64}`, the key-file control inside `sign`; `REF_SCREENS` gains `person`, `proceeding`, `standard` with cards; `ADMIN_ACTS` gains `personexpunge`. Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3146: new R48 on `tranche/T47` (from JOURNEY-CHECK #1): the frame's root carries `data-screen="<id>"` of the registered screen drawn, none on the shell's own fallbacks; test with a control. Merge `tranche/T47`.
