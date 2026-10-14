@@ -13,16 +13,16 @@
   "date": 14,
   "queue": 68,
   "transcribe": 19,
-  "capture": 8,
-  "document": 45,
+  "capture": 11,
+  "document": 49,
   "question": 66,
   "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 52,
-  "project": 34,
+  "project": 41,
   "grouprule": 1,
-  "refusal": 178,
+  "refusal": 180,
   "signing": 17,
   "case": 15,
   "docket": 2,
@@ -81,12 +81,15 @@
   "translations": 1,
   "due": 2,
   "reading": 4,
+  "held": 5,
+  "monitor": 6,
+  "testimony": 2,
   "rail": 17,
   "tab": 2,
   "level": 2,
   "act": 731,
   "column": 33,
-  "total": 2538,
+  "total": 2567,
   "protected": 744
  },
  "words": [
@@ -8788,6 +8791,209 @@
    "protected": false,
    "source": "DEC-249",
    "note": "DEC-249: a wrong password resends nothing (R34)"
+  },
+  {
+   "key": "project.draw.head",
+   "en": "Draw on a question from elsewhere",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: screens-inquiry R11, R16"
+  },
+  {
+   "key": "project.draw.says",
+   "en": "A question another project opened, or one on its own, that this project should rest on too. It stays where it is; this project reads its answer and is told when it changes.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "project.draw.which",
+   "en": "Which question",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: cs.choice over the questions the member may see"
+  },
+  {
+   "key": "project.draw.choose",
+   "en": "Choose a question you can see…",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "project.draw.go",
+   "en": "Draw on it",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: drawquestion"
+  },
+  {
+   "key": "project.draw.already",
+   "en": "This project already draws on that question.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: alreadyCited"
+  },
+  {
+   "key": "project.open.drawfailed",
+   "en": "The question is open on its own page, but it couldn't be put in this project: {reason}",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: R11, the second step refused, beside \"Open a question\""
+  },
+  {
+   "key": "held.setaside.head",
+   "en": "Set aside",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: screens-intake R13"
+  },
+  {
+   "key": "held.setaside.says",
+   "en": "Captures a member set aside, with who did it, when and why. They stay here, never deleted, until someone restores one.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "held.setaside.meta",
+   "en": "Set aside by {who}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "held.restore",
+   "en": "Restore, with a reason",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: heldrestore"
+  },
+  {
+   "key": "held.restore_does",
+   "en": "Puts it back among the held captures, to vouch for or set aside again. Your reason is kept beside the first; nothing is lost either way.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "capture.captured",
+   "en": "Captured: {title}",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: screens-intake R14, R18; the watch acts join the act row only now"
+  },
+  {
+   "key": "capture.watch.freq",
+   "en": "How often to look",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: monitorset frequency, a MONITOR_FREQ word"
+  },
+  {
+   "key": "capture.watch.freq_says",
+   "en": "How often your group's Civicsmith fetches the address again to see whether it changed. At each meeting: after each meeting of the body that publishes it. A change is captured as a new version, and whoever cited the old one is told in their queue.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "monitor.freq.hourly",
+   "en": "Every hour",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: MONITOR_FREQ"
+  },
+  {
+   "key": "monitor.freq.daily",
+   "en": "Every day",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "monitor.freq.weekly",
+   "en": "Every week",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "monitor.freq.monthly",
+   "en": "Every month",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "monitor.freq.per_meeting",
+   "en": "At each meeting",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "monitor.freq.none",
+   "en": "Not watched",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "refusal.NO_LOCATOR",
+   "en": "This document has no address to watch: it came from a file, not from a page.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: R14"
+  },
+  {
+   "key": "refusal.NOT_MONITORED",
+   "en": "This address isn't being watched, so there is nothing to check yet. Watch it first.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: R14"
+  },
+  {
+   "key": "testimony.draft.label",
+   "en": "Draft · the assistant's, asked by {handle}",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: screens-intake R3, R10"
+  },
+  {
+   "key": "testimony.draft.says",
+   "en": "After “Help me write this”, the assistant's wording fills the field, marked as its draft. It words only what you wrote that you saw, and adds nothing; it is kept only when you record it.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: DEC-153 (2)"
+  },
+  {
+   "key": "document.backlinks.head",
+   "en": "What cites it",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: screens-inquiry R3, backlinks"
+  },
+  {
+   "key": "document.backlinks.says",
+   "en": "The questions and findings that rest on this document, so you know what a newer version or a correction would touch. Only what you may see is named.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250"
+  },
+  {
+   "key": "document.backlinks.row",
+   "en": "{project} · cites {where}, {how}",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: {how} as support, or cutting against"
+  },
+  {
+   "key": "document.backlinks.hidden",
+   "en": "Something you can't see cites it too: a project you aren't part of. Its name and what it says stay with its members.",
+   "protected": false,
+   "source": "DEC-250",
+   "note": "DEC-250: out_of_view (DEC-36, K903 (4))"
   },
   {
    "key": "rail.home.name",
