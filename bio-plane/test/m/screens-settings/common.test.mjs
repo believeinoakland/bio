@@ -1,10 +1,10 @@
-/* What holds across the four screens: R8 (after an act answers, the screen reads again what it changes and draws it;
+/* What holds across the screens: R8 (after an act answers, the screen reads again what it changes and draws it;
    nothing is drawn as done before the answer) and R10 (no key, code or password typed on these screens is written to
    the browser's storage, an address or a later request), driven over every act of every screen. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { all, day, has, lacks, open, panelOf, rowOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, accountTable, connectTable, notesTable, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, membersTable, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
@@ -44,9 +44,37 @@ const PRESSES = [
   ["notes", "notedelete", { data: { note: "2" } }],
   ["notes", "noteturn", { data: { note: "2" }, values: { "mn-observation2": true, "mn-made2": "OBS-1" } }],
   ["notes", "writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "n" } }],
+  // T47
+  ["members", "passwordresetlink", { data: { member: "dev" }, reason: "lost it" }],
+  ["members", "signerset", { data: { key: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001" }, reason: "stolen" }],
+  ["group", "groupnameset", { values: { "gr-name": "G" } }],
+  ["group", "groupdomainset", { values: { "gr-domain": "g.example" } }],
+  ["group", "grouplanguagesset", { values: { "gr-langs": "en es" } }],
+  ["group", "courtnoticeset", { values: { "gr-court-dont": true } }],
+  ["group", "hostingaccessset", { values: { "gr-holders": "Rosa" } }],
+  ["group", "strengthbarset", { values: { "gr-cap": "A", "gr-why": "why" } }],
+  ["places", "profilesset", { values: { "pl-p-us-ca": true } }],
+  ["places", "placewanted", { values: { "pl-want": "Berkeley" } }],
+  ["places", "officesseed", {}],
+  ["places", "entitycreate", { values: { "pl-label": "L", "pl-note": "N" } }],
+  ["recovery", "recoverycodesissue", {}],
+  ["group-identity", "groupdescriptionset", { values: { "gi-k-issue": true } }],
+  ["group-identity", "groupdescriptiondraft", { values: { "gi-q-what": "w" } }],
+  ["security", "securitymap", { values: { "se-from": "2026-10-01", "se-to": "2026-10-02" } }],
+  ["security", "securitytooladd", { data: { provider: "acme-scan" }, values: { "sa-acme-scan-c-region": "eu", "sa-acme-scan-k-api_key": SECRET, "sa-acme-scan-keep": true } }],
+  ["security", "securitytooltest", { data: { tool: "T1" } }],
+  ["security", "securitytoolremove", { data: { tool: "T1" } }],
+  ["translations", "translationadopt", { data: { key: "rail.home.name" }, values: { "tr-t-rail_home_name": "Portada" } }],
+  ["translations", "translationconfirm", { data: { key: "mark.outward.means" } }],
+  ["translations", "translationrevert", { data: { key: "rail.home.name" } }],
+  ["translations", "translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana" } }],
+  ["translations", "translationdraft", { data: { key: "mark.outward.means", direction: "to_english" } }],
 ];
-const tableOf = (screen, situation, over, extra = {}) => ({ members: () => membersTable({ ...extra, ...over }), account: () => accountTable(ADMIN, { ...extra, ...over }), connect: () => connectTable(MEMBER, situation || "group", { ...extra, ...over }), notes: () => notesTable(ADMIN, { ...extra, ...over }) })[screen]();
+const TABLES = { members: membersTable, account: () => accountTable(ADMIN), notes: () => notesTable(ADMIN), group: groupTable, places: placesTable, recovery: recoveryTable,
+  "group-identity": identityTable, security: securityTable, translations: translationsTable };
+const tableOf = (screen, situation, over, extra = {}) => (screen === "connect" ? connectTable(MEMBER, situation || "group", { ...extra, ...over }) : { ...TABLES[screen](), ...extra, ...over });
 const meOf = (screen) => (screen === "connect" ? MEMBER : ADMIN);
+const subjectOf = (screen) => (screen === "members" ? "ana" : screen === "translations" ? "es" : null);
 
 /* The reads an act changes (R8), named by what each owner's act writes. */
 const CHANGES = {
@@ -56,24 +84,28 @@ const CHANGES = {
   setpassword: [], signerregisterown: ["signers"], signerrevokeown: ["signers"], groupkeynoticeseen: ["notice"], disclosureshown: ["disclosure"],
   subscriptionsignin: ["signin", "reference"], accountreferenceset: ["reference", "uses"], accountreferenceremove: ["reference", "uses"], subscriptiondisconnect: ["signin", "reference"],
   notewrite: ["notes"], noterevise: ["notes"], notedelete: ["notes"], noteturn: ["notes"], writinghelp: [],
+  passwordresetlink: [], signerset: ["signers"], groupnameset: ["identity"], groupdomainset: ["identity"], grouplanguagesset: ["languages"], courtnoticeset: ["court"],
+  hostingaccessset: ["hosting"], strengthbarset: ["bar"], profilesset: ["profiles"], placewanted: ["place"], officesseed: ["offices"], entitycreate: ["offices"],
+  recoverycodesissue: ["codes"], groupdescriptionset: ["description"], groupdescriptiondraft: [], securitymap: ["map"], securitytooladd: ["tools"], securitytooltest: ["tools"],
+  securitytoolremove: ["tools"], translationadopt: ["words"], translationconfirm: ["words"], translationrevert: ["words"], translationgrant: [], translationdraft: ["words"],
 };
 
 test("R8 every act of every screen, once answered, reads again what it changes and draws it", async () => {
   for (const [screen, op, press, situation, extra] of PRESSES) {
-    const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, {}, extra), subject: screen === "members" ? "ana" : null, reachable: true });
+    const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, {}, extra), subject: subjectOf(screen), reachable: true });
     const spec = o.s.acts.find((a) => a.op === op);
-    for (const r of CHANGES[op]) assert.ok((spec.rereads || Object.keys(o.s.reads({ me: meOf(screen), subject: screen === "members" ? "ana" : null, ui: {} }))).includes(r), `${screen} ${op} re-reads ${r}`);
+    for (const r of CHANGES[op]) assert.ok((spec.rereads || Object.keys(o.s.reads({ me: meOf(screen), subject: subjectOf(screen), ui: {} }))).includes(r), `${screen} ${op} re-reads ${r}`);
     const r = await o.press(op, press);
     assert.ok(r.sent.length >= 1 && !r.refused, `${screen} ${op} sent`);
     const reread = r.sent.slice(1).map((x) => x.op);
-    const reads = o.s.reads({ me: meOf(screen), subject: screen === "members" ? "ana" : null, ui: {} });
+    const reads = o.s.reads({ me: meOf(screen), subject: subjectOf(screen), ui: {} });
     for (const name of CHANGES[op]) if (reads[name]) assert.ok(reread.includes(reads[name].op), `${screen} ${op}: ${name} (${reads[name].op}) read again`);
   }
 });
 
 test("R8 nothing is drawn as done before the answer: while an act has not answered, the screen is unchanged", async () => {
   for (const [screen, op, press, situation, extra] of PRESSES) {
-    const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, { [op]: "pending" }, extra), subject: screen === "members" ? "ana" : null, reachable: true });
+    const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, { [op]: "pending" }, extra), subject: subjectOf(screen), reachable: true });
     const before = o.text;
     o.press(op, press);
     await new Promise((res) => setTimeout(res, 2));
@@ -87,7 +119,7 @@ test("R10 no key, code or password typed is kept in the browser's storage, put i
     const extra = {};
     for (const answer of ["ok", "refused"]) {
       const over = answer === "refused" ? { [op]: env({ ok: false, reason: "REFUSED", code: "REFUSED" }) } : {};
-      const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, over), reachable: true });
+      const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, over), subject: subjectOf(screen), reachable: true });
       const r = await o.press(op, press);
       const what = `${screen} ${op} (${answer})`;
       assert.ok(JSON.stringify(r.sent[0].body).includes(SECRET), `${what}: in the body`);

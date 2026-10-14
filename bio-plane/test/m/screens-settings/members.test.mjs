@@ -42,7 +42,8 @@ test("R1 the one-administrator note while the step is not met, as setup-page R16
   has(a, "screen.members.recovery.one");
   has(a, "screen.members.recovery.nocodes", { remaining: 0 });
   assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "#members-invite").length === 1, "the act that meets it: adding an administrator");
-  assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/").length === 1, "and issuing codes, in Group settings");
+  assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/recovery").length === 1, "and issuing codes, on Recovery codes");
+  assert.equal(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/").length, 0, "no link opens the setup page");
   const two = await open("members", { me: ADMIN, table: membersTable({ adminrecoverystep: env({ ok: true, administrators: 2, codes_held: true, remaining: 7, met: true }) }) });
   assert.ok(!all(two.tree, (e) => e.attrs["data-note"] === "recovery").length);
   const many = await open("members", { me: ADMIN, table: membersTable({ adminrecoverystep: env({ ok: true, administrators: 2, codes_held: false, remaining: 0, met: false }) }) });
@@ -80,6 +81,7 @@ test("R1 each read drawn in its state: still loading, empty, could not read (nev
 
 /* R2's act table: every registry act of `members`, the state in which it applies, and where it is drawn. */
 const TABLE = [
+  ["passwordresetlink", "dev"], ["signerset", "dev"],
   ["memberadd", null], ["membercaps", "dev"], ["memberset", "dev"], ["adminendorse", "kim"], ["adminremove", "lu"], ["expertiseconfirm", "ana"],
   ["invitewithdraw", "mai-k"], ["websitekeycreate", null], ["joinlinkenable", null], ["groupkeyset", null], ["groupkeyswitch", null],
   ["groupkeyremove", null], ["accountusesset", null], ["ailimitset", null], ["aikeepaway", null],
@@ -200,4 +202,45 @@ test("R2 a refusal is drawn beside its act and nothing else changes; R8 nothing 
   b.press("memberset", { data: { member: "dev", status: "revoked" } });
   await new Promise((res) => setTimeout(res, 10));
   assert.equal(b.html, was, "nothing drawn while the act has not answered");
+});
+
+test("R12 each row's name is the member's reference (cs.ref member, opening members/<id>), its panel opened by its own control", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  for (const m of ROSTER.filter((x) => x.handle)) {
+    const row = rowOf(a.tree, m.member_id, m.handle);
+    const ref = all(row, (e) => e.tag === "a" && e.attrs.href === "/app/members/" + m.member_id)[0];
+    assert.ok(ref && textOf(ref) === m.handle, `${m.member_id}'s name is its reference`);
+    assert.ok(!ancestor(ref, (p) => p.tag === "button"), "never inside its panel's control");
+  }
+  // control: one not joined yet has no reference
+  assert.ok(!all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/members/mai-k").length);
+});
+
+test("R23 a member's row offers Make a reset link (passwordresetlink), the link shown once with the sentence that no email is sent", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable({ passwordresetlink: (q, b) => env({ ok: true, member: b.member, link: "rl-SENTINELLINK", expiresAt: "2026-10-19T00:00:00Z" }) }) });
+  assert.ok(btn(panelOf(a.tree, "dev"), "passwordresetlink").length, "in the row's panel");
+  assert.ok(!btn(panelOf(a.tree, "rosa"), "passwordresetlink").length && !btn(panelOf(a.tree, "mai-k"), "passwordresetlink").length, "not for oneself, nor one not joined");
+  const r = await a.press("passwordresetlink", { data: { member: "dev" }, reason: "lost their password" });
+  assert.deepEqual(r.sent[0].body.member, "dev");
+  const shown = all(a.tree, (e) => e.attrs["data-shown"] === "reset")[0];
+  assert.ok(textOf(shown).includes("https://group.example/app/reset#reset=rl-SENTINELLINK"));
+  assert.ok(textOf(shown).includes(said("screen.members.reset.shown", { handle: "dev", expires: day("2026-10-19") })) && said("screen.members.reset.noemail").includes("Civicsmith sends no email"));
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("SENTINELLINK")), "kept nowhere");
+  // a member who does not administer is offered none
+  const m = await open("members", { me: MEMBER, table: membersTableMember() });
+  assert.ok(!btn(m.tree, "passwordresetlink").length);
+});
+
+test("R23 More for administrators links group, places and recovery; a row offers Withdraw <handle>'s signing key (signerset) for a lost or stolen device", async () => {
+  const KEY = "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000009";
+  const a = await open("members", { me: ADMIN, table: membersTable({ signerlist: env({ signers: [{ key_b64: KEY, member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z" }, { key_b64: "AAAAold", member_id: "dev", status: "revoked", added: "2026-10-01T00:00:00Z" }] }), signerset: (q, b) => env({ ok: true, ...b, by: "rosa" }) }) });
+  for (const id of ["group", "places", "recovery"]) assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/" + id).length, id);
+  has(a, "screen.members.more.heading");
+  const w = btn(panelOf(a.tree, "dev"), "signerset");
+  assert.equal(w.length, 1, "only the active key");
+  assert.equal(textOf(w[0]).startsWith(said("screen.members.signer.withdraw", { handle: "dev" })), true);
+  assert.deepEqual((await a.press("signerset", { data: { key: KEY } })).sent[0].body, { keyB64: KEY, status: "revoked" });
+  const m = await open("members", { me: MEMBER, table: membersTableMember() });
+  lacks(m, "screen.members.more.heading");
+  assert.ok(!m.p.requests.some((r) => r.op === "signerlist"));
 });

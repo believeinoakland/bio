@@ -64,6 +64,12 @@ export const connect = {
     // the subscription's state as the plane holds it (credentials R70): the reference's own read, else the sign-in's
     const st = ref && ref.subscription ? ref.subscription : sub || {};
     const subscribed = st.connected === true;
+    // neither the reference nor the sign-in's state could be read: whether the member's own account serves them is not
+    // known, so no situation is drawn and the failed read is said, never "not connected" (R24)
+    if (!ref && !sub) {
+      const failed = data.reference && data.reference.state === "failed" && data.signin && data.signin.state === "failed";
+      return out.join("") + (failed ? `<p data-state="signinread">${W(S + "signin.statefailed")}</p>` : "") + cs.state(data.reference, () => "");
+    }
     const keyed = !!(ref && ref.held === true);
     const groupServes = !!(gk && gk.on === true);
     const situation = subscribed || keyed ? "own" : groupServes ? "group" : "none";
@@ -102,7 +108,6 @@ export const connect = {
         // refused at Anthropic: said once, with the way back (R24)
         if (st.refused_at && !subscribed) h += `<p class="cs-notice" data-state="refused">${W(S + "signin.again", { date: D(st.refused_at) })}</p>`;
         // a state read that failed is said, never drawn as not connected (R24)
-        if (data.signin && data.signin.state === "failed" && !ref) h += `<p data-state="signinread">${W(S + "signin.statefailed")}</p>`;
         // 1. the subscription, offered only while the sign-in is installed (trial §3.2)
         if (part === true) {
           let start = cs.act("subscriptionsignin", { data: { step: "start" } });

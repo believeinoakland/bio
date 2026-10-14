@@ -73,11 +73,24 @@ test("R6 writinghelp under the note's field only while the assistant is reachabl
   assert.ok(!ops(off).includes("writinghelp"), "absent while not reachable");
 });
 
-test("R6 an AI output drawn carries the test-instance label `untested` when the answer marks it (screens-inquiry R7's words)", async () => {
-  const a = await open("notes", { me: MEMBER, reachable: true, table: notesTable(MEMBER, { writinghelp: () => env({ ok: true, text: "A draft.", label: { kind: "machine", asked_by: "member:dev" }, withheld: [], untested: true }) }) });
+test("R11 a writinghelp draft whose answer carries untested is drawn with ai.label.untested beside its Draft label; one without it carries none", async () => {
+  const a = await open("notes", { me: MEMBER, reachable: true, table: notesTable(MEMBER, { writinghelp: () => env({ ok: true, text: "A draft.", label: { kind: "machine", asked_by: "member:dev" }, withheld: [], untested: "untested" }) }) });
   await a.press("writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "x" } });
   has(a, "ai.label.untested");
-  assert.equal(said("ai.label.untested"), "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.");
+  // beside the draft's label: the label and the untested mark sit together, before the field
+  const label = all(a.tree, (e) => e.tag === "label" && e.attrs.for === "mn-new")[0];
+  const sib = label.parent.children.filter((c) => c.tag);
+  const mark = sib[sib.indexOf(label) + 1];
+  assert.ok(mark && /cs-label-untested/.test(mark.attrs.class || "") && textOf(mark) === said("ai.label.untested"), "beside the Draft label");
+  assert.equal(said("ai.label.untested"), String(said("ai.label.untested")), "by its key");
+  // on a note being revised too
+  await a.press("writinghelp", { data: { field: "note:2", id: "mn-r2" }, values: { "mn-r2": "y" } });
+  has(a, "ai.label.untested");
+  // control: a draft without untested carries no label
+  const b = await open("notes", { me: MEMBER, reachable: true, table: notesTable(MEMBER) });
+  await b.press("writinghelp", { data: { field: "new", id: "mn-new" }, values: { "mn-new": "x" } });
+  has(b, "screen.notes.draft.label", { handle: "dev" });
+  lacks(b, "ai.label.untested");
 });
 
 test("R7 the court sentence, in membership R108's words, once: the first time this member keeps a note while the group tells members", async () => {

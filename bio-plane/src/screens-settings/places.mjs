@@ -9,12 +9,11 @@
 export const places = {
   id: "places",
 
-  reads() {
-    return {
-      profiles: { op: "profiles" },
-      place: { op: "placewantedstate" },
-      offices: { op: "entitieskind", query: { kind: "office", limit: "500" } },
-    };
+  reads(view) {
+    const r = { profiles: { op: "profiles" }, offices: { op: "entitieskind", query: { kind: "office", limit: "500" } } };
+    // the owner answers the place wanted to an administrator only (instance-setup R60)
+    if (view.me && view.me.administer === true) r.place = { op: "placewantedstate" };
+    return r;
   },
 
   render(cs, view) {

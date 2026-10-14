@@ -102,7 +102,7 @@ export const group = {
         if (!f) return { refuse: "screen.group.logo.nofile" };
         if (f.type !== "image/png" && f.type !== "image/jpeg") return { refuse: "screen.group.logo.type" };
         if (f.size > 200 * 1024) return { refuse: "screen.group.logo.size" };
-        return { raw: f };
+        return { raw: f, rawType: f.type };
       } },
     { op: "groupdomainset", rereads: ["identity"],
       send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; } },

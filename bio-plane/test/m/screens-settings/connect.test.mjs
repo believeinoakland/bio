@@ -70,14 +70,24 @@ test("R5 the two notices, each outward, before the first question: groupkeynotic
   assert.ok(!ops(seen).includes("groupkeynoticeseen"), "once seen, not again");
 });
 
-test("R4, R5 connecting, in DEC-156's order: the subscription (only while bootstrap's parts holds the sign-in), then an API key, then skip", async () => {
+test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while bootstrap's part_signin answers true), then an API key, then skip", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   const order = acts(a.tree).map((b) => b.attrs["data-act"] + (b.attrs["data-step"] ? ":" + b.attrs["data-step"] : ""));
   assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code", "accountreferenceset"]);
   const t = textOf(a.tree);
   assert.ok(t.indexOf(said("screen.connect.signin.heading")) < t.indexOf(said("screen.connect.apikey.heading")) && t.indexOf(said("screen.connect.apikey.heading")) < t.indexOf(said("screen.connect.skip")));
-  for (const [present, key] of [[false, "screen.connect.signin.absent"], [null, "screen.connect.signin.unread"]]) {
-    const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, parts: [{ part: "signin", present }] } }) });
+  // (R13) the flat `part_signin` (instance-setup R82): `false` not installed, `null` could not be read; the API key either way
+  for (const [part, key, fills] of [[false, "instance.part.signin.absent", {}], [null, "instance.part.unknown", { part: said("screen.connect.signin.part") }]]) {
+    const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, part_signin: part, part_scanner: false, part_safe_view: false } }) });
+    assert.ok(!ops(o).includes("subscriptionsignin"), `R13: no sign-in while part_signin is ${part}`);
+    has(o, key, fills);
+    assert.ok(ops(o).includes("accountreferenceset"));
+  }
+  // control: the T46 nested `parts` is no longer read
+  const old = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, service: "bio-plane", parts: [{ part: "signin", present: true }] } }) });
+  assert.ok(!ops(old).includes("subscriptionsignin"), "R13: parts' signin offers nothing");
+  has(old, "instance.part.unknown", { part: said("screen.connect.signin.part") });
+});
     assert.ok(!ops(o).includes("subscriptionsignin"), `no sign-in while signin is ${present}`);
     has(o, key);
     assert.ok(ops(o).includes("accountreferenceset"));
@@ -89,7 +99,8 @@ test("R4, R5 connecting, in DEC-156's order: the subscription (only while bootst
 test("R5 the subscription sign-in: start, the address offered in a new browsing context (noopener noreferrer), then the code in the body only; connected draws the member's own account", async () => {
   let connected = false;
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", {
-    subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected, member: "member:dev" } : b.step === "start" ? { ok: true, address: "https://claude.ai/oauth/authorize?x=1" } : (connected = true, { ok: true, connected: true, member: "member:dev" }),
+    subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected, member: "member:dev" } : b.step === "start" ? { ok: true, address: "https://claude.ai/oauth/authorize?x=1" } : (connected = true, { ok: true, connected: true, held: true, member: "member:dev" }),
+    accountreference: () => env({ ok: true, held: false, kind: null, subscription: { connected, since: connected ? "2026-10-12T00:00:00Z" : null, held: connected } }),
   }) });
   const s = await a.press("subscriptionsignin", { data: { step: "start" } });
   assert.deepEqual([s.sent[0].query, s.sent[0].body], [{}, { step: "start" }]);
@@ -105,24 +116,64 @@ test("R5 the subscription sign-in: start, the address offered in a new browsing 
   assert.equal(a.p.all.filter((r) => JSON.stringify(r).includes(CODE)).length, 1, "sent once, never again");
 });
 
-test("R5 the sign-in's refusals drawn with this module's meanings; RUNNER_NOT_CONFIGURED and DISCLOSURE_DUE by the translation the door relays", async () => {
-  const words = { NO_SIGNIN_WAITING: "screen.connect.refused.NO_SIGNIN_WAITING", SIGNIN_UNAVAILABLE: "screen.connect.refused.SIGNIN_UNAVAILABLE", SIGNIN_ADDRESS_UNEXPECTED: "screen.connect.refused.SIGNIN_ADDRESS_UNEXPECTED", AGENT_WORKER_UNBOUND: "screen.connect.refused.AGENT_WORKER_UNBOUND", AI_KEPT_AWAY: "screen.connect.refused.AI_KEPT_AWAY" };
-  for (const [code, key] of Object.entries(words)) {
-    const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: code, code } }) });
+/* agent-worker R84's SIGNIN_CODES as it exports them, and the door's own codes (control-plane R65): pinned here, since
+   this module's tests import no layer-6 module (K3144 (7)). */
+const SIGNIN_CODES = ["ATTEMPT_SUPERSEDED", "BAD_BODY", "BAD_CODE", "BAD_MEMBER", "BAD_REQUEST", "BAD_STEP", "NOT_THIS_MEMBER", "NO_SIGNIN_WAITING", "RUNNER_NOT_CONFIGURED", "RUNNER_NOT_STARTED", "RUNNER_SILENT", "SIGNIN_ADDRESS_UNEXPECTED", "SIGNIN_NOT_HELD", "SIGNIN_REFUSED", "SIGNIN_TOKEN_REFUSED", "SIGNIN_UNAVAILABLE", "SIGNOUT_FAILED"];
+const DOOR_CODES = ["AI_KEPT_AWAY", "DISCLOSURE_DUE", "AGENT_WORKER_UNBOUND", "AGENT_WORKER_SILENT"];
+
+test("R5, R24 every subscriptionsignin refusal is drawn in words (refusal.<code> where words.json holds it, else this module's), {detail} filled, never the typed code; nothing else changes", async () => {
+  const spec = (await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") })).s.acts.find((a) => a.op === "subscriptionsignin");
+  for (const code of [...SIGNIN_CODES, ...DOOR_CODES]) {
+    assert.ok(spec.refusals[code], `${code} has its words`);
+    const CODE = "SENTINEL-TYPED-CODE";
+    const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: code, code, detail: "the runner's detail", translation: "untranslated " + code } }) });
     const before = a.text;
-    await a.press("subscriptionsignin", { data: { step: "start" } });
-    assert.equal(a.refused.text, said(key), code);
-    assert.equal(a.text.replace(a.refused.text, "").replace(/\s+/g, " "), before.replace(/\s+/g, " "), "nothing else changes");
+    await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": CODE } });
+    assert.ok(a.refused && a.refused.text && !a.refused.text.includes("untranslated"), `${code} in this module's or words.json's words`);
+    assert.ok(!a.html.includes(CODE), `${code}: the typed code is never drawn`);
+    assert.equal(a.text.replace(a.refused.text, "").replace(/\s+/g, " ").replace(/Reference: \S+/, ""), before.replace(/\s+/g, " "), `${code}: nothing else changes`);
   }
-  assert.ok(said("screen.connect.refused.NO_SIGNIN_WAITING").includes("timed out") && said("screen.connect.refused.AGENT_WORKER_UNBOUND").includes("can't run on your group's Civicsmith yet"));
   const r = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: "SIGNIN_REFUSED", code: "SIGNIN_REFUSED", detail: "invalid code" } }) });
   await r.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "x" } });
-  assert.equal(r.refused.text, said("screen.connect.refused.SIGNIN_REFUSED", { detail: "invalid code" }), "the runner's detail shown");
-  for (const code of ["RUNNER_NOT_CONFIGURED", "DISCLOSURE_DUE"]) {
-    const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: code, code, translation: "relayed " + code } }) });
-    await o.press("subscriptionsignin", { data: { step: "start" } });
-    assert.equal(o.refused.text, "relayed " + code);
+  assert.ok(r.refused.text.startsWith(said("refusal.SIGNIN_REFUSED", { detail: "invalid code" })), "the runner's detail shown");
+});
+
+test("R24 a refusal's reference is drawn beside its words (interface-shell R39) and kept nowhere in the browser", async () => {
+  const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: "SIGNIN_UNAVAILABLE", code: "SIGNIN_UNAVAILABLE", trace: "abcdef0123456789" } }) });
+  await a.press("subscriptionsignin", { data: { step: "start" } });
+  assert.ok(a.refused.text.includes("abcdef01"), "the reference beside the words");
+  assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("abcdef01")));
+});
+
+test("R24 Open Anthropic's sign-in page is disabled while a start is in flight, and pressable again once it answers or is refused", async () => {
+  for (const answer of ["ok", "refused"]) {
+    const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : b.step === "start" ? (answer === "ok" ? { ok: true, address: "https://claude.ai/x" } : { ok: false, reason: "SIGNIN_UNAVAILABLE", code: "SIGNIN_UNAVAILABLE" }) : { ok: true } }) });
+    const start = () => all(a.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "subscriptionsignin" && e.attrs["data-step"] === "start")[0];
+    assert.equal(start().attrs.disabled, undefined);
+    await a.press("subscriptionsignin", { data: { step: "start" } });
+    assert.equal(start().attrs.disabled, undefined, `${answer}: pressable again`);
   }
+  // while in flight it is drawn disabled
+  const p = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : "pending" }) });
+  p.press("subscriptionsignin", { data: { step: "start" } });
+  await p.b.settle(40); p.redraw();
+  const s = all(p.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "subscriptionsignin" && e.attrs["data-step"] === "start")[0];
+  assert.ok(s.attrs.disabled !== undefined, "disabled while in flight");
+});
+
+test("R24 the state as the plane holds it: connected since when and until when; a failed state read is said, never not connected; refused at Anthropic draws connect again once; the code field says to copy the whole code", async () => {
+  const sub = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
+  has(sub, "screen.connect.own.since", { date: day("2026-10-04") });
+  has(sub, "screen.connect.own.until", { date: day("2026-11-04") });
+  const failed = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: () => "none", accountreference: "none" }) });
+  has(failed, "screen.connect.signin.statefailed");
+  lacks(failed, "screen.connect.none");
+  const refused = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { accountreference: env({ ok: true, held: false, subscription: { connected: false, since: null, held: false, refused_at: "2026-10-10T00:00:00Z" } }) }) });
+  has(refused, "screen.connect.signin.again", { date: day("2026-10-10") });
+  assert.equal(refused.text.split(said("screen.connect.signin.again", { date: day("2026-10-10") })).length, 2, "once");
+  assert.ok(acts(refused.tree).some((b) => b.attrs["data-act"] === "subscriptionsignin"), "and the way to connect again");
+  const none = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  has(none, "screen.connect.signin.whole");
 });
 
 test("R5 an API key: accountreferenceset with the key in the body only (and the member it is for), never drawn again", async () => {
