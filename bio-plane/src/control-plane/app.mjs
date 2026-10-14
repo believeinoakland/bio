@@ -58,3 +58,21 @@ export function appAsset(req, url, { assets, version }) {
   const bytes = file.encoding === "base64" ? decoded(file.body) : file.body;
   return new Response(req.method === "HEAD" ? null : bytes, { status: 200, headers });
 }
+
+/* R84 (T47; DEC-205; instance-setup R84, R86): THE GROUP'S LOGO, at `/app/assets/group-logo`, public as every asset is: the
+   store-internal route `grouplogo` of the namespace addressed answers the stored bytes with their `content-type`, served
+   with that type, `no-store` (an administrator may replace or clear it) and `nosniff`; anything else (none set, a type
+   that is not an image of the two the owner keeps, a refusal, a silence) is answered 404 with no body of the record's.
+   No credential is read. */
+export const GROUP_LOGO = "group-logo";
+const LOGO_TYPES = Object.freeze(["image/png", "image/jpeg"]);
+export function logoAsked(url) { return url.pathname === `${ASSETS}${GROUP_LOGO}`; }
+export async function groupLogo(req, stub) {
+  let res = null;
+  try { res = await stub.fetch(new Request("http://do/grouplogo", { method: "GET" })); } catch { res = null; }
+  const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase() : "";
+  if (!res || res.status !== 200 || !LOGO_TYPES.includes(type)) return notFound();
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  return new Response(req.method === "HEAD" ? null : bytes, { status: 200,
+    headers: { "content-type": type, "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+}

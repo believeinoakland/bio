@@ -218,3 +218,62 @@ test("R89 (K3104, K3137; op-declarations R61; people R37): `peopledirectory` rea
     assert.equal(opCalls(env).some((c) => c.route === "peopledirectory"), false, `${k}: nothing forwarded`);
   }
 });
+
+/* ================================================================ R79: clockpropose (K3145) */
+
+test("R79 (T47; K3145; action-clocks R2): `clockpropose` is declared and reaches its store route through the door for any credential its row admits, `proposer` the door's label (a session its member, a machine `class:<cls>`) and `viewer` its sight, none taken from the caller; the route is the door's own map's (`owner-ops.mjs`), so no route is `unknown op`", async () => {
+  const { controlPlaneOwnerOps } = await import("../../../src/control-plane/owner-ops.mjs");
+  assert.ok(OPS.clockpropose, "declared");
+  assert.ok(Object.keys(controlPlaneOwnerOps({}, U, null)).includes("clockpropose"), "a route of the door's own map");
+  const { env, S } = world();
+  for (const [token, proposer, viewer, params] of [[S.ann, "ann", "member:ann", {}], [env.PROBE_TOKEN, "class:probe", "class:probe", { store: "scratch" }]]) {
+    env.calls.length = 0;
+    const r = await call(env, { op: "clockpropose", token, method: "POST", params: { ...params, proposer: FORGED, ...FORGED_QUERY },
+                                body: { target: "ACT-1", rule: "r-30", ...FORGED_BODY } });
+    assert.equal(r.status, 200, r.text.slice(0, 200));
+    const inner = opCalls(env).find((c) => c.route === "clockpropose");
+    assert.deepEqual([inner.params.proposer, inner.params.viewer, inner.body.target], [proposer, viewer, "ACT-1"]);
+    noForged(inner, "clockpropose");
+  }
+});
+
+/* ================================================================ R83: background (K3144) */
+
+test("R83 (T47; K3144; admission's `background`, credentials R71 (7)): a request carrying `background=1` is handed to admission's session read as a background read (the store's `session` route asked with `background=1`, no activity) and the op's own store request keeps it; control: a request without it reads the session as activity", async () => {
+  const { env, S } = world();
+  await call(env, { op: "queue", token: S.ann, params: { background: "1" } });
+  const looked = env.calls.filter((c) => c.route === "session");
+  assert.ok(looked.length > 0, "the session was read");
+  assert.ok(looked.every((c) => c.params.background === "1"), "every session read is a background one");
+  env.calls.length = 0;
+  await call(env, { op: "queue", token: S.ann });
+  assert.ok(env.calls.filter((c) => c.route === "session").every((c) => c.params.background === undefined));
+});
+
+/* ================================================================ R84 */
+
+test("R84 (T47; DEC-205; instance-setup R84, R86): `GET /app/assets/group-logo` answers the stored logo — the namespace's store-internal `grouplogo` route's bytes — with its type, `no-store` and `nosniff`, reading no credential; `store=scratch` reads scratch's; controls: none set, a type that is not PNG or JPEG, a refusal and a silence are each 404 with no record's body", async () => {
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+  const logo = (status, type, body) => (c) => (c.route === "grouplogo"
+    ? new Response(body, { status, headers: type ? { "content-type": type } : {} }) : null);
+  for (const params of [{}, { store: "scratch" }]) {
+    const { env, S } = world({ answer: logo(200, "image/png", PNG) });
+    const r = await call(env, { path: "/app/assets/group-logo", params, headers: { authorization: `Bearer ${S.ann}` } });
+    assert.equal(r.status, 200);
+    assert.deepEqual([r.headers.get("content-type"), r.headers.get("cache-control"), r.headers.get("x-content-type-options")],
+                     ["image/png", "no-store", "nosniff"]);
+    assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[params.store ?? "bio", "grouplogo"]], "no credential read");
+    assert.equal(Buffer.from(r.text, "latin1").length > 0, true);
+  }
+  const bytes = await (await (await import("./harness.mjs")).M.makeFetch({})(
+    new Request("https://plane.example/app/assets/group-logo"), world({ answer: logo(200, "image/jpeg", PNG) }).env)).arrayBuffer();
+  assert.deepEqual(new Uint8Array(bytes), PNG, "the bytes as stored");
+  for (const [label, answer] of [["none set", logo(404, null, null)], ["not an image", logo(200, "text/html", "<script>")],
+                                 ["a refusal", logo(400, "application/json", JSON.stringify({ ok: false, reason: "X" }))],
+                                 ["a silence", () => { throw new Error("down"); }]]) {
+    const { env } = world({ answer: (c) => (c.route === "grouplogo" ? answer(c) : null) });
+    const r = await call(env, { path: "/app/assets/group-logo" });
+    assert.equal(r.status, 404, label);
+    assert.equal(r.text.includes("script") || r.text.includes("reason"), false, label);
+  }
+});

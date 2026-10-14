@@ -31,7 +31,7 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
 /* R75 (T46; N897 (1)): the member interface's page and its assets, beside `/`: interface-shell's page over the four screen
    modules' screens, and interface-assets' files. */
-import { appRouteOf, appPage, appAsset } from "./app.mjs";
+import { appRouteOf, appPage, appAsset, logoAsked, groupLogo } from "./app.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
@@ -239,7 +239,8 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
     digest = await sha256Hex(credential.secret || "");
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
-                                   method: req.method, presented: presentedAi, doAnswer, credential });
+                                   method: req.method, presented: presentedAi, doAnswer, credential,
+                                   background: url.searchParams.get("background") === "1" });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
     inner.searchParams.set("viewer", admitted.caller.viewer);
@@ -266,7 +267,9 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, c
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
    shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
 async function caseReader(url, env, storeName, presentedAi, credential = null) {
-  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential);
+  /* R83 (T47; K3144): a background request's session read is no activity */
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential,
+                           { background: url.searchParams.get("background") === "1" });
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
 
@@ -569,6 +572,8 @@ export function makeFetch(hooks = {}) {
       try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
     const credential = presentedCredential({ req, url, body: reqBody });
     seen.credential = credential;
+    /* R83 (T47; K3144): the page's mark of a background request, read once */
+    const background = url.searchParams.get("background") === "1";
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
 
@@ -615,6 +620,9 @@ export function makeFetch(hooks = {}) {
       if (appNamespace) return json(appNamespace.body, appNamespace.status);
       const appAddress = addressGate(url);   /* R59: admission R20 */
       if (appAddress) return json(appAddress.body, appAddress.status);
+      /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
+      if (appRoute === "asset" && logoAsked(url))
+        return groupLogo(req, env.STORE.get(env.STORE.idFromName(url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio")));
       return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS })
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
@@ -869,7 +877,11 @@ export function makeFetch(hooks = {}) {
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
        refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
        as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
-    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential });
+    /* R83 (T47; K3084, K3144; credentials R71 (7); admission R23–R25): a request the page makes on its own timer carries
+       `background=1`, handed to admission's session read as `background: true` (no activity), and kept in the query the
+       store is asked with; the request's parsed body is handed for the run a write names and the re-ask's argument. */
+    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential,
+                                 body: reqBody, background });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED") {   /* R53: an ask's grant */
       const granted = await grantAdmit(env, url, op, spec, credential.token);

@@ -40,7 +40,7 @@ test("R1, R82 (T47; N1002): GET / with no op answers interface-shell's page (`in
   const { env: appEnv } = world();
   const app = await call(appEnv, { path: "/app" });
   assert.equal(app.status, 200);
-  /* the setup page's own title (setup.mjs, deleted after this job by setup-page's), as it was served at `/` before T47 */
+  /* the setup page's own title, as it was served at `/` before T47 (R82) */
   const marker = "<title>Your accountability record</title>";
   for (const params of [{}, { store: "bio" }, { store: "scratch" }]) {
     const { env } = world({ group: { ok: true, group: "grp-rivertown" } });
