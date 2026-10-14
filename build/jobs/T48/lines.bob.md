@@ -1,6 +1,6 @@
 # BOB to lines (T48)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 480 KB with your tests (K2700), within the 600 KB limit. Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L5: entities, events, lines, connections, standards, duties, people, explore, calculations; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+entities (T48-82) is merged into tranche/T48 (K3247): `entities.notAProceeding` (R53, C-91.9) is there. Merge tranche/T48 into your branch and continue.
