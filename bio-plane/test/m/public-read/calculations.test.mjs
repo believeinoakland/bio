@@ -37,7 +37,7 @@ const DIFFERS = { calc: "CALC-2026-0002", recipe: RECIPE,
   result_key: H("2"), recompute: "differs", disclosed: "Two payments were re-dated after we computed this; the share shown is the one we signed." };
 const UNBOUND = { ...DIFFERS, calc: "CALC-2026-0003", results: { total: "9" }, recompute: "unbound", disclosed: null, result_key: H("3") };
 
-test("R26 publishedCase answers each calculation the signed document carries: its question, its outputs by key each labelled a computed fact, a share with its numerator and denominator beside it, its method version and recompute status", () => {
+test("R26 publishedCase answers each calculation the signed document carries: its question, its outputs by key each labeled a computed fact, a share with its numerator and denominator beside it, its method version and recompute status", () => {
   const { w, text } = publishedSix({ extra: line([SHARE]) });
   /* the key the signed document states (case-grammar's writer keys each row, its R18) */
   const signedKey = calculationsOf(parseFrontmatter(text).data)[0].result_key;

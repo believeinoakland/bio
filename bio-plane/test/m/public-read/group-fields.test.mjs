@@ -162,7 +162,7 @@ test("R34 R7 inbandQuartet carries group unchanged beside hash, never inside it:
   assert.notEqual(qc.hash.sha256, qa.hash.sha256);
 });
 
-test("R34 R3 R23 publishedCase answers group_fields, the group's current identity and stake labelled current, never read from or written into the signed document or the case file", () => {
+test("R34 R3 R23 publishedCase answers group_fields, the group's current identity and stake labeled current, never read from or written into the signed document or the case file", () => {
   const { w, CASE } = publishedSix();
   w.pr.registerGroupIdentity({ identity: () => IDENTITY });
   const first = w.read("publishedcase", { id: CASE });
