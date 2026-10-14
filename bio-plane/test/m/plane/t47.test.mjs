@@ -174,10 +174,10 @@ test("R33 (T47; K3089; answers R35, R30): a grant the draft path minted whose fi
   assert.equal(answersOf(x.ctx).readLog(g.token).use, "ask");
 });
 
-/* ===== R43 (T47; N993; bundler R31) ===== */
+/* ===== R43 (T47; N993; bundler R31; K3147) ===== */
 
-test("R43 (T47; N993; bundler R31): the plane's global scope, measured as bundler's fleetbundles measures it (a fresh import of the built artifact, the median of five), is within R31's 500 ms warning budget; each run is printed", async () => {
-  const { planeMember, buildMember, measureStart, BUDGET } = await import("../../../scripts/fleet-bundle.mjs");
+test("R43 (T47; N993; bundler R31; K3147): the plane's global scope is measured as bundler's fleetbundles measures it (a fresh import of the built artifact, five times) and printed beside R31's 500 ms budget, a time past it a warning (the cause named, PLANE #35 J1), never a failure; control: a run that cannot be measured fails", async () => {
+  const { planeMember, buildMember, measureStart, startVerdict, BUDGET } = await import("../../../scripts/fleet-bundle.mjs");
   const { writeFileSync, mkdtempSync, rmSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
@@ -194,10 +194,14 @@ test("R43 (T47; N993; bundler R31): the plane's global scope, measured as bundle
       runs.push(r.ms);
     }
     const median = [...runs].sort((a, b) => a - b)[2];
-    console.log(`R43: the plane's global scope, five fresh imports: ${runs.map((ms) => ms.toFixed(0)).join(", ")} ms; median ${median.toFixed(0)} ms (budget ${BUDGET.startWarnMs} ms)`);
-    /* control: the measure is a real one (a fresh import evaluates the artifact, never a cached module) */
-    assert.ok(runs.every((ms) => ms > 1));
-    assert.ok(median <= BUDGET.startWarnMs, `median ${median.toFixed(0)} ms past the ${BUDGET.startWarnMs} ms budget`);
+    const v = startVerdict(m, median, BUDGET);
+    console.log(`R43: the plane's global scope, five fresh imports: ${runs.map((ms) => ms.toFixed(0)).join(", ")} ms; median `
+      + `${median.toFixed(0)} ms, budget ${BUDGET.startWarnMs} ms: ${v.verdict}${v.warning ? ` (${v.warning})` : ""}`);
+    assert.ok(runs.every((ms) => ms > 1), "a fresh import evaluates the artifact, never a cached module");
+    assert.ok(["ok", "warn"].includes(v.verdict), "past the budget is a warning, never a failure (R31)");
+    /* control: an artifact that cannot be read is unmeasured, which is a failure */
+    const none = await measureStart(m, { artifact: relative(m.abs, join(dir, "absent.mjs")) });
+    assert.equal(none.measured, false);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
