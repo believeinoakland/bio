@@ -72,3 +72,24 @@ All three are unchanged and outside my entry.
 - No service I provide changed, so no user's tests are owed (P11).
 
 Size (session_01WbAX8BnhgQzuvLSYMgkYAv): test runs 18, module lines 2878
+
+## J4 · COMPLETE
+
+**B3 and B4 (K3149) processed:** I merged `tranche/T47` (instance-setup, setup-words, wizard-scripts and op-grades) into `job/T47/installer`; it is now at `35845c8422`.
+
+- **B4.** `requirements.test.mjs` no longer imports `setupPage`. Nothing in `newgroup/` names `setupPage` or `SETUP_HTML`.
+- **R34's test.** It used to compare against the retired claim page. It now checks `instance-setup`'s one holder directly: `hostingControlBlock` with a guide address links "Replace the one-time password". Without the link it is byte-identical to the block the installer's last screen shows. The rest of R34's test is unchanged.
+- **Bundle.** It is unchanged by the merge. The bundle-fresh test passes.
+
+**Tests and checks after the merge.**
+- `embed: 23 passed, 0 failed`; `wizard: 209 passed, 0 failed`.
+- `requirements` and `t47`: `ℹ pass 58, ℹ fail 0, ℹ todo 4`.
+- `newgroup-bundle-fresh`: `pass 1, fail 0`.
+- `format`: `0 failures`.
+- `architecture` (installer): `19 product files, 45 relative imports; 0 failures`.
+- `coverage`: `54 of 54; 0 failures`.
+- `ownership`: `11 files changed; 0 failures`.
+
+J3's REPORT items stand, except item 1, which this change settles.
+
+Size (session_01WbAX8BnhgQzuvLSYMgkYAv): test runs 20, module lines 2878
