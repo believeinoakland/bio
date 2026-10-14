@@ -46,3 +46,7 @@ Context: this session is at about half its window, so the record names the next 
 
 **Completion (B4, K3298):** `tranche/T48` merged (op-declarations, wizard-scripts); `updates` restored to `SCREENS`. Tests: `node --test bio-plane/test/m/screens-settings/` 108 pass, 0 fail. Checks (`checks/run.mjs`): format 0 failures; architecture 0 failures; coverage names every live id of screens-settings (the failures it prints are other modules'); ownership 0 failures; channels 0 failures.
 Size (session_016pGtSfZzasM34bygFE6WEP): test runs 24, module lines 2305
+
+## J3 · COMPLETE
+
+COMPLETE: R25–R33, T48-87 and B2 applied; 108 tests pass; format, architecture, coverage (this module), ownership 0 failures. Details in the record.
