@@ -32,3 +32,21 @@ Second question (it adds to J1, replaces nothing). R22 and R25 say the subject a
 **My best reading, built meanwhile:** 1(a) and 2(a): `capture` reads `address/<id>` (and `file/<id>`, `saw/<id>`), keeps it on its tab links, and the result links `/app/find-in/<document>/<question>`. If you choose differently I change the one function that reads the subject and the one link.
 
 **Words.** "Cite a passage" has no key for `capture`; `act.cite.label.question` and `act.cite.label.document` both hold that English. I draw it with `act.cite.label.document` (no key minted by me); say if the design wants a `capture` key instead.
+
+## J3 · REPORT
+
+Findings outside my module (none blocks COMPLETE; each is for the module or lane named). I built to the keys as `words.json` holds them at WORDS_COMMIT 8a54848a9e.
+
+**1. `screen.archive.summary` cannot be drawn under R17 (design lane / words).** DEC-259 reworded it to hold all four counts in one sentence ("Opened when it was captured: {filed} files filed…, {held} already held, {notfiled} not filed, {folders} folders."). R17 forbids a count at zero, and an archive that opened often has zero in some of them. I draw the four `screen.archive.sum.*` phrases (each only above zero) joined, and do not read `screen.archive.summary`. Either the design gives a lead-in with a `{parts}` placeholder again, or R17 yields for this one sentence; your call.
+
+**2. `screen.archive.alreadyheld` asks for `{name}` and `{date}`; `archivelist`'s `already_held` entry carries neither the earlier capture's name nor its date (acquisition R41, `unpack.mjs`:693).** I draw the sentence when the entry carries `held_at` (the earlier capture's instant) and otherwise "{count} already held" (`screen.archive.sum.held`, count 1). For the full sentence acquisition R41's `already_held` entry needs `held_at` (and the earlier capture's name if it differs from the entry's own); L3 is closed in T49, so this is for T50.
+
+**3. `mark.gap.refused.means` in `words.json` is still the bare form** ("Refused: Civicsmith won't do this…"), not DEC-149's "your group's Civicsmith". `interface-shell` R5 kept a conformed override row in each drawing module until `WORD_ROWS` carries one; R26 removes mine, so the Refused mark now explains itself with the bare name. Design lane: conform the word.
+
+**4. Two keys changed placeholders under DEC-259 and I conformed to them:** `screen.held.ineligible` now takes `{reason}` (filled with the class's sentence) and `screen.held.waiting` takes `{asker}` and `{capture}` (the set-aside document's title); the question's title is no longer drawn there. Retired (no longer read): `screen.capture.address.empty` (now `capture.fieldneeded`), `screen.capture.address.watch` (R18 drew no watching section), `screen.capture.refusal.BAD_LOCATOR/SOURCE_REFUSED/FETCH_FAILED/EMPTY/TOO_LARGE` (now `refusal.*`, R25), `screen.archive.summary` (item 1). Their rows can be dropped from the screens-intake `reads` list.
+
+**5. A latent flaw in my own module, fixed:** `held` compared a row's `class` to lower-case "crucial"/"contested", while `ratification` answers `CRUCIAL_IN_BATCH`/`CONTESTED_IN_BATCH`, so every real refused row fell through to the catalogue's raw sentence (the very thing R23 forbids). It now reads the codes as they are served.
+
+**6. Requirements wording for BOB (K3372, K3369):** R22 and R25 still say `/app/capture/<tab>?for=<id>`; as built the subject is the route's second step, `/app/capture/<tab>/<id>`. "Provides" still lists `SCREEN_WORDS`; the module no longer exports it (R26: no own sentences), and `words` on each screen are plain keys.
+
+**7. `shell.unread`:** `interface-shell`'s own row reads "This could not be read." and `words.json` "This could not be read. Try again in a moment."; the shell's row wins today. My tests assert the failed state structurally for that reason. It resolves when the shell job drops its rows (its R70).
