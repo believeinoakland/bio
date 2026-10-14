@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · CHANGE
 
 K3295, a report from screens-intake (SCREENS-INTAKE #3 J1 (3)): cs-pickc, drawn by your cs.rows, is on screens-intake R17's rename list; make sure your own rename covers it (it is your file). No requirement change.
+
+## B3 · CHANGE
+
+K3297: R21's contract now lists Intl beside JSON, Math, String, Number, Array, Object, Date (a language's name for screens-settings R31); accept it in your checks. Merge origin/tranche/T48.
