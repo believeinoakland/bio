@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3144: (1) `passwordresetlink` is `RUNG_ABSENT` on the credential ground (R37 re-worded on `tranche/T47`; merge it). (2)–(5) stand as read.
+
+## B3 · CHANGE
+
+K3164 (from AFFORDANCES #32 J7): add NON_ACTS rows by your R5 rule for statementack ("case-directed: keyed by a case edition; a member acknowledges what the case does not cover") and reviewcomment ("review-directed: keyed by a review copy; a reader's comment for the case's owner"), as for K3041's other publish-screen ops; their grades stay. Merge tranche/T47 first, test, and post COMPLETE. This re-opens you.
