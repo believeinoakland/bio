@@ -34,6 +34,14 @@
 
 Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 24, module lines 2453
 
+## Completion, second round (B5)
+
+Applied BOB's B5: (1) `reauth` on `connect` as the mock draws it (a collapsed block under the code with a password field and the act, sending the password; none sends nothing), tested against a scratch copy of the registry never committed. (2) **R40** on `group`: the declared stake from `groupidentity`'s `declared_stake` and its history (`stake.group.title`, `.help`, `stake.set`, `stake.history`, `stake.none`, `stake.unreadable` when the answer carries no field), an administrator's field with `declaredstakeset` (an emptied field saves `null`) and `writinghelp` only while the assistant is reachable, its draft filled into the field, labeled and `ai.label.untested` where it carries it, kept only by their own save; a member reads it and is drawn no act. (4) DEC-262: `own.subscription` `{date}`, `own.apikey` with no fill, `group.allowance` `{limit}` with `.used` only when a limit answers `used` (a day limit), `grouplimits` `{limit}` with `.used` and `.suggestions` only when answered, `recovery.one` with no name (the roster and bootstrap reads `recovery` took for it are gone). (3) `{total}` unchanged.
+
+Tests: `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fail 0 **against the scratch registry** (`connect` + `reauth`, `group` + `declaredstakeset` and `writinghelp`); with the committed registry copy the contract test is red for exactly those until interface-shell's R72 re-point (or the regenerated copy) is merged, and `interfacePage` refuses `connect`'s `reauth` until then, so this module must merge after interface-shell. Checks: format 0, architecture 0, coverage 39 of 39, ownership 0 failures.
+
+Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 30, module lines 2509
+
 ## J1 · QUESTION
 
 QUESTION (my best reading is carried out meanwhile). Seven of the 551 keys DEC-257 reworded now hold a `{fill}` that nothing the plane answers today can fill. R37 forbids drawing a sentence with an empty or default fill, and R39 forbids inline English, so I cannot draw them as the design words them.
