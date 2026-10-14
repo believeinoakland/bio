@@ -52,7 +52,7 @@ export const DOORBELL = Object.freeze({
       },
       done: function (view, answer, cs) {
         view.ui.received = { at: new Date(cs.now()).toISOString() };
-        if (typeof cs.fill === "function") cs.fill("db-note", "");
+        cs.fill("db-note", "");
         return { stay: true };
       },
     },

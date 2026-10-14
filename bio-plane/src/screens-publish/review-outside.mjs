@@ -12,11 +12,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
   reads: function (view) {
     // interface-shell R46: the fragment read once on load, removed from the address, handed in as `{grant}`.
     const f = view.fragment;
-    let secret = f && typeof f === "object" && typeof f.grant === "string" ? f.grant : "";
-    if (!secret && typeof f === "string") {
-      const m = /(?:^|[#&])grant=([^&]+)/.exec(f);
-      try { secret = m ? decodeURIComponent(m[1]) : ""; } catch (e) { secret = ""; }
-    }
+    const secret = f && typeof f.grant === "string" ? f.grant : "";
     view.ui.secret = secret;
     return secret ? { copy: { op: "reviewcopy", body: { secret: secret }, subject: true } } : {};
   },
@@ -59,7 +55,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
         return { query: { draft: String(copy.draft || "") }, body: { text: text, secret: view.ui.secret } };
       },
       done: function (view, answer, cs) {
-        if (typeof cs.fill === "function") cs.fill("ro-comment", "");
+        cs.fill("ro-comment", "");
         view.parts.say(cs, view, "reviewcomment", cs.w("screen.review-outside.sent"));
         return { stay: true };
       },
