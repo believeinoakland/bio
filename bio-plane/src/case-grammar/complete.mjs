@@ -40,11 +40,12 @@
  * renders the bytes it rendered before.
  *
  * A MEMBER DOCUMENT CARRIED AS ITS CLEANED COPY (T39; N806, K2333). Its row states `obscured` as a photo's does, with
- * `case-carriage`'s `COPY_CLEANED_LABEL`, and nothing in the row tells it from a photo, so the edition reads which it
- * is from the copy's own bytes, which the case file carries at `materials/<ref>/obscured`: a copy that is a PDF or a
- * zip package (doc-clean's output: PDF, OOXML, ODF) is a cleaned document and its copy line says so, then its label
- * word for word; every other copy (an image) is a photo's, listed as before T39, so every photo's edition keeps its
- * bytes.
+ * `case-carriage`'s `COPY_CLEANED_LABEL`. Since T48 (R32; N1016) the edition reads which it is from R31's stored `kind`
+ * first: `document` is listed by the cleaned-copy line, `photo` by the photo's copy line, whatever the copy's bytes are.
+ * Only a row stating no `kind` (an edition signed before T47) is read from the copy's own bytes, which the case file
+ * carries at `materials/<ref>/obscured`: a copy that is a PDF or a zip package (doc-clean's output: PDF, OOXML, ODF) is a
+ * cleaned document and its copy line says so, then its label word for word; every other copy (an image) is a photo's,
+ * listed as before T39, so every photo's edition keeps its bytes.
  *
  * MARKED OR NOT (T40; N798; DEC-185 (1); K2394). Since T40 an unmarked photo's copy carries `case-carriage`'s
  * `PUBLISHED_LABEL`, so the label no longer tells a marked copy from an unmarked one: R12's `marked` picks the copy line
@@ -192,6 +193,11 @@ const isDocumentCopy = (v) => {
   return DOCUMENT_MAGIC.some((m) => m.every((c, i) => b[i] === c));
 };
 
+/* T48 (R32; N1016): whether a carried copy is a cleaned member document: by R31's stored `kind` when the row states one
+   (`document` is, `photo` is not, whatever the copy's bytes are), and only a row stating none (signed before T47) by the
+   copy's own bytes. */
+const copyIsDocument = (ob, copyBytes) => (ob.kind === "document" ? true : ob.kind === "photo" ? false : isDocumentCopy(copyBytes));
+
 /* A leg's words. */
 const ROLE_WORDS = { supports: "Supports", cuts_against: "Cuts against" };
 const extentWords = (e) => (e === null || e === undefined ? "no location stated"
@@ -284,7 +290,7 @@ export function completeEditionOf(caseFile) {
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
             /* T40 (DEC-185 (1)): the copy line or the unmarked line by R12's `marked`, then the label word for word when
                there is one; `marked` absent reads by the label, so every earlier edition renders byte for byte */
-            ...(ob ? [...(isDocumentCopy(files.get(caseFilePath("obscured", x.ref))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
+            ...(ob ? [...(copyIsDocument(ob, files.get(caseFilePath("obscured", x.ref))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
                 : (ob.marked ?? ob.label !== null) ? [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`)]
                 : [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]), ...(ob.label === null ? [] : [li(ob.label)])]
               : [li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel.")]),
