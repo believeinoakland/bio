@@ -27,3 +27,7 @@ K3144: (1)–(3) stand. (4): R62's shape governs (admission imports it): `op →
 ## B4 · CHANGE
 
 K3147: op-grades is merged into `tranche/T47`: every T47 op has its NON_ACTS row there; give each a NEEDS row (a present `null` for the public and session-own ones). Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
