@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 2597 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L6: inquiry, basis-versions, run-rules, ai-use, ai-runs, run-productions, capture-requests, reading-guides, skills, question-explorer, answers, agent-worker; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+Wording only (K3259): agent-model's stated converse signature now names trace? and memberRef?, which its code already takes and your R87 passes. Nothing to build; merge tranche/T48 into your branch when convenient.

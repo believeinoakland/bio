@@ -60,7 +60,7 @@ The AI run's rules without a store: the bounds, endings and statuses a run can h
 - **R32** (T46; K2947; `ai-runs` R18) The row `MEMBER_RUN_MODE_NOT_ADMITTED` (C-22.30, the next free number after R30's C-22.29) is held in this module's own table (R11) in DEC-83's form, minted by `ai-runs` (its R18: a member's own sign-in run in a mode other than `check` or `plan`), which reads it here by key; its `where` names `ai-runs`' site. (T47; N992; DEC-198) Its translation is `words.json`'s `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, read by key as R31's rows are, never a copy of the sentence; T46's interim sentence ("Nothing was started, because on your own Claude sign-in …") is gone. Its code, number and `where` are unmoved; the changed translation waits for T48's promotion stamp.
 
 **T48: the reading draft** (T48-28; N670; DEC-127 (3); K3190)
-- **R33** (T48; N670; DEC-127 (3); amends R22, R27) `DRAFT_KINDS` gains `reading`, after `statusreport`: the assistant's translation, for one member, of a passage of the group's own writing into her language. *(not yet met: T48)*
+- **R33** (T48; N670; DEC-127 (3); amends R22, R27) `DRAFT_KINDS` gains `reading`, after `statusreport`: the assistant's translation, for one member, of a passage of the group's own writing into her language.
   - In every other respect it is R21's mode: interactive; no run and no run row; read-only; R17's `ASK_BOUNDS`; started only at the asking member's own act (R18).
   - It deploys under `draft`'s own flag: `draftKindDeployed` answers `true` for it exactly when that flag is true. `action_drafts` plays no part.
   - Its test-bar part is `draft:reading` (`TEST_BAR_PARTS` follows `DRAFT_KINDS`).

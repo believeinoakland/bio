@@ -12,8 +12,9 @@ import { refusal } from "./helpers.mjs";
 
 const ACTION = ["textcheck", "infractiondraft", "bearingdraft"];
 const EARLIER = ["own_words", "translation", "case_account", "account_check", "bearing_note"];
-/* R27 (T46; N920): the kind after the action drafts, under draft's own flag (t46.test.mjs holds it) */
-const LATER = ["statusreport"];
+/* R27 (T46; N920) and R33 (T48; N670): the kinds after the action drafts, under draft's own flag (t46.test.mjs and
+   t48.test.mjs hold them) */
+const LATER = ["statusreport", "reading"];
 const UNKNOWN = ["", "draft", "text_check", "TextCheck", "infraction_draft", "bearing", " textcheck", "statusreportdraft",
                  "__proto__", "toString", null, undefined, 3, true, ["textcheck"], { kind: "textcheck" }];
 

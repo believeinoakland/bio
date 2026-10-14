@@ -3,7 +3,7 @@
  * frozen once written (INVESTIGATIVE-SESSION §6). This module holds the versions and their legs, their six-act state
  * machine, the version a project stands on (CURRENT, §7), a project's conclusion as the adoption of that version's claim
  * (§7.1), and narrowing a leg to a part of its document (Content Framework §14.4). Every act is a member's; a machine
- * proposes a version (`appendVersion`, through `ai-runs`) and holds no act that moves one (R30).
+ * proposes a version (`appendVersion`, through `run-productions`' `op=suggest`) and holds no act that moves one (R30).
  *
  * Extracted from the legacy modules (T7-3; K3, K91, K102, N64, N67): `store.mjs` (PL-1's projection and freeze, PL-2's
  * six acts and CURRENT, PL-3's append, REC-13/REC-124/REC-136's conclusion and its record, REC-86's narrowing, D-235's
@@ -1452,8 +1452,12 @@ export class BasisVersions {
    *  in the caller's field order with `state` and `hidden` after `relationship` (undefined skipped, null written as
    *  `null`); each ground and leg row in its own order (undefined, null and empty skipped), numbers bare, lists of
    *  numbers inline, text quoted. Whether the composition differs in substance from every held version is the
-   *  caller's check. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`, `UNSPLICEABLE_BASIS`; promote's own
-   *  come back unchanged. */
+   *  caller's check. The documented call is `appendVersion({target, version: {name, description, claim?, relationship,
+   *  derived_from?, kind?, run?, level?, observed_at?, author}, grounds, legs, author, at?, log?})`: `version.author` is
+   *  the version's author as the record holds it, written on the row like every other field (`run-productions` R4 passes
+   *  the machine identity whose run proposed it), and it is the field R49's accept arm reads to tell a machine-authored
+   *  version; the outer `author` is only who promotes. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`,
+   *  `UNSPLICEABLE_BASIS`; promote's own come back unchanged. */
   appendVersion({ target, version, grounds = [], legs = [], author, run, kind, at, log } = {}) {
     const tgt = String(target ?? "").trim();
     const b = this.#held(tgt);
@@ -1607,7 +1611,7 @@ export class BasisVersions {
                  + `at ${pos.ref}. That it is there is what the reading says; whether it is on point is yours `
                  + `to judge.` });
     }
-    /* (2) what an extract run proposed, through the registered source (ai-runs, K73 (2)) */
+    /* (2) what an extract run proposed, through the candidate source run-productions registers (R40; K73 (2), K3257) */
     if (this.#candidateSource) {
       let ext = null;
       try { ext = this.#candidateSource.fn({ captureSha: cap, max }); } catch { ext = null; }

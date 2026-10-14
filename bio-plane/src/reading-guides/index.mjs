@@ -19,7 +19,7 @@
  * `{route, expect?, citation}`, checked by R4 narrowed for that purpose. R2, R3, R6–R8 and R12 hold for it as for a
  * reading guide; R5 answers reading guides only. `procedureGuidesFor` answers the profile's guide for a kind
  * (`jurisdictions` R80, through `combine`) first, then the group's approved procedure guides in the order approved,
- * unranked, every answer labelled legal information, not legal advice.
+ * unranked, every answer labeled legal information, not legal advice.
  *
  * SIGHT (R8, R9). A group guide, in any state, and a proposal are the group's: seen by a viewer membership admits as an
  * active member or an administrator, by a machine credential, and by an internal call with no viewer. Any other
@@ -28,7 +28,7 @@
  * REACHED as `readingGuidesOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At
  * creation it creates its tables and declares them with their classes (R9). `deps`:
  *   record, membership   the modules it uses, through their factories on the same host unless a test passes its own.
- *   groupSlug    `() → string|null`, the group's slug an offer is labelled with (R6; the plane composes it from
+ *   groupSlug    `() → string|null`, the group's slug an offer is labeled with (R6; the plane composes it from
  *                `promotion`'s `producingGroup` fact). Absent or blank, an offer is refused `GUIDE_NO_GROUP_SLUG`.
  *   civicsmith   Civicsmith's library (default `CIVICSMITH_GUIDES`); a test passes entries of its own.
  *   now          the module's clock, an ISO instant (default: the wall clock).
@@ -77,7 +77,7 @@ export const PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legal
 /** R12: what a proposal's label says, in each of `record-grammar`'s three proposal states (shaped as its
  *  `proposalLabel` answers; `lawProposalState` decides the state). */
 export const GUIDE_PROPOSAL_STATES = Object.freeze({
-  machine_proposed: "a machine credential proposed this reading guide. That is machine work, labelled as machine work: "
+  machine_proposed: "a machine credential proposed this reading guide. That is machine work, labeled as machine work: "
     + "it can propose what to look for and it can never write, review or approve a guide. It is not a guide until a "
     + "member writes one based on it.",
   member_proposed: "a member proposed this reading guide. It is not a guide until a member writes one based on it.",
@@ -226,7 +226,7 @@ export class ReadingGuides {
   /* ================================================================ R12: a machine's proposal, apart */
 
   /** R12, R13: `{kind, items, purpose?, run, by}`, `by` a machine credential and `run` the run that proposed it. Stored
-   *  apart from the guides, labelled; it is no guide. Answers `{ok, proposal, purpose, label}`. */
+   *  apart from the guides, labeled; it is no guide. Answers `{ok, proposal, purpose, label}`. */
   guidePropose(args) {
     const { kind, items, purpose: p, run, by } = argsOf(args);
     /* DEC-49 REGION is-guide-machine */
@@ -353,7 +353,7 @@ export class ReadingGuides {
     return { ok: true, module };
   }
 
-  /** R6: `{guide, by}` by an active member: the group's guide as canonical bytes and their digest, labelled with this
+  /** R6: `{guide, by}` by an active member: the group's guide as canonical bytes and their digest, labeled with this
    *  group's slug, for another group to adopt. Answers `{ok, guide, bytes, digest, group, channel?}`. */
   guideOffer(args) { return this.#export(argsOf(args), GUIDE_OFFER_FORMAT, "offer"); }
 
@@ -641,7 +641,7 @@ function offerable(row) {
 
 function slugRefusal() {
   /* DEC-49 REGION is-guide-slug */
-  return refusal("GUIDE_NO_GROUP_SLUG", "no group slug is recorded, so an offer cannot be labelled. Nothing was sent.");
+  return refusal("GUIDE_NO_GROUP_SLUG", "no group slug is recorded, so an offer cannot be labeled. Nothing was sent.");
   /* END DEC-49 REGION is-guide-slug */
 }
 

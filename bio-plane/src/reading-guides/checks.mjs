@@ -12,9 +12,11 @@ const at = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
    answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: the
    translations of C-144.4 and C-144.19 (`refusal.<CODE>`) and the procedure guide's label (R13's
    `guide.procedure.legalinfo`, protected). The design stream's words: re-worded there, then re-taken here by key; a row
-   never holds a copy of its sentence. The other rows, which `words.json` does not hold, keep their own. */
+   never holds a copy of its sentence. The other rows, which `words.json` does not hold, keep their own. T48 (N1053;
+   DEC-221): re-taken in the design's American spelling ("recognize"), and this module's own rows and details follow it
+   ("labeled"). */
 export const READING_GUIDES_WORDS = Object.freeze({
-  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognise, and this "
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognize, and this "
     + "names another. Nothing was written.",
   "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests "
     + "on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
@@ -90,7 +92,7 @@ export const READING_GUIDES_CHECKS = Object.freeze({
   },
   GUIDE_NO_GROUP_SLUG: {
     check: "C-144.13", where: at("index.mjs", "slugRefusal", "is-guide-slug"),
-    translation: "An offered guide is labelled with your group's short name, and none is recorded for this group, "
+    translation: "An offered guide is labeled with your group's short name, and none is recorded for this group, "
       + "so nothing can be offered. Whoever runs your group's Civicsmith can set it. Nothing was sent.",
   },
   GUIDE_RETIRE_NOT_APPROVER: {
