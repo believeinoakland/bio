@@ -57,3 +57,7 @@ T47-86 built: R1–R11, with B2–B7 applied (K3143–K3145, K3149, K3152, K3153
 ## J7 · COMPLETE
 
 B8 noted (J5's exemption kept until your CHANGE after interface-shell merges). B9 applied: tranche/T47 merged (d25f2d1ac7). Tests on this branch: 46 pass, 1 fail, the same as J6 (page.test.mjs needs interface-shell's merge); nothing of mine changed. Format 0 failures; the record's Completion stands.
+
+## J8 · COMPLETE
+
+B10 applied: tranche/T47 merged with interface-shell; no overlay. Tests: 52 of 52 pass; J5's exemption removed, the tour's page test now finds nothing stored at all. Checks with my paths set locally: format, architecture, coverage (11 of 11), ownership 0 failures; checks/run.mjs architecture 0 failures. Files for modules.json as in the record's Completion (paths bio-plane/src/screens-entry/, tests bio-plane/test/m/screens-entry/).
