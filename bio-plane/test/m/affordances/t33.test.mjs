@@ -144,19 +144,24 @@ const T41_ADDS = { hypotheses: { hypothesistakeup: "reversible", hypothesissetas
 const T45_ADDS = { duties: ["dutyfromresponse", "dutiesarising"], answers: ["standingendset"],
   following: ["followend", "watchlink", "watchanswer", "watchquestions"] };
 
-test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41 and T45 add — "
+/* T47 (K3104, K3112): people's directory read (its R37, DEC-203), graded by op-grades (T47-48) as a read; pinned here so
+   people's map stays closed. */
+const T47_ADDS = { people: ["peopledirectory"] };
+
+test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41, T45 and T47 add — "
    + "each earlier module's map holds the ops T33 adds to it, and no owner serves a retired op", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
     const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
-      ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? [])];
+      ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? []), ...(T47_ADDS[name] ?? [])];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }
   /* R12: each op a later tranche adds is accounted for — named in NON_ACTS (op-grades' tables carry each; N891: which
      table, and its words, are op-grades' tests') */
   for (const op of [...Object.values(T35_ADDS).flat(), ...Object.values(T36_ADDS).flatMap((ops) => Object.keys(ops)),
-                    ...Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops)), ...Object.values(T45_ADDS).flat()])
+                    ...Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops)), ...Object.values(T45_ADDS).flat(),
+                    ...Object.values(T47_ADDS).flat()])
     assert.ok(Object.hasOwn(NON_ACTS, op) && !published().has(op), op);
   /* retired: served by no owner's map (op-grades' tests hold them graded and named nowhere) */
   for (const op of RETIRED) assert.ok(!keysOf(credentialsOps).includes(op) && !keysOf(aiRunsOps).includes(op), op);
