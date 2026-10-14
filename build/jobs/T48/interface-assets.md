@@ -28,3 +28,39 @@ Two stale artifacts and one inherited red, for you to place (mechanics §14):
 - **plane:** the plane bundle is regenerated likewise (L11 close). R6's effect: a fresh import of interface-assets holds about 171 KB of heap, down from about 1,133 KB. The faces are built only when read. Import time is about 7–11 ms either way, in node.
 - **control-plane:** 2 reds, inherited. R32/R39/R46 (C-numbers on the wire) and R53 (OP_STAMPS) fail the same with and without my change: 255/2 with it, 254/3 on the tranche without it; the third, R81, passed in my run. They are not mine.
 - **interface-shell:** 120 pass, 0 fail with the new assets.
+
+## J3 · COMPLETE
+
+T48-68 applied: R5, R6 and R7 met, R7 as K3295 rules it.
+
+**Read, whole:** `build/requirements/interface-assets.md`; my T48 entries; `build/layers.md`'s layer 11 contract; my code (`generate.mjs`; `index.mjs` is generated, not part of the reading set); `assets.test.mjs`; for R6, `bundler` R31 and `plane` R43 and R54; for the pattern, `court-citations` R11's test and `case-checker`'s `program.mjs`; and `page.src.html`'s `<style>` and `civicsmith.css` at `4664e8efd4`.
+
+**Applied:**
+- **R5:** `ASSETS_COMMIT` is `4664e8efd4`. The visual language and page have not changed on `main` since, and START named no later commit. The stylesheet has no `cursor: help`, no cursor on `.cs-card`, and the three kind tokens light and dark.
+- **R6:** each face's base64 is a literal inside its own function, read by the frozen entry's `body` getter. A fresh import holds about 171 KB of heap, down from 1,133 KB, and the faces are built only when read. The entries are byte-identical (R1). I took the "built on first read" form: an upload part would need the module to import a non-JS file, which R4 forbids, and a bundler entry in another module. This matches case-checker's form, as K3207 records.
+- **R7:** `generate.mjs` exports `shellCss` (the test states the transform with it) and writes `shell.css`. Phone rules go inside `@media (max-width: 760px)` with the prefix `:root:root ` (K3295), after the general rules. `.mk-page` becomes `.cs-frame`. The listed product classes (`.e`, `.e-*`, `.gchip`, `.cell`, `.st`/`.st-a…`, `.row`) are carried. Strings and comments are parsed safely.
+- **Fix in my own module:** `generate.mjs` now writes only when run directly, so its test can import it.
+
+**Wording note:** R7's "How selectors are rewritten" sub-bullet still says "with that prefix removed", against its head sentence (K3295). I followed the head; the sub-bullet needs your fold.
+
+**Deferred:** none.
+
+**Other modules (also in J2):**
+- `installer`'s committed `newgroup/dist/newgroup.bundled.mjs` is stale against the new `ASSET_FILES`. newgroup t47 R53 fails on it; installer's job regenerates it.
+- The plane bundle is regenerated at L11's close.
+- control-plane's 2 reds, R32/R39/R46 and R53, are inherited: they fail the same without my change.
+
+**Tests:**
+- interface-assets: 14 pass, 0 fail.
+- interface-shell, with the new assets: 120 pass, 0 fail.
+- control-plane: 255 pass, 2 fail (inherited).
+- newgroup: 59 pass, 1 fail (the stale bundle, above).
+
+**Checks:**
+- format: 0 failures.
+- architecture interface-assets: 0 failures.
+- coverage interface-assets: 7 of 7 ids named; 0 failures.
+- ownership: 4 files; 0 failures.
+- `run.mjs`: architecture 0 failures; coverage 20 failures, all in other modules (screens-investigate, screens-publish, screens-settings, wizard-scripts and others), none mine.
+
+Size (session_01BCkWsN6RVzkFtiC7RpGiWd): test runs 9, module lines 160
