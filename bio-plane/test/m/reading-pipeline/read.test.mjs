@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, sha, EVIDENCE_PREFIX } from "./fixture.mjs";
 import { identify, doctypeFor, registerDoctype } from "../../../../docprofile/registry.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
-import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP } from "../../../src/reading-pipeline/index.mjs";
+import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP, tier2Escalate, tier3Extend } from "../../../src/reading-pipeline/index.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 
 /* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
@@ -79,20 +79,19 @@ test("R1: a type with no reader answers read_from_text false and says so; a read
   const probe = doctypeFor({ ...{ headers: {}, locator: "https://a.example/x", content_type: "text/plain", text: txt },
     handler: identify({ headers: {}, locator: "https://a.example/x", content_type: "text/plain", text: txt }).handler });
   const r = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
-  if (typeof probe.type.parse === "function") {
-    assert.equal(r.read_from_text, true);
-  } else {
-    assert.equal(r.read_from_text, false);
-    assert.match(r.basis, /declares no reader/);
-  }
-  const t = probe.type, saved = t.parse;
-  t.parse = () => { throw new Error("boom in the reader"); };
+  assert.equal(r.read_from_text, typeof probe.type.parse === "function", "as the registered type declares");
+  /* both arms, whatever the registered type declares: no reader, then a reader that throws */
+  const t = probe.type, had = Object.prototype.hasOwnProperty.call(t, "parse"), saved = t.parse;
   try {
+    t.parse = undefined;
+    const n = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
+    assert.deepEqual([n.read_from_text, n.found, n.entities], [false, false, []]);
+    assert.match(n.basis, new RegExp(`the ${t.key} content type declares no reader, so this document has no reading`));
+    t.parse = () => { throw new Error("boom in the reader"); };
     const f = (await w.read(doc({ digest: d, ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
-    assert.equal(f.found, false);
-    assert.equal(f.read_from_text, true);
+    assert.deepEqual([f.found, f.read_from_text, f.entities], [false, true, []]);
     assert.match(f.basis, /boom in the reader/);
-  } finally { if (saved) t.parse = saved; else delete t.parse; }
+  } finally { if (had) t.parse = saved; else delete t.parse; }
 });
 
 test("R2 R12 R13: delimited text read as text at intake is read through its format entry: the entry's own decode, its sheet list and its dialect", async () => {
@@ -273,6 +272,16 @@ test("R7 R8: a folio page keeps its text, gains the transcription appended and i
   const out = await readPdf(fresh(), i2(pages), { env: { OCR_WORKER: member(() => ocrAnswer([1], { text: () => "chart words" })) } });
   const u1 = out.text_units.find((u) => u.extent.page === 1);
   assert.equal(u1.text, "12\nchart words");
+  /* R8: the page OCR filled has its image_unread discharged (and its routing marker), by append and by replacement */
+  const scan = { page: 2, text: "", undetermined: [noText(2), unreadImage(2)] };
+  const t3 = await tier3Extend({ OCR_WORKER: member((b) => ocrAnswer(b.pages, { text: () => "chart words" })) },
+    { sha: "d", storeName: "bio", i2text: i2([...pages, scan]), wiredTier: 1, tier2PerPage: null, fmt: "pdf" });
+  assert.deepEqual(t3.filled, [1, 2]);
+  for (const pg of [1, 2]) {
+    const own = t3.i2text.pages.find((p) => p.page === pg).undetermined.map((u) => u.reason);
+    assert.deepEqual(own.filter((x) => ["image_unread", "image_content_unread", "no_text_layer"].includes(x)), [], `page ${pg + 1}`);
+  }
+  assert.equal(t3.i2text.undetermined.some((u) => u.reason === "image_unread"), false);
 });
 
 test("R8: a page tier 2 wins keeps a still-true image_unread marker, and image_unread does not make a page read as undecoded", async () => {
@@ -287,8 +296,14 @@ test("R8: a page tier 2 wins keeps a still-true image_unread marker, and image_u
     seen = out.reading;
   });
   assert.equal(seen.text_tier, 2);
-  assert.equal(seen.found !== undefined, true);
   assert.equal(seen.read_from_text, true, "image_unread counts no undecoded character");
+  assert.equal(seen.text_undetermined, 0, "the image_unread marker the page keeps is not counted (R3, R17)");
+  /* the page tier 2 won keeps its still-true image_unread, as tier2Escalate (R23) answers the text the reader is handed */
+  const t2 = await tier2Escalate({ PDF_WORKER: member(() => ({ ok: true, text: i2([{ page: 0, text: "decoded well by tier two" }]) })) },
+                                 { sha: "d", storeName: "bio", text: structuredClone(t1) });
+  assert.deepEqual([t2.outcome, t2.replaced], ["merged", [0]]);
+  assert.deepEqual(t2.text.pages[0].undetermined.filter((u) => u.reason === "image_unread"), [unreadImage(0)]);
+  assert.equal(t2.text.pages[0].undetermined.some((u) => u.reason === "no_tounicode"), false, "tier 1's undecoded markers go with its text");
 });
 
 test("R10: no chain until a text surface answers; a layer chain at the wired tier, cap undetermined, reason stated; a Drive export gains convert at the head", async () => {
@@ -506,9 +521,12 @@ test("R8 (N253): a page tier 2 wins keeps its image_unread markers once, through
     const u = out.text_units[0];
     assert.equal(u.text, "decoded well by tier two");
   }
-  const { mergeTier2Text } = await import("../../../src/textchain.mjs");
-  const m = mergeTier2Text(t1, i2([{ page: 0, text: "decoded well by tier two" }]));
-  assert.deepEqual(m.text.pages[0].undetermined.filter((x) => x.reason === "image_unread"), [img]);
+  /* the marker list of the text the reader is handed (tier2Escalate, R23): each image_unread stated once */
+  for (const t2own of [[], [img]]) {
+    const t2 = await tier2Escalate({ PDF_WORKER: member(() => ({ ok: true, text: i2([{ page: 0, text: "decoded well by tier two", undetermined: t2own }]) })) },
+                                   { sha: "d", storeName: "bio", text: structuredClone(t1) });
+    assert.deepEqual(t2.text.pages[0].undetermined.filter((x) => x.reason === "image_unread"), [img], `tier 2 stating ${t2own.length}`);
+  }
 });
 
 test("R12 R21 (N100): page_boxes follows page_count's rule: pdf-reader's boxes as it answered them, null when the structure answered none or one this wire cannot read whole, null for an entry with no structure, absent where no entry answered", async () => {
