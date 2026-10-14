@@ -18,7 +18,7 @@ export const NONE = Object.freeze({
   credentials: { securityLevel: () => ({ level: "Ordinary", levelAt: null }),
                  securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }),
                  projectAccountsSuspended: () => [] },
-  following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEnd: () => null },
+  following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEndAt: () => null },
   standards: { standardRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_STANDARD", id }) },
   fileSafety: { scanFindings: ({ after }) => ({ ok: true, findings: [], cursor: after ?? null, truncated: false }),
                 securityToolEvents: ({ after }) => ({ ok: true, events: [], cursor: after ?? null, truncated: false }),

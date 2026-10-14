@@ -7,6 +7,13 @@ import assert from "node:assert/strict";
 import { world, sha, MEMBER, BOB, MACHINE, DAY } from "../following/fixture.mjs";
 import { fresh, reader, ofKind, sentences, snapshot, notHintFailures, JUDGMENT, HINT, SIGNAL } from "./fixture.mjs";
 import { HINT_MARK, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS } from "../../../src/notice-producers/index.mjs";
+import { WORDS } from "../ai-use/fixture.mjs";
+
+/* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here) */
+const say = (key, fills = {}) => {
+  assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
+  return WORDS[key].replace(/\{([A-Za-z_]+)\}/g, (m, k) => (k in fills ? fills[k] : m));
+};
 
 const KIND = "policy-changed-noticed";
 const ADDR = "https://ellery.example/policies/records-retention";
@@ -71,13 +78,26 @@ test("R13: one FINDING policy-changed-noticed per change with amendment_held fal
   for (const m of ["bob", "outsider", "root"]) assert.deepEqual(items(m), [], m);
 });
 
-test("R13: its detail is exactly DEC-145 (5)'s sentence, <date> the local day of the earlier capture in the profile's zone", async () => {
+test("R13 R20: its summary and detail are queue.policy-changed-noticed.summary and .detail, the detail exactly DEC-145 (5)'s sentence as words.json holds it, {date} the local day of the earlier capture in the profile's zone by date.daymonth, {policy} the policy's cite", async () => {
   const { items } = await setup();
-  assert.deepEqual(items("alice").map((i) => i.detail), [
-    "Changed without notice: the text differs from the copy captured on 2026-09-30, and no amendment was announced",
-    "Changed without notice: the text differs from the copy captured on 2026-10-07, and no amendment was announced",
-    "Changed without notice: the text differs from the copy captured on 2026-10-14, and no amendment was announced"],
+  const got = items("alice");
+  assert.deepEqual(got.map((i) => i.detail), [
+    "Changed without notice: the text differs from the copy captured on 30 September, and no amendment was announced.",
+    "Changed without notice: the text differs from the copy captured on 7 October, and no amendment was announced.",
+    "Changed without notice: the text differs from the copy captured on 14 October, and no amendment was announced."],
     "midnight UTC is the evening before in Halifax");
+  for (const it of got) {
+    assert.equal(it.summary_key, "queue.policy-changed-noticed.summary");
+    assert.equal(it.detail_key, "queue.policy-changed-noticed.detail");
+    assert.equal(it.fills.policy, `the policy ${P1}`);
+    assert.equal(it.summary, say("queue.policy-changed-noticed.summary", it.fills));
+    assert.equal(it.detail, say("queue.policy-changed-noticed.detail", it.fills));
+    assert.equal(it.summary, `Changed without notice: the policy ${P1}`);
+  }
+  /* negative control: a capture in another local year names its year (date.daymonthyear) */
+  const later = (await setup()).items("alice", Date.parse("2027-01-05T12:00:00Z"));
+  assert.ok(later.length > 0, "a change still inside the window");
+  for (const it of later) assert.match(it.fills.date, /^\d{1,2} [A-Z][a-z]+ 2026$/, it.fills.date);
 });
 
 test("R13: it never says what the change means, never states a violation, is never a finding of the record, and is no hint (no R11 mark)", async () => {

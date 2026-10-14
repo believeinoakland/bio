@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R19).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R21).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -11,13 +11,16 @@
  *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
  *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state;
- *                                none due after following.dutyWatchEnd's day (T45), unless already told before
- *                                that end took hold: then it stays until disposed (R18, T46)
+ *                                none due after following.dutyWatchEndAt's day (T45), unless already told at or
+ *                                before the instant that end took hold: then it stays until disposed (R18, T46;
+ *                                R21, T47)
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
  *   R12 security-level-high      FINDING, credentials.securityLevel/securityMap  once per High episode, to administrators
  *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
  *   R14 scan-found               FINDING, file-safety.scanFindings       a file held after a scan, to who may see it
  *   R15 security-tool-off        FINDING, file-safety.securityToolEvents a tool switched off, to administrators
+ *       (R5's, R6's and R13–R15's summary and detail by key from `words.json`, `queue.<kind>[.<state>].summary|detail`,
+ *       each item answering its `summary_key`, `detail_key` and `fills`; R12 keeps its plain sentence; R20, T47)
  *   R16 explore-ask              FINDING ("Ask"), ai-use.exploreAsksPending     an account's daily Ask, to its owners
  *       ai-limit-reached         FINDING, ai-use.limitsReached                  a limit reached this period, to its owners
  *       project-account-suspended FINDING, credentials.projectAccountsSuspended a project's sign-in stopped serving
@@ -518,9 +521,10 @@ export class NoticeProducers {
    * R20); for each whose recipient is this member, `occurrencesOf` as of the read's instant. An occurrence `overdue`
    * (only after the latest candidate) or possibly overdue (between the candidates, civil-time R19) is one item, a
    * question and never a violation. The group's own checkpoint is never one (D234; action-plans R23). (T45) An occurrence
-   * whose due day (the latest candidate's, when undetermined) falls after the day `following.dutyWatchEnd` answers for the
-   * duty is no item; one due on or before it is raised as before. An occurrence with no due day read stays told. (T46, R18)
-   * An occurrence already told before that end took hold is not cut: its item stays until disposed or no longer due. */
+   * whose due day (the latest candidate's, when undetermined) falls after the day `following.dutyWatchEndAt` answers for
+   * the duty is no item; one due on or before it is raised as before. An occurrence with no due day read stays told. (T46,
+   * R18; T47, R21) An occurrence already told at or before the instant that end took hold is not cut: its item stays until
+   * disposed or no longer due. (T47, R20) Its sentences are `words.json`'s by key. */
   #dutiesDue(me, viewer, now) {
     const asOf = instantOf(now);
     const obligors = this.#rows(`SELECT DISTINCT obligor FROM duties WHERE obligor IS NOT NULL ORDER BY obligor`).map((r) => r.obligor);
@@ -547,7 +551,7 @@ export class NoticeProducers {
              (T46, R18) unless it was already told before that end took hold: then it stays until disposed */
           if (ends && it.due && it.due > ends.day) {
             if (!NoticeProducers.#toldBefore(it, ends)) continue;
-            it.basis.watch_end = { day: ends.day, told_before: true };
+            it.basis.watch_end = { day: ends.day, at: ends.at, told_before: true };
           }
           items.push(it);
         }
@@ -556,24 +560,26 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R5 (T45; following R25): the end of this duty's telling, `{day}`: the day after which the duty is no longer told
-   *  (`following.dutyWatchEnd(duty)`), null while no plan's watch on it is answered (R5 as before). A following that
-   *  throws fails R5's read (R1); an answer that is no day is read as no end, so the duty is still told. */
+  /** R5 (T45; following R25), R21 (T47; following R28): the end of this duty's telling, `{day, at}`: the day after which
+   *  the duty is no longer told and the instant that end took hold (`following.dutyWatchEndAt(duty)`), null while no
+   *  plan's watch on it is answered (R5 as before). A following that throws fails R5's read (R1); an answer whose day is
+   *  no day, or whose instant is none, is read as no end, so the duty is still told. */
   #watchEnd(duty) {
     const f = this.#following;
-    if (!f || typeof f.dutyWatchEnd !== "function") return null;
+    if (!f || typeof f.dutyWatchEndAt !== "function") return null;
     let end;
-    try { end = f.dutyWatchEnd(duty); } catch { throw failure("following"); }
-    return typeof end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(end) ? { day: end } : null;
+    try { end = f.dutyWatchEndAt(duty); } catch { throw failure("following"); }
+    if (!end || typeof end !== "object" || typeof end.day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(end.day)) return null;
+    const at = typeof end.at === "string" && INSTANT.test(end.at) ? Date.parse(end.at) : NaN;
+    return Number.isFinite(at) ? { day: end.day, at: end.at, ms: at } : null;
   }
 
-  /** R18 (T46; N927; queue R16; K2996): whether an occurrence was already told before its duty's end of telling, so it
-   *  keeps its item (and is told as R5 tells it) until disposed, met, met late or no longer overdue. It is told from the
-   *  end of its first told day (civil-time, in that day's own zone): the first candidate's, when undetermined, else its
-   *  due day's. Read on the end day alone (following answers no instant): told when that start came no later than the
-   *  end day's start, i.e. its told state began on or before the end day. Exact for a stop, whose day is its answer's
-   *  own; a keep answered before an occurrence whose candidates span its day reads as told (the instant is N967, T47).
-   *  A start that cannot be read is not told. */
+  /** R18 (T46; N927; queue R16), R21 (T47; N967; following R28): whether an occurrence was already told before its
+   *  duty's end of telling took hold, so it keeps its item (and is told as R5 tells it) until disposed, met, met late or
+   *  no longer overdue. Its told state begins at the end of its first told day (civil-time, in that day's own zone): the
+   *  first candidate's, when its due date is uncertain (`undetermined` once that candidate has passed), else its due
+   *  day's (`overdue`). It was told before the end when that beginning is at or before `at`, the instant the end took
+   *  hold (the answer that made it hold), for a `keep` as for a `stop`. A beginning that cannot be read is not told. */
   static #toldBefore(item, ends) {
     const due = item && item.subject ? item.subject.due : null;
     const first = due && Array.isArray(due.candidates) ? due.candidates[0] : due;
@@ -582,8 +588,7 @@ export class NoticeProducers {
     if (!day || !zone) return false;
     try {
       const from = Date.parse((dayRange(day, day, zone) || {}).end);
-      const endStart = Date.parse((dayRange(ends.day, ends.day, zone) || {}).start);
-      return Number.isFinite(from) && Number.isFinite(endStart) && from <= endStart;
+      return Number.isFinite(from) && from <= ends.ms;
     } catch { return false; }
   }
 
@@ -595,6 +600,12 @@ export class NoticeProducers {
     const owners = filled(project) ? (this.#membership.projectOwners(project) || []).map(bare) : [];
     if (owners.length) return { rule: "project_owners", members: owners };
     return { rule: "administrators", members: (this.#membership.activeAdmins() || []).map(bare) };
+  }
+
+  /** R20's `{office}`: the duty's obligor, as `duties` answers it (its id; see the job record, J1), capitalised to begin
+   *  the sentence. */
+  #officeOf(d) {
+    return capital(filled(d.obligor) ? d.obligor : d.duty_id);
   }
 
   #occurrenceItem(d, occ, to, asOf, viewer, now) {
@@ -612,13 +623,25 @@ export class NoticeProducers {
     const body = due && Array.isArray(due.candidates) ? due.candidates[due.candidates.length - 1] : due;
     const first = due && Array.isArray(due.candidates) ? due.candidates[0] : due;
     const dueDay = body && typeof body === "object" ? dayOf(body.value) : dayOf(body);
-    const words = due && Array.isArray(due.candidates) ? `between ${due.candidates.map((c) => c.value).join(" and ")}` : `by ${dueDay ?? "its due date"}`;
-    const act = d.performance && d.performance.act ? d.performance.act : "what it names";
-    const sinceDay = state === "overdue" ? dueDay : first && typeof first === "object" ? dayOf(first.value) : null;
+    const firstDay = first && typeof first === "object" ? dayOf(first.value) : dayOf(first);
+    const sinceDay = state === "overdue" ? dueDay : firstDay;
     const sinceZone = state === "overdue" ? (body && typeof body === "object" ? body.zone : null) : (first && typeof first === "object" ? first.zone : null);
+    /* R20 (T47; DEC-198 (3)): the sentences by key, `.overdue.*` or `.undetermined.*`, filled from duties' own facts */
+    const today = NoticeProducers.#localDay(now, this.#zone() ?? (filled(sinceZone) ? sinceZone : null));
+    const told = state === "overdue" ? "overdue" : "undetermined";
+    const act = d.performance && filled(d.performance.act) ? d.performance.act : d.duty_id;
+    const trace = occ.due && occ.due.trace && typeof occ.due.trace === "object" ? occ.due.trace : {};
+    const why = filled(occ.why) ? occ.why.replace(/^possibly overdue: undetermined, because\s+/i, "").replace(/\.\s*$/, "") : "";
+    const fills = { duty: act, office: this.#officeOf(d), what: act,
+                    basis: filled(trace.citation) ? trace.citation : d.adoption && filled(d.adoption.clause) ? d.adoption.clause
+                      : occ.due && filled(occ.due.basis_kind) ? occ.due.basis_kind : (d.time && d.time.basis) || "",
+                    reason: why,
+                    ...(told === "overdue" ? { date: dayInSentence(dueDay, today) }
+                      : { from: dayInSentence(firstDay, today), to: dayInSentence(dueDay, today) }) };
+    const summaryKey = `queue.temporal-expectation-due.${told}.summary`, detailKey = `queue.temporal-expectation-due.${told}.detail`;
     return {
       /* K1676: the key carries the occurrence's state as duties answers it, so possibly overdue becoming overdue is new */
-      id: `FINDING::temporal-expectation-due::${d.duty_id}::${occ.key}::${state === "overdue" ? "overdue" : "undetermined"}`,
+      id: `FINDING::temporal-expectation-due::${d.duty_id}::${occ.key}::${told}`,
       class: "FINDING", kind: "temporal-expectation-due",
       label: NOTICED_LABEL, by: "the machine's",
       case: this.#homesAt(filled(d.project) ? [d.project] : [], viewer),
@@ -626,12 +649,7 @@ export class NoticeProducers {
       subject: { kind: "duty", id: d.duty_id, occurrence: occ.key, due: due ?? null,
                  basis_kind: occ.due && occ.due.basis_kind ? occ.due.basis_kind : (d.time && d.time.basis) || null,
                  derivation: occ.derivation ?? null, state },
-      summary: state === "overdue"
-        ? `A question: was "${act}" done ${words}? No matching event is held`
-        : `A question: "${act}" is possibly overdue; its due date is uncertain`,
-      detail: state === "overdue"
-        ? (occ.question || `the record holds no matching event ${words}, as known on ${asOf.slice(0, 10)}. This is a question, not a finding.`)
-        : `${occ.why}. This is a question, not a finding.`,
+      summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
       basis: { source: "duties.occurrencesOf", duty: d.duty_id, occurrence: occ.key, state: occ.state, why: occ.why ?? null,
                trigger: occ.trigger ?? null, due: occ.due ?? null, derivation: occ.derivation ?? null, as_of: asOf,
                recipients_rule: to.rule,
@@ -658,18 +676,24 @@ export class NoticeProducers {
       byKey.get(id).push(w);
     }
     const items = [];
+    const today = NoticeProducers.#localDay(now, filled(r.zone) ? r.zone : this.#zone());
     for (const [id, ws] of byKey) {
       const w = ws[0];
-      const what = ws.map((x) => `${x.text}${filled(x.description) ? ` (${x.description})` : ""}`).join("; ");
+      /* R20 (T47; DEC-198 (3)): the sentences by key; `{what}` each wait's text and `{who}` its description, as inquiry
+         answers them (its R55: what, and from whom, DEC-98), a description's own leading "from" left to the sentence, a wait
+         with no description naming its text; `{date}` its day */
+      const what = [...new Set(ws.map((x) => x.text).filter(filled))].join("; ");
+      const whom = (x) => (filled(x.description) ? x.description.trim().replace(/^from\s+/i, "") : x.text);   /* the sentence says "from" */
+      const who = [...new Set(ws.map(whom).filter(filled))].join("; ");
+      const fills = { question: this.#titleOf(w.inquiry, viewer) ?? w.inquiry, what, who, date: dayInSentence(w.date, today) };
+      const summaryKey = "queue.inquiry-recheck-due.summary", detailKey = "queue.inquiry-recheck-due.detail";
       items.push({
         id, class: "OBLIGATION", kind: "inquiry-recheck-due",
         case: this.#homesAt([w.inquiry], viewer),
         due: w.date,
         subject: { kind: "inquiry", id: w.inquiry, date: w.date,
                    waits: ws.map((x) => ({ index: x.index, text: x.text, description: x.description ?? null, set_at: x.set_at ?? null })) },
-        summary: `A to do: look again at ${w.inquiry}, awaiting ${what}, by ${w.date}`,
-        detail: `You set this question to be looked at again on ${w.date}, awaiting ${what}. Record that you looked, set a `
-              + "new date or remove the wait; it is told once.",
+        summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "inquiry.datedWaits", inquiry: w.inquiry, date: w.date, set_by: w.set_by, zone: r.zone ?? null,
                  waits: ws.map((x) => x.index),
                  detail: "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the "
@@ -795,7 +819,7 @@ export class NoticeProducers {
       if (admins === null) { try { admins = (this.#membership.activeAdmins() || []).map(bare); } catch { throw failure("membership"); } }
       return admins;
     };
-    const zone = this.#zone();
+    const zone = this.#zone(), today = NoticeProducers.#localDay(now, zone);
     const items = [];
     for (const c of changes) {
       if (!filled(c.standard) || !c.before || !c.after || !filled(c.after.capture)) continue;
@@ -812,15 +836,16 @@ export class NoticeProducers {
       }
       const to = recipientOf.get(c.standard);
       if (!to || !to.members.includes(me)) continue;
-      const date = NoticeProducers.#localDate(c.before.at, zone);
+      /* R20 (T47; DEC-198 (3)): the sentences by key, `{date}` the local day of `before.at` (DEC-145 (5)'s sentence) */
+      const fills = { policy: to.cite ?? c.standard, date: dayInSentence(NoticeProducers.#localDate(c.before.at, zone), today) };
+      const summaryKey = "queue.policy-changed-noticed.summary", detailKey = "queue.policy-changed-noticed.detail";
       items.push({
         id: `FINDING::policy-changed-noticed::${c.watch}::${c.after.capture}`, class: "FINDING", kind: "policy-changed-noticed",
         label: NOTICED_LABEL, by: "the machine's",
         case: this.#homesAt([c.standard], viewer),
         subject: { kind: "standard", id: c.standard, cite: to.cite, address: c.address ?? null, watch: c.watch,
                    before: { capture: c.before.capture, at: c.before.at }, after: { capture: c.after.capture, at: c.after.at } },
-        summary: `The published copy of ${to.cite ?? c.standard} changed`,
-        detail: `Changed without notice: the text differs from the copy captured on ${date}, and no amendment was announced`,
+        summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "following.policyChanges", standard: c.standard, watch: c.watch, address: c.address ?? null,
                  before: c.before, after: c.after, amendment_held: false, recipients_rule: to.rule, zone,
                  detail: "a difference between two captures of a policy's published copy (following R21), never a "
@@ -862,31 +887,30 @@ export class NoticeProducers {
       if (r.truncated !== true || r.cursor === null || r.cursor === undefined || r.cursor === after) break;
       after = r.cursor;
     }
-    const zone = this.#zone();
+    const zone = this.#zone(), today = NoticeProducers.#localDay(now, zone);
     const items = [];
     for (const f of found) {
       if (!f || !filled(f.captureSha) || !filled(f.note_id)) continue;
       if (f.held === false) continue;                       /* no open hold covers it any longer: it leaves (N771) */
-      let home = null;
-      try { const h = this.#provenance.homeOf(f.captureSha); home = h && filled(h.bundleId) ? h.bundleId : null; }
+      let home = null, path = null;
+      try { const h = this.#provenance.homeOf(f.captureSha); home = h && filled(h.bundleId) ? h.bundleId : null; path = h && filled(h.path) ? h.path : null; }
       catch { throw failure("provenance"); }
       const names = (Array.isArray(f.findings) ? f.findings : []).filter(filled);
-      const day = NoticeProducers.#localDate(f.at, zone);
-      const by = `${f.engine ? `${f.engine}, ` : ""}the tool ${f.tool ?? "not named"}`;
       const explained = names.map((n) => ({ name: n, ...findingKind(n) }));
-      const said = explained.length
-        ? explained.map((k) => `${k.name}: ${k.words.replace(/\.?$/, ".")}`).join(" ")
-        : "The scanner named no finding.";
+      /* R20 (T47; DEC-198 (3)): the sentences by key; `{document}` the title of the document the file is held in (its home,
+         as this viewer sees it), else its registered path's last part (provenance R11), else the capture; `{engine}` the engine, else the tool, as named (a name is data); `{meanings}` each name in findingKind's words (its
+         R38), named before its words when there are several; `{date}` the note's local day */
+      const meanings = explained.map((k) => (explained.length > 1 ? `${k.name}: ` : "") + String(k.words || "").replace(/\.\s*$/, ""));
+      const fills = { document: (home && this.#titleOf(home, viewer)) || (path && path.split("/").filter(filled).at(-1)) || f.captureSha,
+                      engine: filled(f.engine) ? f.engine : filled(f.tool) ? f.tool : "", names: names.join(", "),
+                      meanings: meanings.join("; "), date: dayInSentence(NoticeProducers.#localDate(f.at, zone), today) };
+      const summaryKey = "queue.scan-found.summary", detailKey = "queue.scan-found.detail";
       items.push({
         id: `FINDING::scan-found::${f.captureSha}::${f.note_id}`, class: "FINDING", kind: "scan-found",
         by: "a scanner's",
         case: home ? this.#homesAt([home], viewer) : this.#homesOf([]),
         subject: { kind: "capture_home", id: home, capture: f.captureSha, note: f.note_id },
-        summary: `A file you can see was held after a scan found ${names.length === 1 ? names[0] : names.length ? `${names.length} things` : "something"} in it`,
-        detail: `This file is held: on ${day} ${by} found ${names.length ? names.join(", ") : "something"} in it. ${said} `
-              + "Its safe view stays open. The original opens again only when two members each release the hold with a "
-              + "reason, or when a second, different engine's clean check releases a hold the built-in scanner alone "
-              + "placed; the machine never can.",
+        summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "file-safety.scanFindings", capture: f.captureSha, note: f.note_id, tool: f.tool ?? null,
                  engine: f.engine ?? null, at: f.at ?? null, findings: explained, home, zone,
                  detail: "a scanner's `found` note (file-safety R15) places a scan hold (its R16): the original does not "
@@ -933,14 +957,15 @@ export class NoticeProducers {
       if (tool && tool.state === "on") continue;
       if (events.slice(i + 1).some((x) => x && x.tool_id === e.tool_id && x.event === TOOL_TEST_PASSED)) continue;
       const name = tool && filled(tool.provider_id) ? `${tool.provider_id} (${e.tool_id})` : e.tool_id;
+      /* R20 (T47; DEC-198 (3)): the sentences by key, `{tool}` the tool as named here */
+      const fills = { tool: name };
+      const summaryKey = "queue.security-tool-off.summary", detailKey = "queue.security-tool-off.detail";
       items.push({
         id: `FINDING::security-tool-off::${e.tool_id}::${e.at}`, class: "FINDING", kind: "security-tool-off",
         by: "the group's Civicsmith",
         case: this.#homesOf([]),
         subject: { kind: "civicsmith", id: null, tool: e.tool_id, provider: tool ? tool.provider_id ?? null : null },
-        summary: `A security tool was switched off: ${name}`,
-        detail: `The security tool ${name} was switched off on ${NoticeProducers.#localDate(e.at, zone)} because it did not `
-              + "confirm the private mode its handling requires. It stays off until an administrator tests it again.",
+        summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
         basis: { source: "file-safety.securityToolEvents", tool: e.tool_id, event: e.event, at: e.at,
                  off_reason: tool ? tool.off_reason ?? null : null, state: tool ? tool.state ?? null : null, zone,
                  detail: "a tool answering PRIVATE_MODE_NOT_HONOURED is switched off (file-safety R31) and is used again "
