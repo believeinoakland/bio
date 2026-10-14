@@ -3286,5 +3286,665 @@
   "en": "Steps it is threaded to",
   "protected": false,
   "note": "DEC-243: captureprogressions R19 on the document"
+ },
+ {
+  "key": "dock.withheld.MEMBER_PRINCIPAL_RUN",
+  "en": "“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.",
+  "protected": false,
+  "note": "DEC-248: D18; K3347: no API key is suggested"
+ },
+ {
+  "key": "dock.withheld.AGENT_WORKER_UNBOUND",
+  "en": "The assistant isn't installed in your group's Civicsmith yet, so this run can't start. Nothing was sent. Whoever installed your group's Civicsmith can add it; everything else works without it.",
+  "protected": false,
+  "note": "DEC-248: D18"
+ },
+ {
+  "key": "dock.withheld.NAMESPACE_UNDETERMINED",
+  "en": "The run can't start: your group's Civicsmith couldn't tell which of its stores to use. Nothing was sent. This is a fault in Civicsmith, not something you did: tell an administrator, with the reference below.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "dock.withheld.CREDENTIAL_RECORD_SILENT",
+  "en": "The run can't start: your group's Civicsmith didn't answer in time while preparing it. Nothing was sent. Try again in a moment.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "dock.withheld.other",
+  "en": "The run can't start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.",
+  "protected": false,
+  "note": "DEC-248: any withheld code without a key; never blank (R33)"
+ },
+ {
+  "key": "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
+  "en": "The run can't start: your membership isn't active in your group's Civicsmith just now. Nothing was sent. An administrator can tell you why.",
+  "protected": false,
+  "note": "DEC-248: R13"
+ },
+ {
+  "key": "refusal.AI_RUN_NOT_PRINCIPAL",
+  "en": "This run was opened on another member's account, so you can't set it working. Nothing was sent. Start your own with Work on this.",
+  "protected": false,
+  "note": "DEC-248: R6, R13"
+ },
+ {
+  "key": "refusal.AI_RUN_NOT_RUNNING",
+  "en": "This run has already ended, so it can't be set working again. Nothing was sent. Start a new one with Work on this.",
+  "protected": false,
+  "note": "DEC-248: R6"
+ },
+ {
+  "key": "refusal.AI_RUN_BOUND_NO_ALLOWANCE",
+  "en": "The run can't start: it was opened without the room this kind of run needs to fetch and work. Nothing was sent. Try again; if it happens again, tell an administrator, with the reference below.",
+  "protected": false,
+  "note": "DEC-248: D3, R33"
+ },
+ {
+  "key": "dock.run.yours",
+  "en": "A run of yours is working on this.",
+  "protected": false,
+  "note": "DEC-248: drawn only while the last airun read says running (R33)"
+ },
+ {
+  "key": "ai.serves.own",
+  "en": "On your own account",
+  "protected": false,
+  "note": "DEC-248: the dock's header (R4, R13); DEC-246 question.ai.whose"
+ },
+ {
+  "key": "ai.serves.group",
+  "en": "On the group's key",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.serves.project",
+  "en": "On {project}'s account",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.serves.own_says",
+  "en": "Your own Claude subscription serves you here, so its use is yours.",
+  "protected": false,
+  "note": "DEC-248: the header's explanation"
+ },
+ {
+  "key": "dock.ifnot",
+  "en": "If a run can't start, the panel says why, here",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "dock.use.head",
+  "en": "Your account's use, last 30 days",
+  "protected": false,
+  "note": "DEC-248: R17, drawn only for the serving account's owner"
+ },
+ {
+  "key": "ai.log.withheld.NO_ACCOUNT",
+  "en": "Stopped before it began: no account served the member who started it. Nothing went to the assistant.",
+  "protected": false,
+  "note": "DEC-248: ai-runs R18, the wake"
+ },
+ {
+  "key": "ai.log.withheld.NOT_THE_INSTANCE_CREDENTIALS_RUN",
+  "en": "Stopped before it began: it was opened under another account than the one it was to run on. Nothing went to the assistant. Tell an administrator, with the reference.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.log.withheld.NO_INSTANCE_AI_CREDENTIAL",
+  "en": "Stopped before it began: your group's Civicsmith has no pass of its own for running the assistant. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD",
+  "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant isn't on its record. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it again.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_REVOKED",
+  "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant was withdrawn. Nothing went to the assistant. Whoever installed your group's Civicsmith can set a new one.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION",
+  "en": "Stopped before it began: the pass your group's Civicsmith holds for the assistant is of the wrong kind. Nothing went to the assistant. Whoever installed your group's Civicsmith can set the right one.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "count.questions.one",
+  "en": "{n} question",
+  "protected": false,
+  "note": "DEC-248: D30, screens-daily R25; every count has .one and .other"
+ },
+ {
+  "key": "count.questions.other",
+  "en": "{n} questions",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "count.documents.one",
+  "en": "{n} document",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "count.documents.other",
+  "en": "{n} documents",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "count.members.one",
+  "en": "{n} member",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "count.members.other",
+  "en": "{n} members",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "updates.running.release_setup",
+  "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+  "protected": false,
+  "note": "DEC-248: D30, screens-settings R37; for an install with no member behind it (setup, admin before a handle, a token)"
+ },
+ {
+  "key": "updates.earlier.installed_setup",
+  "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "refusal.NO_NODE",
+  "en": "Explore needs something to start from. Open a document, a person or a question, and choose Explore connections there.",
+  "protected": false,
+  "note": "DEC-248: D30, screens-investigate R29"
+ },
+ {
+  "key": "connect.change.signin_set",
+  "en": "{who} connected a Claude subscription · {date}",
+  "protected": false,
+  "note": "DEC-248: D30, R37: {who} is a handle, or “You” for the viewer; never empty"
+ },
+ {
+  "key": "connect.change.removed",
+  "en": "{who} disconnected the account · {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "connect.change.switched",
+  "en": "{who} changed which account serves {member} · {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "connect.change.use_set",
+  "en": "{who} changed what the account pays for · {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "connect.change.limit_set",
+  "en": "{who} set a limit: {limit} · {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "connect.change.limit_removed",
+  "en": "{who} removed a limit: {limit} · {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "translations.none",
+  "en": "Your group uses no language but English yet, so there is nothing to translate. When your group adds a language, its words wait here for members who speak it to translate.",
+  "protected": false,
+  "note": "DEC-248: D30, screens-settings R37"
+ },
+ {
+  "key": "queue.project-invitation.summary",
+  "en": "{who} invited you to join {project}",
+  "protected": false,
+  "note": "DEC-248: D25; class OBLIGATION, as membership-request"
+ },
+ {
+  "key": "queue.project-invitation.detail",
+  "en": "Join to see the project whole and work on it with its members. The invitation waits here until you join.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "projects.invited.head",
+  "en": "Invited",
+  "protected": false,
+  "note": "DEC-248: R29"
+ },
+ {
+  "key": "projects.invited.says",
+  "en": "A project you were invited to and have not joined. Join to see it whole and work on it; the invitation also waits in your queue until you do.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "projects.invited.meta",
+  "en": "{who} invited you on {date}",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "due.ours.passed",
+  "en": "Our own date passed {date}",
+  "protected": false,
+  "note": "DEC-248: fold point 4; never \"overdue\" (DEC-243, R28)"
+ },
+ {
+  "key": "due.ours.passed_says",
+  "en": "A date your group set itself, not one a law or an office set. Passing it binds nobody; it tells you your own plan has slipped.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "home.strip.ours_passed.one",
+  "en": "1 of our own dates passed",
+  "protected": false,
+  "note": "DEC-248: R28, in place of screen.home.strip.overdue"
+ },
+ {
+  "key": "home.strip.ours_passed.other",
+  "en": "{n} of our own dates passed",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "reading.affirm.head",
+  "en": "Before you accept",
+  "protected": false,
+  "note": "DEC-248: fold point 5; basis-versions R12"
+ },
+ {
+  "key": "reading.affirm.says",
+  "en": "This reading rests on {n} parts, each enough on its own: your answer stands if any one holds. Accepting says you have read each part and stand behind it, so tick each one.",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "reading.affirm.part",
+  "en": "I have read {part} and stand behind it",
+  "protected": false,
+  "note": "DEC-248: one per part; versionaccept sends every ticked part as affirmed"
+ },
+ {
+  "key": "reading.affirm.accept",
+  "en": "Accept the reading",
+  "protected": false,
+  "note": "DEC-248"
+ },
+ {
+  "key": "refusal.VERSION_AFFIRMATION_INCOMPLETE",
+  "en": "Tick each part first: accepting says you stand behind every part this reading rests on, and {part} is not ticked.",
+  "protected": false,
+  "note": "DEC-248: C-25.33"
+ },
+ {
+  "key": "connect.notnow",
+  "en": "Nothing is connected. Everything in Civicsmith works without the assistant; come back here whenever you want it.",
+  "protected": false,
+  "note": "DEC-249: screens-settings R30, \"Not now\" draws nothing more"
+ },
+ {
+  "key": "setup.skip",
+  "en": "Skip for now",
+  "protected": false,
+  "note": "DEC-249: screens-entry R6, every part"
+ },
+ {
+  "key": "setup.skip_does",
+  "en": "Moves on and leaves this part as it is. Setup shows it as skipped, and you can come back to it here or under Settings at any time.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "setup.admin.invite",
+  "en": "Invite a second administrator",
+  "protected": false,
+  "note": "DEC-249: R6, memberadd with role admin"
+ },
+ {
+  "key": "setup.admin.invite_does",
+  "en": "Makes an invitation with the administrator role, for someone you trust. You pass the link on yourself; Civicsmith sends no email. Members are invited later, from Members.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.head",
+  "en": "Enter your password again",
+  "protected": false,
+  "note": "DEC-249: interface-shell R34, the dialog; its sentence is session.reauth"
+ },
+ {
+  "key": "session.reauth.go",
+  "en": "Go on",
+  "protected": false,
+  "note": "DEC-249: sends reauth, then the act once more"
+ },
+ {
+  "key": "session.reauth.go_does",
+  "en": "Checks your password, then does what you asked, once. Nothing else changes.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.cancel_does",
+  "en": "Closes this and sends nothing; what you wrote stays where it was.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.wrong",
+  "en": "That password isn't right. Nothing was sent; try again.",
+  "protected": false,
+  "note": "DEC-249: a wrong password resends nothing (R34)"
+ },
+ {
+  "key": "project.draw.head",
+  "en": "Draw on a question from elsewhere",
+  "protected": false,
+  "note": "DEC-250: screens-inquiry R11, R16"
+ },
+ {
+  "key": "project.draw.says",
+  "en": "A question another project opened, or one on its own, that this project should rest on too. It stays where it is; this project reads its answer and is told when it changes.",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "project.draw.which",
+  "en": "Which question",
+  "protected": false,
+  "note": "DEC-250: cs.choice over the questions the member may see"
+ },
+ {
+  "key": "project.draw.choose",
+  "en": "Choose a question you can see…",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "project.draw.go",
+  "en": "Draw on it",
+  "protected": false,
+  "note": "DEC-250: drawquestion"
+ },
+ {
+  "key": "project.draw.already",
+  "en": "This project already draws on that question.",
+  "protected": false,
+  "note": "DEC-250: alreadyCited"
+ },
+ {
+  "key": "project.open.drawfailed",
+  "en": "The question is open on its own page, but it couldn't be put in this project: {reason}",
+  "protected": false,
+  "note": "DEC-250: R11, the second step refused, beside \"Open a question\""
+ },
+ {
+  "key": "held.setaside.head",
+  "en": "Set aside",
+  "protected": false,
+  "note": "DEC-250: screens-intake R13"
+ },
+ {
+  "key": "held.setaside.says",
+  "en": "Captures a member set aside, with who did it, when and why. They stay here, never deleted, until someone restores one.",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "held.setaside.meta",
+  "en": "Set aside by {who}, {date}: “{reason}”",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "held.restore",
+  "en": "Restore, with a reason",
+  "protected": false,
+  "note": "DEC-250: heldrestore"
+ },
+ {
+  "key": "held.restore_does",
+  "en": "Puts it back among the held captures, to vouch for or set aside again. Your reason is kept beside the first; nothing is lost either way.",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "capture.captured",
+  "en": "Captured: {title}",
+  "protected": false,
+  "note": "DEC-250: screens-intake R14, R18; the watch acts join the act row only now"
+ },
+ {
+  "key": "capture.watch.freq",
+  "en": "How often to look",
+  "protected": false,
+  "note": "DEC-250: monitorset frequency, a MONITOR_FREQ word"
+ },
+ {
+  "key": "capture.watch.freq_says",
+  "en": "How often your group's Civicsmith fetches the address again to see whether it changed. At each meeting: after each meeting of the body that publishes it. A change is captured as a new version, and whoever cited the old one is told in their queue.",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "monitor.freq.hourly",
+  "en": "Every hour",
+  "protected": false,
+  "note": "DEC-250: MONITOR_FREQ"
+ },
+ {
+  "key": "monitor.freq.daily",
+  "en": "Every day",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "monitor.freq.weekly",
+  "en": "Every week",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "monitor.freq.monthly",
+  "en": "Every month",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "monitor.freq.per_meeting",
+  "en": "At each meeting",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "monitor.freq.none",
+  "en": "Not watched",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "refusal.NO_LOCATOR",
+  "en": "This document has no address to watch: it came from a file, not from a page.",
+  "protected": false,
+  "note": "DEC-250: R14"
+ },
+ {
+  "key": "refusal.NOT_MONITORED",
+  "en": "This address isn't being watched, so there is nothing to check yet. Watch it first.",
+  "protected": false,
+  "note": "DEC-250: R14"
+ },
+ {
+  "key": "testimony.draft.label",
+  "en": "Draft · the assistant's, asked by {handle}",
+  "protected": false,
+  "note": "DEC-250: screens-intake R3, R10"
+ },
+ {
+  "key": "testimony.draft.says",
+  "en": "After “Help me write this”, the assistant's wording fills the field, marked as its draft. It words only what you wrote that you saw, and adds nothing; it is kept only when you record it.",
+  "protected": false,
+  "note": "DEC-250: DEC-153 (2)"
+ },
+ {
+  "key": "document.backlinks.head",
+  "en": "What cites it",
+  "protected": false,
+  "note": "DEC-250: screens-inquiry R3, backlinks"
+ },
+ {
+  "key": "document.backlinks.says",
+  "en": "The questions and findings that rest on this document, so you know what a newer version or a correction would touch. Only what you may see is named.",
+  "protected": false,
+  "note": "DEC-250"
+ },
+ {
+  "key": "document.backlinks.row",
+  "en": "{project} · cites {where}, {how}",
+  "protected": false,
+  "note": "DEC-250: {how} as support, or cutting against"
+ },
+ {
+  "key": "document.backlinks.hidden",
+  "en": "Something you can't see cites it too: a project you aren't part of. Its name and what it says stay with its members.",
+  "protected": false,
+  "note": "DEC-250: out_of_view (DEC-36, K903 (4))"
+ },
+ {
+  "key": "shell.menu.name",
+  "en": "Your menu",
+  "protected": false,
+  "note": "DEC-251: interface-shell R4, under the masthead's initial"
+ },
+ {
+  "key": "shell.menu.says",
+  "en": "Your account, and signing out of this device.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.who",
+  "en": "{name} · signed in as {handle}",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.account",
+  "en": "Your account",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.signout",
+  "en": "Sign out",
+  "protected": false,
+  "note": "DEC-251: op=signout, then the session record cleared and /"
+ },
+ {
+  "key": "shell.menu.signout_does",
+  "en": "Ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "level.keep.ask",
+  "en": "You've used Civicsmith for a month with explanations shown promptly. Keep it that way, or show them only on a longer pause?",
+  "protected": false,
+  "note": "DEC-251: interface-shell R17, asked once after the first month, a note atop Home above everything else; either answer closes it for good"
+ },
+ {
+  "key": "level.keep.prompt",
+  "en": "Keep explaining promptly",
+  "protected": false,
+  "note": "DEC-251: infolevelset prompt"
+ },
+ {
+  "key": "level.keep.pause",
+  "en": "Only on a longer pause",
+  "protected": false,
+  "note": "DEC-251: infolevelset pause"
+ },
+ {
+  "key": "level.keep.later",
+  "en": "You can switch at any time with the Explanations button at the top, or Alt+Shift+I.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "settings.set.system",
+  "en": "set by Civicsmith itself",
+  "protected": false,
+  "note": "DEC-251: screens-settings R33, a value written by a seed or a machine credential after setup; settings.set.setup stays \"set at setup\", now final"
+ },
+ {
+  "key": "court.statement",
+  "en": "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.",
+  "protected": true,
+  "note": "DEC-251: screens-settings R7, membership R108's words exactly (DEC-136)"
+ },
+ {
+  "key": "join.cap.says",
+  "en": "On a busy day, the group's join link says this instead",
+  "protected": false,
+  "note": "DEC-251: screens-entry R7; the words are refusal.JOIN_LINK_DAILY_CAP"
+ },
+ {
+  "key": "project.bar.both",
+  "en": "Bar: {source}/{connection}",
+  "protected": false,
+  "note": "DEC-251: screens-inquiry R10, both axes declared"
+ },
+ {
+  "key": "project.bar.source_only",
+  "en": "Bar: {source} for sources; none for connection",
+  "protected": false,
+  "note": "DEC-251: an undeclared axis in words"
+ },
+ {
+  "key": "project.bar.connection_only",
+  "en": "Bar: none for sources; {connection} for connection",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "project.bar.none",
+  "en": "No bar set for this project",
+  "protected": false,
+  "note": "DEC-251: absent, never zero"
+ },
+ {
+  "key": "inbox.discard.why",
+  "en": "Why discard it? (asked before anything is discarded)",
+  "protected": false,
+  "note": "DEC-251: screens-intake R7"
+ },
+ {
+  "key": "refusal.RESOLVE_NO_REASON",
+  "en": "Say why first: a knock is discarded only with a reason, and it stays as it was until you give one.",
+  "protected": false,
+  "note": "DEC-251: screens-intake R7"
  }
 ]

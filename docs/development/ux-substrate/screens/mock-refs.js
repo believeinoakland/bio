@@ -98,7 +98,7 @@ const SCREEN_REFS = {
     ["Check a pothole report","capture","<b>Check a pothole report</b> · a draft wizard by Dev · for visiting a closed report and recording what you see","Not offered to members until it is submitted and approved."]
   ],
   "queue": [
-    ["The Coliseum lease","project","<b>The Coliseum lease</b> · project · owner: Dev · 3 items for you here","Waiting on you: a decision on the newer lease amendment; also a disagreement on dates and an overdue reply."],
+    ["The Coliseum lease","project","<b>The Coliseum lease</b> · project · owner: Dev · 3 items for you here","Waiting on you: a decision on the newer lease amendment; also a disagreement on dates and a reply due 9 October with none recorded."],
     ["Pothole repairs","project","<b>Pothole repairs</b> · project · whether potholes are repaired within the seven days Administrative Instruction 4.12 sets · 6 items for you here","Waiting on you: Ana's request to check the 812 of 903 count, due 16 October."],
     ["the rent adjustment","matter","<b>The 2024 rent adjustment</b> · a matter in The Coliseum lease · signed by the City Administrator, March 2024, without a council vote","Two documents disagree on its date; a member must judge which one holds."],
     ["A council member","explore","<b>J. Ortega</b> · Council District 3 since 2023 · his Form 700 for 2025 lists income from Bayline Properties","A lead, never a finding: nothing is evidence until a member opens a question and cites the documents."],

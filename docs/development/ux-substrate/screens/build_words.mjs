@@ -33,7 +33,15 @@ const lib = JSON.parse(R('library.json')).scripts;
 const plain = s => String(s).replace(/<span class=["']?more["']?>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const words = [];
 const seen = new Set();
+const T49 = JSON.parse(R('words-t49.json'));
+const retiredSeen = new Set(), rewriteSeen = new Set();
+// DEC-259: the remaining screens' drawn words, written by words-drawn.src.py; its rewrites apply like T49's, to any row
+const DRAWN = JSON.parse(R('words-drawn.json'));
+const drawnSeen = new Set();
 const add = (key, en, prot, source, note) => {
+  if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
+  if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + ((T49.rewrite_dec || {})[key] || 'DEC-256') + ': reworded'; }
+  if (key in DRAWN.rewrite) { drawnSeen.add(key); en = DRAWN.rewrite[key]; note = (note ? note + '; ' : '') + 'DEC-259: reworded'; }
   if (seen.has(key)) fail('duplicate key ' + key);
   if (!en || !String(en).trim()) fail('empty text for ' + key);
   seen.add(key);
@@ -274,6 +282,13 @@ for (const x of JSON.parse(R('words-t46.json'))) add(x.key, x.en, x.protected, '
 for (const x of JSON.parse(R('words-t47.json'))) add(x.key, x.en, x.protected, 'DEC-200', x.note || undefined);
 // 4j. T48's words (DEC-226, DEC-227, DEC-229 onward; BOB's B179, B185; the census's drawings): written in words-t48.src.py, which writes words-t48.json; each entry's DEC is its note's prefix
 for (const x of JSON.parse(R('words-t48.json'))) add(x.key, x.en, x.protected, (x.note && (x.note.match(/^DEC-\d+/) || [])[0]) || 'DEC-227', x.note || undefined);
+// 4k. The modules' own keyed rows, adopted under their own keys (DEC-252; BOB's N1075): written by words-modules.src.py
+for (const x of JSON.parse(R('words-modules.json')).adopted) add(x.key, x.en, x.protected, 'DEC-252', 'adopted from ' + x.module + "'s own rows");
+// 4l. T49's owed words (DEC-253): affordances' vocabularies and standards' sentences, written in words-t49.src.py
+for (const x of T49.rows) { const d = x.note.match(/^DEC-\d+/)[0]; add(x.key, x.en, x.protected, d, x.note.replace(/^DEC-\d+(: )?/, '') || undefined); }
+for (const k of [...T49.retired, ...Object.keys(T49.rewrite)]) if (!retiredSeen.has(k) && !rewriteSeen.has(k)) fail('DEC-256: no row ' + k + ' to retire or reword');
+// 4m. The remaining screens' drawn words (DEC-259): written in words-drawn.src.py
+for (const x of DRAWN.rows) add(x.key, x.en, x.protected, 'DEC-259', x.note.replace(/^DEC-259(: )?/, '') || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
@@ -325,6 +340,8 @@ for (const w of lib) {
     add(`wizard.${w.id}.step${i + 1}.why`, st.why, false, 'library.json');
   });
 }
+
+for (const k of Object.keys(DRAWN.rewrite)) if (!drawnSeen.has(k)) fail('DEC-259: no row ' + k + ' to reword');
 
 const out = {
   _note: 'The interface word list (DEC-179). Built by build_words.mjs from the mockups\' sources; never edit by hand. Keys are stable: a word keeps its key when its English changes, and a new word takes a new key. {name} marks a placeholder the screen fills.',

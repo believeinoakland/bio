@@ -1,0 +1,579 @@
+{
+ "rows": [
+  {
+   "key": "screen.account.explain.help",
+   "en": "Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.",
+   "protected": false,
+   "note": "DEC-259: under the Explanations choice"
+  },
+  {
+   "key": "screen.account.signout.note",
+   "en": "Everywhere ends your sign-in on every phone and computer, this one included. Use it if you lost a device or signed in somewhere you shouldn't have.",
+   "protected": false,
+   "note": "DEC-259: under the two sign-out buttons"
+  },
+  {
+   "key": "screen.account.passwordkey.heading",
+   "en": "Password and signing key",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.answers.count.line",
+   "en": "{rows} rows · {count} with {rule} (a count, method shown)",
+   "protected": false,
+   "note": "DEC-259: a table's count without the assistant: {rule} the counting rule as written"
+  },
+  {
+   "key": "screen.archive.capturedby",
+   "en": "Captured by {name} from {source}, {date}",
+   "protected": false,
+   "note": "DEC-259: under an archive's name: who captured it, from where and when"
+  },
+  {
+   "key": "screen.archive.samefingerprint",
+   "en": "Anyone can cut the same file out with ordinary tools and get the same fingerprint.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.archive.samename",
+   "en": "{count} entries share this name",
+   "protected": false,
+   "note": "DEC-259: two entries of the archive with one name"
+  },
+  {
+   "key": "screen.archive.samename.each",
+   "en": "{count} entries share this name; each is filed by its number",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.archive.notfiled.password",
+   "en": "Not filed: the archive locks this file with a password. It is listed, never opened.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.archive.notfiled.size",
+   "en": "Not filed: {size}, over the {limit} limit for one file. Capture the {kind} from its own address.",
+   "protected": false,
+   "note": "DEC-259: {kind} the kind of file, such as video"
+  },
+  {
+   "key": "screen.archive.higher.heading",
+   "en": "A higher grade for one file",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.archive.higher.how",
+   "en": "A file here can earn a higher grade only by being captured on its own, from its own source; the new capture lands beside this one, and nothing is regraded.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.archive.higher.capture",
+   "en": "Capture a file on its own",
+   "protected": false,
+   "note": "DEC-259: a link to Add to the record"
+  },
+  {
+   "key": "screen.archive.refused.head",
+   "en": "Could not open this archive, because {reason}.",
+   "protected": false,
+   "note": "DEC-259: {reason} such as \"two of its entries claim the same bytes\""
+  },
+  {
+   "key": "screen.archive.refused.note",
+   "en": "A damaged or tampered archive is refused whole rather than filed in part. If the city has a clean copy, capture it again from its address; it lands beside this one.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.assistant.alone",
+   "en": "It works for you alone.",
+   "protected": false,
+   "note": "DEC-259: after \"On your own account\" in the dock: only when your own account serves you"
+  },
+  {
+   "key": "screen.assistant.ask.label",
+   "en": "Ask about this screen",
+   "protected": false,
+   "note": "DEC-259: the dock's question field"
+  },
+  {
+   "key": "screen.calculation.sub",
+   "en": "A computed fact · method shown · recomputed when an input changes",
+   "protected": false,
+   "note": "DEC-259: under a calculation's name"
+  },
+  {
+   "key": "screen.calculation.checkedby",
+   "en": "Checked by {name} ({expertise}, {standing}) on {date}.",
+   "protected": false,
+   "note": "DEC-259: a second member's check; {standing} confirmed or declared"
+  },
+  {
+   "key": "screen.calculation.spot.about",
+   "en": "The {count} is {whose} own count: {what}. A spot-check asks whether {claim} meant {meaning}, by visiting a random sample of {items} on the street.",
+   "protected": false,
+   "note": "DEC-259: {what} the calculation's question, as written"
+  },
+  {
+   "key": "screen.calculation.found.help",
+   "en": "Each visit is recorded as what that member saw, with a photo where they took one.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.calculation.range.all",
+   "en": "So of the {size} {items} marked {claim}, between about {lowc} and {highc} were really {answer}, if the {unsure} that could not be judged are like the rest.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.disclosed.tension",
+   "en": "An unresolved contradiction: {what}",
+   "protected": true,
+   "note": "DEC-259: disclosed with the case (protected: what readers are told)"
+  },
+  {
+   "key": "screen.ceremony.disclosed.timeline",
+   "en": "The timeline, frozen at signing ({n} events)",
+   "protected": true,
+   "note": "DEC-259: disclosed with the case"
+  },
+  {
+   "key": "screen.ceremony.when.chosen",
+   "en": "At a set time: {date}, {time} ({zone})",
+   "protected": true,
+   "note": "DEC-259: the choice of when it becomes public, once a time is set"
+  },
+  {
+   "key": "screen.ceremony.when.note",
+   "en": "Until then the signed edition waits, not public. At {time} Civicsmith checks again; if anything changed since you signed (a source, a member's confirmation of their ties, a hold), it does not publish and tells you once. You can cancel or move the time until then.",
+   "protected": true,
+   "note": "DEC-259: under the choice of when"
+  },
+  {
+   "key": "screen.ceremony.sign.edition",
+   "en": "Sign and publish Edition {edition}",
+   "protected": true,
+   "note": "DEC-259: the signing dialog's heading"
+  },
+  {
+   "key": "screen.ceremony.signs.lines",
+   "en": "{n} lines like these, one for each piece of evidence the {findings} findings rest on: {list}",
+   "protected": true,
+   "note": "DEC-259: what your key signs, after the lines drawn"
+  },
+  {
+   "key": "screen.ceremony.signs.linesabout",
+   "en": "Each line names one thing and the fingerprint of its exact text. If anything in it changes before you sign, you are asked to sign again.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.publishat.button",
+   "en": "Sign and publish at {time} on {date}",
+   "protected": true,
+   "note": "DEC-259: publishat's button, once a time is chosen"
+  },
+  {
+   "key": "screen.ceremony.photos.rules",
+   "en": "A photo in a format whose areas can't be covered (some phones save HEIC or progressive JPEG) stops the signing, naming the photo: capture it again as an ordinary photo, or stop relying on it. If a mark changes after the case is prepared, prepare it again before signing; if it changes after signing, the case isn't published until it is prepared and signed again. Any member who can see a photo may mark it or withdraw a mark; only a member can, never the machine.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.device.head",
+   "en": "Confirm on your device",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.device.example",
+   "en": "Your device's own window (it looks different on each device)",
+   "protected": false,
+   "note": "DEC-259: over a drawing of the device's own window; its words are the device's, not Civicsmith's"
+  },
+  {
+   "key": "screen.ceremony.device.cancel",
+   "en": "If you cancel there, or your device doesn't confirm, nothing is signed or published, and you are back at the last step with everything as it was.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.signed.evidence",
+   "en": "The {n} pieces of evidence",
+   "protected": false,
+   "note": "DEC-259: a row of what was signed"
+  },
+  {
+   "key": "screen.ceremony.signedat.note",
+   "en": "The case page and your queue show this until it goes public; then your queue tells you once that it is live. The public page shows when it was signed and when it was published.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.signednow.told",
+   "en": "Members who follow this case are told once.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.nokey.keyfile",
+   "en": "Unless you keep it on this device, you save it as a key file, protected by a passphrase you choose.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ceremony.nokey.elsewhere",
+   "en": "Registered a key on another computer? Sign from that one, or register a key here too. Lost a key? Withdraw it under Settings › Your account and make a new one here; cases it already signed can still be checked. Your signing keys are listed there.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-action.sub",
+   "en": "Every clock that is running, whose move it is, replies that came in, and what waits for a second approval.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-action.tile.noreply",
+   "en": "{n} with no reply recorded",
+   "protected": false,
+   "note": "DEC-259: under the Their move tile"
+  },
+  {
+   "key": "screen.dash-action.nextready",
+   "en": "the plan's next step is ready",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-action.clock.due",
+   "en": "The {office} must answer by {date}: {days} days under the {law}, rolled past a holiday.",
+   "protected": false,
+   "note": "DEC-259: an action's clock, as a sentence with its rule and date"
+  },
+  {
+   "key": "screen.dash-action.clock.sent",
+   "en": "Sent {date}; the group gave until {due}.",
+   "protected": false,
+   "note": "DEC-259: an action's clock where the group set the date"
+  },
+  {
+   "key": "screen.dash-action.clock.approve",
+   "en": "Approve by {day}, the plan's checkpoint.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-action.next.record",
+   "en": "Record what came back",
+   "protected": false,
+   "note": "DEC-259: an action's next step"
+  },
+  {
+   "key": "screen.dash-action.next.escalate",
+   "en": "Escalate, as the plan sets",
+   "protected": false,
+   "note": "DEC-259: an action's next step"
+  },
+  {
+   "key": "screen.dash-project.next.heading",
+   "en": "Next for you here",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.next.vouch",
+   "en": "Vouch for the {count} photos you captured at {place}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.next.newer",
+   "en": "Decide on the newer version of {document}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.next.prepare",
+   "en": "Then Edition {edition} can be prepared: the {count} findings meet the bar",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.glance.heading",
+   "en": "This project at a glance",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.story.heading",
+   "en": "The story so far",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.dash-project.story.undetermined",
+   "en": "Undetermined order: {events}, both dated by {precision}.",
+   "protected": false,
+   "note": "DEC-259: {precision} month or year"
+  },
+  {
+   "key": "screen.dash-project.activity.events",
+   "en": "{name} added {count} events on {day}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.docket.edition.published",
+   "en": "Edition {n} published, superseding Edition {prior}",
+   "protected": true,
+   "note": "DEC-259: a docket entry (protected: public)"
+  },
+  {
+   "key": "screen.document.capturedby",
+   "en": "captured by {name} from {source}, {date}",
+   "protected": false,
+   "note": "DEC-259: under a document's name, after its office and revision"
+  },
+  {
+   "key": "screen.document.pagetranscribe.button",
+   "en": "Have the assistant read pages {pages}",
+   "protected": false,
+   "note": "DEC-259: pagetranscribe's button, naming the pages"
+  },
+  {
+   "key": "screen.document.citedby.standard",
+   "en": "cites {passage} as the standard {office} is held to",
+   "protected": false,
+   "note": "DEC-259: how a question cites this document"
+  },
+  {
+   "key": "screen.document.citedby.against",
+   "en": "cites {passage}, cutting against {what}",
+   "protected": false,
+   "note": "DEC-259: how a question cites this document"
+  },
+  {
+   "key": "screen.document.links.one",
+   "en": "{n} links on this page; 1 points at a document the group holds.",
+   "protected": false,
+   "note": "DEC-259: document.links.says, where one link is held"
+  },
+  {
+   "key": "screen.document.theme.page",
+   "en": "Page {page}, placed by {name}, {date}: “{note}”",
+   "protected": false,
+   "note": "DEC-259: a theme placed on a page, with the member's note"
+  },
+  {
+   "key": "screen.document.theme.whole",
+   "en": "The whole {kind}, placed by {name}, {date}",
+   "protected": false,
+   "note": "DEC-259: {kind} the kind of document, such as report"
+  },
+  {
+   "key": "screen.document.theme.proposed",
+   "en": "Page {page}, proposed by the assistant, {date}: “{note}”",
+   "protected": false,
+   "note": "DEC-259: a theme the assistant proposed, with its note"
+  },
+  {
+   "key": "screen.due-date.step.rolled",
+   "en": "{date} is {why} and {date2} {why2}, both from your profile: rolled to {due}, close of business.",
+   "protected": false,
+   "note": "DEC-259: two days skipped in a row, each from the group profile"
+  },
+  {
+   "key": "screen.explore.sub",
+   "en": "From {from} to {to}, through {kinds}, as of {date}",
+   "protected": false,
+   "note": "DEC-259: what the walk was asked: {kinds} the kinds followed, such as \"money and votes\""
+  },
+  {
+   "key": "screen.explore.graph.from",
+   "en": "From {name}, as a graph",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.explore.lead.short",
+   "en": "a lead, not a finding",
+   "protected": false,
+   "note": "DEC-259: under a chain with a declared or suspected step"
+  },
+  {
+   "key": "screen.explore.stopped.short",
+   "en": "Stopped at the limit, undetermined beyond {depth} steps.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.finder.named",
+   "en": "named in {n} documents, among them {document}",
+   "protected": false,
+   "note": "DEC-259: a person or organization among the results"
+  },
+  {
+   "key": "screen.finder.nobody.in",
+   "en": "Nobody looked in {place} for this yet.",
+   "protected": false,
+   "note": "DEC-259: after the Nobody looked mark"
+  },
+  {
+   "key": "screen.forgot.noadmin.heading",
+   "en": "If no administrator can get in",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.forgot.noadmin.what",
+   "en": "Whoever holds your group's Cloudflare account can set a new one-time password and an administrator can claim again from it. That is the way back in when every administrator has lost both their password and their codes.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.front.allpublished",
+   "en": "All our published cases",
+   "protected": false,
+   "note": "DEC-259: a link to the published cases"
+  },
+  {
+   "key": "screen.front.invited",
+   "en": "Invited? Open the link you were sent: it brings you here to join.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group.sub",
+   "en": "Administrators only. The settings chosen at setup, all changeable here.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group.name.help",
+   "en": "What people read: at the head of your pages, invitations and published cases. Your short name, {short}, stays fixed.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group.domain.help",
+   "en": "Verified on {date}: readers can confirm a published case comes from your group. Remove it if your group would rather stay unnamed.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group.court.show",
+   "en": "Show members the notice, before their first note and in their settings",
+   "protected": true,
+   "note": "DEC-259: the court notice (protected)"
+  },
+  {
+   "key": "screen.group.bar.line",
+   "en": "Bar: {bar}, set by {name} on {date}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.other.help",
+   "en": "For example “a tenants' union”, “a students' newspaper”, “a retired auditors' circle”. It helps Civicsmith offer what fits first; it locks nothing.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.ask.what",
+   "en": "It asks you a few questions about your group, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your group's.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.held.setaside.why",
+   "en": "Why set it aside?",
+   "protected": false,
+   "note": "DEC-259: the reason field for heldsetaside"
+  },
+  {
+   "key": "screen.help-records.title",
+   "en": "How a records request works",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.sub",
+   "en": "Help · for a request under the {law}, to an office in {place}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.in",
+   "en": "The faster request in {place}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.what",
+   "en": "{place}'s {ordinance} adds the {request}: the office answers within {window}, and the ordinance sets the later limits when it needs more time ({cite}). It suits a small set of records you can describe exactly.",
+   "protected": false,
+   "note": "DEC-259: the place's faster request, from its rules"
+  },
+  {
+   "key": "screen.help-records.portal.where",
+   "en": "{place} takes requests through its public records portal ({portal}).",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.imported.band",
+   "en": "Another group's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated",
+   "protected": false,
+   "note": "DEC-259: the band across an imported case"
+  },
+  {
+   "key": "screen.inbox.same.date",
+   "en": "same knocker as {date}",
+   "protected": false,
+   "note": "DEC-259: beside a knock: the same sender handed in material on {date}"
+  }
+ ],
+ "rewrite": {
+  "screen.archive.summary": "Opened when it was captured: {filed} files filed and held for review beside it, {held} already held, {notfiled} not filed, {folders} folders.",
+  "screen.archive.alreadyheld": "Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it",
+  "screen.archive.folder": "A folder · its {count} files are listed and filed below it",
+  "screen.archive.refused.none": "Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.",
+  "screen.calculation.counts": "{visited} of {n} visited: {yes} {answer}, {no} not {answer}, {unsure} could not tell",
+  "screen.calculation.range": "{share}% of the {judged} that could be judged were {answer} · exact {confidence}% range {low}% to {high}%",
+  "screen.calculation.notsays": "It does not recount the {size} ({whose} check did that), says nothing certain about any one {item} no one visited, and nothing about the {outside} {items} not {what}.",
+  "screen.case-editor.changed": "What changed since Edition {n}",
+  "screen.ceremony.photo.facts": "taken by {by}, {date} · relied on by {findings}",
+  "screen.ceremony.photos.copy": "Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured, labeled “Faces, plates and camera details removed for publication; the group holds the original”, and the original stays inside the group. Every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), labeled “Camera details removed for publication; the group holds the original”. City staff at work are part of what the case is about; obscure one only with a reason.",
+  "screen.ceremony.signs.count": "One confirmation signs all {n}: the edition, its {findings} findings, and the {evidence} pieces of evidence they rest on. Each signature can be checked on its own, so a reader can trust one finding without trusting the rest.",
+  "screen.ceremony.signs.case": "Edition {edition} of {case}",
+  "screen.docket.sub": "The case's public record of corrections, withdrawals and orders.",
+  "screen.due-date.of": "{who}'s reply to your {item}",
+  "screen.due-date.step.counted": "Counted {amount} {units}: to {date}.",
+  "screen.group.court.field": "Tell members what a court can reach",
+  "screen.group-identity.other.field": "Describe your kind of group, in a few words",
+  "screen.group-identity.focus.field": "What you focus on",
+  "screen.group-identity.purpose.field": "Why the group exists, in your own words",
+  "screen.group-identity.visibility.choice.public": "Also our public page and the network directory",
+  "screen.held.archive.filed": "{count} files held beside it",
+  "screen.held.ineligible": "Not eligible for a batch: {reason}",
+  "screen.held.waiting": "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
+  "screen.help-records.must.1": "Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).",
+  "screen.help-records.must.2": "Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).",
+  "screen.help-records.must.3": "Help you focus the request: identify the records that fit it, say where they are kept, and suggest ways past practical obstacles ({cite}).",
+  "screen.help-records.must.4": "Release the rest of a record that is partly exempt ({cite}), and refuse only in writing, naming who decided ({cite2}).",
+  "screen.help-records.must.5": "Give electronic records electronically, in a format it keeps them in, when you ask ({cite}).",
+  "screen.help-records.must.6": "Charge only the direct cost of copying ({cite}); for electronic records, of producing the copy, unless it must compile, extract or program data ({cite2}). You may photograph records you inspect, with your own equipment, at no charge ({cite3}).",
+  "screen.help-records.must.7": "Never ask why you want them: access can't be limited because of the purpose of a request ({cite}).",
+  "screen.help-records.portal.2": "Each request's page shows its full text to anyone, with its dates, the department and the city's contact. Write the request so you are content for anyone to read it.",
+  "screen.help-records.portal.3": "Contact details are optional. Without them you get no updates, and you can collect the records only if the department posts them publicly or you contact it yourself.",
+  "screen.help-records.does": "What Civicsmith does with it"
+ }
+}

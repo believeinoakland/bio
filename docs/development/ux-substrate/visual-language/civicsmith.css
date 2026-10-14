@@ -463,6 +463,13 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-shell { display: grid; grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr); min-height: 100%; }
 .cs-shell.with-dock { grid-template-columns: var(--rail) minmax(0,1fr) var(--dock); }
 .cs-shell > .cs-mast, .cs-shell > .cs-band { grid-column: 1 / -1; }
+/* DEC-249 (interface-shell R36, R53, R58): the test-copy band. On a test copy every frame opens with it, the whole frame's
+   width, above the masthead, the rail and the work, from first paint; a released copy never draws it. */
+.cs-testband { display: flex; gap: var(--s-2); align-items: baseline; flex-wrap: wrap; padding: 6px var(--s-3); background: var(--c-signal-tint); color: var(--c-ink); border-bottom: 2px solid var(--c-signal); font: 600 var(--t-sm)/1.35 var(--f-sans); }
+.cs-testband b { color: var(--c-signal); text-transform: uppercase; letter-spacing: .04em; font-size: var(--t-xs); }
+.cs-testband span { font-weight: 400; }
+.cs-shell > .cs-testband { grid-column: 1 / -1; }
+.cs-shell:has(> .cs-testband) { grid-template-rows: auto auto auto minmax(0,1fr); }
 .cs-rail { position: relative; border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); min-width: 0; }
 /* DEC-155: the rail's width is the member's: drag its edge, or focus the edge and use the arrow keys; double-click or Home
    resets it. Narrower than 120px it becomes icons only, each with its name on hover and focus. */

@@ -726,6 +726,14 @@
      ]
     },
     {
+     "op": "reauth",
+     "label": "Go on",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
      "op": "accountreferenceset",
      "label": "Connect with your own API key",
      "status": "function",
@@ -1173,6 +1181,14 @@
      "modules": [
       "connections"
      ]
+    },
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
     }
    ],
    "journeys": [
@@ -1431,6 +1447,14 @@
      "status": "declared",
      "modules": [
       "actions"
+     ]
+    },
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "function",
+     "modules": [
+      "membership"
      ]
     },
     {
@@ -2109,9 +2133,13 @@
      ]
     },
     {
-     "op": "owed:projectfork DEC-237",
+     "op": "projectfork",
      "label": "Start a project from this one",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "promotion"
+     ]
     },
     {
      "op": "projectownerrescue",
@@ -2224,6 +2252,14 @@
      "label": "Keep the project's material away from AI, with a reason",
      "status": "declared",
      "servedBy": "op-declarations R41 (BOB's B172: declared and served, T47)"
+    },
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
     }
    ],
    "journeys": []
@@ -2335,7 +2371,7 @@
     },
     {
      "op": "versionaccept",
-     "label": "Accept a reading",
+     "label": "Accept this reading",
      "status": "declared",
      "modules": [
       "basis-versions"
@@ -2350,29 +2386,49 @@
      ]
     },
     {
-     "op": "owed:versionconsider DEC-235",
+     "op": "versionconsider",
      "label": "Weigh a reading",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "basis-versions"
+     ]
     },
     {
-     "op": "owed:versionreject DEC-235",
+     "op": "versionreject",
      "label": "Reject a reading",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "basis-versions"
+     ]
     },
     {
-     "op": "owed:versionrevert DEC-235",
+     "op": "versionrevert",
      "label": "Undo the decision on a reading",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "basis-versions"
+     ]
     },
     {
-     "op": "owed:versioncurrent DEC-235",
+     "op": "versioncurrent",
      "label": "Stand on a reading for a project",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "basis-versions"
+     ]
     },
     {
-     "op": "owed:readtranslate DEC-240",
+     "op": "readtranslate",
      "label": "Read in my language",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T49",
+     "modules": [
+      "plane"
+     ]
     },
     {
      "op": "themeplace",
