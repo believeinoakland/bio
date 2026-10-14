@@ -84,3 +84,12 @@ Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 14, module lines 1248
 ## J6 · COMPLETE · re B4
 
 B4 (K3074) applied (code 17772d8278): merged tranche/T47; a project the founder opened (first manifest author 'admin') answers owner {member: "admin", handle: "admin"}; other arms as J5. Tests assert the founder arm (stub and real record-core), a founder's later entry opens nothing, member:admin as author is no opener. project-roster 50/50; format, architecture, coverage 27/27, ownership 0 failures; run.mjs coverage 46 none mine; plane bundle staled (5.4), workers PASS. Deferred: none. This supersedes J5.
+
+## J7 · QUESTION
+
+R28, my reading (proceeding on it; answer only if wrong).
+(1) `members`: every participant of the listed project as R1 lists them (`project_participants`, any state, joined to `members`, membership R120), `{member, handle}`, owners first then by handle. The viewer's sight is applied by R26 itself: a project is listed only at FULL, and at FULL R1 already shows that viewer every participant, so no member of a listed project is one the viewer may not see; a project not listed shows no one.
+(2) An "act" is one `manifest` entry (record-core R37: one per commit, R33), at its `created`. A project's acts are those on its own bundle and on every bundle whose `bundles.project` names it (record-core R34), each counted only when membership's `viewerPredicate` (R43) admits that bundle to the viewer: so an act on a hidden project recorded as belonging to a listed one is not counted for a viewer outside it. Membership's own acts (invitations, joins, visibility) are not record acts and are not counted.
+(3) `activity[7]` counts acts in (now − 7 days, now], `activity[6]` in (now − 14 d, now − 7 d], … `activity[0]` in (now − 56 d, now − 49 d]; acts after now or unreadable instants are not counted. "now" is the server's clock (a clock the host may configure, `Date.now()` by default), never a query parameter.
+(4) `lastChange`: the `created` of the newest counted-kind act (any age, instants compared as instants, ties by recorded order), as recorded; null when none.
+No new Uses edge: `manifest`, `bundles.project` (R37), `members`, `project_participants` (R120) and `viewerPredicate` are already named.
