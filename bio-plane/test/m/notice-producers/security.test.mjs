@@ -144,6 +144,17 @@ test("R12: its detail is one plain sentence: the level is High, since when, whet
   assert.ok(!texts(it).some((t) => /\b(?:NZ|FR)\b/.test(t)), "no country anywhere in the item");
 });
 
+test("R12 R20: the security-level item keeps its plain sentence: words.json holds no key for it and it answers none (control: R15's item, beside it, answers its keys)", async () => {
+  const { w, items } = await setup();
+  for (let h = HOUR - 2; h < HOUR; h++) { lay(w, "signin", h, 30, "NZ"); lay(w, "rate", h, 30, "FR"); }
+  const [it] = items("admin");
+  assert.equal("summary_key" in it, false);
+  assert.equal("detail_key" in it, false);
+  const { WORDS } = await import("../ai-use/fixture.mjs");
+  assert.equal(Object.keys(WORDS).some((k) => k.startsWith("queue.security-level-high")), false);
+  assert.equal(typeof WORDS["queue.security-tool-off.detail"], "string", "control: R15's key is held");
+});
+
 test("R12: a securityLevel or securityMap that throws or does not answer contributes no item and is named in facts.failed, never read as Ordinary; the read writes nothing", async () => {
   const boom = () => { throw new Error("down"); };
   for (const securityLevel of [boom, () => null, () => ({}), () => ({ level: "Unknown" }), () => ({ level: null, levelAt: null })]) {

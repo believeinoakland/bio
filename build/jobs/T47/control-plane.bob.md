@@ -35,3 +35,11 @@ K3147: op-grades is merged; your `totality.test.mjs` R2/R41 is red for T47's six
 ## B6 · CHANGE
 
 K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B7 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B8 · CHANGE
+
+K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw, rawType}`), no store-door change; serve the logo through `groupLogoAsset`; route `grouplogoset`, `grouplanguagesset`, `grouplanguages`.

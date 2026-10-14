@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
 import { boot, stubOver, doAnswer } from "./fixture.mjs";
-import { INSTANCE_SETUP_CHECKS, SETUP_HTML, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY } from "../../../src/setup.mjs";
+import { INSTANCE_SETUP_CHECKS, HOSTING_CONTROL, hostingControlBlock, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY } from "../../../src/setup.mjs";
 
 const REAL = heldProfiles().filter((p) => p.test !== true);
 const TEST = heldProfiles().filter((p) => p.test === true);
@@ -159,13 +159,13 @@ test("R16 profiles() and profilesSet answer from the namespace addressed: a scra
   assert.deepEqual(bio.m.profiles().profiles.map((p) => p.id), [REAL[0].id]);
 });
 
-test("R31 no place is named in this module's outward text: the page it composes and serves, every refusal and every stated sentence name no jurisdiction a profile covers", async () => {
+test("R31 no place is named in this module's outward text: R47's block it holds (R83: it serves no page), every refusal and every stated sentence name no jurisdiction a profile covers", async () => {
   const places = heldProfiles().flatMap((p) => p.covers).flatMap((c) => c.split(/\s+(?:of|and)\s+|\s+/))
     .filter((w) => /^[A-Z]/.test(w) && !["City", "County", "Town"].includes(w));
   assert.ok(places.length >= 2);
   const w = await world({ INSTANCE_NAME: "river-town" });
   w.prov.admins = new Set(["admin"]);
-  const texts = [SETUP_HTML, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY,
+  const texts = [hostingControlBlock("notice"), JSON.stringify(HOSTING_CONTROL), NO_GROUP_RECORDED, RUNTIME_ASYMMETRY,
     ...Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.translation),
     /* the choices are the profiles' own data (jurisdictions'), never this module's words */
     JSON.stringify({ ...w.m.profiles(), choices: undefined }), JSON.stringify(w.m.instanceGroup()), JSON.stringify(w.m.cpuProbeState()),
