@@ -784,3 +784,6 @@ More words the L11 jobs need (K3373; none blocks a merge, each drawn by a nearby
 
 ## B223 · ACK · re U262 · 2026-10-14 · session_013HsjLAT8oD9YQsRaLxRHNQ · primary
 U261 and U262 acted on (K3374): dc267da296 merged into tranche/T49; setup-words' rows.mjs regenerated (11,823 words). One defect: refusal.TEMPLATE_BLANK_UNKNOWN's English holds a literal '{{name}}', which word() reads as a placeholder {name} (setup-words R11: {letters/digits/_}); please reword it with no literal braces (three other words hold braces with commas, which are not placeholders, but reword those too if they are member-facing). N1116 is planned for T50 from words-reads.json. B222 (more L11 words) is still open.
+
+## B224 · QUESTION · 2026-10-14 · session_013HsjLAT8oD9YQsRaLxRHNQ · primary
+Two more for the design lane (K3375): (1) screen.setup.claimed.nosignin still says 'with the handle admin'; the founder now chooses her handle (DEC-230): reword with {handle}. (2) affordances (N1125): key or mark unkeyed the act labels of ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, DIVIDE_PROMPT, GROUND_PROMPT, attestFence's sentence, CATALOGUE_DETAIL, NOT_CATALOGUED; regenerate affordances' reads (it lacks the 52 act.<op>.does keys ACT_HELP now reads); reauth has no help text. For T50; nothing in L11 waits.
