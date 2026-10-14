@@ -109,15 +109,12 @@ export const T36_NON_ACTS = {
     + "when"),
 };
 
-/* ---- R24 (DEC-173 (2)): `openwithwarning`'s consequence statement, published beside its ground (`observational`) as a
-   statement is beside a rung; no rung is added (R3). It says what the owner enforces: the file is high risk for the
-   reasons the surface shows beside it (file-safety R6's, in its member words, R24); what opening it risks; the two
-   confirmations, `warned`'s two fields (file-safety R8); and that who opens which file, and who confirmed, is never
-   recorded (DEC-169 (5), DEC-173 (4); file-safety R10). ---- */
+/* ---- R24 (DEC-173 (2)): `openwithwarning`'s consequence entry, published beside its ground (`observational`) as a
+   statement is beside a rung; no rung is added (R3). The file is high risk for the reasons the surface shows beside it
+   (file-safety R6's, in its member words, R24); the two confirmations are `warned`'s two fields (file-safety R8); and who
+   opens which file, and who confirmed, is never recorded (DEC-169 (5), DEC-173 (4); file-safety R10). (R44, T49) The
+   entry holds the key of the sentence that says what opening risks, `screen.open-file.warn.ends`, never its English; the
+   confirmations and the not-recorded line are the screen's own keys. ---- */
 export const T36_CONSEQUENCE_STATEMENTS = Object.freeze({
-  openwithwarning: Object.freeze({ friction: "dialog",
-    statement: "This file is high risk, for the reasons shown beside this. Opening the original puts the file on your "
-      + "own device: what it does there depends on that device's protections, and it could reach your sign-in to the "
-      + "group. Confirm both: \"I will open it on my own device, not a shared one\" and \"I will not enable macros or "
-      + "editing\". Who opens which file, and who confirmed, is never recorded." }),
+  openwithwarning: Object.freeze({ friction: "dialog", key: "screen.open-file.warn.ends" }),
 });
