@@ -37,7 +37,9 @@
 
 **Tests and checks** (from `bio-plane`, `node --test test/m/instance-setup/`): `ℹ pass 194, fail 0` (164 before; `t48.test.mjs` adds 30). Also run: `test/m/machinery-producers/` pass 29, fail 0; `test/m/screens-entry/` pass 52, fail 0; `newgroup/test/` pass 60, fail 0. Changed existing tests: the fixture and assistant, t41, t47, recovery and translations tests (keep-away now through `ai-accounts`); exports, group (R30 rows 31–33, whose three drafted translations are 10 words or more where older rows need 20), identity (R9 registers two consumers), page and words (the K3240 sentence). From the process repository: `format: 168 modules, 167 requirements files; 0 failures`; `architecture: 26 product files, 109 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 73 of 73 live requirement ids named by a test; 0 failures`; `ownership: 15 files changed by instance-setup between tranche/T48 and HEAD; 0 failures`. `node checks/run.mjs`: format 0, architecture 0 failures, coverage 21 failures in other modules' ids (none instance-setup's), channels 0.
 
-Size (session_015ApP9xtN4HPUemxYssrhFs): test runs 12, module lines 4320
+**B3 (CHANGE, K3297):** already done before it arrived: `assistantGate` and `assistantState` read `ai-accounts` (`#aiAccounts().aiKeptAway()`, `aiKeepAwayState()`); `credentials` is asked for `recoveryCodesState` only. I merged `origin/tranche/T48` (wizard-scripts, op-grades, interface-assets) and re-ran: instance-setup `pass 194, fail 0`; architecture 0 failures; coverage 73 of 73; ownership 0 failures; format 0 failures.
+
+Size (session_015ApP9xtN4HPUemxYssrhFs): test runs 13, module lines 4320
 
 ## J1 · QUESTION
 
