@@ -1,6 +1,6 @@
 # screens-publish — requirements
 
-**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-75: R18 new, amending R2 and R17, the reader's link's end date, N1038, `review` R34; R19 new, amending R6, the published page's evidence and complete edition, K3190 census P1, DEC-228; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R20 new, the common line); marked not yet met (T48).
+**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-75: R18 new, amending R2 and R17, the reader's link's end date, N1038, `review` R34; R19 new, amending R6, the published page's evidence and complete edition, K3190 census P1, DEC-228; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R20 new, the common line); marked not yet met (T48). Last changed T49 (T49-27: R22, R23 new; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,600–3,200 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -64,6 +64,15 @@ From a case's draft to its public page, and what comes in from outside: preparin
   - It covers `cs-note`, which becomes `mk-note`, and `cs-refusal`, which becomes the shell's refusal (`interface-shell` R61).
 
   Test: the module's real `SCREENS` compose under `interface-shell` R56, and each screen drawn over an empty fixture shows no empty section and no zero. Control: a failed read is drawn `state.failed`.
+
+#### T49 (T49-27)
+
+- **R22** (T49; N1094; DEC-240 (P1); `public-read` R1, R3; amends R6, R19) On `published`, "Check a file you hold" (`published.check.title`, explained by `published.check.help`):
+  - a field "Its SHA-256" (`published.check.field`, help `.field.help`), 64 hexadecimal characters, case-folded;
+  - "Check it" (`published.check.go`), which sends `verify` with it as a public op with no `Authorization` header.
+
+  A match in this edition reads `published.check.yes`, with `{n}` and `{finding}` from `publishedcase` read by that `sha256`. No match reads `published.check.no`. No file is read or sent: the page takes the fingerprint only. R19's "the Verify any hash panel is not drawn" is retired. Test: a pinned evidence hash draws the finding. Control: an unknown hash draws `.no`, and no request carries anything but the hash. *(not yet met: T49)*
+- **R23** (T49; N1094; DEC-240 (C2); `case-inputs` R1, R5; `review` R15, R28; amends R17) On `review-outside`, "What the case says it does not cover" (`review.statement.title`, explained by `review.statement.help`) draws the group's statement from `reviewcopy`. Beneath it are "Your note" (`review.statement.note`, help `.note.help`, required) and "Acknowledge it" (`review.statement.ack`). That act sends `statementack` with the draft, the note as `reason`, and the grant's secret through the grant door as `reviewcomment` sends it, never in an address. `STATEMENT_ACK_NO_REASON` and the dead answer are drawn by their words, and the note is kept. A copy whose statement is absent draws no section. Test: the acknowledgement sends the note and the secret in the body only. Control: an empty note is refused, and nothing is sent. *(not yet met: T49)*
 
 ## Private
 

@@ -1,6 +1,6 @@
 # interface-assets — requirements
 
-**Status** · New in T46 (T46-53; K657, K1043): a module built fresh, layer 11 directly after `store-door`, first of the six interface modules (N897 (1), Bob's K2816; DEC-138; N559). No ids move; nothing is extracted from a legacy module (`legacy-ui` stays as it is, K633). Not yet met (T46). Last changed T48 (T48-68: R5 new, amending R1, `ASSETS_COMMIT` on `main` at PR #34's merge, no help cursor and the three kind tokens, N1048, N1028, DEC-224, DEC-215 (3); R6 new, the faces carried as upload parts, N1039; K3147, K3166, K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R7 new, amending R1 and R5, `shell.css` generated from the design page's product rules); marked not yet met (T48).
+**Status** · New in T46 (T46-53; K657, K1043): a module built fresh, layer 11 directly after `store-door`, first of the six interface modules (N897 (1), Bob's K2816; DEC-138; N559). No ids move; nothing is extracted from a legacy module (`legacy-ui` stays as it is, K633). Not yet met (T46). Last changed T48 (T48-68: R5 new, amending R1, `ASSETS_COMMIT` on `main` at PR #34's merge, no help cursor and the three kind tokens, N1048, N1028, DEC-224, DEC-215 (3); R6 new, the faces carried as upload parts, N1039; K3147, K3166, K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R7 new, amending R1 and R5, `shell.css` generated from the design page's product rules); marked not yet met (T48). Last changed T49 (T49-19: R8 new, amending R5 and R7, `ASSETS_COMMIT` at `f498560a37`, DEC-236's classes and the test band; K3334); marked not yet met (T49).
 
 **Size (P6).** About 120 lines of generated data, about 1.1 MB (the 15 faces as base64; plan T46, M-T46-1), no code.
 
@@ -26,6 +26,14 @@ The visual language every member screen uses (DEC-138), as frozen data copied fr
   - **Other rules.** R2 holds for the new file.
 
   Test: the file equals the generator's transform of the source, read from git at `ASSETS_COMMIT`. It holds `.mk-door`, `.mk-acts`, `.mk-frontgrid` and `.mk-avatar`, and `.cs-tabs` inside the 760 px query. Control: no selector names `mk-device`, `mk-scaler` or `.anat`, and no rule lacks a `cs-` or `mk-` class.
+
+#### T49 (T49-19)
+
+- **R8** (T49; N1090, N1094, N1099; DEC-236 (B204 (1), (3)), DEC-240 (N1049), DEC-241; amends R5, R7) `ASSETS_COMMIT` is the `main` commit named at START (`f498560a37`, PR #37's merge, or later). `ASSET_FILES` is read there by R1's and R7's rules. By them:
+  - `shell.css` carries DEC-236's design classes: `.mk-menuwrap`, `.mk-menu`, `.mk-actwrap`, `.mk-slot`, `.mk-rowname`, `.mk-scrim`, `.mk-image`, `.mk-imgareas`, `.mk-imgarea`, `button.mk-avatar` and `.mk-grp`. It also carries the graph's `.e-step_source` and DEC-241's `.mk-morerows` and `.mk-morerow`;
+  - `civicsmith.css` carries `.cs-band[data-band="test"]`.
+
+  Test: R1's byte equality and R7's transform. A scan finds each named rule. Control: no selector names `mk-device` or `mk-scaler`. *(not yet met: T49)*
 
 ## Private
 

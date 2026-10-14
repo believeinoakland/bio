@@ -57,6 +57,7 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
         - filing-templates R29 and R33 (N1097), until T49-11;
       - (C) project-roster R18's hand-list (N1098), until T49-2;
       - (D) promotion `row-census.test.mjs`, until T49-4.
+   8. **Found at the L11 (b) fold (K3334):** op-declarations' `ACT_HELP_ABSENT` partition (R34 'never both') from affordances' merge (T49-14) until T49-17; screens-entry's `signin.founderhint` reads (`front.mjs`:78, `index.mjs`:31) from setup-words' merge (T49-15) until T49-21.
 
    Any other red a merge opens is named at that merge (K2704).
 6. **Every T49 job also does the following**, each in its own module only and in its START. The Haiku test-only jobs (T49-7, T49-11) do only the second and third items.
@@ -309,25 +310,25 @@ No job. N1069 and N1070 (reevaluation) are left out.
 | T49-10 | `case-inputs.md` | folded (K3331): R18 by key |
 | T49-12 | `scheduler.md` | only if R12 is re-scoped |
 | T49-13 | `op-grades.md` | R43 |
-| T49-14 | `affordances.md` | R60, R61 as drafted (fold) |
-| T49-15 | `setup-words.md` | R9 as drafted, with the commit named at START |
+| T49-14 | `affordances.md` | folded (K3339): R60, R61 |
+| T49-15 | `setup-words.md` | folded (K3339): R9 |
 | T49-16 | `op-capabilities.md` (new) | Purpose, Provides R1–R3, Uses none |
 | T49-17 | `op-declarations.md` | R3 re-worded; R71 as drafted; R72 (`projectownervotes`) |
 | T49-18 | `admission.md` | R27 (the session's own window) |
-| T49-19 | `interface-assets.md` | R8 as drafted |
-| T49-20 | `interface-shell.md` | R65–R67 as drafted; R68, R69 |
-| T49-21 | `screens-entry.md` | R17–R19 as drafted; R20, R21 |
-| T49-22 | `screens-settings.md` | R34 as drafted; R35–R38 |
-| T49-23 | `screens-intake.md` | R21–R25 |
-| T49-24 | `screens-daily.md` | R24–R29, R32, R33; R30, R31 as drafted (fold's R25, R28) |
-| T49-25 | `screens-inquiry.md` | R23–R31 as drafted (fold); R32–R42 |
-| T49-26 | `screens-investigate.md` | R27, R28 as drafted (fold's R28, R29); R29 |
-| T49-27 | `screens-publish.md` | R22, R23 as drafted (fold's R23, R24) |
-| T49-28 | `screens-action.md` | R15–R17 as drafted; R18 |
+| T49-19 | `interface-assets.md` | folded (K3339): R8 |
+| T49-20 | `interface-shell.md` | folded (K3339): R65–R69 |
+| T49-21 | `screens-entry.md` | folded (K3339): R16–R20; R2, R4, R6 re-worded |
+| T49-22 | `screens-settings.md` | folded (K3339): R34–R38; R30 re-worded |
+| T49-23 | `screens-intake.md` | folded (K3339): R21–R25 |
+| T49-24 | `screens-daily.md` | folded (K3339): R24–R33 |
+| T49-25 | `screens-inquiry.md` | folded (K3339): R23–R43; R6's K3003 clause re-worded |
+| T49-26 | `screens-investigate.md` | folded (K3339): R27–R29 |
+| T49-27 | `screens-publish.md` | folded (K3339): R22, R23 |
+| T49-28 | `screens-action.md` | folded (K3339): R15–R18 |
 | T49-29 | `control-plane.md` | R96 (N1095), R98; R97 as drafted |
 | T49-30 | `plane.md` | a wiring line only if needed |
-| T49-31 | `site.md` (new) | Purpose, Provides R1 onward (BOB #174's text) |
-| T49-32 | `journey-check.md` | R7 as drafted; R8–R13 |
+| T49-31 | `site.md` (new) | folded (K3339): R1–R11, the file written whole |
+| T49-32 | `journey-check.md` | folded (K3339): R7–R13 |
 | rule 7 | basis-versions, promotion, plane, membership, answers, file-scanner | the wording edits |
 
 Every cross-reference in the fold's drafted text is renumbered with it. screens-inquiry R29 reads project-roster R30, not R32. project-roster R30 names the founder by R29, not R31. op-declarations R72 replaces the fold's R73.

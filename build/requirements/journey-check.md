@@ -1,6 +1,6 @@
 # journey-check — requirements
 
-**Status** · New in T47 (T47-88; N999, N1004; K3052, K3053, K3054, K3059; folded K3100): a helper module carrying no product capability (K1043), registered in layer 11 last (after `stewards`) with empty `paths` and `tests`, listed under "Helper modules" in `build/layers.md`. Drafted in `build/plan/draft-T47-L11-fold.md` §B, worded here by BOB (P5). Not yet met (T47). Last changed T48 (T48-80: R4 new, the journey runs only when executed directly; N1056; K3192; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R5 new, amending R1 (b), the administrator and the member reached directly; R6 new, amending R2, each live screen against the design mock before a release); marked not yet met (T48).
+**Status** · New in T47 (T47-88; N999, N1004; K3052, K3053, K3054, K3059; folded K3100): a helper module carrying no product capability (K1043), registered in layer 11 last (after `stewards`) with empty `paths` and `tests`, listed under "Helper modules" in `build/layers.md`. Drafted in `build/plan/draft-T47-L11-fold.md` §B, worded here by BOB (P5). Not yet met (T47). Last changed T48 (T48-80: R4 new, the journey runs only when executed directly; N1056; K3192; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R5 new, amending R1 (b), the administrator and the member reached directly; R6 new, amending R2, each live screen against the design mock before a release); marked not yet met (T48). Last changed T49 (T49-32: R7–R13 new; K3334); marked not yet met (T49).
 
 ## Public
 
@@ -25,6 +25,39 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
   - text matching a slug, a language tag, a record id or a refusal code.
 
   The pairs are put to BOB, who records the comparison in a K before the release is called ready. Test: a fixture page that overflows fails. Control: a fixture matching its pair passes.
+
+#### T49 (T49-32)
+
+- **R7** (T49; N1072; K3265, "never shown"; DEC-230 (3)) A walk through every screen, signed in as the founder with a handle held and with none, finds no drawn text naming `admin` as a person's name or handle. There is one exception: DEC-230's step for a founder with no handle (`founder.handle.says`, `founder.handle.later.help`), which says she signs in as admin until she chooses. Test: the walk as stated. Control: a screen fixture drawing `admin` as a name fails it. *(not yet met: T49)*
+- **R8** (T49; D29 **M**; amends R2) A step fails on a refusal carried inside an HTTP 200, anywhere in its answer, where the step expects success. That is `ok: false` at any depth, or `started: false`, `dispatched: false`, `found: false` or `withheld` (`walker.mjs`:73 reads only the top level). The refusal a step expects is excused by its code wherever it sits. Test: fixtures of D1's, D3's and D5's answers each fail the step. Control: the expected refusal of a step that tests a refusal passes. *(not yet met: T49)*
+- **R9** (T49; K3320, K3324 (2); amends R1 (a)) **The journey as administrator**, each step through the screens' own controls only, with ops called only to observe:
+  1. claim with her own handle, and sign in by it;
+  2. start a project with a title, and open it;
+  3. open a question in it (its first question, `screens-inquiry` R43);
+  4. connect an assistant by API key on `connect`;
+  5. capture by address into the question (from its "Add a document"), and capture by upload into the question;
+  6. see both held, and vouch for one;
+  7. open the document, see its words, and Find-in a passage;
+  8. cite it with a role (supports);
+  9. run the assistant on the question from the dock;
+  10. read its run's answer and its suggested reading;
+  11. Ask, and read the answer;
+  12. accept a reading, stand on it for the project, and conclude.
+
+  Each step asserts what the design says the screen then shows, and the walk fails on any refused or missing step (R8). *(not yet met: T49)*
+- **R10** (T49; K3320, K3324 (2), (3); `ai-runs` R80) **The same journey as a member** invited to the group and joined to the project. She is on her own API key, with her own run dispatched on that key, and with `projectai`, plan help (`planask`) and Ask walked as hers. *(not yet met: T49)*
+- **R11** (T49; K3324 (2); amends R1 (a)) The local arm binds three things:
+  - the plane's `AGENT_WORKER` to `agent-worker`, run under Miniflare with a fake model that answers the answers contract and the run modes' tools. The fake is served by this module at `agent-worker`'s model address, so `uses` stays empty;
+  - a stub city site for captures by address;
+  - the test-instance mark, set as its deployer, as `local.mjs`:42 does.
+
+  This replaces the walk worker's scratch harness. Its seam for the fake model is confirmed at START (doubt 11). Test: the local arm walks R9. Control: with no fake model bound, step 9 fails by name. *(not yet met: T49)*
+- **R12** (T49; K3296; amends R1 (b), R5) The live arm walks R9 and R10 on a named test instance, with an API key read from the environment and never printed. It must pass before BOB's own live walk (K3296). Test: a missing key fails before any act. Control: the key in no output. *(not yet met: T49)*
+- **R13** (T49; N1099, N1100; DEC-241, DEC-245; amends R6) R6's comparison covers two things:
+  - design journey 29 ("From installing to a first conclusion", DEC-245), step by step;
+  - `/app/more` at 390 px, against `more` (DEC-241).
+
+  Every step of R9 and R10 is screenshotted (R2), and R6's design pairs are taken for each screen of the journey. Test: the pairs are made for each of journey 29's steps. Control: a missing pair fails. *(not yet met: T49)*
 
 ## Private
 

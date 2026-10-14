@@ -34,6 +34,7 @@ Terms. A **capability** is membership's (its vocabulary); the rows use three of 
 ### Satisfies
 
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §5 (capabilities enforced at the op layer; a capability gates a session and nothing else).
+- `CAPABILITIES.md` §4 (no fifth capability token): the rows name only the existing capabilities.
 - Bob's rulings K3 and K23; `layers.md` ruling 2 (declarations stay with the door); K617, K624; K3298 (this split).
 
 ### Suggestions
