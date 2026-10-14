@@ -87,7 +87,7 @@ test("R5: it reaches the instance directly: an environment proxy sees none of th
       const code = `const { runLive, browser, directFetch } = await import(${JSON.stringify(pathToFileURL(join(SRC, "run.mjs")).href)});
 const rule = ["--host-resolver-rules=MAP grp.test 127.0.0.1"];
 const r = await runLive({ base: "http://${host}", env: ${JSON.stringify(ENV)}, out: ${JSON.stringify(join(dir, "proxy-" + direct))},
-  commit: ${JSON.stringify(COMMIT)}, screens: [{ id: "members", frame: "working" }],
+  commit: ${JSON.stringify(COMMIT)}, screens: [{ id: "members", frame: "working" }], investigate: false,
   fetchOf: (q) => directFetch(new Request(q.url.replace("grp.test", "127.0.0.1"), q)),
   launch: (o) => browser(${direct} ? { ...o, args: rule } : { args: rule }) });
 const viaFetch = await fetch(${JSON.stringify(fp.base)} + "/api/?op=bootstrap").then((x) => x.status, () => "refused");
