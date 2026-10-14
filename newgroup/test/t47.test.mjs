@@ -240,6 +240,9 @@ test("R53 the pages use interface-assets' stylesheet and faces, carried in the i
   }
   for (const [, name] of PAGE_CSS.matchAll(/var\((--[a-z0-9-]+)\)/g)) assert.ok(defined.has(name), `PAGE_CSS's ${name} is the stylesheet's`);
   assert.equal(/#[0-9a-f]{3,8}\b/i.test(PAGE_CSS), false, "no colour of its own");
+  /* The stylesheet draws a .cs-dialog as a grid, which would show R41's dialog before it is opened: the layout hides it while closed. */
+  assert.match(sheet, /\.cs-dialog \{[^}]*display: grid/);
+  assert.ok(PAGE_CSS.includes("dialog.cs-dialog:not([open]){display:none}"));
   /* The installer serves every file of interface-assets, byte for byte, with its type; the stylesheet's faces resolve to them. */
   for (const [name, f] of Object.entries(ASSET_FILES)) {
     const r = await req(ASSET_PREFIX + name);
@@ -265,4 +268,47 @@ test("R53 the pages use interface-assets' stylesheet and faces, carried in the i
     const lines = f.encoding === "base64" ? [f.body] : f.body.split("\n").filter((l) => l.length > 40 && !/["'`\\$]|[^\x20-\x7e]/.test(l));
     assert.ok(lines.length > 0 && lines.every((l) => bundle.includes(l)), name);
   }
+});
+
+/* ------------------------------------------------------------------------------- R54 the amendments of R1 and R41 (K3144) */
+
+test("R54 R1's 404 excepts GET /app/assets/<name> for exactly ASSET_FILES' names, byte for byte with their type and an immutable cache header, storing nothing; nothing sends /begin before R41's confirming act, and R50's Continue to Cloudflare sends it; GET /update draws the release it installs, the version before and after drawn on the progress page and the finished panel; the finished panel draws no \"Run the checks again\"", async () => {
+  /* R1's exception: exactly the names of ASSET_FILES, nothing else under the prefix, GET only. */
+  const calls = script([]);
+  for (const name of Object.keys(ASSET_FILES)) {
+    const r = await req(ASSET_PREFIX + name);
+    assert.equal(r.status, 200, name);
+    assert.equal(r.headers.get("cache-control"), "public, max-age=31536000, immutable", name);
+    assert.equal(r.headers.get("set-cookie"), null, name);
+  }
+  for (const [path, init] of [[ASSET_PREFIX + "Civicsmith.css", {}], [ASSET_PREFIX + "fonts/", {}], [ASSET_PREFIX + "icons.svg/x", {}],
+      [ASSET_PREFIX + "icons.svg", { method: "HEAD" }], [ASSET_PREFIX + "icons.svg", { method: "PUT", body: "x" }], ["/assets/civicsmith.css", {}]]) {
+    const r = await req(path, init);
+    assert.equal(r.status, 404, `${init.method || "GET"} ${path}`);
+  }
+  globalThis.fetch = realFetch;
+  assert.deepEqual(calls, [], "the files are the bundle's: nothing fetched, nothing stored");
+  /* R41 as amended: the confirming act sends nothing; Continue to Cloudflare, after it, sends /begin. */
+  const home = await text("/");
+  const w = pageWorld(home);
+  w.el("slug").value = "amended";
+  await w.el("go").click();
+  await w.el("confirm-yes").click();
+  assert.deepEqual(w.sent, [], "the confirming act sends nothing");
+  await w.el("cloudflare").click();
+  assert.deepEqual(w.sent.map((s) => s.body.slug), ["amended"]);
+  /* GET /update draws the release it installs and says the version before is read later; the progress line and the last screen draw both. */
+  const upd = await text("/update");
+  assert.ok(section(upd, "version-after").includes(RELEASE_VERSION));
+  assert.doesNotMatch(section(upd, "version-before"), /\d+\.\d+\.\d+/, "no version before is claimed before it is read");
+  const planeBase = (slug, v) => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
+    { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
+    { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" }, { type: "service", name: "SELF", service: slug }];
+  const u = await run({ slug: "amend-up", mode: "update", pre: { "amend-up": planeBase("amend-up", "0.70.0") } });
+  assert.match(u.page.label("up"), /^Updating the software from 0\.70\.0 to /);
+  assert.ok(section(u.page.done, "versions").includes("0.70.0"));
+  /* No "Run the checks again" on the finished panel, nor anywhere on the progress page. */
+  const i = await run({ slug: "amend-in" });
+  assert.ok(i.page.done && !/Run the checks again/i.test(i.raw), "drawn nowhere");
+  assert.ok(!/Run the checks again/i.test(home + upd));
 });

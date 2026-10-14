@@ -3722,6 +3722,7 @@ button.copy:hover{background:var(--c-accent-tint)}
 .mono{font-family:var(--f-mono);font-size:.9em;word-break:break-all}
 .publisher{border-top:var(--hair);padding-top:var(--s-4)}
 dialog.cs-dialog{color:var(--c-ink)}
+dialog.cs-dialog:not([open]){display:none}
 dialog.cs-dialog::backdrop{background:rgb(10 20 25 / .45)}
 `;
 var LEFT_OUT = leftOutNotice(RELEASE_CONTAINERS, RELEASE_VERSION);
@@ -3838,7 +3839,7 @@ ${pageMark("update")}
 <p class="lede">For whoever holds your group's Cloudflare account. An update keeps every record, member and setting; it
 changes only Civicsmith's own programs. Your passwords, your credentials and your record are untouched, and that is
 enforced by how the update is applied, not by promise.</p>
-<div class="cs-sheet" id="versions">
+<div class="cs-sheet ng-log" id="versions">
 <div class="cs-row" id="version-before"><span class="mk">Now</span><span>Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it, and shown as the update starts.</span><span></span></div>
 <div class="cs-row" id="version-after"><span class="mk">Next</span><span>This update: release <b class="id">${escText2(RELEASE_VERSION)}</b>, signed by Civicsmith, or a newer signed one if the public repository holds it.</span><span></span></div>
 </div>
