@@ -67,6 +67,10 @@ export async function walkInstaller(walk, page, installerOrigin) {
   await walk.step(page, "install: the short name, confirmed permanent", async (p) => {
     await p.locator("#go").click();
     await p.locator("#confirm-yes").click();
+    await p.locator("#stage-before:not([hidden])").waitFor({ timeout: 10000 });
+  });
+  await walk.step(page, "install: before Cloudflare, what it will be asked to allow", async (p) => {
+    await p.locator("#cloudflare").click();
     await p.waitForURL(/dash\.cloudflare\.com\/oauth2\/auth/, { timeout: 15000 });
   });
   await walk.step(page, "install: Cloudflare's permission, allowed", async (p) => {
@@ -77,7 +81,7 @@ export async function walkInstaller(walk, page, installerOrigin) {
     await p.locator("#done:not([hidden]), #fail:not([hidden])").first().waitFor({ timeout: 120000 });
     if (await p.locator("#fail:not([hidden])").count())
       throw new Error("the installer stopped: " + (await p.locator("#fail-h").textContent()) + " " + (await p.locator("#fail-p").textContent()));
-    const stopped = await p.locator(".row.no").allTextContents();
+    const stopped = await p.locator('#log [data-r="no"], #checks [data-r="no"]').allTextContents();
     if (stopped.length) throw new Error("a step did not finish: " + stopped.join(" | "));
     if (!(await p.locator("#done .okbox").count())) throw new Error("the final panel does not say the copy is running: "
       + (await p.locator("#done").textContent()).slice(0, 300));
@@ -93,7 +97,8 @@ export async function walkInstaller(walk, page, installerOrigin) {
 export async function walkFounder(walk, page, { base, founder }) {
   await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
-    await p.waitForURL((u) => u.origin === base && u.pathname.startsWith("/app/setup"), { timeout: 20000 });
+    await p.waitForURL((u) => u.origin === base && u.pathname === "/app/setup", { timeout: 20000 });
+    await settle(p);
     await requireDrawn(walk, p, "setup");
   });
   await walk.step(page, "setup: claim, the one-time password already filled in", async (p) => {

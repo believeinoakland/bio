@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { INTERFACE_MARK } from "./walker.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const REGISTRY_FILE = join(ROOT, "docs", "development", "ux-substrate", "screens", "registry.json");
@@ -24,11 +25,13 @@ export function sweepScreens(file) {
 export const addressOf = (id) => (id === "home" ? "/app" : `/app/${id}`);
 
 /* Whether the page drew screen `id`, read from the page as it stands: `{drawn, why}`. When the frame marks the screen it
-   drew (`data-screen`), that mark decides. Otherwise the shell's own fallbacks are read: a failed draw, a draw still
-   loading, the "Nothing here" it draws for a screen it does not hold (its path a single unlinked step and one empty
-   state), or the page saying a place comes later (a title and one empty state). */
+   drew (`data-screen`, interface-shell R48), that mark decides. A page that is not the interface draws no screen.
+   Otherwise the shell's own fallbacks are read: a failed draw, a draw still loading, the "Nothing here" it draws for a
+   screen it does not hold (its path a single unlinked step and one empty state), or the page saying a place comes
+   later (a title and one empty state). */
 export async function drawnState(page, id) {
-  return page.evaluate((id) => {
+  return page.evaluate(([id, mark]) => {
+    if (!document.querySelector(`link[rel="stylesheet"][href="${mark}"]`)) return { drawn: false, why: "the page is not the interface" };
     const marked = document.querySelector("[data-screen]");
     if (marked) {
       const at = document.querySelector(`[data-screen="${CSS.escape(id)}"]`);
@@ -47,5 +50,5 @@ export async function drawnState(page, id) {
     if (kids.length === 3 && kids[0] === crumbs && kids[1].matches("h1.t-title") && empty(kids[2]))
       return { drawn: false, why: "the shell says this place comes later" };
     return { drawn: true, why: "drawn" };
-  }, id);
+  }, [id, INTERFACE_MARK]);
 }

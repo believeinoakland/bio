@@ -121,7 +121,7 @@ const DRAWS = {
 async function drawn(html, id) {
   const ctx = await B.newContext();
   const p = await ctx.newPage();
-  await p.setContent(`<!doctype html><html><body>${html}</body></html>`);
+  await p.setContent(`<!doctype html><html><head><link rel="stylesheet" href="${INTERFACE_MARK}"></head><body>${html}</body></html>`);
   const st = await drawnState(p, id);
   await ctx.close();
   return st;
@@ -133,6 +133,12 @@ test("R2: a registry screen the shell does not draw fails: its \"Nothing here\" 
   /* the frame's own mark decides when it is drawn */
   assert.equal((await drawn(DRAWS.marked, "members")).drawn, true);
   assert.equal((await drawn(DRAWS.marked, "account")).drawn, false);
+  /* a page that is not the interface draws no screen, whatever it holds */
+  const ctx = await B.newContext();
+  const p = await ctx.newPage();
+  await p.setContent(`<!doctype html><html><body>${DRAWS.drawn}</body></html>`);
+  assert.equal((await drawnState(p, "members")).drawn, false);
+  await ctx.close();
 });
 
 test("R2 (K3137): the sweep opens every registry screen but `site` and the `dash-*` treatments (and the installer's own two pages, walked in the journey)", () => {
