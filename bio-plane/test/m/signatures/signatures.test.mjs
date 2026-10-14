@@ -24,7 +24,7 @@ import { renderSignpage, syncIdPattern, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../..
 import { ID_TABLE, idPattern } from "../../../src/record-grammar/index.mjs";
 
 const {
-  NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
+  NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, NS_RELEASE_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
   noticeStatement, NS_DOCKET, docketStatement, CAPTURE_ACCOUNT_TOKEN, captureAccountStatement,
 } = sshsig;
 const {
@@ -144,19 +144,20 @@ const parseAndLog = (...a) => {
 
 /* ======================================================================= R1 */
 
-const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE", "NS_DOCKET"];
+const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE", "NS_DOCKET", "NS_RELEASE_NOTICE"];
 
-test("R1 the five namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
+test("R1 the six namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
   assert.equal(NS_RELEASE, "bio-release");
   assert.equal(NS_RATIFY, "bio-ratify");
   assert.equal(NS_FLEET, "bio-release-fleet");
   assert.equal(NS_NOTICE, "bio-working-on");
   assert.equal(NS_DOCKET, "bio-docket");
-  /* Exactly five: every NS_ export of the module is one of them. */
+  assert.equal(NS_RELEASE_NOTICE, "bio-release-notice");
+  /* Exactly six: every NS_ export of the module is one of them. */
   assert.deepEqual(Object.keys(sshsig).filter((k) => k.startsWith("NS_")).sort(), [...NAMESPACES].sort());
   const all = NAMESPACES.map((k) => sshsig[k]);
   assert.ok(all.every((v) => typeof v === "string" && v.length > 0));
-  assert.equal(new Set(all).size, 5);
+  assert.equal(new Set(all).size, 6);
   /* Compiled: a caller cannot rebind one. */
   for (const k of NAMESPACES) assert.throws(() => { sshsig[k] = "x"; });
   const msg = enc("one message\n");
@@ -1425,6 +1426,12 @@ test("R26 pure and offline: no service fetches or reads a clock, and the endpoin
     s.docketStatement("CASE-2026-0001", 1, "0".repeat(64));
     try { s.docketStatement("bad", 0, "x"); } catch {}
     s.captureAccountStatement("0".repeat(64), "an account");
+    const notice = { version: "1.2.3", date: "2028-02-29", manifest: "0".repeat(64), security: true,
+      notes: { members: "m", administrators: "a", must_do: "" } };
+    s.releaseNoticeStatement(notice);
+    try { s.releaseNoticeStatement({ ...notice, date: "2027-02-29" }); } catch {}
+    out.notice = await s.verifyReleaseNotice(notice, ${JSON.stringify(PINNED.sig)}, "1.2.2");
+    out.noticeBad = await s.verifyReleaseNotice({ ...notice, date: "2026-13-01" }, "x", "1.2.2");
     s.fleetStatement({ version: "v", plane: { sha256: "p", bytes: 1, asset: "a" },
       members: [{ member: "m", sha256: "s", bytes: 1, asset: "a", compat: { date: "d", flags: [] }, services: [], parts: [] }] });
     const req = t.timestampRequest("${DIGEST}", new Uint8Array(8).fill(3));
@@ -1439,6 +1446,8 @@ test("R26 pure and offline: no service fetches or reads a clock, and the endpoin
   assert.deepEqual(calls, []);
   assert.equal(out.verify.ok, true);
   assert.equal(out.bad.reason, "MALFORMED");
+  assert.equal(out.notice.reason, "NAMESPACE");
+  assert.deepEqual(out.noticeBad, { ok: false, reason: "MALFORMED", field: "date" });
   assert.equal(out.parse.ok, false);
   assert.equal(out.loc, "https://web.archive.org/web/1/x");
   /* The endpoints a caller is handed are constants no argument reaches (R20, R22). */
@@ -1462,6 +1471,8 @@ test("R27 no place is named in any string the module exports", () => {
     td.decode(noticeStatement("NOTE-2026-0001", 1, "0".repeat(64))),
     td.decode(docketStatement("CASE-2026-0001", 1, "0".repeat(64))),
     td.decode(captureAccountStatement("0".repeat(64), "an account")),
+    td.decode(sshsig.releaseNoticeStatement({ version: "1.0.0", date: "2026-10-14", manifest: "0".repeat(64),
+      security: false, notes: { members: "m", administrators: "a", must_do: "" } })),
     fleetStatement({ version: "v", plane: PLANE, members: [] }));
   assert.ok(strings.includes(SIGN_HTML));
   for (const s of strings) assert.doesNotMatch(s, PLACE);
@@ -1469,10 +1480,12 @@ test("R27 no place is named in any string the module exports", () => {
 
 /* ===================================================================== R28 */
 
-test("R28 (R41 among the messages) a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
+test("R28 (R41 and R47 among the messages) a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
   const messages = [enc("m1\n"), ratifyStatement("B", "0".repeat(64)), caseRatifyStatement("B", 1, "0".repeat(64)),
     noticeStatement("NOTE-2026-0001", 1, "0".repeat(64)), docketStatement("CASE-2026-0001", 1, "0".repeat(64)),
     captureAccountStatement("0".repeat(64), "my account\nof the capture\n"), captureAccountStatement("0".repeat(64), ""),
+    sshsig.releaseNoticeStatement({ version: "1.0.0", date: "2026-10-14", manifest: "0".repeat(64), security: false,
+      notes: { members: "m", administrators: "a", must_do: "" } }),
     enc(fleetStatement({ version: "v", plane: PLANE, members: [member("m")] }))];
   for (const [i, m] of messages.entries()) {
     const sig = await sign(KEY, NS_RATIFY, m);
@@ -1481,7 +1494,7 @@ test("R28 (R41 among the messages) a signature never verifies for another namesp
       assert.equal(r.ok, i === j);
       if (i !== j) assert.equal(r.reason, "BAD_SIGNATURE");
     }
-    for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, NS_DOCKET, "", "bio-ratify ", "BIO-RATIFY"]) {
+    for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, NS_DOCKET, NS_RELEASE_NOTICE, "", "bio-ratify ", "BIO-RATIFY"]) {
       assert.equal((await verifyAndLog(sig, m, ns, [KEY.line])).reason, "NAMESPACE");
     }
     /* Every single-bit change to the message is refused. */
