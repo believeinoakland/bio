@@ -610,9 +610,20 @@ test("R19: the walk of a single HTML page's supporting files, its bookkeeping th
                        { locator: "https://s.example/p", subresources: true });
   assert.equal(lr.body.snapshot.complete, false); assert.ok(lr.body.snapshot.continuation.session);
   assert.equal(limited.store.state.sessions.size, 1, "capture R22: parked when anything is outstanding");
-  const fin = await run(limited, (u) => u.endsWith(".css") ? new Response("a{}", { headers: { "content-type": "text/css" } }) : null,
-                        { locator: "https://s.example/p", subresources: true, continue: lr.body.snapshot.continuation.session });
-  if (fin.body.snapshot.complete) assert.deepEqual([limited.store.state.sessions.size, limited.store.state.sessionDrops.length], [0, 1], "dropped when complete");
+  /* each tick takes what the observed ceiling allows; the session is continued until nothing is outstanding */
+  let fin = lr, ticks = 0;
+  while (!fin.body.snapshot.complete && ticks < 10) {
+    const outstanding = fin.body.snapshot.outstanding;
+    fin = await run(limited, (u) => u.endsWith(".css") ? new Response("a{}", { headers: { "content-type": "text/css" } }) : null,
+                    { locator: "https://s.example/p", subresources: true, continue: lr.body.snapshot.continuation.session });
+    ticks++;
+    if (!fin.body.snapshot.complete) {
+      assert.ok(fin.body.snapshot.outstanding < outstanding, "each continuation makes progress");
+      assert.equal(limited.store.state.sessions.size, 1, "still parked while anything is outstanding");
+    }
+  }
+  assert.equal(fin.body.snapshot.complete, true, "the continuations finish the walk");
+  assert.deepEqual([limited.store.state.sessions.size, limited.store.state.sessionDrops.length], [0, 1], "dropped when complete");
   /* the stagger is the store's setting */
   const slow = world(); slow.store.staggerMs = 60;
   const t0 = Date.now();
