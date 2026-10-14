@@ -2,8 +2,8 @@
    composition root registers with `extraction` (`registerTranscriber("plane", t)`), built on the object's own instances
    so `extraction` reaches nothing above its layer. It decides nothing about a page and holds no table: whether the AI's
    part may run is `ai-runs`' `partAdmitted("transcribe")` (R40, T46: run-rules' bar on its R75 records, or the
-   test-instance exception, whose label the transcription hands `extraction`), whether a project keeps its material away is `credentials`',
-   the account and its limit are `credentials`' and `ai-use`'s (asked by `reading-pipeline.tier4Extend`), the rendering is
+   test-instance exception, whose label the transcription hands `extraction`), whether a project keeps its material away is `ai-accounts`' (its R7),
+   the account and its limit are `ai-accounts`' (R53, was `credentials`') and `ai-use`'s (asked by `reading-pipeline.tier4Extend`), the rendering is
    `pdf-pixels`' (a PDF page by its page renderer, a picture file by its picture renderer), the reading `agent-worker`'s, and the count `ai-use`'s (R9). The account's secret leaves the object only
    in the one `POST /transcribe` request body. */
 import { recordOf } from "../record-core/index.mjs";
