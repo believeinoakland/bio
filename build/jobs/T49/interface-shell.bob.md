@@ -19,3 +19,19 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3369: your requirements gain R71 (merge the tranche branch for it): (1) ADMISSION #12 J1 (3): the startup bootstrap (browser.mjs:1903, sent { public: true }) carries the page's session in Authorization whenever the page holds one, so a signed-in member's page loads count in her session's window (admission R27); (2) SCREENS-ENTRY #3 J1 (1): RE_POINTS gains setup: ["founderhandleset"] (front's pattern), until the registry lists it, so screens-entry's setup composes once op-declarations R71 declares the op. Screens-entry waits on (2): push it early in your job.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3373: your requirements gain R72 (merge the tranche branch): wizard-scripts' SCREEN_REGISTRY is stale (4664e8efd4) and lacks 61 acts the design's registry.json now lists, so checkScreens refuses every T49 screen act. RE_POINTS admits exactly these until the registry is re-taken (N1122, T50): `connect`: `reauth`; `group`: `declaredstakeset`, `writinghelp`; `projects`: `themeread`, `projectjoin`; `theme`: `themeread`, `themedeclare`, `themeplace`, `themewithdraw`; `queue`: `projectjoin`, `release`, `filingapprove`; `finder`: `themeread`; `document`: `adoptversion`, `keepversion`, `connectionchoose`, `explore`, `themeplace`, `themepropose`, `themewithdraw`, `captureprogressions`, `thread`; `project`: `projectvisibilityset`, `projectownerremove`, `projectowneradd`, `projectremove`, `projectleave`, `projectfork`, `projectownerrescue`, `writinghelp`; `projectai`: `projectjoin`; `question`: `inquiryground`, `versionaccept`, `versionhide`, `versionconsider`, `versionreject`, `versionrevert`, `versioncurrent`, `readtranslate`, `themeplace`, `airunopen`, `airunclose`; `person`: `entityalias`, `relationdeclare`, `resolve`, `resolvetestify`, `connect`, `writinghelp`; `timeline`: `instance`, `thread`, `discharge`, `proposedispose`, `progression`, `progressiondefine`; `explore`: `stepsource`; `plan`: `planask`; `start-send`: `writinghelp`; `action`: `actionrisktier`, `actionlaws`, `actionlawspropose`; `review-outside`: `statementack`; `home`: `projectjoin`. Test as R72 says. Four screen jobs wait on this: push it early, then tell me (a REPORT is enough) so I can CHANGE them.
+
+## B5 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.

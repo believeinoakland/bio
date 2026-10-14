@@ -90,7 +90,7 @@ w4('question.reading.by.member', 'Written by {member}', True, "a member's own re
 
 # --- DEC-255 (Bob's S25: B): the stewards may decline or remove a listing on civicsmith.org, only under a published rule
 def w5(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-255' + (': ' + note if note else '')))
-w5('site.groups.rule', "The people who make Civicsmith decline or remove a listing only under the listing rule below, never for a group's views or for whom it holds to account. A group is always told why.", True, "under Groups at work")
+w5('site.groups.rule', "The people who make Civicsmith decline or remove a listing only under a published listing rule, never for a group's views or for whom it holds to account. A group is always told why.", True, "under Groups at work")
 
 # --- DEC-256: T49's requirements against the screens: the refusals drawn by their words (DEC-83: what happened, then what to do)
 def w6(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-256' + (': ' + note if note else '')))
@@ -485,6 +485,18 @@ w8('screen.timeline.method.member', "a member's reading of the passage", False, 
 # --- end DEC-258
 
 # Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop
+# --- DEC-261: civicsmith.org's own words for SITE #1 (BOB's B221, K3372): its generator writes no inline English
+def w9(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-261' + (': ' + note if note else '')))
+for k, t in [('nav.home', 'What Civicsmith is'), ('nav.start', 'Start a group'), ('nav.groups', 'Groups at work'),
+             ('onecase.head', "One group's work"), ('questions.head', 'Questions'), ('need.head', 'What you need'), ('costs.head', 'What it costs'),
+             ('create', 'Create your group'), ('groups.visit', 'Visit'),
+             ('uses.ask.example', 'Did the city collect the rent its lease requires?'),
+             ('questions.unset', 'The address to write to is published here before the site opens.'),
+             ('onecase.title', '{case}, Edition {edition}'), ('onecase.meta', '{group}, {place} · signed by {signer} · {date}'),
+             ('groups.cases.many', '{cases} published cases, in {editions} editions, the latest {date}'), ('groups.case.many', '{cases} published cases'),
+             ('notfound', 'There is no such page on civicsmith.org.')]:
+    w9('screen.site.' + k, t, False, 'nav.groups is also the groups page heading' if k == 'nav.groups' else ('fills screen.site.uses.ask {example}' if k == 'uses.ask.example' else ("site R6's marked placeholder until the stewards' address is set" if k == 'questions.unset' else '')))
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',

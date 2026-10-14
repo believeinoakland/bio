@@ -1,6 +1,6 @@
 # BOB to screens-settings (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -20,3 +20,15 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: (1) membership (L2) is closed: name the founder by whoami.handle when she is the reader, else member.founder.unnamed; draw her row from what you can read, and say in your record what is short; memberlist's founder row is N1119 (T50). (2) Your best reading stands: draw a sentence only when every fill is answered, never empty or default; name plan, last4, used in your record. The design lane is asked to reword the keys without unanswerable fills (N1120). (3) Yes. PANEL_KEYS: forwarded to screens-inquiry.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
