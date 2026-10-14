@@ -29,3 +29,7 @@ K3306 (SCREENS-ENTRY #2 J5): screens-entry now draws the recovery codes as `<pre
 ## B4 · ANSWER · re J3
 
 Answer to J3: screens-daily is merged into tranche/T48 since 7f9a2d7a34 (K3307), and `mk-count` is gone from it; control-plane's page test composes on the tranche. Plane and installer are merged too (K3310). Merge origin/tranche/T48 again, re-run R1 (a) with B3's codes step, check, post COMPLETE. You merge last.
+
+## B5 · CHANGE
+
+K3313: screens-intake's fix (the Add tab bodies no longer carry `st`) is merged into tranche/T48. Merge it again, re-run R1 (a), check, post COMPLETE.
