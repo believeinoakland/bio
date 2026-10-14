@@ -44,16 +44,17 @@ const T47_FAMILIES = Object.freeze([
   Object.freeze({ owner: "signin-door", cite: "signin-door R5; R59; N1001", ops: Object.freeze({ signintrace: "ownread" }) }),
 ]);
 
-/* R58 (K3061 D3; credentials R66): THE ACTS THAT ASK THE PASSWORD AGAIN, read by admission R25. Each op maps to `null`
-   (every call asks it) or to the argument that makes it so: `{arg, is}` when the request's `arg` is `is`, and, for
-   `memberset`, `orWas` when the target's role before the act is `orWas` (a role to or from `admin`; admission asks the
-   target's current role). Frozen data (R5). */
+/* R58, R62, R63 (K3061 D3, K3143, K3144; credentials R66): THE ACTS THAT ASK THE PASSWORD AGAIN, imported by admission
+   (its R25). Each op maps to `null` (every call asks it) or to `{field, values}`: the body's `field`, else the query's,
+   being one of `values`, or, with `values: null`, the field present at all. `memberset` is `{field: "role", values:
+   null}`, wider than "a role to or from admin", since admission cannot read a member's present role (R62). Frozen data
+   (R5). */
 const REAUTH_ACTS = Object.freeze({
   caseratify: null, publishat: null, publishatmove: null, ratify: null, docketpost: null,
   adminendorse: null, adminremove: null,
-  memberset: Object.freeze({ arg: "role", is: "admin", orWas: "admin" }),
-  memberadd: Object.freeze({ arg: "role", is: "admin" }),
-  subscriptionsignin: Object.freeze({ arg: "step", is: "start" }),
+  memberset: Object.freeze({ field: "role", values: null }),
+  memberadd: Object.freeze({ field: "role", values: Object.freeze(["admin"]) }),
+  subscriptionsignin: Object.freeze({ field: "step", values: Object.freeze(["start"]) }),
   accountreferenceset: null, groupkeyset: null, projectkeyset: null, projectsigninset: null,
 });
 

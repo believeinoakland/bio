@@ -187,7 +187,7 @@ test("R57 (K3084; credentials R65, R66, R69, R71): unlock and reauth a session's
 
 /* ---------- R58 ---------- */
 
-test("R58 (K3061 D3; credentials R66): REAUTH_ACTS is frozen data naming exactly the acts that ask the password again — caseratify, publishat, publishatmove, ratify, docketpost; adminendorse, adminremove, memberset (a role to or from admin), memberadd (role admin); subscriptionsignin (step start), accountreferenceset, groupkeyset, projectkeyset, projectsigninset — each a declared mutating op, with its argument where one makes it so; exported by index.mjs (negative control: an act not named, signout, is absent)", () => {
+test("R58, R62, R63 (K3061 D3, K3143, K3144; credentials R66): REAUTH_ACTS is frozen data, op → null or {field, values}, naming exactly the acts that ask the password again — caseratify, publishat, publishatmove, ratify, docketpost; adminendorse, adminremove, memberset (its role field present at all, values null, R62), memberadd (role admin); subscriptionsignin (step start), accountreferenceset, groupkeyset, projectkeyset, projectsigninset — each a declared mutating op, with its argument where one makes it so; exported by index.mjs (negative control: an act not named, signout, is absent)", () => {
   assert.equal(O.REAUTH_ACTS, REAUTH_ACTS);
   assert.ok(Object.isFrozen(REAUTH_ACTS));
   assert.deepEqual(Object.keys(REAUTH_ACTS).sort(), ["accountreferenceset", "adminendorse", "adminremove", "caseratify",
@@ -195,11 +195,15 @@ test("R58 (K3061 D3; credentials R66): REAUTH_ACTS is frozen data naming exactly
     "ratify", "subscriptionsignin"]);
   for (const [op, arg] of Object.entries(REAUTH_ACTS)) {
     assert.ok(Object.hasOwn(OPS, op) && OPS[op].mutating, `${op}: no mutating spec`);
-    if (arg !== null) assert.ok(Object.isFrozen(arg) && typeof arg.arg === "string" && typeof arg.is === "string", op);
+    if (arg !== null) {
+      assert.deepEqual(Object.keys(arg).sort(), ["field", "values"], op);
+      assert.ok(Object.isFrozen(arg) && typeof arg.field === "string", op);
+      assert.ok(arg.values === null || (Array.isArray(arg.values) && Object.isFrozen(arg.values) && arg.values.length > 0), op);
+    }
   }
-  assert.deepEqual(plain(REAUTH_ACTS.memberset), { arg: "role", is: "admin", orWas: "admin" });
-  assert.deepEqual(plain(REAUTH_ACTS.memberadd), { arg: "role", is: "admin" });
-  assert.deepEqual(plain(REAUTH_ACTS.subscriptionsignin), { arg: "step", is: "start" });
+  assert.deepEqual(plain(REAUTH_ACTS.memberset), { field: "role", values: null });
+  assert.deepEqual(plain(REAUTH_ACTS.memberadd), { field: "role", values: ["admin"] });
+  assert.deepEqual(plain(REAUTH_ACTS.subscriptionsignin), { field: "step", values: ["start"] });
   for (const op of ["caseratify", "publishat", "publishatmove", "ratify", "docketpost", "adminendorse", "adminremove",
                     "accountreferenceset", "groupkeyset", "projectkeyset", "projectsigninset"]) assert.equal(REAUTH_ACTS[op], null, op);
   assert.throws(() => { "use strict"; REAUTH_ACTS.signout = null; });
@@ -323,4 +327,21 @@ test("R54, R34 (T47; affordances R54, R56): every member op T47 declares is expl
   for (const op of ACTS) if (!explained(op)) assert.deepEqual(ground(op), ["unexplained"], op);
   /* negative control */
   assert.ok(explained("statementack") && ground("statementack").length === 0);
+});
+
+/* ---------- R62, R63: R6's store-internal routes; publishedlist public ---------- */
+
+test("R62, R63, R6 (K3143, K3144): the store-internal routes T47 adds — store-door's reauthdue (its R15), signin-door's five (signintokenhold, signintokenrefused, signindisclosuredue, signintracekeep, signintraceread; plane R49) and instance-setup's grouplogo (its R86) — have no spec and are in no table; publishedlist is public (classes null), in no session set, stamped nothing, no NEEDS row (negative control: a declared op is in a table, and publishedlist's neighbour index stays the working corpus's)", () => {
+  const INTERNAL = ["reauthdue", "signintokenhold", "signintokenrefused", "signindisclosuredue", "signintracekeep",
+                    "signintraceread", "grouplogo"];
+  const inNoTable = (op) => !Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && neither(op) && !Object.hasOwn(OP_STAMPS, op)
+    && !LISTS.some(([, l]) => l.includes(op)) && !Object.hasOwn(UNATTENDED_BY_DECISION, op) && !Object.hasOwn(REAUTH_ACTS, op);
+  for (const op of INTERNAL) assert.ok(inNoTable(op), `${op} is in a table`);
+  assert.deepEqual(plain(OPS.publishedlist), { classes: null, mutating: false });
+  assert.ok(neither("publishedlist") && !Object.hasOwn(NEEDS, "publishedlist") && !Object.hasOwn(OP_STAMPS, "publishedlist"));
+  assert.deepEqual(listsOf("publishedlist"), []);
+  assert.equal(ACT_GATE.mode("publishedlist"), "machine");
+  /* negative control */
+  assert.ok(!inNoTable("signintrace") && !inNoTable("grouplogoset"));
+  assert.deepEqual(plain(OPS.index), { classes: MP, mutating: false });
 });

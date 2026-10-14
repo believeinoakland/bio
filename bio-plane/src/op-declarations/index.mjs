@@ -659,7 +659,7 @@ const OPS = frozenTable(aliasRows({
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
   /* Working corpus (`bundles`): a title names what the group is looking into, so never public; the public list is
-     `publishedlist` (D-30). */
+     `publishedlist` (D-30), public itself since T47 (R63). */
   index:      { classes: ["admin", "member", "probe"],           mutating: false },
   /* S-10 step 1: the metadata projection retrieval filters on; working corpus, op=index's fence. */
   projection: { classes: ["admin", "member", "probe"],           mutating: false },
@@ -983,7 +983,9 @@ const OPS = frozenTable(aliasRows({
      resolve beside it. */
   casedrafts:     { classes: ["admin", "member", "probe"],           mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
-  publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
+  /* T47 (R63; K3144): the published cases' list is public, as the door serves it (screens-entry reads it with no
+     session); it answers only what is already published, so nothing is stamped and no session set holds it. */
+  publishedlist:{ classes: null,                                   mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },

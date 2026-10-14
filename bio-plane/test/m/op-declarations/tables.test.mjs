@@ -35,14 +35,14 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
     assert.ok(!JSON.stringify(s).includes('"ai"'), `${op} names ai`);
   }
   /* The public surface is exactly the ops that gate themselves. T47 (R57, R59): the reset link's look and use
-     (credentials R69, R71) and the group's languages (instance-setup R85) join it. */
+     (credentials R69, R71) and the group's languages (instance-setup R85) join it, and the published cases' list (R63). */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
     ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "credit", "docketfeed",
      "docketpublic", "enroll", "groupdescription",
      "groupidentity", "groupkeyspublic", "grouplanguages", "handlecheck",
      "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "passwordreset",
      "passwordresetlook", "publicread", "publishedbytes",
-     "publishedcase", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
+     "publishedcase", "publishedlist", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
      "templatecomments", "templateread", "templatereview", "verify", "websiteinvite"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
