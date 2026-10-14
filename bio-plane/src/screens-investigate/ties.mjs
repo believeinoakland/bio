@@ -4,9 +4,11 @@
  * names her by her handle or says "a member of the group", the disclosure stated either way. */
 
 import { row } from "./row.mjs";
+import { PARTS } from "./parts.mjs";
 
 function reads() {
-  return { ties: { op: "memberties", query: {}, empty: (v) => !v || !Array.isArray(v.ties) || !v.ties.filter((t) => !t.withdrawn).length } };
+  return { ties: { op: "memberties", query: {}, empty: (v) => !v || !Array.isArray(v.ties) || !v.ties.filter((t) => !t.withdrawn).length },
+    people: { op: "peopledirectory", query: { limit: "200" } } };
 }
 
 function render(cs, view) {
@@ -15,18 +17,24 @@ function render(cs, view) {
   const out = [cs.title()];
   out.push(cs.sec(S + "why", `<ul class="mk-list">${["why.1", "why.2", "why.3", "why.4"].map((k) => `<li>${cs.w(S + k)}</li>`).join("")}</ul>`));
   out.push(cs.sec(S + "who", `<ul class="mk-list">${["who.1", "who.2", "who.3"].map((k) => `<li>${cs.w(S + k)}</li>`).join("")}</ul>`));
-  out.push(cs.sec(S + "list", cs.state(view.data.ties, (v) => cs.rows({ id: "ties", items: (v.ties || []).filter((t) => !t.withdrawn), key: (t) => t.tie_id,
+  const mine = view.data.ties && view.data.ties.state === "ok" && view.data.ties.value ? (view.data.ties.value.ties || []).filter((t) => !t.withdrawn) : [];
+  const who = view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity }));
+  const nameOf = (id) => (who.find((o) => o.value === id) || {}).text || id;
+  /* R22: a list that holds nothing is not drawn; the designed empty state names the first step */
+  const settled = view.data.ties && (view.data.ties.state === "ok" || view.data.ties.state === "empty");
+  if (settled && !mine.length) out.push(`<p class="mk-note">${cs.w(S + "first")}</p>`);
+  else out.push(cs.sec(S + "list", cs.state(view.data.ties, (v) => cs.rows({ id: "ties", items: (v.ties || []).filter((t) => !t.withdrawn), key: (t) => t.tie_id,
     name: (t) => cs.w(S + "kind." + (["employer", "relative", "business", "other"].includes(t.kind) ? t.kind : "other")),
     cols: [S + "col.kind", S + "col.who", S + "col.disclosed"],
     cells: (t) => [cs.w(S + "kind." + (["employer", "relative", "business", "other"].includes(t.kind) ? t.kind : "other")),
-      cs.ref("person", t.entity, t.entity, [t.note || ""]) + (t.note ? ` <span class="cs-meta">${cs.esc(t.note)}</span>` : ""),
+      cs.ref("person", t.entity, nameOf(t.entity), [t.note || ""]) + (t.note ? ` <span class="mk-small">${cs.esc(t.note)}</span>` : ""),
       cs.w(t.attribution === "name" ? S + "says.name" : S + "says.group", { handle: me })],
-    acts: (t) => cs.act("withdrawtie", { label: "act.withdrawtie.label.ties", data: { tie: t.tie_id } }) }), { empty: S + "none" })));
+    acts: (t) => cs.act("withdrawtie", { label: "act.withdrawtie.label.ties", data: { tie: t.tie_id } }) }))));
   out.push(cs.sec(S + "add", cs.choice("tie-kind", S + "kind", [["employer", S + "kind.employer"], ["relative", S + "kind.relative"], ["business", S + "kind.business"], ["other", S + "kind.other"]], {})
-    + cs.field("tie-who", S + "whofield", { help: S + "whofield.help" })
+    + cs.choice("tie-who", S + "whofield", who, {})
     + cs.field("tie-note", S + "note", { area: true, rec: true, help: S + "note.help" })
     + cs.checks("tie-says", S + "says", [["name", S + "says.name.choice", false], ["group", S + "says.group.choice", true]], { radio: true })
-    + `<p class="cs-note">${cs.w(S + "either", { handle: me })}</p>`
+    + `<p class="mk-note">${cs.w(S + "either", { handle: me })}</p>`
     + cs.act("declaretie", { label: "act.declaretie.label.ties", tone: "primary" })));
   return out.join("");
 }
@@ -55,7 +63,7 @@ export const TIES_WORDS = [
   ["who.2", "Outside the group: no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.", true],
   ["who.3", "It is kept with your group's records, so a court order could reach it like the rest of them.", true],
   ["list", "Your ties"],
-  ["none", "You have listed no tie."],
+  ["first", "Nothing is listed yet. Start with “Add this tie”: say who it is with, and how you want a case to name it."],
   ["col.kind", "Kind"],
   ["col.who", "Who"],
   ["col.disclosed", "A case would say"],
@@ -66,7 +74,6 @@ export const TIES_WORDS = [
   ["kind.other", "Other"],
   ["add", "Add a tie"],
   ["whofield", "Who"],
-  ["whofield.help", "The person or organisation the record follows, by its record id."],
   ["note", "The tie, in your words"],
   ["note.help", "For example \"member-owner\", or \"my cousin works on its staff\"."],
   ["says", "If a case the group publishes concerns them, the case discloses this tie", true],
@@ -82,4 +89,4 @@ const words = ["screen.ties.name", "screen.ties.purpose",
   ...["declaretie", "withdrawtie"].flatMap((op) => ["act." + op + ".label.ties", "act." + op + ".does"]),
   "state.empty", "state.loading", "state.failed", ...TIES_WORDS];
 
-export const TIES_SCREEN = Object.freeze({ id: "ties", reads, render, acts, words });
+export const TIES_SCREEN = Object.freeze({ id: "ties", reads, render, acts, words, parts: PARTS });

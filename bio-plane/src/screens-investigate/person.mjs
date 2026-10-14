@@ -6,6 +6,7 @@
 
 import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
+import { graphRows, GRAPH_SHARED } from "./graphwords.mjs";
 
 const S = "screen.person.";
 
@@ -16,6 +17,8 @@ function reads(view) {
   return {
     person: { op: "person", query: { id, at }, subject: true, empty: (v) => !v || v.found === false },
     candidates: { op: "samepersoncandidates", query: { id } },
+    vocab: { op: "affordances", query: {} },
+    people: { op: "peopledirectory", query: { limit: "200" } },
   };
 }
 
@@ -27,7 +30,13 @@ function render(cs, view) {
   const p = d && d.state === "ok" ? d.value : null;
   const name = p && Array.isArray(p.names) && p.names.length ? p.names[0].name : id;
   const out = [cs.title(name, { thing: { kind: "person", facts: p ? (p.names || []).slice(1).map((n) => n.name) : [] } })];
-  out.push(`<div class="cs-actrow">${cs.act("person", { label: "act.person.label.person" })}${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
+  out.push(`<div class="mk-acts">${cs.act("person", { label: "act.person.label.person" })}${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
+  /* R18: "Connections": the graph from this person, as of today, two rings out; a node pressed becomes the centre */
+  const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
+  const groups = P.groupMap(vocab);
+  const centre = String(view.ui.centre || id);
+  const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
+  out.push(cs.sec(S + "connections", cs.state(gq, (g) => P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource" } }))));
   /* each item cited, dated and graded: its passage a reference to the capture, its grade one mark */
   const cite = (c, label) => (c && (c.captureSha || c.capture_sha)
     ? P.refOf(cs, c.captureSha || c.capture_sha, label || cs.w(S + "source"), [c.extent && c.extent.page !== undefined ? cs.w(S + "page", { page: String(Number(c.extent.page) + 1) }) : ""], "capture")
@@ -40,9 +49,9 @@ function render(cs, view) {
   };
   const gradeOf = (g) => (typeof g === "string" && /^[A-D]$/.test(g) ? cs.grade("capture", g)
     : g && /^[A-D]$/.test(g.assertion || "") ? cs.grade("connection", g.assertion) : cs.mark("gap", "unrated"));
-  out.push(cs.sec(S + "positions", cs.state("person", view, (v) => {
+  /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
+  if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state("person", view, (v) => {
     const posts = v.posts || [];
-    if (!posts.length) return `<p>${cs.w(S + "positions.none")}</p>`;
     return cs.sheet(posts.map((x) => cs.row(gradeOf(x.grade),
       `${P.refOf(cs, x.to, x.title || x.to, [x.capacity || ""])}${x.capacity ? " · " + cs.esc(x.capacity) : ""} · ${span(x.valid)}`,
       cite(x.citation))).join(""));
@@ -51,7 +60,7 @@ function render(cs, view) {
   const kinds = ["name", "birth", "death", "locality", "address", "contact"];
   out.push(cs.sec(S + "facts", cs.state("person", view, () => (facts.length
     ? cs.sheet(facts.map((f) => cs.row(gradeOf(f.grade), `<b>${cs.w(S + "kind." + (kinds.includes(f.kind) ? f.kind : "other"))}</b> · ${cs.esc(f.value)}${span(f.valid) ? " · " + span(f.valid) : ""}`, cite(f.citation))).join(""))
-    : `<p>${cs.w(S + "facts.none")}</p>`))
+    : ""))
     + cs.choice("person-fact-kind", S + "fact.kind", kinds.map((k) => [k, S + "kind." + k]), {})
     + cs.field("person-fact-value", S + "fact.value", { rec: true })
     + cs.field("person-fact-from", S + "fact.from", { type: "date" })
@@ -62,23 +71,25 @@ function render(cs, view) {
     + cs.act("followregister", { label: "act.followregister.label.person" })));
   /* same person? the cluster the claims link (never merged), the candidates (not claims), and the claim acts */
   const others = p && p.cluster && Array.isArray(p.cluster.members) ? p.cluster.members.filter((m) => m !== id) : [];
-  const mine = Array.isArray(view.ui.claims) ? view.ui.claims : [];
-  out.push(cs.sec(S + "same", (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, m, []), `<span class="cs-meta">${cs.w(S + "same.claimed")}</span>`)).join(""))
-      : p && p.cluster && p.cluster.state === "undetermined" ? cs.mark("gap", "undetermined", { reason: p.cluster.why || "" }) : `<p>${cs.w(S + "same.none")}</p>`)
-    + (mine.length ? cs.sheet(mine.map((c) => cs.row(cs.grade("subject", c.grade || ""), cs.esc(c.why || "") + ` <span class="cs-meta">${cs.esc(c.claim_id)}</span>`,
+  /* R21: the claims as `person` answers them, each named by its `claim_id` when withdrawn */
+  const claims = p && Array.isArray(p.claims) ? p.claims : [];
+  out.push(cs.sec(S + "same", (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, m, []), `<span class="mk-small">${cs.w(S + "same.claimed")}</span>`)).join(""))
+      : p && p.cluster && p.cluster.state === "undetermined" ? cs.mark("gap", "undetermined", { reason: p.cluster.why || "" }) : "")
+    + (claims.length ? cs.sheet(claims.map((c) => cs.row(cs.grade("subject", c.grade || ""),
+      `<b>${cs.w(S + "claim." + (["same_as", "not_same_as", "unsure"].includes(c.kind) ? c.kind : "unsure"))}</b> · ${P.refOf(cs, c.a === id ? c.b : c.a, c.a === id ? c.b : c.a, [])} · ${cs.esc(c.why || "")}`
+      + ` <span class="mk-small">${cs.w(S + "claim.by", { by: String(c.by || "").replace(/^member:/, ""), date: cs.date(c.at || "") })}</span>`,
       cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person", data: { claim: c.claim_id } }))).join("")) : "")
     + cs.state("candidates", view, (v) => ((v.candidates || []).length
-      ? `<p class="cs-meta">${cs.w(S + "candidates")}</p>` + cs.sheet(v.candidates.map((c) => cs.row("", P.refOf(cs, c.entity_id, c.entity_id, []),
-        `<span class="cs-meta">${["names", "identifiers", "posts", "life"].map((k) => cs.w(S + "field." + k) + ": " + cs.w(S + "state." + ((c.fields && c.fields[k] && c.fields[k].state) || "absent"))).join(" · ")}</span>`)).join(""))
-      : `<p class="cs-meta">${cs.w(S + "candidates.none")}</p>`))
-    + cs.field("person-claim-other", S + "claim.other", { help: S + "claim.other.help" })
+      ? `<p class="mk-small">${cs.w(S + "candidates")}</p>` + cs.sheet(v.candidates.map((c) => cs.row("", P.refOf(cs, c.entity_id, c.entity_id, []),
+        `<span class="mk-small">${["names", "identifiers", "posts", "life"].map((k) => cs.w(S + "field." + k) + ": " + cs.w(S + "state." + ((c.fields && c.fields[k] && c.fields[k].state) || "absent"))).join(" · ")}</span>`)).join(""))
+      : ""))
+    + cs.choice("person-claim-other", S + "claim.other", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })).filter((o) => o.value !== id), {})
     + cs.choice("person-claim-kind", S + "claim.kind", [["same_as", S + "claim.same_as"], ["not_same_as", S + "claim.not_same_as"], ["unsure", S + "claim.unsure"]], {})
     + cs.choice("person-claim-basis", S + "claim.basis", [["testimony", S + "basis.testimony"], ["name", S + "basis.name"], ["corroborated_name", S + "basis.corroborated_name"], ["identifier", S + "basis.identifier"]], {})
     + cs.field("person-claim-sha-a", S + "claim.sha.a", {}) + cs.field("person-claim-sha-b", S + "claim.sha.b", {})
     + cs.field("person-claim-note", S + "claim.note", { area: true, rec: true })
     + cs.act("identityclaim", { label: "act.identityclaim.label.person" })
-    + cs.field("person-claim-id", S + "claim.id", { help: S + "claim.id.help" })
-    + cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person" })));
+));
   /* R1: removing a fact for good: the consequence statement (op-grades R21), filled with the day and the member, the
      law or order that requires it, and the Irreversible act (the shell's dialog; read only at the phone width) */
   const removable = facts.filter((f) => f.fact_id);
@@ -97,7 +108,18 @@ const acts = [
   { op: "person", label: "act.person.label.person",
     send(view) { return { query: { id: String(view.subject || ""), at: new Date(Date.now()).toISOString().slice(0, 10) } }; } },
   { op: "explore", label: "act.explore.label.person",
-    send(view, el, cs) { cs.go("explore", String(view.subject || "")); return null; } },
+    send(view, el, cs) {
+      if (el && el.dataset && el.dataset.node) {
+        const node = String(el.dataset.node);
+        const t = Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [String(view.ui.centre || view.subject || "")];
+        const i = t.indexOf(node);
+        view.ui.trail = i >= 0 ? t.slice(0, i + 1) : t.concat([node]);
+        cs.set("centre", node);
+        return null;
+      }
+      cs.go("explore", String(view.subject || ""));
+      return null;
+    } },
   { op: "recordpersonfact", label: "act.recordpersonfact.label.person",
     send(view, el, cs) {
       const value = String(cs.value("person-fact-value") || "").trim();
@@ -121,14 +143,11 @@ const acts = [
       }
       return { body };
     },
-    done(view, answer, cs) {
-      const r = answer && answer.result !== undefined ? answer.result : answer;
-      if (r && r.claim_id) cs.set("claims", (Array.isArray(view.ui.claims) ? view.ui.claims : []).concat([{ claim_id: r.claim_id, grade: r.grade, why: r.why }]));
-    } },
+    },
   { op: "withdrawidentityclaim", label: "act.withdrawidentityclaim.label.person",
     send(view, el, cs) {
-      const claimId = String((el && el.dataset && el.dataset.claim) || cs.value("person-claim-id") || "").trim();
-      if (!claimId) return { refuse: "screen.person.claim.noid" };
+      const claimId = String((el && el.dataset && el.dataset.claim) || "").trim();
+      if (!claimId) return null;
       return { body: { claimId } };
     } },
   { op: "followregister", label: "act.followregister.label.person",
@@ -150,6 +169,9 @@ const acts = [
 ];
 
 export const PERSON_WORDS = [
+  ...graphRows(S),
+  row(S + "connections", "Connections"),
+  row(S + "connections.holds", "Everything the record joins this person to, two steps out: positions, what they took part in, who they are named with, and records claimed to be the same person. Each line is cited and graded."),
   row(S + "source", "the source passage"),
   row(S + "page", "page {page}"),
   row(S + "nocitation", "the record holds no passage for this"),
@@ -157,9 +179,7 @@ export const PERSON_WORDS = [
   row(S + "since", "since {from}"),
   row(S + "positions", "Positions"),
   row(S + "positions.holds", "The posts and offices the record holds for this person, each dated and cited, with how easily the link can be checked."),
-  row(S + "positions.none", "The record holds no position for this person yet."),
   row(S + "facts", "Career, credentials, memberships, interests and statements"),
-  row(S + "facts.none", "The record holds no other fact about this person yet."),
   row(S + "kind.name", "Name"),
   row(S + "kind.birth", "Born"),
   row(S + "kind.death", "Died"),
@@ -180,9 +200,7 @@ export const PERSON_WORDS = [
   row(S + "same", "Same person?"),
   row(S + "same.holds", "Records claimed to be this person stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs."),
   row(S + "same.claimed", "claimed the same person; the records stay linked, never merged"),
-  row(S + "same.none", "No other record is claimed to be this person."),
   row(S + "candidates", "Records that might be the same person. These are not claims: a member decides."),
-  row(S + "candidates.none", "No other record looks like the same person."),
   row(S + "field.names", "names"),
   row(S + "field.identifiers", "identifiers"),
   row(S + "field.posts", "posts"),
@@ -191,7 +209,6 @@ export const PERSON_WORDS = [
   row(S + "state.differs", "differ"),
   row(S + "state.absent", "not recorded"),
   row(S + "claim.other", "The other record"),
-  row(S + "claim.other.help", "The record you say is, or is not, this person."),
   row(S + "claim.kind", "You say"),
   row(S + "claim.same_as", "It is the same person"),
   row(S + "claim.not_same_as", "It is not the same person"),
@@ -206,9 +223,7 @@ export const PERSON_WORDS = [
   row(S + "claim.note", "Why, in your words"),
   row(S + "claim.empty", "Name the other record and say why."),
   row(S + "claim.evidence", "This basis cites a document for each record."),
-  row(S + "claim.id", "The claim to withdraw"),
-  row(S + "claim.noid", "Name the claim to withdraw."),
-  row(S + "claim.id.help", "A claim made earlier, by its id (IDC-…); one made here is withdrawn from its own row."),
+  row(S + "claim.by", "by {by}, {date}"),
   row(S + "expunge.head", "Correction"),
   row(S + "expunge.statement", "This removes the value for good: from the person's page, from every question that cited it and from every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law requires, {date}, by {member}\". Published cases change only through the docket. Confirm with a reason naming the law or order that requires it: \"Remove it for good, with this reason\".", true),
   row(S + "expunge.fact", "The value to remove"),
@@ -230,6 +245,7 @@ const words = ["screen.person.name", "screen.person.purpose",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.scale.subject.name", "mark.scale.subject.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
+  ...GRAPH_SHARED,
   "state.empty", "state.loading", "state.failed", ...PERSON_WORDS];
 
-export const PERSON_SCREEN = Object.freeze({ id: "person", reads, render, acts, words, parts: PARTS });
+export const PERSON_SCREEN = Object.freeze({ id: "person", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, render, acts, words, parts: PARTS });

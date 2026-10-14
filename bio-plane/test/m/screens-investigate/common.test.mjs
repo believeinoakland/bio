@@ -11,15 +11,12 @@ import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-investigate/index.mjs";
-import { open, main, rawKeys, plane, press, fill, SCREENS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
+import { open, main, rawKeys, plane, press, fill, SCREENS, PATHS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
-export const PATHS = { people: "/app/people", person: "/app/person/" + ENT, explore: "/app/explore/" + ENT, timeline: "/app/timeline/" + P,
-  money: "/app/money/" + MSR, calculation: "/app/calculation/" + CALC, help: "/app/help", proceeding: "/app/proceeding/" + PROC,
-  "due-date": "/app/due-date/" + ACT, standard: "/app/standard/" + STD, ties: "/app/ties" };
 /* the reads each screen draws in one of the four states, by op (the rest feed what is drawn: titles, choices) */
-const DRAWN = { people: ["peopledirectory"], person: ["person", "samepersoncandidates"], explore: ["affordances", "explorepreset"],
-  timeline: ["timeline", "event"], money: ["moneyset", "money"], calculation: ["calculation", "spotcheck"],
+const DRAWN = { people: ["peopledirectory"], person: ["person", "samepersoncandidates", "exploregraph"], explore: ["affordances", "explorepreset", "exploregraph"],
+  timeline: ["timeline"], money: ["moneyset", "money", "exploregraph"], calculation: ["calculation", "spotcheck"],
   proceeding: ["entity", "partiesof", "follows", "dutiesof"], "due-date": ["action", "clockproposals", "clocksics"],
   standard: ["standard", "lawrelations"], ties: ["memberties"] };
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
@@ -38,9 +35,10 @@ for (const [id, ops] of Object.entries(DRAWN)) {
   });
 }
 
-test("R10 a read that answers nothing is drawn empty, never failed (control: a refusal is failed, never empty)", async () => {
+test("R10 a read that answers nothing is drawn empty, never failed (control: a refusal is failed, never empty); R22: ties with none draws its designed empty state, not \"You have listed no tie\"", async () => {
   const p = await open(PATHS.ties, { plane: { memberties: ok({ ok: true, member: "mai", count: 0, ties: [] }) } });
-  assert.ok(main(p).querySelector('[data-state="empty"]'));
+  assert.match(main(p).textContent, /Start with “Add this tie”/);
+  assert.doesNotMatch(main(p).textContent, /You have listed no tie/);
   assert.equal(main(p).querySelector('[data-state="failed"]'), null);
   const q = await open(PATHS.ties, { plane: { memberties: refusedIn("SOME_REFUSAL") } });
   assert.equal(main(q).querySelector('[data-state="empty"]'), null);
@@ -94,10 +92,12 @@ test("R10 each screen draws exactly its registry acts, labelled by its words, ea
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
-    assert.deepEqual([...new Set(s.acts.map((a) => a.op))].sort(), [...new Set(reg.acts.map((a) => a.op))].sort(), s.id);
+    /* interface-shell R55: on explore, stepsource and stepsourcewithdraw re-point connectionassert (screens-investigate R17) */
+    const want = s.id === "explore" ? [...reg.acts.map((a) => a.op).filter((o) => o !== "connectionassert"), "stepsource", "stepsourcewithdraw"] : reg.acts.map((a) => a.op);
+    assert.deepEqual([...new Set(s.acts.map((a) => a.op))].sort(), [...new Set(want)].sort(), s.id);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, `act.${a.op}.label.${s.id}`);
+      assert.equal(a.label, a.op === "stepsource" ? "act.connectionassert.label.explore" : a.op === "stepsourcewithdraw" ? "screen.explore.withdraw" : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
     }
   }
