@@ -64,7 +64,7 @@ async function enrolled(memberId) {
   if (a.reason === "ADMINS_FIRST") a = await add("admin");
   const en = await POST("op=enroll", { invite: a.invite, handle: memberId, password: `${memberId}-passphrase-1` });
   assert.equal(en.ok, true, JSON.stringify({ a, en }).slice(0, 300));
-  return (await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` })).token;
+  return (await POST("op=login", { handle: memberId, password: `${memberId}-passphrase-1` })).token;
 }
 const store = async () => { const ns = await mf.getDurableObjectNamespace("STORE"); return ns.get(ns.idFromName("bio")); };
 
@@ -175,7 +175,7 @@ test("R5, R9: a promotion that leaves an action holding a past-dated pending clo
   const add = await POST("op=memberadd&token=adm-sch",
     { memberId: "sam", cover: "cover for sam", role: "admin", capabilities: ["contribute", "publish"] });
   assert.equal((await POST("op=enroll", { invite: add.invite, handle: "sam", password: "sam-passphrase-1" })).ok, true);
-  const SAM = (await POST("op=login", { role: "member:sam", password: "sam-passphrase-1" })).token;
+  const SAM = (await POST("op=login", { handle: "sam", password: "sam-passphrase-1" })).token;
   /* the day is the group's local day (actions R12, R33; monitoring R50): the instance holds a profile with a zone */
   const zoned = heldProfiles().find((p) => !p.test && combine([p.id]).view?.time_zone?.value);
   const prof = await POST(`op=profilesset&token=${SAM}`, { profiles: [zoned.id] });
@@ -205,7 +205,7 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
     { memberId: "ruth", cover: "cover for ruth", role: "admin", capabilities: ["contribute", "publish"] });
   const en = await POST("op=enroll", { invite: add.invite, handle: "ruth", password: "ruth-passphrase-1" });
   assert.equal(en.ok, true, JSON.stringify(en));
-  const RUTH = (await POST("op=login", { role: "member:ruth", password: "ruth-passphrase-1" })).token;
+  const RUTH = (await POST("op=login", { handle: "ruth", password: "ruth-passphrase-1" })).token;
   const INQ = "INQ-2026-4200-sched-expiry", C = "2026-09-01T00:00:00Z";
   const md = ["---", `id: ${INQ}`, "object_type: inquiry", "schema: inquiry@1", `title: "What does ${INQ} rest on?"`,
     "current_state: open", "prior_state: null", `created: "${C}"`, `last_updated: "${C}"`,
@@ -221,6 +221,14 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
 
   /* N585 (K1614; ai-runs R52): a run carries the account of the member whose act opened it, so ruth connects her own
      account first, through the op the plane routes (credentials R22), the member named, never by writing the store */
+  /* instance-setup R54, ai-accounts R23: the disclosure of what connecting means is shown and recorded first, at the
+     version the plane answers, by her own session */
+  const version = (await POST(`op=disclosureof&token=${RUTH}`, { member: "member:ruth" })).version;
+  const shown = await POST(`op=disclosureshown&token=${RUTH}`, { member: "member:ruth", version });
+  assert.deepEqual([shown.ok, shown.shown], [true, true], JSON.stringify(shown));
+  /* credentials R66, R71 (2): connecting Claude asks for the password again, inside a 5-minute window */
+  const re = await POST(`op=reauth&token=${RUTH}`, { password: "ruth-passphrase-1" });
+  assert.equal(re.ok, true, JSON.stringify(re));
   const acct = await POST(`op=accountreferenceset&token=${RUTH}`, { member: "ruth", kind: "apikey", secret: "sk-sched-plane" });
   assert.equal(acct.ok, true, JSON.stringify(acct));
   /* capture-requests R49 (K1993): ruth captures the index page first, so the address the run asks for is one a held
@@ -281,7 +289,7 @@ test("R9: in the plane, a promotion that ratifies a sweep on an idle instance le
   if (add.reason === "ADMINS_FIRST") add = await memberAdd("admin");
   const en = await POST("op=enroll", { invite: add.invite, handle: "swen", password: "swen-passphrase-1" });
   assert.equal(en.ok, true, JSON.stringify({ add, en }).slice(0, 300));
-  const SWEN = (await POST("op=login", { role: "member:swen", password: "swen-passphrase-1" })).token;
+  const SWEN = (await POST("op=login", { handle: "swen", password: "swen-passphrase-1" })).token;
   const pmd = ["---", "object_type: project", 'title: "Sweep project"', "current_state: forming", `created: "${C}"`,
     `last_updated: "${C}"`, 'objective: "Establish what the council publishes."', "references: []", "required_strength:",
     "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
