@@ -21,3 +21,7 @@ R16 done (op=pressurefor, test pressurefor-op.test.mjs, module tests 38 pass). R
 **Ran.** `node --test bio-plane/test/m/action-holds/`: tests 39, pass 39, fail 0. format: 168 modules, 167 requirements files; 0 failures. architecture action-holds: 12 product files, 37 relative imports; 0 failures. coverage action-holds: 17 of 17 live ids named; 0 failures. ownership action-holds vs tranche/T48: 3 files; 0 failures. `checks/run.mjs`: coverage failures in other modules only (26, none action-holds); the op-declarations R19 census red from `pressurefor` is the one this job adds, reported.
 
 Size (session_019Kbfg98XzHtTx15bKxiwRj): test runs 6, module lines 1218
+
+## J2 · COMPLETE
+
+T48-81 complete: R16 (op=pressurefor) and R17 (three codes through action-records R16's site) applied and tested; module tests 39/39; format, architecture, coverage (17/17) and ownership 0 failures; run.mjs architecture 0 failures. Needs from other modules: op-declarations/op-grades spec for pressurefor (op-declarations R19 census red, the one red this job adds). Record: build/jobs/T48/action-holds.md.
