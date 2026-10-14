@@ -39,7 +39,8 @@ const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`
 const WORDS = {
   members: [...STATES, "screen.members.name", ...own("screen.members."), ...PANEL, "ai.whopays", "screen.group.name", "screen.places.name", "screen.recovery.name",
     ...LABELS("members", ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
-      "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway", "signerset"])],
+      "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway", "signerset"]),
+    "act.owed_passwordresetlink.label.members"],
   account: [...STATES, "screen.account.name", ...own("screen.account."), "handle.fixed", "level.prompt.name", "level.pause.name",
     "screen.connect.name", "screen.notes.name",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere"])],

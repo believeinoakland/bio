@@ -29,7 +29,7 @@ const PRESSES = [
   ["account", "infolevelset", { values: { "ma-level": "pause" } }],
   ["account", "expertisedeclare", { values: { "ma-exp": "Law" } }],
   ["account", "setpassword", { values: { "ma-cur0": SECRET + "-old", "ma-new0": SECRET, "ma-again0": SECRET } }],
-  ["account", "signerregisterown", { values: { "ma-pub": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK x" } }],
+  ["account", "signerregisterown", { signer: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK x" }],
   ["account", "signerrevokeown", { data: { key: "AAAAC3NzaC1lZDI1NTE5AAAAIMine00000000000000000000000000000000000001" } }],
   ["connect", "groupkeynoticeseen", {}, "group"],
   ["connect", "disclosureshown", { data: { version: "D311-1" } }, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }],
@@ -49,7 +49,7 @@ const PRESSES = [
   ["members", "signerset", { data: { key: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001" }, reason: "stolen" }],
   ["group", "groupnameset", { values: { "gr-name": "G" } }],
   ["group", "groupdomainset", { values: { "gr-domain": "g.example" } }],
-  ["group", "grouplanguagesset", { values: { "gr-langs": "en es" } }],
+  ["group", "grouplanguagesset", { values: { "gr-langs": "en es" }, reason: "r" }],
   ["group", "courtnoticeset", { values: { "gr-court-dont": true } }],
   ["group", "hostingaccessset", { values: { "gr-holders": "Rosa" } }],
   ["group", "strengthbarset", { values: { "gr-cap": "A", "gr-why": "why" } }],
@@ -68,7 +68,7 @@ const PRESSES = [
   ["translations", "translationconfirm", { data: { key: "mark.outward.means" } }],
   ["translations", "translationrevert", { data: { key: "rail.home.name" } }],
   ["translations", "translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana" } }],
-  ["translations", "translationdraft", { data: { key: "mark.outward.means", direction: "to_english" } }],
+  ["translations", "translationdraft", { data: { key: "mark.outward.means", direction: "to_english" }, reason: "r" }],
 ];
 const TABLES = { members: membersTable, account: () => accountTable(ADMIN), notes: () => notesTable(ADMIN), group: groupTable, places: placesTable, recovery: recoveryTable,
   "group-identity": identityTable, security: securityTable, translations: translationsTable };

@@ -10,7 +10,7 @@ const ALL = ["courtnoticeset", "groupdomainset", "grouplanguagesset", "grouplogo
 
 test("R18 group: what the group chose is drawn to every member; the acts only to an administrator (control: a member is drawn none)", async () => {
   const a = await open("group", { me: ADMIN, table: groupTable() });
-  for (const op of ["groupidentity", "grouplanguages", "courtnotice", "hostingaccess", "strengthbarof"]) assert.ok(a.p.requests.some((r) => r.op === op), op);
+  for (const op of ["groupidentity", "grouplanguages", "courtnotice", "hostingaccess", "strengthbarof"]) assert.ok(a.p.all.some((r) => r.op === op), op);
   has(a, "screen.group.name.now", { name: "East Oakland Watch" });
   has(a, "screen.group.domain.verified", { domain: "eastoak.example", date: day("2026-10-03") });
   has(a, "screen.group.languages.now", { languages: "en, es" });
@@ -26,7 +26,8 @@ test("R18 group: what the group chose is drawn to every member; the acts only to
 
 test("R18 group: groupnameset, groupdomainset, grouplanguagesset, courtnoticeset, hostingaccessset and strengthbarset (reasoned) send their owners' arguments", async () => {
   const a = await open("group", { me: ADMIN, table: groupTable() });
-  const body = async (op, values, data = {}) => { const r = await a.press(op, { values, data }); return r.sent.length ? r.sent[0].body : null; };
+  // a reason given wherever the shell asks one (its R11, by op-grades' rung)
+  const body = async (op, values, data = {}) => { const r = await a.press(op, { values, data, reason: "as agreed" }); if (!r.sent.length) return null; const { reason, ...b } = r.sent[0].body; return op === "strengthbarset" ? r.sent[0].body : b; };
   assert.deepEqual(await body("groupnameset", { "gr-name": " East Oakland Watch Collective " }), { name: "East Oakland Watch Collective" });
   assert.equal(await body("groupnameset", { "gr-name": " " }), null);
   assert.equal(a.refused.key, "screen.group.name.empty");

@@ -5,7 +5,8 @@ import { acts, all, day, has, lacks, open, said } from "./kit.mjs";
 import { ADMIN, MEMBER, env, placesTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
-const settle = async (o) => { await o.b.settle(200); o.redraw(); };
+// the next page is read on the page's clock (cs.later): the harness's fake clock is moved on
+const settle = async (o) => { for (let i = 0; i < 3; i++) { await o.b.clock.tick(10); await o.b.settle(40); } o.redraw(); };
 
 test("R19 places: the places whose rules apply, chosen with profilesset, its warning said first; choosing none is allowed", async () => {
   const a = await open("places", { me: ADMIN, table: placesTable() });
@@ -30,7 +31,7 @@ test("R19 places: the offices read page by page to the end, each marked by origi
   await settle(a);
   const reads = a.p.requests.filter((r) => r.op === "entitieskind");
   assert.deepEqual(reads.map((r) => [r.query.kind, r.query.after || null]), [["office", null], ["office", "ENT-0002"]]);
-  for (const n of [1, 2, 3]) assert.ok(a.text.includes("Office " + n), "office " + n);
+  for (const n of ["Office of the City Clerk", "Department of Public Works", "Office of the City Auditor"]) assert.ok(a.text.includes(n), n);
   const items = all(all(a.tree, (e) => e.attrs["data-list"] === "offices")[0], (e) => e.tag === "li").map((e) => e.children.map((c) => c.text || "").join(""));
   assert.equal(items.length, 3);
   has(a, "screen.places.offices.bygroup");

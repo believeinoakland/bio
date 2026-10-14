@@ -9,12 +9,12 @@ const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-ac
 
 test("R1 the reads: the roster, the group's key and the keep-away for every member; the recovery step and the group's account (owner group) for an administrator; a member's expertise when opened", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
-  const reads = a.p.requests.map((r) => [r.op, r.query]).slice(0, 9);
+  const reads = a.p.requests.map((r) => [r.op, r.query]).slice(0, 10);
   assert.deepEqual(reads, [["memberlist", {}], ["groupkeystate", {}], ["aikeepawaystate", {}], ["expertiselist", { memberId: "ana" }],
-    ["adminrecoverystep", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }]]);
+    ["adminrecoverystep", {}], ["signerlist", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }]]);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   assert.deepEqual(m.p.requests.map((r) => r.op).slice(0, 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
-  for (const op of ["adminrecoverystep", "accountuses", "ailimits", "aiusage", "accounthistory", "expertiselist"]) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
+  for (const op of ["adminrecoverystep", "signerlist", "accountuses", "ailimits", "aiusage", "accounthistory", "expertiselist"]) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
 test("R1 the roster: each member's handle, cover (to an administrator), role, capabilities and status; no \"formerly\" (DEC-197)", async () => {
@@ -42,7 +42,8 @@ test("R1 the one-administrator note while the step is not met, as setup-page R16
   has(a, "screen.members.recovery.one");
   has(a, "screen.members.recovery.nocodes", { remaining: 0 });
   assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "#members-invite").length === 1, "the act that meets it: adding an administrator");
-  assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/app/recovery").length === 1, "and issuing codes, on Recovery codes");
+  const note = all(a.tree, (e) => e.attrs["data-note"] === "recovery")[0];
+  assert.ok(all(note, (e) => e.tag === "a" && e.attrs.href === "/app/recovery").length === 1, "and issuing codes, on Recovery codes");
   assert.equal(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "/").length, 0, "no link opens the setup page");
   const two = await open("members", { me: ADMIN, table: membersTable({ adminrecoverystep: env({ ok: true, administrators: 2, codes_held: true, remaining: 7, met: true }) }) });
   assert.ok(!all(two.tree, (e) => e.attrs["data-note"] === "recovery").length);

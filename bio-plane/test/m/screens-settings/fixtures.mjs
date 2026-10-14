@@ -193,7 +193,8 @@ export function groupTable(over = {}) {
   };
 }
 
-const office = (i, by = "class:daemon") => ({ entity_id: "ENT-" + String(i).padStart(4, "0"), kind: "office", label: "Office " + i, note: "n", declared_by: by, at: "2026-10-01T00:00:00Z" });
+const OFFICES = ["", "Office of the City Clerk", "Department of Public Works", "Office of the City Auditor"];
+const office = (i, by = "class:daemon") => ({ entity_id: "ENT-" + String(i).padStart(4, "0"), kind: "office", label: OFFICES[i], note: "n", declared_by: by, at: "2026-10-01T00:00:00Z" });
 /** places: two pages of offices, the second answered only when asked `after` the first's last. */
 export function placesTable(over = {}) {
   return {

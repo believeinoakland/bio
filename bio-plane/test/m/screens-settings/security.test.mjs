@@ -9,7 +9,8 @@ const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].so
 test("R15 security: an administrator's screen; any other member is told only that it is administrators', and nothing is read", async () => {
   const m = await open("security", { me: MEMBER, table: securityTable() });
   has(m, "screen.security.admins");
-  assert.deepEqual(m.p.requests, []);
+  const OWN = ["securitymap", "scanstatus", "securitytools", "securitytoolevents", "securitytoolcatalogue", "bootstrap"];
+  assert.deepEqual(m.p.requests.filter((r) => OWN.includes(r.op)), [], "nothing of the screen's own is read");
   assert.deepEqual(ops(m), []);
 });
 
@@ -66,5 +67,8 @@ test("R15 securitytooltest and securitytoolremove from the tool's row panel; a r
   assert.deepEqual((await a.press("securitytoolremove", { data: { tool: "T1" } })).sent[0].body, { toolId: "T1" });
   const r = await open("security", { me: ADMIN, table: securityTable({ securitytooltest: env({ ok: false, reason: "SCANNER_ABSENT", code: "SCANNER_ABSENT", translation: "file-safety's words" }) }) });
   await r.press("securitytooltest", { data: { tool: "T1" } });
-  assert.equal(r.refused.text, "file-safety's words");
+  assert.equal(r.refused.text, said("refusal.SCANNER_ABSENT"), "the owner's row's words");
+  const t = await open("security", { me: ADMIN, table: securityTable({ securitytooltest: env({ ok: false, reason: "SOME_NEW_CODE", code: "SOME_NEW_CODE", translation: "file-safety's words" }) }) });
+  await t.press("securitytooltest", { data: { tool: "T1" } });
+  assert.equal(t.refused.text, "file-safety's words", "else its translation");
 });

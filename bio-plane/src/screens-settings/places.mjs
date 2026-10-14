@@ -100,7 +100,8 @@ export const places = {
         view.ui.more = []; view.ui.moreNext = undefined; view.ui.moreFailed = false;
         cs.set("seeded", { seeded: (a && a.seeded || []).length, already: (a && a.already || []).length, unseeded: (a && a.unseeded || []).length });
       } },
-    { op: "entitycreate", rereads: ["offices"],
+    // the administrator's own note on the office is its reason (interface-shell R11's `reasonField`; DEC-88)
+    { op: "entitycreate", rereads: ["offices"], reasonField: "note",
       send(view, el, cs) {
         const label = String(cs.value("pl-label") || "").trim(), note = String(cs.value("pl-note") || "").trim();
         if (!label || !note) return { refuse: "screen.places.add.incomplete" };

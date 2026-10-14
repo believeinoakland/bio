@@ -88,13 +88,6 @@ test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while b
   assert.ok(!ops(old).includes("subscriptionsignin"), "R13: parts' signin offers nothing");
   has(old, "instance.part.unknown", { part: said("screen.connect.signin.part") });
 });
-    assert.ok(!ops(o).includes("subscriptionsignin"), `no sign-in while signin is ${present}`);
-    has(o, key);
-    assert.ok(ops(o).includes("accountreferenceset"));
-  }
-  const old = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, service: "bio-plane" } }) });
-  assert.ok(!ops(old).includes("subscriptionsignin"), "a plane answering no parts offers no sign-in");
-});
 
 test("R5 the subscription sign-in: start, the address offered in a new browsing context (noopener noreferrer), then the code in the body only; connected draws the member's own account", async () => {
   let connected = false;

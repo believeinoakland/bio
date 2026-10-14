@@ -119,8 +119,10 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   /** Fills the fields (`values`: id → text, or true/false for a box), clicks the act's button whose `data-*` match
    *  `data`, answers the shell's reason when it asks one (`reason`), and settles. Answers the requests the act made and
    *  what the shell drew beside the act. */
-  out.press = async (op, { data = {}, values = {}, reason } = {}) => {
+  out.press = async (op, { data = {}, values = {}, reason, signer } = {}) => {
     const doc = b.doc;
+    // the public line the kit's signer answers (interface-shell R40, R46), or null for a member who declines
+    if (signer !== undefined) b.win.__signerLine = signer;
     for (const [fid, v] of Object.entries(values)) {
       const el = doc.getElementById(fid);
       if (!el) continue;

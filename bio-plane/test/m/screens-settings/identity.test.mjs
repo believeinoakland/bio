@@ -8,7 +8,7 @@ const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].so
 
 test("R14 group-identity: reads groupdescription (the whole record) and groupidentity; every member reads it; only an administrator is drawn the acts", async () => {
   const a = await open("group-identity", { me: ADMIN, table: identityTable(), reachable: true });
-  assert.ok(a.p.requests.some((r) => r.op === "groupdescription") && a.p.requests.some((r) => r.op === "groupidentity"));
+  assert.ok(a.p.all.some((r) => r.op === "groupdescription") && a.p.all.some((r) => r.op === "groupidentity"));
   assert.ok(a.text.includes("Street repair on Seminary.") && a.text.includes("We keep the city to its word.") && a.text.includes("a tenants' union"));
   has(a, "screen.group-identity.visibility.members");
   assert.deepEqual(ops(a), ["groupdescriptiondraft", "groupdescriptionset"]);

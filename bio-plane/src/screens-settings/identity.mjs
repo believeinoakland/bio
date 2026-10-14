@@ -64,7 +64,7 @@ export const identity = {
         if (other) body.otherKind = other;
         if (focus) body.focus = focus;
         if (purpose) body.purpose = purpose;
-        return body;
+        return { body };
       },
       // kept: the words are the group's now, no longer the assistant's draft
       done(view, answer, cs) { if (view.ui && view.ui.draft) cs.set("draft", null); } },

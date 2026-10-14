@@ -11,7 +11,7 @@ test("R16 translations: the group's languages each open their words; translation
   assert.deepEqual(all(a.tree, (e) => e.tag === "a" && /^\/app\/translations\//.test(e.attrs.href || "")).map((e) => e.attrs.href), ["/app/translations/es", "/app/translations/vi"]);
   has(a, "screen.translations.choose");
   const es = await open("translations", { me: ADMIN, table: translationsTable(), subject: "es" });
-  assert.deepEqual(es.p.requests.filter((r) => ["translations", "interfacewords"].includes(r.op)).map((r) => [r.op, r.query]), [["translations", { language: "es" }], ["interfacewords", { language: "es" }]]);
+  assert.deepEqual(es.p.all.filter((r) => ["translations", "interfacewords"].includes(r.op) && r.query.language).map((r) => [r.op, r.query]), [["translations", { language: "es" }], ["interfacewords", { language: "es" }]]);
   // a member not granted the language: its refusal in its words
   const m = await open("translations", { me: MEMBER, subject: "es", table: translationsTable({ translations: refuse("TRANSLATION_NOT_GRANTED") }) });
   assert.ok(m.text.includes("translated TRANSLATION_NOT_GRANTED"));
@@ -42,10 +42,12 @@ test("R16 translationdraft: the picked words' drafts while the assistant is reac
   const a = await open("translations", { me: ADMIN, table: translationsTable(), subject: "es", reachable: true });
   a.b.fire(a.b.doc.getElementById("pick-words-rail.queue.name"), "click");
   await a.b.settle(80); a.redraw();
-  const r = await a.press("translationdraft", { data: { direction: "to_language" } });
-  assert.deepEqual(r.sent[0].body, { language: "es", direction: "to_language", keys: ["rail.queue.name"] });
-  const e = await a.press("translationdraft", { data: { key: "mark.outward.means", direction: "to_english" } });
-  assert.deepEqual(e.sent[0].body, { language: "es", direction: "to_english", key: "mark.outward.means" });
+  const r = await a.press("translationdraft", { data: { direction: "to_language" }, reason: "for the new members" });
+  const { reason, ...body } = r.sent[0].body;
+  assert.deepEqual(body, { language: "es", direction: "to_language", keys: ["rail.queue.name"] });
+  const e = await a.press("translationdraft", { data: { key: "mark.outward.means", direction: "to_english" }, reason: "to confirm it" });
+  const { reason: why, ...back } = e.sent[0].body;
+  assert.deepEqual(back, { language: "es", direction: "to_english", key: "mark.outward.means" });
   assert.ok(a.text.includes("Outward: this goes outside") && a.text.includes(said("screen.translations.reading.label", { handle: "rosa" })));
   assert.ok(!e.sent.some((x) => x.op === "translationadopt" || x.op === "translationconfirm"), "it adopts nothing");
   const off = await open("translations", { me: ADMIN, table: translationsTable(), subject: "es", reachable: false });

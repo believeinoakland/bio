@@ -96,9 +96,11 @@ export const members = {
             if (c) p.push(`<label for="mr-${E(id)}">${W(S + "remove.reason")}</label><textarea id="mr-${E(id)}" class="cs-input rec" maxlength="2000"></textarea>${c}`);
           }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
-          // a reset link for a member who has joined (credentials R69), shown once
-          if (m.handle && m.status === "active" && id !== me.member) {
-            const c = cs.act("passwordresetlink", { data: { member: id } });
+          // a reset link for a member who has joined (credentials R69), shown once; an administrator's act, which the
+          // owner refuses anyone else (drawn only to a session that administers, interface-shell R12)
+          if (admin && m.handle && m.status === "active" && id !== me.member) {
+            // its label is held under the owed act's key in `words.json` (DEC-201 (2))
+            const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
             if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="cs-shown" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
           }
           // the member's active signing keys, each withdrawn for a lost or stolen device (credentials R10)
