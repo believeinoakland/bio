@@ -1,24 +1,19 @@
 /* screens-publish R20 (the common line, interface-shell R56 and R61): every element these screens draw uses a class a
  * served stylesheet defines; a section, list or reading that holds nothing is not drawn and no count is drawn at zero;
  * a screen with nothing at all draws its one designed empty state; a read that failed is still drawn failed. The served
- * stylesheets are `civicsmith.css`, the shell's own `<style>` and the design's page rules (`page.src.html`, whose `mk-*`
- * rules `shell.css` carries once `interface-assets` serves it). */
+ * stylesheets are `civicsmith.css`, `shell.css` and the shell's own `<style>` (R56). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { open, main, text, press, tick, ok, refusedIn, plane, COPY, PREFLIGHT, SCREENS, P, DR, C } from "./fixtures.mjs";
 
-const read = (rel) => readFileSync(new URL(`../../../../docs/development/ux-substrate/${rel}`, import.meta.url), "utf8");
 const tokens = (css) => new Set([...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
 const page = interfacePage(SCREENS);
-const SERVED = new Set([...tokens(read("visual-language/civicsmith.css")), ...tokens(read("screens/page.src.html")),
-  ...tokens((/<style>([\s\S]*?)<\/style>/.exec(page) || [])[1] || "")]);
+const SERVED = new Set([...tokens(ASSET_FILES["civicsmith.css"].body), ...tokens(ASSET_FILES["shell.css"].body),
+  ...tokens((/<style[^>]*>([\s\S]*?)<\/style>/.exec(page) || [])[1] || "")]);
 const drawn = (p) => new Set([...p.root().innerHTML.matchAll(/\bclass="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean));
-/* Drawn by the kit, not by this module: `cs.areas` (interface-shell R49) draws `cs-areas`, which R56's list spells `mk-areas`
-   (the shell's job renames it; reported to BOB). It is the one class excused here, and only until that rename lands. */
-const KIT_OWN = new Set(["cs-areas"]);
-const undefinedIn = (p) => [...drawn(p)].filter((c) => !SERVED.has(c) && !KIT_OWN.has(c));
+const undefinedIn = (p) => [...drawn(p)].filter((c) => !SERVED.has(c) && !Object.hasOwn(HOOK_CLASSES, c));
 
 const PATHS = {
   "case-editor": `/app/case-editor/${P}`, "review-copy": `/app/review-copy/${P}`, ceremony: `/app/ceremony/${P}/${DR}`,

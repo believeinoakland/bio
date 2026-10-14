@@ -14,7 +14,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
     const f = view.fragment;
     const secret = f && typeof f.grant === "string" ? f.grant : "";
     view.ui.secret = secret;
-    return secret ? { copy: { op: "reviewcopy", body: { secret: secret }, subject: true } } : {};
+    return secret ? { copy: { op: "reviewcopy", body: { secret: secret } } } : {};
   },
 
   render: function (cs, view) {
