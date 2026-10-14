@@ -39,3 +39,7 @@ The test passes 6 of 6, and its K3192 reds clear. No assertion about this module
 - No generated artifact is written. The plane bundle is staled by the `index.mjs` change (rule 5 (5)).
 
 Size (session_016oH6wXmETbYJSgystoYKuc): test runs 16, module lines 2644
+
+## J1 · COMPLETE
+
+T48-32 done and pushed. plane.test.mjs signs in by {handle}, re-authenticates (credentials R66) and records the disclosure (instance-setup R54) before connecting Claude: 6/6 pass, K3192 reds cleared. Flaw fixed: op=capturerequestdrain no longer reads the drain's clock from its body (R12, R20; tested, red before). Three tests made to discriminate (R3 unseen inquiry, R49 unrecognised viewer). Module 123/123; users link-sweep, intent, investigation, question-explorer green; scheduler's 4 reds are its inherited T48-54 sign-ins (same without my change). format, architecture, coverage (56/56), ownership 0 failures; run.mjs none for capture-requests. For BOB: R12's item omits cadenceMs, R19 omits C-108 (wording only). The plane bundle is staled.
