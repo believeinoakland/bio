@@ -1,5 +1,6 @@
 Depth 2. Your entries: `build/plan/current.md` (T48), layer 11, affordances:
 - **T48-57 · affordances** · (N996 §5) `t36-backing` and `t41-backing` follow the moved services. (N1054) ACT_HELP re-pinned to the design after PR #33: 285 texts, with DEC-226's three. (N1053) "labelled" becomes "labeled" in `act-help.mjs` · after T48-56.
+- **T48-57 · affordances** also (K3282, ACTION-REPLIES #4 J1): carry `actionreplyquoting` in its op maps (action-replies R10).
 - **T48-57 · affordances** also (K3280, L9 reports): re-read the `actions` and `actionRecords` op maps: `actionsOps` no longer spreads `actionRecordsOps` (actions R103); its R1/R12 op-map tests count from each module's own map; a help line for `pressurefor` if it carries one.
 - **T48-57 · affordances** also (K3278, ACTION-PLANS #12 J1): declare action-plans' `op=planask` (R51, a member act; author and viewer stamps) as this module declares every op.
 - **T48-57 · affordances** also (K3261, ANSWERS #11 J1): `t33.test.mjs`:151's op-map list holds explore's `exploregraph`, clearing rule 5 (9).

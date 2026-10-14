@@ -1,5 +1,6 @@
 Depth 2. Your entries: `build/plan/current.md` (T48), layer 11, plane:
 - **T48-78 · plane** · (N996 §5) spreads `aiAccountsOps` directly before `credentialsOps`, and re-points `ask.mjs`, `transcribe.mjs` and `store.mjs`. (N1015) forwards the door's `trace` and member ref to agent-worker. (N1039, K3147) the global scope is brought under its 500 ms budget (509 ms median), tested at the plane's shape. (N847; K2591) R51: the front door's pointer provider over `jurisdictions.combine` (a new edge, `plane → jurisdictions`). (N670) R50: the `readtranslate` door. (N1047, K3189) the spread and the wiring only: it passes instance-setup's notice read to machinery-producers · text BOB's · after T48-77.
+- **T48-78 · plane** also (K3282, ACTION-REPLIES #4 J1): its op-map tests take `actionreplyquoting` (action-replies R10).
 - **T48-78 · plane** also (K3280, L9 reports): `split.test.mjs`'s layer 9 op-map count takes `filingread` (filings R59) and `pressurefor` (action-holds R16).
 - **T48-78 · plane** also (K3266, AI-USE #8 J2): `t41.test.mjs`:124's ai-use op list holds `aiuseovertime`, clearing rule 5 (10).
 Your requirements: `build/requirements/plane.md` (read whole); every line marked `*(not yet met: T48)*` is yours to meet (R50, R51, R52, R53, R54, R55).
