@@ -181,20 +181,20 @@ function render(cs, view) {
   }
 
   /* two grades, never one score (R2); a grade's strength sentence is drawn by its words (R34), never raw grade text */
-  function grades(s) {
+  function axes(s) {
     const axis = (a) => (s[a] && s[a].state === "graded" ? cs.grade(a, s[a].grade)
       : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: (s[a] && s[a].detail) || "" }));
     const parts = [axis("capture"), axis("connection")];
     if (s.testimony && s.testimony.state === "graded") parts.push(axis("testimony"));
-    return `<span class="cs-strength">${parts.join("")}</span>`;
+    return parts.join("");
   }
+  function grades(s) { return `<span class="cs-strength">${axes(s)}</span>`; }
   const strengthText = (s) => (s && typeof s === "object" ? ["capture", "connection"].map((a) => (s[a] && s[a].grade) || "?").join("/") : String(s || ""));
 
-  /* state b (R23): passages cited and no partition: ask what each carries first; no strength mark, no strength sentence */
-  const askOpen = !!ui.regroup;
-  if (supports.length && (!partitioned || askOpen)) {
-    if (!partitioned) out.push(`<div class="cs-sheet" data-state="ask"><b>${W("question.ask.first.title")}</b><p class="mk-small">${W("question.ask.first.says")}</p></div>`);
-    const live1 = supports.filter(live);
+  /* R23: what each passage carries: one choice per cited passage, the passages that would hold it up, the read-back,
+     and "Save the answers"; drawn as state b, and (R24) inside "Change what a passage carries…" */
+  const live1 = supports.filter(live);
+  const askForm = (regroup) => {
     const asks = live1.map((l) => {
       const others = live1.filter((o) => o.ord !== l.ord);
       return `<div class="mk-ev" data-ask="${l.ord}"><span class="rec">${cs.esc(legName(l))}</span>`
@@ -206,9 +206,12 @@ function render(cs, view) {
     /* the read-back as saved now: until the member saves, every passage is one the answer cannot do without */
     const readback = `<div class="cs-sheet" data-readback="ask"><b>${W("question.rests.any")}</b>`
       + live1.map((l) => `<span class="mk-small">· ${cs.esc(legName(l))}</span>`).join("") + `<span class="mk-small">${W("question.rests.readback")}</span></div>`;
-    out.push(cs.sec("question.ask.title", `<div class="mk-versions">${asks}</div>` + readback
-      + cs.act("inquiryground", { label: "act.inquiryground.label.question", data: { inquiry: id, regroup: partitioned ? "1" : "" }, tone: "primary" }),
-      { help: "question.ask.help", id: "state-b" }));
+    return `<div class="mk-versions">${asks}</div>` + readback
+      + cs.act("inquiryground", { label: "act.inquiryground.label.question", data: { inquiry: id, regroup: regroup ? "1" : "" }, tone: "primary" });
+  };
+  if (supports.length && !partitioned) {
+    out.push(`<div class="cs-sheet" data-state="ask"><b>${W("question.ask.first.title")}</b><p class="mk-small">${W("question.ask.first.says")}</p></div>`);
+    out.push(cs.sec("question.ask.title", askForm(false), { help: "question.ask.help", id: "state-b" }));
   } else if (supports.length) {
     /* state a: the strength against the bar, the weakest part and what would raise it */
     const bar = d.inquiry.state !== "loading" ? later("bar", "strengthbarof", project ? { project } : {}) : { state: "loading" };
@@ -226,7 +229,7 @@ function render(cs, view) {
       const weak = ["capture", "connection"].map((a) => s[a] && s[a].weakest).filter(Boolean)[0];
       const weakText = weak && typeof weak === "object" ? (weak.title || weak.target || weak.detail || "") : weak;
       const raise = ["capture", "connection"].map((a) => s[a] && s[a].state === "graded" && s[a].detail).filter(Boolean)[0];
-      return `<div class="mk-strengthbox">${grades(s).replace("</span>", "")}<span class="phrase">${phrase}</span></span>`
+      return `<div class="mk-strengthbox"><span class="cs-strength">${axes(s)}<span class="phrase">${phrase}</span></span>`
         + `<p class="mk-note">${W("screen.question.strength.two")}</p>`
         + (weakText ? `<p>${W("screen.question.strength.weakest", { weakest: String(weakText) })}</p>` : "")
         + (raise ? `<p>${W("screen.question.strength.raise", { raise: String(raise) })}</p>` : "")
@@ -295,7 +298,7 @@ function render(cs, view) {
     vs.filter((v) => !v.hidden && v.state !== "rejected").map((v) => ({ value: String(v.name), text: String(v.name) })),
     { value: shownName, acts: {} }) + `<p class="mk-small">${W("question.reading.shown.help")}</p>` : "";
   let restsBack = "";
-  if (partitioned && !askOpen) {
+  if (partitioned) {
     /* R24: the read-back, the shared origins, who set it and every later change */
     const singles = parts.filter((p) => p.legs.length === 1), many = parts.filter((p) => p.legs.length > 1);
     const ind = later("independence", "partitionindependence", shownName ? { id, version: shownName }
@@ -321,7 +324,9 @@ function render(cs, view) {
       + (set.asserted_by || set.at ? `<p class="mk-small">${W("question.rests.set", { who: P.who(cs, set.asserted_by || ""), date: { html: set.at ? cs.date(String(set.at), { year: true }) : "" } })}</p>` : "")
       + changes.map((e, i) => `<p class="mk-small" data-change="${i}">${W("question.rests.changed", { who: P.who(cs, e.who), date: { html: cs.date(e.at, { year: true }) },
           reason: e.reason, before: e.before.replace(/capture |connection |testimony /g, ""), after: changes[i + 1] ? changes[i + 1].before.replace(/capture |connection |testimony /g, "") : now })}</p>`).join("")
-      + cs.act("inquiryground", { label: "question.rests.change", data: { inquiry: id, regroup: "1", open: "1" }, tone: "quiet" }));
+      /* "Change what a passage carries…" reopens R23's questions in place; the save carries her reason (NO_REASON) */
+      + `<details class="mk-details" data-regroup="1"><summary>${W("question.rests.change")}</summary>`
+      + `<p class="mk-small">${W("question.ask.title")}</p>` + askForm(true) + "</details>");
   }
   const supportsRows = supports.length ? cs.sheet(supports.map((l) => legRow(l, "supports")).join("")) : "";
   out.push(cs.sec("screen.question.supports.head", chooser + supportsRows
@@ -529,7 +534,6 @@ const acts = [
      part together; each part's statement left empty. A restructure carries her reason (the shell's, NO_REASON) */
   { op: "inquiryground", label: "act.inquiryground.label.question", rereads: ["inquiry", "strength", "basis"],
     send(view, el, cs) {
-      if (el.dataset.open === "1") { cs.set("regroup", true); return null; }
       const P = view.parts;
       const doc = P.front(view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "");
       const legs = (doc.lists.basis || []).map((l, ord) => Object.assign({ ord }, l))
@@ -548,17 +552,21 @@ const acts = [
       for (const l of legs) { const r = root(l.ord); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(l.ord); }
       const grounds = [...groups.values()].map((ords, i) => ({ ground: "part " + (i + 1), legs: ords }));
       return { body: { target: String(view.subject || ""), grounds } };
-    },
-    done(view, answer, cs) { cs.set("regroup", false); } },
+    } },
   /* R25: the reading acts, each with the version; Stand on with the project; accept with the affirmation of every ground */
   ...["versionaccept", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "versionhide"].map((op) => ({
     op, label: "act." + op + ".label.question", rereads: ["basis", "strength", "inquiry"],
     send(view, el) {
+      /* each function is served by its own text (interface-shell R21 (1)), so the op is read from the pressed control */
+      const op = el.getAttribute("data-act");
       const body = { target: String(view.subject || ""), version: String(el.dataset.version || "") };
       if (op === "versioncurrent") body.project = String(el.dataset.project || "");
       if (op === "versionaccept" && el.dataset.grounds) body.affirmed = String(el.dataset.grounds).split(",").filter(Boolean);
       return { body };
     },
+    /* VERSION_AFFIRMATION_INCOMPLETE by its words, naming the parts not yet affirmed */
+    refusals: { VERSION_AFFIRMATION_INCOMPLETE: (r, cs) => cs.w("refusal.VERSION_AFFIRMATION_INCOMPLETE",
+      { part: (Array.isArray(r && r.missing) ? r.missing : []).join(", ") }) },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } })),
   /* R31: the question read in her language, drawn in place; nothing saved */
   { op: "readtranslate", label: "act.readtranslate.label.question",
@@ -641,6 +649,7 @@ const words = Object.freeze([
   "question.ai.other", "question.ai.whose", "question.concluded.heading", "question.concluded.by", "question.concluded.falsifier",
   "question.conclude.reading", "question.conclude.falsifier", "question.conclude.falsifier.help", "question.conclude.nofalsifier",
   "question.conclude.commentary", "question.conclude.commentary.help", "question.plan.link", "question.plan.link.tip",
+  "refusal.VERSION_AFFIRMATION_INCOMPLETE",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */
