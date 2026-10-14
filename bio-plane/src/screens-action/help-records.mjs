@@ -24,7 +24,9 @@ export const helpRecords = Object.freeze({
     const response = pr && pr.state === "ok" ? held(pr.value).find(function (d) { return d.rule === "records_response" && d.amount; }) : null;
     const fills = { days: response ? String(response.amount) : null, cite: response ? response.citation : null };
     const musts = [1, 2, 3, 4, 5, 6, 7].map(function (n) {
-      const said = cs.w("screen.help-records.must." + n, fills.days === null ? {} : fills);
+      // only the first sentence's particulars are the response period's and its citation; another sentence's citations
+      // are other sections of the law, which the profile does not name
+      const said = cs.w("screen.help-records.must." + n, n === 1 && fills.days !== null ? fills : {});
       return /\{\w+\}/.test(said) ? "" : "<li>" + said + "</li>";
     }).filter(Boolean);
     const must = musts.length ? cs.sec("screen.help-records.must", '<ul class="mk-list">' + musts.join("") + "</ul>") : "";

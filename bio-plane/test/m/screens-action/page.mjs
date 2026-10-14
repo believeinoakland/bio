@@ -6,10 +6,21 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { SCREENS } from "../../../src/screens-action/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { wordsOf, interfacePage } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER } from "../interface-shell/harness.mjs";
 
-export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER };
+export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, word, hasWord };
+/** A word read through `setup-words` as a drawn text node holds it (whitespace collapsed): the tests assert keys, never a sentence's text (R19). */
+/** The word as the page carries it for a key (the shell's own rows win over the list's until it reads `word` itself, `interface-shell` R70). */
+export const PAGE = (key) => String(new Map(wordsOf(SCREENS)).get(key)).replace(/\s+/g, " ").trim();
+/** A date as the kit draws it, by `date.daymonthyear` and `date.month.*` (interface-shell R6): `D("2026-10-02")`. */
+export const D = (iso) => {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  const month = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"][m - 1];
+  return word("date.daymonthyear", { day: String(d), month: word("date.month." + month), year: String(y) }).replace(/\s+/g, " ").trim();
+};
+export const W = (key, vars) => String(word(key, vars)).replace(/\s+/g, " ").trim();
 /* R14: the classes a served stylesheet defines: the visual language's `civicsmith.css`, the design page's product rules (what
    interface-assets R7 serves as `shell.css`) and the shell's own `<style>` in the page. */
 const DOCS = join(dirname(fileURLToPath(import.meta.url)), "../../../../docs/development/ux-substrate");
@@ -78,6 +89,12 @@ export const FILING = "FIL-2026-cccccccccccccccc";
 export const DET = "CONF-2026-dddddddddddddddd-determination";
 export const ESC = "ESC-2026-eeeeeeeeeeeeeeee-escalation";
 
+export const QUESTION = "INQ-2026-ffffffffffffffff";
+export const QUESTION_TITLE = "Is closed the same as repaired?";
+export const PROJECT_QUESTIONS = { ok: true, project: PROJECT, items: [{ inquiry: QUESTION, title: QUESTION_TITLE },
+  { inquiry: "INQ-2026-9999999999999999", title: "Who signed the closure memo?" }], cursor: null };
+export const DETERMINATIONS = { ok: true, items: [{ id: DET, project: PROJECT, act: { id: "EVT-1", event: "The 2024 rent adjustment" },
+  outcomes: [{ standard: "STD-1", outcome: "noncompliant" }, { standard: "STD-2", outcome: "compliant" }], live: true, superseded_by: null }], limit: 200, truncated: false, cursor: null };
 export const PROJECTS = { bundles: [{ bundle_id: PROJECT, object_type: "project", title: "Pothole repairs" }], limit: 500, cursor: null, total: 1 };
 
 export const PLAN = Object.freeze({
@@ -121,7 +138,16 @@ export const ACTION = Object.freeze({
   entries: [{ ord: 2 }],
   clock: [{ text: "Response due", description: "the records law", date: "2026-10-12", basis: "ten days from receipt", status: "pending" },
     { text: "Extension ends", description: "x", date: "2099-10-26", basis: "fourteen more days", status: "pending" }],
-  reply_owed: { owed: true, history: [] }, governing_laws: [{ level: "state", citation: "Gov. Code § 7922.535" }],
+  reply_owed: { owed: true, history: [] },
+  // `actions` R25: the laws a member stated, with who and when; the proposals and the risk tier, each apart from the member's value
+  governing_laws: { state: "stated", laws: [{ level: "state", citation: "Gov. Code § 7922.535(b)" }], by: "member:mai", at: "2026-10-01T09:00:00Z", stated: "x" },
+  governing_laws_proposals: { proposals: [{ by: "agent:claude", state: "machine_proposed", machine_work: true, says: "x", at: "2026-10-02T09:00:00Z",
+    laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] }], limit: 12, truncated: false, says: "x" },
+  risk_tier: 2, risk_tier_words: "x",
+  risk_tier_history: { current: 2, intake: { tier: 1, by: null, stated: "x" }, stated: "x", revisions: [
+    { ord: 0, readable: true, tier: 2, prior: 1, by: "member:mai", at: "2026-10-03T09:00:00Z", reason: "the office has fought requests before" }] },
+  risk_tier_proposals: { proposals: [{ by: "agent:claude", state: "machine_proposed", machine_work: true, says: "x", tier: 3, tier_words: "x", basis: "x", at: "2026-10-04T09:00:00Z" },
+    { by: "member:asha", state: "member_proposed", machine_work: false, says: "x", tier: 1, tier_words: "x", basis: "x", at: "2026-10-04T10:00:00Z" }], limit: 12, truncated: false, says: "x" },
 });
 /** `pressurefor` as action-holds R16 answers it: the action's marks, each with where it arrived. */
 export const PRESSURE = { ok: true, items: [{ arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter from the city's counsel", by: "member:mai", at: "2026-10-04T09:00:00Z" }],
@@ -158,6 +184,7 @@ export const ESCALATION = { id: ESC, project: PROJECT, determination: DET, state
 /** A plane answering every read of the six screens with data. */
 export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
+  projectquestions: ok(PROJECT_QUESTIONS), determinations: ok(DETERMINATIONS),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
   pressurefor: ok(PRESSURE),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),

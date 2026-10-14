@@ -8,15 +8,16 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-action/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, hasWord, word } from "../../../src/setup-words/index.mjs";
 import { checkScreens, interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, crumbs, text, ops, ok, refused, textNodes, wordChecker, servedClasses, MEMBER, DATA_PLANE, ROUTES, PLAN_ID, ACTION_ID, DET, ESC, PROJECT, PLAN, ACTION, DETERMINATION,
-  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING } from "./page.mjs";
+  CONSEQUENCES, FILINGS, PROFILES, STATUS_NONE, FILING, W, QUESTION_TITLE, PAGE } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens;
 const WORD_KEYS = new Set(WORD_ROWS.map((r) => r[0]));
+const EN = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
 const IDS = ["plan", "start-send", "request", "action", "matter", "help-records"];
 
 test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, start-send, request, action, matter, help-records, each {id, reads, render, acts, words}", () => {
@@ -31,9 +32,13 @@ test("R1–R6, R9 (interface-shell R21): SCREENS is the registry screens plan, s
 });
 
 test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its registry acts, every op in OPS, each with its send", () => {
+  // An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13): one whose op OPS does not hold is not yet an act
+  // (`actionstake`, `actioninquiry`, T50). `writinghelp` is not wanted on start-send in T49 (BOB, K3369).
+  const NOT_YET = (a) => a.status === "owed" && !Object.hasOwn(OPS, String(a.op).replace(/^owed:/, "").split(" ")[0]);
+  const NOT_WANTED = { "start-send": ["writinghelp"] };
   for (const s of SCREENS) {
-    // R13 (interface-shell R55): on `plan` the registry's `optionpropose` is drawn as `planask`, the re-point R55 admits.
-    const reg = REGISTRY.find((r) => r.id === s.id).acts.map((a) => (s.id === "plan" && a.op === "optionpropose" ? "planask" : a.op));
+    const reg = REGISTRY.find((r) => r.id === s.id).acts.filter((a) => !NOT_YET(a)).map((a) => String(a.op).replace(/^owed:/, "").split(" ")[0])
+      .filter((op) => !(NOT_WANTED[s.id] || []).includes(op));
     const mine = s.acts.map((a) => a.op);
     assert.deepEqual([...mine].sort(), [...reg].sort(), s.id);
     for (const a of s.acts) {
@@ -42,34 +47,54 @@ test("R1–R6 (interface-shell R21, R38): each screen's acts are exactly its reg
     }
   }
   assert.equal(checkScreens(SCREENS), true);
+  // R16, R17: the action screen draws the registry's three acts for the law and the risk
+  for (const op of ["actionrisktier", "actionlaws", "actionlawspropose"]) assert.ok(SCREENS.find((s) => s.id === "action").acts.some((a) => a.op === op), op);
 });
 
-test("R7 (interface-shell R5): every word a screen lists is a WORD_ROWS key or its own row; own rows are screen.<id>.* or the three shared keys", () => {
-  // `act.planask.does` is held until `words.json` keys it for `planask` (reported to BOB, R13); the other three share a key.
-  const SHARED_OWN = ["act.plansubjectadd.label.plan", "act.plansubjectadd.does", "act.filingrecordsent.does", "act.planask.does"];
-  for (const r of SCREEN_WORDS) {
-    assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[1] === "string" && typeof r[2] === "boolean", r[0]);
-    assert.ok(new RegExp(`^screen\\.(${IDS.join("|")})\\.`).test(r[0]) || SHARED_OWN.includes(r[0]), r[0]);
-    // DEC-149: the group's Civicsmith, never Civicsmith bare.
-    assert.ok(!/Civicsmith/.test(r[1].replace(/your group's Civicsmith/gi, "")), `${r[0]} names the group's Civicsmith in DEC-149's form`);
+test("R19 (setup-words R12, R13): the module holds keys only: SCREEN_WORDS is a list of keys, each one setup-words holds, and each screen's words are keys of it or of the acts' and the shell's", () => {
+  assert.ok(Object.isFrozen(SCREEN_WORDS));
+  assert.ok(SCREEN_WORDS.length > 300);
+  for (const k of SCREEN_WORDS) {
+    assert.equal(typeof k, "string", "a key, never a row of English");
+    assert.ok(hasWord(k), `${k} is a word of setup-words`);
   }
-  assert.equal(new Set(SCREEN_WORDS.map((r) => r[0])).size, SCREEN_WORDS.length, "own keys distinct");
-  for (const k of SCREEN_WORDS.map((r) => r[0])) if (!SHARED_OWN.includes(k)) assert.ok(!WORD_KEYS.has(k), `${k} does not shadow a WORD_ROWS key`);
+  assert.equal(new Set(SCREEN_WORDS).size, SCREEN_WORDS.length, "keys distinct");
+  // the design's rename: the ask's label is act.planask.label.plan, read by key, and the old key is read nowhere
+  assert.ok(SCREEN_WORDS.includes("act.planask.label.plan") && !SCREEN_WORDS.includes("act.optionpropose.label.plan"));
   for (const s of SCREENS) for (const w of s.words) {
-    if (typeof w === "string") assert.ok(WORD_KEYS.has(w), `${s.id}: ${w} is a WORD_ROWS key`);
-    else assert.ok(SCREEN_WORDS.includes(w), `${s.id}: ${w[0]} is an own row`);
+    assert.equal(typeof w, "string", `${s.id}: a key`);
+    if (/^act\.[a-z]+\.label\./.test(w) && !hasWord(w)) continue; // an act's default label the registry's design may not key for this screen
+    assert.ok(hasWord(w) || WORD_KEYS.has(w), `${s.id}: ${w}`);
   }
+  // the law and the risk (R16, R17) and the design's words for them
+  for (const k of ["law.title", "law.help", "law.stated", "law.undetermined", "law.change", "law.proposed", "law.proposal.not", "law.propose",
+    "risk.title", "risk.help", "risk.tier", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined", "risk.set", "risk.revise", "risk.proposed",
+    "risk.proposal", "risk.proposal.not"]) assert.ok(SCREENS.find((s) => s.id === "action").words.includes(k), k);
+});
+
+test("R19: over fixtures, what a screen draws for a sample of its keys equals word(key, vars): the plan's, the action's and the matter's", async () => {
+  const plan = await open(ROUTES.plan, DATA_PLANE);
+  for (const [k, v] of [["screen.plan.options"], ["screen.plan.col.category"], ["screen.plan.matter.n", { n: "2" }], ["screen.plan.category.awareness"]])
+    assert.ok(text(plan).includes(W(k, v)), k);
+  const act = await open(ROUTES.action, DATA_PLANE);
+  for (const [k, v] of [["law.title"], ["risk.title"], ["screen.action.dates"], ["screen.action.replies"], ["screen.action.to", { office: "City Clerk, Office of the City Clerk" }]])
+    assert.ok(text(act).includes(W(k, v)), k);
+  const matter = await open(ROUTES.matter, DATA_PLANE);
+  for (const [k, v] of [["screen.matter.determination"], ["screen.matter.escalation"], ["screen.matter.stage.4"]]) assert.ok(text(matter).includes(W(k, v)), k);
+  // and a key setup-words does not hold is no word: word() throws, and so no screen can draw it
+  assert.throws(() => word("screen.action.noSuchSentence"), /UNKNOWN_WORD/);
 });
 
 test("R7 (action-producers R19): every member-facing sentence calls a plan's subject a matter: no word a screen draws says 'subject' of a plan", () => {
   for (const s of SCREENS) for (const w of s.words) {
-    const en = typeof w === "string" ? WORD_ROWS.find((r) => r[0] === w)[1] : w[1];
-    assert.ok(!/\bsubjects?\b/i.test(en), `${s.id}: ${typeof w === "string" ? w : w[0]} says "${en}"`);
+    const en = EN.get(w);
+    if (en === undefined) continue;
+    assert.ok(!/\bsubjects?\b/i.test(en), `${s.id}: ${w} says "${en}"`);
   }
 });
 
-test("R7 (interface-shell R23): no place is named in this module's words", () => {
-  for (const [, en] of SCREEN_WORDS) assert.ok(!/California|Oakland|Alameda|NextRequest|Sunshine Ordinance|Government Code/.test(en), en);
+test("R7 (interface-shell R23): no place is named in the words this module reads", () => {
+  for (const k of SCREEN_WORDS) assert.ok(!/California|Oakland|Alameda|NextRequest|Sunshine Ordinance|Government Code/.test(EN.get(k) || ""), k);
 });
 
 const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's counsel", "Pothole repairs", "Repairs: closed is not repaired", "INQ-2026-ffffffffffffffff", DET, "STD-1", "STD-2", ESC, ACTION_ID, PLAN_ID, PROJECT,
@@ -81,7 +106,8 @@ const DATA = ["River Town", "Inspection logs, 2025", "a letter from the city's c
   "The 2024 rent adjustment", "City Administrator, City", "a council vote", "adjusted without a vote", "notice within 30 days", "noticed on day 21",
   "Tenants of the district", "class", "38000 USD", "from the rent schedules", "The repair program", "program", "its trigger was met 5 days ago",
   "no live compliant determination", "not every part addressed", "the records law's ten days", "1", "2", "3", "10", "14", "notification", "Open",
-  "12 October 2026", "26 October 2099", "2 October 2026", "3 October 2026", "4 October 2026", "20 October 2026", "30 November 2026", "20 December 2026", "24 October 2026", "1 March 2024"];
+  "12 October 2026", "26 October 2099", "2 October 2026", "3 October 2026", "4 October 2026", "20 October 2026", "30 November 2026", "20 December 2026", "24 October 2026", "1 March 2024",
+  QUESTION_TITLE, "Who signed the closure memo?", "Gov. Code § 7922.535(b)", "Open meetings law", "agent:claude", "claude", "asha", "the office has fought requests before"];
 
 test("R1–R6, R9 (interface-shell R8, R21): the shell serves the six screens: each route draws its screen under its path, from its own source", async () => {
   assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
@@ -204,7 +230,7 @@ test("R14: every labelled field is the kit's cs.field (or cs.choice): a label si
 test("R14: a section, list or reading that holds nothing is not drawn, and no count is drawn at zero: each screen over an empty fixture", async () => {
   const empty = {
     plan: ok({ ...PLAN, subjects: [], options: [], scenarios: [], offers: [], checks: [] }),
-    action: ok({ ...ACTION, clock: [], correspondence: [], entries: [], reply_owed: { owed: false }, governing_laws: [] }),
+    action: ok({ ...ACTION, clock: [], correspondence: [], entries: [], reply_owed: { owed: false }, governing_laws: { state: "undetermined", laws: [], by: null, at: null, stated: "x" }, governing_laws_proposals: { proposals: [] }, risk_tier: "undetermined", risk_tier_history: { revisions: [] }, risk_tier_proposals: { proposals: [] } }),
     determination: ok({ ...DETERMINATION, standards: [], outcomes: [] }), consequencesof: ok({ ...CONSEQUENCES, parts: [] }),
     escalationstatus: ok(STATUS_NONE), escalation: ok({}), pressurefor: ok({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
     profiles: ok({ ...PROFILES, view: { deadlines: [] } }),

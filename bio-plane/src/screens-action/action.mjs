@@ -38,12 +38,12 @@ export const action = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf,
-    // R16: the records-request laws the profile names (each citation once), with the window the profile gives.
-    lawsOf: function (profiles) {
+    // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives.
+    lawsOf: function (profiles, kind) {
       const v = profiles && profiles.view ? profiles.view : {};
       const seen = new Set();
       return (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) {
-        if (!d || !d.citation || seen.has(d.citation)) return false;
+        if (!d || !d.citation || d.applies_to !== kind || seen.has(d.citation)) return false;
         seen.add(d.citation);
         return true;
       });
@@ -160,7 +160,7 @@ export const action = Object.freeze({
       // give it), who stated them and when, or that none is; a change by choosing among the laws the places name; the
       // proposals apart, each marked not the law; and another law proposed.
       const pf = view.data.profiles;
-      const offered = P.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+      const offered = P.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
       const gl = a.governing_laws && typeof a.governing_laws === "object" && !Array.isArray(a.governing_laws) ? a.governing_laws : {};
       const stated = Array.isArray(gl.laws) ? gl.laws : [];
       const LEVELS = ["state", "city", "county", "federal"];
@@ -275,10 +275,10 @@ export const action = Object.freeze({
       op: "actionlaws",
       send: function (view, el, cs) {
         const pf = view.data.profiles;
-        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
         const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
-        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
         const held = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws.find(function (l) { return l.citation === c.citation; }) : null;
         return { body: { target: view.subject, laws: [{ level: held ? held.level : cs.value("law-level") || "state", citation: c.citation }] } };
       },
@@ -289,7 +289,8 @@ export const action = Object.freeze({
       op: "actionlawspropose",
       send: function (view, el, cs) {
         const pf = view.data.profiles;
-        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
         const c = offered.find(function (d) { return d.citation === cs.value("lawp-pick"); });
         if (!c) return null;
         return { body: { target: view.subject, laws: [{ level: cs.value("lawp-level") || "state", citation: c.citation }] } };
