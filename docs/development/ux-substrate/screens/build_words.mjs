@@ -33,7 +33,11 @@ const lib = JSON.parse(R('library.json')).scripts;
 const plain = s => String(s).replace(/<span class=["']?more["']?>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const words = [];
 const seen = new Set();
+const T49 = JSON.parse(R('words-t49.json'));
+const retiredSeen = new Set(), rewriteSeen = new Set();
 const add = (key, en, prot, source, note) => {
+  if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
+  if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + 'DEC-256: reworded'; }
   if (seen.has(key)) fail('duplicate key ' + key);
   if (!en || !String(en).trim()) fail('empty text for ' + key);
   seen.add(key);
@@ -277,7 +281,8 @@ for (const x of JSON.parse(R('words-t48.json'))) add(x.key, x.en, x.protected, (
 // 4k. The modules' own keyed rows, adopted under their own keys (DEC-252; BOB's N1075): written by words-modules.src.py
 for (const x of JSON.parse(R('words-modules.json')).adopted) add(x.key, x.en, x.protected, 'DEC-252', 'adopted from ' + x.module + "'s own rows");
 // 4l. T49's owed words (DEC-253): affordances' vocabularies and standards' sentences, written in words-t49.src.py
-for (const x of JSON.parse(R('words-t49.json'))) add(x.key, x.en, x.protected, 'DEC-253', x.note.replace(/^DEC-253(: )?/, '') || undefined);
+for (const x of T49.rows) { const d = x.note.match(/^DEC-\d+/)[0]; add(x.key, x.en, x.protected, d, x.note.replace(/^DEC-\d+(: )?/, '') || undefined); }
+for (const k of [...T49.retired, ...Object.keys(T49.rewrite)]) if (!retiredSeen.has(k) && !rewriteSeen.has(k)) fail('DEC-256: no row ' + k + ' to retire or reword');
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }

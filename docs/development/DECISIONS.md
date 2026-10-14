@@ -3996,3 +3996,31 @@ response: **The design session, 2026-10-14.** (1) **Keys:** a vocabulary value i
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py`, `screens/words-t49.json`, `screens/build_words.mjs` (4l), `words.json` (5,421 words).
 owed: (BOB) N1075 for `affordances` and `standards`: each reads its words by these keys (affordances' R39 order: the owner's registered word, else the design's key, else none) and drops its own English; standards' R45 and T36 line take these words; the check that fails a module carrying its own sentence. (design) `events`' vocabularies once composed.
+
+### DEC-254 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (BOB's B209 (4), D8's rest: left out of T49, which concludes only through the assistant's proposal, DEC-245; asked as S24, 14 October)
+for: bob-session
+question: May a member write a reading herself, so that a group with no assistant can conclude a question?
+why it is Bob's: what Civicsmith must do (a requirement): whether the optional assistant is in practice required to conclude.
+provisional: a reading comes only from the assistant's proposal, accepted by a member (DEC-245); a group without an assistant can capture, cite and grade, but never conclude.
+alternative: (B) she writes it and a second member approves it before she concludes: a check on solo judgment, but a step proposals lack, and a one-member office could never conclude; (C) no: every group must use the assistant to finish a question, against the assistant being optional.
+recommendation: A, yes, marked as hers, accepted by the same act.
+reversal cost: low before T50 builds it; afterwards, readings written by members would need a status of their own.
+response: "S24: A"
+decided: 2026-10-14 · Bob
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-254's four keys: "Write the reading yourself", "Your reading", its help, "Written by {member}"; `question.empty.conclude.own` replacing `question.empty.conclude`), `screens/mock-screens.js` (`SCR.question`'s concluding form and concluded state).
+owed: (BOB, T50) the concluding act accepts a member's own reading: written in the form, marked as hers (`Written by {member}`, never machine work), accepted and concluded on in one act, with the same requirements as any conclusion (cited passages, what would change it, its strength); offered with or without an assistant; inquiry's `NO_CLAIM` reads its new words; `question.empty.conclude.own` replaces `question.empty.conclude`. (design) none.
+
+### DEC-255 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (DEC-247's owed: line; BOB's B210 1; asked as S25, 14 October)
+for: bob-session
+question: May the stewards of civicsmith.org decline or remove a group's listing?
+why it is Bob's: policy (who may keep what off Civicsmith's own site) and doctrine (never a judgment on a group's targets).
+provisional: a group is listed by its administrators' act alone (DEC-132 (3)); nothing lets the stewards decline or remove a listing, and nothing forbids it.
+alternative: (A) never: no accusation of taking sides, but spam, impersonation and harassment stay with no remedy; (C) at the stewards' discretion: simplest, but invites the charge that a listing depends on whom a group criticizes.
+recommendation: B, under a short published rule never about a group's views or targets, the reason told to the group.
+reversal cost: low: the directory is not built yet (network-notices R23 only prepares a submission).
+response: "S25: B"
+decided: 2026-10-14 · Bob
+reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (the ruling and the rule's draft text); `screens/words-t49.src.py` (`site.groups.rule`); `screens/mock-screens.js` (`SCR.site`, "Groups at work").
+owed: (BOB) when the directory is built: a steward's decline or removal of a listing, recorded with the rule's part and the reason, told to the group's administrators, touching nothing but the directory; the group may ask again. (Bob) approval of the rule's text in §5E; the site draws it once approved.
