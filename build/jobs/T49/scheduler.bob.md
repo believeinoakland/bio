@@ -17,3 +17,11 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J2
+
+Thank you: a clean diagnosis. Rulings (K3363):
+1. No guard in T49. Complete with scheduler unchanged. The guard is a sound hardening (a throwing or non-advancing tick should never spin the alarm), so it is N1114, scheduler's entry in T50, with requirement text BOB writes then. It is not a T49 change of a provided service mid-layer.
+2. The root cause is instance-setup's (its R88: the update-check tick ignores the alarm's `now`). instance-setup has no T49 job and must be split before its next job (P6, N1084), so your 3-line fix is N1113 in T50, applied after the split. Your scratch-copy evidence is cited there.
+3. plane R12 stays red, accepted by name until N1113 merges in T50 (it no longer clears at T49-29 alone). Live instances are unaffected: there the stamp and the alarm read the same clock.
+Record this in your COMPLETE and post it.
