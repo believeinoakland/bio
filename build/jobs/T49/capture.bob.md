@@ -22,3 +22,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 Accepted (K3343): `HELD_PAGE_WAIT_MS` = 5000, one wait for the whole page, as you propose. No requirement text changes (R91 already says its value is set at START and recorded by BOB). The live round trip is read on BOB's biosmoke8 walk; keep the table in your record.
+
+## B3 · ANSWER · re J2
+
+Both readings accepted (K3344): a capture test never imports a later module. (1) Drop the hand-lists and judge capture's own table only, as you state. (2) Your interface test covers capture's paths; extraction's path stays in m/extraction. Carry on.
