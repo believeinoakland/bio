@@ -1,8 +1,10 @@
-/* tasks' tables (requirements: `build/requirements/tasks.md`, R8, R17): the obligation inbox, and "Ask for a check"'s
- * requests, To do links, takes and checks (T34, DEC-135). `tasks` moved from `queue/schema.mjs` at the
+/* tasks' tables (requirements: `build/requirements/tasks.md`, R8, R17, R19): the obligation inbox, "Ask for a check"'s
+ * requests, To do links, takes and checks (T34, DEC-135), and "Ask an owner to sign"'s requests and To do links (T47,
+ * DEC-207 (8)). `tasks` moved from `queue/schema.mjs` at the
  * module's extraction (T16, N363; K4, "each module owns its tables"). `tasksOf(ctx).migrate()` runs it, from the store's
  * schema pass and on its own for a storage the store never reached. */
-export const TASKS_TABLES = Object.freeze(["tasks", "check_requests", "check_todos", "check_takes", "check_records"]);
+export const TASKS_TABLES = Object.freeze(["tasks", "check_requests", "check_todos", "check_takes", "check_records",
+                                           "sign_requests", "sign_todos"]);
 
 /** A table in a purge list (a name, or `{name, …}`) that is this module's. */
 export const tasksOwns = (t) => TASKS_TABLES.includes(typeof t === "string" ? t : t && t.name);
@@ -44,10 +46,13 @@ CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
 --
 -- T34 (DEC-135, R14): a check request's To do is one task per addressee, kind
 -- 'check-requested', on the same target, so the dedup covers every OTHER kind.
--- The index of before T34 (all kinds) is dropped and this one, narrower, made.
+-- T47 (DEC-207 (8), R19): a sign request's To do is likewise one task per owner,
+-- kind 'sign-requested', on the same project. The indexes of before T34 (all
+-- kinds) and of T34 (all but check-requested) are dropped and this one made.
 DROP INDEX IF EXISTS tasks_live_unique;
-CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique_drained ON tasks(refers_to, kind)
-  WHERE status IN ('open', 'forwarded') AND kind <> 'check-requested';
+DROP INDEX IF EXISTS tasks_live_unique_drained;
+CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique_inbox ON tasks(refers_to, kind)
+  WHERE status IN ('open', 'forwarded') AND kind NOT IN ('check-requested', 'sign-requested');
 
 -- ---- T34, DEC-135: "Ask for a check" (R13-R17). Append-only: rows are inserted and never updated or deleted. ----
 
@@ -92,4 +97,26 @@ CREATE TABLE IF NOT EXISTS check_records (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS check_records_target ON check_records(target, at);
+
+-- ---- T47, DEC-207 (8): "Ask an owner to sign" (R19). Append-only: rows are inserted and never updated or deleted. ----
+
+-- R19: the request, one per case edition (the second ask is answered with the first), with the number of owners asked.
+CREATE TABLE IF NOT EXISTS sign_requests (
+  request    TEXT PRIMARY KEY,
+  case_id    TEXT NOT NULL,
+  edition    INTEGER NOT NULL,
+  project    TEXT NOT NULL,
+  by         TEXT NOT NULL,
+  at         TEXT NOT NULL,
+  asked      INTEGER NOT NULL,
+  UNIQUE (case_id, edition)
+);
+-- R19: which task is which owner's To do for which request.
+CREATE TABLE IF NOT EXISTS sign_todos (
+  request    TEXT NOT NULL,
+  member     TEXT NOT NULL,
+  task       TEXT NOT NULL UNIQUE,
+  at         TEXT NOT NULL,
+  PRIMARY KEY (request, member)
+);
 `;
