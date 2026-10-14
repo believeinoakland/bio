@@ -72,6 +72,9 @@ It is the only module marked `legacy` in `modules.json`.
 
 **Merge order:** credentials, membership, project-roster, each as soon as it is complete; all before L6's START (their users are L6 and later). Their new rows (credentials' C-29) join the row census red until T48's stamp.
 
+### L2 out of layer (Bob, K3142: "A"; K1548)
+- **T47-93 · project-roster** · (N1025; DEC-214 (3)) R28: `projectlist` answers each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's sight · runs alongside L11; merges before screens-daily (T47-60), which merges `tranche/T47` on BOB's CHANGE.
+
 ### L5 out of layer (Bob, K3104: "Add the People job now"; K1548)
 - **T47-92 · people** · (DEC-203 (1)–(4); K3061 D8; draft-T47-L11-fold doubt 1) R37 `peopleDirectory`/`op=peopledirectory`, the directory's rows, counts and order (screens-investigate R12) · text BOB's · merges as soon as complete; uses edges to earlier modules as the job finds them, named in its record.
 
