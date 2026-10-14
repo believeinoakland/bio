@@ -291,3 +291,25 @@ export function translationsTable(over = {}) {
     ...over,
   };
 }
+
+/** `updatenotice` (instance-setup R89): what Settings › Updates draws. */
+export const UPDATE = Object.freeze({ ok: true,
+  running: { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: "member:rosa" },
+  last_check: { at: "2026-10-14T06:10:00Z", outcome: "ok" },
+  ready: { version: "0.84.0", date: "2026-10-11", security: true, signed: true, found_at: "2026-10-11T06:00:00Z", decision: null,
+    notes: { members: "Searching the record now finds words inside scanned pages.", administrators: "New releases are checked for once a day.", must_do: "After it, open Translations once." } },
+  earlier: [
+    { version: "0.83.1", skipped_at: "2026-10-02T10:00:00Z", skipped_by: "member:rosa", reason: "Changes nothing for us; we wait for 0.84." },
+    { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: "member:rosa" },
+    { version: "0.82.0", installed_at: "2026-09-02T10:00:00Z", allowed_by: null },
+  ],
+  holder: { holders: "Rosa Medina", note: null, recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, viewer_holds: true });
+export function updatesTable(notice = {}, over = {}) {
+  return {
+    updatenotice: env({ ...UPDATE, ...notice }),
+    updatestart: (q, b) => env({ ok: true, version: b.version, address: "https://civicsmith.org/update?release=" + b.version }),
+    updatelater: (q, b) => env({ ok: true, version: b.version, kind: "later" }),
+    updateskip: (q, b) => env({ ok: true, version: b.version, kind: "skip" }),
+    ...over,
+  };
+}
