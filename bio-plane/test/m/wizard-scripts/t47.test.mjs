@@ -137,6 +137,12 @@ test("R33 (T47; N992; DEC-198 (4)) FRONT_DOORS are library.json's doors at a0fab
   assert.deepEqual(left.map((d) => d.door), ["problem", "person", "read", "tip"], "money is left out");
   assert.ok(!left.some((d) => d.scripts.includes(get.id) || d.scripts.includes(money.id)));
   assert.deepEqual(neither.wz.startFrom({ viewer: "nobody" }).doors, [], "a viewer the rule admits to nothing is offered no door");
+  /* a door names any offered script, a required one included, though the guided starts leave it out */
+  const req = real({ library: wz.CIVICSMITH_LIBRARY.map((e) => (e.name === "Check a claim" ? { ...e, required: true } : e)) });
+  const answered = req.wz.startFrom({ viewer: F });
+  const check = by("Check a claim");
+  assert.ok(!answered.scripts.some((x) => x.id === check.id), "a required script is no guided start");
+  assert.deepEqual(answered.doors.filter((d) => d.scripts.includes(check.id)).map((d) => d.door), ["problem", "read", "tip"], "it stays behind its doors");
 });
 
 test("R34 (T47; N984; K3027; ai-runs R78, run-rules R29) on a test instance whose own-words part has not passed its bar, writingHelp's answer past every refusal carries untested, the label as ai-runs answers it; the same request off a test instance carries none; no refusal carries it; nothing is written", () => {
@@ -167,7 +173,7 @@ test("R34 (T47; N984; K3027; ai-runs R78, run-rules R29) on a test instance whos
   assert.equal("untested" in ask(off, { CIVICSMITH_TEST_INSTANCE: "x", env: TEST_ENV }), false);
 });
 
-test("R34 the label follows ai-runs' admission, read at each call: a part the bar admits carries none on a test instance; a read that throws answers run-rules' label exactly when ai-runs.testInstance() answers true; an ai-runs that cannot be reached answers none", () => {
+test("R34 the label follows ai-runs' admission, read at each call: a part the bar admits carries none on a test instance; a read that throws, or a part not admitted, answers run-rules' label exactly when ai-runs.testInstance() answers true (on a test instance an output is never left unmarked); an ai-runs that cannot be reached answers none", () => {
   const w = seeded({ register: false });
   const LABEL = Object.freeze({ kind: "untested", part: "draft:own_words", set: "civicsmith", set_version: 1, words: "ai.label.untested" });
   const asked = [];
@@ -185,9 +191,11 @@ test("R34 the label follows ai-runs' admission, read at each call: a part the ba
   assert.deepEqual(asked, ["draft:own_words"]);
   said.untested = null;
   assert.equal("untested" in ask(), false, "admitted by the bar: none, though this is a test instance");
-  said.admitted = false; said.untested = LABEL;
-  assert.equal("untested" in ask(), false, "not admitted: none");
-  said.admitted = true;
+  said.admitted = false; said.untested = null;
+  assert.deepEqual(ask().untested, LABEL, "not admitted (as ai-runs answers a record it cannot read), on a test instance: run-rules' label");
+  const notTest = make({ partAdmitted: () => ({ admitted: false, untested: null }), testInstance: () => false });
+  assert.equal("untested" in notTest(), false, "control: not admitted, off a test instance: none");
+  said.admitted = true; said.untested = LABEL;
   assert.equal(ask().untested, LABEL, "read at each call");
   /* a read that throws */
   const throws = (testInstance) => make({ partAdmitted: () => { throw new Error("unreadable"); }, testInstance })();

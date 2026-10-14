@@ -400,21 +400,22 @@ export class WizardScripts {
 
   /* R34 (T47; N984; `ai-runs` R78, `run-rules` R29): the test-instance label of a writing-help draft, read at the call:
      the label `ai-runs.partAdmitted(WRITING_HELP_PART)` answers, as given and never composed here, when the part is
-     admitted on the exception; null when the bar admits it, when it is not admitted, or off a test instance. A read
-     that throws answers `run-rules`' label whenever `ai-runs.testInstance()` answers true (on a test instance an output
-     is never left unmarked); an ai-runs that cannot be reached answers null. Writes nothing; never throws. */
+     admitted on the exception; null when the bar admits it, or off a test instance. A read that throws, or any other
+     answer (the part not admitted, which `ai-runs` also answers for a record it cannot read), answers `run-rules`'
+     label whenever `ai-runs.testInstance()` answers true: on a test instance an output is never left unmarked. An
+     ai-runs that cannot be reached answers null. Writes nothing; never throws. */
   #untested() {
     let ai = null;
     try {
       if (typeof this.aiRuns === "function") this.aiRuns = this.aiRuns();
       ai = this.aiRuns;
     } catch { return null; }
-    try {
-      const said = ai.partAdmitted(WRITING_HELP_PART);
-      return said && said.admitted === true && isObj(said.untested) ? said.untested : null;
-    } catch {
-      try { return ai && ai.testInstance() === true ? untestedLabel(WRITING_HELP_PART) : null; } catch { return null; }
-    }
+    if (!ai) return null;
+    let said = null;
+    try { said = ai.partAdmitted(WRITING_HELP_PART); } catch { said = null; }
+    if (said && said.admitted === true && isObj(said.untested)) return said.untested;
+    if (said && said.admitted === true && (said.untested === null || said.untested === undefined)) return null;   /* the bar admits it */
+    try { return ai.testInstance() === true ? untestedLabel(WRITING_HELP_PART) : null; } catch { return null; }
   }
 
   /* ================================================================ who acts (R18, R19) */
@@ -1354,9 +1355,11 @@ export class WizardScripts {
    *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
    *  credential and no key; starts nothing, records no use, writes nothing. */
   startFrom({ viewer = null, message = null, parts = undefined } = {}) {
-    const scripts = this.#offeredScripts(viewer).filter((x) => !(x.s.origin === "civicsmith" && x.s.required))
+    const offered = this.#offeredScripts(viewer);
+    const scripts = offered.filter((x) => !(x.s.origin === "civicsmith" && x.s.required))
       .map((x) => ({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start: startOf(x.steps) }));
-    const ids = new Set(scripts.map((x) => x.id));
+    /* R33: a door names any script offered to this viewer, a required one included (the guided starts leave those out) */
+    const ids = new Set(offered.map((x) => x.s.id));
     const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) }))
       .filter((d) => d.scripts.length);
     const door = this.door || {};
