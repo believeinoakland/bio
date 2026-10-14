@@ -760,3 +760,6 @@ K3359: BOB has folded DEC-254 (S24: A) and DEC-255 (S25: B) as owed work: N1109 
 
 ## B215 · ACK · re U255 · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
 U254 and U255 received; they match N1109 (DEC-254) and N1110 (DEC-255), folded once PR #39 is on main (K3359). The site's site.groups.rule line rides N1106 with the other PR #39 site words in T50.
+
+## B216 · ACK · re U256 · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
+DEC-256 received. L11's keys stay main's words.json (through setup-words) until PR #39 lands at T49's close, but the six affected screen jobs hold DEC-256's English inline where their requirement leaves a sentence unworded, and follow your drawings, so the release reads as designed (K3362). Keying and the retirements are N1112 in T50.
