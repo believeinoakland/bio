@@ -9,6 +9,8 @@
 # Run: python3 words-t49.src.py, then node build_words.mjs.
 import json, os
 W = []
+NC = ' Nothing was changed.'
+NW = ' Nothing was written.'
 def w(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note=('DEC-253: ' + note) if note else 'DEC-253'))
 def vocab(setname, pairs, note=''):
@@ -78,6 +80,43 @@ w('standard.inforce.known', 'Known to be in force through {through}, from {sourc
 w('standard.source.capture', 'capture {capture}, {extent}', False, '{capture} is the first twelve characters of its fingerprint')
 w('standard.source.capture.whole', 'capture {capture}', False, 'when no extent is named')
 
+
+# --- DEC-254 (Bob's S24: A): a member may write a reading herself, marked as hers, accepted by concluding on it
+def w4(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-254' + (': ' + note if note else '')))
+w4('question.conclude.own.choice', 'Write the reading yourself', False, 'beside the readings to conclude on; offered with or without the assistant')
+w4('question.conclude.own.field', 'Your reading')
+w4('question.conclude.own.help', "Say in your own words what the cited passages show. It is marked as yours, not the assistant's, and concluding on it accepts it in the same act.")
+w4('question.reading.by.member', 'Written by {member}', True, "a member's own reading; never marked machine work")
+
+# --- DEC-255 (Bob's S25: B): the stewards may decline or remove a listing on civicsmith.org, only under a published rule
+def w5(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-255' + (': ' + note if note else '')))
+w5('site.groups.rule', "The people who make Civicsmith decline or remove a listing only under the listing rule below, never for a group's views or for whom it holds to account. A group is always told why.", True, "under Groups at work")
+
+# --- DEC-256: T49's requirements against the screens: the refusals drawn by their words (DEC-83: what happened, then what to do)
+def w6(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-256' + (': ' + note if note else '')))
+for code, t in [
+  ('PROJECT_VISIBILITY_NOT_THE_OWNER', "Only the project's owners can change whether it can be found; administrators and the group's founder cannot. Ask an owner." + NC),
+  ('PROJECT_VISIBILITY_NO_OWNER', 'A project can be findable only when it has an owner, and this one has none. Leave it hidden, or give it an owner first.' + NW),
+  ('NAME_TAKEN', 'A project in this group already has that name. Choose another.' + NW),
+  ('CONSENSUS_REQUIRED', 'Your endorsement is recorded. While the group has two or more administrators, a new one is invited only once every administrator endorses. Still to endorse: {awaiting}.'),
+  ('OWNERS_ARE_ACTIVE', 'This project still has active owners: {owners}. An administrator adds an owner only when every owner is inactive. Ask one of them.' + NC),
+  ('NO_REASON', 'This needs a reason, and none was given. Write one.' + NW),
+  ('NO_CLAIM', 'There is nothing to conclude on yet: the project must first stand on a reading of this question. Accept a reading, or write your own, then conclude.' + NW),
+  ('ANSWER_MALFORMED', "The assistant's answer came back incomplete ({field} missing), so none of it is shown. Ask again." + NW),
+  ('RISK_TIER_UNCHANGED', 'This action already has that risk tier.' + NC),
+  ('CRUCIAL_IN_BATCH', 'Crucial material is never vouched for in a batch, and {count} of these are crucial. Vouch for each of them on its own. Nothing in the batch was vouched for.'),
+  ('ENTRY_REQUIREMENTS', 'Some of these are not complete enough to vouch for: {offenders}, each missing what it names. Complete them or leave them out. Nothing in the batch was vouched for.'),
+  ('STATEMENT_ACK_NO_REASON', 'An acknowledgement of a statement is recorded with your own words on it, and none were given, or they are longer than 2,000 characters. Write them.' + NW),
+  ('DOOR_RATE_LIMITED', 'Too many requests came from your connection in the last ten minutes. Try again in {minutes} minutes.' + NW),
+]: w6(f'refusal.{code}', t, False, "T49's requirement draws it by its words")
+w6('question.empty.conclude.own', 'Nothing to conclude on yet: a conclusion adopts a reading, the assistant\'s accepted or one you write yourself, and a reading stands on cited passages.', False, "replaces question.empty.conclude's sentence after S24")
+
+# Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop
+RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
+# Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
+REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
+           'queue.temporal-expectation-due.undetermined.summary': 'Its date may have passed: {duty}'}
+
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(W, indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

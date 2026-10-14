@@ -15,14 +15,14 @@
   "transcribe": 19,
   "capture": 11,
   "document": 49,
-  "question": 66,
+  "question": 70,
   "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 192,
   "project": 45,
   "grouprule": 1,
-  "refusal": 181,
+  "refusal": 194,
   "signing": 17,
   "case": 15,
   "docket": 2,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2725,
+  "screen": 2720,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -90,12 +90,13 @@
   "inbox": 1,
   "request-unsent": 5,
   "standard": 15,
+  "site": 1,
   "rail": 17,
   "tab": 2,
   "act": 731,
   "column": 33,
-  "total": 5421,
-  "protected": 789
+  "total": 5434,
+  "protected": 791
  },
  "words": [
   {
@@ -1356,10 +1357,10 @@
   },
   {
    "key": "queue.milestone-overdue.summary",
-   "en": "Overdue: {milestone}",
+   "en": "Past its date: {milestone}",
    "protected": false,
    "source": "DEC-189",
-   "note": "FINDING"
+   "note": "FINDING; DEC-256: reworded"
   },
   {
    "key": "queue.milestone-overdue.detail",
@@ -4207,10 +4208,10 @@
   },
   {
    "key": "queue.temporal-expectation-due.undetermined.summary",
-   "en": "Possibly overdue: {duty}",
+   "en": "Its date may have passed: {duty}",
    "protected": false,
    "source": "DEC-198",
-   "note": "R5, state undetermined (between candidate dates)"
+   "note": "R5, state undetermined (between candidate dates); DEC-256: reworded"
   },
   {
    "key": "queue.temporal-expectation-due.undetermined.detail",
@@ -8012,13 +8013,6 @@
    "protected": false,
    "source": "DEC-245",
    "note": "DEC-245: airunopen from the question"
-  },
-  {
-   "key": "question.empty.conclude",
-   "en": "Nothing to conclude on yet: a conclusion adopts a reading, and a reading stands on cited passages.",
-   "protected": false,
-   "source": "DEC-245",
-   "note": "DEC-245: state c"
   },
   {
    "key": "question.run.heading",
@@ -12109,13 +12103,6 @@
    "note": "adopted from screens-daily's own rows"
   },
   {
-   "key": "screen.home.strip.overdue",
-   "en": "overdue",
-   "protected": false,
-   "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
-  },
-  {
    "key": "screen.home.strip.group",
    "en": "need the group",
    "protected": false,
@@ -12643,13 +12630,6 @@
   {
    "key": "screen.queue.due.on",
    "en": "Due {date}",
-   "protected": false,
-   "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
-  },
-  {
-   "key": "screen.queue.due.overdue",
-   "en": "Overdue since {date}",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-daily's own rows"
@@ -13866,13 +13846,6 @@
    "note": "adopted from screens-entry's own rows"
   },
   {
-   "key": "screen.forgot.handle.help",
-   "en": "Did you set this group up? Your handle is admin.",
-   "protected": false,
-   "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
-  },
-  {
    "key": "screen.forgot.code",
    "en": "One of your recovery codes",
    "protected": false,
@@ -14092,13 +14065,6 @@
   {
    "key": "screen.setup.claimed.nosignin",
    "en": "Claimed. Sign in on your group's page with the handle admin and the password you just chose.",
-   "protected": false,
-   "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
-  },
-  {
-   "key": "screen.setup.taken",
-   "en": "Your group's Civicsmith has already been claimed. Its administrators sign in on its page.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-entry's own rows"
@@ -25374,13 +25340,6 @@
    "note": "adopted from screens-settings's own rows"
   },
   {
-   "key": "screen.updates.skip.noreason",
-   "en": "Say why your group skips this release, in one line: every administrator will see it. Nothing was recorded.",
-   "protected": false,
-   "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
-  },
-  {
    "key": "screen.settings.yours",
    "en": "Yours",
    "protected": false,
@@ -28973,6 +28932,137 @@
    "protected": false,
    "source": "DEC-253",
    "note": "when no extent is named"
+  },
+  {
+   "key": "question.conclude.own.choice",
+   "en": "Write the reading yourself",
+   "protected": false,
+   "source": "DEC-254",
+   "note": "beside the readings to conclude on; offered with or without the assistant"
+  },
+  {
+   "key": "question.conclude.own.field",
+   "en": "Your reading",
+   "protected": false,
+   "source": "DEC-254"
+  },
+  {
+   "key": "question.conclude.own.help",
+   "en": "Say in your own words what the cited passages show. It is marked as yours, not the assistant's, and concluding on it accepts it in the same act.",
+   "protected": false,
+   "source": "DEC-254"
+  },
+  {
+   "key": "question.reading.by.member",
+   "en": "Written by {member}",
+   "protected": true,
+   "source": "DEC-254",
+   "note": "a member's own reading; never marked machine work"
+  },
+  {
+   "key": "site.groups.rule",
+   "en": "The people who make Civicsmith decline or remove a listing only under the listing rule below, never for a group's views or for whom it holds to account. A group is always told why.",
+   "protected": true,
+   "source": "DEC-255",
+   "note": "under Groups at work"
+  },
+  {
+   "key": "refusal.PROJECT_VISIBILITY_NOT_THE_OWNER",
+   "en": "Only the project's owners can change whether it can be found; administrators and the group's founder cannot. Ask an owner. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.PROJECT_VISIBILITY_NO_OWNER",
+   "en": "A project can be findable only when it has an owner, and this one has none. Leave it hidden, or give it an owner first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.NAME_TAKEN",
+   "en": "A project in this group already has that name. Choose another. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.CONSENSUS_REQUIRED",
+   "en": "Your endorsement is recorded. While the group has two or more administrators, a new one is invited only once every administrator endorses. Still to endorse: {awaiting}.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.OWNERS_ARE_ACTIVE",
+   "en": "This project still has active owners: {owners}. An administrator adds an owner only when every owner is inactive. Ask one of them. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.NO_REASON",
+   "en": "This needs a reason, and none was given. Write one. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.NO_CLAIM",
+   "en": "There is nothing to conclude on yet: the project must first stand on a reading of this question. Accept a reading, or write your own, then conclude. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.ANSWER_MALFORMED",
+   "en": "The assistant's answer came back incomplete ({field} missing), so none of it is shown. Ask again. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.RISK_TIER_UNCHANGED",
+   "en": "This action already has that risk tier. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.CRUCIAL_IN_BATCH",
+   "en": "Crucial material is never vouched for in a batch, and {count} of these are crucial. Vouch for each of them on its own. Nothing in the batch was vouched for.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.ENTRY_REQUIREMENTS",
+   "en": "Some of these are not complete enough to vouch for: {offenders}, each missing what it names. Complete them or leave them out. Nothing in the batch was vouched for.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.STATEMENT_ACK_NO_REASON",
+   "en": "An acknowledgement of a statement is recorded with your own words on it, and none were given, or they are longer than 2,000 characters. Write them. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "refusal.DOOR_RATE_LIMITED",
+   "en": "Too many requests came from your connection in the last ten minutes. Try again in {minutes} minutes. Nothing was written.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "T49's requirement draws it by its words"
+  },
+  {
+   "key": "question.empty.conclude.own",
+   "en": "Nothing to conclude on yet: a conclusion adopts a reading, the assistant's accepted or one you write yourself, and a reading stands on cited passages.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "replaces question.empty.conclude's sentence after S24"
   },
   {
    "key": "rail.home.name",
