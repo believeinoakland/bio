@@ -236,6 +236,7 @@ No edge points later. **Module dropped:** `setup-page` (rule 3).
   - journey-check signs in as the administrator and as a member and sweeps every screen (K3052), rule 5 (8) excepted;
   - each deploy (the plane to `biosmoke7`, the installer) is Bob's approval in session (K1715, K1716): walk him through each;
   - point Bob at `newgroup.believeinoakland.workers.dev`, because civicsmith.org is not live.
+- **The fresh trial instance (Bob, K3260):** the release after L11 is installed as a new instance, `biosmoke8`, founded by Bob, and `biosmoke7`'s Cloudflare resources (workers, Durable Objects, containers, storage) are removed first from an inventory BOB takes now (read-only); each removal and deploy is Bob's approval in session (K1715). The journey's `JOURNEY_ADMIN_*` then name the founder of `biosmoke8`.
 - **N1047's workflow step** (signing and publishing the release notice, `.github/`, not_product): BOB's, between T48 and T49 (P3).
 - **N898:** `mail done --as bob` refuses a `--through` past the job's last entry. In the process repository, between tranches, certified on a dry run (P3).
 - **N945:** BOB's study of `bootstrap`'s `rearmed: true` on `biosmoke7`. A credentials entry joins T48-11 only if a requirement changes before L2's START.
