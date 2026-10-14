@@ -1,25 +1,24 @@
-/* R47 over the page this module composes and serves (K1851): setup-page's template (its R14's one slot) with the hosting
-   block held once in setup-fleet.mjs for the page and the installer, and the re-exports every importer reads. The
-   page's own behaviour is setup-page's, tested there. */
+/* R47 and R83 (T47; N1002): this module serves no page; it holds R47's block, once, in the leaf the installer imports,
+   re-exported for the screens that show it (`screens-entry`). The screens' own behaviour is theirs, tested there. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
+import * as S from "../../../src/setup.mjs";
 import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
-/* K2038: setup-page's address of its guide to replacing the one-time password (its R27). */
-import { PAGE_HTML, HOSTING_SLOT, pageOf, groupLine as pageGroupLine, ROTATION_GUIDE_HREF } from "../../../src/setup-page/index.mjs";
 
-test("R47 K1851 the composed page is setup-page's template with the hosting block in its one slot and no slot left; setupPage(read) is that page with the read's group line, and groupLine is setup-page's", () => {
-  assert.equal(PAGE_HTML.split(HOSTING_SLOT).length - 1, 1, "the template carries the slot once");
-  assert.equal(SETUP_HTML, PAGE_HTML.replace(HOSTING_SLOT, hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF })));
-  assert.equal(SETUP_HTML.includes(HOSTING_SLOT), false);
-  assert.equal(groupLine, pageGroupLine);
-  for (const read of [undefined, { answered: false }, { answered: true, result: { ok: true, group: null } },
-                      { answered: true, result: { ok: true, group: "river-town", display_name: "River <Town>" } }]) {
-    const page = setupPage(read);
-    assert.equal(page, pageOf(read).replace(HOSTING_SLOT, hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF })), JSON.stringify(read));
-    assert.equal((page.match(/id="instance-group"/g) || []).length, 1);
-    assert.ok(page.includes(groupLine(read)));
-  }
+/* R83's test, held as a todo while `setupPage` is retiring (R86; K3144): it goes live on BOB's CHANGE after T47-65. */
+test.todo("R83 no export names the page: setupPage, SETUP_HTML and groupLine are gone, and no export is page HTML (todo until T47-65 drops control-plane's import, R86, K3144)", () => {
+  for (const name of ["setupPage", "SETUP_HTML", "groupLine", "PAGE_HTML", "pageOf"]) assert.equal(name in S, false, name);
+  for (const [name] of Object.entries(S)) assert.doesNotMatch(name, /page/i, `${name} names a page`);
+});
+
+test("R86 R83 setupPage stays exported, retiring, only until T47-65, and is the only export naming the page: SETUP_HTML and groupLine are gone; HOSTING_CONTROL stays R47's one holder, re-exported as the leaf holds it (control: the retiring page still carries R47's block)", () => {
+  for (const name of ["SETUP_HTML", "groupLine", "PAGE_HTML", "pageOf"]) assert.equal(name in S, false, name);
+  assert.deepEqual(Object.keys(S).filter((n) => /page/i.test(n)), ["setupPage"]);
+  for (const [name, v] of Object.entries(S)) if (typeof v === "string") assert.doesNotMatch(v, /<html|<!doctype/i, `${name} is page HTML`);
+  assert.equal(S.HOSTING_CONTROL, HOSTING_CONTROL);
+  assert.equal(S.hostingControlBlock, hostingControlBlock);
+  const page = S.setupPage({ answered: true, result: { ok: true, group: "river-town" } });
+  assert.equal(page.split('id="hosting-control"').length - 1, 1, "the retiring page carries the block once");
 });
 
 /* R47's conditions over one page's bytes, as a list of what fails (empty when it holds), so the negative controls below
@@ -34,39 +33,29 @@ const DEC_109 = [
   /Where possible, let someone other than the group's administrators hold it\./,
   /The same account is the way back in if the password you choose is lost[^<]*your group's Civicsmith can be claimed again\./,
 ];
-function r47Fails(html) {
+function r47Fails(block) {
   const fails = [];
-  const claim = (html.match(/<section id="s-claim">[^]*?<\/section>/) || [""])[0];
-  const block = (claim.match(/<div class="notice" id="hosting-control">[^]*?<\/div>/) || [""])[0];
-  if (!block) fails.push("no block in the claim section");
+  if (!/^<div class="notice" id="hosting-control">/.test(block)) fails.push("no block");
   for (const re of DEC_109) if (!re.test(block)) fails.push(`the block lacks ${re}`);
-  if (block && !(claim.indexOf(block) < claim.indexOf('id="pw1"'))) fails.push("the block is not before the password field");
-  if (OLD_CARD.test(html)) fails.push("the reassurance-only card is still there");
+  if (OLD_CARD.test(block)) fails.push("the reassurance-only card is still there");
   if (/<(?:input|button|select|textarea)\b/.test(block)) fails.push("the block carries a control");
-  if (/acknowledg/i.test(claim.replace(/<!--[^]*?-->/g, ""))) fails.push("the claim section asks for an acknowledgement");
+  if (/acknowledg/i.test(block)) fails.push("the block asks for an acknowledgement");
   return fails;
 }
 
-test("R47 R63 the claim section of the page served shows DEC-109's block before the password is chosen, in place of the reassurance-only card, in DEC-149's words (your group's Civicsmith, never this copy), and asks and records no acknowledgement", async () => {
-  assert.deepEqual(r47Fails(SETUP_HTML), []);
-  assert.deepEqual(r47Fails(setupPage({ answered: true, result: { ok: true, group: "river-town" } })), []);
-  /* the words are held once, in the leaf the installer imports, and the page carries them as that leaf renders them */
-  assert.ok(SETUP_HTML.includes(hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF })));
-  for (const sentence of HOSTING_CONTROL.sentences) assert.equal(SETUP_HTML.split(sentence).length - 1, 1, sentence);
-  /* R63 (DEC-149): the block names the group's Civicsmith, never "copy"; "installation" only for the hosting */
+test("R47 R63 the block held once for the screens and the installer says DEC-109's words in DEC-149's (your group's Civicsmith, never this copy), and asks and records no acknowledgement", () => {
+  assert.deepEqual(r47Fails(hostingControlBlock("notice")), []);
+  assert.deepEqual(r47Fails(hostingControlBlock("notice", { guideHref: "#guide" })), []);
+  for (const sentence of HOSTING_CONTROL.sentences) assert.equal(hostingControlBlock("notice").split(sentence).length - 1, 1, sentence);
   for (const words of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence]) assert.doesNotMatch(words, /\bcopy\b|\binstance\b|\bplane\b|\bserver\b/i, words);
   assert.match(hostingControlBlock('x"<'), /^<div class="x&quot;&lt;" id="hosting-control">/);
-  /* negative controls: the old card restored, and the block placed after pw1, each fail the reading */
-  const card = '<div class="card"><p class="small" style="margin:0"><b>If you ever lose the\n  password you choose here,</b> you are not locked out.</p></div>';
-  const block = hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF });
-  const withCard = SETUP_HTML.replace(block, card);
-  assert.ok(r47Fails(withCard).includes("no block in the claim section"));
+  /* negative controls: the old card in place of a sentence, and a control in the block, each fail the reading */
+  const block = hostingControlBlock("notice");
+  const withCard = block.replace(HOSTING_CONTROL.sentences[0], "If you ever lose the password you choose here, you are not locked out.");
   assert.ok(r47Fails(withCard).includes("the reassurance-only card is still there"));
-  const after = SETUP_HTML.replace(block, "")
-    .replace('<label for="pw2">', block + '<label for="pw2">');
-  assert.deepEqual(r47Fails(after), ["the block is not before the password field"]);
-  const acked = SETUP_HTML.replace('id="hosting-control"><p>', 'id="hosting-control"><p><input type="checkbox" id="ack">');
-  assert.ok(r47Fails(acked).includes("the block carries a control"));
+  assert.ok(r47Fails(withCard).some((f) => f.startsWith("the block lacks")));
+  const acked = block.replace('id="hosting-control"><p>', 'id="hosting-control"><p><input type="checkbox" id="ack">');
+  assert.deepEqual(r47Fails(acked), ["the block carries a control"]);
 });
 
 /* R47's T35 sentence (F10, K1874 (Q6)): the block ends by naming the guide to replacing the one-time password, in the
@@ -91,16 +80,4 @@ test("R47 F10 the block ends by naming the guide to replacing the one-time passw
   assert.match(hostingControlBlock("notice", { guideHref: '#"><script>' }), /<a href="#&quot;&gt;&lt;script&gt;">/, "the href is escaped");
   /* the rest of the block is the same in both forms */
   assert.equal(page.replace(last, ""), installer.replace(lastParagraph(installer), ""));
-});
-
-test("R47 F10 setup-page R14 on the page this module serves, the guide's name links to setup-page's guide (its R27) at the address setup-page exports, and the page carries that guide", () => {
-  assert.equal(ROTATION_GUIDE_HREF, "#replace-one-time-password", "setup-page exports its guide's address (K2038)");
-  const block = (SETUP_HTML.match(/<div class="notice" id="hosting-control">[^]*?<\/div>/) || [""])[0];
-  assert.deepEqual([...block.matchAll(/<a href="([^"]*)">([^<]*)<\/a>/g)].map((m) => [m[1], m[2]]),
-    [[ROTATION_GUIDE_HREF, HOSTING_CONTROL.guide.name]], "the block's one link is the guide's name, to setup-page's address");
-  /* the guide is part of the same page: its section, and the page's script opening it at that address (setup-page R27) */
-  assert.equal(SETUP_HTML.split('<section id="s-rotate"').length - 1, 1, "the page carries the guide's section once");
-  assert.ok(SETUP_HTML.includes(`const ROTATION = ${JSON.stringify(ROTATION_GUIDE_HREF)};`), "the page opens the guide at that address");
-  /* every page this module serves carries the same link */
-  assert.ok(setupPage({ answered: true, result: { ok: true, group: "river-town" } }).includes(block));
 });
