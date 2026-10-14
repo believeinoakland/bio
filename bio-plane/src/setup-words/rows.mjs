@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (11823 words, 862 protected; SHA-256
-   c18e0cbbc6613255ea528b1bce8030db45ad0262d5c4661116b925b6fb52bfc7), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (11827 words, 862 protected; SHA-256
+   7a708b67f1292ffdfa3d5a5a00ada6c45484bd86b97ae9bce79600b8f6580550), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "c18e0cbbc6";
+export const WORDS_COMMIT = "7a708b67f1";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -2966,14 +2966,14 @@ export const WORD_ROWS = Object.freeze([
   ["screen.calculation.draw.repeat","Anyone can repeat it from the seed and get the same items, so no one chose which ones to visit.","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.question","The question","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.found","What members found","adopted from screens-investigate's own rows",null,false],
-  ["screen.calculation.counts","{visited} of {n} visited: {yes} {answer}, {no} not {answer}, {unsure} could not tell","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
+  ["screen.calculation.counts","{visited} of {n} visited: {yes} yes, {no} no, {unsure} could not tell","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
   ["screen.calculation.counts.yes","{n} yes","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.counts.no","{n} no","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.counts.unsure","{n} could not tell","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.counts.disagree","{n} in tension","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.counts.notvisited","{n} not visited","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.estimate","What it estimates","adopted from screens-investigate's own rows",null,false],
-  ["screen.calculation.range","{share}% of the {judged} that could be judged were {answer} · exact {confidence}% range {low}% to {high}%","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
+  ["screen.calculation.range","{share}% of the {judged} that could be judged were yes · exact {confidence}% range {low}% to {high}%","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
   ["screen.calculation.noestimate","no estimate is worked out over this draw yet","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.standing.yes","Yes","adopted from screens-investigate's own rows",null,false],
   ["screen.calculation.standing.no","No","adopted from screens-investigate's own rows",null,false],
@@ -3115,7 +3115,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.proceeding.order.empty","Name who the order binds, what it requires and its paragraph.","adopted from screens-investigate's own rows",null,false],
   ["screen.proceeding.link.empty","Name the decision, what it interprets and the passage.","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.due","Due {date}","adopted from screens-investigate's own rows",null,false],
-  ["screen.due-date.of","{who}'s reply to your {item}","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
+  ["screen.due-date.of","{who}'s reply","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
   ["screen.due-date.entries","Confirmed due dates","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.basis","basis: {basis}","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.at","by {time}, {zone}","adopted from screens-investigate's own rows",null,false],
@@ -3134,7 +3134,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.due-date.step.received.sent","Counted from sending: {date} (receipt not recorded).","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.step.received.service","Served: {date}.","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.noreceipt","the day it was received is not recorded","adopted from screens-investigate's own rows",null,false],
-  ["screen.due-date.step.counted","Counted {amount} {units}: to {date}.","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
+  ["screen.due-date.step.counted","Counted {amount} {units}.","adopted from screens-investigate's own rows; DEC-259: reworded",null,false],
   ["screen.due-date.step.skipped","{date} skipped: {why} (from {source}).","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.step.due","Falls due {date}, {zone}.","adopted from screens-investigate's own rows",null,false],
   ["screen.due-date.nodate","the date cannot be worked out from what is recorded","adopted from screens-investigate's own rows",null,false],
@@ -3449,7 +3449,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.members.founder","the founding administrator","adopted from screens-settings's own rows",null,false],
   ["screen.members.nohandle","Not joined yet","adopted from screens-settings's own rows",null,false],
   ["screen.members.empty","Nobody is in the group yet but you.","adopted from screens-settings's own rows",null,false],
-  ["screen.members.recovery.one","With one administrator, the group depends on {name} and the hosting account.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
+  ["screen.members.recovery.one","With one administrator, the group depends on that one person and the hosting account.","adopted from screens-settings's own rows; DEC-262: reworded",null,false],
   ["screen.members.recovery.many","Your group has {administrators} administrators.","adopted from screens-settings's own rows",null,false],
   ["screen.members.recovery.codes","You hold recovery codes ({remaining} left).","adopted from screens-settings's own rows",null,false],
   ["screen.members.recovery.nocodes","You hold no recovery codes yet.","adopted from screens-settings's own rows",null,false],
@@ -3617,11 +3617,11 @@ export const WORD_ROWS = Object.freeze([
   ["screen.connect.keptaway","Your group keeps its material away from AI. No assistant can be used here, the group's or your own. {by}, an administrator, turned this on on {date}, and gave this reason:","adopted from screens-settings's own rows",null,false],
   ["screen.connect.keptaway.unread","Your group's Civicsmith couldn't read whether the group keeps its material away from AI, so no assistant serves you for now.","adopted from screens-settings's own rows",null,false],
   ["screen.connect.keptaway.ask","Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
-  ["screen.connect.own.subscription","The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
-  ["screen.connect.own.apikey","The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
+  ["screen.connect.own.subscription","The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.","adopted from screens-settings's own rows; DEC-262: reworded",null,false],
+  ["screen.connect.own.apikey","The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.","adopted from screens-settings's own rows; DEC-262: reworded",null,false],
   ["screen.connect.own.thengroup","If you disconnect it, the group's API key serves you instead.","adopted from screens-settings's own rows",null,false],
   ["screen.connect.group","The assistant serves you on the group's API key.","adopted from screens-settings's own rows",null,false],
-  ["screen.connect.group.allowance","The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
+  ["screen.connect.group.allowance","The group pays, up to {limit} for each member, a limit your administrators set.","adopted from screens-settings's own rows; DEC-262: reworded",null,false],
   ["screen.connect.group.allowance.reached","At the limit, the assistant pauses for you until the next {period}; everything else works as usual.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
   ["screen.connect.group.more","Need more? Connect your own account","adopted from screens-settings's own rows",null,false],
   ["screen.connect.none","The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
@@ -3652,7 +3652,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.connect.apikey.nokey","Paste your API key first. Nothing was sent.","adopted from screens-settings's own rows",null,false],
   ["screen.connect.skip","Or skip it: everything in your group's Civicsmith works without the assistant, and you can connect later.","adopted from screens-settings's own rows",null,false],
   ["screen.connect.grouplimits.heading","Limits and suggestions","adopted from screens-settings's own rows",null,false],
-  ["screen.connect.grouplimits","On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.","adopted from screens-settings's own rows; DEC-257: reworded",null,false],
+  ["screen.connect.grouplimits","On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.","adopted from screens-settings's own rows; DEC-262: reworded",null,false],
   ["screen.connect.disconnect.heading","Disconnect","adopted from screens-settings's own rows",null,false],
   ["screen.connect.disconnect.subscription","Disconnect your subscription","adopted from screens-settings's own rows",null,false],
   ["screen.connect.refused.RUNNER_NOT_CONFIGURED","Signing in with a subscription isn't set up on your group's Civicsmith yet. You can connect an API key instead.","adopted from screens-settings's own rows",null,false],
@@ -4501,6 +4501,10 @@ export const WORD_ROWS = Object.freeze([
   ["screen.site.groups.cases.many","{cases} published cases, in {editions} editions, the latest {date}",null,null,false],
   ["screen.site.groups.case.many","{cases} published cases",null,null,false],
   ["screen.site.notfound","There is no such page on civicsmith.org.",null,null,false],
+  ["screen.connect.group.allowance.used","You have used {used} of it {when}.","after screen.connect.group.allowance; drawn only to an account's owners, when answered",null,false],
+  ["screen.connect.grouplimits.used","You have used {used} of it today.","after screen.connect.grouplimits; drawn only when answered",null,false],
+  ["screen.connect.grouplimits.suggestions","Suggestions: {suggestions}.","after screen.connect.grouplimits; drawn only when answered",null,false],
+  ["refusal.DOOR_RATE_LIMITED.session","You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written.","a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED",null,false],
   ["screen.account.explain.help","Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.","under the Explanations choice",null,false],
   ["screen.account.signout.note","Everywhere ends your sign-in on every phone and computer, this one included. Use it if you lost a device or signed in somewhere you shouldn't have.","under the two sign-out buttons",null,false],
   ["screen.account.passwordkey.heading","Password and signing key",null,null,false],
