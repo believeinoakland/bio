@@ -1,27 +1,16 @@
 /* The common line (R21; K3250, K3254; walk C1, C4, C5; DEC-219 (3)) over the module's real `SCREENS`, served by the shell:
    every class each screen draws is one a served stylesheet defines (interface-shell R56: `civicsmith.css`, `shell.css` and
-   the shell's own `STYLE`), every labelled field is the kit's, and a screen drawn over an empty fixture shows no empty
-   section and no zero. The two stylesheets are read from git at `4664e8efd4`, the commit `interface-assets` R5 and R7 serve
-   (`shell.css` is the `<style>` of the design's `page.src.html` there), so a later edit of the working copy does not move
-   them. Until interface-shell R56's own check runs in `interfacePage`, this is the module's check of the same rule. */
+   the shell's own `STYLE`, as `interface-assets` serves them, with the shell's hook classes, as its own `checkClasses` judges them), every labelled field is the
+   kit's, and a screen drawn over an empty fixture shows no empty section and no zero. Beside interface-shell R56's own
+   check of the screens' source (`interfacePage` throws), this checks what each screen draws, with data and empty. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkClasses } from "../../../src/interface-shell/index.mjs";
 import { SCREENS, open, main, text, ok, refused, MEMBER } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const at = (path) => execFileSync("git", ["show", `4664e8efd4:${path}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 });
-const classesIn = (css) => new Set([...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const pageStyle = (html) => [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
-const DEFINED = new Set([
-  ...classesIn(at("docs/development/ux-substrate/visual-language/civicsmith.css")),
-  ...classesIn(pageStyle(at("docs/development/ux-substrate/screens/page.src.html"))),
-  ...classesIn(pageStyle(interfacePage(SCREENS))),
-]);
+// A class the shell's own check (interface-shell R56) accepts: one a served stylesheet defines, or a hook class.
+const defined = (c) => { try { return checkClasses([{ id: "probe", render: 'class="' + c + '"' }], null, ""); } catch { return false; } };
 
 const SINCE = ok({ since: "2026-10-01T00:00:00Z" });
 const FULL = {
@@ -55,21 +44,22 @@ const EMPTY = {
 };
 const ROUTES = { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
 
-test("R21 (interface-shell R56): every class each screen draws, with data and empty, is one a served stylesheet defines", async () => {
+test("R21 (interface-shell R56): the module's real SCREENS compose under the shell's class check, and every class each screen draws, with data and empty, is one a served stylesheet defines", async () => {
+  assert.doesNotThrow(() => interfacePage(SCREENS));
   for (const [name, plane] of Object.entries({ full: FULL, empty: EMPTY })) for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, plane);
     for (const el of main(p).querySelectorAll("[class]")) for (const c of el.getAttribute("class").split(/\s+/).filter(Boolean))
-      assert.ok(DEFINED.has(c), `${id} (${name}) draws class "${c}", which no served stylesheet defines`);
+      assert.ok(defined(c), `${id} (${name}) draws class "${c}", which no served stylesheet defines`);
   }
   // Control: the check finds a class no stylesheet defines.
-  assert.equal(DEFINED.has("cs-nonesuch"), false);
-  assert.equal(DEFINED.has("mk-door"), true);
+  assert.equal(defined("cs-nonesuch"), false);
+  assert.equal(defined("mk-door"), true);
 });
 
 test("R21: every labelled field is drawn with the kit's field; no screen draws cs-form or a bare label with .help", async () => {
   for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, FULL);
-    assert.equal(main(p).querySelector(".cs-form"), null, id);
+    assert.ok(!main(p).querySelector(".cs-form"), id);
     for (const label of main(p).querySelectorAll("label")) {
       const holder = label.parentNode;
       if (holder.querySelector(".help")) assert.match(holder.getAttribute("class") || "", /cs-field/, `${id}: a label with help is the kit's field`);
@@ -91,7 +81,7 @@ test("R21 (DEC-219 (3)): each screen drawn over an empty fixture shows no empty 
   assert.match(text(await open("/app/queue", EMPTY)), /You are up to date/, "the queue's designed empty state");
   assert.match(text(await open("/app/projects", EMPTY)), /No projects yet\. “Start a project” opens the first\./, "Projects' designed empty state names the first step");
   const finder = await open("/app/finder/pothole", EMPTY);
-  assert.equal(main(finder).querySelector(".cs-hold"), null, "finder draws no empty hold tray");
+  assert.ok(!main(finder).querySelector(".cs-hold"), "finder draws no empty hold tray");
 });
 
 test("R21: control: a read that failed is still drawn failed (interface-shell R10)", async () => {

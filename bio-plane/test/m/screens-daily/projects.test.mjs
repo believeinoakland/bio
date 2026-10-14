@@ -52,21 +52,21 @@ test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.init
   ] }) });
   await settle();
   const [a, b, c] = rows(p);
-  assert.equal(a.querySelector(".cs-people").getAttribute("aria-label"), "3 members: dev, rosa, teo");
-  assert.deepEqual(a.querySelector(".cs-people").querySelectorAll("i").map((i) => i.textContent), ["D", "R", "T"]);
-  assert.equal(b.querySelector(".cs-people").getAttribute("aria-label"), "1 members: ana");
+  assert.equal(a.querySelector(".mk-people").getAttribute("aria-label"), "3 members: dev, rosa, teo");
+  assert.deepEqual(a.querySelector(".mk-people").querySelectorAll("i").map((i) => i.textContent), ["D", "R", "T"]);
+  assert.equal(b.querySelector(".mk-people").getAttribute("aria-label"), "1 members: ana");
   // Eight bars, oldest first, the newest marked; the word: busy (more lately), quiet (none lately), steady (about the same).
-  assert.equal(a.querySelector(".cs-spark").querySelectorAll("i").length, 8);
-  assert.equal(a.querySelector(".cs-spark").getAttribute("aria-label"), "busy: 3, 5, 4, 6, 8, 7, 9, 11 acts a week over the last eight weeks");
-  assert.equal(a.querySelector(".cs-spark i.now").getAttribute("style"), "height:18px");
-  assert.equal(b.querySelector(".cs-spark b").textContent, "quiet");
-  assert.equal(c.querySelector(".cs-spark b").textContent, "steady");
+  assert.equal(a.querySelector(".mk-spark").querySelectorAll("i").length, 8);
+  assert.equal(a.querySelector(".mk-spark").getAttribute("aria-label"), "busy: 3, 5, 4, 6, 8, 7, 9, 11 acts a week over the last eight weeks");
+  assert.equal(a.querySelector(".mk-spark i.now").getAttribute("style"), "height:18px");
+  assert.equal(b.querySelector(".mk-spark b").textContent, "quiet");
+  assert.equal(c.querySelector(".mk-spark b").textContent, "steady");
   assert.match(text(p, a), /Last change 12 October 2026/);
   assert.match(text(p, b), /No change in the last eight weeks/);
   // Control: a row answering none of the three draws none of them, and says nothing of them.
   const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
   await settle();
-  assert.equal(main(bare).querySelector(".cs-people, .cs-spark"), null);
+  assert.ok(!main(bare).querySelector(".mk-people, .mk-spark"));
   assert.doesNotMatch(text(bare), /Last change|No change/);
 });
 

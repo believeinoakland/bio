@@ -63,7 +63,7 @@ test("R15 (interface-shell R10): a pointer of null, or a startfrom that fails, i
 test("R15: the record's data is drawn as data, HTML-escaped", async () => {
   const p = await open("/app/elsewhere", { startfrom: door({ places: ["River Town"], pointers: [P("service", "<b>Town</b> & 311", { does: "<img src=x onerror=alert(1)>", contacts: [{ how: "web", value: "javascript:alert(1)" }] })] }) });
   assert.match(text(p), /<b>Town<\/b> & 311/);
-  assert.equal(main(p).querySelector("img"), null);
+  assert.ok(!main(p).querySelector("img"));
   assert.equal(main(p).querySelectorAll("a[target=_blank]").length, 0, "a value that is no web address is no link");
 });
 

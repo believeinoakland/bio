@@ -61,9 +61,9 @@ test("R17: a busy home draws, in order, the strip, Needs you, Needs the group, e
   const p = await open("/app", ADMIN_PLANE);
   await settle();
   assert.deepEqual(sections(p), ["Needs you", "Needs the group", "Each area at a glance", "Projects", "Since you last looked", "What happened?"]);
-  const strip = main(p).querySelector(".cs-strip");
-  const order = main(p).querySelectorAll(".cs-strip, h1, section");
-  assert.equal(order[0], strip, "the strip comes first, above the heading and every block");
+  const strip = main(p).querySelector(".mk-strip");
+  const order = main(p).querySelectorAll(".mk-strip, h1, section");
+  assert.ok(strip && order[0] === strip, "the strip comes first, above the heading and every block");
   assert.deepEqual(strip.querySelectorAll("a").map((a) => text(p, a)), ["2 need you", "1 overdue", "4 need the group"]);
   const you = main(p).querySelectorAll("section")[0];
   assert.match(text(p, you), /Vouch for 3 photos/);
@@ -92,9 +92,9 @@ test("R17: a busy home draws, in order, the strip, Needs you, Needs the group, e
 test("R17: controls: a reading at zero is not drawn, and an empty block is not drawn; a failed read is drawn failed in its block", async () => {
   const quiet = await open("/app", { ...PLANE, queue: ok({ items: [], item_count: 0 }) });
   await settle();
-  assert.equal(main(quiet).querySelector(".cs-strip"), null, "no strip with nothing to count");
+  assert.ok(!main(quiet).querySelector(".mk-strip"), "no strip with nothing to count");
   assert.doesNotMatch(text(quiet), /Needs you|Needs the group|0 need|0 to do|\b0 questions?/);
-  assert.equal(main(quiet).querySelector('[data-area="action"]'), null, "an area with nothing to show is left out");
+  assert.ok(!main(quiet).querySelector('[data-area="action"]'), "an area with nothing to show is left out");
   const failed = await open("/app", { ...PLANE, queue: refused("STORE_DID_NOT_ANSWER", null, 502), projectlist: refused("STORE_DID_NOT_ANSWER", null, 502), lookedsince: refused("STORE_DID_NOT_ANSWER", null, 502) });
   assert.ok(main(failed).querySelectorAll('[data-state="failed"]').length >= 3, "the queue, the projects and lookedsince each drawn failed");
   assert.match(text(failed), /Needs you/);
@@ -124,7 +124,7 @@ test("R17, R23, R11: a new group's home draws that it is ready, its first steps 
   assert.deepEqual(sections(p), ["Your group's Civicsmith is ready", "What happened?"]);
   assert.deepEqual(main(p).querySelectorAll(".mk-links a").map((a) => [a.textContent, a.getAttribute("href")]),
     [["Name your group", "/app/group"], ["Invite your first members", "/app/members"], ["Say who your group is", "/app/group-identity"]]);
-  assert.equal(main(p).querySelector(".mk-ablocks, .cs-strip"), null);
+  assert.ok(!main(p).querySelector(".mk-ablocks, .mk-strip"));
   // Controls: a named group draws no "Name your group"; a group with a project, or a second active member, is not new.
   const named = await open("/app", { ...fresh, groupidentity: PLANE.groupidentity });
   assert.doesNotMatch(text(named), /Name your group/);
@@ -214,7 +214,7 @@ test("R17: an item's own acts on Home send their bodies and re-read the queue, n
 
 test("R1: \"Start a project\" sends promote with the member's title as a new forming project, and opens project on success", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77", owner: "mai" }) });
-  assert.equal(button(p, "promote").textContent, "Start a project");
+  assert.ok(button(p, "promote").textContent.startsWith("Start a project"), "its label, then the weight the shell draws (interface-shell R11, R64)");
   await press(p, "promote", { values: { "home-title": "  Park bond oversight " } });
   const r = last(p, "promote");
   assert.equal(r.method, "POST");

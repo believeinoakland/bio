@@ -78,7 +78,7 @@ test("R2: due dates drawn with mark.due (overdue, near, later), and a hint with 
   const dues = main(p).querySelectorAll(".cs-due").map((e) => e.getAttribute("data-due"));
   assert.deepEqual(dues, ["overdue", "near"]);
   const later = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], due: day(30) }] }) });
-  assert.equal(main(later).querySelector(".cs-due").getAttribute("data-due"), null);
+  assert.ok(!main(later).querySelector(".cs-due").getAttribute("data-due"));
   const hint = main(p).querySelector("details.mk-hintd");
   assert.ok(hint.querySelector(".cs-hint"));
   assert.match(text(p, hint), /Hint · machine work How was this found\?What was matchedForm 700 against votesHow it was foundthe check matched namesHow far to trust itOf this check's past hints that members looked into, 12% were false alarms\.What it is notA lead, never a finding/);
@@ -119,7 +119,7 @@ test("R3: an item's acts are its options and disposition's doors among the regis
   assert.deepEqual(acts(p).filter(([op]) => op === "queuesnooze").map(([, d]) => d.project), ["PROJ-1", "PROJ-2"], "snooze is by case, on each case's heading");
   const open1 = itemOf(p, "TSK-1").querySelector('a[data-nav][href="/app/document/INF-7"]');
   assert.equal(open1.textContent, "Open");
-  assert.equal(main(p).querySelector('a[href^="/app/step/"]'), null, "a subject with no built screen has no link");
+  assert.ok(!main(p).querySelector('a[href^="/app/step/"]'), "a subject with no built screen has no link");
   assert.match(button(p, "taskresolve").textContent, /^Act on an item/);
   // Each act drawn only where the gate allows it (interface-shell R12): without `contribute`, the dispositions needing it go.
   const plain = await open("/app/queue", { ...PLANE, whoami: ok({ tokenClass: "member", session: true, member: "mai", handle: "mai", capabilities: [] }) });
@@ -210,7 +210,7 @@ test("R12 (DEC-201 (13)): with nothing waiting the queue says the member is up t
   for (const plane of [PLANE, { queue: refused("STORE_DID_NOT_ANSWER", null, 502) }]) {
     const q = await open("/app/queue", plane);
     assert.doesNotMatch(text(q), /up to date/);
-    assert.equal(main(q).querySelector('a[data-nav][href="/app"]'), null);
+    assert.ok(!main(q).querySelector('a[data-nav][href="/app"]'));
   }
 });
 

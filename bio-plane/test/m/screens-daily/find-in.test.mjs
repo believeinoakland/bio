@@ -42,7 +42,7 @@ test("R5: the scope is set by where it was opened (a document, the held set, a p
   assert.match(text(none), /Nothing is here.*Open Find in this from a document.*Go to Home/);
   assert.ok(main(none).querySelector('a[href="/app"]'));
   assert.deepEqual(ops(none), []);
-  assert.equal(main(none).querySelector("fieldset, select, input"), null);
+  assert.ok(!main(none).querySelector("fieldset, select, input"));
 });
 
 test("R5: the member ticks what to find, with an optional term and question; findin is sent over the scope, and records nothing", async () => {
