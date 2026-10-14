@@ -65,7 +65,9 @@ test("R12: stale lists the keys of RUNGS and RUNG_ABSENT the table does not carr
   const mutating = new Set(["conclude", "promote"]);
   const table = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT), ...Object.keys(NON_ACTS), ...ACTS.map((a) => a.id)])]
     .map((op) => ({ op, mutating: mutating.has(op), gated: op !== "queue" }));
-  const want = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op)).concat(["queue"]))].sort();
+  /* T48 (R39): a `caller-owned` absence carried as a gated row is accounted for, though not as mutating */
+  const accounted = (op) => RUNG_ABSENT[op]?.ground === "caller-owned" && !Object.hasOwn(RUNGS, op) && op !== "queue";
+  const want = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op) && !accounted(op)).concat(["queue"]))].sort();
   assert.deepEqual(unaccounted(table).stale, want);
 });
 
