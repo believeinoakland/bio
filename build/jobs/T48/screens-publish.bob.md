@@ -23,3 +23,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3293: as you read it: the zone from publishpreflight's publish_at.zone, refusing to share without one, with your word held inline until UX-DESIGN keys it (I am asking). The download: build as written and report what the fixture shows.
+
+## B3 · ANSWER · re J2
+
+K3295: 1. As read. 2. review-outside draws the date and time with UTC named until review carries the zone (N1081, next tranche). 3. The complete edition is publishedbytes with sha256=<manifest_sha>&format=zip; R19's wording now says so. Merge origin/tranche/T48 into your branch.
