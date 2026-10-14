@@ -32,3 +32,7 @@ Also: `site.groups.rule` says "under the listing rule below", and no page draws 
 - Plan rule 6: no member-facing English held (R12, above); no "labelled"; no `admin` reaches a reader; no hand-list of N1073's; D29 does not apply (the site reads no answer).
 - Reading: requirements, entry, L11 contract, interface-assets' Purpose and Provides, setup-words' R10–R13, read whole; no code of mine existed to read.
 - **Next:** on BOB's CHANGE with the keys: merge the tranche, `node site/build.mjs`, commit `site/src/pages.mjs`, run the tests and checks, COMPLETE.
+
+## J2 · REPORT
+
+Built and tested everything but the generated pages (record, Progress). My paths for modules.json: paths ["site/"], tests ["site/test/"]; set now, they clear architecture's 'owned by no module' for site/. site/src/pages.mjs waits on the 16 keys of J1: with them added locally, 24 tests pass under the real setup-words. The R9 browser test needs `npm ci` in site/ (playwright-core 1.56.1, as journey-check pins). On your CHANGE with the keys I generate, commit, check and post COMPLETE.
