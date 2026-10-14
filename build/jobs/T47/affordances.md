@@ -1,6 +1,6 @@
 # affordances (T47)
 
-**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · WORKING · handled B8
+**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · COMPLETE · handled B8
 
 ## Completion
 
