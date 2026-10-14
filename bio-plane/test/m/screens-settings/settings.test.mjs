@@ -48,7 +48,10 @@ test("R20 recovery: the member's own codes (recoverycodesstate); new codes shown
   const m = await open("recovery", { me: MEMBER, table: recoveryTable() });
   assert.ok(m.p.requests.some((r) => r.op === "recoverycodesstate"));
   assert.ok(!m.p.requests.some((r) => r.op === "adminrecoverystep"), "a member is not asked the administrators' step");
-  has(m, "screen.recovery.held", { remaining: 7, date: day("2026-10-02") });
+  // credentials R46 issues ten codes: the sentence's total is ten while the plane does not answer it, the plane's own when it does
+  has(m, "screen.recovery.held", { remaining: 7, total: 10, date: day("2026-10-02") });
+  const t = await open("recovery", { me: MEMBER, table: recoveryTable({ recoverycodesstate: env({ ok: true, held: true, remaining: 7, total: 12, issuedAt: "2026-10-02T00:00:00Z" }) }) });
+  has(t, "screen.recovery.held", { remaining: 7, total: 12, date: day("2026-10-02") });
   has(m, "screen.recovery.spends");
   assert.deepEqual(acts(m.tree).map((b) => b.attrs["data-act"]), ["recoverycodesissue"], "every member issues their own (K3060 D4)");
   const r = await m.press("recoverycodesissue");

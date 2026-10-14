@@ -76,7 +76,7 @@ test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while b
   assert.deepEqual(all(way, (e) => e.tag === "option").map((o) => o.attrs.value), ["subscription", "apikey", "later"]);
   assert.equal(all(way, (e) => e.tag === "option" && "selected" in e.attrs)[0].attrs.value, "subscription");
   const order = acts(a.tree).map((b) => b.attrs["data-act"] + (b.attrs["data-step"] ? ":" + b.attrs["data-step"] : ""));
-  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code", "reauth"], "the password given beforehand comes last (the registry's reauth)");
+  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code"], "the sign-in's two steps");
   // (R13) the flat `part_signin` (instance-setup R82): `false` not installed, `null` could not be read; the API key either way
   for (const [part, key, fills] of [[false, "instance.part.signin.absent", {}], [null, "instance.part.unknown", { part: said("screen.connect.signin.part") }]]) {
     const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, part_signin: part, part_scanner: false, part_safe_view: false } }) });
@@ -95,7 +95,7 @@ test("R30 while nothing serves the member, one choice is asked first (My Claude 
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   const fieldIds = (o) => all(o.tree, (e) => e.tag === "input" && e.attrs.type === "password").map((e) => e.attrs.id);
   // the subscription path draws no key field (control)
-  assert.deepEqual(fieldIds(a), ["mc-code0", "mc-reauth"]);
+  assert.deepEqual(fieldIds(a), ["mc-code0"]);
   has(a, "screen.connect.signin.heading");
   lacks(a, "screen.connect.apikey.heading");
   assert.deepEqual(all(all(a.tree, (e) => e.attrs.id === "mc-way")[0], (e) => e.tag === "option").map((o) => textOf(o)), ["screen.connect.way.subscription", "screen.connect.way.apikey", "screen.connect.way.later"].map((k) => said(k)));
@@ -114,7 +114,7 @@ test("R30 while nothing serves the member, one choice is asked first (My Claude 
   lacks(a, "screen.connect.signin.heading");
   // back to the subscription
   await a.choose("mc-way", "subscription");
-  assert.deepEqual(ops(a), ["reauth", "subscriptionsignin"]);
+  assert.deepEqual(ops(a), ["subscriptionsignin"]);
   // control: with the disclosure not yet read, no choice is asked
   const d = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }) });
   assert.equal(all(d.tree, (e) => e.attrs.id === "mc-way").length, 0);
@@ -306,12 +306,8 @@ test("R38 beside the code: the sign-in's refusals by their keys under connect.if
   assert.ok(!placeholder(nd) && nd.refused.text.startsWith(said("refusal.SIGNIN_REFUSED", { detail: "SIGNIN_REFUSED" })));
 });
 
-test("R30 R36 (K3347) connect gains no pointer to the group key and no API-key preselection; the subscription stays preselected; reauth sends the password, none sends nothing", async () => {
+test("R30 R36 (K3347) connect gains no pointer to the group key and no API-key preselection; the subscription stays preselected", async () => {
   const a = await open("connect", { me: ADMIN, table: connectTable(ADMIN, "none") });
   assert.equal(all(all(a.tree, (e) => e.attrs.id === "mc-way")[0], (e) => e.tag === "option" && "selected" in e.attrs)[0].attrs.value, "subscription");
   assert.ok(!a.html.includes("/app/members"), "no pointer to Members' group key");
-  assert.deepEqual((await a.press("reauth", { values: { "mc-reauth": "" } })).sent, [], "no password, nothing sent");
-  const r = await a.press("reauth", { values: { "mc-reauth": "correct horse battery" } });
-  assert.deepEqual([r.sent[0].op, r.sent[0].body], ["reauth", { password: "correct horse battery" }]);
-  assert.ok(!a.html.includes("correct horse battery"), "the password is never drawn again");
 });

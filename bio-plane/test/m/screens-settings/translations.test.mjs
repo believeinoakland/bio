@@ -14,7 +14,7 @@ test("R16 translations: the group's languages each open their words; translation
   assert.deepEqual(es.p.all.filter((r) => ["translations", "interfacewords"].includes(r.op) && r.query.language).map((r) => [r.op, r.query]), [["translations", { language: "es" }], ["interfacewords", { language: "es" }]]);
   // a member not granted the language: its refusal in its words
   const m = await open("translations", { me: MEMBER, subject: "es", table: translationsTable({ translations: refuse("TRANSLATION_NOT_GRANTED") }) });
-  assert.ok(m.text.includes("translated TRANSLATION_NOT_GRANTED"));
+  assert.ok(m.text.includes(said("refusal.TRANSLATION_NOT_GRANTED")));
 });
 
 test("R16 each word a row: its English, meaning note, state, its text with who adopted it, and whether its English changed", async () => {
@@ -82,7 +82,7 @@ test("R31 translations: every language is listed by its name in the member's lan
 
 test("R31 translations: a member who is not granted sees the refusal's own words alone, no section about the words", async () => {
   const m = await open("translations", { me: MEMBER, subject: "es", table: translationsTable({ translations: refuse("TRANSLATION_NOT_GRANTED") }) });
-  assert.ok(m.text.includes("TRANSLATION_NOT_GRANTED"));
+  assert.ok(m.text.includes(said("refusal.TRANSLATION_NOT_GRANTED")));
   assert.equal(all(m.tree, (e) => e.tag === "h2" && textOf(e) === said("screen.translations.words.heading")).length, 0, "no words section around it");
   assert.equal(all(m.tree, (e) => e.tag === "table").length, 0);
   assert.deepEqual(acts(m.tree), []);

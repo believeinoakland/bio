@@ -42,7 +42,7 @@ export const recovery = {
     }
 
     // the member's own codes: how many are left, and when issued
-    out.push(cs.sec(S + "held.heading", cs.state(data.codes, (v) => `<p data-state="codes">${v.held && v.remaining > 0 ? W(S + "held", { remaining: v.remaining, date: D(v.issuedAt) }) : v.held ? W(S + "spent", { date: D(v.issuedAt) }) : W(S + "none")}</p>`)));
+    out.push(cs.sec(S + "held.heading", cs.state(data.codes, (v) => `<p data-state="codes">${v.held && v.remaining > 0 ? W(S + "held", { remaining: v.remaining, total: Number.isInteger(v.total) ? v.total : 10, date: D(v.issuedAt) }) : v.held ? W(S + "spent", { date: D(v.issuedAt) }) : W(S + "none")}</p>`)));
 
     // new codes, shown once; issuing again spends the earlier ones
     const issue = cs.act("recoverycodesissue");

@@ -199,7 +199,7 @@ test("R2 a refusal is drawn beside its act and nothing else changes; R8 nothing 
   const a = await open("members", { me: ADMIN, table: membersTable({ memberadd: refuse("EXISTS") }) });
   const before = a.text;
   const r = await a.press("memberadd", { values: { "mi-id": "dev", "mi-cover": "x" } });
-  assert.ok(r.refused && a.refused.text.includes("translated EXISTS"));
+  assert.ok(r.refused && a.refused.text.includes(said("refusal.EXISTS")), "the refusal's key's words (interface-shell R13)");
   assert.equal(a.text.replace(a.refused.text, "").replace(/\s+/g, " "), before.replace(/\s+/g, " "), "nothing else changes");
   assert.equal(a.b.doc.getElementById("mi-id").value, "dev", "the form keeps what was typed");
   const b = await open("members", { me: ADMIN, table: membersTable({ memberset: "pending" }) });

@@ -43,10 +43,10 @@ const WORDS = {
     "screen.connect.name", "screen.notes.name",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere"])],
   connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "member.founder.unnamed", ...PANEL, "ai.whopays", "mark.outward.means",
-    "connect.ifnot", "connect.notnow", "session.reauth", "shell.password", "session.reauth.head", "refusal.reference", "screen.panel.amount", "ai.usage.today",
+    "connect.ifnot", "connect.notnow", "refusal.reference", "screen.panel.amount", "ai.usage.today",
     "instance.part.signin.absent", "instance.part.unknown",
     ...["NO_SIGNIN_WAITING", "SIGNIN_REFUSED", "SIGNIN_UNAVAILABLE", "SIGNIN_ADDRESS_UNEXPECTED", "AGENT_WORKER_UNBOUND", "DISCLOSURE_DUE"].map((c) => "refusal." + c),
-    ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "reauth", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
+    ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
   settings: [...STATES, ...own("screen.settings."), ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "updates", "translations", "wizards"]

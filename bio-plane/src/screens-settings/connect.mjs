@@ -136,10 +136,6 @@ export const connect = {
             if (start || code) {
               const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
               h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
-              // the password asked again (DEC-249; the registry's `reauth`): the shell asks it when an act is answered REAUTH_DUE; here it can be
-              // given beforehand. The field is cleared by the shell after the act (interface-shell R21)
-              const re = cs.act("reauth");
-              if (re) h += `<details class="mk-details"><summary>${W(S + "reauth.summary")}</summary><p>${W("session.reauth")}</p>${cs.field("mc-reauth", "shell.password", { type: "password", autocomplete: "current-password" })}${re}</details>`;
               // what the sign-in can answer instead of connecting, beside the code (R38, DEC-246): each refusal by its key, its reference
               // as the shell draws one (`refusal.reference`, interface-shell R69). The runner's own word and a reference are shown as examples
               h += `<details class="mk-details" data-list="ifnot"><summary>${W("connect.ifnot")}</summary><div>${["refusal.NO_SIGNIN_WAITING", "refusal.SIGNIN_REFUSED", "refusal.SIGNIN_UNAVAILABLE", "refusal.SIGNIN_ADDRESS_UNEXPECTED", "refusal.AGENT_WORKER_UNBOUND", "instance.part.signin.absent"].map((k) => `<p class="mk-msg" data-refusal="${k}">${W(k, k === "refusal.SIGNIN_REFUSED" ? { detail: "invalid_grant" } : {})}</p>`).join("")}<p class="mk-small">${W("screen.connect.refusal.reference", { example: T("refusal.reference", { ref: "7f3a91c2" }) })}</p></div></details>`;
@@ -221,9 +217,6 @@ export const connect = {
         SIGNIN_TOKEN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNIN_TOKEN_REFUSED", r); },
         SIGNOUT_FAILED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNOUT_FAILED", r); },
       } },
-    // the password given beforehand (DEC-249): checked, nothing else changes; a field left empty sends nothing
-    { op: "reauth", rereads: [],
-      send(view, el, cs) { const password = String(cs.value("mc-reauth") || ""); return password ? { body: { password } } : { refuse: "session.reauth.head" }; } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
       send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
       done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },
