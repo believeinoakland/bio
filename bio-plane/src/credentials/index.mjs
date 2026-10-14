@@ -1920,16 +1920,17 @@ export class Credentials {
     /* DEC-49 REGION is-keyed-service-on */
     if (!this.#keyedState(service).on) return off();
     /* END DEC-49 REGION is-keyed-service-on */
-    const unsealable = this.#seal();
-    if (unsealable) return unsealable;
+    /* (T48; K3101) opened through `ai-accounts` R24, which answers ACCOUNT_SEAL_UNAVAILABLE (its one site) when no seal
+       secret is bound or the key does not open; a set of fields that opens and does not parse is answered the same
+       refusal, asked of that site with nothing to open */
     const r = this.#one(`SELECT sealed, iv, form FROM keyed_services WHERE service=?`, service);
     const form = r.form === "fields" ? "fields" : "key";
-    const text = await this.#decrypt(`group:${service}`, form, r.sealed, r.iv);
-    let key = text;
-    if (text !== null && form === "fields") { try { key = JSON.parse(text); } catch { key = null; } }
-    if (key === null)
-      return Credentials.#sealRefusal("the key does not open under the seal secret of your group's Civicsmith, which "
-        + "has changed; an administrator sets it again. Nothing was used.");
+    const owner = `group:${service}`;
+    const opened = await this.accounts.unsealText({ owner, kind: form, sealed: r.sealed, iv: r.iv });
+    if (!opened || opened.ok !== true) return opened;
+    let key = opened.text;
+    if (form === "fields") { try { key = JSON.parse(opened.text); } catch { key = null; } }
+    if (key === null) return this.accounts.unsealText({ owner, kind: form });
     return { ok: true, service, key };
   }
 }
