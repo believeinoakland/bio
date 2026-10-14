@@ -1,6 +1,6 @@
 # site (T49)
 
-**Status** · session_01J8PEzpB2y4LnPqzdpgRfCn · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01J8PEzpB2y4LnPqzdpgRfCn · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
