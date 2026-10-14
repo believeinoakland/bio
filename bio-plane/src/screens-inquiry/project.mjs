@@ -16,6 +16,10 @@
 /** R1, R9, R27–R30: the reads, each `{op, query}` as its owner documents it. */
 function reads(view) {
   const id = String(view.subject || "");
+  /* K3379 (D29): the founder (`whoami`'s member `admin`) sees every discoverable project whole, and project-roster
+     answers her `projectdirectory` with a refusal inside a 200 (N1129): it is not asked for her, nor before `whoami` */
+  const me = view.me && view.me.member;
+  const directory = me && me !== "admin" ? { directory: { op: "projectdirectory", query: {} } } : {};
   return {
     stage: { op: "projectstage", query: { project: id }, subject: true },
     project: { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
@@ -25,10 +29,10 @@ function reads(view) {
     questions: { op: "projectquestions", query: { project: id, limit: "100" }, empty: () => false },
     others: { op: "list", query: { type: "inquiry", limit: "500" } },
     account: { op: "projectaccountstate", query: { project: id } },
-    directory: { op: "projectdirectory", query: {} },
     visibility: { op: "projectvisibility", query: { projectId: id } },
     votes: { op: "projectownervotes", query: { projectId: id } },
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
+    ...directory,
   };
 }
 

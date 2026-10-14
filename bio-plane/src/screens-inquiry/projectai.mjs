@@ -20,6 +20,10 @@ const { aiPanel, aiPanelSend } = settingsPanel;
 function reads(view) {
   const id = String(view.subject || "");
   const owner = "project:" + id;
+  /* K3379 (D29): the founder (`whoami`'s member `admin`) sees every discoverable project whole, and project-roster
+     answers her `projectdirectory` with a refusal inside a 200 (N1129): it is not asked for her, nor before `whoami` */
+  const me = view.me && view.me.member;
+  const directory = me && me !== "admin" ? { directory: { op: "projectdirectory", query: {} } } : {};
   return {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     participants: { op: "projectparticipants", query: { projectId: id } },
@@ -32,7 +36,7 @@ function reads(view) {
     usage: { op: "aiusage", query: { owner } },
     history: { op: "accounthistory", query: { owner } },
     /* R37: the projects she may see but has not joined (project-roster's directory) */
-    directory: { op: "projectdirectory", query: {} },
+    ...directory,
   };
 }
 

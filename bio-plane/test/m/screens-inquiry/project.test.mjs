@@ -317,3 +317,12 @@ test("R1 an act the session may not do is absent, never greyed (interface-shell 
   for (const op of needing) assert.ok(!drawn.includes(op), `${op} needs ${NEEDS[op]}: absent`);
   assert.ok(!main(p).querySelector("button[disabled]"), "never greyed");
 });
+
+test("R1 (K3379, D29) the founder's project page sends no projectdirectory; control: a member's does", async () => {
+  const founder = await open(at(), { boot: { plane: { ...plane({ plane: { projectdirectory: ok({ ok: false, code: "PROJECT_DIRECTORY_NEEDS_A_MEMBER" }) } }),
+    whoami: ok({ ...ADMIN, member: "admin", handle: null }) } } });
+  assert.equal(founder.byOp("projectdirectory").length, 0);
+  assert.equal(main(founder).querySelector('[data-state="failed"]'), null, "never drawn as a failure");
+  const member = await open(at());
+  assert.equal(member.byOp("projectdirectory").length, 1);
+});
