@@ -122,3 +122,51 @@ test("R29 over the real record-core: the founder opened a project by a commit an
   assert.deepEqual(owner(), { member: "admin", handle: "foundress", founder: true });
   noAdminAsAName(r.projectList({ viewer: M }).projects.map((p) => p.owner));
 });
+
+/* R29 (K3332): it reaches R3's, R4's and R5's answers too: a field holding a handle names the founder by her held handle,
+   or null while none is held, never `admin`; R23's `by` is a member id for other modules and keeps `admin`. */
+async function ownerWorld() {
+  const w = await world().group("ann", "bob", "cal");
+  w.owned("PROJ-P", "ann", ["bob", "cal"]);
+  w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, owner_order, created, updated)
+              VALUES ('PROJ-P','admin','joined',1,2,'t','t')`);
+  return w;
+}
+
+test("R29 R3 R4 R5 the founder an owner is named by her handle (null while none) in the answers' have, awaiting, deciders, owners, by and leaving, never admin", async () => {
+  for (const held of [null, "foundress"]) {
+    const w = await ownerWorld();
+    if (held) w.founderHandle(held);
+    const f = held; // her name in the answers
+    const add = w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") });
+    assert.deepEqual([add.reason, add.have, add.awaiting], ["CONSENSUS_REQUIRED", ["ann"], [f]], String(held));
+    const done = w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "admin", viewer: "admin" });
+    assert.deepEqual([done.ok, done.deciders.sort(), done.owners.includes("admin")], [true, ["ann", f].sort(), false], String(held));
+    assert.deepEqual(done.owners.filter((x) => x === f).length, 1);
+    const short = w.r.projectOwnerRemove({ projectId: "PROJ-P", handle: "bob", by: "admin", reason: "r", viewer: "admin" });
+    assert.deepEqual([short.reason, short.deciders], ["VOTES_SHORT", [f]], String(held));
+    const gone = w.r.projectOwnerRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", reason: "r", viewer: V("ann") });
+    assert.deepEqual([gone.ok, gone.deciders.sort()], [true, ["ann", f].sort()]);
+    noAdminAsAName([add, done, short, gone]);
+    /* the not-the-owner refusal's sentence names the caller, the founder by her handle */
+    const no = w.r.projectRequestAnswer({ projectId: "PROJ-P", handle: "cal", answer: "grant", by: "second", viewer: V("second") });
+    assert.doesNotMatch(JSON.stringify(no), /"admin"|\badmin\b is not/);
+  }
+});
+
+test("R29 R5 the founder's rescue and a refusal naming owners: by and owners name her by her handle; the owner count of a stranded project; R23's by keeps admin", async () => {
+  const w = await world().group("ann", "bob");
+  w.owned("PROJ-P", "ann");
+  w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, owner_order, created, updated)
+              VALUES ('PROJ-P','admin','joined',1,2,'t','t')`);
+  const busy = w.r.projectOwnerRescue({ projectId: "PROJ-P", handle: "bob", by: "second", reason: "r", viewer: "admin" });
+  assert.equal(busy.reason, "OWNERS_ARE_ACTIVE");
+  assert.doesNotMatch(JSON.stringify(busy), /"admin"/, "the owners a refusal names");
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  w.founderHandle("foundress");
+  const ok = w.r.projectOwnerRescue({ projectId: "PROJ-P", handle: "bob", by: "admin", reason: "r", viewer: "admin" });
+  assert.deepEqual([ok.ok, ok.by, ok.owners.includes("admin")], [true, "foundress", false], "the founder carried it");
+  noAdminAsAName(ok);
+  w.sql.exec(`INSERT INTO project_scopes (project_id, scope, reason, set_by, at) VALUES ('PROJ-P','counsel_matter','r','admin','t')`);
+  assert.equal(w.r.projectScope("PROJ-P").by, "admin", "R23's by is a member id, kept");
+});

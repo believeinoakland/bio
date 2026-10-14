@@ -203,6 +203,9 @@ export class ProjectRoster {
     } catch { return null; }
   }
 
+  /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others as they are. */
+  #nm(id) { return id === ROOT_ADMIN ? this.#founderHandle() : id; }
+
   /* R29: `{member, handle}` as a reader sees a member; the founder carries `founder: true` and her held handle, `null`
      while she holds none, never her id. */
   #person(member, handle) {
@@ -276,7 +279,7 @@ export class ProjectRoster {
       const awaiting = owners.filter((o) => !have.includes(o));
       if (awaiting.length)
         return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
-                 have: have.sort(), awaiting: awaiting.sort(),
+                 have: have.sort().map((x) => this.#nm(x)), awaiting: awaiting.sort().map((x) => this.#nm(x)),
                  detail: "every existing owner must agree to an addition beyond the second" };
     }
     const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
@@ -284,7 +287,8 @@ export class ProjectRoster {
     this.#recordOwnerDecision(projectId, "add", target.member_id, deciders, [], now);
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
       projectId, target.member_id);
-    return { ok: true, projectId, handle, owner: true, owners: this.m.projectOwners(projectId).sort(), deciders };
+    return { ok: true, projectId, handle, owner: true, owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)),
+             deciders: deciders.map((x) => this.#nm(x)) };
   }
 
   /* R5 (§7.13): the ONE participation power an administrator has, and its condition. Only owners manage participation,
@@ -306,8 +310,10 @@ export class ProjectRoster {
        administrator learns it, and before the rescue's own refusals; it names nothing beyond the project's id. */
     const blocked = this.m.rescueRefusal(projectId, by);
     if (blocked && blocked.reason === "NOT_AN_ADMIN") return blocked;
+    const named = (r) => { if (!r || typeof r !== "object") return r;
+      const o = { ...r }; for (const k of ["active", "owners"]) if (Array.isArray(o[k])) o[k] = o[k].map((x) => this.#nm(x)); return o; };
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
-    if (blocked) return blocked;
+    if (blocked) return named(blocked);
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.m.memberByHandle(handle);
@@ -322,8 +328,8 @@ export class ProjectRoster {
        VALUES (?,'rescue',?,?,?,?)`, projectId, target.member_id, by, why, now);
     this.m.participationWrite("rescue", { projectId, memberId: target.member_id, by, comment: why, at: now });   /* R118 */
     this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why], now);
-    return { ok: true, projectId, handle, by, reason: why, owner: true,
-             owners: this.m.projectOwners(projectId).sort(), addedNotReplaced: true,
+    return { ok: true, projectId, handle, by: this.#nm(by), reason: why, owner: true,
+             owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)), addedNotReplaced: true,
              detail: "the inactive owners keep their rows. If one is reactivated they are an owner again "
                    + "alongside this one, and removing them is then the ordinary 7.10 process." };
   }
@@ -355,8 +361,8 @@ export class ProjectRoster {
     const remaining = owners.filter((o) => o !== target.member_id);
     const committed = this.#committedOwners(projectId).filter((o) => o !== target.member_id);
     if (!committed.length)
-      return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort(),
-               detail: `removing this owner would leave only owners who have asked to leave (${remaining.join(", ")}), `
+      return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort().map((x) => this.#nm(x)),
+               detail: `removing this owner would leave only owners who have asked to leave (${remaining.map((x) => this.#nm(x)).join(", ")}), `
                      + "so nobody would be committed to the project. Add another owner first (7.10), or deactivate "
                      + "the project (7.11). Nothing was written." };
     /* At three and above the target does not vote. At two they must, which is the whole divergence from §4.7. */
@@ -378,7 +384,7 @@ export class ProjectRoster {
     const votes = counted.map((v) => v.voter);
     if (votes.length < math.votesNeeded)
       return { ok: false, reason: "VOTES_SHORT", projectId, handle,
-               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort() };
+               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort().map((x) => this.#nm(x)) };
 
     /* Carried. They stay a PARTICIPANT: §7.10 says removing ownership leaves them on the project, and removing them
        from it entirely is then §7.7 (membership's `projectRemove`). */
@@ -388,7 +394,8 @@ export class ProjectRoster {
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
       projectId, target.member_id);
     return { ok: true, projectId, handle, owner: false, stillAParticipant: true,
-             owners: this.m.projectOwners(projectId).sort(), deciders: votes.sort(), reasons };
+             owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)),
+             deciders: votes.sort().map((x) => this.#nm(x)), reasons };
   }
 
   /** R30 (T49; N1091; DEC-237 (3)): THE OWNER CHANGES NOT YET CARRIED, to a viewer at FULL of the project: each addition
@@ -1008,7 +1015,7 @@ export class ProjectRoster {
     if (!this.m.isProjectOwner(projectId, by))
       return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
         `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture `
-        + `v2 §7.14; only owners invite, §7.2), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one `
+        + `v2 §7.14; only owners invite, §7.2), and ${String(this.#nm(by) ?? "an unnamed caller").slice(0, 80)} is not one `
         + `of them. Administrators see requests and answer none. Nothing was written.`);
     if (!ProjectRoster.JOIN_REQUEST_ANSWERS.includes(want))
       return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
