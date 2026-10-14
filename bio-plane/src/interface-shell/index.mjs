@@ -7,7 +7,7 @@
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { WORD_ROWS } from "../setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
-import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, phoneOf } from "../op-grades/index.mjs";
+import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { shellProgram } from "./browser.mjs";
 import { SHELL_WORDS } from "./words.mjs";
@@ -31,14 +31,17 @@ const ASSET = (name) => {
   return "/app/assets/" + name;
 };
 export const STYLESHEET = ASSET("civicsmith.css");
+/* R56 (K3254 (2); `interface-assets` R7): the design page's product rules, linked after the stylesheet */
+export const SHELL_STYLESHEET = ASSET("shell.css");
 export const ICONS = ASSET("icons.svg");
 
 /* R8 (DEC-154; N672): each screen's path, `mock-shell.js`' `PATH` at 3f40899950, from its rail place to its own name;
    `@project` is the project's step, its title as read (the screen's `place(view)`). R28 (T47): the new screen modules'
    screens from `PATH` at a0fab7abf0, and L11's (R37) from `PATH` at PR #33's head; a step that is not a screen's own name
-   is a `shell.step.*` word. A screen of the public, published or setup frame has no path (R30, R45). */
+   is a `shell.step.*` word. A screen of the public, published or setup frame has no path (R30, R45). R54: the screens
+   PR #34's registry adds, from `PATH` at its merge (4664e8efd4): `elsewhere` (Home) and `updates` (Settings). */
 export const PATHS = Object.freeze({
-  home: ["home"], queue: ["queue"], inbox: ["queue", "screen.inbox.name"], "due-date": ["queue", "shell.step.due-date"],
+  home: ["home"], elsewhere: ["home", "screen.elsewhere.name"], queue: ["queue"], inbox: ["queue", "screen.inbox.name"], "due-date": ["queue", "shell.step.due-date"],
   finder: ["find"], answers: ["find", "screen.answers.name"],
   capture: ["add"], held: ["add", "screen.held.name"], archive: ["add", "screen.held.name", "screen.archive.name"],
   "open-file": ["projects", "@project", "screen.open-file.name"], "find-in": ["projects", "@project", "screen.find-in.name"],
@@ -58,6 +61,7 @@ export const PATHS = Object.freeze({
   connect: ["settings", "screen.connect.name"], notes: ["settings", "screen.notes.name"], ties: ["settings", "screen.ties.name"],
   "group-identity": ["settings", "screen.group-identity.name"], security: ["settings", "screen.security.name"],
   translations: ["settings", "screen.translations.name"], wizards: ["settings", "screen.wizards.name"],
+  updates: ["settings", "screen.updates.name"],
   group: ["settings", "screen.group.name"], places: ["settings", "screen.places.name"], recovery: ["settings", "screen.recovery.name"],
   unavailable: ["screen.unavailable.name"],
 });
@@ -71,9 +75,11 @@ export const PLACE_SCREENS = Object.freeze({
   projects: Object.freeze(["projects", "project"]), people: Object.freeze(["people"]), settings: Object.freeze(["settings"]),
 });
 
-/* R37's fallback: the settings screens the shell lists while `settings` is not registered (R28's list). */
+/* R37's fallback: the settings screens the shell lists while `settings` is not registered (R28's list; R54: `updates`
+   after Security, drawn only while `whoami`'s `administer` is true, `ADMIN_SCREENS`). */
 export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", "notes", "ties", "group-identity", "security",
-  "translations", "wizards", "group", "places", "recovery"]);
+  "updates", "translations", "wizards", "group", "places", "recovery"]);
+export const ADMIN_SCREENS = Object.freeze(["updates"]);
 
 /* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
    the record follows opens `person`, a proceeding `proceeding`, a standard `standard`). */
@@ -95,10 +101,14 @@ const sessionless = (id) => FRAMES[id] === "public" || FRAMES[id] === "published
 export const ADDRESSES = Object.freeze({ review: "review-outside" });
 
 /* R21, R38: the ops a screen may name beyond its registry acts: `infolevelset` on any screen, and the re-points, each
-   until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2). */
+   until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2);
+   R55: `planask` on `plan` (`screens-action` R13), `stepsource` and `stepsourcewithdraw` on `explore` (`screens-investigate`
+   R17). */
 export const RE_POINTS = Object.freeze({
   ceremony: Object.freeze(["ratify"]),
   front: Object.freeze(["unlock"]),
+  plan: Object.freeze(["planask"]),
+  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
 });
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
 
@@ -145,6 +155,7 @@ export function checkScreens(screens) {
       if (sessionless(id) && OPS[op].classes !== null && !(RE_POINTS[id] || []).includes(op)) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
     }
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
+    if (s.ABSENT_CODES !== undefined && !(Array.isArray(s.ABSENT_CODES) && s.ABSENT_CODES.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s ABSENT_CODES is not a list of codes`);
   }
   return true;
 }
@@ -202,9 +213,10 @@ function pageWords(screens, ops) {
 /* R33 (K3061 D3; `credentials` R65): the page's own idle limits, the plane's answer governing over them. */
 export const IDLE_LOCK_MS = 30 * 60 * 1000;
 export const IDLE_END_MS = 15 * 60 * 1000;
-/* R35 (DEC-201 (8)): a subject read refused with one of these is "You can't open this"; `NOT_FOUND`, `NO_SUCH_*` and
-   `*_NOT_FOUND`, or an empty answer, are "Nothing is here"; no answer, or a 5xx, is "can't be reached", tried again every
-   `RETRY_MS`. */
+/* R35 (DEC-201 (8)): a subject read refused with one of these is "You can't open this"; an absence code (R61: `NO_SUCH_*`,
+   `*_NOT_FOUND`, `NOT_FOUND`, `NO_ENTITY`, `NO_CALC`, `NO_NODE`, and the codes a screen lists as its `ABSENT_CODES`), or an empty
+   answer, is "Nothing is here"; no answer, or a 5xx, is "can't be reached", tried again every `RETRY_MS`. */
+export const ABSENCE = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$|^NO_ENTITY$|^NO_CALC$|^NO_NODE$/;
 export const NOT_YOURS = Object.freeze(["NOT_VISIBLE", "NOT_A_PARTICIPANT"]);
 export const RETRY_MS = 30 * 1000;
 
@@ -231,6 +243,8 @@ function dataOf(screens, guide) {
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
     rungs: pick(rungOf),
+    /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
+    marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
     /* R50 (K3156): the acts held at the phone width: every act carrying a weight that `op-grades.phoneOf` answers false
        for (its terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, its larger-screen acts through
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
@@ -238,63 +252,105 @@ function dataOf(screens, guide) {
     larger: [...ops].filter((op) => Object.hasOwn(OPS, op) && rungOf(op) !== "none" && phoneOf(op) === false),
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
-    idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS,
+    idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS, absence: ABSENCE.source, adminScreens: ADMIN_SCREENS,
   };
 }
 
-/* Shell styles the stylesheet does not hold: the path, the menu, the rows and their panels, the phone's row cards; the
-   mark (R43), the lock and the password dialog (R33, R34), the test band (R36), the ring (R31) and the at-a-glance
-   elements (R44, `page.src.html`'s drawings at PR #33's head). */
-const STYLE = `.cs-crumbs ol{display:flex;flex-wrap:wrap;gap:4px 8px;list-style:none;margin:0;padding:0;font-size:var(--t-sm);color:var(--c-muted)}
-.cs-crumbs li+li::before{content:"›";margin-right:8px}.cs-crumbs [aria-current]{color:var(--c-ink);font-weight:600}
+/* The shell's own styles (R56: only where no design class fits, each listed in R56 with an ASK to UX-DESIGN; never a
+   hand copy of a design rule, which `shell.css` carries): the frame's fixed height, so its main column scrolls and the
+   page never does (R57); the member menu; an act's wrapper and the slot beside it (R13); the row name's line (R27); the
+   test band (R53, R58); the lock and the dialogs over the screen (R33, R34, R41); the image and the areas over it (R49);
+   the avatar drawn as a button; and motion stopped under reduced motion (R22). No rule gives `cursor: help`, nor a
+   pointer to an element that only explains itself (R52): `cs.areas` keeps `crosshair`, a control. */
+const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
+#cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
+.cs-mast{min-width:0}.cs-mast .grp{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit;text-decoration:none}
+button.mk-avatar{border:0;padding:0;flex:none}
 .cs-menuwrap{position:relative}.cs-menu{position:absolute;right:0;top:100%;z-index:40;min-width:220px;padding:var(--s-3);gap:var(--s-2)}
-.cs-menu[hidden]{display:none}.cs-list{display:grid;gap:var(--s-2);padding-left:var(--s-4)}.cs-actrow{display:flex;flex-wrap:wrap;gap:var(--s-2)}
-.cs-actwrap{display:inline-grid;gap:var(--s-2);justify-items:start}.cs-slot:empty{display:none}
-.cs-rows{width:100%;border-collapse:collapse;background:var(--c-surface)}.cs-rows th,.cs-rows td{padding:var(--s-2) var(--s-3);border-bottom:var(--hair);text-align:left;vertical-align:top}
+.cs-menu[hidden]{display:none}.cs-actwrap{display:inline-grid;gap:var(--s-2);justify-items:start}.cs-slot:empty{display:none}
 .cs-rowname{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2)}
-.cs-panel[hidden]{display:none}.cs-hold{position:sticky;bottom:0}
-.cs-mast .cs-mark{display:inline-flex;align-items:center;margin-right:-4px;cursor:help}.cs-mast .cs-mark svg{height:20px;width:auto;color:var(--c-accent)}
-.cs-testband{padding:var(--s-2) var(--s-4);border-bottom:var(--hair);border-top:3px solid var(--c-attn,var(--c-ink));background:var(--c-ground-2);font-size:var(--t-sm)}
+.cs-testband{flex:none;padding:var(--s-2) var(--s-4);border-bottom:var(--hair);border-top:3px solid var(--c-attn,var(--c-ink));background:var(--c-ground-2);font-size:var(--t-sm)}
 .cs-overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:var(--s-4);background:color-mix(in srgb,var(--c-ground) 82%,transparent)}
 .cs-overlay>.cs-dialog{max-width:440px;width:100%;display:grid;gap:var(--s-3)}
-.cs-ring{outline:3px solid var(--c-accent);outline-offset:3px;animation:cs-ring 1.2s ease-out 2}.cs-ringlabel{display:block;font-size:var(--t-xs);font-weight:600;color:var(--c-accent)}
-@keyframes cs-ring{from{outline-offset:12px}to{outline-offset:3px}}
 .cs-image{max-width:100%;height:auto;display:block}.cs-areas-box{position:relative;display:inline-block;max-width:100%;touch-action:none;cursor:crosshair}
 .cs-area{position:absolute;border:2px solid var(--c-accent);background:color-mix(in srgb,var(--c-accent) 18%,transparent);padding:0;min-width:8px;min-height:8px}
 .cs-area:focus-visible{outline:3px solid var(--c-ink);outline-offset:2px}
-.cs-spark{display:inline-flex;align-items:flex-end;gap:2px;height:20px;vertical-align:middle}.cs-spark i{display:block;width:5px;background:color-mix(in srgb,var(--c-stage) 40%,var(--c-surface));border-radius:1px 1px 0 0}
-.cs-spark i.now{background:var(--c-stage)}.cs-spark b{margin-left:6px;font:600 var(--t-xs) var(--f-sans);color:var(--c-ink-2);align-self:center}
-.cs-people{display:inline-flex;align-items:center}.cs-people i{width:22px;height:22px;margin-right:-4px;border-radius:50%;background:var(--c-ground-2);border:1.5px solid var(--c-surface);box-shadow:0 0 0 1px var(--c-rule-strong);font:600 11px/20px var(--f-sans);text-align:center;font-style:normal;color:var(--c-ink)}
-.cs-people i.more{background:var(--c-surface);font-size:10px}.cs-people>span{margin-left:10px;font:600 var(--t-sm) var(--f-sans);color:var(--c-ink-2)}
-.cs-tile{background:var(--c-surface);border:var(--hair);padding:10px 12px;display:grid;gap:2px;align-content:start}.cs-tile .k{font:600 var(--t-xs) var(--f-sans);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--c-muted)}
-.cs-tile .v{font:600 var(--t-2xl)/1.1 var(--f-sans)}.cs-tile .d{font-size:var(--t-sm);color:var(--c-ink-2)}.cs-tile .cs-spark{margin-top:4px}
-.cs-strip{display:flex;flex-wrap:wrap;gap:6px 20px;padding:8px 14px;background:var(--c-ground-2);border:var(--hair);border-top:3px solid var(--c-ink);margin-bottom:4px}
-.cs-strip .cs-ref{display:inline-flex;align-items:baseline;gap:6px;font-weight:600;text-decoration:none;color:var(--c-ink)}.cs-strip .cs-ref b{font-size:var(--t-xl)}
-.cs-next{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:n}.cs-next li{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:8px 12px;border:var(--hair);background:var(--c-surface);counter-increment:n}
-.cs-next li::before{content:counter(n);width:24px;height:24px;border-radius:50%;border:1.5px solid var(--c-rule-strong);text-align:center;font:600 13px/22px var(--f-sans);color:var(--c-ink-2);flex:none}
-.cs-next li[aria-current]{border-color:var(--c-accent);box-shadow:inset 3px 0 0 var(--c-accent)}.cs-next li[aria-current]::before{background:var(--c-accent);color:var(--c-on-accent);border-color:var(--c-accent)}.cs-next li>span:first-of-type{flex:1 1 240px}
-.cs-tl{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(118px,1fr);gap:6px;padding:0 4px;overflow-x:auto}.cs-tl::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid var(--c-rule-strong)}
-.cs-tl .ev{display:grid;grid-template-rows:1fr 16px 1fr;height:124px;justify-items:center;text-align:center}.cs-tl .ev .t{font-size:var(--t-xs);line-height:1.25;color:var(--c-ink-2);max-width:118px}.cs-tl .ev .t b{display:block;color:var(--c-ink)}
-.cs-tl .ev .t:first-child{align-self:end;padding-bottom:4px}.cs-tl .ev .t:last-child{align-self:start;padding-top:4px}
-.cs-tl .ev i{width:14px;height:14px;border-radius:50%;background:var(--c-ink);border:2px solid var(--c-surface);z-index:1;align-self:center}.cs-tl .ev.us i{background:var(--c-accent)}
-@media (max-width:760px){.cs-rows thead{display:none}.cs-rows tr.cs-r{display:grid;border-bottom:var(--hair)}.cs-rows td{border:0}
-.cs-rows td[data-label]::before{content:attr(data-label);display:block;font-size:var(--t-xs);color:var(--c-muted)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
+/* R56: the script-hook classes, each with what reads it; a class here needs no style. */
+export const HOOK_CLASSES = Object.freeze({
+  "cs-crumbs": "the path's element, read by journey-check's walker (its screens.mjs) and the screen modules' tests",
+  "cs-rows": "the kit's table of rows (R19), read by the screen modules' tests",
+  "cs-r": "a row of `cs.rows`, read by the screen modules' tests",
+  "cs-panel": "a row's panel, read by the shell's ring (R31) and `cs.fieldOf`, and by the screen modules' tests",
+});
+
+/* R56: every class a served stylesheet defines: `civicsmith.css` (whose own elements' classes count with it), `shell.css`
+   and the shell's `STYLE`. Comments and addresses are no selector. */
+export function stylesheetClasses(...sheets) {
+  const out = new Set();
+  for (const css of sheets) {
+    const text = String(css || "").replace(/\/\*[\s\S]*?\*\//g, " ").replace(/url\([^)]*\)/g, " ").replace(/"[^"\n]*"|'[^'\n]*'/g, " ");
+    for (const m of text.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) out.add(m[1]);
+  }
+  return out;
+}
+let DEFINED = null;
+const definedClasses = () => DEFINED || (DEFINED = stylesheetClasses(ASSET_FILES["civicsmith.css"].body, ASSET_FILES["shell.css"].body, STYLE));
+
+/* R56: the classes written as literals in `class` attributes (and the `class` set by `setAttribute` or `classList.add`) in
+   a source text. A literal cut by a quote of the program's own string, `${` or a backslash keeps its last word unless
+   that word ends open (`cs-tag-` + a kind), so a class made at run time is never taken for a written one. */
+export function classLiterals(src) {
+  const out = new Set();
+  const take = (body, closed) => {
+    const words = body.split(/\s+/).filter(Boolean);
+    if (!closed && words.length && /[-_]$/.test(words[words.length - 1])) words.pop();
+    for (const c of words) if (/^-?[_a-zA-Z][\w-]*$/.test(c)) out.add(c);
+  };
+  for (const m of String(src).matchAll(/\bclass=(\\?)(["'])([^"'`$\\<>{}]*)(.)/g)) {
+    const [, , q, body, end] = m;
+    const closed = end === q || /\s$/.test(body);
+    take(body, closed || end === "\\");
+  }
+  for (const m of String(src).matchAll(/setAttribute\(\s*["']class["']\s*,\s*["']([^"']*)["']\s*\)|classList\.add\(\s*["']([^"']*)["']\s*\)/g)) take(m[1] || m[2] || "", true);
+  return out;
+}
+/* R56: throws, naming the screen (or the guide, or the shell) and the class, for a class no served stylesheet defines
+   that is neither a hook class nor one of `civicsmith.css`' own. */
+export function checkClasses(screens, guide, program) {
+  const defined = definedClasses();
+  const check = (who, src) => {
+    for (const c of classLiterals(src)) if (!defined.has(c) && !Object.hasOwn(HOOK_CLASSES, c)) throw new Error(`interface-shell: ${who} draws the class ${c}, which no served stylesheet defines`);
+  };
+  check("the shell", program);
+  for (const s of screens) check(`screen ${s.id}`, toSource(s));
+  if (guide) check("the guide", toSource(guide));
+  return true;
+}
+
 /**
- * R1: the page. One document, `<html lang>` `en` until the member's language is read; one stylesheet link to
- * `interface-assets`' `civicsmith.css`; icons referenced from its `icons.svg`; one script, its nonce `NONCE_SLOT`,
- * composed from the shell's program and each screen's functions. No member-facing text stands outside the words.
- * R28: `screens` are the nine screen modules' `SCREENS`; R31: `options.guide` is `screens-wizards`' `GUIDE`, the dock's
- * wizard guide.
+ * R1: the page. One document, `<html lang>` `en` until the member's language is read; `interface-assets`' `civicsmith.css`
+ * and then its `shell.css` (R56), both before the shell's own `<style>`; icons referenced from its `icons.svg`; one
+ * script, its nonce `NONCE_SLOT`, composed from the shell's program and each screen's functions. No member-facing text
+ * stands outside the words. R28: `screens` are the nine screen modules' `SCREENS`; R31: `options.guide` is
+ * `screens-wizards`' `GUIDE`, the dock's wizard guide; R58: `options.testInstance` true serves the test band in the page
+ * itself, above the frame, from first paint (`control-plane` R95). R56: throws for a class no served stylesheet defines.
  */
 export function interfacePage(screens = [], options = {}) {
   checkScreens(screens);
   const guide = options && options.guide ? options.guide : null;
   checkGuide(guide);
+  const program = shellProgram.toString();
+  checkClasses(screens, guide, program);
   const D = dataOf(screens, guide);
-  const script = `(${shellProgram.toString()})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`
+  const script = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`
     .replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
+  /* R58: the band as served, in the English of its word until the member's words are read (R5) */
+  const notice = (WORD_ROWS.find((r) => r[0] === "instance.test.notice") || [])[1] || "";
+  const band = options && options.testInstance === true
+    ? `<div class="cs-testband" id="cs-testband" role="note">${notice.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))}</div>\n` : "";
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -302,10 +358,11 @@ export function interfacePage(screens = [], options = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title></title>
 <link rel="stylesheet" href="${STYLESHEET}">
+<link rel="stylesheet" href="${SHELL_STYLESHEET}">
 <style>${STYLE}</style>
 </head>
 <body class="cs">
-<div id="cs-root"></div>
+${band}<div id="cs-root"></div>
 <div class="cs-tip" id="cs-tip" role="tooltip" hidden></div>
 <script nonce="${NONCE_SLOT}">${script}</script>
 </body>

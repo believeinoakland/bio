@@ -22,10 +22,11 @@ const handlers = (html) => {
 };
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "withheld", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 
-test("R1 one document: <html lang> en until the member's language is read, one stylesheet link to interface-assets' civicsmith.css, the icon sprite absent (icons referenced from /app/assets/icons.svg), one script with the nonce slot, no member text outside the words", async () => {
+test("R1 R56 one document: <html lang> en until the member's language is read, interface-assets' civicsmith.css and then shell.css linked before the shell's own style, the icon sprite absent (icons referenced from /app/assets/icons.svg), one script with the nonce slot, no member text outside the words", async () => {
   const html = interfacePage(ALL);
   assert.match(html, /^<!doctype html>\n<html lang="en">/);
-  assert.deepEqual([...html.matchAll(/<link\b[^>]*>/g)].map((m) => m[0]), ['<link rel="stylesheet" href="/app/assets/civicsmith.css">']);
+  assert.deepEqual([...html.matchAll(/<link\b[^>]*>/g)].map((m) => m[0]), ['<link rel="stylesheet" href="/app/assets/civicsmith.css">', '<link rel="stylesheet" href="/app/assets/shell.css">']);
+  assert.ok(html.indexOf("shell.css") < html.indexOf("<style>"), "both before the shell's own style");
   assert.doesNotMatch(html, /<symbol\b|<svg[^>]*>\s*<defs/, "no inline sprite");
   assert.equal(scripts(html).length, 1);
   assert.equal(scripts(html)[0].trim(), `nonce="${NONCE_SLOT}"`);
@@ -149,3 +150,10 @@ test("R5 the shell's own words: frozen [key, en, protected] rows, keys shell.<pa
   }
 });
 
+
+test("R21 (K3297) a screen's functions may use Intl beside JSON, Math, String, Number, Array, Object and Date: composed and drawn, a language's name read through it", async () => {
+  const s = { id: "account", reads: () => ({}), acts: [], render: (cs) => "<p id=lang>" + cs.esc(new Intl.DisplayNames(["en"], { type: "language" }).of("es")) + "</p>" };
+  assert.ok(interfacePage([s]).length > 1000);
+  const p = await boot({ screens: [s], path: "/app/account" });
+  assert.equal(p.doc.getElementById("lang").textContent, "Spanish");
+});

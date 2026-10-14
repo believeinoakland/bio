@@ -10,9 +10,9 @@
  * backed (its R12, R19, R20) and publishes these very objects in its `VOCABULARIES` (its R4). Names written in the
  * comments below (`STATES`, `decorateAct`, `ACTS`, `CAPTURE_ACTS`, `deriveActs`, `unaccounted`) are `affordances`'.
  *
- * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's and T47's ops are graded in `./t33.mjs`,
- * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs` and
- * `./t47.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
+ * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's, T47's and T48's ops are graded in `./t33.mjs`,
+ * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs`,
+ * `./t47.mjs` and `./t48.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -37,7 +37,11 @@ import { T45_RUNGS, T45_RUNG_ABSENT, T45_NON_ACTS } from "./t45.mjs";
 import { T46_RUNGS, T46_RUNG_ABSENT, T46_NON_ACTS } from "./t46.mjs";
 /* R36, R37 (T47) and K3104: every op T47's owners add, graded from its owner. */
 import { T47_RUNGS, T47_RUNG_ABSENT, T47_NON_ACTS } from "./t47.mjs";
+/* R38–R41 (T48): every op T48's owners add, graded from its owner, and R39's two given rows. */
+import { T48_RUNGS, T48_RUNG_ABSENT, T48_NON_ACTS, T48_MACHINE_REFUSALS } from "./t48.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
+/* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
+export { MARKS, MARK_SOURCES } from "./marks.mjs";
 
 /* ===========================================================================
  * FW-14 — THE WEIGHT LADDER, ASSIGNED TO EVERY MUTATING OP OR STATED ABSENT.
@@ -225,6 +229,10 @@ export const JUSTIFICATION_REFUSALS = [
   "CONTRADICTED_HELD", "DOCUMENT_FIRST_NO_REASON", "OVERRIDE_NO_GROUND",
   /* R36 (T47; N976): a project's own bar is set with the member's reason (strength R40, C-107.4), refused absent. */
   "PROJECT_BAR_NO_REASON",
+  /* R40, R41 (T48; N1047, N1030): an update skipped says why (instance-setup R90, a skip recorded with who, when and why and
+     never erased), and a member's cited backing of a declared step states its basis, the member's words on what the passage
+     states (connections R68, as CONNECTION_ASSERT_NO_BASIS). `updatelater` and `updatestart` ask no reason. */
+  "UPDATE_SKIP_NO_REASON", "STEP_SOURCE_NO_BASIS",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -632,6 +640,7 @@ export const RUNGS = {
   ...T45_RUNGS,
   ...T46_RUNGS,
   ...T47_RUNGS,
+  ...T48_RUNGS,
 };
 
 
@@ -840,6 +849,7 @@ export const RUNG_ABSENT = {
   ...T45_RUNG_ABSENT,
   ...T46_RUNG_ABSENT,
   ...T47_RUNG_ABSENT,
+  ...T48_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -909,6 +919,9 @@ export const MACHINE_REFUSALS = {
   /* R33 (T46; K2998; affordances R52): adopting a clock proposal is an ACTS row on an action, refused a machine by
      action-clocks' own code; its absence (`undetermined`) stands and it left NON_ACTS. */
   clockadopt:             "MACHINE_CANNOT_ADOPT_CLOCK",
+  /* R38 (T48; affordances R58): the quoting record is an ACTS row on an action, refused a machine by its owner's own code
+     (action-replies R10), with no NON_ACTS row. `planask` is none (R41, K3297): a plan act, a NON_ACTS row. */
+  ...T48_MACHINE_REFUSALS,
 };
 
 /* (T45; R8, R32; K2885, K2887) The 21 acts `affordances` R51 makes ACTS rows on an action target are named here no
@@ -1552,6 +1565,7 @@ export const NON_ACTS = {
   ...T45_NON_ACTS,
   ...T46_NON_ACTS,
   ...T47_NON_ACTS,
+  ...T48_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

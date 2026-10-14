@@ -13,7 +13,7 @@ const refused = (r, c, why = "") => {
 };
 const ids = (r) => r.scripts.map((s) => s.id);
 
-test("R10 wizards lists, to the owners of a script's project and to administrators, the scripts the viewer may see, newest first, each offered version with state, author, contributors, approver, dates, broken and use; others see none; writes nothing; D54: an administrator lists no script of a hidden project she is neither invited nor joined to", () => {
+test("R10 wizards lists, to the owners of a script's project and to administrators (every member, what is offered to her, R39), the scripts the viewer may see, newest first, each offered version with state, author, contributors, approver, dates, broken and use; others see none; writes nothing; D54: an administrator lists no script of a hidden project she is neither invited nor joined to", () => {
   const w = seeded();
   const a1 = approved(w, { name: "First" });
   w.clock.now = "2026-10-04T00:00:00Z";
@@ -21,7 +21,7 @@ test("R10 wizards lists, to the owners of a script's project and to administrato
   const dq = draft(w, { who: "dave", name: "Q's", project: w.Q });
   const before = w.snapshot();
   const al = w.wz.wizards({ viewer: A });
-  assert.deepEqual(ids(al), [a2.script, a1.script], "an owner of P: P's offered scripts, newest first");
+  assert.deepEqual(ids(al), [a2.script, a1.script, LIBRARY[1].id, LIBRARY[0].id], "an owner of P: P's offered scripts, newest first, and the library (R39)");
   const v = al.scripts[0].versions[0];
   assert.deepEqual([v.id, v.state, v.author.id, v.approved.by.id, v.broken, v.use, v.start], [a2.version, "approved", "frank", "alice", false, { start: 0, finish: 0 }, "case-home"]);
   assert.ok(Array.isArray(v.contributors) && v.created_at);
@@ -29,8 +29,8 @@ test("R10 wizards lists, to the owners of a script's project and to administrato
   assert.deepEqual(ids(w.wz.wizards({ viewer: E })), [LIBRARY[1].id, LIBRARY[0].id], "D54: P is hidden and erin uninvited: the library's only");
   w.join(w.P, "erin", "invited");
   assert.deepEqual(ids(w.wz.wizards({ viewer: E })), [a2.script, a1.script, LIBRARY[1].id, LIBRARY[0].id], "an administrator invited to P: every one, the library's too");
-  assert.deepEqual(ids(w.wz.wizards({ viewer: F })), [], "frank is joined, not an owner");
-  assert.deepEqual(ids(w.wz.wizards({ viewer: D })), [], "dave owns Q, which has only a draft");
+  assert.deepEqual(ids(w.wz.wizards({ viewer: F })), [a2.script, a1.script, LIBRARY[1].id, LIBRARY[0].id], "frank is joined, not an owner: what is offered to him (R39)");
+  assert.deepEqual(ids(w.wz.wizards({ viewer: D })), [LIBRARY[1].id, LIBRARY[0].id], "dave owns Q, which has only a draft: the library, and no script of P (R39)");
   assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: D })), [dq.script]);
   assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: A })), [], "alice cannot see Q");
   /* the states */
@@ -43,7 +43,7 @@ test("R10 wizards lists, to the owners of a script's project and to administrato
   assert.deepEqual(ids(w.wz.wizards({ state: "submitted", viewer: A })), [s.script]);
   assert.deepEqual(ids(w.wz.wizards({ state: "withdrawn", viewer: A })), [x.script]);
   assert.deepEqual(ids(w.wz.wizards({ state: "retired", viewer: A })), [a1.script]);
-  assert.deepEqual(ids(w.wz.wizards({ viewer: A })), [a2.script], "a retired script is not offered");
+  assert.deepEqual(ids(w.wz.wizards({ viewer: A })), [a2.script, LIBRARY[1].id, LIBRARY[0].id], "a retired script is not offered");
   assert.deepEqual(w.wz.wizards({ state: "proposed", viewer: A }).proposals.map((q) => q.id), [p.proposal.id]);
   assert.deepEqual(w.wz.wizards({ state: "broken", viewer: A }).scripts, []);
   refused(w.wz.wizards({ state: "everything", viewer: A }), "WIZARDS_STATE_REFUSED");
@@ -150,4 +150,38 @@ test("R17 submittedFor lists every (version, owner) pair for a submitted version
   const n2 = w.wz.wizardDraft({ from: s1.version, author: F, viewer: F });
   w.wz.wizardSubmit({ version: n2.version, author: F, viewer: F });
   assert.deepEqual(w.wz.submittedFor({ viewer: MACHINE }).entries.map((e) => [e.version, e.owner, e.project]), [[2, "erin", null]]);
+});
+
+test("R39 (T48; K3250, K3254; walk row 17) wizards also answers every active member the scripts offered to her, Civicsmith's library and each approved group script she may run, each with its name, whose (origin), based_on and finished count; a member who owns no project sees the library; control: her state draft read answers only her own drafts, and the other states stay as R10 answers them", () => {
+  const w = seeded();
+  w.member("gwen"); w.join(w.P, "gwen");
+  const G = V("gwen");
+  const a = approved(w, { name: "Offered" });
+  w.wz.wizardProgress({ script: a.script, version: a.version, event: "start", viewer: F });
+  w.wz.wizardProgress({ script: a.script, version: a.version, event: "finish", viewer: F });
+  const mine = draft(w, { who: "frank", name: "Frank's draft" });
+  const hers = draft(w, { who: "gwen", name: "Gwen's draft" });
+  const before = w.snapshot();
+  /* a member who owns no project: the library and the project's approved script she may run, no draft */
+  for (const viewer of [F, G]) {
+    const r = w.wz.wizards({ viewer });
+    assert.deepEqual(ids(r), [a.script, LIBRARY[1].id, LIBRARY[0].id], "offered to her: the approved script of her project and the library");
+    const lib = r.scripts.find((x) => x.id === LIBRARY[0].id);
+    assert.deepEqual([lib.origin, lib.name, lib.based_on, lib.versions[0].use.finish], ["civicsmith", LIBRARY[0].name, null, 0], "whose, name, based_on, finished");
+    assert.equal(r.scripts.find((x) => x.id === a.script).versions[0].use.finish, 1, "the finished count");
+    assert.equal(r.scripts.find((x) => x.id === a.script).origin, "group");
+  }
+  /* a member outside the project, owner of none, sees the library and nothing of P; one the rule admits to nothing sees none */
+  assert.deepEqual(ids(w.wz.wizards({ viewer: D })), [LIBRARY[1].id, LIBRARY[0].id], "dave, outside P: the library alone");
+  assert.deepEqual(w.wz.wizards({ viewer: "nobody" }).scripts, [], "control: not a member, nothing");
+  /* control: her draft read answers only her own drafts; an owner's answers every draft she may see */
+  assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: F })), [mine.script]);
+  assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: G })), [hers.script]);
+  assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: A })).sort(), [mine.script, hers.script].sort(), "an owner: every draft of her project");
+  assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: D })), [], "no draft of anyone's");
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  /* the other states stay as R10 answers them: owners and administrators only */
+  const s = draft(w, { who: "frank", name: "Sub" }); w.wz.wizardSubmit({ version: s.version, author: F, viewer: F });
+  assert.deepEqual(ids(w.wz.wizards({ state: "submitted", viewer: F })), [], "a non-owner lists no submitted version");
+  assert.deepEqual(ids(w.wz.wizards({ state: "submitted", viewer: A })), [s.script]);
 });

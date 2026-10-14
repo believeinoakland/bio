@@ -1252,6 +1252,12 @@ export const ACTS = [
   { id: "actionbearingpropose", label: "Propose what a reply says to each claim", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
                      && countOf(f.action?.entries?.received) > 0 },
+  /* R58 (action-replies R10): a received reply of a request for comment may be recorded as asking not to be quoted, or the
+     record withdrawn (QUOTING_NOT_RFC otherwise): the same facts as the layout, read through `bearingsOf`; a machine is
+     refused it (MACHINE_CANNOT_RECORD_QUOTING, `MACHINE_REFUSALS`, `op-grades` R38). Which entry, which words are parameters. */
+  { id: "actionreplyquoting", label: "Record that a reply asks not to be quoted", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
+                     && countOf(f.action?.entries?.received) > 0 },
   { id: "arosefrom", label: "Link a matter that arose from this reply", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.received) > 0 },
   /* escalation R1, R9 (join on override, R23): opened on the determination this action rests on, and the action

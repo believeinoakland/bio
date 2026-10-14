@@ -109,9 +109,9 @@ test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RA
   /* CHECK_FAMILY_FILES unchanged: T46 adds no family, so no file of a module new in T46 is listed */
   for (const id of ["interface-assets", "interface-shell", "screens-settings", "screens-intake", "screens-daily", "screens-inquiry"])
     assert.equal(M.CHECK_FAMILY_FILES.some(([p]) => p.startsWith(`src/${id}/`)), false, id);
-  /* T46 added none; T47 adds case-inputs' file alone (R15), so 87 then, 88 now */
-  assert.equal(M.CHECK_FAMILY_FILES.length, 88);
-  assert.equal(M.CHECK_FAMILY_FILES.filter(([p]) => p !== "src/case-inputs/checks.mjs").length, 87);
+  /* T46 added none; T47 adds case-inputs' file alone (R15) and T48 ai-accounts' alone (R17), so 87, then 88, now 89 */
+  assert.equal(M.CHECK_FAMILY_FILES.length, 89);
+  assert.equal(M.CHECK_FAMILY_FILES.filter(([p]) => p !== "src/case-inputs/checks.mjs" && p !== "src/ai-accounts/checks.mjs").length, 87);
   /* control: every other pinned code decorates exactly as pinned */
   for (const [code, pin] of Object.entries(SNAP.rows)) if (code !== "SCENARIO_OUT_OF_RANGE") {
     const got = M.dec49Row(code);

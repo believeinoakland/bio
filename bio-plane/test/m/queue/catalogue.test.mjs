@@ -23,7 +23,9 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   /* T41 (notice-producers R17; N820, K2418, K2484) */
   "step-date-due", "step-reminder", "milestone-reminder",
   /* T45 (action-producers R10, R12; N855, N890) */
-  "watch-keep-or-stop", "plan-review-due", "plan-look-again"];
+  "watch-keep-or-stop", "plan-review-due", "plan-look-again",
+  /* T48 (R54; N1047, DEC-226 (1)) */
+  "update-ready"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */

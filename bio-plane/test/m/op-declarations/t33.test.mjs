@@ -26,6 +26,8 @@ import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { inquiryOps } from "../../../src/inquiry/index.mjs";
 import { corpusExportOps } from "../../../src/corpus-export/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
+import { actionRecordsOps } from "../../../src/action-records/index.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { membershipOps } from "../../../src/membership/index.mjs";
@@ -53,7 +55,11 @@ const both = (op) => SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op);
 const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-checks": moneyChecksOps, duties: dutiesOps,
   people: peopleOps, explore: exploreOps, hypotheses: hypothesesOps, calculations: calculationsOps, workbooks: workbooksOps,
   answers: answersOps, following: followingOps, standards: standardsOps, credentials: credentialsOps, sources: sourcesOps,
-  entities: entitiesOps, "ai-runs": aiRunsOps, inquiry: inquiryOps, "corpus-export": corpusExportOps, actions: actionsOps,
+  entities: entitiesOps, "ai-runs": aiRunsOps, inquiry: inquiryOps, "corpus-export": corpusExportOps,
+  /* T48 (R103 of actions; R68): the plane spreads `actionRecordsOps` beside `actionsOps`, and `aiAccountsOps` serves
+     the 24 ops that moved from credentials */
+  actions: (a, url, body, ...rest) => ({ ...actionsOps(a, url, body, ...rest), ...actionRecordsOps(a, url, body, ...rest) }),
+  "ai-accounts": aiAccountsOps,
   "action-clocks": actionClocksOps, "capture-requests": captureRequestsOps, membership: membershipOps, tasks: tasksOps,
   publication: publicationOps, "wizard-scripts": wizardScriptsOps,
   /* T36 (R32): file-safety's map, read for R6's totality */
@@ -127,6 +133,10 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* the assistant's two drafts, whose doors the plane builds (K2824, K2881) */
   infractiondraft: "plane (T45-47)", bearingdraft: "plane (T45-47)",
   declaredstakeset: "instance-setup (T45-44)",
+  /* T48 (R66): the update notice and the administrator's three choices, built by instance-setup's job beside this one
+     (its R89, R90); readtranslate, the plane's draft door (plane R50; agent-worker R86), no map of a module this one uses */
+  updatenotice: "instance-setup (T48-62)", updatestart: "instance-setup (T48-62)", updatelater: "instance-setup (T48-62)",
+  updateskip: "instance-setup (T48-62)", readtranslate: "plane (T48-78; plane R50)",
   /* T46 (R50, R51): how much is explained, built by instance-setup's job beside this one (its R79); the member-run
      door, control-plane's route calling ai-runs' `dispatchMemberRun` in process (no arm in `aiRunsOps`, K2952) */
   infolevelset: "instance-setup (T46-50)", infolevel: "instance-setup (T46-50)",
@@ -137,8 +147,8 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   airundispatch: "control-plane (T46-59)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
-  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "ai-use", "answers",
-    "calculations", "capture", "capture-requests", "case-account", "case-carriage", "corpus-export", "credentials", "duties",
+  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-accounts", "ai-runs", "ai-use", "answers",
+    "calculations", "capture", "capture-requests", "case-account", "case-carriage", "connections", "corpus-export", "credentials", "duties",
     "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
     "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
@@ -148,6 +158,7 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "plan-work", "project-roster",
     /* T47 (R55, R59): the owners T47 gives a family */
     "basis-versions", "signin-door"].sort());
+  /* T48 (R67, R68): `ai-accounts` holds the 24 ops that moved from credentials, `connections` the step-source acts */
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
     "sessionread", "sessionrunact",
@@ -166,7 +177,8 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
       assert.ok(Object.isFrozen(st), owner);
       assert.deepEqual(Object.keys(st).sort(), ["at", "key"], owner);
       assert.ok(["query", "body"].includes(st.at), owner);
-      assert.ok(["by", "author", "proposer", "viewer"].includes(st.key), `${owner}: ${st.key}`);
+      /* T48 (R67): connections' acts are stamped `member`, the session's own member, as answers' `ask` */
+      assert.ok(["by", "author", "proposer", "viewer", "member"].includes(st.key), `${owner}: ${st.key}`);
     }
     const ops = Object.keys(f.kinds);
     for (const op of ops) {
@@ -457,17 +469,21 @@ test("R20 (T41; DEC-188 (8); K2484): ask a member's own session only (machineCla
   assert.equal(OP_FAMILIES["ai-use"].kinds.aiusage, "ownread");
   assert.ok(!Object.hasOwn(OP_FAMILIES["ai-runs"].kinds, "aiusage"));
   assert.ok(await reaches("ai-use", "aiusage", { key: "viewer", at: "query" }));
-  const cr = OP_FAMILIES.credentials;
-  for (const op of ["accountreferenceset", "accountreferenceremove", "aigrantmint", "accountusesset"]) {
-    assert.equal(cr.kinds[op], "own", op);
+  /* T48 (R68): the account ops are ai-accounts' now, `aigrantmint` stays credentials' */
+  const cr = OP_FAMILIES.credentials, aa = OP_FAMILIES["ai-accounts"];
+  for (const [owner, f, op] of [["ai-accounts", aa, "accountreferenceset"], ["ai-accounts", aa, "accountreferenceremove"],
+                                ["credentials", cr, "aigrantmint"], ["ai-accounts", aa, "accountusesset"]]) {
+    assert.equal(f.kinds[op], "own", op);
     assert.deepEqual([...OPS[op].machineClasses], [], op);
-    assert.ok(await reaches("credentials", op, { key: "by", at: "query" }), op);
+    assert.ok(await reaches(owner, op, { key: "by", at: "query" }), op);
   }
   assert.deepEqual(cr.actor, { key: "by", at: "query" });
+  assert.deepEqual(aa.actor, { key: "by", at: "query" });
   /* the switches: one act, accountusesset; the retired switch acts have no spec and are in no table */
   for (const op of ["accountswitchset", "groupswitchset"])
     assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && !Object.hasOwn(OP_STAMPS, op)
-      && !SESSION_OPS.member.has(op) && !FAMILY_OPS.includes(op) && !servedBy("credentials").includes(op), op);
+      && !SESSION_OPS.member.has(op) && !FAMILY_OPS.includes(op) && !servedBy("credentials").includes(op)
+      && !servedBy("ai-accounts").includes(op), op);
   assert.deepEqual(Object.keys(OPS).filter((op) => /switch/.test(op) && /account|group/.test(op)).sort(),
                    ["groupkeyswitch", "projectaccountswitch"]);
   /* no op names a group-level subscription or a group account; a project's account ops are R41's alone */

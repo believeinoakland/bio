@@ -119,7 +119,7 @@ test("R10: an ai caller is refused AI_CREDENTIAL_REVOKED (C-29.7) when its crede
     for (const [e, token, c] of [[env, K.ann, cred({ tokenId: "agent-ann", writes: [] })], [w2.env, wide, cred({ tokenId: "wide", taskScope: "everything", writes: GATED })]]) {
       e.calls.length = 0;
       const r = await gate(e, { op, token });
-      if (!reach || (OPS[op].mutating && !c.writes.includes(op))) {
+      if (!reach || ((OPS[op].mutating || ["sourceof", "sourcerung"].includes(op)) && !c.writes.includes(op))) { /* R26 amends R10: who a source is needs a declared scope too */
         const body = refused(r, 403, "AI_BEYOND_TASK_SCOPE", "C-29.6", [token]);
         /* aicredential: the refusal names the op, the class, the credential, its task scope and its declared writes */
         assert.deepEqual([body.op, body.cls, body.tokenId, body.taskScope, body.declared], [op, "ai", c.tokenId, c.taskScope, c.writes]);
