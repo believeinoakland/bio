@@ -31,6 +31,8 @@
 
 Size (session_01RtPw7v4BWuC6SZ3yKqdReZ): test runs 16, module lines 3,831
 
+**After B3 (K3148; CHANGE: wizard-scripts T47-47 and op-grades T47-48 merged).** `tranche/T47` merged (3109927b7e); `node --test bio-plane/test/m/instance-setup/`: tests 165, pass 164, fail 0, todo 1 (R83, K3144). Checks: format, architecture, coverage (68/68), ownership: 0 failures each.
+
 ## J1 · QUESTION
 
 R83 (remove `setupPage`, `SETUP_HTML`, `groupLine`'s page use) and the L11 merge order (instance-setup before control-plane T47-65).
