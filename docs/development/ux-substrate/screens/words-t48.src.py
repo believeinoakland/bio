@@ -1,4 +1,4 @@
-# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197; DEC-231, a stake per matter, B191; DEC-232, the words of B188 to B194).
+# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197; DEC-231, a stake per matter, B191; DEC-232, the words of B188 to B194; DEC-233, what the group says about a person or an organization).
 # Each entry: (key, English, protected, note). Placeholders in {braces} are filled by the screen. No place, law or venue
 # appears here: a pointer's name, what it does and how to reach it come from the group's place profile (jurisdictions).
 # Run: python3 docs/development/ux-substrate/screens/words-t48.src.py, then node build_words.mjs (it reads words-t48.json).
@@ -252,6 +252,41 @@ w('queue.source.detail', 'Your group\'s Civicsmith noticed this when it checked.
 w('queue.source.untitled', 'A document with no title, captured {date}', False, 'DEC-232')
 w('home.first.name', 'Name your group', False, 'DEC-232: B194; leads an administrator\'s first steps while the group has no name')
 w('settings.set.setup', 'set at setup', False, 'DEC-232: B194; never a credential\'s name')
+
+# DEC-233: what the group says about a person or an organization (DEC-228 (2), census S2; entities R2, R3, R11, R12, R17; connections R1)
+w('entity.says.title', 'What the group says about them', False, 'DEC-233: the section on a person\'s page')
+w('entity.says.title.org', 'What the group says about it', False, 'DEC-233: on an organization\'s page')
+w('entity.says.help', 'What members have said about this person that no single document states: other names they go by, ties a member declared, and which documents name them. Each line shows who said it and when.', False, 'DEC-233')
+w('entity.says.help.org', 'What members have said about this organization that no single document states: other names it goes by, ties a member declared, and which documents name it. Each line shows who said it and when.', False, 'DEC-233')
+w('entity.alias.title', 'Other names', False, 'DEC-233')
+w('entity.alias.label', 'Another name they go by', False, 'DEC-233')
+w('entity.alias.label.org', 'Another name it goes by', False, 'DEC-233')
+w('entity.alias.help', 'A name documents use for them: a short form, a former name, a title used as a name. Civicsmith then looks for it in the documents your group holds. Two people can share a name; nothing here decides which one a document means.', False, 'DEC-233')
+w('entity.alias.add', 'Add the name', False, 'DEC-233')
+w('entity.alias.by', 'added by {who} on {date}', False, 'DEC-233')
+w('entity.alias.roster', 'the name on the city roster', False, 'DEC-233')
+w('entity.relation.title', 'Ties a member declared', False, 'DEC-233')
+w('entity.relation.kind', 'Their tie', False, 'DEC-233')
+w('entity.relation.kind.help', '“Member of” a body or group; “stands in for” someone, acting in their name; “overlaps with” another record that may be partly the same. Never more than the tie itself.', False, 'DEC-233')
+w('entity.relation.member_of', 'Member of', False, 'DEC-233: K1486')
+w('entity.relation.proxy_for', 'Stands in for', False, 'DEC-233: K1486')
+w('entity.relation.overlaps', 'Overlaps with', False, 'DEC-233: K1486')
+w('entity.relation.with', 'With', False, 'DEC-233')
+w('entity.relation.why', 'Why you say so', False, 'DEC-233')
+w('entity.relation.cite', 'Where it is said', False, 'DEC-233')
+w('entity.relation.cite.help', 'The page, document or record that says it, so another member can check. Required.', False, 'DEC-233')
+w('entity.relation.declare', 'Declare the tie', False, 'DEC-233')
+w('entity.relation.declared', 'declared by {who} on {date}, citing {where} · declared, not evidenced', False, 'DEC-233')
+w('entity.relation.none', 'None yet. A tie such as “member of” a larger body goes here, with why and where it is said.', False, 'DEC-233')
+w('entity.naming.title', 'Documents that may name them', False, 'DEC-233')
+w('entity.naming.says', 'Found by their names in the documents your group holds. Not yet matched: a document names them once Civicsmith matches an identifier or name, or a member says so from what they know.', False, 'DEC-233')
+w('entity.naming.row', 'page {page} · by the name {alias}', False, 'DEC-233')
+w('entity.naming.match', 'Match it', False, 'DEC-233')
+w('entity.naming.testify', 'I know this is them…', False, 'DEC-233')
+w('entity.naming.basis', 'How you know', False, 'DEC-233')
+w('entity.naming.basis.help', 'Your own knowledge, in your words. It is recorded as your word, grade D: never established on its own, and never lowering a stronger match.', False, 'DEC-233')
+w('entity.connect', 'Connect the documents that name them', False, 'DEC-233')
+w('entity.connect.org', 'Connect the documents that name it', False, 'DEC-233')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]

@@ -2278,7 +2278,7 @@
    "id": "person",
    "name": "Person",
    "frame": "working",
-   "purpose": "Positions, career, credentials, memberships, interests, statements; same person?",
+   "purpose": "A person or an organization the record follows: positions, career, credentials, memberships, interests, statements; same person?; what the group says about them (other names, declared ties, the documents that may name them) (DEC-233).",
    "acts": [
     {
      "op": "person",
@@ -2334,6 +2334,56 @@
      "status": "declared",
      "modules": [
       "people"
+     ]
+    },
+    {
+     "op": "entityalias",
+     "label": "Add another name",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "relationdeclare",
+     "label": "Declare a tie",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "resolve",
+     "label": "Match a document to them",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "queue",
+      "record-core"
+     ]
+    },
+    {
+     "op": "resolvetestify",
+     "label": "Say from what you know that a document names them",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "connect",
+     "label": "Connect the documents that name them",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],

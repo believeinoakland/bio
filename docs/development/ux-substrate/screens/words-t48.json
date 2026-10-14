@@ -1402,5 +1402,203 @@
   "en": "set at setup",
   "protected": false,
   "note": "DEC-232: B194; never a credential's name"
+ },
+ {
+  "key": "entity.says.title",
+  "en": "What the group says about them",
+  "protected": false,
+  "note": "DEC-233: the section on a person's page"
+ },
+ {
+  "key": "entity.says.title.org",
+  "en": "What the group says about it",
+  "protected": false,
+  "note": "DEC-233: on an organization's page"
+ },
+ {
+  "key": "entity.says.help",
+  "en": "What members have said about this person that no single document states: other names they go by, ties a member declared, and which documents name them. Each line shows who said it and when.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.says.help.org",
+  "en": "What members have said about this organization that no single document states: other names it goes by, ties a member declared, and which documents name it. Each line shows who said it and when.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.title",
+  "en": "Other names",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.label",
+  "en": "Another name they go by",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.label.org",
+  "en": "Another name it goes by",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.help",
+  "en": "A name documents use for them: a short form, a former name, a title used as a name. Civicsmith then looks for it in the documents your group holds. Two people can share a name; nothing here decides which one a document means.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.add",
+  "en": "Add the name",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.by",
+  "en": "added by {who} on {date}",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.roster",
+  "en": "the name on the city roster",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.title",
+  "en": "Ties a member declared",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.kind",
+  "en": "Their tie",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.kind.help",
+  "en": "“Member of” a body or group; “stands in for” someone, acting in their name; “overlaps with” another record that may be partly the same. Never more than the tie itself.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.member_of",
+  "en": "Member of",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.proxy_for",
+  "en": "Stands in for",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.overlaps",
+  "en": "Overlaps with",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.with",
+  "en": "With",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.why",
+  "en": "Why you say so",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.cite",
+  "en": "Where it is said",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.cite.help",
+  "en": "The page, document or record that says it, so another member can check. Required.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.declare",
+  "en": "Declare the tie",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.declared",
+  "en": "declared by {who} on {date}, citing {where} · declared, not evidenced",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.none",
+  "en": "None yet. A tie such as “member of” a larger body goes here, with why and where it is said.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.title",
+  "en": "Documents that may name them",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.says",
+  "en": "Found by their names in the documents your group holds. Not yet matched: a document names them once Civicsmith matches an identifier or name, or a member says so from what they know.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.row",
+  "en": "page {page} · by the name {alias}",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.match",
+  "en": "Match it",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.testify",
+  "en": "I know this is them…",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.basis",
+  "en": "How you know",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.basis.help",
+  "en": "Your own knowledge, in your words. It is recorded as your word, grade D: never established on its own, and never lowering a stronger match.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.connect",
+  "en": "Connect the documents that name them",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.connect.org",
+  "en": "Connect the documents that name it",
+  "protected": false,
+  "note": "DEC-233"
  }
 ]
