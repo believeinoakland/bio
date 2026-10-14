@@ -1611,7 +1611,7 @@ export class BasisVersions {
                  + `at ${pos.ref}. That it is there is what the reading says; whether it is on point is yours `
                  + `to judge.` });
     }
-    /* (2) what an extract run proposed, through the registered source (ai-runs, K73 (2)) */
+    /* (2) what an extract run proposed, through the candidate source run-productions registers (R40; K73 (2), K3257) */
     if (this.#candidateSource) {
       let ext = null;
       try { ext = this.#candidateSource.fn({ captureSha: cap, max }); } catch { ext = null; }

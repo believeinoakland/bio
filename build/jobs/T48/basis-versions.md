@@ -38,3 +38,9 @@ REPORT items (detail in my record): (1) requirements R28 header and R30 still na
 ## J2 · REPORT
 
 (1) build/requirements/basis-versions.md R28's header ('For ai-runs' op=suggest') and R30 ('through ai-runs') are stale: op=suggest is run-productions' (its R4, since K82). This is BOB's text. (2) reevaluation (layer 7, adoptVersion) calls basis-versions appendVersion with no version.author, so its versions' rows name no author. That is harmless for R49, which exempts only machine authors, but the record does not hold who authored the adopted version: a question for reevaluation's requirements.
+
+## B2 · CHANGE (K3257), processed
+
+Merged `tranche/T48`. R25's extract arm now reads "the candidate source `run-productions` registers, R40": a wording change only. The module's own comment on that arm (`#narrowCandidateList`, `index.mjs`) said "ai-runs"; it now names `run-productions` and R40, matching. No behaviour changed. Re-run: module tests 155 pass, 0 fail; format, architecture (29 files, 99 imports), coverage (47 of 47) and ownership: 0 failures each.
+
+Size (session_01KjNrjv7CqBp7Kcsh6vw11D): test runs 3, module lines 3782
