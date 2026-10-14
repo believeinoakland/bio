@@ -21,3 +21,7 @@ Merge order in L9: action-records first (K3189), then conformance, action-gramma
 ## B2 · CHANGE
 
 action-records is merged into tranche/T48 (K3278): merge tranche/T48 into your branch and re-run. Your census arms also need actions R101's is-correspond-direction region; ACTIONS #20 is creating it; I will send a second CHANGE when actions merges. Post COMPLETE again once green.
+
+## B3 · CHANGE
+
+C-117.28 NOT_A_PROCEEDING is in your module: bio-plane/src/action-grammar/checks.mjs:1862 (its where names actions #proceedingRefusal > is-proceeding-kind, which no longer exists). T48-46's also line retires it (K3243): remove the row; entities' C-91.9 (R53) is the one site. Do this with B2's merge.
