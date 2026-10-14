@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
 import * as events from "../../../src/events/index.mjs";
@@ -215,8 +216,8 @@ const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "particip
   "money_precisions", "connection_kinds", "identity_claim_kinds"];
 const EVENTS_KEYS = R39_KEYS.filter((k) => /^(event|dated|participant)/.test(k));
 const FORBIDDEN = /knows|network|conflict|suspicious|most connected|ledger|diverted|misused/i;
-const K1486 = { proposed: "proposed", adopted: "adopted", adjusted: "amended", encumbered: "committed", incurred: "spent",
-  paid: "paid", assessed: "billed", collected: "collected" };
+/* R62 (K3366; DEC-253): the design's word for a value is read by key, `label.<set>.<value>` with a value's spaces written `_` */
+const labelKey = (set, value) => `label.${set}.${String(value).replace(/ /g, "_")}`;
 
 test("R39: a vocabulary whose owner is not composed answers absent, never empty â€” events' five before events registers "
    + "with connection-grammar, present after", () => {
@@ -262,39 +263,74 @@ test("R39 R4: each vocabulary's values are the very objects its owner answers â€
   assert.deepEqual(v.connection_kinds.values, listed.map(([k]) => k));
   assert.ok(v.connection_kinds.values.every((k) => typeof k === "string"), "the values are kind names, not registry entries");
   assert.equal(new Set(v.connection_kinds.values).size, v.connection_kinds.values.length, "each kind once");
-  /* R59 adds each kind's design `group`, checked for totality in t48.test.mjs */
-  assert.deepEqual(v.connection_kinds.words, Object.fromEntries(listed.map(([k, e]) => [k, { ...e, group: v.connection_kinds.words[k].group }])));
+  /* R59 adds each kind's design `group`, checked for totality in t48.test.mjs; R62 reads a kind's word by the design's key where the list
+     holds one (a line kind `label.linekinds.*`, a post held `label.connectionkinds.holds` with its capacity, any other
+     `label.connectionkinds.*`), else the owner's registered word */
+  const designWord = (kind) => {
+    const held = /^line:holds:(.+)$/.exec(kind);
+    if (held) return hasWord(labelKey("linecapacities", held[1])) && hasWord("label.connectionkinds.holds")
+      ? word("label.connectionkinds.holds", { capacity: word(labelKey("linecapacities", held[1])) }) : null;
+    const line = /^line:(.+)$/.exec(kind);
+    const key = line ? labelKey("linekinds", line[1]) : labelKey("connectionkinds", kind);
+    return hasWord(key) ? word(key) : null;
+  };
+  assert.deepEqual(v.connection_kinds.words, Object.fromEntries(listed.map(([k, e]) =>
+    [k, { ...e, word: designWord(k) ?? e.word, group: v.connection_kinds.words[k].group }])));
+  /* the design keys a word for these, and it is read by key, not the owner's (control: a registered word that differs is not answered) */
+  const keyedKinds = listed.filter(([k]) => designWord(k) !== null);
+  assert.ok(keyedKinds.length >= 19, "the design keys the connection kinds it names (DEC-253)");
+  assert.equal(v.connection_kinds.words.member_of.word, word("label.connectionkinds.member_of"));
   assert.deepEqual(Object.keys(v.connection_kinds.words), v.connection_kinds.values);
 });
 
-test("R39: each word is the owner's registered word where it holds one, else K1486's, else one plain word marked "
-   + "provisional", () => {
+test("R39 R62: each word is the design's, read by key through setup-words (DEC-253), else the owner's registered word where it holds "
+   + "one, else one plain word marked provisional; every key it reads is a word", () => {
   eventsWorld().ev.start();
   const v = A.vocabulariesFor(null);
-  const expect = (k, value, registeredKind) => {
+  const expect = (k, value, registeredKind, set) => {
     const reg = registeredKind ? kindOf(registeredKind) : null;
-    const want = reg ? { word: reg.word } : Object.hasOwn(K1486, value) && /^money_(phases|stages)$/.test(k)
-      ? { word: K1486[value] } : { word: plainWord(value), provisional: true };
+    const key = set ? labelKey(set, value) : null;
+    const want = key && hasWord(key) ? { word: word(key) } : reg ? { word: reg.word }
+      : { word: plainWord(value), provisional: true };
     assert.deepEqual(v[k].words[value], want, `${k}.${value}`);
+    return key;
   };
   for (const r of events.ROLES) expect("participant_roles", r, `event_${r}`);
   for (const r of events.RELATION_KINDS) expect("event_relation_kinds", r, `event_${r}`);
   for (const k of events.EVENT_KINDS) expect("event_kinds", k, null);
   for (const k of events.DATED_KINDS) expect("dated_fact_kinds", k, null);
   for (const k of events.STATUSES) expect("event_statuses", k, null);
-  for (const k of lines.kinds()) expect("line_kinds", k, kindOf(`line:${k}`) ? `line:${k}` : null);
-  for (const k of lines.capacities()) expect("line_capacities", k, null);
-  for (const k of people.CLAIM_KINDS) expect("identity_claim_kinds", k, k);
-  for (const k of money.phases()) expect("money_phases", k, null);
-  for (const k of money.stages()) expect("money_stages", k, null);
-  for (const k of money.kinds()) expect("money_kinds", k, null);
+  const read = [];
+  for (const k of lines.kinds()) {
+    read.push(expect("line_kinds", k, kindOf(`line:${k}`) ? `line:${k}` : null, "linekinds"));
+    for (const r of lines.roles(k)) {
+      const key = labelKey(`lineroles.${k}`, r);
+      assert.deepEqual(v.line_roles.words[k][r], hasWord(key) ? { word: word(key) } : { word: plainWord(r), provisional: true }, `${k}.${r}`);
+      read.push(key);
+    }
+  }
+  for (const k of lines.capacities()) read.push(expect("line_capacities", k, null, "linecapacities"));
+  for (const k of people.CLAIM_KINDS) read.push(expect("identity_claim_kinds", k, k, "identityclaimkinds"));
+  for (const k of money.phases()) read.push(expect("money_phases", k, null, "moneyphases"));
+  for (const k of money.stages()) read.push(expect("money_stages", k, null, "moneystages"));
+  for (const k of money.kinds()) read.push(expect("money_kinds", k, null, "moneykinds"));
+  for (const k of money.bases()) read.push(expect("money_bases", k, null, "moneybases"));
+  for (const k of money.precisions()) read.push(expect("money_precisions", k, null, "moneyprecisions"));
+  /* every value of the closed vocabularies the owners answer is keyed in the list: no provisional word remains for them */
+  for (const key of read) assert.ok(hasWord(key), `${key} is a word`);
+  for (const k of ["line_kinds", "line_capacities", "money_kinds", "money_phases", "money_stages", "money_bases", "money_precisions",
+                   "identity_claim_kinds"])
+    assert.deepEqual(Object.values(v[k].words).filter((w) => w.provisional), [], `${k} has no provisional word`);
   /* the plain word, worked: a status loses `Event`, joined words are spaced */
   assert.equal(plainWord("EventMovedOnline"), "moved online");
   assert.equal(plainWord("stated_cause"), "stated cause");
   assert.equal(plainWord("procuringEntity"), "procuring entity");
-  assert.equal(v.money_stages.words.encumbered.word, "committed");
-  assert.equal(v.line_kinds.words.holds.provisional, true, "holds is registered per capacity only");
-  assert.equal(v.identity_claim_kinds.words.same_as.word, "same person?");
+  /* a value the list keys is answered by its word, not provisional; a value it does not key stays provisional (the events' own) */
+  assert.equal(v.money_stages.words.encumbered.word, word("label.moneystages.encumbered"));
+  assert.equal(v.line_kinds.words.holds.provisional, undefined, "holds is keyed by the design");
+  assert.equal(v.line_kinds.words.holds.word, word("label.linekinds.holds"));
+  assert.equal(v.identity_claim_kinds.words.same_as.word, word("label.identityclaimkinds.same_as"));
+  assert.ok(events.EVENT_KINDS.every((k) => v.event_kinds.words[k].provisional === true), "the design keys none of the events' kinds yet");
 });
 
 test("R39 R26: vocabulariesFor keeps every fixed vocabulary the same object and adds only R39's", () => {

@@ -17,15 +17,11 @@ test("R21: personexpunge keeps its `reasoned` rung and its NON_ACTS sentence, st
   assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "personexpunge"));
   const e = CONSEQUENCE_STATEMENTS.personexpunge;
   assert.ok(Object.isFrozen(e));
-  assert.deepEqual(Object.keys(e), ["friction", "statement"]);
+  assert.deepEqual(Object.keys(e), ["friction", "key"]);
   assert.equal(e.friction, "dialog");
   assert.equal(e.friction, CONSEQUENCE_STATEMENTS.actionholdrelease.friction, "DEC-113's tier");
-  const s = e.statement;
-  for (const part of [/the person's page/, /every question that cited it/, /every export/, /cannot be undone/,
-    /by you or by anyone/, /"Removed where the law requires, <date>, by <member>"/,
-    /Published cases change only through the docket/, /a reason naming the law or order that requires it/,
-    /"Remove it for good, with this reason"/]) assert.match(s, part);
-  assert.doesNotMatch(s.replace("<date>", "").replace("<member>", ""), /<[a-z]+>/, "only the two fields to fill");
+  assert.equal(e.key, "screen.person.expunge.statement", "the key of the sentence the surface fills with {date} and {member}");
+  assert.ok(!Object.hasOwn(e, "statement"));
 });
 
 test("R21 R22 R37 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades `irreversible` (publishat, "
@@ -44,8 +40,7 @@ test("R21 R22 R37 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS gra
   const r = CONSEQUENCE_STATEMENTS.standardrelease;
   assert.ok(Object.isFrozen(r));
   assert.equal(r.friction, "dialog");
-  for (const part of [/every member of your group/, /cannot be undone/, /your name, the time and your reason/])
-    assert.match(r.statement, part);
+  assert.equal(r.key, "consequence.standardrelease");
   assert.equal(JSON.stringify(IRREVERSIBLE_WEIGHT), JSON.stringify([...IRREVERSIBLE_WEIGHT]), "served as a list");
 });
 

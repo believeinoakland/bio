@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T49)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -27,3 +27,23 @@ K3369 (SCREENS-SETTINGS #4 J1): screens-settings' words.mjs rows go (SCREEN_WORD
 ## B3 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3372 (SCREENS-INTAKE #4 J2): your R38 'Add a document' opens /app/capture/<tab>/<id> (the subject in the path, project or question id), never ?for=.
+
+## B5 · ANSWER · re J2
+
+K3372: both readings stand: J1 the frozen per-mode bounds table derived from run-rules, no zero allowance, tested through checkConsume; J2 the reasons list only where the assistant cannot work, each by key, the serving account always said.
+
+## B6 · ANSWER · re J3
+
+K3373: interface-shell R72 admits every act the design's registry lists that the stale generated registry lacks; the re-take is N1122 (T50). Keep your local loader for tests until interface-shell merges, then merge the tranche and drop it.
+
+## B7 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B8 · ANSWER · re J4
+
+K3375: your fallbacks stand (draw only what is answered; no grade mark rather than Unrated); the missing reads are N1124 (T50).
