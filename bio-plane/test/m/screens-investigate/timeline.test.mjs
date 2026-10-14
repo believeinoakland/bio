@@ -34,7 +34,7 @@ test("R3 an event whose order is undetermined is drawn so, with the evidence tha
   const ev = main(p).querySelector('[data-event="EVT-2026-0002"]');
   assert.ok(ev.querySelector('.cs-gap[data-gap="undetermined"]'));
   drew(ev, "screen.timeline.order.why", { with: "EVT-2026-0003" });
-  drew(ev, "screen.timeline.order.evidence");
+  drew(ev, "screen.timeline.order.evidence", { examples: word("screen.timeline.evkind.decision") });
   assert.deepEqual(actsIn(ev).sort(), ["findin", "recorddatedfact", "relate"]);
   assert.equal(main(p).querySelector('[data-event="EVT-2026-0001"] .cs-gap[data-gap="undetermined"]'), null, "an ordered event carries no such mark (control)");
   const undated = main(p).querySelectorAll("section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("screen.timeline.undated.head"));

@@ -19,7 +19,7 @@ test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by 
   const adopted = word("screen.money.phase.adopted");
   assert.ok(r1[1].startsWith(word("screen.money.kind.transfer")), "its kind");
   assert.deepEqual(r1.slice(2, 4), ["Sewer Fund 3100", "General Fund 1010"], "from and to, as the source writes them");
-  assert.equal(r1[4], word("screen.money.didnotmove", { phase: adopted }));
+  assert.equal(r1[4], word("screen.money.didnotmove", { phase: adopted, date: dayOf("2021-07-01") }));
   assert.equal(r1[5].trim(), word("screen.money.stage", { phase: adopted, stage: "" }).trim());
   assert.equal(r1[6], "FY2021-22");
   assert.equal(r1[7], word("screen.money.amount", { sign: "", amount: "4200000.00", currency: "USD" }));

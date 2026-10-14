@@ -79,7 +79,7 @@ function render(cs, view) {
     if (L.state !== "ok") return [cs.state(L, () => ""), "", "", "", "", "", "", "", ""];
     const f = L.value;
     const tr = e.trail || {};
-    const moved = f.phase !== "actual" ? cs.w(S + "didnotmove", { phase: cs.w(S + "phase." + (f.phase || "adopted")) })
+    const moved = f.phase !== "actual" ? cs.w(S + "didnotmove", { phase: cs.w(S + "phase." + (f.phase || "adopted")), date: cs.date((f.period && f.period.from) || "") })
       : tr.moved && tr.moved.state === "dated" ? (cs.date((tr.moved.when && (tr.moved.when.value || tr.moved.when.start)) || "") || cs.esc((tr.moved.when && tr.moved.when.value) || ""))
         + (tr.moved.event ? " " + P.refOf(cs, tr.moved.event, cs.w(S + "event"), [], "event") : "")
       : gap(e, "moved", (tr.moved && tr.moved.why) || cs.w(S + "moved.why"));

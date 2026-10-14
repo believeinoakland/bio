@@ -92,7 +92,7 @@ test("R10 after an act the screen reads again what it changed and draws it (cont
   await press(p, "declaretie");
   assert.equal(n, 2);
   assert.ok(main(p).textContent.includes("East Bay Transit"), "the tie she added, read again");
-  const q = await open(PATHS.ties, { plane: { declaretie: refusedIn("NO_SUCH_ENTITY", "No such entity.") } });
+  const q = await open(PATHS.ties, { plane: { declaretie: refusedIn("ODD_TIE_REFUSAL", "No such entity.") } });
   const before = q.byOp("memberties").length;
   fill(q, { "tie-who": "ENT-1", "tie-note": "x" });
   await press(q, "declaretie");

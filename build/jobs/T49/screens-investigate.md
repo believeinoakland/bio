@@ -52,3 +52,7 @@ REPORT (J2), full text in my record's Completion section. For BOB:
 ## J3 · COMPLETE
 
 COMPLETE (J3). T49-26 applied: R27 (six groups, `.e-step_source`), R28 (proceeding "Dates", two lanes), R29 (explore with no centre), R30 (words by key; no English in the module or its tests), R10's red cleared, rule 6 (D29, N1073's hand list, N1068, `admin`). Checks from the process repository: format 0 failures, architecture 0 failures (whole product too), coverage 30 of 30 ids named, ownership 0 failures. Tests: 108 pass on a local stand-in for setup-words' `word`/`hasWord`; on the committed tree they load only after setup-words merges (then merge `tranche/T49` and I re-run: send a CHANGE). Details, deferred items and the REPORT in my record.
+
+## After CHANGE B3/B4 (real setup-words, DEC-259–DEC-261 words)
+Merged `tranche/T49`; 109 tests pass against the real setup-words. New placeholders met: `screen.money.didnotmove` `{date}` (read as the figure's period start: the data holds no adoption date), `screen.timeline.order.evidence` `{examples}` (the event's keyed kind word). The shell now words known refusal codes itself, so the tie-refusal test uses an unknown code. Both fills are guesses for BOB/the design lane (REPORT J4).
+Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 44, module lines 2087
