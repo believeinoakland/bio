@@ -130,10 +130,10 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* T46 (R50, R51): how much is explained, built by instance-setup's job beside this one (its R79); the member-run
      door, control-plane's route calling ai-runs' `dispatchMemberRun` in process (no arm in `aiRunsOps`, K2952) */
   infolevelset: "instance-setup (T46-50)", infolevel: "instance-setup (T46-50)",
-  /* T47 (R59): the group's logo and languages, built by instance-setup's job (its R84, R85), and the request to sign,
-     built by tasks' (its R19), each merging before this one in L11's order */
+  /* T47 (R59): the group's logo and languages, built by instance-setup's job (its R84, R85), merged before this one
+     (the request to sign, tasks R19, is served by tasks' map since its merge, K3152) */
   grouplogoset: "instance-setup (T47-75)", grouplanguagesset: "instance-setup (T47-75)",
-  grouplanguages: "instance-setup (T47-75)", signrequest: "tasks (T47-89)",
+  grouplanguages: "instance-setup (T47-75)",
   airundispatch: "control-plane (T46-59)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
