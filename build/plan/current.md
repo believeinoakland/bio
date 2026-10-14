@@ -45,7 +45,7 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
    5. The plane bundle and `program.mjs`, staled by any merge, until they are regenerated at each layer's close (K1540).
    6. test-support R2 run as root under a 0700 directory: not owed, environment only (K3192 E).
    7. **K3321's reds, each until the entry named:**
-      - (A) the account defect N1095: capture-requests `plane.test.mjs` (6) and agent-worker `harness.test.mjs` REC100-1b/2/2b, until T49-29 (control-plane, L11). They stay red through L6's agent-worker job, which does not touch them. scheduler `plane` R12 is red until T49-12 (its own part, N1096) and T49-29 (the refusal);
+      - (A) the account defect N1095: capture-requests `plane.test.mjs` (6) and agent-worker `harness.test.mjs` REC100-0/1b/2/2b/2c (K3351), until T49-29 (control-plane, L11). They stay red through L6's agent-worker job, which does not touch them. scheduler `plane` R12 is red until T49-12 (its own part, N1096) and T49-29 (the refusal);
       - (B) the design files moved by PR #36:
         - op-declarations (10), until T49-17;
         - op-grades R42 (2), until T49-13;
