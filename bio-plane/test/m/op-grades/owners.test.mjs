@@ -228,10 +228,12 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
 });
 
 /* ---- R14 ----------------------------------------------------------------------------------------------------------- */
-test("R14: publishat and publishatmove `irreversible` as publish, publishatcancel `reversible`, each with its NON_ACTS "
-   + "reason, publishschedule a read; phone false, false, true; none a machine refusal", () => {
+test("R14 R37: publishat and publishatmove `irreversible` (publishing's own weight; publish itself prepares since R37), "
+   + "publishatcancel `reversible`, each with its NON_ACTS reason, publishschedule a read; phone false, false, true; none "
+   + "a machine refusal", () => {
   assert.deepEqual([RUNGS.publishat, RUNGS.publishatmove, RUNGS.publishatcancel],
-    [RUNGS.publish, "irreversible", "reversible"]);
+    ["irreversible", "irreversible", "reversible"]);
+  assert.notEqual(RUNGS.publishat, RUNGS.publish, "R37: publish prepares; the set time is weighed as publishing");
   assert.equal(NON_ACTS.publishat, "case-directed: keyed by a case edition (case, edition), reached from the publication "
     + "ceremony's last step; signs now and publishes at the set time only if every check passes again then");
   for (const op of ["publishatmove", "publishatcancel"]) assert.equal(NON_ACTS[op], "case-directed: keyed by a case "
