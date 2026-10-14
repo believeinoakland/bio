@@ -2465,7 +2465,7 @@
    "id": "assistant",
    "name": "The assistant panel",
    "frame": "dock",
-   "purpose": "Docked beside the screen it serves; runs only on the member's own account.",
+   "purpose": "Docked beside the screen it serves; runs on whichever account serves the member, the group's key or the member's own, and says which (screens-inquiry R4; DEC-246).",
    "acts": [
     {
      "op": "airunopen",

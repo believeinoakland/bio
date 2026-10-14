@@ -103,7 +103,7 @@ screen('question', 'Question', 'working', 'A question and what supports it or cu
    ('owed:versionreject DEC-235','Reject a reading'),('owed:versionrevert DEC-235','Undo the decision on a reading'),('owed:versioncurrent DEC-235','Stand on a reading for a project'),('owed:readtranslate DEC-240','Read in my language')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ask','Ask'),('ruleanswer','Show how this was counted'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
-screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',
+screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs on whichever account serves the member, the group\'s key or the member\'s own, and says which (screens-inquiry R4; DEC-246).',
   [('airunopen','Ask the assistant to work on this'),('suggest','Suggest'),('airunclose','Stop the run')], [17])
 
 # --- the record's subjects

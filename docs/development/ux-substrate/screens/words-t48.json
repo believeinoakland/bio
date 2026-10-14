@@ -2832,6 +2832,102 @@
   "note": "DEC-242: Find's filter, R44"
  },
  {
+  "key": "refusal.BAD_LOCATOR",
+  "en": "That isn't an address Civicsmith can fetch. Check it starts with https:// and has no spaces.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1, acquire"
+ },
+ {
+  "key": "refusal.SOURCE_REFUSED",
+  "en": "The site refused to give the page to your group's Civicsmith. Try again later, or save the page yourself and add it as a file.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1"
+ },
+ {
+  "key": "refusal.FETCH_FAILED",
+  "en": "The page couldn't be fetched: the site didn't answer in time. Nothing was kept; try again.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1"
+ },
+ {
+  "key": "refusal.EMPTY",
+  "en": "The address answered with nothing to keep: an empty page.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1"
+ },
+ {
+  "key": "refusal.TOO_LARGE",
+  "en": "The file at that address is larger than your group's Civicsmith keeps. Ask an administrator, or add a smaller part of it as a file.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1"
+ },
+ {
+  "key": "capture.fieldneeded",
+  "en": "Fill in the {field} first: it is needed to capture.",
+  "protected": false,
+  "note": "DEC-246: screens-intake R2"
+ },
+ {
+  "key": "connect.ifnot",
+  "en": "If it doesn't connect, you see one of these, beside the code",
+  "protected": false,
+  "note": "DEC-246: screens-settings R24"
+ },
+ {
+  "key": "capture.ifnot",
+  "en": "If it can't be captured, you see one of these, beside the address",
+  "protected": false,
+  "note": "DEC-246: screens-intake R1"
+ },
+ {
+  "key": "refusal.reference",
+  "en": "Reference: {ref}",
+  "protected": false,
+  "note": "DEC-246: interface-shell R39: beside every refusal"
+ },
+ {
+  "key": "setup.codes.once",
+  "en": "Shown once. Each works one time.",
+  "protected": false,
+  "note": "DEC-246: screens-entry R6"
+ },
+ {
+  "key": "setup.codes.copy",
+  "en": "Copy them",
+  "protected": false,
+  "note": "DEC-246: cs.copy"
+ },
+ {
+  "key": "setup.codes.save",
+  "en": "Save them as a file",
+  "protected": false,
+  "note": "DEC-246: cs.save"
+ },
+ {
+  "key": "setup.claimed.heading",
+  "en": "Already claimed",
+  "protected": false,
+  "note": "DEC-246: screens-entry R15"
+ },
+ {
+  "key": "setup.claimed.sub",
+  "en": "Your group's Civicsmith already has its first administrator.",
+  "protected": false,
+  "note": "DEC-246: screens-entry R15"
+ },
+ {
+  "key": "question.ai.other",
+  "en": "Other reasons the assistant can't work here",
+  "protected": false,
+  "note": "DEC-246: screens-inquiry R4"
+ },
+ {
+  "key": "question.ai.whose",
+  "en": "The dock and this page say whose account serves you: “On the group's key” or “On your own account”.",
+  "protected": false,
+  "note": "DEC-246: screens-inquiry R4"
+ },
+ {
   "key": "question.empty.heading",
   "en": "Nothing cited yet",
   "protected": false,
@@ -2911,7 +3007,7 @@
  },
  {
   "key": "question.run.stop",
-  "en": "Stop it",
+  "en": "Stop the run",
   "protected": false,
   "note": "DEC-245: airunclose"
  },
