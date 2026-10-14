@@ -1,43 +1,160 @@
-/* interface-assets' generator (R1; K1043): writes `index.mjs` beside it from the design stream's visual language as
-   committed at ASSETS_COMMIT, read from git so the working copy never moves it. Kept beside the module and imported by
-   nothing, so it is not bundled. Run from anywhere: node bio-plane/src/interface-assets/generate.mjs
-   A later commit is carried only by a later requirement naming it (R1): change COMMIT here, rerun, and rerun the tests. */
+/* interface-assets' generator (R1, R5–R7; K1043): writes `index.mjs` beside it from the design stream's visual language
+   and page as committed at ASSETS_COMMIT, read from git so the working copy never moves it. Kept beside the module and
+   imported by nothing in the product, so it is not bundled; its test imports `shellCss` to state R7's transform.
+   Run from anywhere: node bio-plane/src/interface-assets/generate.mjs
+   A later commit is carried only by a later requirement naming it (R1, R5): change COMMIT here, rerun, and rerun the
+   tests. `shell.css` is regenerated with it (R7), never edited by hand. */
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
-const COMMIT = "3f40899950";
+const COMMIT = "4664e8efd4";
 const DIR = "docs/development/ux-substrate/visual-language";
-const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, "../../..");
-const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
-const show = (path) => git(["show", `${COMMIT}:${DIR}/${path}`]);
+const PAGE = "docs/development/ux-substrate/screens/page.src.html";
 
-const faces = git(["ls-tree", "--name-only", `${COMMIT}`, `${DIR}/fonts/`]).toString("utf8").split("\n")
-  .filter((p) => p.endsWith(".woff2")).map((p) => p.slice(`${DIR}/fonts/`.length)).sort();
-if (faces.length !== 15) throw new Error(`expected 15 faces at ${COMMIT}, found ${faces.length}`);
+/* R7: which of the page's rules are product rules, and how they are rewritten. */
+const PHONE = '.mk-device[data-device="phone"] ';
+const PHONE_QUERY = "@media (max-width: 760px)";
+const PHONE_WEIGHT = ":root:root "; // K3295: the prefix's (0,2,0), matching every element, so each phone rule wins as in the design
+/* K3295: the design's unprefixed product classes that carried mk- components draw: the graph's edges (.e, .e-*) and
+   chips (.gchip), the areas' .cell, the front's states (.st and its .st-a…), and .row. */
+const PRODUCT = /^(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)$/;
+const MOCK_ONLY = ["mk-device", "mk-scaler", "mk-mockctl", "mk-osprompt", "vtabs", "vstage", "vhead", "vnav", "vdots", "vwhat", "vsay"];
+const PAGE_OWN = ["anat", "asfig", "viewer", "vlist"];
+const EXCLUDED = new Set([...MOCK_ONLY, ...PAGE_OWN]);
 
-const css = show("civicsmith.css").toString("utf8")
-  + show("faces.css").toString("utf8").replace(/url\("fonts\/([^"]+)"\)/g, 'url("/app/assets/fonts/$1")');
-const entries = [
-  ["civicsmith.css", { type: "text/css", body: css }],
-  ["icons.svg", { type: "image/svg+xml", body: show("icons.svg").toString("utf8") }],
-  ...faces.map((f) => [`fonts/${f}`, { type: "font/woff2", encoding: "base64", body: show(`fonts/${f}`).toString("base64") }]),
-  ...["source-serif-4", "source-sans-3", "source-code-pro"].map((n) =>
-    [`fonts/OFL-${n}.txt`, { type: "text/plain", body: show(`fonts/OFL-${n}.txt`).toString("utf8") }]),
-];
+/* The page's one <style>, its {{…}} placeholders (where the page inlines the faces and the stylesheet) removed. */
+export function pageStyle(html) {
+  const m = /<style>([\s\S]*?)<\/style>/.exec(html);
+  if (!m) throw new Error("page.src.html: no <style>");
+  return m[1].replace(/\{\{[A-Z_]+\}\}/g, "");
+}
 
-const field = (e) => Object.entries(e).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join(", ");
-const out = `/* GENERATED: do not edit by hand. interface-assets R1–R4 (DEC-138; N897 (1); N559): the visual language's stylesheet,
-   icons, ${faces.length} faces (base64) and their three licences, read from ${DIR}/ at ASSETS_COMMIT. civicsmith.css
-   is civicsmith.css followed by faces.css with each url("fonts/<f>") rewritten to url("/app/assets/fonts/<f>") (R1, R2).
-   The map and each entry are frozen (R3); the module imports nothing (R4). Written by generate.mjs beside this file;
-   bio-plane/test/m/interface-assets/assets.test.mjs checks every entry byte for byte against git. */
-export const ASSETS_COMMIT = ${JSON.stringify(COMMIT)};
+/* A stylesheet's top-level items: {prelude, block} for a rule or an at-rule with a block. Comments are dropped; strings
+   are kept whole, so a brace or a comma inside one never splits. */
+function items(css) {
+  const out = [];
+  let i = 0, prelude = "";
+  const skipString = (j) => { const q = css[j]; j++; while (j < css.length && css[j] !== q) j += css[j] === "\\" ? 2 : 1; return j + 1; };
+  while (i < css.length) {
+    const c = css[i];
+    if (c === "/" && css[i + 1] === "*") { const e = css.indexOf("*/", i + 2); i = e < 0 ? css.length : e + 2; continue; }
+    if (c === '"' || c === "'") { const e = skipString(i); prelude += css.slice(i, e); i = e; continue; }
+    if (c === "{") {
+      let depth = 1, j = i + 1, block = "";
+      while (j < css.length && depth > 0) {
+        const d = css[j];
+        if (d === "/" && css[j + 1] === "*") { const e = css.indexOf("*/", j + 2); j = e < 0 ? css.length : e + 2; continue; }
+        if (d === '"' || d === "'") { const e = skipString(j); block += css.slice(j, e); j = e; continue; }
+        if (d === "{") depth++;
+        if (d === "}" && --depth === 0) break;
+        block += d; j++;
+      }
+      out.push({ prelude: prelude.trim().replace(/\s+/g, " "), block: block.trim() });
+      prelude = ""; i = j + 1; continue;
+    }
+    if (c === ";" && prelude.trim().startsWith("@")) { prelude = ""; i++; continue; }
+    prelude += c; i++;
+  }
+  return out;
+}
+
+/* A selector list split at its top-level commas (never inside (), [] or a string). */
+function selectors(prelude) {
+  const out = [];
+  let depth = 0, cur = "", q = null;
+  for (const c of prelude) {
+    if (q) { cur += c; if (c === q) q = null; continue; }
+    if (c === '"' || c === "'") q = c;
+    else if (c === "(" || c === "[") depth++;
+    else if (c === ")" || c === "]") depth--;
+    else if (c === "," && depth === 0) { out.push(cur.trim()); cur = ""; continue; }
+    cur += c;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+
+const classes = (sel) => [...sel.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]);
+/* R7: a selector is carried when it names an mk- or cs- class, or one of PRODUCT's, and no mock-only or page class;
+   `.mk-page` becomes `.cs-frame`, and a phone rule's prefix PHONE_WEIGHT. Answers {phone, sel} or null. */
+function carry(sel) {
+  const phone = sel.startsWith(PHONE);
+  const rest = phone ? sel.slice(PHONE.length).trim() : sel;
+  const named = classes(rest);
+  if (!named.some((c) => /^(mk|cs)-/.test(c) || PRODUCT.test(c)) || named.some((c) => EXCLUDED.has(c))) return null;
+  const out = rest.replace(/\.mk-page(?![\w-])/g, ".cs-frame");
+  return { phone, sel: phone ? PHONE_WEIGHT + out : out };
+}
+
+const decls = (block) => block.split("\n").map((l) => l.trim()).filter(Boolean).join(" ");
+
+/* R7: shell.css from the page's <style>: the product rules in source order, then every rule written under the phone
+   frame inside the 760 px query, its prefix PHONE_WEIGHT. A rule whose selectors are not all carried is not carried; a
+   rule mixing phone and other selectors is carried as one rule of each. An @media block keeps its carried rules. */
+export function shellCss(html) {
+  const general = [], phone = [];
+  for (const it of items(pageStyle(html))) {
+    if (it.prelude.startsWith("@media")) {
+      const inner = items(it.block).map((r) => ({ r, s: selectors(r.prelude).map(carry) }))
+        .filter(({ s }) => s.every((x) => x && !x.phone)).map(({ r, s }) => `  ${s.map((x) => x.sel).join(", ")} { ${decls(r.block)} }`);
+      if (inner.length) general.push(`${it.prelude} {\n${inner.join("\n")}\n}`);
+      continue;
+    }
+    if (it.prelude.startsWith("@")) continue;
+    const s = selectors(it.prelude).map(carry);
+    if (!s.length || s.some((x) => !x)) continue;
+    const body = decls(it.block);
+    const plain = s.filter((x) => !x.phone), ph = s.filter((x) => x.phone);
+    if (plain.length) general.push(`${plain.map((x) => x.sel).join(", ")} { ${body} }`);
+    if (ph.length) phone.push(`  ${ph.map((x) => x.sel).join(", ")} { ${body} }`);
+  }
+  return "/* GENERATED by bio-plane/src/interface-assets/generate.mjs (interface-assets R7) from the product rules of\n"
+    + `   ${PAGE}'s <style> at ${COMMIT}. Never edited by hand. */\n`
+    + general.join("\n") + "\n" + (phone.length ? `${PHONE_QUERY} {\n${phone.join("\n")}\n}\n` : "");
+}
+
+function main() {
+  const HERE = dirname(fileURLToPath(import.meta.url));
+  const ROOT = join(HERE, "../../..");
+  const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
+  const at = (path) => git(["show", `${COMMIT}:${path}`]);
+  const show = (path) => at(`${DIR}/${path}`);
+
+  const faces = git(["ls-tree", "--name-only", `${COMMIT}`, `${DIR}/fonts/`]).toString("utf8").split("\n")
+    .filter((p) => p.endsWith(".woff2")).map((p) => p.slice(`${DIR}/fonts/`.length)).sort();
+  if (faces.length !== 15) throw new Error(`expected 15 faces at ${COMMIT}, found ${faces.length}`);
+
+  const css = show("civicsmith.css").toString("utf8")
+    + show("faces.css").toString("utf8").replace(/url\("fonts\/([^"]+)"\)/g, 'url("/app/assets/fonts/$1")');
+  const lit = JSON.stringify;
+  const plain = (type, body) => `Object.freeze({ type: ${lit(type)}, body: ${lit(body)} })`;
+  const entries = [
+    ["civicsmith.css", plain("text/css", css)],
+    ["shell.css", plain("text/css", shellCss(at(PAGE).toString("utf8")))],
+    ["icons.svg", plain("image/svg+xml", show("icons.svg").toString("utf8"))],
+    // R6: a face's base64 is a literal inside its own function, compiled and evaluated only when its body is read.
+    ...faces.map((f) => [`fonts/${f}`, `face(() => ${lit(show(`fonts/${f}`).toString("base64"))})`]),
+    ...["source-serif-4", "source-sans-3", "source-code-pro"].map((n) =>
+      [`fonts/OFL-${n}.txt`, plain("text/plain", show(`fonts/OFL-${n}.txt`).toString("utf8"))]),
+  ];
+
+  const out = `/* GENERATED: do not edit by hand. interface-assets R1–R7 (DEC-138; N897 (1); N559; N1039; K3254): the visual
+   language's stylesheet, the design page's product rules (shell.css), icons, ${faces.length} faces (base64) and their three
+   licences, read from ${DIR}/ and ${PAGE} at ASSETS_COMMIT. civicsmith.css is civicsmith.css followed by faces.css with
+   each url("fonts/<f>") rewritten to url("/app/assets/fonts/<f>") (R1, R2). A face's body is built on its first read,
+   never parsed in the global scope (R6). The map and each entry are frozen (R3); the module imports nothing (R4).
+   Written by generate.mjs beside this file; bio-plane/test/m/interface-assets/assets.test.mjs checks every entry
+   byte for byte against git. */
+export const ASSETS_COMMIT = ${lit(COMMIT)};
+const face = (read) => Object.freeze({ type: "font/woff2", encoding: "base64", get body() { return read(); } });
 export const ASSET_FILES = Object.freeze({
-${entries.map(([name, e]) => `  ${JSON.stringify(name)}: Object.freeze({ ${field(e)} }),`).join("\n")}
+${entries.map(([name, e]) => `  ${lit(name)}: ${e},`).join("\n")}
 });
 `;
-writeFileSync(join(HERE, "index.mjs"), out);
-console.log(`interface-assets: ${entries.length} files at ${COMMIT}, ${out.length} bytes`);
+  writeFileSync(join(HERE, "index.mjs"), out);
+  console.log(`interface-assets: ${entries.length} files at ${COMMIT}, ${out.length} bytes`);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

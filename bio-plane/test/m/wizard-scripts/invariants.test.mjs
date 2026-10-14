@@ -103,7 +103,7 @@ test("R20 visibility: a project's script is seen by whoever may see the project;
   const strip = (r) => ({ ...r, script: null });
   assert.deepEqual(strip(w.wz.wizardRead({ script: a.script, viewer: D })), strip(w.wz.wizardRead({ script: "WIZ-2026-0000", viewer: D })));
   assert.ok(!w.wz.wizardsAt({ screen: "case-home", viewer: D }).scripts.some((x) => x.id === a.script));
-  assert.deepEqual(w.wz.wizards({ viewer: D }).scripts, []);
+  assert.deepEqual(w.wz.wizards({ viewer: D }).scripts.map((x) => x.id), [LIBRARY[1].id, LIBRARY[0].id], "the library's only: no count or script of P (R39)");
   assert.deepEqual(w.wz.submittedFor({ viewer: D }).entries, []);
   assert.deepEqual(w.wz.brokenScripts({ viewer: D }).entries, []);
   const dc = w.wz.wizardCandidates({ viewer: V("dave") });

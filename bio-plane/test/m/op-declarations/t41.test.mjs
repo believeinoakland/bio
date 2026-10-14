@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { aiUseOps } from "../../../src/ai-use/index.mjs";
 import { membershipOps } from "../../../src/membership/index.mjs";
 import { hypothesesOps } from "../../../src/hypotheses/index.mjs";
@@ -18,11 +19,15 @@ import { inquiryOps } from "../../../src/inquiry/index.mjs";
 import { runProductionsOps } from "../../../src/run-productions/index.mjs";
 import { readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
+import { actionRecordsOps } from "../../../src/action-records/index.mjs";
 import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { provenanceOps } from "../../../src/provenance/ops.mjs";
 import { actionPlansOps } from "../../../src/action-plans/index.mjs";
 
+/* T48 (actions R103): the plane spreads `actionRecordsOps` beside `actionsOps`; the ops that moved to action-records
+   (`actionseekspropose` among them) are served by the pair */
+const actionsPair = (a, url, body, ...rest) => ({ ...actionsOps(a, url, body, ...rest), ...actionRecordsOps(a, url, body, ...rest) });
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_KINDS, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT, PLAN_RUN_SCOPE } = O;
 const MP = ["admin", "member", "probe"];
@@ -67,13 +72,14 @@ const KIND = {
 };
 
 /* every op T41 declares, by requirement: [family, kind, stamps] */
+/* T48 (R68): the project-account ops and the uses and history reads are ai-accounts' family now */
 const R41 = {
-  projectkeyset: ["credentials", "own", ["by", "viewer"]], projectsigninset: ["credentials", "own", ["by", "viewer"]],
-  projectaccountremove: ["credentials", "own", ["by", "viewer"]], projectaccountswitch: ["credentials", "own", ["by", "viewer"]],
-  projectaccountstate: ["credentials", "ownread", ["viewer"]], projectkeynotice: ["credentials", "ownread", ["viewer"]],
-  projectkeynoticeseen: ["credentials", "own", ["by", "viewer"]], projectaikeepaway: ["credentials", "own", ["by", "viewer"]],
-  projectaikeepawaystate: ["credentials", "ownread", ["viewer"]], accountusesset: ["credentials", "own", ["by", "viewer"]],
-  accountuses: ["credentials", "ownread", ["viewer"]], accounthistory: ["credentials", "ownread", ["viewer"]],
+  projectkeyset: ["ai-accounts", "own", ["by", "viewer"]], projectsigninset: ["ai-accounts", "own", ["by", "viewer"]],
+  projectaccountremove: ["ai-accounts", "own", ["by", "viewer"]], projectaccountswitch: ["ai-accounts", "own", ["by", "viewer"]],
+  projectaccountstate: ["ai-accounts", "ownread", ["viewer"]], projectkeynotice: ["ai-accounts", "ownread", ["viewer"]],
+  projectkeynoticeseen: ["ai-accounts", "own", ["by", "viewer"]], projectaikeepaway: ["ai-accounts", "own", ["by", "viewer"]],
+  projectaikeepawaystate: ["ai-accounts", "ownread", ["viewer"]], accountusesset: ["ai-accounts", "own", ["by", "viewer"]],
+  accountuses: ["ai-accounts", "ownread", ["viewer"]], accounthistory: ["ai-accounts", "ownread", ["viewer"]],
   ailimitset: ["ai-use", "own", ["by", "viewer"]], ailimits: ["ai-use", "ownread", ["viewer"]],
   aiusage: ["ai-use", "ownread", ["viewer"]], exploreapprove: ["ai-use", "own", ["by", "viewer"]],
 };
@@ -159,18 +165,18 @@ test("R41 (N812; DEC-188; K2373, K2435): the project-account ops, accountusesset
   assert.notDeepEqual(plain({ ...OPS.ailimits, mutating: true }), KIND.ownread.spec);
 });
 
-test("R41, R4, R6: each R41 op is served by its owner's map (credentials', ai-use's), its by reaching the owner from the query and its viewer on the reads; the project's key is the body's only (a query copy does not reach); aiusage reaches both arms, with owner and without (ai-use R4) (negative control: a key the owner does not read does not reach)", async () => {
-  const MAP = { credentials: credentialsOps, "ai-use": aiUseOps };
+test("R41, R4, R6: each R41 op is served by its owner's map (ai-accounts', ai-use's), its by reaching the owner from the query and its viewer on the reads; the project's key is the body's only (a query copy does not reach); aiusage reaches both arms, with owner and without (ai-use R4) (negative control: a key the owner does not read does not reach)", async () => {
+  const MAP = { "ai-accounts": aiAccountsOps, "ai-use": aiUseOps };
   for (const [op, [fam]] of Object.entries(R41)) {
     assert.ok(keysOf(MAP[fam]).includes(op), `${op} is not served by ${fam}`);
     const st = OPS[op].mutating ? "by" : "viewer";
     assert.ok(await reaches(MAP[fam], op, { query: { [st]: SENT } }), `${op}: ${st} does not reach`);
     assert.equal(await reaches(MAP[fam], op, { query: { nosuchstamp: SENT } }), false, `${op}: any key reaches`);
   }
-  assert.ok(await reaches(credentialsOps, "projectkeyset", { body: { key: SENT } }));
-  assert.equal(await reaches(credentialsOps, "projectkeyset", { query: { key: SENT } }), false, "the query's key reaches");
-  /* a body copy of by is not the actor (credentials spreads the body, then the stamp) */
-  assert.equal((await drive(credentialsOps, "accountusesset", { body: { by: SENT }, query: { by: "member:real" } })).includes(SENT), false);
+  assert.ok(await reaches(aiAccountsOps, "projectkeyset", { body: { key: SENT } }));
+  assert.equal(await reaches(aiAccountsOps, "projectkeyset", { query: { key: SENT } }), false, "the query's key reaches");
+  /* a body copy of by is not the actor (ai-accounts spreads the body, then the stamp) */
+  assert.equal((await drive(aiAccountsOps, "accountusesset", { body: { by: SENT }, query: { by: "member:real" } })).includes(SENT), false);
   const mine = await drive(aiUseOps, "aiusage", { query: { viewer: SENT } });
   const owned = await drive(aiUseOps, "aiusage", { query: { viewer: SENT, owner: "group" } });
   assert.ok(mine.includes(SENT) && owned.includes(SENT) && mine !== owned, "aiusage's two arms");
@@ -180,7 +186,7 @@ test("R41 (DEC-188 (8)): aiceilingset and aicopyceilingset are retired to ailimi
   for (const op of ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"]) {
     assert.ok(inNoTable(op), `${op} is declared`);
     assert.ok(!Object.values(ACT_HELP_ABSENT).some((g) => g.ops.includes(op)), op);
-    for (const m of [credentialsOps, aiUseOps, aiRunsOps]) assert.ok(!keysOf(m).includes(op), `${op} is served`);
+    for (const m of [credentialsOps, aiAccountsOps, aiUseOps, aiRunsOps]) assert.ok(!keysOf(m).includes(op), `${op} is served`);
   }
   /* aiusage moved: ai-use's family, not ai-runs' */
   assert.ok(!Object.hasOwn(OP_FAMILIES["ai-runs"].kinds, "aiusage") && OP_FAMILIES["ai-use"].kinds.aiusage === "ownread");
@@ -230,17 +236,17 @@ test("R43 (K2496, K2561): readpages is declared as extractpropose is — its cla
   assert.equal(NEEDS.actionseekspropose, NEEDS.actionlawspropose);
   assert.ok(both("actionseekspropose") && both("actionlawspropose"));
   for (const st of ["principal", "viewer"]) assert.ok(await reaches(runProductionsOps, "readpages", { query: { [st]: SENT } }), st);
-  assert.ok(await reaches(actionsOps, "actionseekspropose", { query: { proposer: SENT } }));
-  assert.ok(await reaches(actionsOps, "actionseekspropose", { body: { seeks: SENT } }));
-  assert.ok(await reaches(actionsOps, "actionseekspropose", { body: { target: SENT } }));
-  assert.equal((await drive(actionsOps, "actionseekspropose", { body: { seeks: "s" }, query: { seeks: SENT } })).includes(SENT), false);
+  assert.ok(await reaches(actionsPair, "actionseekspropose", { query: { proposer: SENT } }));
+  assert.ok(await reaches(actionsPair, "actionseekspropose", { body: { seeks: SENT } }));
+  assert.ok(await reaches(actionsPair, "actionseekspropose", { body: { target: SENT } }));
+  assert.equal((await drive(actionsPair, "actionseekspropose", { body: { seeks: "s" }, query: { seeks: SENT } })).includes(SENT), false);
   /* negative control: a session-only act is not as either */
   assert.notDeepEqual(plain(OPS.stepcreate), plain(OPS.extractpropose));
 });
 
 test("R43, R4, R6: each R43 op whose owner exports a map is served by it and its stamps reach the owner where it reads them — hypotheses' and reading-guides' by from the body, inquiry's, run-productions' and actions' from the query; the rest are served by the door's own map (control-plane R71: steps, question-explorer, investigation, leg-earning, case-account (T42, R48), review, ai-use's estimate and actual, ai-runs' three); milestonereminder's at is a body field, never a stamp; planPropose's machine arm is no op (N842) (negative control: a key the owner does not read does not reach)", async () => {
   const MAPS = { hypotheses: hypothesesOps, inquiry: inquiryOps, "run-productions": runProductionsOps,
-                 "reading-guides": readingGuidesOps, actions: actionsOps };
+                 "reading-guides": readingGuidesOps, actions: actionsPair };
   const DOOR = ["steps", "question-explorer", "investigation", "leg-earning", "case-account", "review"];
   let driven = 0;
   for (const [op, [fam, , st]] of Object.entries(R43)) {

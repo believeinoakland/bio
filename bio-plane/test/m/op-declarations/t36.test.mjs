@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { calculationsOps } from "../../../src/calculations/index.mjs";
@@ -212,21 +213,23 @@ test("R32, R4: each file-safety stamp reaches file-safety where it reads it, thr
 
 test("R33, R6: aikeepaway an administrator's act, a session's only (machineClasses []), mutating, by stamped, a present null; aikeepawaystate a read of admin, member, probe, stamped nothing, a present null — both in credentials' family and both session sets, in neither bearer fence, not on AI_GRANT_OPS; on and reason the body's and by the query's; securitycount a store-internal route with no spec (negative control: a declared op is in a table)", async () => {
   assert.deepEqual(plain(OPS.aikeepaway), { classes: SESSION, machineClasses: [], mutating: true });
-  assert.equal(OP_FAMILIES.credentials.kinds.aikeepaway, "admin");
+  /* T48 (R68): the keep-away ops are ai-accounts' family and map now (`securitycount` stays credentials') */
+  assert.equal(OP_FAMILIES["ai-accounts"].kinds.aikeepaway, "admin");
   assert.deepEqual(stamps("aikeepaway"), ["by", "viewer"]);
   assert.deepEqual(plain(OPS.aikeepawaystate), { classes: MP, mutating: false });
-  assert.equal(OP_FAMILIES.credentials.kinds.aikeepawaystate, "settingread");
+  assert.equal(OP_FAMILIES["ai-accounts"].kinds.aikeepawaystate, "settingread");
+  assert.ok(!Object.hasOwn(OP_FAMILIES.credentials.kinds, "aikeepaway") && !Object.hasOwn(OP_FAMILIES.credentials.kinds, "aikeepawaystate"));
   assert.deepEqual(stamps("aikeepawaystate"), []);
   for (const op of ["aikeepaway", "aikeepawaystate"]) {
     assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
     assert.ok(both(op) && !GOVERNANCE_ACTIONS.includes(op) && !IDENTITY_ACTIONS.includes(op) && !AI_GRANT_OPS.includes(op), op);
-    assert.ok(keysOf(credentialsOps).includes(op), op);
+    assert.ok(keysOf(aiAccountsOps).includes(op), op);
     assert.deepEqual(listsOf(op), [], op);
   }
-  assert.ok(await reaches(credentialsOps, "aikeepaway", { query: { by: SENT } }));
-  for (const k of ["on", "reason"]) assert.ok(await reaches(credentialsOps, "aikeepaway", { body: { [k]: SENT } }), k);
-  /* a body copy of `by` is overwritten by the stamp (credentials spreads the body, then the stamp) */
-  assert.ok(!(await drive(credentialsOps, "aikeepaway", { body: { by: SENT }, query: { by: "member:real" } })).includes(SENT));
+  assert.ok(await reaches(aiAccountsOps, "aikeepaway", { query: { by: SENT } }));
+  for (const k of ["on", "reason"]) assert.ok(await reaches(aiAccountsOps, "aikeepaway", { body: { [k]: SENT } }), k);
+  /* a body copy of `by` is overwritten by the stamp (ai-accounts spreads the body, then the stamp) */
+  assert.ok(!(await drive(aiAccountsOps, "aikeepaway", { body: { by: SENT }, query: { by: "member:real" } })).includes(SENT));
   /* R6: securitycount is served and declared nowhere */
   assert.ok(keysOf(credentialsOps).includes("securitycount"));
   assert.ok(!Object.hasOwn(OPS, "securitycount") && !Object.hasOwn(NEEDS, "securitycount") && neither("securitycount")
@@ -281,8 +284,11 @@ test("R34, R5: ACT_HELP_ABSENT is frozen data grouping op names under their grou
   /* each ground's names are what its sentence says: an alias is in OP_ALIASES; a read is no act */
   for (const op of ACT_HELP_ABSENT.alias.ops) assert.ok(Object.hasOwn(OP_ALIASES, op), op);
   for (const op of ACT_HELP_ABSENT.read.ops) assert.equal(OPS[op].mutating, false, op);
+  /* T48 (R64): a draft the assistant makes, declared in agent-worker's family as a session's read (`readtranslate`, as
+     `textcheck` is), may sit under the last ground until the design explains it */
   for (const k of ["nocontrol", "unexplained"]) for (const op of ACT_HELP_ABSENT[k].ops)
-    assert.ok(OPS[op].mutating && !Object.hasOwn(OP_ALIASES, op), op);
+    assert.ok((OPS[op].mutating || (k === "unexplained" && O.OP_FAMILIES["agent-worker"].reads.includes(op)))
+      && !Object.hasOwn(OP_ALIASES, op), op);
   /* every alias of a member op is under the alias ground: the explanation is held under its op (affordances R48) */
   for (const al of Object.keys(OP_ALIASES).filter((a) => SESSION_OPS.member.has(a))) assert.ok(ACT_HELP_ABSENT.alias.ops.includes(al), al);
   /* negative control */
