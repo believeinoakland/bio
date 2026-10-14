@@ -34,7 +34,7 @@ const SCREEN_REFS = {
     ["shield laws",null,"<b>Shield laws</b> · laws in many states, California among them, that can protect journalists from being forced to reveal unpublished sources","A member such as a reporter may have protections the rest of the group does not."]
   ],
   "group-identity": [
-    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What brought you here?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
+    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What happened?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
     ["Draft · the assistant's",null,"<b>Draft · the assistant's</b> · a label on words the assistant wrote · stays until a member edits and keeps them","Nothing here is saved as the group's own until a member keeps it."]
   ],
   "join": [
@@ -116,7 +116,7 @@ const SCREEN_REFS = {
   "capture": [
     ["the office's own site",null,"<b>The office's own site</b> · the website of the office that issued the document · for Oakland, oaklandca.gov","A copy fetched there carries its source with it, so a reader can fetch the same page and compare."],
     ["public archive",null,"<b>Public archive</b> · an outside service that keeps dated copies of public web pages · not run by the city or by your group","It can rescue a page the city has removed, but it learns which address your group asked for."],
-    ["testimony",null,"<b>Testimony</b> · one of the four grade scales · a person's own account of what they saw or heard","What you write here can support or cut against a question, labelled as yours, as Mai's Seminary Ave visit does."],
+    ["testimony",null,"<b>Testimony</b> · one of the four grade scales · a person's own account of what they saw or heard","What you write here can support or cut against a question, labeled as yours, as Mai's Seminary Ave visit does."],
     ["grade D",null,"<b>Grade D</b> · what rests on a person's word · A is easiest for someone else to check · a grade never says whether something is true","D does not mean doubtful: it tells a reader your account can be checked only by asking you."]
   ],
   "held": [
@@ -124,7 +124,7 @@ const SCREEN_REFS = {
     ["Photo · Seminary Ave at 60th","document","<b>Photo · Seminary Ave at 60th</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch: vouching for it lets it stand beside Mai's account of the unrepaired pothole."],
     ["Photo · Seminary Ave at 61st","document","<b>Photo · Seminary Ave at 61st</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch with the 60th Street photo; both are vouched for in one act."],
     ["vouched for",null,"<b>Vouching</b> · a member signs that a capture is what it says it is · until then it is held and counts toward nothing","Nothing on this list supports or cuts against any question until a member vouches for it."],
-    ["Were the FY2022 transfers authorised?","question","<b>Were the FY2022 transfers authorised?</b> · Ana's question in Sewer fund transfers · waiting on the FY2024–25 budget","Setting the budget aside sends your reason to Ana on this question."],
+    ["Were the FY2022 transfers authorized?","question","<b>Were the FY2022 transfers authorized?</b> · Ana's question in Sewer fund transfers · waiting on the FY2024–25 budget","Setting the budget aside sends your reason to Ana on this question."],
     ["FY2024–25 budget","document","<b>City budget FY2024–25, adopted</b> · PDF, 412 pages · captured 2 October · held, not yet vouched for","The third row above, not picked: vouching for it would end Ana's wait."],
     ["crucial to a finding",null,"<b>Crucial to a finding</b> · a capture a finding would fall without · vouched for one at a time, never in a batch","The March 2024 amendment carries a finding in The Coliseum lease, so it gets its own look."]
   ],
@@ -164,7 +164,7 @@ const SCREEN_REFS = {
     ["seven calendar days","standard","<b>Seven calendar days</b> · the standard Administrative Instruction 4.12 sets in passage 3 · weekends and holidays count","Ask the assistant whether the city's 2026 report counted calendar or working days; it says where it looked."],
     ["passage 3","document","<b>Passage 3</b> of Administrative Instruction 4.12 · \"The Director shall repair each reported pothole within seven calendar days of the report, weather permitting.\"","Ask the assistant to set it beside passage 5, which says when a report counts as closed."],
     ["computed fact",null,"<b>Computed fact</b> · a figure worked out from captured data by a stated method · recomputed when an input changes","The assistant can explain the method; only a member's check, like Ana's, is recorded as a check."],
-    ["Ana","members","<b>Ana</b> · member of your group · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the count on 5 October; the assistant's work is labelled machine work and is not a check."],
+    ["Ana","members","<b>Ana</b> · member of your group · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Checked the count on 5 October; the assistant's work is labeled machine work and is not a check."],
     ["marked closed on 15 September",null,"<b>Report at 6012 Seminary Ave</b> · reported 12 September · marked closed 15 September · still open when Mai visited on 4 October","Ask the assistant for this report's work order: it would show what the crew recorded on 15 September."],
     ["Mai","members","<b>Mai</b> · member of your group · translates Español · joined 2 October","Mai's account is testimony; the assistant can find related records but cannot raise its grade."],
     ["Hunch",null,"<b>Hunch</b> · a member's suspicion, kept on the record · supports nothing and counts toward no grade","Ask the assistant what records would test Dev's hunch; it stays a hunch until a source supports it."]
@@ -184,10 +184,10 @@ const SCREEN_REFS = {
     ["city roster",null,"<b>City roster</b> · the City of Oakland's published list of officials and their posts","The source for the current post; when it changes, this page shows who holds the office next."],
     ["council minutes",null,"<b>Council minutes</b> · the council's official record of its meetings · published on Legistar","The source for the earlier post, 2018 to 2022."],
     ["Deputy Director, Transportation",null,"<b>Deputy Director, Transportation</b> · a post in Public Works · held by L. Chen 2018–2022, from council minutes","The post that links L. Chen to \"Lin Chen\" in the 2019 minutes."],
-    ["state licence register",null,"<b>State licence register</b> · California's public register of licensed engineers","Following it brings any change to this licence into your queue."],
+    ["state license register",null,"<b>State license register</b> · California's public register of licensed engineers","Following it brings any change to this license into your queue."],
     ["Form 700",null,"<b>Form 700</b> · California's Statement of Economic Interests · filed yearly by officials · lists income, property and gifts","The 2025 filing reports none; a later filing would show any change."],
     ["Lin Chen",null,"<b>“Lin Chen”</b> · a name in the 2019 council minutes · claimed as the same person · subject match B","If the claim is wrong, the 2019 facts belong to someone else; withdraw it with a reason."],
-    ["grade B",null,"<b>Subject match B</b> · rests on the same post held on the cited dates, not on a shared identifier","A shared identifier, such as a licence number on both records, would make it easier to check."],
+    ["grade B",null,"<b>Subject match B</b> · rests on the same post held on the cited dates, not on a shared identifier","A shared identifier, such as a license number on both records, would make it easier to check."],
     ["2019 voter file",null,"<b>2019 voter file</b> · the county's voter registration list · the source of the home address being removed","The value taken from it is what this removal erases for good."],
     ["the docket","docket","<b>The docket</b> · each published case's public record of corrections, withdrawals and orders","Published cases that cite the address are dealt with there, openly, not by this removal."]
   ],
@@ -201,14 +201,14 @@ const SCREEN_REFS = {
     ["Memo on rent indexing","document","<b>Memo on rent indexing</b> · a document · no date on its face","Kept apart until a source dates it; it may show how the 2024 rent was set."]
   ],
   "money": [
-    ["Sewer Fund 3100",null,"<b>Sewer Fund 3100</b> · the city fund that holds sewer-fee revenue · kept apart from the general fund","Transfers out of it are what Ana's question asks were authorised."],
+    ["Sewer Fund 3100",null,"<b>Sewer Fund 3100</b> · the city fund that holds sewer-fee revenue · kept apart from the general fund","Transfers out of it are what Ana's question asks were authorized."],
     ["adopted",null,"<b>Adopted</b> · a stage · the amount in the budget the council adopted for the year","Set against the paid figure to show what moved beyond the budget."],
     ["actual (paid)",null,"<b>Actual (paid)</b> · a stage · what was paid, from the city's annual financial report","$550,000 above the adopted figure for the same transfer."],
     ["Overhead charge",null,"<b>Overhead charge</b> · what the sewer fund pays for shared city services · recorded apart from transfers","Left out by Ana as a different transfer; the reason stays on the record."],
-    ["$550,000 more paid than adopted",null,"<b>$550,000</b> · $4,750,000 paid against $4,200,000 adopted · FY2022 · Sewer Fund 3100","The gap the trail rests on; What authorised it looks for the act behind the extra."],
+    ["$550,000 more paid than adopted",null,"<b>$550,000</b> · $4,750,000 paid against $4,200,000 adopted · FY2022 · Sewer Fund 3100","The gap the trail rests on; What authorized it looks for the act behind the extra."],
     ["the budget",null,"<b>Adopted budget, FY2022</b> · the council's spending plan for the year · reports by fund","The source of the adopted figure."],
     ["the financial report",null,"<b>Annual financial report, FY2022</b> · the city's year-end accounts · reports by department","The source of the paid figure; its basis differs from the budget's, so figures need matching first."],
-    ["Ana","members","<b>Ana</b> · member of your group · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Started this trail for the question \"Were the FY2022 transfers authorised?\""]
+    ["Ana","members","<b>Ana</b> · member of your group · owns Sewer fund transfers · declared expertise: accounting (CPA, confirmed)","Started this trail for the question \"Were the FY2022 transfers authorized?\""]
   ],
   "calculation": [
     ["812 of 903",null,"<b>812 of 903</b> · reports whose closed date is within 7 calendar days of the reported date · FY2025","It counts \"closed\" as the city records it: when the crew reports the work complete, not after an inspection."],
@@ -326,7 +326,7 @@ const SCREEN_REFS = {
   ],
   "ceremony": [
     ["a new edition","docket","<b>A new edition</b> · how a published case is corrected · posted on the case's docket · the earlier edition stays public","Nothing here can be unpublished; a mistake found later costs a new edition."],
-    ["Bias", null, "<b>Declared bias</b> · the group's own statement of any stake it has in what it examines, in its own words · every published case carries it", "Readers judge the case knowing what the group may favour."],
+    ["Bias", null, "<b>Declared bias</b> · the group's own statement of any stake it has in what it examines, in its own words · every published case carries it", "Readers judge the case knowing what the group may favor."],
     ["Ties","ties","<b>Ties</b> · a step · each member confirms any tie to people or firms the case concerns · Teo's tie to the Bay Courier is declared","If a member's confirmation changes after you sign, a scheduled publish stops."],
     ["Finding 1",null,"<b>Finding 1</b> · the 2024 rent adjustments were made without the council vote the lease requires · capture B, connection B","The case's central claim; it meets the bar, so it can be relied on in public."],
     ["Finding 2",null,"<b>Finding 2</b> · two rent adjustments had no council vote · capture B, connection B · Prof. Iyer asked it to name which schedule the council approved","Check the reviewer's comment was answered before you sign."],
@@ -337,7 +337,7 @@ const SCREEN_REFS = {
     ["owner of the project",null,"<b>Owner of The Coliseum lease</b> · Dev · only an owner signs the project's cases","Your signature stands for the group; readers see “signed by an owner of the project”."]
   ],
   "published": [
-    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 14 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
+    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 19 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the group that made this case · tenants near the Oakland Coliseum, meeting since 2025","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
     ["this project's bar",null,"<b>The project's bar</b> · the least strength a finding needs before the group relies on it · here B for both grades","This finding meets it; the bar is the group's own, set before publishing."],
@@ -371,8 +371,8 @@ const SCREEN_REFS = {
     ["doorbell","doorbell","<b>Your doorbell</b> · the group's public page where anyone can hand over material, without an account","Everything here came through it, so the sender may be anyone."],
     ["3 PDFs",null,"<b>3 PDFs</b> · handed in 3 October · not yet in the record","Nothing in them counts until a member moves them into the record and they are graded like any other document."],
     ["inspection sheets","action","<b>Inspection sheets</b> · what the sender calls these files · claimed, not checked · the group's records request asks the City Clerk for inspection logs, due 14 October","Compare them with what the City Clerk releases; sheets that match would raise their standing."],
-    ["same knocker as 12 September",null,"<b>Same knocker</b> · recognised by the secret phrase the sender added · the sender also handed in material on 12 September","Still unnamed, but how the earlier material held up tells you something about this."],
-    ["Same knocker",null,"<b>Same knocker</b> · where this source stands · recognised across deliveries, nothing more known","Weigh the material by what can be checked in it, not by who might have sent it."],
+    ["same knocker as 12 September",null,"<b>Same knocker</b> · recognized by the secret phrase the sender added · the sender also handed in material on 12 September","Still unnamed, but how the earlier material held up tells you something about this."],
+    ["Same knocker",null,"<b>Same knocker</b> · where this source stands · recognized across deliveries, nothing more known","Weigh the material by what can be checked in it, not by who might have sent it."],
     ["Partly known",null,"<b>Partly known</b> · the next step · a member records what is known of the source, such as role or access, without naming them","Recording it helps weigh the material without exposing who sent it."]
   ],
   "doorbell": [
@@ -413,21 +413,39 @@ const TITLE_HELP = {
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
   "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
-  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 14 November 2026, which corrects Edition 1.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 19 November 2026, which corrects Edition 1.",
   "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
-  install: 'Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group\'s permanent short name and let the installation test itself.',
+  site: 'Civicsmith\'s own website: what it is, a group\'s published work, the groups that chose to be listed, and how to start a group.',
+  install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
+  update: 'Updates your group\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',
+  updates: 'Administrators only: the release your group\'s Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.',
+  front: 'Your group\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
+  'help-records': 'What the law requires of the office you ask for records, the faster request, and what the city\'s portal shows.',
+  tour: 'How your group works, in six short steps, for anyone: no account needed, nothing recorded.',
+  reset: 'Choose a new password from the one-time reset link an administrator made for you.',
+  forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
+  group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
+  settings: 'Every setting in one list: yours first, then the group\'s.',
+  projects: 'Every project you can see: its stage, who works on it, how busy it is, and when it last changed.',
+  'dash-action': 'The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.',
+  'dash-project': 'One project as a dashboard: your next steps here, the project at a glance, its story so far, and its activity.',
+  people: 'The people and organizations your group\'s record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.',
+  unavailable: 'What you see when an address leads nowhere, when something isn\'t yours to see, or when your group\'s Civicsmith can\'t be reached.',
+  'review-outside': 'What someone outside the group sees when asked to review a draft case: the draft and a place to comment.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
   'group-identity': 'What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.',
   join: 'Your invitation to join a group. Choose your language, the name the group will know you by, and a password.',
-  home: 'Your group\'s home: what it is working on and what is waiting on you. Start here each day.',
+  home: 'Your group\'s home, the nerve center: what needs you, what needs the group, every area at a glance, the projects and what changed since you last looked. Start here each day.',
   members: 'Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.',
+  places: 'Administrators only: the places whose rules your group\'s Civicsmith follows (deadlines, holidays, offices, records laws), and the offices and seats your group deals with.',
+  recovery: 'Your own recovery codes, which let you set a new password if you lose yours. Each works once.',
   security: 'Administrators only: how hard your group\'s Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.',
   account: 'Your own settings: your handle, password, signing key, language and expertise.',
   connect: 'Whether and how the assistant serves you: on your group\'s key, your own Claude account, or not at all. Set your limit and suggestions here.',
-  ties: 'Your own ties to people or organisations the group may look into. Only you and the administrators see this list.',
+  ties: 'Your own ties to people or organizations the group may look into. Only you and the administrators see this list.',
   notes: 'Your private notes. Only you can see them in your group; turn one into an observation, a hunch or a question when you choose.',
   translations: 'The words members see, in your group\'s languages. Members given the grant translate them, the assistant drafts where it can, and protected words are checked twice.',
   wizards: 'Step-by-step walk-throughs of the real screens. Civicsmith\'s own come with each release; your group can write its own or copy one and change the copy.',
@@ -467,13 +485,13 @@ const SCREEN_HELP = {
   doorbell: 'Hand material to the group. You need no account; the page says what will happen to what you send.',
 };
 const RAIL_HELP = {
-  home: 'Home: what your group is working on and what is waiting on you.',
+  home: 'Home: what needs you, what needs the group, and every area at a glance.',
   queue: 'Queue: everything waiting on you, in one list.',
   find: 'Find: search what your group holds, or look outside for something new.',
   add: 'Add: capture a document, a file, or what you saw yourself.',
   projects: 'Projects: your group\'s investigations, their questions, plans and cases.',
-  people: 'People: the people and organisations the record follows. Your own group\'s members are under Settings.',
-  settings: 'Settings: your account, your group\'s members, the assistant, translations and wizards.',
+  people: 'People: the people and organizations the record follows. Your own group\'s members are under Settings.',
+  settings: 'Settings: your account, your group\'s members, the assistant, translations, wizards and updates.',
 };
 
 // What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).

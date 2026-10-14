@@ -3,32 +3,135 @@
  "checkedAgainst": "origin/main",
  "screens": [
   {
-   "id": "install",
-   "name": "Install Civicsmith",
+   "id": "site",
+   "name": "civicsmith.org",
    "frame": "setup",
-   "purpose": "The installer page: what is needed, the short name, installing the signed release into the group's own account.",
+   "purpose": "Civicsmith's own website, one site of three pages joined by one menu (Bob's D6, K3060; DEC-206; rewritten for its readers, DEC-223): the front page, for someone who has never heard of Civicsmith (what it is, how a group uses it in five steps, what a group gets, what it does not do, a published case, members sent to their own group's address); \"Start a group\", for a member who has decided (whether it fits, what is needed, who holds the Cloudflare account, what happens step by step, what it costs, then \"Create your group\" opens the installer); \"Groups at work\", the groups that chose to be listed (DEC-132).",
+   "acts": [],
+   "journeys": [
+    1,
+    28
+   ]
+  },
+  {
+   "id": "install",
+   "name": "Create your Civicsmith group",
+   "frame": "setup",
+   "purpose": "The founder's link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare's permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).",
    "acts": [
     {
      "op": "bootstrap",
-     "label": "Install with this short name",
+     "label": "Continue to Cloudflare",
      "status": "declared",
      "modules": [
       "installer",
-      "instance-setup"
+      "instance-setup",
+      "setup-page"
      ]
-    },
+    }
+   ],
+   "journeys": [
+    1,
+    28
+   ]
+  },
+  {
+   "id": "update",
+   "name": "Update your group's Civicsmith",
+   "frame": "setup",
+   "purpose": "The hosting account's holder updates the group's Civicsmith to the signed release chosen in Settings › Updates and no other: the versions before and after, the steps as they run, a stop that leaves it running as it was, and the finish; records, members and settings are kept (installer R1, R17, R52, R54; DEC-201, DEC-226).",
+   "acts": [
     {
-     "op": "selftest",
-     "label": "Let it test itself",
+     "op": "bootstrap",
+     "label": "Continue to Cloudflare to update",
      "status": "declared",
      "modules": [
       "installer",
-      "instance-setup"
+      "instance-setup",
+      "setup-page"
      ]
     }
    ],
    "journeys": [
     1
+   ]
+  },
+  {
+   "id": "front",
+   "name": "Your group's page",
+   "frame": "public",
+   "purpose": "The group's own landing page at its address (Bob's D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).",
+   "acts": [
+    {
+     "op": "login",
+     "label": "Sign in",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "unlock",
+     "label": "Unlock",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "credentials"
+     ]
+    }
+   ],
+   "journeys": [
+    3,
+    28
+   ]
+  },
+  {
+   "id": "tour",
+   "name": "How we work, step by step",
+   "frame": "public",
+   "purpose": "The walk-through for anyone, offered on the group's page before joining (Bob's D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).",
+   "acts": [],
+   "journeys": [
+    3
+   ]
+  },
+  {
+   "id": "reset",
+   "name": "Choose a new password",
+   "frame": "public",
+   "purpose": "The administrator's one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob's D4, K3060; DEC-201, DEC-205).",
+   "acts": [
+    {
+     "op": "passwordreset",
+     "label": "Set my new password",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "credentials"
+     ]
+    }
+   ],
+   "journeys": [
+    3
+   ]
+  },
+  {
+   "id": "forgot",
+   "name": "Forgot your password",
+   "frame": "public",
+   "purpose": "Getting back in without email: any member with one of their recovery codes, or through an administrator's one-time reset link (Bob's D4, B3, K3060; credentials R47; DEC-201, DEC-202).",
+   "acts": [
+    {
+     "op": "recover",
+     "label": "Set a new password with a recovery code",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    3
    ]
   },
   {
@@ -137,11 +240,11 @@
      ]
     },
     {
-     "op": "hostingaccess",
+     "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "setup-page"
      ]
     },
     {
@@ -160,10 +263,19 @@
      "modules": [
       "setup-page"
      ]
+    },
+    {
+     "op": "recoverycodesissue",
+     "label": "Show my recovery codes",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
-    1
+    1,
+    28
    ]
   },
   {
@@ -236,23 +348,75 @@
       "admission",
       "setup-page"
      ]
+    },
+    {
+     "op": "joinlinkinvite",
+     "label": "Join through the group's join link",
+     "status": "declared",
+     "modules": [
+      "admission",
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
-    3
+    3,
+    28
    ]
   },
   {
    "id": "home",
    "name": "Your group's home",
    "frame": "working",
-   "purpose": "What the group is working on, what waits on you, and \"What happened?\", the door to a first step.",
+   "purpose": "The group's nerve center (Bob's S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and \"What happened?\", the door to a first step; a new member's first visit and a new group's empty home as states.",
    "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Act on an item",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
     {
      "op": "promote",
      "label": "Start a project",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
@@ -284,6 +448,19 @@
      "status": "declared",
      "modules": [
       "setup-page"
+     ]
+    },
+    {
+     "op": "owed:passwordresetlink DEC-201",
+     "label": "Make a reset link for a member",
+     "status": "owed"
+    },
+    {
+     "op": "signerset",
+     "label": "Withdraw a member's signing key",
+     "status": "function",
+     "modules": [
+      "credentials"
      ]
     },
     {
@@ -466,6 +643,22 @@
      ]
     },
     {
+     "op": "signout",
+     "label": "Sign out on this device",
+     "status": "declared",
+     "modules": [
+      "interface-shell"
+     ]
+    },
+    {
+     "op": "signouteverywhere",
+     "label": "Sign out everywhere",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
      "op": "setpassword",
      "label": "Change your password",
      "status": "declared",
@@ -502,7 +695,10 @@
      "op": "infolevelset",
      "label": "Choose how much is explained",
      "status": "declared",
-     "servedBy": "instance-setup R79 (T46)"
+     "modules": [
+      "instance-setup",
+      "interface-shell"
+     ]
     }
    ],
    "journeys": [
@@ -536,7 +732,10 @@
      "op": "subscriptionsignin",
      "label": "Open Anthropic's sign-in page",
      "status": "declared",
-     "servedBy": "control-plane R65"
+     "modules": [
+      "interface-shell",
+      "screens-settings"
+     ]
     },
     {
      "op": "accountreferenceset",
@@ -549,9 +748,9 @@
     {
      "op": "subscriptiondisconnect",
      "label": "Disconnect your subscription",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "screens-settings"
      ]
     },
     {
@@ -582,6 +781,176 @@
    "journeys": [
     4,
     17
+   ]
+  },
+  {
+   "id": "places",
+   "name": "Places and offices",
+   "frame": "working",
+   "purpose": "Administrators: the places whose rules apply, the place a group wants that Civicsmith does not hold yet, and the offices and seats the group deals with (setup-page R13; instance-setup R50, R62; DEC-200 (8), N997).",
+   "acts": [
+    {
+     "op": "profilesset",
+     "label": "Choose the places whose rules apply",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "placewanted",
+     "label": "Save the place you want",
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "setup-page"
+     ]
+    },
+    {
+     "op": "officesseed",
+     "label": "Fill in the offices again",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "entitycreate",
+     "label": "Add an office yourself",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
+   "id": "recovery",
+   "name": "Recovery codes",
+   "frame": "working",
+   "purpose": "Every member's own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).",
+   "acts": [
+    {
+     "op": "recoverycodesissue",
+     "label": "Get new recovery codes",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
+   "id": "group",
+   "name": "Your group",
+   "frame": "working",
+   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar (DEC-201).",
+   "acts": [
+    {
+     "op": "groupnameset",
+     "label": "Save the name",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "groupdomainset",
+     "label": "Verify the website",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "grouplanguagesset",
+     "label": "Save the languages",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "grouplogoset",
+     "label": "Change the logo",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "courtnoticeset",
+     "label": "Show the court notice",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "hostingaccessset",
+     "label": "Record who holds the hosting account",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "strengthbarset",
+     "label": "Set the group's bar",
+     "status": "function",
+     "modules": [
+      "strength"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
+   "id": "settings",
+   "name": "Settings",
+   "frame": "working",
+   "purpose": "Every setting in one list: the member's own, then the group's for administrators (DEC-201).",
+   "acts": [],
+   "journeys": [
+    2,
+    3
+   ]
+  },
+  {
+   "id": "updates",
+   "name": "Updates",
+   "frame": "working",
+   "purpose": "Administrators: the release the group's Civicsmith runs; the release ready to install (version, date, a security mark when present, the signed release notes in three parts: for members, for administrators, what an administrator must do); the choice Update (the installer's page, set to that release), Not now, or Skip this version with a reason; the hand-off, with a link to copy, for an administrator who does not hold the group's Cloudflare account; the releases installed and skipped (K3158, DEC-226).",
+   "acts": [
+    {
+     "op": "owed:updatestart K3158",
+     "label": "Update",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updateskip K3158",
+     "label": "Skip this version, with a reason",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    19
    ]
   },
   {
@@ -771,6 +1140,117 @@
    "journeys": []
   },
   {
+   "id": "projects",
+   "name": "Projects",
+   "frame": "working",
+   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).",
+   "acts": [
+    {
+     "op": "promote",
+     "label": "Start a project",
+     "status": "declared",
+     "modules": [
+      "action-producers",
+      "basis-versions",
+      "control-plane",
+      "promotion"
+     ]
+    }
+   ],
+   "journeys": [
+    6
+   ]
+  },
+  {
+   "id": "dash-action",
+   "name": "The Action dashboard",
+   "frame": "working",
+   "purpose": "An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.",
+   "acts": [
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "reminderanswer",
+     "label": "Answer a reminder",
+     "status": "declared",
+     "modules": [
+      "action-clocks"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Start the next step",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
+    {
+     "op": "actioncreate",
+     "label": "Start an action",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    }
+   ],
+   "journeys": [
+    22
+   ]
+  },
+  {
+   "id": "dash-project",
+   "name": "A project's dashboard",
+   "frame": "working",
+   "purpose": "A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.",
+   "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    }
+   ],
+   "journeys": [
+    15
+   ]
+  },
+  {
+   "id": "unavailable",
+   "name": "Can't open this",
+   "frame": "working",
+   "purpose": "An address that leads nowhere, something the member may not see, and the group's Civicsmith out of reach (DEC-201).",
+   "acts": [],
+   "journeys": [
+    3
+   ]
+  },
+  {
    "id": "queue",
    "name": "Your queue",
    "frame": "working",
@@ -791,6 +1271,11 @@
      "modules": [
       "tasks"
      ]
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
     },
     {
      "op": "proposedispose",
@@ -847,6 +1332,7 @@
      "label": "Open a question from a hint",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
@@ -866,6 +1352,14 @@
      "status": "function",
      "modules": [
       "ai-use"
+     ]
+    },
+    {
+     "op": "actionmove",
+     "label": "Drop an unsent request, with a reason",
+     "status": "declared",
+     "modules": [
+      "actions"
      ]
     }
    ],
@@ -959,7 +1453,8 @@
      "label": "Capture a file or photo",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "screens-intake"
      ]
     },
     {
@@ -981,8 +1476,17 @@
      ]
     },
     {
-     "op": "monitor",
+     "op": "monitorset",
      "label": "Watch this address",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "monitoring"
+     ]
+    },
+    {
+     "op": "monitor",
+     "label": "Check it now",
      "status": "declared",
      "modules": [
       "capture-sources",
@@ -1121,7 +1625,8 @@
      "label": "Read the safe view",
      "status": "declared",
      "modules": [
-      "file-safety"
+      "file-safety",
+      "screens-intake"
      ]
     },
     {
@@ -1203,8 +1708,17 @@
      ]
     },
     {
-     "op": "monitor",
+     "op": "monitorset",
      "label": "Watch for changes",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "monitoring"
+     ]
+    },
+    {
+     "op": "monitor",
+     "label": "Check for a new version now",
      "status": "declared",
      "modules": [
       "capture-sources",
@@ -1340,9 +1854,19 @@
      "label": "Open a question",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
+     ]
+    },
+    {
+     "op": "drawquestion",
+     "label": "Draw on a question from elsewhere",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "citation"
      ]
     },
     {
@@ -1354,9 +1878,10 @@
      ]
     },
     {
-     "op": "strengthbarset",
-     "label": "Set the project's bar",
-     "status": "function",
+     "op": "projectbarset",
+     "label": "Set this project's bar",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
      "modules": [
       "strength"
      ]
@@ -1455,9 +1980,10 @@
      ]
     },
     {
-     "op": "owed:projectaikeepaway DEC-188",
+     "op": "projectaikeepaway",
      "label": "Keep the project's material away from AI, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "servedBy": "op-declarations R41 (BOB's B172: declared and served, T47)"
     }
    ],
    "journeys": []
@@ -1577,7 +2103,9 @@
      "op": "ask",
      "label": "Ask",
      "status": "declared",
-     "servedBy": "the plane's ask door, agent-worker R54"
+     "modules": [
+      "screens-daily"
+     ]
     },
     {
      "op": "ruleanswer",
@@ -1659,6 +2187,44 @@
    ]
   },
   {
+   "id": "people",
+   "name": "People",
+   "frame": "working",
+   "purpose": "A directory of the people and organizations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
+   "acts": [
+    {
+     "op": "search",
+     "label": "Search people and organizations",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "retrieval"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    },
+    {
+     "op": "entitycreate",
+     "label": "Add someone the record follows",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    10,
+    13
+   ]
+  },
+  {
    "id": "person",
    "name": "Person",
    "frame": "working",
@@ -1670,6 +2236,14 @@
      "status": "declared",
      "modules": [
       "people"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
      ]
     },
     {
@@ -1832,7 +2406,7 @@
     },
     {
      "op": "authoritychain",
-     "label": "What authorised it",
+     "label": "What authorized it",
      "status": "function",
      "modules": [
       "money"
@@ -1967,16 +2541,34 @@
     },
     {
      "op": "testify",
-     "label": "Record what you found at a report",
+     "label": "Record what you saw at a report",
      "status": "function",
      "modules": [
       "entities",
       "provenance"
      ]
+    },
+    {
+     "op": "spotcheckvisit",
+     "label": "Count it for the drawn report",
+     "status": "declared",
+     "modules": [
+      "calculations"
+     ]
     }
    ],
    "journeys": [
     9
+   ]
+  },
+  {
+   "id": "help-records",
+   "name": "Help: How a records request works",
+   "frame": "working",
+   "purpose": "What your state's public records law requires of the office, your city's faster request where it has one, what the city's portal shows, and what Civicsmith does with a request; the place's own facts come from the group's places (Bob's D13, K3060; DEC-209; B177).",
+   "acts": [],
+   "journeys": [
+    7
    ]
   },
   {
@@ -2032,6 +2624,7 @@
      "label": "Open a question from this chain",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
@@ -2599,7 +3192,7 @@
    "id": "ceremony",
    "name": "Publication ceremony",
    "frame": "working",
-   "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, signing.",
+   "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob's D9, K3060; Q4): when it becomes public, the password asked again (D3), the member's own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn't an owner (DEC-207).",
    "acts": [
     {
      "op": "publishpreflight",
@@ -2620,7 +3213,7 @@
     },
     {
      "op": "caseratify",
-     "label": "Sign with your key",
+     "label": "Sign and publish now",
      "status": "declared",
      "modules": [
       "publication",
@@ -2629,7 +3222,7 @@
     },
     {
      "op": "publish",
-     "label": "Publish, with your confirmation of no undeclared tie",
+     "label": "Confirm your ties and prepare the edition for signing",
      "status": "declared",
      "modules": [
       "case-authoring",
@@ -2639,7 +3232,7 @@
     },
     {
      "op": "publishat",
-     "label": "Publish at a set time, checked again then",
+     "label": "Sign now and publish at a set time, checked again then",
      "status": "declared",
      "modules": [
       "publication",
@@ -2662,11 +3255,65 @@
      "modules": [
       "case-carriage"
      ]
+    },
+    {
+     "op": "signerregisterown",
+     "label": "Register a signing key in this browser",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
+     "op": "signrequest",
+     "label": "Ask an owner to sign",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "tasks"
+     ]
+    },
+    {
+     "op": "publishatmove",
+     "label": "Move the publishing time",
+     "status": "declared",
+     "modules": [
+      "publish-schedule",
+      "queue-producers"
+     ]
+    },
+    {
+     "op": "publishatcancel",
+     "label": "Cancel publishing",
+     "status": "declared",
+     "modules": [
+      "publish-schedule",
+      "queue-producers"
+     ]
     }
    ],
    "journeys": [
     15,
     24
+   ]
+  },
+  {
+   "id": "review-outside",
+   "name": "A review copy, from outside",
+   "frame": "published",
+   "purpose": "What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).",
+   "acts": [
+    {
+     "op": "reviewcomment",
+     "label": "Send your comment",
+     "status": "declared",
+     "modules": [
+      "review"
+     ]
+    }
+   ],
+   "journeys": [
+    21
    ]
   },
   {

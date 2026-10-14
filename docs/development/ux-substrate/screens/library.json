@@ -22,8 +22,8 @@
       {
        "screen": "install",
        "act": null,
-       "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.",
-       "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up."
+       "what": "Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.",
+       "why": "Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up."
       },
       {
        "screen": "install",
@@ -33,9 +33,9 @@
       },
       {
        "screen": "install",
-       "act": "selftest",
-       "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.",
-       "why": "The test proves it works before anyone relies on it."
+       "act": null,
+       "what": "Your group's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",
+       "why": "The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later."
       },
       {
        "screen": "install",
@@ -99,7 +99,7 @@
       },
       {
        "screen": "setup",
-       "act": "hostingaccess",
+       "act": "hostingaccessset",
        "what": "Record who holds the hosting account.",
        "why": "If you are ever unreachable, this is how the group gets back in."
       },
@@ -252,19 +252,19 @@
       {
        "screen": "ceremony",
        "act": "publish",
-       "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.",
-       "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not."
+       "what": "Confirm you have no undeclared tie to anyone the case concerns, and prepare the edition for signing.",
+       "why": "Including anyone paid in its money. Your confirmation goes inside what you sign. A tie disclosed is a strength; one found later is not."
       },
       {
        "screen": "ceremony",
        "act": "caseratify",
-       "what": "Sign with your key.",
-       "why": "Publishing is permanent. Corrections come as a new edition, never by changing this one."
+       "what": "Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.",
+       "why": "Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one."
       },
       {
        "screen": "ceremony",
        "act": "publishat",
-       "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.",
+       "what": "To publish later, sign now with “Sign and publish at…”, such as when a story citing it runs.",
        "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then."
       }
      ]
@@ -565,6 +565,44 @@
        "act": "websitekeycreate",
        "what": "Or let people join through your website: create a website key, or turn on the reusable join link.",
        "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "WIZ-7de505135a9ecd4f",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Update your group's Civicsmith",
+   "start": "updates",
+   "required": false,
+   "journeys": [
+    19
+   ],
+   "note": "",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "updates",
+       "act": null,
+       "what": "Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.",
+       "why": "The notes are signed with the release itself, so what you read is what Civicsmith published."
+      },
+      {
+       "screen": "updates",
+       "act": "owed:updatestart K3158",
+       "what": "Choose Update if you hold your group's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
+       "why": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your group's Civicsmith cannot rewrite itself."
+      },
+      {
+       "screen": "update",
+       "act": "bootstrap",
+       "what": "On the installer's page, check the release running and the release chosen, then continue to Cloudflare and allow the update.",
+       "why": "If a step stops, your group's Civicsmith keeps running as it was; the stop says what to do."
       }
      ]
     }
@@ -1282,7 +1320,7 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.",
+       "what": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.",
        "why": "The words that leave the group are always a member's."
       },
       {

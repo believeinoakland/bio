@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build civicsmith.css from palette.json (colour tokens) and components.css (DEC-138), then check contrast.
+"""Build civicsmith.css from palette.json (color tokens) and components.css (DEC-138), then check contrast.
 Run from anywhere: python3 docs/development/ux-substrate/visual-language/build.py"""
 import json, os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
