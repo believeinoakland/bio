@@ -1,6 +1,6 @@
 # affordances (T48)
 
-**Status** · session_013rWFiEswSPebSrrG2bB1Kf · depth 2 · COMPLETE · handled B2
+**Status** · session_013rWFiEswSPebSrrG2bB1Kf · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -47,3 +47,14 @@ Merged `tranche/T48` (op-grades in). Fixed in my tests: t34 (`groupdescriptiondr
 ## J3 · REPORT
 
 B2 applied; merged tranche/T48. 3 tests red, all planask: op-grades t48.mjs still holds it as an ACTS row with MACHINE_CANNOT_PLAN and no NON_ACTS row, against your ruling. Needs an op-grades CHANGE; then they pass unchanged. Everything else green (actionreplyquoting passes as an ACTS row). Architecture edge to ai-accounts: see below.
+
+## After B3 (K3301, K3302)
+`unaccounted` (R12): a `RUNG_ABSENT` op held `caller-owned` and carried as a gated row is no longer stale (`groupdescriptiondraft`, `securitymap`, which op-declarations declares `ownread`); a ranked op, another absence ground, and an op carried by no row or only ungated still read stale. Control test in `t48.test.mjs`; `services.test.mjs` re-pinned. Ran `test/m/affordances/` plus the nine control-plane tests that name affordances (`totality`, `affordances-pack`, ...): 296 tests, all pass except the one fixed after (`services` R12, now 10/10); the three `planask` tests are red only until op-grades' CHANGE (B2 note), unless that has landed in the merged tranche.
+
+## J4 · COMPLETE
+
+B3 done: unaccounted() now accepts a caller-owned absence carried as a gated read (control added); totality and affordances-pack tests of control-plane pass, module tests pass (296 incl. control-plane tests). Only open items: the planask ACTS-row mismatch in op-grades (3 tests of mine), and the modules.json edge to ai-accounts.
+
+## J5 · REPORT
+
+Correction to J4: the full run shows no planask failure (op-grades now drops it) and architecture shows 0 failures (the ai-accounts edge is in). Nothing open on my side.
