@@ -1,11 +1,14 @@
-/* op-declarations, T49 (R71, R72; N1072, N1091; K3265, K3333; DEC-237 (3)): the founder's handle op and the project
-   owners' votes read, with R34 over each. Each op is tested by name with its controls (K874). Specs, sets, rows and
+/* op-declarations, T49 (R3, R71, R72; K3298, K3339; N1072, N1091; K3265, K3333; DEC-237 (3)): `NEEDS` composed from
+   `op-capabilities.needsRows()` and the families' rows (R3), the founder's handle op and the project owners' votes read,
+   with R34 over each. Each op is tested by name with its controls (K874). Specs, sets, rows and
    stamps are read from the exported tables; each stamp is driven through its owner's own ops map (membership's,
    project-roster's), so a stamp named at a site the owner does not read is seen. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { T49_SHARES } from "../../../src/op-declarations/t49.mjs";
+import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
+import { needsRows } from "../../../src/op-capabilities/index.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { membershipOps } from "../../../src/membership/index.mjs";
@@ -139,4 +142,64 @@ test("R72, R34 (T49): projectownervotes is named in ACT_HELP_ABSENT under the re
   if (!explained(op)) assert.deepEqual(ground(op), ["read"]);
   assert.ok(SESSION_OPS.member.has(op));
   assert.ok(explained("statementack") && ground("statementack").length === 0);
+});
+
+/* ---------- R3 ---------- */
+
+/* what the families' kinds give: a row for every family op whose kind has one (`needs: undefined` is no row) */
+const familyRows = () => Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds)
+  .filter(([, k]) => OP_KINDS[k].needs !== undefined).map(([op, k]) => [op, OP_KINDS[k].needs])));
+
+test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows() (323 hand-written rows) and each family op's row from its kind (500 rows), the aliases applied over the whole — 850 keys, the 848 it held before the split and the two T49 family ops — every hand-written row and every family row answered as given, every alias row equal to its op's, the table frozen and the same on every read", () => {
+  const hand = needsRows();
+  const fam = familyRows();
+  assert.equal(Object.keys(hand).length, 323);
+  assert.equal(Object.keys(fam).length, 500);
+  /* the two parts share no op */
+  assert.deepEqual(Object.keys(fam).filter((op) => Object.hasOwn(hand, op)), []);
+  const aliasRows = Object.entries(OP_ALIASES).filter(([, op]) => Object.hasOwn(NEEDS, op)).map(([al]) => al);
+  assert.equal(aliasRows.length, 27);
+  assert.equal(Object.keys(NEEDS).length, 323 + 500 + 27);
+  assert.equal(Object.keys(NEEDS).length, 848 + 2, "848 before the split, and founderhandleset and projectownervotes");
+  for (const [op, row] of Object.entries(hand)) assert.equal(NEEDS[op], row, `${op}: the hand-written row`);
+  for (const [op, row] of Object.entries(fam)) assert.equal(NEEDS[op], row, `${op}: the family row`);
+  for (const al of aliasRows) assert.equal(NEEDS[al], NEEDS[OP_ALIASES[al]], `${al}: an alias row equals its op's`);
+  /* nothing else is in the table */
+  assert.deepEqual(Object.keys(NEEDS).filter((op) => !Object.hasOwn(hand, op) && !Object.hasOwn(fam, op) && !aliasRows.includes(op)), []);
+  /* the new ops' rows come from their kinds: present nulls */
+  for (const op of ["founderhandleset", "projectownervotes"]) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
+  assert.ok(!Object.hasOwn(hand, "founderhandleset") && !Object.hasOwn(hand, "projectownervotes"));
+  /* frozen, and the act gate reads this very table (R1) */
+  assert.ok(Object.isFrozen(NEEDS) && Object.isFrozen(O.NEEDS) && O.NEEDS === NEEDS);
+  assert.throws(() => { NEEDS.promote = null; }, TypeError);
+  for (const op of ["promote", "ratify", "projectfork", "templatedraft", "projectownervotes"]) assert.equal(ACT_GATE.needs(op), NEEDS[op], op);
+  assert.equal(NEEDS.projectfork, "create_projects");
+  assert.equal(NEEDS.ratify, "publish");
+  /* negative control: an op with no row has none, and the gate answers null for it */
+  assert.ok(!Object.hasOwn(NEEDS, "search") && ACT_GATE.needs("search") === null);
+});
+
+test("R3 (T49; K3339): composeNeeds joins the hand-written rows and the families' and refuses a family row for an op the hand-written part holds, rather than letting the later key win; the result is a fresh table, the hand-written part untouched (negative control: a disjoint pair composes, an overlap throws by name)", () => {
+  const hand = Object.freeze({ promote: "contribute", ratify: "publish", credit: null });
+  const fam = { eventcreate: "contribute", timeline: null };
+  const out = composeNeeds(hand, fam);
+  assert.deepEqual(out, { promote: "contribute", ratify: "publish", credit: null, eventcreate: "contribute", timeline: null });
+  assert.ok(!Object.isFrozen(out), "a fresh table, for the aliases to be applied over");
+  assert.deepEqual({ ...hand }, { promote: "contribute", ratify: "publish", credit: null });
+  assert.deepEqual(fam, { eventcreate: "contribute", timeline: null });
+  /* an overlap fails, whatever the two rows are — even when they agree */
+  assert.throws(() => composeNeeds(hand, { promote: "publish" }), /promote.*family row.*hand-written row/);
+  assert.throws(() => composeNeeds(hand, { promote: "contribute" }), TypeError);
+  assert.throws(() => composeNeeds(hand, { credit: null }), TypeError);
+  /* an empty part composes to the other */
+  assert.deepEqual(composeNeeds(hand, {}), { ...hand });
+  assert.deepEqual(composeNeeds({}, fam), fam);
+});
+
+test("R3 (T49; op-capabilities R1): the hand-written half comes from needsRows() alone — the same frozen object on every call, and a hand-written row is never one the families give (every family op's kind row and every hand row are disjoint over the live tables) (negative control: a family op answered by needsRows() is undefined, not null)", () => {
+  assert.equal(needsRows(), needsRows());
+  assert.ok(Object.isFrozen(needsRows()));
+  for (const op of Object.keys(familyRows())) assert.equal(needsRows()[op], undefined, `${op}: both a hand-written row and a family row`);
+  assert.equal(needsRows().eventcreate, undefined);
+  assert.equal(NEEDS.eventcreate, "contribute");
 });
