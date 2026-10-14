@@ -32,3 +32,13 @@ Best reading if you do not answer: I draw these links as `cs.ref` of the screen'
 **Tests and checks:** `node --test test/m/screens-inquiry/`: 77 pass, 0 fail (64 before; 13 new: 12 in `t48.test.mjs`, 1 in `document.test.mjs`). `checks/format`: 0 failures; `architecture screens-inquiry`: 0 failures; `coverage screens-inquiry`: 22 of 22 live ids named; `ownership screens-inquiry tranche/T48`: 0 failures; `checks/run.mjs`: no failure names my module (others' R-ids unmet, inherited).
 
 Size (session_01QWcbBxH6PyVrtBPVA5u3fy): test runs 9, module lines 1723
+
+## J3 · COMPLETE
+
+CHANGE B3 processed: merged `origin/tranche/T48` (interface-shell R55–R64 in), re-ran.
+
+**Stand-in dropped:** my class test now uses the shell's own R56 (`interfacePage` over my real screens must compose; control: an undefined class is refused), not a CSS-source reading of my own.
+
+**Red, and whose:** the whole module's tests (71 of 77) fail to boot, with `interface-shell: screen projectai draws the class cs-list, which no served stylesheet defines`. The class is in `screens-settings`' AI account panel (`panel.mjs`; then `cs-note`, `cs-form`, `cs-table`, …), which `projectai` draws as `view.parts`, so R56 refuses the page for every screen. That is screens-settings' own R20 (unmerged; it merges before me in L11's order); nothing in my files. Evidence: `interfacePage` over my screens with only that panel stood in composes ("own classes ok"), and with the panel stood in, 74 of 77 pass; the other 3 (`projectai` R5 pending/refused and two R14 tests) need the real panel. They should go green when screens-settings merges with its classes defined. Also pending from screens-settings: `aiUsageBars` (R17's dock bars; tested here through a stand-in).
+
+Checks: format 0 failures; architecture 0; coverage 22 of 22 named; ownership 0. Size (session_01QWcbBxH6PyVrtBPVA5u3fy): test runs 16, module lines 1719
