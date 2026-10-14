@@ -64,15 +64,23 @@ test("R2 the address must be a public https locator with a readable host (C-28.2
 
 test("R3 the target must be an inquiry the viewer can see (C-28.3), an unseen and an absent one alike; a legacy spelling reads as an inquiry", () => {
   const w = world().scene();
+  /* an inquiry in a project ann is not in: unseen by her, and seen by a member who is (the control) */
   w.project("PROJ-H");
-  w.bundle("PROJ-H-INQ", "inquiry");
-  st(w).exec(`UPDATE bundles SET object_type='project' WHERE bundle_id='PROJ-H-INQ'`);
+  w.participant("PROJ-H", "inner");
+  w.bundle("INQ-H");
+  st(w).exec(`UPDATE bundles SET project='PROJ-H' WHERE bundle_id='INQ-H'`);
+  w.membership.reindexProjectSight("INQ-H");
   w.bundle("FOCUS-1", "focus");
   refusedWith(w.ask({ target: "" }), "CAPTURE_REQUEST_NOT_AN_INQUIRY");
   refusedWith(w.ask({ target: "INQ-NONE" }), "CAPTURE_REQUEST_NOT_AN_INQUIRY");
   refusedWith(w.ask({ target: "DOC-1" }), "CAPTURE_REQUEST_NOT_AN_INQUIRY");
-  const hidden = w.ask({ target: "PROJ-H" }), absent = w.ask({ target: "PROJ-X" });
-  assert.equal(hidden.code, absent.code);
+  const hidden = w.ask({ target: "INQ-H" }), absent = w.ask({ target: "INQ-X" });
+  refusedWith(hidden, "CAPTURE_REQUEST_NOT_AN_INQUIRY");
+  assert.deepEqual(Object.keys(hidden).sort(), Object.keys(absent).sort());
+  assert.equal(hidden.detail.replace("INQ-H", "INQ-X"), absent.detail, "alike but for the id");
+  w.run("R-H", { plane: "member:inner/tok3" });
+  assert.equal(w.ask({ run: "R-H", target: "INQ-H" }, { viewer: V("inner"), caller: "member:inner/tok3" }).ok, true,
+    "control: a member who sees the inquiry may ask under it");
   assert.equal(w.ask({ target: "FOCUS-1" }).ok, true, "a legacy `focus` is an inquiry");
   assert.equal(w.ask({ target: "INQ-1" }, { viewer: null }).code, "CAPTURE_REQUEST_NO_RUN",
     "an absent viewer sees nothing, the run first");

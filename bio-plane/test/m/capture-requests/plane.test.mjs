@@ -130,7 +130,7 @@ async function world() {
   /* N295: an inquiry created through a member's session, whose browser agent the control plane stamps (inquiry R44) */
   await create("INQ-2026-9001-ua", { "User-Agent": MEMBER_UA });
   /* N585 (K1614; ai-runs R52): a run carries the account of the member whose act opened it, so the opener connects
-     their own account first, through the op the control plane routes (credentials R22), the member named by the stamp */
+     their own account first, through the op the control plane routes (ai-accounts R1, which was credentials R22), the member named by the stamp */
   /* instance-setup R54, ai-accounts R23: the disclosure of what connecting means is shown and recorded first, at the
      version the plane answers (`op=disclosureof`), by her own session */
   const version = (await call("disclosureof", RUTH, { member: "member:ruth" })).body.version;

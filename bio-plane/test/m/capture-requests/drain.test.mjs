@@ -547,7 +547,7 @@ test("R20 R12 op=capturerequestdrain reads no clock from its body: a body's `now
   const ahead = T0 + 2 * CAPTURE_REQUEST_TTL_MS;
   const d = await captureRequestsOps(w.cr, new URL("http://x/capturerequestdrain"), { now: ahead }).capturerequestdrain();
   assert.deepEqual([d.expired.length, d.captured.length, w.req(id).state], [0, 1, "captured"]);
-  assert.notEqual(Date.parse(d.at), ahead);
+  assert.equal(Date.parse(d.at), w.clock.ms, "the module's clock");
   /* Control: the in-process caller's stated instant is still the drain's clock (the scheduler's replay, a test) */
   const w2 = world().scene();
   const id2 = w2.ask().request;
