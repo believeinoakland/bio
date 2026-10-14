@@ -7,22 +7,22 @@
    agent-worker's `POST /signin` through the `AGENT_WORKER` binding as `{member, step, code?}`: `member` the door's stamp
    (the session's `by`), never a value the caller sends; `step` and `code` the request body's alone. Who reaches the op
    (a member's own session only) is `admission`'s, before this module is asked. `start` and `code` are refused while the
-   group keeps its material away (`credentials.aiKeptAway()`, asked through the store-internal `aikeptaway`), nothing
+   group keeps its material away (`ai-accounts.aiKeptAway()`, its R7, asked through the store-internal `aikeptaway`), nothing
    sent. The runner's answer is relayed as given, status and body; a `code` answer carrying `connected: true` for that
-   member and no token is recorded through `credentials.subscriptionConnected` (`subscriptionconnected`), and only then.
+   member and no token is recorded through `ai-accounts.subscriptionConnected` (its R18; `subscriptionconnected`), and only then.
    The member's own `subscriptiondisconnect` and their revocation send `step: "signout"` for that member, and a runner
    that cannot be reached changes neither act's answer. The code is never logged, stored, echoed or answered here.
    `agent-worker`'s `RUNNER_NOT_CONFIGURED` is relayed unchanged, with a `translation` read by key.
-   R2 (was R78; N981, K231): `start` is refused `DISCLOSURE_DUE` as `credentials.disclosureDue({member})` answers it,
+   R2 (was R78; N981, K231): `start` is refused `DISCLOSURE_DUE` as `ai-accounts.disclosureDue({member})` answers it (its R23),
    relayed as given, after the keep-away refusal and before anything is sent; this module holds no row for the code.
    R3 (was R85): each request gets a `trace`, sent with `member_ref` in headers; one log line `signin.door`; `trace` in
    every answer.
    R4 (was R86; K3060 D10): on `code` the door sends `hold: true`; a `token` answered is handed to
-   `credentials.subscriptionTokenHold` and its result read; `token` and `valid_for` never leave this module; the answer
+   `ai-accounts.subscriptionTokenHold` (its R19) and its result read; `token` and `valid_for` never leave this module; the answer
    says `held: true`, or `held: false` with the fact's code. `state` is answered from
-   `credentials.accountReferenceState`'s `subscription` (nothing sent to the runner). Disconnect and revocation drop the
-   token through `credentials` (its own acts, R43, R16, R70) and send `signout`. An ask or draft answered
-   `SIGNIN_TOKEN_REFUSED` calls `credentials.subscriptionTokenRefused`.
+   `ai-accounts.accountReferenceState`'s `subscription` (nothing sent to the runner). Disconnect and revocation drop the
+   token through `ai-accounts` (its own acts, R18, R27, R19) and send `signout`. An ask or draft answered
+   `SIGNIN_TOKEN_REFUSED` calls `ai-accounts.subscriptionTokenRefused`.
    R5 (was R87): on a test instance only, a bounded trace answers `op=signintrace`; elsewhere `SIGNINTRACE_NOT_TEST`.
 
    THE INTERFACE. `store(path, init)` is the caller's ask of its record store, answered in `answer-envelope`'s
@@ -210,7 +210,7 @@ export async function subscriptionSignin({ env, member, asked, store, log = defa
     return done({ status: out.status, body: { ...rest, held, ...(held ? {} : { fact }) } }, "relayed", { held });
   }
   if (step === "code" && b.ok === true && b.connected === true && own) {
-    /* R1 (credentials R43): the fact only, the member alone; a record that fails changes nothing of the answer */
+    /* R1 (ai-accounts R18): the fact only, the member alone; a record that fails changes nothing of the answer */
     await ask(store, `${STORE_ROUTES.connected}?by=${encodeURIComponent(member)}`);
   }
   return done(out, out.body.reason === "AGENT_WORKER_UNBOUND" || out.body.reason === "AGENT_WORKER_SILENT" ? "refused_local" : "relayed");
@@ -230,7 +230,7 @@ export function leaverOf(op, asked, result, by) {
 }
 
 /** R1, R4: `step: "signout"` for a member who left (`leaverOf`), best effort: nothing it answers reaches the act's
- *  caller. The token was dropped by `credentials`' own act (disconnection R43, revocation R16; its R70). */
+ *  caller. The token was dropped by `ai-accounts`' own act (disconnection R18, revocation R27; its R19). */
 export async function signoutLeaver(env, member) {
   if (!member) return;
   try {
@@ -239,8 +239,8 @@ export async function signoutLeaver(env, member) {
   } catch { /* never changes the act's answer */ }
 }
 
-/** `op=subscriptiondisconnect` (R1, R4): the member's own act, reaching `credentials.subscriptionDisconnect` (which
- *  drops the held token, its R70) through the store's `subscriptiondisconnect` with `by` the door's stamp; when it
+/** `op=subscriptiondisconnect` (R1, R4): the member's own act, reaching `ai-accounts.subscriptionDisconnect` (which
+ *  drops the held token, its R19) through the store's `subscriptiondisconnect` with `by` the door's stamp; when it
  *  succeeds, `signout` is sent for that member. Answers the store's answer as `doAnswer` read it, for the door to relay
  *  as every store answer is. */
 export async function subscriptionDisconnect({ env, member, store }) {
@@ -250,7 +250,7 @@ export async function subscriptionDisconnect({ env, member, store }) {
 }
 
 /** R4: an ask's or a draft's answer naming `SIGNIN_TOKEN_REFUSED` (at the top level or in `result`) for `member`'s
- *  held sign-in: `credentials.subscriptionTokenRefused` drops it (the store's `signintokenrefused`). Answers whether it
+ *  held sign-in: `ai-accounts.subscriptionTokenRefused` drops it (the store's `signintokenrefused`). Answers whether it
  *  was asked; never changes the answer it reads, never throws. */
 export async function tokenRefusedSeen({ member, answer, store }) {
   const b = isObject(answer) ? answer : null;
