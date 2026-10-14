@@ -63,3 +63,7 @@ After merging op-declarations: 273 tests, 269 pass, 4 red.
  - Opened by op-declarations' merge, in other modules' terms (both green before it): control-plane doorbell.test R28, `sourceof` now refuses the narrow agent (403 AI_BEYOND_TASK_SCOPE); affordances-pack.test R2/R41, affordances' unaccounted lists `groupdescriptiondraft` etc. as stale. Not mine to fix; op-declarations to look.
  - R90 vs op-declarations R64: R90 says proceedingdates is refused to non-sessions; R64 as merged admits a binding class. My test follows the merged spec. Your call which text changes.
 COMPLETE.
+
+## B5 (K3302)
+Merged tranche/T48. `doorbell.test.mjs` R28 re-pointed to admission R26 (only `sourceof` and `sourcerung` refuse a narrow agent: AI_BEYOND_TASK_SCOPE, nothing forwarded; control: an agent whose scope names the op reads it; other reads unchanged). R91 now passes. Re-run: 273 tests, 271 pass, 2 red: affordances-pack R2/R41 (affordances' R12, `stale: groupdescriptiondraft, securitymap`: sent to affordances) and R95 (waits on interface-shell R58). The three miniflare e2e files were not run red here.
+Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 14, module lines 3755
