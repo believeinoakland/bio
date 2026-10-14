@@ -227,7 +227,8 @@ function sendTestify(view, el, cs) {
 }
 function doneTestify(view, answer, cs) {
   cs.set("draft", null);
-  cs.set("testified", (answer && (answer.id || answer.bundleId)) || "");
+  /* provenance testify answers `{ok, bundle_id, bundle_sha, capture_sha, …}` (K3171) */
+  cs.set("testified", (answer && typeof answer.bundle_id === "string" && answer.bundle_id) || "");
 }
 
 /* R3, R10: help wording the member's own account (`writinghelp`, DEC-153 (2)), drawn only while the assistant is

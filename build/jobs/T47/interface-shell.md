@@ -1,6 +1,6 @@
 # interface-shell (T47)
 
-**Status** · session_01GsfjK9xaCHwtptoRYK8boR · depth 2 · COMPLETE · handled B13
+**Status** · session_01GsfjK9xaCHwtptoRYK8boR · depth 2 · COMPLETE · handled B14
 
 ## Completion (INTERFACE-SHELL #2)
 
@@ -17,6 +17,23 @@
 **Tests and checks** (on `job/T47/interface-shell` after merging `tranche/T47` at B11, with wizard-scripts, op-grades, setup-words, instance-setup, op-declarations and admission merged): `node --test bio-plane/test/m/interface-shell/` 115 pass, 0 fail. Users (screens-daily, -inquiry, -intake, -settings, control-plane's `t46-app` and `t46-e2e`): 178 pass, 14 fail; with the tranche's own shell 182 pass, 10 fail; the difference is exactly J2's four (R32, R33, R36 at work), `t46-e2e` 4 of 4 either way. Checks: `format` 0 failures; `architecture` (interface-shell) 0 failures; `coverage` 48 of 48; `ownership` 0 failures.
 
 Size (session_01Mqqp1PVr9KzRUa1bjw1eZa): test runs 40, module lines 2,198 (source; tests 3,010)
+
+## Completion (INTERFACE-SHELL #3, B14)
+
+Re-opened by B14 (K3177; JOURNEY-CHECK #1 J6 (b), (c)). `tranche/T47` merged; the requirements changed only by losing their "not yet met" marks.
+
+**Entries applied:**
+- **(b) R35:** the shell draws one state's words only. Each state now has its own heading ("Nothing is here", "You can't open this", "Can't be reached"). The path's last step names the state too, and the shell's sentence under it is new: `shell.unavailable.<state>.title` and `.says`. "Can't open this" (`screen.unavailable.name`) heads no state now. The old sentence keys `shell.unavailable.nothing`, `.notyours` and `.unreachable` keep their English unchanged, because `screens-publish` draws them.
+- **(c) R7, R4:** the masthead's initial and its "You: {handle}" come from `whoami`'s handle. When that is empty (a founder's session can answer `handle: null`), they come from the handle the member signed in with, and failing that from the member's id. They are never empty.
+
+**Found in another module (REPORT J7):** the bare-address `published` that JOURNEY-CHECK saw is drawn by `screens-publish` itself (`parts.mjs`' `nothing`), not by the shell. It heads `screen.unavailable.name` ("Can't open this") over `shell.unavailable.nothing` ("Nothing is here: …"), so (b) stands on that screen until `screens-publish` draws `shell.unavailable.nothing.title` over `shell.unavailable.nothing.says`. Its tests match /Nothing is here/, which still holds after that change. Separately, `format` fails twice on `build/modules.json`, whose `setup-page` paths and tests name directories no longer in the product.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/interface-shell/`: 120 pass, 0 fail. R35's test now checks each state's heading and path step, with a control that no other state's words and no "Can't open this" are drawn. The new test is R7 R4 (K3177 (c)). Both fail against the shell before the change.
+- Every screen module, all nine: 0 failures (action 53, daily 64, entry 52, inquiry 64, intake 58, investigate 78, publish 53, settings 83, wizards 32 pass). control-plane `t46-app` and `t46-e2e`: 9 of 9.
+- Checks: `architecture`, `coverage` (49 of 49) and `ownership` have 0 failures. `format` has 2 failures, both the `modules.json` entries above and neither mine.
+
+Size (session_01GsfjK9xaCHwtptoRYK8boR): test runs 20, module lines 2,251 (source; tests 3,127)
 
 ## Completion (INTERFACE-SHELL #3)
 
@@ -82,3 +99,11 @@ One reading for you to confirm or correct: R50's phone hold is `op-grades`' `LAR
 ## J6 · COMPLETE
 
 Re-opened by B12 (K3156) and B13; complete again. I merged tranche/T47 at B13 and built three changes. R33: activity is stored only while a session record exists; with none, nothing is stored, bio-session:active included. R50: the phone hold covers every weighed act that op-grades.phoneOf answers false for (terminal, attested and irreversible rungs, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS through OP_ALIASES); it never holds an op run on press, so knock, enroll and recover stay on the phone. R51: a guide element with data-guide (in its panel or its marks) is handled on click, Enter or Space by GUIDE.control(cs, view, control, dataset), with no op sent; the marks now sit in one <div data-guide-from="marks"> under the path. Tests: interface-shell 119 of 119. The users' results are the same, test for test, as with this branch's shell before the change (16 fail, J2's four among them), and t46-app and t46-e2e pass 8 of 8. Checks: format, architecture and ownership have 0 failures; coverage 49 of 49. Record: "Completion (INTERFACE-SHELL #3)".
+
+## J7 · REPORT
+
+Two findings outside my module. (1) The bare-address 'published' that JOURNEY-CHECK J6 (b) saw is drawn by screens-publish itself (parts.mjs, part 'nothing'), not by the shell: it heads screen.unavailable.name ('Can't open this') over shell.unavailable.nothing ('Nothing is here: ...'). (b) stands on that screen until screens-publish draws the shell's new words, shell.unavailable.nothing.title ('Nothing is here') over shell.unavailable.nothing.says ('This address leads nowhere in your group's Civicsmith.'). Its tests match /Nothing is here/, which still holds after that change. I left the old sentence keys' English unchanged, so its tests pass today. (2) checks/format.mjs fails twice on build/modules.json: setup-page's paths and tests entries (bio-plane/src/setup-page/, bio-plane/test/m/setup-page/) name directories no longer in the product.
+
+## J8 · COMPLETE
+
+B14 (K3177) built after merging tranche/T47. (b) R35 draws one state's words only: each state has its own heading and path step ('Nothing is here', 'You can't open this', 'Can't be reached'; shell.unavailable.<state>.title and .says), and 'Can't open this' heads none. (c) The masthead's initial and 'You: {handle}' come from whoami's handle, else the handle signed in with, else the member's id, so never empty (a founder's whoami can answer handle null). Tests: interface-shell 120 of 120, with a test and control for each change. All nine screen modules pass with 0 failures (547 tests), and control-plane t46-app and t46-e2e pass 9 of 9. Checks: architecture, coverage (49 of 49) and ownership have 0 failures; format has 2 failures, both in modules.json and not mine (REPORT J7). The bare 'published' page is drawn by screens-publish itself and needs its own fix (J7). Record: 'Completion (INTERFACE-SHELL #3, B14)'.

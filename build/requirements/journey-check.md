@@ -10,8 +10,8 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 ### Provides
 
-- **R1** (N1004; K3052, K3053) A Playwright (Chromium) walk, run by `npm run journey` from its directory, in two arms: (a) local, with no account: the installer Worker over the installer's fake Cloudflare account, the hand-over into a plane under Miniflare, then journey 28 (claim, codes, setup, invite, join, codes, a member's first settings, Home, first testimony, sign out, sign in kept, lock, unlock) and journey 3; (b) live, against a named test instance, signing in as the administrator and as a member with credentials read from the environment, never printed, opening `/` and every working screen of the registry. *(not yet met: T47)*
-- **R2** Each step is screenshotted into its output directory (generated, never committed); the walk fails on any `ok: false` not expected by the step, any 4xx/5xx, any page whose script throws, any setup-page or legacy-ui address reached, and any registry screen not drawn, except `site` (N1011, not built in T47) and the treatments DEC-214 (4) names (`dash-home`, `dash-action`, `dash-project`) (K3137). *(not yet met: T47)*
+- **R1** (N1004; K3052, K3053) A Playwright (Chromium) walk, run by `npm run journey` from its directory, in two arms: (a) local, with no account: the installer Worker over the installer's fake Cloudflare account, the hand-over into a plane under Miniflare, then journey 28 (claim, codes, setup, invite, join, codes, a member's first settings, Home, first testimony, sign out, sign in kept, lock, unlock) and journey 3; (b) live, against a named test instance, signing in as the administrator and as a member with credentials read from the environment, never printed, opening `/` and every working screen of the registry.
+- **R2** Each step is screenshotted into its output directory (generated, never committed); the walk fails on any `ok: false` not expected by the step, any 4xx/5xx, any page whose script throws, any setup-page or legacy-ui address reached, and any registry screen not drawn, except `site` (N1011, not built in T47) and the treatments DEC-214 (4) names (`dash-home`, `dash-action`, `dash-project`) (K3137).
 
 ## Private
 
@@ -21,7 +21,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 ### Invariants
 
-- **R3** It writes nothing to the instance but what the journey's acts write, and runs only against an instance whose `bootstrap` answers `test_instance: true`. Test: the walker refuses a non-test instance. *(not yet met: T47)*
+- **R3** It writes nothing to the instance but what the journey's acts write, and runs only against an instance whose `bootstrap` answers `test_instance: true`. Test: the walker refuses a non-test instance.
 
 ### Satisfies
 

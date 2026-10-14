@@ -10,6 +10,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
+import { tokenRefusal } from "./ask.mjs";
 import { renderPageToPixels } from "../../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../../pdf-worker/src/picturepixels.mjs";
 
@@ -99,8 +100,8 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
     /* Nothing rendered: nothing is sent, and no account leaves the object; (T44) each asked page says why. */
     if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED", refused };
     const a = account && typeof account === "object" ? account : {};
-    /* agent-worker R6's wire shape: `accountFor`'s `key` named `secret`, the acting member, no suggestions; a project's
-       account names its project. */
+    /* agent-worker R6's wire shape: `accountFor`'s `key` named `secret` (R47, T47: a sign-in's held token as an API
+       key's), the acting member, no suggestions; a project's account names its project. */
     const body = JSON.stringify({ capture_sha: sha, pages: rendered,
       account: { kind: a.kind, level: a.level, ...(a.level === "project" ? { project: a.project } : {}), secret: a.key,
                  member, suggestions: false } });
@@ -112,6 +113,9 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
       answer = await res.json();
     } catch { return { ok: false, reason: "AGENT_WORKER_SILENT" }; }
     if (!answer || typeof answer !== "object" || Array.isArray(answer)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
+    /* R47 (T47; K3084; credentials R70): an answer refusing a sign-in's token has credentials drop the token it holds
+       for the member whose sign-in served, as the ask and the draft do */
+    tokenRefusal(credentialsOf(ctx), a)(answer);
     /* Whatever else it says, usage it carries is counted, in one transaction, under this act (D12). */
     if (answer.usage && typeof answer.usage === "object") {
       const entry = { owner: ownerOf(a, member), member, use: USE, mode: USE,

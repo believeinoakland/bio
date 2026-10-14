@@ -693,9 +693,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const target = (D.placeScreens[k] || []).find(screenOf);
     return target === "home" ? "/app" : target ? hrefOf(target) : "/app/" + k;
   }
-  function pathNav(route, inst) {
+  function pathNav(route, inst, kind) {
+    if (kind) return crumbs([{ label: w(unavailKey(kind) + ".title") }]);
     const steps = [];
-    const p = D.paths[route.screen] || (inst && inst.unavail ? D.paths.unavailable : null);
+    const p = D.paths[route.screen] || null;
     if (p) {
       let proj = null;
       try { proj = inst && inst.spec.place ? (inst.spec.place(inst.view) || {}).project : null; } catch { proj = null; }
@@ -707,6 +708,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (route.screen === "project" && !(proj && proj.title)) steps.push({ label: w("screen.project.name") });
     } else if (D.places.includes(route.screen)) steps.push({ label: w(route.screen === "more" ? "shell.more" : "rail." + route.screen + ".name") });
     else steps.push({ label: inst && has("screen." + route.screen + ".name") ? w("screen." + route.screen + ".name") : w("screen.unavailable.name") });
+    return crumbs(steps);
+  }
+  function crumbs(steps) {
     if (steps.length) steps[steps.length - 1].href = null;
     return '<nav class="cs-crumbs" aria-label="' + w("shell.path") + '"><ol>' + steps.map((s, i) => "<li>" + (i === steps.length - 1
       ? '<span aria-current="page">' + s.label + "</span>"
@@ -715,10 +719,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
 
   /* ---------- drawing ---------- */
   /* R35 (DEC-201 (8)): unavailable, in its three states */
+  /* K3177 (b): one state's words, its heading and its sentence, never another state's ("Can't open this" heads none
+     but `notyours`) */
+  const unavailKey = (kind) => (kind === "notyours" ? "shell.unavailable.notyours" : kind === "unreachable" ? "shell.unavailable.unreachable" : "shell.unavailable.nothing");
   function unavailableHtml(kind) {
-    const key = kind === "notyours" ? "shell.unavailable.notyours" : kind === "unreachable" ? "shell.unavailable.unreachable" : "shell.unavailable.nothing";
-    return '<h1 class="t-title" tabindex="0"' + tipAttr(kw("screen.unavailable.purpose"), 2) + ">" + w("screen.unavailable.name") + "</h1>"
-      + '<p class="cs-state" data-state="' + (kind === "unreachable" ? "failed" : "empty") + '" data-unavailable="' + esc(kind) + '"' + (kind === "unreachable" ? ' role="alert"' : "") + ">" + w(key) + "</p>"
+    const key = unavailKey(kind);
+    return '<h1 class="t-title" tabindex="0"' + tipAttr(kw("screen.unavailable.purpose"), 2) + ">" + w(key + ".title") + "</h1>"
+      + '<p class="cs-state" data-state="' + (kind === "unreachable" ? "failed" : "empty") + '" data-unavailable="' + esc(kind) + '"' + (kind === "unreachable" ? ' role="alert"' : "") + ">" + w(key + ".says") + "</p>"
       + (kind === "unreachable" ? "" : '<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + w("shell.unavailable.home") + "</a></p>");
   }
   const shellPage = (route) => {
@@ -754,16 +761,16 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (ENTRY_PAGE) return entryPage();
     if (!MAIN) {
       if (D.places.includes(route.screen)) return pathNav(route, null) + marksHtml() + shellPage(route);
-      return pathNav(route, null) + unavailableHtml("nothing");
+      return pathNav(route, null, "nothing") + unavailableHtml("nothing");
     }
-    if (MAIN.unavail) return pathNav(route, MAIN) + unavailableHtml(MAIN.unavail);
+    if (MAIN.unavail) return pathNav(route, MAIN, MAIN.unavail) + unavailableHtml(MAIN.unavail);
     const body = renderOf(MAIN);
     return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) + marksHtml() : "") + body;
   }
   /* R32: with no `front` registered, the state the session ended in, drawn by the shell */
   let ENTRY_PAGE = false;
   const entryPage = () => '<h1 class="t-title">' + w("screen.unavailable.name") + "</h1>"
-    + (ENTRY.state ? '<p class="cs-state" data-state="empty">' + w("session." + ENTRY.state) + "</p>" : '<p class="cs-state" data-state="empty">' + w("shell.unavailable.notyours") + "</p>");
+    + '<p class="cs-state" data-state="empty">' + w(ENTRY.state ? "session." + ENTRY.state : "shell.unavailable.notyours.says") + "</p>";
   function dockHtml() {
     /* R31, K3143: one panel at a time: the guide's while it draws one (a wizard runs), else the assistant's */
     const guideBody = GUIDEI ? renderOf(GUIDEI) : "";
@@ -776,10 +783,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + (guide ? "" : '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-label="' + w("shell.assistant.close") + '">' + I("close") + "</button>") + "</header>"
       + '<div class="body">' + body + "</div></aside>";
   }
+  /* K3177 (c): the signed-in member's handle, never empty: `whoami`'s, else the one signed in with, else the member's id
+     (a founder's session may answer no handle) */
+  const handleOf = () => String((ME && ME.handle) || (S && S.w) || (ME && ME.member) || "");
   function mastHtml() {
     const name = GROUP ? esc(GROUP) : "";
     const level = w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name");
-    const initial = ME && ME.handle ? esc(String(ME.handle).slice(0, 1).toUpperCase()) : "";
+    const initial = esc(handleOf().slice(0, 1).toUpperCase());
     const signout = can("signout") ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout" role="menuitem"' + tipAttr(w("shell.signout.does"), 2) + ">" + w("shell.signout") + "</button>" : "";
     const themes = ["device", "light", "dark"].map((t) => '<button type="button" class="cs-btn" data-tone="quiet" role="menuitemradio" aria-checked="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("");
     /* R43 (DEC-214 (1)): the mark opens the masthead, before the group's name */
@@ -791,7 +801,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + w("shell.assistant") + "</button>" : "")
       + (TODO !== null ? '<a class="cs-kind" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(w("shell.todo.means"), 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
       + '<span class="cs-menuwrap"><button type="button" class="cs-btn" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
-      + tipAttr(w("shell.you.holds"), 2) + '><span aria-hidden="true">' + initial + '</span><span class="sr">' + w("shell.you", { handle: ME ? ME.handle || "" : "" }) + "</span></button>"
+      + tipAttr(w("shell.you.holds"), 2) + '><span aria-hidden="true">' + initial + '</span><span class="sr">' + w("shell.you", { handle: handleOf() }) + "</span></button>"
       + '<div class="cs-dialog cs-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }

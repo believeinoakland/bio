@@ -1,4 +1,4 @@
-/* plane R10 (K861, K923): control-plane's promotion step (its R42: provenance's testimony slot and membership's sight
+/* plane R10 (K861, K923): store-door's promotion step (its R5, was control-plane R42: provenance's testimony slot and membership's sight
    index), its export registered by plane under control-plane's name, each promotion answering as it answered under
    `legacy-store` (pinned). Its rank in the step order is `store.test.mjs`' R2 pin. */
 import { test } from "node:test";
@@ -26,7 +26,7 @@ async function world() {
 }
 const one = (x, q, ...a) => [...x.ctx.storage.sql.exec(q, ...a)][0];
 
-test("R10: control-plane's step, registered under its name (its R42), keeps the projection's answer: a project's creation answers its visibility read back and gains its sight row; a revision answers no visibility", async () => {
+test("R10: store-door's step (was control-plane's), registered under its name (its R42), keeps the projection's answer: a project's creation answers its visibility read back and gains its sight row; a revision answers no visibility", async () => {
   const x = await world();
   assert.deepEqual(Object.keys(x.created).sort(), ["bundleId", "bundleSha", "ok", "owner", "rowVersion", "visibility"]);
   assert.equal(x.created.visibility, "hidden");
@@ -46,7 +46,7 @@ test("R10: control-plane's step, registered under its name (its R42), keeps the 
   assert.equal(Object.hasOwn(rev, "testimony"), false, "no other path's answer gains the testimony key");
 });
 
-test("R10: control-plane's step keeps the testimony slot: op=testify's later work runs inside its promotion and its answer carries it; a refused testimony writes nothing", async () => {
+test("R10: store-door's step (was control-plane's) keeps the testimony slot: op=testify's later work runs inside its promotion and its answer carries it; a refused testimony writes nothing", async () => {
   const x = await world();
   const r = await x.call("/testify?author=member:alice", { words: "The gate on the north side was chained shut.", observedAt: "2026-09-01" });
   assert.equal(r.ok, true, JSON.stringify(r));

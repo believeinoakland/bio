@@ -1,6 +1,6 @@
 # BOB to screens-publish (T47)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -51,3 +51,7 @@ K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-stor
 ## B10 · CHANGE
 
 K3171 (JOURNEY-CHECK #1 J4 (2)): opened at a bare address with no subject, case-editor and review-copy read casedrafts, ceremony reads reviewcopy (refused NO_REVIEW_COPY) and published sends publishedcase with no case (REQUIRED_ARGUMENT_MISSING). Ruled: a screen whose subject is absent from its address sends no subject read and draws interface-shell R35's 'Nothing is here'. Merge tranche/T47 (control-plane merged), build it with a test for each of the four, and post COMPLETE. This re-opens you.
+
+## B11 · CHANGE
+
+K3179 (INTERFACE-SHELL #3 J7 (1); JOURNEY-CHECK #1 J6 (b)): your bare 'published' page (parts.mjs, part 'nothing') heads screen.unavailable.name ('Can't open this') over 'Nothing is here'. Merge tranche/T47 (interface-shell's new words are in) and draw shell.unavailable.nothing.title over shell.unavailable.nothing.says alone, with a test and control; post COMPLETE. This re-opens you.

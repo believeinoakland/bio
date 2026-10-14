@@ -82,3 +82,16 @@ test("R13 the two empty states: a record that follows no one yet, and a search t
   assert.ok(main(q).querySelector('a[href="/app/finder"]'));
   assert.deepEqual(actsIn(main(q)).sort(), ["entitycreate", "search"]);
 });
+
+test("R13 a row never draws a record's machine note: an office seeded at setup reads \"Added at setup from your group's place\" (K3177); a member's own note is drawn as written (control)", async () => {
+  const seeded = "An office an action may be addressed to, as the active jurisdiction profile oakland-alameda, counterparties[0] (basis: x) names it; seeded at setup.";
+  const rows = [{ entity: "ENT-2026-0400", kind: "office", name: "City Clerk", today: { kind: "office", sector: null, note: seeded }, documents: 0, questions: 0, projects: 0, newest_added: null, mine: false },
+    { entity: "ENT-2026-0401", kind: "body", name: "Public Works Department", today: { kind: "body", sector: "government", note: "A city department · repairs streets and sewers" }, documents: 1, questions: 0, projects: 0, newest_added: null, mine: false }];
+  const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 2, in_your_projects: 0 })) } });
+  const m = main(p);
+  const [a, b] = m.querySelectorAll(".cs-row");
+  assert.match(a.textContent, /City Clerk · Added at setup from your group's place/);
+  assert.doesNotMatch(p.root().textContent + m.innerHTML, /seeded at setup|counterparties\[0\]|oakland-alameda|jurisdiction profile/, "no machine note anywhere, card included");
+  assert.match(b.textContent, /A city department · repairs streets and sewers/);
+  assert.deepEqual(rawKeys(p.root()), []);
+});

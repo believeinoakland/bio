@@ -8,7 +8,7 @@ import { test } from "node:test";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { store, storage, deployed, GATE_FLAGS, GATE_SET } from "./fixture.mjs";
+import { store, storage, deployed, GATE_FLAGS, GATE_SET, disclosed } from "./fixture.mjs";
 import { assistantGateOf } from "../../../src/plane/ask.mjs";
 import { stepsOf, STEPS_TABLES, ACCEPTANCE_COUNT_KEYS } from "../../../src/steps/index.mjs";
 import { readingGuidesOf, readingGuidesOps, READING_GUIDES_TABLES } from "../../../src/reading-guides/index.mjs";
@@ -193,6 +193,7 @@ async function world() {
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
            createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
+  await disclosed(x.ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
   const r = await credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" });
   assert.equal(r.ok, true, JSON.stringify(r));
   return { ...x, asks };
