@@ -14,3 +14,7 @@ Deferred / depends on others: (1) words.test fails on 4 keys until setup-words (
 Other modules: none found.
 Tests: node --test test/m/screens-wizards/*.test.mjs: all pass except words.test (above). Checks: format 0 failures; architecture 11 files 0 failures; coverage 12 of 12 ids named; ownership 0 failures. checks/run.mjs: 22 coverage failures, none mine (other modules).
 Size (session_01Qp58hwvG5avLezx8s8j93H): test runs 8, module lines 871
+
+## J3 · COMPLETE
+
+B2 applied: tranche/T48 merged (setup-words in). With the real WORD_ROWS every screens-wizards test passes (words.test included); format, architecture (12 files), coverage (12 of 12) and ownership show 0 failures. The only change since my first COMPLETE is the R10 test's text comparison. Size (session_01Qp58hwvG5avLezx8s8j93H): test runs 10, module lines 871
