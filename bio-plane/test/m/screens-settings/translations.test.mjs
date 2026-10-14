@@ -59,3 +59,31 @@ test("R16 translationgrant: an administrator grants or revokes a named member's 
   assert.deepEqual((await a.press("translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana" } })).sent[0].body, { member: "ana", language: "es" });
   assert.deepEqual((await a.press("translationgrant", { data: { revoke: "" }, values: { "tr-member": "ana", "tr-revoke": true } })).sent[0].body, { member: "ana", language: "es", revoke: true });
 });
+
+test("R31 translations: every language is listed by its name in the member's language and never as a tag; the group's source English is not offered; a row shows its English and meaning, never its key", async () => {
+  const a = await open("translations", { me: ADMIN, table: translationsTable({ grouplanguages: env({ ok: true, languages: ["en", "en-US", "es", "vi"] }), memberlanguage: env({ ok: true, language: null }) }) });
+  const links = all(a.tree, (e) => e.tag === "a" && /^\/app\/translations\//.test(e.attrs.href || ""));
+  assert.deepEqual(links.map((e) => textOf(e)), ["Spanish", "Vietnamese"], "named, English left out");
+  assert.deepEqual(links.map((e) => e.attrs.href), ["/app/translations/es", "/app/translations/vi"], "the tag is the address only");
+  assert.ok(!/\b(es|vi|en-US)\b/.test(a.text), "no tag is drawn");
+  // in the member's language
+  const es = await open("translations", { me: ADMIN, table: translationsTable({ memberlanguage: env({ ok: true, language: "es" }) }) });
+  assert.deepEqual(all(es.tree, (e) => e.tag === "a" && /^\/app\/translations\//.test(e.attrs.href || "")).map((e) => textOf(e)), ["Español", "Vietnamita"]);
+  // a word's row: its English and its meaning, and no key (control: no row shows a screen. key)
+  const w = await open("translations", { me: ADMIN, table: translationsTable(), subject: "es" });
+  assert.ok(!w.text.includes("rail.home.name") && !/\b(screen|rail|mark|act)\.[a-z]/.test(w.text.replace(/screen\.[a-z-]+\.[a-z.]+ /g, "")), "no key is drawn");
+  const home = textOf(rowOf(w.tree, "rail.home.name", "Home"));
+  assert.ok(home.includes("Home") && home.includes("The first place"));
+  assert.ok(!all(w.tree, (e) => e.tag === "code").length, "no key in a code box");
+  assert.ok(!w.text.includes(said("screen.translations.col.key")), "no key column");
+  // the grant names the language, not its tag
+  assert.ok(w.text.includes(said("screen.translations.grant.member", { language: "Spanish" })));
+});
+
+test("R31 translations: a member who is not granted sees the refusal's own words alone, no section about the words", async () => {
+  const m = await open("translations", { me: MEMBER, subject: "es", table: translationsTable({ translations: refuse("TRANSLATION_NOT_GRANTED") }) });
+  assert.ok(m.text.includes("TRANSLATION_NOT_GRANTED"));
+  assert.equal(all(m.tree, (e) => e.tag === "h2" && textOf(e) === said("screen.translations.words.heading")).length, 0, "no words section around it");
+  assert.equal(all(m.tree, (e) => e.tag === "table").length, 0);
+  assert.deepEqual(acts(m.tree), []);
+});

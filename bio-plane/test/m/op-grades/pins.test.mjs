@@ -88,6 +88,9 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
   /* R36, R37 (T47) */
   want.reversible.push("drawquestion", "monitorset", "grouplogoset", "grouplanguagesset", "signrequest");
   want.reasoned.push("projectbarset");
+  /* R38, R40, R41 (T48) */
+  want.reversible.push("actionreplyquoting", "updatelater", "updatestart", "planask");
+  want.reasoned.push("updateskip", "stepsource", "stepsourcewithdraw");
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -123,7 +126,7 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
    + "DEC-88's 57; a later op left out, or one of the 57 left there, is seen", () => {
   const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument", "wizarddraft", "wizardrevise",
     "wizardpropose", "wizardsubmit", "wizardapprove", ...undeterminedOf(T33_RUNG_ABSENT), ...undeterminedOf(T34_RUNG_ABSENT),
-    ...undeterminedOf(T35_RUNG_ABSENT), "safecopyrequest", "translationdraft", "translationmark",
+    ...undeterminedOf(T35_RUNG_ABSENT), "safecopyrequest", "translationmark" /* R39 (T48): translationdraft left the ground */,
     ...T41_UNDETERMINED, "pagetranscribe",
     /* R32 (T45), named by hand */
     "dutyfromresponse", "actionreceipt", "holdnoticesent", "pressurerecord", "watchlink", "watchanswer", "jointsignatory",

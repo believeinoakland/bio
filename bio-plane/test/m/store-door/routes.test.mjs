@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { D, go, quietly } from "./harness.mjs";
 const { record } = await import("./record.mjs");
 const { credentialsOf, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
+const { aiAccountsOf } = await import("../../../src/ai-accounts/index.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
 const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
@@ -294,14 +295,48 @@ test("R10 (K2238; control-plane R65; credentials R35, R43): the store-internal r
   assistant(r, true);
   assert.deepEqual((await r.go("aikeptaway", "POST", {})).json.result, { ok: true });
   const asked = [];
-  const orig = C.subscriptionConnected.bind(C);
-  C.subscriptionConnected = (a) => { asked.push(a); return orig(a); };
+  const AA = aiAccountsOf(r.ctx), orig = AA.subscriptionConnected.bind(AA);
+  AA.subscriptionConnected = (a) => { asked.push(a); return orig(a); };
   const ok = await r.go("subscriptionconnected?by=member:bea", "POST", { member: "member:ann", login: "code-x" });
   assert.equal(ok.json.result.ok, true, JSON.stringify(ok.json));
   const no = await r.go("subscriptionconnected?by=member:nobody", "POST", {});
   assert.equal(no.json.result.reason, "ACCOUNT_MEMBER_NOT_ACTIVE");
   assert.deepEqual(asked, [{ member: "member:bea" }, { member: "member:nobody" }]);
   assert.deepEqual(r.db.prepare("SELECT member_id FROM subscription_connections").all().map((x) => x.member_id), ["bea"]);
+});
+
+test("R16 (T48; N996; K3101; amends R10, R11): the door reads `aiKeptAway`, `accountFor` and `subscriptionConnected` from `ai-accounts`, never through `credentials`' delegates — with those three delegates made to throw, `aikeptaway` and `subscriptionconnected` answer as before, a draft under keep-away is refused AI_KEPT_AWAY with its row, and `askusage` counts to the paying account (the door's `accountFor` read is ai-accounts'); `credentials` is kept for `aigrantadmit`, `signerregister` and `signerrevoke` (negative control: the same routes with ai-accounts' reads made to throw do not answer as before)", async () => {
+  const { r, C } = await drafts();
+  const AA = aiAccountsOf(r.ctx);
+  assert.equal((await C.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ann-own", by: "member:ann" })).ok, true);
+  assistant(r, false);
+  const keptBefore = (await r.go("aikeptaway", "POST", {})).json.result;
+  const draftBefore = (await r.go("groupdescriptiondraft?by=member:ann&viewer=member:ann", "POST", { text: "x" })).json.result;
+  assistant(r, true);
+  const subBefore = (await r.go("subscriptionconnected?by=member:bea", "POST", {})).json.result;
+  const boom = () => { throw new Error("credentials' delegate was called"); };
+  const saved = { a: C.aiKeptAway, b: C.accountFor, c: C.subscriptionConnected };
+  C.aiKeptAway = boom; C.accountFor = boom; C.subscriptionConnected = boom;
+  try {
+    assistant(r, false);
+    assert.deepEqual((await r.go("aikeptaway", "POST", {})).json.result, keptBefore);
+    assert.equal(keptBefore.reason, "AI_KEPT_AWAY");
+    assert.deepEqual((await r.go("groupdescriptiondraft?by=member:ann&viewer=member:ann", "POST", { text: "x" })).json.result, draftBefore);
+    assistant(r, true);
+    assert.deepEqual((await r.go("aikeptaway", "POST", {})).json.result, { ok: true });
+    assert.deepEqual((await r.go("subscriptionconnected?by=member:bea", "POST", {})).json.result, subBefore);
+    const u = await r.go("askusage?viewer=member:ann", "POST", { usage: USE });
+    assert.equal(u.json.result.owner, "member:ann", JSON.stringify(u.json).slice(0, 300));
+  } finally { C.aiKeptAway = saved.a; C.accountFor = saved.b; C.subscriptionConnected = saved.c; }
+  /* negative control: ai-accounts' own reads are the ones the door asks */
+  const savedAA = { a: AA.aiKeptAway, c: AA.subscriptionConnected };
+  AA.aiKeptAway = boom; AA.subscriptionConnected = boom;
+  try {
+    const k = await r.go("aikeptaway", "POST", {});
+    const s2 = await r.go("subscriptionconnected?by=member:bea", "POST", {});
+    assert.equal(k.json.ok === true && JSON.stringify(k.json.result) === JSON.stringify({ ok: true }), false);
+    assert.equal(s2.json.ok === true && JSON.stringify(s2.json.result) === JSON.stringify(subBefore), false);
+  } finally { AA.aiKeptAway = savedAA.a; AA.subscriptionConnected = savedAA.c; }
 });
 
 test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal route `reauthdue` answers `{due}` from `credentials.reauthDue({token})`, the token the `x-bio-session` header the door hands on as `session` — `due` credentials' own REAUTH_DUE refusal, as given, for a live session outside its re-ask window (a fresh sign-in, a window lapsed) and null inside it, as `reauthDue` answers (admission R25 reads null as open); a token naming no session (absent, unknown, signed out) answers `{due: false}`; asking reads the session as no activity and writes nothing (controls: the same session after `reauth` answers null; the header's token is read over one in the query)", async () => {

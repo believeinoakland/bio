@@ -31,6 +31,7 @@ export const connect = {
       limits: { op: "ailimits", query: { owner: own } },
       usage: { op: "aiusage", query: { owner: own } },
       history: { op: "accounthistory", query: { owner: own } },
+      over: { op: "aiuseovertime", query: { owner: own } },
       // the member's own use across every payer, with the limits that bind them (ai-use R4; J2's last point)
       mine: { op: "aiusage" },
     };
@@ -44,9 +45,9 @@ export const connect = {
     const ui = view.ui || {};
     const data = view.data || {};
     const okv = (o) => (o && o.state === "ok" && o.value && o.value.ok !== false ? o.value : null);
-    const outward = (inner) => `<div class="cs-notice"><p class="cs-tag-outward">${W("mark.outward.means")}</p>${inner}</div>`;
+    const outward = (inner) => `<div class="mk-msg"><p class="cs-tag-outward">${W("mark.outward.means")}</p>${inner}</div>`;
     const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === me.member ? T(S + "you") : id === "admin" ? T("screen.members.founder") : id; };
-    const out = [cs.title(), `<p>${W(S + "optional")}</p>`, `<p class="cs-note">${W("ai.whopays")}</p>`];
+    const out = [cs.title(), `<p>${W(S + "optional")}</p>`, `<p class="mk-note">${W("ai.whopays")}</p>`];
 
     // the situation: exactly one of four (R4)
     const ka = okv(data.keepaway), as = okv(data.assistant);
@@ -57,7 +58,7 @@ export const connect = {
     if (!kept && !as && !ka) return out.join("") + cs.state(data.assistant, () => "");
     if (kept) {
       // the group keeps its material away: who, when, the reason in the administrator's words, and no act
-      out.push(`<div class="cs-situation" data-situation="keptaway"><p>${kept.by ? W(S + "keptaway", { by: names(kept.by), date: D(kept.at) }) : W(S + "keptaway.unread")}${kept.reason ? ` <span class="rec">${E(kept.reason)}</span>` : ""}</p><p>${W(S + "keptaway.ask")}</p></div>`);
+      out.push(`<div class="mk-msg" data-situation="keptaway"><p>${kept.by ? W(S + "keptaway", { by: names(kept.by), date: D(kept.at) }) : W(S + "keptaway.unread")}${kept.reason ? ` <span class="rec">${E(kept.reason)}</span>` : ""}</p><p>${W(S + "keptaway.ask")}</p></div>`);
       return out.join("");
     }
     const ref = okv(data.reference), sub = okv(data.signin), gk = okv(data.groupkey);
@@ -77,7 +78,7 @@ export const connect = {
     if (situation === "own") {
       // a subscription: since when and, when answered, until when (credentials R70)
       const when = subscribed ? (st.since ? `<p data-state="since">${W(S + "own.since", { date: D(st.since) })}${st.valid_until ? " " + W(S + "own.until", { date: D(st.valid_until) }) : ""}</p>` : "") : "";
-      out.push(`<div class="cs-situation" data-situation="own"><p>${W(subscribed ? S + "own.subscription" : S + "own.apikey")}</p>${when}${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
+      out.push(`<div class="mk-msg" data-situation="own"><p>${W(subscribed ? S + "own.subscription" : S + "own.apikey")}</p>${when}${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
     } else if (situation === "group") {
       // the member's allowance on the group's key, when a per-member limit is set
       let allowance = "";
@@ -85,9 +86,9 @@ export const connect = {
       const payer = mine && (mine.payers || []).find((p) => p.whose === "group");
       const lim = payer && (payer.limits || []).find((l) => l.scope === "per_member");
       if (lim) allowance = " " + W(lim.reached ? S + "group.allowance.reached" : S + "group.allowance", { amount: lim.unit === "usd" ? "$" + Number(lim.amount).toFixed(2) : Number(lim.amount).toLocaleString("en"), unit: T("screen.panel.unit." + lim.unit), period: T("screen.panel.period." + lim.period) });
-      out.push(`<div class="cs-situation" data-situation="group"><p>${W(S + "group")}${allowance}</p><p><a href="#connect-own">${W(S + "group.more")}</a></p></div>`);
+      out.push(`<div class="mk-msg" data-situation="group"><p>${W(S + "group")}${allowance}</p><p><a href="#connect-own">${W(S + "group.more")}</a></p></div>`);
     } else {
-      out.push(`<div class="cs-situation" data-situation="none"><p>${W(S + "none")}</p></div>`);
+      out.push(`<div class="mk-msg" data-situation="none"><p>${W(S + "none")}</p></div>`);
     }
     // a read that did not answer is said, never taken as "nothing serves" (interface-shell R10)
     if (!ref) out.push(cs.state(data.reference, () => ""));
@@ -106,24 +107,28 @@ export const connect = {
         // the sign-in's part, read flat (R13; instance-setup R82): `true` installed, `false` not, `null` not read
         const part = boot ? boot.part_signin : null;
         // refused at Anthropic: said once, with the way back (R24)
-        if (st.refused_at && !subscribed) h += `<p class="cs-notice" data-state="refused">${W(S + "signin.again", { date: D(st.refused_at) })}</p>`;
-        // a state read that failed is said, never drawn as not connected (R24)
-        // 1. the subscription, offered only while the sign-in is installed (trial §3.2)
-        if (part === true) {
-          let start = cs.act("subscriptionsignin", { data: { step: "start" } });
-          const code = cs.act("subscriptionsignin", { label: S + "signin.connect", data: { step: "code" } });
-          // "Open Anthropic's sign-in page" is not pressed again while a start is in flight (R24)
-          if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
-          if (start || code) {
-            const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
-            h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}<div class="cs-form"><label for="mc-code${ui.gen || 0}">${W(S + "signin.code")}</label><span class="help">${W(S + "signin.whole")} ${W(S + "signin.help")}</span><input id="mc-code${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${code}</div>`;
-          }
-        } else h += `<p data-state="signin">${part === false ? W("instance.part.signin.absent") : W("instance.part.unknown", { part: T(S + "signin.part") })}</p>`;
-        // 2. an API key
-        const set = cs.act("accountreferenceset");
-        if (set) h += `<h3>${W(S + "apikey.heading")}</h3><div class="cs-form"><label for="mc-key${ui.gen || 0}">${W(S + "apikey.field")}</label><span class="help">${W(S + "apikey.help")}</span><input id="mc-key${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${set}</div>`;
-        // 3. skip
-        return h + `<p>${W(S + "skip")}</p>`;
+        if (st.refused_at && !subscribed) h += `<p class="mk-msg" data-state="refused">${W(S + "signin.again", { date: D(st.refused_at) })}</p>`;
+        // R30: one choice first, the subscription preselected (DEC-156's order); only the chosen path's steps are drawn, and
+        // "Not now" draws nothing more
+        h += cs.choice("mc-way", S + "way.field", [["subscription", S + "way.subscription"], ["apikey", S + "way.apikey"], ["later", S + "way.later"]], { acts: {}, value: "subscription" });
+        const way = ui["choice:mc-way"] || "subscription";
+        if (way === "subscription") {
+          // the subscription, offered only while the sign-in is installed (trial §3.2)
+          if (part === true) {
+            let start = cs.act("subscriptionsignin", { data: { step: "start" } });
+            const code = cs.act("subscriptionsignin", { label: S + "signin.connect", data: { step: "code" } });
+            // "Open Anthropic's sign-in page" is not pressed again while a start is in flight (R24)
+            if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
+            if (start || code) {
+              const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
+              h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
+            }
+          } else h += `<p data-state="signin">${part === false ? W("instance.part.signin.absent") : W("instance.part.unknown", { part: T(S + "signin.part") })}</p>`;
+        } else if (way === "apikey") {
+          const set = cs.act("accountreferenceset");
+          if (set) h += `<h3>${W(S + "apikey.heading")}</h3>${cs.field("mc-key" + (ui.gen || 0), S + "apikey.field", { type: "password", help: S + "apikey.help", autocomplete: "off" })}${set}`;
+        }
+        return h;
       });
       out.push(`<div id="connect-own">${cs.sec(S + "own.heading", c)}</div>`);
     }
@@ -191,7 +196,7 @@ export const connect = {
     { op: "accountusesset", rereads: ["uses", "history"],
       send(view, el, cs) { return view.parts.aiPanelSend("accountusesset", "member:" + (view.me || {}).member, el, cs); },
       refusals: { SWITCH_VALUE_INVALID: "ai.refused.switchvalue" } },
-    { op: "ailimitset", rereads: ["limits"],
+    { op: "ailimitset", rereads: ["limits", "over"],
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "member:" + (view.me || {}).member, el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
     { op: "accountreferenceremove", rereads: ["reference", "uses", "limits", "usage", "history"],

@@ -14,7 +14,9 @@ const { membersTable, membersTableMember, accountTable, connectTable, notesTable
 
 const MARKED = [...WORDS.keys()].map((key) => ({ key, text: "\u2060" + key + "\u2062" + WORDS.get(key) + "\u2061", en: WORDS.get(key), fallback: false }));
 // the record's data: everything the fake plane answers, its fixtures' source included (functions' answers among them)
-const DATA = JSON.stringify(F) + readFileSync(new URL("./fixtures.mjs", import.meta.url), "utf8") + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64);
+const DATA = JSON.stringify(F) + readFileSync(new URL("./fixtures.mjs", import.meta.url), "utf8") + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64)
+  // the languages' names (R31), derived from the tags the record holds, in the member's language
+  + ["en", "es"].flatMap((l) => ["en", "en-US", "es", "vi", "zh", "yue", "tl", "ko", "ja", "fr", "ar", "ru", "pt", "hi", "so", "am", "ti", "fa", "uk", "hy", "km", "th", "ht", "de", "it", "pl", "sw", "mn", "lo"].map((t) => { const n = new Intl.DisplayNames([l], { type: "language" }).of(t); return n.charAt(0).toUpperCase() + n.slice(1); })).join(" ");
 const strip = (t) => { let s = t, prev; do { prev = s; s = s.replace(/\u2060[^\u2060\u2061]*\u2061/g, " "); } while (s !== prev); return s; };
 const keysIn = (t) => [...t.matchAll(/\u2060([^\u2060\u2061\u2062]+)\u2062/g)].map((m) => m[1]);
 const PUNCT = /^[\s·:,…$\d.()\-–/%›]*$/;

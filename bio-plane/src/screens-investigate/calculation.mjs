@@ -33,43 +33,47 @@ function render(cs, view) {
     const status = ["unchecked", "agrees", "differs", "stale"].includes(v.recompute_status) ? v.recompute_status : "unchecked";
     return `<div class="mk-bignum"><b>${cs.esc(fig(r.output))}</b><span>${cs.esc(r.says || "")}</span></div>`
       + cs.sec(S + "method", `<p class="rec">${cs.esc(v.method_note || (g.method && g.method.note) || v.method_version || "")}</p>`
-        + (v.calculation && v.calculation.recipe ? `<pre class="cs-meta">${cs.esc(JSON.stringify(v.calculation.recipe, null, 1))}</pre>` : "")
-        + `<p class="cs-meta">${cs.w(S + "status." + status)}${v.accepted_by ? " · " + cs.w(S + "accepted", { by: String(v.accepted_by).replace(/^member:/, ""), date: cs.date(v.accepted_at || "") }) : ""}</p>`)
+        + (v.calculation && v.calculation.recipe ? `<pre class="mk-small">${cs.esc(JSON.stringify(v.calculation.recipe, null, 1))}</pre>` : "")
+        + `<p class="mk-small">${cs.w(S + "status." + status)}${v.accepted_by ? " · " + cs.w(S + "accepted", { by: String(v.accepted_by).replace(/^member:/, ""), date: cs.date(v.accepted_at || "") }) : ""}</p>`)
       + cs.sec(S + "inputs", cs.sheet(((g.inputs && g.inputs.length ? g.inputs : (v.inputs || []).map((x) => ({ name: x.name, kind: x.kind, ref: x.sha || x.content_id })))).map((x) =>
         cs.row(/^[A-D]$/.test(x.grade || "") ? cs.grade("capture", x.grade) : cs.mark("gap", "unrated"),
           `<b>${cs.esc(x.name)}</b> · ${cs.esc(x.kind || "")} ${x.ref ? P.refOf(cs, x.ref, x.ref, [x.why || ""]) : ""}`, x.unbound ? cs.mark("gap", "undetermined", { reason: cs.w(S + "unbound") }) : "")).join(""))
-        + (g.capture && g.capture.why ? `<p class="cs-meta">${cs.esc(g.capture.why)}</p>` : ""))
-      + ((r.counted_apart || []).length ? `<p class="cs-meta">${cs.w(S + "apart", { n: String(r.counted_apart.length) })}</p>` : "");
+        + (g.capture && g.capture.why ? `<p class="mk-small">${cs.esc(g.capture.why)}</p>` : ""))
+      + ((r.counted_apart || []).length ? `<p class="mk-small">${cs.w(S + "apart", { n: String(r.counted_apart.length) })}</p>` : "");
   }));
-  out.push(`<div class="cs-actrow">${cs.act("calculationaccept", { label: "act.calculationaccept.label.calculation" })}${cs.act("recordcheck", { label: "act.recordcheck.label.calculation" })}</div>`);
+  out.push(`<div class="mk-acts">${cs.act("calculationaccept", { label: "act.calculationaccept.label.calculation" })}${cs.act("recordcheck", { label: "act.recordcheck.label.calculation" })}</div>`);
   /* the spot-check: the draw the calculation rests on, or the one drawn here */
   const drawKey = ui.draw || (c && (c.inputs || []).map((x) => x.draw || (x.kind === "draw" ? x.sha || x.ref : null)).find(Boolean)) || null;
   const spot = drawKey ? P.later(cs, view, "spot", "spotcheck", { query: { draw: drawKey } }) : null;
   const estId = spot && spot.state === "ok" && (spot.value.estimates || [])[0] ? spot.value.estimates[0].calc_id : null;
   const est = estId ? (c && estId === c.calc_id ? { state: "ok", value: c } : P.later(cs, view, "est", "calculation", { query: { id: estId } })) : null;
-  const spotInner = !spot ? `<p>${cs.w(S + "nodraw")}</p>` : cs.state(spot, (s) => {
-    if (s.found === false) return `<p class="cs-state" data-state="empty">${cs.w(S + "nodraw")}</p>`;
+  const spotInner = !spot ? "" : cs.state(spot, (s) => {
+    if (s.found === false) return "";
     const d = s.draw || {};
     const k = s.counts || {};
     const range = est && est.state === "ok" && est.value.results && est.value.results.interval ? est.value.results.interval : null;
-    return `<dl class="mk-facts"><dt>${cs.w(S + "draw")}</dt><dd>${cs.w(S + "draw.what", { n: String(d.n || 0), size: String(d.set_size || 0), seed: String(d.seed || "") })}<span class="cs-meta">${cs.w(S + "draw.repeat")} ${cs.esc(d.method || "")}</span></dd>`
+    return `<dl class="mk-facts"><dt>${cs.w(S + "draw")}</dt><dd>${cs.w(S + "draw.what", { n: String(d.n || 0), size: String(d.set_size || 0), seed: String(d.seed || "") })}<span class="mk-small">${cs.w(S + "draw.repeat")} ${cs.esc(d.method || "")}</span></dd>`
       + (s.question ? `<dt>${cs.w(S + "question")}</dt><dd class="rec">${cs.esc(s.question)}</dd>` : "")
-      + `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { judged: String(k.judged || 0), n: String(d.n || 0), yes: String(k.yes || 0), no: String(k.no || 0), unsure: String(k.could_not_tell || 0), disagree: String(k.disagree || 0), notvisited: String(k.not_visited || 0) })}</dd>`
+      + (() => {
+        /* R22: no count is drawn at zero: only the findings that were made */
+        const bits = [["yes", k.yes], ["no", k.no], ["unsure", k.could_not_tell], ["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
+        return bits.length ? `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { judged: String(k.judged || 0), n: String(d.n || 0), list: bits.join(", ") })}</dd>` : "";
+      })()
       + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)), confidence: String(Math.round((range.confidence || 0.95) * 100)), lowc: String(range.low), highc: String(range.high), size: String(range.frame_size) })
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
-        `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="cs-meta">${cs.w(S + "tension")}</span>` : ""),
-        (it.visits || []).map((x) => `<span class="cs-visit">${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: String(x.visitor || "").replace(/^member:/, ""), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
+        `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
+        (it.visits || []).map((x) => `<span>${cs.grade("testimony", x.grade || "D")} ${cs.w(S + "visit", { finding: cs.w(S + "finding." + (["yes", "no", "could_not_tell"].includes(x.finding) ? x.finding : "could_not_tell")), by: String(x.visitor || "").replace(/^member:/, ""), date: cs.date(x.observed_at || "") })} ${P.refOf(cs, x.testimony, cs.w(S + "account"), [], "capture")}</span>`).join(" "))).join(""));
   });
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
   out.push(cs.sec(S + "spot", spotInner
-    + `<p class="cs-meta">${cs.w(S + "notsays")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
+    + `<p class="mk-small">${cs.w(S + "notsays")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
     + cs.field("calc-set", S + "set", { help: S + "set.help" }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
     + cs.field("calc-words", S + "words", { area: true, rec: true, help: S + "words.help" }) + cs.field("calc-observed", S + "observed", { type: "date", value: P.today(cs) })
     + cs.act("testify", { label: "act.testify.label.calculation" })
-    + (ui.testimony ? `<p class="cs-note">${cs.w(S + "testified")}</p>` : "")
+    + (ui.testimony ? `<p class="mk-note">${cs.w(S + "testified")}</p>` : "")
     + cs.choice("calc-item", S + "itempick", items, {})
     + cs.checks("calc-finding", S + "finding", [["yes", S + "finding.yes", false], ["no", S + "finding.no", false], ["could_not_tell", S + "finding.could_not_tell", false]], { radio: true })
     + cs.field("calc-photo", S + "photo", { help: S + "photo.help" })
@@ -176,13 +180,17 @@ export const CALCULATION_WORDS = [
   ["inputs", "Inputs"],
   ["unbound", "not tied to the record"],
   ["apart", "{n} items were counted apart, never guessed."],
-  ["nodraw", "No random sample has been drawn for this calculation yet."],
   ["draw", "The draw"],
   ["draw.what", "{n} of {size} picked at random · seed {seed}"],
   ["draw.repeat", "Anyone can repeat it from the seed and get the same items, so no one chose which ones to visit."],
   ["question", "The question"],
   ["found", "What members found"],
-  ["counts", "{judged} of {n} judged: {yes} yes, {no} no, {unsure} could not tell, {disagree} in tension, {notvisited} not visited"],
+  ["counts", "{judged} of {n} judged: {list}"],
+  ["counts.yes", "{n} yes"],
+  ["counts.no", "{n} no"],
+  ["counts.unsure", "{n} could not tell"],
+  ["counts.disagree", "{n} in tension"],
+  ["counts.notvisited", "{n} not visited"],
   ["estimate", "What it estimates"],
   ["range", "{share}% of those judged · exact {confidence}% range {low}% to {high}% · between {lowc} and {highc} of all {size}"],
   ["noestimate", "no estimate is worked out over this draw yet"],
@@ -274,7 +282,7 @@ export const HELP_WORDS = [
 
 function renderHelp(cs) {
   const H = "screen.help.";
-  return cs.title() + `<p class="cs-sub">${cs.w(H + "sub")}</p>`
+  return cs.title() + `<p class="mk-sub">${cs.w(H + "sub")}</p>`
     + ["does", "random", "says", "notsays", "evidence"].map((k) => cs.sec(H + k, `<p>${cs.w(H + k + ".p")}</p>`)).join("");
 }
 
@@ -285,5 +293,5 @@ const words = ["screen.calculation.name", "screen.calculation.purpose",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
   "state.empty", "state.loading", "state.failed", ...CALCULATION_WORDS];
 
-export const CALCULATION_SCREEN = Object.freeze({ id: "calculation", reads, place, render, acts, words, parts: PARTS });
+export const CALCULATION_SCREEN = Object.freeze({ id: "calculation", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });
 export const HELP_SCREEN = Object.freeze({ id: "help", reads: () => ({}), render: renderHelp, acts: [], words: ["screen.help.name", ...HELP_WORDS] });

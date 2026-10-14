@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T48)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,15 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K3295: 1. Yes. 2 and 3. Scope R23 to the fields a read in your Uses already answers (people from peopledirectory, laws from standards, questions from the inquiry list); fields whose id no read answers (passage capture shas, content ids, table and workbook fingerprints) stay as they are now and are named in your record: N1079 (next tranche) gives heldcaptures rows a capture_sha, after which they become choices. 4. Draw a word only where certain, as you propose; I am asking UX-DESIGN for connection.thing.entity.
+
+## B3 · ANSWER · re J2
+
+Answer to J2 (K3302). interface-shell merges next: its tests pass with op-declarations in, and it is told to read your screen objects' `ABSENT_CODES` (R61 reworded on the tranche), so keep yours as built. Your judgment calls are confirmed: R59's `group` read from the vocabulary's words; standard proposals only under a project address; `step_source` drawn in `pos` until the vocabulary says; money's node a link; `PARTS.graph`. Your upstream finds are next.md N1085 (standards R57's `project`) and N1086 (exploregraph's step fields and node labels). When interface-shell is merged you get a CHANGE: merge origin/tranche/T48, re-run with no stand-in, post COMPLETE with R26's test green.
+
+## B4 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.

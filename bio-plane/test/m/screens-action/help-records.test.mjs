@@ -23,5 +23,7 @@ test("R9: control: a profile naming no faster request draws only the law it name
   assert.doesNotMatch(text(p), /the faster request/, "no law marked faster");
   assert.doesNotMatch(text(p), /suits a small set of records/);
   const none = await open("/app/help-records", { ...DATA_PLANE, profiles: ok({ ...PROFILES, view: {} }) });
-  assert.match(text(none), /Your group's places name no law for records requests/);
+  // R14: with no law named, the sections that would hold laws hold nothing and are not drawn
+  assert.doesNotMatch(text(none), /The faster request|Sources|no law/);
+  assert.match(text(none), /What the office must do/);
 });

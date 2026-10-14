@@ -69,6 +69,10 @@ export { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "./checks.mjs";
    status item a "condition" or a "signal" ("obligation" names only a public body's duty, DEC-107). */
 export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
 
+/* R54 (T48; N1047; DEC-226 (1); K3189): the sections a surface files kinds under instead of under a case, section id to
+   its kinds. The words `queue.update.section` and `queue.update.section_says` are the interface's. Frozen through. */
+export const QUEUE_SECTIONS = Object.freeze({ civicsmith: Object.freeze(["update-ready"]) });
+
 /* R49 (DEC-110 (1); K1038): the orders the feed's `sort` names; absent or blank is DEC-110 (3)'s default. */
 export const QUEUE_SORTS = Object.freeze(["added", "due", "case", "kind"]);
 
@@ -612,6 +616,9 @@ export class Queue {
     "step-date-due": "stepend", "step-reminder": "stepreminder", "milestone-reminder": "milestonereminder",
     /* T45 (action-producers R10, R12; N855, N890): each is the op its owner serves for the act that makes it leave. */
     "watch-keep-or-stop": "watchanswer", "plan-review-due": "planreviewrecord", "plan-look-again": "planresume",
+    /* R54 (N1047; DEC-226 (1)): a release ready to install is put aside until a date; updating or skipping it are the
+       screen's, "See what changes" being the screen's too (machinery-producers R11). */
+    "update-ready": "updatelater",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -694,6 +701,11 @@ export class Queue {
       + "a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
     "plan-look-again": " This one is the date your group set to look again at a paused plan, keyed by the plan and the "
       + "day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
+    /* R54 (machinery-producers R11, instance-setup R89; DEC-226 (1)). */
+    "update-ready": " This one is a release of your group's Civicsmith that is ready to install, one to-do for every "
+      + "administrator, keyed by the release rather than by a task: it leaves every administrator's list when any of them "
+      + "updates, skips the release or puts it aside until a date (op=updatelater), and when the running version is that "
+      + "release or newer. A newer release replaces it.",
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
     "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
@@ -1439,6 +1451,8 @@ export class Queue {
       classes: Queue.QUEUE_CLASSES,
       /* N301 (K356): how each class is shown to members; FINDING reads Noticed, its code unchanged. */
       class_labels: QUEUE_CLASS_LABELS,
+      /* R54 (N1047; DEC-226 (1)): the kinds a surface files under a named section, not under "no case". */
+      sections: QUEUE_SECTIONS,
       classes_deferred: Queue.QUEUE_CLASSES_DEFERRED,
       ancestor_depth_bound: Queue.QUEUE_ANCESTOR_DEPTH,
       /* REC-21. What this member has chosen not to be told about, REPORTED

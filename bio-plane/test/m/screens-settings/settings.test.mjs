@@ -1,14 +1,14 @@
 /* Settings, the index (R17), and Recovery codes (R20), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { ADMIN, MEMBER, env, refuse, recoveryTable } from "./fixtures.mjs";
 
 const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"]).map((e) => e.attrs["data-screen"]);
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "translations", "wizards"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "updates", "translations", "wizards"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -21,6 +21,27 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
   assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery"]);
   lacks(m, "screen.settings.groups");
   assert.ok(!a.html.includes('href="/"'), "no link opens the setup page");
+});
+
+test("R32 settings draws its sections as the design's link list: each its icon and its screen's name as the reference, its purpose beneath, the two never run together", async () => {
+  const a = await open("settings", { me: ADMIN, table: {} });
+  const lists = all(a.tree, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
+  assert.equal(lists.length, 2, "Yours, and the group's");
+  for (const id of links(a)) {
+    const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
+    assert.equal(all(l, (e) => e.tag === "svg").length, 1, `${id} has its icon`);
+    assert.equal(textOf(l), said(`screen.${id}.name`), `${id}'s reference is its name alone`);
+    // the purpose is a box of its own beside the reference, beneath it, never inside it
+    const purpose = all(a.tree, (e) => e.attrs["data-purpose"] === id)[0];
+    assert.ok(purpose && textOf(purpose) === said(`screen.${id}.purpose`), `${id}'s purpose`);
+    assert.ok(!ancestor(purpose, (e) => e === l) && purpose.parent === l.parent, `${id}: apart from the reference`);
+    const sib = l.parent.children.filter((c) => c.tag);
+    assert.equal(sib[sib.indexOf(l) + 1], purpose, `${id}: the purpose follows its name`);
+  }
+  // control: the group's section is not drawn to a member who does not administer
+  const m = await open("settings", { me: MEMBER, table: {} });
+  assert.equal(all(m.tree, (e) => /\bmk-links\b/.test(e.attrs.class || "")).length, 1);
+  assert.ok(!links(m).includes("updates"), "R27: no Updates section for a member who does not administer");
 });
 
 test("R20 recovery: the member's own codes (recoverycodesstate); new codes shown once, saying first that issuing again spends the earlier ones", async () => {

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, ADMIN } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, ENT, ORG, SHA } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, PERSON, ENT, ORG, SHA } from "./fixtures.mjs";
 
 const at = "/app/person/" + ENT;
 const admin = { boot: { plane: { ...plane(), whoami: ok(ADMIN) } } };
@@ -67,10 +67,7 @@ test("R1 identityclaim \"Say another record is this person\" with its basis and 
   fill(p, { "person-claim-other": "ENT-2026-0019", "person-claim-kind": "same_as", "person-claim-basis": "testimony", "person-claim-note": "I met both at the same meeting" });
   await press(p, "identityclaim");
   assert.deepEqual(p.byOp("identityclaim")[0].body, { a: ENT, b: "ENT-2026-0019", kind: "same_as", basis: "testimony", note: "I met both at the same meeting" });
-  assert.match(main(p).textContent, /claimed the same person, grade D/);
-  const mine = main(p).querySelectorAll('button[data-act="withdrawidentityclaim"]').find((b) => b.getAttribute("data-claim") === "IDC-2026-0003");
-  await press(p, "withdrawidentityclaim", { el: mine, reason: "different middle initial" });
-  assert.deepEqual(p.byOp("withdrawidentityclaim")[0].body, { claimId: "IDC-2026-0003", reason: "different middle initial" });
+  assert.equal(p.byOp("person").length, 2, "after the claim the screen reads the person again");
   const q = await open(at, { plane: { identityclaim: refusedIn("IDENTITY_GRADE_UNEARNED", "That basis does not earn this grade.") } });
   fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-sha-a": SHA, "person-claim-sha-b": SHA, "person-claim-note": "same name" });
   await press(q, "identityclaim");
@@ -111,4 +108,23 @@ test("R1 personexpunge at the phone width is read and not done (interface-shell 
   const p = await open(at, { boot: { plane: { ...plane(), whoami: ok(ADMIN) }, phone: true } });
   assert.equal(button(p, "personexpunge"), null);
   assert.ok(main(p).querySelector('[data-phone-act="personexpunge"]'));
+});
+
+test("R21 person draws each identity claim as person answers it (kind, grade, why, who and when); \"Withdraw this claim\" names that claim by its claim_id, with a reason; withdrawing one of two leaves the other drawn; control: a claim of a hidden project is not drawn", async () => {
+  const both = PERSON();
+  const rest = { ...both, claims: [both.claims[1]] };
+  let gone = false;
+  const p = await open(at, { plane: { person: () => ok(gone ? rest : both), withdrawidentityclaim: () => { gone = true; return ok({ ok: true, claim_id: "IDC-2026-0001" }); } } });
+  const m = main(p);
+  const buttons = m.querySelectorAll('button[data-act="withdrawidentityclaim"]');
+  assert.deepEqual(buttons.map((b) => b.getAttribute("data-claim")), ["IDC-2026-0001", "IDC-2026-0002"]);
+  assert.match(m.textContent, /It is the same person.*both hold the Deputy Director post.*by dev, 3 October 2026/s);
+  assert.match(m.textContent, /You are unsure.*the same surname.*by mai, 4 October 2026/s);
+  assert.equal(m.querySelectorAll("*").filter((e) => e.getAttribute("id") === "person-claim-id").length, 0, "no field asks for a claim id");
+  await press(p, "withdrawidentityclaim", { el: buttons[0], reason: "different middle initial" });
+  assert.deepEqual(p.byOp("withdrawidentityclaim")[0].body, { claimId: "IDC-2026-0001", reason: "different middle initial" });
+  const after = main(p).querySelectorAll('button[data-act="withdrawidentityclaim"]');
+  assert.deepEqual(after.map((b) => b.getAttribute("data-claim")), ["IDC-2026-0002"], "the other claim is still drawn");
+  const hidden = await open(at, { plane: { person: ok(PERSON({ claims: [] })) } });
+  assert.equal(main(hidden).querySelectorAll('button[data-act="withdrawidentityclaim"]').length, 0, "a claim person does not answer is not drawn");
 });

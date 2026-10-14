@@ -71,7 +71,7 @@ test("R4 each photo shown with its marks; areas drawn on the photo and named by 
   assert.ok(ph);
   assert.match(ph.textContent, /Not yet checked/);
   assert.equal(last(p, "openoriginal").query.capture, PHOTO, "the photo is read as open-file reads it (K3150)");
-  assert.ok(ph.querySelector("img.cs-image") && ph.querySelector(".cs-areas"), "drawn on the photo itself");
+  assert.ok(ph.querySelector("img.cs-image") && ph.querySelector('[data-shell="areas-box"]'), "drawn on the photo itself");
   assert.match(text(p), /must be marked, or marked "nothing to obscure", before signing/);
   assert.match(text(p), /obscured and labelled, and goes out without its camera details/);
   await press(p, "obscuremark", { reason: R });

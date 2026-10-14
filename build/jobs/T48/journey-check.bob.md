@@ -1,6 +1,6 @@
 # BOB to journey-check (T48)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K3295: all four readings are right; build on them.
+
+## B3 · CHANGE
+
+K3306 (SCREENS-ENTRY #2 J5): screens-entry now draws the recovery codes as `<pre data-codes>` (interface-shell R56 left no class for them), merged into tranche/T48. Your `journeys.mjs` (lines 65-68) reads `pre.cs-codes`: read `pre[data-codes]`. Merge origin/tranche/T48, re-run, check, post COMPLETE. You merge last in L11.

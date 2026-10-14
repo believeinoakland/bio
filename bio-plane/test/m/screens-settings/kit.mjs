@@ -120,8 +120,18 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   /** Fills the fields (`values`: id → text, or true/false for a box), clicks the act's button whose `data-*` match
    *  `data`, answers the shell's reason when it asks one (`reason`), and settles. Answers the requests the act made and
    *  what the shell drew beside the act. */
-  out.press = async (op, { data = {}, values = {}, reason, wait = false } = {}) => {
+  /** Picks an option of a choice the screen drew (`cs.choice`), as a member would, and settles with the screen drawn again. */
+  out.choose = async (fid, value) => {
+    const el = b.doc.getElementById(fid);
+    if (!el) throw new Error(`${id}: no choice ${fid} drawn`);
+    el.value = value;
+    b.fire(el, "change");
+    await b.settle(40);
+    out.redraw();
+  };
+  out.press = async (op, { data = {}, values = {}, reason, wait = false, choose = {} } = {}) => {
     const doc = b.doc;
+    for (const [cid, v] of Object.entries(choose)) await out.choose(cid, v);
     for (const [fid, v] of Object.entries(values)) {
       const el = doc.getElementById(fid);
       if (!el) continue;

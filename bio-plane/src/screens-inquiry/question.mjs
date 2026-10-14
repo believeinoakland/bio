@@ -15,7 +15,7 @@ import { OWN, ownRows } from "./words.mjs";
 function reads(view) {
   const id = String(view.subject || "");
   return {
-    inquiry: { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+    inquiry: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     strength: { op: "inquirystrength", query: { id } },
     basis: { op: "basisversions", query: { id } },
     hunches: { op: "hypotheses", query: { inquiry: id },
@@ -41,6 +41,7 @@ function place(view) {
 /** R2, R5: the question, its strength against the bar, what it waits on, its four sections and its acts. */
 function render(cs, view) {
   const id = String(view.subject || "");
+  if (!id) return "";
   const ui = view.ui;
   const d = view.data || {};
   /* the front matter: top-level scalars, and the `references` list as {target, rel, status, note} */
@@ -98,8 +99,8 @@ function render(cs, view) {
       const pm = pr.state === "ok" && pr.value && typeof pr.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(pr.value["bundle.md"]) : null;
       let pt = pm ? pm[1].trim() : project;
       try { if (pt.startsWith("\"")) pt = JSON.parse(pt); } catch { /* raw */ }
-      out.push(`<p class="cs-sub">${cs.w("screen.question.opened", { date: { html: date }, project: "" })}${cs.ref("project", project, pt, [])}</p>`);
-    } else out.push(`<p class="cs-sub">${cs.w("screen.question.opened.noproject", { date: { html: date } })}</p>`);
+      out.push(`<p class="mk-sub">${cs.w("screen.question.opened", { date: { html: date }, project: "" })}${cs.ref("project", project, pt, [])}</p>`);
+    } else out.push(`<p class="mk-sub">${cs.w("screen.question.opened.noproject", { date: { html: date } })}</p>`);
   }
 
   /* strength against the bar: two grades and the phrase, the weakest part and what would raise it */
@@ -108,6 +109,13 @@ function render(cs, view) {
   const barOf = bar.state === "ok" && bar.value && bar.value.bar && (bar.value.bar.capture || bar.value.bar.connection)
     && (project ? bar.value.bar.declared !== false : true) ? bar.value.bar : null;
   const rank = { A: 4, B: 3, C: 2, D: 1 };
+  /* a section that holds nothing is not drawn (R20): a read answered empty, or a body that draws nothing, makes no section;
+     a read still pending or failed is drawn as such */
+  const secOf = (titleKey, key, inner) => {
+    if (d[key] && d[key].state === "empty") return "";
+    const body = cs.state(key, view, inner);
+    return body ? cs.sec(titleKey, body) : "";
+  };
   out.push(cs.sec("screen.question.strength.head", cs.state("strength", view, (s) => {
     const axis = (a) => (s[a] && s[a].state === "graded" ? cs.grade(a, s[a].grade)
       : cs.mark("gap", s[a] && s[a].state === "undetermined" ? "undetermined" : "unrated", { reason: (s[a] && s[a].detail) || "" }));
@@ -124,8 +132,8 @@ function render(cs, view) {
     const weak = ["capture", "connection"].map((a) => s[a] && s[a].weakest).filter(Boolean)[0];
     const weakText = weak && typeof weak === "object" ? (weak.title || weak.target || weak.detail || "") : weak;
     const raise = ["capture", "connection"].map((a) => s[a] && s[a].state === "graded" && s[a].detail).filter(Boolean)[0];
-    return `<div class="cs-strengthbox"><span class="cs-strength">${parts.join("")}<span class="phrase">${phrase}</span></span>`
-      + `<p class="cs-note">${cs.w("screen.question.strength.two")}</p>`
+    return `<div class="mk-strengthbox"><span class="cs-strength">${parts.join("")}<span class="phrase">${phrase}</span></span>`
+      + `<p class="mk-note">${cs.w("screen.question.strength.two")}</p>`
       + (weakText ? `<p>${cs.w("screen.question.strength.weakest", { weakest: String(weakText) })}</p>` : "")
       + (raise ? `<p>${cs.w("screen.question.strength.raise", { raise: String(raise) })}</p>` : "")
       + ["capture", "connection"].filter((a) => s[a] && s[a].state === "undetermined")
@@ -133,9 +141,9 @@ function render(cs, view) {
   }), { help: "mark.strength.means" }));
 
   /* what it waits on: a document set aside, with who and why; restore it with a reason, or find another source */
-  out.push(cs.sec("screen.question.waits.head", cs.state("waits", view, (v) => {
+  out.push(secOf("screen.question.waits.head", "waits", (v) => {
     const list = Array.isArray(v) ? v : (v.waits || v.items || []);
-    if (!list.length) return `<p>${cs.w("state.empty")}</p>`;
+    if (!list.length) return "";
     return list.map((x, i) => {
       const who = x.setter || x.by || x.handle || "";
       const doc2 = x.document || x.bundle_id || x.capture || "";
@@ -143,11 +151,11 @@ function render(cs, view) {
         ? cs.w("screen.question.waits.setaside", { document: x.title || doc2, who, reason: x.reason || "" })
         : cs.w("screen.question.waits.item", { text: x.text || x.what || "" });
       return `<div class="cs-wait" data-wait="${i}">${said}`
-        + (x.date || x.at ? `<span class="cs-meta">${cs.w("screen.question.waits.since", { who, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
+        + (x.date || x.at ? `<span class="mk-small">${cs.w("screen.question.waits.since", { who, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
         + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
         + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</div>";
     }).join("");
-  })));
+  }));
 
   /* the current basis version's legs, by role; each live or severed by the inquiry's own reference to its target */
   const refOf = (target) => (doc ? doc.refs.find((r) => String(r.target || "") === target) : null);
@@ -164,7 +172,7 @@ function render(cs, view) {
   const legRows = (b, role) => {
     const v = cur(b);
     const legs = v && Array.isArray(v.legs) ? v.legs.filter((l) => (l.role || "supports") === role) : [];
-    if (!legs.length) return `<p>${cs.w("screen.question.legs.empty")}</p>`;
+    if (!legs.length) return "";
     return cs.sheet(legs.map((l) => {
       const g = l.grade || (l.grades && l.grades.capture) || "";
       const scale = l.scale || (role === "cuts_against" && l.testimony ? "testimony" : "capture");
@@ -176,22 +184,22 @@ function render(cs, view) {
       const why = severed ? whyOf(ref && ref.note) : "";
       const live = status === "confirmed" || status === "proposed";
       return cs.row(g ? cs.grade(scale, g) : cs.mark("gap", "unrated"),
-        (l.words ? `<span class="cs-rec">“${cs.esc(l.words)}”</span>` : "")
-        + `<span class="cs-meta">${cs.ref("document", target, l.target_title || target, facts)}`
+        (l.words ? `<span class="rec">“${cs.esc(l.words)}”</span>` : "")
+        + `<span class="mk-small">${cs.ref("document", target, l.target_title || target, facts)}`
         + (severed ? ` · <span data-leg="severed">${why ? cs.w("screen.question.leg.severed.why", { why }) : cs.w("screen.question.leg.severed")}</span>` : "") + "</span>",
         live ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
           : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "");
     }).join(""));
   };
   out.push(cs.sec("screen.question.supports.head", cs.state("basis", view, (b) => legRows(b, "supports"))
-    + `<p class="cs-meta">${cs.w("screen.question.cite.from")}</p>`
+    + `<p class="mk-small">${cs.w("screen.question.cite.from")}</p>`
     + cs.act("cite", { label: "act.cite.label.question", data: { inquiry: id, q: heading }, tone: "primary" })));
-  out.push(cs.sec("screen.question.against.head", cs.state("basis", view, (b) => legRows(b, "cuts_against"))));
+  out.push(secOf("screen.question.against.head", "basis", (b) => legRows(b, "cuts_against")));
 
-  /* hunches: a member's suspicion, labelled, never evidence (mark.hunch) */
-  out.push(cs.sec("screen.question.hunches.head", cs.state("hunches", view, (h) =>
+  /* hunches: a member's suspicion, labeled, never evidence (mark.hunch) */
+  out.push(cs.sec("screen.question.hunches.head", (d.hunches && d.hunches.state === "empty" ? "" : cs.state("hunches", view, (h) =>
     (h.hypotheses || []).map((x) => `<p><span class="cs-hunch" data-mark="hunch">${cs.w("screen.question.hunch.by", { who: x.held_by || "" })}</span> `
-      + `<span class="cs-rec">${cs.esc(x.statement || "")}</span></p>`).join(""), { empty: "screen.question.hunches.empty" })
+      + `<span class="rec">${cs.esc(x.statement || "")}</span></p>`).join("")))
     + cs.field("question-hunch", "screen.question.hunch.label", { area: true, rec: true })
     + cs.choice("question-hunch-kind", "screen.question.hunch.kind",
         [["other", "screen.question.hunch.kind.other"], ["flow", "screen.question.hunch.kind.flow"]], { value: "other" })
@@ -217,13 +225,13 @@ function render(cs, view) {
                    + cs.field("question-conclude-falsifier", "screen.question.conclude.falsifier", { area: true, rec: true })
                    + cs.field("question-conclude-commentary", "screen.question.conclude.commentary", { area: true, rec: true })
                    + cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id } }))
-    + `<p class="cs-meta">${cs.w("screen.question.conclude.who")}</p>`
+    + `<p class="mk-small">${cs.w("screen.question.conclude.who")}</p>`
     + cs.field("question-check", "screen.question.check.label", { help: "screen.question.check.help" })
     + cs.field("question-check-note", "screen.question.check.note", { area: true, rec: true })
     + cs.act("checkrequest", { label: "act.checkrequest.label.question", data: { inquiry: id } })
     + cs.field("question-plan", "screen.question.plan.label", {})
     + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } })
-    + (Array.isArray(ui.plans) ? ui.plans.map((p) => `<p class="cs-note">${cs.w("screen.question.plan.opened", { title: p.title || p.id || "" })}</p>`).join("") : "")));
+    + (Array.isArray(ui.plans) ? ui.plans.map((p) => `<p class="mk-note">${cs.w("screen.question.plan.opened", { title: p.title || p.id || "" })}</p>`).join("") : "")));
   return out.join("");
 }
 

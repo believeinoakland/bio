@@ -9,6 +9,7 @@
 
 import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
+import { graphRows, GRAPH_SHARED } from "./graphwords.mjs";
 
 const S = "screen.money.";
 
@@ -16,7 +17,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false } }
+    ? { questions: { op: "list", query: { type: "inquiry", limit: "500" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] } };
 }
 
@@ -52,7 +53,7 @@ function render(cs, view) {
   const set = t && t.state === "ok" ? t.value.set || {} : null;
   if (set && /^PROJ-/.test(String(set.concerns || ""))) P.later(cs, view, "project", "image", { query: { id: set.concerns } });
   out.push(cs.title(set ? set.label || id : id, { thing: { kind: "record", facts: set ? [cs.w(S + "startedby", { by: String(set.by || "").replace(/^member:/, "") })] : [] } }));
-  out.push(`<div class="cs-actrow">${cs.act("recordfact", { label: S + "read", tone: "primary" })}${cs.act("createset", { label: "act.createset.label.money" })}${cs.act("committedagainstpaid", { label: "act.committedagainstpaid.label.money" })}</div>`);
+  out.push(`<div class="mk-acts">${cs.act("recordfact", { label: S + "read", tone: "primary" })}${cs.act("createset", { label: "act.createset.label.money" })}${cs.act("committedagainstpaid", { label: "act.committedagainstpaid.label.money" })}</div>`);
   /* the rows: every fact the trail holds, included or left out, and those read here not yet in it */
   const entries = t && t.state === "ok"
     ? (t.value.inclusions || []).map((x) => ({ key: x.fact_id, state: "included", reason: x.reason, trail: x.trail }))
@@ -105,15 +106,15 @@ function render(cs, view) {
     const others = entries.filter((x) => x.key !== e.key);
     const gaps = gapsOf(e, f);
     const help = gaps.map((g) => `<div class="mk-gapblock" data-gap-item="${g}"><b>${cs.w(S + "col." + g)}</b> ${cs.mark("gap", "undetermined", { reason: cs.w(S + "gap." + g) })}`
-      + `<p class="cs-meta">${cs.w(S + "evidence." + g)}</p></div>`).join("");
+      + `<p class="mk-small">${cs.w(S + "evidence." + g)}</p></div>`).join("");
     const auth = ui.auth && ui.auth[e.key];
     const rec = ui.rec && ui.rec[e.key];
     const note = ui.note && ui.note[e.key];
-    return (f && f.as_read ? `<p class="cs-meta">${cs.w(S + "asread", { as_read: f.as_read, by: String(f.by || "").replace(/^member:/, "") })}</p>` : "") + help
-      + (rec ? `<p class="cs-meta">${cs.w(rec.consistent ? S + "rec.same" : S + "rec.differs", { dims: (rec.differs || []).map((x) => x.dimension).join(", ") })}</p>` : "")
-      + (auth ? `<p class="cs-meta">${auth.chains && auth.chains.length ? auth.chains.map((c) => cs.w(S + "auth.chain", { n: String((c.hops || []).length), event: c.event_id || "" })).join("; ") : cs.w(S + "auth.none")}</p>` : "")
-      + (note ? `<p class="cs-meta">${cs.esc(note)}</p>` : "")
-      + `<div class="cs-actrow">`
+    return (f && f.as_read ? `<p class="mk-small">${cs.w(S + "asread", { as_read: f.as_read, by: String(f.by || "").replace(/^member:/, "") })}</p>` : "") + help
+      + (rec ? `<p class="mk-small">${cs.w(rec.consistent ? S + "rec.same" : S + "rec.differs", { dims: (rec.differs || []).map((x) => x.dimension).join(", ") })}</p>` : "")
+      + (auth ? `<p class="mk-small">${auth.chains && auth.chains.length ? auth.chains.map((c) => cs.w(S + "auth.chain", { n: String((c.hops || []).length), event: c.event_id || "" })).join("; ") : cs.w(S + "auth.none")}</p>` : "")
+      + (note ? `<p class="mk-small">${cs.esc(note)}</p>` : "")
+      + `<div class="mk-acts">`
       + (f && f.phase !== "actual" && others.length ? cs.choice("money-with-" + e.key, S + "with", others.map((o) => ({ value: o.key, text: o.key })), {}) + cs.act("reconcile", { label: "act.reconcile.label.money", data: k }) : "")
       + cs.act("authoritychain", { label: "act.authoritychain.label.money", data: k })
       + (e.state === "included" ? cs.act("exclude", { label: "act.exclude.label.money", data: k }) : cs.act("include", { label: "act.include.label.money", data: k }))
@@ -128,8 +129,13 @@ function render(cs, view) {
   const onlyGaps = mode === "undetermined";
   const shown = onlyGaps ? entries.filter((e) => { const L = fact(e); return L.state !== "ok" || gapsOf(e, L.value).length; }) : entries;
   const nGaps = entries.filter((e) => { const L = fact(e); return L.state === "ok" && gapsOf(e, L.value).length; }).length;
+  /* R18: the connection graph, its centre the trail's set, as of today; a node opens Explore connections at it */
+  const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
+  const groups = P.groupMap(vocab);
+  const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre: id, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource" } }))));
   out.push(cs.state("trail", view, () => `<div class="mk-tablebar"><a class="cs-btn" data-tone="quiet" data-nav href="/app/money/${encodeURIComponent(id)}${onlyGaps ? "" : "/undetermined"}" aria-pressed="${onlyGaps}">`
-    + cs.w(onlyGaps ? S + "filter.all" : S + "filter.gaps", { n: String(nGaps) }) + "</a></div>"
+    + cs.w(onlyGaps ? S + "filter.all" : nGaps ? S + "filter.gaps" : S + "filter.gaps.none", { n: String(nGaps) }) + "</a></div>"
     + (shown.length ? cs.rows({ id: "money", pick: true, items: shown, key: (e) => e.key, name: (e) => e.key,
       cols: ["column.money.figure.name", "column.money.from.name", "column.money.to-where-it-went.name", "column.money.when-it-moved.name", "column.money.stage.name",
         "column.money.period.name", "column.money.amount.name", "column.money.source.name", "column.money.in-this-trail.name"],
@@ -137,13 +143,13 @@ function render(cs, view) {
       hold: (picked) => cs.act("include", { label: "act.include.label.money" }) + cs.act("exclude", { label: "act.exclude.label.money" })
         + (picked.length === 2 ? cs.act("reconcile", { label: "act.reconcile.label.money" }) : "") + cs.act("checkrequest", { label: "act.checkrequest.label.money" }) })
       : `<p>${cs.w(onlyGaps ? S + "nogaps" : S + "empty")}</p>`)));
-  out.push(`<p class="cs-note">${cs.w(S + "tension")}</p>`);
+  out.push(`<p class="mk-note">${cs.w(S + "tension")}</p>`);
   if (ui.cap) out.push(cs.sec(S + "cap.head", `<p>${ui.cap.difference && ui.cap.difference.figure
     ? cs.w(S + "cap.diff", { committed: (ui.cap.committed && ui.cap.committed.sum && ui.cap.committed.sum.value) || "", paid: (ui.cap.paid && ui.cap.paid.sum && ui.cap.paid.sum.value) || "", difference: ui.cap.difference.figure.value || "" })
     : cs.mark("gap", "undetermined", { reason: (ui.cap.difference && (ui.cap.difference.why || ui.cap.difference.says)) || cs.w(S + "cap.none") })}</p>`));
   /* the forms the acts read: a figure from a passage; the contract for committed against paid; the member's own words */
   const ch = (fid, key, list) => cs.choice(fid, key, list.map((x) => [x, key + "." + x]), {});
-  out.push(cs.sec(S + "form.head", (ui.readFor ? `<p class="cs-meta">${cs.w(S + "readfor", { fact: ui.readFor })}</p>` : "")
+  out.push(cs.sec(S + "form.head", (ui.readFor ? `<p class="mk-small">${cs.w(S + "readfor", { fact: ui.readFor })}</p>` : "")
     + cs.field("mf-amount", S + "f.amount", { help: S + "f.amount.help" }) + cs.field("mf-asread", S + "f.asread", { rec: true })
     + cs.field("mf-currency", S + "f.currency", { value: "USD" })
     + ch("mf-sign", S + "f.sign", ["+", "-"].map((x) => (x === "+" ? "in" : "out"))).replace(/value="in"/, 'value="+"').replace(/value="out"/, 'value="-"')
@@ -156,7 +162,7 @@ function render(cs, view) {
     + cs.field("mf-contract", S + "f.contract", {}) + cs.field("mf-label", S + "label", {})
     + cs.field("mf-expertise", S + "f.expertise", { value: "municipal budget", help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
-    + cs.field("mf-question", S + "f.question", { help: S + "f.question.help" }) + cs.field("mf-hunch", S + "f.hunch", { area: true, rec: true })));
+    + cs.choice("mf-question", S + "f.question", view.parts.options(view, "questions", (v) => v.bundles, (b) => ({ value: b.bundle_id, text: b.title || b.bundle_id })), { help: S + "f.question.help" }) + cs.field("mf-hunch", S + "f.hunch", { area: true, rec: true })));
   return out.join("");
 }
 
@@ -296,6 +302,8 @@ const acts = [
 ];
 
 const ROWS = [
+  ["graph", "Connections"],
+  ["graph.holds", "Everything the record joins this trail to, two steps out, each step cited and graded. A line stopped at its limit is undetermined, not absent."],
   ["notrail", "No money trail is open here yet. Start one: a named set of figures you include or leave out, each with a reason."],
   ["label", "The trail's name"],
   ["label.help", "What the trail follows, for example \"Sewer fund transfers, FY2022\"."],
@@ -342,6 +350,7 @@ const ROWS = [
   ["auth.none", "The record holds nothing that authorised it."],
   ["note.none", "No grade note is held for this copy."],
   ["filter.gaps", "Only figures with something undetermined · {n}"],
+  ["filter.gaps.none", "Only figures with something undetermined"],
   ["filter.all", "Every figure"],
   ["empty", "This trail holds no figure yet. Read one in from a document."],
   ["nogaps", "No figure in this trail has anything undetermined."],
@@ -387,8 +396,8 @@ const ROWS = [
   ["f.periodfrom", "Period from"],
   ["f.periodto", "Period to"],
   ["f.fiscal", "Or its fiscal year (FY2022-23)"],
-  ["f.payer", "Who paid (as written, or a record id)"],
-  ["f.payee", "Who received it (as written, or a record id)"],
+  ["f.payer", "Who paid (as the source writes it)"],
+  ["f.payee", "Who received it (as the source writes it)"],
   ["f.sha", "The document"],
   ["f.sha.help", "The document's fingerprint, as its page shows it; the figure cites the passage."],
   ["f.page", "Page (optional)"],
@@ -397,7 +406,7 @@ const ROWS = [
   ["f.expertise.help", "Members who declared this expertise are asked; the one who read the figure is not."],
   ["f.address", "The city's own address for the document"],
   ["f.address.help", "Fetched by your group's Civicsmith and kept exactly as the city sends it."],
-  ["f.question", "Beside which question (its id)"],
+  ["f.question", "Beside which question"],
   ["f.question.help", "A hunch is kept beside a question, labelled as yours, and is never evidence."],
   ["f.hunch", "Your reading, as a hunch"],
   ["f.empty", "Give the amount, how the source writes it, and the passage it comes from."],
@@ -420,7 +429,7 @@ const ROWS = [
     .map((k) => ["kind." + k, { revenue: "Revenue", expenditure: "Expenditure", transfer: "Transfer", allocation: "Allocation", payment: "Payment", contribution: "Contribution",
       gift: "Gift", income: "Income", behested: "Behested payment", settlement: "Settlement", debt: "Debt", balance: "Balance", fee_charged: "Fee charged", other: "Other" }[k]]),
 ];
-export const MONEY_WORDS = ROWS.map(([k, en]) => row(S + k, en));
+export const MONEY_WORDS = [...ROWS.map(([k, en]) => row(S + k, en)), ...graphRows(S)];
 
 const words = ["screen.money.name", "screen.money.purpose",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
@@ -428,6 +437,7 @@ const words = ["screen.money.name", "screen.money.purpose",
   ...["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].flatMap((c) => ["column.money." + c + ".name", "column.money." + c + ".shows"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
+  ...GRAPH_SHARED,
   "state.empty", "state.loading", "state.failed", ...MONEY_WORDS];
 
 export const MONEY_SCREEN = Object.freeze({ id: "money", reads, place, render, acts, words, parts: PARTS });

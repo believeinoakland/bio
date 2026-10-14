@@ -1,6 +1,6 @@
 # BOB to affordances (T48)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -20,3 +20,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K3297: 1. Right: planask is not an ACTS row; op-grades drops it from MACHINE_REFUSALS. 2. op-grades is now merged: merge origin/tranche/T48. Its report for you: (a) t34's groupdescriptiondraft and securitymap carry RUNG_ABSENT rows (R39), R12's totality must accept that for a non-mutating op R39 names; (b) MACHINE_REFUSALS holds actionreplyquoting as an ACTS row (your R58): make it one; (c) R19's reasoned drives for updateskip, stepsource and stepsourcewithdraw.
+
+## B3 · CHANGE
+
+K3301: merged into tranche/T48 (258 pass there). K3302: control-plane's composed check (its R2/R41 test over the door's op table) finds `unaccounted().stale` = [`groupdescriptiondraft`, `securitymap`] on the tranche: `ACT_HELP` holds rows for two ops op-declarations declares `ownread`. `unaccounted` is your R12: make the composed result empty in your module (stale should mean an op the table no longer carries, or the two rows move to where a read's help lives; your choice), with a control. Merge origin/tranche/T48, run your tests and control-plane's `test/m/control-plane/` affordances-pack test, then post COMPLETE.

@@ -37,7 +37,7 @@ const STATES = [
   ["setup", { fragment: { boot: SECRET.otp } }], ["setup", { fragment: { boot: SECRET.otp }, me: FOUNDER }],
   ["join", { fragment: { invite: SECRET.invite } }], ["join", { fragment: { join: SECRET.join } }], ["join", {}],
 ];
-const DATA = ["River Town", "Leases", "Checking terms.", "A finding", "mai", "Mai", "A profile", "en", "C1", "C2"];
+const DATA = ["River Town", "Leases", "Checking terms.", "A finding", "mai", "Mai", "A profile", "English", "C1", "C2"];
 
 /* interface-shell R5: a drawn text node is a word's text, filled, or the record's own data */
 const PATTERNS = [...WORDS.values()].filter((en) => en.replace(/\{\w+\}/g, "").replace(/[\s\p{P}]/gu, "").length >= 3).map((en) => new RegExp("^" + en.replace(/\s+/g, " ").trim().split(/\{\w+\}/).map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\S]*") + "$"));

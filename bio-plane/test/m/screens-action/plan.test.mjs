@@ -2,7 +2,7 @@
    the served page over a scripted plane, every act through the shell's friction and gate. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, DATA_PLANE, ROUTES, PLAN, PLAN_ID, ESC, DET } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, DATA_PLANE, ROUTES, PLAN, PLAN_ID, PROPOSALS, ESC, DET } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
 // each row's name, without the row's own panel control the kit may draw beside it (interface-shell R27)
@@ -29,16 +29,17 @@ test("R1: reads the plan: its matters (with support and escalation stage), optio
   assert.match(t, /awaiting a response/);
 });
 
-test("R1: the assistant's suggestions are read and drawn only while it is reachable, labelled machine work not yet in the plan; control: unreachable reads none and draws no optionpropose", async () => {
+test("R1: the assistant's suggestions are read and drawn only while it is reachable, labelled machine work not yet in the plan; control: unreachable reads none and draws no ask", async () => {
   const off = await open(ROUTES.plan, DATA_PLANE);
   assert.equal(off.byOp("planproposals").length, 0);
-  assert.ok(!ops(off).includes("optionpropose"));
+  assert.ok(!ops(off).includes("planask"));
   assert.doesNotMatch(text(off), /Suggested by the assistant/);
   const on = await open(ROUTES.plan, { ...DATA_PLANE, ...REACH });
   assert.equal(on.byOp("planproposals").at(-1).query.plan, PLAN_ID);
   assert.match(text(on), /Suggested by the assistant · not yet in the plan/);
   assert.match(text(on), /Ask the committee to agendize repair performance/);
-  assert.ok(ops(on).includes("optionpropose"));
+  assert.ok(ops(on).includes("planask"), "R13: Ask the assistant for options");
+  assert.ok(!ops(on).includes("optionpropose"), "R13: optionpropose is not drawn for this act");
 });
 
 test("R1 (interface-shell R19): options sort by category, regulated end date, matter or disposition, each row's acts in its panel", async () => {
@@ -82,7 +83,7 @@ test("R1, R7: 'Add a matter' sends plansubjectadd with the matter and the member
 });
 
 test("R1: optionadd sends the option's line, category and matter; optionadopt adopts a suggestion or a standing offer only by the member's act", async () => {
-  const p = await open(ROUTES.plan, { ...DATA_PLANE, ...REACH, optionadd: ok({}), optionadopt: ok({}), optionpropose: ok({}) });
+  const p = await open(ROUTES.plan, { ...DATA_PLANE, ...REACH, optionadd: ok({}), optionadopt: ok({}) });
   await press(p, "optionadd", { values: { "plan-opt-summary": "Ask the auditor", "plan-opt-category": "legal", "plan-opt-matter": `outcome:${DET}#STD-1` }, reason: "worth trying" });
   assert.deepEqual({ ...last(p, "optionadd").body, reason: undefined }, { plan: PLAN_ID, summary: "Ask the auditor", category: "legal", subjects: [`outcome:${DET}#STD-1`], reason: undefined });
   const adopts = main(p).querySelectorAll('button[data-act="optionadopt"]');
@@ -90,8 +91,6 @@ test("R1: optionadd sends the option's line, category and matter; optionadopt ad
   assert.deepEqual(last(p, "optionadopt").body.offer, { subject: `outcome:${DET}#STD-1`, kind: "chance_to_fix" });
   await press(p, main(p).querySelectorAll('button[data-act="optionadopt"]').find((b) => b.dataset.proposal), { reason: "good" });
   assert.equal(last(p, "optionadopt").body.proposal, `${PLAN_ID}/proposal/1`);
-  await press(p, "optionpropose", { values: { "plan-prop-summary": "A petition", "plan-prop-why": "many signed before" }, reason: "x" });
-  assert.equal(last(p, "optionpropose").body.why, "many signed before");
 });
 
 test("R1: scenarioset lays out a scenario of chosen options; checkpointrecord judges a checkpoint; refusals stay beside the act", async () => {
@@ -133,4 +132,63 @@ test("R1: control: a closed plan offers no act", async () => {
   const p = await open(ROUTES.plan, { ...DATA_PLANE, plan: ok({ ...PLAN, state: "closed", closed: { reason: "done", by: "member:dev", at: "x" } }) });
   assert.deepEqual(ops(p).filter((o) => o !== "itemtakeup"), []);
   assert.match(text(p), /Closed: done/);
+});
+
+/* ---------- R13 (T48; N1043; K3149, K3207; action-plans R51; interface-shell R55) ---------- */
+
+const RUN = "RUN-2026-00000001";
+const asking = (held, o = {}) => ({ ...DATA_PLANE, ...REACH, planask: o.ask || ok({ ok: true, plan: PLAN_ID, run: RUN, started: true }),
+  airun: () => ok({ found: true, session: { id: RUN, status: held.status, ticks: 1 } }),
+  planproposals: () => ok({ ...PROPOSALS, proposals: held.proposals || PROPOSALS.proposals }), ...(o.more || {}) });
+
+test("R13: 'Ask the assistant for options' sends planask with the plan, labelled as the registry labels optionpropose, its run drawn running; control: no optionpropose is sent", async () => {
+  const held = { status: "running" };
+  const p = await open(ROUTES.plan, asking(held));
+  const b = button(p, "planask");
+  assert.equal(b.textContent.replace(/\s+/g, " ").trim().startsWith("Ask the assistant for options"), true);
+  await press(p, b, { reason: "to see what else we could do" });
+  assert.equal(last(p, "planask").body.plan, PLAN_ID);
+  assert.deepEqual(Object.keys(last(p, "planask").body).filter((k) => k !== "reason"), ["plan"], "the plan alone: no summary or why of her own");
+  assert.equal(p.byOp("optionpropose").length, 0, "control: no optionpropose");
+  assert.match(text(p), /The assistant is looking for options/);
+  assert.ok(main(p).querySelector('[data-run="running"]'));
+});
+
+test("R13: the run is re-read on the page clock until it ends, and its proposals then reach the tray, labelled machine work; an ended run is not read again", async () => {
+  const held = { status: "running", proposals: [] };
+  const p = await open(ROUTES.plan, asking(held));
+  await press(p, "planask", { reason: "ask" });
+  const reads = () => p.byOp("airun").length;
+  const before = reads();
+  await p.clock.tick(9000);
+  assert.equal(reads(), before, "not before 10 seconds");
+  const trayBefore = p.byOp("planproposals").length;
+  held.status = "completed"; held.proposals = PROPOSALS.proposals;
+  await p.clock.tick(10000);
+  assert.match(text(p), /The assistant has finished/);
+  assert.ok(p.byOp("planproposals").length > trayBefore, "the tray is re-read when the run ends");
+  assert.match(text(p), /Ask the committee to agendize repair performance/);
+  assert.match(text(p), /machine work/);
+  const ended = reads();
+  await p.clock.tick(60000);
+  assert.equal(reads(), ended, "an ended run is not read again");
+});
+
+test("R13: existed: true draws the run already asked; refusals by their words (PLAN_CLOSED, AI_*)", async () => {
+  const p = await open(ROUTES.plan, asking({ status: "running" }, { ask: ok({ ok: true, plan: PLAN_ID, run: RUN, started: false, existed: true }) }));
+  await press(p, "planask", { reason: "ask" });
+  assert.match(text(p), /was already asked about this plan and is still working/);
+  for (const [code, words] of [["PLAN_CLOSED", "The plan is closed."], ["AI_RUN_MODE_NOT_DEPLOYED", "Planning runs are not deployed."]]) {
+    const q = await open(ROUTES.plan, asking({ status: "running" }, { ask: refusedIn(code, words) }));
+    const b = await press(q, "planask", { reason: "ask" });
+    assert.match(beside(q, b), new RegExp(words.replace(/\./g, "\\.")), code);
+    assert.doesNotMatch(text(q), /looking for options/, "nothing is drawn as asked");
+  }
+});
+
+test("R13: a closed plan offers no ask; the ask is drawn only while the assistant is reachable", async () => {
+  const closed = await open(ROUTES.plan, { ...DATA_PLANE, ...REACH, plan: ok({ ...PLAN, state: "closed", closed: { reason: "done", by: "member:dev", at: "x" } }) });
+  assert.ok(!ops(closed).includes("planask"));
+  const off = await open(ROUTES.plan, { ...DATA_PLANE, planask: ok({}) });
+  assert.ok(!ops(off).includes("planask"));
 });
