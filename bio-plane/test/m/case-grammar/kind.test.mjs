@@ -105,3 +105,71 @@ test("R31 the stored marker, never a label's words, tells a cleaned copy from a 
   assert.equal(section(CG.completeEditionOf(editionInput(manifest, marked))), section(CG.completeEditionOf(editionInput(manifest, files))),
                "the materials are listed as before");
 });
+
+/* ===== R32 (T48; N1016; K3111): the complete edition reads R31's stored kind first ===== */
+const MEMBER_PATH = CG.caseFilePath("obscured", MEMBER_DOC);
+const PHOTO_PATH = CG.caseFilePath("obscured", PHOTO);
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+/* the fixture's case document with `obscured_kind` stated on the row of `label`; the copy's bytes replaced when handed */
+const edition = (fixture, { stating, label, ref, bytes }) => {
+  const files = new Map(fixture.files);
+  if (stating !== undefined) {
+    const was = files.get("case.md");
+    files.set("case.md", was.replace(`    obscured_label: "${label}"`, `    obscured_label: "${label}"\n    obscured_kind: ${stating === null ? "null" : `"${stating}"`}`));
+    assert.notEqual(files.get("case.md"), was);
+  }
+  if (bytes !== undefined) files.set(CG.caseFilePath("obscured", ref), bytes);
+  const input = editionInput(fixture.manifest, files);
+  return CG.completeEditionOf(bytes === null ? { ...input, files: input.files.filter((f) => f.path !== CG.caseFilePath("obscured", ref)) } : input);
+};
+const rowListing = (html, ref) => { const at = html.indexOf(`<h3>${ref} (document)</h3>`); return html.slice(at, html.indexOf("</ul>", at)); };
+const IMAGE = "\xff\xd8\xffJPEG";
+const PDF = "%PDF-1.7 a cleaned member document";
+
+test("R32 a row stating kind: \"photo\" whose copy is a PDF is listed as a photo's copy; a row stating kind: \"document\" whose copy is an image is listed as a cleaned copy", () => {
+  const fx = caseFileFixture({ photo: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  const cleaned = esc(CG.OBSCURED_WORDS.cleaned), copy = esc(CG.OBSCURED_WORDS.copy);
+  /* the member document's copy is a PDF, yet the row states a photo: the photo's copy line, the label as handed */
+  const asPhoto = rowListing(edition(fx, { stating: "photo", label: COPY_CLEANED_LABEL, ref: MEMBER_DOC }), MEMBER_DOC);
+  assert.equal(asPhoto.includes(cleaned), false);
+  assert.equal(asPhoto.includes(esc(`${CG.OBSCURED_WORDS.copy}${MEMBER_DOC_ROW.obscured.copy}`)), true);
+  assert.equal(asPhoto.includes(esc(COPY_CLEANED_LABEL)), true, "the label is still printed word for word");
+  /* the photo's copy is an image, yet the row states a document: the cleaned-copy line */
+  const asDoc = rowListing(edition(fx, { stating: "document", label: OBSCURED_LABEL, ref: PHOTO }), PHOTO);
+  assert.equal(asDoc.includes(copy), false);
+  assert.equal(asDoc.includes(esc(`${CG.OBSCURED_WORDS.cleaned}${COPY}`)), true);
+  assert.equal(asDoc.includes(esc(OBSCURED_LABEL)), true);
+  /* the stored kind agreeing with the bytes lists the same lines as the bytes alone gave
+     (the case document's own hash differs, since the stated kind is in its bytes; the materials are the same) */
+  const materials = (h) => h.slice(h.indexOf("<h2>3. "), h.indexOf("<h2>4. "));
+  assert.equal(materials(edition(fx, { stating: "document", label: COPY_CLEANED_LABEL, ref: MEMBER_DOC })), materials(edition(fx, {})));
+  assert.equal(materials(edition(fx, { stating: "photo", label: OBSCURED_LABEL, ref: PHOTO })), materials(edition(fx, {})));
+});
+
+test("R32 a row stating a kind is never re-read from its bytes: no copy handed, an empty or odd copy, an image or a PDF all list by the kind", () => {
+  const fx = caseFileFixture({ photo: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  for (const bytes of [null, "", IMAGE, PDF, "PK\x03\x04zip", new Uint8Array(0)]) {
+    const doc1 = rowListing(edition(fx, { stating: "document", label: COPY_CLEANED_LABEL, ref: MEMBER_DOC, bytes }), MEMBER_DOC);
+    assert.equal(doc1.includes(esc(CG.OBSCURED_WORDS.cleaned)), true, `document, ${JSON.stringify(bytes)}`);
+    const photo = rowListing(edition(fx, { stating: "photo", label: COPY_CLEANED_LABEL, ref: MEMBER_DOC, bytes }), MEMBER_DOC);
+    assert.equal(photo.includes(esc(CG.OBSCURED_WORDS.cleaned)), false, `photo, ${JSON.stringify(bytes)}`);
+    assert.equal(photo.includes(esc(CG.OBSCURED_WORDS.copy)), true, `photo, ${JSON.stringify(bytes)}`);
+  }
+  assert.doesNotThrow(() => edition(fx, { stating: "photo", label: OBSCURED_LABEL, ref: PHOTO, bytes: 7 }));
+});
+
+test("R32 a row stating none (kind: null, or no obscured_kind at all) keeps T39's choice by the copy's bytes, and an edition signed before T47 renders byte for byte as before", () => {
+  const fx = caseFileFixture({ photo: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  for (const stating of [undefined, null, "other"]) {
+    const html = edition(fx, { stating, label: COPY_CLEANED_LABEL, ref: MEMBER_DOC });
+    assert.equal(rowListing(html, MEMBER_DOC).includes(esc(CG.OBSCURED_WORDS.cleaned)), true, `a PDF copy, ${stating}`);
+    const image = rowListing(edition(fx, { stating, label: COPY_CLEANED_LABEL, ref: MEMBER_DOC, bytes: IMAGE }), MEMBER_DOC);
+    assert.equal(image.includes(esc(CG.OBSCURED_WORDS.cleaned)), false, `an image copy, ${stating}`);
+    assert.equal(image.includes(esc(CG.OBSCURED_WORDS.copy)), true, `an image copy, ${stating}`);
+    const none = rowListing(edition(fx, { stating, label: COPY_CLEANED_LABEL, ref: MEMBER_DOC, bytes: null }), MEMBER_DOC);
+    assert.equal(none.includes(esc(CG.OBSCURED_WORDS.cleaned)), false, `no copy handed, ${stating}`);
+  }
+  const t37 = caseFileFixture({ photo: true, fileFormat: CG.CASE_FILE_FORMAT });
+  assert.equal(createHash("sha256").update(CG.completeEditionOf(editionInput(t37.manifest, t37.files))).digest("hex"),
+               "910634ae4b5ee876b270213a84d13eafa65e717db54d8360ff5b1449e2c53a35");
+});
