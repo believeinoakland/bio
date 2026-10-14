@@ -6,7 +6,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, sqlOver, FOUNDER_HANDLE } from "./fixture.mjs";
-import { installFounderHandle } from "./r144-shim.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 
@@ -164,7 +163,6 @@ test("R21 R8 a key registered before status_at existed reads null, never back-fi
   const core = { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; }, bundleInfo() { return null; } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  installFounderHandle(m);
   const c = credentialsOf(ctx, { record: core, membership: m });
   c.migrate();
   c.migrate();

@@ -111,8 +111,6 @@ test("R27 R28 R29 R31 R32 R65 R66 R69 R77 the C-29 and keyed-service rows this m
     SESSION_LOCKED: ["C-29.43", W("sessionLockedRefusal", "is-session-unlocked")],
     RESET_LINK_DEAD: ["C-29.46", W("#resetLinkDead", "is-reset-link-live")],
     RESET_LINK_MEMBER_NOT_ACTIVE: ["C-29.47", W("passwordResetLinkMake", "is-reset-link-member")],
-    /* (T49-3; R77) a claim that carries no fingerprint, the next free number of C-29 */
-    NO_TOKEN_FP: ["C-29.48", W("claim", "is-claim-fingerprint")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],

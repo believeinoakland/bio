@@ -6,7 +6,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, sqlOver, PASSWORD, FOUNDER_PASSWORD, sha, FOUNDER_HANDLE } from "./fixture.mjs";
-import { installFounderHandle } from "./r144-shim.mjs";
 import { SIGN_IN_CHECKS, SIGN_IN_WINDOW, SIGN_IN_STATED, RECOVERY_CODE_COUNT, credentialsOf }
   from "../../../src/credentials/index.mjs";
 import { membershipOf, notAnAdmin } from "../../../src/membership/index.mjs";
@@ -244,7 +243,6 @@ test("R40 sessions held as tokens when the migration runs are carried over as th
   const core = { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; }, bundleInfo() { return null; } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  installFounderHandle(m);
   const c = credentialsOf(ctx, { record: core, membership: m });
   c.migrate();
   await c.claim({ password: FOUNDER_PASSWORD, handle: FOUNDER_HANDLE, tokenFp: "fp" });

@@ -186,14 +186,6 @@ export const ACCOUNT_CHECKS = Object.freeze({
     check: 'C-29.47', where: at("passwordResetLinkMake", "is-reset-link-member"),
     translation: 'A password reset link is made only for an active member of your group. Nothing was made.',
   }),
-  /* T49 (T49-3; N945, K3329; R77): a claim that carries no fingerprint of the bootstrap credential, the next free number
-     of C-29. A new row, awaiting promotion's stamp (T49-4). */
-  NO_TOKEN_FP: Object.freeze({
-    check: 'C-29.48', where: at("claim", "is-claim-fingerprint"),
-    translation: 'This claim did not say which setup key it was made with, so your group\'s Civicsmith cannot tell it '
-      + 'from an older one and did not accept it. Nothing was changed. Open the setup page again and try once more; if '
-      + 'it keeps happening, tell whoever hosts your group\'s Civicsmith.',
-  }),
 });
 
 

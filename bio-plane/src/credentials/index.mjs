@@ -316,21 +316,17 @@ export class Credentials {
 
   /* R1: spending the bootstrap credential. Refused once spent, so a leaked ADMIN_TOKEN cannot silently re-claim a
      running instance; a replaced one (a different recorded fingerprint) re-arms it. R38's window is asked first, under
-     the role `admin`; each refused claim counts toward it and toward R44's tally. (T49; R77, N945) A claim given no
-     `tokenFp` is refused NO_TOKEN_FP, writing nothing. (R74, N1072) The founder chooses her handle at the claim: when
-     none is held (a first claim or a re-armed one) `handle` is required and is judged and recorded by membership's
+     the role `admin`; each refused claim counts toward it and toward R44's tally. (T49; R77, N945, K3337) A claim given
+     no `tokenFp` records none, and so reads claimed. (R74, N1072) The founder chooses her handle at the claim: when
+     none is held (a first claim or a re-armed one) a given `handle` is judged and recorded by membership's
      `founderHandleSet` (its R144) in the claim's one act, after R1's own refusals, its refusal answered as given and
-     neither password nor handle written; when one is held, `handle` absent or equal to it is accepted and any other is
-     refused by that same service, HANDLE_FIXED. The success answers `handle`, the held one. */
+     neither password nor handle written; with none given (K3337) the password is set and no handle is held, so R75's
+     transition applies; when one is held, `handle` absent or equal to it is accepted and any other is refused by that
+     same service, HANDLE_FIXED. The success answers `handle`, the held one or null. */
   async claim({ password, handle = null, tokenFp = null, source = null, country = null } = {}) {
     const gate = await this.#gate({ role: ROOT, source, country, password });
     if (gate.paused) return gate.paused;
     const refuse = (answer) => { this.#refusedAttempt(gate, country); return answer; };
-    /* DEC-49 REGION is-claim-fingerprint */
-    if (typeof tokenFp !== "string" || tokenFp === "")
-      return refuse(Credentials.#row(ACCOUNT_CHECKS, "NO_TOKEN_FP", "the claim named no fingerprint of the bootstrap "
-        + "credential, so there is nothing to record that a later rotated secret could be told from. Nothing was written."));
-    /* END DEC-49 REGION is-claim-fingerprint */
     if (typeof password !== "string" || password.length < 12)
       return refuse({ ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
     const st = this.bootstrapState(tokenFp);
@@ -343,7 +339,7 @@ export class Credentials {
       const now = new Date().toISOString();
       this.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)
                      ON CONFLICT(id) DO UPDATE SET consumed_at=excluded.consumed_at,
-                       token_fp=excluded.token_fp`, now, tokenFp);
+                       token_fp=excluded.token_fp`, now, typeof tokenFp === "string" && tokenFp !== "" ? tokenFp : null);
       return { ok: true, role: ROOT, consumedAt: now, handle: chosen.handle };
     });
     return done.ok === true ? done : refuse(done);
@@ -358,12 +354,14 @@ export class Credentials {
   }
 
   /* R74: the handle the claim takes, inside its act: the one held when `handle` is absent or equal to it, else the
-     answer of membership's `founderHandleSet({handle, by: "admin"})`: the handle recorded, or its refusal (NO_HANDLE,
-     BAD_HANDLE, HANDLE_TAKEN with none held; HANDLE_FIXED with a different one held) as it gives it. */
+     answer of membership's `founderHandleSet({handle, by: "admin"})`: the handle recorded, or its refusal (BAD_HANDLE,
+     HANDLE_TAKEN with none held; HANDLE_FIXED with a different one held) as it gives it. With none held and none
+     given, no handle is held (K3337). */
   #founderHandleChosen(handle) {
     const held = this.#founderHandle();
     if (held !== null && (handle === null || handle === undefined || handle === "" || handle === held))
       return { ok: true, handle: held };
+    if (held === null && (handle === null || handle === undefined || handle === "")) return { ok: true, handle: null };
     return this.membership.founderHandleSet({ handle, by: ROOT });
   }
 

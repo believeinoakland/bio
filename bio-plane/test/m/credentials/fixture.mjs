@@ -8,7 +8,6 @@ import { createHash } from "node:crypto";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { installFounderHandle } from "./r144-shim.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -76,7 +75,6 @@ export function world({ sealSecret = SEAL } = {}) {
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  installFounderHandle(m);
   const c = credentialsOf(ctx, { record: core, membership: m, sealSecret });
   if (credentialsOf(ctx) !== c) throw new Error("credentialsOf answers one instance per storage");
   c.migrate();
@@ -145,7 +143,6 @@ export function realWorld() {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
-  installFounderHandle(m);
   const c = credentialsOf(ctx, { sealSecret: SEAL });
   c.migrate();
   return { db, sql, ctx, rc, m, c, row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };

@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD, FOUNDER_PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
-import { ACCOUNT_CHECKS, Credentials } from "../../../src/credentials/index.mjs";
+import { Credentials } from "../../../src/credentials/index.mjs";
+import { viewerPredicate } from "../../../src/membership/index.mjs";
 
 const COUNTS = ["signin_window", "security_counts", "security_pending", "security_key", "sqlite_sequence"];
 /* every table but the counts the sign-in window and the tally keep (R38, R44): what an act wrote besides its count */
@@ -26,10 +27,10 @@ test("R74 a first claim with a free handle sets the password and the handle, ans
   assert.equal(w.c.session(s.token).handle, "mara", "R5 names it");
 });
 
-test("R74 controls: no handle is NO_HANDLE, `admin` HANDLE_TAKEN, a malformed handle BAD_HANDLE, each writing neither password nor handle and each counted under R38", async () => {
+test("R74 controls: `admin` is HANDLE_TAKEN and a malformed handle BAD_HANDLE, each writing neither password nor handle and each counted under R38", async () => {
   const w = world();
   const before = unCounted(w);
-  const arms = [[undefined, "NO_HANDLE"], [null, "NO_HANDLE"], ["", "NO_HANDLE"], ["admin", "HANDLE_TAKEN"],
+  const arms = [["admin", "HANDLE_TAKEN"],
                 ["Bad Handle!", "BAD_HANDLE"], ["ADMIN", "BAD_HANDLE"]];
   for (const [i, [handle, reason]] of arms.entries()) {
     const r = await w.c.claim({ password: FOUNDER_PASSWORD, handle, tokenFp: "fp-1", source: `s${i}` });
@@ -40,6 +41,19 @@ test("R74 controls: no handle is NO_HANDLE, `admin` HANDLE_TAKEN, a malformed ha
     assert.deepEqual(w.c.bootstrapState("fp-1"), { claimed: false, rearmed: false, consumedAt: null });
     assert.equal(signins(w), i + 1, "each refused claim is R44's `signin`");
     assert.equal(windowN(w), i + 1, "and counts toward R38's window");
+  }
+});
+
+test("R74 a claim with no handle (absent, null or empty; K3337) sets the password and holds no founder handle; `admin` then signs in (R75's transition) until she chooses one", async () => {
+  for (const handle of [undefined, null, ""]) {
+    const w = world();
+    const c = await w.c.claim({ password: FOUNDER_PASSWORD, handle, tokenFp: "fp-1" });
+    assert.deepEqual([c.ok, c.role, c.handle], [true, "admin", null], String(handle));
+    assert.equal(w.m.founderHandle(), null);
+    assert.equal((await w.c.login({ handle: "admin", password: FOUNDER_PASSWORD })).ok, true);
+    assert.equal(w.m.founderHandleSet({ handle: "mara", by: "admin" }).ok, true, "she chooses once, later");
+    assert.equal((await w.c.login({ handle: "admin", password: FOUNDER_PASSWORD, source: "x" })).reason, "SIGN_IN_REFUSED");
+    assert.equal((await w.c.login({ handle: "mara", password: FOUNDER_PASSWORD })).ok, true);
   }
 });
 
@@ -68,7 +82,7 @@ test("R74 the handle is read after R1's own refusals: a short password or a clai
   assert.equal(w.m.founderHandle(), "mara");
 });
 
-test("R74 a re-armed claim with a handle held accepts none or the same handle and answers it; any other is HANDLE_FIXED, writing nothing; with none held it needs one", async () => {
+test("R74 a re-armed claim with a handle held accepts none or the same handle and answers it; any other is HANDLE_FIXED, writing nothing; with none held one may be chosen", async () => {
   const w = world();
   assert.equal((await w.c.claim({ password: FOUNDER_PASSWORD, handle: "mara", tokenFp: "fp-1" })).ok, true);
   const before = unCounted(w);
@@ -89,15 +103,14 @@ test("R74 a re-armed claim with a handle held accepts none or the same handle an
   await old.c.setPassword({ role: "admin", password: FOUNDER_PASSWORD });
   old.sql.exec(`INSERT INTO bootstrap (id, consumed_at, token_fp) VALUES (1, ?, ?)`, "2026-01-01T00:00:00.000Z", "fp-old");
   assert.deepEqual(old.c.bootstrapState("fp-new"), { claimed: false, rearmed: true, consumedAt: null });
-  assert.equal((await old.c.claim({ password: "another-passphrase", tokenFp: "fp-new", source: "o1" })).reason, "NO_HANDLE");
   const chosen = await old.c.claim({ password: "another-passphrase", handle: "olga", tokenFp: "fp-new", source: "o2" });
   assert.deepEqual([chosen.ok, chosen.handle], [true, "olga"]);
 });
 
 test("R74 the route: claim takes the handle from the body and the fingerprint from the query only", async () => {
   const w = world();
-  const no = await w.ops("fp=fp-1", { password: FOUNDER_PASSWORD, tokenFp: "fp-forged" }).claim();
-  assert.equal(no.reason, "NO_HANDLE");
+  const no = await world().ops("fp=fp-1", { password: FOUNDER_PASSWORD, tokenFp: "fp-forged" }).claim();
+  assert.deepEqual([no.ok, no.handle], [true, null], "no handle: not refused (K3337)");
   const ok = await w.ops("fp=fp-1", { password: FOUNDER_PASSWORD, handle: "mara", tokenFp: "fp-forged", role: "member:x" }).claim();
   assert.deepEqual([ok.ok, ok.role, ok.handle], [true, "admin", "mara"], "a body's `role` is never read");
   assert.equal(w.c.bootstrapState("fp-1").claimed, true);
@@ -255,7 +268,7 @@ test("R77 a store spent with a null fingerprint answers bootstrapState(fp) {clai
   assert.deepEqual(w.c.bootstrapState("fp-2"), { claimed: true, rearmed: false, consumedAt: "2026-01-01T00:00:00.000Z" });
 });
 
-test("R77 controls: a store spent with fingerprint A re-arms for B and stays claimed for A; a claim with no tokenFp is refused NO_TOKEN_FP, writing nothing", async () => {
+test("R77 controls: a store spent with fingerprint A re-arms for B and stays claimed for A; a claim with no tokenFp succeeds and then reads claimed for any fp", async () => {
   const w = world();
   assert.equal((await w.c.claim({ password: FOUNDER_PASSWORD, handle: "mara", tokenFp: "A" })).ok, true);
   assert.deepEqual(w.c.bootstrapState("A"), { claimed: true, rearmed: false, consumedAt: w.c.bootstrapState("A").consumedAt });
@@ -263,20 +276,24 @@ test("R77 controls: a store spent with fingerprint A re-arms for B and stays cla
   assert.deepEqual(w.c.bootstrapState(null).rearmed, false, "none presented: not re-armed");
   assert.equal((await w.c.claim({ password: "another-passphrase", handle: "mara", tokenFp: "A", source: "s1" })).reason, "ALREADY_CLAIMED");
   assert.equal((await w.c.claim({ password: "another-passphrase", handle: "mara", tokenFp: "B", source: "s2" })).ok, true, "B re-arms");
-  /* no fingerprint: refused on an unclaimed store, writing nothing but its count */
-  const u = world();
-  const before = unCounted(u);
-  for (const [i, tokenFp] of [undefined, null, "", 7, {}].entries()) {
-    const r = await u.c.claim({ password: FOUNDER_PASSWORD, handle: "mara", tokenFp, source: `n${i}` });
-    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "NO_TOKEN_FP", "NO_TOKEN_FP", "C-29.48"], String(tokenFp));
-    assert.equal(r.translation, ACCOUNT_CHECKS.NO_TOKEN_FP.translation);
-    assert.equal(unCounted(u), before, "nothing written but its count");
-    assert.equal(signins(u), i + 1, "a refused claim counts (R44)");
+  /* no fingerprint (K3337): the claim is not refused; it records none, and so reads claimed for any fingerprint */
+  for (const tokenFp of [undefined, null, ""]) {
+    const u = world();
+    const r = await u.c.claim({ password: FOUNDER_PASSWORD, handle: "mara", tokenFp });
+    assert.equal(r.ok, true, String(tokenFp));
+    for (const fp of ["A", "B", null]) assert.deepEqual([u.c.bootstrapState(fp).claimed, u.c.bootstrapState(fp).rearmed], [true, false]);
+    assert.equal((await u.c.claim({ password: "another-passphrase", handle: "mara", tokenFp: "B" })).reason, "ALREADY_CLAIMED");
   }
-  assert.equal(u.c.claimed(), false);
-  assert.equal(u.m.founderHandle(), null);
-  assert.equal((await u.c.claim({ password: FOUNDER_PASSWORD, handle: "mara", tokenFp: "A" })).ok, true, "control: with one it claims");
-  /* and the same through the route, which reads it from the query only */
-  const v = world();
-  assert.equal((await v.ops("", { password: FOUNDER_PASSWORD, handle: "mara", tokenFp: "forged" }).claim()).reason, "NO_TOKEN_FP");
+});
+
+test("R76 the founder's Ask reads her own project: the grant's viewer `member:admin` is folded to the founder by membership's viewer predicate, so a project she owns is in sight", async () => {
+  const { w, f } = await withAccount();
+  w.project("p-hers", "admin", "hidden");
+  const g = await w.c.aiGrantMint({ member: "admin", by: "admin", session: f });
+  const held = await w.c.aiGrantHeld({ token: g.token });
+  assert.equal(held.viewer, "member:admin");
+  const pred = viewerPredicate(held.viewer);
+  assert.notEqual(pred.scope, "DENY");
+  const seen = w.rows(`SELECT b.bundle_id AS id FROM bundles b WHERE ${pred.sql} AND b.object_type='project'`, ...pred.args).map((r) => r.id);
+  assert.ok(seen.includes("p-hers"), "her own project is read under her grant");
 });

@@ -17,7 +17,7 @@ test("R1 claim sets the founder's password once; too short refused; a replaced b
   assert.match(ok.consumedAt, /^\d{4}-\d\d-\d\dT/);
   const again = await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" });
   assert.deepEqual(again, { ok: false, reason: "ALREADY_CLAIMED", consumedAt: ok.consumedAt });
-  assert.equal((await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE })).reason, "NO_TOKEN_FP", "no fingerprint never re-arms (R77)");
+  assert.equal((await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE })).reason, "ALREADY_CLAIMED", "no fingerprint never re-arms (R77)");
   assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "x".repeat(12) })).ok, true);
   assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "y".repeat(12) })).ok, false);
   const rearmed = await w.c.claim({ password: "z".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-2" });
