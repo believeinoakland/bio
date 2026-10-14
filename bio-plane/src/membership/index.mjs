@@ -3062,5 +3062,9 @@ export function membershipOps(m, url, body, env) {
         courtnotice: () => m.courtNotice(),
         groupdescriptionset: () => m.groupDescriptionSet({ ...(body || {}), by: url.searchParams.get("by") }),
         groupdescription: () => m.groupDescription({ viewer: url.searchParams.get("viewer") }),
+        /* R143 (T48; N1036; K3211): the member's own Home mark, read and recorded in one act. `by` is the control plane's
+           stamp, read from the query as `adminresign`'s is, and nothing the body says is read, so no caller names whose
+           mark it moves. Its declaration and routing are `op-declarations`' and `control-plane`'s (T48-63, T48-77). */
+        lookedsince: () => m.lookedSince({ by: url.searchParams.get("by") }),
   };
 }

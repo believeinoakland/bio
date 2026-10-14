@@ -100,3 +100,17 @@ test("R44 sight answers the three levels as the strings \"full\", \"existence\" 
   }
   assert.ok(!levels.has("FULL") && !levels.has("EXISTENCE") && !levels.has("NONE"));
 });
+
+test("R143 op=lookedsince answers the stamped member's own mark, read and recorded in one act; control: a body's `by` is never read, and no stamp records nothing", async () => {
+  const w = await world().group("ann", "bob");
+  assert.deepEqual(w.ops("by=ann", { by: "bob" }).lookedsince(), { since: null });
+  const at = w.row(`SELECT at FROM home_looks WHERE member_id='ann'`).at;
+  assert.equal(w.row(`SELECT at FROM home_looks WHERE member_id='bob'`), null, "the body's `by` moved no mark");
+  await tick();
+  assert.deepEqual(w.ops("by=ann").lookedsince(), { since: at }, "the second answers the first's instant");
+  /* control: with no stamp, whatever the body names, nothing is recorded */
+  const before = snapshot(w);
+  assert.deepEqual(w.ops("", { by: "bob" }).lookedsince(), { since: null });
+  assert.deepEqual(w.ops(`by=${MACHINE_CLASS_PREFIX}admin`).lookedsince(), { since: null });
+  assert.equal(snapshot(w), before);
+});
