@@ -169,6 +169,6 @@
     {"id": "legacy-ui", "layer": 11, "legacy": true, "paths": ["civicos-ui/"], "tests": ["civicos-ui/test/", "bio-plane/test/budget.mjs", "bio-plane/test/caseceremony.mjs"], "uses": ["*earlier"]},
     {"id": "installer", "layer": 11, "paths": ["newgroup/", "bio-plane/public/newgroup/"], "tests": ["newgroup/test/", "bio-plane/test/system/newgroup-bundle-fresh.test.mjs"], "uses": ["bundler", "jurisdictions", "signatures", "instance-setup", "test-support", "interface-assets"]},
     {"id": "stewards", "layer": 11, "paths": ["stewards/"], "tests": ["stewards/test/"], "uses": ["test-support", "instance-setup"]},
-    {"id": "journey-check", "layer": 11, "paths": [], "tests": [], "uses": []}
+    {"id": "journey-check", "layer": 11, "paths": ["bio-plane/src/journey-check/"], "tests": ["bio-plane/test/m/journey-check/"], "uses": []}
   ]
 }
