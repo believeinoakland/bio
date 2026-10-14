@@ -26,3 +26,25 @@ Users' tests my merge turns red, each closed by that user's own T47 job (all oth
 (4) plane (T47-66) `wizards.test.mjs` 'R19 (T34 …) … the irreversible acts': it asserts `publish` is among RUNGS' irreversible acts; since R37 they are publishat and publishatmove.
 
 Requirement wording (BOB's): op-grades R1 ("irreversible publish"), R14 ("as publish") and R21 (IRREVERSIBLE_WEIGHT "(`publish`, `publishat`, `publishatmove`; R1, R14)") still name publish as irreversible; read as R37 amends them (K3144 (3)), worth re-wording at the next fold. R36's "their NON_ACTS sentences" for sever/reinstate is read as their backing note (K3144 (2)).
+
+## J3 · COMPLETE
+
+T47-48 done on job/T47/op-grades (tranche/T47 merged after B2).
+
+Read whole: the requirements (public and private), layer 11's contract, every file of src/op-grades/ and test/m/op-grades/, the plan entry, the L11 fold's §B and doubts, DEC-207/DEC-208, and the owners' requirements for each op graded (credentials R65–R71, instance-setup R84–R85, tasks R19, control-plane R85–R87, people R37, citation R4/R14/R15, strength R40, monitoring R74, capture-requests R56, case-authoring R14/R34/R76, publication R21). No flaw found in my own module beyond what the entry changes.
+
+Applied:
+- R35: `deepercheck` → RUNG_ABSENT `observational` (as deeperbatch; sentence names file-safety R3, R10, R13); `inboxpull` → RUNGS `reversible` (heldsetaside takes the filed document out); R3's tally re-pinned 21 → 20 (24 with R7/R9/R10's); controls: safecopyrequest stays undetermined.
+- R36 (new `t47.mjs`): projectlist, projectquestions reads; drawquestion reversible (as cite); projectbarset reasoned, PROJECT_BAR_NO_REASON joins JUSTIFICATION_REFUSALS; monitorset reversible; sever/reinstate's backing note names a question's own legs (no NON_ACTS row: ACTS rows, K3144 (2)); capturerequest's two sentences name a member's own request (capture-requests R56).
+- R37: unlock, reauth, passwordresetlink (K3144 (1)), passwordreset on the credential ground; passwordresetlook, grouplanguages, signintrace reads; grouplogoset, grouplanguagesset, signrequest reversible; `publish` re-graded `terminal` (K3100 doubt 9), `publishcheck` with it (K2883); both leave IRREVERSIBLE_WEIGHT (now publishat, publishatmove, personexpunge, standardrelease); MACHINE_CANNOT_PUBLISH stays; no consequence statement.
+- K3104: peopledirectory a read.
+- Census: every op an owner's merged map serves with no grade, against my tables — the T47 ones are exactly R36's, R37's and peopledirectory; the rest are older store-internal routes with no spec.
+Every op above has a NON_ACTS row, so op-declarations gives each a NEEDS row (K3144 (4)). None is in MACHINE_REFUSALS. New tests: t47.test.mjs (15 tests naming R35, R36, R37, each with a control, and the totality over a stand-in of op-declarations' T47 rows); re-pinned to R35/R37: ladder (R1, R2, R3), pins (partition, terminal/irreversible, undetermined), t35 (R21, R22), t36 (R24), t37 (R18), t42 (R1), t45 (R32), owners (R14).
+
+Deferred: none.
+
+Other modules: REPORT J2 (affordances ×2, control-plane totality, plane wizards R19; R1/R14/R21's wording).
+
+Tests and checks: op-grades 94/94 pass. Users against an unmodified tranche/T47 run: affordances 233/12 (was 10), control-plane 234/8 (was 7), plane 217/6 (was 5), op-declarations 144/12 (unchanged), membership, interface-shell, screens-daily, screens-settings, screens-inquiry, wizard-scripts unchanged. format 0 failures; architecture 0 failures (24 product files); coverage 37 of 37 live ids, 0 failures; ownership 14 files, 0 failures; checks/run.mjs: my files 0 failures (its coverage failures are the unbuilt L11 screens' and others', none op-grades').
+
+Size (session_01JUGvXiy9wCt6uvuqTS5HEj): test runs 7, module lines 3028
