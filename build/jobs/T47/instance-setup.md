@@ -50,3 +50,7 @@ Alternative, if BOB prefers no window: control-plane merges its R82 (drop the im
 T47-75 complete on `job/T47/instance-setup` (record's "Completion" section). R82 flat parts (membership REC-41/R132 green: 98/0); R54 `disclosureReadOf`/`DISCLOSURE_READER` for plane's registration, tested with real credentials; R83 per K3144: `SETUP_HTML`, `groupLine` gone, `setupPage` retiring, R83's test a todo naming T47-65 — keep the `setup-page` edge until your CHANGE; R84/R86 `grouplogoset` {raw, rawType} (C-64.30 `LOGO_REFUSED`, new table `group_logos`), store-internal `grouplogo` bytes route, `groupLogoAsset` for control-plane; R85/R86 `grouplanguagesset`/`grouplanguages` {languages}.
 Tests: instance-setup 165 (0 fail, 1 todo); credentials 201/0, public-read 196/0, setup-page 87/0, page-policy 6/0. Checks: format, architecture, channels 0; coverage mine 68/68 (25 others' T47 ids); ownership 0.
 REPORT items in the record: (1) store-door must stream `grouplogoset`'s body (STREAMED_BODY_OPS) or control-plane sends JSON base64 — both accepted here; (2) control-plane T47-65 drops `setupPage`, serves via `groupLogoAsset`, routes the three ops; (3) page-policy and newgroup tests import `setupPage`, to re-point before the CHANGE; (4) setup-page's script reads nested `parts` (moot at its delete); (5) plane bundle stale.
+
+## J3 · COMPLETE
+
+B3 (K3148) applied: tranche/T47 merged (wizard-scripts T47-47, op-grades T47-48); instance-setup 165 tests, 164 pass, 0 fail, 1 todo (R83, K3144); format, architecture, coverage 68/68, ownership 0 failures. J2's REPORT items stand.
