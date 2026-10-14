@@ -5,6 +5,8 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, fill, press, rawKeys, plane, READING, P, Q, D, SHA } from "./fixtures.mjs";
 
 const at = "/app/document/" + D;
+const DOCUMENT_MD_NO_HASH = ["---", `id: ${D}`, "object_type: information", "title: \"Policy\"", "source:", "  locator: https://example.org/ai-4-12.pdf",
+  "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
 const section = (p, head) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === head);
 /* the assistant reachable for this member (interface-shell R20) */
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -141,4 +143,11 @@ test("R8 the question a passage is cited in, and an unread page, are choices amo
   const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
   assert.deepEqual(opts("document-cite-question"), [[Q, "screen.document.copy"]], "a title is drawn as data, never read as a key");
   assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
+});
+
+test("R22 control: a document with no capture digest draws no \"Open the original\" link, and no other opens by its bundle id", async () => {
+  const noDigest = DOCUMENT_MD_NO_HASH;
+  const p = await open(at, { plane: { image: (r) => ok(r.query.id === D ? { "bundle.md": noDigest } : null) } });
+  assert.equal(main(p).querySelectorAll('a[href^="/app/open-file/"]').length, 0);
+  assert.doesNotMatch(main(p).textContent, /Open the original/);
 });
