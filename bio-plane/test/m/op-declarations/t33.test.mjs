@@ -130,6 +130,10 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* T46 (R50, R51): how much is explained, built by instance-setup's job beside this one (its R79); the member-run
      door, control-plane's route calling ai-runs' `dispatchMemberRun` in process (no arm in `aiRunsOps`, K2952) */
   infolevelset: "instance-setup (T46-50)", infolevel: "instance-setup (T46-50)",
+  /* T47 (R59): the group's logo and languages, built by instance-setup's job (its R84, R85), and the request to sign,
+     built by tasks' (its R19), each merging before this one in L11's order */
+  grouplogoset: "instance-setup (T47-75)", grouplanguagesset: "instance-setup (T47-75)",
+  grouplanguages: "instance-setup (T47-75)", signrequest: "tasks (T47-89)",
   airundispatch: "control-plane (T46-59)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
@@ -141,7 +145,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "wizard-scripts", "workbooks",
     /* T45 (R49): the owners T45 gives a family */
     "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",
-    "plan-work", "project-roster"].sort());
+    "plan-work", "project-roster",
+    /* T47 (R55, R59): the owners T47 gives a family */
+    "basis-versions", "signin-door"].sort());
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
     "sessionread", "sessionrunact",
