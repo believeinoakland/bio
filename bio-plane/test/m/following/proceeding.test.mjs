@@ -3,20 +3,22 @@
    the fixture's stand-ins coded to their requirements (actions R30, R65; action-clocks R18). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { world, proceedingEvent, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
 import { notAProceeding, noSuchEntity } from "../../../src/entities/index.mjs";
 import { FOLLOWING_CHECKS } from "../../../src/following/index.mjs";
-import { courtlistenerDocket } from "../../../../court-doctypes/index.mjs";
 
 const REG = "https://dockets.registry.example/case/2";
 const REG2 = "https://dockets.registry.example/case/3";
-const page = readFileSync(new URL("../../../../court-doctypes/test/fixtures/courtlistener-4214664-p2.html", import.meta.url), "utf8");
+/* the register's page, and the rows its court-doctypes reading holds (events R38 reads `rows`, each with the source's entry id) */
+const page = "<table><tr><td>docket</td></tr></table>";
+const ROWS = [{ entry_id: "1", date: "2026-09-02", text: "Complaint filed" },
+              { entry_id: "2", date: "2026-09-15", kind_as_written: "Order", text: "Order granting the motion" },
+              { entry_id: null, date: "2026-09-20", text: "A note the register gives no entry id" }];
 
 /* a world whose register addresses serve the docket page and land with its court-doctypes reading */
 function docketWorld() {
   const w = world();
-  const parsed = courtlistenerDocket.parse({ locator: REG, text: page, view: w.view, origin: null });
+  const parsed = { rows: ROWS };
   /* a second address serves its own bytes: one capture is held by one bundle */
   for (const a of [REG, REG2]) { w.serve(a, a === REG ? page : `${page}<!-- ${a} -->`); w.readings.set(a, { content_type: "courtlistener_docket", facts: parsed }); }
   w.parsed = parsed;
