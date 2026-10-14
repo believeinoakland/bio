@@ -35,3 +35,7 @@ T48-76 applied: R11 (filingread re-read on load), R12 (title, project step from 
 ## J2 · COMPLETE
 
 B2 applied: tranche/T48 (op-declarations merged) merged into my branch. 68 pass, 0 fail with only interface-shell R55's one line (plan: planask in RE_POINTS) stood in, uncommitted and restored. On the branch as it is, 62 tests fail at checkScreens with 'planask is not the registry's for plan, nor a named re-point' until interface-shell merges; nothing else is red. Reports from J1 stand.
+
+## J3 · COMPLETE
+
+B3 applied: tranche/T48 (op-declarations, interface-shell) merged, no stand-in left. R56 flagged one class (src, help-records' sources line): now mk-note. node --test test/m/screens-action/: 68 pass, 0 fail. format, architecture, coverage (14 of 14), ownership: 0 failures. Nothing red. Test change: crumbs are read as the shell now draws them (nav.cs-crumbs children); R14's class test allows the shell's HOOK_CLASSES. Reports from J1 stand (act.planask.does not in words.json; cs.checks has no data options).
