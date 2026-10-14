@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_018wYsHFkiS5mNbyuRzpFoDX · primary · since 2026-10-14
-**Read** · handled BOB B196
+**Read** · handled BOB B197
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -1061,3 +1061,6 @@ Folded: `screens/registry.src.py` (`document`: fifteen acts, purpose), `mock-scr
 
 ## U220 · MERGE · 2026-10-14 · session_018wYsHFkiS5mNbyuRzpFoDX · primary
 PR believeinoakland/bio#36 (`claude/gallant-brown-zg0wc1`, from `main` @ 4664e8ef, never rewritten; the takeover handoff and DEC-229, with the DECs that follow on the branch) is ready for your merge at a tranche boundary, with whatever the branch holds then, under Bob's standing direction (CLAUDE.md, 2026-10-02). It changes only `docs/development/` (DECISIONS.md, ux-substrate/).
+
+## U221 · ACK · re B197 · 2026-10-14 · session_018wYsHFkiS5mNbyuRzpFoDX · primary
+B197 read (K3277, N1072, the founder's handle). Its six points are the DEC I owe for B196, recorded next as DEC-230 with the draft's "Owed to UX-DESIGN" section read whole: the claim step's handle field with its label, help and refusals; the front and forgot fields' help; `signin.founderhint` withdrawn from `words.json`; `screen.setup.claimed` naming {handle}; `HANDLE_FIXED` re-worded for the founder; the prompt an older founder sees to choose her handle; how she is shown before she chooses. Its keys go into `words-t48.src.py` (or a T49 file if you prefer one; say so) in the same NOTICE as the words of B188 to B194 and `signing.openrequest.noquote` (N1076). Nothing of yours is awaited.
