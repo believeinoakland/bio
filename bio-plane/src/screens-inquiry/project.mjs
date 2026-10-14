@@ -56,9 +56,11 @@ function render(cs, view) {
   const T = (k, f) => P.plain(cs, k, f);
   const later = (key, op, query, token) => P.later(cs, ui, key, op, query, token);
   const doc = d.project && d.project.state === "ok" ? P.front(d.project.value["bundle.md"]) : null;
-  /* the refusal a read gave for a project she sees only to exist, with its name and owners */
-  const seen = ["stage", "participants", "bar", "account"].map((k) => d[k] && d[k].refusal)
-    .find((r) => r && r.code === "PROJECT_SEEN_NOT_A_PARTICIPANT") || null;
+  /* a project she sees only to exist: its subject read refused PROJECT_SEEN_NOT_A_PARTICIPANT, read once more for the
+     refusal's own fields (its `name` and `owners`, project-roster's existence answer) */
+  const seenCode = ["stage", "participants", "bar", "account"].some((k) => d[k] && d[k].refusal && d[k].refusal.code === "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  const seenRead = seenCode ? later("seen", "projectstage", { project: id }) : null;
+  const seen = seenCode ? Object.assign({ code: "PROJECT_SEEN_NOT_A_PARTICIPANT" }, (seenRead.refusal && seenRead.refusal.fields) || {}) : null;
   const listed = d.directory && d.directory.state === "ok" && Array.isArray(d.directory.value.projects)
     ? d.directory.value.projects.find((p) => p && p.id === id) : null;
   /* R39: the title read from the record (or the directory's, or the refusal's name), never its id */
@@ -83,8 +85,7 @@ function render(cs, view) {
 
   /* not joined (R1): she sees that it exists, and joins where she may */
   const me = view.me && view.me.handle;
-  const notJoined = !!seen || ["project", "participants", "bar"].some((k) => d[k] && d[k].refusal && d[k].refusal.code === "PROJECT_SEEN_NOT_A_PARTICIPANT")
-    || !!listed;
+  const notJoined = !!seen || !!listed;
   if (notJoined) {
     const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => P.who(cs, o)).join(", ") : "";
     out.push(cs.sec("screen.project.members.head",

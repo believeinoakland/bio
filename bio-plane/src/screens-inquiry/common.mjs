@@ -47,7 +47,8 @@ export function front(text) {
 
 /** A read the screen makes as it draws: once per key and query (and `token`, to read again), its outcome kept in the
  *  screen's memory and drawn on arrival. An answer `ok: false` (top level or in `result`) is failed, with its words;
- *  `found: false` is empty. */
+ *  `found: false` is empty. A refusal keeps its answer's fields (a project seen only to exist names its `name` and
+ *  `owners`). */
 export function later(cs, ui, key, op, query, token) {
   const L = ui.later || (ui.later = {});
   const q = JSON.stringify(query) + "#" + (token || "");
@@ -59,7 +60,7 @@ export function later(cs, ui, key, op, query, token) {
       if (!a || a.ok === false || (r && r.ok === false)) {
         const f = r && r.ok === false ? r : a || {};
         const code = String(f.code || f.reason || "");
-        settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+        settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code), fields: f } });
       } else if (r && r.found === false) settle({ state: "empty" });
       else settle({ state: "ok", value: r });
     }, () => settle({ state: "failed", refusal: null }));
