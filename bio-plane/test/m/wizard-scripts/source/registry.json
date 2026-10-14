@@ -6,7 +6,7 @@
    "id": "site",
    "name": "civicsmith.org",
    "frame": "setup",
-   "purpose": "Civicsmith's own website, where the founding journey starts (Bob's D6, K3060): what Civicsmith is (installer R42's two lines), what a group gets, a case a group published, the groups that chose to be listed (DEC-132), members sent to their own group's address; \"Start your group\": whether it fits, what is needed (Workers Paid), who holds the Cloudflare account, what the group will choose, then \"Create your group\" opens the installer (DEC-206).",
+   "purpose": "Civicsmith's own website, one site of three pages joined by one menu (Bob's D6, K3060; DEC-206; rewritten for its readers, DEC-223): the front page, for someone who has never heard of Civicsmith (what it is, how a group uses it in five steps, what a group gets, what it does not do, a published case, members sent to their own group's address); \"Start a group\", for a member who has decided (whether it fits, what is needed, who holds the Cloudflare account, what happens step by step, what it costs, then \"Create your group\" opens the installer); \"Groups at work\", the groups that chose to be listed (DEC-132).",
    "acts": [],
    "journeys": [
     1,
@@ -28,15 +28,6 @@
       "instance-setup",
       "setup-page"
      ]
-    },
-    {
-     "op": "selftest",
-     "label": "Run the checks again",
-     "status": "declared",
-     "modules": [
-      "installer",
-      "instance-setup"
-     ]
     }
    ],
    "journeys": [
@@ -48,7 +39,7 @@
    "id": "update",
    "name": "Update your group's Civicsmith",
    "frame": "setup",
-   "purpose": "The hosting account's holder updates the group's Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).",
+   "purpose": "The hosting account's holder updates the group's Civicsmith to the signed release chosen in Settings › Updates and no other: the versions before and after, the steps as they run, a stop that leaves it running as it was, and the finish; records, members and settings are kept (installer R1, R17, R52, R54; DEC-201, DEC-226).",
    "acts": [
     {
      "op": "bootstrap",
@@ -377,8 +368,49 @@
    "id": "home",
    "name": "Your group's home",
    "frame": "working",
-   "purpose": "What the group is working on, what waits on you, and \"What happened?\", the door to a first step.",
+   "purpose": "The group's nerve center (Bob's S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and \"What happened?\", the door to a first step; a new member's first visit and a new group's empty home as states.",
    "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Act on an item",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
     {
      "op": "promote",
      "label": "Start a project",
@@ -896,6 +928,32 @@
    ]
   },
   {
+   "id": "updates",
+   "name": "Updates",
+   "frame": "working",
+   "purpose": "Administrators: the release the group's Civicsmith runs; the release ready to install (version, date, a security mark when present, the signed release notes in three parts: for members, for administrators, what an administrator must do); the choice Update (the installer's page, set to that release), Not now, or Skip this version with a reason; the hand-off, with a link to copy, for an administrator who does not hold the group's Cloudflare account; the releases installed and skipped (K3158, DEC-226).",
+   "acts": [
+    {
+     "op": "owed:updatestart K3158",
+     "label": "Update",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updateskip K3158",
+     "label": "Skip this version, with a reason",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    19
+   ]
+  },
+  {
    "id": "ties",
    "name": "Your ties",
    "frame": "working",
@@ -1104,75 +1162,6 @@
    ]
   },
   {
-   "id": "dash-home",
-   "name": "Home as a dashboard (three arrangements)",
-   "frame": "working",
-   "purpose": "Treatments for S20 (Bob's direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.",
-   "acts": [
-    {
-     "op": "release",
-     "label": "Vouch for photos",
-     "status": "declared",
-     "modules": [
-      "capture",
-      "ratification"
-     ]
-    },
-    {
-     "op": "adoptversion",
-     "label": "Adopt the newer version",
-     "status": "function",
-     "modules": [
-      "reevaluation"
-     ]
-    },
-    {
-     "op": "keepversion",
-     "label": "Keep the version you cited",
-     "status": "function",
-     "modules": [
-      "reevaluation"
-     ]
-    },
-    {
-     "op": "filingapprove",
-     "label": "Approve the text",
-     "status": "function",
-     "modules": [
-      "filings"
-     ]
-    },
-    {
-     "op": "taskresolve",
-     "label": "Act on an item",
-     "status": "declared",
-     "modules": [
-      "tasks"
-     ]
-    },
-    {
-     "op": "promote",
-     "label": "Open a question",
-     "status": "declared",
-     "modules": [
-      "action-producers",
-      "basis-versions",
-      "control-plane",
-      "promotion"
-     ]
-    },
-    {
-     "op": "startfrom",
-     "label": "Start from…",
-     "status": "function",
-     "modules": [
-      "wizard-scripts"
-     ]
-    }
-   ],
-   "journeys": []
-  },
-  {
    "id": "dash-action",
    "name": "The Action dashboard",
    "frame": "working",
@@ -1262,6 +1251,16 @@
    ]
   },
   {
+   "id": "elsewhere",
+   "name": "Where else to go",
+   "frame": "working",
+   "purpose": "What a member sees when what they need is not Civicsmith's work (wizard-scripts R23's 'elsewhere' route, reached from Home's sixth door and from a door-offered wizard's guide): the places the group's place lists for it, by kind, each with what it does, how to reach it, and where that came from; and what shows when the place lists none (K3183, N847, DEC-227).",
+   "acts": [],
+   "journeys": [
+    6
+   ]
+  },
+  {
    "id": "queue",
    "name": "Your queue",
    "frame": "working",
@@ -1282,6 +1281,11 @@
      "modules": [
       "tasks"
      ]
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
     },
     {
      "op": "proposedispose",
@@ -2196,11 +2200,11 @@
    "id": "people",
    "name": "People",
    "frame": "working",
-   "purpose": "A directory of the people and organisations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
+   "purpose": "A directory of the people and organizations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
    "acts": [
     {
      "op": "search",
-     "label": "Search people and organisations",
+     "label": "Search people and organizations",
      "status": "declared",
      "modules": [
       "agent-worker",
@@ -2412,7 +2416,7 @@
     },
     {
      "op": "authoritychain",
-     "label": "What authorised it",
+     "label": "What authorized it",
      "status": "function",
      "modules": [
       "money"
@@ -2571,7 +2575,7 @@
    "id": "help-records",
    "name": "Help: How a records request works",
    "frame": "working",
-   "purpose": "What the California Public Records Act requires of the office, Oakland's faster request, what the city's portal shows, and what Civicsmith does with a request (Bob's D13, K3060; DEC-209).",
+   "purpose": "What your state's public records law requires of the office, your city's faster request where it has one, what the city's portal shows, and what Civicsmith does with a request; the place's own facts come from the group's places (Bob's D13, K3060; DEC-209; B177).",
    "acts": [],
    "journeys": [
     7

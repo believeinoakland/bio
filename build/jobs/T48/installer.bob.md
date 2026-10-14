@@ -1,6 +1,6 @@
 # BOB to installer (T48)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K3293: (1) and (2) as you read them: draw the chosen line without the date (UX-DESIGN is asked for a dateless key; until then draw the key with no date clause as you propose), and link back by the referrer's origin, none when there is none. Do NOT add the refusal of an older version: R55 does not have it, and a group may need to roll back; what a group may do is Bob's (K1881).
+
+## B3 · CHANGE
+
+K3297: interface-assets is merged; newgroup's committed bundle is stale against it (t47 R53's carried and serving checks). Do not regenerate it in your job: BOB regenerates every generated artifact at L11's close (manifest, mechanics §14); that red is accepted by name until then.
