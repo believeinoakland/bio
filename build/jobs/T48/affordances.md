@@ -40,3 +40,6 @@ Size (session_013rWFiEswSPebSrrG2bB1Kf): test runs 9, module lines 2,934
 ## J2 · COMPLETE
 
 Job complete; see the record's Completion section. Red here only on op-grades R38-R41 and op-declarations R64 (pending merges; verified against a throwaway copy of the rows). For you: add modules.json edge affordances -> ai-accounts; op-declarations ACT_HELP_ABSENT: selftest now textless, peopledirectory now held. QUESTION J1 (planask not an ACTS row) stands on my reading.
+
+## After B2 (K3297)
+Merged `tranche/T48` (op-grades in). Fixed in my tests: t34 (`groupdescriptiondraft` carried as mutating, R39's `RUNG_ABSENT` row), plane R19 list (`stepsource`, `stepsourcewithdraw` driven in t48-backing; `updateskip` named, backed at its owner's tests). Module run 258 tests: 3 red, all `planask`: op-grades' merged `t48.mjs` still holds it as an `ACTS` row (`MACHINE_REFUSALS`, no `NON_ACTS`), against BOB's ruling (not an `ACTS` row). Green once op-grades' CHANGE drops it: t33 R20 test, catalogue T45 test, t48 totality test. `actionreplyquoting` is an `ACTS` row here (R58) and passes.
