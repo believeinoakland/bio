@@ -21,6 +21,8 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
 
 #### The answer contract and its checks (ladders §9.4 L1)
 
+`ANSWER_FIELDS` is the frozen list of R3's fields in R3's order, exported (`answers/check.mjs`:21, re-exported by `index.mjs`), so a caller that must name the contract's fields reads them here and never lists them by hand (`agent-worker` R89; K3268).
+
 - **R3** An **answer** is `{question_as_read, clarifying, summary, sentences, holdings, rules, looks, bound, truncated, out_of_view, lens, not_established, query, next_acts, label}`: `question_as_read` the question as the model read it; `clarifying` null or exactly one question (an answer with one has no `summary` and no `sentences`); `summary` one line naming the sentences it rests on; each sentence `{text, kind, support}`, `kind` one of `quote`, `list`, `figure`, `absence`, `rule`, `explain`, `support` the ids of the holdings, rule items or looks it rests on; each holding `{address, quote}`; `looks` `[{level, state}]`; `query` the query run, shown; `label` `"machine work"`. `checkAnswer` refuses any other shape as `ANSWER_MALFORMED`, naming the field, and nothing is shown.
 - **R4** `checkAnswer(answer, {readLog, viewer})` → `{ok: true, answer, withheld}`: each sentence that fails a check is withheld, never rewritten, and `withheld` lists `{sentence, code, translation}` for each; a summary resting on a withheld sentence is withheld too, and when nothing remains the answer states what could not be established. The checks, each a catalogue row with its translation:
   - `ANSWER_CITES_UNREAD`: a holding whose address the read log did not answer, or whose quote is not a byte-exact substring of the object as the read log answered it;
