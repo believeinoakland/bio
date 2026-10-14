@@ -23,7 +23,7 @@
 
 **Checks:** `format` 0 failures; `architecture` (screens-daily) 0 failures; `coverage` 13 of 13; `ownership` 0 failures; `checks/run.mjs`: format, architecture, channels 0 failures, coverage's 14 failures all other modules' ids.
 
-Size (session_0162xmsCFHXbjgNsPJ9QiCQ2): test runs 18, module lines 1,370
+Size (session_0162xmsCFHXbjgNsPJ9QiCQ2): test runs 18, module lines 1,417
 
 ## J1 · QUESTION
 
