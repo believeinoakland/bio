@@ -15,7 +15,7 @@ function render(cs, view) {
   const out = [cs.title()];
   out.push(cs.sec(S + "why", `<ul class="mk-list">${["why.1", "why.2", "why.3", "why.4"].map((k) => `<li>${cs.w(S + k)}</li>`).join("")}</ul>`));
   out.push(cs.sec(S + "who", `<ul class="mk-list">${["who.1", "who.2", "who.3"].map((k) => `<li>${cs.w(S + k)}</li>`).join("")}</ul>`));
-  out.push(cs.sec(S + "list", cs.state("ties", view, (v) => cs.rows({ id: "ties", items: (v.ties || []).filter((t) => !t.withdrawn), key: (t) => t.tie_id,
+  out.push(cs.sec(S + "list", cs.state(view.data.ties, (v) => cs.rows({ id: "ties", items: (v.ties || []).filter((t) => !t.withdrawn), key: (t) => t.tie_id,
     name: (t) => cs.w(S + "kind." + (["employer", "relative", "business", "other"].includes(t.kind) ? t.kind : "other")),
     cols: [S + "col.kind", S + "col.who", S + "col.disclosed"],
     cells: (t) => [cs.w(S + "kind." + (["employer", "relative", "business", "other"].includes(t.kind) ? t.kind : "other")),

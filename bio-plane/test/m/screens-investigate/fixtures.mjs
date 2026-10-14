@@ -115,6 +115,7 @@ export function plane(o = {}) {
     lawrelations: ok(RELATIONS),
     proposals: ok({ ok: true, proposals: [] }),
     memberties: ok(TIES),
+    clocksics: ok({ ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n", events: 1, left_out: { undated: 0 } }),
     ...(o.plane || {}),
   };
 }

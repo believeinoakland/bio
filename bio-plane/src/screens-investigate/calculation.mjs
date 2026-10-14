@@ -133,13 +133,12 @@ const acts = [
       if (!captureSha || !range || !table || !c || !c.project) return { refuse: "screen.calculation.bind.empty" };
       return { body: { captureSha, project: c.project, range, input: /^[0-9a-f]{64}$/.test(table) ? { table, range: trange || "A1:A1" } : { extent: table } } };
     } },
-  { op: "recordcheck", label: "act.recordcheck.label.calculation",
+  { op: "recordcheck", label: "act.recordcheck.label.calculation", reasonField: "note",
     send(view, el, cs) {
       const captureSha = String(cs.value("calc-wb") || "").trim().toLowerCase();
       const c = view.data.calc && view.data.calc.state === "ok" ? view.data.calc.value : null;
       if (!captureSha || !c || !c.project) return { refuse: "screen.calculation.wb.empty" };
-      const note = String(cs.value("calc-note") || "").trim();
-      return { body: Object.assign({ captureSha, project: c.project, outcome: String(cs.value("calc-outcome") || "agrees") }, note ? { note } : {}) };
+      return { body: { captureSha, project: c.project, outcome: String(cs.value("calc-outcome") || "agrees"), note: String(cs.value("calc-note") || "").trim() } };
     } },
   { op: "calculationaccept", label: "act.calculationaccept.label.calculation",
     send(view) { return { query: { id: String(view.subject || "") } }; } },
@@ -246,7 +245,7 @@ export const CALCULATION_WORDS = [
   ["outcome.agrees", "It agrees"],
   ["outcome.disagrees", "It disagrees"],
   ["outcome.could_not_check", "Could not check"],
-  ["note", "Their note (optional)"],
+  ["note", "What they found, in their words"],
   ["work.empty", "Give the question, its period and its input."],
   ["table.empty", "Give the table's source and its columns."],
   ["draw.empty", "Give the set's fingerprint and how many to draw."],

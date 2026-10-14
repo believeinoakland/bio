@@ -162,7 +162,7 @@ function render(cs, view) {
 
 /* every act names its trail and fact; a hold-strip act receives the picked keys (`extra.picked`) */
 const acts = [
-  { op: "recordfact", label: "screen.money.read",
+  { op: "recordfact", label: "act.recordfact.label.money",
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
       const src = view.parts.passage(cs.value("mf-sha"), cs.value("mf-page"));

@@ -65,7 +65,8 @@ function render(cs, view) {
   const mine = Array.isArray(view.ui.claims) ? view.ui.claims : [];
   out.push(cs.sec(S + "same", (others.length ? cs.sheet(others.map((m) => cs.row("", P.refOf(cs, m, m, []), `<span class="cs-meta">${cs.w(S + "same.claimed")}</span>`)).join(""))
       : p && p.cluster && p.cluster.state === "undetermined" ? cs.mark("gap", "undetermined", { reason: p.cluster.why || "" }) : `<p>${cs.w(S + "same.none")}</p>`)
-    + (mine.length ? cs.sheet(mine.map((c) => cs.row(cs.grade("subject", c.grade || ""), cs.esc(c.why || ""), `<span class="cs-meta">${cs.esc(c.claim_id)}</span>`)).join("")) : "")
+    + (mine.length ? cs.sheet(mine.map((c) => cs.row(cs.grade("subject", c.grade || ""), cs.esc(c.why || "") + ` <span class="cs-meta">${cs.esc(c.claim_id)}</span>`,
+      cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person", data: { claim: c.claim_id } }))).join("")) : "")
     + cs.state("candidates", view, (v) => ((v.candidates || []).length
       ? `<p class="cs-meta">${cs.w(S + "candidates")}</p>` + cs.sheet(v.candidates.map((c) => cs.row("", P.refOf(cs, c.entity_id, c.entity_id, []),
         `<span class="cs-meta">${["names", "identifiers", "posts", "life"].map((k) => cs.w(S + "field." + k) + ": " + cs.w(S + "state." + ((c.fields && c.fields[k] && c.fields[k].state) || "absent"))).join(" · ")}</span>`)).join(""))
@@ -76,7 +77,7 @@ function render(cs, view) {
     + cs.field("person-claim-sha-a", S + "claim.sha.a", {}) + cs.field("person-claim-sha-b", S + "claim.sha.b", {})
     + cs.field("person-claim-note", S + "claim.note", { area: true, rec: true })
     + cs.act("identityclaim", { label: "act.identityclaim.label.person" })
-    + cs.field("person-claim-id", S + "claim.id", { value: mine.length ? mine[mine.length - 1].claim_id : "" })
+    + cs.field("person-claim-id", S + "claim.id", { help: S + "claim.id.help" })
     + cs.act("withdrawidentityclaim", { label: "act.withdrawidentityclaim.label.person" })));
   /* R1: removing a fact for good: the consequence statement (op-grades R21), filled with the day and the member, the
      law or order that requires it, and the Irreversible act (the shell's dialog; read only at the phone width) */
@@ -126,7 +127,7 @@ const acts = [
     } },
   { op: "withdrawidentityclaim", label: "act.withdrawidentityclaim.label.person",
     send(view, el, cs) {
-      const claimId = String(cs.value("person-claim-id") || "").trim();
+      const claimId = String((el && el.dataset && el.dataset.claim) || cs.value("person-claim-id") || "").trim();
       if (!claimId) return { refuse: "screen.person.claim.noid" };
       return { body: { claimId } };
     } },
@@ -207,6 +208,7 @@ export const PERSON_WORDS = [
   row(S + "claim.evidence", "This basis cites a document for each record."),
   row(S + "claim.id", "The claim to withdraw"),
   row(S + "claim.noid", "Name the claim to withdraw."),
+  row(S + "claim.id.help", "A claim made earlier, by its id (IDC-…); one made here is withdrawn from its own row."),
   row(S + "expunge.head", "Correction"),
   row(S + "expunge.statement", "This removes the value for good: from the person's page, from every question that cited it and from every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law requires, {date}, by {member}\". Published cases change only through the docket. Confirm with a reason naming the law or order that requires it: \"Remove it for good, with this reason\".", true),
   row(S + "expunge.fact", "The value to remove"),
