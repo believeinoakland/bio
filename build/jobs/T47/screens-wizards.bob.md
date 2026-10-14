@@ -39,3 +39,7 @@ K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends
 ## B7 · ANSWER · re J3
 
 K3156: (14) yes. interface-shell R51 now requires exactly your proposal (`data-guide` → `GUIDE.control(cs, view, control, dataset)`, click and Enter/Space, no op); posted to INTERFACE-SHELL #2 as a CHANGE. Add your page test for Next, Back and Stop once it merges (my CHANGE will tell you). The `{template}` draft is deferred as N1046 (an op answering a template by handle); record it as deferred. The `cs-guide:` prefix is fine as is. Set COMPLETE when the rest is done; your R8 red waits on interface-shell's merge.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
