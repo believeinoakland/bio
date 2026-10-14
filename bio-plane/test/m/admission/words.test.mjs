@@ -10,12 +10,15 @@ import { A, C, world, gate, refused, member, hex64 } from "./harness.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
   .modules.admission.reads;
+const SESSION_KEY = "refusal.DOOR_RATE_LIMITED.session";
 const ROW_CODES = Object.values(C).flatMap((rows) => Object.keys(rows));
 
 test("R28: every key admission reads is held by setup-words (hasWord), and the keys it reads are exactly the refusal.<CODE> of its rows — no row without a key, no key without a row", () => {
   assert.ok(Array.isArray(READS) && READS.length > 0);
   for (const key of READS) assert.equal(hasWord(key), true, key);
   assert.deepEqual([...READS].sort(), ROW_CODES.map((code) => `refusal.${code}`).sort());
+  /* the session window's own sentence (R27; DEC-262) */
+  assert.equal(hasWord(SESSION_KEY), true);
   /* control: a key nobody holds is no word, and reading it is a loud failure, never a fallback */
   assert.equal(hasWord("refusal.NO_SUCH_CODE_ANYWHERE"), false);
   assert.throws(() => word("refusal.NO_SUCH_CODE_ANYWHERE"), (e) => e.code === "UNKNOWN_WORD" || /UNKNOWN_WORD/.test(String(e.message)));
@@ -40,6 +43,9 @@ test("R28: over fixtures, what each gate answers as `translation` equals word(ke
     assert.equal(body.minutes, minutes, String(seconds));
     expectWord(body, "DOOR_RATE_LIMITED", { minutes });
   }
+  const sessionBody = refused({ refusal: A.doorRateLimited(225, { session: true }) }, 429, "DOOR_RATE_LIMITED", "C-38.9");
+  assert.equal(sessionBody.translation, word(SESSION_KEY, { minutes: 4 }));
+  assert.notEqual(sessionBody.translation, word("refusal.DOOR_RATE_LIMITED", { minutes: 4 }));
   /* controls: a session's sentence, and the mint's refusals, are words too */
   expectWord(refused(A.aiScopeDeclaration(["nosuchop"]), 403, "AI_SCOPE_UNKNOWN_OP", "C-29.8"), "AI_SCOPE_UNKNOWN_OP");
   expectWord(refused(await gate(env, { op: "governorconfig", token: S.ann }), 403, "SESSION_ROLE_CANNOT_REACH_OP", "C-38.7"), "SESSION_ROLE_CANNOT_REACH_OP");
