@@ -158,3 +158,22 @@ test("R33 (the harness for the screens' tests) clock.tickActive runs the page cl
   await p.clock.tick(31 * MIN);
   assert.ok(lockOf(p));
 });
+
+test("R33 (K3156) activity counts only while a session record exists: with none (the public frame before sign-in) the member's input stores nothing, bio-session:active included; control: signed in, it is stored", async () => {
+  const p = await boot({ screens: SCREENS, session: null, path: "/app" });
+  assert.equal(screenOf(p), "front");
+  const keys = () => [...p.local.keys()].sort();
+  const was = keys();
+  for (const type of ["keydown", "pointerdown", "touchstart", "wheel"]) p.fire(p.doc.body, type, { key: "a" });
+  p.doc.getElementById("f-handle").value = "mai";
+  await p.click(p.doc.getElementById("f-handle"));
+  await p.clock.tick(11 * 1000);
+  p.fire(p.doc.body, "keydown", { key: "b" });
+  await p.settle();
+  assert.deepEqual(keys(), was, "nothing stored");
+  assert.equal(p.local.has(STORE_KEY + ":active"), false);
+  const q = await boot({ screens: SCREENS, plane: { projectdirectory: ok({ projects: [] }) } });
+  await q.clock.tick(11 * 1000);
+  q.fire(q.doc.body, "keydown", { key: "a" });
+  assert.ok(q.local.has(STORE_KEY + ":active"));
+});

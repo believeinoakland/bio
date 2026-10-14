@@ -1,4 +1,4 @@
-/* interface-shell: the browser program (R3–R22, R24, R26–R45). `shellProgram(D, SCREENS, win, GUIDE)` is serialized whole
+/* interface-shell: the browser program (R3–R22, R24, R26–R51). `shellProgram(D, SCREENS, win, GUIDE)` is serialized whole
    into the page's one script by `interfacePage` (draft-T46-interface §1.3): it refers only to its parameters and to the
    language's own globals, so the same function runs in node over the tests' document stand-in. `D` is the page's frozen
    data (words, the act gate's tables, the grades, the paths, the frames), `SCREENS` the registered screens (R21), `win`
@@ -388,7 +388,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const label = w(o.label || spec.label || "act." + op + ".label." + (inst.spec.id || "guide"), o.fills);
         const does = has("act." + op + ".does") ? w("act." + op + ".does") : "";
         const outward = !!(spec.outward || o.outward);
-        /* R11 (DEC-181), R50: a signed or irreversible act, or one of `op-grades`' larger-screen acts, is held at the phone width */
+        /* R11 (DEC-181), R50 (K3156): a signed or irreversible act, or any weighed act `op-grades.phoneOf` answers false for,
+         is held at the phone width */
         if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
@@ -739,10 +740,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (inst.key !== "g") { inst.acts = []; inst.binds = []; }
     try { return inst.spec.render(kit(inst), inst.view); } catch { return inst.key === "g" ? "" : '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
   }
-  /* K3143: the guide's marks, under the path of every working screen, on each draw */
+  /* K3143: the guide's marks, under the path of every working screen, on each draw; R51: held in one element that says
+     they are the guide's, so its `data-guide` controls are known from a screen's */
   function marksHtml() {
     if (!GUIDEI || typeof GUIDE.marks !== "function") return "";
-    try { return String(GUIDE.marks(kit(GUIDEI), GUIDEI.view) || ""); } catch { return ""; }
+    let h = "";
+    try { h = String(GUIDE.marks(kit(GUIDEI), GUIDEI.view) || ""); } catch { h = ""; }
+    return h ? '<div class="cs-guidemarks" data-guide-from="marks">' + h + "</div>" : "";
   }
   function mainHtml(route) {
     if (UNREACHED) return unavailableHtml("unreachable");
@@ -1051,6 +1055,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      idle and signs a shared one out at 15, the plane's answer governing over it */
   let LAST = Date.now(), SHARED_AT = 0, idleT = null;
   function activity() {
+    /* R33 (K3156): only while a session record exists; with none (the public frame before sign-in) nothing is stored */
+    if (!S && !readRecord()) return;
     LAST = Date.now();
     if (LAST - SHARED_AT >= 10000 || SHARED_AT > LAST) { SHARED_AT = LAST; local.set(ACTIVE_KEY, String(LAST)); }
   }
@@ -1138,6 +1144,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function guideCall(name, arg) {
     if (!GUIDEI || typeof GUIDE[name] !== "function") return;
     try { GUIDE[name](kit(GUIDEI), GUIDEI.view, arg); } catch { /* the guide's own work never stops the shell */ }
+  }
+  /* R51 (K3156): a control the guide drew (in its panel or its marks) carrying `data-guide="<control>"`, pressed by click,
+     Enter or Space: handed to `GUIDE.control(cs, view, control, dataset)`, its `data-*` as the dataset; no op is sent */
+  const guideControl = (t) => {
+    const el = GUIDEI && t && t.closest ? t.closest("[data-guide]") : null;
+    return el && el.closest('.cs-dock[data-panel="guide"], [data-guide-from]') ? el : null;
+  };
+  let GUIDE_KEYED = null;
+  function guidePress(el) {
+    if (typeof GUIDE.control !== "function") return;
+    const dataset = Object.assign({}, el.dataset || {});
+    const control = el.getAttribute("data-guide");
+    let r;
+    try { r = GUIDE.control(kit(GUIDEI), GUIDEI.view, control, dataset); } catch { return draw(); }
+    if (r && typeof r.then === "function") r.then(() => draw(), () => draw()); else draw();
   }
   /* `cs.ring(op, label)`: the control the current screen drew for `op` rung, its row panel opened, scrolled to and
      focused; answers whether there was one. The shell never presses it. */
@@ -1457,6 +1478,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const t = e.target;
       /* R33, R34, R41: under the lock or a dialog over the screen, nothing beneath it answers */
       if (blocked(t)) { e.preventDefault(); return; }
+      /* R51: the guide's own control; a click the browser makes of the Enter or Space just handled is not a second press */
+      const gc = guideControl(t);
+      if (gc) {
+        e.preventDefault();
+        const keyed = GUIDE_KEYED && GUIDE_KEYED.el === gc && e.detail === 0 && Date.now() - GUIDE_KEYED.at < 1000;
+        GUIDE_KEYED = null;
+        return keyed ? undefined : guidePress(gc);
+      }
       const nav = t.closest ? t.closest("a[data-nav]") : null;
       if (nav && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) { e.preventDefault(); activity(); return navigate(nav.getAttribute("href")); }
       const act = t.closest ? t.closest("button[data-act]") : null;
@@ -1540,6 +1569,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     });
     root.addEventListener("keydown", (e) => {
       if (blocked(e.target)) return;
+      const gc = (e.key === "Enter" || e.key === " ") && !e.repeat && !(e.target.matches && e.target.matches("input, textarea, select")) ? guideControl(e.target) : null;
+      if (gc) { e.preventDefault(); GUIDE_KEYED = { el: gc, at: Date.now() }; return guidePress(gc); }
       const g = e.target.closest ? e.target.closest('[data-shell="grip"]') : null;
       if (g && ["ArrowLeft", "ArrowRight", "Home"].includes(e.key)) {
         e.preventDefault();

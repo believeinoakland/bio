@@ -7,7 +7,7 @@
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { WORD_ROWS } from "../setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
-import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS, OP_ALIASES } from "../op-grades/index.mjs";
+import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { shellProgram } from "./browser.mjs";
 import { SHELL_WORDS } from "./words.mjs";
@@ -150,12 +150,13 @@ export function checkScreens(screens) {
 }
 
 /* R31, K3143: the dock's wizard guide (`screens-wizards`' `GUIDE`), `{words, parts?, ops, acts, render, marks, start,
-   entered, pressed, ring}`: no registry id; `ops` (the ops it reads by `cs.call`) and its acts' ops each an op `OPS`
-   holds, carried with their gate rows as a screen's. Throws, naming the guide, for one that is not. */
+   entered, pressed, ring, control}` (R51: `control` handles the guide's own `data-guide` controls): no registry id;
+   `ops` (the ops it reads by `cs.call`) and its acts' ops each an op `OPS` holds, carried with their gate rows as a
+   screen's. Throws, naming the guide, for one that is not. */
 export function checkGuide(guide) {
   if (guide === undefined || guide === null) return true;
   if (typeof guide !== "object" || typeof guide.render !== "function") throw new Error("interface-shell: the guide has no render");
-  for (const f of ["marks", "start", "entered", "pressed", "ring"]) if (guide[f] !== undefined && typeof guide[f] !== "function") throw new Error(`interface-shell: the guide's ${f} is not a function`);
+  for (const f of ["marks", "start", "entered", "pressed", "ring", "control"]) if (guide[f] !== undefined && typeof guide[f] !== "function") throw new Error(`interface-shell: the guide's ${f} is not a function`);
   if (!Array.isArray(guide.acts)) throw new Error("interface-shell: the guide has no acts list");
   if (guide.ops !== undefined && !Array.isArray(guide.ops)) throw new Error("interface-shell: the guide's ops is not a list");
   for (const op of [...(guide.ops || []), ...guide.acts.map((a) => a && a.op)]) if (!(typeof op === "string" && Object.hasOwn(OPS, op))) throw new Error(`interface-shell: the guide names ${String(op)}, which OPS does not hold`);
@@ -213,6 +214,13 @@ function dataOf(screens, guide) {
   for (const s of all) for (const a of s.acts) ops.add(a.op);
   if (guide) for (const op of guide.ops || []) ops.add(op);
   const pick = (f) => Object.fromEntries([...ops].filter((op) => Object.hasOwn(OPS, op)).map((op) => [op, f(op)]).filter(([, v]) => v !== undefined));
+  /* R11 (K3002, K3011): the weight from `RUNGS` (an alias carries its op's); an act that can never be undone weighs
+     Irreversible (DEC-143, `op-grades` R21); a read (`OPS` declares it not mutating), or an op in `RUNG_ABSENT` under a
+     ground other than `undetermined`, is not an act on the record: no weight (`none`), run on press; an undetermined or
+     unnamed op is reasoned in the browser (DEC-87) */
+  const rungOf = (op) => (OPS[op] && OPS[op].mutating === false ? "none" : IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
+    : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
+      : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined);
   return {
     storeKey: SESSION_STORE_KEY, phoneWidth: PHONE_WIDTH, icons: ICONS,
     words: pageWords(all, ops),
@@ -222,15 +230,12 @@ function dataOf(screens, guide) {
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
-    /* R11 (K3002): the weight from `RUNGS` (an alias carries its op's); an act that can never be undone weighs
-       Irreversible (DEC-143, `op-grades` R21); an op in `RUNG_ABSENT` under a ground other than `undetermined` is not an
-       act on the record: no weight (`none`), run on press; an undetermined or unnamed op is reasoned in the browser (DEC-87) */
-    /* R11 (K3011): a read (`OPS` declares it not mutating) carries no weight and runs on press, whatever the grades hold */
-    rungs: pick((op) => (OPS[op] && OPS[op].mutating === false ? "none" : IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
-      : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
-        : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined)),
-    /* R50: the acts held at the phone width beyond R11's weights: `op-grades`' larger-screen acts (an alias by its op) */
-    larger: [...ops].filter((op) => LARGER_SCREEN_ACTS.includes(Object.hasOwn(OP_ALIASES, op) ? OP_ALIASES[op] : op)),
+    rungs: pick(rungOf),
+    /* R50 (K3156): the acts held at the phone width: every act carrying a weight that `op-grades.phoneOf` answers false
+       for (its terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, its larger-screen acts through
+       `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
+       credential acts `knock`, `enroll`, `recover` stay on the phone) */
+    larger: [...ops].filter((op) => Object.hasOwn(OPS, op) && rungOf(op) !== "none" && phoneOf(op) === false),
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS,

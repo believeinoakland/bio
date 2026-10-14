@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { REF_SCREENS, ADMIN_ACTS, interfacePage, checkGuide } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, ADMIN, STORE_KEY, nestedTips } from "./harness.mjs";
-import { ALL, HELD, FRONT, PERSON } from "./screens.fixture.mjs";
+import { ALL, HELD, FRONT, PERSON, DOORBELL, JOIN } from "./screens.fixture.mjs";
 
 const ROWS = ok({ items: [{ id: "c1", title: "Minutes <draft>", at: "2026-10-01" }, { id: "c2", title: "Budget", at: "2026-10-02" }] });
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
@@ -177,7 +177,8 @@ test("R31 (K3143) the guide's marks are drawn under the path of every working sc
   const p = await boot({ screens: ALL, guide: GUIDE, path: "/app/held", plane: { heldcaptures: async () => { await slow; return HELDROWS; } } });
   const main = p.root().querySelector("#cs-main");
   assert.equal(main.children[0].localName, "nav");
-  assert.equal(main.children[1].id, "marks", "directly under the path");
+  assert.equal(main.children[1].getAttribute("data-guide-from"), "marks", "directly under the path, held as the guide's (R51)");
+  assert.equal(main.children[1].children[0].id, "marks");
   assert.equal(p.doc.getElementById("marks").textContent, "held");
   assert.equal(GUIDE_UI(p).entered, undefined, "not before the reads settle");
   release();
@@ -411,4 +412,84 @@ test("R50 ADMIN_ACTS names the reset link, signerset, the group's settings, plac
   }
   /* control: an everyday act is still a phone act */
   assert.equal(!!btn(phone, "actioncreate"), !!btn(wide, "actioncreate"));
+});
+
+test("R50 (K3156) at the phone width every weighed act op-grades.phoneOf answers false for is held (terminal, attested, irreversible rungs); never an act run on press: knock, enroll and recover stay on the phone", async () => {
+  const who = ok({ ...ADMIN, capabilities: ["contribute", "publish", "act", "ratify", "attest"] });
+  const c = { id: "ceremony", reads: () => ({}), acts: [{ op: "publish" }, { op: "publishat" }, { op: "caseratify" }, { op: "obscuremark" }],
+    render: (cs) => cs.act("publish") + cs.act("publishat") + cs.act("caseratify") + cs.act("obscuremark") };
+  const wide = await boot({ screens: [c], path: "/app/ceremony/x", plane: { whoami: who } });
+  const phone = await boot({ screens: [c], path: "/app/ceremony/x", phone: true, plane: { whoami: who } });
+  for (const op of ["publish", "publishat", "caseratify"]) {
+    assert.ok(btn(wide, op), op + " is drawn on a wide screen");
+    assert.equal(btn(phone, op), null, op + " is not sent from the phone");
+    assert.ok(phone.root().querySelector(`[data-phone-act="${op}"]`).textContent.includes("Finish this on a larger screen"), op);
+  }
+  /* control: an act op-grades leaves on the phone is still a phone act */
+  assert.equal(!!btn(phone, "obscuremark"), !!btn(wide, "obscuremark"));
+  /* control: the credential acts R11 runs on press are never held, phoneOf notwithstanding */
+  const forgot = { id: "forgot", reads: () => ({}), acts: [{ op: "recover" }], render: (cs) => cs.act("recover") };
+  for (const [screens, path, op] of [[[DOORBELL], "/app/doorbell", "knock"], [[JOIN], "/app/join", "enroll"], [[forgot], "/app/forgot", "recover"]]) {
+    const p = await boot({ screens, path, phone: true, session: null });
+    assert.ok(btn(p, op), op + " is a phone act");
+    assert.equal(p.root().querySelector(`[data-phone-act="${op}"]`), null, op);
+    assert.equal(btn(p, op).querySelector(".w"), null, op + " carries no weight");
+  }
+});
+
+/* R51: a guide whose panel and marks draw its own controls, recording what `control` hears */
+const STEPPER = {
+  words: [["screen.guide.s.next", "Next", false], ["screen.guide.s.back", "Back", false], ["screen.guide.s.stop", "Stop", false]],
+  ops: [], acts: [],
+  render(cs, view) {
+    return '<p id="heard">' + cs.esc(JSON.stringify(view.ui.heard || [])) + "</p>"
+      + '<button type="button" data-guide="next" data-step="2" data-script-id="W-1">' + cs.w("screen.guide.s.next") + "</button>"
+      + '<button type="button" data-guide="back">' + cs.w("screen.guide.s.back") + "</button>"
+      + '<span tabindex="0" role="button" data-guide="stop" data-why="done">' + cs.w("screen.guide.s.stop") + "</span>";
+  },
+  marks() { return '<button type="button" id="mark-next" data-guide="next" data-from="marks">' + "Next" + "</button>"; },
+  control(cs, view, control, dataset) { cs.set("heard", (view.ui.heard || []).concat([[control, dataset]])); },
+};
+const heardOf = (p) => JSON.parse(p.doc.getElementById("heard").textContent);
+
+test("R51 (K3156) an element the guide draws with data-guide is handled on click, Enter or Space by GUIDE.control(cs, view, control, dataset), its data-* as the dataset; Next, Back and Stop reach it, from the panel and the marks; no request is sent", async () => {
+  const p = await boot({ screens: ALL, guide: STEPPER, path: "/app/held", plane: { heldcaptures: ok({ items: [] }) } });
+  const dock = () => p.root().querySelector('.cs-dock[data-panel="guide"]');
+  assert.ok(dock());
+  const before = p.requests.length;
+  await p.click(dock().querySelector('[data-guide="next"]'));
+  p.fire(dock().querySelector('[data-guide="back"]'), "keydown", { key: "Enter" });
+  await p.settle();
+  p.fire(dock().querySelector('[data-guide="stop"]'), "keydown", { key: " " });
+  await p.settle();
+  await p.click(p.doc.getElementById("mark-next"));
+  assert.deepEqual(heardOf(p), [
+    ["next", { guide: "next", step: "2", scriptId: "W-1" }],
+    ["back", { guide: "back" }],
+    ["stop", { guide: "stop", why: "done" }],
+    ["next", { guide: "next", from: "marks" }],
+  ]);
+  assert.equal(p.requests.length, before, "no op is sent");
+  assert.equal(p.location.pathname, "/app/held", "and nothing else happens");
+  /* a key pressed and the click the browser makes of it are one press */
+  const nb = dock().querySelector('[data-guide="back"]');
+  p.fire(nb, "keydown", { key: "Enter" });
+  p.fire(nb, "click", { detail: 0 });
+  await p.settle();
+  assert.equal(heardOf(p).length, 5);
+});
+
+test("R51 (K3156) control: a data-guide element the screen draws, not the guide, reaches no GUIDE.control", async () => {
+  const s = { id: "held", reads: () => ({}), acts: [], render: () => '<button type="button" id="own" data-guide="next">x</button>' };
+  const p = await boot({ screens: [s], guide: STEPPER, path: "/app/held" });
+  await p.click(p.doc.getElementById("own"));
+  p.fire(p.doc.getElementById("own"), "keydown", { key: "Enter" });
+  await p.settle();
+  assert.deepEqual(heardOf(p), []);
+  /* a guide without control: its data-guide element does nothing and sends nothing */
+  const q = await boot({ screens: ALL, guide: { ...STEPPER, control: undefined }, path: "/app/held", plane: { heldcaptures: ok({ items: [] }) } });
+  const n = q.requests.length;
+  await q.click(q.root().querySelector('.cs-dock [data-guide="next"]'));
+  assert.equal(q.requests.length, n);
+  assert.throws(() => interfacePage(ALL, { guide: { ...STEPPER, control: "no" } }), /guide's control/);
 });

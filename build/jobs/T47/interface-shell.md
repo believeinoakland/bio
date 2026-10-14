@@ -18,6 +18,29 @@
 
 Size (session_01Mqqp1PVr9KzRUa1bjw1eZa): test runs 40, module lines 2,198 (source; tests 3,010)
 
+## Completion (INTERFACE-SHELL #3)
+
+Restarted on B12 (K3156) and B13 (K3157). **Read whole:** `build/requirements/interface-shell.md` as merged at B12 (R33, R50 changed; R51 new); `index.mjs` and `browser.mjs`; `dom.mjs`, `harness.mjs`, `idle.test.mjs`; the R50/R31 tests of `kit.test.mjs` and R11's of `acts.test.mjs`; `op-grades`' `phoneOf` and `LARGER_SCREEN_ACTS`. `tranche/T47` merged into the branch at B12–B13 (action-producers, op-declarations again).
+
+**Entries applied (B12):**
+1. **R33:** the member's input counts as activity only while a session record exists; with none (the public frame before sign-in) the shell stores nothing, `bio-session:active` included.
+2. **R50:** the phone hold covers every act carrying a weight that `op-grades.phoneOf` answers false for, which takes in the terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, and `LARGER_SCREEN_ACTS` through `OP_ALIASES`. An op R11 runs on press is never held: a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`. So `knock`, `enroll` and `recover` stay on the phone. R11's own test said a terminal act stays a phone act; R50 amends that, and the test now holds `retire`.
+3. **R51:** an element the guide draws with `data-guide="<control>"`, in its panel or its marks, is handled on click, Enter or Space. The shell calls `GUIDE.control(cs, view, control, dataset)` with the element's `data-*` as the dataset; it sends no op and does nothing else. The guide's marks are now held in one `<div data-guide-from="marks">` under the path, so the guide's controls are told apart from a screen's; a screen's own `data-guide` element reaches nothing. A browser makes a click of the Enter or Space it just handled; that click is not a second press. `checkGuide` takes `control` as an optional function.
+
+B13: merged and re-run (below).
+
+**Deferred:** nothing.
+
+**Found in other modules:** nothing new. J2's items stand (users' tests that R32, R33 and R36 break, each needing the fix named there). J4 is ruled.
+
+**Tests and checks** (on `job/T47/interface-shell` after merging `tranche/T47` at B13):
+- `node --test bio-plane/test/m/interface-shell/`: 119 pass, 0 fail. The new tests are R33 (K3156), R50 (K3156) and R51 (two). Each fails against the shell before the change.
+- Users (screens-settings, -intake, -daily, -inquiry; control-plane `t46-app`, `t46-e2e`): 16 fail. That is the same set, test for test, as with this branch's shell before today's change, so today's change affects no user's test. Of the 16, J2 already names four; the rest are the users' word, registry and act-list checks against the providers merged since. `t46-app` and `t46-e2e` pass 8 of 8.
+- `tranche/T47`'s own older shell is no comparison now: under today's providers it fails about 170 of the users' tests.
+- Checks: `format` 0 failures; `architecture` (interface-shell) 0 failures; `coverage` 49 of 49; `ownership` 0 failures.
+
+Size (session_01GsfjK9xaCHwtptoRYK8boR): test runs 12, module lines 2,234 (source; tests 3,112)
+
 ## J1 · QUESTION
 
 Three points; I carry on with my best reading of each and stop for none of them.
