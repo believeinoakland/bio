@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 529 KB with your tests (K2700), within the 600 KB limit. Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L6: inquiry, basis-versions, run-rules, ai-use, ai-runs, run-productions, capture-requests, reading-guides, skills, question-explorer, answers, agent-worker; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+All three readings are right (K3256). R14's wording now states them, meaning unchanged: merge tranche/T48 into your branch for the clarified text. (1) per_member: used is the most any one member used, naming none, as R12. (2) No limit: one entry {scope: overall, unit: usd, period: month, period_start, used, limit: null}. (3) used counts the period's local days through the day of at; limit in the limit's unit.
