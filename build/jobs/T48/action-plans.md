@@ -23,3 +23,5 @@
 - format: 168 modules, 167 requirements files; 0 failures. architecture: 20 product files, 65 relative imports; 0 failures. coverage: 51 of 51 live requirement ids named by a test; 0 failures.
 
 Size (session_013tQFG4eQVgJ5Dw7du8QRfz): test runs 3, module lines 3396
+
+**Full checks (`node checks/run.mjs`, whole product):** format 0 failures; architecture 3,296 product files, 0 failures (none of mine); ownership (action-plans against `tranche/T48`) 5 files changed, 0 failures; channels 0 failures; coverage 28 failures, all in other modules (admission, answer-envelope, control-plane, filing-templates, filings, following, installer, instance-setup, interface-assets, interface-shell, journey-check, op-declarations, op-grades, plane, queue, screens-*, setup-words, wizard-scripts), none in action-plans (51 of 51 named): inherited reds, not mine.
