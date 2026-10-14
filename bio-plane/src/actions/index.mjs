@@ -51,7 +51,7 @@ import { conformanceOf, determinationSuperseded, determinationVoided } from "../
 import { consequencesModule } from "../consequences/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
-import { entitiesOf, noSuchEntity, ORGANISATION_KINDS } from "../entities/index.mjs";
+import { entitiesOf, noSuchEntity, notAProceeding, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
@@ -74,7 +74,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          premiseOverrideOf, overrideGroundFindings, copiedFindings, partnersFindings, pressTermsFindings,
          entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
-import { actionRecordsOf, actionRecordsOps, ActionRecords } from "../action-records/index.mjs";
+import { actionRecordsOf } from "../action-records/index.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
@@ -917,7 +917,7 @@ export class Actions {
   /* R64 (K1446), R65 (C1): the records-request law's held standard (`law_standard`) and the `proceeding`, each set or
      changed only by a member and naming a record the author may see: a standard through `standards.standardRead`
      (`NO_SUCH_STANDARD`, minted by `standards.noSuchStandard`), a proceeding through the registry (`NO_SUCH_ENTITY`,
-     minted by `entities.noSuchEntity`; another kind `NOT_A_PROCEEDING`). Asked only when the value moved. */
+     minted by `entities.noSuchEntity`; another kind through `entities.notAProceeding`, R104). Asked only when the value moved. */
   #heldLinks(heldFm, nextFm, who, viewer) {
     const val = (fm, k) => (fm && typeof fm[k] === "string" && fm[k].trim() ? fm[k].trim() : fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "" ? fm[k] : null);
     const lawStd = val(nextFm, "law_standard");
@@ -955,11 +955,10 @@ export class Actions {
     const pid = typeof id === "string" ? id.trim() : "";
     const kind = pid ? this.#entityKind(pid) : null;
     if (!kind) return noSuchEntity(pid || null, { end: "proceeding" });
-    /* DEC-49 REGION is-proceeding-kind */
+    /* R104 (T48; K231, K3207): `entities.notAProceeding` is the one site minting `NOT_A_PROCEEDING`. */
     if (kind !== "proceeding")
-      return refuse("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind}; an action belongs to an entity of `
+      return notAProceeding(`proceeding names an entity of kind ${kind}; an action belongs to an entity of `
         + "kind proceeding. Nothing was written.", { entity_id: pid, kind });
-    /* END DEC-49 REGION is-proceeding-kind */
     return null;
   }
 
@@ -1624,43 +1623,24 @@ export class Actions {
                      speaker = "", officeStatus = null, foundElsewhere = null,
                      pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_CORRESPOND",
-               detail: "a correspondence entry is a named member's statement that this exchange happened — "
-                     + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
-                     + "and may not testify to an exchange. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-correspond */
+    /* R101 (T48; N1024, K231): C-32.4 is `action-records.correspondFence`'s, the one site, its `detail` this act's own. */
+    const fence = this.records.correspondFence(who, { detail: CORRESPOND_DETAIL.MACHINE_CANNOT_CORRESPOND });
+    if (fence) return fence;
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
-    /* DEC-49 REGION is-correspond-entry — REC-64/C-33.5-8. The four conditions
-       on the ENTRY's own shape. The target guard above and the hash checks below
-       refuse with codes minted at several other sites, so they are outside this
-       span: a `where` claims ONE span, and a code enforced in eight places
-       cannot honestly name one of them as the site. */
+    /* DEC-49 REGION is-correspond-direction — C-33.5 stays this act's own, its region drawn around the direction alone. */
     if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
       return { ok: false, reason: "BAD_DIRECTION", legal: CORRESPONDENCE_DIRECTIONS, direction,
                detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
                      + "is recorded as no_response with the date it was due, not omitted (DEC-13)." };
+    /* END DEC-49 REGION is-correspond-direction */
     const day = String(at ?? "").trim();
-    /* R15 (civil-time R6): a YYYY-MM-DD naming a real calendar day; 2026-02-31 is no day. */
-    if (!isCalendarDate(day))
-      return { ok: false, reason: "BAD_DATE", at: day,
-               detail: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
-                     + "non-response, which is dated by when the reply was due" };
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account ?? "").trim();
-    if (sha && acct)
-      return { ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
-               detail: "an entry carries the captured bytes OR a named account, never both: what comes back "
-                     + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
-                     + "would quote instead of the thing the group can defend." };
-    if (!sha && !acct)
-      return { ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
-               detail: "an entry carries either an artifact_sha that resolves in the register or an account "
-                     + "with an author. Neither is an entry that asserts an exchange and offers no way to "
-                     + "check that it happened." };
-    /* END DEC-49 REGION is-correspond-entry */
+    /* R101: C-33.6, C-33.7 and C-33.8 are `action-records.correspondEntryRefusal`'s, a date only (R15). */
+    const entryRefusal = this.records.correspondEntryRefusal({ at: day, artifactSha: sha, account: acct },
+      { target, detail: CORRESPOND_DETAIL });
+    if (entryRefusal) return entryRefusal;
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     if (sha && direction === "no_response")
@@ -1740,12 +1720,9 @@ export class Actions {
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */
-    /* DEC-49 REGION is-correspond-artifact — REC-64/C-33.9. */
-    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-      return { ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
-               detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
-                     + "record a named account instead — those are the two honest ways to hold an exchange." };
-    /* END DEC-49 REGION is-correspond-artifact */
+    /* R101: C-33.9 is `action-records.unregisteredArtifact`'s. */
+    const unregistered = this.records.unregisteredArtifact(sha, { target, detail: CORRESPOND_DETAIL.UNREGISTERED_ARTIFACT });
+    if (unregistered) return unregistered;
 
     /* THE COURTESY LOCK, under the acting member. */
     const lease = this.record.acquireLease(target, who, CORRESPOND_LEASE_MS);
@@ -2838,7 +2815,11 @@ export class Actions {
     const fm = this.#heldFm(id) || {};
     const d = this.derived({ bundle_id: id }, now, viewer);
     /* R29 (K248): R25's keys, and the document's own values its users read (filings, escalation). */
-    return { ok: true, id, current_state: b.current_state, ...d,
+    /* R102 (T48; N1035, K3145): the action's project (`record-core` R34, null when none) and title (the document's, as held). */
+    let project = null;
+    try { project = this.record.bundleInfo(id)?.project ?? null; } catch { project = null; }
+    return { ok: true, id, current_state: b.current_state, ...d, project,
+             title: typeof fm.title === "string" ? fm.title : null,
              counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [],
              legs: d.basis.map((l) => ({ target: l.target_id, kind: l.kind, note: l.note ?? null, at: l.at ?? null,
                                          target_type: l.target_type, extent_capture: l.extent_capture })),
@@ -3215,6 +3196,23 @@ export function actionsOwns(t) {
   return ACTIONS_TABLES.includes(name);
 }
 
+/* R101: this act's own sentences for the five conditions `action-records` R16 answers, kept as `actionCorrespond` worded them. */
+const CORRESPOND_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: "a correspondence entry is a named member's statement that this exchange happened — "
+    + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
+    + "and may not testify to an exchange. Sign in as a member.",
+  BAD_DATE: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
+    + "non-response, which is dated by when the reply was due",
+  CAPTURE_AND_TESTIMONY: "an entry carries the captured bytes OR a named account, never both: what comes back "
+    + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
+    + "would quote instead of the thing the group can defend.",
+  NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carries either an artifact_sha that resolves in the register or an account "
+    + "with an author. Neither is an entry that asserts an exchange and offers no way "
+    + "to check that it happened.",
+  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
+    + "record a named account instead — those are the two honest ways to hold an exchange.",
+});
+
 /** The module's ops (K3), as entries of the plane's one route map (plane R5: `routes` spreads them in, and
  *  control-plane's `dispatch` answers every store request over it). `viewer`, `author` and `proposer` are the control
  *  plane's stamps, read from the query, so a caller's own copy never wins. */
@@ -3222,10 +3220,7 @@ export function actionsOps(a, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    /* T47 (N961): the six acts moved to `action-records` (its R1–R6) keep their ops, spread here from its map (its R15)
-       until the plane spreads that map itself (its L11 job); the same arms, so a second spread changes nothing. An owner
-       handed with no `action-records` instance of its own (a stand-in in a test of the map) is handed the arms itself. */
-    ...actionRecordsOps(a.records instanceof ActionRecords ? a.records : a, url, body),
+    /* R103 (T48; N1040, K3147): this module's own arms only; the plane spreads `actionRecordsOps` (its R45) beside them. */
     actionmove: () => a.actionMove({ target: q("target"), to: q("to"), reason: q("reason"), resolution: q("resolution"),
                                      viewer: q("viewer"), author: q("author") }),
     actionlaws: () => a.actionLaws({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"), author: q("author") }),
