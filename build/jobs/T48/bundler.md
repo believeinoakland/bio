@@ -37,3 +37,7 @@ Three readings of R32 I am building on; tell me if any is wrong.
 
 T48-4 is built and committed (R32), on the readings K3199 confirmed; the record's "Work" section has the detail. All my tests pass against a local, uncommitted stand-in for signatures R46–R48 (release 52/0, module 46/0, deploybindings 37/0, resolveversion 12/0, bundle exit 0, fleetbundles 149/0 with no SKIP); bundler's checks show 0 failures. Committed alone, release-assemble.mjs and release.test.mjs cannot load until SIGNATURES merges, so I am waiting on your CHANGE to merge tranche/T48, drop the stand-in, re-run and post COMPLETE.
 For the workflow (yours, not_product): step 4 needs no change, but a cut branch must commit release/notes/<V>.json before step 3, or the dry run refuses [NO_NOTES].
+
+## J3 · COMPLETE
+
+T48-4 (R32) complete. B3 applied: merged tranche/T48 after SIGNATURES #12; the stand-in is gone and the code and tests use signatures' own NS_RELEASE_NOTICE, releaseNoticeStatement and verifyReleaseNotice. Module tests 98 pass, 0 fail; deploybindings 37/0; resolveversion 12/0; bundle exit 0. fleetbundles 141 pass, 8 fail, no SKIP: all 8 are the plane's and agent-worker's committed bundles, staled by other modules' merges into tranche/T48 (record-grammar, signatures, ooxml, court-citations). They are red on the tranche branch too and are not mine to write; they are regenerated at L1's close. bundler's checks: 0 failures (format, architecture, coverage 32/32, ownership). Record: build/jobs/T48/bundler.md on job/T48/bundler.
