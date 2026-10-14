@@ -33,3 +33,7 @@ Size (session_019yjReZUpXMLtca7kaoYDyK): test runs 14, module lines 2600
 ## J1 · REPORT
 
 Found in other modules (record, 'Found in other modules'): (1) modules.json: credentials' uses must gain ai-accounts (BOB's file); until then architecture shows 4 failures for my files, all that edge, 0 with it. (2) Two tests besides families.test.mjs R2 go red with DISCLOSURE_DUE leaving credentials' checks.mjs (split map §7 risk 3, cleared by T48-65): answer-envelope test/m/answer-envelope/envelope.test.mjs R14 (:305) and control-plane test/m/control-plane/envelope.test.mjs:433 (R32 R39 R46); they want naming as accepted reds. (3) ai-accounts R26 does not notify on subscriptionTokenRefused, so R73's 'Anthropic's refusal' never reaches credentials: a refused sign-in leaves her run credentials live (as before T48); the gap is ai-accounts'. (4) The plane bundle is staled by this merge (rule 5 (5)).
+
+## J2 · COMPLETE
+
+T48-11 complete on job/T48/credentials (69f57c9105+). Copies deleted (own code 4,433 -> 2,600 lines); ai-accounts made in credentialsOf with the seal secret, its migrate first; R27, R29, R32, R63 re-pointed; R72 delegates (36), USE_KINDS and the ACCOUNT_CHECKS view, the 24 ops through aiAccountsOps over the delegates; R73 registered; own fourteen tables only; R71 (6) tested. credentials 136/136; users' 638 files 4577/4610 (31 fail, as on tranche/T48, plus the two of J1 (2) and one load-only flake); coverage 49/49, format 0, ownership 0, architecture 0 once modules.json gains the edge (J1 (1)). Record has the details.
