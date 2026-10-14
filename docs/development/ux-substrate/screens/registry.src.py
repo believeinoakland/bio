@@ -61,7 +61,9 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
   [('wizards','See the library'),('wizarddraft','Record a new wizard'),('wizardrevise','Revise a draft'),('wizardsubmit','Submit for approval'),('wizardapprove','Approve'),('wizardretire','Retire')], [])
 
 # --- daily work
-screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
+screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201); the group\'s themes, which cut across projects (DEC-242).', [('promote','Start a project'),('themeread','Read the themes')], [6])
+screen('theme', 'Themes', 'working', 'The group\'s themes, newest first, searchable by name or test, and declaring one (state a); one theme with what was placed in it, its hunches apart, and what was taken out with the reasons (state b). A theme is never evidence (DEC-242; connections R39 to R46).',
+  [('themeread','Read the themes'),('themedeclare','Declare a theme'),('themeplace','Place it in the theme'),('themewithdraw','Take out or reject, with a reason')], [6])
 screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
   [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
 screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',
@@ -162,3 +164,10 @@ screen('inbox', 'Inbox', 'working', 'Material handed in through the doorbell.',
   [('inboxpull','Move into the record'),('inboxresolve','Discard with a reason'),('sourcelink','Record what is known of the source')], [20])
 screen('doorbell', 'Hand material to the group', 'public', 'The doorbell page for someone outside, with no account.',
   [('knock','Hand it over')], [20])
+
+# DEC-242 (S4): themes on the document, the question and Find (connections R39 to R46).
+_THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose','Propose it for a theme'),('themewithdraw','Reject a hunch, with a reason')],
+  'question': [('themeplace','Place a passage in a theme')], 'finder': [('themeread','Filter by theme')]}
+for _s in S:
+    for _op, _l in _THEME_ACTS.get(_s['id'], []):
+        _s['acts'].append(dict(op=_op, label=_l))

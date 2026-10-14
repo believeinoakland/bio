@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 156,
+  "screen": 158,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -71,13 +71,14 @@
   "law": 8,
   "action": 4,
   "review": 5,
+  "theme": 32,
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 695,
+  "act": 710,
   "column": 33,
-  "total": 2330,
-  "protected": 719
+  "total": 2379,
+  "protected": 729
  },
  "words": [
   {
@@ -7590,6 +7591,230 @@
    "note": "DEC-241: the More page's heading line"
   },
   {
+   "key": "theme.never.evidence",
+   "en": "A theme gathers documents and passages so members can see them together. It is never evidence: a finding cites the document or passage itself.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: every theme section's explanation; R39, R46"
+  },
+  {
+   "key": "theme.list.heading",
+   "en": "Every theme, newest first",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeread, R42"
+  },
+  {
+   "key": "theme.q.label",
+   "en": "Words in a theme's name or test",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeread q"
+  },
+  {
+   "key": "theme.declare",
+   "en": "Declare a theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the declare panel"
+  },
+  {
+   "key": "theme.name.label",
+   "en": "Its name",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare name"
+  },
+  {
+   "key": "theme.name.help",
+   "en": "A few words members will recognize, such as “Deferred maintenance”.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare name"
+  },
+  {
+   "key": "theme.test.label",
+   "en": "Belongs when",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare test; also before a theme's test"
+  },
+  {
+   "key": "theme.test.help",
+   "en": "The test a document or passage must meet to be placed in it, in a sentence a member who did not write it could apply.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare test"
+  },
+  {
+   "key": "theme.declare.go",
+   "en": "Declare the theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themedeclare"
+  },
+  {
+   "key": "theme.declared",
+   "en": "Declared by {who}, {date}.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R45: handles only"
+  },
+  {
+   "key": "theme.placed",
+   "en": "Placed in it",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 members"
+  },
+  {
+   "key": "theme.placed.by",
+   "en": "Placed by {who}, {date}: “{note}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R40, R45"
+  },
+  {
+   "key": "theme.hunches",
+   "en": "Hunches: not yet placed",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 hunches, never mixed"
+  },
+  {
+   "key": "theme.hunch.note",
+   "en": "A hunch is not membership. It counts for nothing until a member places it.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R44 says"
+  },
+  {
+   "key": "theme.hunch.by",
+   "en": "Proposed by {who}, {date}: “{note}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R41, R45"
+  },
+  {
+   "key": "theme.hunch.mark",
+   "en": "a hunch",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: beside a theme on a document"
+  },
+  {
+   "key": "theme.out",
+   "en": "Taken out",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43, R44 withdrawn"
+  },
+  {
+   "key": "theme.out.withdrawn",
+   "en": "Taken out by {who}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43"
+  },
+  {
+   "key": "theme.out.rejected",
+   "en": "Rejected by {who}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: R43"
+  },
+  {
+   "key": "theme.confirm",
+   "en": "It belongs",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace at a hunch"
+  },
+  {
+   "key": "theme.takeout",
+   "en": "Take it out…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themewithdraw, placer or administrator"
+  },
+  {
+   "key": "theme.reject",
+   "en": "Reject…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themewithdraw at a hunch, any member"
+  },
+  {
+   "key": "theme.place",
+   "en": "Place it in a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace on a document"
+  },
+  {
+   "key": "theme.propose",
+   "en": "Propose it for a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themepropose"
+  },
+  {
+   "key": "theme.section",
+   "en": "Themes",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the document's and Projects' section"
+  },
+  {
+   "key": "theme.question.section",
+   "en": "Themes its passages are in",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: the question page"
+  },
+  {
+   "key": "theme.question.place",
+   "en": "Place a passage in a theme…",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: themeplace from a question"
+  },
+  {
+   "key": "theme.across",
+   "en": "Themes cut across projects: one gathers documents and passages from any of them.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Projects"
+  },
+  {
+   "key": "theme.every",
+   "en": "Every theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Projects → Themes"
+  },
+  {
+   "key": "theme.filter",
+   "en": "Theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter, themeread"
+  },
+  {
+   "key": "theme.filter.any",
+   "en": "Any theme",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter"
+  },
+  {
+   "key": "theme.filter.help",
+   "en": "With a theme chosen, Find lists what was placed in it, then its hunches apart.",
+   "protected": false,
+   "source": "DEC-242",
+   "note": "DEC-242: Find's filter, R44"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -8061,6 +8286,18 @@
   {
    "key": "screen.projects.purpose",
    "en": "Every project you can see: its stage, who works on it, how busy it is, and when it last changed.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.theme.name",
+   "en": "Themes",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.theme.purpose",
+   "en": "The group's themes: lenses that gather documents and passages, never evidence.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -9223,6 +9460,36 @@
    "source": "registry.json"
   },
   {
+   "key": "act.themeread.label.projects",
+   "en": "Read the themes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeread.label.theme",
+   "en": "Read the themes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themedeclare.label.theme",
+   "en": "Declare a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeplace.label.theme",
+   "en": "Place it in the theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themewithdraw.label.theme",
+   "en": "Take out or reject, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.filingapprove.label.dash-action",
    "en": "Approve the text",
    "protected": true,
@@ -9387,6 +9654,12 @@
   {
    "key": "act.owed_secondlook.label.finder",
    "en": "Flag for a second look",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeread.label.finder",
+   "en": "Filter by theme",
    "protected": true,
    "source": "registry.json"
   },
@@ -9597,6 +9870,24 @@
   {
    "key": "act.explore.label.document",
    "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeplace.label.document",
+   "en": "Place it in a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themepropose.label.document",
+   "en": "Propose it for a theme",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themewithdraw.label.document",
+   "en": "Reject a hunch, with a reason",
    "protected": true,
    "source": "registry.json"
   },
@@ -9909,6 +10200,12 @@
   {
    "key": "act.owed_readtranslate.label.question",
    "en": "Read in my language",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.themeplace.label.question",
+   "en": "Place a passage in a theme",
    "protected": true,
    "source": "registry.json"
   },
@@ -12201,6 +12498,36 @@
   {
    "key": "act.hypothesishold.does",
    "en": "Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themeread.does",
+   "en": "Lists the group's themes, newest first, or what one theme gathers: what was placed in it, then its hunches apart. Documents you cannot open are left out.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themedeclare.does",
+   "en": "Declares a theme for the whole group: its name and the test something must meet to belong. A theme is a lens, never evidence.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themeplace.does",
+   "en": "Places this document or passage in a theme, with an optional note saying why. At a hunch, it confirms the hunch and keeps who proposed it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themepropose.does",
+   "en": "Proposes this document or passage for a theme as a hunch: it shows apart and counts for nothing until another member places it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.themewithdraw.does",
+   "en": "Takes a placement out of a theme (the member who placed it, or an administrator) or rejects a hunch (any member). Your reason is required and stays on record.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

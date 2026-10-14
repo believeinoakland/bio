@@ -430,6 +430,7 @@ const SCREEN_HELP = {
   group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
   settings: 'Every setting in one list: yours first, then the group\'s.',
   more: 'The places the tabs below do not hold: projects, people and settings.',
+  theme: 'The group\'s themes: lenses that gather documents and passages, never evidence.',
   projects: 'Every project you can see: its stage, who works on it, how busy it is, and when it last changed.',
   'dash-action': 'The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.',
   'dash-project': 'One project as a dashboard: your next steps here, the project at a glance, its story so far, and its activity.',

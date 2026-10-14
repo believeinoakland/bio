@@ -1153,7 +1153,7 @@
    "id": "projects",
    "name": "Projects",
    "frame": "working",
-   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).",
+   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201); the group's themes, which cut across projects (DEC-242).",
    "acts": [
     {
      "op": "promote",
@@ -1164,6 +1164,57 @@
       "basis-versions",
       "control-plane",
       "promotion"
+     ]
+    },
+    {
+     "op": "themeread",
+     "label": "Read the themes",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    }
+   ],
+   "journeys": [
+    6
+   ]
+  },
+  {
+   "id": "theme",
+   "name": "Themes",
+   "frame": "working",
+   "purpose": "The group's themes, newest first, searchable by name or test, and declaring one (state a); one theme with what was placed in it, its hunches apart, and what was taken out with the reasons (state b). A theme is never evidence (DEC-242; connections R39 to R46).",
+   "acts": [
+    {
+     "op": "themeread",
+     "label": "Read the themes",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themedeclare",
+     "label": "Declare a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themeplace",
+     "label": "Place it in the theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themewithdraw",
+     "label": "Take out or reject, with a reason",
+     "status": "declared",
+     "modules": [
+      "connections"
      ]
     }
    ],
@@ -1453,6 +1504,14 @@
      "op": "owed:secondlook DEC-238",
      "label": "Flag for a second look",
      "status": "owed"
+    },
+    {
+     "op": "themeread",
+     "label": "Filter by theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
     }
    ],
    "journeys": [
@@ -1808,6 +1867,30 @@
      "status": "declared",
      "modules": [
       "explore"
+     ]
+    },
+    {
+     "op": "themeplace",
+     "label": "Place it in a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themepropose",
+     "label": "Propose it for a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "themewithdraw",
+     "label": "Reject a hunch, with a reason",
+     "status": "declared",
+     "modules": [
+      "connections"
      ]
     }
    ],
@@ -2257,6 +2340,14 @@
      "op": "owed:readtranslate DEC-240",
      "label": "Read in my language",
      "status": "owed"
+    },
+    {
+     "op": "themeplace",
+     "label": "Place a passage in a theme",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
     }
    ],
    "journeys": [

@@ -2638,5 +2638,197 @@
   "en": "The places the tabs below do not hold.",
   "protected": false,
   "note": "DEC-241: the More page's heading line"
+ },
+ {
+  "key": "theme.never.evidence",
+  "en": "A theme gathers documents and passages so members can see them together. It is never evidence: a finding cites the document or passage itself.",
+  "protected": false,
+  "note": "DEC-242: every theme section's explanation; R39, R46"
+ },
+ {
+  "key": "theme.list.heading",
+  "en": "Every theme, newest first",
+  "protected": false,
+  "note": "DEC-242: themeread, R42"
+ },
+ {
+  "key": "theme.q.label",
+  "en": "Words in a theme's name or test",
+  "protected": false,
+  "note": "DEC-242: themeread q"
+ },
+ {
+  "key": "theme.declare",
+  "en": "Declare a theme",
+  "protected": false,
+  "note": "DEC-242: the declare panel"
+ },
+ {
+  "key": "theme.name.label",
+  "en": "Its name",
+  "protected": false,
+  "note": "DEC-242: themedeclare name"
+ },
+ {
+  "key": "theme.name.help",
+  "en": "A few words members will recognize, such as “Deferred maintenance”.",
+  "protected": false,
+  "note": "DEC-242: themedeclare name"
+ },
+ {
+  "key": "theme.test.label",
+  "en": "Belongs when",
+  "protected": false,
+  "note": "DEC-242: themedeclare test; also before a theme's test"
+ },
+ {
+  "key": "theme.test.help",
+  "en": "The test a document or passage must meet to be placed in it, in a sentence a member who did not write it could apply.",
+  "protected": false,
+  "note": "DEC-242: themedeclare test"
+ },
+ {
+  "key": "theme.declare.go",
+  "en": "Declare the theme",
+  "protected": false,
+  "note": "DEC-242: themedeclare"
+ },
+ {
+  "key": "theme.declared",
+  "en": "Declared by {who}, {date}.",
+  "protected": false,
+  "note": "DEC-242: R45: handles only"
+ },
+ {
+  "key": "theme.placed",
+  "en": "Placed in it",
+  "protected": false,
+  "note": "DEC-242: R44 members"
+ },
+ {
+  "key": "theme.placed.by",
+  "en": "Placed by {who}, {date}: “{note}”",
+  "protected": false,
+  "note": "DEC-242: R40, R45"
+ },
+ {
+  "key": "theme.hunches",
+  "en": "Hunches: not yet placed",
+  "protected": false,
+  "note": "DEC-242: R44 hunches, never mixed"
+ },
+ {
+  "key": "theme.hunch.note",
+  "en": "A hunch is not membership. It counts for nothing until a member places it.",
+  "protected": false,
+  "note": "DEC-242: R44 says"
+ },
+ {
+  "key": "theme.hunch.by",
+  "en": "Proposed by {who}, {date}: “{note}”",
+  "protected": false,
+  "note": "DEC-242: R41, R45"
+ },
+ {
+  "key": "theme.hunch.mark",
+  "en": "a hunch",
+  "protected": false,
+  "note": "DEC-242: beside a theme on a document"
+ },
+ {
+  "key": "theme.out",
+  "en": "Taken out",
+  "protected": false,
+  "note": "DEC-242: R43, R44 withdrawn"
+ },
+ {
+  "key": "theme.out.withdrawn",
+  "en": "Taken out by {who}, {date}: “{reason}”",
+  "protected": false,
+  "note": "DEC-242: R43"
+ },
+ {
+  "key": "theme.out.rejected",
+  "en": "Rejected by {who}, {date}: “{reason}”",
+  "protected": false,
+  "note": "DEC-242: R43"
+ },
+ {
+  "key": "theme.confirm",
+  "en": "It belongs",
+  "protected": false,
+  "note": "DEC-242: themeplace at a hunch"
+ },
+ {
+  "key": "theme.takeout",
+  "en": "Take it out…",
+  "protected": false,
+  "note": "DEC-242: themewithdraw, placer or administrator"
+ },
+ {
+  "key": "theme.reject",
+  "en": "Reject…",
+  "protected": false,
+  "note": "DEC-242: themewithdraw at a hunch, any member"
+ },
+ {
+  "key": "theme.place",
+  "en": "Place it in a theme…",
+  "protected": false,
+  "note": "DEC-242: themeplace on a document"
+ },
+ {
+  "key": "theme.propose",
+  "en": "Propose it for a theme…",
+  "protected": false,
+  "note": "DEC-242: themepropose"
+ },
+ {
+  "key": "theme.section",
+  "en": "Themes",
+  "protected": false,
+  "note": "DEC-242: the document's and Projects' section"
+ },
+ {
+  "key": "theme.question.section",
+  "en": "Themes its passages are in",
+  "protected": false,
+  "note": "DEC-242: the question page"
+ },
+ {
+  "key": "theme.question.place",
+  "en": "Place a passage in a theme…",
+  "protected": false,
+  "note": "DEC-242: themeplace from a question"
+ },
+ {
+  "key": "theme.across",
+  "en": "Themes cut across projects: one gathers documents and passages from any of them.",
+  "protected": false,
+  "note": "DEC-242: Projects"
+ },
+ {
+  "key": "theme.every",
+  "en": "Every theme",
+  "protected": false,
+  "note": "DEC-242: Projects → Themes"
+ },
+ {
+  "key": "theme.filter",
+  "en": "Theme",
+  "protected": false,
+  "note": "DEC-242: Find's filter, themeread"
+ },
+ {
+  "key": "theme.filter.any",
+  "en": "Any theme",
+  "protected": false,
+  "note": "DEC-242: Find's filter"
+ },
+ {
+  "key": "theme.filter.help",
+  "en": "With a theme chosen, Find lists what was placed in it, then its hunches apart.",
+  "protected": false,
+  "note": "DEC-242: Find's filter, R44"
  }
 ]
