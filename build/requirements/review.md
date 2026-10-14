@@ -29,7 +29,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 **revoke** (`act: "revoke"`, with `grant`)
 - **R7** No grant named is `REVIEW_NO_GRANT` (C-87.10); a grant not held or a caller not its project's owner, C-87.3. A grant already revoked answers `existed: true` with the first revocation, unchanged; otherwise the revoker and instant are recorded.
 
-- **R34** (T48; N1038; DEC-100; K3147; amends R6, R8, R14; `screens-publish` R2) `grant` also takes `until`, the reader's end date: an instant in `record-core`'s stamp form (the screen sends the end of the day the member chose); `until` is answered wherever the grant is (R14's roster and the recipient's own grant part in the copy). *(not yet met: T48)*
+- **R34** (T48; N1038; DEC-100; K3147; amends R6, R8, R14; `screens-publish` R2) `grant` also takes `until`, the reader's end date: an instant in `record-core`'s stamp form (the screen sends the end of the day the member chose); `until` is answered wherever the grant is (R14's roster and the recipient's own grant part in the copy).
   - After R6's refusals, an `until` that is present and not such an instant, or not later than the act's own instant, is `REVIEW_BAD_UNTIL` (C-87.17, a new row of this module's family; BOB's draft translation, re-wordable by the design stream: "Choose an end date after today for this reader's link. Nothing was shared."), and nothing is written.
   - The grant records `until` (null when absent: live until revoked, as before T48) and answers it.
   - From `until` on, the grant is dead exactly as a revoked one (R8): `liveGrant` and `grantAdmitsCaseEdition` answer as for a revoked grant, and R10's doors give the dead answer, byte-identical. Nothing is written when it lapses.

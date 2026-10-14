@@ -88,7 +88,7 @@ Terms are `case-authoring`'s and `publication`'s. A **statement** is a case docu
 
 #### A reply that asks not to be quoted (T48-43; N880; Actions D13, H17)
 
-- **R18** (T48; N880; Actions D13; amends R8, R10, R17; `action-replies` R11) A source row (R8) may also answer `quotable`, a boolean. *(not yet met: T48)*
+- **R18** (T48; N880; Actions D13; amends R8, R10, R17; `action-replies` R11) A source row (R8) may also answer `quotable`, a boolean.
   - A value that is not a boolean makes the row malformed, so R8 reads the source `undetermined`. A row not answering it reads as `true`.
   - For a row answering `quotable: false`, `openRequestLine` (R10, R17) also answers `quoting: {key: "signing.openrequest.noquote", says}`, filled with `{whom}`. The words are read by key from `words.json` once the design stream gives the key (an ASK to UX-DESIGN). Until then `key` is null and `says` is BOB's plain sentence, "{whom}'s reply asks not to be quoted.", as `case-authoring` R34 kept its sentences until given.
   - The line is shown once, with its row's line. It asks no reason and refuses nothing (a declaration, DEC-13).
