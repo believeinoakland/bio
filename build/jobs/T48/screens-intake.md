@@ -41,3 +41,7 @@ Merged origin/tranche/T48. `capture.mjs` wrapped each tab body in the design's `
 ## J4 · COMPLETE
 
 B3 done: the tab bodies no longer carry the design's st (hidden by shell.css); new R18 test that each Add tab body is visible under the served stylesheets, with a control showing st is hidden. 66 tests pass; format, architecture, coverage (20 of 20), ownership 0 failures; nothing of mine red.
+
+## J5 · REPORT
+
+Correction to my J4 COMPLETE (B3): architecture screens-intake shows 1 failure, which I read only after posting. My new visibility test (t48.test.mjs) reads the served stylesheet's rules (to prove no rule hides an Add tab body) through interface-assets' ASSET_FILES, and screens-intake does not declare interface-assets in uses; screens-publish declares it for the same reason (tests only). modules.json is yours: please add interface-assets to screens-intake's uses. I did not work around it: interface-shell exports only the stylesheets' URLs, not their text. Everything else is green (66 tests, format, coverage 20 of 20, ownership).
