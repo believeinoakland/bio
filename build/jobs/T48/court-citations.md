@@ -25,3 +25,6 @@
 
 Size (session_01MwBvb1DAPUGfMhfWC4d2cf): test runs 6, module lines 847
 
+## J1 · COMPLETE
+
+T48-5 done: R11 met, names unchanged (plain const bindings to lazily filled frozen proxies; no id-spaces re-point needed). court-data.mjs regenerated: one JSON text, parsed once on first read; --check fresh. Import 22-38 ms (was 68-173). court-citations 18/18, id-spaces 37/37; format, architecture, coverage (11/11), ownership 0 failures; run.mjs architecture 0. Stale artifact for you: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (bundler's, not_product) carry court-data.mjs' old form; regenerate at layer close. Details in my record's Completion.
