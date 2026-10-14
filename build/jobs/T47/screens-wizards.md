@@ -1,6 +1,6 @@
 # screens-wizards (T47)
 
-**Status** · session_0118dwXjnwwYydM1sWbE5P8u · depth 2 · WORKING · handled B2
+**Status** · session_0118dwXjnwwYydM1sWbE5P8u · depth 2 · WAITING ON BOB (J3) · handled B2
 
 
 **Progress** (kept above the entries) · Built at 6d1d24e0b5: `bio-plane/src/screens-wizards/` (`index.mjs`, `library.mjs`, `guide.mjs`, `words.mjs`) and `bio-plane/test/m/screens-wizards/` (`kit.mjs`, `fixtures.mjs`, `standin.mjs`, `library.test.mjs`, `guide.test.mjs`, `words.test.mjs`). 26 of 27 tests pass; the one red is R8's path (Settings › Wizards), which waits on interface-shell R28's `PATHS` entry. The guide is tested over a stand-in for the shell's half of the J2/J3 contract (K3143); next: on interface-shell's merge (CHANGE), merge `tranche/T47` and re-run the guide's walk over the real page, then COMPLETE.
