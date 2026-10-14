@@ -255,3 +255,33 @@ test("R45, R35 (T47; K3150; control-plane R71): `clockpropose`, served by contro
   try { await x.fetch(`/${path}`, { method: "POST", body: "{}" }); } finally { ac.clockPropose = was; }
   assert.equal(hit, 1, "the plane's action-clocks instance answered");
 });
+
+/* ===== R49 (T47; K3143; signin-door R2, R4, R5) ===== */
+
+test("R49 (T47; K3143; signin-door R2, R4, R5): signin-door's store-internal map is spread whole directly after credentials' map, over the plane's one credentials instance: signindisclosuredue answers credentials' DISCLOSURE_DUE through the door (R44's registration in force), signintokenhold holds a token without answering it, and none of the five has an op spec, so no caller is served one; control: an op neither map holds is no route", async () => {
+  const { signinDoorOps } = await import("../../../src/signin-door/ops.mjs");
+  const { OPS } = await import("../../../src/op-declarations/index.mjs");
+  const u = new URL("http://do/");
+  const x = await store({ env: { ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t47-test" } });
+  member(x, "ann");
+  const own = Object.keys(signinDoorOps(credentialsOf(x.ctx), u, null, x.env));
+  assert.deepEqual([...own].sort(), ["signindisclosuredue", "signintokenhold", "signintokenrefused", "signintracekeep", "signintraceread"]);
+  const keys = Object.keys(x.s.routes(u, null));
+  const cred = Object.keys(MODULE_MAPS.find(([m]) => m === "credentials")[1](x.ctx, u, null, x.env));
+  const at = keys.indexOf(cred.at(-1)) + 1;
+  assert.deepEqual(keys.slice(at, at + own.length), own, "directly after credentials' map");
+  for (const op of own) assert.equal(Object.hasOwn(OPS, op), false, `${op} has no op spec: never served to a caller`);
+  const via = async (path, body = {}) => JSON.parse(await (await x.fetch(`/${path}`, { method: "POST", body: JSON.stringify(body) })).text());
+  const due = await via("signindisclosuredue?by=member:ann");
+  assert.equal(due.result.reason, "DISCLOSURE_DUE", JSON.stringify(due));
+  assert.equal(instanceSetupOf(x.ctx).disclosureShown({ member: "member:ann", version: ASSISTANT_DISCLOSURE.version, by: "member:ann" }).ok, true);
+  assert.deepEqual((await via("signindisclosuredue?by=member:ann")).result, { ok: true });
+  const TOKEN = "sk-ant-oat01-SENTINEL-r49-held-token";
+  const held = await via("signintokenhold?by=member:ann", { token: TOKEN });
+  assert.equal(held.result.ok, true, JSON.stringify(held));
+  assert.equal(JSON.stringify(held).includes(TOKEN), false, "the token is never answered");
+  assert.equal(credentialsOf(x.ctx).accountReferenceState({ member: "member:ann", viewer: "member:ann" }).subscription.held, true);
+  assert.equal((await via("signintokenrefused?by=member:ann")).result.dropped, true);
+  /* negative control */
+  assert.equal(keys.includes("signinzz"), false);
+});

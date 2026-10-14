@@ -13,6 +13,7 @@ import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
 import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
 import { caseInputsOf, caseInputsOps } from "../case-inputs/index.mjs";
+import { signinDoorOps } from "../signin-door/ops.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../action-records/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../standards/index.mjs";
@@ -692,6 +693,10 @@ export class Store extends DurableObject {
          `projectparticipants`, `projectrequest*`), split from membership, directly after its map. */
       ...projectRosterOps(projectRosterOf(ctx), url, body, env),
       ...credentialsOps(credentialsOf(ctx), url, body, env),
+      /* R49 (T47; K3143; signin-door R2, R4, R5): the sign-in door's store-internal routes (`signintokenhold`,
+         `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`), beside credentials' map, over
+         the plane's one credentials instance; none has an op spec, so none is served to a caller. */
+      ...signinDoorOps(credentialsOf(ctx), url, body, env),
       /* K2042 (acquisition R43; CONTROL-PLANE #24 J3): the group's co-archive setting, acquisition's one instance per
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),

@@ -45,6 +45,7 @@ import { strengthOf, strengthOps } from "../../../src/strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "../../../src/reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+import { signinDoorOps } from "../../../src/signin-door/ops.mjs";
 import { caseInputsOf, caseInputsOps } from "../../../src/case-inputs/index.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../../../src/action-records/index.mjs";
 import { caseAccountOf, caseAccountOps } from "../../../src/case-account/index.mjs";
@@ -92,6 +93,8 @@ export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
   ["project-roster", (c, u, b, e) => projectRosterOps(projectRosterOf(c), u, b, e)],   /* N783 (K2270): directly after membership's */
   ["credentials", (c, u, b, e) => credentialsOps(credentialsOf(c), u, b, e)],
+  /* R49 (T47): signin-door's store-internal map, beside credentials' */
+  ["signin-door", (c, u, b, e) => signinDoorOps(credentialsOf(c), u, b, e)],
   /* K2042 (acquisition R43): the group's co-archive setting, acquisition's two acts. acquisition exports no ops map of
      its own (its ops are reached through capture's and control-plane's doors), so the pair is named here as the module's
      whose methods answer them: the plane adds no behaviour, only the entry (plane R9). */
