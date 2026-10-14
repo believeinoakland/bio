@@ -2,7 +2,7 @@
  * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
@@ -116,9 +116,10 @@ test("R8 (interface-shell R12) an act is drawn only when the session may do it: 
 });
 
 test("R9 no act or read records which member opened which file: every request is an op naming no member, and the screens store nothing", async () => {
-  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band) */
-  const FRAME = new Set(["bootstrap", "whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select"]);
+  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
+     the shell's declaration of them (N1073) */
+  const FRAME = new Set(SHELL_OPS);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];

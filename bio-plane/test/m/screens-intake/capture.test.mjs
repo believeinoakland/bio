@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { open as openPage, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, html, text, main, btn, fill, press, ok, refused, refusedIn, rawKeys, word, hasWord, says, saysIn, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 /* a document named on the page is a link only where the `document` screen is served: the stand-in serves it */
@@ -146,6 +146,25 @@ test("R1 R21 R23 R24 (N747) an answer without promoted is promoted as an informa
   await r.settle();
   assert.ok(failed(r), "a failure with no words is still drawn as failed");
   assert.ok(!says(r, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }));
+});
+
+test("R1 R21 (D29) an answer of ok: true that carries ok: false is a refusal at either step of a promotion, never a capture that waits", async () => {
+  const nested = (words) => refusedIn("NOT_NOW", words);
+  for (const [plane, words] of [[{ allocid: nested("No number now.") }, "No number now."], [{ promote: nested("Not kept now.") }, "Not kept now."]]) {
+    const p = await open("/app/capture", { plane: { ...CAPTURED, ...plane } });
+    fill(p, { "ci-address": ADDRESS });
+    await press(p, "acquire");
+    await p.settle();
+    assert.ok(!says(p, "screen.capture.address.done", { title: "street-maintenance-2026.pdf" }), words);
+    assert.ok(failed(p), `${words}: drawn failed`);
+    assert.equal(main(p).querySelector(`a[href*="${BUNDLE}"]`), null, `${words}: no link`);
+    const u = await open("/app/capture/file", { plane: { ...UPLOAD_PLANE, ...plane } });
+    fill(u, filled);
+    await press(u, "captureupload");
+    await u.settle();
+    assert.ok(!says(u, "screen.capture.file.done", { name: "Seminary Ave.jpg" }), `${words}: upload`);
+    assert.ok(failed(u), `${words}: upload drawn failed`);
+  }
 });
 
 test("R16 \"Watch this address\" sends monitorset alone, enabled with the frequency chosen, for the bundle the address was captured into", async () => {
