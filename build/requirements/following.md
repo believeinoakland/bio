@@ -86,19 +86,19 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 
 #### A proceeding followed with its own dates (T48-53; N882; Actions D15, H19; U5)
 
-- **R29** (T48; N882; Actions D15, H19; v0.2 rule 17; U5; amends R7, R13, R14; `events` R38) `followRegister` (R7) also takes `proceeding`, an entity of kind `proceeding` the author may see. *(not yet met: T48)*
+- **R29** (T48; N882; Actions D15, H19; v0.2 rule 17; U5; amends R7, R13, R14; `events` R38) `followRegister` (R7) also takes `proceeding`, an entity of kind `proceeding` the author may see.
   - Refusals, after R7's and before R22's `WATCH_END_REFUSED`, each writing nothing: absent or unseen, `NO_SUCH_ENTITY` (one answer, through `entities.noSuchEntity`); an entity of another kind, `NOT_A_PROCEEDING` (the row `actions` R65 refuses with, held in `action-grammar`'s table, read by key, never a copy).
   - Each read of such a follow hands its newest capture to `events.followedRegister({captureSha, proceeding, by})` (`events` R38). A read here is a tick (R7, R13), or `refreshRegister` for an account-gated or fee-bearing register (R8). `events` writes each register entry once, as a `filing` or `order` event concerning the proceeding.
   - A refusal `events` answers (`CAPTURE_NOT_HELD`, `NOT_A_REGISTER`) is counted in R13's `failed` with its reason; the follow stays due.
   - `follows` (R14) answers `proceeding` per follow, or null. A follow without `proceeding` is unchanged.
   - Controls: a follow naming a proceeding hands each read's capture, and the events written concern that proceeding; the same follow without `proceeding` hands nothing; a person entity named as `proceeding` is refused `NOT_A_PROCEEDING`.
-- **R30** (T48; N882; Actions D15, H19; v0.2 rules 6, 17; U5) `proceedingDates({proceeding, from?, to?, viewer})` (`op=proceedingdates`; a read) answers two lanes, never interleaved: *(not yet met: T48)*
+- **R30** (T48; N882; Actions D15, H19; v0.2 rules 6, 17; U5) `proceedingDates({proceeding, from?, to?, viewer})` (`op=proceedingdates`; a read) answers two lanes, never interleaved:
   - **`proceeding`**: the proceeding's own events, as `events.eventsFor({entity: proceeding})` answers them to the viewer (hearings, filings, orders, comment windows), past and future, each with its `when` as held (with its precision, or undetermined with its bounds), its kind, its label and the captures it rests on; and today's stage as `events.proceedingStatusAt` answers it (or undetermined, with why).
   - **`group`**: the group's own deadlines on it: the entries `action-clocks.ourDeadlines` answers (its R18: `owed_by: group`, pending) whose action is among `actions.actionsFor({proceeding})` (its R30, R65), each with its date, basis and action. A body's deadlines are never in this lane.
   - Each lane holds at most 500 items, with `truncated` (`events` R27's bound). `from` and `to` bound both lanes' dated items.
   - It answers no finding, states no lateness and writes nothing. An absent or unseen proceeding, or an entity of another kind, answers as R29 refuses.
   - Controls: an action linked to another proceeding adds nothing to `group`; a body's pending duty on the proceeding is not in `group`.
-- **R31** (T48; K231; K3207; amends R29) R29's `NOT_A_PROCEEDING` is `entities.notAProceeding`'s answer (its R53). *(not yet met: T48)*
+- **R31** (T48; K231; K3207; amends R29) R29's `NOT_A_PROCEEDING` is `entities.notAProceeding`'s answer (its R53).
 
 ## Private
 
@@ -107,7 +107,7 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 Rule 3's list: `monitoring` (`sweepHost`, its R65; R14's frequencies), `capture` (the render path, R7), `acquisition` (captures, R2, R8, R9, R10), `events` (observed meetings, R4; the Legistar following write, R2), `legistar-reader` (R2, R3), `jurisdictions` (the profile's recurrences, notice periods, identifier schemes), `civil-time` (recurrence expansion, zones, `validAt`).
 (T35) `standards`: the held policies with their source address and family, and a version from captures (T35-31), for R20; its amendments and supersessions, for R21's `amendment_held`. A `modules.json` edge, BOB's (P17).
 (T45; K2781 (2); the plan's reconciliation R7, R13, R18) New edges, each to an earlier module: `action-plans` (the plan read with its state, closing instant and matters, `NO_SUCH_PLAN`; R23, R24); `plan-work` (`matterPromiseDuties`, its R13, R24; `registerWatchReader`, its R9, R26); `duties` (a duty's sight and words, its met state; R23, R24, R26; from T46 its met instant is read through `plan-work`, R27); `answers` (a standing question's sight, words and `ends`; `standingQuestionEnd`, its R16; `standingQuestionEndSet`, its R34; R23–R26). `monitoring` gains `addressWatchEnd` and `addressWatchers` (its R71, R72) in the existing use; `membership` (`memberFacts`, `projectOwners`, `activeAdmins`) for R24's recipients.
-(T48; N882; K3190) New edges, each to an earlier module: `actions` (`actionsFor` with its `proceeding` filter, its R30, R65; R30); `action-clocks` (`ourDeadlines`, its R18; R30); `action-grammar` (`NOT_A_PROCEEDING`'s row, its R9; R29). `entities` (`noSuchEntity`, an entity's kind; R29) and `events` (`followedRegister`, its R38; `eventsFor`, `proceedingStatusAt`, its R27; R29, R30) are existing uses.
+(T48; N882; K3190) New edges, each to an earlier module: `actions` (`actionsFor` with its `proceeding` filter, its R30, R65; R30); `action-clocks` (`ourDeadlines`, its R18; R30) (`action-grammar`'s edge, first named for R29's row, is dropped: R31 reads `entities.notAProceeding`, K3290). `entities` (`noSuchEntity`, an entity's kind; R29) and `events` (`followedRegister`, its R38; `eventsFor`, `proceedingStatusAt`, its R27; R29, R30) are existing uses.
 **Not in Rule 3, needed by this draft (open):** `entities` (R1's body identifier), `membership` (sight and the machine-author test), `record-core` (`declareTable`, `transact`), `promotion` (if a landing promotes outside the host's `land`).
 
 ### Invariants
