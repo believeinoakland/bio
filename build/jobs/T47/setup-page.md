@@ -44,3 +44,7 @@ B2 done: merged tranche/T47 (29c4591555); my tests 87/87 pass. Still waiting on 
   - `run.mjs` (whole product): architecture 3,240 files, 0 failures; coverage 5,195 of 5,198 live ids named, 1 failure (journey-check R1–R3, not built, merges last; not mine); channels 0 failures; format as above.
 
 Size (session_01VvQEKrSFUtxdAB7G8fe5Mv): test runs 1, module lines 0
+
+## J3 · COMPLETE
+
+T47-74 done: merged tranche/T47 (a54734bd94) and deleted every file under my paths: bio-plane/src/setup-page/index.mjs and the 14 files of bio-plane/test/m/setup-page/ (listed in my record). Nothing imports setup-page; setup.mjs, interface-shell and control-plane import cleanly. Checks: architecture 0 failures, coverage 0 of 0, ownership 0 failures; format 2 failures, both my emptied paths/tests rows, as B3 expected; run.mjs otherwise only journey-check R1–R3 uncovered (not mine). Stale generated bundles carrying the deleted code: plane's dist/ and release/, installer's newgroup/src/release.mjs and dist (J1). Please empty my paths.
