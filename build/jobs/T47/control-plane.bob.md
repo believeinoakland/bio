@@ -43,3 +43,7 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B8 · CHANGE
 
 K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw, rawType}`), no store-door change; serve the logo through `groupLogoAsset`; route `grouplogoset`, `grouplanguagesset`, `grouplanguages`.
+
+## B9 · CHANGE
+
+K3150: re-pin, as yours in T47-65: tasks' C-138.16/.17 in `envelope.test.mjs` test 57 (R22); `doorbell.test.mjs:79` (`sourceof`, `sourcerung` in both session sets by op-declarations R56). J2: (1)–(2) sent to plane; (3) is N1045; (4) your own logo read stands. Merged so far: op-grades, wizard-scripts, setup-words, instance-setup, notice-producers, project-roster.
