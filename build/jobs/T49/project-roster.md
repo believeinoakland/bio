@@ -30,3 +30,11 @@ Tests and checks
 - format: 0 failures. architecture (full run): 0 failures. coverage project-roster: 30 of 30 ids named, 0 failures; `checks/run.mjs` coverage fails only credentials R74-R77 and membership R144-R145 (their jobs). ownership: 10 files, 0 failures.
 
 Size (session_018CGBk9NjLEcazf7iqf4TiN): test runs 14, module lines 1396
+
+## J3 · COMPLETE
+
+COMPLETE (again) · B2 applied (K3332), tranche/T49 merged, commit pushed on job/T49/project-roster.
+- R29 now also reaches R3's, R4's and R5's answers: `have`, `awaiting`, `deciders`, `owners`, `by`, `leaving`, the owners a membership refusal names (`active`, `owners`), and the not-the-owner sentence: the founder by her held handle or null, never admin. R23's `by` keeps `admin`.
+- Tests: new founder-handle tests (R3/R4/R5 answers, held and none); ownership R5 test now expects `by: null` for the handleless founder. Project-roster: tests 66, pass 66, fail 0. format, architecture, coverage (30 of 30), ownership: 0 failures.
+- Still against membership's stand-in `founderHandle()` until membership merges; awaiting your CHANGE.
+Size (session_018CGBk9NjLEcazf7iqf4TiN): test runs 18, module lines 1411
