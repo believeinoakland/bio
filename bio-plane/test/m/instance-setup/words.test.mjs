@@ -24,7 +24,7 @@ test("R63 the check rows' translations (T34-87: setup.mjs :1701, :1731, :1742, :
   assert.match(T("GROUP_ALREADY_RECORDED"), /^Your group's Civicsmith has its group recorded already, and it is recorded once/);   // :1701
   assert.match(T("PROFILES_NOT_ADMIN"), /profiles your group's Civicsmith reads its local facts from\. Nothing was changed\.$/);  // :1731
   assert.match(T("UNKNOWN_PROFILE"), /^Your group's Civicsmith holds no jurisdiction profile by that name/);                       // :1742
-  assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers credentials' row");
+  assert.equal("ASSISTANT_OFF" in INSTANCE_SETUP_CHECKS, false, "T37 (N765): C-119.5 retired; the gate answers ai-accounts' row");
   assert.match(T("PROFILE_IS_TEST"), /so no group's Civicsmith reads local facts from it\./);
   for (const [code, row] of Object.entries(INSTANCE_SETUP_CHECKS)) assert.doesNotMatch(row.translation, RETIRED, code);
 });
@@ -33,7 +33,7 @@ test("R63 R47 the hosting block's words (T34-87: setup-fleet.mjs :22, :24, :25, 
   assert.equal(HOSTING_CONTROL.heading, "Before you choose a password: who controls your group's Civicsmith");                    // :22
   assert.match(HOSTING_CONTROL.sentences[0], /^Whoever can sign in to the hosting account your group's Civicsmith runs in \(its Cloudflare account\) controls it\./); // :24
   assert.match(HOSTING_CONTROL.sentences[0], /They can replace the one-time password, claim it again, read everything in it/);    // :25
-  assert.match(HOSTING_CONTROL.sentences.at(-1), /and your group's Civicsmith can be claimed again\.$/);                            // :31
+  assert.match(HOSTING_CONTROL.sentences.at(-1), /for your group's Civicsmith to be claimed again\.$/);                           // :31 (K3240)
   for (const s of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) assert.doesNotMatch(s, RETIRED, s);
 });
 
@@ -41,7 +41,7 @@ test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its re
   const w = await world();
   w.prov.keepAway = { on: true, reason: "Kept here.", set_by: "admin", set_at: "2026-10-08T09:00:00Z" };
   const kept = w.m.assistantGate();
-  assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: credentials' refusal, as given");
+  assert.equal(kept.reason, "AI_KEPT_AWAY", "T37: ai-accounts' refusal, as given");
   assert.match(kept.detail, /the group keeps its material away from every assistant/);
   w.prov.keepAway = { on: null, reason: null, set_by: null, set_at: null };
   const stateDetail = w.m.assistantState().detail;
@@ -49,7 +49,7 @@ test("R63 R53 R55 the assistant's sentences (T36: the keep-away state and its re
   const unread = w.m.assistantGate();
   assert.match(unread.detail, /^whether the group keeps its material away from every assistant could not be read/);
   /* this module's own sentence on the gate: a provider that throws is the store's silence */
-  const thrown = (await boot({ prov: { ...w.prov, credentials: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
+  const thrown = (await boot({ prov: { ...w.prov, aiAccounts: { aiKeptAway() { throw new Error("x"); } } } })).m.assistantGate();
   assert.match(thrown.detail, /^whether your group keeps its material away from every assistant did not answer/);
   for (const s of [kept.detail, stateDetail, unread.detail, kept.translation, thrown.detail]) assert.doesNotMatch(s, RETIRED, s);
 });

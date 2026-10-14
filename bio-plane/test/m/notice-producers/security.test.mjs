@@ -158,23 +158,23 @@ test("R12 R20: the security-level item keeps its plain sentence: words.json hold
 test("R12: a securityLevel or securityMap that throws or does not answer contributes no item and is named in facts.failed, never read as Ordinary; the read writes nothing", async () => {
   const boom = () => { throw new Error("down"); };
   for (const securityLevel of [boom, () => null, () => ({}), () => ({ level: "Unknown" }), () => ({ level: null, levelAt: null })]) {
-    const { read } = await setup({ credentials: { securityLevel, securityMap: boom, projectAccountsSuspended: () => [] } });
+    const { read } = await setup({ credentials: { securityLevel, securityMap: boom } });
     const r = at(NOW, () => read("admin", { now: NOW }));
     assert.deepEqual(ofKind(r, KIND), []);
     assert.deepEqual(r.facts.failed, ["credentials"], String(securityLevel));
   }
   assert.deepEqual([...SECURITY_LEVELS], ["Ordinary", "Raised", "High"]);
   for (const securityMap of [boom, () => ({ ok: false, reason: "SECURITY_PERIOD_INVALID" }), () => null]) {
-    const { read } = await setup({ credentials: { securityLevel: () => ({ level: "High", levelAt: iso(NOW) }), securityMap, projectAccountsSuspended: () => [] } });
+    const { read } = await setup({ credentials: { securityLevel: () => ({ level: "High", levelAt: iso(NOW) }), securityMap } });
     const r = at(NOW, () => read("admin", { now: NOW }));
     assert.deepEqual(ofKind(r, KIND), []);
     assert.deepEqual(r.facts.failed, ["credentials"]);
   }
-  /* a non-administrator's read never asks the level or the map, so their failure is none of theirs (R16's own read of
-     credentials, `projectAccountsSuspended`, is every member's) */
+  /* a non-administrator's read never asks the level or the map, so their failure is none of theirs (R16's own read, ai-accounts'
+     `projectAccountsSuspended`, is every member's, and none of credentials') */
   let asked = 0;
   const counted = () => { asked += 1; throw new Error("down"); };
-  const quiet = await setup({ credentials: { securityLevel: counted, securityMap: counted, projectAccountsSuspended: () => [] } });
+  const quiet = await setup({ credentials: { securityLevel: counted, securityMap: counted } });
   assert.equal(at(NOW, () => quiet.read("alice", { now: NOW })).facts.failed.includes("credentials"), false);
   assert.equal(asked, 0);
   /* writes nothing */

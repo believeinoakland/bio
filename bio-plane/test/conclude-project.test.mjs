@@ -112,7 +112,7 @@ const enrol = async (memberId, role, caps) => {
   if (!add.ok) throw new Error(`memberadd ${memberId}: ${JSON.stringify(add)}`);
   const en = await POST("op=enroll", { invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` });
   if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en)}`);
-  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` });
+  const lg = await POST("op=login", { handle: memberId, password: `${memberId}-passphrase-1` });
   if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
