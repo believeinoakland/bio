@@ -81,12 +81,15 @@ test("R27 R28: T37's tables hold exactly these ops, obscuremark's rung in T38's 
 /* ---- R18, R26 ------------------------------------------------------------------------------------------------------ */
 test("R18 R26 (T37; DEC-181): phoneOf answers false for every op in IRREVERSIBLE_WEIGHT and for every alias of one, "
    + "standardrelease among them; LARGER_SCREEN_ACTS holds filingsent alone and shares no op with IRREVERSIBLE_WEIGHT", () => {
-  assert.ok(IRREVERSIBLE_WEIGHT.length >= 5);
+  assert.ok(IRREVERSIBLE_WEIGHT.length >= 4);
   for (const op of IRREVERSIBLE_WEIGHT) assert.equal(phoneOf(op), false, op);
   for (const [alias, op] of Object.entries(OP_ALIASES))
     if (IRREVERSIBLE_WEIGHT.includes(op)) assert.equal(phoneOf(alias), false, alias);
-  for (const op of ["publish", "publishat", "publishatmove", "personexpunge", "standardrelease"])
+  for (const op of ["publishat", "publishatmove", "personexpunge", "standardrelease"])
     assert.ok(IRREVERSIBLE_WEIGHT.includes(op), op);
+  /* R37 (T47): publish prepares and left the weight; it stays off the phone by its terminal rung */
+  assert.ok(!IRREVERSIBLE_WEIGHT.includes("publish"));
+  assert.equal(phoneOf("publish"), false);
   /* two of the set are `reasoned`: only the weight keeps them off the phone */
   assert.deepEqual([RUNGS.personexpunge, RUNGS.standardrelease], ["reasoned", "reasoned"]);
   assert.deepEqual([phoneOf("personexpunge"), phoneOf("standardrelease")], [false, false]);
