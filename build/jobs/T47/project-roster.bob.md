@@ -48,3 +48,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Run the tests of the modules that use `projectlist` (P11).
 Reading set (mechanics §17): measured at this START: 425 KB with your tests, within the 600 KB limit: read it all whole.
+
+## B6 · ANSWER · re J7
+
+K3144: (1)–(4) stand.
