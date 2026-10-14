@@ -27,3 +27,7 @@ K3369: option (a) is right, but capture and acquisition are in L3, closed in T49
 ## B3 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · ANSWER · re J2
+
+K3372: 1(a) and 2(a) as you built: /app/capture/<tab>/<id>; result links /app/find-in/<document>/<question>. screens-inquiry (R38 link) and screens-daily (find-in's second step) are told. act.cite.label.document is right.
