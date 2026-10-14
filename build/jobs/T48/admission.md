@@ -11,3 +11,7 @@
 - **Deferred:** none. **Found in other modules:** none.
 
 Size (session_014TBE54ERQ8MZ87YxDeqkyj): test runs 4, module lines 1055
+
+## J1 · COMPLETE
+
+T48-64 applied (R26): an ai credential is refused AI_BEYOND_TASK_SCOPE at sourceof/sourcerung unless its scope names the op. New t48.test.mjs; R10 test updated for the amendment. Admission tests 49 pass; format, architecture, coverage, ownership 0 failures. Details in my record.
