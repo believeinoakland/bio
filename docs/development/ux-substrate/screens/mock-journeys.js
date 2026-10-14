@@ -35,10 +35,10 @@ const J = [
    { s: 'find-in', act: 'recordpersonfact', v: 'project', say: 'He uses "Find in this project" for people and offices: L. Chen is named in 6 of its 14 documents, each with its passage. Nothing is recorded until he records it.' },
    { s: 'people', act: 'search', say: 'He opens People and searches for “Chen”: L. Chen is listed under his projects, named in 14 documents, 2 questions and 1 project.' },
    { s: 'person', act: 'person', say: 'He opens the person\'s page: positions over time, each dated and cited.' },
-   { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a licence from the state register.' },
+   { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a license from the state register.' },
    { s: 'person', act: 'identityclaim', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
    { s: 'person', act: null, dock: true, only: 'ai', say: 'He asks the assistant whether Chen held other posts; it answers from what the group holds and says where it looked.' },
-   { s: 'person', act: 'followregister', say: 'He asks to be told when the licence register changes for Chen.' } ] },
+   { s: 'person', act: 'followregister', say: 'He asks to be told when the license register changes for Chen.' } ] },
  { n: 11, t: 'Building a timeline', who: 'Members; the project owner', wiz: 'Build a timeline' },
  { n: 12, t: 'Following a money trail', who: 'Members; often an accountant', wiz: 'Follow the money' },
  { n: 13, t: 'Exploring connections', who: 'Investigators', steps: [
@@ -90,7 +90,7 @@ const J = [
  { n: 22, t: 'From suspicion to a closed plan', who: 'Members; offices, reporters, counsel', steps: [
    { s: 'question', act: 'planopen', say: 'While the question is still young, Dev opens a plan from it.' },
    { s: 'plan', act: 'optionadd', say: 'He adds options. With his own account he may also ask for suggestions, which wait in a tray.' },
-   { s: 'plan', act: 'optionadopt', only: 'ai', say: 'He adopts one of the assistant\'s suggestions; it is labelled as adopted from machine work.' },
+   { s: 'plan', act: 'optionadopt', only: 'ai', say: 'He adopts one of the assistant\'s suggestions; it is labeled as adopted from machine work.' },
    { s: 'plan', act: 'optiondispose', say: 'He chooses the records request and declines the complaint, each with a reason.' },
    { s: 'plan', act: 'scenarioset', say: 'He lays out a scenario with a checkpoint a member will judge.' },
    { s: 'start-send', act: 'optionstart', say: 'He starts the option. The start-and-send wizard can walk it (see Wizards).' },
@@ -129,7 +129,7 @@ const J = [
    { s: 'home', v: 'firstvisit', act: null, say: 'Her home offers the guided welcome she began when she joined. She continues it.' },
    { s: 'account', act: 'expertisedeclare', say: 'In her account she checks her language and declares that she interprets Spanish and English, so members can ask her to check work in that field.' },
    { s: 'home', act: 'startfrom', say: 'Back on Home she answers “What happened?” with “A problem I live with”.' },
-   { s: 'capture', act: 'testify', say: 'Her first piece of work: she records what she saw on Seminary Avenue, where and when, with a photo. It is her testimony, labelled as hers.' },
+   { s: 'capture', act: 'testify', say: 'Her first piece of work: she records what she saw on Seminary Avenue, where and when, with a photo. It is her testimony, labeled as hers.' },
    { s: 'account', act: 'signout', say: 'At the end of the day she signs out on the library computer she used.' },
    { s: 'front', v: 'signedout', act: 'login', say: 'Next morning, on her own phone, she opens the group\'s address, signs in, and keeps herself signed in on that phone.' } ] },
 ];

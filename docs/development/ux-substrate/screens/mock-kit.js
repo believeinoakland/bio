@@ -60,7 +60,7 @@ const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder=
 // DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
 // never in a field stating a member's reason for an act (`reason`, K1841), never on an act the assistant is refused
 // (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
-// never where a labelled draft already fills the field, and not on the group's own description, which has its own guided
+// never where a labeled draft already fills the field, and not on the group's own description, which has its own guided
 // draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
 const WRITE_ACT = 'writinghelp';
 const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',

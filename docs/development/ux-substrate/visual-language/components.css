@@ -102,7 +102,7 @@
 .cs-dialog .ends { padding: var(--s-3); background: var(--c-ground-2); border-left: 3px solid var(--c-ink); }
 
 /* ============================================================
-   Fields; labelled drafts (principle 6.4, DEC-120 G5)
+   Fields; labeled drafts (principle 6.4, DEC-120 G5)
    ============================================================ */
 .cs-field { display: grid; gap: 6px; min-width: 0; }
 .cs-field > label { font-weight: 600; }
@@ -116,7 +116,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 
 /* ============================================================
    Evidence: letters grade it (DEC-82). One shape for every scale;
-   the scale's colour and icon name the scale; the letter gives the value.
+   the scale's color and icon name the scale; the letter gives the value.
    ============================================================ */
 .cs-grade { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px 3px 5px; border: 1.5px solid currentColor;
             border-radius: var(--r-1); font: 700 var(--t-sm)/1 var(--f-sans); white-space: nowrap; cursor: help; }
@@ -296,7 +296,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 /* ============================================================
    The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.
    Rust is attention, so it marks only what is above the usual; the highest step is also textured, and every cell
-   names its count on hover, focus or tap, so colour is never the only signal.
+   names its count on hover, focus or tap, so color is never the only signal.
    ============================================================ */
 .cs-risk { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; margin-right: 6px; font: 700 var(--t-xs)/1.25 var(--f-sans);
            letter-spacing: var(--track-caps); text-transform: uppercase; border-radius: var(--r-1); border: 1.5px solid var(--c-rule-strong); color: var(--c-ink-2); }

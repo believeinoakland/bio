@@ -61,7 +61,7 @@
  },
  {
   "key": "refusal.SIGN_IN_PAUSED",
-  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at {time}.",
   "protected": false,
   "note": "credentials R38; {time} the local time the pause ends"
  },
@@ -177,7 +177,7 @@
   "key": "signing.ceremony.declined",
   "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
   "protected": true,
-  "note": "device cancelled or failed"
+  "note": "device canceled or failed"
  },
  {
   "key": "signing.ceremony.signedat",

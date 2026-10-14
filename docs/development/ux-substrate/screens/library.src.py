@@ -1,6 +1,6 @@
 # The Civicsmith wizard library (design phase step 5, DEC-139; DEC-121 (9): written by the UX stream, approved by Bob).
 # Each script follows wizard-scripts R1 and R2: a step is {screen, act, what, why, draft?}; `what` and `why` are 1-300
-# characters; a draft is {text}, {template} or {machine: op}, always shown labelled; no step presses, signs or sends.
+# characters; a draft is {text}, {template} or {machine: op}, always shown labeled; no step presses, signs or sends.
 # `act` names the control the step points at (null: the step explains the screen). Side trips (`via`) start another
 # wizard and return to the step left. Places, laws and venues never appear here (K1): they come from the group's profile
 # and its own templates (`{template: "@…"}` names the kind of template the group's library offers).
@@ -218,7 +218,7 @@ wiz('Start and send', 'plan', False, [
  ('plan', 'optiondispose', 'Choose the option, and say when to be reminded.', 'Choosing records why this option, now.'),
  ('start-send', 'optionstartpreview', 'See what starting does, and anything that would stop it.', 'Refusals are shown before anything runs.'),
  ('start-send', 'optionstart', 'Start the action, addressed to the office by role.', 'The office\'s holder that day is shown, so you know who will read it.'),
- ('start-send', 'communicationprepare', 'Prepare what is sent: start from your group\'s template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.', 'The words that leave the group are always a member\'s.'),
+ ('start-send', 'communicationprepare', 'Prepare what is sent: start from your group\'s template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.', 'The words that leave the group are always a member\'s.'),
  ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
  ('start-send', 'filingrecordsent', 'Send it, then record that you sent it.', 'This tells the office what your group is looking at, and starts the clock.'),
  ('due-date', 'reminderset', 'The due date and next checkpoint go into your queue. A next step can wait on the reply.', 'If no reply comes, the next step is ready without anyone remembering.'),

@@ -337,7 +337,7 @@
  },
  {
   "key": "refusal.GUIDE_KIND_UNKNOWN",
-  "en": "A guide is for one kind of action or document your group's places recognise, and this names another. Nothing was written.",
+  "en": "A guide is for one kind of action or document your group's places recognize, and this names another. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -1015,13 +1015,13 @@
  },
  {
   "key": "refusal.MACHINE_CANNOT_SET_PARTNERS",
-  "en": "Only a member names the organisations acting with your group. Nothing was written.",
+  "en": "Only a member names the organizations acting with your group. Nothing was written.",
   "protected": true,
   "note": ""
  },
  {
   "key": "refusal.PARTNERS_REFUSED",
-  "en": "Each partner is a named organisation, listed once. Nothing was written.",
+  "en": "Each partner is a named organization, listed once. Nothing was written.",
   "protected": false,
   "note": ""
  },
@@ -1465,7 +1465,7 @@
  },
  {
   "key": "refusal.NOT_A_PARTNER",
-  "en": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was written.",
+  "en": "That organization isn't one of this action's partners. Add it as a partner first. Nothing was written.",
   "protected": false,
   "note": ""
  },

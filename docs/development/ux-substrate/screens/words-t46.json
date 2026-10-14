@@ -147,11 +147,11 @@
   "key": "statusreport.assist.label",
   "en": "A first draft by the assistant, from the plan's items. Each line cites what it rests on; edit it, then save it as yours.",
   "protected": true,
-  "note": "machine work, labelled until saved (statusReportSave's from)"
+  "note": "machine work, labeled until saved (statusReportSave's from)"
  },
  {
   "key": "ai.run.ownsignin",
-  "en": "This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.",
+  "en": "This run works on your own Claude sign-in, for you alone. What it produces is labeled machine work and changes nothing until a member acts on it.",
   "protected": true,
   "note": "shown before \"Work on this\" starts on a member's own sign-in"
  },
@@ -457,7 +457,7 @@
  },
  {
   "key": "ref.here.machine",
-  "en": "What the assistant does with it is labelled machine work; only a member's act changes the record.",
+  "en": "What the assistant does with it is labeled machine work; only a member's act changes the record.",
   "protected": false,
   "note": "a card's Here: line"
  },

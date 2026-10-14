@@ -368,7 +368,7 @@
    "id": "home",
    "name": "Your group's home",
    "frame": "working",
-   "purpose": "The group's nerve centre (Bob's S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and \"What happened?\", the door to a first step; a new member's first visit and a new group's empty home as states.",
+   "purpose": "The group's nerve center (Bob's S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and \"What happened?\", the door to a first step; a new member's first visit and a new group's empty home as states.",
    "acts": [
     {
      "op": "release",
@@ -2159,11 +2159,11 @@
    "id": "people",
    "name": "People",
    "frame": "working",
-   "purpose": "A directory of the people and organisations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
+   "purpose": "A directory of the people and organizations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
    "acts": [
     {
      "op": "search",
-     "label": "Search people and organisations",
+     "label": "Search people and organizations",
      "status": "declared",
      "modules": [
       "agent-worker",
@@ -2375,7 +2375,7 @@
     },
     {
      "op": "authoritychain",
-     "label": "What authorised it",
+     "label": "What authorized it",
      "status": "function",
      "modules": [
       "money"

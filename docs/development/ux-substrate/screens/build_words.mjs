@@ -64,7 +64,7 @@ const fixed = [
   ['mark.strength.means', 'An answer is only as strong as the weakest thing it depends on'],
   ['mark.due.means', 'counted on your group\\\'s local day.'],
   ['mark.hint.means', 'something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.'],
-  ['mark.hunch.means', 'a member\\\'s suspicion, labelled as one. Never evidence, and it never moves a finding.'],
+  ['mark.hunch.means', 'a member\\\'s suspicion, labeled as one. Never evidence, and it never moves a finding.'],
   ['mark.outward.means', 'this leaves your group\\\'s Civicsmith. Someone outside will see it.'],
   ['mark.band.means', 'this band says who can see what you are working on.'],
 ];
@@ -91,7 +91,7 @@ add('state.loading', 'Still loading', false, 'DEC-98');
 add('state.failed', 'Could not read this, because {reason}', false, 'DEC-98', 'the reason always follows');
 add('state.undetermined', 'Undetermined, because {reason}', true, 'DEC-98', 'the reason always follows');
 
-// 4. Labelled drafts (DEC-120 G5, DEC-153): who wrote what is in a field
+// 4. Labeled drafts (DEC-120 G5, DEC-153): who wrote what is in a field
 for (const [k, s] of [['machine', 'Draft by the assistant, at your request · edit it until it is yours'], ['template', 'Draft from your group\\\'s template · edit it until it is yours'], ['wizard', 'Draft from the wizard · edit it until it is yours']])
   add(`draft.${k}.label`, must(kit, 'mock-kit.js', s).replace(/\\'/g, "'"), false, 'mock-kit.js field');
 add('draft.writing-help.act', 'Help me write this', false, 'mock-kit.js writeHelp');
@@ -194,7 +194,7 @@ add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue
 // 4c''. Queue items from steps, milestones, projects and reviews (DEC-189; BOB's B126 (2), notice-producers R17): each kind's
 //     one-line summary and its detail, told once
 for (const [k, sum, det, note] of [
-  ['question-find', 'Found while looking into {question}: {what}', 'The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.', 'FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member'],
+  ['question-find', 'Found while looking into {question}: {what}', 'The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.', 'FINDING, Hint · machine work; labeled with ai.label.explored or ai.label.explored.member'],
   ['step-later-found', 'Found later: {what}', 'You looked for this on {date} and didn\'t find it; it has since arrived. Your earlier look stays as it was, dated. Open the step to say whether this changes what it shows for each question.', 'FINDING'],
   ['step-date-due', 'Past its date: {step}', 'You set {date} for this step, and it isn\'t done. Only you are told. Finish it, move the date, or end it with a reason.', 'OBLIGATION, to the member who set the date'],
   ['step-reminder', 'Your reminder: {step}', 'You asked to be reminded about this step today. Only you are told.', 'OBLIGATION, to the member who asked'],
@@ -252,7 +252,7 @@ add('connection.graph.limit', W.GRAPH_WORDS.limit, true, 'mock-screens.js GRAPH_
 add('connection.graph.limit.means', W.GRAPH_WORDS.limitMeans, true, 'mock-screens.js GRAPH_WORDS');
 add('connection.graph.trail.means', W.GRAPH_WORDS.trail, false, 'mock-screens.js GRAPH_WORDS');
 add('connection.graph.grade.means', W.GRAPH_WORDS.grade, true, 'mock-screens.js GRAPH_WORDS');
-add('connection.graph.centre.means', W.GRAPH_WORDS.centre, false, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.center.means', W.GRAPH_WORDS.center, false, 'mock-screens.js GRAPH_WORDS');
 add('connection.graph.click', W.GRAPH_WORDS.click, false, 'mock-screens.js GRAPH_WORDS');
 add('connection.graph.trail.label', 'Trail', false, 'mock-screens.js graphInner');
 add('connection.graph.legend.grade', 'the step\'s grade', false, 'mock-screens.js graphInner');
@@ -285,7 +285,7 @@ add('guide.stopping', must(shell, 'mock-shell.js', 'Stopping is fine: nothing is
 add('guide.showwhere', must(shell, 'mock-shell.js', 'Show me where'), false, 'mock-shell.js wizardGuide');
 add('guide.sidetrip', 'Side trip: {wizard}. When it finishes or you stop it, you come back to this step.', false, 'mock-shell.js wizardGuide', 'the wizard\'s name in place of {wizard}');
 must(shell, 'mock-shell.js', 'When it finishes or you stop it, you come back to this step.');
-add('guide.draft', must(shell, 'mock-shell.js', 'This step places a labelled draft in the field. It becomes yours only when you keep or edit it.'), false, 'mock-shell.js wizardGuide');
+add('guide.draft', must(shell, 'mock-shell.js', 'This step places a labeled draft in the field. It becomes yours only when you keep or edit it.'), false, 'mock-shell.js wizardGuide');
 add('guide.press', must(shell, 'mock-shell.js', 'Press here when you\\\'re ready').replace(/\\'/g, "'"), false, 'mock-shell.js ring');
 add('guide.step', 'step {i} of {n}', false, 'mock-shell.js wizardGuide');
 
