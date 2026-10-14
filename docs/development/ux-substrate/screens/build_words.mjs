@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 // The interface's word list for translation (DEC-157, DEC-179; BOB's B90 for N669 and N670): every fixed word and phrase
 // the member screens use, each with the stable key a translation is known by and whether it is protected (DEC-157 (4)).
 // Read from the same sources the mockups are drawn from, so the list cannot drift from the screens:
@@ -289,6 +290,9 @@ for (const x of T49.rows) { const d = x.note.match(/^DEC-\d+/)[0]; add(x.key, x.
 for (const k of [...T49.retired, ...Object.keys(T49.rewrite)]) if (!retiredSeen.has(k) && !rewriteSeen.has(k)) fail('DEC-256: no row ' + k + ' to retire or reword');
 // 4m. The remaining screens' drawn words (DEC-259): written in words-drawn.src.py
 for (const x of DRAWN.rows) add(x.key, x.en, x.protected, 'DEC-259', x.note.replace(/^DEC-259(: )?/, '') || undefined);
+// 4n. The other modules' inline English (DEC-260): written in words-mod-<n>.src.py, one file per batch, rows only
+for (const f of readdirSync(new URL('.', import.meta.url)).filter(f => /^words-mod-\d+\.json$/.test(f)).sort())
+  for (const x of JSON.parse(R(f)).rows) add(x.key, x.en, x.protected, 'DEC-260', x.note.replace(/^DEC-260(: )?/, '') || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
