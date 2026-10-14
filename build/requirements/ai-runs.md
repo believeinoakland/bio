@@ -115,7 +115,7 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
     - a sentinel token held for the payer reaches the stub agent-worker's `account.secret` and no record;
     - control: an `apikey` account is unchanged.
   -
-- **R80** retired (T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again).
+- **R80** *(retired: T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again)*.
 - **R81** (T49; D5 **B**; amends R9, R11 and R13's relay of `run-rules` R6) **The project gate reads the actor as participation is keyed.** On `open`, `tick` and `close`, the facts handed to `run-rules` R6 (`projectsJoined`) are asked of `membership.participation` with the actor's member id. The actor can be given in any of three forms: `member:<id>`, `member:<id>/<tokenId>` or `<id>`. All three are asked as `<id>` and answer alike.
   - An actor that names no member (a machine identity, a `class:` or `token:` stamp) is judged exactly as today. It is never read as an absent actor, so it never passes as `NO_MEMBER_BEHIND_CALLER`.
   - An empty actor still passes unapplied, as R6 states.

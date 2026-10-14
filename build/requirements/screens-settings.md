@@ -90,7 +90,7 @@ The settings a member and an administrator use day to day: the roster and the gr
   - **The founder's row.** Her row is drawn whether or not the roster holds one, named by her handle, or by `member.founder.unnamed` (explained by `member.founder.unnamed.help`) while she has none. Never by `admin`.
 
   Test: a founder with no roster row and one roster member read "Active members: 2 · Administrators: 1", with her row drawn. Control: with a handle held, the row draws it. *(not yet met: T49)*
-- **R36** retired (T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again): `connect` gains no pointer to the group key and no API-key preselection; R30 stands (the subscription preselected).
+- **R36** *(retired: T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again)*: `connect` gains no pointer to the group key and no API-key preselection; R30 stands (the subscription preselected).
 - **R37** (T49; D30 **m**; amends R27, R4, R16) Two rules:
   - **Every fill filled.** Each sentence `updates` and `connect` draw is read by key with every `{fill}` filled from its read. No sentence is drawn with an empty or default fill: no "allowed by set at setup", no "you held the key".
   - **Translations' empty state.** `translations` with nothing to show draws its empty state by key, never a bare screen. The key is owed by the channel act; until given, this module's own row.
