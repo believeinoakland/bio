@@ -87,3 +87,21 @@ test("R31 translations: a member who is not granted sees the refusal's own words
   assert.equal(all(m.tree, (e) => e.tag === "table").length, 0);
   assert.deepEqual(acts(m.tree), []);
 });
+
+/* R37 (T49; D30 m): translations with nothing to show draws its empty state by key, never a bare screen */
+test("R37 a group with no language beside English draws screens-settings' languages.none by key; no language is offered, nor a choice of one; a failed read is drawn failed", async () => {
+  for (const languages of [["en"], ["en-US"], []]) {
+    const a = await open("translations", { me: ADMIN, table: translationsTable({ grouplanguages: env({ ok: true, languages }) }) });
+    has(a, "screen.translations.languages.none");
+    assert.equal(all(a.tree, (e) => e.tag === "a" && /^\/app\/translations\//.test(e.attrs.href || "")).length, 0, `${JSON.stringify(languages)}: no language to open`);
+    assert.ok(!a.text.includes(said("screen.translations.choose")), "no choice of a language that is not there");
+    assert.ok(a.text.includes(said("screen.translations.name")) && a.text.trim().length > said("screen.translations.name").length, "never a bare screen");
+  }
+  // control: a language beside English draws the list and not the empty state
+  const b = await open("translations", { me: ADMIN, table: translationsTable() });
+  assert.ok(!b.text.includes(said("screen.translations.languages.none")));
+  // control: a read that failed is drawn failed, never as no language
+  const f = await open("translations", { me: ADMIN, table: translationsTable({ grouplanguages: "none" }) });
+  assert.ok(all(f.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);
+  assert.ok(!f.text.includes(said("screen.translations.languages.none")));
+});

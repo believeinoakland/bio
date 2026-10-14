@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { ADMIN, MEMBER, UPDATE, env, refuse, updatesTable } from "./fixtures.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const section = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
@@ -42,7 +43,9 @@ test("R27 an administrator who holds the hosting account: what runs now, the rel
   const t = textOf(earlier);
   assert.ok(t.includes(said("updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: "rosa", reason: "Changes nothing for us; we wait for 0.84." })));
   assert.ok(t.includes(said("updates.earlier.installed", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "rosa" })));
-  assert.ok(t.includes(said("updates.earlier.installed", { version: "0.82.0", date: day("2026-09-02T10:00:00Z"), who: said("settings.set.setup") })), "R33: recorded at setup");
+  // R33, R37: an install with no member behind it is drawn by the words that name no one, never "allowed by set at setup"
+  assert.ok(t.includes(said("updates.earlier.installed_setup", { version: "0.82.0", date: day("2026-09-02T10:00:00Z") })), "recorded at setup");
+  assert.ok(!t.includes(said("settings.set.setup")), "no \"set at setup\" in a fill");
   assert.ok(!/\badmin\b/.test(t));
 });
 
@@ -102,7 +105,9 @@ test("R27 Not now sends the version; Skip this version is reasoned: its reason, 
   assert.equal(a.s.acts.find((x) => x.op === "updateskip").reasonField, "reason");
   assert.deepEqual((await a.press("updateskip", { data: { version: "0.84.0" }, values: { "up-skipwhy": "Changes nothing  for us." }, reason: "Changes nothing for us." })).sent[0].body, { version: "0.84.0", reason: "Changes nothing for us." });
   assert.deepEqual((await a.press("updateskip", { data: { version: "0.84.0" }, values: { "up-skipwhy": "  " }, reason: "x" })).sent, []);
-  assert.equal(a.refused.key, "screen.updates.skip.noreason");
+  // R34: refused in place by refusal.UPDATE_SKIP_NO_REASON, nothing sent; the retired row is no word of the list
+  assert.equal(a.refused.key, "refusal.UPDATE_SKIP_NO_REASON");
+  assert.equal(hasWord("screen.updates.skip.noreason"), false);
   assert.deepEqual((await a.press("updateskip", { data: { version: "0.84.0" }, values: { "up-skipwhy": "x".repeat(1001) }, reason: "x" })).sent, []);
 });
 
@@ -121,4 +126,36 @@ test("R27 controls: a note carrying <script> is drawn as text, never markup; a m
   // a refused read (an administrator turned away) is not nothing to install either
   const r = await open("updates", { me: ADMIN, table: updatesTable({}, { updatenotice: refuse("STORE_DID_NOT_ANSWER") }) });
   lacks(r, "updates.none");
+});
+
+/* R37 (T49; D30 m): every sentence updates draws has every fill filled from its read; none is drawn "allowed by set at setup" */
+test("R37 who allowed or skipped a release is a handle when a member did it; an install with no member behind it is drawn without one; the founder by her handle in her own session", async () => {
+  const rows = (allowed, skipped) => updatesTable({ running: { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: allowed }, earlier: [
+    { version: "0.83.1", skipped_at: "2026-10-02T10:00:00Z", skipped_by: skipped, reason: "We wait." },
+    { version: "0.83.0", installed_at: "2026-09-28T10:00:00Z", allowed_by: allowed }] });
+  const placeholder = (o) => /\{\w+\}|undefined/.test(o.html);
+  // a filled `who` draws the member's handle (control)
+  const m = await open("updates", { me: ADMIN, table: rows("member:rosa", "member:rosa") });
+  has(m, "updates.running.release", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "rosa" });
+  has(m, "updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: "rosa", reason: "We wait." });
+  // setup, a token, a machine class, a seed and a founder without a handle in another's session: no one to name
+  for (const by of [null, "admin", "member:admin", "token:abc", "class:daemon", "seed", "bootstrap"]) {
+    const o = await open("updates", { me: ADMIN, table: rows(by, "member:rosa") });
+    has(o, "updates.running.release_setup", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+    has(o, "updates.earlier.installed_setup", { version: "0.83.0", date: day("2026-09-28T10:00:00Z") });
+    assert.ok(!o.text.includes(said("settings.set.setup")) && !placeholder(o), String(by));
+    assert.ok(!/\badmin\b/.test(o.text), `${by}: never the id admin`);
+  }
+  // the founder in her own session, with her handle: named by it
+  const founder = { ...ADMIN, member: "admin", handle: "cleo" };
+  const f = await open("updates", { me: founder, table: rows("admin", "admin") });
+  has(f, "updates.running.release", { version: "0.83.0", date: day("2026-09-28T10:00:00Z"), who: "cleo" });
+  has(f, "updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: "cleo", reason: "We wait." });
+  // a skip by the founder in another's session, without her handle: member.founder.unnamed, never admin
+  const g = await open("updates", { me: ADMIN, table: rows("member:rosa", "admin") });
+  has(g, "updates.earlier.skipped", { version: "0.83.1", date: day("2026-10-02T10:00:00Z"), who: said("member.founder.unnamed"), reason: "We wait." });
+  assert.ok(!/\badmin\b/.test(g.text));
+  // a member who does not administer is told the screen is administrators' by its key
+  const n = await open("updates", { me: MEMBER, table: updatesTable() });
+  has(n, "screen.updates.admins");
 });

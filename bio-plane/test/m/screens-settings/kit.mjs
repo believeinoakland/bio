@@ -8,7 +8,8 @@
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
+import { SCREENS } from "../../../src/screens-settings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 export { SCREENS };
 
 // ---- reading HTML ----
@@ -62,14 +63,14 @@ export const ancestor = (e, pred) => { for (let p = e.parent; p; p = p.parent) i
 
 // ---- the words ----
 
-/* The words the served page carries (interface-shell R5): `WORD_ROWS`, the shell's own and each screen's own rows. */
+/* The words the served page carries (interface-shell R5, R70): `WORD_ROWS` and the shell's own, each screen's keys among them. */
 const ROWS = new Map(wordsOf(SCREENS));
 export const WORDS = ROWS;
-/** The shell's `w(key, fills)` (its R5): the screen's own row first, else `WORD_ROWS`; each `{name}` filled, escaped. */
+/** A word as the shell's `w(key, fills)` draws it (R5, R70): `setup-words`' `word`, which throws for a key the list lacks and for a
+ *  `{name}` the fills do not fill, each fill escaped. */
 export function w(key, fills = {}) {
-  if (!ROWS.has(key)) throw new Error(`no word ${key}`);
   used.add(key);
-  return esc(ROWS.get(key).replace(/\{(\w+)\}/g, (m, n) => (n in fills ? String(fills[n]) : m)));
+  return esc(word(key, fills));
 }
 const used = new Set();
 export const usedKeys = () => new Set(used);

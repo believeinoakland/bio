@@ -46,7 +46,13 @@ export const connect = {
     const data = view.data || {};
     const okv = (o) => (o && o.state === "ok" && o.value && o.value.ok !== false ? o.value : null);
     const outward = (inner) => `<div class="mk-msg"><p class="cs-tag-outward">${W("mark.outward.means")}</p>${inner}</div>`;
-    const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === me.member ? T(S + "you") : id === "admin" ? T("screen.members.founder") : id; };
+    // who did it, by handle: the viewer by their own, the founder by hers or `member.founder.unnamed`, never the id `admin` and never a
+    // bare "you" (R37: every fill filled)
+    const names = (by) => {
+      const id = String(by || "").replace(/^member:/, "");
+      if (id === me.member) return me.handle || (me.member === "admin" ? T("member.founder.unnamed") : id);
+      return id === "admin" ? T("member.founder.unnamed") : id;
+    };
     const out = [cs.title(), `<p>${W(S + "optional")}</p>`, `<p class="mk-note">${W("ai.whopays")}</p>`];
 
     // the situation: exactly one of four (R4)
@@ -76,16 +82,24 @@ export const connect = {
     const situation = subscribed || keyed ? "own" : groupServes ? "group" : "none";
 
     if (situation === "own") {
-      // a subscription: since when and, when answered, until when (credentials R70)
-      const when = subscribed ? (st.since ? `<p data-state="since">${W(S + "own.since", { date: D(st.since) })}${st.valid_until ? " " + W(S + "own.until", { date: D(st.valid_until) }) : ""}</p>` : "") : "";
-      out.push(`<div class="mk-msg" data-situation="own"><p>${W(subscribed ? S + "own.subscription" : S + "own.apikey")}</p>${when}${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
+      // what serves them, with every fill filled from the answer (R37): the plan and the day it was signed in, or the key's last four
+      // characters, when the plane answers them; else since when (and, when answered, until when: credentials R70) by `own.since`
+      const since = subscribed ? st.since : ref && ref.set_at;
+      const full = subscribed ? (typeof st.plan === "string" && st.plan && st.since ? W(S + "own.subscription", { plan: st.plan, date: D(st.since) }) : "")
+        : typeof (ref && ref.last4) === "string" && ref.last4 ? W(S + "own.apikey", { last4: ref.last4 }) : "";
+      const when = since ? `<p data-state="since">${full ? "" : W(S + "own.since", { date: D(since) })}${subscribed && st.valid_until ? (full ? "" : " ") + W(S + "own.until", { date: D(st.valid_until) }) : ""}</p>` : "";
+      out.push(`<div class="mk-msg" data-situation="own">${full ? `<p>${full}</p>` : ""}${when}${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
     } else if (situation === "group") {
-      // the member's allowance on the group's key, when a per-member limit is set
+      // the member's allowance on the group's key, when a per-member limit is set. Its sentence is drawn when every fill is read: the
+      // limit, and what they have used of it today (a limit's `used`, in its unit); at the limit, when it is reached, by its period
       let allowance = "";
       const mine = okv(data.mine);
       const payer = mine && (mine.payers || []).find((p) => p.whose === "group");
       const lim = payer && (payer.limits || []).find((l) => l.scope === "per_member");
-      if (lim) allowance = " " + W(lim.reached ? S + "group.allowance.reached" : S + "group.allowance", { amount: lim.unit === "usd" ? "$" + Number(lim.amount).toFixed(2) : Number(lim.amount).toLocaleString("en"), unit: T("screen.panel.unit." + lim.unit), period: T("screen.panel.period." + lim.period) });
+      const amountOf = (a, u) => (u === "usd" ? "$" + Number(a).toFixed(2) : Number(a).toLocaleString("en"));
+      if (lim && lim.reached) allowance = " " + W(S + "group.allowance.reached", { period: T("screen.panel.period." + lim.period) });
+      else if (lim && lim.period === "day" && Number.isFinite(Number(lim.used)) && lim.used !== null)
+        allowance = " " + W(S + "group.allowance", { limit: T("screen.panel.amount", { amount: amountOf(lim.amount, lim.unit), unit: T("screen.panel.unit." + lim.unit), period: T("screen.panel.period." + lim.period) }), used: amountOf(lim.used, lim.unit), when: T("ai.usage.today") });
       out.push(`<div class="mk-msg" data-situation="group"><p>${W(S + "group")}${allowance}</p><p><a href="#connect-own">${W(S + "group.more")}</a></p></div>`);
     } else {
       out.push(`<div class="mk-msg" data-situation="none"><p>${W(S + "none")}</p></div>`);
@@ -122,19 +136,36 @@ export const connect = {
             if (start || code) {
               const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
               h += `<h3>${W(S + "signin.heading")}</h3><ol class="mk-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}${cs.field("mc-code" + (ui.gen || 0), S + "signin.code", { type: "password", help: S + "signin.whole", autocomplete: "off" })}<p class="mk-note">${W(S + "signin.help")}</p>${code}`;
+              // the password asked again (DEC-249; the registry's `reauth`): the shell asks it when an act is answered REAUTH_DUE; here it can be
+              // given beforehand. The field is cleared by the shell after the act (interface-shell R21)
+              const re = cs.act("reauth");
+              if (re) h += `<details class="mk-details"><summary>${W(S + "reauth.summary")}</summary><p>${W("session.reauth")}</p>${cs.field("mc-reauth", "shell.password", { type: "password", autocomplete: "current-password" })}${re}</details>`;
+              // what the sign-in can answer instead of connecting, beside the code (R38, DEC-246): each refusal by its key, its reference
+              // as the shell draws one (`refusal.reference`, interface-shell R69). The runner's own word and a reference are shown as examples
+              h += `<details class="mk-details" data-list="ifnot"><summary>${W("connect.ifnot")}</summary><div>${["refusal.NO_SIGNIN_WAITING", "refusal.SIGNIN_REFUSED", "refusal.SIGNIN_UNAVAILABLE", "refusal.SIGNIN_ADDRESS_UNEXPECTED", "refusal.AGENT_WORKER_UNBOUND", "instance.part.signin.absent"].map((k) => `<p class="mk-msg" data-refusal="${k}">${W(k, k === "refusal.SIGNIN_REFUSED" ? { detail: "invalid_grant" } : {})}</p>`).join("")}<p class="mk-small">${W("screen.connect.refusal.reference", { example: T("refusal.reference", { ref: "7f3a91c2" }) })}</p></div></details>`;
             }
           } else h += `<p data-state="signin">${part === false ? W("instance.part.signin.absent") : W("instance.part.unknown", { part: T(S + "signin.part") })}</p>`;
         } else if (way === "apikey") {
           const set = cs.act("accountreferenceset");
           if (set) h += `<h3>${W(S + "apikey.heading")}</h3>${cs.field("mc-key" + (ui.gen || 0), S + "apikey.field", { type: "password", help: S + "apikey.help", autocomplete: "off" })}${set}`;
-        }
+        } else h += `<p class="mk-note" data-state="notnow">${W("connect.notnow")}</p>`;
         return h;
       });
       out.push(`<div id="connect-own">${cs.sec(S + "own.heading", c)}</div>`);
     }
 
     // on the group's key, its settings are the administrators'
-    if (situation === "group") out.push(cs.sec(S + "grouplimits.heading", `<p>${W(S + "grouplimits")}</p>`));
+    // (R37: drawn only when every fill is read: the per-member limit, what they have used of it today, and the group's suggestions switch)
+    if (situation === "group") {
+      const mine = okv(data.mine);
+      const payer = mine && (mine.payers || []).find((p) => p.whose === "group");
+      const lim = payer && (payer.limits || []).find((l) => l.scope === "per_member" && l.period === "day");
+      const sug = gk && typeof gk.suggestions === "boolean" ? gk.suggestions : null;
+      if (lim && lim.used !== null && lim.used !== undefined && Number.isFinite(Number(lim.used)) && sug !== null) {
+        const amountOf = (a, u) => (u === "usd" ? "$" + Number(a).toFixed(2) : Number(a).toLocaleString("en"));
+        out.push(cs.sec(S + "grouplimits.heading", `<p>${W(S + "grouplimits", { limit: T("screen.panel.amount", { amount: amountOf(lim.amount, lim.unit), unit: T("screen.panel.unit." + lim.unit), period: T("screen.panel.period." + lim.period) }), used: amountOf(lim.used, lim.unit), suggestions: T(sug ? "screen.panel.on" : "screen.panel.off") })}</p>`));
+      }
+    }
 
     // the member's own account: the panel (R9) and disconnecting
     if (situation === "own") {
@@ -169,14 +200,14 @@ export const connect = {
       // words: `refusal.<code>` where `words.json` holds it, else this module's meaning; `{detail}` filled where it has one
       refusals: {
         NO_SIGNIN_WAITING: (r, cs) => { cs.set("starting", false); return cs.w("refusal.NO_SIGNIN_WAITING", r); },
-        SIGNIN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_REFUSED", { detail: r.detail || "" }); },
+        SIGNIN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_REFUSED", { detail: r.detail || r.code || "SIGNIN_REFUSED" }); },
         SIGNIN_UNAVAILABLE: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_UNAVAILABLE", r); },
         SIGNIN_ADDRESS_UNEXPECTED: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_ADDRESS_UNEXPECTED", r); },
         AGENT_WORKER_UNBOUND: (r, cs) => { cs.set("starting", false); return cs.w("refusal.AGENT_WORKER_UNBOUND", r); },
         DISCLOSURE_DUE: (r, cs) => { cs.set("starting", false); return cs.w("refusal.DISCLOSURE_DUE", r); },
         AI_KEPT_AWAY: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.AI_KEPT_AWAY", r); },
         RUNNER_NOT_CONFIGURED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_NOT_CONFIGURED", r); },
-        RUNNER_NOT_STARTED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_NOT_STARTED", { detail: r.detail || "" }); },
+        RUNNER_NOT_STARTED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_NOT_STARTED", { detail: r.detail || r.code || "RUNNER_NOT_STARTED" }); },
         RUNNER_SILENT: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_SILENT", r); },
         AGENT_WORKER_SILENT: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.AGENT_WORKER_SILENT", r); },
         ATTEMPT_SUPERSEDED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.ATTEMPT_SUPERSEDED", r); },
@@ -190,6 +221,9 @@ export const connect = {
         SIGNIN_TOKEN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNIN_TOKEN_REFUSED", r); },
         SIGNOUT_FAILED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNOUT_FAILED", r); },
       } },
+    // the password given beforehand (DEC-249): checked, nothing else changes; a field left empty sends nothing
+    { op: "reauth", rereads: [],
+      send(view, el, cs) { const password = String(cs.value("mc-reauth") || ""); return password ? { body: { password } } : { refuse: "session.reauth.head" }; } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
       send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
       done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },

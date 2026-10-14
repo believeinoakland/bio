@@ -141,7 +141,7 @@ export function connectTable(me, situation = "group", over = {}) {
     groupkeystate: env({ ok: true, on: situation === "group" || ownKey }),
     groupkeynotice: env({ ok: true, due: true, text: "notice" }),
     disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: true, shown_at: "2026-10-05T00:00:00Z" }),
-    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: sub ? "2026-10-04T00:00:00Z" : null, held: sub, valid_until: sub ? "2026-11-04T00:00:00Z" : undefined, uses: null } }),
+    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: ownKey ? "2026-10-06T09:00:00Z" : null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: sub ? "2026-10-04T00:00:00Z" : null, held: sub, valid_until: sub ? "2026-11-04T00:00:00Z" : undefined, uses: null } }),
     subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: sub, member: "member:" + me.member }
       : b.step === "start" ? { ok: true, address: "https://claude.ai/oauth/authorize?code=true&state=s" }
       : { ok: true, connected: true, member: "member:" + me.member },
@@ -161,6 +161,7 @@ export function connectTable(me, situation = "group", over = {}) {
     subscriptiondisconnect: () => env({ ok: true, disconnected: true }),
     accountusesset: (q, b) => env({ ok: true, owner: b.owner, switch: b.switch, on: b.on }),
     ailimitset: (q, b) => env({ ok: true, ...b, change: b.amount === null ? "removed" : "set", set_at: "2026-10-12T00:00:00Z" }),
+    reauth: () => env({ ok: true }),
     ...over,
   };
 }
@@ -231,6 +232,9 @@ export function recoveryTable(over = {}) {
   return {
     recoverycodesstate: env({ ok: true, held: true, remaining: 7, issuedAt: "2026-10-02T00:00:00Z" }),
     adminrecoverystep: env({ ok: true, administrators: 1, codes_held: true, remaining: 7, met: false }),
+    // the one administrator is named (screens-settings R35): the founder alone, claimed
+    memberlist: env({ members: [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }] }),
+    bootstrap: { ok: true, claimed: true },
     recoverycodesissue: () => env({ ok: true, codes: Array.from({ length: 10 }, (_, i) => "CODE-" + String(i).padStart(4, "0") + "-SENTINEL"), issuedAt: "2026-10-12T00:00:00Z" }),
     ...over,
   };

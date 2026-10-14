@@ -38,12 +38,15 @@ export const translations = {
     const out = [cs.title()];
 
     // the group's languages, each opening its words; the group's source English is not a language to translate into (R31)
+    // none beside English: the screen's one designed empty state, by key (R37), never a bare screen
+    let some = false;
     const langs = cs.state(data.languages, (v) => {
       const L = Array.isArray(v.languages) ? v.languages.filter((t) => String(t).split("-")[0].toLowerCase() !== "en") : [];
-      return L.length ? `<ul class="mk-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : "";
+      some = L.length > 0;
+      return L.length ? `<ul class="mk-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : `<p data-state="nolanguages">${W(S + "languages.none")}</p>`;
     });
     if (langs) out.push(cs.sec(S + "languages.heading", langs));
-    if (!lang) { if (langs) out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }
+    if (!lang) { if (some) out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }
 
     // a member who is not granted reads the refusal's own words alone
     if (data.words && data.words.state === "failed") { out.push(cs.state(data.words, () => "")); return out.join(""); }

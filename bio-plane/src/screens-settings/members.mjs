@@ -49,7 +49,12 @@ export const members = {
     const byId = {};
     for (const m of roster) byId[m.member_id] = m;
     // a recorded `by` (a bare id, `member:<id>` or `admin`) drawn as the member's handle where the roster names it
-    const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? T(S + "founder") : byId[id] && byId[id].handle ? byId[id].handle : id; };
+    // the founder is named by her handle, else by `member.founder.unnamed`, never by the id `admin` (R35; membership R144): her own session
+    // answers her handle in `whoami`; a roster that answers her row (project-roster R29) carries it too
+    const founderRow = roster.find((m) => m.member_id === "admin" || m.founder === true) || null;
+    const founderHandle = (founderRow && founderRow.handle) || (me.member === "admin" && me.handle ? me.handle : null);
+    const founderName = () => founderHandle || T("member.founder.unnamed");
+    const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? founderName() : byId[id] && byId[id].handle ? byId[id].handle : id; };
     const vocabulary = Array.isArray(me.vocabulary) && me.vocabulary.length ? me.vocabulary : ["contribute", "publish", "create_projects"];
     const capName = (c) => vocabulary.indexOf(c) >= 0 || c === "administer" ? T(S + "cap." + c) : c;
     const out = [cs.title()];
@@ -58,16 +63,25 @@ export const members = {
 
     // the roster (R1): handle, cover, role, capabilities, status; no "formerly" (DEC-197)
     out.push(cs.state(data.roster, (v) => {
-      const list = v.members || [];
-      const active = list.filter((m) => m.status === "active");
+      // the founder is no roster row (membership R64, R86): her row is made here, whether or not the roster holds one (R35)
+      const list0 = (v.members || []).filter((m) => m.member_id !== "admin" && m.founder !== true);
+      const active = list0.filter((m) => m.status === "active");
       const rec = okv(data.recovery);
-      // administrators as membership R64 and R86 define them: the founder once claimed, then each active member with role admin; never roster rows alone (R29)
       const boot = okv(data.boot);
-      const counted = boot && typeof boot.claimed === "boolean" ? active.filter((m) => m.role === "admin" && m.member_id !== "admin").length + (boot.claimed ? 1 : 0)
-        : rec && Number.isInteger(rec.administrators) ? rec.administrators : null;
-      let h = counted === null ? cs.state({ state: "failed" }, () => "") : `<p>${W(S + "count", { members: active.length, administrators: counted })}</p>`;
-      if (admin && rec && rec.met === false)
-        h += `<div class="mk-msg" data-note="recovery"><p>${W(rec.administrators === 1 ? S + "recovery.one" : S + "recovery.many", { administrators: rec.administrators })} ${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
+      const rosterAdmins = active.filter((m) => m.role === "admin").length;
+      // whether the founder holds the instance: claimed, else a roster that answers her row, else the one-administrator step's count
+      const founderIs = boot && typeof boot.claimed === "boolean" ? boot.claimed || !!founderRow : founderRow ? true : rec && Number.isInteger(rec.administrators) ? rec.administrators > rosterAdmins : null;
+      const founderItem = { member_id: "admin", handle: founderHandle, role: "admin", status: "active", capabilities: [], expertise: [], founder: true };
+      const list = founderIs ? [founderItem, ...list0] : list0;
+      // "Active members" counts the founder among them, so it is never fewer than the administrators it counts (R35)
+      const counted = founderIs === null ? null : rosterAdmins + (founderIs ? 1 : 0);
+      let h = counted === null ? cs.state({ state: "failed" }, () => "") : `<p>${W(S + "count", { members: active.length + (founderIs ? 1 : 0), administrators: counted })}</p>`;
+      if (admin && rec && rec.met === false) {
+        // with one administrator, the group depends on that person: named by handle, the founder as she is named (R35)
+        const sole = founderIs && rosterAdmins === 0 ? founderName() : !founderIs && rosterAdmins === 1 ? active.find((m) => m.role === "admin").handle || "" : "";
+        const lead = rec.administrators === 1 ? (sole ? W(S + "recovery.one", { name: sole }) : "") : W(S + "recovery.many", { administrators: rec.administrators });
+        h += `<div class="mk-msg" data-note="recovery"><p>${lead}${lead ? " " : ""}${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
+      }
       const cols = [S + "col.handle", ...(admin ? [S + "col.cover"] : []), S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
       const expOf = (m) => {
         const ex = okv(data.expertise);
@@ -75,9 +89,10 @@ export const members = {
       };
       return h + cs.rows({
         // the member's handle is their reference (R12); one not joined yet has none
-        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => (m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle"))),
+        // the founder's row is drawn by her handle, else by `member.founder.unnamed` with its explanation (R35), never by her id
+        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => (m.founder ? E(founderName()) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle"))),
         cells: (m) => [
-          m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")),
+          m.founder ? E(founderName()) + (founderHandle ? "" : `<span class="mk-small">${W("member.founder.unnamed.help")}</span>`) : m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")),
           ...(admin ? [m.cover !== undefined ? E(m.cover) : ""] : []),
           W(m.role === "admin" ? S + "role.admin" : S + "role.member"),
           E((m.capabilities || []).map(capName).join(", ")),
@@ -86,7 +101,7 @@ export const members = {
         ],
         // each row's acts, in its panel (R2; interface-shell R19)
         acts: (m) => {
-          const label = m.handle || T(S + "nohandle");
+          const label = m.founder ? founderName() : m.handle || T(S + "nohandle");
           const id = m.member_id;
           const p = [];
           if (m.role !== "admin" && m.status === "active") {
@@ -99,14 +114,15 @@ export const members = {
             if (c) p.push(`<p>${W(S + "status.to." + next, { handle: label })}</p>${c}`);
           }
           if (m.role === "admin" && m.status === "proposed") { const c = cs.act("adminendorse", { data: { member: id } }); if (c) p.push(`<p>${W(S + "endorse.what", { handle: label })}</p>${c}`); }
-          if (m.role === "admin" && m.status === "active" && id !== me.member) {
+          // the founder cannot be removed (membership R64): no act is drawn on her row
+          if (m.role === "admin" && m.status === "active" && id !== me.member && !m.founder) {
             const c = cs.act("adminremove", { data: { member: id } });
             if (c) p.push(`${cs.field("mr-" + id, S + "remove.reason", { area: true, rec: true, max: 2000 })}${c}`);
           }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
           // a reset link for a member who has joined (credentials R69), shown once; an administrator's act, which the
           // owner refuses anyone else (drawn only to a session that administers, interface-shell R12)
-          if (admin && m.handle && m.status === "active" && id !== me.member) {
+          if (admin && m.handle && m.status === "active" && id !== me.member && !m.founder) {
             // its label is held under the owed act's key in `words.json` (DEC-201 (2))
             const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
             if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="mk-msg" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);

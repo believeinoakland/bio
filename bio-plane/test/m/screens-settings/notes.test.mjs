@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
 import { MEMBER, READER, NOTES, notesTable, env } from "./fixtures.mjs";
+import { WORD_ROWS, hasWord } from "../../../src/setup-words/index.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 
@@ -11,9 +12,9 @@ test("R6 reads the member's own notes; states who can see them (protected words)
   const no = a.p.requests.map((r) => r.op);
   assert.deepEqual(no.slice(no.indexOf("notes"), no.indexOf("notes") + 2), ["notes", "courtnotice"], "the screen's own reads, after the frame's");
   has(a, "screen.notes.private");
-  assert.equal(said("screen.notes.private"), "Only you can see these in your group.");
+  // the words that say who can see the notes are protected words of the list (setup-words R1)
   for (const r of ["screen.notes.private", "screen.notes.protects", "screen.notes.court", "screen.notes.draft.label"])
-    assert.equal(a.s.words.find((w) => Array.isArray(w) && w[0] === r)[2], true, `${r} is protected`);
+    assert.equal(WORD_ROWS.find((x) => x[0] === r)[4], true, `${r} is protected`);
   for (const n of NOTES) {
     assert.ok(textOf(rowOf(a.tree, String(n.note))).includes(n.text));
     const panel = panelOf(a.tree, String(n.note));
@@ -97,7 +98,7 @@ test("R11 a writinghelp draft whose answer carries untested is drawn with ai.lab
 });
 
 test("R7 the court sentence, in membership R108's words, once: the first time this member keeps a note while the group tells members", async () => {
-  assert.equal(said("screen.notes.court"), "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.");
+  assert.ok(hasWord("screen.notes.court"));
   let kept = [];
   const a = await open("notes", { me: MEMBER, table: notesTable(MEMBER, {
     notes: () => env({ ok: true, notes: kept, limit: 200, truncated: false, next: null }),

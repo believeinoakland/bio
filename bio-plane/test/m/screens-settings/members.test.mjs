@@ -32,7 +32,7 @@ test("R1 the roster: each member's handle, cover (to an administrator), role, ca
     for (const c of m.capabilities) assert.ok(t.includes(said("screen.members.cap." + c)));
     assert.ok(t.includes(said("screen.members.status." + m.status)));
   }
-  has(a, "screen.members.count", { members: 4, administrators: 3 });
+  has(a, "screen.members.count", { members: 5, administrators: 3 });
   assert.ok(!/formerly/i.test(a.html), "no formerly");
   assert.ok(textOf(rowOf(a.tree, "ana")).includes(said("screen.members.expertise.declared", { label: "CPA" })));
   // a member who does not administer: no cover column, no cover
@@ -41,8 +41,10 @@ test("R1 the roster: each member's handle, cover (to an administrator), role, ca
 });
 
 test("R1 the one-administrator note while the step is not met, as setup-page R16 states it; nothing once met", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
-  has(a, "screen.members.recovery.one");
+  // the founder alone administers (R35): the sentence names her, by member.founder.unnamed while she has no handle
+  const sole = [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }];
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: sole }) }) });
+  has(a, "screen.members.recovery.one", { name: said("member.founder.unnamed") });
   has(a, "screen.members.recovery.nocodes", { remaining: 0 });
   assert.ok(all(a.tree, (e) => e.tag === "a" && e.attrs.href === "#members-invite").length === 1, "the act that meets it: adding an administrator");
   const note = all(a.tree, (e) => e.attrs["data-note"] === "recovery")[0];
@@ -112,7 +114,6 @@ test("R2 every registry act is drawn for an administrator where it applies, each
 test("R2 memberadd: the short id, the cover and the capabilities ticked; the invitation answered shown once, with the sentence that no email is sent", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   has(a, "screen.members.invite.noemail");
-  assert.ok(said("screen.members.invite.noemail").startsWith("Your group's Civicsmith sends no email"));
   const r = await a.press("memberadd", { values: { "mi-id": "mai-k2", "mi-cover": "Mai's cousin", "mi-cap-contribute": true, "mi-cap-publish": true } });
   assert.deepEqual([r.sent[0].op, r.sent[0].query, r.sent[0].body, r.sent[0].method], ["memberadd", {}, { memberId: "mai-k2", cover: "Mai's cousin", capabilities: ["contribute", "publish"] }, "POST"]);
   assert.equal(r.sent[0].headers.Authorization, "Bearer tok-1", "the session in the header only");
@@ -228,7 +229,7 @@ test("R23 a member's row offers Make a reset link (passwordresetlink), the link 
   assert.deepEqual(r.sent[0].body.member, "dev");
   const shown = all(a.tree, (e) => e.attrs["data-shown"] === "reset")[0];
   assert.ok(textOf(shown).includes("https://group.example/app/reset#reset=rl-SENTINELLINK"));
-  assert.ok(textOf(shown).includes(said("screen.members.reset.shown", { handle: "dev", expires: day("2026-10-19") })) && said("screen.members.reset.noemail").includes("Civicsmith sends no email"));
+  assert.ok(textOf(shown).includes(said("screen.members.reset.shown", { handle: "dev", expires: day("2026-10-19") })) && textOf(shown).includes(said("screen.members.reset.noemail")));
   assert.ok(![...a.b.store.values(), ...a.b.local.values()].some((v) => String(v).includes("SENTINELLINK")), "kept nowhere");
   // a member who does not administer is offered none
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
@@ -254,11 +255,11 @@ test("R29 Administrators counts the founder once claimed, with or without a rost
   const one = [{ member_id: "rosa", handle: "rosa", role: "admin", status: "active", capabilities: [], cover: "R", expertise: [], invitation: "spent" }];
   // a founder with no roster row and one roster administrator
   const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
-  has(a, "screen.members.count", { members: 1, administrators: 2 });
-  assert.ok(said("screen.members.count", { members: 1, administrators: 2 }).startsWith("Active members"), "it says it counts active members");
+  // (R35) the founder is among the active members: never fewer than the administrators the count names
+  has(a, "screen.members.count", { members: 2, administrators: 2 });
   // the same count to a member who does not administer (the founder is public as claimed)
   const m = await open("members", { me: MEMBER, table: membersTableMember({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
-  has(m, "screen.members.count", { members: 1, administrators: 2 });
+  has(m, "screen.members.count", { members: 2, administrators: 2 });
   // control: an unclaimed instance has no founder to count; a proposed or revoked administrator is not counted
   const u = await open("members", { me: ADMIN, table: membersTable({ bootstrap: { ok: true, claimed: false } }) });
   has(u, "screen.members.count", { members: 4, administrators: 2 });
@@ -271,4 +272,41 @@ test("R29 control: a member with no expertise shows no Expertise, and an empty c
   assert.equal(last("dev"), "", "dev declared nothing: the cell is empty");
   assert.ok(last("ana").includes("CPA"), "ana declared CPA");
   assert.ok(!textOf(rowOf(a.tree, "dev")).match(/undefined|null/));
+});
+
+/* R35 (T49; D26 M; membership R144, R64, R86; project-roster R29): the founder is counted among the active members, her row is drawn
+   whether or not the roster holds one, named by her handle or by member.founder.unnamed (explained by its help), never by `admin` */
+test("R35 the founder is among the active members and has a row: a founder with no roster row and one roster member read Active members 2, Administrators 1", async () => {
+  const one = [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }];
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true }, adminrecoverystep: env({ ok: true, administrators: 1, codes_held: true, remaining: 8, met: true }) }) });
+  has(a, "screen.members.count", { members: 2, administrators: 1 });
+  const row = rowOf(a.tree, "admin", said("member.founder.unnamed") + said("member.founder.unnamed.help"));
+  assert.ok(row, "her row is drawn");
+  assert.ok(textOf(row).includes(said("member.founder.unnamed")) && textOf(row).includes(said("member.founder.unnamed.help")), "named, and explained");
+  assert.ok(textOf(row).includes(said("screen.members.role.admin")) && textOf(row).includes(said("screen.members.status.active")));
+  assert.ok(!/\badmin\b/.test(a.text.replace(said("screen.members.role.admin"), "")), "never named by admin");
+  // no act removes or resets the founder
+  assert.deepEqual(acts(panelOf(a.tree, "admin")).map((b) => b.attrs["data-act"]), [], "no act on her row");
+  // control: an unclaimed instance has no founder to count or to draw
+  const u = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: false }, adminrecoverystep: env({ ok: true, administrators: 0, codes_held: false, remaining: 0, met: false }) }) });
+  has(u, "screen.members.count", { members: 1, administrators: 0 });
+  assert.equal(rowOf(u.tree, "admin", said("member.founder.unnamed") + said("member.founder.unnamed.help")), null);
+});
+
+test("R35 control: with her handle held her row draws it, in her own session and wherever the roster answers it; the sole administrator is named by it", async () => {
+  const one = [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }];
+  const founder = { member: "admin", handle: "cleo", administer: true, capabilities: ["contribute"], vocabulary: ["contribute", "publish", "create_projects"], tokenClass: "session" };
+  const mine = await open("members", { me: founder, table: membersTable({ whoami: env(founder), memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
+  assert.ok(textOf(rowOf(mine.tree, "admin", "cleo")).includes("cleo"));
+  assert.ok(!mine.text.includes(said("member.founder.unnamed.help")), "no explanation once she has a handle");
+  has(mine, "screen.members.recovery.one", { name: "cleo" });
+  // a roster that answers her row (project-roster R29) names her to every reader
+  const row = { member_id: "admin", handle: "cleo", founder: true, role: "admin", status: "active", capabilities: [] };
+  const other = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [row, ...one] }), bootstrap: { ok: true, claimed: true } }) });
+  has(other, "screen.members.count", { members: 2, administrators: 1 });
+  assert.ok(textOf(rowOf(other.tree, "admin", "cleo")).includes("cleo"));
+  has(other, "screen.members.recovery.one", { name: "cleo" });
+  // the keep-away line and the key's line name her too, never admin
+  const kept = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [row, ...one] }), bootstrap: { ok: true, claimed: true }, groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "admin" }) }) });
+  has(kept, "screen.members.key.heldon", { by: "cleo", date: day("2026-10-06") });
 });
