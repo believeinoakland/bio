@@ -1,4 +1,4 @@
-/* answer-envelope R6, through control-plane's door (was control-plane R51; DEC-122 (3); N528; F17, K1881; K2037 (a)): every `text/html` response the plane serves — the signer page, the setup page,
+/* answer-envelope R6, through control-plane's door (was control-plane R51; DEC-122 (3); N528; F17, K1881; K2037 (a)): every `text/html` response the plane serves — the signer page, the interface page at `/` (R82; the setup page before T47),
    and any page a module's hook answers through the door — carries a content security policy under which a browser loads
    no script, style, font, image or connection from another origin and sends nothing elsewhere. The policy is parsed and
    judged directive by directive, never matched as text. */
@@ -29,7 +29,7 @@ function assertOwnOrigin(header, where) {
   return scripts[0].slice(7, -1);
 }
 
-test("R51 (answer-envelope R6): the signer page and the setup page (bio's and scratch's) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
+test("R51 (answer-envelope R6): the signer page and the page at `/` (bio's and scratch's; the interface page since T47, R82) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
   const { env } = world();
   for (const [path, params] of [["/sign", {}], ["/sign/", {}], ["/", {}], ["/", { store: "scratch" }]]) {
     const r = await call(env, { path, params });
@@ -37,7 +37,7 @@ test("R51 (answer-envelope R6): the signer page and the setup page (bio's and sc
     assert.match(r.headers.get("content-type"), /^text\/html/, path);
     assertOwnOrigin(r.headers.get("content-security-policy"), `${path} ${JSON.stringify(params)}`);
   }
-  /* the pages' bytes are unchanged by the policy (the setup page's no-store kept) */
+  /* the pages' bytes are unchanged by the policy (the page's no-store kept) */
   const setup = await call(env, { path: "/" });
   assert.equal(setup.headers.get("cache-control"), "no-store");
   /* negative controls: the judge refuses another origin, a wildcard and a missing directive's fallback to one */

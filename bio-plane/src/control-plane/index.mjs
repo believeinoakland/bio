@@ -44,7 +44,7 @@ import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
-import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
+import { instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
 import { publicReadDoorRead } from "../public-read/door.mjs";
@@ -572,7 +572,7 @@ export function makeFetch(hooks = {}) {
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
 
-    /* The API lives under /api so the instance can serve its own setup UI at
+    /* The API lives under /api so the instance can serve its own interface at
        the root. A bare GET of / with no op parameter is a person in a browser
        and gets the page. The legacy root query API (/?op=...) still answers,
        for the one deployment that predates this, and should be dropped once
@@ -593,38 +593,18 @@ export function makeFetch(hooks = {}) {
                      "access-control-allow-origin": "*" } });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
-    /* REC-163 / IC-174: the page names whose record this is — the group ITS record records, read when the page is
-       SERVED, through the one public read (`publicInstanceGroup`). `setupPage` puts the slug in the served bytes,
-       or says in words that none is recorded, or — when the record did not answer — says THAT, never "none" and
-       never a name. `no-store`, because the bytes now carry a fact the record can change: a page kept from before a
-       seed would go on saying none is recorded. D-596: the read is op=groupidentity's PUBLIC projection, so the line
-       carries the display name beside the slug and a verified domain with its date (`setup.mjs` `groupLine`).
-
-       D-475 — AND THE NAMESPACE IS THE CALLER'S TO NAME HERE, because NOTHING BELOW CAN REACH THIS ROUTE. This is an
-       HTML route: it answers before `path` and `op` exist, so D-456's `namespaceGate` and D-461's
-       `pinnedNamespaceGate`, both of which run at the op front door a few lines down, never see it. MEASURED: the
-       read was written `publicInstanceGroup(env, "bio")`, so `/?store=scratch` served `bio`'s slug as this copy's
-       own — a live verification whose whole no-write guarantee is naming its namespace (D-325) read
-       production while believing it was in scratch — and `/?store=nonsense` did the same, which is D-456's own
-       defect surviving at the one route D-456 did not reach. Found by D-461's worker.
-
-       THE RULE IS op=instancegroup's, NOT A NEW ONE, and that is the decision rather than a convenience: this page
-       and that op are ONE READER (`publicInstanceGroup` — its own header says so) shown to a stranger, so a
-       namespace that does not exist is refused BY NAME through the very gate every other caller meets,
-       `store=scratch` reads scratch, and everything else reads `bio`. The page is deliberately NOT added to
-       D-461's pinned set: pinning one of two surfaces over one reader would make `store=scratch` mean two things on
-       the same copy — refused on the page, honoured on the op — and the op is exempt because it reads `store=`
-       itself, which is now exactly what the page does. `/version` and `/sign` are left alone on purpose: they
-       address no namespace, and a gate on a route that reads no record would be a fence tighter than its rule. */
+    /* R82 (T47; N1002; amends R1, R81): `GET /` with no `op` is a person in a browser, and gets the interface's page
+       (`interfacePage`; the page draws `front` or Home, interface-shell R32), under R75's gates and policy, `no-store`.
+       No route serves the setup page. The namespace and address gates run first, as on `/app` (admission R1, R20; D-475:
+       `/?store=nonsense` is refused by name, and nothing below reaches this route). `/version` and `/sign` address no
+       namespace and are left ungated. */
     if (req.method === "GET" && !url.pathname.startsWith("/api")
         && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
       const pageNamespace = namespaceGate(url);   /* admission R1 */
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
-      const pageAddress = addressGate(url);   /* R59: admission R20, before the page's read */
+      const pageAddress = addressGate(url);   /* R59: admission R20, before the page is built */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
-        { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+      return appPage(req, { interfacePage, screens: APP_SCREENS });
     }
 
     /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
@@ -777,8 +757,8 @@ export function makeFetch(hooks = {}) {
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
-        /* DEC-88 (case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
-           the query as case-authoring's `statementack` arm reads them: the caller's `reason=`, else a POST body's string
+        /* DEC-88 (case-inputs R1, was case-authoring R19, C-82.8): an acknowledgement carries the acknowledger's own words, on either door, in
+           the query as case-inputs' `statementack` arm reads them: the caller's `reason=`, else a POST body's string
            `reason`, verbatim. Nothing else of the caller's crosses; an absent reason stays absent, refused there. */
         if (op === "statementack") {
           let reason = url.searchParams.get("reason");
@@ -803,10 +783,14 @@ export function makeFetch(hooks = {}) {
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
          the caller names (`invStub` above). Moved from legacy-index at T19 (its door share). */
+      /* R83 (T47; K3084; credentials R65, R67): `login` takes the body's `handle`, `password` and `device` alone and
+         sends no `role` (the founder signs in by the handle `admin`, credentials R67); nothing else of the body crosses,
+         and the password is relayed once and never logged, kept or echoed here (R30). */
       if (op === "login") {
-        const body = await req.json().catch(() => ({}));
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
         return relayAnswer(stub.fetch(new Request(`http://do/login${doorStamps ? `?${doorStamps}` : ""}`, {
-          method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })), "login");
+          method: "POST", body: JSON.stringify({ handle: o.handle, password: o.password, device: o.device }) })), "login");
       }
       /* R58 (credentials R47; K1888): `recover`, credential-free as `login` is, pinned to `bio`: its `role`, `code` and
          `password` from the body alone, relayed once and never logged, kept or echoed here (R30); `source` and `country`
@@ -814,8 +798,20 @@ export function makeFetch(hooks = {}) {
       if (op === "recover") {
         const b = await req.json().catch(() => null);
         const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        /* (T47; credentials R67, amending its R47) and its `handle`, from the body alone, so a member recovers by handle */
         return relayAnswer(stub.fetch(new Request(`http://do/recover${doorStamps ? `?${doorStamps}` : ""}`, {
-          method: "POST", body: JSON.stringify({ role: o.role, code: o.code, password: o.password }) })), "recover");
+          method: "POST", body: JSON.stringify({ role: o.role, handle: o.handle, code: o.code, password: o.password }) })),
+          "recover");
+      }
+      /* R83 (T47; K3084; credentials R69, R71 (6)): the administrator's reset link looked at and used, credential-free as
+         `recover` is, pinned to `bio`: the `link` and the new `password` from the body alone, never the address, relayed
+         once and never logged, kept or echoed here (R30); `source` and `country` the door's. */
+      if (op === "passwordresetlook" || op === "passwordreset") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        const pass = op === "passwordreset" ? { link: o.link, password: o.password } : { link: o.link };
+        return relayAnswer(stub.fetch(new Request(`http://do/${op}${doorStamps ? `?${doorStamps}` : ""}`, {
+          method: "POST", body: JSON.stringify(pass) })), op);
       }
       if (op === "invitelook" || op === "enroll") {
         const body = await req.json().catch(() => ({}));
@@ -1082,7 +1078,10 @@ export function makeFetch(hooks = {}) {
        (`#positionalMember`). `affordances` and `queue` build their own inner requests
        in their owners' handlers, reached through plane's hooks (`gatedOp`), and stamp it there. A new reader of `identity` joins this list. */
     /* D-681 (T5-11): `leadlist` joins, `leadread`'s reach asked of the same positional stamp. */
-    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
+    /* R88 (T47; K3099; strength R40): `projectbarset` joins, so the project's bar is asked of its author's position by
+       the identity stamp (strength's `projectAuthority`), never the author's bare id; it takes the viewer beside it (the
+       project's sight, absent and unseen one answer). */
+    const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier", "projectbarset"];
     const REC30_VIEWER_READS = ["dangling", "tasks", "reading", "readingref", "readingname",
                                 "textprovenance", "textattest",
                                 /* CPDF-13: the drift obligation's rows NAME the bundle each
@@ -1423,7 +1422,7 @@ export function makeFetch(hooks = {}) {
            tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
            call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
-        /* R45 (K1168; op-declarations R10): case-authoring's draft of what changed and its read (R39) and network-notices'
+        /* R45 (K1168; op-declarations R10): case-inputs' draft of what changed and its read (its R6, was case-authoring R39) and network-notices'
            act and reads (R1, R4, R22, R23) each answer by the caller's sight, and fail closed without the stamp
            (escalation's `escalationreasondraft` and link-sweep's `sweeps`, its R9 (N506), take it as `ACTION_LAYER_READS`). */
         || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op)
@@ -1438,7 +1437,7 @@ export function makeFetch(hooks = {}) {
         /* R50 (op-declarations R15; wizard-scripts R20): every wizard act but the editor grant's and every wizard read
            answers a script the viewer may not see as absent, so each takes the stamp. */
         || WIZARD_VIEWER_OPS.includes(op)
-        || REC30_VIEWER_READS.includes(op)) {
+        || REC30_VIEWER_READS.includes(op) || IDENTITY_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
          An `ai` credential does NOT stamp `class:ai`. It stamps the PRINCIPAL
@@ -1891,6 +1890,11 @@ export function makeFetch(hooks = {}) {
        and the store refuses it BY SHAPE (CONNECTION_ASSERT_NOT_A_MEMBER, FILE_MEMBERSHIP_NOT_A_MEMBER). */
     if (op === "connectionassert" || op === "filemembershipjudge")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* R79, R88 (T47; op-declarations R55; strength R40): a project's own bar is declared as the group's is
+       (`DECLARATION_ACTIONS`' `author`, by its expression), so a caller's `author` names nobody and a machine arrives
+       honestly named, refused by strength by name (C-32.9). */
+    if (op === "projectbarset")
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* N345 (case-authoring R32): the ceremony's read asks the owner test op=publish asks, of the same `author`, so it
        takes publish's stamp by publish's expression (`STATE_ACTIONS`' author above), in a statement of its own so the
        span pinned above is not lengthened; a caller's `author` is overwritten. */
@@ -2065,23 +2069,22 @@ export function makeFetch(hooks = {}) {
       return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
     }
-    /* R77 (T46; N919; Bob's K2892, K2947, K2952, K2976; ai-runs R18): THE MEMBER-RUN DOOR. A member's own run, opened on
-       her own sign-in, is dispatched at her act by `ai-runs.dispatchMemberRun`, in the store object addressed (plane's
-       `dispatchMemberRun` on the object, as its `draft` and `ask` are), with `by` and `viewer` the member (a session's as
-       R17 stamps it; an `ai` credential's its principal, `member:<id>`, never `class:ai/<tokenId>`, since ai-runs compares
-       `by` with the run's principal), `run` from the body alone, and `credential` the `ai` credential the caller presented
-       (admission R20), handed in process: it crosses no query, body or fetch and is never logged, kept or answered (R30).
-       Any other caller is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and
-       refusals are ai-runs', as given. */
+    /* R77, R80 (T46, T47; N919, N955; Bob's K2892, K2947, K2952; K2976, K2999, K3027; ai-runs R18, credentials R63): THE
+       MEMBER-RUN DOOR, WITH NO CREDENTIAL FROM THE PAGE. A member's own run, opened on her own sign-in, is dispatched at her
+       act by `ai-runs.dispatchMemberRun`, in the store object addressed (plane's `dispatchMemberRun` RPC on the object, as
+       its `draft` and `ask` are), with `by` and `viewer` the member her session names (R17), `run` from the body alone. No
+       credential is read for it or passed on: a credential presented in a header, body or query reaches nothing here, and
+       the segment's credential is minted in the plane (credentials R63, at ai-runs R18's call). Any caller not arriving by
+       a session is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and refusals are
+       ai-runs', as given. */
     if (op === "airundispatch") {
       if (typeof stub.dispatchMemberRun !== "function") return unboundRun("the run was not started");
-      const who = viaSession ? sessViewer : cls === "ai" && !aiCred?.grant ? aiCred.principal : actor;
+      const who = viaSession ? sessViewer : actor;
       const run = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.run === "string"
         ? reqBody.run : null;
-      const presented = cls === "ai" && !aiCred?.grant && typeof credential.token === "string" ? credential.token : null;
       let out;
       try {
-        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, credential: presented, at: new Date().toISOString() });
+        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, at: new Date().toISOString() });
       } catch { return storeSilent(op); }
       if (!out || typeof out !== "object" || Array.isArray(out)) return storeSilent(op);
       /* a refusal by its code is a refusal (the envelope decorates it, admission's tally counts it); a withholding, an
@@ -2292,10 +2295,10 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* R45 (case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
+    /* R45 (case-inputs R6, was case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
        labelled machine work), so the stamp is the label, by `actionlawspropose`'s expression (a session its member, a
        machine `class:<cls>`, an `ai` credential `class:ai/<tokenId>`); set as `proposedBy`, the stamp op-declarations
-       names, and as `author`, the key case-authoring's map reads it from. A caller's copy of either is overwritten. */
+       names, and as `author`, the key case-inputs' map reads it from. A caller's copy of either is overwritten. */
     if (WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op)) {
       const proposer = viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`

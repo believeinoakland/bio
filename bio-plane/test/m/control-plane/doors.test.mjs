@@ -35,25 +35,30 @@ test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version 
   assert.equal(env.calls.length, 0);
 });
 
-test("R1: GET / with no op answers instance-setup's page, built from its public read of the namespace addressed (store=scratch reads scratch, anything else bio, R6's gate first), served cache-control: no-store", async () => {
-  for (const [params, ns] of [[{}, "bio"], [{ store: "bio" }, "bio"], [{ store: "scratch" }, "scratch"]]) {
+test("R1, R82 (T47; N1002): GET / with no op answers interface-shell's page (`interfacePage` over the screen modules' screens, the page `/app` answers), text/html, cache-control: no-store, under the page policy, whatever namespace it names (R1's gate first) and with no store asked; no route serves the setup page (control: none of setupPage's text)", async () => {
+  const strip = (html) => html.replace(/ nonce="[^"]*"/g, "");
+  const { env: appEnv } = world();
+  const app = await call(appEnv, { path: "/app" });
+  assert.equal(app.status, 200);
+  /* the setup page's own title (setup.mjs, deleted after this job by setup-page's), as it was served at `/` before T47 */
+  const marker = "<title>Your accountability record</title>";
+  for (const params of [{}, { store: "bio" }, { store: "scratch" }]) {
     const { env } = world({ group: { ok: true, group: "grp-rivertown" } });
     const log = [];
     const r = await call(env, { path: "/", params, hooks: defaultHooks(log) });
     assert.equal(r.status, 200);
     assert.match(r.headers.get("content-type"), /^text\/html/);
     assert.equal(r.headers.get("cache-control"), "no-store");
+    assert.match(r.headers.get("content-security-policy") || "", /script-src 'nonce-/);
     assert.match(r.text, /^<!doctype html>/i);
-    assert.ok(r.text.includes("grp-rivertown"), "the page names the group its record records");
-    assert.deepEqual(log, [{ kind: "group", ns, projection: "groupidentitypublic" }]);
-    assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[ns, "groupidentitypublic"]]);
+    assert.equal(strip(r.text), strip(app.text), "the interface's page, as /app answers it");
+    /* control: the setup page is served by no route, and nothing of the record is read for the page */
+    assert.equal(r.text.includes(marker), false);
+    assert.equal(r.text.includes("grp-rivertown"), false);
+    assert.deepEqual(log, []);
+    assert.equal(env.calls.length, 0);
   }
-  /* a record that did not answer is stated as such, never as a name */
-  const silent = world({ answer: (c) => (c.route === "groupidentitypublic" ? new Response("x") : null), group: { ok: true, group: "grp-rivertown" } });
-  const s = await call(silent.env, { path: "/" });
-  assert.equal(s.status, 200);
-  assert.equal(s.text.includes("grp-rivertown"), false);
-  /* R3 applies first: nothing is read */
+  /* R1's gate applies first: nothing is read */
   const { env } = world();
   refused(await call(env, { path: "/", params: { store: "elsewhere" } }), 400, "NAMESPACE_UNKNOWN", "C-78.1");
   assert.equal(env.calls.length, 0);

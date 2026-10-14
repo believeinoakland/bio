@@ -268,9 +268,9 @@ test("R25: an error thrown in the Worker door is answered PLANE_INTERNAL_ERROR (
       hooks: { publicOp: async () => M.json({}), gatedOp: thrower } })],
     ["public hook", (w) => call(w.env, { op: "knock", method: "POST", body: {},
       hooks: { publicOp: thrower, gatedOp: async () => undefined } })],
-    ["store stub", (w) => { w.env.STORE.get = thrower; return call(w.env, { op: "index", token: w.env.ADMIN_TOKEN }); }],
-    ["page read", (w) => call(w.env, { path: "/", method: "GET",
-      hooks: { publicInstanceGroup: thrower, publicOp: async () => M.json({}), gatedOp: async () => undefined } })]]) {
+    ["store stub", (w) => { w.env.STORE.get = thrower; return call(w.env, { op: "index", token: w.env.ADMIN_TOKEN }); }]]) {
+    /* (T47; R82) `/` reads nothing of the record since it answers the interface's page, so its old "page read" row has
+       no read left to throw */
     const w = world();
     const { value: r, logged } = await quietly(() => drive(w));
     refused(r, 500, "PLANE_INTERNAL_ERROR", "C-69.3");
