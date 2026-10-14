@@ -22,4 +22,4 @@
 - `checks/format.mjs`: 0 failures; `architecture.mjs … case-grammar`: 0 failures; `coverage.mjs … case-grammar`: 32 of 32 live ids named, 0 failures; `ownership.mjs … tranche/T48`: 0 failures.
 - `checks/run.mjs`: format 0, architecture 0 failures, channels 0; coverage 32 failures, none case-grammar's (other modules' ids named by no test, rule 5.1).
 
-Size (session_01YKW8GwS3kRscPxRh48DN1m): test runs 6, module lines 2807
+Size (session_01YKW8GwS3kRscPxRh48DN1m): test runs 6, module lines 2801
