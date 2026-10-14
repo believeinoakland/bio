@@ -42,9 +42,8 @@ test("R3 tour walked on the page: no request but the shell's own bootstrap", asy
   await p.settle(80);
   for (let n = 2; n <= 6; n++) { await p.click(main(p).querySelector(`a[href="/app/tour/${n}"]`)); }
   assert.deepEqual(p.requests.map((r) => r.op).filter((op) => op !== "bootstrap"), []);
-  // nothing stored by the screen; the shell's own activity instant (interface-shell R33, `bio-session:active`), written
-  // on a click even with no session, is the shell's and reported to BOB (screens-entry J5), so left out here
-  assert.deepEqual([...p.local.keys(), ...p.store.keys()].filter((k) => k !== "bio-session:active"), []);
+  // nothing stored, by the screen or the shell (interface-shell R33 stores nothing without a session; K3156)
+  assert.deepEqual([...p.local.keys(), ...p.store.keys()], []);
 });
 
 test("R5 R8 the reset link: gone from the address before any request, only in passwordresetlook's body, never stored", async () => {

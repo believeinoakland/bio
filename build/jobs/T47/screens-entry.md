@@ -15,9 +15,9 @@
 
 **Found in other modules (REPORT J5):** interface-shell writes `bio-session:active` (R33's activity instant) on a click in the public frame with no session, so walking `tour` stores something (screens-entry R3's "nothing is stored"); my page test leaves that one shell key out and names it.
 
-**Tests and checks:** `node --test bio-plane/test/m/screens-entry/` on this branch (tranche/T47 merged, B6): 46 pass, 1 fail — `page.test.mjs` needs interface-shell's merge (the tranche's shell has no public frame). Over interface-shell's branch head overlaid in a scratch worktree (never committed): 52 pass, 0 fail. Checks, with this module's `paths`/`tests` set locally (not committed): `format` 0 failures; `architecture` (screens-entry) 0 failures; `coverage` 11 of 11, 0 failures; `ownership` 0 failures; `checks/run.mjs` architecture 0 failures (its coverage failures are other modules').
+**Tests and checks** (after B10, tranche/T47 with interface-shell merged, no overlay): `node --test bio-plane/test/m/screens-entry/` 52 pass, 0 fail; J5's storage exemption removed (B8: the tour stores nothing, shell included). Checks, with this module's `paths`/`tests` set locally (not committed): `format` 0 failures; `architecture` (screens-entry) 0 failures; `coverage` 11 of 11, 0 failures; `ownership` 0 failures; `checks/run.mjs` architecture 0 failures.
 
-Size (session_018kvztadrm22jvWsfWwMjCL): test runs 24, module lines 1,027
+Size (session_018kvztadrm22jvWsfWwMjCL): test runs 28, module lines 1,027
 
 ## J1 · QUESTION
 
