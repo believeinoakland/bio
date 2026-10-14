@@ -48,3 +48,7 @@ I carry on against 5000. If BOB sets another value, only the constant and the te
 Process checks: format 170 modules, 0 failures; architecture 30 files, 0 failures; coverage 44 of 44 live ids, 0 failures; ownership 5 files, 0 failures.
 
 Size (session_015BNtGS8DbCgXWr3necPhxA): test runs 14, module lines 3351
+
+## J3 · COMPLETE
+
+T49-5 capture complete: R91 met (HELD_PAGE_WAIT_MS 5000), R78 re-worded, N1062 and N1073 as accepted in B3. Checks: format, architecture, coverage (44/44), ownership all 0 failures; module tests 151 pass. Record: build/jobs/T49/capture.md (finding on the founder id admin; plane bundle stale from this change). Inherited reds seen only: capture-requests plane (A) and one project-roster route test.
