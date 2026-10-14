@@ -392,18 +392,19 @@ test("R24 (D2; run-rules R26): a run reads a held document a few pages at a time
   assert.equal(read({ run: "RUN-INV" }).ok, true, "a run in mode investigate reads too");
 });
 
-test("R24 (run-rules R26, credentials R57): a document under a 'no AI' material limit covering reading is refused whatever the bound, run-rules' checkPagesRead judging credentials' limits, its refusal relayed; a limit not covering reading, or on another project, refuses nothing", () => {
+test("R24 (run-rules R26; ai-accounts R21, R22): a document under a 'no AI' material limit covering reading — its project's (ai-accounts' projectsKeptAway) or the group's (its aiKeepAwayState) — is refused whatever the bound, run-rules' checkPagesRead judging the limits, its refusal relayed; a limit not covering reading, or on another project, refuses nothing; a limit that cannot be read refuses (fail closed)", () => {
   const { w, cap } = base({ pages: 20 });
   w.project(PROJ, ["alice"]);
   w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, 'olive', 'joined', 1, 't', 't')`, PROJ);
   w.membership.reindexProjectSight(PROJ);
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, PROJ, DOC); w.membership.reindexProjectSight(DOC);
   const read = () => w.p.readPages({ run: "RUN-E", bundleId: DOC, viewer: ALICE, caller: AK });
+  assert.equal(w.p.aiAccounts, w.aiAccounts, "the limits are ai-accounts', reached through its factory");
   assert.equal(read().ok, true, "no limit set");
-  const askOnly = w.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["ask"], reason: "draft material", by: "member:olive" });
+  const askOnly = w.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["ask"], reason: "draft material", by: "member:olive" });
   assert.equal(askOnly.ok, true, JSON.stringify(askOnly));
   assert.equal(read().ok, true, "a limit on asking only does not cover reading");
-  assert.equal(w.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "sealed records", by: "member:olive" }).ok, true);
+  assert.equal(w.aiAccounts.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["read"], reason: "sealed records", by: "member:olive" }).ok, true);
   const before = w.snapshot();
   const kept = read();
   refusedAs(kept, "AI_RUN_READ_NO_AI");
@@ -414,6 +415,47 @@ test("R24 (run-rules R26, credentials R57): a document under a 'no AI' material 
   w.st.sql.exec(`UPDATE bundles SET project=NULL WHERE bundle_id=?`, DOC); w.membership.reindexProjectSight(DOC);
   assert.equal(read().ok, true);
   void cap;
+});
+
+test("R24 (ai-accounts R21, R22): the group's 'no AI' limit covering reading refuses every document, in a project or not; one not covering reading refuses nothing; a limit ai-accounts cannot read, answered unknown or thrown, refuses the read with nothing spent (fail closed)", () => {
+  const { w } = base({ pages: 20 });
+  w.project(PROJ, ["alice"]);
+  const read = () => w.p.readPages({ run: "RUN-E", bundleId: DOC, viewer: ALICE, caller: AK });
+  assert.equal(read().ok, true, "no limit set");
+  /* An active administrator of the roster (membership R64), who alone sets the group's limit (ai-accounts R20). */
+  const ADMIN = "member:keeper";
+  w.st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('keeper', 'the keeper', 'admin', 'active', 't', 't')`);
+  const ask = w.aiAccounts.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "a quiet week", by: ADMIN });
+  assert.equal(ask.ok, true, JSON.stringify(ask));
+  assert.equal(read().ok, true, "a group limit on asking only does not cover reading");
+  assert.equal(w.aiAccounts.aiKeepAwaySet({ on: true, uses: ["read"], reason: "records under seal", by: ADMIN }).ok, true);
+  refusedAs(read(), "AI_RUN_READ_NO_AI");
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, PROJ, DOC); w.membership.reindexProjectSight(DOC);
+  refusedAs(read(), "AI_RUN_READ_NO_AI");
+  assert.equal(w.aiAccounts.aiKeepAwaySet({ on: false, reason: null, by: ADMIN }).ok, true);
+  assert.equal(read().ok, true, "the control: the group's limit off, the document in its project reads");
+  /* Unreadable limits: each fails closed, nothing read or spent. */
+  const before = w.snapshot();
+  const spent = () => w.calls.filter((c) => c.name === "consumeBound" && c.a.bound === "pages").length;
+  const n = spent();
+  const unreadable = [
+    ["group, unknown", "aiKeepAwayState", () => ({ on: null, uses: null })],
+    ["group, thrown", "aiKeepAwayState", () => { throw new Error("unreadable"); }],
+    ["project, unknown", "projectsKeptAway", () => null],
+    ["project, thrown", "projectsKeptAway", () => { throw new Error("unreadable"); }],
+  ];
+  for (const [why, name, fn] of unreadable) {
+    const real = w.aiAccounts[name];
+    w.aiAccounts[name] = fn;
+    try {
+      const r = read();
+      assert.equal(r.ok, false, why);
+      refusedAs(r, "AI_RUN_READ_NO_AI");
+    } finally { w.aiAccounts[name] = real; }
+  }
+  assert.deepEqual(w.snapshot(), before);
+  assert.equal(spent(), n, "nothing spent");
+  assert.equal(read().ok, true, "the control: readable again, it reads");
 });
 
 test("R24: a document read by paragraphs reads 40 paragraphs as one page; a slide is a page; a sheet is a page; the unit containing a sheet cell is the range holding it (R21)", async () => {
