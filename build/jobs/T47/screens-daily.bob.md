@@ -27,3 +27,7 @@ K3143: (1) Home draws no welcome offer itself: the guide's `marks` (screens-wiza
 ## B4 · CHANGE
 
 K3145 (SCREENS-ACTION #1 J1): R13's "Pick up where you left off" opens `/app/request/<action>` for a records request (the `request` screen takes an action id and opens at its step).
+
+## B5 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
