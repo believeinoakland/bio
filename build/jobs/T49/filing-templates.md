@@ -42,3 +42,25 @@ Either way, `setup-words` line 516 still carries the two rows, and T49-15 re-tak
 Plain steps for Bob: tell the design session (its next session) that words.json lost `refusal.RFC_QUOTING_MISSING` and `rfc.quoting` in 0fd6562c1e and that R33 needs them back; or rule (2) here. Then ring me back, and I will re-run the tests and COMPLETE.
 
 Also disclosed: I did not read the module's index.mjs, schema.mjs and blanks.mjs whole (step 2); the record says so.
+
+## Completion (after BOB's ANSWER to J1, B2)
+
+**Entries applied.** T49-11, test only, as B2 settled (K3357): the words are this module's own, declared in it (`checks.mjs` lines 31–32, text unchanged) and absent from `words.json` (DEC-234, B200 (5)).
+- `r33.test.mjs`: the first R33 test asserts the sentence is unchanged and that `words.json` holds neither `rfc.quoting` nor `refusal.RFC_QUOTING_MISSING`; the words.json re-wording comparison is dropped. The row test pins the module's own text (`RFC_TRANSLATION`) and asserts the row and the declaration both carry it.
+- `t46-words.test.mjs`: the table test reads `refusal.TEMPLATE_NOT_REVIEWED` from `words.json` by key and pins `refusal.RFC_QUOTING_MISSING` as the module's own word.
+- N1068 ("labeled", `index.mjs` line 211) and the `admin` grep: as in the first record. No further change.
+- `setup-words` untouched (T49-15 re-takes its rows from main, as B2 said). No change to `words.json`.
+
+**Deferred.** None.
+
+**Found in other modules (for BOB, a REPORT).** `checks/run.mjs` over the product (run after the merge) reports 17 coverage failures: live requirement ids named by no test, in admission, affordances, control-plane, interface-assets, interface-shell, journey-check, op-capabilities, screens-action, screens-daily, screens-entry, screens-inquiry, screens-intake, screens-investigate, screens-publish, screens-settings, setup-words and site. Architecture is 0 failures overall. These modules are not this job's; the list is reported, not fixed.
+
+**Tests and checks (after the re-point).**
+- `node --test bio-plane/test/m/filing-templates/*.test.mjs`: 79 tests, 79 pass, 0 fail.
+- `checks/format.mjs`: 0 failures.
+- `checks/architecture.mjs filing-templates`: 0 failures. `checks/run.mjs` architecture over the product: 0 failures.
+- `checks/coverage.mjs filing-templates`: 33 of 33 live requirement ids named by a test.
+- `checks/ownership.mjs T49`: 0 failures.
+- `checks/run.mjs` coverage over the product: 17 failures, all in other modules (above).
+
+Size (session_01DLu9hNhnNY3UX3zTHQrEQY): test runs 4, module lines 1919
