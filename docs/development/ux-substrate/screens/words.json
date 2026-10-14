@@ -20,11 +20,11 @@
   "guide": 7,
   "prepared": 2,
   "label": 52,
-  "project": 7,
+  "project": 32,
   "grouprule": 1,
   "refusal": 166,
   "signing": 17,
-  "case": 11,
+  "case": 15,
   "docket": 2,
   "advocacy": 3,
   "conformance": 4,
@@ -63,16 +63,16 @@
   "proceeding": 6,
   "duty": 6,
   "published": 1,
-  "shell": 11,
+  "shell": 13,
   "settings": 1,
   "entity": 33,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 667,
+  "act": 681,
   "column": 33,
-  "total": 2193,
-  "protected": 689
+  "total": 2238,
+  "protected": 700
  },
  "words": [
   {
@@ -6857,6 +6857,223 @@
    "note": "DEC-236"
   },
   {
+   "key": "project.work.title",
+   "en": "This project's work",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: screens-inquiry R18, the links"
+  },
+  {
+   "key": "project.work.help",
+   "en": "Everything this project has gathered beyond its questions. Each opens on its own page; a kind the project has none of is not listed.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "shell.card.proceeding",
+   "en": "A proceeding the project follows: a hearing, a rulemaking or a case before a public body, with its dates and the group's deadlines on it.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: the reference card, beside DEC-234's"
+  },
+  {
+   "key": "shell.card.standard",
+   "en": "A standard the project holds the government to: a rule it set itself, with where it is written and what it requires.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.visibility.title",
+   "en": "Who can find it",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: R2"
+  },
+  {
+   "key": "project.visibility.hidden",
+   "en": "Hidden: only its members know it exists.",
+   "protected": true,
+   "source": "DEC-237",
+   "note": "DEC-237: membership R45 `hidden`, the default"
+  },
+  {
+   "key": "project.visibility.discoverable",
+   "en": "Findable: every member of the group sees it in Projects and can ask to join.",
+   "protected": true,
+   "source": "DEC-237",
+   "note": "DEC-237: `discoverable`"
+  },
+  {
+   "key": "project.visibility.start.hidden",
+   "en": "Hidden: only the members you invite know it exists",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: at Start a project, preselected (promotion R19)"
+  },
+  {
+   "key": "project.visibility.start.discoverable",
+   "en": "Findable: every member of the group sees it in Projects and can ask to join",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.visibility.start.later",
+   "en": "You can change this later, with a reason.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.visibility.history",
+   "en": "{change} by {who}, {date}: \"{reason}\"",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: project-roster R8, each record of the history"
+  },
+  {
+   "key": "project.visibility.started",
+   "en": "started {setting}, {date}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.start.title",
+   "en": "What it is about",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: Start a project"
+  },
+  {
+   "key": "project.start.title.help",
+   "en": "One line the members will recognize, such as \"Rent at the Coliseum lots\". You become its owner.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.start.go",
+   "en": "Start the project",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: promote with a title and visibility"
+  },
+  {
+   "key": "project.member.owner",
+   "en": "owner",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.member.member",
+   "en": "member",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.member.since",
+   "en": "owner since {date}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.member.joined",
+   "en": "joined {date}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.owners.pending",
+   "en": "Making {who} an owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: CONSENSUS_REQUIRED's have and awaiting (project-roster R3, R7)"
+  },
+  {
+   "key": "project.owners.pending.remove",
+   "en": "{who} standing down as owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: R4"
+  },
+  {
+   "key": "project.owners.agree",
+   "en": "Agree: make {who} an owner",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: projectowneradd by another owner"
+  },
+  {
+   "key": "project.owners.rule",
+   "en": "With one owner, that owner can add a second. After that, every owner agrees before someone becomes an owner or stops being one, each by making the same change.",
+   "protected": true,
+   "source": "DEC-237",
+   "note": "DEC-237: membership R38 ownerMath, in words"
+  },
+  {
+   "key": "project.rescue.title",
+   "en": "Every owner of this project has been gone since {date}",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: project-roster R5, an administrator at a hidden project's existence (K2578)"
+  },
+  {
+   "key": "project.rescue.says",
+   "en": "{owners}, and no one else owns it. The project is hidden, so as an administrator you see only that it exists. You can become its owner to keep its work going: you then see it whole, and its members see that you did it and why.",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "project.rescue.go",
+   "en": "Become its owner",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: projectownerrescue, reasoned"
+  },
+  {
+   "key": "project.rescue.own",
+   "en": "A project a member kept for themselves alone is never taken over: when they leave the group, it stays as they left it.",
+   "protected": true,
+   "source": "DEC-237",
+   "note": "DEC-237: K2782, project-roster R22"
+  },
+  {
+   "key": "case.links.editor",
+   "en": "The case being prepared",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237: screens-inquiry R18, from the question"
+  },
+  {
+   "key": "case.links.review",
+   "en": "Review copies",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "case.links.ceremony",
+   "en": "Publishing",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
+   "key": "case.links.docket",
+   "en": "The published case's record",
+   "protected": false,
+   "source": "DEC-237",
+   "note": "DEC-237"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -8910,6 +9127,48 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectvisibilityset.label.project",
+   "en": "Change who can find it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectownerremove.label.project",
+   "en": "Stand down as owner",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectowneradd.label.project",
+   "en": "Make an owner, or agree to it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectremove.label.project",
+   "en": "Remove a member",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectleave.label.project",
+   "en": "Ask to leave this project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_projectfork.label.project",
+   "en": "Start a project from this one",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectownerrescue.label.project",
+   "en": "Become the owner of an ownerless project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.projectjoin.label.project",
    "en": "Join",
    "protected": true,
@@ -10706,6 +10965,48 @@
   {
    "key": "act.owed_founderhandleset.does",
    "en": "Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectvisibilityset.does",
+   "en": "Switches the project between hidden (only its members know it exists) and findable (every member of the group sees it in Projects and can ask to join), with a reason kept in its history. Only an owner changes it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectowneradd.does",
+   "en": "Makes a member an owner. With one owner, that owner decides alone; with two or more, every owner agrees, each by making the same change.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectownerremove.does",
+   "en": "Ends someone's ownership, with a reason; they stay a member. A project always keeps at least one owner, and with three or more owners the others agree first.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectremove.does",
+   "en": "Takes a member off the project, with a reason they see. Their work on it stays, under their name.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectleave.does",
+   "en": "Tells the owners you are leaving the project, with a note if you like. An owner can leave once another owner remains.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectfork.does",
+   "en": "Starts a new project of your own from this one, with you as its only owner and the visibility you choose.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectownerrescue.does",
+   "en": "Makes an administrator an owner of a project whose owners are all gone, with a reason on its record. Never for a project a member kept for themselves alone.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

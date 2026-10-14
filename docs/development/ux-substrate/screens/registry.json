@@ -1933,6 +1933,59 @@
      ]
     },
     {
+     "op": "projectvisibilityset",
+     "label": "Change who can find it",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "projectownerremove",
+     "label": "Stand down as owner",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Make an owner, or agree to it",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectremove",
+     "label": "Remove a member",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "projectleave",
+     "label": "Ask to leave this project",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "owed:projectfork DEC-237",
+     "label": "Start a project from this one",
+     "status": "owed"
+    },
+    {
+     "op": "projectownerrescue",
+     "label": "Become the owner of an ownerless project",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
      "op": "projectjoin",
      "label": "Join",
      "status": "function",

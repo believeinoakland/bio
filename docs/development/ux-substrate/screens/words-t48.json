@@ -2014,5 +2014,191 @@
   "en": "The record holds this {kind} but no name for it yet. Open it to see the documents that mention it.",
   "protected": false,
   "note": "DEC-236"
+ },
+ {
+  "key": "project.work.title",
+  "en": "This project's work",
+  "protected": false,
+  "note": "DEC-237: screens-inquiry R18, the links"
+ },
+ {
+  "key": "project.work.help",
+  "en": "Everything this project has gathered beyond its questions. Each opens on its own page; a kind the project has none of is not listed.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "shell.card.proceeding",
+  "en": "A proceeding the project follows: a hearing, a rulemaking or a case before a public body, with its dates and the group's deadlines on it.",
+  "protected": false,
+  "note": "DEC-237: the reference card, beside DEC-234's"
+ },
+ {
+  "key": "shell.card.standard",
+  "en": "A standard the project holds the government to: a rule it set itself, with where it is written and what it requires.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.title",
+  "en": "Who can find it",
+  "protected": false,
+  "note": "DEC-237: R2"
+ },
+ {
+  "key": "project.visibility.hidden",
+  "en": "Hidden: only its members know it exists.",
+  "protected": true,
+  "note": "DEC-237: membership R45 `hidden`, the default"
+ },
+ {
+  "key": "project.visibility.discoverable",
+  "en": "Findable: every member of the group sees it in Projects and can ask to join.",
+  "protected": true,
+  "note": "DEC-237: `discoverable`"
+ },
+ {
+  "key": "project.visibility.start.hidden",
+  "en": "Hidden: only the members you invite know it exists",
+  "protected": false,
+  "note": "DEC-237: at Start a project, preselected (promotion R19)"
+ },
+ {
+  "key": "project.visibility.start.discoverable",
+  "en": "Findable: every member of the group sees it in Projects and can ask to join",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.start.later",
+  "en": "You can change this later, with a reason.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.history",
+  "en": "{change} by {who}, {date}: \"{reason}\"",
+  "protected": false,
+  "note": "DEC-237: project-roster R8, each record of the history"
+ },
+ {
+  "key": "project.visibility.started",
+  "en": "started {setting}, {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.start.title",
+  "en": "What it is about",
+  "protected": false,
+  "note": "DEC-237: Start a project"
+ },
+ {
+  "key": "project.start.title.help",
+  "en": "One line the members will recognize, such as \"Rent at the Coliseum lots\". You become its owner.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.start.go",
+  "en": "Start the project",
+  "protected": false,
+  "note": "DEC-237: promote with a title and visibility"
+ },
+ {
+  "key": "project.member.owner",
+  "en": "owner",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.member",
+  "en": "member",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.since",
+  "en": "owner since {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.joined",
+  "en": "joined {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.owners.pending",
+  "en": "Making {who} an owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+  "protected": false,
+  "note": "DEC-237: CONSENSUS_REQUIRED's have and awaiting (project-roster R3, R7)"
+ },
+ {
+  "key": "project.owners.pending.remove",
+  "en": "{who} standing down as owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+  "protected": false,
+  "note": "DEC-237: R4"
+ },
+ {
+  "key": "project.owners.agree",
+  "en": "Agree: make {who} an owner",
+  "protected": false,
+  "note": "DEC-237: projectowneradd by another owner"
+ },
+ {
+  "key": "project.owners.rule",
+  "en": "With one owner, that owner can add a second. After that, every owner agrees before someone becomes an owner or stops being one, each by making the same change.",
+  "protected": true,
+  "note": "DEC-237: membership R38 ownerMath, in words"
+ },
+ {
+  "key": "project.rescue.title",
+  "en": "Every owner of this project has been gone since {date}",
+  "protected": false,
+  "note": "DEC-237: project-roster R5, an administrator at a hidden project's existence (K2578)"
+ },
+ {
+  "key": "project.rescue.says",
+  "en": "{owners}, and no one else owns it. The project is hidden, so as an administrator you see only that it exists. You can become its owner to keep its work going: you then see it whole, and its members see that you did it and why.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.rescue.go",
+  "en": "Become its owner",
+  "protected": false,
+  "note": "DEC-237: projectownerrescue, reasoned"
+ },
+ {
+  "key": "project.rescue.own",
+  "en": "A project a member kept for themselves alone is never taken over: when they leave the group, it stays as they left it.",
+  "protected": true,
+  "note": "DEC-237: K2782, project-roster R22"
+ },
+ {
+  "key": "case.links.editor",
+  "en": "The case being prepared",
+  "protected": false,
+  "note": "DEC-237: screens-inquiry R18, from the question"
+ },
+ {
+  "key": "case.links.review",
+  "en": "Review copies",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "case.links.ceremony",
+  "en": "Publishing",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "case.links.docket",
+  "en": "The published case's record",
+  "protected": false,
+  "note": "DEC-237"
  }
 ]
