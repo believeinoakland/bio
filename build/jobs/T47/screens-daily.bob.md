@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 screens-daily R10 changed on `tranche/T47` (Bob's K3142): each projects row draws members, eight weeks' activity and last change as `projectlist` answers them (project-roster R28, T47-93, running now out of layer); the "until then draw none" clause is gone, so drop the `test.todo` naming N1025 from your START notes. Merge `tranche/T47` into your branch now. Build against R28's shape (`members` [{member, handle}], `activity` eight integers oldest first, `lastChange` instant or null) with a fixture; BOB sends another CHANGE when T47-93 merges, and you merge `tranche/T47` again and run against it before COMPLETE.
+
+## B3 · ANSWER · re J1
+
+K3143: (1) Home draws no welcome offer itself: the guide's `marks` (screens-wizards, drawn by the shell under the path) are Home's R11 offers. (2) your reading stands. (3) the owner is project-roster R27, merged (in `projectlist` already); members, activity, last change are R28 (T47-93, my B2): no `test.todo`. (4)–(6) stand.
