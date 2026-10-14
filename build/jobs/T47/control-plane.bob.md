@@ -27,3 +27,11 @@ K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the que
 ## B4 · CHANGE
 
 K3145 (SCREENS-INVESTIGATE #1 J1 B6): `clockpropose` is in `OPS` but no route serves it (`unknown op`); route it to its owner (action-clocks) with T47's ops (R79), tested.
+
+## B5 · CHANGE
+
+K3147: op-grades is merged; your `totality.test.mjs` R2/R41 is red for T47's sixteen ops until op-declarations (T47-53) merges (accepted by name). Merge `tranche/T47` when convenient.
+
+## B6 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).

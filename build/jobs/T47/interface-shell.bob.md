@@ -27,3 +27,15 @@ K3144: 1. as read, and see R46's last sentence. 2. edge `interface-shell → sig
 ## B4 · CHANGE
 
 K3145: new R47 on `tranche/T47`: `cs.save`, `cs.copy`, `cs.signout` each answer their own bound control (`{label}`); `cs.signer.sign([{label, bytes, namespace}])` → `{ok: true, signatures}` or `{ok: false, declined: true}`, `cs.signer.register({keep})` → `{ok: true, keyB64}`, the key-file control inside `sign`; `REF_SCREENS` gains `person`, `proceeding`, `standard` with cards; `ADMIN_ACTS` gains `personexpunge`. Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3146: new R48 on `tranche/T47` (from JOURNEY-CHECK #1): the frame's root carries `data-screen="<id>"` of the registered screen drawn, none on the shell's own fallbacks; test with a control. Merge `tranche/T47`.
+
+## B6 · CHANGE
+
+K3147: new R49 on `tranche/T47`: `cs.image(op, params, {alt})` (fetched with the session's `Authorization`, drawn from a page-made object address), `cs.areas(image, {areas, label})` (rectangles drawn by pointer, touch and keyboard over it, answering pixel rectangles), and `cs.choice` driving the act it governs (one button following the choice). Also R46's `view.fragment` carries `grant` for `review-outside`. Merge `tranche/T47`.
+
+## B7 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).

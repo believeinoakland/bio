@@ -28,8 +28,8 @@ const R32_WRITES = {
   followend: "reversible", watchlink: "undetermined", watchanswer: "undetermined",
   /* filings R36, R42, R47 */
   filingsecondapprove: "terminal", jointsignatory: "undetermined", holdnoticeprepare: "undetermined",
-  /* case-check R1 (graded as publish, K2839) */
-  publishcheck: "irreversible",
+  /* case-check R1 (graded as publish, K2839; terminal with it since R37, T47) */
+  publishcheck: "terminal",
   /* project-roster R21, R24 */
   projectscopeset: "reasoned", projectapprovalset: "reasoned",
   /* action-replies R1, R2 */
@@ -152,16 +152,15 @@ test("R32 R1 (K2857): JUSTIFICATION_REFUSALS gains the codes T45's owners refuse
     ["terminal", "undetermined", "reasoned"]);
 });
 
-test("R32 R5 R18 R21: of T45's ops MACHINE_REFUSALS holds exactly the eight acts R32 names, each with its owner's code, "
-   + "the two that admit a machine none; phone follows the rung (publishcheck and "
-   + "filingsecondapprove off the phone); publishcheck carries the Irreversible weight by R21's rule; no consequence "
+test("R32 R5 R18 R21 R37: of T45's ops MACHINE_REFUSALS holds exactly the eight acts R32 names, each with its owner's "
+   + "code, the two that admit a machine none; phone follows the rung (publishcheck and filingsecondapprove, terminal, "
+   + "off the phone); none carries the Irreversible weight (publishcheck left it with publish at R37); no consequence "
    + "statement, larger-screen entry or alias is added", () => {
   assert.deepEqual(Object.fromEntries(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)).map((op) => [op, MACHINE_REFUSALS[op]])),
     R32_MACHINE);
   for (const op of ["holdnoticeprepare", "actionbearingpropose"]) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
   assert.deepEqual(ALL.filter((op) => !phoneOf(op)).sort(), ["filingsecondapprove", "publishcheck"]);
-  assert.ok(IRREVERSIBLE_WEIGHT.includes("publishcheck"));
-  assert.deepEqual(ALL.filter((op) => IRREVERSIBLE_WEIGHT.includes(op)), ["publishcheck"]);
+  assert.deepEqual(ALL.filter((op) => IRREVERSIBLE_WEIGHT.includes(op)), []);
   for (const op of ALL) {
     assert.ok(!Object.hasOwn(CONSEQUENCE_STATEMENTS, op), op);
     assert.ok(!LARGER_SCREEN_ACTS.includes(op), op);
