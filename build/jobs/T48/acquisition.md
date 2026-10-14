@@ -65,3 +65,7 @@ An earlier attempt of mine, 60 suites at once on this 4-CPU, 16 GB container, ma
   - coverage 46 failures, all other modules' ids not yet met (rule 5 (1)), none of them acquisition's.
 
 Size (session_01SP5b3QVofcumu9NEJFCqpN): test runs 312, module lines 2955
+
+## J1 · COMPLETE
+
+T48-15 applied (N998). Cause: a capture's document carries several separate second-precision clock reads (retrieved, and each attestation attempt's own instant); R2/R27's comparison blanked only retrieved, so a capture crossing a second differed. Shown by a clock forced across a second (old test red, fixed green). Fix: R2/R27's and R13's two captures run under a pinned clock (mock.timers, Date only) and compare exactly, nothing blanked out (stricter). Same flaw, fixed: R11's comparison; a module flaw in unpack.mjs, where R40's daily day was read separately from the recorded instant (new test 'R40 (N998)', red then green); midnight races pinned in budgets R40, archivelist R41 and selflink-render R5; R19's vacuous 'dropped when complete' now driven to completion; unpack R40 R38's conditional asserted. Proof: the 2 tests alone 200/200; the module suite 51 + 21 runs three at a time, each 159/159, no OOM kills. Users: case-carriage 88/88, plane 233/233; capture's sign-in reds (T48-16, rule 5 (7, S)) and control-plane envelope:433 (rule 5 (6)) are accepted. format, architecture, coverage (45/45), ownership: 0 failures; run.mjs coverage 46 failures, none acquisition's. Deferred, with why, in the record (one source-text check, sample coverage). Record: build/jobs/T48/acquisition.md.
