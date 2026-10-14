@@ -1,13 +1,18 @@
-/* The member's queue (registry screen `queue`; screens-daily R2, R3, R7, R12, R13; DEC-110, DEC-131, DEC-201 (13), DEC-212). Everything waiting on the
+/* The member's queue (registry screen `queue`; screens-daily R2, R3, R7, R12, R13, R18, R19, R21, R22; DEC-110, DEC-131, DEC-201 (13), DEC-212,
+   DEC-226 (1)). Everything waiting on the
    member, drawn by kind (To do, Noticed, Status) and grouped by case, in the sort they chose; each item's acts are its own
    decorated options and the door its disposition names (queue R12, R17, R46), drawn when the op is one of the screen's
    registered acts, and any other option as "Open". The sort is the route's subject (`/app/queue/due`), so a chosen sort
    survives a reload and the browser's history (interface-shell R9). With nothing waiting it says the member is up to date
-   (R12). The unsent-request item (`action-producers` R25) draws its own three acts (R13). Every function is
-   self-contained (interface-shell R21 (1)). */
+   (R12). The unsent-request item (`action-producers` R25) draws its own three acts (R13). "Mute a kind" mutes the item's
+   kind for its nearest home case (R18). The update to-do has its own section, "Your group's Civicsmith" (R19). The source
+   notices of one kind are one item with their count, opening the list of their documents (R22, the `sourceItems` part).
+   Every function is self-contained (interface-shell R21 (1)). */
+import { sourceItems } from "./source-items.mjs";
 
 export const queue = Object.freeze({
   id: "queue",
+  parts: { sourceItems },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind).
   reads: function (view) {
@@ -30,7 +35,7 @@ export const queue = Object.freeze({
       taskresolve: "taskresolve", taskforward: "taskforward", proposedispose: "proposedispose", queuesnooze: "queuesnooze",
       queuemute: "queuemute", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion",
       versionkeep: "keepversion", reminderanswer: "reminderanswer", promote: "promote", projectkeyset: "projectkeyset",
-      exploreapprove: "exploreapprove",
+      exploreapprove: "exploreapprove", updatelater: "updatelater",
     };
     // The queue's words keyed in WORD_ROWS (`queue.<kind>.summary` / `.detail`); an item of any other kind draws its own.
     const KEYED = ["question-find", "step-later-found", "step-date-due", "step-reminder", "step-cost-shared", "step-cost-message",
@@ -53,7 +58,7 @@ export const queue = Object.freeze({
       if (!fields) return cs.act(op, { label: "act." + op + ".label.queue", data: data });
       const f = "qa-" + (seq++);
       const button = cs.act(op, { label: "act." + op + ".label.queue", data: Object.assign({}, data, { f: f }) });
-      return button ? '<details class="mk-actd"><summary>' + cs.w("act." + op + ".label.queue") + "</summary>"
+      return button ? '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.queue") + "</summary>"
         + fields.map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>" : "";
     };
 
@@ -62,6 +67,14 @@ export const queue = Object.freeze({
       const a = Array.isArray(c.ancestors) ? c.ancestors : [];
       const p = a.filter(function (x) { return x && x.type === "project"; })[0] || a[a.length - 1];
       return c.ungrouped || !p ? null : p;
+    };
+    // R18: the item's nearest home case, a question or a project (the ancestor of least depth).
+    const nearestOf = function (it) {
+      const c = it.case || {};
+      if (c.ungrouped) return null;
+      const a = (Array.isArray(c.ancestors) ? c.ancestors : []).filter(function (x) { return x && x.id && (x.type === "inquiry" || x.type === "project"); });
+      a.sort(function (x, y) { return (Number(x.depth) || 0) - (Number(y.depth) || 0); });
+      return a[0] || null;
     };
     const keyOf = function (it) {
       if (typeof it.word === "string") {
@@ -103,7 +116,9 @@ export const queue = Object.freeze({
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
       if (it.class !== "OBLIGATION") add("queuemute");
+      const near = nearestOf(it);
       const data = {
+        mutecase: near ? String(near.id) : "",
         item: it.id, cls: it.class || "", kind: it.kind || "",
         subject: it.subject && it.subject.id ? String(it.subject.id) : "",
         entry: it.subject && it.subject.entry !== undefined ? String(it.subject.entry) : "",
@@ -128,12 +143,18 @@ export const queue = Object.freeze({
       const pick = id ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/request/' + encodeURIComponent(id) + '">' + cs.w("screen.queue.unsent.pickup") + "</a>" : "";
       const f = "qa-" + (seq++);
       const snoozeBtn = cas ? cs.act("queuesnooze", { label: "screen.queue.unsent.keep", data: { project: String(cas.id), f: f } }) : "";
-      const snooze = snoozeBtn ? '<details class="mk-actd"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"
+      const snooze = snoozeBtn ? '<details class="mk-details"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"
         + cs.field(f + "-until", "screen.queue.snooze.until", {}) + snoozeBtn + "</details>" : "";
       const drop = id ? cs.act("actionmove", { label: "screen.queue.unsent.drop", data: { item: it.id, action: id } }) : "";
       return pick + snooze + drop;
     };
+    const src = view.parts.sourceItems();
     const itemRow = function (it) {
+      // R22: one kind's source notices as one item with its count; each document with its own options.
+      if (it.sources) {
+        const g = src.draw(cs, it, function (x) { return actsOf(x, caseOf(x)); });
+        return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "noticed"), g.list + '<span class="meta">' + g.detail + "</span>", "", "");
+      }
       const cas = caseOf(it);
       const k = keyOf(it);
       const fills = it.fills && typeof it.fills === "object" ? it.fills : {};
@@ -160,26 +181,44 @@ export const queue = Object.freeze({
     const note = ui.kindsNote
       ? '<p class="mk-note">' + cs.w("screen.queue.note") + ' <span class="muted">' + cs.w("screen.queue.note.once") + "</span></p>" : "";
 
-    const sorts = '<nav class="mk-sorts" aria-label="' + cs.w("screen.queue.sort") + '"><span>' + cs.w("screen.queue.sort") + "</span> "
+    const sorts = '<nav class="mk-sortrow" aria-label="' + cs.w("screen.queue.sort") + '"><span>' + cs.w("screen.queue.sort") + "</span> "
       + SORTS.map(function (s) {
         return s === sort ? '<b aria-current="true">' + cs.w("screen.queue.sort." + s) + "</b>"
           : '<a data-nav href="/app/queue/' + s + '">' + cs.w("screen.queue.sort." + s) + "</a>";
       }).join(" · ") + "</nav>";
 
+    // R19 (DEC-226 (1)): the update to-do, under its own section: the release, its date, the security mark when marked,
+    // "See what changes" (opening `updates`) and Not now (`updatelater`).
+    const updateSection = function (list) {
+      if (!list.length) return "";
+      return cs.sec("queue.update.section", cs.sheet(list.map(function (it) {
+        const d = it.detail && typeof it.detail === "object" ? it.detail : {};
+        const version = String(d.version || it.version || "");
+        const security = (d.security !== undefined ? d.security : it.security) === true;
+        const mark = security ? '<span class="mk-tag" tabindex="0" data-level="1" data-tip="' + cs.w("updates.ready.security_says") + '">' + cs.w("updates.ready.security") + "</span> " : "";
+        const acts = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>"
+          + cs.act("updatelater", { label: "act.owed_updatelater.label.queue", data: { version: version } });
+        return cs.row(cs.mark("kind", "todo"), mark + cs.w("queue.update.ready", { version: version, date: { html: cs.date(String(d.date || it.date || "")) } })
+          + '<span class="mk-acts">' + acts + "</span>", it.due ? dueOf(it.due) : "", "");
+      }).join("")), { help: "queue.update.section_says" });
+    };
+
     const body = cs.state("queue", function (q) {
-      const items = Array.isArray(q.items) ? q.items : [];
+      const all = Array.isArray(q.items) ? q.items : [];
+      const updates = all.filter(function (it) { return it && it.kind === "update-ready"; });
+      const items = src.fold(all.filter(function (it) { return !(it && it.kind === "update-ready"); }));
       const groups = [];
       const at = {};
       items.forEach(function (it) {
-        const c = caseOf(it);
+        const c = caseOf(it.sources ? it.sources[0] : it);
         const key = c ? String(c.id) : "";
         if (!(key in at)) { at[key] = groups.length; groups.push({ c: c, items: [] }); }
         groups[at[key]].items.push(it);
       });
       const n = typeof q.item_count === "number" ? q.item_count : items.length;
       const head = '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
-        + '</span><span class="sep"> · </span><span>' + cs.w("screen.queue.grouped") + "</span></p>";
-      return head + groups.map(function (g) {
+        + "</span> · <span>" + cs.w("screen.queue.grouped") + "</span></p>";
+      return head + updateSection(updates) + groups.map(function (g) {
         const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
         const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
@@ -210,8 +249,11 @@ export const queue = Object.freeze({
         const until = String(cs.value(el.dataset.f + "-until") || "").trim();
         return until ? { body: { case: el.dataset.project, until: until } } : { refuse: "screen.queue.fieldfirst" };
       } },
+    // R18 (queue R19, R20): "Mute a kind" mutes the item's kind for its nearest home case; with no case, the item.
     { op: "queuemute", label: "act.queuemute.label.queue",
-      send: function (view, el) { return { body: { item: el.dataset.item } }; } },
+      send: function (view, el) {
+        return el.dataset.mutecase && el.dataset.kind ? { body: { case: el.dataset.mutecase, kinds: [el.dataset.kind] } } : { body: { item: el.dataset.item } };
+      } },
     // Adopting asks why (reevaluation R15); the member's words are the act's reason (interface-shell R11, K3002).
     { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why",
       send: function (view, el, cs) {
@@ -260,6 +302,9 @@ export const queue = Object.freeze({
     // R13: the unsent request dropped, with the member's reason (the shell asks it: `actionmove` is reasoned).
     { op: "actionmove", label: "act.actionmove.label.queue",
       send: function (view, el) { return el.dataset.action ? { body: { target: el.dataset.action, to: "abandoned" } } : null; } },
+    // R19: Not now, for every administrator (instance-setup R90).
+    { op: "updatelater", label: "act.owed_updatelater.label.queue",
+      send: function (view, el) { return el.dataset.version ? { body: { version: el.dataset.version } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue",
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },
   ],
