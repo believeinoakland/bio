@@ -47,8 +47,9 @@ export const ID_TABLE = Object.freeze([
   row('ENT', 'entities'), row('REL', 'entities'), row('STDP', 'standards'), row('ACT', 'conformance'),
   row('CMP', 'conformance'), row('FIL', 'filings'), row('CPK', 'filings'), row('THY', 'filings'),
   row('GATH', 'monitoring'), row('THEME', 'connections'), row('LEAD', 'observation-log'), row('TASK', 'tasks'),
-  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. */
-  row('CASE', 'case-authoring'), row('WCD', 'case-authoring'), row('DRAFT', 'review'), row('RVG', 'review'),
+  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. T48-1 (R63; N1017,
+     K3112): `WCD`, an edition statement's draft, is `case-inputs`', which has minted it since T47 (its R6). */
+  row('CASE', 'case-authoring'), row('WCD', 'case-inputs'), row('DRAFT', 'review'), row('RVG', 'review'),
   row('SRC', 'sources'), row('NOTE', 'network-notices'), row('DKT', 'docket'), row('TPL', 'filing-templates'),
   row('TPP', 'filing-templates'), row('TRG', 'filing-templates'), row('WIZ', 'wizard-scripts'),
   row('WZP', 'wizard-scripts'), row('WEG', 'wizard-scripts'),
@@ -77,8 +78,14 @@ export const ID_TABLE = Object.freeze([
      layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
      this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
      has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
-     no heading set and no `checkBundle` schema. */
+     no heading set. Since T47 (R62; N958) `checkBundle` admits its document, a bare `SUC` core under `success_record@1`
+     (bundle.mjs), without making `SUC` one of R1's prefixes. */
   row('SUC', 'consequences'),
+  /* T48-1 (R63; N1017, K3112): a carried outcome (`case-inputs`, its R9), sequential, drawn at random by record-core's
+     opaque minter (its R6) as `WCD` is. `case-inputs` has minted `OUTC-<year>-<4 digits>` since T47, which is this form,
+     so every one of those ids stays valid. A row of its owner's table, not a bundle prefix (R1): no type, no heading set,
+     no machine and no `checkBundle` schema. */
+  row('OUTC', 'case-inputs'),
 ]);
 
 const YEAR = '\\d{4}';

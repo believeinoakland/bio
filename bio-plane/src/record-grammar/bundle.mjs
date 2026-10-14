@@ -252,7 +252,7 @@ function checkStateLegality(ctx, findings) {
      folded into `legal`: every OTHER reader of this table — the affordance
      derivation, the transition guards, `edgesFrom` — asks what the machine can
      DO, and must see the shorter list. */
-    const readable = [...spec.legal, ...(spec.legacy || [])];
+  const readable = [...spec.legal, ...(spec.legacy || [])];
   if (!readable.includes(cur)) {
     findings.push(f('C-4.1', 'error', `current_state '${cur}' is not legal for ${ot} (legal: ${spec.legal.join(', ')})`));
   }
