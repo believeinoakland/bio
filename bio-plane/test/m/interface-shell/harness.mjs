@@ -83,13 +83,13 @@ export function fakeIndexedDB(dbs = new Map()) {
 
 /**
  * Boot the page at `path` with `screens` registered, over `plane` (an op's answer, or `(req) => answer`).
- * `session` is the record R32 keeps in localStorage (null for none); `tabs` (from `tabs()`) shares one localStorage
+ * `session` is the record R32 keeps in localStorage (null for none); `testInstance` is `interfacePage`'s option (R58); `tabs` (from `tabs()`) shares one localStorage
  * among pages, each told of the others' writes by the storage event; `idb` is the IndexedDB stand-in's store.
  * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null } = {}) {
-  html = html || served(interfacePage(screens, guide ? { guide } : {}));
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false } = {}) {
+  html = html || served(interfacePage(screens, { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}) }));
   const doc = documentOf(html);
   const requests = [];
   const answers = { ...FRAME, ...plane };

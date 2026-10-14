@@ -347,7 +347,7 @@ test("R21 told means at or before the end's instant: an occurrence possibly over
 
 /* R20 (T47; N889; DEC-198 (3)): R5's sentences by key, `.overdue.*` or `.undetermined.*`, the item answering the keys
    beside its text, the placeholders filled from duties' own facts; every date as R16's `{date}`. */
-test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expectation-due.overdue.summary and .detail filled: {duty} and {what} the duty's act, {office} its obligor's registered name (K3144), {basis} its due's citation, {date} the due day by date.daymonth; an undetermined one's .undetermined.*, {reason} duties' why and {from}, {to} its candidates", () => {
+test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expectation-due.overdue.summary and .detail filled: {duty} and {what} the duty's act, {office} its obligor's registered name (K3144), {basis} its due's citation, {date} the due day by date.daymonth; an undetermined one's .undetermined.*, {reason} duties' reason.says (R22) and {from}, {to} its candidates", () => {
   const { w, read } = setup();
   const a = w.declare();
   const it = ofKind(read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0];
@@ -375,7 +375,10 @@ test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expe
   assert.equal(b.detail_key, "queue.temporal-expectation-due.undetermined.detail");
   assert.equal(b.fills.from, say("date.daymonth", { day: "28", month: say("date.month.february") }));
   assert.equal(b.fills.to, say("date.daymonth", { day: "1", month: say("date.month.march") }));
-  assert.equal(b.fills.reason, b.basis.why.replace(/^possibly overdue: undetermined, because /, "").replace(/\.$/, ""), "duties' why, after its opening");
+  /* R22 (T48): {reason} is duties' member-facing reason, never its why */
+  const says = u.w.duties.occurrencesOf({ dutyId: b.subject.id, asOf: "2026-03-01T16:00:00Z", viewer: BOB }).occurrences.find((x) => x.key === b.subject.occurrence).reason.says;
+  assert.equal(b.fills.reason, says.replace(/\.$/, ""), "duties' reason.says");
+  assert.notEqual(b.fills.reason, b.basis.why.replace(/^possibly overdue: undetermined, because /, "").replace(/\.$/, ""), "control: not the why");
   assert.equal(b.summary, say(b.summary_key, b.fills));
   assert.equal(b.detail, say(b.detail_key, b.fills));
   assert.equal(b.summary, `Possibly overdue: ${b.fills.duty}`);
@@ -392,4 +395,75 @@ test("R20 R5: an occurrence due last year names its year (date.daymonthyear); co
   assert.equal(nextYear.fills.date, say("date.daymonthyear", { day: "12", month: say("date.month.february"), year: "2026" }));
   assert.equal(nextYear.fills.date, "12 February 2026");
   assert.equal(nextYear.summary, say("queue.temporal-expectation-due.overdue.summary", nextYear.fills));
+});
+
+/* R22 (T48; N1044; K3150, K3203; duties R33): `{reason}` is the occurrence's member-facing reason, `reason.says`, never `why`;
+   `reason: null` fills nothing and draws no clause; the item also answers `reason_code`. Over duties' answers in their
+   R33 shape (a trigger placed nowhere leaves no candidate dates, so the real duties raises this reason only for an
+   occurrence it cannot tell as an item; the stand-in answers the shape R33 publishes). */
+function reasoned(reason, why = "the trigger 2026-01-31 in America/Halifax is undetermined (K1444, R10)") {
+  const { w } = setup();
+  const duty = { duty_id: "DUT-2026-0042", project: null, adoption: { by: "member:bob" }, performance: { act: "post the minutes" } };
+  const occ = { key: "OCC-1", trigger: { kind: "date", ref: "2026-01-31" }, state: "undetermined", why: `possibly overdue: undetermined, because ${why}`,
+                evidence: [], question: "?", reason,
+                due: { basis_kind: "rule", date: { candidates: [day("2026-02-28"), day("2026-03-01")] } } };
+  w.st.sql.exec(`INSERT INTO duties (duty_id, modality, obligor, version, adopted_by, adopted_at, clause) VALUES ('DUT-2026-0042','duty','ENT-x',1,'member:bob','2026-02-01T00:00:00Z','c')`);
+  const n = fresh(w.host, { membership: { participation: () => null, projectOwners: () => [], activeAdmins: () => ["ada"] },
+    duties: { dutiesOf: () => ({ ok: true, duties: [duty], truncated: false }), occurrencesOf: () => ({ ok: true, occurrences: [occ] }) } });
+  return ofKind(reader(n).read("bob", { now: "2026-03-01T16:00:00Z" }), KIND)[0];
+}
+
+test("R22 an undetermined occurrence whose trigger is undated answers the words of trigger_undated in {reason}, naming no ISO date, zone id or ruling number, and its reason_code; control: its why text appears nowhere in the item's summary or detail", () => {
+  const says = "What starts the clock has no date in the record.";
+  const it = reasoned({ code: "trigger_undated", says });
+  assert.ok(it, "the item is raised");
+  assert.equal(it.fills.reason, "What starts the clock has no date in the record", "reason.says, its closing full stop left to the sentence");
+  assert.equal(it.reason_code, "trigger_undated");
+  assert.equal(it.detail_key, "queue.temporal-expectation-due.undetermined.detail");
+  assert.equal(it.detail, say(it.detail_key, it.fills));
+  assert.match(it.detail, /^Possibly overdue: undetermined, because What starts the clock has no date in the record\. /);
+  for (const t of [it.summary, it.detail]) {
+    assert.doesNotMatch(t, /\d{4}-\d{2}-\d{2}/, "no ISO date");
+    assert.doesNotMatch(t, /America\/Halifax/, "no zone id");
+    assert.doesNotMatch(t, /\bK\d+|\bR\d+/, "no ruling or requirement number");
+    assert.ok(!t.includes("is undetermined (K1444"), "control: the why's text appears nowhere");
+  }
+  assert.ok(it.basis.why.includes("K1444"), "the why stays the record's derivation, in the basis");
+  assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
+});
+
+test("R22 each of duties' codes is answered as reason_code and its says fills {reason}; control: another code's words are not used", () => {
+  const codes = { trigger_undated: "What starts the clock has no date in the record.", due_between_days: "The due date depends on a day the record does not settle.",
+                  deadline_not_held: "Your group's Civicsmith holds no rule for this deadline yet.", due_not_computed: "The due date could not be worked out.",
+                  match_undated: "The event that met it has no settled date.", order_unsettled: "The dates held are not precise enough to say whether it was on time." };
+  for (const [code, says] of Object.entries(codes)) {
+    const it = reasoned({ code, says });
+    assert.equal(it.reason_code, code);
+    assert.equal(it.fills.reason, says.replace(/\.$/, ""));
+    for (const [other, ow] of Object.entries(codes)) if (other !== code) assert.ok(!it.detail.includes(ow.replace(/\.$/, "")), `${code} is not ${other}`);
+  }
+});
+
+test("R22 an occurrence answering reason: null fills {reason} with nothing and draws no reason clause, and answers reason_code null; control: with a reason the clause is drawn", () => {
+  const it = reasoned(null);
+  assert.equal(it.fills.reason, "");
+  assert.equal(it.reason_code, null);
+  assert.doesNotMatch(it.detail, /because/, "no reason clause");
+  assert.doesNotMatch(it.detail, /K1444|2026-01-31|Halifax/, "and never the why");
+  assert.match(it.detail, /^Possibly overdue: undetermined\. /);
+  assert.ok(!/\{/.test(it.detail), "no placeholder left");
+  assert.match(reasoned({ code: "due_not_computed", says: "The due date could not be worked out." }).detail, /because The due date could not be worked out\./, "control");
+});
+
+test("R22 over the real duties: a possibly overdue occurrence answers duties' reason code and says, in the item and its {reason}; an overdue one answers reason_code null", () => {
+  const u = setup();
+  u.w.declare({ trigger: { kind: "date", date: "2026-01-31" }, time: { basis: "rule", rule: "monthly_report", applies_to: "claim" } });
+  const b = ofKind(u.read("bob", { now: "2026-03-01T16:00:00Z" }), KIND)[0];
+  const r = u.w.duties.occurrencesOf({ dutyId: b.subject.id, asOf: "2026-03-01T16:00:00Z", viewer: BOB }).occurrences.find((x) => x.key === b.subject.occurrence).reason;
+  assert.equal(r.code, "due_between_days");
+  assert.equal(b.reason_code, r.code);
+  assert.ok(b.detail.includes(r.says.replace(/\.$/, "")), "duties' says in the sentence");
+  const o = setup();
+  o.w.declare();
+  assert.equal(ofKind(o.read("bob", { now: "2026-02-20T12:00:00Z" }), KIND)[0].reason_code, null, "control: an overdue occurrence has no reason");
 });

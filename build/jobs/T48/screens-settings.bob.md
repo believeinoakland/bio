@@ -1,6 +1,6 @@
 # BOB to screens-settings (T48)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ K3297: Intl.DisplayNames is right; interface-shell R21's contract now lists Intl
 ## B4 · CHANGE
 
 K3298: op-declarations and wizard-scripts are merged into tranche/T48: merge it, put updates back in SCREENS, re-run.
+
+## B5 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.

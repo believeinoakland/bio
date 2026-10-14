@@ -98,7 +98,7 @@ test("R6 dates are drawn by date.daymonthyear and date.daymonth with date.month.
   for (const id of ["a", "b", "c", "d"]) assert.doesNotMatch(t(id), /\d{4}-\d{2}-\d{2}/);
 });
 
-test("R10 every read of every screen answered in turn as pending, empty, refused and failed (no answer) draws still loading, empty (or the screen's own sentence), could not read with the refusal's words, never one for another", async () => {
+test("R10 R61 every read of every screen answered in turn as pending, empty, refused and failed (no answer) draws still loading, empty (or the screen's own sentence), a refusal's own words alone or, with none, \"could not be read\" naming no code, never one for another", async () => {
   const reads = [["/app", "projectdirectory", "No project yet"], ["/app/held", "heldcaptures", "Nothing here"]];
   for (const [path, op, emptyText] of reads) {
     const st = async (answer) => { const p = await boot({ screens: ALL, path, plane: { ...PLANE, [op]: answer } }); return p.root().querySelector("#cs-main"); };
@@ -108,12 +108,12 @@ test("R10 every read of every screen answered in turn as pending, empty, refused
     const empty = await st(ok(op === "heldcaptures" ? { items: [] } : { projects: [] }));
     assert.ok(empty.querySelector('[data-state="empty"]').textContent.includes(emptyText), path);
     assert.equal(empty.querySelector('[data-state="failed"]'), null);
-    for (const [answer, words] of [[refused("NOT_ALLOWED", "You may not read this."), "You may not read this."], [refusedIn("NOT_ALLOWED", "Not yours."), "Not yours."], [httpError(500), "500"], [silent, "did not answer"]]) {
+    for (const [answer, words] of [[refused("NOT_ALLOWED", "You may not read this."), "You may not read this."], [refusedIn("NOT_ALLOWED", "Not yours."), "Not yours."], [httpError(500), "This could not be read."], [silent, "This could not be read."]]) {
       const failed = await st(answer);
       const f = failed.querySelector('[data-state="failed"]');
       assert.ok(f, path);
-      assert.ok(f.textContent.startsWith("Could not read this, because"), f.textContent);
-      assert.ok(f.textContent.includes(words), f.textContent);
+      assert.equal(f.textContent, words, "R61: the words alone, never wrapped in state.failed");
+      assert.doesNotMatch(f.textContent, /NOT_ALLOWED|500/, "no code named");
       assert.equal(failed.querySelector('[data-state="empty"]'), null, "a failed read is never drawn as empty");
     }
     const data = await st(PLANE[op]);
@@ -121,11 +121,12 @@ test("R10 every read of every screen answered in turn as pending, empty, refused
   }
 });
 
-test("R10 a refusal's words: refusal.<code> when held, else the answer's translation, else state.failed with the code", async () => {
+test("R10 R61 a refusal's words: refusal.<code> when held, else the answer's translation, each alone; else \"could not be read\" with its reference, never the code", async () => {
   const code = WORD_ROWS.find((r) => r[0].startsWith("refusal.") && !/\{/.test(r[1]))[0].slice(8);
   const en = WORD_ROWS.find((r) => r[0] === "refusal." + code)[1];
   const st = async (answer) => (await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('[data-state="failed"]').textContent;
-  assert.ok((await st(refused(code, "ignored"))).includes(en));
-  assert.ok((await st(refused("ZZ_UNHELD", "Its own words."))).includes("Its own words."));
-  assert.ok((await st(refused("ZZ_UNHELD"))).includes("ZZ_UNHELD"));
+  assert.equal(await st(refused(code, "ignored")), en);
+  assert.equal(await st(refused("ZZ_UNHELD", "Its own words.")), "Its own words.");
+  assert.equal(await st(refused("ZZ_UNHELD")), "This could not be read.");
+  assert.equal(await st(refused("ZZ_UNHELD", null, 400, { trace: "abcdef0123456789" })), "This could not be read. Reference: abcdef01", "R39's reference beside it");
 });
