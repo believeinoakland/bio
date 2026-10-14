@@ -42,3 +42,7 @@ Nothing follows from T48-14 here.
   - coverage: 46 failures, none of them capture's (other modules' ids, under rule 5 (1)).
 
 Size (session_01LtRvmNXLopJbGvdXoMYZH8): test runs 9, module lines 3253
+
+## J1 · COMPLETE
+
+T48-16 complete on job/T48/capture. The three tests (cap13-reuse-pages, d57selflink, m/capture/plane) sign in by {handle}, and their K3192 reds clear. No code change: R77's REGISTER_FIRST already picks the first registration, and no capture test pins the moving value. Own flaws fixed (P8): grammar titles R37→R89; t35 titles name their ids, not line numbers; d57 gets the no-assertion guard; stale store.mjs and R42 notes. For your ruling: evidence-absent.test.mjs:77 scans src text for NOT_FOUND (R63's one-site property). It breaks the interface-only test rule, but deleting it would weaken R63's test, so I kept it. Tests 144/144; format, architecture, coverage (43/43) and ownership: 0 failures. run.mjs: architecture 0; coverage's 46 are other modules'. Record: build/jobs/T48/capture.md.
