@@ -262,13 +262,13 @@ test("R15: notewrite and noteturn `caller-owned` as reminderset, note-directed, 
 });
 
 /* ---- R16 ----------------------------------------------------------------------------------------------------------- */
-test("R16: groupdescriptiondraft and writinghelp take no rung, carry the draft sentence, and are no machine refusal", () => {
+test("R16 R39: groupdescriptiondraft and writinghelp carry the draft sentence and are no machine refusal; writinghelp takes no "
+   + "rung, groupdescriptiondraft the `caller-owned` ground (R39, T48)", () => {
   const D = "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the "
     + "member's words only by the member's own act of keeping it";
-  for (const op of ["groupdescriptiondraft", "writinghelp"]) {
-    assert.equal(gradeOf(op), null, op);
-    assert.equal(NON_ACTS[op], D, op);
-  }
+  for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.equal(NON_ACTS[op], D, op);
+  assert.equal(gradeOf("writinghelp"), null);
+  assert.equal(gradeOf("groupdescriptiondraft"), "caller-owned");
   notMachine(["groupdescriptiondraft", "writinghelp"]);
 });
 

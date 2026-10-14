@@ -1,5 +1,5 @@
 /* machinery-producers — the feed's conditions about our own machinery (requirements:
- * `build/requirements/machinery-producers.md`, R1–R10). Split from `queue-producers` by copy (K617, K624 (1), K1850; seam read
+ * `build/requirements/machinery-producers.md`, R1–R12). Split from `queue-producers` by copy (K617, K624 (1), K1850; seam read
  * `build/extraction/queue-producers-split.md`), with no change of meaning: its R3, R22, R26 and R27 are this module's R2–R5.
  * Each producer derives, on read and writing nothing, the CONDITIONs one provider's facts earn for a viewer, naming each
  * item's subjects and home subjects for `queue-producers` to answer in `feedItems` (its R8) and for `queue` to home,
@@ -14,6 +14,8 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, governor, provenance, capture, captureRequests, monitoring, linkSweep, actions, networkNotices
  *   the providers (Uses).
+ * `deps.updateNotice` (R12) is handed in by the plane's composition, never reached by default: `instance-setup`'s
+ * `updateNoticeState()` (its R89), called at each read.
  *
  * `homesOf(subjectIds)` and `optionsOf(subjectIds)` (queue R7, R12) are held for the length of one synchronous
  * `conditionItems` read. `#conditionHomes` (`subject_bound`) and `#homesAt` (a case at depth 0) are built over `homesOf`.
@@ -203,13 +205,17 @@ export class MachineryProducers {
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
     this.#zone = undefined;
     try {
-      return { items: [
+      const items = [
         /* R2, R3: the machinery's own conditions. */
         ...this.#queueConditions(viewer, at),
         /* R4, R5 (K1036 (8); DEC-111): a sweep that needs a member's look; a working-on notice that needs its owners'. */
         ...this.#conditionsSweep(me, viewer, at),
         ...this.#conditionsNotice(me, viewer, at),
-      ] };
+      ];
+      /* R11, R12 (T48): the administrators' to-do for a release ready to install; a read that fails is named, never guessed. */
+      const update = this.#updateTodo(me, at);
+      items.push(...update.items);
+      return update.failed ? { items, facts: { failed: ["update-ready"] } } : { items };
     } finally {
       this.#homesFn = null;
       this.#optionsFn = null;
@@ -1068,6 +1074,105 @@ export class MachineryProducers {
       }
     }
     return out;
+  }
+
+  /* ======================================================================
+   * T48 · R11, R12 — THE ADMINISTRATORS' TO-DO FOR A RELEASE READY TO INSTALL (N1047; DEC-226 (1); K3158, K3189).
+   * Derived on read from `deps.updateNotice()`, the plane's handing of `instance-setup`'s `updateNoticeState()`
+   * (its R89): never imported, since `instance-setup` is later in the order. Nothing is stored; the item leaves on the
+   * first read after the notice read answers a decision or a running version that settles it.
+   * ====================================================================== */
+
+  /** A dotted release number as its numbers, else null. */
+  static #versionParts(v) {
+    return typeof v === "string" && /^\d+(\.\d+)*$/.test(v.trim()) ? v.trim().split(".").map(Number) : null;
+  }
+
+  /** -1, 0 or 1 comparing two parsed release numbers, a missing part being 0. */
+  static #compareVersions(a, b) {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      const d = (a[i] ?? 0) - (b[i] ?? 0);
+      if (d) return d < 0 ? -1 : 1;
+    }
+    return 0;
+  }
+
+  /** The latest decision on `version` among those the read answers (the ready release's own `decision`, R89, and the
+   *  `decisions` list), by `at`, a later entry winning a tie; null when none; `undefined` when one is malformed. */
+  static #latestDecision(version, state) {
+    const all = [state.ready.decision, ...(Array.isArray(state.decisions) ? state.decisions : [])]
+      .filter((d) => d !== null && d !== undefined);
+    let best = null;
+    for (const d of all) {
+      if (typeof d !== "object" || typeof d.kind !== "string" || !["start", "later", "skip"].includes(d.kind)) return undefined;
+      if (d.version !== undefined && d.version !== version) continue;
+      if (best === null || String(d.at ?? "") >= String(best.at ?? "")) best = d;
+    }
+    return best;
+  }
+
+  /** R11, R12: `{items, failed}`. Only an active administrator is asked at all. */
+  #updateTodo(me, now) {
+    const none = { items: [], failed: false };
+    if (!me) return none;
+    let admins;
+    try { admins = this.#membership.activeAdmins(); } catch { return none; }
+    if (!Array.isArray(admins) || !admins.includes(me)) return none;
+    const failed = { items: [], failed: true };
+    const read = this.#deps.updateNotice;
+    if (typeof read !== "function") return failed;
+    let st;
+    try { st = read(); } catch { return failed; }
+    if (!st || typeof st !== "object") return failed;
+    const running = MachineryProducers.#versionParts(st.running && st.running.version);
+    if (!running) return failed;
+    if (st.ready === null || st.ready === undefined) return none;
+    const r = st.ready;
+    const ver = MachineryProducers.#versionParts(r && r.version);
+    if (!ver || typeof r.date !== "string" || !r.date || typeof r.found_at !== "string" || !Number.isFinite(Date.parse(r.found_at)))
+      return failed;
+    const version = r.version.trim();
+    /* the running version is that release or newer: nothing to install */
+    if (MachineryProducers.#compareVersions(ver, running) <= 0) return none;
+    const decision = MachineryProducers.#latestDecision(version, st);
+    if (decision === undefined) return failed;
+    if (decision) {
+      if (decision.kind !== "later") return none;                               // started or skipped, by any administrator
+      const until = typeof decision.until === "string" ? decision.until.trim() : "";
+      if (isCalendarDate(until)) {
+        /* R10: a day is read on the local day; with no zone held, at the latest local day any zone has reached */
+        const today = MachineryProducers.#today(now, this.#instanceZone() || "Etc/GMT-14");
+        if (!today) return failed;
+        if (today < until) return none;
+      } else {
+        const untilMs = Date.parse(until);
+        if (!Number.isFinite(untilMs)) return failed;
+        if (untilMs > now) return none;
+      }
+    }
+    const security = r.security === true;
+    return { failed: false, items: [{
+      id: `OBLIGATION::update-ready::${version}`,
+      class: "OBLIGATION",
+      kind: "update-ready",
+      case: { ...UNGROUPED },
+      subject: { kind: "release", id: null, version },
+      summary: security
+        ? `a new release of your group's Civicsmith, ${version}, with a security fix, is ready to install`
+        : `a new release of your group's Civicsmith, ${version}, is ready to install`,
+      detail: { version, date: r.date, security },
+      basis: { source: "instance-setup.updateNoticeState", version, date: r.date, security, found_at: r.found_at,
+               running: st.running.version,
+               detail: "the to-do is derived on read from the signed notice your group's Civicsmith already holds. It goes to "
+                     + "every administrator and leaves every administrator's queue when one of them updates, puts it aside "
+                     + "until a later day or skips it, or when your group is running that release or a newer one." },
+      age: MachineryProducers.#localAge(r.found_at, this.#instanceZone(), now, "no_release_instant",
+        "the notice carries no instant this producer can read for when the release was found"),
+      assignee: null,
+      assignee_role: "admin",
+      recipients: [...admins],
+      options: this.#optionsOf([]),
+    }] };
   }
 
   /** A calendar day `n` days from `day` in the proleptic Gregorian calendar: arithmetic on the date's own numbers, no

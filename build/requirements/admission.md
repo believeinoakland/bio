@@ -75,7 +75,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 #### T48 (T48-64)
 
-- **R26** (T48; N1045; K3150; amends R10; `op-declarations` R56, R70; `sources` R1, R9) `sourceof` and `sourcerung` answer who a source is, so a member's reach alone never admits an `ai` credential to them: an `ai` caller, a member-scoped credential included, is refused `AI_BEYOND_TASK_SCOPE` (C-29.6) there unless its declared task scope names the op (R13), before any store call. A member's session is admitted as before. Test: a member-scoped `ai` credential asking `sourceof` is refused; controls: the member's own session is admitted; the same credential is admitted to another read its member reaches. *(not yet met: T48)*
+- **R26** (T48; N1045; K3150; amends R10; `op-declarations` R56, R70; `sources` R1, R9) `sourceof` and `sourcerung` answer who a source is, so a member's reach alone never admits an `ai` credential to them: an `ai` caller, a member-scoped credential included, is refused `AI_BEYOND_TASK_SCOPE` (C-29.6) there unless its declared task scope names the op (R13), before any store call. A member's session is admitted as before. Test: a member-scoped `ai` credential asking `sourceof` is refused; controls: the member's own session is admitted; the same credential is admitted to another read its member reaches.
 
 ### Satisfies
 
