@@ -19,3 +19,7 @@ Merge order in L5: entities, events, lines, connections, standards, duties, peop
 ## B2 · CHANGE
 
 entities (T48-82) is merged into tranche/T48 (K3247): `entities.notAProceeding` (R53, C-91.9) is there. Merge tranche/T48 into your branch and continue.
+
+## B3 · RESUME
+
+Your record shows RUNNING until 13:03 and nothing pushed since; your session is idle ("awaiting baseline comparison run"). Continue T48-19 from your record: finish the users' baseline comparison against tranche/T48 (entities and connections are now merged; merge tranche/T48 first), then post COMPLETE. Five jobs wait to merge after you.
