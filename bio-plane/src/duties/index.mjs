@@ -1083,7 +1083,7 @@ export class Duties {
           /* R30: a report's required response, its rule chosen on each read from the governing view (R5): the deadlines
              a body owes, started by the report's issuer; one is used, several or none leave the date undetermined */
           const c = responseRules(view, tm.response_to);
-          /* R33: none held is `deadline_not_held`; several held and none named, `due_not_computed` (J1) */
+          /* R33: none held is `deadline_not_held`; several held and none named, `due_not_computed` (K3243) */
           if (c.length !== 1) return { undetermined: true, basis_kind: "rule", law_set: true, ...(c.length ? { candidates: c.map((d) => d.rule) } : {}),
             rc: c.length ? "due_not_computed" : "deadline_not_held",
             why: c.length ? `the active jurisdiction profiles hold ${c.length} deadlines a body owes in response to ${responseWho(tm.response_to)} (${c.map((d) => d.rule).join(", ")}), and none is named for this office`
@@ -1190,7 +1190,7 @@ export class Duties {
         if (o === "not_overdue") state = { state: "pending", why: "the due date has not passed and no matching event is held" };
         else if (o === "overdue") state = { state: "overdue", why: "the due date has passed and no matching event is held, as known on the day asked" };
         /* R10, R33: between candidate days (the "possibly overdue" band), or a due held at a precision that does not
-           settle the day asked: either way the due date's day is what the record does not settle (J1) */
+           settle the day asked: either way the due date's day is what the record does not settle (K3243) */
         else state = { state: "undetermined", why: o && o.why ? o.why : "whether the due date has passed is not settled", rc: "due_between_days" };
       }
     }

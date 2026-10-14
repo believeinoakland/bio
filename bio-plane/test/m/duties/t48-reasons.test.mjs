@@ -156,3 +156,32 @@ test("R33 control: met, met_late, discharged, pending and overdue answer reason 
   assert.deepEqual(w.ops(`id=${u}&as_of=${AS_OF}&viewer=${BOB}`).dutyoccurrences().occurrences[0].reason,
                    { code: "deadline_not_held", says: DUTIES_REASON_WORDS["duty.reason.deadline_not_held"] });
 });
+
+test("R33 (K3243) each remaining path explicitly: a due civil-time cannot settle against asOf without candidates; a match with an open end; measured evidence against an undetermined due", () => {
+  const w = world();
+  /* a commitment due held open-ended: whether asOf is past it is not settled, and it has no candidates */
+  const open = w.declare({ time: { basis: "commitment", date: { value: "2026-03/..", precision: "edtf", zone: ZONE } } }).duty_id;
+  const o = one(w, open);
+  assert.equal(o.due.date.candidates, undefined);
+  undetermined(o, "due_between_days", "an open-ended due, unmatched");
+  /* a match whose date has an open end, either way */
+  for (const value of ["2026-02-10/..", "../2026-02-10"]) {
+    const id = w.declare().duty_id;
+    const ev = w.event({ value: { value, precision: "edtf", zone: ZONE }, concerns: [E.group] });
+    w.duties.matchEvent({ dutyId: id, occurrenceKey: one(w, id).key, eventId: ev, reason: "an open-ended response", by: BOB });
+    const m = one(w, id);
+    assert.match(m.why, /open end/);
+    undetermined(m, "match_undated", value);
+  }
+  /* measured evidence (R12) against an undetermined due passes the due's own code; against a settled due, its state */
+  w.duties.registerOccurrenceEvidence("calculations", () => [{ evidence: "CALC-2026-0001", when: "2026-02-05" }]);
+  const nr = w.declare({ time: { basis: "rule", rule: "no_such_rule" } }).duty_id;
+  const n = one(w, nr);
+  assert.match(n.why, /^measured evidence is held, and the due date is undetermined/);
+  undetermined(n, "deadline_not_held", "measured, the due undetermined");
+  const far = w.declare({ trigger: { kind: "date", date: "2028-02-02" } }).duty_id;
+  undetermined(one(w, far, "2028-03-09T12:00:00Z"), "due_not_computed", "measured, the due not computed");
+  const met = one(w, w.declare().duty_id);
+  assert.equal(met.state, "met");
+  assert.equal(met.reason, null);
+});
