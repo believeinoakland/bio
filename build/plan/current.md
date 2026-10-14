@@ -63,6 +63,8 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
       - (D) promotion `row-census.test.mjs`, until T49-4.
    8. **Found at the L11 (b) fold (K3334):** op-declarations' `ACT_HELP_ABSENT` partition (R34 'never both') from affordances' merge (T49-14) until T49-17; screens-entry's `signin.founderhint` reads (`front.mjs`:78, `index.mjs`:31) from setup-words' merge (T49-15) until T49-21.
 
+   9. **Found at L6's close (K3353):** bundler's `fleetbundles.test.mjs` pin of agent-worker's 28 inputs, until N1107 (T50).
+
    Any other red a merge opens is named at that merge (K2704).
 6. **Every T49 job also does the following**, each in its own module only and in its START. The Haiku test-only jobs (T49-7, T49-11) do only the second and third items.
    - (N1075, K3269) It reads by key every member-facing sentence it carries that `words.json` already keys, and drops its inline copy. A sentence with no key yet stays inline.

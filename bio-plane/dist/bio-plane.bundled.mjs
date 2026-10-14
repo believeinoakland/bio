@@ -158235,8 +158235,9 @@ var AiRuns = class _AiRuns {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects2 = this.#runContextProjects(contextType, contextId);
     const who3 = actor == null ? "" : String(actor).trim();
+    const asked = memberIdOf3(who3) ?? who3;
     const joined2 = who3 && runConsultsProjects(contextType) ? projects2.filter((p3) => {
-      const part = this.#membership().participation(p3, who3);
+      const part = this.#membership().participation(p3, asked);
       return !!part && part.state === "joined";
     }) : [];
     const g = projectGate({ actor: who3, contextType, contextId, projects: projects2, projectsJoined: joined2 });
