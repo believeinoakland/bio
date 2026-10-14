@@ -38,3 +38,7 @@ Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 9, module lines 887
 ## J2 · REPORT
 
 control-plane (T47-65): R14 opens two reds there, by design. (a) test/m/control-plane/t46-door.test.mjs R65 and the R32/R39/R46 wire-check test pin DISCLOSURE_DUE at C-69.6; the door now answers it decorated with credentials' C-29.40 and words.json's sentence. (b) control-plane/index.mjs :2035 still calls dispatchRow("DISCLOSURE_DUE"); answer-envelope's reader answers that one retired code with the C-29.40 row (RETIRED_DISPATCH) until T47-65 answers through credentials.disclosureDue, so the door keeps working. After T47-65 that branch can go in a later answer-envelope job. promotion (T48 stamp): src/gate.mjs's census comment still names C-69.6 as a live row. Before/after counts are in my record.
+
+## J3 · COMPLETE
+
+T47-54 done: R14 (C-69.6 retired; DISCLOSURE_DUE decorates with C-29.40), R15 (case-inputs' family before case-authoring's), R16 (interfacePage under R6; C-69.7 SIGNINTRACE_NOT_TEST as B2 confirmed), and the DEC-199 re-pins C-116.14, C-116.41. Rule 5 (7a) and (7b) are cleared. Module tests 35/35. Checks: format, architecture, coverage and ownership 0 failures; run.mjs architecture 0. Users: store-door and plane unchanged; control-plane +2 C-69.6 pins (J2). Record on job/T47/answer-envelope.
