@@ -23,3 +23,7 @@ K3143: the GUIDE contract you and screens-wizards meet at (your R31, its R2–R7
 ## B3 · ANSWER · re J1
 
 K3144: 1. as read, and see R46's last sentence. 2. edge `interface-shell → signatures` added; drop the setup-page import (BOB drops the edge at your merge). 3. as read. Also new R46 on `tranche/T47`: the kit contract screens-entry and screens-settings need (`view.session`, `view.fragment`, `cs.signin`, `cs.signout`, `cs.signedOut`, `cs.save`, `cs.copy`, `cs.signer.publicLine`, public acts in the public and setup frames). Their J1s on `job/T47/screens-entry` and `job/T47/screens-settings` give the detail. Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3145: new R47 on `tranche/T47`: `cs.save`, `cs.copy`, `cs.signout` each answer their own bound control (`{label}`); `cs.signer.sign([{label, bytes, namespace}])` → `{ok: true, signatures}` or `{ok: false, declined: true}`, `cs.signer.register({keep})` → `{ok: true, keyB64}`, the key-file control inside `sign`; `REF_SCREENS` gains `person`, `proceeding`, `standard` with cards; `ADMIN_ACTS` gains `personexpunge`. Merge `tranche/T47`.
