@@ -232,3 +232,22 @@ test("R51 R35 precedes is one of the event links: neighbours answers it as an ev
   const v = w.ev.readEvent({ eventId: b, viewer: MEMBER }).event.relations;
   assert.deepEqual(v.map((r) => [r.kind, r.direction, r.from]), [["precedes", "in", a]]);
 });
+
+/* ---- R52 ---- */
+
+test("R52 R34's NOT_A_PROCEEDING is entities.notAProceeding's answer (its R53): code, catalogue row and sentence, with the entity asked; through the op too; nothing written (control: a proceeding is not refused)", async () => {
+  const { notAProceeding } = await import("../../../src/entities/index.mjs");
+  const { eventsOps } = await import("../../../src/events/index.mjs");
+  const w = world();
+  const person = w.entity("Kim");
+  const r = w.ev.proceedingStatusAt({ proceeding: person, at: "2026-01-01", viewer: MEMBER });
+  assert.deepEqual(r, notAProceeding("status as of a date is read of an entity of kind proceeding", { entity_id: person }));
+  assert.deepEqual([r.ok, r.reason, r.code, r.entity_id], [false, "NOT_A_PROCEEDING", "NOT_A_PROCEEDING", person]);
+  assert.equal(r.translation, notAProceeding().translation);
+  assert.equal(r.check, notAProceeding().check);
+  const url = new URL(`https://x.test/?proceeding=${person}&at=2026-01-01&viewer=${MEMBER}`);
+  assert.deepEqual(eventsOps(w.ev, url, {}).proceedingstatus(), r);
+  assert.equal(w.rows(`SELECT * FROM events`).length, 0);
+  const proc = w.proceeding("Suit one");
+  assert.notEqual(w.ev.proceedingStatusAt({ proceeding: proc, at: "2026-01-01", viewer: MEMBER }).reason, "NOT_A_PROCEEDING");
+});

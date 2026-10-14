@@ -12,7 +12,7 @@ import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER, notAnAdmi
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, noSha } from "../extraction/index.mjs";
 import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
-import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index.mjs";
+import { entitiesOf, noEntity, noSuchEntity, notAProceeding, gradeRank } from "../entities/index.mjs";
 import { readHooksOf } from "../reading-pipeline/hooks.mjs";
 import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJson, TESTIMONY_GRADE }
   from "../record-grammar/index.mjs";
@@ -1315,7 +1315,8 @@ export class Events {
     if (!ents.has(proceeding)) return noSuchEntity(proceeding);
     const e = ents.readEntity({ entityId: proceeding, viewer: "class:admin" });
     if (!e || !e.entity || e.entity.kind !== "proceeding")
-      return refuse("NOT_A_PROCEEDING", "status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
+      /* R52 (K231): the one site minting NOT_A_PROCEEDING is entities' (its R53) */
+      return notAProceeding("status as of a date is read of an entity of kind proceeding", { entity_id: proceeding });
     const und = (why, extra = {}) => ({ ok: true, proceeding, at: at ?? null, stage: "undetermined", why, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : (e.entity.proceeding || null);
     const kind = facet && facet.kind;
