@@ -17,7 +17,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 1. `modules.json` (BOB's): credentials' `uses` must gain `ai-accounts` (the entry says so). Until it does, architecture shows 4 failures for my files, each that one edge; with it, 0.
 2. Two tests outside my module read credentials' `checks.mjs` for `DISCLOSURE_DUE`, now `ai-accounts`' (C-29.40): answer-envelope `test/m/answer-envelope/envelope.test.mjs` (R14, :305, asserts the one holder is `src/credentials/checks.mjs`) and control-plane `test/m/control-plane/envelope.test.mjs:433` (R32, R39, R46: the decorated wire codes lose `DISCLOSURE_DUE` while `CHECK_FAMILY_FILES` lacks `src/ai-accounts/checks.mjs`). Both are split map §7 risk 3, cleared by T48-65; the plan names only `families.test.mjs` R2, so these two want naming.
 3. `ai-accounts` R26 does not tell its listeners when Anthropic refuses a sign-in (`subscriptionTokenRefused`), so R73's "or Anthropic's refusal" never reaches credentials: a refused sign-in leaves her run credentials live (as before T48). R73's listener revokes them on any `signin` notice; the gap is ai-accounts R26/R19's.
