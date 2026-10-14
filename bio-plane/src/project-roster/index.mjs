@@ -1,11 +1,12 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R27). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R28). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`); T47 (R26) lists the
- * projects a viewer sees at FULL with each one's recorded stage, and R27 each one's opener. Split from membership for
+ * projects a viewer sees at FULL with each one's recorded stage, R27 each one's opener and R28 its members and recent
+ * activity. Split from membership for
  * size at T38 (N783; K617, K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's
  * behaviour is membership's as T37 left it, its answers byte for byte. Inviting, joining, leaving and removing, the
  * visibility setting, what a caller may see of a project, the fence and the participation record stay `membership`'s.
@@ -13,7 +14,7 @@
  *
  * SHAPE (K61). `projectRosterOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
  * reaching record-core by `recordOf(ctx)` and membership by `membershipOf(ctx)` on the same `ctx`; a test may pass its
- * own as `projectRosterOf(ctx, { record, membership })`. This module writes only its own five tables (`schema.mjs`).
+ * own as `projectRosterOf(ctx, { record, membership, clock })`. This module writes only its own five tables (`schema.mjs`).
  * It reads membership's tables only through membership's stated read contract (its R120) and writes them only through
  * `participationWrite` (its R118); it joins record-core's `bundles` and `manifest` only on its read contract
  * (record-core R37) and asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
@@ -30,10 +31,12 @@ export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECK
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
 
 export class ProjectRoster {
-  constructor({ sql, core = null, membership } = {}) {
+  constructor({ sql, core = null, membership, clock = null } = {}) {
     this.sql = sql;
     this.core = core;
     this.m = membership;
+    /* R28: the server's instant, `() => milliseconds`; the host may configure it, a request never does. */
+    this.clock = typeof clock === "function" ? clock : () => Date.now();
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -169,10 +172,13 @@ export class ProjectRoster {
     const mine = this.m.participation(projectId, by);
     if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
     const handleOf = (id) => this.m.memberFacts(id)?.handle ?? id;
+    /* The founder, a participant once invited (D54) with no roster row, is listed by its handle `admin` (credentials
+       R67), as R27 names it. */
     return { ok: true, projectId, participants: this.#rows(
-      `SELECT m.handle, p.state, p.owner, p.comment, p.created
-       FROM project_participants p JOIN members m ON m.member_id = p.member_id
-       WHERE p.project_id=? ORDER BY p.owner DESC, m.handle`, projectId),
+      `SELECT COALESCE(m.handle, p.member_id) AS handle, p.state, p.owner, p.comment, p.created
+       FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
+       WHERE p.project_id=? AND (m.member_id IS NOT NULL OR p.member_id = ?)
+       ORDER BY p.owner DESC, COALESCE(m.handle, p.member_id), p.member_id`, projectId, ROOT_ADMIN),
       /* R6: every ownership decision, with its deciders and reasons, in the order it was carried. */
       ownership: this.#rows(`SELECT kind, target, deciders, reasons, at FROM project_owner_decisions
                               WHERE project_id=? ORDER BY seq`, projectId).map((d) => ({
@@ -651,7 +657,10 @@ export class ProjectRoster {
    *
    *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
    *  states), `{member, handle}`, the founder's `{member: "admin", handle: "admin"}`, or null when that opener is no
-   *  longer an active member or names none; nothing else about them. */
+   *  longer an active member or names none; nothing else about them.
+   *
+   *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
+   *  sight (`#projectFacts`). */
   projectList(asked = {}) {
     const { viewer = null, limit = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
@@ -672,15 +681,84 @@ export class ProjectRoster {
         ORDER BY b.bundle_id
         LIMIT ?`, ROOT_ADMIN, ...gate.args, cap + 1);
     const truncated = rows.length > cap;
-    const projects = (truncated ? rows.slice(0, cap) : rows).map((r) => ({ id: r.id,
+    const page = truncated ? rows.slice(0, cap) : rows;
+    const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
+    const projects = page.map((r) => ({ id: r.id,
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? { member: ROOT_ADMIN, handle: ROOT_ADMIN }
-        : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null }));
+        : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
+      members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
+      lastChange: lastChange.get(r.id) ?? null }));
     return { ok: true, projects, count: projects.length, limit: cap, truncated };
   }
 
   /* R26's page size, R9's rule: a chosen ceiling, lowered by the caller and never raised. */
   static PROJECT_LIST_LIMIT = 200;
+
+  /* R28 (T47; N1025; DEC-214 (3)): eight weeks of activity, oldest first, each week seven days back from the server's
+     instant, never a caller's. */
+  static ACTIVITY_WEEKS = 8;
+  static WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  /* The server's instant in milliseconds: the host's clock when it gave one that reads as a finite number, else now. */
+  #now() {
+    let t;
+    try { t = Number(this.clock()); } catch { t = NaN; }
+    return Number.isFinite(t) ? Math.trunc(t) : Date.now();
+  }
+
+  /** R28: FOR THE LISTED PROJECTS (`ids`, already those the viewer sees at FULL), each one's `members`, `activity` and
+   *  `lastChange`, by the viewer's sight (`gate`, membership's compiled R43):
+   *    MEMBERS     every participant, any state, as R1 lists them to a viewer at FULL (membership R120's
+   *                `project_participants` joined to `members`), `{member, handle}`, owners first, then by handle; the
+   *                founder, who has no roster row, as R27 names it. A project is listed only at FULL, where R1 already
+   *                shows that viewer every participant, so no member here is one the viewer may not see.
+   *    ACTS        one per `manifest` entry (record-core R37; one per commit) on the project's own bundle or on a bundle
+   *                its `bundles.project` names (record-core R34), each counted only when the gate admits that bundle:
+   *                an act on a record the viewer may not see (a hidden project recorded as belonging to this one) moves
+   *                nothing. Instants are compared as instants (`julianday`), never as strings.
+   *    ACTIVITY    week k back (0 the newest) holds the acts in (now − (k+1)·7d, now − k·7d]; answered oldest first. An
+   *                act after now, or one whose instant cannot be read, is in no week.
+   *    LASTCHANGE  the `created` of the newest such act, as recorded, ties to the later recorded; null when none.
+   *  Writes nothing. */
+  #projectFacts(ids, gate) {
+    const members = new Map(), activity = new Map(), lastChange = new Map();
+    if (!ids.length) return { members, activity, lastChange };
+    const list = `(${ids.map(() => "?").join(",")})`;
+    for (const r of this.#rows(
+      `SELECT p.project_id AS project, p.member_id AS member, COALESCE(m.handle, p.member_id) AS handle
+         FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
+        WHERE p.project_id IN ${list} AND (m.member_id IS NOT NULL OR p.member_id = ?)
+        ORDER BY p.project_id, p.owner DESC, COALESCE(m.handle, p.member_id), p.member_id`, ...ids, ROOT_ADMIN)) {
+      if (!members.has(r.project)) members.set(r.project, []);
+      members.get(r.project).push({ member: r.member, handle: r.handle });
+    }
+    const timed = `WITH acts AS (
+        SELECT b.bundle_id AS project, x.created, x.rowid AS rid
+          FROM manifest x JOIN bundles b ON b.bundle_id = x.bundle_id
+         WHERE b.object_type = 'project' AND b.bundle_id IN ${list} AND (${gate.sql})
+        UNION ALL
+        SELECT b.project AS project, x.created, x.rowid AS rid
+          FROM manifest x JOIN bundles b ON b.bundle_id = x.bundle_id
+         WHERE b.project IN ${list} AND b.bundle_id <> b.project AND (${gate.sql})),
+      timed AS (SELECT project, created, rid,
+                       CAST(ROUND((julianday(created) - 2440587.5) * 86400000.0) AS INTEGER) AS ms
+                  FROM acts)`;
+    const args = [...ids, ...gate.args, ...ids, ...gate.args];
+    const now = this.#now(), W = ProjectRoster.WEEK_MS, N = ProjectRoster.ACTIVITY_WEEKS;
+    for (const r of this.#rows(
+      `${timed} SELECT project, CAST((? - ms) / ? AS INTEGER) AS k, COUNT(*) AS n FROM timed
+        WHERE ms IS NOT NULL AND ms <= ? AND ms > ? GROUP BY project, k`, ...args, now, W, now, now - N * W)) {
+      if (!activity.has(r.project)) activity.set(r.project, Array(N).fill(0));
+      if (r.k >= 0 && r.k < N) activity.get(r.project)[N - 1 - r.k] = r.n;
+    }
+    for (const r of this.#rows(
+      `${timed} SELECT project, created FROM (
+          SELECT project, created, ROW_NUMBER() OVER (PARTITION BY project ORDER BY ms DESC, rid DESC) AS rn
+            FROM timed WHERE ms IS NOT NULL) WHERE rn = 1`, ...args))
+      lastChange.set(r.project, r.created);
+    return { members, activity, lastChange };
+  }
 
   /* The cap APPLIED for an asked `limit` under a ceiling (R9, R14, R26): the ceiling when none is asked or it is not a
      positive number, never more than it, never less than one. Reads any value without throwing. */
@@ -957,14 +1035,14 @@ export class ProjectRoster {
 
 /* K61: the one ProjectRoster of a Durable Object's storage, made on first use over its `sql`, reaching record-core by
    `recordOf(ctx)` and membership by `membershipOf(ctx)` on the same `ctx`, and started once (R15, R16). `record` and
-   `membership` (a test's own) are read on the first call only. */
+   `membership` (a test's own) and `clock` (the host's, R28) are read on the first call only. */
 const OF = new WeakMap();
-export function projectRosterOf(ctx, { record = null, membership = null } = {}) {
+export function projectRosterOf(ctx, { record = null, membership = null, clock = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let r = OF.get(storage);
   if (!r) {
     r = new ProjectRoster({ sql: storage.sql, core: record ?? recordOf(ctx),
-                            membership: membership ?? membershipOf(ctx, { record }) });
+                            membership: membership ?? membershipOf(ctx, { record }), clock });
     OF.set(storage, r);
     r.start();
   }
@@ -989,7 +1067,8 @@ export function projectRosterOps(r, url, body, env) {
     projectvisibility: () => r.projectVisibility({ projectId: q("projectId"), viewer: q("viewer") }),
     /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
-    /* T47 (R26, R27): the projects the stamped viewer sees at FULL, with each one's recorded stage and opener. */
+    /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
+       activity; the instant is the server's, never a query's. */
     projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),
     /* REC-150: `by` and `viewer` are the control plane's stamps. */

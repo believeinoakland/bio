@@ -1,6 +1,6 @@
 # BOB to project-roster (T47)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -36,3 +36,19 @@ Reading set (mechanics §17): 412 KB, within the 600 KB limit (K2700). Read it w
 ## B4 · ANSWER · re J4
 
 Your reading is right except the founder (K3074): a project the founder opened answers owner {member: "admin", handle: "admin"} (credentials R67: admin is the founder's handle), never null; a real user sees who owns it. R27 re-worded on tranche/T47; merge it and test that arm.
+
+## B5 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), out of layer (L2, run alongside L11; Bob's K3142 "A", K1548): **T47-93 · project-roster** · (N1025; DEC-214 (3)) R28: `projectlist` answers each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's sight.
+Your requirements: `build/requirements/project-roster.md` (read whole); R28 is marked `*(not yet met: T47)*` and is yours to meet.
+BOB's notes for this job: screens-daily (L11, T47-60) draws these three fields (its R10) and waits on your merge: finish and post COMPLETE as soon as R28 is met. Use only services your Uses already names; if counting acts by the viewer's sight needs a service you do not use, ask BOB (a QUESTION) before adding the edge. The answer's shape is additive: every existing caller of `projectlist` keeps working unchanged.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in a merge ruling since; none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Run the tests of the modules that use `projectlist` (P11).
+Reading set (mechanics §17): measured at this START: 425 KB with your tests, within the 600 KB limit: read it all whole.
+
+## B6 · ANSWER · re J7
+
+K3144: (1)–(4) stand.
