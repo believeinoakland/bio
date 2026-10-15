@@ -133,3 +133,20 @@ test("R11: the fake model answers by the tool the conversation names, else the o
   const g = conversation({ prompt: "Answer by calling judge_plan.", tools: TOOLS, max_turns: 2 });
   assert.equal(g.next().value.name, "judge_plan");
 });
+
+test("R11: the fake model answers an ask in the answers contract's form: no clarifying question, no summary, no sentence it did not read, the tool's own label; the walk's step 11 checks it against answers' own check", () => {
+  const F = ["question_as_read", "clarifying", "summary", "sentences", "holdings", "rules", "looks", "bound", "truncated", "out_of_view",
+    "lens", "not_established", "query", "next_acts", "label"];
+  const hint = { question_as_read: { type: "string" }, clarifying: { type: ["string", "null"] }, sentences: { type: "array" },
+    holdings: { type: "array" }, rules: { type: "array" }, looks: { type: "array" }, label: { type: "string", enum: ["machine work"] } };
+  const tools = [{ name: "read_result", input_schema: {} }, { name: "answer", input_schema: { type: "object",
+    properties: Object.fromEntries(F.map((k) => [k, hint[k] ?? {}])), required: F } }];
+  const g = conversation({ prompt: "USER:\nWhat did the city order the landlord to do?\n", tools, max_turns: 6 });
+  const step = g.next();
+  assert.equal(step.value.name, "answer");
+  const a = step.value.input;
+  assert.deepEqual(Object.keys(a), F);
+  assert.deepEqual([a.clarifying, a.summary, a.sentences, a.holdings, a.label], [null, null, [], [], "machine work"]);
+  assert.equal(a.question_as_read, "What did the city order the landlord to do?");
+  assert.ok(a.not_established.length >= 1 && a.not_established.every((t) => typeof t === "string" && t));
+});

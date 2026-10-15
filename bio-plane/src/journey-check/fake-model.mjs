@@ -63,6 +63,8 @@ export function fill(schema, read, name = "") {
     const prefer = s.enum.find((e) => /^(?:found|present|supports|held|answered|yes|ok)$/i.test(String(e)));
     return prefer ?? s.enum[0];
   }
+  /* a field that may be null is left null: a careful model asks no clarifying question it does not need */
+  if (Array.isArray(s.type) && s.type.includes("null")) return null;
   const type = Array.isArray(s.type) ? s.type.find((t) => t !== "null") : s.type;
   if (type === "object" || (!type && s.properties)) {
     const out = {};
@@ -126,6 +128,25 @@ export function* conversation({ system = "", prompt = "", tools = [], max_turns 
   /* the ask reads before it answers: done_reading closes its reading */
   if (!final) return "There is nothing to answer with.";
   const schema = (tools.find((t) => t.name === final) || {}).input_schema || {};
-  yield { name: final, input: fill(schema, gather(results)) };
+  const read = gather(results);
+  yield { name: final, input: final === "answer" && isAnswersContract(schema) ? plainAnswer(schema, prompt, read) : fill(schema, read) };
   return "Answered.";
+}
+
+/* The ask's `answer` tool asks for the answers contract (agent-worker R89): its fields, and the one label it allows. */
+export const isAnswersContract = (schema) => !!(schema && schema.properties && schema.properties.question_as_read
+  && schema.properties.label && Array.isArray(schema.properties.label.enum));
+
+/* An answer in the answers contract that claims nothing it did not read: the question as read, no clarifying question,
+   no sentence, and what it could not establish said as not established. Every field the tool names, in its form. */
+export function plainAnswer(schema, prompt, read) {
+  const asked = /USER:\n([^\n]+)/.exec(String(prompt));
+  const values = {
+    question_as_read: asked ? asked[1].trim().slice(0, 300) : "the question asked",
+    clarifying: null, summary: null, sentences: [], holdings: [], rules: [], looks: [], bound: null, truncated: false,
+    out_of_view: false, lens: null, query: null, next_acts: [], label: schema.properties.label.enum[0],
+    not_established: [read.passages.length ? "What the record holds was read; this answer states nothing it did not read."
+      : "Nothing the assistant read settles this yet."],
+  };
+  return Object.fromEntries(Object.keys(schema.properties).map((k) => [k, k in values ? values[k] : fill(schema.properties[k], read, k)]));
 }
