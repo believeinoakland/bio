@@ -81,3 +81,13 @@ CHANGE B9 processed (K3379): merged `origin/tranche/T49` (op-declarations, contr
 `node --test test/m/screens-inquiry/` with `test/m/control-plane/t46-app.test.mjs`, with the local registry loader (B6): 117 pass, 0 fail. Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures. Everything else in J5 stands.
 
 Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 27, module lines 2194
+
+## J7 · COMPLETE
+
+CHANGE B10 processed (K3380): merged `origin/tranche/T49` (interface-shell R65–R72 and admission in); the local registry loader and every stand-in are deleted.
+
+On the real shell: `node --test test/m/screens-inquiry/ test/m/control-plane/t46-app.test.mjs`: 117 pass, 0 fail. The other tests that import my screens: `screens-daily/answers`, `plane/t47`, `screens-intake/held`, `interface-shell/frame`: all pass; `answer-envelope/catalogue-end.test.mjs`: 2 fail (its R7/R13 pins, `AI_BEYOND_TASK_SCOPE` among the differences), failing identically on `origin/tranche/T49` without my branch, so answer-envelope's (or the code's owner's), not this module's.
+
+Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures. Everything else in J5 and J6 stands (the reads N1124 owes, R33's test playing run-rules' rule for want of a `uses` edge).
+
+Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 30, module lines 2194
