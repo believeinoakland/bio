@@ -558,7 +558,7 @@ console.log("\n--- release: a copy that fails verification is never installed --
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   const put = calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/wary-town"));
   if (BUILTIN_OK) {
-    t("the built-in source installed instead", (await sourceOf(put)).includes("tampered"), false);
+    t("the built-in source installed instead", (await sourceOf(put)).includes("tampered bytes"), false);
     t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
   } else {
     t("R20: the built-in states no limits, so nothing installs, and the page says why",
