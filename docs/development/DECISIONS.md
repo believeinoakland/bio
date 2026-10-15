@@ -4333,3 +4333,17 @@ response: **The design session, 2026-10-15.** `screen.plan.tip.hypothetical` "a 
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-276's rows), `screens/mock-refs.js`; `words.json`.
 owed: (BOB) `setup-words`' rows regenerated (three reworded). (design) none.
+
+### DEC-278 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (BOB's B238: admission R28, screens-entry R21, K3421)
+for: bob-session
+question: `words-reads.json` lists only the keys a module writes whole: since T49's modules read keys rather than English (K3366), a key a module computes (`refusal.${code}`, `"screen.front." + k`, `screen.tour.step${n}.title`) is no longer listed (admission's reads 23 to 1; screens-entry's 231 to 107, its `retired` list gone), and two tests that compare against the list are red.
+why it is Bob's: the design's own tool (DEC-258); decided by the design session, reported to Bob as done.
+provisional: as above.
+alternative: each module declares its key set and the tests read that (N1146). Kept as BOB's choice for T50; the inventory serves either way.
+recommendation: as below.
+reversal cost: low: a tool's output.
+response: **The design session, 2026-10-15.** `words-reads.src.mjs` lists a module's computed keys too, from its source with comments set aside: a key's head before a placeholder at its end (`refusal.${code}`, `"screen.front." + k`) joined to each string, property name or CONSTANT_NAME the module holds, and a key with words after its placeholder (`screen.tour.step${n}.title`) matched as a pattern, each listed only where the joined key is a word (and under `retired` where it is retired). `counts.computedKeys` says how many came so. Admission reads 31 (DEC-271's 23 among them), screens-entry 595 (its 231 among them but the twelve tour steps' reads, now matched, and its `retired` list back); 12,469 keys in all, 2,306 of them computed. The list over-reaches only where a head joins a name the module holds for another use; every key listed is a word whose two parts the module holds. Keys DEC-271's list held that no module source now names (screens-daily's 34, interface-shell's 10 and others moved or dropped by T49's jobs) are not listed.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (DEC-278), `screens/words-reads.json`.
+owed: (BOB) admission R28 and screens-entry R21 compare against the new list at the next MERGE, or read their own keys against `hasWord` (N1146), as BOB chooses. (design) none.

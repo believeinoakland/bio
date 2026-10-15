@@ -408,6 +408,7 @@ for (const m of MODULES) {
   const dir = path.join(SRC, m);
   if (!fs.existsSync(dir)) { out.modules[m] = { reads: [], counts: { reads: 0 }, unkeyed: [], note: "not built yet at T49: no source, so it reads no key yet" }; continue; }
   const reads = new Set(), lits = new Set(), unkeyed = [], retired = new Set(), renamed = {};
+  const srcs = [];
   const c = { keyedRows: 0, literalKeys: 0, inline: 0, inlineKeyed: 0, inlineUnkeyed: 0 };
   if (m === "setup-words") {
     const sw = await import(pathToFileURL(path.join(dir, "index.mjs")).href);
@@ -432,6 +433,7 @@ for (const m of MODULES) {
   for (const f of files) {
     const rel = path.relative(SRC, f).split(path.sep).join("/");
     const src = fs.readFileSync(f, "utf8");
+    srcs.push(src);
     const { toks } = tokenize(src, 0, false, { line: 1 });
     literalKeys(toks, lits);
     for (const [from, to] of Object.entries(RENAMED[m] || {})) if (src.includes(JSON.stringify(from))) { renamed[from] = to; reads.add(to); }
@@ -452,6 +454,23 @@ for (const m of MODULES) {
   }
   for (const k of lits) if (!RETIRED.has(k)) reads.add(k);
   c.literalKeys = lits.size;
+  /* DEC-278 (B238): keys a module computes, a key's head joined to a code or name the module holds (`refusal.${code}`,
+     "screen.front." + k): each head (a dotted name ending in "." before `${` or before +) joined to each string, property
+     name or CONSTANT_NAME the module's source holds, read where the joined key is a word (and retired where it is retired) */
+  { const heads = new Set(), tails = new Set(), pats = []; let n = 0;
+    for (const t0 of srcs) { const t = t0.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:\\"'`])\/\/[^\n]*/g, "$1");   /* comments name keys they do not read */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.)\$\{/g)) heads.add(r[1]);
+      for (const r of t.matchAll(/["'`]([a-z][\w-]*(?:\.[\w-]+)*\.)["'`]\s*\+/g)) heads.add(r[1]);
+      for (const r of t.matchAll(/["'`]([\w-]+(?:\.[\w-]+)*)["'`]/g)) tails.add(r[1]);
+      for (const r of t.matchAll(/\b([A-Za-z_][\w]*)\s*:/g)) tails.add(r[1]);
+      for (const r of t.matchAll(/\b([A-Z][A-Z0-9_]{2,})\b/g)) tails.add(r[1]);
+      /* a key with words after its placeholder (`screen.tour.step${n}.title`): every word the pattern fits */
+      for (const r of t.matchAll(/`([a-z][\w-]*(?:\.[\w-]+)*\.?[\w-]*(?:\$\{[^}`]*\}[\w-]*)+(?:\.[\w-]+)+)`/g)) pats.push(new RegExp("^" + r[1].split(/\$\{[^}`]*\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\w-]+") + "$"));
+    }
+    for (const re of pats) for (const k of KEYS) if (re.test(k)) { if (RETIRED.has(k)) retired.add(k); else if (!reads.has(k)) { reads.add(k); n++; } }
+    for (const h of heads) for (const tl of tails) { const k = h + tl;
+      if (RETIRED.has(k)) retired.add(k); else if (KEYS.has(k) && !reads.has(k)) { reads.add(k); n++; } }
+    c.computedKeys = n; }
   /* DEC-265 (B226 (5)): keys a module's requirements name that its merged source does not read yet */
   for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
