@@ -101,3 +101,7 @@ screens-settings complete after B6: tranche merged on the real shell, words.test
 ## J6 · COMPLETE
 
 screens-settings complete after B7: DEC-263-267 merged; the three DEC-265 name keys read; AGENT_WORKER_UNBOUND already by refusal key. Module tests 119 of 119; checks 0 failures, coverage 39 of 39.
+
+## J7 · COMPLETE
+
+screens-settings complete after B8: tranche merged; R39's test guards the retired list and keeps the retired row asserted absent by name. Module tests 119 of 119; checks 0 failures.
