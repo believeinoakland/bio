@@ -123,6 +123,8 @@ export class Walk {
     for (const r of unexcused)
       this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
         : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`) + why(r));
+    /* JOURNEY_DEBUG=bodies prints each answer that carries a refusal, redacted, to diagnose it; never into the report */
+    if (process.env.JOURNEY_DEBUG === "bodies" && refusals.length) process.stderr.write(`BODY ${where}: ${this.redact(JSON.stringify(body)).slice(0, 4000)}\n`);
     const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
     if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
