@@ -1,0 +1,203 @@
+/* journey-check R11: the fake model the local arm's runner (runner.mjs) speaks for, pure: no I/O, no clock. One
+   conversation is a generator: it yields each tool call `{name, input}` it makes, receives that call's `tool_result`
+   (`{id, content, is_error?}`), and returns its closing text. It answers as a careful model would within the contract it
+   is handed, never by knowing the walk:
+   - it reads first: each result the transcript holds back (`read_result`, agent-model R12) and the facts
+     (`read_facts`), and, in a search sub-session, one search of its own;
+   - it answers by calling the tool the conversation names as its answer ("Answer by calling …", agent-model's row and
+     sub-session prompts), or, when none is named, the one tool of `ANSWERS` it is offered;
+   - its answer fills that tool's `input_schema` from what it read: addresses it read are its citations, a passage it
+     read is its quote, the question it was asked is its subject (`fill`).
+   The run modes' judgements are `judge_<step>` (agent-model `judgeTools`, `planJudgeTools`), the sub-session's is
+   `report`, the ask's `answer` (agent-worker R54, R89) after `done_reading`, the drafts' `draft`, the transcriber's
+   its own tool. */
+
+import { NOTICE_PASSAGE, NOTICE_ADDRESS } from "./city.mjs";
+
+/* The fake model knows the walk's own scenario (city.mjs): the notice the walk captures, and what it says. */
+export const NOTICE_ID = "2026-118";
+export const SCENARIO_CLAIM = `The city's housing notice ${NOTICE_ID} orders the landlord to repair the roof: "${NOTICE_PASSAGE}"`;
+
+/* The answer tools a conversation may offer without naming one, in the order they are preferred. */
+export const ANSWERS = Object.freeze(["answer", "report", "draft", "done_reading"]);
+/* The optional fields that carry what was read, and so are said */
+const CARRIES = /summary|citation|source|address|candidate|target|description|claim|name|quote/i;
+/* How many of the results a transcript holds back it reads again, newest first */
+export const READ_HELD = 3;
+
+const text = (content) => {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) return content.map((b) => (b && typeof b === "object" ? (b.text ?? JSON.stringify(b)) : String(b ?? ""))).join("\n");
+  return JSON.stringify(content ?? null);
+};
+const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
+
+/* The answer tool a conversation names, or the one it offers. */
+export function answerTool({ system = "", prompt = "", tools = [] }) {
+  const names = tools.map((t) => t.name);
+  /* the transcript carries every earlier row's prompt: the answer named last is this turn's */
+  for (const s of [prompt, system]) {
+    const named = [...String(s).matchAll(/Answer by calling (?:the )?`?([A-Za-z_][\w]*)`?/g)].map((m) => m[1]).filter((n) => names.includes(n));
+    if (named.length) return named[named.length - 1];
+  }
+  if (/then call report once/.test(system) && names.includes("report")) return "report";
+  return ANSWERS.find((n) => names.includes(n)) || names.find((n) => /^judge_/.test(n)) || names[names.length - 1] || null;
+}
+
+/* What the conversation has read: every value under keys that name an address, every string long enough to be a
+   passage, and the record ids it saw. */
+export function gather(values) {
+  const seen = { addresses: new Set(), passages: [], ids: new Set(), objects: [] };
+  const visit = (v, key, depth) => {
+    if (depth > 40 || v === null || v === undefined) return;
+    if (typeof v === "string") {
+      if (/^(?:address|url|source|href|capture_address)$/i.test(key || "") || /^https?:\/\//.test(v)) seen.addresses.add(v);
+      if (/^[A-Z]{2,6}-\d{4}-[a-z0-9]+$/i.test(v)) seen.ids.add(v);
+      if (v.length >= 40 && /\s/.test(v)) seen.passages.push(v);
+      return;
+    }
+    if (Array.isArray(v)) { for (const x of v) visit(x, key, depth + 1); return; }
+    if (typeof v === "object") { seen.objects.push(v); for (const [k, x] of Object.entries(v)) visit(x, k, depth + 1); }
+  };
+  for (const v of values) visit(v, "", 0);
+  return seen;
+}
+
+/* A value for `schema` from what was read: the first enum value that does not say nothing was found, the read
+   addresses as citations, a read passage as words, and each required property of an object. */
+export function fill(schema, read, name = "") {
+  const s = schema && typeof schema === "object" ? schema : {};
+  if (Array.isArray(s.enum) && s.enum.length) {
+    /* it found something only when it read an address it can cite; else it says it looked and could not tell */
+    const prefer = read.addresses.size
+      ? s.enum.find((e) => /^(?:found|present|supports|held|answered|yes|ok)$/i.test(String(e)))
+      : s.enum.find((e) => /indeterminate|absent|none|not/i.test(String(e)));
+    return prefer ?? s.enum[0];
+  }
+  /* a field that may be null is left null: a careful model asks no clarifying question it does not need */
+  if (Array.isArray(s.type) && s.type.includes("null")) return null;
+  const type = Array.isArray(s.type) ? s.type.find((t) => t !== "null") : s.type;
+  if (type === "object" || (!type && s.properties)) {
+    const out = {};
+    const props = s.properties || {};
+    for (const k of Object.keys(props)) {
+      const required = (s.required || []).includes(k);
+      /* an optional field is said only when it carries what was read; a careful model leaves the rest unsaid */
+      if (!required && !CARRIES.test(k)) continue;
+      const v = fill(props[k], read, k);
+      if (required || (v !== undefined && !(Array.isArray(v) && !v.length) && v !== "")) out[k] = v;
+    }
+    return out;
+  }
+  if (type === "array") {
+    if (/citation|source|address/i.test(name)) {
+      const items = [...read.addresses].slice(0, Math.max(1, Math.min(s.maxItems || 3, 3)));
+      return items.map((a) => (s.items && (s.items.type === "object" || s.items.properties) ? { ...fill(s.items, read), address: a } : a));
+    }
+    const n = s.minItems || 0;
+    return Array.from({ length: n }, () => fill(s.items, read, name));
+  }
+  if (type === "boolean") return false;
+  if (type === "integer" || type === "number") return s.minimum ?? 1;
+  if (type === "string" || !type) {
+    if (/address|url/i.test(name) && read.addresses.size) return [...read.addresses][0];
+    if (/quote|passage|exact/i.test(name) && read.passages.length) return read.passages[0].slice(0, 200);
+    const words = read.passages.length ? `The document read says: ${read.passages[0].slice(0, 160)}`
+      : "What the record holds was read; nothing in it settles this yet.";
+    return s.maxLength ? words.slice(0, s.maxLength) : words;
+  }
+  return undefined;
+}
+
+/* One conversation, as the runner drives it. */
+export function* conversation({ system = "", prompt = "", tools = [], max_turns = 1 }) {
+  const names = tools.map((t) => t.name);
+  const final = answerTool({ system, prompt, tools });
+  const results = [];
+  let turns = 0;
+  const room = () => turns < max_turns - 2;
+  /* the results the transcript holds back, each read by its id */
+  /* the results the transcript holds back: the newest few (the current row's facts come last), never more than the
+     turns allow */
+  const held = [...String(prompt).matchAll(/read it with read_result \{"id": ("[^"]*")\}/g)].slice(-READ_HELD);
+  if (names.includes("read_result"))
+    for (const m of held) {
+      if (!room()) break;
+      turns += 1;
+      const r = yield { name: "read_result", input: { id: JSON.parse(m[1]) } };
+      results.push(parse(text(r && r.content)) ?? text(r && r.content));
+    }
+  if (names.includes("read_facts") && room()) {
+    turns += 1;
+    const r = yield { name: "read_facts", input: {} };
+    results.push(parse(text(r && r.content)) ?? text(r && r.content));
+  }
+  /* a search sub-session searches once before it reports */
+  if (final === "report" && names.includes("meaningrows") && room()) {
+    turns += 1;
+    const r = yield { name: "meaningrows", input: { rows: "leg", limit: 10 } };
+    results.push(parse(text(r && r.content)) ?? text(r && r.content));
+  }
+  /* the ask reads before it answers: done_reading closes its reading */
+  if (!final) return "There is nothing to answer with.";
+  const schema = (tools.find((t) => t.name === final) || {}).input_schema || {};
+  const read = gather(results);
+  const facts = results.filter((r) => r && typeof r === "object" && !Array.isArray(r)).pop() || {};
+  const input = final === "answer" && isAnswersContract(schema) ? plainAnswer(schema, prompt, read)
+    : final === "judge_compose" && facts.target ? { candidates: [basisVersion(facts)] }
+    : final === "report" ? levelReport(system, schema)
+    : fill(schema, read);
+  yield { name: final, input };
+  return "Answered.";
+}
+
+/* The ask's `answer` tool asks for the answers contract (agent-worker R89): its fields, and the one label it allows. */
+export const isAnswersContract = (schema) => !!(schema && schema.properties && schema.properties.question_as_read
+  && schema.properties.label && Array.isArray(schema.properties.label.enum));
+
+/* An answer in the answers contract that claims nothing it did not read: the question as read, no clarifying question,
+   no sentence, and what it could not establish said as not established. Every field the tool names, in its form. */
+export function plainAnswer(schema, prompt, read) {
+  const asked = /USER:\n([^\n]+)/.exec(String(prompt));
+  const values = {
+    question_as_read: asked ? asked[1].trim().slice(0, 300) : "the question asked",
+    clarifying: null, summary: null, sentences: [], holdings: [], rules: [], looks: [], bound: null, truncated: false,
+    out_of_view: false, lens: null, query: null, next_acts: [], label: schema.properties.label.enum[0],
+    not_established: [read.passages.length ? "What the record holds was read; this answer states nothing it did not read."
+      : "Nothing the assistant read settles this yet."],
+  };
+  return Object.fromEntries(Object.keys(schema.properties).map((k) => [k, k in values ? values[k] : fill(schema.properties[k], read, k)]));
+}
+
+/* A search sub-session's report (agent-harness R5): at the document level the scenario's notice is held, so it is
+   reported present, cited by its address for the parent to re-read; at every other level, honestly, nothing found. */
+export function levelReport(system, schema) {
+  const level = (/"level":"([a-z]+)"/.exec(String(system)) || [])[1] || "";
+  const states = ((schema.properties || {}).state || {}).enum || [];
+  const pick = (re, fallback) => states.find((x) => re.test(String(x))) ?? fallback;
+  if (level === "document")
+    return { state: pick(/^present$/i, "PRESENT"), summary: `The city's housing notice ${NOTICE_ID} is held and bears on this question.`,
+      citations: [{ address: NOTICE_ADDRESS }] };
+  return { state: pick(/absent/i, "LOOKED_ABSENT"), summary: `Nothing at the ${level || "searched"} level bears on this question.` };
+}
+
+/* The held document the run's collect step found for an address it re-read (its holdings), by its bundle id. */
+export function heldDocument(facts) {
+  const ids = [];
+  const visit = (v) => { if (typeof v === "string" && /^INFO-\d{4}-/.test(v)) ids.push(v); else if (v && typeof v === "object") Object.values(v).forEach(visit); };
+  visit(facts.holdings);
+  return ids[0] || null;
+}
+
+/* A run's composed reading (`judge_compose`): one basis version of the question it is run on (the body of
+   `op=suggest`, run-productions R1), resting on the held notice when the run found it, in one part, as a machine
+   composes one (C-25.6). Its claim is an account of something, never filler (SUGGEST_BOILERPLATE), and is what a
+   conclusion adopts (NO_CLAIM). */
+export function basisVersion(facts) {
+  const doc = heldDocument(facts);
+  return { kind: "basis-version", target: facts.target, name: "City repair order 2026-118",
+    description: `The city's housing notice ${NOTICE_ID}, held in the record, orders the repair this question asks about.`,
+    claim: SCENARIO_CLAIM,
+    ...(doc ? { legs: [{ target: doc, role: "supports", ground: "paper", note: "the notice's repair order and its 28 days" }],
+      grounds: [{ ground: "paper", statement: "the city's own notice ordering the landlord to repair the roof" }] } : {}) };
+}

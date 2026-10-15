@@ -3,8 +3,15 @@
    tabs pinned to the viewport's foot, every class defined by its stylesheet) after `whoami`, which answers each handle's
    `administer` as `admins` says. The administrator is drawn `memberadd` on Members; both roles are drawn `testify`.
    `adminActs: false` draws the administrator nothing more than the member. `flaws` puts one flaw on one screen:
-   {screen: "wide" | "tabs" | "band" | "class" | "words"}. */
+   {screen: "wide" | "tabs" | "band" | "class" | "words"}.
+   R12: `projects`, `project`, `question` and `connect` draw just enough of R9's steps 2 to 4 to reach the sign-in:
+   a project and a question opened by `promote`, and the subscription's sign-in (`subscriptionsignin`: a link to
+   Anthropic's page, then the code typed), each drawing the words the walk asserts, through `word`. `codes` records each
+   code the plane was sent. */
 import { createServer } from "node:http";
+import { word } from "../../../src/setup-words/index.mjs";
+
+const WORDS = { empty: word("question.empty.heading"), connected: word("screen.connect.own.subscription", { plan: "Pro", date: "14 October 2026" }) };
 
 const CSS = `body{margin:0;font:16px sans-serif}.cs-frame{display:block;width:100%}.cs-testband{display:block;padding:4px}
 .cs-main{display:block;padding:16px 16px 80px}.cs-tabs{position:fixed;left:0;right:0;bottom:0;height:48px;display:flex;background:#eee}
@@ -17,7 +24,7 @@ const FLAW = {
 };
 
 export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = {}) {
-  const seen = [];
+  const seen = [], codes = [];
   const sessions = new Map();
   const page = (body) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>Civicsmith</title><link rel="stylesheet" href="/app/assets/civicsmith.css"></head><body>${body}</body></html>`;
@@ -30,7 +37,7 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
   if (r.ok) { sessionStorage.setItem("t", r.token); location.href = "/app"; }
 };</script>`);
   const app = page(`<div id="root"></div><script>(async () => {
-  const id = location.pathname === "/app" ? "home" : location.pathname.slice(5);
+  const id = location.pathname === "/app" ? "home" : location.pathname.slice(5).split("/")[0];
   const who = await (await fetch("/api/?op=whoami", { headers: { authorization: "Bearer " + sessionStorage.getItem("t") } })).json();
   const flaws = ${JSON.stringify(flaws)}, FLAW = ${JSON.stringify(FLAW)};
   const f = flaws[id];
@@ -38,9 +45,27 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
     + (${JSON.stringify(adminActs)} && who.result.administer && id === "members" ? '<button class="cs-btn" data-act="memberadd" type="button">Invite a member</button>' : "");
   document.getElementById("root").innerHTML = '<div class="cs-frame" id="cs-frame">'
     + '<div class="cs-testband' + (f === "band" ? " cs-narrow" : "") + '" role="note">A test instance</div>'
-    + '<main class="cs-main" id="cs-main" data-screen="' + id + '"><h1 class="t-title">A screen</h1>' + acts + (FLAW[f] || "") + '</main>'
+    + '<main class="cs-main" id="cs-main" data-screen="' + id + '">' + (STEPS[id] ? STEPS[id]() : '<h1 class="t-title">A screen</h1>' + acts + (FLAW[f] || "")) + '</main>'
     + '<nav class="cs-tabs' + (f === "tabs" ? " cs-flow" : "") + '"><a class="cs-tab" href="/app">Home</a><a class="cs-tab" href="/app/queue">Queue</a></nav></div>';
-})();</script>`);
+  const on = (op, fn) => { for (const b of document.querySelectorAll('[data-act="' + op + '"]')) b.onclick = fn; };
+  on("promote", () => { const t = document.querySelector("#projects-title, #project-question");
+    sessionStorage.setItem(t.id, t.value); location.href = t.id === "projects-title" ? "/app/project/P1" : "/app/question/Q1"; });
+  on("subscriptionsignin", async (e) => {
+    const code = document.getElementById("mc-code0").value;
+    if (!code) { document.getElementById("mc-link").hidden = false; return; }
+    const r = await (await fetch("/api/?op=subscriptionsignin", { method: "POST", body: JSON.stringify({ step: "code", code }) })).json();
+    if (r.ok) document.getElementById("mc-done").hidden = false;
+  });
+})();
+const W = ${JSON.stringify(WORDS)};
+var STEPS = {
+  projects: () => '<h1 class="t-title">Projects</h1><input id="projects-title"><button class="cs-btn" data-act="promote" type="button">Start a project</button>',
+  project: () => '<h1 class="t-title">' + sessionStorage.getItem("projects-title") + '</h1><textarea id="project-question"></textarea><button class="cs-btn" data-act="promote" type="button">Open a question</button>',
+  question: () => '<h1 class="t-title">' + sessionStorage.getItem("project-question") + '</h1><p>' + W.empty + '</p>',
+  connect: () => '<h1 class="t-title">The assistant</h1><button class="cs-btn" data-act="subscriptionsignin" type="button">Open the sign-in page</button>'
+    + '<p id="mc-link" hidden><a href="https://claude.ai/oauth/authorize?code=true" target="_blank">Open it in a new tab</a></p>'
+    + '<input id="mc-code0" type="password"><button class="cs-btn" data-act="subscriptionsignin" type="button">Connect</button><p id="mc-done" hidden>' + W.connected + '</p>',
+};</script>`);
   const server = createServer(async (req, res) => {
     const u = new URL(req.url, "http://x");
     seen.push(`${req.method} ${u.pathname}${u.search}`);
@@ -56,6 +81,11 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
         sessions.set(token, handle);
         return json({ ok: true, token });
       }
+      if (op === "subscriptionsignin") {
+        let body = ""; for await (const c of req) body += c;
+        codes.push(JSON.parse(body).code);
+        return json({ ok: true, result: { connected: true } });
+      }
       if (op === "whoami") {
         const handle = sessions.get((req.headers.authorization || "").replace(/^Bearer /, ""));
         return json({ ok: true, result: { session: true, member: "m-" + handle, handle, administer: !!admins[handle] } });
@@ -68,5 +98,5 @@ export async function fakePlane({ admins = {}, flaws = {}, adminActs = true } = 
     send(404, "text/plain", "not found");
   });
   await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
-  return { base: `http://127.0.0.1:${server.address().port}`, seen, close: () => new Promise((ok) => server.close(ok)) };
+  return { base: `http://127.0.0.1:${server.address().port}`, seen, codes, close: () => new Promise((ok) => server.close(ok)) };
 }
