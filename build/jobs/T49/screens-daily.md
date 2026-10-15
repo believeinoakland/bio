@@ -80,3 +80,15 @@ B8 applied (K3381), tranche merged (11,899 words). The five singular keys are dr
 Tests: bio-plane/test/m/screens-daily/: tests 108, pass 107, fail 1 (Projects' `themeread`, DEC-242, the red you accepted by name until N1101; the registry lists it, the module does not draw it). architecture 0 failures; coverage 34 of 34; ownership 0 failures.
 
 Size (session_01K3B1SwGYL8nCwqykgeAT82): test runs 29, module lines 1795
+
+## J6 · REPORT
+
+B9 (K3402) answered: the name is not made in screens-daily; it comes from another module. I changed no code.
+
+Where it comes from: `machinery-producers/index.mjs`:529–539 (the `capture-completed-unattended` condition) builds the item's `summary` ("... was completed by an unattended writer after ${started.author} left it") and `detail` ("${started.author} authored this document and an unattended writer (${latest.author}) ...") as English text with `started.author` and `latest.author` raw, i.e. the member id, `admin` for the founder. Home and the queue draw an unkeyed item's `summary` and `detail` as the producer gives them (R2: "else the item's own summary and detail"), so they draw what it composed. The word list already holds `machinery-producers.summary.completed_unattended_writer` ("{bundle_id} was completed by an unattended writer after {author} left it"), unused by the producer.
+
+Needed from machinery-producers (REPORT): name `started.author` and `latest.author` through the founder's handle (`membership.founderHandle()`, R144; none held: no name, never the id) in `summary`, `detail` and anywhere else it composes an author, and carry the names, not ids, in the fields a screen may read. Then screens-daily draws them as it does now. Writing a guard here that spots the string `admin` would hard-code the founder's id into a screen (N1072), so I did not.
+
+I did not run journey-check's local arm: nothing in this module changed. Tests unchanged: tests 108, pass 107, fail 1 (Projects' `themeread`, accepted). Tranche merged.
+
+Size (session_01K3B1SwGYL8nCwqykgeAT82): test runs 29, module lines 1795
