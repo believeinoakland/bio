@@ -297,12 +297,20 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
   assert.deepEqual(declared.filter((a) => !Object.hasOwn(OPS, a.op)).map((a) => a.op), []);
   /* T48 (R65; PR #34's merge, `4664e8efd4`): DEC-226 adds the update screen's three owed acts, `updatestart`,
      `updatelater` and `updateskip` (the second also on the queue), each declared under its own name by R66 */
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart"]);
+  /* T49 (K3321 (B); PR #36's registry): `owed:founderhandleset K3265` is declared by R71 (membership's founder-only op, the
+     founder's set alone); the five owed acts T49 leaves out (N933, DEC-238, DEC-239) have no op yet. */
+  const OWED_T49 = ["founderhandleset"];
+  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...LEFT_OUT].sort());
+  for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
+  for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   for (const op of ["updatestart", "updatelater", "updateskip"]) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
   assert.ok(Object.hasOwn(OPS, "passwordresetlink") && !Object.hasOwn(OP_ALIASES, "passwordresetlink"));
   for (const op of ["projectaikeepaway", "itemtakeup", "actionscope", "filingsecondapprove", "escalationstoppursuing",
                     "infolevelset", "subscriptionsignin", "passwordreset", "grouplanguagesset", "grouplogoset", "signrequest", "unlock"])
-    assert.ok(declared.some((a) => a.op === op) && Object.hasOwn(OPS, op), `${op}: not a declared act with a spec`);
+    /* T49 (K3321 (B); PR #36's registry): `passwordreset` and `unlock` are `function` acts of the front and reset screens now */
+    assert.ok((declared.some((a) => a.op === op) || (["passwordreset", "unlock"].includes(op) && fns.some((a) => a.op === op)))
+              && Object.hasOwn(OPS, op), `${op}: not a declared act with a spec`);
   for (const id of ["setup", "group"]) {
     const sc = registry.screens.find((s) => s.id === id);
     assert.ok(sc.acts.some((a) => a.op === "hostingaccessset"), id);

@@ -3,9 +3,11 @@
    trace, the at-a-glance elements, and the screens' session, fragment and bound controls. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 import { REF_SCREENS, ADMIN_ACTS, interfacePage, checkGuide } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, ADMIN, STORE_KEY, nestedTips } from "./harness.mjs";
 import { ALL, HELD, FRONT, PERSON, DOORBELL, JOIN } from "./screens.fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ROWS = ok({ items: [{ id: "c1", title: "Minutes <draft>", at: "2026-10-01" }, { id: "c2", title: "Budget", at: "2026-10-02" }] });
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
@@ -31,14 +33,14 @@ test("R27 cs.rows takes name(item), the HTML of the row's name (a reference), an
   assert.equal(p.location.pathname, "/app/document/c1", "the name opens the reference's screen");
   /* control: the old form (cells for every column, name as text) still draws the control beside the first cell */
   const q = await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: ROWS } });
-  assert.equal(q.root().querySelector("tr.cs-r .cs-rowname").childNodes[0].textContent, "Minutes <draft>");
+  assert.equal(q.root().querySelector("tr.cs-r .mk-rowname").childNodes[0].textContent, "Minutes <draft>");
 });
 
 test("R27 cs.appearance() draws R18's control (Follow my device, Light, Dark), each switching the appearance", async () => {
   const s = { id: "account", reads: () => ({}), acts: [], render: (cs) => "<div id=ap>" + cs.appearance() + "</div>" };
   const p = await boot({ screens: [s], path: "/app/account" });
   const bs = p.doc.getElementById("ap").querySelectorAll("button");
-  assert.deepEqual(bs.map((b) => b.textContent), ["Follow my device", "Light", "Dark"]);
+  assert.deepEqual(bs.map((b) => b.textContent), [word("shell.appearance.device"), word("shell.appearance.light"), word("shell.appearance.dark")]);
   assert.equal(bs[0].getAttribute("aria-pressed"), "true");
   await p.click(bs[2]);
   assert.equal(p.doc.documentElement.getAttribute("data-theme"), "dark");
@@ -91,22 +93,37 @@ test("R27 cs.fill(id, value) sets a field the screen drew over what was typed, a
   await p.click(btn(p, "notewrite"));
   if (p.root().querySelector('[data-shell="reason-send"]')) { p.root().querySelector("[data-slot] textarea").value = "r"; await p.click(p.root().querySelector('[data-shell="reason-send"]')); }
   assert.equal(p.doc.getElementById("t").value, "A labelled draft");
-  assert.ok(p.root().querySelector(".cs-draftlabel").textContent.includes("It is kept with the act"));
+  assert.ok(p.root().querySelector(".cs-draftlabel").textContent.includes(word("shell.reason.help")));
   await p.click('[data-shell="menu"]');
   assert.equal(p.doc.getElementById("t").value, "A labelled draft", "kept by the redraw");
 });
 
-test("R27 R47 REF_SCREENS: a knock opens inbox at that knock, its card naming what was handed in and when; a person opens person, a proceeding proceeding, a standard standard, each with its card", async () => {
-  assert.deepEqual([REF_SCREENS.knock, REF_SCREENS.person, REF_SCREENS.proceeding, REF_SCREENS.standard], ["inbox", "person", "proceeding", "standard"]);
+test("R27 R47 R66 REF_SCREENS: a knock opens inbox at that knock; a person, proceeding, standard, plan, timeline, money, calculation, case-editor, review-copy, ceremony and docket each open their screen, each with its card shell.card.<kind>; control: an unknown kind opens nothing and has no card", async () => {
+  const KINDS = ["knock", "person", "proceeding", "standard", "plan", "timeline", "money", "calculation", "case-editor", "review-copy", "ceremony", "docket"];
+  const SCREEN_OF = { knock: "inbox", person: "person", proceeding: "proceeding", standard: "standard", plan: "plan", timeline: "timeline", money: "money", calculation: "calculation",
+    "case-editor": "case-editor", "review-copy": "review-copy", ceremony: "ceremony", docket: "docket" };
+  assert.deepEqual(KINDS.map((k) => REF_SCREENS[k]), KINDS.map((k) => SCREEN_OF[k]));
   const target = (id) => ({ id, reads: () => ({}), acts: [], render: (cs) => cs.title() });
   const s = { id: "home", reads: () => ({}), acts: [],
-    render: (cs) => cs.ref("knock", "K1", "A tip about the lease", ["Handed in on 3 October 2026"]) + cs.ref("person", "E1", "Dana Ruiz", ["Director"]) + cs.ref("proceeding", "R1", "Case 22-1", []) + cs.ref("standard", "S1", "Ten days to answer", []) };
-  const p = await boot({ screens: [s, ...["inbox", "person", "proceeding", "standard"].map(target)] });
+    render: (cs) => ["knock", "person", "proceeding", "standard", "plan", "timeline", "money", "calculation", "case-editor", "review-copy", "ceremony", "docket"]
+      .map((k, i) => cs.ref(k, "X" + i, "label " + k, ["a fact " + k])).join("") + cs.ref("zzz-unknown", "U1", "label unknown", []) };
+  const p = await boot({ screens: [s, ...Object.values(SCREEN_OF).map(target)] });
   const refs = p.root().querySelectorAll("#cs-main a.cs-ref");
-  assert.deepEqual(refs.map((a) => a.getAttribute("href")), ["/app/inbox/K1", "/app/person/E1", "/app/proceeding/R1", "/app/standard/S1"]);
-  assert.ok(refs[0].getAttribute("data-tip").includes("Material handed to your group at its doorbell"));
-  assert.ok(refs[0].getAttribute("data-tip").includes("Handed in on 3 October 2026"));
-  for (const [i, words] of [[1, "A person or organisation"], [2, "A proceeding"], [3, "A standard"]]) assert.ok(refs[i].getAttribute("data-tip").includes(words), words);
+  assert.deepEqual(refs.map((a) => a.getAttribute("href")), KINDS.map((k, i) => "/app/" + SCREEN_OF[k] + "/X" + i));
+  const tip = (el) => el.getAttribute("data-tip");
+  refs.forEach((a, i) => {
+    assert.ok(tip(a).includes(word("shell.card." + KINDS[i]).replace(/'/g, "&#39;")), KINDS[i] + ": its card");
+    assert.ok(tip(a).includes("a fact " + KINDS[i]), KINDS[i] + ": the screen's facts");
+    assert.ok(tip(a).includes(word("shell.card.open")), KINDS[i] + ": opens");
+  });
+  const unknown = p.root().querySelector("#cs-main .cs-card");
+  assert.equal(unknown.localName, "span", "an unknown kind is no link");
+  assert.equal(p.root().querySelectorAll("#cs-main a.cs-ref").length, KINDS.length);
+  assert.ok(!tip(unknown).includes(word("shell.card.open")), "nothing to open");
+  /* a kind whose screen is not registered carries its card only (R16) */
+  const q = await boot({ screens: [s] });
+  assert.equal(q.root().querySelectorAll("#cs-main a.cs-ref").length, 0);
+  assert.ok(q.root().querySelectorAll("#cs-main .cs-card").every((c) => !tip(c).includes(word("shell.card.open"))));
 });
 
 test("R47 ADMIN_ACTS gains personexpunge: drawn only to a member who administers", async () => {
@@ -117,20 +134,20 @@ test("R47 ADMIN_ACTS gains personexpunge: drawn only to a member who administers
   assert.equal(!!btn(a, "personexpunge") || !!a.root().querySelector('[data-phone-act="personexpunge"]'), true);
 });
 
-test("R39 a refusal carrying trace is drawn with Reference: <first 8 characters> beside its words; the trace is kept nowhere in the browser", async () => {
+test("R39 R69 a refusal carrying trace is drawn with Reference: <first 8 characters> beside its words; the trace is kept nowhere in the browser", async () => {
   const TRACE = "9f8e7d6c5b4a39281706";
   const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }), promote: refused("SIGNIN_UNAVAILABLE", "Anthropic's sign-in did not answer.", 502, { trace: TRACE }) } });
   p.doc.getElementById("home-title").value = "T";
   await p.click(btn(p, "promote"));
   const slot = p.root().querySelector('[data-slot="m:0"]');
-  assert.ok(slot.textContent.includes("Reference: 9f8e7d6c"));
+  assert.ok(slot.textContent.includes(word("refusal.reference", { ref: "9f8e7d6c" })));
   assert.ok(!slot.textContent.includes(TRACE), "the first 8 characters only");
   for (const v of [...p.local.values(), ...p.store.values()]) assert.ok(!String(v).includes(TRACE.slice(0, 8)));
   /* a read's refusal likewise; control: a refusal with no trace draws no reference */
   const q = await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: refused("NOT_ALLOWED", "No.", 403, { trace: TRACE }) } });
-  assert.ok(q.root().querySelector('[data-state="failed"]').textContent.includes("Reference: 9f8e7d6c"));
+  assert.ok(q.root().querySelector('[data-state="failed"]').textContent.includes(word("refusal.reference", { ref: "9f8e7d6c" })));
   const r = await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: refused("NOT_ALLOWED", "No.") } });
-  assert.ok(!r.root().querySelector('[data-state="failed"]').textContent.includes("Reference"));
+  assert.ok(!r.root().querySelector('[data-state="failed"]').textContent.includes(word("refusal.reference", { ref: "" })));
 });
 
 const GUIDE = {
@@ -204,7 +221,7 @@ test("R31 cs.ring(op) finds the control the screen drew for op, opens the row pa
   const ringed = q.root().querySelector('button[data-act="heldrestore"]');
   assert.equal(q.root().querySelector("tr.cs-panel").hidden, false, "its row panel opened");
   assert.ok(ringed.classList.contains("cs-target"), "the design's ring");
-  assert.equal(ringed.previousElementSibling.textContent, "Press here when you're ready");
+  assert.equal(ringed.previousElementSibling.textContent, word("shell.ring.ready"));
   assert.ok(q.doc.activeElement === ringed, "focused");
   assert.ok(q.doc.scrolledTo && q.doc.scrolledTo.getAttribute("data-act") === "heldrestore", "scrolled into view");
   assert.equal(q.byOp("heldrestore").length, 0, "never pressed");
@@ -222,9 +239,9 @@ test("R31 cs.ring(op) finds the control the screen drew for op, opens the row pa
 
 test("R46 view.session tells a screen the session's state and handle; view.fragment carries the fragment read once; cs.signin with stay keeps the screen signed in, without it opens the kept page or Home", async () => {
   const p = await boot({ screens: [...ALL, FRONT], path: "/app/held", session: null });
-  assert.equal(p.doc.getElementById("state").textContent, "State: none");
+  assert.equal(p.doc.getElementById("state").textContent, "fx t state none");
   const q = await boot({ screens: [...ALL, FRONT], path: "/app/held", session: { t: "t", e: 0, d: "own", w: "rosa" }, plane: { heldcaptures: refused("X", null, 401) } });
-  assert.equal(q.doc.getElementById("state").textContent, "State: ended");
+  assert.equal(q.doc.getElementById("state").textContent, "fx t state ended");
   assert.equal(q.doc.getElementById("f-handle").value, "rosa");
   const live = { id: "home", reads: () => ({}), acts: [], render: (cs, view) => "<p id=s>" + cs.esc(view.session.state + "/" + view.session.handle) + "</p>" };
   const r = await boot({ screens: [live] });
@@ -238,7 +255,7 @@ test("R46 R47 cs.signout({label}), cs.save(name, text, {label}) and cs.copy(text
   const p = await boot({ screens: [s, FRONT], path: "/app/recovery" });
   p.win.navigator = { clipboard: { writeText: (t) => copied.push(t) } };
   const [save, copy, out] = p.doc.getElementById("c").querySelectorAll("button");
-  assert.deepEqual([save.textContent, copy.textContent, out.textContent], ["Your reason", "Copy", "Sign out"]);
+  assert.deepEqual([save.textContent, copy.textContent, out.textContent], [word("shell.reason"), word("shell.copy"), word("shell.signout")]);
   await p.click(save);
   assert.equal(p.files.length, 1);
   assert.equal(p.files[0].name, "codes.txt");
@@ -250,7 +267,7 @@ test("R46 R47 cs.signout({label}), cs.save(name, text, {label}) and cs.copy(text
   await p.click(out);
   assert.equal(p.byOp("signout").length, 1);
   assert.equal(p.local.has(STORE_KEY), false);
-  assert.equal(p.doc.getElementById("state").textContent, "State: signedout");
+  assert.equal(p.doc.getElementById("state").textContent, "fx t state signedout");
   /* cs.signedOut: no signout op of its own */
   const q = await boot({ screens: [s, FRONT], path: "/app/recovery", plane: { whoami: ok({ ...ADMIN }) } });
   const b = btn(q, "recoverycodesissue");
@@ -260,7 +277,7 @@ test("R46 R47 cs.signout({label}), cs.save(name, text, {label}) and cs.copy(text
     if (go) { const ta = q.root().querySelector("[data-slot] textarea"); if (ta) ta.value = "r"; await q.click(go); }
     assert.equal(q.byOp("signout").length, 0);
     assert.equal(q.local.has(STORE_KEY), false);
-    assert.equal(q.doc.getElementById("state").textContent, "State: signedout");
+    assert.equal(q.doc.getElementById("state").textContent, "fx t state signedout");
   }
 });
 
@@ -316,7 +333,7 @@ test("R49 cs.image(op, params, {alt}) fetches the image with the session's Autho
   const s = { id: "open-file", reads: () => ({}), acts: [], render: (cs) => cs.image("openoriginal", { capture: "ab12" }, { alt: { text: "A photo of the site" } }) };
   const home = { id: "home", reads: () => ({}), acts: [], render: (cs) => cs.title() };
   const p = await boot({ screens: [s, home], path: "/app/open-file/ab12", plane: { openoriginal: bytes("PNGDATA", "image/png") } });
-  const img = p.root().querySelector("img.cs-image");
+  const img = p.root().querySelector("img.mk-image");
   assert.equal(img.getAttribute("alt"), "A photo of the site");
   assert.equal(img.getAttribute("data-image"), "ok");
   assert.match(img.getAttribute("src"), /^blob:https:\/\/group\.example\//);
@@ -330,8 +347,8 @@ test("R49 cs.image(op, params, {alt}) fetches the image with the session's Autho
   await p.click('a[href="/app"]');
   assert.equal(p.objectUrls[0].released, true, "released when the screen closes");
   const q = await boot({ screens: [s], path: "/app/open-file/ab12", plane: { openoriginal: refused("NOT_VISIBLE") } });
-  assert.equal(q.root().querySelector("img.cs-image").getAttribute("src"), null);
-  assert.equal(q.root().querySelector("img.cs-image").getAttribute("data-image"), "failed");
+  assert.equal(q.root().querySelector("img.mk-image").getAttribute("src"), null);
+  assert.equal(q.root().querySelector("img.mk-image").getAttribute("data-image"), "failed");
 });
 
 test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (added, moved, resized, removed), cs.value(id) answering [{left, top, width, height}] in the image's pixels", async () => {
@@ -344,22 +361,22 @@ test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (a
   const size = () => { const img = box().querySelector("img"); img.naturalWidth = 1000; img.naturalHeight = 500; box().getBoundingClientRect = () => ({ left: 100, top: 50, width: 500, height: 250 }); };
   size();
   assert.equal(p.doc.getElementById("ph").getAttribute("aria-label"), "Areas on the photo");
-  assert.equal(p.root().querySelectorAll(".cs-area").length, 1);
+  assert.equal(p.root().querySelectorAll(".mk-imgarea").length, 1);
   /* drawn with the pointer: from (150, 100) to (250, 150) on the screen is (100, 100) to (300, 200) in the image */
   p.fire(box(), "pointerdown", { clientX: 150, clientY: 100 });
   for (const f of p.win.listeners.pointermove || []) f({ clientX: 250, clientY: 150 });
   for (const f of [...(p.win.listeners.pointerup || [])]) f({ clientX: 250, clientY: 150 });
   await p.settle();
   size();
-  assert.equal(p.root().querySelectorAll(".cs-area").length, 2);
+  assert.equal(p.root().querySelectorAll(".mk-imgarea").length, 2);
   /* added, moved and resized by the keyboard, and one removed */
   await p.click('[data-shell="area-add"]');
   size();
-  const third = () => p.root().querySelector('.cs-area[data-i="2"]');
+  const third = () => p.root().querySelector('.mk-imgarea[data-i="2"]');
   third().focus();
   p.fire(third(), "keydown", { key: "ArrowRight" }); await p.settle(); size();
   p.fire(third(), "keydown", { key: "ArrowDown", shiftKey: true }); await p.settle(); size();
-  p.fire(p.root().querySelector('.cs-area[data-i="0"]'), "keydown", { key: "Delete" }); await p.settle(); size();
+  p.fire(p.root().querySelector('.mk-imgarea[data-i="0"]'), "keydown", { key: "Delete" }); await p.settle(); size();
   await p.click('button[data-act="obscuremark"]');
   const go = p.root().querySelector('[data-shell="reason-send"], [data-shell="confirm"]');
   if (go) { const ta = p.root().querySelector("[data-slot] textarea"); if (ta) ta.value = "r"; await p.click(go); }
@@ -399,7 +416,8 @@ test("R46 (K3147) view.fragment carries grant for review-outside, read once and 
 });
 
 test("R50 ADMIN_ACTS names the reset link, signerset, the group's settings, places and offices, translators and security tools: none drawn to a member who does not administer; at the phone width op-grades' larger-screen acts (filingsent, filingrecordsent) are held with what they do and where to finish them", async () => {
-  for (const op of ["passwordresetlink", "signerset", "groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert", "securitytooladd", "securitytooltest", "securitytoolremove"]) assert.ok(ADMIN_ACTS.has(op), op);
+  /* every op the shell holds back from a member who does not administer is an op its owner declares (OPS) */
+  for (const op of ADMIN_ACTS) assert.ok(Object.hasOwn(OPS, op), op + ": declared by its owner");
   const g = { id: "group", reads: () => ({}), acts: [{ op: "groupnameset" }, { op: "courtnoticeset" }], render: (cs) => cs.act("groupnameset") + cs.act("courtnoticeset") };
   const m = await boot({ screens: [g], path: "/app/group" });
   assert.equal(btn(m, "groupnameset"), null);
@@ -412,7 +430,7 @@ test("R50 ADMIN_ACTS names the reset link, signerset, the group's settings, plac
   if (btn(wide, "filingrecordsent")) {
     assert.equal(btn(phone, "filingrecordsent"), null);
     const held = phone.root().querySelector('[data-phone-act="filingrecordsent"]');
-    assert.ok(held.textContent.includes("Finish this on a larger screen"));
+    assert.ok(held.textContent.includes(word("shell.phone.larger")));
   }
   /* control: an everyday act is still a phone act */
   assert.equal(!!btn(phone, "actioncreate"), !!btn(wide, "actioncreate"));
@@ -427,7 +445,7 @@ test("R50 (K3156) at the phone width every weighed act op-grades.phoneOf answers
   for (const op of ["publish", "publishat", "caseratify"]) {
     assert.ok(btn(wide, op), op + " is drawn on a wide screen");
     assert.equal(btn(phone, op), null, op + " is not sent from the phone");
-    assert.ok(phone.root().querySelector(`[data-phone-act="${op}"]`).textContent.includes("Finish this on a larger screen"), op);
+    assert.ok(phone.root().querySelector(`[data-phone-act="${op}"]`).textContent.includes(word("shell.phone.larger")), op);
   }
   /* control: an act op-grades leaves on the phone is still a phone act */
   assert.equal(!!btn(phone, "obscuremark"), !!btn(wide, "obscuremark"));

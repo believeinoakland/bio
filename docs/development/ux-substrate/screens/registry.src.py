@@ -31,7 +31,7 @@ screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpo
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('memberlanguageset','Choose your language'),('handlecheck','See whether a handle is free'),('enroll','Join with a handle and password'),('joinlinkinvite','Join through the group\'s join link')], [3,28])
 screen('home', 'Your group\'s home', 'working', 'The group\'s nerve center (Bob\'s S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and "What happened?", the door to a first step; a new member\'s first visit and a new group\'s empty home as states.',
-  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('filingapprove','Approve the text'),('taskresolve','Act on an item'),('promote','Start a project'),('startfrom','Start from…')], [3,6])
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('filingapprove','Approve the text'),('taskresolve','Act on an item'),('promote','Start a project'),('startfrom','Start from…'),('projectjoin','Join')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('owed:passwordresetlink DEC-201','Make a reset link for a member'),('signerset','Withdraw a member\'s signing key'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
@@ -133,7 +133,7 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
-  [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('planask','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
+  [('plansubjectadd','Add a matter'),('optionadd','Add an option'),('planask','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
    ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('itemtakeup','Take an item up yourself')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
   [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('filingsecondapprove','Give the second approval'),('owed:actionstake K3230','Save this action\'s stake'),('writinghelp','Help me write this')], [7,22])
