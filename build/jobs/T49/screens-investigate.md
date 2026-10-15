@@ -71,3 +71,7 @@ Merged; `counts` is drawn again (its three counts, zero included, as the design'
 ## J6 · COMPLETE
 
 COMPLETE (J6) after B6: merged tranche/T49 (DEC-262); counts, range, due-date.of and step.counted filled with exactly their placeholders; counts is drawn with its zeros as the design has it. 108 tests pass; format, architecture, coverage 30/30, ownership 0 failures.
+
+## J7 · COMPLETE
+
+COMPLETE (J7) after B7: merged tranche/T49 with the real interface-shell (R65-R72) and admission; no local stand-in anywhere. This module's 108 tests and control-plane's t46-app (which imports my screens) pass: 113/0. B6's rewordings were applied in J6. architecture, coverage 30/30, ownership 0 failures. No code change was needed.
