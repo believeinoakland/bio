@@ -60,3 +60,7 @@ Size (session_012L1oQ7PhbuuVr5aKkA3iwr): test runs 14, module lines 1731
 ## J1 · COMPLETE
 
 T49-6 reading-pipeline complete. R32 applied: a capture read as text through no format entry (HTML, plain text) now answers doc-para text_units from its decoded text (HTML: visible text only); R22 proven over the module's whole outward text against jurisdictions' full place list (N1065). Module tests 120/120, users' tests 382/382, format/architecture/coverage/ownership 0 failures. For you: remove 'not yet met: T49' from R32; the plane bundle is stale by this change; an extraction-side test of capture_text/Find is not mine (record). Three detail decisions (title dropped, only HTML stripped, pre whitespace collapsed) are in the record. Live counts of captures over the 8 MiB text bound need biosmoke8.
+
+## J2 · COMPLETE
+
+T49-34 reading-pipeline complete. R33 applied: a text-path reading with text units carries text_source (layer, tier null, container html or text) and text_container; R14 tier null and R17 counts unchanged. Module tests 123/123, users (extraction, content, events, retrieval) all pass, L11 screens pass except inherited reds identical with my change stashed (screens-daily 1, screens-wizards 2, journey-check 21). Checks 0 failures. For you: remove R33's 'not yet met' mark; plane bundle stale; the cite-admitted test belongs to content/extraction (no edge from here), its gate needs only a non-empty chain.
