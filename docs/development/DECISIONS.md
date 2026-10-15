@@ -4206,3 +4206,17 @@ response: **The design session, 2026-10-15.** The captured result says where it 
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-268), `screens/mock-screens.js`; `words.json`.
 owed: (BOB) screens-intake draws these keys under R22. (design) none.
+
+### DEC-269 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency)
+for: bob-session
+question: Words that break the design's own rules: "overdue" in queue items (DEC-256; screens-daily R31) and British spelling (DEC-221).
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: as below, before.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** Queue items: `queue.temporal-expectation-due.undetermined.detail` "It may be past its date; that is undetermined, because {reason}. …" (was "Possibly overdue"); `machinery-producers.summary.overdue_check_interval` "{bundle} has gone longer than its own interval without its check". Spelling: `screen.people.today.kind.program` "A program"; `money.says.authorising_events_held` and `.authorising_event_held` "authorizing". "Overdue" stays where it is a deadline's recorded status on an action or a due date (`screen.action.clock.overdue`, `screen.due-date.status.overdue`, `screen.open-file.status.overdue` and the refusals naming the statuses), never on Home or in the queue.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-269), `screens/words-mod-3.src.py`; `words.json`.
+owed: (BOB) setup-words' rows regenerated. (design) none.

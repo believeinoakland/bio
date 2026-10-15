@@ -4329,9 +4329,10 @@
   },
   {
    "key": "queue.temporal-expectation-due.undetermined.detail",
-   "en": "Possibly overdue: undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+   "en": "It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
    "protected": true,
-   "source": "DEC-198"
+   "source": "DEC-198",
+   "note": "DEC-269: reworded"
   },
   {
    "key": "queue.inquiry-recheck-due.summary",
@@ -17944,10 +17945,10 @@
   },
   {
    "key": "screen.people.today.kind.program",
-   "en": "A programme",
+   "en": "A program",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-269: reworded"
   },
   {
    "key": "screen.people.counts",
@@ -60959,17 +60960,17 @@
   },
   {
    "key": "money.says.authorising_events_held",
-   "en": "the authorising events held toward this event",
+   "en": "the authorizing events held toward this event",
    "protected": false,
    "source": "DEC-260",
-   "note": "money, says"
+   "note": "money, says; American spelling, DEC-269"
   },
   {
    "key": "money.says.authorising_event_held",
-   "en": "no authorising event is held for this event",
+   "en": "no authorizing event is held for this event",
    "protected": false,
    "source": "DEC-260",
-   "note": "money, says"
+   "note": "money, says; American spelling, DEC-269"
   },
   {
    "key": "money.why.money_facts_name",
@@ -61960,10 +61961,10 @@
   },
   {
    "key": "machinery-producers.summary.overdue_check_interval",
-   "en": "{bundle} is overdue for its check by more than its own interval",
+   "en": "{bundle} has gone longer than its own interval without its check",
    "protected": false,
    "source": "DEC-260",
-   "note": "machinery-producers, summary"
+   "note": "machinery-producers, summary; never \"overdue\" in the queue (screens-daily R31), DEC-269"
   },
   {
    "key": "machinery-producers.summary.monitored_check_scheduled",

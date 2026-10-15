@@ -3450,7 +3450,9 @@
   "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
   "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
   "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
-  "screen.capture.address.watchhead": "Once it is captured: where it is filed, and watching the address"
+  "screen.capture.address.watchhead": "Once it is captured: where it is filed, and watching the address",
+  "queue.temporal-expectation-due.undetermined.detail": "It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+  "screen.people.today.kind.program": "A program"
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
@@ -3501,6 +3503,8 @@
   "signing.ceremony.device": "DEC-266",
   "screen.account.key.help": "DEC-266",
   "refusal.AGENT_WORKER_UNBOUND": "DEC-267",
-  "screen.capture.address.watchhead": "DEC-268"
+  "screen.capture.address.watchhead": "DEC-268",
+  "queue.temporal-expectation-due.undetermined.detail": "DEC-269",
+  "screen.people.today.kind.program": "DEC-269"
  }
 }
