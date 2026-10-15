@@ -1,18 +1,18 @@
 /* screens-settings at the screen contract (interface-shell R21, R38, R5; draft-T46-interface §4 (1)): the screens are
    registry screens, each lists exactly its registry acts (an owed act by the op it owes), every act names an op `OPS`
    holds, every function is self-contained (K2854 T1: it runs the same when rebuilt from its own source, with nothing
-   in scope), and every word a screen names is held in `WORD_ROWS` or the module's own `SCREEN_WORDS`. */
+   in scope), and every word a screen names is a word of `setup-words`' list (R39). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
-import { open, said } from "./kit.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { SCREENS, SCREEN_WORDS, KEYS } from "../../../src/screens-settings/index.mjs";
+import { open, said, day } from "./kit.mjs";
 import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
-import { ADMIN, membersTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, membersTable, accountTable, connectTable, notesTable, groupTable, identityTable, placesTable, recoveryTable, securityTable, translationsTable, updatesTable } from "./fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const PATH = "docs/development/ux-substrate/screens/registry.json";
@@ -61,26 +61,37 @@ test("the shell serves the screens: interfacePage passes its R21 check, and the 
   assert.ok(o.html.includes('data-state="failed"'), "control: a leaky render is drawn as failed");
 });
 
-test("SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, under the screens' own keys or the shell's named rows", () => {
-  assert.ok(Object.isFrozen(SCREEN_WORDS));
-  const keys = new Set();
-  const named = new Set(["handle.fixed", "act.memberlanguageset.does", "act.groupkeyremove.does", "act.subscriptionsignin.does", "settings.set.setup"]);
-  for (const r of SCREEN_WORDS) {
-    assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[0] === "string" && typeof r[1] === "string" && typeof r[2] === "boolean", String(r));
-    assert.ok(!keys.has(r[0]), `${r[0]} once`);
-    keys.add(r[0]);
-    assert.ok(/^screen\.(settings|members|account|connect|notes|panel|group|group-identity|places|recovery|security|translations|updates)\./.test(r[0]) || named.has(r[0]), r[0]);
-    // DEC-149: the group's own Civicsmith is "your group's Civicsmith", never bare
-    // (the software itself, "Civicsmith's tests", is not the group's)
-    for (const m of r[1].matchAll(/Civicsmith(?!'s tests)/g)) assert.equal(r[1].slice(Math.max(0, m.index - 8), m.index), "group's ", `${r[0]}: ${r[1]}`);
-    assert.ok(!/group's copy|\b(instance|plane|server)\b/i.test(r[1]), `${r[0]} names the group's Civicsmith as DEC-149 says`);
+/* R39 (T49; K3366, K3368; DEC-257, DEC-258; setup-words R11–R13): this module holds no member-facing English, only keys; each is a word of
+   setup-words' list; what it draws equals `word(key, vars)`. */
+const READS = () => JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/words-reads.json"), "utf8")).modules["screens-settings"];
+
+test("R39 words by key: the module holds no row, every key it reads is a word of the list (hasWord), the design's reads list is met and its retired row is gone", () => {
+  assert.ok(Object.isFrozen(SCREEN_WORDS) && SCREEN_WORDS.length === 0, "no row of English is held");
+  const reads = READS();
+  for (const k of reads.reads) assert.ok(KEYS.includes(k), `${k} is a key this module reads`);
+  for (const k of KEYS) assert.ok(hasWord(k), `${k} is a word`);
+  for (const k of reads.retired) assert.ok(!KEYS.includes(k) && !hasWord(k), `${k} is retired`);
+  for (const s of SCREENS) for (const k of s.words) {
+    assert.equal(typeof k, "string", `${s.id}: its words are keys, never rows`);
+    assert.ok(hasWord(k), `${s.id}: ${k}`);
   }
+  // the keys the requirements name besides the reads list
+  for (const k of ["refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "member.founder.unnamed.help", "connect.ifnot", "connect.notnow", "refusal.reference", "updates.running.release_setup", "updates.earlier.installed_setup"])
+    assert.ok(hasWord(k), k);
+  assert.equal(reads.unkeyed.length, 0, "no string stays in source");
 });
 
-test("every word a screen names is held in WORD_ROWS or SCREEN_WORDS", () => {
-  const held = new Set([...WORD_ROWS.map((r) => r[0]), ...SCREEN_WORDS.map((r) => r[0])]);
-  for (const s of SCREENS) for (const k of s.words) {
-    if (Array.isArray(k)) assert.ok(SCREEN_WORDS.includes(k), `${s.id}: its own row ${k[0]} is SCREEN_WORDS' row`);
-    else assert.ok(held.has(k), `${s.id}: ${k}`);
-  }
+test("R39 what a screen draws for a sample of its keys equals word(key, vars)", async () => {
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  for (const k of ["screen.members.col.handle", "screen.members.col.status", "screen.members.invite.heading", "screen.members.key.heading", "screen.members.keepaway.heading"])
+    assert.ok(a.text.includes(unescapeHtml(word(k))), k);
+  assert.ok(a.text.includes(unescapeHtml(word("screen.members.count", { members: 5, administrators: 3 }))));
+  const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  for (const k of ["screen.connect.way.field", "screen.connect.way.subscription", "screen.connect.signin.step1", "connect.ifnot"]) assert.ok(c.text.includes(unescapeHtml(word(k))), k);
+  const u = await open("updates", { me: ADMIN, table: updatesTable() });
+  assert.ok(u.text.includes(unescapeHtml(word("updates.ready.release", { version: "0.84.0", date: day("2026-10-11") }))));
+  // a word the list lacks, or a fill it names that the screen does not give, throws: it is never drawn as the key or empty
+  assert.throws(() => word("screen.members.nosuchword"), (e) => e.code === "UNKNOWN_WORD");
+  assert.throws(() => word("screen.members.count", { members: 1 }), (e) => e.code === "WORD_VAR_MISSING");
 });
+const unescapeHtml = (t) => String(t).replace(/\s+/g, " ").trim();

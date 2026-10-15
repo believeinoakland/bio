@@ -8,6 +8,15 @@
    to the two screens as `view.parts` (J2 (1)). The panel reads the screen's reads `uses`, `limits`, `usage` and
    `history`, each over `owner`. */
 
+import { KEYS } from "./keys.mjs";
+
+/** The keys the AI account panel draws (R9, R26, R39): `screens-inquiry`'s `projectai` lists them too, for the words its page carries. */
+const USE_KINDS = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
+export const PANEL_KEYS = Object.freeze([...KEYS.filter((k) => k.startsWith("screen.panel.")), ...USE_KINDS.map((u) => `ai.use.${u}.name`),
+  "ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable", "ai.refused.switchvalue",
+  ...["bars", "bars.means", "day", "today", "summary", "meter", "meter.means", "meter.near", "nolimit"].map((k) => `ai.usage.${k}`),
+  ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)]);
+
 /** The panel's HTML. `o`: `{owner, explore, perMember, names}`: whether exploring and a per-member limit apply (group
  *  level), and `names(by)` turning a recorded `by` into the name drawn. A section that holds nothing is not drawn (R28). */
 export function aiPanel(cs, view, o) {

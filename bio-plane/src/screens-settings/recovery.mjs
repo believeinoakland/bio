@@ -19,17 +19,20 @@ export const recovery = {
   render(cs, view) {
     const W = cs.w, E = cs.esc, S = "screen.recovery.";
     const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+    const T = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     const ui = view.ui || {};
     const data = view.data || {};
     const out = [cs.title()];
 
     // the one-administrator step, while not met (instance-setup R66)
     const st = data.step && data.step.state === "ok" ? data.step.value : null;
-    if (st && st.met === false)
-      out.push(`<div class="mk-msg" data-note="step"><p>${W(st.administrators === 1 ? "screen.members.recovery.one" : "screen.members.recovery.many", { administrators: st.administrators })}</p>${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
+    if (st && st.met === false) {
+      const lead = st.administrators === 1 ? W("screen.members.recovery.one") : W("screen.members.recovery.many", { administrators: st.administrators });
+      out.push(`<div class="mk-msg" data-note="step">${lead ? `<p>${lead}</p>` : ""}${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
+    }
 
     // the member's own codes: how many are left, and when issued
-    out.push(cs.sec(S + "held.heading", cs.state(data.codes, (v) => `<p data-state="codes">${v.held && v.remaining > 0 ? W(S + "held", { remaining: v.remaining, date: D(v.issuedAt) }) : v.held ? W(S + "spent", { date: D(v.issuedAt) }) : W(S + "none")}</p>`)));
+    out.push(cs.sec(S + "held.heading", cs.state(data.codes, (v) => `<p data-state="codes">${v.held && v.remaining > 0 ? W(S + "held", { remaining: v.remaining, total: Number.isInteger(v.total) ? v.total : 10, date: D(v.issuedAt) }) : v.held ? W(S + "spent", { date: D(v.issuedAt) }) : W(S + "none")}</p>`)));
 
     // new codes, shown once; issuing again spends the earlier ones
     const issue = cs.act("recoverycodesissue");
