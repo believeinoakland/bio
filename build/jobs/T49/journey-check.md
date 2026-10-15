@@ -154,3 +154,7 @@ B11 applied (K3411). Step 12's stop is not the walk's: conclude is admitted (200
 ## After B12 (K3412)
 
 Merged tranche/T49 (design stream @ f8edc66dd2, words only) and re-walked the local arm on that tip: 118 steps, 7 failures in the same 3 steps as 'After B11' (R9 step 12, R41 state g; R10 "she joins the project", `projectaccountstate` NO_SUCH_PROJECT; R10 `projectai`, owner-only reads), all screens-inquiry. No change of mine was needed. Tests and checks as 'After B11' (my code is unchanged by the merge).
+
+## J13 · COMPLETE
+
+B12 applied (K3412): merged tranche/T49 at the design stream f8edc66dd2 and re-walked the local arm on that tip: 118 steps, 7 failures in the same 3 steps as J12, all screens-inquiry (R9 step 12 R41 g; R10 projectjoin/projectaccountstate; R10 projectai owner-only reads). Record: 'After B12'.
