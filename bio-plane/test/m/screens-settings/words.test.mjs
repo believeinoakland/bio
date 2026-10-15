@@ -7,7 +7,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { open, walk, WORDS, SCREENS } from "./kit.mjs";
-import { SHELL_WORDS } from "../../../src/interface-shell/index.mjs";
 import * as F from "./fixtures.mjs";
 
 const { membersTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env, refuse } = F;
@@ -20,7 +19,7 @@ const DATA = JSON.stringify(F) + readFileSync(new URL("./fixtures.mjs", import.m
 const strip = (t) => { let s = t, prev; do { prev = s; s = s.replace(/\u2060[^\u2060\u2061]*\u2061/g, " "); } while (s !== prev); return s; };
 const keysIn = (t) => [...t.matchAll(/\u2060([^\u2060\u2061\u2062]+)\u2062/g)].map((m) => m[1]);
 const PUNCT = /^[\s·:,…$\d.()\-–/%›]*$/;
-const SHELL = new Set(SHELL_WORDS.map((r) => r[0]));
+const SHELL = new Set(); // the shell reads its own words by key; its families are SHELLS
 const SHELLS = ["rail.", "tab.", "state.", "weight.", "mark.", "date.", "level.", "shell.", "refusal."];
 
 async function check(id, opt, what) {
