@@ -14,6 +14,8 @@
 
 /* The answer tools a conversation may offer without naming one, in the order they are preferred. */
 export const ANSWERS = Object.freeze(["answer", "report", "draft", "done_reading"]);
+/* How many of the results a transcript holds back it reads again, newest first */
+export const READ_HELD = 3;
 
 const text = (content) => {
   if (typeof content === "string") return content;
@@ -25,9 +27,10 @@ const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
 /* The answer tool a conversation names, or the one it offers. */
 export function answerTool({ system = "", prompt = "", tools = [] }) {
   const names = tools.map((t) => t.name);
+  /* the transcript carries every earlier row's prompt: the answer named last is this turn's */
   for (const s of [prompt, system]) {
-    const m = /Answer by calling (?:the )?`?([A-Za-z_][\w]*)`?/.exec(String(s));
-    if (m && names.includes(m[1])) return m[1];
+    const named = [...String(s).matchAll(/Answer by calling (?:the )?`?([A-Za-z_][\w]*)`?/g)].map((m) => m[1]).filter((n) => names.includes(n));
+    if (named.length) return named[named.length - 1];
   }
   if (/then call report once/.test(system) && names.includes("report")) return "report";
   return ANSWERS.find((n) => names.includes(n)) || names.find((n) => /^judge_/.test(n)) || names[names.length - 1] || null;
@@ -99,8 +102,11 @@ export function* conversation({ system = "", prompt = "", tools = [], max_turns 
   let turns = 0;
   const room = () => turns < max_turns - 2;
   /* the results the transcript holds back, each read by its id */
+  /* the results the transcript holds back: the newest few (the current row's facts come last), never more than the
+     turns allow */
+  const held = [...String(prompt).matchAll(/read it with read_result \{"id": ("[^"]*")\}/g)].slice(-READ_HELD);
   if (names.includes("read_result"))
-    for (const m of String(prompt).matchAll(/read it with read_result \{"id": ("[^"]*")\}/g)) {
+    for (const m of held) {
       if (!room()) break;
       turns += 1;
       const r = yield { name: "read_result", input: { id: JSON.parse(m[1]) } };

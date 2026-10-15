@@ -42,7 +42,10 @@ export async function requireWord(page, key, { vars = {}, within = "body", timeo
       return !!el && new RegExp(src, flags).test(el.textContent.replace(/\s+/g, " ").trim());
     }, [within, re.source, re.flags], { timeout });
   } catch {
-    throw new Error(`the screen does not draw the word ${key} on ${new URL(page.url()).pathname}`);
+    /* what the screen says instead, when it says something: its alerts and refusals, as drawn */
+    const said = await page.evaluate(() => [...document.querySelectorAll('[role="alert"], .mk-msg, [data-refusal]')]
+      .map((e) => e.textContent.replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, 3).join(" | ")).catch(() => "");
+    throw new Error(`the screen does not draw the word ${key} on ${new URL(page.url()).pathname}${said ? `; it says: ${said.slice(0, 300)}` : ""}`);
   }
 }
 
