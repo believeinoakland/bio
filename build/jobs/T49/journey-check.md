@@ -85,3 +85,10 @@ B7 (K3383): re-walked on tranche/T49 @ ceca2ea2fd, 103 steps, 10 failures. Steps
 ## J6 · COMPLETE
 
 T49-32 complete at B7: built, re-walked, owners named in J5. I re-walk and shape the fake model past step 9 at your next CHANGE.
+
+## After B8 (K3389–K3391)
+
+Merged the tranche (screens-inquiry's step-7 fix, admission, site, control-plane) and walked to the end. Built to the screens as merged: step 7 expects the Passages section's empty state (`screen.document.passages.head`, `state.empty`) and finds the passage with Find-in, opened from the document's own "Find in this", for the question; step 8 cites from the Find-in result with the role chosen (supports) and finds the passage on the question; step 9 opens the assistant's dock from the top bar and starts the run there (`dock.run.yours`); step 11 asks on `answers` (`screen.answers.machine`). A refusal's failure now names its check and its first finding (redacted). Walk on `tranche/T49` (B8 merge): 105 steps, 7 failures. Passing: journey 28 from civicsmith.org, journey 3, R7, R9 steps 1–7. Open, owners for BOB (J7):
+- step 8: `cite` refused `BASIS_REFUSED` [C-45.2: "this record holds no extraction chain for the capture this leg cites, so there is no transcription over ¶3"] — extraction (the captured HTML notice has no extraction chain; K3387's `text_units`, the same gap as the document's words);
+- step 9: `airundispatch` refused `ACCOUNT_MEMBER_NOT_ACTIVE` [C-29.15: "a run's credential is minted only for an active member's own run"] for the founder, connected by her own subscription — credentials R63 (`aiRunCredentialMint`), which does not count the founder as ai-accounts R19 does ("only an active member, or the founder");
+- R10, and R13's pairs for steps 9 and after, follow from R9 stopping at step 9. Steps 10–12 and the fake model's run are still not reached; the fake model is untested past the sign-in.
