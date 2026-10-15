@@ -44,3 +44,8 @@ K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` g
 ## B7 · CHANGE
 
 K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: (1) DEC-265 lists `screen.<id>.name` and `.purpose` for `settings` and its thirteen sections in your reads (your R39 contract test is red on `screen.settings.name`): read them. (2) DEC-267: AGENT_WORKER_UNBOUND is drawn by `refusal.AGENT_WORKER_UNBOUND`, no longer `ai.refused.notdeployed`. Re-run your tests and COMPLETE again.
+
+## B8 · CHANGE
+
+CHANGE (K3409; test hygiene, no requirement changes). Merge tranche/T49 into your branch first (it now carries the design stream @ 9534b570e0, DEC-272/DEC-273, and setup-words' regenerated rows).
+Your `contract.test.mjs` R39 is red on the tranche: `TypeError: reads.retired is not iterable` (line 73). The design's `words-reads.json` (re-run at K3406) no longer gives a module a `retired` list: `modules["screens-settings"]` now holds `reads`, `counts` and `unkeyed` only (a stale decision fails only when its key is no longer read). Bring R39's test in line: assert every key you read is a word (`hasWord`) and the design's reads list is met; drop or guard the retired-row loop (`reads.retired ?? []`), keeping any retired key you know of asserted absent by name. Then run your tests (expect 119 of 119) and journey-check's local arm is not needed. Record COMPLETE.
