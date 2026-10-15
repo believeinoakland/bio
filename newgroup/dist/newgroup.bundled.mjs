@@ -5570,7 +5570,12 @@ async function fetchRepoAsset(man) {
       throw e;
     }
   }
-  return new TextDecoder().decode(bytes);
+  return {
+    blob: new Blob([bytes], { type: "application/javascript+module" }),
+    sha: got,
+    limits: planeLimits(bytes),
+    capable: reportsBuilds(bytes)
+  };
 }
 async function selectRelease(emit) {
   emit.step("rel", "Checking the public repository for the newest release");
@@ -5578,11 +5583,10 @@ async function selectRelease(emit) {
   try {
     man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
-      const source = await fetchRepoAsset(man);
-      const lim2 = planeLimits(source);
+      const { limits: lim2, ...asset } = await fetchRepoAsset(man);
       if (lim2.ok) {
         emit.ok("rel", "The repository has " + man.version + ", newer than the built-in " + RELEASE_VERSION + ". " + (ARMED_SIGNERS.length ? "It carries a valid signature from a key this installer trusts, so that is what installs." : "Its integrity checked out, so that is what installs."));
-        return { version: String(man.version), source, from: "repository", man, limits: lim2.limits };
+        return { version: String(man.version), ...asset, from: "repository", man, limits: lim2.limits };
       }
       said = "The repository has " + man.version + ", but it " + LIMITS_NOT_STATED[lim2.why] + (lim2.detail ? " (" + lim2.detail + ")" : "") + ", so it was NOT used. The installer's own built-in release (" + RELEASE_VERSION + ") installs instead.";
     } else said = "The built-in release (" + RELEASE_VERSION + ") is current.";
@@ -5616,16 +5620,16 @@ async function selectChosen(emit, V) {
   if (!builtIn) {
     if (unreachable) return stop(`the public repository was not reachable just now, so release ${V} could not be fetched`);
     if (!man || String(man.version) !== V) return stop(`the public repository holds no release ${V}`);
-    let source;
+    let asset;
     try {
-      source = await fetchRepoAsset(man);
+      asset = await fetchRepoAsset(man);
     } catch (e) {
       return stop(e && e.integrity ? `release ${V} did not pass its integrity check, so it was not used` : e && e.unsigned ? `release ${V} carries no signature, and this installer only installs signed releases` : e && e.signature ? `release ${V} is signed, but not by a key ${PRODUCT} releases are signed with (${e.reason || "invalid"})` : `release ${V} could not be fetched`);
     }
-    const lim2 = planeLimits(source);
+    const { limits: lim2, ...rest } = asset;
     if (!lim2.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim2.why]}${lim2.detail ? " (" + lim2.detail + ")" : ""}`);
     emit.ok("rel", UPDATE_WORDS.progressVerified(V));
-    return { version: V, source, from: "repository", man, limits: lim2.limits };
+    return { version: V, ...rest, from: "repository", man, limits: lim2.limits };
   }
   const lim = planeLimits(RELEASE_SOURCE);
   if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
@@ -5755,6 +5759,31 @@ async function copyHeld(token, acct, { buckets = true, members = [] } = {}) {
   return held;
 }
 var ONE_COPY = `One installation of ${PRODUCT} per Cloudflare account is supported for now`;
+var CRLF = [13, 10];
+var HEADER_END = [13, 10, 13, 10];
+var ascii = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
+function find(hay, pat, from = 0) {
+  for (let i = hay.indexOf(pat[0], from); i !== -1 && i + pat.length <= hay.length; i = hay.indexOf(pat[0], i + 1)) {
+    let k = 1;
+    while (k < pat.length && hay[i + k] === pat[k]) k++;
+    if (k === pat.length) return i;
+  }
+  return -1;
+}
+function multipartPart(bytes, boundary) {
+  const delim = ascii("--" + boundary), next = new Uint8Array([...CRLF, ...delim]);
+  for (let at = find(bytes, delim); at !== -1; ) {
+    const start = at + delim.length;
+    if (bytes[start] === 45 && bytes[start + 1] === 45) return null;
+    const head = find(bytes, HEADER_END, start);
+    if (head === -1) return null;
+    const headers = new TextDecoder().decode(bytes.subarray(start, head));
+    const end = find(bytes, next, head + HEADER_END.length);
+    if (/name="index\.mjs"/.test(headers)) return bytes.subarray(head + HEADER_END.length, end === -1 ? bytes.length : end);
+    at = end === -1 ? -1 : end + CRLF.length;
+  }
+  return null;
+}
 async function scriptHash(token, acct, slug) {
   let r;
   try {
@@ -5771,16 +5800,20 @@ async function scriptHash(token, acct, slug) {
   if (/multipart/i.test(ct)) {
     const m = /boundary="?([^";]+)"?/i.exec(ct);
     if (!m) return null;
-    const text = new TextDecoder("latin1").decode(bytes);
-    const part = text.split("--" + m[1]).find((p) => /name="index\.mjs"/.test(p.slice(0, p.indexOf("\r\n\r\n"))));
-    if (!part) return null;
-    const body = part.slice(part.indexOf("\r\n\r\n") + 4).replace(/\r\n$/, "");
-    bytes = Uint8Array.from(body, (c) => c.charCodeAt(0));
+    bytes = multipartPart(bytes, m[1]);
+    if (!bytes) return null;
   }
   return hex(await crypto.subtle.digest("SHA-256", bytes));
 }
+var builtInSha = null;
+async function releaseSha(release) {
+  if (release.sha) return release.sha;
+  return builtInSha ??= hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+}
+var planeOf = (release) => release.blob ?? release.source;
+var canReport = (release) => release.capable ?? reportsBuilds(release.source);
 async function readBack(token, acct, slug, release) {
-  const want = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  const want = await releaseSha(release);
   let got = null;
   for (let i = 0; i < 3; i++) {
     got = await scriptHash(token, acct, slug);
@@ -5792,7 +5825,7 @@ async function readBack(token, acct, slug, release) {
 function uploadForm(meta, source) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
-  fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
+  fd.append("index.mjs", source instanceof Blob ? source : new Blob([source], { type: "application/javascript+module" }), "index.mjs");
   return fd;
 }
 var selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
@@ -5841,11 +5874,28 @@ var hostOf = (base) => {
     return null;
   }
 };
+var QUOTES = /* @__PURE__ */ new Set([34, 39, 96]);
+var STATEMENT_STOP = /* @__PURE__ */ new Set([34, 39, 96, 92, 10]);
+function statementsInBytes(bytes, tag) {
+  const pat = ascii(tag), bodies = /* @__PURE__ */ new Set();
+  for (let i = find(bytes, pat); i !== -1; i = find(bytes, pat, i + 1)) {
+    const q = i > 0 ? bytes[i - 1] : -1, from = i + pat.length;
+    if (!QUOTES.has(q) || bytes[from] !== 32) continue;
+    let k = from;
+    while (k < bytes.length && !STATEMENT_STOP.has(bytes[k])) k++;
+    if (bytes[k] === q) bodies.add(new TextDecoder().decode(bytes.subarray(from, k)));
+  }
+  return bodies;
+}
 function statedLimits(source, tag) {
-  if (typeof source !== "string") return { ok: false, why: "none" };
-  const bodies = /* @__PURE__ */ new Set();
-  const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
-  for (const m of source.matchAll(re)) bodies.add(m[2]);
+  const isBytes2 = source instanceof Uint8Array;
+  if (typeof source !== "string" && !isBytes2) return { ok: false, why: "none" };
+  let bodies = /* @__PURE__ */ new Set();
+  if (isBytes2) bodies = statementsInBytes(source, tag);
+  else {
+    const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
+    for (const m of source.matchAll(re)) bodies.add(m[2]);
+  }
   if (bodies.size === 0) return { ok: false, why: "none" };
   if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
   const [body] = bodies;
@@ -5937,7 +5987,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   return cf(
     token,
     `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, release.source) }
+    { method: "PUT", body: uploadForm(meta, planeOf(release)) }
   );
 }
 async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
@@ -6012,7 +6062,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
   return cf(
     token,
     `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, release.source) }
+    { method: "PUT", body: uploadForm(meta, planeOf(release)) }
   );
 }
 var PART_MIME = {
@@ -6215,7 +6265,7 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
     emit.ok("fleet", "The fleet signature did not verify (" + (v.reason || "invalid") + "), so no capability workers were installed. Your group's Civicsmith itself installed normally and is safe.");
     return;
   }
-  const planeSha = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  const planeSha = await releaseSha(release);
   if (planeSha !== man.sha256) {
     emit.ok("fleet", "The capability workers are signed against a different release of Civicsmith than the one just installed (the installer used its built-in copy), so no capability workers were installed. The next update, fetching both halves together, adds them.");
     return;
@@ -6399,7 +6449,15 @@ async function verifyInstall(base, probe) {
   return null;
 }
 var BUILD_FIELDS = ["storeVersion", "memberVersions"];
+var WORD_BYTE = (b) => b >= 48 && b <= 57 || b >= 65 && b <= 90 || b === 95 || b >= 97 && b <= 122;
+var hasWord = (bytes, word) => {
+  const pat = ascii(word);
+  for (let i = find(bytes, pat); i !== -1; i = find(bytes, pat, i + 1))
+    if (!(i > 0 && WORD_BYTE(bytes[i - 1])) && !(i + pat.length < bytes.length && WORD_BYTE(bytes[i + pat.length]))) return true;
+  return false;
+};
 function reportsBuilds(source) {
+  if (source instanceof Uint8Array) return BUILD_FIELDS.every((f) => hasWord(source, f));
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
 var failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member)).map((l) => `the capability worker ${l.member} could not be installed, so your group's Civicsmith has no ${BINDING_OF.get(l.member)} connection to use (${l.why})`);
@@ -6817,7 +6875,7 @@ async function runInstall(emit, code, saved) {
   const logLags = logs.lags;
   emit.step("verify", "Checking that it answers");
   const st = await verifyInstall(base, secrets.probe);
-  const capable = reportsBuilds(release.source);
+  const capable = canReport(release);
   const failed = fleet?.left || [];
   const served = !st ? null : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed) : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
   const verdict = withByteLags(served, [...byteLags, ...logLags], capable);
@@ -7029,7 +7087,7 @@ async function runUpdate(emit0, code, saved) {
   emit.ok("addr", ownHosts ? `Your group's Civicsmith is at ${ownHosts.join(", ")}, and this update told it that address is its own.` : "No web address was found for your group's Civicsmith, so it was not told one of its own. Once its address works, running this update again tells it.");
   const logs = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
   const logLags = logs.lags;
-  const capable = reportsBuilds(release.source);
+  const capable = canReport(release);
   let verdict = null;
   if (base) {
     emit.step("verify", UPDATE_WORDS.progressAnswers);
