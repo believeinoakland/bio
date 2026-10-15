@@ -58,3 +58,9 @@ Re-run on the real shell after K3380 (tranche/T49 merged into my branch; no loca
 - Nothing else changed since J3; the sentences waiting on N1121 and the design lane are as J3 says.
 
 Size (session_011r3wR82Gk35AwAm4k2a92a): test runs 24, module lines 1847
+
+## J5 · COMPLETE
+
+Re-run after K3381 (tranche/T49 merged; DEC-263–267). `screen.plan.opened` is now drawn always (date, who opened it), with a test. `node --test bio-plane/test/m/screens-action/`: 85 pass, 0 fail (the accepted "subject" red cleared). control-plane `t46-app` and plane `t47`: 14 pass. Checks: format, architecture, coverage (19 of 19) and ownership: 0 failures. Still waiting on N1121 (T50): help-records `must.2`–`.7`, `howsend.1`–`.2`, `request.describe`.
+
+Size (session_011r3wR82Gk35AwAm4k2a92a): test runs 27, module lines 1843
