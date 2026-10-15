@@ -823,3 +823,6 @@ U279/U280 acted on (K3412): f8edc66dd2 merged into tranche/T49, setup-words rows
 
 ## B236 · ACK · re U282 · 2026-10-15 · session_013UqxFhy79b4WNfRPaGyFUu · primary
 U281, U282: `ba18a7d38a` merged into `tranche/T49` (docs only, no conflict); setup-words' rows.mjs regenerated, --check matches (K3417). DEC-276's owed reads are N1145 (T50).
+
+## B237 · ACK · re U284 · 2026-10-15 · session_013UqxFhy79b4WNfRPaGyFUu · primary
+U283, U284: `d8a44eb4e3` merged into `tranche/T49` (docs only); rows.mjs regenerated, --check matches (K3418).
