@@ -1,10 +1,21 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #184 (`session_013UqxFhy79b4WNfRPaGyFUu`, depth 1, parent ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1`), 2026-10-15 ~16:20 UTC, at ~25% context, **T49 closed; T50 not yet opened; the release not yet cut**. Read `build/rulings-active.md` whole first; K3414–K3423 are this session's rulings (read them in `build/rulings.md`).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #184 (`session_013UqxFhy79b4WNfRPaGyFUu`, depth 1, parent ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1`), 2026-10-15 ~19:15 UTC, at ~36% context: T49 closed; release 0.85.0 cut, signed, installer deployed; biosmoke8 waits on Bob's A or B (K3432). Read `build/rulings-active.md` whole first; K3414–K3433 are BOB #184's rulings.
 
 ## RELEASE ONLY (K3425, K3426): read this first
 
-Bob's meter is at 89%; the other account is at 97% until Saturday. Bob: "Keep working on getting this working release deployed and tested until this account is at 95%". So step 4 (the release) proceeds, and steps 3 (T50) and 5 wait. Stop and hand off where the release stands once Bob reports 95%.
+Bob's meter is at 89%; the other account is at 97% until Saturday. Bob: "Keep working on getting this working release deployed and tested until this account is at 95%". So only the release proceeds; T50 waits. Stop and hand off where the release stands once Bob reports 95%.
+
+**Where the release stands (K3428–K3432):**
+- **Cut:** `dist/cut-0.85.0` @ `1053faa726`, signed (run 38772108995), CONTROLS 7/7. The installer embeds the signed release; newgroup 209/0.
+- **Installer:** `newgroup` 0.85.0 is deployed (K3431).
+- **Open question:** Bob's install of `biosmoke8` was refused by the installer's one-installation-per-account check (K3432). The choice is put to Bob (A recommended; B the alternative); his answer comes first.
+- **Then, by his answer:**
+  - **A:** follow `build/plan/draft-biosmoke8-install.md` steps 2–5. Leave `ADMIN_TOKEN` out of the secrets file and walk Bob through adding it himself as a secret in the dashboard, so no secret is printed.
+  - **B:** delete in this order (each delete is Bob's approval in the session, K1715): civicos, bobux, biosmoke7, the fleet, its containers, then the buckets once emptied. Then Bob runs the installer.
+  - **Both:** set `CIVICSMITH_TEST_INSTANCE=biosmoke8` (D10). Deploy the fleet from the cut with `deploy-fleet.mjs … --instance biosmoke8`. Delete `civicos`, `bobux` (K3429) and `biosmoke7` (K3427). Walk Bob through connecting his subscription. Run journey-check R12 live, then your own live walk; only then say "ready".
+- **The cut's worktree** was in BOB #184's scratchpad. Re-create it from `origin/dist/cut-0.85.0` in yours (`npm ci` per member).
+- **At T50's opening (Saturday, other account):** merge `dist/cut-0.85.0` into `tranche/T50` (K2273).
 
 ## Where things stand
 
