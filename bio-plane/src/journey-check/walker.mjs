@@ -53,7 +53,8 @@ export function refusalsIn(body) {
     if (flag || withheld) {
       const how = flag ? `${flag}: false` : "withheld";
       const own = [v.code, v.reason].find((c) => typeof c === "string" && c);
-      out.push({ code: own || how, how, at });
+      const said = [v.detail, v.translation, v.message].find((d) => typeof d === "string" && d.trim());
+      out.push({ code: own || how, how, at, ...(typeof v.check === "string" ? { check: v.check } : {}), ...(said ? { said: said.slice(0, 200) } : {}) });
     }
     for (const [k, x] of Object.entries(v)) visit(x, at ? `${at}.${k}` : k, depth + 1);
   };
@@ -114,9 +115,10 @@ export class Walk {
     const expected = (r) => expect.some((e) => (e && typeof e === "object" && !(e instanceof RegExp)
       ? e.at.test(r.at) && matches(e.code, r.code) : matches(e, r.code)));
     const unexcused = refusals.filter((r) => !expected(r));
+    const why = (r) => (r.check || r.said ? ` [${[r.check, r.said].filter(Boolean).join(": ")}]` : "");
     for (const r of unexcused)
-      this.fail(FAIL.REFUSED, r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
-        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`);
+      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
+        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`) + why(r));
     const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
     if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
