@@ -16,9 +16,9 @@ const PATHS = { project: "/app/project/" + P, question: "/app/question/" + Q, do
 /* the reads each screen draws in one of the four states, by the screen's own read names (N1073: the ops are read from its
    declaration, never hand-listed); the rest feed what is drawn (titles, choices); the document's reading and versions are
    the reads it makes once its digest and address are read */
-const DRAWN_READS = { project: ["stage", "bar", "questions", "others", "account", "participants", "visibility"], question: ["strength", "waits", "hunches"],
-  document: ["backlinks"], projectai: ["state", "keepaway", "uses", "limits", "usage", "history"] };
-const LATER = { document: ["reading", "versionchain"] };
+const DRAWN_READS = { project: ["stage", "bar", "questions", "others", "participants", "visibility"], question: ["strength", "waits", "hunches"],
+  document: ["backlinks"], projectai: ["state", "keepaway"] };
+const LATER = { project: ["projectaccountstate"], document: ["reading", "versionchain"], projectai: ["accountuses", "ailimits", "aiusage", "accounthistory"] };
 const DRAWN = Object.fromEntries(Object.entries(DRAWN_READS).map(([id, names]) => {
   const reads = SCREENS.find((s) => s.id === id).reads({ subject: "X-1" });
   return [id, names.map((n) => reads[n].op).concat(LATER[id] || [])];

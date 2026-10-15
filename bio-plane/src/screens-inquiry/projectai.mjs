@@ -13,6 +13,7 @@
 
 import * as settingsPanel from "../screens-settings/panel.mjs";
 import { SCREEN_WORDS as SETTINGS_ROWS } from "../screens-settings/index.mjs";
+import { later } from "./common.mjs";
 
 const { aiPanel, aiPanelSend } = settingsPanel;
 
@@ -31,10 +32,8 @@ function reads(view) {
     notice: { op: "projectkeynotice", query: { project: id } },
     keepaway: { op: "projectaikeepawaystate", query: { project: id } },
     signin: { op: "subscriptionsignin", body: { step: "state" } },
-    uses: { op: "accountuses", query: { owner } },
-    limits: { op: "ailimits", query: { owner } },
-    usage: { op: "aiusage", query: { owner } },
-    history: { op: "accounthistory", query: { owner } },
+    /* K3419: `accountuses`, `ailimits`, `aiusage` and `accounthistory` are an owner's; the screen reads them (`later`)
+       only once the roster shows her an owner who has joined, so a participant who is not an owner never makes them */
     /* R37: the projects she may see but has not joined (project-roster's directory) */
     ...directory,
   };
@@ -87,7 +86,7 @@ function render(cs, view) {
   const refusedHer = ["project", "participants", "state", "notice", "keepaway"].some((k) => d[k] && d[k].state === "failed"
     && d[k].refusal && NOT_JOINED.includes(d[k].refusal.code));
   const absent = parts && !parts.some((x) => x.handle === me && x.state === "joined");
-  if (listed || refusedHer || (absent && !(mine && mine.state === "invited"))) {
+  if (listed || refusedHer || absent) {
     out.push(`<p data-state="notjoined">${W("projectai.notjoined", { project: title || plain("state.undetermined") })}</p>`
       + cs.act("projectjoin", { label: "act.projectjoin.label.projectai", data: { project: id }, tone: "primary" }));
     return out.join("");
@@ -124,8 +123,16 @@ function render(cs, view) {
   else if (n && n.due === false) out.push(`<p class="mk-small" data-notice="seen">${W(S + "notice.seen")}</p>`);
 
   /* what the project's account pays for, its limits, its use summed and its changes: screens-settings R9's panel */
-  if (isOwner && view.parts && view.parts.aiPanel)
-    out.push(view.parts.aiPanel(cs, view, { owner, explore: false, perMember: false }));
+  if (isOwner && view.parts && view.parts.aiPanel) {
+    const tok = String(ui.paSeq || 0);
+    const owned = (op) => {
+      const r = view.parts.later(cs, ui, "pa:" + op, op, { owner }, tok);
+      return r.state === "ok" && (!r.value || typeof r.value !== "object") ? { state: "empty", value: null, refusal: null } : r;
+    };
+    const seen = Object.assign({}, view, { data: Object.assign({}, d, { uses: owned("accountuses"), limits: owned("ailimits"),
+      usage: owned("aiusage"), history: owned("accounthistory") }) });
+    out.push(view.parts.aiPanel(cs, seen, { owner, explore: false, perMember: false }));
+  }
 
   /* keeping the project's material away from AI: what it is now, and an owner's act, on only with a reason */
   out.push(cs.sec(S + "keepaway.head", cs.state("keepaway", view, (k) => {
@@ -144,28 +151,31 @@ function render(cs, view) {
  *  panel's own (`aiPanelSend`), over the project's account. */
 const acts = [
   /* the key in the request's body only; the field drawn anew, empty, once it is held (never drawn again) */
-  { op: "projectkeyset", label: "act.projectkeyset.label.projectai", rereads: ["state", "notice", "uses", "history"],
+  { op: "projectkeyset", label: "act.projectkeyset.label.projectai", rereads: ["state", "notice"],
     send(view, el, cs) {
       const key = String(cs.value("pa-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim();
       return key ? { body: { project: String(view.subject || ""), key } } : { refuse: "screen.projectai.key.nokey" };
     },
-    done(view, answer, cs) { cs.set("keyGen", ((view.ui && view.ui.keyGen) || 0) + 1); } },
-  { op: "projectsigninset", label: "act.projectsigninset.label.projectai", rereads: ["state", "uses", "history"],
-    send(view) { return { body: { project: String(view.subject || "") } }; },
+    done(view, answer, cs) { cs.set("keyGen", ((view.ui && view.ui.keyGen) || 0) + 1); cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); } },
+  { op: "projectsigninset", label: "act.projectsigninset.label.projectai", rereads: ["state"],
+    send(view) { return { body: { project: String(view.subject || "") } }; }, done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); },
     /* its owner's translations are these words, filled with the project's name (credentials R54); held here too */
     refusals: { PROJECT_NOT_SOLE_MEMBER: (r, cs) => (r && r.translation ? cs.esc(r.translation) : cs.w("ai.refused.notsole", { project: String((r && r.project) || "") })),
                 SIGNIN_NOT_CONNECTED: "ai.refused.signinnotconnected" } },
-  { op: "projectaccountswitch", label: "act.projectaccountswitch.label.projectai", rereads: ["state", "history"],
-    send(view, el) { return { body: { project: String(view.subject || ""), on: el.dataset.on === "on" } }; } },
-  { op: "projectaccountremove", label: "act.projectaccountremove.label.projectai", rereads: ["state", "notice", "uses", "history"],
-    send(view) { return { body: { project: String(view.subject || "") } }; } },
+  { op: "projectaccountswitch", label: "act.projectaccountswitch.label.projectai", rereads: ["state"],
+    send(view, el) { return { body: { project: String(view.subject || ""), on: el.dataset.on === "on" } }; },
+    done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); } },
+  { op: "projectaccountremove", label: "act.projectaccountremove.label.projectai", rereads: ["state", "notice"],
+    send(view) { return { body: { project: String(view.subject || "") } }; }, done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); } },
   { op: "projectkeynoticeseen", label: "act.projectkeynoticeseen.label.projectai", rereads: ["notice"],
     send(view) { return { body: { project: String(view.subject || "") } }; } },
-  { op: "accountusesset", label: "act.accountusesset.label.projectai", rereads: ["uses", "history"],
+  { op: "accountusesset", label: "act.accountusesset.label.projectai", rereads: [],
     send(view, el, cs) { return view.parts.aiPanelSend("accountusesset", "project:" + String(view.subject || ""), el, cs); },
+    done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); },
     refusals: { SWITCH_VALUE_INVALID: "ai.refused.switchvalue" } },
-  { op: "ailimitset", label: "act.ailimitset.label.projectai", rereads: ["limits"],
+  { op: "ailimitset", label: "act.ailimitset.label.projectai", rereads: [],
     send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "project:" + String(view.subject || ""), el, cs); },
+    done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); },
     refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }),
                 LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
   /* on only with a reason of 1 to 2,000 characters in the owner's own words, its field the act's reason (interface-shell
@@ -173,7 +183,7 @@ const acts = [
   /* R37: she joins the project from here (project-roster's join, by the project's id) */
   { op: "projectjoin", label: "act.projectjoin.label.projectai", rereads: null,
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
-  { op: "projectaikeepaway", label: "act.projectaikeepaway.label.projectai", rereads: ["keepaway", "history", "uses"], reasonField: "reason",
+  { op: "projectaikeepaway", label: "act.projectaikeepaway.label.projectai", rereads: ["keepaway"], reasonField: "reason", done(view, answer, cs) { cs.set("paSeq", ((view.ui && view.ui.paSeq) || 0) + 1); },
     send(view, el, cs) {
       const reason = String(cs.value("pa-why") || "").trim();
       if (reason.length < 1 || reason.length > 2000) return { refuse: "screen.projectai.keepaway.noreason" };
@@ -206,4 +216,4 @@ const words = Object.freeze([
 
 /** The project's AI account (interface-shell R21), with the panel's functions as its parts. */
 export const PROJECTAI_SCREEN = Object.freeze({ id: "projectai", reads, place, render, acts, words,
-  parts: Object.freeze({ aiPanel, aiPanelSend }) });
+  parts: Object.freeze({ aiPanel, aiPanelSend, later }) });

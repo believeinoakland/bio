@@ -28,7 +28,8 @@ function reads(view) {
     /* an empty first page is drawn by the screen's own state b, or paged on while a cursor follows */
     questions: { op: "projectquestions", query: { project: id, limit: "100" }, empty: () => false },
     others: { op: "list", query: { type: "inquiry", limit: "500" } },
-    account: { op: "projectaccountstate", query: { project: id } },
+    /* what pays (`projectaccountstate`) is read by the screen (`later`) once she is a participant: an invited member who has
+       not joined is answered NO_SUCH_PROJECT, a refused read the page must not make (R1, R37) */
     visibility: { op: "projectvisibility", query: { projectId: id } },
     votes: { op: "projectownervotes", query: { projectId: id } },
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
@@ -62,7 +63,7 @@ function render(cs, view) {
   const doc = d.project && d.project.state === "ok" ? P.front(d.project.value["bundle.md"]) : null;
   /* a project she sees only to exist: its subject read refused PROJECT_SEEN_NOT_A_PARTICIPANT, read once more for the
      refusal's own fields (its `name` and `owners`, project-roster's existence answer) */
-  const seenCode = ["stage", "participants", "bar", "account"].some((k) => d[k] && d[k].refusal && d[k].refusal.code === "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  const seenCode = ["stage", "participants", "bar"].some((k) => d[k] && d[k].refusal && d[k].refusal.code === "PROJECT_SEEN_NOT_A_PARTICIPANT");
   const seenRead = seenCode ? later("seen", "projectstage", { project: id }) : null;
   const seen = seenCode ? Object.assign({ code: "PROJECT_SEEN_NOT_A_PARTICIPANT" }, (seenRead.refusal && seenRead.refusal.fields) || {}) : null;
   const listed = d.directory && d.directory.state === "ok" && Array.isArray(d.directory.value.projects)
@@ -89,7 +90,12 @@ function render(cs, view) {
 
   /* not joined (R1): she sees that it exists, and joins where she may */
   const me = view.me && view.me.handle;
-  const notJoined = !!seen || !!listed;
+  /* R1, R37: an invited member who has not joined is a participant to the roster but not to the project's reads
+     (`projectaccountstate` answers NO_SUCH_PROJECT): she sees the not-joined state, never a failed read */
+  const roster = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
+    ? d.participants.value.participants.find((x) => x && x.handle && x.handle === me) : null;
+  const invited = !!(roster && roster.state === "invited");
+  const notJoined = !!seen || !!listed || invited;
   if (notJoined) {
     const owners = seen && Array.isArray(seen.owners) && seen.owners.length ? seen.owners.map((o) => P.who(cs, o)).join(", ") : "";
     out.push(cs.sec("screen.project.members.head",
@@ -233,7 +239,7 @@ function render(cs, view) {
   })));
 
   /* what pays for the assistant here (credentials' projectaccountstate), and the project's AI screen (R14) */
-  out.push(cs.sec("screen.project.account.head", cs.state("account", view, (a) => {
+  out.push(cs.sec("screen.project.account.head", cs.state(!d.participants || d.participants.state === "loading" ? { state: "loading" } : later("account", "projectaccountstate", { project: id }), (a) => {
     const say = a.on === false && a.held ? "screen.project.account.off"
       : a.serving === "project" || (a.on && a.held) ? "screen.project.account.project" : "screen.project.account.member";
     return `<p>${W(say)}</p>`;
@@ -363,6 +369,7 @@ const acts = [
       return { query: { projectId: String(view.subject || ""), handle } };
     } },
   { op: "projectjoin", label: "act.projectjoin.label.project",
+    rereads: ["stage", "participants", "bar", "questions", "visibility", "votes", "plans"],
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
   { op: "planopen", label: "act.planopen.label.project", reasonField: "title", rereads: ["plans"],
     send(view, el, cs) {

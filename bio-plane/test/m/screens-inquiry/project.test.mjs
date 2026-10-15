@@ -281,6 +281,27 @@ test("R1 a member who has not joined sees that the project exists, and the Join 
   }
 });
 
+test("R1 R37 a member invited and not yet joined sees the not-joined state with Join, never a failed read; after joining, the page reads as a participant's", async () => {
+  let joined = false;
+  const roster = () => ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 },
+    { handle: "mai", state: joined ? "joined" : "invited", owner: 0 }] });
+  const p = await open(at(), { plane: { projectparticipants: roster, projectaccountstate: () => (joined ? ok({ ok: true, on: true, serving: "member" }) : refusedIn("NO_SUCH_PROJECT")),
+    projectjoin: () => { joined = true; return ok({ ok: true }); } } });
+  const m = main(p);
+  assert.deepEqual(actsIn(m), ["projectjoin"]);
+  assert.ok(says(m, "screen.project.notjoined"));
+  assert.equal(m.querySelector('[data-state="failed"]'), null, "no failed read drawn");
+  assert.equal(m.querySelector("h1").textContent, "Pothole repairs");
+  assert.equal(p.byOp("projectaccountstate").length, 0, "what pays is not read for a member who has not joined");
+  await press(p, "projectjoin");
+  assert.equal(p.byOp("projectjoin")[0].query.projectId, P);
+  assert.equal(p.byOp("projectaccountstate").length, 1, "read once she has joined");
+  assert.ok(actsIn(main(p)).includes("projectleave") && !actsIn(main(p)).includes("projectjoin"), "now a participant's page");
+  /* control: a joined member's page is not the not-joined state */
+  const j = await open(at());
+  assert.ok(!says(main(j), "screen.project.notjoined"));
+});
+
 test("R38 Add a document opens capture with the project as its subject", async () => {
   const p = await open(at());
   const a = main(p).querySelector('[data-adddoc="project"]');
