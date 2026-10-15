@@ -368,20 +368,23 @@ test("R2 UPLOAD_NO_STATEMENT, EMPTY, TOO_LARGE and MEMBER_SESSION_REQUIRED are e
 
 /* R22 (BOB's reading of J2: the subject rides the path, `/app/capture/<tab>/<id>`) */
 const PROJ = "PROJ-2026-0007", Q = "INQ-2026-0001-seven-days";
+const projectMd = ["---", `id: ${PROJ}`, "object_type: project", 'title: "Pothole repairs"', "---", "", "## Summary", ""].join("\n");
 const questionMd = (project) => ["---", `id: ${Q}`, "object_type: inquiry", 'title: "Seven days"', ...(project ? [`project: ${project}`] : []), "references: []", "---", "", "## Question", ""].join("\n");
-const FOR_QUESTION = (project = PROJ) => ({ ...CAPTURED, image: (r) => ok(r.query.id === Q ? { "bundle.md": questionMd(project) } : null) });
+const FOR_QUESTION = (project = PROJ) => ({ ...CAPTURED, image: (r) => ok(r.query.id === Q ? { "bundle.md": questionMd(project) } : r.query.id === PROJ ? { "bundle.md": projectMd } : null) });
 
 test("R22 a capture made from a question is filed under the question's project and offers Cite a passage over the document with the question", async () => {
   const p = await open(`/app/capture/address/${Q}`, { plane: FOR_QUESTION() });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.deepEqual(p.byOp("image").map((r) => r.query.id), [Q]);
+  assert.deepEqual(p.byOp("image").map((r) => r.query.id), [Q, PROJ]);
   const md = p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text;
   assert.match(md, new RegExp(`^project: ${PROJ}$`, "m"));
   const cite = main(p).querySelector(`a[href="/app/find-in/${BUNDLE}/${Q}"]`);
   assert.ok(cite, "Cite a passage opens find-in over the document with the question");
-  assert.ok(cite.textContent.includes(word("act.cite.label.document")));
+  assert.ok(cite.textContent.includes(word("capture.cite")));
+  assert.equal(cite.getAttribute("data-tip"), word("capture.cite.tip").replace(/'/g, "&#39;").replace(/&#39;/g, "'"), "its tip");
+  assert.ok(says(p, "capture.filed.question", { project: "Pothole repairs", question: "Seven days" }), "where it is filed, and for which question");
   /* the subject rides every tab link, so the tabs keep the question */
   assert.ok(main(p).querySelector(`a[href="/app/capture/file/${Q}"][data-nav]`));
   /* the upload tab files it the same way */
@@ -392,14 +395,15 @@ test("R22 a capture made from a question is filed under the question's project a
   assert.match(u.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text, new RegExp(`^project: ${PROJ}$`, "m"));
 });
 
-test("R22 a capture made from a project is filed under it, with no question read and no question carried to find-in", async () => {
-  const p = await open(`/app/capture/address/${PROJ}`, { plane: CAPTURED });
+test("R22 a capture made from a project is filed under it and says so, with no question read and no Cite a passage", async () => {
+  const p = await open(`/app/capture/address/${PROJ}`, { plane: { ...CAPTURED, image: (r) => ok(r.query.id === PROJ ? { "bundle.md": projectMd } : null) } });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
   await p.settle();
-  assert.equal(p.byOp("image").length, 0);
+  assert.deepEqual(p.byOp("image").map((r) => r.query.id), [PROJ], "only the project's title is read");
   assert.match(p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text, new RegExp(`^project: ${PROJ}$`, "m"));
-  assert.ok(main(p).querySelector(`a[href="/app/find-in/${BUNDLE}"]`));
+  assert.ok(says(p, "capture.filed.project", { project: "Pothole repairs" }));
+  assert.equal(main(p).querySelector('a[href^="/app/find-in/"]'), null, "no question to cite into");
 });
 
 test("R22 controls: no subject, a subject that is neither a project nor a question, and a question stating no project file it under none; a question that cannot be read files nothing", async () => {
@@ -410,6 +414,7 @@ test("R22 controls: no subject, a subject that is neither a project nor a questi
     await p.settle();
     assert.doesNotMatch(p.byOp("promote")[0].body.files.find((f) => f.path === "bundle.md").text, /^project:/m, path);
     assert.equal(p.byOp("image").length, 0, path);
+    assert.ok(!text(p).includes(word("capture.filed.project", { project: "" }).split("{")[0].trim()), `${path}: says nothing is filed`);
     assert.equal(main(p).querySelector('a[href^="/app/find-in/"]'), null, `${path}: nothing to cite into`);
   }
   const n = await open(`/app/capture/address/${Q}`, { plane: FOR_QUESTION("") });
