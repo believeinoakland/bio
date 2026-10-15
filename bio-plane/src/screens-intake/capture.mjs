@@ -16,18 +16,29 @@ function forOf(view) {
   return { tab: ["address", "file", "saw"].includes(tab) ? tab : "address", id: /^(PROJ|INQ)-[A-Za-z0-9-]+$/.test(id) ? id : "" };
 }
 
-/* R22: the project the subject files a capture under: a project's own id; a question's, as its bundle states it
- * (`project:` in its front matter; the question is read through `image`). "" when a question states none (filed
- * nowhere); null when the question could not be read, so nothing is filed where the member did not mean. */
+/* R22: where the subject files a capture: `{id, title, question}`, the project's id and title and, for a question, the
+ * question's title. A project's own id; a question's project, as its bundle states it (`project:` in its front matter; the
+ * question is read through `image`). `id` is "" when a question states no project (filed nowhere); null when the
+ * question could not be read, so nothing is filed where the member did not mean. A title that cannot be read is the id. */
 async function projectOf(cs, id) {
-  if (!id) return "";
-  if (/^PROJ-/.test(id)) return id;
-  const a = await cs.call("image", { query: { id } });
-  const r = a && typeof a.result === "object" && a.result ? a.result : a;
-  const md = r && typeof r["bundle.md"] === "string" ? r["bundle.md"] : null;
-  if (md === null) return null;
-  const m = /^project:\s*["']?(PROJ-[^\s"']+)["']?\s*$/m.exec(md.split(/\n---\s*\n/)[0] || "");
-  return m ? m[1] : "";
+  if (!id) return { id: "", title: "", question: "" };
+  const front = async (of) => {
+    const a = await cs.call("image", { query: { id: of } });
+    const r = a && typeof a.result === "object" && a.result ? a.result : a;
+    const md = r && typeof r["bundle.md"] === "string" ? r["bundle.md"] : null;
+    return md === null ? null : md.split(/\n---\s*\n/)[0] || "";
+  };
+  const field = (fm, name) => { const m = new RegExp("^" + name + ":\\s*(.*?)\\s*$", "m").exec(fm); return m ? m[1].replace(/^["']|["']$/g, "") : ""; };
+  let project = id, question = "";
+  if (!/^PROJ-/.test(id)) {
+    const fm = await front(id);
+    if (fm === null) return null;
+    question = field(fm, "title") || id;
+    project = /^PROJ-\S+$/.test(field(fm, "project")) ? field(fm, "project") : "";
+    if (!project) return { id: "", title: "", question };
+  }
+  const pm = await front(project);
+  return { id: project, title: (pm && field(pm, "title")) || project, question };
 }
 
 /* R1, R21, R23 (N747): a document the screen promotes as an information bundle at `collected`, the one composition both
@@ -101,7 +112,8 @@ function renderCapture(cs, view) {
      chosen when the capture was made for one. Nothing is linked for a refused promotion or an answer naming no bundle. */
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.title || g.bundleId, [])}`
-      + (at.id ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.bundleId)}${/^INQ-/.test(at.id) ? "/" + encodeURIComponent(at.id) : ""}" data-nav>${cs.w("act.cite.label.document")}</a>` : "")
+      + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
+      + (/^INQ-/.test(at.id) ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.bundleId)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
   /* R21: a refused promotion is drawn on its tab in the owner's words, else the shell's own for a failure with none */
   const refusedPromotion = (t) => U.promoteRefused && U.promoteRefused.tab === t
@@ -189,11 +201,11 @@ async function doneAcquire(view, answer, cs) {
     return;
   }
   if (a.existed === true) { cs.set("captured", { existed: true, title, address, bundleId: typeof a.bundleId === "string" ? a.bundleId : null }); return; }
-  const project = await view.parts.projectOf(cs, view.parts.forOf(view).id);
-  if (project === null) { cs.set("promoteRefused", { tab: "address", text: "" }); return; }
-  const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project });
+  const filed = await view.parts.projectOf(cs, view.parts.forOf(view).id);
+  if (filed === null) { cs.set("promoteRefused", { tab: "address", text: "" }); return; }
+  const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", text: made.refused }); return; }
-  cs.set("captured", { title, address, bundleId: made.bundleId });
+  cs.set("captured", { title, address, bundleId: made.bundleId, filed });
 }
 
 /* R14 (capture-requests R56): "Ask for this later" is the member's own request: `capturerequest` with the address and no
@@ -277,11 +289,11 @@ async function doneUpload(view, answer, cs) {
   cs.set("uploaded", null);
   if (a.existed === true) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
   const doc = a.document && typeof a.document === "object" ? a.document : {};
-  const project = await view.parts.projectOf(cs, view.parts.forOf(view).id);
-  if (project === null) { cs.set("promoteRefused", { tab: "file", text: "" }); return; }
-  const made = await view.parts.promoteDocument(cs, { doc, title: name || String(doc.locator || ""), locator: String(doc.locator || ""), project });
+  const filed = await view.parts.projectOf(cs, view.parts.forOf(view).id);
+  if (filed === null) { cs.set("promoteRefused", { tab: "file", text: "" }); return; }
+  const made = await view.parts.promoteDocument(cs, { doc, title: name || String(doc.locator || ""), locator: String(doc.locator || ""), project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", text: made.refused }); return; }
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title: name });
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title: name, filed });
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */

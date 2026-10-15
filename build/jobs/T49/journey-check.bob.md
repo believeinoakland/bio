@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -45,3 +45,7 @@ K3381: received. Merged so far: op-declarations, site, control-plane, plane, adm
 ## B7 · CHANGE
 
 K3383: merged into tranche/T49 now: every L11 job but control-plane (B8, rewriting its e2e tests) and you. Merge the tranche, re-walk, and for each failure still open name the module that owns it in a REPORT (I route it). Then COMPLETE.
+
+## B8 · CHANGE
+
+K3389–K3391: screens-inquiry's step-7 fix is merged (every capture read keyed on provenance's capture sha, not the dataset digest; versionchain and Find-in now read the capture), with admission, site (icon, one full stop) and control-plane. The document's words wait on extraction answering `text_units` (K3387, Bob's approval asked): until then step 7 expects the Passages section's empty state, and walks Find-in for the passage instead. Merge the tranche, re-walk to the end (shape the fake model for steps 8–12), and REPORT each failure with the module that owns it. Then COMPLETE.

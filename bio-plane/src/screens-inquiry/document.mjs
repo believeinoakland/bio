@@ -1,7 +1,8 @@
 /* screens-inquiry R3: the document screen (Projects › <project> › Document; registry screen `document`, its 11 acts).
  *
  * Self-contained functions (interface-shell R21 (1)). The document is the INFO bundle `view.subject` its capture is
- * filed in; its capture's digest is the document's `content_hash`, its address `source.locator`. What needs the digest
+ * filed in; its capture's digest is its provenance document's `documents[0].capture.sha256` (never `content_hash`, the
+ * dataset digest, capture grammar C-2.7; K3387), its address `source.locator`. What needs the digest
  * or the address (the reading and its passages, the grade note, the versions) is read once the document is read.
  * `release` and `retire` act on a selection (`ratification` takes a handle), so each makes its own selection of this
  * document (`op=select`) and sends itself, drawing its own outcome beside the act. Opening the original goes through
@@ -90,7 +91,16 @@ function render(cs, view) {
   };
   const doc = d.capture && d.capture.state === "ok" ? view.parts.front(d.capture.value["bundle.md"]) : null;
   if (doc) doc.source = doc.maps.source || {};
-  const sha = doc && /^sha256:[0-9a-f]{64}$/.test(String(doc.content_hash || "")) ? String(doc.content_hash).slice(7) : "";
+  /* R3, R32 (K3387): every capture read is keyed on the capture's own sha, from its provenance document (a testimony's
+     too); never `content_hash`, which is the bundle's dataset digest (capture grammar C-2.7) */
+  const sha = (() => {
+    if (!doc) return "";
+    let p = null;
+    try { p = JSON.parse(String(d.capture.value["data/provenance.json"] || "")); } catch { p = null; }
+    const first = p && Array.isArray(p.documents) ? p.documents[0] : null;
+    const s0 = first && first.capture ? String(first.capture.sha256 || "") : "";
+    return /^[0-9a-f]{64}$/.test(s0) ? s0 : "";
+  })();
   const locator = doc && doc.source ? String(doc.source.locator || "") : "";
   const out = [];
   const T = (k, f) => view.parts.plain(cs, k, f);
@@ -138,12 +148,10 @@ function render(cs, view) {
   const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
   out.push(secOf("screen.document.passages.head", reading, (r) => {
-    const rd = r.reading || {};
-    const passages = Array.isArray(rd.passages) ? rd.passages
-      : Array.isArray(rd.units) ? rd.units
-      : typeof rd.text === "string" ? rd.text.split(/\n\s*\n/).map((t) => ({ text: t })) : [];
-    const list = passages.filter((p) => p && String(p.text || p.words || "").trim());
-    if (!list.length) return "";
+    /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
+       the bundle is); a reading answers no other text, and with none the section says it holds nothing */
+    const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
+    if (!list.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
     const pick = qs.length
       ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) })), {})
         + cs.choice("document-cite-role", "screen.document.cite.role",
@@ -152,7 +160,7 @@ function render(cs, view) {
     return list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       const page = extent && Number.isInteger(extent.page) ? extent.page : null;
-      return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text || p.words).trim())}”`
+      return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
         + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
         + (extent && qs.length ? cs.act("cite", { label: "act.cite.label.document",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
@@ -207,7 +215,7 @@ function render(cs, view) {
         const at = Number.isInteger(v.at_index) ? v.at_index : list.findIndex((x) => x && (x.capture_sha === sha || x.sha256 === sha));
         const newer = at >= 0 && at < list.length - 1;
         return (newer ? `<p class="cs-due" data-changed="true">${cs.w("screen.document.versions.changed")}</p>` : "")
-          + cs.sheet(list.map((x, i) => cs.row("", x && (x.at || x.retrieved) ? cs.date(String(x.at || x.retrieved), { year: true }) : "",
+          + cs.sheet(list.map((x, i) => cs.row("", x && x.first_retrieved ? cs.date(String(x.first_retrieved), { year: true }) : "",
               i === at ? `<span class="mk-small">${cs.w("screen.document.versions.this")}</span>` : "")).join(""));
       })() : "";
     if (vbody || decide) out.push(cs.sec("screen.document.versions.head", vbody + decide));
@@ -364,7 +372,11 @@ const acts = [
       const note = String(cs.value("document-claim-note") || "").trim();
       if (!b || !note || !el.dataset.entity) return { refuse: "screen.document.claim.empty" };
       const text = view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value["bundle.md"] : "";
-      const m = typeof text === "string" ? /^content_hash:\s*sha256:([0-9a-f]{64})/m.exec(text) : null;
+      /* the capture's own sha, from its provenance document (K3387) */
+      let prov = null;
+      try { prov = JSON.parse(String((view.data.capture && view.data.capture.state === "ok" && view.data.capture.value["data/provenance.json"]) || "")); } catch { prov = null; }
+      const capSha = prov && Array.isArray(prov.documents) && prov.documents[0] && prov.documents[0].capture ? String(prov.documents[0].capture.sha256 || "") : "";
+      const m = /^[0-9a-f]{64}$/.test(capSha) ? [null, capSha] : null;
       const basis = ["name", "corroborated_name", "identifier"].includes(cs.value("document-claim-basis")) ? cs.value("document-claim-basis") : "name";
       return { body: { a: el.dataset.entity, b, kind: "same_as", basis, evidence: { a: { captureSha: m ? m[1] : "" } }, note } };
     } },

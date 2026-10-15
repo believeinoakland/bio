@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { word, hasWord } from "../../bio-plane/src/setup-words/index.mjs";
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
-import worker, { CSP } from "../src/index.mjs";
+import worker, { CSP, FAVICON } from "../src/index.mjs";
 import { SITE_COMMIT as SERVED_COMMIT } from "../src/pages.mjs";
 import { KEYS, STATES, SITE_COMMIT, designMain, parse, find, generate, render, placesReady, esc } from "../build.mjs";
 
@@ -143,6 +143,15 @@ test("R3 control: Create your group opens exactly INSTALLER_ADDRESS", async () =
   assert.equal(create[0].attrs.target, undefined);
 });
 
+/* R4 (DEC-255, DEC-270): the listing rule, beside its sentence, as a details element: its heading and Bob's text, whole. */
+function listingRule(t) {
+  const d = find(mainOf(t), (e) => e.tag === "details");
+  assert.equal(d.length, 1);
+  assert.equal(norm(textOf(find(d[0], (e) => e.tag === "summary")[0])), norm(word("site.groups.rule.head")));
+  assert.equal(norm(textOf(find(d[0], (e) => e.tag === "p")[0])), norm(word("site.groups.rule.text")));
+  assert.ok(t.indexOf(w("site.groups.rule")) < t.indexOf("<details"));
+}
+
 test("R4: two listed groups draw two rows, in order, each with its name, place, focus, cases and Visit", async () => {
   const t = await sameAsDesign("/groups", "c");
   const rows = find(mainOf(t), (e) => cls(e).includes("cs-row"));
@@ -152,6 +161,7 @@ test("R4: two listed groups draw two rows, in order, each with its name, place, 
   assert.equal(b, `${GROUP_B.name} · ${GROUP_B.place}${GROUP_B.focus} · ${norm(word("screen.site.groups.case.one"))}${word("screen.site.groups.visit")}`);
   assert.deepEqual(rows.map((r) => find(r, (e) => e.tag === "a")[0].attrs.href), [GROUP_A.address, GROUP_B.address]);
   assert.ok(t.indexOf(w("screen.site.groups.listing")) > t.lastIndexOf("cs-row"));
+  listingRule(t);
   /* more than one case */
   const many = { ...GROUP_A, cases: 3, editions: 5 };
   const { t: t3 } = await html("/groups", { ...ENV, LISTED_GROUPS: [many, { ...GROUP_B, cases: 2 }] });
@@ -171,6 +181,7 @@ test("R4 control: an empty list draws the empty state, no row and no made-up gro
     for (const g of designGroups) assert.ok(!t.includes(esc(g)), g);
     for (const k of ["screen.site.groups.lede", "screen.site.groups.none", "site.groups.rule"]) assert.ok(t.includes(w(k)), k);
     assert.ok(!t.includes(w("screen.site.groups.visit")));
+    listingRule(t);
   }
   for (const bad of ["{", "{}", [{ ...GROUP_A, address: "http://a.example/" }], [{ ...GROUP_A, cases: 0 }], [{ ...GROUP_A, name: "" }], [{ ...GROUP_A, editions: 2, cases: 3 }]]) {
     assert.equal((await get("/groups", { ...ENV, LISTED_GROUPS: bad })).status, 500, JSON.stringify(bad));
@@ -206,13 +217,40 @@ test("R5 control: null draws no section; a malformed edition is refused, never d
 test("R6: STEWARDS_ADDRESS unset draws the marked placeholder, and every response says not yet public", async () => {
   const env = { ...ENV, STEWARDS_ADDRESS: undefined };
   const { r, t } = await html("/", env);
-  assert.ok(t.includes(w("screen.site.questions.write", { address: `<b>${word("screen.site.questions.unset")}</b>` }).replace(/&lt;(\/?)b&gt;/g, "<$1b>")));
+  assert.ok(t.includes(w("screen.site.questions.write", { address: `<b>${word("screen.site.questions.unset")}</b>` }).replace(/&lt;(\/?)b&gt;/g, "<$1b>").replace(/([.!?])<\/b>\.$/, "$1</b>")));
   assert.ok(!t.includes("mailto:"));
   for (const path of ["/", "/start", "/groups", "/nonesuch", "/app/assets/civicsmith.css"]) {
     assert.equal((await get(path, env)).headers.get("x-robots-tag"), "noindex", path);
     assert.equal((await get(path, { ...env, STEWARDS_ADDRESS: "" })).headers.get("x-robots-tag"), "noindex", path);
   }
   assert.equal(r.headers.get("x-robots-tag"), "noindex");
+});
+
+test("R6: the placeholder's own full stop ends the sentence, never followed by a second", async () => {
+  const { t } = await html("/", { ...ENV, STEWARDS_ADDRESS: undefined });
+  const q = find(mainOf(t), (e) => e.tag === "section" && find(e, (h) => h.tag === "h2" && textOf(h) === word("screen.site.questions.head")).length)[0];
+  const said = norm(textOf(q).slice(word("screen.site.questions.head").length));
+  assert.match(word("screen.site.questions.unset"), /[.!?]$/);
+  assert.equal(said, norm(word("screen.site.questions.write", { address: word("screen.site.questions.unset") })).replace(/([.!?])\.$/, "$1"));
+  assert.doesNotMatch(said, /[.!?]\.$/);
+  /* set: the address takes the sentence's own stop */
+  const { t: s2 } = await html("/");
+  assert.ok(s2.includes(`${ENV.STEWARDS_ADDRESS}</a>.`));
+});
+
+test("R8: the page's icon is the mark, served from the site itself", async () => {
+  for (const path of ["/", "/start", "/groups", "/nonesuch"]) assert.ok((await html(path)).t.includes('<link rel="icon" type="image/svg+xml" href="/favicon.svg">'), path);
+  for (const path of ["/favicon.svg", "/favicon.ico"]) {
+    const r = await get(path);
+    assert.equal(r.status, 200, path);
+    assert.match(r.headers.get("content-type"), /^image\/svg\+xml/);
+    assert.equal(r.headers.get("content-security-policy"), CSP);
+    const body = await r.text();
+    assert.equal(body, FAVICON);
+    assert.doesNotMatch(body, /<script|<style|href=|url\(/);
+    const mark = /<symbol id="i-mark"[^>]*>([\s\S]*?)<\/symbol>/.exec(ASSET_FILES["icons.svg"].body)[1];
+    assert.ok(body.includes(/ d="([^"]+)"/.exec(mark)[1]));
+  }
 });
 
 test("R6 control: set, it draws the mailto: link and no header", async () => {
@@ -259,6 +297,7 @@ test("R8: every page loads only the site's own files, runs no script, and every 
       const [, attr, v] = m, tagStart = t.lastIndexOf("<", m.index), tag = /^<(\w+)/.exec(t.slice(tagStart))[1];
       assert.notEqual(attr, "src", path);
       if (tag === "a") { assert.ok(v.startsWith("/") ? ["/", "/start", "/groups"].includes(v) : outside.has(v), `${path}: ${v}`); continue; }
+      if (v === "/favicon.svg") { assert.equal((await get(v)).status, 200); continue; }
       assert.ok(/^\/app\/assets\/[\w./-]+(#[\w-]+)?$/.test(v), `${path}: <${tag}> ${v}`);
       const file = v.slice("/app/assets/".length).replace(/#.*/, "");
       assert.ok(Object.hasOwn(ASSET_FILES, file), file);
@@ -359,6 +398,7 @@ test("R11 control: no place is drawn but the profiles' and the listed groups' ow
 
 test("R12: every key the site reads exists, and what it draws is word(key, vars)", async () => {
   for (const k of Object.keys(KEYS)) assert.ok(hasWord(k), k);
+  assert.ok(Object.keys(KEYS).includes("site.groups.rule.text") && Object.keys(KEYS).includes("site.groups.rule.head"));
   const drawn = async (path, env = ENV) => norm(textOf(mainOf((await html(path, env)).t)));
   const home = await drawn("/");
   for (const k of ["screen.site.hold", "screen.site.uses.head", "screen.site.not.legal", "screen.site.member.where", "screen.site.uses.gather"]) assert.ok(home.includes(norm(word(k))), k);
