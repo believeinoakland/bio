@@ -422,6 +422,14 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
     }
    ],
    "journeys": [
@@ -3237,7 +3245,7 @@
    "acts": [
     {
      "op": "plansubjectadd",
-     "label": "Add a subject",
+     "label": "Add a matter",
      "status": "declared",
      "modules": [
       "action-plans"

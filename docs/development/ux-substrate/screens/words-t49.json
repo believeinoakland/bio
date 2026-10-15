@@ -2873,6 +2873,432 @@
    "en": "You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written.",
    "protected": false,
    "note": "DEC-262: a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED"
+  },
+  {
+   "key": "screen.queue.more.one",
+   "en": "One more item is not shown here; act on these first.",
+   "protected": false,
+   "note": "DEC-263: screen.queue.more when {n} is 1"
+  },
+  {
+   "key": "screen.find-in.notread.one",
+   "en": "One document could not be read for this, so “nothing” is not said for it.",
+   "protected": false,
+   "note": "DEC-263: screen.find-in.notread when {n} is 1"
+  },
+  {
+   "key": "screen.finder.nobody.one",
+   "en": "Nobody has looked yet at one place your group holds.",
+   "protected": false,
+   "note": "DEC-263: screen.finder.nobody when {n} is 1"
+  },
+  {
+   "key": "screen.answers.withheld.one",
+   "en": "One sentence was held back because it could not be checked against what your group holds.",
+   "protected": false,
+   "note": "DEC-263: screen.answers.withheld when {n} is 1"
+  },
+  {
+   "key": "published.check.elsewhere",
+   "en": "The group published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.",
+   "protected": false,
+   "note": "DEC-263: screens-publish R22: verify answers published, with no evidence row of this edition's findings"
+  },
+  {
+   "key": "act.attest.name",
+   "en": "Certify when this copy existed",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.monitor.name",
+   "en": "Check this address for a new version now",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.attesttext.name",
+   "en": "Vouch that this text matches the page image",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.release.name",
+   "en": "Vouch for this copy",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.dispose.name",
+   "en": "Set this question aside, or dismiss it",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.contradictionresolve.name",
+   "en": "Settle this contradiction: say what it turned out to be",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.publish.name",
+   "en": "Publish the signed edition",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.inquirydivide.name",
+   "en": "Split this question into narrower ones",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.inquiryground.name",
+   "en": "Say what each passage carries",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionmove.name",
+   "en": "Move the action to its next stage",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actioncorrespond.name",
+   "en": "Record a reply or letter received",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionlaws.name",
+   "en": "Choose the laws it goes under",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionrisktier.name",
+   "en": "Revise the risk tier, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionhold.name",
+   "en": "Record a litigation hold, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionholdrelease.name",
+   "en": "End a litigation hold, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionpressure.name",
+   "en": "Mark a reply as pressure on the group",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.holdnoticeprepare.name",
+   "en": "Prepare the hold notice for members",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.holdnoticesent.name",
+   "en": "Record that the hold notice was sent",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionreceipt.name",
+   "en": "Record that what you sent was received",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionscope.name",
+   "en": "Make the action confidential, or not, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionpromise.name",
+   "en": "Record a promise the group made",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionreplybearing.name",
+   "en": "Lay out the reply claim by claim",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionbearingpropose.name",
+   "en": "Propose a claim-by-claim layout of the reply",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.actionreplyquoting.name",
+   "en": "Record that a reply asks not to be quoted",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.arosefrom.name",
+   "en": "Record a matter that arose from this reply",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.escalationopen.name",
+   "en": "Open an escalation, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.escalationattach.name",
+   "en": "Attach this action to its escalation, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.escalationstoppursuing.name",
+   "en": "Stop pursuing this escalation, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.escalationreopen.name",
+   "en": "Reopen the escalation where it stopped, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.filingprepare.name",
+   "en": "Prepare the filing",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.communicationprepare.name",
+   "en": "Prepare what is sent",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.clockadopt.name",
+   "en": "Confirm the due date",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.filingapprove.name",
+   "en": "Approve the text for sending",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.filingsent.name",
+   "en": "Record that the approved text was sent",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.counselpacket.name",
+   "en": "Prepare the packet for counsel, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.clockstate.name",
+   "en": "Give a due date and where it comes from",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.reminderset.name",
+   "en": "Remind me on a date",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.itemtakeup.name",
+   "en": "Take this item up yourself",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versionaccept.name",
+   "en": "Accept this reading",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versionreject.name",
+   "en": "Reject this reading, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versionconsider.name",
+   "en": "Weigh this reading, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versionrevert.name",
+   "en": "Undo the decision on this reading, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versioncurrent.name",
+   "en": "Stand the project on this reading, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.withdrawconclusion.name",
+   "en": "Withdraw the conclusion; it stays on the record",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.versionhide.name",
+   "en": "Hide this reading; it stays on the record",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.cite.name",
+   "en": "Cite in a question or a case",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.sever.name",
+   "en": "Remove a citation, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.reinstate.name",
+   "en": "Reinstate a removed citation",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectinvite.name",
+   "en": "Invite a member to the project",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectjoin.name",
+   "en": "Join this project",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectremove.name",
+   "en": "Remove a member from the project, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectowneradd.name",
+   "en": "Make an owner, or agree to it",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectownerremove.name",
+   "en": "Remove an owner, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectownerrescue.name",
+   "en": "Become the owner of a project whose owners are gone, with a reason",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.projectvisibilityset.name",
+   "en": "Change who can find the project",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.sourceconsent.name",
+   "en": "Record a source's consent to publish, with its evidence",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act"
+  },
+  {
+   "key": "act.proposedispose.name.selected",
+   "en": "Set aside or dismiss the selected findings",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act over a selection (per-item)"
+  },
+  {
+   "key": "act.taskresolve.name.selected",
+   "en": "Act on the selected items",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act over a selection (per-item)"
+  },
+  {
+   "key": "act.taskforward.name.selected",
+   "en": "Forward the selected items to a member",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act over a selection (per-item)"
+  },
+  {
+   "key": "act.resolve.name.selected",
+   "en": "Match the selected documents' mentions",
+   "protected": false,
+   "note": "DEC-264: affordances' name for the act over a selection (per-item)"
+  },
+  {
+   "key": "prompt.inquirydivide",
+   "en": "Dividing does not remove anything. Every leg this question rests on gets a home on one of the children, including any leg that cuts against you, and this question stays on the record as the divided parent, recording where each leg went. Each child names this parent and every sibling, and when a child is published it names them to its readers. If you mean to drop material rather than re-home it, remove the citation, with a reason, instead.",
+   "protected": false,
+   "note": "DEC-264: affordances' DIVIDE_PROMPT (R5), shown before a question is divided"
+  },
+  {
+   "key": "prompt.inquiryground",
+   "en": "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest group rather than from its weakest single reason, so your name and the time go on each group you make and stay there until that group's reasons change. Nothing is hidden: every reason stays visible under the group you put it in, and a published case carries each group and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.",
+   "protected": false,
+   "note": "DEC-264: affordances' GROUND_PROMPT (R5; DEC-32 clause 1), shown before reasons are grouped"
+  },
+  {
+   "key": "prompt.attest.fence",
+   "en": "What co-attestation answers: when did these bytes exist? It asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. What it does not answer: whether the document is TRUE, whether its source is authoritative, or how close it stands to the fact you are citing it for. A secondhand report that is co-attested is still a secondhand report. What it is worth: it strengthens a Grade {ceiling} capture toward evidentiary weight. It never reaches Grade {unreachable} — that needs a chain-of-custody web archive this surface cannot produce.",
+   "protected": true,
+   "note": "DEC-264: affordances' attestFence (R5): DEC-39's wording verbatim, its two grade letters filled from the capture ceiling and the grade above it"
+  },
+  {
+   "key": "refusal.uncatalogued",
+   "en": "Civicsmith has no explanation of this refusal in its words yet, so its code is shown as the act gave it.",
+   "protected": false,
+   "note": "DEC-264: affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word"
+  },
+  {
+   "key": "screen.ceremony.photo.facts.dated",
+   "en": "taken by {by}, {date} · relied on by {findings}",
+   "protected": false,
+   "note": "DEC-265: screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)"
+  },
+  {
+   "key": "draft.machine.label.group",
+   "en": "Draft by the assistant, at your request · edit it until it is your group's",
+   "protected": false,
+   "note": "DEC-267: draft.machine.label for a field that holds the group's words (control-plane's group draft)"
   }
  ],
  "retired": [
@@ -2883,6 +3309,72 @@
   "screen.updates.skip.noreason",
   "question.empty.conclude"
  ],
+ "affordances_names": {
+  "act.attest.name": "Co-attest this capture",
+  "act.monitor.name": "Check this source against what was captured",
+  "act.attesttext.name": "Attest that this text matches the page image",
+  "act.release.name": "Release (verify)",
+  "act.dispose.name": "Dispose (defer or dismiss)",
+  "act.contradictionresolve.name": "Resolve this contradiction (conclude with what it turned out to be)",
+  "act.publish.name": "Publish (author the case)",
+  "act.inquirydivide.name": "Divide (split this question)",
+  "act.inquiryground.name": "Group what this rests on",
+  "act.actionmove.name": "Move this action",
+  "act.actioncorrespond.name": "Record correspondence",
+  "act.actionlaws.name": "State governing laws",
+  "act.actionrisktier.name": "Revise risk tier",
+  "act.actionhold.name": "Place a litigation hold (with a reason)",
+  "act.actionholdrelease.name": "Release a litigation hold (with a reason)",
+  "act.actionpressure.name": "Mark a reply as pressure on the group",
+  "act.holdnoticeprepare.name": "Prepare the hold notice for members",
+  "act.holdnoticesent.name": "Record that the hold notice was sent",
+  "act.actionreceipt.name": "Record that a sending was received",
+  "act.actionscope.name": "Keep this action confidential, or no longer (with a reason)",
+  "act.actionpromise.name": "Note a promise the group made",
+  "act.actionreplybearing.name": "Record what a reply says to each claim",
+  "act.actionbearingpropose.name": "Propose what a reply says to each claim",
+  "act.actionreplyquoting.name": "Record that a reply asks not to be quoted",
+  "act.arosefrom.name": "Link a matter that arose from this reply",
+  "act.escalationopen.name": "Open an escalation of the determination this rests on (with a reason)",
+  "act.escalationattach.name": "Attach this action to its escalation (with a reason)",
+  "act.escalationstoppursuing.name": "Stop pursuing this escalation (with a reason)",
+  "act.escalationreopen.name": "Reopen an escalation the group stopped pursuing (with a reason)",
+  "act.filingprepare.name": "Prepare a filing",
+  "act.communicationprepare.name": "Prepare a communication",
+  "act.clockadopt.name": "Put a proposed deadline on this action's clock",
+  "act.filingapprove.name": "Approve a prepared draft",
+  "act.filingsent.name": "Record that an approved draft was sent",
+  "act.counselpacket.name": "Brief counsel (with a reason)",
+  "act.clockstate.name": "State a deadline and its basis",
+  "act.reminderset.name": "Set a reminder for a date",
+  "act.itemtakeup.name": "Take this up myself",
+  "act.versionaccept.name": "Accept a reading of the evidence",
+  "act.versionreject.name": "Turn down a reading (with a reason)",
+  "act.versionconsider.name": "Set a reading aside for now (with a reason)",
+  "act.versionrevert.name": "Put a reading back to where nobody had acted on it",
+  "act.versioncurrent.name": "Stand this project on a reading",
+  "act.withdrawconclusion.name": "Withdraw this project's conclusion (it stays in the record)",
+  "act.versionhide.name": "Hide a reading from the display (it stays in the record)",
+  "act.cite.name": "Cite material into a case or a question",
+  "act.sever.name": "Sever a citation",
+  "act.reinstate.name": "Reinstate a severed citation",
+  "act.projectinvite.name": "Invite a member to this project",
+  "act.projectjoin.name": "Join this project",
+  "act.projectremove.name": "Remove a participant",
+  "act.projectowneradd.name": "Add an owner",
+  "act.projectownerremove.name": "Remove an owner (with a reason)",
+  "act.projectownerrescue.name": "Add an owner to a project whose owners are all inactive (with a reason)",
+  "act.projectvisibilityset.name": "Choose whether this project can be found",
+  "act.sourceconsent.name": "Record a source's consent to publish (with its evidence)",
+  "act.proposedispose.name.selected": "Defer or dismiss the selected findings",
+  "act.taskresolve.name.selected": "Resolve the selected obligations",
+  "act.taskforward.name.selected": "Forward the selected obligations",
+  "act.resolve.name.selected": "Resolve the selected documents' references",
+  "prompt.inquirydivide": "Dividing does not remove anything.",
+  "prompt.inquiryground": "Grouping says these reasons are enough on their own",
+  "prompt.attest.fence": "What co-attestation answers: when did these bytes exist?",
+  "refusal.uncatalogued": "This refusal is not in the catalogue of refusals"
+ },
  "rewrite": {
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
   "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
@@ -2928,7 +3420,12 @@
   "screen.setup.assistant.paid": "The group's API key. One Anthropic API key, held by your group, serves every member who has no account of their own. Anthropic bills the key's owner for each use, so your group pays. It is off until an administrator switches it on. Each member is told once, before their first question under it, that their questions and the material read to answer them go to Anthropic under the group's account. Administrators see the key's use summed over members, never who used it or what was asked, and set the daily limit and whether the assistant may make suggestions unprompted.",
   "screen.setup.limit": "Each member's daily use of the group's key (optional)",
   "screen.setup.limit.help": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
-  "screen.setup.court.what": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk."
+  "screen.setup.court.what": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk.",
+  "screen.setup.claimed.nosignin": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose.",
+  "signing.ceremony.nokey": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+  "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
+  "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
+  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it."
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
@@ -2973,6 +3470,11 @@
   "screen.setup.assistant.paid": "DEC-257",
   "screen.setup.limit": "DEC-257",
   "screen.setup.limit.help": "DEC-257",
-  "screen.setup.court.what": "DEC-257"
+  "screen.setup.court.what": "DEC-257",
+  "screen.setup.claimed.nosignin": "DEC-263",
+  "signing.ceremony.nokey": "DEC-266",
+  "signing.ceremony.device": "DEC-266",
+  "screen.account.key.help": "DEC-266",
+  "refusal.AGENT_WORKER_UNBOUND": "DEC-267"
  }
 }
