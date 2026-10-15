@@ -1029,7 +1029,7 @@
   "key": "translate.read",
   "en": "Read in my language",
   "protected": false,
-  "note": "DEC-232: B188 (2), N670; the control beside a passage, note, question, finding or notice (readtranslate)"
+  "note": "DEC-232: B188 (2), N670; the control beside a note, question, finding or notice (readtranslate; plane R50; DEC-273)"
  },
  {
   "key": "translate.label",

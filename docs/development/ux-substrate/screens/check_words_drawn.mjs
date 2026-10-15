@@ -7,7 +7,9 @@
 // question, a passage or a reading; a field's typed value; a sentence wholly in quotation marks; a template's placeholder in
 // quotation marks, "{reason}"); the mockup's sample records marked .mk-data (a reading's name, a document's title: an
 // instance, never a fixed word; unstyled); and parts that are only sample data (numbers, dates and names).
+// The same for what each explanation says, shown on hover, focus or tap (a control's data-tip; DEC-273), counted apart.
 // Prints each screen's unmatched count and FAILS if any screen's count exceeds its baseline in words-drawn-baseline.json
+// (the explanations' in words-drawn-tips-baseline.json)
 // (a ratchet: counts may only fall; a screen with no baseline has a baseline of 0). Run it after check_walk.mjs.
 // Usage: node check_words_drawn.mjs                    check against the baseline (run after check_walk.mjs)
 //        node check_words_drawn.mjs --write-baseline   write the current counts as the baseline (refused if any rose)
@@ -20,6 +22,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PW || 'playwright');
 const here = path.dirname(url.fileURLToPath(import.meta.url));
 const BASE = path.join(here, 'words-drawn-baseline.json');
+const TBASE = path.join(here, 'words-drawn-tips-baseline.json');
 const argv = process.argv.slice(2);
 const opt = n => { const i = argv.indexOf(n); return i < 0 ? null : (argv[i + 1] || ''); };
 const WRITE = argv.includes('--write-baseline'), LIST = opt('--list'), JSONOUT = opt('--json');
@@ -37,7 +40,7 @@ const drawn = await p.evaluate(() => {
   const box = document.createElement('main'); document.body.appendChild(box);
   const SEPCLS = /\b(cs-btn|mk-tag|cs-tag|cs-band|cs-grade|cs-strength|cs-kind|cs-due|cs-origin|cs-gap|cs-hint|cs-hunch|cs-changed|cs-tension|cs-risk)\b/;
   const SEPTAG = new Set(['BUTTON', 'SELECT', 'OPTION', 'INPUT', 'TEXTAREA', 'LABEL', 'BR', 'IMG']);
-  const res = {};
+  const res = {}, tres = {};
   for (const { s, v, ai } of pairs.values()) {
     box.innerHTML = W.render(s, { ai, v, dockAssist: s === 'assistant' });
     box.querySelectorAll('.mk-mockctl, script, style').forEach(e => e.remove());
@@ -57,10 +60,16 @@ const drawn = await p.evaluate(() => {
       if (sep) { flush(); walk(ch); flush(); } else walk(ch);
     } };
     walk(box); flush();
+    // what an explanation says, shown on hover, focus or tap (data-tip; a record's card, .cs-ref, holds the record: data).
+    // On an act's button the tip is "<b>label</b>: what it does here": the label is the button's own words, matched above.
+    const n0 = segs.length;
+    [...box.querySelectorAll('[data-tip]:not(.cs-ref)')].forEach(e => { const d = document.createElement('div'); d.innerHTML = e.dataset.tip; const lead = d.firstChild; if (e.dataset.act && lead?.nodeName === 'B' && /^\s*:/.test(lead.nextSibling?.nodeValue || '')) { lead.nextSibling.nodeValue = lead.nextSibling.nodeValue.replace(/^\s*:\s*/, ''); lead.remove(); } d.querySelectorAll('.rec, .mk-data').forEach(x => x.replaceWith('⁂')); d.querySelectorAll('.more').forEach(x => x.before(document.createElement('br')));   /* .more: the tip's second line */ box.appendChild(d); flush(); walk(d); flush(); d.remove(); });
+    const tips = segs.splice(n0);
+    tres[s] = tres[s] || new Set(); tips.forEach(t => tres[s].add(t));
     res[s] = res[s] || new Set(); segs.forEach(t => res[s].add(t));
   }
   box.remove();
-  const o = {}; for (const k in res) o[k] = [...res[k]]; return o;
+  const o = {}, t = {}; for (const k in res) o[k] = [...res[k]]; for (const k in tres) t[k] = [...tres[k]]; return { text: o, tips: t };
 });
 await b.close();
 if (errs.length) { for (const e of errs) console.log('SCRIPT ERROR:', e); console.log('FAILED'); process.exit(1); }
@@ -109,9 +118,12 @@ const sample = s => { if (/^"[^"]+"$/.test(s)) return true;   // wholly a quotat
   return !ws.some(x => x === 'by') && !/^(For|From|With|To)$/.test(ws[0]) && ws.every(x => /^[\p{N}$]/u.test(x) || /^\p{Lu}/u.test(x) || JOIN.has(x.toLowerCase())); };
 const nwords = s => (s.match(/\p{L}[\p{L}\p{N}'’-]*/gu) || []).length;
 
-// 3. Count each screen's drawn sentences that are not keyed
-const unmatched = {};
-for (const [sid, segs] of Object.entries(drawn)) {
+// 3. Count each screen's drawn sentences that are not keyed: what it draws, and what its explanations say (DEC-273: the
+// explanations have their own baseline, words-drawn-tips-baseline.json, a ratchet as the other)
+// an explanation reads "<b>name</b>: what it is" (the name is the thing's own word): matched whole, or its remainder alone
+const tipRest = seg => { const m = /^[^:.]{1,40}: (.+)$/.exec(seg); return m ? [m[1], m[1][0].toUpperCase() + m[1].slice(1)] : []; };
+const count = (segsBy, tips) => { const unmatched = {};
+for (const [sid, segs] of Object.entries(segsBy)) {
   const um = new Set();
   const ok = x => nwords(x) < 4 || matched(x) || sample(x);
   // words people wrote may sit between keyed words ("Concluded by {who}, {date}:" then the claim): each side is matched
@@ -119,6 +131,7 @@ for (const [sid, segs] of Object.entries(drawn)) {
   for (const seg0 of segs) {
     const seg = norm(seg0);
     if (matched(seg)) continue;
+    if (tips && tipRest(seg).some(r => sents(r).every(x => nwords(x) < 4 || matched(x) || matched(bare(x)))))  continue;
     // each sentence, whole; failing that, each of its parts joined by " · " or " › " ("Settings › Security" stays whole)
     for (const s of sents(seg)) {
       if (okRec(s)) continue;
@@ -127,22 +140,29 @@ for (const [sid, segs] of Object.entries(drawn)) {
   }
   unmatched[sid] = [...um];
 }
+return unmatched; };
+let failed = false;
+for (const [what, segsBy, file] of [['drawn sentences', drawn.text, BASE], ['explanation sentences', drawn.tips, TBASE]]) {
+const unmatched = count(segsBy, file === TBASE);
 const ids = Object.keys(unmatched).sort();
 const now = Object.fromEntries(ids.map(s => [s, unmatched[s].length]));
 const total = Object.values(now).reduce((a, x) => a + x, 0);
-const base = fs.existsSync(BASE) ? JSON.parse(fs.readFileSync(BASE, 'utf8')).screens : null;
-if (JSONOUT) fs.writeFileSync(JSONOUT, JSON.stringify(unmatched, null, 1) + '\n');
-console.log('unmatched drawn sentences by screen: ' + ids.map(s => `${s} ${now[s]}` + (base && base[s] !== undefined && base[s] !== now[s] ? ` (baseline ${base[s]})` : '')).join(', '));
-if (LIST) for (const s of ids) if (LIST === 'all' || LIST === s) for (const t of unmatched[s]) console.log(`  ${s}: ${t}`);
+const base = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).screens : null;
+if (JSONOUT) fs.writeFileSync(file === BASE ? JSONOUT : JSONOUT.replace(/(\.json)?$/, '-tips.json'), JSON.stringify(unmatched, null, 1) + '\n');
+console.log(`unmatched ${what} by screen: ` + ids.filter(s => now[s] || (base && base[s])).map(s => `${s} ${now[s]}` + (base && base[s] !== undefined && base[s] !== now[s] ? ` (baseline ${base[s]})` : '')).join(', '));
+if (LIST) for (const s of ids) if (LIST === 'all' || LIST === s) for (const t of unmatched[s]) console.log(`  ${s}${file === BASE ? '' : ' (explanation)'}: ${t}`);
 const rose = base ? ids.filter(s => now[s] > (base[s] ?? 0)) : [];
-for (const s of rose) console.log(`FAIL: screen ${s} draws ${now[s]} sentences that are not keyed words, more than its baseline of ${base[s] ?? 0}; key them in words-drawn.src.py (or the newest words file), or draw the keyed words`);
+for (const s of rose) console.log(`FAIL: screen ${s} draws ${now[s]} ${what} that are not keyed words, more than its baseline of ${base[s] ?? 0}; key them in words-drawn.src.py (or the newest words file), or draw the keyed words`);
 if (WRITE) {
   if (rose.length) { console.log('FAILED: the baseline only falls; key the new sentences first'); process.exit(1); }
-  fs.writeFileSync(BASE, JSON.stringify({ _note: 'Written by check_words_drawn.mjs --write-baseline: each screen\'s drawn sentences that are not yet keyed words (K3268). A ratchet: counts may only fall.', total, screens: now }, null, 1) + '\n');
-  console.log(`baseline written: ${total} unmatched sentences on ${ids.length} screens`);
-  process.exit(0);
+  fs.writeFileSync(file, JSON.stringify({ _note: `Written by check_words_drawn.mjs --write-baseline: each screen's ${what} that are not yet keyed words (K3268${file === BASE ? '' : '; DEC-273'}). A ratchet: counts may only fall.`, total, screens: now }, null, 1) + '\n');
+  console.log(`baseline written: ${total} unmatched ${what} on ${ids.length} screens`);
+  continue;
 }
-if (!base) { console.log('FAILED: no baseline; write one with --write-baseline'); process.exit(1); }
-console.log(`${total} drawn sentences on ${ids.length} screens are not yet keyed words (baseline ${JSON.parse(fs.readFileSync(BASE, 'utf8')).total})`);
-console.log(rose.length ? 'FAILED' : 'All checks pass.');
-process.exit(rose.length ? 1 : 0);
+if (!base) { console.log(`FAILED: no baseline for ${what}; write one with --write-baseline`); failed = true; continue; }
+console.log(`${total} ${what} on ${ids.length} screens are not yet keyed words (baseline ${JSON.parse(fs.readFileSync(file, 'utf8')).total})`);
+if (rose.length) failed = true;
+}
+if (WRITE) process.exit(0);
+console.log(failed ? 'FAILED' : 'All checks pass.');
+process.exit(failed ? 1 : 0);

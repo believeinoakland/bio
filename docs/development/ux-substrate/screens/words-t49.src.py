@@ -444,7 +444,7 @@ for code, t in [
 w8('ai.keepaway.unread', "Your group's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.", False, "plane's ask: UNDETERMINED keep-away, for a translation or a draft")
 w8('ai.draft.planunread', "The plan couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a status report's draft")
 w8('ai.draft.recordsunread', "The records this draft is about couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a bearing or infraction draft")
-w8('translate.undetermined.language', "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.", False, "plane's ask: readtranslate")
+w8('translate.undetermined.language', "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.", False, "plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)")
 
 # op-grades' consequence statements (R4, R8, R21 (K2049)): word for word; personexpunge's is screen.person.expunge.statement and
 # openwithwarning's screen.open-file.warn.ends, the design's words governing

@@ -2588,9 +2588,9 @@
   },
   {
    "key": "translate.undetermined.language",
-   "en": "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.",
+   "en": "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.",
    "protected": false,
-   "note": "DEC-258: plane's ask: readtranslate"
+   "note": "DEC-258: plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)"
   },
   {
    "key": "consequence.attribute",
