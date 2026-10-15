@@ -8,10 +8,13 @@
    language's own globals, so the shell can compose the page's script from its text. */
 import { projectRows } from "./project-rows.mjs";
 import { sourceItems } from "./source-items.mjs";
+import { itemWords } from "./item-words.mjs";
+import { startProject } from "./start-project.mjs";
+import { participation } from "./participation.mjs";
 
 export const home = Object.freeze({
   id: "home",
-  parts: { projectRows, sourceItems },
+  parts: { projectRows, sourceItems, itemWords, startProject, participation },
 
   // R17's reads, each through the op its provider serves: the queue (the strip, "Needs you", "Needs the group", each area's
   // to-dos), the projects (`projectlist`, each count by the rows, R8), the doors (`startfrom`, R9, R14), when the member
@@ -41,7 +44,6 @@ export const home = Object.freeze({
 
   render: function (cs, view) {
     const CLASS_KIND = { OBLIGATION: "todo", FINDING: "noticed", CONDITION: "status" };
-    const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
     const ui = view.ui || {};
     const me = view.me || {};
     const admin = me.administer === true;
@@ -49,6 +51,7 @@ export const home = Object.freeze({
     const ok = function (r) { return r && r.state === "ok" ? r.value : null; };
     const failed = function (r) { return !!r && r.state === "failed"; };
     const src = view.parts.sourceItems();
+    const iw = view.parts.itemWords();
 
     // R23: the heading is the group's name, or "Your group" while none is set, never the slug.
     const gv = ok(data.group);
@@ -65,8 +68,6 @@ export const home = Object.freeze({
     const mine = function (it) { const a = it && it.assignee; return !!a && a !== "unassigned" && (a === me.member || a === me.handle); };
     const forMe = items.filter(mine);
     const forGroup = items.filter(function (it) { return !mine(it); });
-    const today = new Date(cs.now()).toISOString().slice(0, 10);
-    const overdue = items.filter(function (it) { return it.due && String(it.due).slice(0, 10) < today; }).length;
 
     // One item's row: its kind mark, its words (the update's and the source notices' keyed, R19, R22), the way to act on it,
     // its due date, and, on "Needs the group", whose move it is.
@@ -105,13 +106,13 @@ export const home = Object.freeze({
         words = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security ? cs.w("home.update.security") : "" });
         open = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>";
       } else {
-        words = cs.esc(it.summary || "");
+        // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
+        const wd = iw.words(cs, it);
+        words = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
         open = actsOf(it);
         if (!open) {
-          const s = it.subject || {};
-          const screen = OPENS[s.kind];
-          open = '<a class="cs-btn" data-tone="quiet" data-nav href="' + (screen && s.id ? "/app/" + screen + "/" + encodeURIComponent(String(s.id)) : "/app/queue") + '">'
-            + cs.w("screen.home.open") + "</a>";
+          const to = iw.open(it);
+          open = '<a class="cs-btn" data-tone="quiet" data-nav href="' + (to || "/app/queue") + '">' + cs.w("screen.home.open") + "</a>";
         }
       }
       let whose = "";
@@ -120,7 +121,7 @@ export const home = Object.freeze({
         whose = '<span class="muted">' + (it.assignee_role === "admin" ? cs.w("screen.home.move.admin")
           : a ? cs.w("screen.home.move.member", { who: a }) : cs.w("screen.home.move.anyone")) + "</span> ";
       }
-      return cs.row(mark, words + '<span class="meta">' + whose + open + "</span>", it.due ? cs.due(String(it.due), String(it.due).slice(0, 10) < today ? "overdue" : "") : "", "");
+      return cs.row(mark, words + '<span class="meta">' + whose + open + "</span>", it.due ? cs.due(String(it.due), "") : "", "");
     };
     const block = function (key, list, group) {
       return cs.sec(key, cs.sheet(src.fold(list).map(function (it) { return itemRow(it, group); }).join("")));
@@ -152,19 +153,19 @@ export const home = Object.freeze({
         return " " + cs.ref(String(h.object_type || "").toLowerCase() === "project" || /^PROJ-/.test(id) ? "project" : "document", id, h.title || id, []);
       }).join(",");
     }) + "</p>" : "";
-    const promote = cs.act("promote", { label: "act.promote.label.home", tone: "primary" });
-    const start = promote ? '<details class="mk-details" data-start="project"><summary>' + cs.w("act.promote.label.home") + "</summary>"
-      + cs.field("home-title", "screen.home.title", { rec: true, help: "screen.home.title.help" }) + '<div class="mk-acts">' + promote + "</div></details>" : "";
+    // R30: "Start a project" opens its form on press: what it is about, who can find it.
+    const start = view.parts.startProject().form(cs, "home", "act.promote.label.home", cs.act("promote", { label: "project.start.go", tone: "primary" }));
+    // R25: a card's title and its description are two elements, and a closed door's summary carries its name.
     const doorCard = function (x) {
       const k = String(x.door);
-      return '<details class="mk-door" data-door="' + cs.esc(k) + '"><summary><b>' + cs.w("door.front." + k + ".name") + "</b><span>" + cs.w("door.front." + k + ".hint") + "</span></summary>"
+      return '<details class="mk-door" data-door="' + cs.esc(k) + '"><summary aria-label="' + cs.w("door.front." + k + ".name") + '"><b>' + cs.w("door.front." + k + ".name") + "</b><br><span>" + cs.w("door.front." + k + ".hint") + "</span></summary>"
         + '<span class="mk-acts">' + x.scripts.map(function (id) {
           const s = scripts[String(id)] || { id: id, name: id };
           return cs.act("startfrom", { label: "screen.home.script", fills: { name: String(s.name || s.id) }, data: { script: String(s.id), version: String(s.version === undefined ? "" : s.version) } });
         }).join("") + "</span></details>";
     };
     const awayCard = away.map(function () {
-      return '<a class="mk-door" data-door="elsewhere" data-nav href="/app/elsewhere"><b>' + cs.w("door.front.elsewhere.name") + "</b><span>" + cs.w("door.front.elsewhere.hint") + "</span></a>";
+      return '<a class="mk-door" data-door="elsewhere" data-nav href="/app/elsewhere"><b>' + cs.w("door.front.elsewhere.name") + "</b><br><span>" + cs.w("door.front.elsewhere.hint") + "</span></a>";
     }).join("");
     const front = failed(data.doors)
       ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2">' + cs.w("door.front.head") + "</h2>" + cs.state("doors", null) + "</section>"
@@ -184,14 +185,24 @@ export const home = Object.freeze({
     const firstVisit = lk && lk.state === "ok" && !since;
 
     // The strip (`cs.strip`, at most four readings), each one of the blocks below; none at zero.
+    // R29: a project the member is invited to is hers to join, as the participants of the project (or `projectlist`, N1118) answer her place.
+    const pv0 = ok(data.projects);
+    const place = view.parts.participation(cs, view, pv0 && Array.isArray(pv0.projects) ? pv0.projects : []);
+    const invited = !firstVisit && pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
+    const mineCount = forMe.length + invited.length;
     const readings = [];
-    if (!firstVisit && forMe.length) readings.push({ n: forMe.length, label: "screen.home.strip.you", screen: "queue" });
-    if (overdue) readings.push({ n: overdue, label: "screen.home.strip.overdue", screen: "queue", subject: "due" });
+    if (!firstVisit && mineCount) readings.push({ n: mineCount, label: "screen.home.strip.you", screen: "queue" });
     if (forGroup.length) readings.push({ n: forGroup.length, label: "screen.home.strip.group", screen: "queue" });
     const strip = readings.length ? cs.strip(readings) : "";
 
     const queueFailed = failed(data.queue) ? cs.sec("screen.home.needsyou", cs.state("queue", null)) : "";
-    const needsYou = !firstVisit && forMe.length ? block("screen.home.needsyou", forMe, false) : "";
+    const joinRows = invited.map(function (p) {
+      const id = String(p.id);
+      return cs.row(cs.mark("kind", "todo"), cs.ref("project", id, p.name || id, []) + '<span class="meta">'
+        + cs.act("projectjoin", { label: "act.projectjoin.label.projects", data: { project: id } }) + "</span>", "", "");
+    }).join("");
+    const needsYou = !firstVisit && mineCount
+      ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
     const needsGroup = forGroup.length ? block("screen.home.needsgroup", forGroup, true) : "";
 
     // Each of the four areas at a glance (DEC-219 (2)): what needs the member in it, its readings, a line of what changed,
@@ -219,7 +230,7 @@ export const home = Object.freeze({
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const actionGroup = forGroup.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const investigation = area("investigation", "/app/projects",
-      forMe.filter(function (it) { return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready"; }).length,
+      forMe.filter(function (it) { return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready"; }).length + invited.length,
       [rd(plist.length, "screen.home.rd.project", "screen.home.rd.projects"), rd(counted, "screen.home.rd.question", "screen.home.rd.questions")],
       latest ? [cs.w("screen.home.line.lastchange", { project: String(latest.name || latest.id), date: cs.date(String(latest.lastChange)) })] : [],
       failed(data.projects) ? [data.projects] : []);
@@ -286,6 +297,9 @@ export const home = Object.freeze({
       } },
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+    // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
+    { op: "projectjoin", label: "act.projectjoin.label.projects", rereads: ["projects"],
+      send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
     // R9: "Start from…": a script button starts that script in the wizard runner and sends nothing; the words button keeps
     // the member's words and re-reads the doors and the work matching them.
     {
@@ -305,29 +319,14 @@ export const home = Object.freeze({
       },
     },
     {
-      // R1, R23: a new project, its title the member's, its owner the member (the door stamps the owner, control-plane R73).
+      // R1, R23, R25, R30: a new project, its title the member's and written as its `title`, its visibility the member's
+      // choice (hidden unless made findable), its owner the member (the door stamps the owner, control-plane R73).
       op: "promote",
       label: "act.promote.label.home",
       rereads: ["projects"],
       send: function (view, el, cs) {
-        const title = String(cs.value("home-title") || "").trim();
-        if (!title) return { refuse: "screen.home.title.needed" };
-        const now = new Date(cs.now());
-        const iso = now.toISOString().replace(/\.\d{3}Z$/, "Z");
-        const stamp = iso.replace(/[-:]/g, "");
-        const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
-        const text = "---\nobject_type: project\nobjective: " + JSON.stringify(title) + "\ncurrent_state: forming\ncreated: \"" + iso
-          + "\"\nlast_updated: \"" + iso + "\"\n---\n\n## Session Log\n\n### Session " + iso
-          + " | Formation | interactive\nTrigger: started from the group's home\nChanges: created.\n";
-        return {
-          body: {
-            base: null,
-            snapKey: stamp + "_" + nonce,
-            meta: { object_type: "project", title: title, current_state: "forming", created: iso, last_updated: iso },
-            files: [{ path: "bundle.md", text: text }],
-            register: [],
-          },
-        };
+        const body = view.parts.startProject().body(cs, view, "home", "file.trigger.home");
+        return body ? { body: body } : { refuse: "screen.home.title.needed" };
       },
       // R1: opening `project` on success.
       done: function (view, answer, cs) {
