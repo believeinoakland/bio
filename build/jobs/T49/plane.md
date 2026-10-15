@@ -58,3 +58,21 @@ COMPLETE again for T49-30 · plane (after ANSWER B2). Commits on job/T49/plane: 
 ## J3 · REPORT
 
 Correction to my Size line (J2): module lines are 2282, not 2300 (wc over src/plane at e5063109e9). Test runs 4 stands.
+
+## J4 · COMPLETE
+
+COMPLETE again for T49-30 · plane (after CHANGES B3 and B4). Commits on job/T49/plane: 4c2aca06e1 (AGENT_WORKER_UNBOUND), pushed. Tranche T49 merged in (B3's DEC-259–261 and B4's DEC-263–267 with rows.mjs regenerated).
+
+**B3 (placeholders).** I draw none of the keys B3 lists (`archive.summary`, `calculation.*`, `help-records.must.*`, `held.waiting`, `request.howsend.*`). My keys' placeholders are unchanged: `refusal.PASSAGE_TOO_LONG` still takes `{max}`, and the code fills it. No site keys are read by plane.
+
+**B4 (DEC-267).** `AGENT_WORKER_UNBOUND` now reads `refusal.AGENT_WORKER_UNBOUND` on both the ask path (`src/plane/ask.mjs`:273) and the draft path (:356), in place of the interim `ai.refused.notdeployed`. `ask.test.mjs`'s B2 control compares the new key.
+
+**One gap for BOB.** `docs/development/ux-substrate/screens/words-reads.json` still lists only `ai.refused.notdeployed` for plane (35 keys, unchanged). It does not list `refusal.AGENT_WORKER_UNBOUND`. The R56 test in `words.test.mjs` therefore names the key as BOB's ruling (K3381), in a `RULED` list with a comment, so the test does not fail on the stale list. I did not edit the design's file. Request: re-cut `words-reads.json` so the plane's list includes the new key and drops the interim one, and the `RULED` entry can go.
+
+**Tests.** Full plane suite: 250 tests, 249 pass, 1 fail: `store.test.mjs:85` (R2, R10), the inherited red accepted in plan rule 5 (10) until N1115 (T50).
+
+**Checks.** `format`: 0 failures. `architecture plane`: 0 failures (58 files). `coverage plane`: 56 of 56 live ids named. `ownership plane origin/tranche/T49`: 3 files, 0 failures. `run.mjs` over the product: format 0, architecture 0, channels 0; coverage gaps remain only in other modules' open jobs.
+
+**Unchanged from J2 and J3.** The keyless titles report stands (DEC-265: "Subjects", "Progressions", "Themes", "Projects", "Review", "Case files" stay unkeyed in source). The N1073 hand-lists beyond `t41:124` and `roster` wait for plane's next substantive entry (K3268). Module lines: 2282.
+
+**Size (session_012h3BBihPG3oRtYmVkx9DcV):** test runs 6, module lines 2282.
