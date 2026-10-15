@@ -42,6 +42,12 @@ Tests: `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fa
 
 Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 30, module lines 2509
 
+## Completion, third round (B6)
+
+Merged tranche/T49 (interface-shell, admission) with no local stand-in of the shell or its registry. `words.test.mjs` no longer imports `SHELL_WORDS` (the shell reads its words by key). `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fail 0 on the real shell, the contract test included. Users of my screens: `screens-inquiry` tests 77, pass 70, fail 7, the same seven as before (its `projectai` reads `SCREEN_WORDS` rows instead of `PANEL_KEYS`, and its own later-words and registry reds; owner screens-inquiry). Checks: format 0, architecture 0, coverage 39 of 39, ownership 0 failures.
+
+Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 33, module lines 2509
+
 ## J1 · QUESTION
 
 QUESTION (my best reading is carried out meanwhile). Seven of the 551 keys DEC-257 reworded now hold a `{fill}` that nothing the plane answers today can fill. R37 forbids drawing a sentence with an empty or default fill, and R39 forbids inline English, so I cannot draw them as the design words them.
