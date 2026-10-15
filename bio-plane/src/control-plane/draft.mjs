@@ -112,7 +112,7 @@ export function checkedDraft(ask, drafted, status, askedBy) {
     out.withheld.push(...(k.withheld || []).map((x) => ({ field: f, ...x })));
   }
   Object.assign(out, untested);
-  out.note = word("draft.machine.label");
+  out.note = word("draft.machine.label.group");
   return { status: 200, body: out };
 }
 

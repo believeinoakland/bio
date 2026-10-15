@@ -199,7 +199,7 @@ export const home = Object.freeze({
     const joinRows = invited.map(function (p) {
       const id = String(p.id);
       return cs.row(cs.mark("kind", "todo"), cs.ref("project", id, p.name || id, []) + '<span class="meta">'
-        + cs.act("projectjoin", { label: "act.projectjoin.label.projects", data: { project: id } }) + "</span>", "", "");
+        + cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }) + "</span>", "", "");
     }).join("");
     const needsYou = !firstVisit && mineCount
       ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
@@ -298,7 +298,7 @@ export const home = Object.freeze({
     { op: "keepversion", label: "act.keepversion.label.home", rereads: ["queue"],
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
-    { op: "projectjoin", label: "act.projectjoin.label.projects", rereads: ["projects"],
+    { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
     // R9: "Start from…": a script button starts that script in the wizard runner and sends nothing; the words button keeps
     // the member's words and re-reads the doors and the work matching them.

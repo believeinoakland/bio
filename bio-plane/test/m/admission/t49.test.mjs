@@ -135,7 +135,7 @@ test("R27 (the limit): a session's request past SESSION_WINDOW.limit is refused 
   assert.equal(body.stated, A.SESSION_WINDOW_STATED);
   assert.ok(Number.isInteger(body.retryAfter) && body.retryAfter > 500 && body.retryAfter <= 602, String(body.retryAfter));
   assert.equal(body.minutes, Math.ceil(body.retryAfter / 60));
-  assert.equal(body.translation, word("refusal.DOOR_RATE_LIMITED", { minutes: body.minutes }));
+  assert.equal(body.translation, word("refusal.DOOR_RATE_LIMITED.session", { minutes: body.minutes }));
   assert.deepEqual(routes(env), ["session", "doorwindow"], "nothing of the op was asked");
   assert.deepEqual(sessionRows(w), [{ session: sha(t), bucket: BUCKET, count: 3000 }], "a refused request is not counted");
   assert.deepEqual(w.rows(), []);

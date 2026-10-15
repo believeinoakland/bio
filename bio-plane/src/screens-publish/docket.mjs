@@ -54,7 +54,7 @@ export const DOCKET = Object.freeze({
       + cs.field("dk-summary", "screen.docket.summary.label", { area: true, rec: true })
       + cs.choice("dk-proposed", "screen.docket.proposed.label", [["record", "screen.docket.proposed.record"], ["public", "screen.docket.proposed.public"], ["both", "screen.docket.proposed.both"]])
       + cs.field("dk-reason", "screen.docket.reason.label", { area: true, help: "screen.docket.reason.help" })
-      + '<div class="mk-acts">' + cs.act("docketfile") + "</div>"));
+      + '<div class="mk-acts">' + cs.act("docketfile") + "</div>" + P.said(view, "docketfile")));
     out.push('<p class="muted">' + cs.w("screen.docket.order") + "</p>" + P.said(view, "docketpost"));
     return out.join("");
   },
@@ -71,7 +71,7 @@ export const DOCKET = Object.freeze({
         return { body: { case: caseId, kind: String(cs.value("dk-kind") || "response"), from: { kind: "other", name: from }, summary: summary,
           proposed: String(cs.value("dk-proposed") || "record"), reason: String(cs.value("dk-reason") || "").trim() } };
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "docketfile", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R8, R16: "Post it, signed": the prepared `docketStatement` (namespace `bio-docket`), prepared again once its hour has
@@ -90,7 +90,11 @@ export const DOCKET = Object.freeze({
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== 1) return { refuse: "signing.ceremony.declined" };
         return { body: { digest: pr.digest, signature: signed.signatures[0], acknowledged: true } };
       },
-      done: function (view, answer, cs) { view.parts.forget(view); view.parts.say(cs, view, "docketpost", cs.w("screen.docket.posted.said")); },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "docketpost", answer)) return; // D29: not posted on a refusal
+        view.parts.forget(view);
+        view.parts.say(cs, view, "docketpost", cs.w("screen.docket.posted.said"));
+      },
     },
   ],
 });

@@ -3332,9 +3332,9 @@
   },
   {
    "key": "refusal.TEMPLATE_BLANK_UNKNOWN",
-   "en": "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.",
+   "en": "The words name a blank that no filing fills. Use only the blanks a filing fills, each written as its name inside two pairs of curly brackets.",
    "protected": false,
-   "note": "DEC-260: filing-templates, refusal by its code"
+   "note": "DEC-260: filing-templates, refusal by its code; reworded without literal braces, DEC-263 (B223)"
   },
   {
    "key": "refusal.TEMPLATE_SCOPE_REFUSED",

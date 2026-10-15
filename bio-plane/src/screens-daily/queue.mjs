@@ -210,7 +210,7 @@ export const queue = Object.freeze({
         const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
         const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
-      }).join("") + (q.truncated ? '<p class="mk-note">' + cs.w("screen.queue.more", { n: String(Math.max(0, n - items.length)) }) + "</p>" : "");
+      }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
     }, { empty: "screen.queue.uptodate" });
 
     // R12 (DEC-201 (13)): with nothing waiting, the member is up to date, one step from Home.

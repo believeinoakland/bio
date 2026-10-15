@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, ADMIN } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, PERSON, ENT, ORG, SHA } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, PERSON, ENT, ORG, SHA, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/person/" + ENT;
 const admin = { boot: { plane: { ...plane(), whoami: ok(ADMIN) } } };
@@ -16,22 +16,24 @@ test("R1 reads person (as of the page's day, never \"now\") and samepersoncandid
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "L. Chen");
   const secs = m.querySelectorAll("section");
-  const pos = secs.find((s) => /Positions/.test(s.querySelector("h2").textContent));
-  assert.match(pos.textContent, /Director of Public Works · employee · since 1 March 2022/);
+  const pos = secs.find((s) => s.querySelector("h2").textContent === word("screen.person.positions"));
+  assert.ok(pos.textContent.includes("Director of Public Works · employee · " + word("screen.person.since", { from: dayOf("2022-03-01") })));
   assert.equal(pos.querySelectorAll(".cs-grade").map((g) => [g.getAttribute("data-scale"), g.textContent.slice(-1)]).join(), "connection,B");
   assert.ok(pos.querySelector(`[data-tip*="page 1"]`), "the position cites its passage");
-  const facts = secs.find((s) => /Career/.test(s.querySelector("h2").textContent));
-  assert.match(facts.textContent, /Where they live or work · Oakview district/);
+  const facts = secs.find((s) => s.querySelector("h2").textContent === word("screen.person.facts"));
+  assert.ok(facts.textContent.includes(word("screen.person.kind.locality") + " · Oakview district"));
   assert.equal(facts.querySelector(".cs-grade").textContent.slice(-1), "B");
   assert.ok(facts.querySelector('[data-tip*="page 3"]'));
 });
 
 test("R1 same person? the cluster's other records linked as claimed (never merged) and the candidates, which are not claims", async () => {
   const p = await open(at);
-  const s = main(p).querySelectorAll("section").find((x) => /Same person/.test(x.querySelector("h2").textContent));
-  assert.match(s.textContent, /ENT-2026-0019.*claimed the same person; the records stay linked, never merged/s);
-  assert.match(s.textContent, /These are not claims: a member decides/);
-  assert.match(s.textContent, /names: agree · identifiers: not recorded · posts: differ/);
+  const s = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.person.same"));
+  assert.ok(s.textContent.includes("ENT-2026-0019"));
+  drew(s, "screen.person.same.claimed");
+  drew(s, "screen.person.candidates");
+  const fieldState = (f, st) => word("screen.person.field." + f) + ": " + word("screen.person.state." + st);
+  assert.ok(s.textContent.includes([fieldState("names", "agrees"), fieldState("identifiers", "absent"), fieldState("posts", "differs")].join(" · ")));
 });
 
 test("R1 the acts as drawn for a member: person, explore, recordpersonfact, identityclaim, withdrawidentityclaim, followregister; personexpunge only for an administrator (interface-shell R47)", async () => {
@@ -72,7 +74,7 @@ test("R1 identityclaim \"Say another record is this person\" with its basis and 
   fill(q, { "person-claim-other": "ENT-2026-0019", "person-claim-basis": "name", "person-claim-sha-a": SHA, "person-claim-sha-b": SHA, "person-claim-note": "same name" });
   await press(q, "identityclaim");
   assert.equal(q.byOp("identityclaim")[0].body.evidence.a.captureSha, SHA);
-  assert.match(main(q).textContent, /That basis does not earn this grade\./);
+  assert.ok(main(q).textContent.includes("That basis does not earn this grade."), "the refusal by its words");
   assert.equal(q.doc.getElementById("person-claim-note").value, "same name");
 });
 
@@ -90,13 +92,10 @@ test("R1 followregister: a register the person appears in (control: an address t
 test("R1 personexpunge: the consequence statement (op-grades R21) filled with the day and the member, the reason naming the law or order, the Irreversible weight, a dialog before anything is sent", async () => {
   const p = await open(at, { ...admin, plane: { personexpunge: ok({ ok: true, removed: 1 }) } });
   const d = main(p).querySelector('[data-consequence="personexpunge"]');
-  assert.match(d.textContent, /This removes the value for good.*It cannot be undone, by you or by anyone\..*by rosa/s);
-  assert.match(d.textContent, /Removed where the law requires, \d+ \w+ \d{4}, by rosa/);
-  /* op-grades' CONSEQUENCE_STATEMENTS.personexpunge.statement (its R21) as it stands on tranche/T47 at K3148 */
-  const statement = "This removes the value for good: from the person's page, from every question that cited it and from every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law requires, <date>, by <member>\". Published cases change only through the docket. Confirm with a reason naming the law or order that requires it: \"Remove it for good, with this reason\".";
-  assert.equal(d.querySelector(".ends").textContent.replace(/\d+ \w+ \d{4}/, "<date>").replace("by rosa", "by <member>"), statement, "the statement as op-grades words it");
+  const day = /\d+ \w+ \d{4}/.exec(d.querySelector(".ends").textContent)[0];
+  assert.equal(d.querySelector(".ends").textContent, word("screen.person.expunge.statement", { date: day, member: "rosa" }), "the statement, filled with the day and the member");
   const b = button(p, "personexpunge");
-  assert.match(b.textContent, /Irreversible/);
+  assert.ok(b.textContent.includes(word("weight.irreversible.name")));
   fill(p, { "person-x-fact": "PFA-2026-0007", "person-x-ground": "court_order", "person-x-order": "Superior Court order of 2 October 2026, ¶3" });
   await p.click(b);
   assert.equal(p.byOp("personexpunge").length, 0, "nothing is sent before the dialog's confirm");
@@ -118,8 +117,11 @@ test("R21 person draws each identity claim as person answers it (kind, grade, wh
   const m = main(p);
   const buttons = m.querySelectorAll('button[data-act="withdrawidentityclaim"]');
   assert.deepEqual(buttons.map((b) => b.getAttribute("data-claim")), ["IDC-2026-0001", "IDC-2026-0002"]);
-  assert.match(m.textContent, /It is the same person.*both hold the Deputy Director post.*by dev, 3 October 2026/s);
-  assert.match(m.textContent, /You are unsure.*the same surname.*by mai, 4 October 2026/s);
+  for (const [kind, why, by, day] of [["same_as", "both hold the Deputy Director post", "dev", "2026-10-03"], ["unsure", "the same surname", "mai", "2026-10-04"]]) {
+    drew(m, "screen.person.claim." + kind);
+    assert.ok(m.textContent.includes(why), "its why, as the member wrote it");
+    drew(m, "screen.person.claim.by", { by, date: dayOf(day) });
+  }
   assert.equal(m.querySelectorAll("*").filter((e) => e.getAttribute("id") === "person-claim-id").length, 0, "no field asks for a claim id");
   await press(p, "withdrawidentityclaim", { el: buttons[0], reason: "different middle initial" });
   assert.deepEqual(p.byOp("withdrawidentityclaim")[0].body, { claimId: "IDC-2026-0001", reason: "different middle initial" });

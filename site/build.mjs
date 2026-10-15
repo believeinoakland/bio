@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { word } from "../bio-plane/src/setup-words/index.mjs";
 
-export const SITE_COMMIT = "dc267da296";
+export const SITE_COMMIT = "af89fd5931";
 const ROOT = new URL("../", import.meta.url);
 const SCREENS = "docs/development/ux-substrate/screens/";
 const OUT = new URL("src/pages.mjs", import.meta.url);
@@ -36,7 +36,7 @@ export const KEYS = Object.freeze({
   "screen.site.steps.head": [], "screen.site.steps.name": ["places"], "screen.site.steps.permission": [], "screen.site.steps.install": [],
   "screen.site.steps.claim": [], "screen.site.steps.setup": [], "screen.site.steps.invite": [],
   "screen.site.costs.head": [], "screen.site.costs.what": [], "screen.site.create": [], "screen.site.back": [],
-  "screen.site.groups.lede": [], "screen.site.groups.listing": [], "screen.site.groups.none": [], "site.groups.rule": [],
+  "screen.site.groups.lede": [], "screen.site.groups.listing": [], "screen.site.groups.none": [], "site.groups.rule": [], "site.groups.rule.head": [], "site.groups.rule.text": [],
   "screen.site.groups.visit": [],
   "screen.site.groups.case.one": [], "screen.site.groups.cases.one": ["editions", "date"],
   "screen.site.groups.case.many": ["cases"], "screen.site.groups.cases.many": ["cases", "editions", "date"],

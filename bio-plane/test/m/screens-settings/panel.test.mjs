@@ -75,7 +75,7 @@ test("R9 this month's use summed per use and in all, naming no member; the chang
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.use_set", { who: "lu", use: said("ai.use.explore.name"), value: said("ai.explore.ask") }))));
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.key_set", { who: "rosa" }))));
   const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
-  assert.ok(textOf(section(c, "screen.panel.changes.heading")).includes(said("screen.panel.change.key_set", { who: said("screen.connect.you") })));
+  assert.ok(textOf(section(c, "screen.panel.changes.heading")).includes(said("screen.panel.change.key_set", { who: MEMBER.handle })), "R37: the member's own change is theirs by handle, never \"you\"");
 });
 
 /* R26: thirty days of bars and a meter against each limit */

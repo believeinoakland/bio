@@ -63,13 +63,13 @@ export const NAMESPACES = Object.freeze(["bio", SCRATCH]);
    a partial row: DEC-49 exists because a refusal once shipped `translation: undefined` to a member, and a throw is a
    loud failure where a missing sentence is a silent one that reaches a person. `word` itself throws for a key the list
    does not hold, so a code with no sentence behind it cannot reach a member either. */
-function rowOf(table, family, code, vars = {}) {
+function rowOf(table, family, code, vars = {}, key = `refusal.${code}`) {
   const row = table[code];
   if (!row || typeof row.check !== "string" || !row.check)
     throw new Error(`admission: ${code} has no ${family} row (DEC-49). A code with no row must not reach a member.`);
-  return { code, check: row.check, translation: word(`refusal.${code}`, vars) };
+  return { code, check: row.check, translation: word(key, vars) };
 }
-const admissionRow = (code, vars) => rowOf(ADMISSION_CHECKS, "ADMISSION_CHECKS", code, vars);
+const admissionRow = (code, vars, key) => rowOf(ADMISSION_CHECKS, "ADMISSION_CHECKS", code, vars, key);
 const namespaceRow = (code) => rowOf(NAMESPACE_CHECKS, "NAMESPACE_CHECKS", code);
 const aiScopeRow = (code) => rowOf(AI_SCOPE_CHECKS, "AI_SCOPE_CHECKS", code);
 const operatorFenceRow = (code) => rowOf(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_CHECKS", code);
@@ -909,13 +909,15 @@ export function doorRetryAfter({ prev = 0, cur = 0, elapsedFrac = 0, limit = DOO
 /* R21, R27 — THE REFUSAL: 429, the bound in `stated`, the wait in `retryAfter` (whole seconds) and, for the member's
    sentence (R28: `refusal.DOOR_RATE_LIMITED` holds `{minutes}`), in `minutes`. It names no address, fingerprint or
    credential, and says nothing of who the caller is (R15): the window knows neither. `session` is the session's own
-   window (R27); the code, the row and the sentence are the one row's (C-38.9, K3333). */
+   window (R27); the code and the row are the one row's (C-38.9, K3333), the session's sentence the word
+   `refusal.DOOR_RATE_LIMITED.session` (DEC-262). */
 export function doorRateLimited(retryAfter, { session = false } = {}) {
   const wait = Math.max(1, Math.ceil(Number(retryAfter) || 1));
   const minutes = Math.ceil(wait / 60);
   const where = session ? "this signed-in session" : "one source";
   /* DEC-49 REGION is-door-window */
-  return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes }),
+  return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes },
+      session ? "refusal.DOOR_RATE_LIMITED.session" : undefined),
     detail: `too many requests to the operations anyone may call reached this group's Civicsmith from ${where} in `
       + `a short time, so this one was turned away before the operation ran; nothing was read or written. Try again `
       + `in ${wait} seconds.`,

@@ -1,7 +1,7 @@
 /* Settings › Security at the module's interface (R15). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, has, lacks, open, panelOf, said } from "./kit.mjs";
+import { acts, all, has, lacks, open, panelOf, said, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, env, securityTable, CATALOGUE_ENTRY } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
@@ -9,7 +9,8 @@ const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].so
 test("R15 security: an administrator's screen; any other member is told only that it is administrators', and nothing is read", async () => {
   const m = await open("security", { me: MEMBER, table: securityTable() });
   has(m, "screen.security.admins");
-  const OWN = ["securitymap", "scanstatus", "securitytools", "securitytoolevents", "securitytoolcatalogue", "bootstrap"];
+  const OWN = Object.values(SCREENS.find((s) => s.id === "security").reads({ me: ADMIN })).map((r) => r.op);
+  assert.ok(OWN.length >= 6 && OWN.includes("securitymap"), "the reads the screen asks an administrator");
   assert.deepEqual(m.p.requests.filter((r) => OWN.includes(r.op)), [], "nothing of the screen's own is read");
   assert.deepEqual(ops(m), []);
 });
