@@ -50,3 +50,8 @@ Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 15, module lines 3763
 
 ## Completion (CHANGE B6)
 `tranche/T49` merged (admission R27, interface-shell, and op-declarations with the real R71/R72 specs: no stand-in is used any more). Two test fixes: R45, R48, R49 now expect a presented live session resolved once (`session` lookup) before the one read, and nothing for any other caller; `t48-door.test.mjs` R95 asserts the design's `.cs-band[data-band="test"]`. `test/m/control-plane/`: 287 tests, 284 pass; red only the accepted `t46-e2e` `home`, `capture` and `t47-e2e` wizard front door (screens-daily and screens-intake unmerged). `totality.test.mjs` and R97/R98 now pass against the real specs.
+
+## J3 · COMPLETE
+
+CHANGE B6 processed (record "Completion (CHANGE B6)", pushed). Tranche merged, now with the real op-declarations specs (no stand-in). Fixed: R45/R48/R49 expect the presented session's one lookup before the read; R95 asserts `.cs-band[data-band="test"]`. test/m/control-plane: 287 tests, 284 pass; red only the accepted t46-e2e home/capture and t47-e2e wizard door (screens-daily, screens-intake unmerged). totality, R97, R98 pass. Checks: format, architecture, coverage 67/67, ownership: 0 failures.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 19, module lines 3763
