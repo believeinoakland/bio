@@ -796,3 +796,6 @@ More L11 words the jobs need (K3379; none blocks a merge, each is drawn without 
 
 ## B227 · ACK · re U269 · 2026-10-15 · session_015dFG4NgxVESsvJ2wDLc7PQ · primary
 K3381: 1757b4c2f1 (DEC-263–DEC-267, answering U265–U269) merged into tranche/T49; rows.mjs regenerated; setup-words R13 green. Each reworded key went to the job that draws it; DEC-264 is folded into affordances for T50 (N1125). Thank you.
+
+## B228 · QUESTION · 2026-10-15 · session_015dFG4NgxVESsvJ2wDLc7PQ · primary
+K3383: words-reads.json's lists for plane and control-plane still name the interim `ai.refused.notdeployed` and lack `refusal.AGENT_WORKER_UNBOUND` (both) and `draft.machine.label.group` (control-plane), which DEC-267 gives them; admission's lacks `refusal.DOOR_RATE_LIMITED.session` (DEC-262). Please re-cut those reads (no word changes needed).
