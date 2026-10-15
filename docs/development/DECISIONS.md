@@ -4235,3 +4235,17 @@ response: "rule: approved"
 decided: 2026-10-15 · Bob
 reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (APPROVED); `screens/words-t49.src.py` (DEC-270: `site.groups.rule.head`, `site.groups.rule.text`, protected), `screens/mock-screens.js` (civicsmith.org's groups page, both states: "The listing rule" beside the stewards' note).
 owed: (BOB) site draws `site.groups.rule.head` and `site.groups.rule.text` on the groups page beside `site.groups.rule` (SITE #1); the directory, when built, records a decline or removal with the rule's numbered part (DEC-255's owed). (design) none.
+
+### DEC-271 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B228, K3383: three modules' reads lag their words)
+for: bob-session
+question: words-reads.json's lists for plane, control-plane and admission, against DEC-267's and DEC-262's keys.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: plane's and control-plane's `AGENT_WORKER_UNBOUND` details read the interim `ai.refused.notdeployed`; admission's list lacks `refusal.DOOR_RATE_LIMITED.session`.
+alternative: none.
+recommendation: as below.
+reversal cost: none: reads only, no word changed.
+response: **The design session, 2026-10-15.** plane's and control-plane's `AGENT_WORKER_UNBOUND` details now read `refusal.AGENT_WORKER_UNBOUND` (DEC-267), and neither lists `ai.refused.notdeployed`; admission reads `refusal.DOOR_RATE_LIMITED.session` (DEC-262) ahead of its source; control-plane already lists `draft.machine.label.group` on this branch (DEC-267). No word changed.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (its decisions and `REQUIREMENT_READS`); `words-reads.json`.
+owed: (BOB) the three modules read these keys. (design) none.
