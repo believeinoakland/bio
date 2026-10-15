@@ -4,6 +4,8 @@
 
 ## Entries
 
+- N1156 · bundler (test only; K3454) · `fleetbundles.test.mjs`'s "agent-worker's 28 inputs are all recorded" hand-lists the inputs and lags the bundle (36 recorded: answers, calc-grammar, record-grammar json, holdings); assert the recorded inputs against what the build reaches, never a hand list (K3268). · K3454
+
 - N751 · doctypes (measurement) · R35's out-of-sample measure again for the three header fields below target (coordinator, review_due, revision_cycle; R26's `measured: "below_target"`, K2079) once the issuers publish policies not among the 74 already read (the 50 and T36's 24); the mark comes off a field read at 90% or more · K2079 · req: R26 (the mark struck per field) · hard reason: a measurement: no fresh policies exist (DOCTYPES #3 J1)
 - N794 · legacy-ui (test only; T37's red 22, K2257) · `civicos-ui/test/statement-ack.test.mjs`: the recipient's acknowledgement is never drawn within its 8,000 ms budget (M0-107), its earlier cause, red before T37-22 and again after T37-33 cleared the `reviewgrant` refusal (REVIEW #10 J1, CONTROL-PLANE #26 J3): the job finds why the acknowledgement page is not drawn and makes the test pass · K2228, K2257 · req: none · hard reason: `legacy-ui` is touched only where Bob names it (K633, K1849); accepted red by name until he does or the new interface retires it.
 - N824 · capture (email capture; N821) · a per-group forwarding address bringing email into the record, graded like upload · K2425 · hard reason: Bob's "D42 - email: A" (later, after upload is in use) and a deployment.
