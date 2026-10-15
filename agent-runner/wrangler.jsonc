@@ -26,7 +26,7 @@
   "containers": [
     {
       "class_name": "AgentRunner",
-      "image": "ghcr.io/believeinoakland/agent-runner@sha256:03dcdf70efee6f011a425294b80710ef8acdcf0d030541908772fad183f46d1b",
+      "image": "ghcr.io/believeinoakland/agent-runner@sha256:e7050ca4f9a32e42ac7ac0e0d629511c1f449ad4e4c323d9844d56aa59282fc0",
       "max_instances": 10
     }
   ],
