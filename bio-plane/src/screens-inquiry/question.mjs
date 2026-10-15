@@ -67,8 +67,18 @@ function render(cs, view) {
   })();
   {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
-    if (project) out.push(`<p class="mk-sub">${W("screen.question.opened", { date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
-    else out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { date: { html: date } })}</p>`);
+    /* K3402: who opened it, the author of its first promotion as the record keeps it (the image's `_history`), by
+       handle (the founder unnamed by key, R40); undetermined when the record names none */
+    const opener = (() => {
+      const img = d.inquiry.value || {};
+      const first = Object.keys(img).filter((k) => /^_history\/promotion_.*\.json$/.test(k)).map((k) => {
+        try { return JSON.parse(String(img[k])); } catch { return null; }
+      }).filter((h) => h && h.author).sort((a, b) => String(a.created || "").localeCompare(String(b.created || "")))[0];
+      return first ? P.who(cs, first.author) : "";
+    })();
+    const name = opener || T("state.undetermined", { reason: "" });
+    if (project) out.push(`<p class="mk-sub">${W("screen.question.opened", { name, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
+    else out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { name, date: { html: date } })}</p>`);
   }
 
   /* R31: "Read in my language", only while the assistant is reachable: its answer drawn in place, labeled, and the
@@ -107,7 +117,14 @@ function render(cs, view) {
   const shown = vs.find((v) => v.name === shownName) || null;
   const legTitle = (l) => {
     const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null;
-    return String(l.target_title || l.title || (r && r.target_title) || l.target);
+    const named = l.target_title || l.title || (r && r.target_title);
+    if (named) return String(named);
+    /* K3402 (R39): a cited document is named by its own title, read from the record, never its id */
+    const im = later("doc:" + l.target, "image", { id: String(l.target) });
+    const m = im.state === "ok" && im.value && typeof im.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(im.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
+    let t = m ? m[1].trim() : "";
+    try { if (t.startsWith("\"")) t = JSON.parse(t); } catch { /* raw */ }
+    return t || T("state.undetermined", { reason: "" });
   };
   const legGrade = (l) => {
     const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null;
@@ -291,7 +308,9 @@ function render(cs, view) {
     const line = part ? `<span class="mk-small" data-carries="${others.length ? "holds" : "falls"}">${others.length
       ? W("question.holds", { others: others.join(", ") }) : W("question.falls")}</span>` : "";
     return cs.row(g ? cs.grade(scale === "testimony" ? "testimony" : "capture", g) : "",
-      (l.words ? `<span class="rec">“${cs.esc(l.words)}”</span>` : "")
+      /* the passage by its own words where the inquiry or the reading shown holds them (K3402) */
+      ((() => { const r = shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === target) : null;
+        const words = l.words || (r && r.words); return words ? `<span class="rec">“${cs.esc(words)}”</span>` : ""; })())
       + `<span class="mk-small">${cs.ref("document", target, legTitle(l), [legTitle(l)])}`
       + (severed ? ` · <span data-leg="severed">${why ? W("screen.question.leg.severed.why", { why }) : W("screen.question.leg.severed")}</span>` : "") + "</span>" + line,
       isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
