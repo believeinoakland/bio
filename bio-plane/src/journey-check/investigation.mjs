@@ -144,16 +144,17 @@ async function captureAndVouch(walk, page, base, { question, password }) {
   return document;
 }
 
-/* Steps 7 and 8: the document opened; its words, until extraction answers them by passage (K3387, B8), are its
-   Passages section's empty state, so the passage is found with Find-in (from the document's own "Find in this"), for the
-   question, and cited from the result as supporting it (screens-daily R24: the role chosen, none preselected). The
-   question then holds the passage. */
+/* Steps 7 and 8: the document opened and its words seen in its Passages (extraction R76, K3399); the passage found with
+   Find-in (from the document's own "Find in this"), for the question, and cited from the result as supporting it
+   (screens-daily R24: the role chosen, none preselected). The question then holds the passage. */
 async function readAndCite(walk, page, { document, question }) {
   await walk.step(page, "7 · open the document, see its words, and Find-in a passage", async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
     await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
-    await requireWord(p, "state.empty", { within: "#cs-main" });
+    /* its words (extraction R76's `text_units`, K3399): the notice's passage drawn on its page */
+    if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(NOTICE_PASSAGE))
+      throw new Error("the document's words are not drawn on its page");
     await act(p, "findin");
     await p.waitForURL((u) => u.pathname.startsWith("/app/find-in/"), { timeout: 15000 });
     await settle(p);
