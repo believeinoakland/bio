@@ -34,8 +34,12 @@ export const inquiryMd = (project = P, refs = INQUIRY_REFS, o = {}) => ["---", `
   ...(o.grounds ? ["grounds:", ...o.grounds.flatMap((g) => [`  - ground: ${g.ground}`, `    asserted_by: ${g.asserted_by}`, `    at: "${g.at}"`])] : []),
   "---", "", "## Question", "", "Is the city repairing reported potholes within seven days?", "", "## What It Rests On", "",
   "## Session Log", "", ...(o.log || []), "## Review Notes", ""].join("\n");
+/* the bundle's dataset digest (capture grammar C-2.7), never the capture's sha (K3387) */
+export const DATASET = "5e44" + "1".repeat(56) + "d505";
+/* the capture's own sha, in the bundle's provenance document (as `acquire` and `testify` write it) */
+export const provenanceOf = (sha) => JSON.stringify({ documents: [{ capture: { sha256: sha } }] });
 export const DOCUMENT_MD = ["---", `id: ${D}`, "object_type: information", "title: \"Pothole repair policy, Administrative Instruction 4.12\"",
-  `content_hash: sha256:${SHA}`, `project: ${P}`, "source:", "  locator: https://example.org/ai-4-12.pdf", "  authority: Public Works",
+  `content_hash: sha256:${DATASET}`, `project: ${P}`, "source:", "  locator: https://example.org/ai-4-12.pdf", "  authority: Public Works",
   "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
 
 export const BASIS = (extra = {}) => ({ ok: true, inquiry: Q, versions: [{ name: "main", state: "accepted", author: "member:dev",
@@ -44,10 +48,15 @@ export const BASIS = (extra = {}) => ({ ok: true, inquiry: Q, versions: [{ name:
   { ord: 2, target: "INFO-2026-0005", role: "supports", grade: "B", status: "severed", target_title: "Work orders" },
   { ord: 3, target: "INFO-2026-0006", role: "cuts_against", grade: "D", scale: "testimony", words: "still open, about 60 cm across", target_title: "Mai's observation" }] }],
   ...extra });
+/* extraction R27's answer: the reading (reading-pipeline R1's object, no text) and, beside it, R36's text units in seq
+   order (K3387) */
 export const READING = (o = {}) => ({ ok: true, found: true, capture_sha: SHA, reading: {
-  passages: [{ text: "3. The Director shall repair each reported pothole within seven calendar days of the report.", extent: { kind: "pdf-page", page: 2 } },
-             { text: "5. Repairs are recorded as closed when the crew reports the work complete.", extent: { kind: "pdf-page", page: 3 } }],
+  content_type: "application/pdf", found: true, text_chars: 624,
   people: [{ id: "ENT-17", name: "L. Chen, Director of Public Works" }] },
+  text_units: [{ seq: 1, extent: { kind: "pdf-page", page: 2 }, reference: "u1", truncated: false,
+                 text: "3. The Director shall repair each reported pothole within seven calendar days of the report." },
+               { seq: 2, extent: { kind: "pdf-page", page: 3 }, reference: "u2", truncated: false,
+                 text: "5. Repairs are recorded as closed when the crew reports the work complete." }],
   unread_pages: [7, 8, 9], ...o });
 const STRENGTH = { [Q]: { capture: { state: "graded", grade: "B", weakest: { title: "Administrative Instruction 4.12" } },
                          connection: { state: "graded", grade: "C", detail: "a work-order number on both would raise it to B" }, testimony: { state: "unrated" } },
@@ -63,7 +72,7 @@ export const PARTICIPANTS = [{ handle: "dev", state: "joined", owner: 1 }, { han
 
 /** The plane every screen reads from, keyed by op; `image` answers by the id asked. */
 export function plane(o = {}) {
-  const images = { [P]: { "bundle.md": PROJECT_MD }, [Q]: { "bundle.md": inquiryMd(o.inquiryProject === undefined ? P : o.inquiryProject) }, [D]: { "bundle.md": DOCUMENT_MD }, ...(o.images || {}) };
+  const images = { [P]: { "bundle.md": PROJECT_MD }, [Q]: { "bundle.md": inquiryMd(o.inquiryProject === undefined ? P : o.inquiryProject) }, [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": provenanceOf(SHA) }, ...(o.images || {}) };
   return {
     image: (r) => (Object.hasOwn(images, r.query.id) ? ok(images[r.query.id]) : ok(null)),
     projectstage: ok({ ok: true, project: P, stage: "investigating", questions: { read: 2, with_legs: 1, concluded: 0 } }),
@@ -90,7 +99,7 @@ export function plane(o = {}) {
     reading: ok(READING()),
     gradenote: ok({ captureSha: SHA, note: "Fetched from the city's site over HTTPS; a signed copy would raise it to A." }),
     heldcaptures: ok({ ok: true, rows: [{ document: D, capture: { sha256: SHA, grade: { grade: "B", route: "fetched", determined: true } } }] }),
-    versionchain: ok({ ok: true, versions: [{ capture_sha: SHA, at: "2026-10-02T09:00:00Z" }, { capture_sha: NEWER, at: "2026-10-09T09:00:00Z" }], at_index: 0 }),
+    versionchain: ok({ ok: true, versions: [{ capture_sha: SHA, first_retrieved: "2026-10-02T09:00:00Z" }, { capture_sha: NEWER, first_retrieved: "2026-10-09T09:00:00Z" }], at_index: 0 }),
     links: ok({ ok: true, links: [] }),
     connections: ok({ ok: true, connections: [] }),
     reevaluationnotices: ok({ ok: true, notices: [] }),

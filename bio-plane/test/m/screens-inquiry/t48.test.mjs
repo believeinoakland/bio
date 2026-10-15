@@ -132,10 +132,10 @@ test("R20 over an empty fixture no section is drawn empty and no count is drawn 
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }) } });
   const question = await open("/app/question/" + Q, { plane: { ...bare, basisversions: ok(BASIS({ versions: [{ name: "main", legs: [] }] })), questionwaits: ok({ ok: true, waits: [] }),
     hypotheses: ok({ ok: true, inquiry: Q, hypotheses: [] }) } });
-  const document = await open("/app/document/" + D, { plane: { reading: ok(READING({ reading: { passages: [], people: [] }, unread_pages: [] })),
+  const document = await open("/app/document/" + D, { plane: { reading: ok(READING({ reading: { people: [] }, text_units: [], unread_pages: [] })),
     backlinks: ok({ ok: true, target: D, backlinks: [] }), versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
   for (const [p, absent] of [[project, ["screen.project.draw.head"]], [question, ["screen.question.against.head", "screen.question.waits.head"]],
-                             [document, ["screen.document.passages.head", "screen.document.people.head", "screen.document.versions.head", "screen.document.backlinks.head", "screen.document.unread.head"]]]) {
+                             [document, ["screen.document.people.head", "screen.document.versions.head", "screen.document.backlinks.head", "screen.document.unread.head"]]]) {
     for (const h of absent) assert.ok(!heads(p).includes(word(h)), `${h} is not drawn`);
     for (const s of main(p).querySelectorAll("section")) assert.ok(text(s).length > text(s.querySelector("h2")).length, `${text(s.querySelector("h2"))} holds something`);
     for (const k of ["screen.project.stage.read", "screen.project.stage.legs", "screen.project.stage.concluded"]) assert.ok(!says(main(p), k, { count: "0" }), `${k} at zero`);
