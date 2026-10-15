@@ -54,3 +54,9 @@ COMPLETE (again, after B4 and B5; supersedes J3's test line, rest of J3 stands).
 - Not changed: words-reads.json's admission `reads` still lists 22 keys without the `.session` key; the words test asserts it with hasWord separately. Design lane may add it to the list.
 - admission tests: 54, pass 54, fail 0. format 0 failures; architecture 0 (21 files); coverage 28 of 28; ownership 0 (16 files).
 Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 19, module lines 1547
+
+## J5 · COMPLETE
+
+COMPLETE (after B6). Merged tranche/T49. doors.test.mjs R18: the derived administrator's acts already exclude founderhandleset (only acts every session reaches); a new test reads it from its spec (op-declarations R71, control-plane R97): only SESSION_OPS.admin holds it, the founder's session is admitted, a member's session is refused 403 SESSION_ROLE_CANNOT_REACH_OP naming the founder, admission adds no fence.
+Tests: admission 55, pass 55, fail 0. format 0 failures; architecture 0 (21 files); coverage 28 of 28; ownership 0 (5 files vs tranche/T49).
+Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 22, module lines 1547
