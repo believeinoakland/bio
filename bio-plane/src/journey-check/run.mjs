@@ -106,13 +106,14 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     }
     /* each journey that stops has said why; the next is still walked, and the sweep after them */
     const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
-    const r9 = await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder }).catch(going);
+    const made = {};
+    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made }).catch(going);
     if (parts.includes("R10")) {
       walk.journey = "R10 as member";
-      if (!r9) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
+      if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
       else await (async () => {
         await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
-        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: r9.project });
+        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: made.project });
       })().catch(going);
     }
     /* the sweep with her handle held (a founder who could not choose one was swept handleless above) */
@@ -167,16 +168,17 @@ async function investigateLive(walk, b, base, { founder, member, codeOf }) {
   try {
     const admin = await device();
     walk.journey = "R9 as administrator";
-    const r9 = await (async () => {
+    const made = {};
+    await (async () => {
       await signInBy(walk, admin, base, founder, "1 · sign in by her handle");
-      return walkAdministrator(walk, admin, { base, founder, codeOf: (address) => codeOf("administrator", address) });
+      return walkAdministrator(walk, admin, { base, founder, made, codeOf: (address) => codeOf("administrator", address) });
     })().catch(going);
     walk.journey = "R10 as member";
-    if (!r9) { walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made"); return; }
+    if (!made.project) { walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made"); return; }
     const mine = await device();
     await (async () => {
       await signInBy(walk, mine, base, member, "she signs in by her handle");
-      await walkMemberJourney(walk, mine, { base, member, inviter: admin, project: r9.project, codeOf: (address) => codeOf("member", address) });
+      await walkMemberJourney(walk, mine, { base, member, inviter: admin, project: made.project, codeOf: (address) => codeOf("member", address) });
     })().catch(going);
   } finally { for (const c of devices) await c.close().catch(() => {}); }
 }
