@@ -53,8 +53,12 @@ export function refusalsIn(body) {
     if (flag || withheld) {
       const how = flag ? `${flag}: false` : "withheld";
       const own = [v.code, v.reason].find((c) => typeof c === "string" && c);
-      const said = [v.detail, v.translation, v.message].find((d) => typeof d === "string" && d.trim());
-      out.push({ code: own || how, how, at, ...(typeof v.check === "string" ? { check: v.check } : {}), ...(said ? { said: said.slice(0, 200) } : {}) });
+      /* a refusal that keeps its reasons in a list (`findings`, `errors`) is named by its first */
+      const first = [v.findings, v.errors].find((l) => Array.isArray(l) && l.length && l[0] && typeof l[0] === "object");
+      const inner = first ? first[0] : null;
+      const said = [v.detail, v.translation, v.message, inner && (inner.detail || inner.message)].find((d) => typeof d === "string" && d.trim());
+      const check = [v.check, inner && inner.check].find((c) => typeof c === "string" && c);
+      out.push({ code: own || how, how, at, ...(check ? { check } : {}), ...(said ? { said: said.slice(0, 200) } : {}) });
     }
     for (const [k, x] of Object.entries(v)) visit(x, at ? `${at}.${k}` : k, depth + 1);
   };
