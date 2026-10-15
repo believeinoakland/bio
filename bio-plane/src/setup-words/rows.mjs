@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (11905 words, 865 protected; SHA-256
-   56ba4b32956c994c0cd153e71f0336682378d4343301aed11c16f82a1a855b51), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (11907 words, 865 protected; SHA-256
+   63feb6e6f0a87583e8620167a9a3f74ed72c95e701013089d76bc466098dedbe), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "56ba4b3295";
+export const WORDS_COMMIT = "63feb6e6f0";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -4582,6 +4582,9 @@ export const WORD_ROWS = Object.freeze([
   ["capture.cite.tip","Opens Find in this over the document, with your question chosen.","what capture.cite opens",null,false],
   ["site.groups.rule.head","The listing rule","the details' heading beside site.groups.rule",null,false],
   ["site.groups.rule.text","civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.","Bob approved this text (DEC-270); a change is his",null,true],
+  ["queue.capture-completed-unattended.summary","A capture finished after {member} left it: {title}","machinery-producers' capture-completed-unattended; {title} the document's title, never its record id",null,false],
+  ["queue.capture-completed-unattended.detail","{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.","machinery-producers' capture-completed-unattended",null,false],
+  ["queue.capture-completed-unattended.who","your group's Civicsmith","{member} when the capture was started by a credential that is no member",null,false],
   ["screen.account.explain.help","Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.","under the Explanations choice",null,false],
   ["screen.account.signout.note","Everywhere ends your sign-in on every phone and computer, this one included. Use it if you lost a device or signed in somewhere you shouldn't have.","under the two sign-out buttons",null,false],
   ["screen.account.passwordkey.heading","Password and signing key",null,null,false],
@@ -9077,7 +9080,6 @@ export const WORD_ROWS = Object.freeze([
   ["machinery-producers.summary.pacing_holding_captures","our own pacing is holding {host}: captures from it are PACED, not broken","machinery-producers, summary",null,false],
   ["machinery-producers.summary.capture_did_finish","the capture of {locator} did not finish: support material is still outstanding","machinery-producers, summary",null,false],
   ["machinery-producers.map.grade_note_names","The grade note of {captures} it names ({x}), as a member present would have read it: {note}","machinery-producers, .map()#0",null,false],
-  ["machinery-producers.summary.completed_unattended_writer","{bundle_id} was completed by an unattended writer after {author} left it","machinery-producers, summary",null,false],
   ["machinery-producers.summary.captured_daemon_investigative","{address} was captured by the daemon at the investigative session's request","machinery-producers, summary",null,false],
   ["machinery-producers.summary.stopped_answering_often","{address} has stopped answering often enough that its archived copy may be fetched instead","machinery-producers, summary",null,false],
   ["machinery-producers.summary.overdue_check_interval","{bundle} has gone longer than its own interval without its check","machinery-producers, summary; never \"overdue\" in the queue (screens-daily R31), DEC-269",null,false],
