@@ -120,10 +120,11 @@ async function captureAndVouch(walk, page, base, { question, password }) {
     const dir = join(walk.out, "upload");
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, UPLOAD_NAME), UPLOAD_TEXT);
-    await p.locator("#ci-file").setInputFiles(join(dir, UPLOAD_NAME));
     await p.locator("#ci-how-made").first().check();
     await type(p, "ci-where", "Flat 4, 14 Lakeshore Row, 1 October 2026");
     await type(p, "ci-what", "My note of when the water came through the ceiling.");
+    /* chosen last, as the screen redraws while she types and a redraw empties a file field */
+    await p.locator("#ci-file").setInputFiles(join(dir, UPLOAD_NAME));
     await act(p, "captureupload", { password });
     await requireWord(p, "screen.capture.file.done", { within: "#cs-main" });
   }, { expect: CAPTURE_EXPECTS });
