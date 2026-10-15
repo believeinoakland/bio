@@ -34,3 +34,20 @@
 **Found in another module:** nothing. (`signatures`' `verifySshsig` digests the message it is given directly, no copy; the plane's source is not touched.)
 
 Size (session_014NJFRDyaFqVZ3Rve2MDf5G): test runs 24, module lines 2749
+
+## J2 · COMPLETE
+
+**B2 CHANGE applied** (commit `81a67ea976`, pushed with this entry). The embed fix is done and the 5 MB margin is now 26 MB.
+
+**What changed**
+1. `scripts/embed-release.mjs` writes the plane as `RELEASE_BINARY`: a binary string, one character per byte (each 0-255), as a printable-ASCII literal (`\xNN` for any byte that is not a plain printable character, `"` or `\`). A string whose characters are all under 256 is held one byte each: 21.4 MB, where the same release as text was 43 MB. Deterministic: two runs of `npm run embed` give byte-identical `src/release.mjs` (sha256 `587a729c…`, 24.3 MB of source). `RELEASE_SOURCE` is gone from `release.mjs`; nothing outside `newgroup/` read it (only records and docs name it).
+2. The installer holds the built-in release as one Blob made from that string in one pass (each character back to its byte), kept for every upload of the act; its limits and build fields are read from the string as text (they are ASCII); its hash is taken from the Blob's bytes when the read-back first needs it. A repository release was already one Blob (J1). So both kinds of release are `{blob, capable, sha?}` and every read (hash, limits, build fields, uploads, the R26 reading) goes through the bytes. The bytes uploaded and hashed are exactly the signed release's (`aa48b8cb…d649`); a test asserts the embedded string equals `release/bio-plane.bundled.mjs` byte for byte and hashes to RELEASE.json's sha256.
+3. Tests read the release through `test/release-text.mjs` (the bytes and their text); `embed.test.mjs`, the R26/R49 arms and `newgroup-bundle-fresh.test.mjs` (arm B reads `RELEASE_BINARY` and hashes the bytes it holds) follow the new name; R26 gains a test that every byte value survives the literal, that it is printable ASCII, reproducible, and holds nothing above 255.
+
+**Real-size harness, re-run** (same 128 MB assertion, kept; the same metric as J1): baseline **58 MB** (was 79); largest peak **101 MB** (102 in one update run) in every scenario (install and update; built-in, repository, repository with the real fleet), was 123. The peak is at the plane upload: baseline + the one Blob (21.4) + the body as `fetch` buffers it (21.4). The built-in's one-time conversion (the byte array and the Blob, 43 MB on 58) peaks at 101 as well; the read-back, the fleet members (largest 6.3 MB) and the re-upload sit below it. Resident-growth guard: 0 MB. Margin to 128: 26 MB, five times J1's.
+
+**Run** (all green): `npm test` in `newgroup/`: embed 23 passed 0 failed; wizard 209 passed, 0 failed; `node --test` tests 76, pass 73, fail 0, todo 3 (R13, R24, R48). `newgroup-bundle-fresh` from the root: 4 passed, 0 failed. Checks: format (170 modules, 169 requirements files; 0 failures), architecture (23 product files, 63 relative imports, 1 naming no tracked file, not judged; 0 failures), coverage (55 of 55 live ids named; 0 failures), ownership (14 files changed by installer; 0 failures). The bundle is rebuilt and committed.
+
+**Deferred:** nothing new. Still not shown on a real Worker; what it rests on is unchanged (the same upload step passed in Bob's live run at a higher peak, 123 MB in Node, and this one is 101).
+
+Size (session_014NJFRDyaFqVZ3Rve2MDf5G): test runs 34, module lines 2767
