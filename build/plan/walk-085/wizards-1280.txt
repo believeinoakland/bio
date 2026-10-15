@@ -1,0 +1,148 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Wizards
+Wizards
+
+Step-by-step walk-throughs of the real screens. Civicsmith's own come with each release; your group can write its own or copy one and change the copy.
+
+Which wizards
+Offered to members
+Drafts
+Submitted for approval
+Withdrawn
+Retired
+Broken: no longer matching the screens
+Open proposals
+See the whole library
+Reversible
+RECORD A NEW WIZARD
+
+Choose the project the wizard is for, then work on the real screens. Each act you press is added as a step: only the screen and the act, never what you typed.
+
+Record a new wizard
+Reasoned
+SHOWING: OFFERED TO MEMBERS
+WIZARD	WHOSE	BASED ON	APPROVED BY	FINISHED
+
+Set up and claim
+version 4 · Required
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Start and send
+version 3
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Update your group's Civicsmith
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Connect your Claude account
+version 3
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Publication ceremony
+version 3 · Required
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Comment for the group
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Refer it to an oversight body
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Demand a correction
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Pick up a plan
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Take an escalation to its next stage
+version 1
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Invite a member
+version 2
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Follow a proceeding
+version 2
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Check a claim
+version 2
+Acts
+	Civicsmith's	Not a copy	BOB	
+
+Your ties
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Follow the money
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Translate the interface
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Build a timeline
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Your first question
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Welcome a new member
+version 1 · Required
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Keep asking this
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Say who your group is
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	
+
+Use another group's case
+version 1
+Acts
+	Civicsmith's	Not a copy	Bob	

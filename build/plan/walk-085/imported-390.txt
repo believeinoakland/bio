@@ -1,0 +1,21 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Projects › Imported › Another group's case
+Another group's case
+1 wizard starts here
+
+No case imported yet. Choose a case file to import the first.
+
+IMPORT A CASE
+The case file
+The complete edition another group published.
+Import a case
+Reasoned
+Home
+Queue
+Add
+Find
+More

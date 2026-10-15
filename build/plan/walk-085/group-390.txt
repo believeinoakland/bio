@@ -1,0 +1,81 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Settings › Your group
+Your group
+NAME AND LOGO
+
+Your group is called Believe In Oakland.
+
+The group's name
+Save the name
+Reasoned
+A new logo
+A PNG or JPEG image, at most 200 KB.
+Change the logo
+Reversible
+WEBSITE
+Your group's web address
+Verify the website
+Reasoned
+LANGUAGES
+
+Your members use: American English.
+
+The languages
+
+Tick from 1 to 20 languages your members use.
+
+American EnglishEnglishSpanishChineseCantoneseVietnameseFilipinoKoreanJapaneseFrenchArabicRussianPortugueseHindiSomaliAmharicTigrinyaPersianUkrainianArmenianKhmerThaiHaitian CreoleGermanItalianPolishSwahiliMongolianLao
+Save the languages
+Reversible
+THE COURT NOTICE
+
+Members are told what a court order could reach.
+
+Tell members what a court can reach
+Tell themDon't tell them
+Show the court notice
+Reasoned
+THE HOSTING ACCOUNT
+
+Recorded by set at setup on 15 October 2026: Bob Krause
+
+Who holds it
+A note (optional)
+Record who holds the hosting account
+Reasoned
+THE GROUP'S BAR
+Capture
+No bar
+A
+B
+C
+D
+Connection
+No bar
+A
+B
+C
+D
+Why (every member will see this)
+Set the group's bar
+Reasoned
+WHAT THE GROUP HAS AT STAKE
+
+None stated beyond the group's
+
+In your group's own words: what the group itself stands to gain or lose in the matters it works on. It goes beside your group's name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.
+
+The group's statement
+Help me write this
+Reasoned
+Save the statement
+Reversible
+Home
+Queue
+Add
+Find
+More

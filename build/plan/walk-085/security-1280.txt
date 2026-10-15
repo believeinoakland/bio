@@ -1,0 +1,115 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Security
+Security
+HOW HARD YOUR GROUP'S CIVICSMITH WAS TRIED
+
+Ordinary. From 8 October 2026 to 15 October 2026.
+
+KIND	THIS PERIOD	USUALLY
+Refused sign-ins	1	0
+From
+To
+Show the level for a period
+Reversible
+WHAT IS INSTALLED
+
+File scanner: installed
+
+Safe view: installed
+
+TOOLS YOU CAN ADD
+TOOL	WHAT IT DOES
+
+Uva Software, LLC · Scanii
+Acts
+	scans files
+
+OPSWAT, Inc. · MetaDefender Cloud (private mode)
+Acts
+	scans files
+
+OPSWAT, Inc. · MetaDefender Core
+Acts
+	scans files
+
+stated by the administrator · any ICAP server (RFC 3507)
+Acts
+	scans files
+
+Microsoft Corporation · Microsoft Defender for Storage
+Acts
+	scans files
+
+Sophos Ltd · SophosLabs Intelix
+Acts
+	scans files, runs files in a sandbox
+
+OPSWAT, Inc. · Deep CDR (MetaDefender Cloud or Core)
+Acts
+	makes a safe copy
+
+Glasswall Solutions Ltd · Glasswall Halo
+Acts
+	makes a safe copy
+
+Joe Security LLC · Joe Sandbox Cloud (Light and above)
+Acts
+	runs files in a sandbox
+
+VMRay GmbH · VMRay Analyzer (cloud)
+Acts
+	runs files in a sandbox
+
+CrowdStrike, Inc. · Falcon Sandbox (Falcon Intelligence)
+Acts
+	runs files in a sandbox
+
+Palo Alto Networks, Inc. · WildFire (standalone API)
+Acts
+	runs files in a sandbox
+
+Cloudflare, Inc. · Cloudflare URL intelligence
+Acts
+	checks web addresses
+
+Google LLC · Web Risk (Update API)
+Acts
+	checks web addresses
+
+Splunk LLC · Splunk HTTP Event Collector
+Acts
+	receives security counts
+
+Microsoft Corporation · Microsoft Sentinel (Logs Ingestion API)
+Acts
+	receives security counts
+
+Google LLC · Google Security Operations (ImportLogs)
+Acts
+	receives security counts
+
+Elasticsearch B.V. · Elastic (_bulk API)
+Acts
+	receives security counts
+
+stated by the administrator · any syslog collector (RFC 5424 over TLS)
+Acts
+	receives security counts
+
+stated by the administrator · any HTTPS endpoint taking a JSON POST
+Acts
+	receives security counts

@@ -1,0 +1,48 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Places and offices
+Places and offices
+THE PLACES WHOSE RULES APPLY
+City of Oakland and Alameda County · City of Oakland, Alameda County
+The places, read in this order
+City of Oakland and Alameda County · City of Oakland, Alameda County
+
+Local facts read differently from then on: what the record holds stays as it is, and anything read afterwards is read from the places chosen. Choosing none is allowed.
+
+Choose the places whose rules apply
+Reasoned
+A PLACE NOT LISTED YET
+
+No place is named.
+
+A place you want that isn't listed (optional)
+Kept in your group's Civicsmith and never sent anywhere. When an update brings its rules and offices, administrators are told once in their queue and can choose it above.
+Save the place you want
+Reasoned
+WHERE ELSE TO GO
+
+Your place lists 31 places for needs Civicsmith doesn't serve: legal help, the courts' self-help, the city's service line, state agencies, your representative's office, a newsroom tip line. Each comes from the place's rules with where that came from. Members reach them from Home's sixth door and from any wizard a door offers.
+
+See the list
+
+CHANGE THE OFFICES
+Fill in the offices again
+Reasoned
+The office's name
+Who or what this office is
+In your own words: where it comes from, and how your group deals with it.
+Add an office yourself
+Reasoned

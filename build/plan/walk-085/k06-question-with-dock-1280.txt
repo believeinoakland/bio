@@ -1,0 +1,78 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Projects › WALK-085 project › Question
+How many pothole reports did the city close late in 2025?
+
+Opened by The group's founder, 15 October 2026 · WALK-085 project
+
+Read in my language
+Reversible
+THE ASSISTANT IS WORKING ON THIS QUESTION
+Machine work
+
+You can leave this page; the run keeps going, and what it proposes waits here and in your queue. Nothing it finds counts until a member accepts it.
+
+Stop the assistant
+Reversible
+SUPPORTS
+
+Choose the passage in a document, or find it: then cite it here.
+
+Cite a passage
+Reversible
+Add a document
+HUNCHES
+Your hunch
+What kind of hunch
+A suspicion
+Where something went
+Keep a hunch
+Reversible
+WHAT RELIES ON THIS
+WALK-085 project
+A project
+CONCLUDING
+
+Nothing to conclude on yet: a conclusion adopts a reading, the assistant's accepted or one you write yourself, and a reading stands on cited passages.
+
+A name for the narrower question
+Why, in a sentence
+Narrow the question
+Reasoned
+The expertise needed
+For example: accounting, engineering, law.
+What to check
+Ask for a check by expertise
+Reasoned
+The plan's title
+Plan what to do
+Reasoned
+Assistant
+
+It finds, reads and checks; it never concludes, signs or sends.
+
+The assistant serves you here on: your own account
+
+ESTIMATED DOLLARS A DAY, THE LAST 30 DAYS
+16 September 2026
+15 October 2026, today, so far
+Last 30 days: $0.36, 5 calls · busiest 15 October 2026, $0.36
+Everything (the overall limit) · (dollars, estimated) · month: $0.36 · No limit is set, so there is nothing to measure against: only Anthropic's own spending limit on the key caps this account.
+Ask the assistant to work on this
+Reversible
+Stop the run
+Reversible
+The assistant: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.

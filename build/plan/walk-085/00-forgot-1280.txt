@@ -1,0 +1,25 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Forgot your password
+
+Civicsmith sends no email, so getting back in goes through your group, not a mailbox.
+
+USE ONE OF YOUR RECOVERY CODES
+Your handle
+The handle you sign in with: the name the group knows you by.
+One of your recovery codes
+One of the ten codes you saved when you joined, or got later in Settings › Recovery codes. Each works once.
+A new password
+At least 12 characters. A short sentence you can remember works well.
+Type it again
+Set a new password with a recovery code
+Reasoned
+NO CODES TO HAND? ASK AN ADMINISTRATOR FOR A RESET LINK
+
+An administrator can make you a reset link, like an invitation: it works once, for seven days, and lets you choose a new password. Ask an administrator in person or however your group talks. No administrator can see your password, and you keep your handle and everything you did.
+
+IF YOU CANNOT SIGN IN
+
+Your group's administrators can help you: ask one of them for a reset link.
+
+If none of them can sign in either, whoever holds your group's hosting account can open the way back in for them.

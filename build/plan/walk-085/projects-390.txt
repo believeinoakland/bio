@@ -1,0 +1,29 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Projects
+Projects
+
+Each project is one problem the group wants to get to the bottom of. These are the ones you can see.
+
+WALK-085 project
+Forming
+Investigating
+Matured
+Closed
+Owner: sparky
+S
+1
+busy
+Last change 15 October 2026
+Start a project
+
+Another group's case
+
+Home
+Queue
+Add
+Find
+More
