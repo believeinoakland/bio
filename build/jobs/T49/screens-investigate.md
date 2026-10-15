@@ -75,3 +75,6 @@ COMPLETE (J6) after B6: merged tranche/T49 (DEC-262); counts, range, due-date.of
 ## J7 · COMPLETE
 
 COMPLETE (J7) after B7: merged tranche/T49 with the real interface-shell (R65-R72) and admission; no local stand-in anywhere. This module's 108 tests and control-plane's t46-app (which imports my screens) pass: 113/0. B6's rewordings were applied in J6. architecture, coverage 30/30, ownership 0 failures. No code change was needed.
+
+## After CHANGE B8 (DEC-263–DEC-267)
+`didnotmove` filled with `{phase}` only; `order.evidence` drawn with no fill. 113 tests (module + control-plane t46-app) pass. Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 50, module lines 2075

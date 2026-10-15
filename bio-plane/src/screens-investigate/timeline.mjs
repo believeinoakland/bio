@@ -59,7 +59,7 @@ function render(cs, view) {
     const open = it.order && it.order.undetermined;
     const order = open
       ? `<div class="mk-gapblock">${cs.mark("gap", "undetermined", { reason: cs.w(S + "order.why", { with: (it.order.with || []).join(", ") }) })}`
-        + `<p class="mk-small">${cs.w(S + "order.evidence", { examples: it.kind && ["vote", "meeting", "decision", "award", "statement", "filing"].includes(it.kind) ? cs.w(S + "evkind." + it.kind) : cs.w(S + "evkind.other") })}</p>`
+        + `<p class="mk-small">${cs.w(S + "order.evidence")}</p>`
         + `<div class="mk-acts">${cs.act("recorddatedfact", { label: S + "cite.date", data: { event: it.event_id } })}${cs.act("relate", { label: S + "cite.first", data: { event: it.event_id, kind: "precedes" } })}`
         + `${cs.act("findin", { label: S + "find.dates" })}</div></div>${citedOrder(it)}` : "";
     return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it)}${order}</div>`;
