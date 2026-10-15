@@ -4291,3 +4291,17 @@ response: **The design session, 2026-10-15.** `queue.capture-completed-unattende
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-274); `words.json`.
 owed: (BOB, N1140, T50) machinery-producers' `#conditionsCaptureRequested` reads these keys: a run's request (`at_the_request_of.run`) `.request.detail.assistant`, a member's own `.request.detail`, none named `.unnamed`; both producers append `.gradenote` per distinct note. (design) none.
+
+### DEC-275 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (DEC-273's owed: the explanation sentences, first batch)
+for: bob-session
+question: The explanations of the screens from account to members, and the words every screen's explanations share, as keyed words.
+why it is Bob's: design detail beneath DEC-259 and DEC-273; decided by the design session, reported to Bob as done.
+provisional: DEC-273's check read a record card's "Here:" line glued to the line before it ("…on any public case it is inHere: …"), though the card draws it on its own line, so 154 sentences could not be keyed as drawn; 872 counted.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words, drawings and a check.
+response: **The design session, 2026-10-15.** The check reads a card's "Here:" line (`.why`) on its own line, as the card draws it; measured so, 998. The 31 screens from account to members, and the explanations shared by every screen, are keyed: 259 keys minted (`shell.crumb.back` "Back to {place}." on 50 screens; the row icons' `shell.icon.capture`, `.group`, `.clock`, `.tension`, `.hold`, `.plan`, a person's drawing `shell.card.person`; the explanations' `screen.<id>.tip.<part>`); a sample record's words in an explanation (a project's, office's or group's description, a person's role) are marked as data; where a drawing paraphrased a key it draws the key; 26 buttons' own explanations gave way to the act's general one, and three that say what the act does in that place are keyed (`act.promote.here.home`, `act.publish.here.ceremony`, `act.themeplace.here.question`). Two errors fixed: the dock drew a literal "{project}", and a citation ended in two periods. 998 became 468, the ratchet's new baseline; the rest (money, person, plan, proceeding, published, timeline and the other screens past members) follow in the next batch.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-275), `screens/mock-shell.js`, `screens/mock-screens.js`, `screens/mock-refs.js`, `screens/check_words_drawn.mjs`, `screens/words-drawn-tips-baseline.json`; `words.json`.
+owed: (BOB) `setup-words`' rows regenerated (265 rows minted with DEC-274's); Home's "Start a project" explains itself by `act.promote.here.home` and the edition's confirmation by `act.publish.here.ceremony` (their general `act.promote.does` and `act.publish.does` are wrong there), the question's theme placing by `act.themeplace.here.question`; where a module draws a row icon's or the breadcrumb's explanation, it reads `shell.icon.*` and `shell.crumb.back`. (design) the remaining 468 explanation sentences.

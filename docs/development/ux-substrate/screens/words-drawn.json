@@ -1703,6 +1703,1560 @@
    "en": "Click to see who your group is.",
    "protected": false,
    "note": "DEC-273: the group's card in the masthead, its second line; the group's description and purpose are its own words (data)"
+  },
+  {
+   "key": "shell.icon.capture",
+   "en": "A document or a capture",
+   "protected": false,
+   "note": "DEC-275: a row's icon, its explanation"
+  },
+  {
+   "key": "shell.icon.group",
+   "en": "An office, a member or a group",
+   "protected": false,
+   "note": "DEC-275: a row's icon, its explanation"
+  },
+  {
+   "key": "shell.icon.clock",
+   "en": "Something with a time limit",
+   "protected": false,
+   "note": "DEC-275: a row's icon, its explanation"
+  },
+  {
+   "key": "shell.icon.tension",
+   "en": "Two things that disagree",
+   "protected": false,
+   "note": "DEC-275: a row's icon, its explanation"
+  },
+  {
+   "key": "shell.icon.hold",
+   "en": "Held, not yet in the record",
+   "protected": false,
+   "note": "DEC-275: a row's icon, its explanation"
+  },
+  {
+   "key": "shell.crumb.back",
+   "en": "Back to {place}.",
+   "protected": false,
+   "note": "DEC-275: a step of the path, its explanation; {place} the step's own name"
+  },
+  {
+   "key": "screen.account.tip.handle",
+   "en": "shown on your work in the record and on any public case it is in",
+   "protected": false,
+   "note": "DEC-275: your handle's card"
+  },
+  {
+   "key": "screen.account.tip.handle_after",
+   "en": "After that it is fixed.",
+   "protected": false,
+   "note": "DEC-275: your handle's card, after handle.changeable"
+  },
+  {
+   "key": "screen.account.tip.checks",
+   "en": "a member asks another with declared expertise to check their work",
+   "protected": false,
+   "note": "DEC-275: the card of checks by expertise"
+  },
+  {
+   "key": "screen.account.tip.checks_why",
+   "en": "Declaring yours, such as Spanish–English interpreting, lets members send you checks in that field.",
+   "protected": false,
+   "note": "DEC-275: the card of checks by expertise"
+  },
+  {
+   "key": "screen.account.tip.key",
+   "en": "a key held in this browser",
+   "protected": false,
+   "note": "DEC-275: the signing key's card"
+  },
+  {
+   "key": "screen.account.tip.key_signs",
+   "en": "signs what you approve under your handle, such as a case you own",
+   "protected": false,
+   "note": "DEC-275: the signing key's card"
+  },
+  {
+   "key": "screen.account.tip.key_why",
+   "en": "Without one registered here you cannot sign; revoking it ends this browser's key for good.",
+   "protected": false,
+   "note": "DEC-275: the signing key's card"
+  },
+  {
+   "key": "screen.action.tip.title",
+   "en": "{action}: your group's request to {office}, sent by {name} on {date}.",
+   "protected": false,
+   "note": "DEC-275: the action's title, its explanation"
+  },
+  {
+   "key": "screen.action.tip.title_holds",
+   "en": "What was sent, when the reply is due and what came back are here.",
+   "protected": false,
+   "note": "DEC-275: the action's title, its explanation"
+  },
+  {
+   "key": "screen.action.tip.office_record",
+   "en": "{n} requests from your group, {m} answered on time",
+   "protected": false,
+   "note": "DEC-275: an office's card: its record of answering the group"
+  },
+  {
+   "key": "screen.action.tip.office_why",
+   "en": "The office that must reply; its record with your group so far is {m} of {n} on time.",
+   "protected": false,
+   "note": "DEC-275: an office's card"
+  },
+  {
+   "key": "screen.action.tip.sent",
+   "en": "recorded by {name} on the day it was sent",
+   "protected": false,
+   "note": "DEC-275: the sending date's card"
+  },
+  {
+   "key": "screen.action.tip.sent_why",
+   "en": "The response clock counts from this date.",
+   "protected": false,
+   "note": "DEC-275: the sending date's card"
+  },
+  {
+   "key": "screen.action.tip.office_decides",
+   "en": "Its reply, or its silence by {date}, decides the plan's next step.",
+   "protected": false,
+   "note": "DEC-275: the office's card on an action"
+  },
+  {
+   "key": "screen.action.tip.ack",
+   "en": "the office confirms it received the request",
+   "protected": false,
+   "note": "DEC-275: an acknowledgment's card"
+  },
+  {
+   "key": "screen.action.tip.ack_why",
+   "en": "It is not the records: the {date} due date stands unless the office gives notice of an extension.",
+   "protected": false,
+   "note": "DEC-275: an acknowledgment's card"
+  },
+  {
+   "key": "screen.action.tip.reference",
+   "en": "{office}'s reference for this request",
+   "protected": false,
+   "note": "DEC-275: the office's reference number's card"
+  },
+  {
+   "key": "screen.action.tip.reference_from",
+   "en": "from its acknowledgment of {date}",
+   "protected": false,
+   "note": "DEC-275: the office's reference number's card"
+  },
+  {
+   "key": "screen.action.tip.reference_why",
+   "en": "Quote it in any follow-up so the office can find the request.",
+   "protected": false,
+   "note": "DEC-275: the office's reference number's card"
+  },
+  {
+   "key": "screen.archive.tip.title",
+   "en": "{title}: a ZIP archive {name} captured from {source} on {date}, for {project}.",
+   "protected": false,
+   "note": "DEC-275: the archive's title, its explanation; {title} the archive's own name"
+  },
+  {
+   "key": "screen.archive.tip.title_holds",
+   "en": "Every file inside is listed with what happened to it: filed, held for review, or set aside.",
+   "protected": false,
+   "note": "DEC-275: the archive's title, its explanation"
+  },
+  {
+   "key": "screen.assistant.tip.title",
+   "en": "{question}: {name}'s question in {project}, opened {date}, with the assistant beside it.",
+   "protected": false,
+   "note": "DEC-275: the title's explanation; {question} the question's own words"
+  },
+  {
+   "key": "screen.assistant.tip.computed_fact",
+   "en": "a figure worked out from captured data by a stated method",
+   "protected": false,
+   "note": "DEC-275: a computed fact's card"
+  },
+  {
+   "key": "screen.assistant.tip.computed_why",
+   "en": "The assistant can explain the method; only a member's check, like {name}'s, is recorded as a check.",
+   "protected": false,
+   "note": "DEC-275: a computed fact's card, beside the assistant"
+  },
+  {
+   "key": "screen.assistant.tip.hunch_why",
+   "en": "Ask the assistant what records would test {name}'s hunch; it stays a hunch until a source supports it.",
+   "protected": false,
+   "note": "DEC-275: a hunch's card, beside the assistant"
+  },
+  {
+   "key": "ai.serves.other_says",
+   "en": "Where the group's key or a project's account serves you instead, this says so.",
+   "protected": false,
+   "note": "DEC-275: the account that serves you, its explanation (corrected: it showed a placeholder)"
+  },
+  {
+   "key": "act.themeplace.here.question",
+   "en": "Pick one of this question's passages and the theme it belongs in, with an optional note.",
+   "protected": false,
+   "note": "DEC-275: on a question: a question is not placed, its passages are"
+  },
+  {
+   "key": "screen.question.tip.themes",
+   "en": "A question is not placed in a theme; the passages it cites are.",
+   "protected": false,
+   "note": "DEC-275: the themes section of a question, its explanation"
+  },
+  {
+   "key": "screen.calculation.tip.title",
+   "en": "{title}: a fact your group worked out from {source}: {result}.",
+   "protected": false,
+   "note": "DEC-275: the calculation's title, its explanation; {title} and {result} the calculation's own words"
+  },
+  {
+   "key": "screen.calculation.tip.title_method",
+   "en": "Its method is shown below, {name} checked it on {date}, and it is worked out again if an input changes.",
+   "protected": false,
+   "note": "DEC-275: the calculation's title, its explanation"
+  },
+  {
+   "key": "screen.calculation.tip.closed_why",
+   "en": "It counts “closed” as the city records it: when the crew reports the work complete, not after an inspection.",
+   "protected": false,
+   "note": "DEC-275: the result's card"
+  },
+  {
+   "key": "screen.calculation.tip.expertise",
+   "en": "{name}'s declared expertise, {expertise}",
+   "protected": false,
+   "note": "DEC-275: a member's expertise, its card"
+  },
+  {
+   "key": "screen.calculation.tip.expertise_confirmed",
+   "en": "confirmed in the group",
+   "protected": false,
+   "note": "DEC-275: a member's expertise, its card"
+  },
+  {
+   "key": "screen.calculation.tip.check_why",
+   "en": "{name}'s check is the second member's check; the result still needs a member to accept it.",
+   "protected": false,
+   "note": "DEC-275: a member's expertise, its card"
+  },
+  {
+   "key": "screen.calculation.tip.helpbelow",
+   "en": "“How spot-checks work” below explains it in general.",
+   "protected": false,
+   "note": "DEC-275: the spot-check section's explanation, its second line"
+  },
+  {
+   "key": "screen.question.tip.proposes",
+   "en": "What a run produced. It is machine work, never evidence, until a member accepts it.",
+   "protected": false,
+   "note": "DEC-275: the section of what the assistant proposes, its explanation"
+  },
+  {
+   "key": "screen.question.tip.concluded",
+   "en": "The group's answer to this question, recorded with who concluded it, when, and what would change it.",
+   "protected": false,
+   "note": "DEC-275: the concluded section, its explanation"
+  },
+  {
+   "key": "screen.capture.tip.ownsite",
+   "en": "the website of the office that issued the document",
+   "protected": false,
+   "note": "DEC-275: the office's own site, its card"
+  },
+  {
+   "key": "screen.capture.tip.ownsite_why",
+   "en": "A copy fetched there carries its source with it, so a reader can fetch the same page and compare.",
+   "protected": false,
+   "note": "DEC-275: the office's own site, its card"
+  },
+  {
+   "key": "screen.capture.tip.archive",
+   "en": "an outside service that keeps dated copies of public web pages",
+   "protected": false,
+   "note": "DEC-275: a public archive, its card"
+  },
+  {
+   "key": "screen.capture.tip.archive_who",
+   "en": "not run by the city or by your group",
+   "protected": false,
+   "note": "DEC-275: a public archive, its card"
+  },
+  {
+   "key": "screen.capture.tip.archive_why",
+   "en": "It can rescue a page the city has removed, but it learns which address your group asked for.",
+   "protected": false,
+   "note": "DEC-275: a public archive, its card"
+  },
+  {
+   "key": "screen.capture.tip.testimony",
+   "en": "one of the four grade scales",
+   "protected": false,
+   "note": "DEC-275: testimony, its card"
+  },
+  {
+   "key": "screen.capture.tip.testimony_is",
+   "en": "a person's own account of what they saw or heard",
+   "protected": false,
+   "note": "DEC-275: testimony, its card"
+  },
+  {
+   "key": "screen.capture.tip.testimony_why",
+   "en": "What you write here can support or cut against a question, labeled as yours, as {example} does.",
+   "protected": false,
+   "note": "DEC-275: testimony, its card; {example} a member's own account"
+  },
+  {
+   "key": "screen.capture.tip.graded_why",
+   "en": "D does not mean doubtful: it tells a reader your account can be checked only by asking you.",
+   "protected": false,
+   "note": "DEC-275: grade D, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.title",
+   "en": "{edition}: {name}'s draft of the next edition of your group's published case.",
+   "protected": false,
+   "note": "DEC-275: the case's title, its explanation"
+  },
+  {
+   "key": "screen.case-editor.tip.title_public",
+   "en": "Nothing here is public until an owner signs and publishes it.",
+   "protected": false,
+   "note": "DEC-275: the case's title, its explanation"
+  },
+  {
+   "key": "screen.case-editor.tip.internal",
+   "en": "the case passes Civicsmith's own checks: bar met, people named with reasons, what it leaves out",
+   "protected": false,
+   "note": "DEC-275: the readiness step Internally checked, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.internal_why",
+   "en": "The missing reason for {name} would hold it back.",
+   "protected": false,
+   "note": "DEC-275: the readiness step Internally checked, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.external",
+   "en": "the case meets outside rules it must follow, such as court orders and sealing",
+   "protected": false,
+   "note": "DEC-275: the readiness step Externally compliant, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.external_why",
+   "en": "Checked before publishing, so nothing public breaks an order.",
+   "protected": false,
+   "note": "DEC-275: the readiness step Externally compliant, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.reason",
+   "en": "every person a case names needs the reason, drawn from its evidence",
+   "protected": false,
+   "note": "DEC-275: a missing reason, its card"
+  },
+  {
+   "key": "screen.case-editor.tip.reason_why",
+   "en": "The case can't pass its checks until {name} has a reason or is taken out.",
+   "protected": false,
+   "note": "DEC-275: a missing reason, its card"
+  },
+  {
+   "key": "screen.ceremony.tip.title",
+   "en": "Publish {edition}: the last checks and the signing of {project}, {edition_2}.",
+   "protected": false,
+   "note": "DEC-275: the publishing screen's title, its explanation"
+  },
+  {
+   "key": "screen.ceremony.tip.bias",
+   "en": "the group's own statement of any stake it has in what it examines, in its own words",
+   "protected": false,
+   "note": "DEC-275: declared bias, its card"
+  },
+  {
+   "key": "screen.ceremony.tip.bias_carried",
+   "en": "every published case carries it",
+   "protected": false,
+   "note": "DEC-275: declared bias, its card"
+  },
+  {
+   "key": "screen.ceremony.tip.bias_why",
+   "en": "Readers judge the case knowing what the group may favor.",
+   "protected": false,
+   "note": "DEC-275: declared bias, its card"
+  },
+  {
+   "key": "screen.ceremony.tip.central_why",
+   "en": "The case's central claim; it meets the bar, so it can be relied on in public.",
+   "protected": false,
+   "note": "DEC-275: a finding's card at publishing"
+  },
+  {
+   "key": "screen.ceremony.tip.asked",
+   "en": "{name} asked it to {request}",
+   "protected": false,
+   "note": "DEC-275: a finding's card: a reviewer's comment; {request} the reviewer's own words"
+  },
+  {
+   "key": "screen.ceremony.tip.asked_why",
+   "en": "Check the reviewer's comment was answered before you sign.",
+   "protected": false,
+   "note": "DEC-275: a finding's card at publishing"
+  },
+  {
+   "key": "screen.ceremony.tip.bar",
+   "en": "the least capture and connection a finding needs to be relied on",
+   "protected": false,
+   "note": "DEC-275: the project's bar, its card"
+  },
+  {
+   "key": "screen.ceremony.tip.bar_why",
+   "en": "Every finding meets it, so none is published as weaker than the group claims.",
+   "protected": false,
+   "note": "DEC-275: the project's bar, its card"
+  },
+  {
+   "key": "act.publish.here.ceremony",
+   "en": "Records your confirmation inside the edition you are about to sign and fixes its text, so what you sign next is exactly what was checked. It publishes nothing.",
+   "protected": false,
+   "note": "DEC-275: the ties step's button, which prepares the edition and publishes nothing"
+  },
+  {
+   "key": "shell.step.leave",
+   "en": "You can leave and come back; nothing is lost.",
+   "protected": false,
+   "note": "DEC-275: a step still to do, its explanation"
+  },
+  {
+   "key": "screen.capture.tip.ownsite_name",
+   "en": "The office's own site",
+   "protected": false,
+   "note": "DEC-275: the office's own site, its card"
+  },
+  {
+   "key": "screen.connect.tip.groupkey_on",
+   "en": "switched on by {name}, {date}",
+   "protected": false,
+   "note": "DEC-275: the group's key, its card"
+  },
+  {
+   "key": "screen.connect.tip.groupkey_pays",
+   "en": "the group pays Anthropic for each use",
+   "protected": false,
+   "note": "DEC-275: the group's key, its card"
+  },
+  {
+   "key": "screen.connect.tip.groupkey_why",
+   "en": "It serves you now; your own account, if you connect one, replaces it for you alone.",
+   "protected": false,
+   "note": "DEC-275: the group's key, its card"
+  },
+  {
+   "key": "screen.connect.tip.anthropic",
+   "en": "the company that makes Claude",
+   "protected": false,
+   "note": "DEC-275: Anthropic, its card"
+  },
+  {
+   "key": "screen.connect.tip.anthropic_gets",
+   "en": "receives your question and the material read to answer it, only when you ask",
+   "protected": false,
+   "note": "DEC-275: Anthropic, its card"
+  },
+  {
+   "key": "screen.connect.tip.anthropic_why",
+   "en": "This is where your questions go, under whichever account serves you.",
+   "protected": false,
+   "note": "DEC-275: Anthropic, its card"
+  },
+  {
+   "key": "screen.connect.tip.limit",
+   "en": "set by your administrators for every member on the group's key",
+   "protected": false,
+   "note": "DEC-275: the daily limit, its card"
+  },
+  {
+   "key": "screen.connect.tip.limit_why",
+   "en": "You have used {amount} of it today; when it is reached the assistant stops serving you until the next day.",
+   "protected": false,
+   "note": "DEC-275: the daily limit, its card"
+  },
+  {
+   "key": "screen.connect.tip.workers",
+   "en": "the Cloudflare plan your group's Civicsmith can run on",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.connect.tip.workers_cost",
+   "en": "{amount} a month, paid by the group",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.connect.tip.workers_why",
+   "en": "Signing in with a subscription needs it; without it, connect with an API key instead.",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.connect.tip.plans",
+   "en": "Claude's paid subscription plans",
+   "protected": false,
+   "note": "DEC-275: Pro or Max, its card"
+  },
+  {
+   "key": "screen.connect.tip.plans_billed",
+   "en": "billed to you by Anthropic, not to your group",
+   "protected": false,
+   "note": "DEC-275: Pro or Max, its card"
+  },
+  {
+   "key": "screen.connect.tip.plans_why",
+   "en": "Only these plans can serve your questions through a subscription.",
+   "protected": false,
+   "note": "DEC-275: Pro or Max, its card"
+  },
+  {
+   "key": "screen.connect.tip.console",
+   "en": "Anthropic's Console, where API keys are made",
+   "protected": false,
+   "note": "DEC-275: the Console, its card"
+  },
+  {
+   "key": "screen.connect.tip.console_needs",
+   "en": "needs a payment method",
+   "protected": false,
+   "note": "DEC-275: the Console, its card"
+  },
+  {
+   "key": "screen.connect.tip.console_why",
+   "en": "Where you would make your own key; Anthropic then bills you for each use.",
+   "protected": false,
+   "note": "DEC-275: the Console, its card"
+  },
+  {
+   "key": "screen.dash-action.tip.yours",
+   "en": "What is yours in Action: each item with whose move it is and its act.",
+   "protected": false,
+   "note": "DEC-275: the section of what is yours, its explanation"
+  },
+  {
+   "key": "screen.dash-action.tip.every",
+   "en": "Every action your group has open, with whose move it is and its clock as a sentence with its rule and date, never a countdown.",
+   "protected": false,
+   "note": "DEC-275: the section of every action, its explanation"
+  },
+  {
+   "key": "screen.dash-project.tip.next",
+   "en": "What comes next in this project, for you, in order. The first is the one to take now; each is the act itself.",
+   "protected": false,
+   "note": "DEC-275: the section Next for you here, its explanation"
+  },
+  {
+   "key": "screen.dash-project.tip.story",
+   "en": "What they did above the line, what we did below it, in order. Anything undated is listed on the full timeline, never guessed into place.",
+   "protected": false,
+   "note": "DEC-275: the section The story so far, its explanation"
+  },
+  {
+   "key": "screen.docket.tip.withdrawal",
+   "en": "the group withdraws a finding or a whole case, publicly",
+   "protected": false,
+   "note": "DEC-275: a withdrawal, its card"
+  },
+  {
+   "key": "screen.docket.tip.withdrawal_stays",
+   "en": "the earlier edition stays visible, marked withdrawn",
+   "protected": false,
+   "note": "DEC-275: a withdrawal, its card"
+  },
+  {
+   "key": "screen.docket.tip.withdrawal_none",
+   "en": "None so far for this case.",
+   "protected": false,
+   "note": "DEC-275: a withdrawal, its card"
+  },
+  {
+   "key": "screen.docket.tip.superseding",
+   "en": "{edition} replaced {edition_2} as the current edition",
+   "protected": false,
+   "note": "DEC-275: superseding, its card"
+  },
+  {
+   "key": "screen.docket.tip.superseding_stays",
+   "en": "{edition} stays public, marked as corrected",
+   "protected": false,
+   "note": "DEC-275: superseding, its card"
+  },
+  {
+   "key": "screen.docket.tip.superseding_why",
+   "en": "Every new edition is a docket entry; this is the case's first.",
+   "protected": false,
+   "note": "DEC-275: superseding, its card"
+  },
+  {
+   "key": "screen.docket.tip.draft",
+   "en": "a draft docket entry",
+   "protected": false,
+   "note": "DEC-275: an entry not yet posted, its card"
+  },
+  {
+   "key": "screen.docket.tip.draft_public",
+   "en": "public only once a member posts it, signed",
+   "protected": false,
+   "note": "DEC-275: an entry not yet posted, its card"
+  },
+  {
+   "key": "screen.docket.tip.draft_why",
+   "en": "Readers of the public case can't see this entry until it is posted.",
+   "protected": false,
+   "note": "DEC-275: an entry not yet posted, its card"
+  },
+  {
+   "key": "screen.document.tip.title",
+   "en": "{title}: {description}, captured by {name} from {site} on {date}.",
+   "protected": false,
+   "note": "DEC-275: the document's title, its explanation; {title} and {description} the document's own"
+  },
+  {
+   "key": "screen.document.tip.title_holds",
+   "en": "It holds {rule} the {project} project tests the city against.",
+   "protected": false,
+   "note": "DEC-275: the document's title, its explanation"
+  },
+  {
+   "key": "screen.document.tip.headed",
+   "en": "headed by the {office}, today {name}",
+   "protected": false,
+   "note": "DEC-275: a department's card"
+  },
+  {
+   "key": "screen.document.tip.issuer_why",
+   "en": "The department that issued this instruction is the one it binds.",
+   "protected": false,
+   "note": "DEC-275: a department's card"
+  },
+  {
+   "key": "screen.document.tip.ownwebsite",
+   "en": "{place}'s own website",
+   "protected": false,
+   "note": "DEC-275: a website's card"
+  },
+  {
+   "key": "screen.document.tip.publishes",
+   "en": "where the city publishes its policies",
+   "protected": false,
+   "note": "DEC-275: a website's card"
+  },
+  {
+   "key": "screen.document.tip.site_why",
+   "en": "Captured from the issuer's own site, so a reader can fetch the same page and compare its fingerprint.",
+   "protected": false,
+   "note": "DEC-275: a website's card"
+  },
+  {
+   "key": "screen.document.tip.version",
+   "en": "the version this copy holds",
+   "protected": false,
+   "note": "DEC-275: a document's version, its card"
+  },
+  {
+   "key": "screen.document.tip.version_inforce",
+   "en": "the version in force when captured on {date}",
+   "protected": false,
+   "note": "DEC-275: a document's version, its card"
+  },
+  {
+   "key": "screen.document.tip.version_why",
+   "en": "{period} repairs are tested against this version, so a later revision would not change past counts.",
+   "protected": false,
+   "note": "DEC-275: a document's version, its card"
+  },
+  {
+   "key": "screen.due-date.tip.title",
+   "en": "Due {date}: the day {office} must reply to your group's records request.",
+   "protected": false,
+   "note": "DEC-275: the due date's title, its explanation"
+  },
+  {
+   "key": "screen.due-date.tip.title_below",
+   "en": "The law it comes from and how the days were counted are below.",
+   "protected": false,
+   "note": "DEC-275: the due date's title, its explanation"
+  },
+  {
+   "key": "screen.due-date.tip.cob",
+   "en": "the end of the office's working day on the due date",
+   "protected": false,
+   "note": "DEC-275: close of business, its card"
+  },
+  {
+   "key": "screen.due-date.tip.cob_why",
+   "en": "A reply that arrives after then on {date} is late.",
+   "protected": false,
+   "note": "DEC-275: close of business, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.title",
+   "en": "Hand material to {group}: the page where anyone can give the group documents or information, without an account.",
+   "protected": false,
+   "note": "DEC-275: the doorbell's title, its explanation"
+  },
+  {
+   "key": "screen.doorbell.tip.title_says",
+   "en": "It says exactly what happens to what is sent.",
+   "protected": false,
+   "note": "DEC-275: the doorbell's title, its explanation"
+  },
+  {
+   "key": "screen.doorbell.tip.civicsmith",
+   "en": "The group's own Civicsmith",
+   "protected": false,
+   "note": "DEC-275: the group's own Civicsmith, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.civicsmith_runs",
+   "en": "runs on the group's own hosting account",
+   "protected": false,
+   "note": "DEC-275: the group's own Civicsmith, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.civicsmith_sees",
+   "en": "no other group sees it",
+   "protected": false,
+   "note": "DEC-275: the group's own Civicsmith, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.civicsmith_why",
+   "en": "Only this group's members can open what you send.",
+   "protected": false,
+   "note": "DEC-275: the group's own Civicsmith, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.member",
+   "en": "may use your material, or set it aside with a reason kept on the group's record",
+   "protected": false,
+   "note": "DEC-275: a member, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.member_why",
+   "en": "Nothing is published as it arrives: a member decides first, and anything used is checked like any other document.",
+   "protected": false,
+   "note": "DEC-275: a member, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.phrase",
+   "en": "any words you choose",
+   "protected": false,
+   "note": "DEC-275: a secret phrase, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.phrase_same",
+   "en": "a later delivery with the same phrase is marked as from the same sender",
+   "protected": false,
+   "note": "DEC-275: a secret phrase, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.phrase_names",
+   "en": "it never names you",
+   "protected": false,
+   "note": "DEC-275: a secret phrase, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.phrase_why",
+   "en": "Worth adding if you may send more: the group can weigh new material by how your earlier material held up.",
+   "protected": false,
+   "note": "DEC-275: a secret phrase, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.court",
+   "en": "a court can order the group to hand over what it holds, including what you send and when it arrived",
+   "protected": false,
+   "note": "DEC-275: a court's reach, its card"
+  },
+  {
+   "key": "screen.doorbell.tip.court_why",
+   "en": "Think about what your files and note could reveal about you before you send them.",
+   "protected": false,
+   "note": "DEC-275: a court's reach, its card"
+  },
+  {
+   "key": "screen.find-in.tip.notfollowed",
+   "en": "a person your group does not follow yet",
+   "protected": false,
+   "note": "DEC-275: a name search does not know, its card"
+  },
+  {
+   "key": "screen.find-in.tip.notfollowed_why",
+   "en": "Search does not know this name; the assistant's proposals, later, would.",
+   "protected": false,
+   "note": "DEC-275: a name search does not know, its card"
+  },
+  {
+   "key": "screen.finder.tip.portal",
+   "en": "{place}'s open-data portal",
+   "protected": false,
+   "note": "DEC-275: an open-data portal, its card"
+  },
+  {
+   "key": "screen.finder.tip.captured_where",
+   "en": "where {name} captured {what} on {date}",
+   "protected": false,
+   "note": "DEC-275: a source's card"
+  },
+  {
+   "key": "screen.finder.tip.portal_why",
+   "en": "A copy from the city's own portal holds up better than one found elsewhere.",
+   "protected": false,
+   "note": "DEC-275: an open-data portal, its card"
+  },
+  {
+   "key": "screen.finder.tip.archivecopy",
+   "en": "captured from a public web archive, not the city's own site",
+   "protected": false,
+   "note": "DEC-275: a public archive copy, its card"
+  },
+  {
+   "key": "screen.finder.tip.archivecopy_why",
+   "en": "Capture it from the city's site before relying on it; that copy would hold up better.",
+   "protected": false,
+   "note": "DEC-275: a public archive copy, its card"
+  },
+  {
+   "key": "screen.finder.tip.held_until",
+   "en": "held for you until {time} today",
+   "protected": false,
+   "note": "DEC-275: documents held together, their card"
+  },
+  {
+   "key": "screen.finder.tip.held_why",
+   "en": "A held set can be counted, cited or acted on as one; let it go when you are done.",
+   "protected": false,
+   "note": "DEC-275: documents held together, their card"
+  },
+  {
+   "key": "connection.graph.grade.edge",
+   "en": "Its letter is the step's connection grade: how easily someone else could check the link.",
+   "protected": false,
+   "note": "DEC-275: a line of the graph, its explanation's second line (A is easiest; D rests on a person's word.)"
+  },
+  {
+   "key": "connection.graph.lead.means",
+   "en": "A lead, not evidence: no finding rests on it until a source is attached.",
+   "protected": false,
+   "note": "DEC-275: a declared or suspected line of the graph, its explanation's second line"
+  },
+  {
+   "key": "screen.explore.tip.title",
+   "en": "Explore connections: chains from {from} to {to}, through {kinds}, as of {date}, each step cited and graded.",
+   "protected": false,
+   "note": "DEC-275: the screen's title, its explanation"
+  },
+  {
+   "key": "screen.explore.tip.graph",
+   "en": "The same connections as the chains below, drawn: {center} in the middle, what the record joins it to around it, and one ring further out.",
+   "protected": false,
+   "note": "DEC-275: the graph section, its explanation"
+  },
+  {
+   "key": "screen.explore.tip.graph_read",
+   "en": "Each line's color and pattern say the kind of connection, its word says the step, its letter the step's grade; the legend under the graph is always shown. Click anything to make it the center and follow on from it; the trail above walks back.",
+   "protected": false,
+   "note": "DEC-275: the graph section, its explanation"
+  },
+  {
+   "key": "screen.explore.tip.stepfrom",
+   "en": "a step from {source}",
+   "protected": false,
+   "note": "DEC-275: a step's card; {source} the record it is cited to"
+  },
+  {
+   "key": "screen.explore.tip.vote_why",
+   "en": "The step that ties {name} to the amendment, cited to the vote record.",
+   "protected": false,
+   "note": "DEC-275: a step's card"
+  },
+  {
+   "key": "screen.explore.tip.paid_why",
+   "en": "Ties the amendment to the {amount} paid; open the report to check the line.",
+   "protected": false,
+   "note": "DEC-275: a step's card"
+  },
+  {
+   "key": "screen.explore.tip.weakest",
+   "en": "a chain is graded by its weakest link",
+   "protected": false,
+   "note": "DEC-275: the weakest step, its card"
+  },
+  {
+   "key": "screen.explore.tip.weakest_here",
+   "en": "here {grade} on connection",
+   "protected": false,
+   "note": "DEC-275: the weakest step, its card"
+  },
+  {
+   "key": "screen.explore.tip.weakest_why",
+   "en": "No single strong step carries the chain; each must hold.",
+   "protected": false,
+   "note": "DEC-275: the weakest step, its card"
+  },
+  {
+   "key": "screen.explore.tip.declared",
+   "en": "a link someone stated with no source attached",
+   "protected": false,
+   "note": "DEC-275: a declared step, its card"
+  },
+  {
+   "key": "screen.explore.tip.declared_why",
+   "en": "Attaching a source could raise this step; until then the chain is a lead.",
+   "protected": false,
+   "note": "DEC-275: a declared step, its card"
+  },
+  {
+   "key": "screen.explore.tip.limit",
+   "en": "longer chains are not followed",
+   "protected": false,
+   "note": "DEC-275: the search's limit, its card"
+  },
+  {
+   "key": "screen.explore.tip.limit_why",
+   "en": "A link further out may exist; the search says it did not look rather than that there is none.",
+   "protected": false,
+   "note": "DEC-275: the search's limit, its card"
+  },
+  {
+   "key": "screen.home.tip.title",
+   "en": "{group}: your group, {description}, {n} members.",
+   "protected": false,
+   "note": "DEC-275: the group's name on its home, its explanation; {description} the group's own words"
+  },
+  {
+   "key": "screen.home.tip.focus",
+   "en": "Its focus: {focus}.",
+   "protected": false,
+   "note": "DEC-275: the group's name on its home, its explanation; {focus} the group's own words"
+  },
+  {
+   "key": "screen.home.tip.fulldialog",
+   "en": "Signing, sending and publishing still go through their full dialog, never one press here.",
+   "protected": false,
+   "note": "DEC-275: the section of what needs you, its explanation"
+  },
+  {
+   "key": "screen.home.tip.waits",
+   "en": "What waits on someone, or on an office: whose move it is, and when it is due.",
+   "protected": false,
+   "note": "DEC-275: the section of what waits on others, its explanation (offices too, so not screen.home.needsgroup.holds)"
+  },
+  {
+   "key": "screen.home.tip.dashboard",
+   "en": "The name opens the area's dashboard.",
+   "protected": false,
+   "note": "DEC-275: the areas section, its explanation"
+  },
+  {
+   "key": "act.promote.here.home",
+   "en": "Starts a project: one problem the group wants to get to the bottom of, with you as its owner. Questions, documents and plans gather under it.",
+   "protected": false,
+   "note": "DEC-275: Start a project on Home, which starts a project rather than opening a question"
+  },
+  {
+   "key": "ai.usage.meter.month_group",
+   "en": "This month on the group's key",
+   "protected": false,
+   "note": "DEC-275: a use meter's name, its explanation's first line"
+  },
+  {
+   "key": "screen.group-identity.tip.draft",
+   "en": "a label on words the assistant wrote",
+   "protected": false,
+   "note": "DEC-275: the assistant's draft label, its card"
+  },
+  {
+   "key": "screen.group-identity.tip.draft_stays",
+   "en": "stays until a member edits and keeps them",
+   "protected": false,
+   "note": "DEC-275: the assistant's draft label, its card"
+  },
+  {
+   "key": "screen.group-identity.tip.draft_why",
+   "en": "Nothing here is saved as the group's own until a member keeps it.",
+   "protected": false,
+   "note": "DEC-275: the assistant's draft label, its card"
+  },
+  {
+   "key": "screen.held.tip.vouching",
+   "en": "a member signs that a capture is what it says it is",
+   "protected": false,
+   "note": "DEC-275: vouching, its card"
+  },
+  {
+   "key": "screen.held.tip.vouching_until",
+   "en": "until then it is held and counts toward nothing",
+   "protected": false,
+   "note": "DEC-275: vouching, its card"
+  },
+  {
+   "key": "screen.held.tip.vouching_why",
+   "en": "Nothing on this list supports or cuts against any question until a member vouches for it.",
+   "protected": false,
+   "note": "DEC-275: vouching, its card"
+  },
+  {
+   "key": "screen.held.tip.photo",
+   "en": "The photo, as captured. Click to open it full size, in the safe view until it has been checked.",
+   "protected": false,
+   "note": "DEC-275: a held photo's thumbnail, its explanation"
+  },
+  {
+   "key": "screen.held.tip.crucial",
+   "en": "Crucial to a finding",
+   "protected": false,
+   "note": "DEC-275: a capture crucial to a finding, its card"
+  },
+  {
+   "key": "screen.held.tip.crucial_is",
+   "en": "a capture a finding would fall without",
+   "protected": false,
+   "note": "DEC-275: a capture crucial to a finding, its card"
+  },
+  {
+   "key": "screen.held.tip.crucial_vouched",
+   "en": "vouched for one at a time, never in a batch",
+   "protected": false,
+   "note": "DEC-275: a capture crucial to a finding, its card"
+  },
+  {
+   "key": "screen.held.tip.crucial_why",
+   "en": "{document} carries a finding in {project}, so it gets its own look.",
+   "protected": false,
+   "note": "DEC-275: a capture crucial to a finding, its card"
+  },
+  {
+   "key": "screen.imported.tip.title",
+   "en": "{title}: a case published by {group} ({edition}), imported by {name} on {date}.",
+   "protected": false,
+   "note": "DEC-275: the imported case's title, its explanation"
+  },
+  {
+   "key": "screen.imported.tip.title_counts",
+   "en": "Nothing in it counts for your group until a member accepts it.",
+   "protected": false,
+   "note": "DEC-275: the imported case's title, its explanation"
+  },
+  {
+   "key": "screen.imported.tip.publisher",
+   "en": "its work counts here only as far as a member accepts it",
+   "protected": false,
+   "note": "DEC-275: the publishing group, its card"
+  },
+  {
+   "key": "screen.imported.tip.publisher_why",
+   "en": "The publisher: if it corrects the case, a new edition appears on its docket.",
+   "protected": false,
+   "note": "DEC-275: the publishing group, its card"
+  },
+  {
+   "key": "screen.imported.tip.edition_of",
+   "en": "the published case of {group}",
+   "protected": false,
+   "note": "DEC-275: the imported edition, its card"
+  },
+  {
+   "key": "screen.imported.tip.edition",
+   "en": "the edition imported here",
+   "protected": false,
+   "note": "DEC-275: the imported edition, its card"
+  },
+  {
+   "key": "screen.imported.tip.edition_why",
+   "en": "The edition recreated here; a later edition from them would need recreating again.",
+   "protected": false,
+   "note": "DEC-275: the imported edition, its card"
+  },
+  {
+   "key": "screen.imported.tip.recreated",
+   "en": "repeated here from the publisher's documents and method, with the same result",
+   "protected": false,
+   "note": "DEC-275: Recreated, its card"
+  },
+  {
+   "key": "screen.imported.tip.recreated_why",
+   "en": "It still counts for your group only once a member accepts it, with a reason.",
+   "protected": false,
+   "note": "DEC-275: Recreated, its card"
+  },
+  {
+   "key": "screen.imported.tip.part",
+   "en": "some of the finding's support was repeated here from the publisher's documents and method, not all",
+   "protected": false,
+   "note": "DEC-275: Recreated in part, its card"
+  },
+  {
+   "key": "screen.imported.tip.part_why",
+   "en": "Accept only what recreated, and say why in the reason.",
+   "protected": false,
+   "note": "DEC-275: Recreated in part, its card"
+  },
+  {
+   "key": "screen.imported.tip.no",
+   "en": "repeating it here from the publisher's documents and method did not give their result",
+   "protected": false,
+   "note": "DEC-275: Did not recreate, its card"
+  },
+  {
+   "key": "screen.imported.tip.no_why",
+   "en": "Not a judgment that they are wrong: it just cannot count here.",
+   "protected": false,
+   "note": "DEC-275: Did not recreate, its card"
+  },
+  {
+   "key": "screen.inbox.tip.notyet",
+   "en": "not yet in the record",
+   "protected": false,
+   "note": "DEC-275: material handed in, its card"
+  },
+  {
+   "key": "screen.inbox.tip.notyet_why",
+   "en": "Nothing in them counts until a member moves them into the record and they are graded like any other document.",
+   "protected": false,
+   "note": "DEC-275: material handed in, its card"
+  },
+  {
+   "key": "screen.inbox.tip.phrase",
+   "en": "recognized by the secret phrase the sender added",
+   "protected": false,
+   "note": "DEC-275: the same knocker, its card"
+  },
+  {
+   "key": "screen.inbox.tip.earlier",
+   "en": "the sender also handed in material on {date}",
+   "protected": false,
+   "note": "DEC-275: the same knocker, its card"
+  },
+  {
+   "key": "screen.inbox.tip.earlier_why",
+   "en": "Still unnamed, but how the earlier material held up tells you something about this.",
+   "protected": false,
+   "note": "DEC-275: the same knocker, its card"
+  },
+  {
+   "key": "screen.inbox.tip.stands",
+   "en": "where this source stands",
+   "protected": false,
+   "note": "DEC-275: the source's step, its card"
+  },
+  {
+   "key": "screen.inbox.tip.stands_known",
+   "en": "recognized across deliveries, nothing more known",
+   "protected": false,
+   "note": "DEC-275: the source's step, its card"
+  },
+  {
+   "key": "screen.inbox.tip.stands_why",
+   "en": "Weigh the material by what can be checked in it, not by who might have sent it.",
+   "protected": false,
+   "note": "DEC-275: the source's step, its card"
+  },
+  {
+   "key": "screen.inbox.tip.partly",
+   "en": "a member records what is known of the source, such as role or access, without naming them",
+   "protected": false,
+   "note": "DEC-275: the step Partly known, its card"
+  },
+  {
+   "key": "screen.inbox.tip.partly_why",
+   "en": "Recording it helps weigh the material without exposing who sent it.",
+   "protected": false,
+   "note": "DEC-275: the step Partly known, its card"
+  },
+  {
+   "key": "shell.civicsmith.what",
+   "en": "free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.",
+   "protected": false,
+   "note": "DEC-275: Civicsmith's name or credit, its explanation"
+  },
+  {
+   "key": "screen.install.tip.account",
+   "en": "your group's Civicsmith and all its records live in it",
+   "protected": false,
+   "note": "DEC-275: the Cloudflare account, its card"
+  },
+  {
+   "key": "screen.install.tip.account_free",
+   "en": "the free plan is enough to start",
+   "protected": false,
+   "note": "DEC-275: the Cloudflare account, its card"
+  },
+  {
+   "key": "screen.install.tip.account_why",
+   "en": "Whoever can sign in to it controls everything, so use a group account rather than a personal login.",
+   "protected": false,
+   "note": "DEC-275: the Cloudflare account, its card"
+  },
+  {
+   "key": "screen.install.tip.workers_cost",
+   "en": "{amount} a month, with a payment method",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.install.tip.workers_later",
+   "en": "can be added later",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.install.tip.workers_why",
+   "en": "Needed only for recomputing members' spreadsheets and for members signing in with a Claude subscription.",
+   "protected": false,
+   "note": "DEC-275: Workers Paid, its card"
+  },
+  {
+   "key": "screen.install.tip.shortname",
+   "en": "your group's fixed label",
+   "protected": false,
+   "note": "DEC-275: the short name, its card"
+  },
+  {
+   "key": "screen.install.tip.shortname_where",
+   "en": "in every web address and beside every signature",
+   "protected": false,
+   "note": "DEC-275: the short name, its card"
+  },
+  {
+   "key": "screen.install.tip.shortname_why",
+   "en": "Chosen once, here: it can never change without installing again, so an unnamed group picks one that reveals nothing.",
+   "protected": false,
+   "note": "DEC-275: the short name, its card"
+  },
+  {
+   "key": "screen.install.tip.typed",
+   "en": "the short name typed here",
+   "protected": false,
+   "note": "DEC-275: the typed short name, its card"
+  },
+  {
+   "key": "screen.install.tip.typed_becomes",
+   "en": "becomes {address} and the label on every signature",
+   "protected": false,
+   "note": "DEC-275: the typed short name, its card"
+  },
+  {
+   "key": "screen.install.tip.typed_why",
+   "en": "This exact label is what every case your group signs will carry.",
+   "protected": false,
+   "note": "DEC-275: the typed short name, its card"
+  },
+  {
+   "key": "screen.install.tip.otp",
+   "en": "shown once, on this page",
+   "protected": false,
+   "note": "DEC-275: the one-time password, its card"
+  },
+  {
+   "key": "screen.install.tip.otp_spent",
+   "en": "spent when you claim the group in the next part",
+   "protected": false,
+   "note": "DEC-275: the one-time password, its card"
+  },
+  {
+   "key": "screen.install.tip.otp_why",
+   "en": "The only way to become the first administrator; if lost before claiming, only the Cloudflare account can set a new one.",
+   "protected": false,
+   "note": "DEC-275: the one-time password, its card"
+  },
+  {
+   "key": "screen.join.tip.title",
+   "en": "You're invited to {group}: {name}'s invitation for you to contribute to the group.",
+   "protected": false,
+   "note": "DEC-275: the invitation's title, its explanation"
+  },
+  {
+   "key": "screen.join.tip.handle",
+   "en": "the name the record shows on your work",
+   "protected": false,
+   "note": "DEC-275: a handle, its card"
+  },
+  {
+   "key": "screen.join.tip.handle_legal",
+   "en": "not your legal name unless you choose",
+   "protected": false,
+   "note": "DEC-275: a handle, its card"
+  },
+  {
+   "key": "screen.join.tip.handle_fixed",
+   "en": "chosen when you join and never changed",
+   "protected": false,
+   "note": "DEC-275: a handle, its card"
+  },
+  {
+   "key": "screen.join.tip.handle_why",
+   "en": "No other member can ever take it, so a handle always means the same person.",
+   "protected": false,
+   "note": "DEC-275: a handle, its card"
+  },
+  {
+   "key": "screen.join.tip.admins",
+   "en": "members who invite and manage members",
+   "protected": false,
+   "note": "DEC-275: administrators, their card"
+  },
+  {
+   "key": "screen.join.tip.admins_count",
+   "en": "{group} has one, {name}",
+   "protected": false,
+   "note": "DEC-275: administrators, their card"
+  },
+  {
+   "key": "screen.join.tip.admins_why",
+   "en": "They know who you are even under a pen name, and see the ties you declare.",
+   "protected": false,
+   "note": "DEC-275: administrators, their card"
+  },
+  {
+   "key": "screen.join.tip.contribute",
+   "en": "what this invitation lets you do",
+   "protected": false,
+   "note": "DEC-275: Contribute, its card"
+  },
+  {
+   "key": "screen.join.tip.contribute_is",
+   "en": "add to the record, open questions, take part in projects",
+   "protected": false,
+   "note": "DEC-275: Contribute, a capability, its card"
+  },
+  {
+   "key": "screen.join.tip.contribute_why",
+   "en": "It sets what you can do once you join; an administrator can change it later.",
+   "protected": false,
+   "note": "DEC-275: Contribute, its card"
+  },
+  {
+   "key": "screen.join.tip.expires",
+   "en": "an invitation lasts seven days",
+   "protected": false,
+   "note": "DEC-275: the invitation's expiry, its card"
+  },
+  {
+   "key": "screen.join.tip.expires_by",
+   "en": "this one created by {name} on {date}",
+   "protected": false,
+   "note": "DEC-275: the invitation's expiry, its card"
+  },
+  {
+   "key": "screen.join.tip.expires_why",
+   "en": "After that the link stops working and {name} must create a new one.",
+   "protected": false,
+   "note": "DEC-275: the invitation's expiry, its card"
+  },
+  {
+   "key": "screen.join.tip.penname",
+   "en": "a handle that is not the name people know you by",
+   "protected": false,
+   "note": "DEC-275: a pen name, its card"
+  },
+  {
+   "key": "screen.join.tip.penname_known",
+   "en": "the administrators still know who you are",
+   "protected": false,
+   "note": "DEC-275: a pen name, its card"
+  },
+  {
+   "key": "screen.join.tip.penname_why",
+   "en": "Shields you from pressure if a published case names your work.",
+   "protected": false,
+   "note": "DEC-275: a pen name, its card"
+  },
+  {
+   "key": "screen.matter.tip.title",
+   "en": "what your group is pursuing about this one problem, judged {determination} with {rule} and {status}, from the first letter to the outcome.",
+   "protected": false,
+   "note": "DEC-275: the matter's title, its explanation, after the matter's own name"
+  },
+  {
+   "key": "screen.matter.tip.noncompliant",
+   "en": "the act did not meet the rule it is measured against",
+   "protected": false,
+   "note": "DEC-275: Noncompliant, its card"
+  },
+  {
+   "key": "screen.matter.tip.noncompliant_by",
+   "en": "recorded by a member, with a reason",
+   "protected": false,
+   "note": "DEC-275: Noncompliant, its card"
+  },
+  {
+   "key": "screen.matter.tip.noncompliant_why",
+   "en": "What the group has determined from its evidence, not what a court has decided.",
+   "protected": false,
+   "note": "DEC-275: Noncompliant, its card"
+  },
+  {
+   "key": "screen.matter.tip.established",
+   "en": "the determination is settled on the record",
+   "protected": false,
+   "note": "DEC-275: Established, its card"
+  },
+  {
+   "key": "screen.matter.tip.established_bar",
+   "en": "its finding meets the project's bar, {bar}",
+   "protected": false,
+   "note": "DEC-275: Established, its card"
+  },
+  {
+   "key": "screen.matter.tip.established_why",
+   "en": "Strong enough to act on: escalating does not wait for more evidence.",
+   "protected": false,
+   "note": "DEC-275: Established, its card"
+  },
+  {
+   "key": "screen.matter.tip.clock",
+   "en": "a deadline the city must answer by starts running, tracked in your queue",
+   "protected": false,
+   "note": "DEC-275: the stage Clock starts, its card"
+  },
+  {
+   "key": "screen.matter.tip.clock_why",
+   "en": "Advancing to it is the next act offered here; it normally follows the reply due {date}, or its absence.",
+   "protected": false,
+   "note": "DEC-275: the stage Clock starts, its card"
+  },
+  {
+   "key": "screen.members.tip.hosting",
+   "en": "the Cloudflare account the group's Civicsmith runs in",
+   "protected": false,
+   "note": "DEC-275: the hosting account, its card"
+  },
+  {
+   "key": "screen.members.tip.hosting_holder",
+   "en": "holder recorded at setup: {name}",
+   "protected": false,
+   "note": "DEC-275: the hosting account, its card"
+  },
+  {
+   "key": "screen.members.tip.hosting_why",
+   "en": "Whoever signs in to it controls everything; with one administrator, the group depends on {name} and on whoever holds it.",
+   "protected": false,
+   "note": "DEC-275: the hosting account, its card"
+  },
+  {
+   "key": "screen.members.tip.cover_name",
+   "en": "cover name {cover}",
+   "protected": false,
+   "note": "DEC-275: a member's card"
+  },
+  {
+   "key": "screen.members.tip.onlyadmin",
+   "en": "The group's only administrator: the group depends on her and the hosting account.",
+   "protected": false,
+   "note": "DEC-275: the only administrator's card"
+  },
+  {
+   "key": "screen.members.tip.cover",
+   "en": "how the group knows a member, beside their handle",
+   "protected": false,
+   "note": "DEC-275: a cover, its card"
+  },
+  {
+   "key": "screen.members.tip.cover_legal",
+   "en": "not a legal name",
+   "protected": false,
+   "note": "DEC-275: a cover, its card"
+  },
+  {
+   "key": "screen.members.tip.cover_when",
+   "en": "recorded when they are invited",
+   "protected": false,
+   "note": "DEC-275: a cover, its card"
+  },
+  {
+   "key": "screen.members.tip.cover_why",
+   "en": "Lets administrators know who each handle is without the record holding legal names.",
+   "protected": false,
+   "note": "DEC-275: a cover, its card"
+  },
+  {
+   "key": "screen.members.tip.contribute_why",
+   "en": "Every member here holds it; it is what an invitation grants by default.",
+   "protected": false,
+   "note": "DEC-275: Contribute, a capability, its card"
+  },
+  {
+   "key": "screen.members.tip.administer",
+   "en": "invite and remove members, hold the group's key, change the group's settings",
+   "protected": false,
+   "note": "DEC-275: Administer, a capability, its card"
+  },
+  {
+   "key": "screen.members.tip.administer_why",
+   "en": "Only {name} holds it, so the group depends on {name_2} alone.",
+   "protected": false,
+   "note": "DEC-275: Administer, a capability, its card"
+  },
+  {
+   "key": "screen.members.tip.owner",
+   "en": "owner of {project}",
+   "protected": false,
+   "note": "DEC-275: a member's card"
+  },
+  {
+   "key": "screen.members.tip.owner_why",
+   "en": "Signs the group's cases for that project.",
+   "protected": false,
+   "note": "DEC-275: a project owner's card"
+  },
+  {
+   "key": "screen.members.tip.workson",
+   "en": "works on {project}",
+   "protected": false,
+   "note": "DEC-275: a member's card"
+  },
+  {
+   "key": "screen.members.tip.waiting_why",
+   "en": "Has a question waiting on a held document.",
+   "protected": false,
+   "note": "DEC-275: a member's card"
+  },
+  {
+   "key": "screen.members.tip.notconfirmed",
+   "en": "not yet confirmed here",
+   "protected": false,
+   "note": "DEC-275: declared expertise, its card"
+  },
+  {
+   "key": "screen.members.tip.notconfirmed_why",
+   "en": "Confirming it records that an administrator checked it; members ask her to check calculations either way.",
+   "protected": false,
+   "note": "DEC-275: declared expertise, its card"
+  },
+  {
+   "key": "screen.members.tip.story_why",
+   "en": "Runs the story that cites {edition}.",
+   "protected": false,
+   "note": "DEC-275: a reporter member's card"
+  },
+  {
+   "key": "screen.members.tip.invited",
+   "en": "invited to contribute as {handle}",
+   "protected": false,
+   "note": "DEC-275: an invitation's card"
+  },
+  {
+   "key": "screen.members.tip.invited_link",
+   "en": "link works once, for seven days",
+   "protected": false,
+   "note": "DEC-275: an invitation's card"
+  },
+  {
+   "key": "screen.members.tip.invited_why",
+   "en": "Withdraw it if it went to the wrong person; until it is used, anyone holding the link can join.",
+   "protected": false,
+   "note": "DEC-275: an invitation's card"
   }
  ],
  "rewrite": {
