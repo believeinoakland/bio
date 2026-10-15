@@ -808,3 +808,6 @@ U274 acted on: 8e6ba67cf5 merged into tranche/T49 (no conflict); setup-words' ro
 
 ## B231 · NOTICE · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 K3407 (Bob's, 2026-10-15): "Step 12: A". Out-of-layer jobs in T49: agent-worker R90 (compose's facts carry each held document's record id) and machinery-producers R13 (capture-completed-unattended read by DEC-272's keys, starter by handle). Folded in their requirements; nothing owed to the design.
+
+## B232 · QUESTION · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+N1140 (K3408): machinery-producers' second capture-completed-unattended producer (a capture made at a member's request, #conditionsCaptureRequested) still composes English with raw ids ("at the request of member:<id>", the run id, the paying credential). It needs words by key; proposed queue.capture-completed-unattended.request.summary and .request.detail, {member} the requester's handle (or .who), {title} the document's title, the run and credential left out of the member's sentence. Please mint the keys (or say which existing ones apply); the job runs in T50.
