@@ -81,3 +81,7 @@ Merged the tranche (every L11 job but control-plane) and re-walked; four flaws o
 ## J5 · REPORT
 
 B7 (K3383): re-walked on tranche/T49 @ ceca2ea2fd, 103 steps, 10 failures. Steps 1–6 now pass (claim by handle, project, question, subscription sign-in, capture by address and upload, held, vouched), and R7. Open failures and owners: (1) the document page draws none of the document's words: op=reading for the captured HTML notice carries no passages/units/text — screens-inquiry R32 or the reading's owner (extraction/reading-pipeline); (2) versionchain refuses VERSION_CHAIN_NO_SUCH_VERSION inside a 200 for the copy just captured — provenance (index.mjs:1318). R10 and 7 of R13's pairs follow from R9 stopping at step 7. Details: record, 'After B7'.
+
+## J6 · COMPLETE
+
+T49-32 complete at B7: built, re-walked, owners named in J5. I re-walk and shape the fake model past step 9 at your next CHANGE.
