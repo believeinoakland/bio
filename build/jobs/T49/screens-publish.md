@@ -48,3 +48,9 @@ Size (session_016LMFaLD8DrK4YxdZxPyQuM): test runs 14, module lines 1613
 COMPLETE again (re B6). Merged tranche/T49 (interface-shell, admission); no local stand-in of the shell or its registry remains. On the real shell: `bio-plane/test/m/screens-publish/` 82 of 82 pass (the five "Nothing is here" tests and every page now pass); control-plane t46-app 5/5, plane t47 9/9, interface-shell frame 21/21. One change: `ceremony.test.mjs` R4 asserts the design's `mk-image`. Checks: format 0 failures; architecture (18 files, 0 not judged) 0 failures; coverage 24 of 24 ids named, 0 failures; ownership 0 failures. Items (1), (4), (6), (7) of J2 stand as BOB answered them in B5.
 
 Size (session_016LMFaLD8DrK4YxdZxPyQuM): test runs 18, module lines 1613
+
+## J4 · COMPLETE
+
+COMPLETE again (re B7). Merged tranche/T49 (DEC-263–DEC-267). `screen.ceremony.photo.facts` is drawn without a day, and `photo.facts.dated` when a photo carries `taken_at` (tested both). A `verify` hit that no finding of the edition rests on draws `published.check.elsewhere`; a hash never published still draws `published.check.no` (tested). Module tests 83 of 83; control-plane t46-app, plane t47, interface-shell frame all pass. Checks: format, architecture, coverage (24 of 24), ownership: 0 failures.
+
+Size (session_016LMFaLD8DrK4YxdZxPyQuM): test runs 21, module lines 1617
