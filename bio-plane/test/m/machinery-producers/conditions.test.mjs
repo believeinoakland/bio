@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../../../src/record-grammar/actors.mjs";
 
 const HOST = "www.example.gov";
@@ -145,4 +146,40 @@ test("R3 (DEC-95 (1); K1105): each capture-completed-unattended item carries in 
   assert.ok(dave["CONDITION::capture-completed-unattended::CR-1"].detail.endsWith(ACQUIRE_GRADE_NOTE));
   /* the note is capture's: what op=gradenote answers for a held, seen capture (its R76) */
   assert.equal(typeof ACQUIRE_GRADE_NOTE, "string"); assert.ok(ACQUIRE_GRADE_NOTE.length > 20);
+});
+
+test("R13 (T49; N1138; DEC-272; K3366): capture-completed-unattended reads its summary and detail by key, the starter by handle, the title by its own, never an id", () => {
+  const { w } = corpus();
+  const add = (bundle, key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json)
+    VALUES (?, ?, 'revision', 'b', ?, ?, '[]')`, bundle, key, author, created);
+  const starts = (bundle, author, title) => {
+    if (bundle !== "INFO-88") { w.bundle(bundle, "information", { title }); w.cite("PRJ-1", bundle); }
+    add(bundle, `${bundle}-1`, author, "2026-07-31T12:00:00Z");
+    add(bundle, `${bundle}-2`, `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
+  };
+  w.run(`UPDATE members SET handle=? WHERE member_id=?`, "Carol Ruiz", "carol");
+  w.run(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, "Dana Founder", iso(NOW));
+  starts("INFO-88", "carol", "Controller memo");
+  starts("INFO-77", "admin", "");
+  starts("INFO-66", "dave", "Board packet");
+  const items = byId(w.read("carol"));
+  const fills = (member, title) => ({ member, title });
+  const k = (name) => `queue.capture-completed-unattended.${name}`;
+  assert.ok(hasWord(k("summary")) && hasWord(k("detail")) && hasWord(k("who")), "the keys this item reads are in the word list");
+
+  const held = items[`CONDITION::capture-completed-unattended::INFO-88`];
+  assert.equal(held.summary, word(k("summary"), fills("Carol Ruiz", "Controller memo")), "the starter's handle and the title, from the key");
+  assert.ok(held.detail.startsWith(word(k("detail"), fills("Carol Ruiz", "Controller memo"))), "the detail reads its key, then the grade note");
+
+  const founder = items[`CONDITION::capture-completed-unattended::INFO-77`];
+  assert.equal(founder.summary, word(k("summary"), fills("Dana Founder", word("screen.held.untitled"))),
+    "the founder by her held handle; an untitled document by its own untitled word, never the bundle id");
+
+  const nameless = items[`CONDITION::capture-completed-unattended::INFO-66`];
+  assert.equal(nameless.summary, word(k("summary"), fills(word(k("who")), "Board packet")),
+    "a starter with no handle held is named by the who word, never by id");
+
+  for (const it of [held, founder, nameless])
+    for (const s of [it.summary, it.detail])
+      assert.ok(!/carol|admin|dave|token:|INFO-|member:/.test(s), `no id in: ${s}`);
 });
