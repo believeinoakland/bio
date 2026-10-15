@@ -1,0 +1,12 @@
+# BOB to notice-producers (T49)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T49), "Out of layer": **T49-36 · notice-producers**. Model: claude-haiku-5-5 (wording only).
+Your requirements: `build/requirements/notice-producers.md` (read whole); R23 is marked *(not yet met: T49)* and is yours to meet.
+BOB's notes (N1133, K3393 audit item 6, `build/plan/audit-T49-reds.md`): `NOTICE_WORDS` copies sentences that lag `words.json` ("Possibly overdue" is now "Its date may have passed", "Overdue" is now "Past its date"). Read every member-facing sentence through `setup-words`' `word(key, vars)` (its R11; `modules.json` now gives you the edge) and delete the copies; fill exactly each key's placeholders; tests assert keys with `hasWord`, never a sentence's text (K3366). Your five reds (tests `duties` (2), `investigation`, `words` (2)) clear with this. A key `words.json` lacks is a REPORT to BOB, never inline English.
+Reading set (mechanics §17, K3271): read your requirements whole, your entry, your layer contract, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. The used-public figure is an upper bound (whole public parts); if what your entry touches still exceeds what you can read, have helpers in your session read it in full and write you a digest citing each section (K2032). State in your record how the set was read.
+Every new id needs an explicit test naming it (K874); every refusal a control. Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here.
+Out of layer (Bob's approval, K3398): you branch from tranche/T49 as it stands, with every later layer merged; also run the L11 screens' tests that read your module (screens-*, journey-check's local arm) before COMPLETE.
