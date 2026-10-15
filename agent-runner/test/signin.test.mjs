@@ -2,9 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { stubSdk, success, request, startRunner, conversation, filesUnder, until } from './helpers.mjs';
-import { TOKEN, GOOD_CODE, ADDRESS } from './stubs/claude-values.mjs';
+import { TOKEN, GOOD_CODE, LONG_CODE, ADDRESS } from './stubs/claude-values.mjs';
 import { readManifest } from '../src/manifest.mjs';
-import { SETUP_ARGS, COLUMNS, anthropicAddress, codeOk, tokenIn, addressIn } from '../src/signin.mjs';
+import { spawn as nodeSpawn } from 'node:child_process';
+import { signinOf, SETUP_ARGS, COLUMNS, anthropicAddress, codeOk, tokenIn, addressIn } from '../src/signin.mjs';
 import { screen } from '../src/screen.mjs';
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
@@ -152,6 +153,29 @@ test('R18 R27 POST /signin/code types the code once, ended by a carriage return,
   assert.equal(addressIn(`\x1b[2GUse\x1b[6Gthe url below to sign in\r\n\x1b]8;id=a;${ADDRESS}\x07${ADDRESS}\x1b]8;;\x07\r\nPaste code here if prompted >`), ADDRESS);
   assert.equal(addressIn(`Use the url below to sign in\r\n${ADDRESS}\r\n`), null, 'not before its prompt is up');
   assert.deepEqual(tokenIn(`Your OAuth token (valid for 30 days):\r\n\x1b[33m${TOKEN}\x1b[39m\r\nStore this token securely.`), { token: TOKEN, valid_for: '30 days' });
+});
+
+test('R18 the code and its line end arrive as two writes, the line end after the code; a code of real length is delivered exactly and signs in', async () => {
+  const r = await runner();
+  try {
+    const writes = [];
+    const spawn = (...a) => {
+      const proc = nodeSpawn(...a), write = proc.stdin.write.bind(proc.stdin);
+      proc.stdin.write = (d, ...rest) => { writes.push({ d: String(d), at: Date.now() }); return write(d, ...rest); };
+      return proc;
+    };
+    for (const code of [GOOD_CODE, LONG_CODE]) {
+      writes.length = 0;
+      const s = signinOf({ root: r.signinRoot, binary: r.claude.binary, spawn });
+      assert.ok(LONG_CODE.length >= 120 && LONG_CODE.includes('#'));
+      assert.equal((await s.start(M)).status, 200);
+      const a = await s.code(M, code);
+      assert.equal(a.status, 200, `${code.length} characters signs in`);
+      assert.equal(a.body.token, TOKEN);
+      assert.deepEqual(writes.map((w) => w.d), [code, '\r'], 'the code exactly as given, then the line end as its own write');
+      assert.ok(writes[1].at > writes[0].at, 'the line end after the code');
+    }
+  } finally { await r.stop(); }
 });
 
 test('R27 R18 a refused code, no token in time, or a token of another shape answers SIGNIN_REFUSED with no token', async () => {
