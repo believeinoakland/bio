@@ -49,7 +49,7 @@ test("R6: the answer is drawn as machine work: summary, sentences each with its 
   assert.ok(mw.querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "903 rows"));
   assert.ok(inOrder(text(p, mw), [word("screen.answers.holdings"), "903 rows", word("screen.answers.looks"), word("screen.answers.level.document"), word("screen.answers.state.LOOKED_FOUND"),
     word("screen.answers.level.internet"), word("screen.answers.state.NOT_LOOKED"), word("screen.answers.level.meaning"), "ODD"]));
-  assert.ok(text(p, mw).includes(word("screen.answers.withheld", { n: "1" })));
+  assert.ok(text(p, mw).includes(word("screen.answers.withheld.one")), "R25: one sentence, the singular key");
   assert.ok(text(p, mw).endsWith(word("screen.answers.machine")));
   assert.ok(!text(p, mw).includes(word("ai.label.untested")), "control: no label without untested");
 });
