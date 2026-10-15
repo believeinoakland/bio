@@ -143,6 +143,15 @@ test("R3 control: Create your group opens exactly INSTALLER_ADDRESS", async () =
   assert.equal(create[0].attrs.target, undefined);
 });
 
+/* R4 (DEC-255, DEC-270): the listing rule, beside its sentence, as a details element: its heading and Bob's text, whole. */
+function listingRule(t) {
+  const d = find(mainOf(t), (e) => e.tag === "details");
+  assert.equal(d.length, 1);
+  assert.equal(norm(textOf(find(d[0], (e) => e.tag === "summary")[0])), norm(word("site.groups.rule.head")));
+  assert.equal(norm(textOf(find(d[0], (e) => e.tag === "p")[0])), norm(word("site.groups.rule.text")));
+  assert.ok(t.indexOf(w("site.groups.rule")) < t.indexOf("<details"));
+}
+
 test("R4: two listed groups draw two rows, in order, each with its name, place, focus, cases and Visit", async () => {
   const t = await sameAsDesign("/groups", "c");
   const rows = find(mainOf(t), (e) => cls(e).includes("cs-row"));
@@ -152,6 +161,7 @@ test("R4: two listed groups draw two rows, in order, each with its name, place, 
   assert.equal(b, `${GROUP_B.name} · ${GROUP_B.place}${GROUP_B.focus} · ${norm(word("screen.site.groups.case.one"))}${word("screen.site.groups.visit")}`);
   assert.deepEqual(rows.map((r) => find(r, (e) => e.tag === "a")[0].attrs.href), [GROUP_A.address, GROUP_B.address]);
   assert.ok(t.indexOf(w("screen.site.groups.listing")) > t.lastIndexOf("cs-row"));
+  listingRule(t);
   /* more than one case */
   const many = { ...GROUP_A, cases: 3, editions: 5 };
   const { t: t3 } = await html("/groups", { ...ENV, LISTED_GROUPS: [many, { ...GROUP_B, cases: 2 }] });
@@ -171,6 +181,7 @@ test("R4 control: an empty list draws the empty state, no row and no made-up gro
     for (const g of designGroups) assert.ok(!t.includes(esc(g)), g);
     for (const k of ["screen.site.groups.lede", "screen.site.groups.none", "site.groups.rule"]) assert.ok(t.includes(w(k)), k);
     assert.ok(!t.includes(w("screen.site.groups.visit")));
+    listingRule(t);
   }
   for (const bad of ["{", "{}", [{ ...GROUP_A, address: "http://a.example/" }], [{ ...GROUP_A, cases: 0 }], [{ ...GROUP_A, name: "" }], [{ ...GROUP_A, editions: 2, cases: 3 }]]) {
     assert.equal((await get("/groups", { ...ENV, LISTED_GROUPS: bad })).status, 500, JSON.stringify(bad));
@@ -359,6 +370,7 @@ test("R11 control: no place is drawn but the profiles' and the listed groups' ow
 
 test("R12: every key the site reads exists, and what it draws is word(key, vars)", async () => {
   for (const k of Object.keys(KEYS)) assert.ok(hasWord(k), k);
+  assert.ok(Object.keys(KEYS).includes("site.groups.rule.text") && Object.keys(KEYS).includes("site.groups.rule.head"));
   const drawn = async (path, env = ENV) => norm(textOf(mainOf((await html(path, env)).t)));
   const home = await drawn("/");
   for (const k of ["screen.site.hold", "screen.site.uses.head", "screen.site.not.legal", "screen.site.member.where", "screen.site.uses.gather"]) assert.ok(home.includes(norm(word(k))), k);
