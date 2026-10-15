@@ -36,6 +36,7 @@
 - [L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)](#l-access-and-language-the-standard-every-screen-meets-bob-2026-10-01-dec-99)
 - [W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)](#w-working-and-published-the-fence-a-member-can-always-see-bob-2026-10-01-dec-106)
 - [V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)](#v-the-visual-language-one-look-for-every-screen-and-the-published-case-the-design-session-2026-10-06-dec-138)
+  - RULED 2026-10-15 by Bob (DEC-279): setup written for a newly made administrator; parts and choices
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
 ---
@@ -1000,6 +1001,25 @@ judges it when no exploring limit is set, so a member is refused exploring only 
 names who enabled it only to the paying account's owners; every other member sees "Machine work · found while exploring". Every fixed
 word a refusal or queue item fills in (the period, when it works again, the use, the account, the month) has its own key, and each
 queue item from steps, milestones, quiet projects and left-out review comments has a summary and a detail.
+### RULED 2026-10-15 by Bob (DEC-279): setup written for a newly made administrator; parts and choices
+
+Bob, of the live setup screen (K3446, B240): the setup *"doesn't always give enough introduction to the information it's asking
+for"*, its words were unclear to *"a newly minted group administrator"*, the group's name had *"no visual acknowledgement"*,
+keeping AI out should make *"everything else related to AI … collapse and disappear"*, sections should be *"visually delineated,
+and be collapsable/expandable based on choices being made"*, with mouseovers, for *"best practices, minimum visible complexity,
+welcoming, powerful, exciting"*. Of the redraw: *"much improved"*.
+
+- **A task in parts** (`.cs-part`): a numbered card that opens and closes; its head says in one line what the part is for and
+  whether it is needed first, done or optional; a done part's number becomes a check. Before the claim, setup shows only the claim,
+  with the parts to come shown closed beneath it, so the newcomer sees the whole task before being asked anything.
+- **A choice that says what it means** (`.cs-choice`): each option carries one line on what choosing it does. A choice opens only
+  what it needs: keeping AI out hides everything else about AI; "No" to a website hides its address; the group's API key shows
+  only if the group pays.
+- **Acknowledgement where the eye is**: a save is confirmed beside the field ("Saved. Your group is now called …"), and the
+  group's name replaces its short name at the head of the page.
+- **Explanation by layers**: one short visible line per field; the rest behind dotted words (hover, focus or tap).
+- Every other long task follows this pattern (the assistant's settings next, B241).
+
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

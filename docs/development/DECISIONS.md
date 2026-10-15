@@ -4348,6 +4348,20 @@ decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-reads.src.mjs` (DEC-278), `screens/words-reads.json`.
 owed: (BOB) admission R28 and screens-entry R21 compare against the new list at the next MERGE, or read their own keys against `hasWord` (N1146), as BOB chooses. (design) none.
 
+### DEC-279 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01HcUUthHRZ9j5aP76mbxgqB; the development process also runs on his primary account since K1428) (BOB's B240; K3446)
+for: bob-session
+question: Bob found the live setup screen unclear to a newly made administrator, with no acknowledgement of the group's name, AI questions shown even when AI is kept out, and a layout unlike the other screens. How should setup be written and laid out?
+why it is Bob's: UX (P17); his direction, explored and drawn before recording (§2).
+provisional: the redraw on the Screens page (version 46 on).
+alternative: keep one long page and only reword it; or a wizard of one question per screen (more clicks, less overview).
+recommendation: as drawn: setup in eight numbered parts that open and close; the claim alone first, the rest shown closed; choices that open only what they need; acknowledgement beside each save; long explanations behind dotted words; 49 setup words reworded, 36 minted, 10 retired.
+reversal cost: medium: screens-entry's setup module redraws its sections (N1152); the words are keyed either way.
+response: Bob, 2026-10-15: "The assistant settings page is much improved, as is the group setup page."
+decided: 2026-10-15 · Bob
+reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §V (RULED 2026-10-15); `screens/mock-screens.js` (`SCR.setup`, `part`, `pick`), `visual-language/components.css` (`.cs-part`, `.cs-choice`), `screens/words-drawn.src.py` (the DEC-279 block), `screens/words-t49.src.py` (RETIRED), `screens/registry.src.py` (the name), `screens/library.src.py` (the wizard's steps), `screens/mock-shell.js` (a wizard opens the part it points into).
+owed: (BOB, N1152, screens-entry for T50) setup renders its parts as `.cs-part` (the claim alone before claiming, with the parts to come closed beneath it; once claimed, each part open or closed, its state needed first, done or optional) in place of the steps list; the choices as `.cs-choice`: the assistant's use (yes; no = `aikeepaway` on, everything else about AI hidden), who pays (members' own; the group's key, opening the key, switch and limit), the website (no; yes, opening the address); `name.now` drawn beside the name with the accepted mark and the group's name in the head; the new keys (`screen.setup.after`, `.coming`, `.state.*`, `.part.*`, `.claim.intro`, `.otp.tip`, `.handle.tip`, `.codes.intro`, `.name.tip`, `.site.*`, `.places.intro`, `.place.other`, `.ai.*`, `.pay.*`, `.key.tip`, `.hosting.help`) read; `screen.setup.people.what` drawn in the privacy part; the steps keys kept until the module stops reading them. (design) none.
+
 ### DEC-280 · answered
 raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01HcUUthHRZ9j5aP76mbxgqB; the development process also runs on his primary account since K1428) (Bob's feedback from the live site, biosmoke8, in the session)
 for: bob-session
