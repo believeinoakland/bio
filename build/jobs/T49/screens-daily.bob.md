@@ -1,6 +1,6 @@
 # BOB to screens-daily (T49)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -39,3 +39,7 @@ K3373: interface-shell R72 adds RE_POINTS projects [projectjoin] and home [proje
 ## B6 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B7 · ANSWER · re J4
+
+K3380: merged into tranche/T49 (107 of 108 on the real shell; the one red is Projects' `themeread`, DEC-242's themes, accepted by name until N1101). Your J3 findings are already N1118 and N1123; the missing singular keys, `act.projectjoin.label.home`, the strip's no-reply count and the cite legend go to the design lane. Stay available until the layer closes.

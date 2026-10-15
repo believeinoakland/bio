@@ -18,6 +18,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { deployedModesFor, draftKindDeployed, draftMayRead, partRefusal, AI_RUN_OPEN_CHECKS, ASK_MODE,
          DRAFT_MODE } from "../run-rules/index.mjs";
 
@@ -53,8 +54,7 @@ function presentedToken(req, url, body) {
 export async function askOp({ req, url, env, viaSession, sessMember, grantMember, trace = null, memberRef = null }) {
   const member = viaSession && sessMember ? `member:${idOf(sessMember)}` : typeof grantMember === "string" && grantMember ? grantMember : null;
   if (!member)
-    return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "an ask is a member's own act, from their own session or "
-      + "the grant minted at it. Nothing was asked." }, 403);
+    return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: word("refusal.ASK_NOT_A_MEMBER") }, 403);
   if (req.method !== "POST") return json({ ok: false, reason: "METHOD_NOT_ALLOWED", detail: "an ask is a POST" }, 405);
   let body;
   try { body = await req.json(); } catch { return json({ ok: false, reason: "BAD_JSON", detail: "the ask's body is not JSON" }, 400); }
@@ -80,8 +80,7 @@ export const ACTION_DRAFT_OPS = Object.freeze(["infractiondraft", "bearingdraft"
  *  The grant and the read log are never answered. */
 export async function actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer, trace = null, memberRef = null }) {
   if (!viaSession || !sessMember)
-    return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "a draft is a member's own act, from their own session. "
-      + "Nothing was drafted." }, 403);
+    return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: word("refusal.ASK_NOT_A_MEMBER") }, 403);
   if (req.method !== "POST") return json({ ok: false, reason: "METHOD_NOT_ALLOWED", detail: "a draft is a POST" }, 405);
   let body;
   try { body = await req.json(); } catch { return json({ ok: false, reason: "BAD_JSON", detail: "the draft's body is not JSON" }, 400); }
@@ -97,7 +96,7 @@ export async function actionDraftOp({ req, url, env, op, viaSession, sessMember,
     drafted = await res.json();
   } catch { drafted = null; }
   if (!drafted || typeof drafted !== "object")
-    return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the draft did not come back. Nothing was kept." }, 502);
+    return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: word("refusal.AGENT_WORKER_SILENT") }, 502);
   const { grant: _g, read: _r, ...given } = drafted;
   if (given.ok !== true) return json(given, status >= 400 ? status : 502);
   try {
@@ -271,7 +270,7 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   if (gate.refusal) return json(gate.refusal, 403);
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
+    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("ai.refused.notdeployed") }, 503);
   /* K1690, N765 (instance-setup R55; credentials R35; K231, K2200 (3)): while the group keeps its material away from
      every assistant, or that setting cannot be read, every ask is refused as instance-setup's `assistantGate()` answers
      it, `credentials`' `AI_KEPT_AWAY` row as given, before any grant is minted or any account read. */
@@ -301,7 +300,7 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   try {
     res = await w.fetch("https://agent-worker/ask", { method: "POST", headers: doorHeaders({ trace, memberRef }), body: out });
   } catch {
-    return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, 502);
+    return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: word("refusal.AGENT_WORKER_SILENT") }, 502);
   }
   /* R47: handed back unchanged, a refusal of the sign-in's token dropping it */
   return watched(res, heard);
@@ -354,7 +353,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   untested = gate.untested;
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
+    return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("ai.refused.notdeployed") });
   const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx), acc = aiAccountsOf(ctx);   /* R53: the grant is credentials'; the account reads are ai-accounts' */
@@ -369,14 +368,14 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     if (!got.ok) return out(got.status, got.answer);
     const lang = instanceSetupOf(ctx, env).readingLanguage({ member: who, ...(said(language) ? { language } : {}) });
     if (!lang || lang.ok === false || !said(lang.language)) return out(409, lang || { ok: false, reason: "UNDETERMINED",
-      detail: "the language this passage is read in could not be read. Nothing was translated." });
+      detail: word("translate.undetermined.language") });
     const original = { kind: subject.kind, id: subject.id, text: got.text };
     if (got.text.length > READ_PASSAGE_MAX)
       return out(413, { ok: false, reason: "PASSAGE_TOO_LONG", code: "PASSAGE_TOO_LONG", max: READ_PASSAGE_MAX, original,
-        detail: `a passage of more than ${READ_PASSAGE_MAX} characters is not translated here. Nothing was translated.` });
+        detail: word("refusal.PASSAGE_TOO_LONG", { max: READ_PASSAGE_MAX }) });
     let away;
     try { away = got.project ? acc.aiKeptAway({ project: got.project, use: "draft" }) : null; }
-    catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this subject's project keeps its material away could not be read. Nothing was translated." }; }
+    catch { away = { ok: false, reason: "UNDETERMINED", detail: word("ai.keepaway.unread") }; }
     if (away) return out(403, away);
     reading = { language: lang.language, from_language: said(lang.from_language) ? lang.from_language : null, original };
   }
@@ -388,11 +387,11 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     if (typeof read !== "function" || !said(who)) return out(400, badTask("the plan this draft is about cannot be read here"));
     let p;
     try { p = read("plan", { id: plan, viewer: who }); } catch { p = null; }
-    if (!p || typeof p !== "object") p = { ok: false, reason: "UNDETERMINED", detail: "the plan could not be read. Nothing was drafted." };
+    if (!p || typeof p !== "object") p = { ok: false, reason: "UNDETERMINED", detail: word("ai.draft.planunread") };
     if (p.ok !== true) return out(409, p);
     const project = said(p.project) ? p.project : p.plan && said(p.plan.project) ? p.plan.project : null;
     let away;
-    try { away = acc.aiKeptAway({ project, use: "draft" }); } catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this plan's project keeps its material away could not be read. Nothing was drafted." }; }
+    try { away = acc.aiKeptAway({ project, use: "draft" }); } catch { away = { ok: false, reason: "UNDETERMINED", detail: word("ai.keepaway.unread") }; }
     if (away) return out(403, away);
   }
   /* R33 (K2500, K2508; answers R30): the account and its limit judged by answers for kind `draft`; its refusal answered
@@ -437,11 +436,11 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   try {
     res = await w.fetch("https://agent-worker/draft", { method: "POST", headers: doorHeaders({ trace, memberRef }), body });
   } catch {
-    return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, grant, suggestions);
+    return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: word("refusal.AGENT_WORKER_SILENT") }, grant, suggestions);
   }
   let answer;
   try { answer = await res.json(); }
-  catch { return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member's answer was not JSON. Nothing was kept." }, grant, suggestions); }
+  catch { return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: word("refusal.AGENT_WORKER_SILENT") }, grant, suggestions); }
   heard(answer);
   /* R50: the reading, labelled a machine's, beside the passage it is of; usage and calls ride along for the door's count */
   if (reading && answer && answer.ok === true && res.status < 400)
@@ -478,7 +477,7 @@ function readSubject(ctx, who, subject) {
       after = page.next.after;
     }
     return { ok: false, status: 404, answer: { ok: false, reason: "NO_SUCH_NOTE", code: "NO_SUCH_NOTE",
-      detail: "no note of yours is held by that number", note: Number.isInteger(want) ? want : null } };
+      detail: word("refusal.NO_SUCH_NOTE"), note: Number.isInteger(want) ? want : null } };
   }
   if (kind === "question" || kind === "finding") {
     const sid = String(id);
@@ -562,6 +561,6 @@ export function assembleRecords(ctx, { kind, matter = null, action = null, reply
     }
     return { ok: true, records: { record: { plan: said(m.plan) ? plan : null, actions, correspondence, findings } } };
   } catch (e) {
-    return { ok: false, reason: "UNDETERMINED", detail: `the records this draft is about could not be read (${String((e && e.message) || e).slice(0, 120)}). Nothing was drafted.` };
+    return { ok: false, reason: "UNDETERMINED", detail: word("ai.draft.recordsunread"), cause: String((e && e.message) || e).slice(0, 120) };
   }
 }

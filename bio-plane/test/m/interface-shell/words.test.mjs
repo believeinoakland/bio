@@ -2,8 +2,8 @@
    and every read in one of four states. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { SHELL_WORDS, wordsOf } from "../../../src/interface-shell/index.mjs";
+import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
+import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, httpError, silent, pending, textNodes } from "./harness.mjs";
 import { ALL, FIXTURE_WORDS } from "./screens.fixture.mjs";
 
@@ -19,6 +19,7 @@ function wordChecker(words, data) {
   const pats = [], pieces = new Set();
   for (const [, en] of words) {
     const parts = en.split(/\{\w+\}/);
+    if (/^\{\w+\}$/.test(en.trim())) continue; /* a word that is only a placeholder names no text */
     pats.push(new RegExp("^" + parts.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\S]*") + "$"));
     for (const p of parts) if (p.trim()) pieces.add(p.trim());
   }
@@ -83,7 +84,7 @@ test("R5 a screen's own row under a WORD_ROWS key is drawn in place of WORD_ROWS
   assert.equal(p.doc.getElementById("a").textContent, "Removes your group's key from your group's Civicsmith.");
   assert.equal(p.doc.getElementById("b").textContent, "Hello <b>x</b>");
   assert.equal(p.doc.getElementById("b").querySelectorAll("b").length, 0);
-  assert.ok(SHELL_WORDS.length > 30 && FIXTURE_WORDS.length);
+  assert.ok(FIXTURE_WORDS.length);
 });
 
 test("R6 dates are drawn by date.daymonthyear and date.daymonth with date.month.*, never in ISO form", async () => {
@@ -99,16 +100,16 @@ test("R6 dates are drawn by date.daymonthyear and date.daymonth with date.month.
 });
 
 test("R10 R61 every read of every screen answered in turn as pending, empty, refused and failed (no answer) draws still loading, empty (or the screen's own sentence), a refusal's own words alone or, with none, \"could not be read\" naming no code, never one for another", async () => {
-  const reads = [["/app", "projectdirectory", "No project yet"], ["/app/held", "heldcaptures", "Nothing here"]];
+  const reads = [["/app", "projectdirectory", FIXTURE_WORDS.find((r) => r[0] === "screen.home.t.empty")[1]], ["/app/held", "heldcaptures", word("state.empty")]];
   for (const [path, op, emptyText] of reads) {
     const st = async (answer) => { const p = await boot({ screens: ALL, path, plane: { ...PLANE, [op]: answer } }); return p.root().querySelector("#cs-main"); };
     const loading = await st(pending);
     assert.ok(loading.querySelector('[data-state="loading"]'), path);
-    assert.ok(loading.textContent.includes("Still loading"));
+    assert.ok(loading.textContent.includes(word("state.loading")));
     const empty = await st(ok(op === "heldcaptures" ? { items: [] } : { projects: [] }));
     assert.ok(empty.querySelector('[data-state="empty"]').textContent.includes(emptyText), path);
     assert.equal(empty.querySelector('[data-state="failed"]'), null);
-    for (const [answer, words] of [[refused("NOT_ALLOWED", "You may not read this."), "You may not read this."], [refusedIn("NOT_ALLOWED", "Not yours."), "Not yours."], [httpError(500), "This could not be read."], [silent, "This could not be read."]]) {
+    for (const [answer, words] of [[refused("NOT_ALLOWED", "You may not read this."), "You may not read this."], [refusedIn("NOT_ALLOWED", "Not yours."), "Not yours."], [httpError(500), word("shell.unread")], [silent, word("shell.unread")]]) {
       const failed = await st(answer);
       const f = failed.querySelector('[data-state="failed"]');
       assert.ok(f, path);
@@ -127,6 +128,6 @@ test("R10 R61 a refusal's words: refusal.<code> when held, else the answer's tra
   const st = async (answer) => (await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('[data-state="failed"]').textContent;
   assert.equal(await st(refused(code, "ignored")), en);
   assert.equal(await st(refused("ZZ_UNHELD", "Its own words.")), "Its own words.");
-  assert.equal(await st(refused("ZZ_UNHELD")), "This could not be read.");
-  assert.equal(await st(refused("ZZ_UNHELD", null, 400, { trace: "abcdef0123456789" })), "This could not be read. Reference: abcdef01", "R39's reference beside it");
+  assert.equal(await st(refused("ZZ_UNHELD")), word("shell.unread"));
+  assert.equal(await st(refused("ZZ_UNHELD", null, 400, { trace: "abcdef0123456789" })), word("shell.unread") + " " + word("refusal.reference", { ref: "abcdef01" }), "R39's reference beside it");
 });

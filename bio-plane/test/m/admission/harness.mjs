@@ -29,10 +29,11 @@ export async function doAnswer(res) {
 
 const ok = (result) => new Response(JSON.stringify({ ok: true, result }));
 
-/* credentials' REAUTH_DUE answer as its `reauthDue` gives it (its R66, R71 (2)): its row, read from its checks */
+/* credentials' REAUTH_DUE answer as its `reauthDue` gives it (its R66, R71 (2)): its check id, read from its checks; the
+   sentence is credentials' and this module relays it unread, so a fixture stands for it */
 const { ACCOUNT_CHECKS } = await import("../../../src/credentials/checks.mjs");
 export const REAUTH_DUE_ANSWER = Object.freeze({ ok: false, reason: "REAUTH_DUE", code: "REAUTH_DUE",
-  check: ACCOUNT_CHECKS.REAUTH_DUE.check, translation: ACCOUNT_CHECKS.REAUTH_DUE.translation,
+  check: ACCOUNT_CHECKS.REAUTH_DUE.check, translation: "credentials' sentence, relayed as it gives it",
   detail: "this act asks for the password again, and it was not given in the last 5 minutes. Nothing was changed." });
 
 /** A fake env. `sessions` maps a 64-hex token to its session row; `creds` maps an `aik-` value to its credential row
@@ -216,8 +217,8 @@ export function storeWorld({ env = {} } = {}) {
 }
 
 /** The Worker's env, whose store answers `doorwindow` through the store side's own map (as `store-door` would). */
-export function bridged(w, { answer = null, env = {} } = {}) {
-  const e = makeEnv({ answer: async (call) => {
+export function bridged(w, { answer = null, env = {}, sessions = {}, creds = {} } = {}) {
+  const e = makeEnv({ sessions, creds, answer: async (call) => {
     if (answer) { const r = await answer(call); if (r) return r; }
     if (call.route !== "doorwindow") return null;
     const route = W.admissionOps(w.a, new URL(call.href), call.body).doorwindow;
