@@ -37,3 +37,5 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 
 - Bob allowed Cloudflare domain/DNS changes in this session. Custom domains `civicsmith.org` and `www.civicsmith.org` attached to Worker `civicsmith-site`; over HTTPS (valid certificate) `/`, `/start`, `/groups`, `/favicon.ico` answer 200 on both, still with `X-Robots-Tag: noindex` (address unset in the product).
 - Email Routing enabled on the zone: three MX records (route1–3.mx.cloudflare.net), SPF `v=spf1 include:_spf.mx.cloudflare.net ~all`, a DKIM record. Destination address added to the account (Cloudflare sent its confirmation link to it; Bob to click). Rule `stewards@civicsmith.org` → that destination: see the next entry for whether it could be created before verification.
+
+- Bob clicked Cloudflare's confirmation link; the destination shows verified. Created the Email Routing rule `stewards@civicsmith.org` → the verified destination (enabled). Delivery test: this session cannot send mail, so Bob sends a message from another account and reports whether it arrives (next).
