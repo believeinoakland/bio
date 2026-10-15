@@ -58,3 +58,8 @@ Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 19, module lines 3763
 
 ## Completion (CHANGE B7)
 `tranche/T49` merged (DEC-263–267). `AGENT_WORKER_UNBOUND`'s detail reads `refusal.AGENT_WORKER_UNBOUND`; the group description's draft note reads `draft.machine.label.group` (the writing help keeps `draft.machine.label`). Note: `words-reads.json` still lists `ai.refused.notdeployed` for this module and not the two new keys, so my test asserts the keys the module draws by name and every key on the file's list with `hasWord`, not the list's exact contents. `test/m/control-plane/`: 287 tests, 284 pass; red only the accepted `t46-e2e` `home`, `capture` and `t47-e2e` wizard door.
+
+## J4 · COMPLETE
+
+CHANGE B7 processed (record "Completion (CHANGE B7)", pushed). AGENT_WORKER_UNBOUND reads refusal.AGENT_WORKER_UNBOUND; the group description draft note reads draft.machine.label.group. Note for BOB/design: words-reads.json still lists ai.refused.notdeployed for control-plane and lacks the two new keys. test/m/control-plane: 287 tests, 284 pass; red only the accepted t46-e2e home/capture and t47-e2e wizard door. Checks: architecture, coverage 67/67, ownership: 0 failures.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 20, module lines 3763
