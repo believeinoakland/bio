@@ -9,7 +9,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { settle } from "./walker.mjs";
 import { act, control, type, open, requireDrawn } from "./journeys.mjs";
-import { requireWord, byWord, wordPattern } from "./words.mjs";
+import { requireWord, requireAnyWord, byWord, wordPattern } from "./words.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE } from "./city.mjs";
 
 export const PROJECT_TITLE = "Roof repairs at 14 Lakeshore Row";
@@ -184,7 +184,8 @@ async function runAndRead(walk, page, { question }) {
     await p.goto(question); await settle(p);
     await openDock(p);
     await act(p, "airunopen", { within: DOCK });
-    await requireWord(p, "dock.run.yours", { within: DOCK, timeout: 30000 });
+    /* her run at work, or, with a fake model that answers at once, already ended (screens-inquiry R33's two states) */
+    await requireAnyWord(p, ["dock.run.yours", "screen.assistant.run.ended"], { within: DOCK, timeout: 30000 });
   });
   await walk.step(page, "10 · read its run's answer and its suggested reading", async (p) => {
     const until = Date.now() + RUN_WAIT_MS;

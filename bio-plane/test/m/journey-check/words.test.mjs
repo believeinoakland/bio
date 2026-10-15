@@ -3,7 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { word as setupWord, hasWord } from "../../../src/setup-words/index.mjs";
-import { word, wordPattern, drawsWord, requireWord, byWord } from "../../../src/journey-check/words.mjs";
+import { word, wordPattern, drawsWord, requireWord, requireAnyWord, byWord } from "../../../src/journey-check/words.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
 
 let B;
@@ -16,7 +16,7 @@ const ASSERTED = ["screen.connect.own.subscription", "question.empty.heading", "
   "screen.capture.file.done", "screen.held.released", "ref.here.cited.support", "question.run.heading", "question.proposal.heading",
   "screen.assistant.notevidence", "question.concluded.by", "screen.plan.ask.running", "screen.plan.ask.ended", "founder.handle.done",
   "founder.handle.says", "founder.handle.later.help", "screen.document.passages.head", "state.empty", "dock.run.yours", "screen.answers.machine",
-  "screen.site.start", "screen.site.create"];
+  "screen.site.start", "screen.site.create", "screen.assistant.run.ended"];
 
 test("R14: every key a step asserts is a word the list holds, read through setup-words' word", () => {
   for (const k of ASSERTED) assert.ok(hasWord(k), k);
@@ -40,6 +40,11 @@ test("R14: a step asserting a keyed word passes on the screen's text and fails o
   /* a heading the stylesheet draws in capitals is still its word */
   await on(`<style>h2{text-transform:uppercase}</style><main id="cs-main"><h2>${setupWord("question.empty.heading")}</h2></main>`,
     (p) => requireWord(p, "question.empty.heading", { within: "#cs-main", timeout: 2000 }));
+  /* one of several words: either state drawn holds; control: neither fails, naming both */
+  await on(`<main id="cs-main"><p>${setupWord("dock.run.yours")}</p></main>`, (p) => requireAnyWord(p, ["screen.assistant.run.ended", "dock.run.yours"], { within: "#cs-main", timeout: 2000 }));
+  await on(`<main id="cs-main"><p>Nothing yet.</p></main>`, async (p) => {
+    await assert.rejects(requireAnyWord(p, ["screen.assistant.run.ended", "dock.run.yours"], { within: "#cs-main", timeout: 1000 }), /none of the words screen\.assistant\.run\.ended, dock\.run\.yours/);
+  });
   /* a control found by its word */
   await on(`<main id="cs-main"><a href="/app/capture">${setupWord("question.adddoc")}</a></main>`, async (p) => assert.equal(await byWord(p, "question.adddoc").count(), 1));
 });

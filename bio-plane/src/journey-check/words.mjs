@@ -52,3 +52,17 @@ export async function requireWord(page, key, { vars = {}, within = "body", timeo
 /** The visible link or control whose own text is the word `key`. */
 export const byWord = (page, key, vars = {}, within = null) =>
   (within ? page.locator(within) : page).locator("a:visible, button:visible, summary:visible").filter({ hasText: wordPattern(key, vars) }).first();
+
+/** Requires the page to draw one of the words `keys` (each with its own open placeholders), as `requireWord` does. */
+export async function requireAnyWord(page, keys, { within = "body", timeout = 10000 } = {}) {
+  const res = keys.map((k) => wordPattern(k));
+  try {
+    await page.waitForFunction(([sel, srcs]) => {
+      const el = document.querySelector(sel);
+      const t = el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+      return !!el && srcs.some(([src, flags]) => new RegExp(src, flags).test(t));
+    }, [within, res.map((r) => [r.source, r.flags])], { timeout });
+  } catch {
+    throw new Error(`the screen draws none of the words ${keys.join(", ")} on ${new URL(page.url()).pathname}`);
+  }
+}
