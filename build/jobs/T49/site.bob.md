@@ -39,3 +39,7 @@ K3375: your paths are set in modules.json. The 16 keys are on tranche/T49 (K3374
 ## B5 · CHANGE
 
 K3384: the design's DEC-270 is merged into tranche/T49 (af89fd5931; rows.mjs regenerated): Bob approved the listing rule (DEC-255, Publication §5E). Draw `site.groups.rule.head` ('The listing rule') and `site.groups.rule.text` (protected, Bob's approved text; never reworded) on civicsmith.org's groups page in both states (listed, none yet), as a details element beside `site.groups.rule`. Take `SITE_COMMIT` as af89fd5931 if `SCR.site` changed there, regenerate `site/src/pages.mjs`, test against the mock, COMPLETE again.
+
+## B6 · CHANGE
+
+K3390 (SITE-LAUNCH H1, H3; the site is live at civicsmith-site.believeinoakland.workers.dev): (1) with STEWARDS_ADDRESS unset, 'Questions' draws the placeholder's full stop and then the sentence's ('…before the site opens.'+'.'): draw one stop (the page adds none after a placeholder that ends in one), with a test. (2) Every page load asks /favicon.ico and gets 404: name the mark as the page's icon, <link rel="icon" href="/app/assets/icons.svg#i-mark"> or serve it at /favicon.ico, whichever the Worker's file list (R8) carries cleanly; test that /favicon.ico or the linked icon answers 200. Regenerate pages.mjs, test, COMPLETE again.
