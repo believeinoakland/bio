@@ -62,7 +62,10 @@ export function gather(values) {
 export function fill(schema, read, name = "") {
   const s = schema && typeof schema === "object" ? schema : {};
   if (Array.isArray(s.enum) && s.enum.length) {
-    const prefer = s.enum.find((e) => /^(?:found|present|supports|held|answered|yes|ok)$/i.test(String(e)));
+    /* it found something only when it read an address it can cite; else it says it looked and could not tell */
+    const prefer = read.addresses.size
+      ? s.enum.find((e) => /^(?:found|present|supports|held|answered|yes|ok)$/i.test(String(e)))
+      : s.enum.find((e) => /indeterminate|absent|none|not/i.test(String(e)));
     return prefer ?? s.enum[0];
   }
   /* a field that may be null is left null: a careful model asks no clarifying question it does not need */
@@ -162,8 +165,9 @@ export function plainAnswer(schema, prompt, read) {
 /* A run's composed reading (`judge_compose`): one basis version of the question it is run on, its words taken from
    what the reports and holdings said (the body of `op=suggest`, run-productions R1). */
 export function basisVersion(facts, read) {
-  const said = (facts.reports || []).map((r) => r && r.summary).find((t) => typeof t === "string" && t.trim())
-    || read.passages[0] || "The document the group holds bears on this question.";
+  const said = (facts.reports || []).map((r) => r && r.summary).find((t) => typeof t === "string" && t.trim());
+  /* a composed reading states its claim: what a conclusion adopts (basis-versions' NO_CLAIM) */
+  const claim = said ? String(said).slice(0, 300) : "The document the group holds on this question answers it.";
   return { kind: "basis-version", target: facts.target, name: "What the held notice says",
-    description: String(said).slice(0, 400) };
+    description: "The reading the record's held document supports, as the run read it.", claim: { text: claim } };
 }
