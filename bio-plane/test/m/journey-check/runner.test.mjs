@@ -91,7 +91,8 @@ test("R11: a conversation runs only on the token the sign-in minted for that mem
   assert.equal((await converse(s, { ...req(token), credential: { kind: "apikey", secret: "k" } }))[0].code, "NO_CREDENTIAL");
   const seen = await converse(s, req(token), (u) => (u.name === "read_facts" ? JSON.stringify({ target: "INQ-2026-0001-x" }) : "received"));
   assert.deepEqual(seen.map((m) => (m.tool_use ? m.tool_use.name : m.ok)), ["read_facts", "judge_plan", true]);
-  assert.deepEqual(seen[1].tool_use.input, { observed: "present" });
+  /* optional look fields are left unsaid: nothing was looked at in this conversation */
+  assert.deepEqual(seen[1].tool_use.input, {});
   const end = seen.at(-1);
   assert.deepEqual(Object.keys(end).sort(), ["num_turns", "ok", "result", "stop_reason", "usage"]);
   assert.equal(end.num_turns, 3);

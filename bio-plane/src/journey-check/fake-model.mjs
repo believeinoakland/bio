@@ -14,6 +14,8 @@
 
 /* The answer tools a conversation may offer without naming one, in the order they are preferred. */
 export const ANSWERS = Object.freeze(["answer", "report", "draft", "done_reading"]);
+/* The optional fields that carry what was read, and so are said */
+const CARRIES = /summary|citation|source|address|candidate|target|description|claim|name|quote/i;
 /* How many of the results a transcript holds back it reads again, newest first */
 export const READ_HELD = 3;
 
@@ -71,6 +73,8 @@ export function fill(schema, read, name = "") {
     const props = s.properties || {};
     for (const k of Object.keys(props)) {
       const required = (s.required || []).includes(k);
+      /* an optional field is said only when it carries what was read; a careful model leaves the rest unsaid */
+      if (!required && !CARRIES.test(k)) continue;
       const v = fill(props[k], read, k);
       if (required || (v !== undefined && !(Array.isArray(v) && !v.length) && v !== "")) out[k] = v;
     }
@@ -129,7 +133,11 @@ export function* conversation({ system = "", prompt = "", tools = [], max_turns 
   if (!final) return "There is nothing to answer with.";
   const schema = (tools.find((t) => t.name === final) || {}).input_schema || {};
   const read = gather(results);
-  yield { name: final, input: final === "answer" && isAnswersContract(schema) ? plainAnswer(schema, prompt, read) : fill(schema, read) };
+  const facts = results.filter((r) => r && typeof r === "object" && !Array.isArray(r)).pop() || {};
+  const input = final === "answer" && isAnswersContract(schema) ? plainAnswer(schema, prompt, read)
+    : final === "judge_compose" && facts.target ? { candidates: [basisVersion(facts, read)] }
+    : fill(schema, read);
+  yield { name: final, input };
   return "Answered.";
 }
 
@@ -149,4 +157,13 @@ export function plainAnswer(schema, prompt, read) {
       : "Nothing the assistant read settles this yet."],
   };
   return Object.fromEntries(Object.keys(schema.properties).map((k) => [k, k in values ? values[k] : fill(schema.properties[k], read, k)]));
+}
+
+/* A run's composed reading (`judge_compose`): one basis version of the question it is run on, its words taken from
+   what the reports and holdings said (the body of `op=suggest`, run-productions R1). */
+export function basisVersion(facts, read) {
+  const said = (facts.reports || []).map((r) => r && r.summary).find((t) => typeof t === "string" && t.trim())
+    || read.passages[0] || "The document the group holds bears on this question.";
+  return { kind: "basis-version", target: facts.target, name: "What the held notice says",
+    description: String(said).slice(0, 400) };
 }
