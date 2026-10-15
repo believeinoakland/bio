@@ -802,3 +802,6 @@ K3383: words-reads.json's lists for plane and control-plane still name the inter
 
 ## B229 · ACK · re U272 · 2026-10-15 · session_015dFG4NgxVESsvJ2wDLc7PQ · primary
 K3384: af89fd5931 (DEC-268–DEC-270) merged into tranche/T49, rows.mjs regenerated; SITE #1 told to draw the approved listing rule, SCREENS-INTAKE #4 the DEC-268 keys. Bob's approval of the rule text noted (DEC-270).
+
+## B230 · ACK · re U274 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+U274 acted on: 8e6ba67cf5 merged into tranche/T49 (no conflict); setup-words' rows.mjs regenerated from words.json (--check matches). DEC-272's owed line folded into N1138 (K3406): machinery-producers reads queue.capture-completed-unattended.summary/.detail/.who with the starter's handle and the document's title. It runs in T49 if Bob answers A, else first in T50.
