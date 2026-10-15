@@ -11,6 +11,7 @@ import { requireWord, wordPattern, byWord } from "./words.mjs";
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
 export const GROUP_NAME = "Lakeshore Tenants";
+export const FOUNDER_HANDLE = "rosa-l";
 
 /* ---------- the page's controls ---------- */
 
@@ -194,7 +195,13 @@ export async function walkFounder(walk, page, { base, founder, whileHandleless =
   await walk.step(page, founder.handle ? "1 · setup: claim with her own handle; she is the group's first administrator"
     : "setup: claim; she is the group's first administrator", async (p) => {
     const fields = { "su-pw": founder.password, "su-pw2": founder.password };
-    if (founder.handle && await p.locator("#su-handle").count()) { fields["su-handle"] = founder.handle; byHandle = true; }
+    /* the claim's form drawn first: whether it asks a handle is read from the form, never before it is there */
+    try { await p.locator("#su-pw").waitFor({ state: "attached", timeout: 15000 }); } catch { throw new Error("the claim's form is not drawn"); }
+    if (await p.locator("#su-handle").count()) {
+      /* the claim requires a handle (screens-entry R17): hers, or, for a walk with none chosen, the walk's own */
+      if (!founder.handle) founder.handle = FOUNDER_HANDLE;
+      fields["su-handle"] = founder.handle; byHandle = true;
+    }
     await act(p, "claim", { fields });
     await shown(p, '[data-state="claimed"]', "the claim");
   });
@@ -405,7 +412,7 @@ export async function sweep(walk, page, base, { screens = sweepScreens(), journe
 export const drawnActs = (page) => page.evaluate(() => [...new Set([...document.querySelectorAll("[data-act]")].map((e) => e.getAttribute("data-act")))].sort());
 
 export const credentials = () => ({
-  founder: { handle: "rosa-l", password: "founder-" + rand(12) },
+  founder: { handle: FOUNDER_HANDLE, password: "founder-" + rand(12) },
   member: { handle: "mai-k", password: "member-" + rand(12) },
   newcomer: { handle: "teo-r", password: "newcomer-" + rand(12) },
 });
