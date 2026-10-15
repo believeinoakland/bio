@@ -1,0 +1,31 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+More
+More
+
+The places the tabs below do not hold.
+
+Projects
+
+Your group's investigations, their questions, plans and cases.
+
+People
+
+The people and organizations the record follows. Your own group's members are under Settings.
+
+Settings
+
+Your account, your group's members, the assistant, translations, wizards and updates.

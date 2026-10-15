@@ -1,0 +1,40 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+Settings
+Settings
+YOURS
+Your account
+Your own settings: your handle, password, signing key, language and expertise.
+The assistant
+Whether and how the assistant serves you: on your group's key, your own Claude account, or not at all. Set your limit and suggestions here.
+Your ties
+Your own ties to people or organizations the group may look into. Only you and the administrators see this list.
+Your notes
+Your private notes. Only you can see them in your group; turn one into an observation, a hunch or a question when you choose.
+Recovery codes
+Your own recovery codes, which let you set a new password if you lose yours. Each works once.
+THE GROUP'S
+Your group
+Administrators only: your group's name, website, languages, court notice, hosting account and bar.
+Who your group is
+What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.
+Members
+Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.
+Places and offices
+Administrators only: the places whose rules your group's Civicsmith follows (deadlines, holidays, offices, records laws), and the offices and seats your group deals with.
+Security
+Administrators only: how hard your group's Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.
+Updates
+Administrators only: the release your group's Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.
+Translations
+The words members see, in your group's languages. Members given the grant translate them, the assistant drafts where it can, and protected words are checked twice.
+Wizards
+Step-by-step walk-throughs of the real screens. Civicsmith's own come with each release; your group can write its own or copy one and change the copy.
+Home
+Queue
+Add
+Find
+More

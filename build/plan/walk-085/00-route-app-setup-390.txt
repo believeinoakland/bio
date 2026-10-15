@@ -1,0 +1,10 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Become your group's first administrator
+ALREADY CLAIMED
+
+Your group's Civicsmith already has its first administrator.
+
+Your group's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.
+
+Sign in

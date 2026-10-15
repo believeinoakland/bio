@@ -1,0 +1,51 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Add
+Add
+3 wizards start here
+
+A document from an address or a file, a photo, or what you saw yourself.
+
+From an address
+A file or photo
+What I saw or heard
+Take a photo, or choose a file
+on a phone, the camera opens
+
+Frame what you are checking, and leave out people's faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.
+
+How you got it
+I made it myself: a photo, a recording, my notes
+I was handed it: a printed agenda, a letter
+Someone sent it to me
+I downloaded it from a website
+
+Downloaded from a website? Capture it from its address instead: a copy your group's Civicsmith fetches itself holds up better. Capture it from its address
+
+Where and when
+Filled from the photo where it says; correct it if it is wrong.
+What it shows, in your own words
+Capture a file or photo
+Reasoned
+
+Captured: walk085-sample.txt. It waits in Held captures until you or another member vouches for it.
+
+walk085-sample.txt Filed under WALK-085 project, for the question “How many pothole reports did the city close late in 2025?” Cite a passage
+
+Who made or obtained it, when, and with what are kept with it, so anyone can check where it came from. It waits in Held captures until you or another member vouches for it. A file your group's Civicsmith did not fetch itself opens in the safe view until it has been checked.
+
+Capture a file or photo: Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.
+Reasoned: asks for your reason, which becomes part of the record.

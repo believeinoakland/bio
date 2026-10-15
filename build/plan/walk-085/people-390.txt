@@ -1,0 +1,57 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+S
+Working · not public · seen by your group's members
+People
+People
+
+The people and organizations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under Settings › Members. Settings › Members
+
+Name or office
+Search people and organizations
+Reversible
+Show
+People and organizations
+People
+Organizations
+Holding an office in
+Any body
+Named in
+Any project
+Your projects
+Named recently
+At any time
+In the last 30 days
+In the last 90 days
+In the last year
+
+The record follows 3 people and organizations. Each row counts the documents, questions and projects that name them, among those you may see, and says when the newest of them was added to the record.
+
+EVERYONE ELSE THE RECORD FOLLOWS
+ORGANIZATION
+Finance Department · added at setup from your group's place
+Explore connections
+Reversible
+ORGANIZATION
+Oakland City Council · added at setup from your group's place
+Explore connections
+Reversible
+ORGANIZATION
+Office Of The City Auditor · added at setup from your group's place
+Explore connections
+Reversible
+ADD SOMEONE THE RECORD FOLLOWS
+Their name
+A person or an organization
+A person
+An organization
+Your note: who they are, and why the group follows them
+Facts about them are then added from documents, each cited.
+Add someone the record follows
+Reasoned
+Home
+Queue
+Add
+Find
+More

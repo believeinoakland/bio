@@ -1,0 +1,75 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+People › Person
+Finance Department
+Open the person
+Reversible
+Explore connections
+Reversible
+CONNECTIONS
+Trail
+Finance Department
+Finance Department
+Position or membership
+Took part
+Money
+Mentioned together
+Same person?
+Stated in a source
+Declared or hunch
+the step's grade
+Finance Department
+the center: everything drawn is joined to it, directly or one step further out.
+CAREER, CREDENTIALS, MEMBERSHIPS, INTERESTS
+What the passage says
+Name
+Born
+Died
+Where they live or work
+Address
+Contact
+The fact, as the passage states it
+True from (optional)
+The document it is read from
+The document's fingerprint, as its page shows it. The fact cites the passage.
+Page (optional)
+Add a fact from a document
+Reversible
+The register's address
+A public register (licenses, filings) that lists this person. You are told when an entry changes.
+Follow a register
+Reversible
+SAME PERSON?
+
+This could not be read. Try again in a moment.
+
+The other record
+Oakland City Council
+Office Of The City Auditor
+You say
+It is the same person
+It is not the same person
+You are unsure
+Because
+I know it myself
+Both records carry the name
+The name, and the same post on the dates cited
+The same identifier, on the dates cited
+The document for this person (unless you know it yourself)
+The document for the other record
+Why, in your words
+Say another record is this person
+Reasoned

@@ -1,0 +1,95 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+Assistant
+S
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › The assistant
+The assistant
+1 wizard starts here
+
+Optional. Everything in your group's Civicsmith works without the assistant.
+
+For a member's act in a project that has its own AI account, that project's account pays. Otherwise the member's own account, if they connected one; otherwise the group's key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.
+
+The assistant serves you on your own Claude subscription, signed in on Anthropic's page on 15 October 2026. Only you use it; your plan's own allowance applies.
+
+Anthropic accepts it until 15 October 2027.
+
+WHAT THIS ACCOUNT PAYS FOR
+Asking · on 
+Switch off
+Reasoned
+Drafting · on 
+Switch off
+Reasoned
+Runs · on 
+Switch off
+Reasoned
+Standing questions · off 
+Switch on
+Reasoned
+Interviews and planning · on 
+Switch off
+Reasoned
+Reading inside documents · on 
+Switch off
+Reasoned
+Reading page pictures · on 
+Switch off
+Reasoned
+A case's account · on 
+Switch off
+Reasoned
+Suggestions · off 
+Switch on
+Reasoned
+
+A use switched off here stops the assistant for that use whenever this account would pay. It does not move on to another account.
+
+LIMITS ON THIS ACCOUNT
+Limit on
+Everything (the overall limit)
+Asking
+Drafting
+Runs
+Standing questions
+Interviews and planning
+Reading inside documents
+Reading page pictures
+A case's account
+Amount
+In
+(dollars, estimated)
+tokens
+calls
+Each
+day
+month
+For a limit on one use
+Part of the overall limitOn top of the overall limit
+Set a limit on your account
+Reasoned
+
+The first time a limit is reached in a period, this account's owners are told once in their queue; a member stopped by it is told whose limit it is, never a cost.
+
+THIS MONTH'S USE
+ESTIMATED DOLLARS A DAY, THE LAST 30 DAYS
+16 September 2026
+15 October 2026, today, so far
+Last 30 days: $0.00, 0 calls · busiest 16 September 2026, $0.00
+Everything (the overall limit) · (dollars, estimated) · month: $0.00 · No limit is set, so there is nothing to measure against: only Anthropic's own spending limit on the key caps this account.
+CHANGES
+sparky connected a sign-in · 15 October 2026
+DISCONNECT
+Disconnect your subscription
+Terminal
