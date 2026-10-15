@@ -67,3 +67,13 @@ K3387 (journey-check's step 7; diagnosis at build/plan/diag-T49-step7.md on the 
 ## B13 · CHANGE
 
 K3402 (JOURNEY-CHECK #4 J10, walked on tranche/T49): the question screen draws "Opened by {name}" with its placeholder unfilled, and names a cited passage by its record id ("INFO-2026-0002-2026-118") instead of its words or its document's title. Merge the tranche branch (journey-check is merged), fix both against your requirements and the design, run your tests and journey-check's local arm (`npm ci` in bio-plane/src/journey-check first), then COMPLETE again.
+
+## B14 · CHANGE
+
+CHANGE (K3419; JOURNEY-CHECK #5 J12, confirmed by BOB). The journey walk (journey-check R9, R10, merged into tranche/T49 @ 142f6a9bfe) now stops only on three screens-inquiry defects, each under a requirement you already hold. Merge `tranche/T49` into your branch first (it carries the design's latest words, DEC-276/DEC-277, and the walk).
+
+1. R41 state g (concluded). After `conclude` is admitted (claim adopted, one basis leg; the project reads one concluded), the question page never draws state g: `question.mjs` decides the state from `basisversions` read without a project (around line 21), which answers `conclusion`/`conclusion_stance` only when a project is named (basis-versions `index.mjs`:527–529). The project-aware read is already held (`cur`, around line 109) and not used. Decide the state from the project-aware read.
+2. R1, R37 (not joined). The project page reads `projectaccountstate` before an invited member has joined; it answers NO_SUCH_PROJECT and the page breaks. A member not joined sees the project's not-joined state with "Join" (`projectjoin`), never a failed read; after joining, the page reads as a participant's.
+3. R14 (a joined non-owner). `projectai` opened by a joined member who is not an owner reads the owner-only `accounthistory`, `accountuses`, `ailimits` and `aiusage` and draws their refusal PROJECT_ACT_NOT_THE_OWNER. R14's acts are each an owner's: a non-owner sees what pays (`projectaccountstate`) read-only, and the owner-only reads are neither called nor drawn for her. Wording clarification (BOB's, K3419): R14 gains "A participant who is not an owner sees what pays, read-only; the owner-only reads are not made for her."
+
+Tests: one each at the module's interface (state g after a conclude over a project; a not-joined member's project page; a non-owner's projectai), each with its control. Then run journey-check's local walk (`bio-plane/src/journey-check`, `runLocal`) and confirm R9 and R10 pass through to the end; name in your record any failure left and whose it is. Model: you run on claude-sonnet-5-5.
