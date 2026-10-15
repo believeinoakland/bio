@@ -9,6 +9,7 @@ Bob's meter is at 89%; the other account is at 97% until Saturday. Bob: "Keep wo
 **Where the release stands (K3428–K3432):**
 - **Cut:** `dist/cut-0.85.0` @ `1053faa726`, signed (run 38772108995), CONTROLS 7/7. The installer embeds the signed release; newgroup 209/0.
 - **Installer:** `newgroup` 0.85.0 is deployed (K3431).
+- **NEEDS BOB (K3437):** approve, in BOB #185's session, running `build/plan/wipe-0.85.0.mjs` once (`NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt node build/plan/wipe-0.85.0.mjs`); its `--dry` run is clean.
 - **Bob chose B (K3434):** wipe this account's Civicsmith, then Bob reruns the installer. The wipe list and its order are in K3434. Follow the B line below.
 - **Then, by his answer:**
   - **A:** follow `build/plan/draft-biosmoke8-install.md` steps 2–5. Leave `ADMIN_TOKEN` out of the secrets file and walk Bob through adding it himself as a secret in the dashboard, so no secret is printed.
