@@ -92,3 +92,7 @@ Merged the tranche (screens-inquiry's step-7 fix, admission, site, control-plane
 - step 8: `cite` refused `BASIS_REFUSED` [C-45.2: "this record holds no extraction chain for the capture this leg cites, so there is no transcription over ¶3"] — extraction (the captured HTML notice has no extraction chain; K3387's `text_units`, the same gap as the document's words);
 - step 9: `airundispatch` refused `ACCOUNT_MEMBER_NOT_ACTIVE` [C-29.15: "a run's credential is minted only for an active member's own run"] for the founder, connected by her own subscription — credentials R63 (`aiRunCredentialMint`), which does not count the founder as ai-accounts R19 does ("only an active member, or the founder");
 - R10, and R13's pairs for steps 9 and after, follow from R9 stopping at step 9. Steps 10–12 and the fake model's run are still not reached; the fake model is untested past the sign-in.
+
+## J7 · REPORT
+
+B8: walked to the end on the merged tranche, 105 steps, 7 failures; R9 steps 1–7 pass (Find-in route as you set). Open: (1) step 8, cite refused BASIS_REFUSED, C-45.2 'no extraction chain for the capture this leg cites' — extraction (K3387's gap); (2) step 9, airundispatch refused ACCOUNT_MEMBER_NOT_ACTIVE, C-29.15 'a run's credential is minted only for an active member's own run', for the founder connected by her subscription — credentials R63 (aiRunCredentialMint), which does not admit the founder as ai-accounts R19 does. R10 and R13's later pairs follow; steps 10–12 and the fake model's run are not reached. Record: 'After B8'.
