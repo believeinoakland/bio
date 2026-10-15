@@ -1224,7 +1224,10 @@ export class Credentials {
    * answered once, never logged or stored. */
   aiRunCredentialMint({ member = null, run = null, writes = null } = {}) {
     const id = Credentials.#memberOf(member);
-    if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
+    /* R78 (T49; K3392, K3398; amends R63, as R76 amends R27): the founder holds no member row; the member who resolves to
+       her (`#isFounder`, R76's one test) is admitted as an active member, for her own run only. */
+    if (id === null || isMachineIdentity(member) || isMachineIdentity(id)
+        || (id === ROOT ? !this.#isFounder(ROOT) : this.#memberFacts(id)?.status !== "active"))
       return this.accounts.accountMemberNotActive("a run's credential is minted only for an active member's own run. "
         + "Nothing was minted.", { member: id });
     const malformed = Credentials.#runCredentialFault(run, writes);
@@ -1396,8 +1399,14 @@ export class Credentials {
   #ownSession(role, id) {
     if (typeof id !== "string" || id === "" || typeof role !== "string") return false;
     if (id !== ROOT) return role === `member:${id}`;
+    return role === ROOT && this.#isFounder(role);
+  }
+
+  /* R76, R78: whether the role `role` is the founder's, by membership's one answer (`sessionRights`, its R144):
+     the root of trust, and her id. */
+  #isFounder(role) {
     const r = this.membership.sessionRights(role) || {};
-    return role === ROOT && r.rootOfTrust === true && r.member === ROOT;
+    return r.rootOfTrust === true && r.member === ROOT;
   }
 
   /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
