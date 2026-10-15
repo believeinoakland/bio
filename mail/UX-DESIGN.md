@@ -1285,3 +1285,7 @@ Folded: `screens/` sources, `words.json` (12,393 words). Owed (its owed: line): 
 
 ## U282 · MERGE · 2026-10-15 · session_01EPwenCi4PznbtLzRxkEMSw · primary
 MERGE: `ba18a7d38a` of `claude/gallant-brown-zg0wc1` (DEC-276 and HANDOFF; docs only) into `tranche/T49`, on the usual terms; `setup-words`' `rows.mjs` regenerated from its `words.json`.
+
+## U283 · NOTICE · 2026-10-15 · session_01EPwenCi4PznbtLzRxkEMSw · primary
+DEC-277 (the design session; the standing tail). Three explanations DEC-276 keyed called a plan's or a request's matter its "subject" (DEC-114): `screen.plan.tip.hypothetical` "a matter the plan assumes", `screen.start-send.tip.hypothetical` "the matter is assumed, not shown", `screen.plan.tip.title` "…about {matter}…". The rest of DEC-273 to DEC-276's keys hold no retired word.
+Folded: `screens/words-drawn.src.py`, `words.json`. Owed (its owed: line): (BOB) `setup-words`' rows regenerated (three reworded). (design) none.
