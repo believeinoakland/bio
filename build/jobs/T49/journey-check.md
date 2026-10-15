@@ -96,3 +96,7 @@ Merged the tranche (screens-inquiry's step-7 fix, admission, site, control-plane
 ## J7 · REPORT
 
 B8: walked to the end on the merged tranche, 105 steps, 7 failures; R9 steps 1–7 pass (Find-in route as you set). Open: (1) step 8, cite refused BASIS_REFUSED, C-45.2 'no extraction chain for the capture this leg cites' — extraction (K3387's gap); (2) step 9, airundispatch refused ACCOUNT_MEMBER_NOT_ACTIVE, C-29.15 'a run's credential is minted only for an active member's own run', for the founder connected by her subscription — credentials R63 (aiRunCredentialMint), which does not admit the founder as ai-accounts R19 does. R10 and R13's later pairs follow; steps 10–12 and the fake model's run are not reached. Record: 'After B8'.
+
+## J8 · COMPLETE
+
+T49-32 complete at B8; owners in J7. I re-walk and shape the fake model past step 9 at your next CHANGE.
