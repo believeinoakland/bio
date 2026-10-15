@@ -48,3 +48,13 @@ Also answered by this job's tests, not needing BOB: `action`'s `governing_laws` 
 - `checks/format.mjs`: only `site`'s two paths (not mine). `checks/architecture.mjs bio screens-action`: 17 files, 0 failures. `checks/coverage.mjs bio screens-action`: 19 of 19 ids named, 0 failures. `checks/ownership.mjs bio screens-action tranche/T49`: 16 files, 0 failures. `checks/run.mjs`: architecture 0 failures over the product; its coverage failures are other modules'.
 
 Size (session_011r3wR82Gk35AwAm4k2a92a): test runs 21, module lines 1847
+
+## J4 · COMPLETE
+
+Re-run on the real shell after K3380 (tranche/T49 merged into my branch; no local stand-in of the shell or its registry remains; `git status` clean).
+- `node --test bio-plane/test/m/screens-action/`: 84 pass, 1 fail: R7 (`action-producers` R19), "no word says 'subject'", on `act.plansubjectadd.label.plan` and `.does` only, the red accepted by name (K3373) until the design corrects them. (Earlier: 85 tests; the count is 85 with it.)
+- The tests that import my screens, control-plane `t46-app` and plane `t47`: 14 pass, 0 fail.
+- Checks: format 0 failures; architecture (screens-action) 0; coverage 19 of 19 ids; ownership 0.
+- Nothing else changed since J3; the sentences waiting on N1121 and the design lane are as J3 says.
+
+Size (session_011r3wR82Gk35AwAm4k2a92a): test runs 24, module lines 1847
