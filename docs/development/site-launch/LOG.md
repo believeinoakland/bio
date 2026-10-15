@@ -19,3 +19,7 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 - Not done: a pixel-pair comparison against the design's mock drawings. The module's own browser test does that at SITE_COMMIT (passes); my walk was against the requirements' order and by eye. Screenshots are in the session scratchpad only.
 - Defects found: see HANDOFF H1–H3. None blocks the domain step.
 - Zone DNS and Email Routing still refuse the session's token (code 10000); needed for steps 3–4.
+
+## 2026-10-15 · H1 and H3 fixed upstream
+
+- BOB #181 (K3390, K3391) reports H1 (doubled stop) and H3 (icon at `/favicon.svg`, `/favicon.ico`) fixed on tranche/T49. Merged `origin/tranche/T49` into this branch; site tests re-run. Not yet deployed: the redeploy needs Bob's approval in session (K1715) and will go with the domain step.
