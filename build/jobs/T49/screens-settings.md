@@ -81,3 +81,7 @@ screens-settings T49-22 complete on job/T49/screens-settings: R39 (words by key;
 ## J4 · COMPLETE
 
 screens-settings T49-22 complete again on job/T49/screens-settings: B5 applied (reauth on connect, R40 the group's declared stake, DEC-262 fills). Module tests 119 of 119 against a scratch registry copy; with the committed copy the contract test is red for connect's reauth and group's two acts until interface-shell's R72 re-point lands, so merge me after interface-shell. Checks 0 failures, coverage 39 of 39. See the second completion record in build/jobs/T49/screens-settings.md.
+
+## J5 · COMPLETE
+
+screens-settings complete after B6: tranche merged on the real shell, words.test re-pointed, B5 (R40, reauth, DEC-262) in. Module tests 119 of 119 including the contract test; checks 0 failures, coverage 39 of 39. screens-inquiry's seven reds are its own (projectai must read PANEL_KEYS).
