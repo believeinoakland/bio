@@ -115,7 +115,7 @@ async function captureAndVouch(walk, page, base, { question, password }) {
   await walk.step(page, "5 · capture by upload into the question", async (p) => {
     await p.goto(question); await settle(p);
     await follow(p, "question.adddoc");
-    await p.locator('#cs-main a[href="/app/capture/file"], #cs-main a[href^="/app/capture/file?"]').first().click();
+    await p.locator('#cs-main a[href^="/app/capture/file"]').first().click();
     await settle(p);
     const dir = join(walk.out, "upload");
     mkdirSync(dir, { recursive: true });
