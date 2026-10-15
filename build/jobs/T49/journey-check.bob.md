@@ -63,3 +63,7 @@ First: CREDENTIALS #17 and EXTRACTION #24 both saw your local arm (R1 (a), after
 
 CHANGE (K3411). Merge tranche/T49 into your branch: it now carries agent-worker R90 (compose's facts carry each held document's record_id; K3411), machinery-producers R13 (K3408), screens-inquiry's B13 fixes (K3405), screens-settings (K3410) and the design stream @ 9534b570e0 with setup-words' rows regenerated. Run `npm ci` in `bio-plane/src/journey-check` if needed.
 Re-walk the whole journey on the tranche (R1 (a), the local arm). AGENT-WORKER #24 saw step 12 no longer refused NO_BASIS; it now stops at "the screen does not draw the word `question.concluded.by` on /app/question/…", and R10 follows. Diagnose that stop first: if the walk expects the word where the screen draws the conclusion otherwise, or reads before the page settles, it is the walk's own (fix it); if the question page does not draw the conclusion after an admitted `conclude`, REPORT it naming screens-inquiry's requirement it misses. Then walk R10 through. Record COMPLETE with the steps passed and every remaining red by name and owner.
+
+## B12 · CHANGE
+
+CHANGE (K3412): tranche/T49 moved after B11: the design stream @ f8edc66dd2 (words only: 265 keys minted, setup-words' rows regenerated). Merge tranche/T49 once more before your final walk, so the walk you record COMPLETE on is the tranche's tip.

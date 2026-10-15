@@ -4277,3 +4277,59 @@ response: **The design session, 2026-10-15.** (1) "neighborhood", "when they joi
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-mod-3.src.py`, `screens/words-t48.src.py`, `screens/words-t49.src.py`, `screens/words-drawn.src.py` (DEC-273), `screens/mock-acts.js`, `screens/mock-screens.js`, `screens/mock-shell.js`, `screens/check_words_drawn.mjs`, `screens/words-drawn-tips-baseline.json`; `words.json`.
 owed: (BOB) `setup-words`' rows regenerated from the new `words.json` (five rows reworded, three minted); the five requirements above may read the keys as given, no longer owed; where `interface-shell` explains the queue count or the group's card, it reads `shell.queue.waiting`/`.open` and `shell.group.open`. (design) the remaining 872 explanation sentences, in batches.
+
+### DEC-274 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (BOB's B232: N1140, K3408)
+for: bob-session
+question: The words of machinery-producers' second `capture-completed-unattended` item, a capture made at a request (`#conditionsCaptureRequested`), which composes English with raw ids ("the daemon captured this, at the investigative session's request (run …), under member:…, paid by …").
+why it is Bob's: design detail beneath DEC-27(b) (both principals named, the act the machine's); decided by the design session, reported to Bob as done.
+provisional: summary "{address} was captured by the daemon at the investigative session's request"; detail the attribution statement, a paragraph on legs and the 'collected' state, and each grade note with capture fingerprints.
+alternative: reuse DEC-272's `.summary`/`.detail`. Rejected: those say a member left a capture; here someone asked for one.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `queue.capture-completed-unattended.request.summary` "Captured at {member}'s request: {title}" (`.request.summary.unnamed` "Captured at a request: {title}" when the request names no member). Detail: a member's own request (capture-requests R56) `.request.detail` "{member} asked for this document, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it."; a run's request `.request.detail.assistant` "The assistant asked for this document while working for {member}, and your group's Civicsmith captured it. …" (the same two closing sentences); no member named `.request.detail.unnamed` "This document was asked for, and your group's Civicsmith captured it. …". Each distinct grade note is appended as `queue.capture-completed-unattended.gradenote` "When it was captured, a member there would have read this note on it: {note}", by both producers (DEC-272's too). `{member}` is the requester's handle, `{title}` the document's title; the run's id, the credential, the account that paid and any capture fingerprint stay out of the member's sentence (they remain on the item's `basis` and the run's own record).
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-274); `words.json`.
+owed: (BOB, N1140, T50) machinery-producers' `#conditionsCaptureRequested` reads these keys: a run's request (`at_the_request_of.run`) `.request.detail.assistant`, a member's own `.request.detail`, none named `.unnamed`; both producers append `.gradenote` per distinct note. (design) none.
+
+### DEC-275 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (DEC-273's owed: the explanation sentences, first batch)
+for: bob-session
+question: The explanations of the screens from account to members, and the words every screen's explanations share, as keyed words.
+why it is Bob's: design detail beneath DEC-259 and DEC-273; decided by the design session, reported to Bob as done.
+provisional: DEC-273's check read a record card's "Here:" line glued to the line before it ("…on any public case it is inHere: …"), though the card draws it on its own line, so 154 sentences could not be keyed as drawn; 872 counted.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words, drawings and a check.
+response: **The design session, 2026-10-15.** The check reads a card's "Here:" line (`.why`) on its own line, as the card draws it; measured so, 998. The 31 screens from account to members, and the explanations shared by every screen, are keyed: 259 keys minted (`shell.crumb.back` "Back to {place}." on 50 screens; the row icons' `shell.icon.capture`, `.group`, `.clock`, `.tension`, `.hold`, `.plan`, a person's drawing `shell.card.person`; the explanations' `screen.<id>.tip.<part>`); a sample record's words in an explanation (a project's, office's or group's description, a person's role) are marked as data; where a drawing paraphrased a key it draws the key; 26 buttons' own explanations gave way to the act's general one, and three that say what the act does in that place are keyed (`act.promote.here.home`, `act.publish.here.ceremony`, `act.themeplace.here.question`). Two errors fixed: the dock drew a literal "{project}", and a citation ended in two periods. 998 became 468, the ratchet's new baseline; the rest (money, person, plan, proceeding, published, timeline and the other screens past members) follow in the next batch.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-275), `screens/mock-shell.js`, `screens/mock-screens.js`, `screens/mock-refs.js`, `screens/check_words_drawn.mjs`, `screens/words-drawn-tips-baseline.json`; `words.json`.
+owed: (BOB) `setup-words`' rows regenerated (265 rows minted with DEC-274's); Home's "Start a project" explains itself by `act.promote.here.home` and the edition's confirmation by `act.publish.here.ceremony` (their general `act.promote.does` and `act.publish.does` are wrong there), the question's theme placing by `act.themeplace.here.question`; where a module draws a row icon's or the breadcrumb's explanation, it reads `shell.icon.*` and `shell.crumb.back`. (design) the remaining 468 explanation sentences.
+
+### DEC-276 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (DEC-275's owed: the explanation sentences, second batch)
+for: bob-session
+question: The explanations of the screens past members (money, people, person, plan, proceeding, project, published, question, queue, security, timeline and the rest) as keyed words; and the government a sentence names.
+why it is Bob's: design detail beneath DEC-259 and DEC-273; decided by the design session, reported to Bob as done.
+provisional: 468 explanation sentences not keyed; DEC-275's keys and this batch's named the sample's government in fixed words ("the city's portal", "the council's spending plan"), though a group may follow a county, a state agency or a school board.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words and drawings.
+response: **The design session, 2026-10-15.** Every explanation on the 69 screens is a keyed word: 218 keys minted (`screen.<id>.tip.<part>`; the security screen's hourly squares by six keys; `shell.card.roster`, `shell.card.cited`, `shell.pubfoot.signature`, `shell.credit.neither`); 31 buttons' own explanations gave way to the act's general one, and 16 that say what the act does in that place are keyed `act.<op>.here.<place>` (the act's general explanation is wrong or vague there: "Turn back on" in the queue's muted section is explained as muting, People's search as searching everything, a money figure's "hold as a hypothesis" as sitting beside a question). A sentence that names the group's government names it by placeholder: `{government}` ("the city"), `{council}` ("the council"), `{filing}`, in 31 keys of DEC-275's and this batch's; the timeline's "no council vote" reads "no vote of the council". Fixed: the wizard chip's "1 wizard start here" reads "starts"; a person's "his" reads "their". 468 became 0: the explanations' ratchet stands at 0 on every screen, so a new explanation must be a keyed word, as drawn text has been since DEC-259.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-276, and DEC-275's rows templated), `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-screens.js`, `screens/mock-shell.js`, `screens/words-drawn-tips-baseline.json`; `words.json` (12,393 words).
+owed: (BOB) `setup-words`' rows regenerated (218 minted; 31 of DEC-275's reworded to placeholders); where a module explains these acts in these places it reads the `.here.` keys: `act.acquire.here.money`, `act.actionmove.here.queue`, `act.entitycreate.here.people`, `act.exclude.here.money_picked`, `act.explore.here.person`, `act.findin.here.money_when`, `act.findin.here.money_where`, `act.hypothesishold.here.money`, `act.include.here.money_picked`, `act.promote.here.project`, `act.queuemute.here.queue_kind`, `act.queuemute.here.queue_project`, `act.reconcile.here.money_picked`, `act.recordfact.here.money`, `act.recordfact.here.money_where`, `act.search.here.people`; a module filling `{government}` or `{council}` fills it from the group's own place, never a fixed "city". (design) none: the explanations are done.
+
+### DEC-277 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency, over DEC-273 to DEC-276's keys)
+for: bob-session
+question: Retired vocabulary in the explanations DEC-276 keyed.
+why it is Bob's: design detail beneath DEC-114; decided by the design session, reported to Bob as done.
+provisional: three explanations called a plan's or a request's matter its "subject" ("a subject the plan assumes", "the subject is assumed, not shown", "…about {subject}").
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `screen.plan.tip.hypothetical` "a matter the plan assumes", `screen.start-send.tip.hypothetical` "the matter is assumed, not shown", `screen.plan.tip.title` "…about {matter}…" (DEC-114: a plan's matter, never its subject). The rest of DEC-273 to DEC-276's 477 keys hold no retired word ("overdue" in a queue item, "sever", "Release" for vouching, British spellings).
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-276's rows), `screens/mock-refs.js`; `words.json`.
+owed: (BOB) `setup-words`' rows regenerated (three reworded). (design) none.

@@ -93,7 +93,7 @@ The settings a member and an administrator use day to day: the roster and the gr
 - **R36** *(retired: T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again)*: `connect` gains no pointer to the group key and no API-key preselection; R30 stands (the subscription preselected).
 - **R37** (T49; D30 **m**; amends R27, R4, R16) Two rules:
   - **Every fill filled.** Each sentence `updates` and `connect` draw is read by key with every `{fill}` filled from its read. No sentence is drawn with an empty or default fill: no "allowed by set at setup", no "you held the key".
-  - **Translations' empty state.** `translations` with nothing to show draws its empty state by key, never a bare screen. The key is owed by the channel act; until given, this module's own row.
+  - **Translations' empty state.** `translations` with nothing to show draws its empty state by key, never a bare screen. The design gives the key (DEC-273).
 
   Test: each over a fixture. Control: a filled `who` draws the member's handle.
 - **R38** (T49; N1100; DEC-246; `interface-shell` R69; amends R5, R24) Beside the code field, under `connect.ifnot`, `connect` draws the sign-in's refusals by their keys. These are `refusal.NO_SIGNIN_WAITING`, `refusal.SIGNIN_REFUSED` (with `{detail}`), `refusal.SIGNIN_UNAVAILABLE`, `refusal.SIGNIN_ADDRESS_UNEXPECTED`, `refusal.AGENT_WORKER_UNBOUND` and `instance.part.signin.absent`, each with its reference (`refusal.reference`, `interface-shell` R69). The `SCREEN_WORDS` rows R5 held for these codes go. R30's four words are R34's keys (finding 6). Test: each refusal over a fixture draws its key's words and reference. Control: the typed code is never drawn.

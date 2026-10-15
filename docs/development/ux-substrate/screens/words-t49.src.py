@@ -662,6 +662,19 @@ w17('queue.capture-completed-unattended.detail', "{member} started capturing thi
 w17('queue.capture-completed-unattended.who', "your group's Civicsmith", False, '{member} when the capture was started by a credential that is no member')
 # --- end DEC-272
 
+# --- DEC-274 (B232, N1140, K3408): the queue item for a capture made at a request (machinery-producers'
+# #conditionsCaptureRequested): a member's own request, or the assistant's while it works for a member (DEC-27(b): both
+# named, the act the machine's). {member} the requester's handle (or queue.capture-completed-unattended.who); {title} the
+# document's title. Never the run's id, the credential, the account that paid, or a capture's fingerprint.
+w18 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-274' + (': ' + note if note else '')))
+w18('queue.capture-completed-unattended.request.summary', "Captured at {member}'s request: {title}", False, "a capture a member asked for, or the assistant asked for while working for that member")
+w18('queue.capture-completed-unattended.request.summary.unnamed', 'Captured at a request: {title}', False, "the summary when the request names no member (a credential that is no member asked)")
+w18('queue.capture-completed-unattended.request.detail', "{member} asked for this document, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.", False, "a member's own request (capture-requests R56)")
+w18('queue.capture-completed-unattended.request.detail.assistant', "The assistant asked for this document while working for {member}, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.", False, "a run's request; the account that paid and the run are on the run's own record, never in this sentence")
+w18('queue.capture-completed-unattended.request.detail.unnamed', "This document was asked for, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.", False, "the detail when the request names no member")
+w18('queue.capture-completed-unattended.gradenote', 'When it was captured, a member there would have read this note on it: {note}', False, "appended to either producer's detail once per distinct grade note; {note} the note's own words; never a fingerprint")
+# --- end DEC-274
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
