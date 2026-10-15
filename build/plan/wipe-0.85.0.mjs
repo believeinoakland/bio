@@ -3,7 +3,7 @@
 const A = '20b533579290b9b93168345edd3b7f72';
 const B = `https://api.cloudflare.com/client/v4/accounts/${A}`;
 const KEEP = new Set(['newgroup', 'civicsmith-site']);
-const WORKERS = ['civicos', 'bobux', 'biosmoke7', 'agent-worker', 'agent-runner', 'pdf-worker', 'ocr-worker', 'sheet-worker', 'file-scanner'];
+const WORKERS = ['biosmoke8', 'civicos', 'bobux', 'biosmoke7', 'agent-worker', 'agent-runner', 'pdf-worker', 'ocr-worker', 'sheet-worker', 'file-scanner'];
 const BUCKETS = ['bio-captures', 'bio-published'];
 const DRY = process.argv.includes('--dry');
 
