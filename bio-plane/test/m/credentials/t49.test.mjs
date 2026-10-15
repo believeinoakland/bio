@@ -3,7 +3,7 @@
    spent bootstrap credential with no recorded fingerprint reads claimed, and a claim with none is refused (R77). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD, FOUNDER_PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
+import { world, PASSWORD, FOUNDER_PASSWORD, FOUNDER_HANDLE, sha } from "./fixture.mjs";
 import { Credentials } from "../../../src/credentials/index.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
@@ -296,4 +296,51 @@ test("R76 the founder's Ask reads her own project: the grant's viewer `member:ad
   assert.notEqual(pred.scope, "DENY");
   const seen = w.rows(`SELECT b.bundle_id AS id FROM bundles b WHERE ${pred.sql} AND b.object_type='project'`, ...pred.args).map((r) => r.id);
   assert.ok(seen.includes("p-hers"), "her own project is read under her grant");
+});
+
+/* ===== R78: the founder's own run ===== */
+
+test("R78 the founder's run is minted a credential: member-scoped to her, bound to her run, as R63 mints a member's; both forms of her id; it ends with the run and with her sign-in's clearing", async () => {
+  const w = await founded();
+  for (const [i, member] of ["admin", "member:admin"].entries()) {
+    const run = `RUN-F${i}`;
+    const r = w.c.aiRunCredentialMint({ member, run, writes: ["airuntick", "airunclose"] });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.deepEqual([r.run, r.writes], [run, ["airuntick", "airunclose"]]);
+    assert.match(r.token, /^aik-[0-9a-f]{64}$/);
+    const row = w.row(`SELECT principal_kind, principal, minted_by, run, task_scope, secret_sha FROM ai_credentials WHERE token_id=?`, r.tokenId);
+    assert.deepEqual([row.principal_kind, row.principal, row.minted_by, row.run, row.task_scope],
+      ["member", "member:admin", "admin", run, "run"]);
+    assert.equal(row.secret_sha, sha(r.token), "only its digest is kept");
+    const look = w.c.aiCredentialLook({ secretSha: sha(r.token) });
+    assert.deepEqual([look.credential.run, look.credential.revoked, look.credential.expired], [run, false, false]);
+    assert.equal(w.c.aiRunCredentialsEnd({ run }).revoked, 1, "revoked at the run's end");
+  }
+  /* the next segment revokes the earlier one of the same run, as R63 states */
+  const a = w.c.aiRunCredentialMint({ member: "admin", run: "RUN-N", writes: ["airuntick"] });
+  const b = w.c.aiRunCredentialMint({ member: "admin", run: "RUN-N", writes: ["airuntick"] });
+  assert.equal(w.c.aiCredentialLook({ secretSha: sha(a.token) }).credential.revoked, true);
+  assert.equal(w.c.aiCredentialLook({ secretSha: sha(b.token) }).credential.revoked, false);
+});
+
+test("R78 controls: an inactive enrolled member is still refused ACCOUNT_MEMBER_NOT_ACTIVE (C-29.15); so are a machine, an unknown member and none; the founder is judged by every other refusal of R63 as a member is; she is admitted for her own run only", async () => {
+  const w = await founded();
+  await w.group("bob");
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  const before = unCounted(w);
+  for (const member of ["bob", "member:bob", "nobody", null, "", "class:ai", "token:ai", "admin:x", "Admin"]) {
+    const r = w.c.aiRunCredentialMint({ member, run: "RUN-1", writes: ["airuntick"] });
+    assert.deepEqual([r.ok, r.code, r.check], [false, "ACCOUNT_MEMBER_NOT_ACTIVE", "C-29.15"], String(member));
+  }
+  assert.equal(unCounted(w), before, "nothing minted");
+  /* her other refusals stand: malformed, then the keep-away */
+  for (const [run, writes] of [["", ["airuntick"]], [null, ["airuntick"]], ["RUN-1", []], ["RUN-1", ["promote"]]])
+    assert.equal(w.c.aiRunCredentialMint({ member: "admin", run, writes }).code, "AI_RUN_CREDENTIAL_MALFORMED");
+  assert.equal(w.c.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "admin" }).ok
+    || w.c.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "a review", by: "ann" }).ok, true);
+  assert.equal(w.c.aiRunCredentialMint({ member: "admin", run: "RUN-1", writes: ["airuntick"] }).code, "AI_KEPT_AWAY");
+  assert.equal(w.rows(`SELECT * FROM ai_credentials`).length, 0, "no refusal minted");
+  /* control: a member's own run is minted as before */
+  assert.equal(w.c.aiKeepAwaySet({ on: false, by: "admin" }).ok || w.c.aiKeepAwaySet({ on: false, by: "ann" }).ok, true);
+  assert.equal(w.c.aiRunCredentialMint({ member: "ann", run: "RUN-A", writes: ["airuntick"] }).ok, true);
 });

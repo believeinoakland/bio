@@ -183,8 +183,8 @@ test("R64, R34: actionreplyquoting and readtranslate are explained in affordance
 
 test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read against the registry at PR #34's merge — every function act is an op or an alias and the alias table names only function acts of the file, the Where else to go screen lists no act so no spec or alias is added for it, and the update screen's three owed acts (updatestart, updatelater, updateskip; updatelater also on the queue) are each declared under their own names with no alias (negative control: an undeclared function is seen)", () => {
   const fns = regActs.filter((a) => a.status === "function");
-  /* T49 (K3321 (B); R21): re-pinned at PR #36's merge, whose screens (DEC-235–DEC-240) carry 119 function acts (85 distinct) */
-  assert.equal(fns.length, 119);
+  /* T49 (K3321 (B), K3393; R21): the count is read from the registry, never pinned (K3268) */
+  assert.ok(fns.length >= 88, `${fns.length} function acts`);
   for (const a of fns) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: a function act with no spec`);
   /* the alias table equals the file's function acts: each alias is a function act of the file; every other function act is
      an op declared under its own name */

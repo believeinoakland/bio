@@ -1,6 +1,6 @@
 # BOB to affordances (T49)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -32,3 +32,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B5 · CHANGE
+
+K3393: on tranche/T49, `t36.test.mjs` R48 pins `act.plansubjectadd.does`'s English at f498560a37, which DEC-263 rewords ('Adds a matter to the plan…'): read it by key (R62), never its text. R62's red on DEC-264's 60 `act.*.name` reads is accepted by name until N1125 (T50): leave those. Merge the tranche, test, COMPLETE again.

@@ -44,6 +44,9 @@ const HANDLE_REFUSAL = MEMBERSHIP_CHECKS.HANDLE_FIXED.translation;
 const UNGATED = ["bootstrap", "login", "invitelook", "search", "frontier", "verify", "publishedcase", "instance", "progression",
   "captureprogressions"];
 
+/* K3393 (DEC-263, and DEC-259 to DEC-261 for signerregister): texts the design re-worded after f498560a37; they are read by key (R62), never by their text at the commit */
+const REWORDED_SINCE = ["plansubjectadd", "signerregister"];
+
 const { OP_ALIASES } = G;
 const gradedOrPublished = (op) => [G.RUNGS, G.RUNG_ABSENT, G.NON_ACTS].some((t) => Object.hasOwn(t, op))
   || [...A.ACTS, ...A.CAPTURE_ACTS, ...A.PER_ITEM_ACTS].some((a) => a.id === op);
@@ -59,7 +62,7 @@ const expected = () => {
   const held = new Map();
   for (const [k, text] of Object.entries(DESIGN)) {
     const op = heldAs(k);
-    if (!held.has(op)) held.set(op, k === "handlechange" ? HANDLE_REFUSAL : text);
+    if (!held.has(op)) held.set(op, k === "handlechange" ? HANDLE_REFUSAL : REWORDED_SINCE.includes(op) ? word(ACT_HELP_KEYS[op]) : text);
   }
   return [...held];
 };

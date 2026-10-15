@@ -2,47 +2,87 @@
    "Welcome a new member"), and the sweep of the registry's screens. Each step drives the page as a person does: the
    screens' own fields and controls (`[data-act]`, interface-shell R13; the shell's confirmation and reason, R11; the
    wizard guide's own controls, `[data-guide]`), the installer's own page; no op is called by the walker. Journey 28's
-   first two steps (civicsmith.org, `site`) wait on Bob's DNS act (N1011) and start here at the installer. */
+   first two steps are civicsmith.org's (`site`), served by the local arm at its address (`walkSite`). */
 import { StepFailed, settle } from "./walker.mjs";
-import { drawnState, sweepScreens, addressOf } from "./screens.mjs";
+import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
+import { requireWord, wordPattern, byWord } from "./words.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
 export const GROUP_NAME = "Lakeshore Tenants";
+export const FOUNDER_HANDLE = "rosa-l";
 
 /* ---------- the page's controls ---------- */
 
 const where = (page) => new URL(page.url()).pathname;
 
-/* The visible control of act `op` (in `within`, a selector, when given); throws, naming it, when the screen does not
-   draw it. */
-export async function control(page, op, { within = null, timeout = 10000 } = {}) {
-  const c = (within ? page.locator(within) : page).locator(`[data-act="${op}"]:visible`).first();
-  try { await c.waitFor({ state: "visible", timeout }); }
-  catch { throw new Error(`control ${op} is not on ${where(page)}`); }
-  return c;
+/* Opens each closed disclosure (`<details>`) that holds `locator`'s first element, outermost first, by clicking its
+   summary as a person does. */
+export async function reveal(locator) {
+  const n = await locator.first().evaluate((e) => {
+    let k = 0;
+    for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open) k += 1;
+    return k;
+  }).catch(() => 0);
+  for (let i = 0; i < n; i += 1) {
+    const summary = await locator.first().evaluateHandle((e) => {
+      const closed = [];
+      for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open) closed.push(d);
+      const outer = closed[closed.length - 1];
+      return outer && outer.querySelector(":scope > summary");
+    });
+    const el = summary.asElement();
+    if (!el) break;
+    await el.click();
+  }
 }
 
-/* Types `value` into the field with id `id`, as a person does (each keystroke). */
+/* The visible control of act `op` (in `within`, a selector, when given), opening the disclosure that holds it; throws,
+   naming it, when the screen does not draw it. */
+export async function control(page, op, { within = null, timeout = 10000, which = "" } = {}) {
+  const scope = within ? page.locator(within) : page;
+  const shown = scope.locator(`[data-act="${op}"]${which}:visible`).first();
+  try { await shown.waitFor({ state: "visible", timeout: Math.min(timeout, 2000) }); return shown; } catch { /* closed, or not drawn */ }
+  const any = scope.locator(`[data-act="${op}"]${which}`);
+  if (await any.count()) await reveal(any);
+  try { await shown.waitFor({ state: "visible", timeout }); }
+  catch { throw new Error(`control ${op} is not on ${where(page)}`); }
+  return shown;
+}
+
+/* Types `value` into the field with id `id`, as a person does, opening the disclosure that holds it. */
 export async function type(page, id, value) {
   const f = page.locator(`[id="${id}"]`).first();
+  if (await f.count()) await reveal(f);
   try { await f.waitFor({ state: "visible", timeout: 10000 }); }
   catch { throw new Error(`no field ${id} on ${where(page)}`); }
   await f.fill(value);
 }
 
 /* Presses act `op` after filling `fields` ({id: value}); then answers what the shell asks before it sends (interface-shell
-   R11): its confirmation, or a reason (`reason`). Waits for the answer to arrive. */
-export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk." } = {}) {
+   R11): its confirmation, or a reason (`reason`); and, when the shell asks her password again before an act that needs
+   a fresh sign-in (`REAUTH_DUE`), gives `password`. Waits for the answer to arrive. `nth` picks among several controls
+   of one act; `which` (a selector suffix, as `[data-version="…"]`) picks the control of one subject. */
+export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk.", password = null, nth = 0, which = "" } = {}) {
   for (const [id, value] of Object.entries(fields)) await type(page, id, value);
-  await (await control(page, op, { within })).click();
-  const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible').first();
-  try { await ask.waitFor({ state: "visible", timeout: 1500 }); } catch { /* sent at once */ }
-  if (await ask.count()) {
-    if ((await ask.getAttribute("data-shell")) === "reason-send")
-      await page.locator('.cs-reason textarea:visible').first().fill(reason);
-    await ask.click();
+  const c = await control(page, op, { within, which });
+  await (nth ? (within ? page.locator(within) : page).locator(`[data-act="${op}"]${which}:visible`).nth(nth) : c).click();
+  const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible, [data-shell="reauth"]:visible').first();
+  for (let i = 0; i < 3; i += 1) {
+    let h = null;
+    try { h = await ask.elementHandle({ timeout: 1500 }); } catch { break; }
+    const kind = await h.getAttribute("data-shell").catch(() => null);
+    if (!kind) break;
+    if (kind === "reason-send") await page.locator(".cs-reason textarea:visible").first().fill(reason);
+    if (kind === "reauth") {
+      if (!password) throw new Error(`act ${op} asks her password again, and the walk was given none`);
+      await page.locator("#cs-reauth-pw").fill(password);
+    }
+    await h.click().catch(() => {});
+    /* the shell takes its question away once answered; a next one is a new question */
+    await h.waitForElementState("hidden", { timeout: 15000 }).catch(() => {});
+    await settle(page);
   }
   await settle(page);
 }
@@ -71,13 +111,36 @@ async function tenCodes(page) {
 
 /* ---------- journey 28, the installer's half (local arm) ---------- */
 
+/* Journey 28's first two steps (DEC-201 (9), DEC-206 (5)): civicsmith.org, what Civicsmith is; "Start a group", what a
+   group needs; its "Create your group" opens the installer. Each control is found by its word (R14). */
+export async function walkSite(walk, page, siteOrigin, installerOrigin) {
+  await walk.step(page, "civicsmith.org: what Civicsmith is", async (p) => {
+    await p.goto(siteOrigin + "/");
+    await settle(p);
+    await shownWord(p, "screen.site.start");
+  });
+  await walk.step(page, "civicsmith.org: start a group, and create it", async (p) => {
+    await byWord(p, "screen.site.start").click();
+    await p.waitForURL((u) => u.pathname === "/start", { timeout: 15000 });
+    await settle(p);
+    await byWord(p, "screen.site.create").click();
+    await p.waitForURL((u) => u.origin === installerOrigin, { timeout: 15000 });
+    await settle(p);
+  });
+}
+async function shownWord(page, key) {
+  try { await byWord(page, key).waitFor({ state: "visible", timeout: 10000 }); }
+  catch { throw new Error(`no link or control "${key}" on ${page.url()}`); }
+}
+
 /* From the installer's first page to its last: the short name, Cloudflare's consent, the progress, the checks. Answers
-   the copy's address and the one-time password (kept secret by the walk). */
+   the copy's address and the one-time password (kept secret by the walk). A walk that came from civicsmith.org is on the
+   installer's first page already. */
 export async function walkInstaller(walk, page, installerOrigin) {
   let copy = null, boot = null;
   walk.mask.push("#out-boot", "#out-probe", '[href*="#invite="]', "[data-invite-link]", '[data-secret]');
   await walk.step(page, "install: the installer's first page", async (p) => {
-    await p.goto(installerOrigin + "/");
+    if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
     await p.locator("#slug").fill(SLUG);
     const profile = p.locator('input[name="profile"]').first();
     if (await profile.count()) await profile.check();
@@ -92,8 +155,9 @@ export async function walkInstaller(walk, page, installerOrigin) {
     await p.waitForURL(/dash\.cloudflare\.com\/oauth2\/auth/, { timeout: 15000 });
   });
   await walk.step(page, "install: Cloudflare's permission, allowed", async (p) => {
-    await p.locator("#allow").click();
-    await p.waitForURL(/\/callback\?/, { timeout: 15000 });
+    /* the callback answers when the install has run, which can take longer than a click waits */
+    await p.locator("#allow").click({ noWaitAfter: true });
+    await p.waitForURL(/\/callback\?/, { timeout: 180000 });
   });
   await walk.step(page, "install: each step finishes, the checks pass", async (p) => {
     await p.locator("#done:not([hidden]), #fail:not([hidden])").first().waitFor({ timeout: 120000 });
@@ -112,9 +176,14 @@ export async function walkInstaller(walk, page, installerOrigin) {
 
 /* ---------- journey 28, inside the group's Civicsmith ---------- */
 
-/* The founder: the hand-over, the claim with the one-time password filled in, the ten codes, the group's name, Home in a
-   new group, and an invitation for the first member. */
-export async function walkFounder(walk, page, { base, founder }) {
+/* The founder: the hand-over, the claim with the one-time password filled in and her own handle (R9 step 1), the ten
+   codes, the group's name, Home in a new group, and an invitation for the first member. She claims by her handle where
+   the claim asks it (screens-entry R6), or, where the claim does not, chooses it on setup once claimed
+   (`founderhandleset`, DEC-230); either way she then signs in by it. `founder.handle` null claims with none (R7's
+   handleless founder, DEC-230), as a group claimed before T49 was. `whileHandleless(page)`, when given, is walked while
+   she has no handle yet (R7's sweep with none, K3380), before she chooses one. Answers the invitation link and whether
+   the claim itself took her handle. */
+export async function walkFounder(walk, page, { base, founder, whileHandleless = null }) {
   await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
     await p.waitForURL((u) => u.origin === base && u.pathname === "/app/setup", { timeout: 20000 });
@@ -122,14 +191,48 @@ export async function walkFounder(walk, page, { base, founder }) {
     await requireDrawn(walk, p, "setup");
     if (!(await p.locator("#su-otp").inputValue())) throw new Error("the one-time password is not filled in");
   });
-  await walk.step(page, "setup: claim; she is the group's first administrator", async (p) => {
-    await act(p, "claim", { fields: { "su-pw": founder.password, "su-pw2": founder.password } });
+  let byHandle = false;
+  await walk.step(page, founder.handle ? "1 · setup: claim with her own handle; she is the group's first administrator"
+    : "setup: claim; she is the group's first administrator", async (p) => {
+    const fields = { "su-pw": founder.password, "su-pw2": founder.password };
+    /* the claim's form drawn first: whether it asks a handle is read from the form, never before it is there */
+    try { await p.locator("#su-pw").waitFor({ state: "attached", timeout: 15000 }); } catch { throw new Error("the claim's form is not drawn"); }
+    if (await p.locator("#su-handle").count()) {
+      /* the claim requires a handle (screens-entry R17): hers, or, for a walk with none chosen, the walk's own */
+      if (!founder.handle) founder.handle = FOUNDER_HANDLE;
+      fields["su-handle"] = founder.handle; byHandle = true;
+    }
+    await act(p, "claim", { fields });
     await shown(p, '[data-state="claimed"]', "the claim");
   });
+  /* a claim that answers no session: she signs in by her handle on her own device (screens-entry R6, R17) */
+  if (byHandle && !(await page.locator("pre[data-codes]").count()) && await page.locator('[data-state="claimed"] ~ * a[href="/app/front"], a[href="/app/front"]').count())
+    await signInBy(walk, page, base, founder, "1 · sign in by her handle");
   await walk.step(page, "setup: her ten recovery codes, shown once", async (p) => {
+    if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await tenCodes(p);
   });
+  if (!byHandle && whileHandleless) await whileHandleless(page);
+  if (founder.handle && !byHandle) {
+    /* a handle not chosen fails the walk, and she goes on as she is signed in, so the rest is still walked */
+    let chosen = true;
+    await walk.step(page, "1 · setup: she chooses her own handle", async (p) => {
+      await open(walk, p, base, "/app/setup", "setup");
+      await act(p, "founderhandleset", { fields: { "su-fh": founder.handle }, password: founder.password });
+      await requireWord(p, "founder.handle.done", { vars: { handle: founder.handle }, within: "#cs-main" });
+    }).catch((e) => { if (!(e instanceof StepFailed)) throw e; chosen = false; });
+    if (!chosen) founder.handle = null;
+  }
+  if (founder.handle && !byHandle) {
+    await walk.step(page, "1 · sign out, to sign in by her handle", async (p) => {
+      await open(walk, p, base, "/app/account", "account");
+      await act(p, "signout");
+      await shown(p, '[data-state="signedout"]', "the signed-out state");
+    });
+    await signInBy(walk, page, base, founder, "1 · sign in by her handle");
+  }
   await walk.step(page, "setup: the group's name", async (p) => {
+    if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await act(p, "groupnameset", { fields: { "su-name": GROUP_NAME } });
     await p.locator("a[href='/app'][data-nav]").last().click();
     await settle(p);
@@ -139,7 +242,20 @@ export async function walkFounder(walk, page, { base, founder }) {
     await shown(p, "a[href='/app/members']", "the invitation to invite members");
   });
   const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
-  return { invite };
+  return { invite, byHandle };
+}
+
+/* Signs `who` in by her handle on the front screen; `whoami` must then answer that handle (R9 step 1). */
+export async function signInBy(walk, page, base, who, label) {
+  await walk.step(page, label, async (p) => {
+    walk.whoami = null;
+    await open(walk, p, base, "/", "front");
+    await act(p, "login", { fields: { "fs-handle": who.handle, "fs-pw": who.password } });
+    await p.waitForFunction(() => !document.querySelector("#fs-pw"), null, { timeout: 15000 });
+    await settle(p);
+    const handle = walk.whoami && (walk.whoami.handle ?? walk.whoami.session?.handle);
+    if (handle !== undefined && handle !== null && handle !== who.handle) throw new Error(`signed in, the plane answers the handle ${handle}, not hers`);
+  });
 }
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
@@ -296,7 +412,19 @@ export async function sweep(walk, page, base, { screens = sweepScreens(), journe
 export const drawnActs = (page) => page.evaluate(() => [...new Set([...document.querySelectorAll("[data-act]")].map((e) => e.getAttribute("data-act")))].sort());
 
 export const credentials = () => ({
-  founder: { password: "founder-" + rand(12) },
+  founder: { handle: FOUNDER_HANDLE, password: "founder-" + rand(12) },
   member: { handle: "mai-k", password: "member-" + rand(12) },
   newcomer: { handle: "teo-r", password: "newcomer-" + rand(12) },
 });
+
+/* R7: the sweep as the founder, her handle held or with none: no screen draws `admin` as a person's name or handle. With
+   no handle, DEC-230's own words are excepted (they say she signs in as admin until she chooses); with one, nothing is. */
+export function sweepAsFounder(walk, page, base, { handle, screens = undefined }) {
+  const except = handle ? [] : ADMIN_WORDS.map((k) => wordPattern(k));
+  return sweep(walk, page, base, { ...(screens ? { screens } : {}), journey: handle ? "R7 as the founder, her handle held" : "R7 as the founder, with no handle",
+    each: async (p, s, drawn) => {
+      if (!drawn) return;
+      const at = adminAsName(await p.locator("body").innerText(), { except });
+      if (at.length) walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: ${at.map((a) => `…${a.at}…`).join(" | ")}`);
+    } });
+}
