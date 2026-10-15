@@ -24,7 +24,7 @@ import { ARCHIVE_SCREEN } from "./archive.mjs";
 export const SCREEN_KEYS = Object.freeze({
   capture: Object.freeze([
     "act.acquire.label.capture", "act.capturerequest.label.capture", "act.captureupload.label.capture",
-    "act.cite.label.document", "act.monitor.label.capture", "act.monitorset.label.capture",
+    "capture.cite", "capture.cite.tip", "capture.filed.project", "capture.filed.question", "act.monitor.label.capture", "act.monitorset.label.capture",
     "act.testify.label.capture", "act.writinghelp.label.capture", "ai.label.untested", "capture.fieldneeded",
     "photo.reminder", "refusal.BAD_LOCATOR", "refusal.EMPTY", "refusal.FETCH_FAILED", "refusal.SOURCE_REFUSED",
     "refusal.TOO_LARGE", "screen.capture.address.archive", "screen.capture.address.checked",

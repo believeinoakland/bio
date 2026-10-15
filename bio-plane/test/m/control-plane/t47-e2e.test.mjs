@@ -77,7 +77,15 @@ async function until(p, ok, ms = 15000) {
   while (Date.now() < end) { if (ok()) return true; await p.settle(20); await new Promise((r) => setTimeout(r, 10)); }
   return ok();
 }
-async function run(p, n = 30) { for (let i = 0; i < n; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 5)); } }
+/* Runs the page until it has gone quiet: no new request for several rounds (the merged screens ask many reads, so a fixed
+   number of rounds is a race); bounded. */
+async function run(p) {
+  let last = -1, stable = 0;
+  for (let i = 0; i < 600 && stable < 10; i++) {
+    await p.settle(20); await new Promise((r) => setTimeout(r, 10));
+    stable = p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
+  }
+}
 const main = (p) => p.doc.getElementById("cs-main");
 const text = (el) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();
 const bearer = (r) => r.headers.Authorization || r.headers.authorization || "";
@@ -170,6 +178,7 @@ test("R81 end to end: a wizard started from one of Home's front doors: the doors
   assert.ok(script && script.version, JSON.stringify(offered.result.scripts).slice(0, 300));
 
   const p = await appAt("/app");
+  await until(p, () => p.byOp("startfrom").length > 0 && main(p).querySelector('[data-front="doors"] [data-door]'));
   answered(p, "startfrom");
   const m = main(p);
   const doors = m.querySelector('[data-front="doors"]');
