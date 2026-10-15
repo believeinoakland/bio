@@ -66,7 +66,7 @@ export const setup = {
     if (!signed) {
       if (ui.taken) return out.concat(taken()).join("");
       if (ui.claimed) {
-        out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed.nosignin")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
+        out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed.nosignin", { handle: ui.claimed.handle || "" })}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
         return out.join("");
       }
       out.push(cs.state(data.boot, (b) => {
@@ -239,7 +239,7 @@ export const setup = {
         const handle = a && typeof a.handle === "string" && a.handle ? a.handle : String(cs.value("su-handle") || "").trim();
         const l = await cs.call("login", { body: { handle, password, device: "own" } });
         const login = l && l.result !== undefined ? l.result : l;
-        if (!(login && login.ok !== false && login.token)) { cs.set("claimed", true); return { stay: true }; }
+        if (!(login && login.ok !== false && login.token)) { cs.set("claimed", { handle }); return { stay: true }; }
         await cs.signin(login, { device: "own", handle, stay: true });
         view.ui.claimedHere = true;
         const c = await cs.call("recoverycodesissue", { body: {} });

@@ -146,7 +146,9 @@ test("R20 state c, 'Already claimed': drawn for a claim refused ALREADY_CLAIMED 
 test("R6 not armed says so; a claim whose sign-in fails says sign in, linking front", async () => {
   has(await open("setup", { table: plane({ bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: false } } }) }), "screen.setup.unarmed");
   const n = await claimed({ login: { ok: false, code: "SIGN_IN_REFUSED" } });
-  has(n, "screen.setup.claimed.nosignin");
+  // the handle she chose, never admin (R17)
+  has(n, "screen.setup.claimed.nosignin", { handle: HANDLE });
+  assert.doesNotMatch(n.drawn(), /\badmin\b/);
   assert.ok(links(n.tree).includes("/app/front"));
   assert.ok(!n.requests.some((r) => r.op === "recoverycodesissue"));
 });
