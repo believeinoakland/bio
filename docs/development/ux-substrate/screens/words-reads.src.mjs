@@ -289,10 +289,10 @@ const DECISIONS = [
   ["control-plane", "control-plane/index.mjs", "^capabilities are set by an administrator and gate", dev("whoami")],
   ["control-plane", "control-plane/index.mjs", "^a machine credential has no member behind it", dev("whoami")],
   ["control-plane", "control-plane/index.mjs", "^this promotion says it is a replay", dev("replay")],
-  ["control-plane", "control-plane/index.mjs", "^your group's Civicsmith has no assistant bound to it", "ai.refused.notdeployed"],
-  ["control-plane", "control-plane/index.mjs", "=the text was not checked", "ai.refused.notdeployed"],
-  ["control-plane", "control-plane/index.mjs", "=nothing was translated", "ai.refused.notdeployed"],
-  ["control-plane", "control-plane/index.mjs", "=the run was not started", "ai.refused.notdeployed"],
+  ["control-plane", "control-plane/index.mjs", "^your group's Civicsmith has no assistant bound to it", "refusal.AGENT_WORKER_UNBOUND"],
+  ["control-plane", "control-plane/index.mjs", "=the text was not checked", "refusal.AGENT_WORKER_UNBOUND"],
+  ["control-plane", "control-plane/index.mjs", "=nothing was translated", "refusal.AGENT_WORKER_UNBOUND"],
+  ["control-plane", "control-plane/index.mjs", "=the run was not started", "refusal.AGENT_WORKER_UNBOUND"],
   ["control-plane", "control-plane/index.mjs", "~It is not stored and cannot be recovered", "credential.token.once"],
   ["control-plane", "control-plane/index.mjs", "~Give it to the recipient: it lets them READ this one draft", "screen.review-copy.link.once"],
   ["control-plane", "control-plane/index.mjs", "~Give it to the reviewer: it lets them READ this one template version", "template.review.secret.once"],
@@ -304,7 +304,7 @@ const DECISIONS = [
   ["plane", "plane/ask.mjs", "=the draft did not come back. Nothing was kept.", "refusal.AGENT_WORKER_SILENT"],
   ["plane", "plane/ask.mjs", "=the assistant member did not answer. Nothing was kept.", "refusal.AGENT_WORKER_SILENT"],
   ["plane", "plane/ask.mjs", "=the assistant member's answer was not JSON. Nothing was kept.", "refusal.AGENT_WORKER_SILENT"],
-  ["plane", "plane/ask.mjs", "^your group's Civicsmith has no assistant bound to it", "ai.refused.notdeployed"],
+  ["plane", "plane/ask.mjs", "^your group's Civicsmith has no assistant bound to it", "refusal.AGENT_WORKER_UNBOUND"],
   ["plane", "plane/ask.mjs", "^the language this passage is read in could not be read", "translate.undetermined.language"],
   ["plane", "plane/ask.mjs", "^a passage of more than", "refusal.PASSAGE_TOO_LONG"],
   ["plane", "plane/ask.mjs", "~project keeps its material away could not be read", "ai.keepaway.unread"],
@@ -349,9 +349,11 @@ const DEFAULTS = {
 };
 const DEFAULT_BY_FILE = { "plane/screens.mjs": "legacy", "plane/unpack.mjs": "diag", "plane/wiring.mjs": "diag", "plane/wizards.mjs": "diag" };
 /* A key a module names that the design holds under another name: the design's governs. */
-/* DEC-265 (B226 (5)): reads a module's requirements name ahead of its source: screens-settings R32 draws each section's
+/* DEC-271 (B228): AGENT_WORKER_UNBOUND's details read refusal.AGENT_WORKER_UNBOUND (DEC-267), not the interim ai.refused.notdeployed;
+   admission reads DEC-262's session limit. DEC-265 (B226 (5)): reads a module's requirements name ahead of its source: screens-settings R32 draws each section's
    name and purpose (the settings index's thirteen sections and its own), R38 connect.ifnot and the refusal reference. */
 const REQUIREMENT_READS = {
+  "admission": ["refusal.DOOR_RATE_LIMITED.session"],
   "screens-settings": [...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members",
     "places", "security", "updates", "translations", "wizards"].flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`]),
     "connect.ifnot", "screen.connect.refusal.reference"],

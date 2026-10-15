@@ -5481,6 +5481,7 @@
     "refusal.CLASS_FORBIDDEN",
     "refusal.CREDENTIAL_IN_ADDRESS",
     "refusal.DOOR_RATE_LIMITED",
+    "refusal.DOOR_RATE_LIMITED.session",
     "refusal.GROUP_IDENTITY_NEEDS_SESSION",
     "refusal.MACHINE_CREDENTIAL_REQUIRED",
     "refusal.MEMBER_TOKEN_RETIRED",
@@ -5496,7 +5497,7 @@
     "refusal.SESSION_ROUTE_NOT_RECORDED"
    ],
    "counts": {
-    "reads": 22,
+    "reads": 23,
     "minted": 21,
     "keyedRows": 0,
     "literalKeys": 0,
@@ -9162,7 +9163,6 @@
   },
   "control-plane": {
    "reads": [
-    "ai.refused.notdeployed",
     "credential.token.once",
     "draft.machine.label",
     "draft.machine.label.group",
@@ -9172,6 +9172,7 @@
     "file.archive.summary",
     "file.archive.title",
     "file.log.unpacked",
+    "refusal.AGENT_WORKER_UNBOUND",
     "screen.review-copy.link.once",
     "template.review.secret.once"
    ],
@@ -9270,8 +9271,8 @@
     "ai.draft.planunread",
     "ai.draft.recordsunread",
     "ai.keepaway.unread",
-    "ai.refused.notdeployed",
     "refusal.AGENT_WORKER_SILENT",
+    "refusal.AGENT_WORKER_UNBOUND",
     "refusal.ASK_NOT_A_MEMBER",
     "refusal.NO_SUCH_NOTE",
     "refusal.PASSAGE_TOO_LONG",
