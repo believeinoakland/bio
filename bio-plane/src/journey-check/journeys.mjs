@@ -40,11 +40,11 @@ export async function reveal(locator) {
 
 /* The visible control of act `op` (in `within`, a selector, when given), opening the disclosure that holds it; throws,
    naming it, when the screen does not draw it. */
-export async function control(page, op, { within = null, timeout = 10000 } = {}) {
+export async function control(page, op, { within = null, timeout = 10000, which = "" } = {}) {
   const scope = within ? page.locator(within) : page;
-  const shown = scope.locator(`[data-act="${op}"]:visible`).first();
+  const shown = scope.locator(`[data-act="${op}"]${which}:visible`).first();
   try { await shown.waitFor({ state: "visible", timeout: Math.min(timeout, 2000) }); return shown; } catch { /* closed, or not drawn */ }
-  const any = scope.locator(`[data-act="${op}"]`);
+  const any = scope.locator(`[data-act="${op}"]${which}`);
   if (await any.count()) await reveal(any);
   try { await shown.waitFor({ state: "visible", timeout }); }
   catch { throw new Error(`control ${op} is not on ${where(page)}`); }
@@ -63,11 +63,11 @@ export async function type(page, id, value) {
 /* Presses act `op` after filling `fields` ({id: value}); then answers what the shell asks before it sends (interface-shell
    R11): its confirmation, or a reason (`reason`); and, when the shell asks her password again before an act that needs
    a fresh sign-in (`REAUTH_DUE`), gives `password`. Waits for the answer to arrive. `nth` picks among several controls
-   of one act. */
-export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk.", password = null, nth = 0 } = {}) {
+   of one act; `which` (a selector suffix, as `[data-version="…"]`) picks the control of one subject. */
+export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk.", password = null, nth = 0, which = "" } = {}) {
   for (const [id, value] of Object.entries(fields)) await type(page, id, value);
-  const c = await control(page, op, { within });
-  await (nth ? (within ? page.locator(within) : page).locator(`[data-act="${op}"]:visible`).nth(nth) : c).click();
+  const c = await control(page, op, { within, which });
+  await (nth ? (within ? page.locator(within) : page).locator(`[data-act="${op}"]${which}:visible`).nth(nth) : c).click();
   const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible, [data-shell="reauth"]:visible').first();
   for (let i = 0; i < 3; i += 1) {
     let h = null;

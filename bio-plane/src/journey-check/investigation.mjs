@@ -224,8 +224,10 @@ async function openDock(page) {
 async function concludeOn(walk, page, { question, project }) {
   await walk.step(page, "12 · accept a reading, stand on it for the project, and conclude", async (p) => {
     await p.goto(question); await settle(p);
-    await act(p, "versionaccept", { reason: "I read the notice; it says the repair was ordered." });
-    await act(p, "versioncurrent", { reason: "The project stands on the city's own order." });
+    /* the reading that answers the question: the one the assistant composed, not the table's own "nothing at this
+       level" (`level-empty-…`, which states no claim and so cannot be concluded on) */
+    await act(p, "versionaccept", { which: ':not([data-version^="level-empty"])', reason: "I read the notice; it says the repair was ordered." });
+    await act(p, "versioncurrent", { which: ':not([data-version^="level-empty"])', reason: "The project stands on the city's own order." });
     await act(p, "conclude", { fields: { "question-conclude-falsifier": "The city withdrawing or amending notice 2026-118",
       "question-conclude-commentary": "The city's notice orders the landlord to repair the roof within 28 days." },
     reason: "The notice answers the question." });
