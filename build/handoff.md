@@ -9,7 +9,7 @@ Bob's meter is at 89%; the other account is at 97% until Saturday. Bob: "Keep wo
 **Where the release stands (K3428–K3432):**
 - **Cut:** `dist/cut-0.85.0` @ `1053faa726`, signed (run 38772108995), CONTROLS 7/7. The installer embeds the signed release; newgroup 209/0.
 - **Installer:** `newgroup` 0.85.0 is deployed (K3431).
-- **Open question:** Bob's install of `biosmoke8` was refused by the installer's one-installation-per-account check (K3432). The choice is put to Bob (A recommended; B the alternative); his answer comes first.
+- **Bob chose B (K3434):** wipe this account's Civicsmith, then Bob reruns the installer. The wipe list and its order are in K3434. Follow the B line below.
 - **Then, by his answer:**
   - **A:** follow `build/plan/draft-biosmoke8-install.md` steps 2–5. Leave `ADMIN_TOKEN` out of the secrets file and walk Bob through adding it himself as a secret in the dashboard, so no secret is printed.
   - **B:** delete in this order (each delete is Bob's approval in the session, K1715): civicos, bobux, biosmoke7, the fleet, its containers, then the buckets once emptied. Then Bob runs the installer.
