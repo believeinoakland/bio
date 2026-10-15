@@ -276,6 +276,10 @@ Approved by Bob ("A", 2026-10-15) for T49 only; no precedent. Each job runs conc
 - **T49-34 · reading-pipeline** (L4) · (K3392 (1)) R33: a text-path reading carries its chain · claude-sonnet-5-5.
 - **T49-35 · extraction** (L4) · (K3387) R76: `op=reading` answers `text_units` · claude-sonnet-5-5.
 - **T49-36 · notice-producers** (L11) · (N1133, K3393) R23: its words read by key; its five reds cleared · claude-haiku-5-5.
+- **T49-37 · agent-worker** (L6) · (N1137, K3407) R90: compose's facts carry each held document's record id, so step 12's `conclude` is admitted · claude-sonnet-5-5.
+- **T49-38 · machinery-producers** (L11) · (N1138, K3407; DEC-272) R13: `capture-completed-unattended` read by key, the starter by handle, never an id · claude-haiku-5-5.
+
+Approved by Bob ("A", 2026-10-15, to step 12) for T49-37 and T49-38 (K3407); once both are merged, journey-check re-walks from step 12 through R10.
 
 ## Count
 
