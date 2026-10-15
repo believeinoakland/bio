@@ -1,21 +1,28 @@
-/* screens-entry R6 (and R8–R11): `setup`, "Become your group's first administrator", in the setup frame at
+/* screens-entry R6 (and R8–R11, R14–R20): `setup`, "Become your group's first administrator", in the setup frame at
    `/app/setup` (the shell forwards `/#boot=` here and hands the one-time password as `view.fragment.boot`, taken from
-   the address on load). The claim: the one-time password, the founder's password twice (12 or more), `claim`, then
-   `login` as `admin` on an own device and `recoverycodesissue`, the ten codes shown once. Then each part is the
-   registry's act for it, every part skippable and resumable from what the reads answer: name and website, places,
-   offices, the assistant, the court notice, the hosting account (beside `HOSTING_CONTROL`'s words), a second
-   administrator, security tools; "Finished" links `/app`. A refused part keeps the step and sends nothing more (the
-   shell draws the refusal beside its act and keeps what was typed). Self-contained (interface-shell R21). */
+   the address on load). The claim (R6, R17): the one-time password, the handle the founder chooses, her password twice
+   (12 or more), `claim` with the handle, then `login` by the handle the claim answers (never `admin`) on an own device
+   and `recoverycodesissue`, the ten codes shown once (R20). Then each part is the registry's act for it, every part
+   skippable and resumable from what the reads answer: name and website, places, offices, the assistant, the court
+   notice, the hosting account (beside `HOSTING_CONTROL`'s words), a second administrator, security tools; "Finished"
+   links `/app`. A refused part keeps the step and sends nothing more (the shell draws the refusal beside its act and
+   keeps what was typed). R18: a founder signed in with no handle held (`whoami`: `rootOfTrust`, `handle: null`) is
+   asked it once (`founderhandleset`), or "Later". R19: anyone else signed in sees only that the group is set up, and
+   Home. R20: an instance already claimed draws state c, "Already claimed". Self-contained (interface-shell R21). */
 
 export const setup = {
   id: "setup",
 
   reads(view) {
-    const signed = !!(view.me && view.me.session);
-    if (!signed) return { boot: { op: "bootstrap" } };
+    const me = view.me || {};
+    if (!me.session) return { boot: { op: "bootstrap" } };
+    // R19: a reader who is not the founder reads nothing here; R18: nor does a founder still choosing her handle
+    if (me.rootOfTrust !== true || !me.handle) return {};
     return {
       boot: { op: "bootstrap" },
       identity: { op: "groupidentity" },
+      // R19: "Show my recovery codes" only before the founder has seen hers
+      codes: { op: "recoverycodesstate" },
       profiles: { op: "profiles" },
       place: { op: "placewantedstate" },
       keepaway: { op: "aikeepawaystate" },
@@ -32,38 +39,66 @@ export const setup = {
     const ui = view.ui || {};
     const data = view.data || {};
     const ok = (r) => (r && r.state === "ok" ? r.value : null);
-    const signed = !!(view.me && view.me.session);
+    const me = view.me || {};
+    const signed = !!me.session;
     const boot = ok(data.boot) || {};
     const fragment = view.fragment || {};
+    const home = (key) => `<div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app" data-nav>${W(key)}</a></div>`;
     const hosting = () => {
       const p = [];
       for (let i = 1; i < 20; i++) { const k = "screen.hosting.s" + i; const t = W(k); if (t === k) break; p.push(`<p>${t}</p>`); }
       return `<div class="mk-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${p.join("")}<p>${W("screen.hosting.guide")}</p></div>`;
     };
+    // R20: the ten codes shown once, with "Copy them" and "Save them as a file"
     const codes = () => (ui.codes
-      ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><pre data-codes aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
+      ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("setup.codes.once")}</p><p class="mk-note">${W("screen.entry.codes.what")}</p><pre data-codes aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.copy(ui.codes.join("\n"), { label: "setup.codes.copy" }) || "")}${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "setup.codes.save" }) || "")}</div>`)
       : ui.nocodes ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "");
+    // R20 state c: an instance already claimed
+    const taken = () => cs.sec("setup.claimed.heading", `<p class="mk-sub">${W("setup.claimed.sub")}</p><p class="cs-row" data-state="taken">${W("refusal.ALREADY_CLAIMED")}</p>`
+      + `<div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
     const out = [cs.title()];
     // R15: the lede ("Claim what you just installed…") follows the claimed state: drawn only while the instance answers
     // that it is not yet claimed and no one here has claimed it
-    const unclaimed = !signed && !ui.claimed && !!ok(data.boot) && boot.claimed !== true;
+    const unclaimed = !signed && !ui.claimed && !ui.taken && !!ok(data.boot) && boot.claimed !== true;
     if (unclaimed) out.push(`<p class="mk-sub" data-lede>${W(S + "lede")}</p>`);
 
-    // ---- the claim (R6): before a session exists ----
+    // ---- the claim (R6, R17): before a session exists ----
     if (!signed) {
+      if (ui.taken) return out.concat(taken()).join("");
       if (ui.claimed) {
         out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed.nosignin")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
         return out.join("");
       }
       out.push(cs.state(data.boot, (b) => {
-        if (b.claimed === true) return `<p class="cs-row" data-state="taken">${W(S + "taken")}</p><div class="mk-acts"><a class="cs-btn" href="/app/front" data-nav>${W("screen.entry.backtofront")}</a></div>`;
+        if (b.claimed === true) return taken();
         if (b.bootstrapConfigured === false) return `<p class="cs-row" data-state="unarmed">${W(S + "unarmed")}</p>`;
         return cs.sec(S + "claim", hosting()
           + cs.field("su-otp", S + "otp", { help: S + "otp.help", autocomplete: "off", value: typeof fragment.boot === "string" ? fragment.boot : "" })
+          // R17: the handle she chooses, between the one-time password and her own password
+          + cs.field("su-handle", S + "handle", { help: S + "handle.help", autocomplete: "username" })
           + cs.field("su-pw", S + "own", { type: "password", help: S + "own.help", autocomplete: "new-password" })
           + cs.field("su-pw2", "screen.entry.again", { type: "password", help: S + "again.help", autocomplete: "new-password" })
           + `<div class="mk-acts">${cs.act("claim", { tone: "primary" })}</div>`);
       }));
+      return out.join("");
+    }
+
+    // ---- R19: a member, or an administrator who is not the founder: their own state, no founder words ----
+    if (me.rootOfTrust !== true) {
+      out.push(cs.sec("setup.member.heading", `<p class="mk-sub">${W("setup.member.sub")}</p>` + home("setup.member.home")));
+      return out.join("");
+    }
+
+    // ---- R18: the founder of a group claimed before T49 chooses her handle once, or later ----
+    if (ui.handleDone) {
+      out.push(cs.sec("founder.handle.title", `<p class="cs-row" data-state="done">${W("founder.handle.done", { handle: ui.handleDone })}</p>` + home("setup.member.home")));
+      return out.join("");
+    }
+    if (!me.handle) {
+      out.push(cs.sec("founder.handle.title", `<p class="mk-sub">${W("founder.handle.says")}</p>`
+        + cs.field("su-fh", S + "handle", { help: S + "handle.help", autocomplete: "username" })
+        + `<div class="mk-acts">${cs.act("founderhandleset", { tone: "primary", label: "founder.handle.choose" })}<a class="cs-btn" data-tone="quiet" href="/app" data-nav>${W("founder.handle.later")}</a></div>`
+        + `<p class="mk-small">${W("founder.handle.later.help")}</p>`));
       return out.join("");
     }
 
@@ -81,11 +116,17 @@ export const setup = {
       ["offices", !!ui.offices], ["assistant", keep.on === true || gk.held === true], ["court", court.choice === "tell" || court.choice === "dont"],
       ["hosting", !!host.current], ["admins", !!ui.invite], ["security", tools.length > 0],
     ];
-    out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed")}</p>`);
+    // R17: the claim's next step, once, with the group and the handle she chose (R19: the founder only)
+    if (ui.claimedHere) {
+      const group = id.display_name ? id.display_name : { html: W("screen.entry.group") };
+      out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed", { group, handle: me.handle })}</p>`);
+    }
     // the design's steps: each done one marked, the first open one current (R14: "Name" stays open while it is skipped)
     const current = steps.findIndex(([, done]) => !done);
     out.push(`<nav aria-label="${W(S + "steps")}"><ol class="mk-steps">${steps.map(([k, done], i) => `<li${done ? ' class="done"' : ""}${i === current ? ' aria-current="step"' : ""}>${W(S + "step." + k)}${done ? ` <span class="sr">${W(S + "step.done")}</span>` : ""}</li>`).join("")}</ol></nav>`);
-    out.push(codes() || cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><div class="mk-acts">${cs.act("recoverycodesissue")}</div>`));
+    // R19: "Show my recovery codes" only while she holds none she has seen (no unspent code)
+    const held = ok(data.codes);
+    out.push(codes() || (held && held.held === false ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><div class="mk-acts">${cs.act("recoverycodesissue")}</div>`) : ""));
 
     // R14: the group's name, the first part after the codes, before any other; its help says where the name shows, and
     // while it is skipped every page says "Your group"
@@ -174,31 +215,59 @@ export const setup = {
   closed(cs, view) { if (view.ui) delete view.ui.pending; },
 
   acts: [
-    // R6, R8: the one-time password and the founder's password in the body only, the password typed twice alike
+    // R6, R8, R17: the one-time password, the handle she chooses and her password in the body only, the password typed
+    // twice alike; no handle sends nothing (a claim with none would hold none)
     { op: "claim",
       send(view, el, cs) {
         const bootstrapToken = String(cs.value("su-otp") || "").trim();
+        const handle = String(cs.value("su-handle") || "").trim();
         const password = String(cs.value("su-pw") || "");
         if (!bootstrapToken) return { refuse: "screen.setup.nootp" };
+        if (!handle) return { refuse: "refusal.NO_HANDLE" };
         if (password !== String(cs.value("su-pw2") || "")) return { refuse: "screen.entry.differ" };
         if (password.length < 12) return { refuse: "screen.entry.short" };
         // held in the page's memory only until the sign-in below, never drawn, stored or put in an address
         view.ui.pending = password;
-        return { body: { bootstrapToken, password } };
+        return { body: { bootstrapToken, password, handle } };
       },
-      // then `login` as `admin` on an own device, the session handed to the shell, and the ten codes shown once
+      // then `login` by the handle the claim answers (R17: never `admin`) on an own device, the session handed to the
+      // shell, and the ten codes shown once (R20)
       async done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
         const password = view.ui.pending;
         delete view.ui.pending;
-        const l = await cs.call("login", { body: { handle: "admin", password, device: "own" } });
+        const handle = a && typeof a.handle === "string" && a.handle ? a.handle : String(cs.value("su-handle") || "").trim();
+        const l = await cs.call("login", { body: { handle, password, device: "own" } });
         const login = l && l.result !== undefined ? l.result : l;
         if (!(login && login.ok !== false && login.token)) { cs.set("claimed", true); return { stay: true }; }
-        await cs.signin(login, { device: "own", handle: "admin", stay: true });
+        await cs.signin(login, { device: "own", handle, stay: true });
+        view.ui.claimedHere = true;
         const c = await cs.call("recoverycodesissue", { body: {} });
         const codes = c && c.result !== undefined ? c.result : c;
-        if (codes && Array.isArray(codes.codes) && codes.codes.length) view.ui.codes = codes.codes.map(String); else view.ui.nocodes = true;
+        if (codes && codes.ok !== false && Array.isArray(codes.codes) && codes.codes.length) view.ui.codes = codes.codes.map(String); else view.ui.nocodes = true;
       },
-      refusals: { ALREADY_CLAIMED: "screen.setup.taken" } },
+      // R17: a refused handle keeps the handle and clears the passwords; R20: ALREADY_CLAIMED draws state c. Every
+      // refusal takes the password out of the page's memory (R8)
+      refusals: {
+        ALREADY_CLAIMED: (r, cs) => { cs.set("pending", null); cs.set("taken", true); return ""; },
+        NO_HANDLE: (r, cs) => { cs.set("pending", null); cs.fill("su-pw", ""); cs.fill("su-pw2", ""); return cs.w("refusal.NO_HANDLE"); },
+        BAD_HANDLE: (r, cs) => { cs.set("pending", null); cs.fill("su-pw", ""); cs.fill("su-pw2", ""); return cs.w("refusal.BAD_HANDLE"); },
+        HANDLE_TAKEN: (r, cs) => { cs.set("pending", null); cs.fill("su-pw", ""); cs.fill("su-pw2", ""); return cs.w("refusal.HANDLE_TAKEN"); },
+        HANDLE_FIXED: (r, cs) => { cs.set("pending", null); cs.fill("su-pw", ""); cs.fill("su-pw2", ""); return cs.w("refusal.HANDLE_FIXED"); },
+        PASSWORD_TOO_SHORT: (r, cs) => { cs.set("pending", null); return cs.w("refusal.PASSWORD_TOO_SHORT"); },
+      } },
+    // R18: the founder's handle, chosen once, in the body only
+    { op: "founderhandleset", rereads: [],
+      send(view, el, cs) {
+        const handle = String(cs.value("su-fh") || "").trim();
+        return handle ? { body: { handle } } : { refuse: "refusal.NO_HANDLE" };
+      },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        cs.set("handleDone", a && typeof a.handle === "string" && a.handle ? a.handle : String(cs.value("su-fh") || "").trim());
+        return { stay: true };
+      },
+      refusals: { NO_HANDLE: "refusal.NO_HANDLE", BAD_HANDLE: "refusal.BAD_HANDLE", HANDLE_TAKEN: "refusal.HANDLE_TAKEN", HANDLE_FIXED: "refusal.HANDLE_FIXED" } },
     { op: "recoverycodesissue", rereads: [],
       send() { return { body: {} }; },
       done(view, answer, cs) {
