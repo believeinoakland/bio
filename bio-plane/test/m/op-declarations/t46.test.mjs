@@ -303,9 +303,9 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   /* T47 (R54, R60): re-pinned at PR #33's head, whose screens carry 89 function acts (67 distinct functions).
      T48 (R65; N1054): re-pinned at PR #34's merge (`4664e8efd4`), whose screens carry 88 (the Home redrawn by DEC-218
      drew one of them away); every alias still names a function act of the file.
-     T49 (K3321 (B); R21): re-pinned at PR #36's merge, whose screens (DEC-235–DEC-240) carry 119 (85 distinct); each is
-     an op or an alias still */
-  assert.equal(fnActs.length, 119);
+     T49 (K3321 (B), K3393; R21): the count is read from the registry, never pinned (K3268): every function act the file
+     names is an op or an alias, below */
+  assert.ok(fnActs.length >= 88, `${fnActs.length} function acts`);
   for (const a of fnActs) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: no spec`);
   for (const al of Object.keys(OP_ALIASES)) assert.ok(fnActs.some((a) => a.op === al), `${al}: an alias of no registry function`);
   const NEW = ["ailimitset", "archivelist", "exploreapprove", "projectaccountremove", "projectaccountswitch",

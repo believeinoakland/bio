@@ -1,11 +1,13 @@
-/* R16, R17 (DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; K2704; T44: DEC-191 (2), (3), DEC-192 (3), (5); N869, N876): every sentence and fill this module says is read by key
-   from the design stream's `words.json`, its `en` verbatim; a key the file lacks fails, never a fallback sentence. The
-   keys DEC-189's owed line names for this module are each held, and the retired `act.owed_exploreapprove.label.queue`
-   is not. Each with its negative control (K874). */
+/* R16, R17 (DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; K2704; T44: DEC-191 (2), (3), DEC-192 (3), (5); N869, N876; T49 R23, N1133, K3366): every sentence and fill this module says is read by key
+   through setup-words (`word`, `hasWord`); no copy of a sentence is held here, and tests assert keys, never a sentence's text. A key the word list lacks fails, never a
+   fallback sentence. The keys DEC-189's owed line names for this module are each held, and the retired `act.owed_exploreapprove.label.queue` is not. Each with its
+   negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { WORDS } from "../ai-use/fixture.mjs";
-import { NOTICE_WORDS, wordsOf, hasWords, monthName, dayInSentence, untilWords } from "../../../src/notice-producers/words.mjs";
+import * as wordsModule from "../../../src/notice-producers/words.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import { wordsOf, hasWords, monthName, dayInSentence, untilWords } from "../../../src/notice-producers/words.mjs";
 import { EXPLORE_APPROVE } from "../../../src/notice-producers/index.mjs";
 
 const KINDS = ["question-find", "step-later-found", "step-date-due", "step-reminder", "step-cost-shared", "step-cost-message",
@@ -20,59 +22,57 @@ const OWED = ["ai.queue.limitreached", "ai.queue.limitreached.overall", "ai.queu
   ...MONTHS.map((m) => `date.month.${m}`), "ai.label.explored", "ai.label.explored.member",
   ...KINDS.flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`])];
 
-test("R16 R17 every word this module holds is words.json's own en, verbatim; every key DEC-189 names for it is held and in words.json", () => {
-  for (const [key, en] of Object.entries(NOTICE_WORDS)) assert.equal(en, WORDS[key], `${key} is words.json's own sentence`);
+test("R16 R17 R23 every key this module reads is held by setup-words and in words.json; no sentence table is kept here; a key the list lacks fails", () => {
   for (const key of OWED) {
     assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
-    assert.equal(NOTICE_WORDS[key], WORDS[key], `${key} is held`);
+    assert.equal(hasWord(key), true, `${key} is held by setup-words`);
   }
   assert.equal(KINDS.length, 10, "R17's ten kinds");
-  /* negative control: a key the file lacks is no word here, and asking for it fails rather than answering a sentence */
-  assert.equal(WORDS["ai.queue.nosuchword"], undefined);
+  /* R23: the hand-copied table is retired; nothing this module exports carries a sentence */
+  assert.equal("NOTICE_WORDS" in wordsModule, false, "no copied sentence table");
+  /* negative control: a key the list lacks is no word here, and asking for it fails rather than answering a sentence */
+  assert.equal(hasWord("ai.queue.nosuchword"), false);
   assert.equal(hasWords("ai.queue.nosuchword"), false);
   assert.throws(() => wordsOf("ai.queue.nosuchword", {}), /no words for ai\.queue\.nosuchword/);
-  assert.equal(wordsOf("ai.queue.suspended", { project: "S" }), WORDS["ai.queue.suspended"].replace("{project}", "S"));
+  assert.equal(wordsOf("ai.queue.suspended", { project: "S" }), word("ai.queue.suspended", { project: "S" }));
 });
 
 test("R16 the Ask's act reads act.exploreapprove.label.queue; the retired act.owed_exploreapprove.label.queue and the pre-DEC-189 fills ({for_use}, {Uses}) are gone", () => {
-  assert.equal(EXPLORE_APPROVE.label, WORDS["act.exploreapprove.label.queue"]);
+  assert.equal(EXPLORE_APPROVE.label, word("act.exploreapprove.label.queue"));
   assert.equal(WORDS["act.owed_exploreapprove.label.queue"], undefined, "retired in words.json");
-  assert.equal(NOTICE_WORDS["act.owed_exploreapprove.label.queue"], undefined, "and not held here");
-  for (const en of Object.values(NOTICE_WORDS)) assert.doesNotMatch(en, /\{(for_use|Uses)\}/, en);
+  assert.equal(hasWord("act.owed_exploreapprove.label.queue"), false, "and not held");
+  for (const key of OWED) assert.doesNotMatch(WORDS[key] ?? "", /\{(for_use|Uses)\}/, key);
 });
 
 test("R16 R17 (T44) {date}: date.daymonth in the current year, date.daymonthyear in any other, the day with no leading zero and the month from date.month.*; {when} after \"until\" from ai.until.*, never the refusals' ai.when.*; nothing for no day", () => {
-  const fill = (key, f) => WORDS[key].replace(/\{(\w+)\}/g, (m, k) => f[k] ?? m);
-  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), fill("date.daymonth", { day: "9", month: WORDS["date.month.october"] }));
-  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), "9 October");
-  assert.equal(dayInSentence("2026-01-31", "2026-12-31"), `31 ${WORDS["date.month.january"]}`, "the same year, however far");
-  assert.equal(dayInSentence("2025-12-31", "2026-01-01"), fill("date.daymonthyear", { day: "31", month: WORDS["date.month.december"], year: "2025" }));
-  assert.equal(dayInSentence("2027-03-03", "2026-10-11"), "3 March 2027", "a day in a later year names it too");
-  assert.equal(dayInSentence("2026-03-03", null), "3 March 2026", "with no current day read, the year is named");
-  for (let m = 1; m <= 12; m++) assert.equal(monthName(m), WORDS[`date.month.${MONTHS[m - 1]}`]);
+  const october = word("date.month.october");
+  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), word("date.daymonth", { day: "9", month: october }));
+  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), `9 ${october}`);
+  assert.equal(dayInSentence("2026-01-31", "2026-12-31"), `31 ${word("date.month.january")}`, "the same year, however far");
+  assert.equal(dayInSentence("2025-12-31", "2026-01-01"), word("date.daymonthyear", { day: "31", month: word("date.month.december"), year: "2025" }));
+  assert.equal(dayInSentence("2027-03-03", "2026-10-11"), `3 ${word("date.month.march")} 2027`, "a day in a later year names it too");
+  assert.equal(dayInSentence("2026-03-03", null), `3 ${word("date.month.march")} 2026`, "with no current day read, the year is named");
+  for (let m = 1; m <= 12; m++) assert.equal(monthName(m), word(`date.month.${MONTHS[m - 1]}`));
   for (const bad of [null, "", "2026-13-01", "9 October", "2026-10-09T12:00:00Z"]) assert.equal(dayInSentence(bad, "2026-10-11"), null, String(bad));
   assert.equal(monthName(0), null);
-  assert.equal(untilWords("day"), WORDS["ai.until.day"]);
-  assert.equal(untilWords("month", 11), fill("ai.until.month", { month: WORDS["date.month.november"] }));
-  assert.equal(untilWords("month", 11), "1 November");
+  assert.equal(untilWords("day"), word("ai.until.day"));
+  assert.equal(untilWords("month", 11), word("ai.until.month", { month: word("date.month.november") }));
+  assert.equal(untilWords("month", 11), `1 ${word("date.month.november")}`);
   for (const [p, m] of [["week", 11], ["month", 0], ["month", 13], [null, 1]]) assert.equal(untilWords(p, m), null, `${p} ${m}`);
   /* negative control: the refusals' words are ai-use's; this module holds neither, so no sentence here can say them */
-  for (const k of ["ai.when.day", "ai.when.month"]) {
-    assert.equal(typeof WORDS[k], "string", `${k} is in words.json`);
-    assert.equal(hasWords(k), false, `${k} is not held here`);
-  }
-  assert.notEqual(untilWords("month", 11), WORDS["ai.when.month"].replace("{month}", "November"));
+  for (const k of ["ai.when.day", "ai.when.month"]) assert.equal(typeof WORDS[k], "string", `${k} is in words.json`);
+  assert.notEqual(untilWords("month", 11), word("ai.when.month", { month: word("date.month.november") }), "not the refusals' words");
 });
 
 /* R20 (T47; N889; DEC-198 (3)): R5's, R6's, R13's, R14's and R15's sentences, each by key */
 const R20_KEYS = [...["overdue", "undetermined"].flatMap((st) => [`queue.temporal-expectation-due.${st}.summary`, `queue.temporal-expectation-due.${st}.detail`]),
   ...["inquiry-recheck-due", "policy-changed-noticed", "scan-found", "security-tool-off"].flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`])];
 
-test("R20 every key R20 names is in words.json and held here verbatim, with the placeholders R20 fills; R12's item has no key (its plain sentence); a key the file lacks fails", () => {
+test("R20 every key R20 names is in words.json and held by setup-words, with the placeholders R20 fills; R12's item has no key (its plain sentence); a key the list lacks fails", () => {
   assert.equal(R20_KEYS.length, 12);
   for (const key of R20_KEYS) {
     assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
-    assert.equal(NOTICE_WORDS[key], WORDS[key], `${key} is held, verbatim`);
+    assert.equal(hasWord(key), true, `${key} is held`);
   }
   const holes = (key) => [...WORDS[key].matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
   assert.deepEqual(holes("queue.temporal-expectation-due.overdue.detail"), ["basis", "date", "office", "what"]);
@@ -83,6 +83,6 @@ test("R20 every key R20 names is in words.json and held here verbatim, with the 
   assert.deepEqual(holes("queue.security-tool-off.detail"), ["tool"]);
   /* negative control: R12 has no key in the file, and none is held here */
   for (const k of Object.keys(WORDS)) assert.doesNotMatch(k, /^queue\.security-level-high\./, k);
-  assert.equal(Object.keys(NOTICE_WORDS).some((k) => k.startsWith("queue.security-level-high")), false);
+  assert.equal(hasWord("queue.security-level-high.summary"), false);
   assert.throws(() => wordsOf("queue.temporal-expectation-due.pending.summary", {}), /no words for/);
 });

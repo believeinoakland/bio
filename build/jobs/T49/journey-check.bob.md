@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -53,3 +53,8 @@ K3389–K3391: screens-inquiry's step-7 fix is merged (every capture read keyed 
 ## B9 · CHANGE
 
 K3393 (with B8): the audit finds the local arm's step 07 'setup: claim' red since screens-entry's merge: the walk fills no `su-handle`, and the claim now requires one (screens-entry R17). Fill the handle in that path too.
+
+## B10 · CHANGE
+
+K3398–K3401: Bob approved the out-of-layer fixes and all four are merged into tranche/T49: credentials R78 (the founder's own run credential, your step 9), reading-pipeline R33 (a text-path reading carries its chain, your step 8), extraction R76 (`op=reading` answers `text_units`), notice-producers R23 (words by key). Merge the tranche branch and re-walk the whole journey to the end, re-capturing (a capture stored before has no chain until re-read).
+First: CREDENTIALS #17 and EXTRACTION #24 both saw your local arm (R1 (a), after `npm ci` in `bio-plane/src/journey-check`) stop at "journey 28 · setup: claim: the claim is not shown on /app/setup", the same with and without their changes. Diagnose it: if it is the walk's, fix it; if the product's, REPORT the module and the evidence. Then walk on and report every step past 7 as you find it; COMPLETE when the walk passes or each remaining failure is reported with its owner.
