@@ -78,3 +78,7 @@ COMPLETE (J7) after B7: merged tranche/T49 with the real interface-shell (R65-R7
 
 ## After CHANGE B8 (DEC-263–DEC-267)
 `didnotmove` filled with `{phase}` only; `order.evidence` drawn with no fill. 113 tests (module + control-plane t46-app) pass. Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 50, module lines 2075
+
+## J8 · COMPLETE
+
+COMPLETE (J8) after B8: merged DEC-263-267; didnotmove filled with {phase} only, order.evidence drawn with no fill. 113 tests (module + control-plane t46-app) pass; architecture, coverage 30/30, ownership 0 failures.
