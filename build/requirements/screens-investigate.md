@@ -90,7 +90,7 @@ The investigation's tools beside a question: a person the record follows and the
   - Nothing is drawn as late.
 
   Test: two lanes over a fixture. Control: a body's own deadline is never in the group's lane.
-- **R29** (T49; D30 **m**; amends R2) `explore` opened with no centre draws its sentence by key, never "no centre is named…". The key is owed by the channel act; until given, this module's own `SCREEN_WORDS` row in plain words. Test: a bare `explore` draws the keyed sentence. Control: with a centre, the graph.
+- **R29** (T49; D30 **m**; amends R2) `explore` opened with no centre draws its sentence by key, never "no centre is named…". The design gives the key (DEC-273). Test: a bare `explore` draws the keyed sentence. Control: with a centre, the graph.
 
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 

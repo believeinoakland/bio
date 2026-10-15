@@ -1035,3 +1035,4 @@ From `current.md` (T21), "next.md: every entry" and "Changed at the opening": th
 - N1098 · project-roster (K3321) · `figures-purge.test.mjs` R18 hand-lists membership's explicit declarations (`join_doors` only); membership's T48-9 added a second: the test reads membership's own `MEMBERSHIP_DECLARED_TABLES` (K3268) · joins T49-2 · placed in T49 (T49-2; K3327)
 
 - N1111 · process repository (`tools/mail.mjs`, mechanics §5.1), BOB's (K3361) · `mail bob` writes BOB's Writer line too; `xcheck` warns on a Writer line naming another session than the plan; §5.1 step 1 updated; fixture tests; certified (§15) · BOB alongside T49 (no product job) · applied (K3362)
+- N1142 · BOB, wording only (K3409; DEC-273; K3259) · screens-daily R29, R31, screens-investigate R29, screens-settings R37 and screens-inquiry R33 stop calling their keys owed: the keys are given · T49's L11 close (BOB's edit, no job)

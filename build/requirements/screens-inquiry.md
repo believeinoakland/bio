@@ -149,7 +149,7 @@ The investigation's working screens: a project's home, one question with what su
 - **R33** (T49; D3 **B**, D18 **M**; amends R6's K3003 clause, R13, R4) **The dock** (finding 3).
   - **Bounds.** `airunopen` is sent with the bounds the run's mode needs, as the plane states them for that mode. It sends no zero `fetches` or `subsessions` allowance for a mode that uses them. R6's "`fetches` 0, `subsessions` 0" is retired.
   - **Not started.** An answer of `started: false` is a refusal, drawn by its words, and `airundispatch` is not called after it.
-  - **Withheld.** A dispatch answered withheld (`AGENT_WORKER_UNBOUND`, `MEMBER_PRINCIPAL_RUN` and the rest) is drawn with its reason by key, never blank. The withheld reasons' keys are owed by the channel act; until given, this module's rows.
+  - **Withheld.** A dispatch answered withheld (`AGENT_WORKER_UNBOUND`, `MEMBER_PRINCIPAL_RUN` and the rest) is drawn with its reason by key, never blank. The design gives the withheld reasons' keys (DEC-273).
   - **Running.** "A run of yours is working on this" is drawn only while a dispatched run is running, as the last `airun` read answers it (R8).
 
   Test: over a fake plane running `run-rules`' check, `airunopen` is not refused `AI_RUN_BOUND_NO_ALLOWANCE`. Controls: `started: false` sends no dispatch; a withheld dispatch draws its reason.
