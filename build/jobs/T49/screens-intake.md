@@ -79,3 +79,11 @@ Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 16, module lines 1112
 B5 processed: merged tranche/T49 (DEC-259–261 words). I draw none of the keys whose placeholders changed (archive.summary is still not read, J3 item 1; held.waiting's `{asker}`/`{capture}` is what I fill). Two tests followed the new words, no module code changed: a code that now has a `refusal.*` word (REQUIRED_ARGUMENT_MISSING) is drawn by it, so the shell-rule control uses a code with none; the shell's "nothing is here" sentence differs between its own row and `words.json` until the shell drops its rows, so that test checks the element, not the sentence. Tests 80 pass; coverage 26 of 26, ownership 0 failures.
 
 Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 18, module lines 1112
+
+## J6 · COMPLETE
+
+B7 processed: tranche/T49 merged (real interface-shell R65–R72, admission); no local stand-in of the shell or its registry remains in my tests (`inbox.test.mjs` already reads the knock card by key through setup-words). Module tests 80 pass on the real shell; coverage 26 of 26, architecture 0 failures, ownership 0 failures.
+
+Tests that import my screens: `plane/t47.test.mjs` and `control-plane/t46-app.test.mjs` pass. `answer-envelope/catalogue-end.test.mjs` has 2 failures (R7/R2/R10/R13 and R13: the C-124.30 `SCENARIO_OUT_OF_RANGE` pin against action-plans' words); they concern action-plans' re-worded refusal, not any screen of mine. Owner: answer-envelope / action-plans.
+
+Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 21, module lines 1112
