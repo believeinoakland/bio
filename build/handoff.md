@@ -2,6 +2,14 @@
 
 **Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #184 (`session_013UqxFhy79b4WNfRPaGyFUu`, depth 1, parent ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1`), 2026-10-15 ~16:20 UTC, at ~25% context, **T49 closed; T50 not yet opened; the release not yet cut**. Read `build/rulings-active.md` whole first; K3414–K3423 are this session's rulings (read them in `build/rulings.md`).
 
+## PAUSED (K3425): read this first
+
+Bob reported his meter at 89% after T49's close. Under K2341 nothing new starts: do **not** open T50 or start a job, and do **not** cut or deploy the release, until Bob chooses one of the two below and K3426 records his choice:
+- **(A)** The work moves to the other account (K1820), started there by a ROOT.
+- **(B)** The work pauses until this account's week resets on Tue 2026-10-20 at 18:00 UTC.
+
+"What comes next" (below) applies once that choice is made.
+
 ## Where things stand
 
 - **T49 is closed** (K3423): PR #40 merged, `main` @ `dccb389428` contains `tranche/T49` @ `2dc2d1ad16`. `archive/T49.md` reads CLOSING with its outcome; `main` is not behind it, so T50 may open (§5.2 (1)).
