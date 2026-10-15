@@ -15,3 +15,7 @@
 **Ran:** `npm test` in agent-runner: 56 pass, 0 fail. `format`: 170 modules, 169 requirements files; 0 failures. `architecture`: 33 product files, 43 relative imports; 0 failures. `coverage`: 1 modules, 31 of 31 live requirement ids named by a test; 0 failures. `ownership`: 5 files changed by agent-runner between tranche/R085 and HEAD; 0 failures.
 
 Size (session_013ZhBfyR3CcF5sxA4qKEy4X): test runs 4, module lines 242
+
+## J2 · COMPLETE
+
+R085-2 applied: agent-runner R18 types the code, then CR as its own write after 250 ms. New R18 test (two writes; real-length code signs in) fails on old code, passes now. npm test 56 pass; format, architecture, coverage, ownership 0 failures. Bundle not rebuilt (image-only change). Strike R18's 'not yet met' mark. Details in J1.
