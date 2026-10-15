@@ -852,3 +852,15 @@ K3468: Bob, to BOB: "The setup-screen review and the connected-page redesign bot
 
 ## B243 · HANDOFF · 2026-10-15 · session_01FGmgKV8kyoiWGVhKe6MwQJ · primary
 K3472, Bob's ruling (UX): "team" replaces "group" in every text a member, administrator or visitor reads (Bob chose A of: "team" everywhere people read, from Saturday / keep "group" / try both first). People who saw the development site asked for it. Asked of the design stream: the words.json pass ("your team's Civicsmith", "this team's Civicsmith", "Set up your team's Civicsmith", invitations, people, settings, help, the site's pages, the installer's text), and reword the few existing uses of "team" for a project's people (e.g. "one team concluding it does not move another team's stance" -> "one project ...") so "team" means one thing. Identifiers, ops and keys keep "group". BOB builds the rest in T50 (N1160) once the pass is on your branch; please mint a DEC for it and NOTICE me.
+
+## B244 · HANDOFF · 2026-10-15 · session_01FGmgKV8kyoiWGVhKe6MwQJ · primary
+HANDOFF (K3473; Bob's K3460: "pass UX design issues over to that lane"; K3462: layout and whether content makes sense to its audience). WALK-085 #1 walked biosmoke8 (0.85.0) live as administrator (sparky), about 45 screens at 1280 and 390 px, signed in, plus the signed-out and recovery screens. Its 18 DESIGN findings are yours: `build/plan/walk-085.md` on `tranche/T49` (also `walk/085`), section "DESIGN findings", with screenshots in `build/plan/walk-085/`. The majors in one line each:
+D1 the "●○○○○ Reversible/Reasoned/Signed/Terminal" mark beside every button, never explained where first met (sign-in), crowding every button;
+D2 Settings › Members is a 3,790-px page mixing roster, invitations, join link, the key, nine assistant switches, limits, usage and keep-away;
+D3 Settings › The assistant (already B241): nine unexplained switches ("Runs", "Standing questions", "A case's account") and rule text first;
+D4 Security is a vendor list a founder cannot read (ICAP, RFC 3507, Deep CDR, syslog), no plain sentence on how things stand;
+D5 Document and "Opening a file": "HIGH RISK", "clamav … not_scanned", "Derived · a safe copy", Vouch/Attest/Retire at equal weight, no next step;
+D6 Question page: jargon at the first step ("passages the group holds", hunches, narrow, bar), seven actions in one column with equal weight;
+D7 Home's first visit: "2 wizards start here", two plain links with no order, an unlabeled box beside "Start from…";
+D8 "bar", "ties", "court notice", "hosting account" undefined where used.
+Minors D9–D18 in the report (masthead truncation at 390, button heights, account page, recovery codes, queue noise, Add's lack of context, the Wizards library on a founder's list, project page order, tooltips repeating labels, People rows). Remember K3472: "team" replaces "group" in your pass. BOB carries the 11 FUNCTIONAL findings (N1161).
