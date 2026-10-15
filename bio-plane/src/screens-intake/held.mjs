@@ -14,10 +14,15 @@ function renderHeld(cs, view) {
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   const age = (d) => d === 0 ? cs.w("screen.held.age.today") : d === 1 ? cs.w("screen.held.age.one")
     : Number.isFinite(d) ? cs.w("screen.held.age", { days: d }) : "";
-  const eligibility = (r) => r.eligible === false
-    ? `${cs.mark("gap", "refused")} ${cs.w("screen.held.ineligible")} ${r.class === "crucial" ? cs.w("screen.held.ineligible.crucial")
-        : r.class === "contested" ? cs.w("screen.held.ineligible.contested") : cs.esc(r.reason || "")} ${cs.w("screen.held.ineligible.alone")}`
-    : r.eligible === true ? "" : `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.eligibility.undetermined")}`;
+  /* R23: a row's refusal is drawn by its words: the class `ratification` names (`CRUCIAL_IN_BATCH`, `CONTESTED_IN_BATCH`, in
+     the case it gives them), never the catalogue's sentence for it, which is not the member's */
+  const eligibility = (r) => {
+    if (r.eligible === true) return "";
+    if (r.eligible !== false) return `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.eligibility.undetermined")}`;
+    const why = String(r.class || "").toUpperCase();
+    const reason = why.startsWith("CRUCIAL") ? "screen.held.ineligible.crucial" : why.startsWith("CONTESTED") ? "screen.held.ineligible.contested" : null;
+    return `${cs.mark("gap", "refused")} ${reason ? cs.w("screen.held.ineligible", { reason: { html: cs.w(reason) } }) + " " : ""}${cs.w("screen.held.ineligible.alone")}`;
+  };
   const asked = (r) => {
     const f = r.captured_for;
     if (!f) return r.captured_for_basis ? `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.forundetermined", { reason: r.captured_for_basis })}` : "";
@@ -71,7 +76,7 @@ function renderHeld(cs, view) {
   /* R13: the "Set aside" list: who set each aside, when, and why, as `set_aside` answers it; `heldrestore` with a reason in
      its row's panel, and in the hold strip for picked rows */
   const asideSec = cs.sec("screen.held.setaside", (Array.isArray(U.waiting) && U.waiting.length
-      ? U.waiting.map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("") : "")
+      ? U.waiting.map((q) => said("screen.held.waiting", { asker: q.asker || "", capture: q.capture || "" })).join("") : "")
     + cs.state(view.data.aside, (v) => cs.rows({
       id: "aside",
       cols: ["screen.held.col"],
@@ -137,7 +142,12 @@ function sendSetAside(view, el, cs, extra) {
 function doneSetAside(view, answer, cs) {
   const a = answer || {};
   const waiting = [];
-  for (const d of (Array.isArray(a.documents) ? a.documents : [])) for (const q of (d && Array.isArray(d.waiting) ? d.waiting : [])) waiting.push(q);
+  /* the question waits for the capture set aside: its title, as the Held list drew it, else its id */
+  const rows = view.data && view.data.held && view.data.held.state === "ok" && Array.isArray(view.data.held.value.held) ? view.data.held.value.held : [];
+  for (const d of (Array.isArray(a.documents) ? a.documents : [])) {
+    const row = rows.find((x) => x && x.bundle_id === (d && d.id));
+    for (const q of (d && Array.isArray(d.waiting) ? d.waiting : [])) waiting.push({ asker: q.asker || "", capture: (row && row.title) || (d && d.id) || "" });
+  }
   cs.set("setAside", Array.isArray(a.ids) ? a.ids.length : 0);
   cs.set("waiting", waiting);
   cs.set("released", 0);
@@ -165,7 +175,21 @@ function sendRefresh(view, el, cs) {
   return { query: { limit: 50 } };
 }
 
-export { sendRelease };
+/* R23: `release`'s refusals in words. `refusal.CRUCIAL_IN_BATCH` counts the crucial documents and `refusal.ENTRY_REQUIREMENTS`
+ * names each document with what it lacks, from the answer's `offenders`; any other code is the shell's (R13). */
+const RELEASE_REFUSALS = Object.freeze({
+  CRUCIAL_IN_BATCH: function (refusal, cs) {
+    return cs.w("refusal.CRUCIAL_IN_BATCH", { count: Array.isArray(refusal.offenders) ? refusal.offenders.length : 0 });
+  },
+  ENTRY_REQUIREMENTS: function (refusal, cs) {
+    const named = (Array.isArray(refusal.offenders) ? refusal.offenders : []).map(function (o) {
+      return o && typeof o === "object" ? String(o.id || "") + (Array.isArray(o.missing) && o.missing.length ? " (" + o.missing.join(", ") + ")" : "") : String(o);
+    }).filter(Boolean);
+    return cs.w("refusal.ENTRY_REQUIREMENTS", { offenders: named.join("; ") });
+  },
+});
+
+export { sendRelease, RELEASE_REFUSALS };
 
 export const HELD_SCREEN = Object.freeze({
   id: "held",
@@ -173,7 +197,7 @@ export const HELD_SCREEN = Object.freeze({
   render: renderHeld,
   acts: Object.freeze([
     Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh }),
-    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, reasonField: "acknowledgment" }),
+    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
     Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
     Object.freeze({ op: "heldrestore", label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
   ]),

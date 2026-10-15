@@ -91,6 +91,9 @@ test("R4: frontier draws Nobody looked (mark.gap.nobody) for where nobody looked
   assert.equal(last(p, "frontier").query.level, "document");
   assert.ok(main(p).querySelector('.cs-gap[data-gap="nobody"]'));
   assert.ok(text(p).includes(word("screen.finder.nobody", { n: "2" })) && text(p).includes("Council minutes 2024") && text(p).includes("Budget FY24"));
+  const single = await open("/app/finder", { frontier: ok({ never_looked: ["Budget FY24"], never_looked_count: 1 }) }, { html });
+  await press(single, "frontier", { reason: R });
+  assert.ok(text(single).includes(word("screen.finder.nobody.one")), "R25: one place, the singular key");
   const none = await open("/app/finder", { frontier: ok({ never_looked: [] }) }, { html });
   await press(none, "frontier", { reason: R });
   assert.ok(text(none).includes(word("screen.finder.nobody.none")));

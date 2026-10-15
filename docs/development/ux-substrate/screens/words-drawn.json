@@ -1685,6 +1685,24 @@
    "en": "{document}, its own date {date}",
    "protected": false,
    "note": "DEC-259: a document threaded to a step, with the date it bears"
+  },
+  {
+   "key": "shell.queue.waiting",
+   "en": "{n} items wait on you in your queue: {todo} to do, {noticed} noticed, {status} status.",
+   "protected": false,
+   "note": "DEC-273: the queue count's explanation in the masthead; {n} their sum"
+  },
+  {
+   "key": "shell.queue.open",
+   "en": "Click to open your queue.",
+   "protected": false,
+   "note": "DEC-273: the queue count's explanation, its second line"
+  },
+  {
+   "key": "shell.group.open",
+   "en": "Click to see who your group is.",
+   "protected": false,
+   "note": "DEC-273: the group's card in the masthead, its second line; the group's description and purpose are its own words (data)"
   }
  ],
  "rewrite": {

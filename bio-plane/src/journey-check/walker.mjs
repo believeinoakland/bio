@@ -1,8 +1,9 @@
 /* journey-check R2: one walk of a browser through journeys, a step at a time. Each step is screenshotted into the output
-   directory; the walk fails on any `ok: false` the step does not expect, any 4xx or 5xx, any page whose script throws, any
-   old page (the setup page, legacy-ui) or other address outside the walk reached, and any registry screen not drawn. A
-   step whose own control is missing fails with what it looked for. Nothing secret is written: a step's label and a
-   failure's detail never carry a password, a code or a token (`redact`). */
+   directory; the walk fails on any refusal the step does not expect, at any depth of an answer whatever its status
+   (R8), any 4xx or 5xx, any page whose script throws, any old page (the setup page, legacy-ui) or other address outside
+   the walk reached, and any registry screen not drawn. A step whose own control is missing fails with what it looked
+   for. Nothing secret is written: a step's label and a failure's detail never carry a password, a code or a token
+   (`redact`). */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -18,7 +19,9 @@ export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "s
   /* R5: a role signed in that `whoami` does not answer as that role, or acts only an administrator is drawn not drawn */
   ROLE: "role",
   /* R6: a working screen the design mock does not draw, and the limits of a live page (design.mjs' LIMIT) */
-  DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words" });
+  DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words",
+  /* R7: `admin` drawn as a person's name or handle */
+  ADMIN_NAME: "admin-name" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -29,6 +32,38 @@ export function documentKind(html) {
   const t = /<title>([^<]*)<\/title>/i.exec(html);
   if (t && t[1].trim() === SETUP_PAGE_TITLE) return "setup-page";
   return "other";
+}
+
+/* R8 (D29): the refusals an answer carries, anywhere in it: `[{code, how, at}]`, `at` the path to the object that
+   carries it ("" at the top). A refusal is an object holding `ok: false`, `started: false`, `dispatched: false` or
+   `found: false`, or a non-empty `withheld`; its code is its own `code` or `reason`, else what it says. Each object
+   counts once, under its first sign. */
+export const REFUSAL_FLAGS = Object.freeze(["ok", "started", "dispatched", "found"]);
+export function refusalsIn(body) {
+  const out = [];
+  const seen = new Set();
+  const visit = (v, at, depth) => {
+    if (!v || typeof v !== "object" || depth > 64 || seen.has(v)) return;
+    seen.add(v);
+    if (Array.isArray(v)) { v.forEach((x, i) => visit(x, `${at}[${i}]`, depth + 1)); return; }
+    const flag = REFUSAL_FLAGS.find((k) => v[k] === false);
+    const w = v.withheld;
+    const withheld = w === true || (Array.isArray(w) && w.length > 0) || (w && typeof w === "object" && !Array.isArray(w) && Object.keys(w).length > 0)
+      || (typeof w === "string" && w.length > 0);
+    if (flag || withheld) {
+      const how = flag ? `${flag}: false` : "withheld";
+      const own = [v.code, v.reason].find((c) => typeof c === "string" && c);
+      /* a refusal that keeps its reasons in a list (`findings`, `errors`) is named by its first */
+      const first = [v.findings, v.errors].find((l) => Array.isArray(l) && l.length && l[0] && typeof l[0] === "object");
+      const inner = first ? first[0] : null;
+      const said = [v.detail, v.translation, v.message, inner && (inner.detail || inner.message)].find((d) => typeof d === "string" && d.trim());
+      const check = [v.check, inner && inner.check].find((c) => typeof c === "string" && c);
+      out.push({ code: own || how, how, at, ...(check ? { check } : {}), ...(said ? { said: said.slice(0, 200) } : {}) });
+    }
+    for (const [k, x] of Object.entries(v)) visit(x, at ? `${at}.${k}` : k, depth + 1);
+  };
+  visit(body, "", 0);
+  return out;
 }
 
 export class Walk {
@@ -42,6 +77,8 @@ export class Walk {
     this.whoami = null;
     /* R6: the LIVE and DESIGN pairs written, relative to `out`, put to BOB before a release is called ready */
     this.pairs = [];
+    /* what the walk could not walk here and says so, never a failure (R7 with no handle, K3380) */
+    this.notes = [];
     /* Elements whose text is a secret (a one-time password, a probe credential, an invitation link): masked in every
        screenshot. */
     this.mask = [];
@@ -72,13 +109,31 @@ export class Walk {
     const where = `${req.method()} ${url.host}${url.pathname}${url.searchParams.get("op") ? "?op=" + url.searchParams.get("op") : ""}`;
     let body = null;
     const type = res.headers()["content-type"] || "";
-    if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
+    /* a JSON answer, or a stream of JSON lines (an ask's answer, `application/x-ndjson`): each line is part of the answer */
+    if (/ndjson/.test(type)) {
+      const text = await res.text().catch(() => "");
+      body = text.split("\n").filter((l) => l.trim()).map((l) => { try { return JSON.parse(l); } catch { return { unreadable_line: l.slice(0, 200) }; } });
+    } else if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
     if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
-    const code = body && body.ok === false ? (body.code || body.reason || "ok:false") : null;
-    /* A refusal the step expects excuses its own status; one it does not is one failure, naming both. */
-    const excused = expect.some((e) => (e instanceof RegExp ? code !== null && e.test(code) : e === (code ?? res.status())));
-    if (code && !excused) this.fail(FAIL.REFUSED, `${where} answered ok: false (${code}, HTTP ${res.status()})`);
-    else if (res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
+    /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
+       code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
+    const refusals = refusalsIn(body);
+    const matches = (e, code) => (e instanceof RegExp ? e.test(code) : e === code);
+    /* an expectation is a code (a string or a pattern), or `{at, code}`: that code where its path matches `at` */
+    const expected = (r) => expect.some((e) => (e && typeof e === "object" && !(e instanceof RegExp)
+      ? e.at.test(r.at) && matches(e.code, r.code) : matches(e, r.code)));
+    const unexcused = refusals.filter((r) => !expected(r));
+    const why = (r) => (r.check || r.said ? ` [${[r.check, r.said].filter(Boolean).join(": ")}]` : "");
+    for (const r of unexcused)
+      this.fail(FAIL.REFUSED, (r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
+        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`) + why(r));
+    /* JOURNEY_DEBUG=bodies prints each answer that carries a refusal, JOURNEY_DEBUG_OP=<op> every answer of that op,
+       redacted, to diagnose them; never into the report */
+    if (process.env.JOURNEY_DEBUG_OP && url.searchParams.get("op") === process.env.JOURNEY_DEBUG_OP)
+      process.stderr.write(`BODY ${where} (HTTP ${res.status()}, ${type}): ${this.redact(body ? JSON.stringify(body) : "(not JSON)").slice(0, 6000)}\n`);
+    if (process.env.JOURNEY_DEBUG === "bodies" && refusals.length) process.stderr.write(`BODY ${where}: ${this.redact(JSON.stringify(body)).slice(0, 4000)}\n`);
+    const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
+    if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
       const kind = documentKind(await res.text().catch(() => null));
       if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, `${url.pathname} is the setup page`);
@@ -93,7 +148,8 @@ export class Walk {
     return this.fail(FAIL.ADDRESS, `${u.host}${u.pathname} is outside the walk`);
   }
 
-  /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern) or HTTP statuses it expects. The page is
+  /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern, or `{at, code}` for a code
+     only where its path in the answer matches `at`) or HTTP statuses it expects. The page is
      screenshotted when it settles, whether the step held or not; a step that throws stops the journey. */
   async step(page, label, fn, { expect = [] } = {}) {
     this.current = { label, expect };
@@ -116,10 +172,11 @@ export class Walk {
     const lines = [`journey-check (${this.arm}): ${this.steps.length} steps, ${this.failures.length} failures`];
     for (const s of this.steps) lines.push(`${s.ok ? "ok  " : "FAIL"} ${s.journey} · ${s.label} (${s.screenshot})`);
     for (const f of this.failures) lines.push(`  ${f.kind}: ${f.journey} · ${f.step ?? "between steps"}: ${f.detail}`);
+    for (const n of this.notes) lines.push(`note: ${n}`);
     if (this.pairs.length) lines.push(`${this.pairs.length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):`, ...this.pairs.map((p) => `  ${p}`));
     const text = this.redact(lines.join("\n")) + "\n";
     writeFileSync(join(this.out, "report.txt"), text);
-    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs }, null, 1)));
+    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs, notes: this.notes }, null, 1)));
     return text;
   }
 }

@@ -1,8 +1,7 @@
 /* screens-entry R3, R4, R5: `tour`, `forgot` and `reset`, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, has, lacks, said, date, all, actOps, links, squash, SCREENS } from "./kit.mjs";
-import { HOSTING_CONTROL, FORGOT_HELP } from "../../../src/setup-fleet.mjs";
+import { open, has, lacks, said, date, all, actOps, links, SCREENS } from "./kit.mjs";
 
 // ---- tour (R3) ----
 
@@ -69,18 +68,34 @@ test("R4 refusal: RECOVERY_REFUSED drawn as its one sentence, the code cleared a
   lacks(o, "screen.forgot.done", { remaining: "7" });
 });
 
-test("R4 the other two ways: ask an administrator for a reset link; if no administrator can get in, instance-setup's FORGOT_HELP for every visitor; control: forgot draws no HOSTING_CONTROL", async () => {
+// FORGOT_HELP's and HOSTING_CONTROL's words as the design stream keys them (R21)
+const HELP = ["screen.forgot.help.heading", "screen.forgot.help.s1", "screen.forgot.help.s2"];
+const HOSTING = ["screen.hosting.heading", "screen.hosting.s1", "screen.hosting.s2", "screen.hosting.s3", "screen.hosting.s4", "screen.hosting.s5", "screen.hosting.guide"];
+
+test("R4 the other two ways: ask an administrator for a reset link; if no administrator can get in, FORGOT_HELP's words for every visitor; control: forgot draws no HOSTING_CONTROL", async () => {
   for (const session of [{ state: "none" }, { state: "ended", handle: "mai" }]) {
     const o = await open("forgot", { session });
     has(o, "screen.forgot.admin"); has(o, "screen.forgot.admin.what");
-    for (const t of [FORGOT_HELP.heading, ...FORGOT_HELP.sentences]) assert.ok(o.text.includes(squash(t)), t);
+    for (const k of HELP) has(o, k);
     // the founder's block is setup's only (R6): none of its heading, sentences or guide is drawn here
-    for (const t of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence]) assert.ok(!o.text.includes(squash(t)), "forgot draws HOSTING_CONTROL: " + t);
+    for (const k of HOSTING) lacks(o, k);
     assert.equal(all(o.tree, (e) => e.attrs.id === "hosting-control").length, 0);
   }
   // control: setup's claim still draws it
   const s = await open("setup", { fragment: { boot: "otp" }, table: { bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: true } } } });
-  assert.ok(s.text.includes(squash(HOSTING_CONTROL.heading)));
+  for (const k of HOSTING) has(s, k);
+});
+
+test("R16 forgot's handle field carries no founder hint: its help is forgot.handle.help, neither withdrawn key is read or drawn, and no text names admin; control: the handle field is drawn and sends handle", async () => {
+  for (const session of [{ state: "none" }, { state: "ended", handle: "mai" }]) {
+    const o = await open("forgot", { session, table: { recover: { ok: false, code: "RECOVERY_REFUSED" } } });
+    has(o, "forgot.handle.help");
+    assert.doesNotMatch(o.drawn(), /\badmin\b/i);
+    for (const k of ["screen.forgot.handle.help", "signin.founderhint"]) { assert.ok(!o.spec.words.includes(k), k); assert.ok(!o.drawn().includes(k), k); }
+    const r = await o.press("recover", { values: { "fg-handle": "mai", "fg-code": "C-1", "fg-pw": "a long new password", "fg-pw2": "a long new password" } });
+    assert.equal(r.sent[0].body.handle, "mai");
+    assert.doesNotMatch(o.drawn(), /\badmin\b/i, "refused");
+  }
 });
 
 // ---- reset (R5) ----

@@ -2,7 +2,11 @@
  * acts and the restore. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, html, text, main, btn, fill, press, ok, refused, rawKeys } from "./page.mjs";
+import { open, html, text, main, btn, fill, press, ok, refused, rawKeys, word, hasWord, says, saysIn } from "./page.mjs";
+import { SCREENS } from "../../../src/screens-intake/index.mjs";
+
+/* cs.date's form (interface-shell R6), by its keys */
+const day = (d, m, y) => word("date.daymonthyear", { day: String(d), month: word(`date.month.${m}`), year: String(y) });
 
 const ROWS = [
   { bundle_id: "INFO-2026-0001-photo", title: "Photo · Seminary Ave", project: "Pothole repairs", age_days: 2, eligible: true,
@@ -11,7 +15,7 @@ const ROWS = [
     captured_for: { questions: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }], withheld: null } },
   { bundle_id: "INFO-2026-0003-minutes", title: "Council minutes", project: "Sewer", age_days: 3, eligible: true,
     captured_for: { questions: [], withheld: "Captured for a question you may not see" } },
-  { bundle_id: "INFO-2026-0004-lease", title: "Lease amendment", project: "Coliseum", age_days: 0, eligible: false, class: "crucial", reason: "crucial",
+  { bundle_id: "INFO-2026-0004-lease", title: "Lease amendment", project: "Coliseum", age_days: 0, eligible: false, class: "CRUCIAL_IN_BATCH", reason: "crucial-criticality material is never batch-released (the catalogue's sentence).",
     captured_for: { questions: [], withheld: null } },
   { bundle_id: "INFO-2026-0005-packet", title: "Agenda packet (ZIP)", project: "Sewer", age_days: 1, eligible: null, captured_for: null,
     captured_for_basis: "no reader answered",
@@ -29,27 +33,28 @@ test("R4 the screen reads heldcaptures; a list with no row is drawn in the scree
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
   assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.state ?? null), [null, "set_aside"]);
   const e = await open("/app/held", { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
-  assert.match(text(e), /No captures are waiting/);
+  assert.ok(says(e, "screen.held.empty"));
   /* control: a read that failed is drawn as failed, never as empty */
   const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "The record did not answer.") } });
   /* interface-shell R61: a refusal with its own words is drawn as those words alone */
   assert.match(text(f), /The record did not answer\./);
   assert.ok(main(f).querySelector('[data-state="failed"]'));
-  assert.doesNotMatch(text(f), /Could not read this/);
-  assert.doesNotMatch(text(f), /No captures are waiting/);
+  assert.ok(!says(f, "state.failed", { reason: "x" }) && !text(f).includes(word("state.failed", { reason: "" }).split("{")[0].trim()));
+  assert.ok(!says(f, "screen.held.empty"));
 });
 
 test("R4 each row with its title, age and project; the questions it waits for; withheld and refused marks with their reasons", async () => {
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
   const t = text(p);
   for (const r of ROWS) assert.ok(main(p).querySelector(`#pick-held-${r.bundle_id}`), r.bundle_id);
-  assert.match(t, /2 days old · Project: Pothole repairs/);
-  assert.match(t, /Captured today · Project: Coliseum/);
-  assert.match(t, /For Ana's question: “Were the transfers authorised\?”/);
+  assert.ok(t.includes(`${word("screen.held.age", { days: 2 })} · ${word("screen.held.project", { project: "Pothole repairs" })}`));
+  assert.ok(t.includes(`${word("screen.held.age.today")} · ${word("screen.held.project", { project: "Coliseum" })}`));
+  assert.ok(t.includes(word("screen.held.for", { asker: "Ana", title: "Were the transfers authorised?" })));
   assert.ok(main(p).querySelector('[data-gap="withheld"]'));
-  assert.match(t, /Captured for a question you may not see\./);
+  assert.ok(t.includes(word("screen.held.withheld")));
   assert.ok(main(p).querySelector('[data-gap="refused"]'));
-  assert.match(t, /Not eligible for a batch: it is crucial to a finding\. Vouch for it on its own\./);
+  assert.ok(t.includes(`${word("screen.held.ineligible", { reason: word("screen.held.ineligible.crucial") })} ${word("screen.held.ineligible.alone")}`));
+  assert.ok(!t.includes("the catalogue"), "R23: never the catalogue's sentence");
   assert.ok(main(p).querySelector('[data-gap="undetermined"]'), "an undetermined eligibility is stated, never drawn eligible");
   assert.deepEqual(rawKeys(p), []);
   /* control: an eligible row with nothing withheld carries no gap mark */
@@ -64,13 +69,13 @@ test("R4 rows are picked (shell R19) and the hold strip offers heldsetaside and 
   const strip = main(p).querySelector(".cs-hold");
   assert.ok(strip.querySelector('button[data-act="heldsetaside"]'));
   assert.ok(strip.querySelector('button[data-act="release"]'));
-  assert.match(strip.textContent, /1 picked/);
+  assert.ok(strip.textContent.includes(word("shell.picked", { n: 1 })));
   const file = main(p).querySelector(`a.cs-ref[href="/app/open-file/${"e".repeat(64)}"]`);
   assert.equal(file.textContent, "01_Agenda.pdf");
   /* a document's screen is screens-inquiry's: registered alone, this module's page draws its card (shell R16) */
   assert.ok(main(p).querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "City budget"));
-  assert.match(text(p), /An archive: 36 files filed and held beside it, 2 not filed/);
-  assert.match(text(p), /1 of 36 files shown/);
+  assert.ok(says(p, "screen.held.archive", { parts: `${word("screen.held.archive.filed", { count: 36 })}, ${word("screen.held.archive.notfiled", { count: 2 })}` }));
+  assert.ok(says(p, "screen.held.archivemore", { shown: 1, total: 36 }));
 });
 
 test("R4 release: an enumerated selection of the picked rows, then the release over its handle, with the member's acknowledgment and mitigation", async () => {
@@ -87,7 +92,7 @@ test("R4 release: an enumerated selection of the picked rows, then the release o
   assert.equal(rq.query.acknowledgment, "Each copy is what its source gave.");
   assert.equal(rq.query.mitigation, "Compared with the site.");
   assert.equal(rq.method, "POST");
-  assert.match(text(p), /Vouched for: 2\./);
+  assert.ok(says(p, "screen.held.released", { count: 2 }));
   assert.ok(p.byOp("heldcaptures").length >= 2, "read again after the act (R8)");
 });
 
@@ -100,7 +105,7 @@ test("R4 (K3114; ratification R51) release as ratification reads it: the three f
   await pick(p, "INFO-2026-0001-photo");
   fill(p, { "ch-ack": "Each copy is what its source gave.", "ch-mitigation": "Compared with the site." });
   await press(p, "release");
-  assert.match(text(p), /Vouched for: 1\./);
+  assert.ok(says(p, "screen.held.released", { count: 1 }));
   const rq = p.byOp("release")[0];
   assert.deepEqual([rq.body.handle, rq.body.acknowledgment, rq.body.mitigation], ["SEL-1", "Each copy is what its source gave.", "Compared with the site."]);
   /* controls, each both ways: the three in the body alone, or in the query alone, answer alike; in neither, refused */
@@ -111,18 +116,18 @@ test("R4 (K3114; ratification R51) release as ratification reads it: the three f
 });
 
 test("R4 release sends nothing with a field missing, or a field outside ratification R20's bounds", async () => {
-  const cases = [[{ "ch-ack": "", "ch-mitigation": "" }, /Say why first|say: What you vouch for, What you did to check\./],
-                 [{ "ch-ack": "a", "ch-mitigation": "" }, /say: What you did to check\./],
-                 [{ "ch-ack": 'has a " quote', "ch-mitigation": "ok" }, /at most 500 characters, with no quotation marks/],
-                 [{ "ch-ack": "two\nlines", "ch-mitigation": "ok" }, /no quotation marks, backslashes or line breaks/],
-                 [{ "ch-ack": "x".repeat(501), "ch-mitigation": "ok" }, /at most 500 characters/]];
-  for (const [values, words] of cases) {
+  const cases = [[{ "ch-ack": "", "ch-mitigation": "" }, ["screen.held.vouchmissing", { fields: `${word("screen.held.ack")}, ${word("screen.held.mitigation")}` }]],
+                 [{ "ch-ack": "a", "ch-mitigation": "" }, ["screen.held.vouchmissing", { fields: word("screen.held.mitigation") }]],
+                 [{ "ch-ack": 'has a " quote', "ch-mitigation": "ok" }, ["screen.held.vouchbad", { field: word("screen.held.ack") }]],
+                 [{ "ch-ack": "two\nlines", "ch-mitigation": "ok" }, ["screen.held.vouchbad", { field: word("screen.held.ack") }]],
+                 [{ "ch-ack": "x".repeat(501), "ch-mitigation": "ok" }, ["screen.held.vouchbad", { field: word("screen.held.ack") }]]];
+  for (const [values, [key, vars]] of cases) {
     const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD), select: ok({ ok: true, handle: "SEL" }) } });
     await pick(p, "INFO-2026-0001-photo");
     fill(p, values);
     const r = await press(p, "release");
     assert.equal(p.byOp("select").length + p.byOp("release").length, 0, JSON.stringify(values));
-    assert.match(r.slot().textContent, words);
+    assert.ok(saysIn(r.slot(), key, vars), JSON.stringify(values));
   }
   /* control: at 500 characters it is sent; a refused selection sends no release */
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD), select: ok({ ok: true, handle: "SEL" }) } });
@@ -135,7 +140,7 @@ test("R4 release sends nothing with a field missing, or a field outside ratifica
   fill(q, { "ch-ack": "a", "ch-mitigation": "b" });
   const r = await press(q, "release");
   assert.equal(q.byOp("release").length, 0);
-  assert.match(r.slot().textContent, /could not be gathered/);
+  assert.ok(saysIn(r.slot(), "screen.held.selectfailed"));
 });
 
 test("R4 R13 heldsetaside: one reason (the shell's reason field, no writing help) for every picked row; they move to the Set aside list", async () => {
@@ -144,14 +149,14 @@ test("R4 R13 heldsetaside: one reason (the shell's reason field, no writing help
   const p = await open("/app/held", { reachable: true, plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? asideNow : HELD),
     heldsetaside: () => { asideNow = AFTER; return ok({ ok: true, act: "set_aside", ids: ["INFO-2026-0002-budget"], reason: "Wrong year.",
       documents: [{ id: "INFO-2026-0002-budget", waiting: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }] }] }); } } });
-  assert.doesNotMatch(text(p), /Set aside/, "R19: an empty Set aside is not drawn");
+  assert.ok(!says(p, "screen.held.setaside"), "R19: an empty Set aside is not drawn");
   await pick(p, "INFO-2026-0002-budget");
   const r = await press(p, "heldsetaside", { reason: "Wrong year.", sel: ":not([data-id])" });
   assert.equal(r.slot() && r.slot().querySelector('[data-act="writinghelp"]'), null, "no writing help on a reason (K1841)");
   assert.deepEqual(p.byOp("heldsetaside")[0].body, { ids: ["INFO-2026-0002-budget"], reason: "Wrong year." });
-  assert.match(text(p), /Set aside: 1\. They are listed under Set aside/);
-  assert.match(text(p), /Ana's question “Were the transfers authorised\?” was waiting for it/);
-  assert.match(text(p), /Set aside by mai: “Wrong year\.” 13 October 2026/, "read again, the row names who, why and when");
+  assert.ok(says(p, "screen.held.setasidecount", { count: 1 }));
+  assert.ok(says(p, "screen.held.waiting", { asker: "Ana", capture: "City budget" }));
+  assert.ok(text(p).includes(`${word("screen.held.asideby", { author: "mai", reason: "Wrong year." })} ${day(13, "october", 2026)}`), "read again, the row names who, why and when");
 });
 
 test("R13 the Set aside list: heldcaptures with state set_aside, each row naming who set it aside, when and why; heldrestore with a reason, in its panel and for picked rows", async () => {
@@ -161,27 +166,26 @@ test("R13 the Set aside list: heldcaptures with state set_aside, each row naming
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD, ASIDE), heldrestore: (req) => ok({ ok: true, act: "restore", ids: req.body.ids }) } });
   assert.equal(p.byOp("heldcaptures").find((r) => r.query.state === "set_aside").query.state, "set_aside");
   const t = text(p);
-  assert.match(t, /Set aside by ben: “Wrong year\.” 30 September 2026/);
-  assert.match(t, /Set aside by ana: “Duplicate\.” 1 October 2026/);
+  assert.ok(t.includes(`${word("screen.held.asideby", { author: "ben", reason: "Wrong year." })} ${day(30, "september", 2026)}`));
+  assert.ok(t.includes(`${word("screen.held.asideby", { author: "ana", reason: "Duplicate." })} ${day(1, "october", 2026)}`));
   /* in its row's panel: the one row, set aside in an earlier visit */
   await press(p, "heldrestore", { reason: "Right year after all.", sel: '[data-id="INFO-2026-0002-budget"]' });
   assert.deepEqual(p.byOp("heldrestore")[0].body, { ids: ["INFO-2026-0002-budget"], reason: "Right year after all." });
-  assert.match(text(p), /Restored: 1\./);
+  assert.ok(says(p, "screen.held.restored", { count: 1 }));
   /* in the hold strip, for the picked rows */
   const q = await open("/app/held", { plane: { heldcaptures: LISTS(HELD, ASIDE), heldrestore: (req) => ok({ ok: true, act: "restore", ids: req.body.ids }) } });
   await q.click(main(q).querySelector("#pick-aside-INFO-2026-0002-budget"));
   await q.click(main(q).querySelector("#pick-aside-INFO-2026-0007-memo"));
   await press(q, "heldrestore", { reason: "Both belong.", sel: ":not([data-id])" });
   assert.deepEqual(q.byOp("heldrestore")[0].body, { ids: ["INFO-2026-0002-budget", "INFO-2026-0007-memo"], reason: "Both belong." });
-  assert.match(text(q), /Restored: 2\./);
+  assert.ok(says(q, "screen.held.restored", { count: 2 }));
   /* control: the Held list offers no restore, and a failed set-aside read is drawn failed, never empty */
   const f = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? refused("STORE_SILENT", "The record did not answer.") : HELD) } });
   assert.equal(btn(f, "heldrestore"), null);
-  assert.doesNotMatch(text(f), /Nothing is set aside/);
+  assert.ok(!says(f, "screen.held.asideempty"));
   /* interface-shell R61: a refusal with its own words is drawn as those words alone */
   assert.match(text(f), /The record did not answer\./);
   assert.ok(main(f).querySelector('[data-state="failed"]'));
-  assert.doesNotMatch(text(f), /Could not read this/);
 });
 
 test("R11 each row's grade is one mark from capture.grade, never a received or authored capture drawn as measured; its thumbnail opens open-file", async () => {
@@ -199,11 +203,11 @@ test("R11 each row's grade is one mark from capture.grade, never a received or a
   assert.equal(grades("INFO-A").length, 1);
   assert.match(grades("INFO-A")[0].textContent, /B$/);
   assert.equal(grades("INFO-B").length, 0, "a received capture earns no letter");
-  assert.match(row("INFO-B").textContent, /Received, not fetched/);
+  assert.ok(saysIn(row("INFO-B"), "screen.held.grade.received"));
   assert.equal(grades("INFO-C").length, 0);
-  assert.match(row("INFO-C").textContent, /testimony, never a capture grade/);
-  assert.match(row("INFO-D").textContent, /C as a member stated it, not measured/);
-  assert.match(row("INFO-E").textContent, /Undetermined, because no file is registered under it/);
+  assert.ok(saysIn(row("INFO-C"), "screen.held.grade.testimony"));
+  assert.ok(row("INFO-D").textContent.includes(word("screen.held.grade.stated")) && grades("INFO-D")[0].textContent.endsWith("C"));
+  assert.ok(saysIn(row("INFO-E"), "state.undetermined", { reason: word("screen.held.grade.nocapture") }));
   /* the thumbnail opens open-file for capture.sha256; a row with no capture has none */
   for (const [id, sha] of [["INFO-A", S1], ["INFO-B", S2], ["INFO-C", S3], ["INFO-D", S4]])
     assert.ok(row(id).querySelector(`a.cs-ref[href="/app/open-file/${sha}"]`), id);
@@ -215,4 +219,57 @@ test("R4 heldcaptures (\"See held captures\") asks the list again", async () => 
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
   await press(p, "heldcaptures", { reason: "refresh" });
   assert.ok(p.byOp("heldcaptures").length >= 3);
+});
+
+test("R23 a held row's refusal is drawn by its words, never the catalogue's text; a crucial capture is still refused, in words", async () => {
+  const CAT = "the catalogue's own sentence for a class (never the member's)";
+  const rows = [
+    { bundle_id: "INFO-X1", title: "Crucial", eligible: false, class: "CRUCIAL_IN_BATCH", reason: CAT },
+    { bundle_id: "INFO-X2", title: "Contested", eligible: false, class: "CONTESTED_IN_BATCH", reason: CAT },
+    { bundle_id: "INFO-X3", title: "Incomplete", eligible: false, class: "ENTRY_REQUIREMENTS", reason: CAT },
+    { bundle_id: "INFO-X4", title: "Odd", eligible: false, class: "SOMETHING_NEW", reason: CAT },
+    { bundle_id: "INFO-X5", title: "Plain", eligible: false, reason: CAT },
+  ];
+  const p = await open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows })) } });
+  const row = (id) => main(p).querySelector(`#pick-held-${id}`).parentNode.parentNode;
+  assert.ok(!text(p).includes(CAT), "no row draws the catalogue's text");
+  assert.ok(saysIn(row("INFO-X1"), "screen.held.ineligible.crucial"));
+  assert.ok(saysIn(row("INFO-X2"), "screen.held.ineligible.contested"));
+  for (const id of ["INFO-X1", "INFO-X2", "INFO-X3", "INFO-X4", "INFO-X5"]) {
+    assert.ok(row(id).querySelector('[data-gap="refused"]'), id);
+    assert.ok(saysIn(row(id), "screen.held.ineligible.alone"), id);
+  }
+  /* control: the other class's sentence is not drawn for a crucial one */
+  assert.ok(!saysIn(row("INFO-X1"), "screen.held.ineligible.contested"));
+  /* the release over a crucial pick is refused CRUCIAL_IN_BATCH and drawn in its words, counting the offenders */
+  const q = await open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows })), select: ok({ ok: true, handle: "SEL" }),
+    release: refused("CRUCIAL_IN_BATCH", CAT, 400, { offenders: ["INFO-X1"] }) } });
+  await pick(q, "INFO-X1");
+  fill(q, { "ch-ack": "a", "ch-mitigation": "b" });
+  const r = await press(q, "release");
+  assert.ok(saysIn(r.slot(), "refusal.CRUCIAL_IN_BATCH", { count: 1 }), r.slot().textContent);
+  assert.ok(!r.slot().textContent.includes("{count}"));
+  assert.ok(!r.slot().textContent.includes(CAT));
+  /* ENTRY_REQUIREMENTS names each offender with what it lacks */
+  const e = await open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows })), select: ok({ ok: true, handle: "SEL" }),
+    release: refused("ENTRY_REQUIREMENTS", CAT, 400, { offenders: [{ id: "INFO-X3", missing: ["data/dataset.json"] }] }) } });
+  await pick(e, "INFO-X3");
+  fill(e, { "ch-ack": "a", "ch-mitigation": "b" });
+  const s = await press(e, "release");
+  assert.ok(saysIn(s.slot(), "refusal.ENTRY_REQUIREMENTS", { offenders: "INFO-X3 (data/dataset.json)" }), s.slot().textContent);
+  /* control: any other code is the shell's (R13): the answer's own words */
+  const o = await open("/app/held", { plane: { heldcaptures: LISTS(ok({ ok: true, held: rows })), select: ok({ ok: true, handle: "SEL" }),
+    release: refused("SOMETHING_ELSE", "The owner's own words.") } });
+  await pick(o, "INFO-X4");
+  fill(o, { "ch-ack": "a", "ch-mitigation": "b" });
+  assert.match((await press(o, "release")).slot().textContent, /The owner's own words\./);
+});
+
+test("R26 every key the held screen reads is a word of the list, and its rows draw word(key, vars)", async () => {
+  const keys = SCREENS.find((x) => x.id === "held").words;
+  for (const k of keys) assert.ok(hasWord(k), k);
+  const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
+  for (const k of ["screen.held.sub"]) assert.ok(says(p, k), k);
+  assert.ok(says(p, "screen.held.age.today"));
+  assert.ok(says(p, "screen.held.noproject"));
 });

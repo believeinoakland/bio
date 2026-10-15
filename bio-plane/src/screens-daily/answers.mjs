@@ -66,13 +66,13 @@ export const answers = Object.freeze({
         const unsure = (Array.isArray(a.not_established) ? a.not_established : []).map(function (e) {
           if (typeof e === "string") return e.trim() ? cs.esc(e) : "";
           if (e && typeof e === "object" && typeof e.text === "string" && e.text.trim()) return cs.esc(e.text);
-          if (e && typeof e === "object" && typeof e.withheld === "number" && e.withheld > 0) return cs.w("screen.answers.withheld", { n: String(e.withheld) });
+          if (e && typeof e === "object" && typeof e.withheld === "number" && e.withheld > 0) return e.withheld === 1 ? cs.w("screen.answers.withheld.one") : cs.w("screen.answers.withheld", { n: String(e.withheld) });
           return "";
         }).filter(Boolean);
         const notEstablished = unsure.length ? "<h3>" + cs.w("screen.answers.notestablished") + '</h3><ul class="mk-list">'
           + unsure.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>" : "";
         const withheld = Array.isArray(ui.withheld) && ui.withheld.length
-          ? '<p class="mk-note">' + cs.w("screen.answers.withheld", { n: String(ui.withheld.length) }) + "</p>" : "";
+          ? '<p class="mk-note">' + (ui.withheld.length === 1 ? cs.w("screen.answers.withheld.one") : cs.w("screen.answers.withheld", { n: String(ui.withheld.length) })) + "</p>" : "";
         const asRead = a.question_as_read ? '<p class="mk-small">' + cs.w("screen.answers.asread", { question: String(a.question_as_read) }) + "</p>" : "";
         const untested = ui.untested ? '<p class="mk-tag" data-untested="true">' + cs.w("ai.label.untested") + "</p>" : "";
         drawn = '<div class="cs-machinework">' + asRead + summary + sentences + notEstablished + where + looked + withheld

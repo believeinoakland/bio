@@ -4024,6 +4024,7 @@ response: "S25: B"
 decided: 2026-10-14 · Bob
 reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (the ruling and the rule's draft text); `screens/words-t49.src.py` (`site.groups.rule`); `screens/mock-screens.js` (`SCR.site`, "Groups at work").
 owed: (BOB) when the directory is built: a steward's decline or removal of a listing, recorded with the rule's part and the reason, told to the group's administrators, touching nothing but the directory; the group may ask again. (Bob) approval of the rule's text in §5E; the site draws it once approved.
+amended: 2026-10-15 · the listing rule's text approved by Bob as drafted (DEC-270).
 
 ### DEC-256 · answered
 raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (the standing tail: T49's requirement files on `tranche/T49` read against the screens)
@@ -4192,3 +4193,87 @@ response: **The design session, 2026-10-15.** `refusal.AGENT_WORKER_UNBOUND`: "T
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-267), `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
 owed: (BOB) a module that raises `AGENT_WORKER_UNBOUND` reads `refusal.AGENT_WORKER_UNBOUND`, not `ai.refused.notdeployed`; control-plane's group draft reads `draft.machine.label.group`. (design) none.
+
+### DEC-268 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: T49's requirements against the screens; `screens-intake` R22, Bob's D12, M-T49-5)
+for: bob-session
+question: How the capture screen shows a capture opened with a project or a question as its subject, and draws R22's "Cite a passage".
+why it is Bob's: design detail beneath his D12; decided by the design session, reported to Bob as done.
+provisional: the capture screen drew no filing line and no "Cite a passage" (DEC-245's `capture.forquestion.help` only promised it).
+alternative: the `cite` act on capture itself. Rejected: R22 opens find-in over the document, where the passage is chosen.
+recommendation: as below.
+reversal cost: low: words and a drawing.
+response: **The design session, 2026-10-15.** The captured result says where it is filed: `capture.filed.project` "Filed under {project}" or `capture.filed.question` "Filed under {project}, for the question “{question}”", and for a question offers `capture.cite` "Cite a passage", opening find-in over the document with the question chosen (`capture.cite.tip`). The details' heading reads "Once it is captured: where it is filed, and watching the address". The other T49 requirement changes since DEC-256 (each L11 module's words by key; interface-shell R71, R72; affordances R60; op-grades' `founderhandleset`; op-capabilities R1–R3; op-declarations R72) draw nothing new.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-268), `screens/mock-screens.js`; `words.json`.
+owed: (BOB) screens-intake draws these keys under R22. (design) none.
+
+### DEC-269 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency)
+for: bob-session
+question: Words that break the design's own rules: "overdue" in queue items (DEC-256; screens-daily R31) and British spelling (DEC-221).
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: as below, before.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** Queue items: `queue.temporal-expectation-due.undetermined.detail` "It may be past its date; that is undetermined, because {reason}. …" (was "Possibly overdue"); `machinery-producers.summary.overdue_check_interval` "{bundle} has gone longer than its own interval without its check". Spelling: `screen.people.today.kind.program` "A program"; `money.says.authorising_events_held` and `.authorising_event_held` "authorizing". "Overdue" stays where it is a deadline's recorded status on an action or a due date (`screen.action.clock.overdue`, `screen.due-date.status.overdue`, `screen.open-file.status.overdue` and the refusals naming the statuses), never on Home or in the queue.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-269), `screens/words-mod-3.src.py`; `words.json`.
+owed: (BOB) setup-words' rows regenerated. (design) none.
+
+### DEC-270 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-255's rule: its text, drafted for Bob's approval in Publication §5E)
+for: bob
+question: Does the listing rule, as drafted, say when civicsmith.org's stewards may decline or remove a group's listing?
+why it is Bob's: policy (who may keep what off Civicsmith's own site) and doctrine (never a judgment on a group's views or targets), DEC-255's.
+provisional: the draft in Publication §5E, not drawn.
+alternative: change its grounds or its wording.
+recommendation: approve as drafted.
+reversal cost: low: the directory is not built yet.
+response: "rule: approved"
+decided: 2026-10-15 · Bob
+reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (APPROVED); `screens/words-t49.src.py` (DEC-270: `site.groups.rule.head`, `site.groups.rule.text`, protected), `screens/mock-screens.js` (civicsmith.org's groups page, both states: "The listing rule" beside the stewards' note).
+owed: (BOB) site draws `site.groups.rule.head` and `site.groups.rule.text` on the groups page beside `site.groups.rule` (SITE #1); the directory, when built, records a decline or removal with the rule's numbered part (DEC-255's owed). (design) none.
+
+### DEC-271 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B228, K3383: three modules' reads lag their words)
+for: bob-session
+question: words-reads.json's lists for plane, control-plane and admission, against DEC-267's and DEC-262's keys.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: plane's and control-plane's `AGENT_WORKER_UNBOUND` details read the interim `ai.refused.notdeployed`; admission's list lacks `refusal.DOOR_RATE_LIMITED.session`.
+alternative: none.
+recommendation: as below.
+reversal cost: none: reads only, no word changed.
+response: **The design session, 2026-10-15.** plane's and control-plane's `AGENT_WORKER_UNBOUND` details now read `refusal.AGENT_WORKER_UNBOUND` (DEC-267), and neither lists `ai.refused.notdeployed`; admission reads `refusal.DOOR_RATE_LIMITED.session` (DEC-262) ahead of its source; control-plane already lists `draft.machine.label.group` on this branch (DEC-267). No word changed.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (its decisions and `REQUIREMENT_READS`); `words-reads.json`.
+owed: (BOB) the three modules read these keys. (design) none.
+
+### DEC-272 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (K3402, K3403, N1138: Home and the queue draw "admin authored this document", machinery-producers' own English; and `words-reads.json` against T49 after L11's merges)
+for: bob-session
+question: The words of the queue item for a capture finished without the member who started it; and the reads inventory once L11's modules hold keys.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: DEC-260 keyed only its summary ("{bundle_id} was completed by an unattended writer after {author} left it": a record id, a raw author id, the jargon "unattended writer") and missed its detail (an internal code, "D-61", in member text).
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `queue.capture-completed-unattended.summary` "A capture finished after {member} left it: {title}"; `.detail` "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it."; `.who` "your group's Civicsmith", for `{member}` when the capture was started by a credential that is no member. `{member}` is a handle and `{title}` the document's title, never a record or credential id. `machinery-producers.summary.completed_unattended_writer` gives way to them (machinery-producers' reads re-pointed). `words-reads.src.mjs` re-run on T49 as it stands after L11's merges: a decision whose string its module no longer holds is retired when the module reads its key (61 retired), failing only when the key is no longer read; the record files' own grammar (a new question's and project's front matter, an archive log's "Changes:" label) is listed unkeyed.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-272), `screens/words-mod-3.src.py`, `screens/words-reads-mod-3.json`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB, N1138) machinery-producers' `capture-completed-unattended` reads these keys, filling `{member}` with the starter's handle (or `.who`) and `{title}` with the document's title. (design) none.
+
+### DEC-273 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (the standing tail: T49's requirements against the screens since K3376, through K3407; the words' consistency)
+for: bob-session
+question: What T49's requirement changes since DEC-268 ask of the screens; three British spellings left in module rows; whether what an explanation says (a control's hover text) is a keyed word, as DEC-259 holds for what a screen draws.
+why it is Bob's: design detail beneath DEC-221 and DEC-259; decided by the design session, reported to Bob as done.
+provisional: (1) `refusal.GROUP_KIND_UNKNOWN` read "neighbourhood", `refusal.BAD_MEMBER_ID` "when they enrol", `refusal.START_RUMOUR_AS_QUESTION` "rumour". (2) `act.readtranslate.does` said "Shows this passage…", yet `readtranslate` never translates a passage (plane R50: a note, question, finding or notice; `screens-inquiry` R31: no control on a passage), and the question screen drew its own unkeyed help instead, so two explanations of one act competed. (3) `check_words_drawn.mjs` read only the text a screen draws, never its explanations: 1,729 explanation sentences on the 69 screens were not keyed words, about 900 of them the shell's own, paraphrasing keys `interface-shell` draws (`shell.mark.means`, `shell.level.holds`, `shell.menu.signout_does`).
+alternative: (3) key every explanation in one pass. Rejected: about 750 distinct sentences; a ratchet holds the count while batches bring it down.
+recommendation: as below.
+reversal cost: low: words, drawings and a check.
+response: **The design session, 2026-10-15.** (1) "neighborhood", "when they join", "rumor" (DEC-221). (2) `act.readtranslate.does` "Shows this in the language you read, translated by a machine for you alone and marked as machine work; passages it quotes stay in their own words. Nothing is saved: the original stays the record, one tap away, and you quote only the original."; the question screen draws it (its own help is gone); `translate.undetermined.language` "…couldn't tell what language this is written in…". (3) `check_words_drawn.mjs` also reads every explanation (`[data-tip]`, a record's card aside, whose words are the record's), matched whole or, after its name ("<b>Search</b>: …"), by what follows; counted apart against `words-drawn-tips-baseline.json`, a ratchet that only falls. The shell draws its keys word for word (the explanations level, Search, the group's card with its description and purpose marked as the group's own words); `shell.queue.waiting`, `shell.queue.open` and `shell.group.open` are minted. 1,729 became 872; the rest are keyed in later batches. The requirement sweep (K3376 to K3407) found every key a requirement names held, and five keys requirements still call owed already given: `queue.project-invitation.summary`/`.detail` (screens-daily R29, DEC-248), `due.ours.passed` and `home.strip.ours_passed.one`/`.other` (screens-daily R31, DEC-248), `screen.explore.nocentre` (screens-investigate R29, DEC-256), `translations.none` (screens-settings R37, DEC-248), and the withheld reasons `dock.withheld.<CODE>` (screens-inquiry R33, DEC-248).
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-mod-3.src.py`, `screens/words-t48.src.py`, `screens/words-t49.src.py`, `screens/words-drawn.src.py` (DEC-273), `screens/mock-acts.js`, `screens/mock-screens.js`, `screens/mock-shell.js`, `screens/check_words_drawn.mjs`, `screens/words-drawn-tips-baseline.json`; `words.json`.
+owed: (BOB) `setup-words`' rows regenerated from the new `words.json` (five rows reworded, three minted); the five requirements above may read the keys as given, no longer owed; where `interface-shell` explains the queue count or the group's card, it reads `shell.queue.waiting`/`.open` and `shell.group.open`. (design) the remaining 872 explanation sentences, in batches.

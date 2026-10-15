@@ -4,7 +4,6 @@
  * marked new) and the orders held as obligations (`duties`' `dutiesof`, each party's, the ones arising in it), each
  * with its due date. Procedural facts are drawn as facts, never as advice on what to file. */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function reads(view) {
@@ -13,6 +12,7 @@ function reads(view) {
   return {
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     parties: { op: "partiesof", query: { proceeding: id } },
+    dates: { op: "proceedingdates", query: { proceeding: id } },
     follows: { op: "follows", query: {} },
     people: { op: "peopledirectory", query: { limit: "200" } },
     standards: { op: "standards", query: { limit: "200" } },
@@ -41,6 +41,25 @@ function render(cs, view) {
     return `<p class="mk-sub">${p.forum ? P.refOf(cs, p.forum, p.forum, [p.forum_kind || ""]) : ""} · ${cs.w(S + "caption", { number: p.number || "", label: x.label || "" })}</p>`
       + (x.note ? `<p class="mk-small">${cs.esc(x.note)}</p>` : "");
   }));
+  /* R28: "Dates": the proceeding's own dates and the group's deadlines on it, two lanes, never interleaved; nothing is drawn as late */
+  out.push(cs.sec("proceeding.dates.title", cs.state("dates", view, (v) => {
+    const lanes = (v && v.lanes) || {};
+    const own = lanes.proceeding || { items: [] }, ours = lanes.group || { items: [] };
+    const ownItems = Array.isArray(own.items) ? own.items : [], ourItems = Array.isArray(ours.items) ? ours.items : [];
+    if (!ownItems.length && !ourItems.length && !ours.unread) return `<p class="cs-state" data-state="empty">${cs.w("proceeding.dates.none")}</p>`;
+    const st = own.status || null;
+    const stage = st ? (st.stage === "undetermined" || !st.stage ? cs.mark("gap", "undetermined", { reason: st.why || "" }) : cs.w("proceeding.dates.stage", { stage: st.label || st.stage })) : "";
+    const lane = (key, tag, body) => `<section data-lane="${tag}"><h2 class="mk-lanehead" tabindex="0">${cs.w(key)}</h2>${body}</section>`;
+    return (stage ? `<p class="mk-small">${stage}</p>` : "")
+      + `<div class="mk-lanes">`
+      + (ownItems.length || own.truncated ? lane("proceeding.dates.lane.proceeding", "proceeding", ownItems.map((x) =>
+        `<div class="mk-ev" data-event="${cs.esc(x.event)}"><span class="mk-date">${P.when(cs, x.when_undetermined ? null : x.when, x.why)}</span> <b>${P.refOf(cs, x.event, x.label || x.event, [x.kind || ""], "event")}</b></div>`).join("")
+        + (own.truncated ? `<p class="mk-small">${cs.w("screen.timeline.more")}</p>` : "")) : "")
+      + (ourItems.length || ours.truncated || ours.unread ? lane("proceeding.dates.lane.group", "group", ourItems.map((x) =>
+        `<div class="mk-ev us" data-action="${cs.esc(x.action)}"><span class="mk-date">${cs.date(x.date || "") || cs.esc(String(x.date || ""))}</span> <b>${P.refOf(cs, x.action, x.text || x.action, [x.basis || ""], "action")}</b>${x.basis ? ` <span class="mk-small">${cs.esc(x.basis)}</span>` : ""}</div>`).join("")
+        + (ours.unread ? cs.mark("gap", "undetermined", { reason: String(ours.unread) }) : "") + (ours.truncated ? `<p class="mk-small">${cs.w("screen.timeline.more")}</p>` : "")) : "")
+      + "</div>";
+  }), { help: "proceeding.dates.help" }));
   const parties = view.data.parties && view.data.parties.state === "ok" ? view.data.parties.value.parties || [] : [];
   out.push(cs.sec(S + "parties", cs.state("parties", view, (v) => ((v.parties || []).length
     ? cs.sheet(v.parties.map((x) => cs.row(`<b>${cs.w(S + "role", { role: cs.w(S + "roles." + (["plaintiff", "defendant", "petitioner", "respondent", "appellant", "appellee", "intervenor", "amicus", "complainant", "applicant", "real_party_in_interest", "interested_party"].includes(x.role) ? x.role : "other")) })}</b>`,
@@ -120,62 +139,28 @@ const acts = [
     } },
 ];
 
-export const PROCEEDING_WORDS = [
-  ["none", "No proceeding is open here. Register one from its caption."],
-  ["caption", "No. {number} · a neutral label: \"{label}\""],
-  ["parties", "Parties"],
-  ["role", "{role}"],
-  ...["plaintiff", "defendant", "petitioner", "respondent", "appellant", "appellee", "intervenor", "amicus", "complainant", "applicant", "real_party_in_interest", "interested_party", "other"]
-    .map((r) => ["roles." + r, { plaintiff: "Plaintiff", defendant: "Defendant", petitioner: "Petitioner", respondent: "Respondent", appellant: "Appellant", appellee: "Appellee",
-      intervenor: "Intervenor", amicus: "Amicus", complainant: "Complainant", applicant: "Applicant", real_party_in_interest: "Real party in interest", interested_party: "Interested party", other: "Other party" }[r]]),
-  ["cited", "where it appears"],
-  ["party", "The party"],
-  ["rolepick", "Their role"],
-  ["sha", "The document it appears in"],
-  ["sha.help", "The document's fingerprint, as its page shows it."],
-  ["page", "Page (optional)"],
-  ["register.head", "The register"],
-  ["new", "New"],
-  ["read", "read {date}"],
-  ["notread", "not read yet"],
-  ["gated", "needs a login"],
-  ["register.address", "The register's address"],
-  ["login", "Its register"],
-  ["login.yes", "needs a login"],
-  ["login.note", "A register that needs a login is not read by your group's Civicsmith: new filings come only by a member's own capture."],
-  ["orders", "Orders, held as obligations"],
-  ["nodue", "the order states no date"],
-  ["obligor", "Who the order binds"],
-  ["act", "What the order requires"],
-  ["clause", "Where it says so (the order's paragraph)"],
-  ["due", "By when (optional)"],
-  ["court", "The decision"],
-  ["law", "What it interprets"],
-  ["citation", "The passage (a content id)"],
-  ["type", "The decision"],
-  ["type.interprets", "Interprets it"],
-  ["type.applies", "Applies it"],
-  ["type.holds_invalid", "Holds it invalid"],
-  ["type.requires", "Requires it"],
-  ["facts", "Procedural facts (which form, which court, which deadline) are facts, never advice on what to file."],
-  ["register", "Register a proceeding"],
-  ["forum", "The court or tribunal"],
-  ["number", "Its number"],
-  ["kind", "The kind of proceeding"],
-  ["kind.help", "As the court names it, for example \"civil\"."],
-  ["label", "A neutral label"],
-  ["label.help", "How the group refers to it, saying nothing of who is right, for example \"the lease rent case\"."],
-  ["note", "Where its caption comes from"],
-  ["create.empty", "Give the court, the number, the kind and where the caption comes from."],
-  ["party.empty", "Name the party and the passage it appears in."],
-  ["register.empty", "Give the register's public address, starting https://."],
-  ["order.empty", "Name who the order binds, what it requires and its paragraph."],
-  ["link.empty", "Name the decision, what it interprets and the passage."],
-].map(([k, en]) => row("screen.proceeding." + k, en));
+const PROCEEDING_KEYS = [
+  "screen.proceeding.none", "screen.proceeding.caption", "screen.proceeding.parties", "screen.proceeding.role", "screen.proceeding.roles.plaintiff",
+  "screen.proceeding.roles.defendant", "screen.proceeding.roles.petitioner", "screen.proceeding.roles.respondent",
+  "screen.proceeding.roles.appellant", "screen.proceeding.roles.appellee", "screen.proceeding.roles.intervenor", "screen.proceeding.roles.amicus",
+  "screen.proceeding.roles.complainant", "screen.proceeding.roles.applicant", "screen.proceeding.roles.real_party_in_interest",
+  "screen.proceeding.roles.interested_party", "screen.proceeding.roles.other", "screen.proceeding.cited", "screen.proceeding.party",
+  "screen.proceeding.rolepick", "screen.proceeding.sha", "screen.proceeding.sha.help", "screen.proceeding.page", "screen.proceeding.register.head",
+  "screen.proceeding.new", "screen.proceeding.read", "screen.proceeding.notread", "screen.proceeding.gated", "screen.proceeding.register.address",
+  "screen.proceeding.login", "screen.proceeding.login.yes", "screen.proceeding.login.note", "screen.proceeding.orders", "screen.proceeding.nodue",
+  "screen.proceeding.obligor", "screen.proceeding.act", "screen.proceeding.clause", "screen.proceeding.due", "screen.proceeding.court",
+  "screen.proceeding.law", "screen.proceeding.citation", "screen.proceeding.type", "screen.proceeding.type.interprets",
+  "screen.proceeding.type.applies", "screen.proceeding.type.holds_invalid", "screen.proceeding.type.requires", "screen.proceeding.facts",
+  "screen.proceeding.register", "screen.proceeding.forum", "screen.proceeding.number", "screen.proceeding.kind", "screen.proceeding.kind.help",
+  "screen.proceeding.label", "screen.proceeding.label.help", "screen.proceeding.note", "screen.proceeding.create.empty",
+  "screen.proceeding.party.empty", "screen.proceeding.register.empty", "screen.proceeding.order.empty", "screen.proceeding.link.empty",
+];
 
 const words = ["screen.proceeding.name", "screen.proceeding.purpose",
+  "proceeding.dates.title", "proceeding.dates.help", "proceeding.dates.lane.proceeding", "proceeding.dates.lane.group", "proceeding.dates.stage", "proceeding.dates.none",
+  "screen.timeline.month", "screen.timeline.onorbefore", "screen.timeline.undated", "screen.timeline.more",
   ...["entitycreate", "recordline", "followregister", "declare", "courtlink"].flatMap((op) => ["act." + op + ".label.proceeding", "act." + op + ".does"]),
   "mark.kind.todo.name", "mark.kind.todo.means", "mark.due.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "state.empty", "state.loading", "state.failed", ...PROCEEDING_WORDS];
+  "state.empty", "state.loading", "state.failed", ...PROCEEDING_KEYS];
 
 export const PROCEEDING_SCREEN = Object.freeze({ id: "proceeding", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, render, acts, words, parts: PARTS });

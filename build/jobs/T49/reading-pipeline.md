@@ -1,6 +1,6 @@
 # reading-pipeline (T49)
 
-**Status** · session_01GqCLDeeJthzed1vQ19Mi4Q · depth 2 · COMPLETE · handled B1
+**Status** · session_012L1oQ7PhbuuVr5aKkA3iwr · depth 2 · COMPLETE · handled B2
 
 ## Completion (T49-6)
 
@@ -39,6 +39,28 @@
 
 Size (session_01GqCLDeeJthzed1vQ19Mi4Q): test runs 9, module lines 1724
 
+## Completion (T49-34, READING-PIPELINE #14)
+
+**Reading.** Read whole: `build/requirements/reading-pipeline.md`, `build/manifest.md`, `roles/JOB.md`, B2; of the code, `index.mjs` lines 120–190, 980–1040 and 1180–1390 (`layerChainFor`, `readingFromWire`, `readInner`), and `text-chain.layerChain`; of the tests, `text-units.test.mjs` heads and the R32 cases and `read.test.mjs`'s R10 case. The set was small enough to read without helpers.
+
+**Entry applied.** R33: in `readInner`'s R1 branch, a reading given text units now carries `text_source = layerChainFor(null, {tier: null, container})` and `text_container = container`, where `container` is the detected format (`html`) or `"text"` when the format is `undetermined`, set after the reader's outcome (found, throwing, or no reader alike) and before the provenance site, so R14 (tier null, plane) and R17's counts are unchanged. A reading with no unit list (no glyph, multipart, over the bound, bytes absent) has neither key, as before. START's measure of B2's note: the worker's read was right (the R32 literals had no `text_source`); the fix is where it suggested.
+
+**Tests.** `text-units.test.mjs`: three new (R33 HTML and plain text with chain, tier null, container, `checkChain` null, provenance tier null; R33 control: no units, no chain; R33 with a recognising reader's entities kept). The R32 test's old `text_source === undefined` assertion became the chain assertion, since R33 amends R10. The `cite` admitted on a captured HTML notice cannot be a test of this module (`content` comes later, no edge); it is `content`'s or `extraction`'s to hold, and its gate (`extent-core.mjs`:567) needs only a non-empty chain, which `checkChain` accepts here. Control (no reading, C-45.2 refused) is `content`'s existing case.
+
+**Deferred.** None. **Found in another module.** The plane bundle is stale by this change (BOB's layer-close regeneration). `R33` carries *(not yet met: T49)* in the requirements file and Status: BOB's to remove.
+
+**Tests and checks.**
+- `m/reading-pipeline/`: 123 tests, 123 pass; `d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding`: 3, 3 pass.
+- Users: `m/extraction/` 172/172, `m/content/` 132/132, `m/events/` 75/75, `m/retrieval/` 175/175.
+- L11 screens: `screens-action`, `-entry`, `-inquiry`, `-intake`, `-investigate`, `-publish`, `-settings` all pass. Reds identical with my change stashed, so inherited, not mine: `screens-daily` 107/108 (one: "each screen's acts are exactly its registered acts"), `screens-wizards` 37/39 (R1 refusals, R8 path), `journey-check` 7/28 (its local arm fails to run: the walker's world).
+- `checks/format.mjs`: 170 modules, 0 failures; `architecture.mjs`: 28 product files, 93 relative imports, 0 failures; `coverage.mjs`: 33 of 33 live ids named, 0 failures; `ownership.mjs`: 0 failures.
+
+Size (session_012L1oQ7PhbuuVr5aKkA3iwr): test runs 14, module lines 1731
+
 ## J1 · COMPLETE
 
 T49-6 reading-pipeline complete. R32 applied: a capture read as text through no format entry (HTML, plain text) now answers doc-para text_units from its decoded text (HTML: visible text only); R22 proven over the module's whole outward text against jurisdictions' full place list (N1065). Module tests 120/120, users' tests 382/382, format/architecture/coverage/ownership 0 failures. For you: remove 'not yet met: T49' from R32; the plane bundle is stale by this change; an extraction-side test of capture_text/Find is not mine (record). Three detail decisions (title dropped, only HTML stripped, pre whitespace collapsed) are in the record. Live counts of captures over the 8 MiB text bound need biosmoke8.
+
+## J2 · COMPLETE
+
+T49-34 reading-pipeline complete. R33 applied: a text-path reading with text units carries text_source (layer, tier null, container html or text) and text_container; R14 tier null and R17 counts unchanged. Module tests 123/123, users (extraction, content, events, retrieval) all pass, L11 screens pass except inherited reds identical with my change stashed (screens-daily 1, screens-wizards 2, journey-check 21). Checks 0 failures. For you: remove R33's 'not yet met' mark; plane bundle stale; the cite-admitted test belongs to content/extraction (no edge from here), its gate needs only a non-empty chain.

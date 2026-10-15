@@ -33,10 +33,10 @@ export const IMPORTED = Object.freeze({
       }).join("")) : ""));
       out.push(cs.sec("screen.imported.accept", cs.field("im-checked", "screen.imported.checked.label", { area: true })
         + cs.field("im-reason", "screen.imported.reason.label", { area: true })
-        + '<div class="mk-acts">' + cs.act("importaccept", { tone: "primary" }) + "</div>"));
-      out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="mk-acts">' + cs.act("importflag") + "</div>"));
+        + '<div class="mk-acts">' + cs.act("importaccept", { tone: "primary" }) + "</div>" + P.said(view, "importaccept")));
+      out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="mk-acts">' + cs.act("importflag") + "</div>" + P.said(view, "importflag")));
       out.push(cs.sec("screen.imported.watch", cs.field("im-publisher", "screen.imported.publisher.label", { type: "url", help: "screen.imported.publisher.help" })
-        + '<div class="mk-acts">' + cs.act("importwatch") + "</div>"));
+        + '<div class="mk-acts">' + cs.act("importwatch") + "</div>" + P.said(view, "importwatch")));
     } else if (view.subject) out.push(cs.state("chosen", function () { return ""; }));
 
     // The cases imported, each opening its own page.
@@ -66,6 +66,7 @@ export const IMPORTED = Object.freeze({
         return { body: { parts: [btoa(bin)] } };
       },
       done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "caseimport", answer)) return; // D29: no import is opened on a refusal
         const r = view.parts.value(answer) || {};
         if (r.import) cs.go("imported", r.import);
       },
@@ -82,6 +83,7 @@ export const IMPORTED = Object.freeze({
         if (!checked) return { refuse: "screen.imported.checked.needed" };
         return { body: { import: c.import, edition: ed.edition, findings: findings, checked: checked, reason: String(cs.value("im-reason") || "").trim() } };
       },
+      done: function (view, answer, cs) { view.parts.refused(cs, view, "importaccept", answer); }, // D29
     },
     {
       // R7: "Flag an issue", kept within the group.
@@ -93,6 +95,7 @@ export const IMPORTED = Object.freeze({
         if (!issue) return { refuse: "screen.imported.issue.needed" };
         return { body: { import: c.import, edition: (c.edition || {}).edition, issue: issue } };
       },
+      done: function (view, answer, cs) { view.parts.refused(cs, view, "importflag", answer); }, // D29
     },
     {
       // R7: "Watch the publisher's docket".
@@ -104,6 +107,7 @@ export const IMPORTED = Object.freeze({
         if (!/^https:\/\//.test(publisher)) return { refuse: "screen.imported.publisher.needed" };
         return { body: { import: c.import, publisher: publisher } };
       },
+      done: function (view, answer, cs) { view.parts.refused(cs, view, "importwatch", answer); }, // D29
     },
   ],
 });

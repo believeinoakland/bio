@@ -12,9 +12,6 @@ export const helpRecords = Object.freeze({
   },
 
   render: function (cs, view) {
-    const must = cs.sec("screen.help-records.must", '<ul class="mk-list">' + [1, 2, 3, 4, 5, 6, 7].map(function (n) {
-      return "<li>" + cs.w("screen.help-records.must." + n) + "</li>";
-    }).join("") + "</ul>");
     // R14: a section that holds nothing is not drawn: no law the profile names, no "faster" and no "sources".
     const held = function (p) {
       const v = p && p.view ? p.view : {};
@@ -22,6 +19,17 @@ export const helpRecords = Object.freeze({
     };
     const pr = view.data.profiles;
     const none = pr && pr.state === "ok" && !held(pr.value).length;
+    // R9, R19: what the office must do, each sentence by its key with the particulars the profile names (the response
+    // period and its citation); a sentence whose particulars the profile does not name is not drawn, never drawn short.
+    const response = pr && pr.state === "ok" ? held(pr.value).find(function (d) { return d.rule === "records_response" && d.amount; }) : null;
+    const fills = { days: response ? String(response.amount) : null, cite: response ? response.citation : null };
+    const musts = [1, 2, 3, 4, 5, 6, 7].map(function (n) {
+      // only the first sentence's particulars are the response period's and its citation; another sentence's citations
+      // are other sections of the law, which the profile does not name
+      const said = cs.w("screen.help-records.must." + n, n === 1 && fills.days !== null ? fills : {});
+      return /\{\w+\}/.test(said) ? "" : "<li>" + said + "</li>";
+    }).filter(Boolean);
+    const must = musts.length ? cs.sec("screen.help-records.must", '<ul class="mk-list">' + musts.join("") + "</ul>") : "";
     const faster = none ? "" : cs.sec("screen.help-records.faster", cs.state("profiles", function (p) {
       const ds = held(p);
       const days = function (d) { return (Number(d.amount) || 0) * (d.count === "business" ? 1.4 : 1); };

@@ -468,6 +468,16 @@ REWRITE.update({'screen.wizards.basedon': "based on Civicsmith's “{name}”", 
 w('screen.tour.what.says', '{group} looks into {focus}. We check what the city says against its own records, and publish what the records show.', False, "the walk-through's first step; {focus} the group's own words")
 w('screen.timeline.threaded.owndate', '{document}, its own date {date}', False, 'a document threaded to a step, with the date it bears')
 # --- end DEC-259
+
+# --- DEC-273: what each explanation says (a control's data-tip, shown on hover, focus or tap) is a keyed word too, counted by
+# check_words_drawn.mjs apart from the drawn text (words-drawn-tips-baseline.json, a ratchet). A drawing that paraphrased a
+# key now draws the key; a sentence no key held is minted here. The shell's, on every screen:
+def w273(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-273' + (': ' + note if note else '')))
+w273('shell.queue.waiting', '{n} items wait on you in your queue: {todo} to do, {noticed} noticed, {status} status.', False, "the queue count's explanation in the masthead; {n} their sum")
+w273('shell.queue.open', 'Click to open your queue.', False, "the queue count's explanation, its second line")
+w273('shell.group.open', 'Click to see who your group is.', False, "the group's card in the masthead, its second line; the group's description and purpose are its own words (data)")
+# --- end DEC-273
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

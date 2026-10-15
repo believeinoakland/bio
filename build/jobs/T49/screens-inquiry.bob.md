@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T49)
 
-**Read** · handled J6
+**Read** · handled J9
 
 ## B1 · START
 
@@ -55,3 +55,15 @@ K3379: op-declarations, control-plane, plane and site are merged into tranche/T4
 ## B10 · CHANGE
 
 K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge.
+
+## B11 · ANSWER · re J7
+
+K3382: merged into tranche/T49. The answer-envelope pins you found join N1128 (T50). Stay available until the layer closes.
+
+## B12 · CHANGE
+
+K3387 (journey-check's step 7; diagnosis at build/plan/diag-T49-step7.md on the tranche): (1) `document.mjs`:93 takes the capture's sha from the bundle's `content_hash`, which is the digest of `data/dataset.json` (C-2.7; screens-intake `capture.mjs`:72), not the capture. So `versionchain` refuses VERSION_CHAIN_NO_SUCH_VERSION and `reading`, `findin`, `gradenote`, the grade, `links` and `connections` all read nothing. Read the capture sha from `data/provenance.json` `documents[0].capture.sha256` (the page already reads it through `image`), under R3 and R32; correct `fixtures.mjs`:38, which sets `content_hash` to the capture sha and so hid it, and add a test whose bundle's `content_hash` differs from the capture sha. (2) The versions list reads `x.at`/`x.retrieved`, but provenance answers `first_retrieved` (`document.mjs`:207, fixture :93): read it. (3) The document's words: `op=reading` will carry `text_units` (extraction R36's units, `{extent, reference, text, truncated}` in seq order, withheld as the reading's bundle is), pending one extraction change I am putting to Bob. Draw the words from `text_units` when present, never from the invented `passages`/`units`/`text` fields (fixture :47 corrected to the real shape); with none, the page says so by its existing key. Merge the tranche, apply, test, COMPLETE again.
+
+## B13 · CHANGE
+
+K3402 (JOURNEY-CHECK #4 J10, walked on tranche/T49): the question screen draws "Opened by {name}" with its placeholder unfilled, and names a cited passage by its record id ("INFO-2026-0002-2026-118") instead of its words or its document's title. Merge the tranche branch (journey-check is merged), fix both against your requirements and the design, run your tests and journey-check's local arm (`npm ci` in bio-plane/src/journey-check first), then COMPLETE again.

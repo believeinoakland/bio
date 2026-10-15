@@ -444,7 +444,7 @@ for code, t in [
 w8('ai.keepaway.unread', "Your group's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.", False, "plane's ask: UNDETERMINED keep-away, for a translation or a draft")
 w8('ai.draft.planunread', "The plan couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a status report's draft")
 w8('ai.draft.recordsunread', "The records this draft is about couldn't be read just now, so nothing was drafted. Try again in a moment.", False, "plane's ask: a bearing or infraction draft")
-w8('translate.undetermined.language', "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.", False, "plane's ask: readtranslate")
+w8('translate.undetermined.language', "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.", False, "plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)")
 
 # op-grades' consequence statements (R4, R8, R21 (K2049)): word for word; personexpunge's is screen.person.expunge.statement and
 # openwithwarning's screen.open-file.warn.ends, the design's words governing
@@ -627,6 +627,41 @@ DEC267_REWORDED = {'refusal.AGENT_WORKER_UNBOUND': "The assistant isn't installe
 REWRITE7.update(DEC267_REWORDED)
 # --- end DEC-267
 
+# --- DEC-268 (screens-intake R22, T49; Bob's D12): a capture opened with a project or a question as its subject says where it
+# is filed, and from a question offers "Cite a passage", opening find-in over the document with the question chosen
+w15 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-268' + (': ' + note if note else '')))
+w15('capture.filed.project', 'Filed under {project}', False, 'after capture.captured, for a capture opened from a project')
+w15('capture.filed.question', 'Filed under {project}, for the question “{question}”', False, 'after capture.captured, for a capture opened from a question')
+w15('capture.cite', 'Cite a passage', False, "the captured result's link to find-in, offered for a capture opened from a question (R22)")
+w15('capture.cite.tip', 'Opens Find in this over the document, with your question chosen.', False, 'what capture.cite opens')
+DEC268_REWORDED = {'screen.capture.address.watchhead': 'Once it is captured: where it is filed, and watching the address'}
+REWRITE7.update(DEC268_REWORDED)
+# --- end DEC-268
+
+# --- DEC-269 (the standing tail: the words' consistency): never "overdue" in the queue (DEC-256; screens-daily R31), and
+# American spelling (DEC-221)
+DEC269_REWORDED = {
+  'queue.temporal-expectation-due.undetermined.detail': 'It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).',
+  'screen.people.today.kind.program': 'A program',
+}
+REWRITE7.update(DEC269_REWORDED)
+# --- end DEC-269
+
+# --- DEC-270 (Bob, 2026-10-15: "rule: approved"): the listing rule's text (DEC-255; Publication §5E), as he approved it, drawn on
+# civicsmith.org's groups page beside site.groups.rule
+w16 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-270' + (': ' + note if note else '')))
+w16('site.groups.rule.head', 'The listing rule', False, "the details' heading beside site.groups.rule")
+w16('site.groups.rule.text', "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.", True, 'Bob approved this text (DEC-270); a change is his')
+# --- end DEC-270
+
+# --- DEC-272 (K3402, K3403, N1138): the queue item a capture finished without the member who started it. Its summary and
+# detail name the member by handle, never a raw id; a credential that is no member reads queue.capture-completed-unattended.who.
+w17 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-272' + (': ' + note if note else '')))
+w17('queue.capture-completed-unattended.summary', 'A capture finished after {member} left it: {title}', False, "machinery-producers' capture-completed-unattended; {title} the document's title, never its record id")
+w17('queue.capture-completed-unattended.detail', "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.", False, "machinery-producers' capture-completed-unattended")
+w17('queue.capture-completed-unattended.who', "your group's Civicsmith", False, '{member} when the capture was started by a credential that is no member')
+# --- end DEC-272
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -634,5 +669,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-269' if k in DEC269_REWORDED else 'DEC-268' if k in DEC268_REWORDED else 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

@@ -4,9 +4,8 @@
  * `explore` answers the chains, each drawn hop by hop, every hop a reference with its cited source, the chain's grade its
  * weakest hop's. A step declared and not evidenced is a lead, never a finding. No score, rank or "most connected". */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
-import { graphRows, GRAPH_SHARED } from "./graphwords.mjs";
+import { GRAPH_SHARED } from "./graphwords.mjs";
 
 const S = "screen.explore.";
 
@@ -26,12 +25,14 @@ function render(cs, view) {
   const from = String(view.subject || "");
   const ui = view.ui;
   const out = [cs.title()];
+  /* R29: opened with no centre, the screen says where to start and asks the plane nothing (never the plane's refusal) */
+  if (!from.trim()) return out.join("") + `<p class="cs-state" data-state="empty">${cs.w(S + "nocentre")}</p>`;
   out.push(`<p class="mk-sub">${cs.w(S + "from")} ${P.refOf(cs, from, from, [])}</p>`);
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
   const groupOf = (k) => P.groupMap(vocab)[k] || null;
   const wordOf = (k) => (vocab && vocab.vocabularies.connection_kinds.words[k] && vocab.vocabularies.connection_kinds.words[k].word) || k;
-  const GROUPS = ["pos", "money", "part", "ment", "same"];
-  /* R24: the design's five groups, the first three ticked; a group sends its kinds by the vocabulary's group for each */
+  const GROUPS = ["pos", "money", "part", "ment", "same", "step_source"];
+  /* R24, R27: the design's six groups, the first three ticked; a group sends its kinds by the vocabulary's group for each */
   out.push(cs.sec(S + "follow", cs.state("vocab", view, () => {
     const on = Array.isArray(ui.groups) ? ui.groups : ["pos", "money", "part"];
     return cs.checks("explore-groups", S + "follow.legend", GROUPS.map((g) => [g, "connection.kind." + g + ".name", on.includes(g)]), {});
@@ -70,7 +71,7 @@ function render(cs, view) {
       const attached = h.kind === "step_source" || h.backs !== undefined;
       const g = h.grade && /^[A-D]$/.test(h.grade.assertion || "") ? cs.grade("connection", h.grade.assertion) : cs.mark("gap", "unrated");
       return `<li data-hop="${cs.esc(h.id)}">${P.refOf(cs, h.from, h.from, [])} → <i>${cs.esc(wordOf(h.kind))}</i> → ${P.refOf(cs, h.to, h.to, [])} ${g} `
-        + (declared ? `<b>${cs.w(S + "declared")}</b> ` + cs.act("stepsource", { label: "act.connectionassert.label.explore", data: { relation: h.id } })
+        + (declared ? `<b>${cs.w(S + "declared")}</b> ` + cs.act("stepsource", { label: "act.stepsource.label.explore", data: { relation: h.id } })
           : hunch ? cs.mark("hunch") : src || cs.mark("gap", "undetermined", { reason: cs.w(S + "nosource") }))
         + (attached ? ` <span class="mk-small" data-attached="${cs.esc(h.id)}">${cs.w(S + "attached", { by: String(h.attached_by || "").replace(/^member:/, ""), date: cs.date(h.at || "") })}</span> `
           + cs.act("stepsourcewithdraw", { label: S + "withdraw", data: { id: h.id } }) : "")
@@ -119,7 +120,7 @@ const acts = [
       const to = String(cs.value("explore-to") || "").trim();
       if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) return { refuse: "screen.explore.at.empty" };
       /* R24: each ticked group sends the kinds the vocabulary puts in it; no raw kind is chosen */
-      const GROUPS = ["pos", "money", "part", "ment", "same"];
+      const GROUPS = ["pos", "money", "part", "ment", "same", "step_source"];
       const on = GROUPS.filter((g, i) => cs.value("explore-groups-" + i) === true);
       if (!on.length) return { refuse: "screen.explore.groups.empty" };
       const v = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value.vocabularies.connection_kinds : null;
@@ -178,7 +179,7 @@ const acts = [
       return null;
     } },
   /* R17 "Attach a source to a declared step": a passage the member chooses and her words on what it shows (connections R68) */
-  { op: "stepsource", label: "act.connectionassert.label.explore", reasonField: "basis",
+  { op: "stepsource", label: "act.stepsource.label.explore", reasonField: "basis",
     send(view, el, cs) {
       const relation = String((el && el.dataset && el.dataset.relation) || "");
       const at = view.parts.passage(cs.value("explore-assert-sha"), cs.value("explore-assert-page"));
@@ -212,7 +213,7 @@ const acts = [
       const path = view.ui.answer && view.ui.answer.paths ? view.ui.answer.paths[i] : null;
       if (!path) return null;
       const steps = (path.hops || []).map((h) => h.from + " → " + h.kind + " → " + h.to).join("; ");
-      const title = ("What does this chain show: " + steps).replace(/\s+/g, " ").slice(0, 120);
+      const title = view.parts.plain(cs, "file.chain.title", { steps }).replace(/\s+/g, " ").slice(0, 120);
       const fail = (a) => { const r = a && a.result !== undefined ? a.result : a; cs.set("refusal", { code: (r && (r.code || r.reason)) || "", translation: (r && r.translation) || null }); };
       const clock = new Date(cs.now());
       cs.call("allocid", { query: { prefix: "INQ", year: String(clock.getUTCFullYear()) } }).then((a) => {
@@ -224,12 +225,12 @@ const acts = [
           "current_state: open", "prior_state: null", "created: " + now, "last_updated: " + now,
           "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []",
           "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
-          "surfaced_by: human", "recheck_triggers:", "  - text: Revisit this chain",
-          "    description: Opened from a chain found by exploring connections; re-explore when its steps change.", "---", ""];
+          "surfaced_by: human", "recheck_triggers:", "  - text: " + view.parts.plain(cs, "file.recheck.chain"),
+          "    description: " + view.parts.plain(cs, "file.recheck.chain.why"), "---", ""];
         ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"].forEach((h, k) => {
           lines.push(h, "");
-          if (k === 0) lines.push("What does this chain of connections show, and does each step hold? " + steps, "");
-          if (k === 1) lines.push("Explored as of " + ((view.ui.at) || "") + ", each step as the record cites it: " + steps, "");
+          if (k === 0) lines.push(view.parts.plain(cs, "file.chain.question", { steps }), "");
+          if (k === 1) lines.push(view.parts.plain(cs, "file.chain.rests", { at: (view.ui.at) || "", steps }), "");
         });
         const stamp = now.replace(/[-:]/g, "") + "_" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
         return cs.call("promote", { body: { bundleId: id, base: null, snapKey: stamp,
@@ -245,57 +246,25 @@ const acts = [
     } },
 ];
 
-export const EXPLORE_WORDS = [
-  ...graphRows(S),
-  row(S + "from", "From"),
-  row(S + "follow", "What to follow"),
-  row(S + "follow.holds", "The kinds of connection the walk follows, by their words. Untick a kind to leave it out."),
-  row(S + "follow.legend", "Follow"),
-  row(S + "to", "To (optional)"),
-  row(S + "to.any", "Anyone: show where the connections lead"),
-  row(S + "at", "As of"),
-  row(S + "at.help", "The day the connections are explored as of: a post held then, a payment made by then."),
-  row(S + "at.empty", "Give the day to explore as of."),
-  row(S + "preset", "A ready-made search"),
-  row(S + "chains", "Chains found: {n}"),
-  row(S + "chains.holds", "Each chain step by step, every step cited and graded; a chain is only as strong as its weakest step."),
-  row(S + "lead", "a lead, not a finding: a step in it was declared or suspected, with no source attached"),
-  row(S + "evidenced", "each step cited; the chain's grade is its weakest step's"),
-  row(S + "declared", "declared, not evidenced"),
-  row(S + "cited", "the cited passage"),
-  row(S + "page", "page {page}"),
-  row(S + "testimony", "a member's own testimony"),
-  row(S + "nosource", "this step names no source"),
-  row(S + "atdate", "whether this held on that day"),
-  row(S + "nochains", "No chain was found among the connections the record holds."),
-  row(S + "noscore", "Chains are listed by how few steps they take, never scored or ranked."),
-  row(S + "stopped", "Stopped at the limit: the walk went {depth} steps and stopped; what lies beyond is undetermined, not absent."),
-  row(S + "verify.matches", "This chain holds as the record has it now."),
-  row(S + "verify.differs", "This chain does not match what the record holds now. {why}"),
-  row(S + "promoted", "The question was opened from this chain."),
-  row(S + "assert.head", "Attach a source to a declared step"),
-  row(S + "assert.sha", "The document that shows the step"),
-  row(S + "assert.sha.help", "The document's fingerprint, as its page shows it. The step cites the passage."),
-  row(S + "assert.page", "Page (optional)"),
-  row(S + "attached", "stated in a source, attached by {by}, {date}"),
-  row(S + "withdraw", "Withdraw this source"),
-  row(S + "graph", "Connections"),
-  row(S + "graph.holds", "Everything the record joins this to, two steps out, each step cited and graded. A line stopped at its limit is undetermined, not absent."),
-  row(S + "groups.empty", "Tick at least one kind of connection to follow."),
-  row(S + "hunch", "a hunch, not evidence"),
-  row(S + "verify.lead", "It is a lead: a step in it is declared or suspected."),
-  row(S + "verify.cited", "A step the record cites, not recomputed."),
-  row(S + "verify.hop.holds", "This step holds as the record has it now."),
-  row(S + "verify.hop.differs", "This step does not match what the record has now."),
-  row(S + "assert.basis", "What the document shows, in your words"),
-  row(S + "assert.empty", "Name the document that shows the step and say what the passage shows."),
+const EXPLORE_KEYS = [
+  "screen.explore.g.cited", "screen.explore.g.declared", "screen.explore.g.hunch", "screen.explore.g.nosource", "screen.explore.from",
+  "screen.explore.follow", "screen.explore.follow.holds", "screen.explore.follow.legend", "screen.explore.to", "screen.explore.to.any",
+  "screen.explore.at", "screen.explore.at.help", "screen.explore.at.empty", "screen.explore.preset", "screen.explore.chains",
+  "screen.explore.chains.holds", "screen.explore.lead", "screen.explore.evidenced", "screen.explore.declared", "screen.explore.cited",
+  "screen.explore.page", "screen.explore.testimony", "screen.explore.nosource", "screen.explore.atdate", "screen.explore.nochains",
+  "screen.explore.noscore", "screen.explore.stopped", "screen.explore.verify.matches", "screen.explore.verify.differs", "screen.explore.promoted",
+  "screen.explore.assert.head", "screen.explore.assert.sha", "screen.explore.assert.sha.help", "screen.explore.assert.page",
+  "screen.explore.attached", "screen.explore.withdraw", "screen.explore.graph", "screen.explore.graph.holds", "screen.explore.groups.empty",
+  "screen.explore.hunch", "screen.explore.verify.lead", "screen.explore.verify.cited", "screen.explore.verify.hop.holds",
+  "screen.explore.verify.hop.differs", "screen.explore.assert.basis", "screen.explore.assert.empty",
 ];
 
 const words = ["screen.explore.name", "screen.explore.purpose",
-  ...["explore", "explorepreset", "exploreverify", "connectionassert", "promote"].flatMap((op) => ["act." + op + ".label.explore", "act." + op + ".does"]),
+  ...["explore", "explorepreset", "exploreverify", "stepsource", "promote"].flatMap((op) => ["act." + op + ".label.explore", "act." + op + ".does"]),
   ...GRAPH_SHARED,
+  "file.chain.title", "file.chain.question", "file.chain.rests", "file.recheck.chain", "file.recheck.chain.why", "screen.explore.nocentre",
   "mark.scale.connection.name", "mark.scale.connection.means", "mark.grade.reading", "mark.hunch.means",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "state.empty", "state.loading", "state.failed", ...EXPLORE_WORDS];
+  "state.empty", "state.loading", "state.failed", ...EXPLORE_KEYS];
 
 export const EXPLORE_SCREEN = Object.freeze({ id: "explore", reads, render, acts, words, parts: PARTS });

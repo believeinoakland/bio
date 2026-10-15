@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { word } from "../bio-plane/src/setup-words/index.mjs";
 
-export const SITE_COMMIT = "dc267da296";
+export const SITE_COMMIT = "af89fd5931";
 const ROOT = new URL("../", import.meta.url);
 const SCREENS = "docs/development/ux-substrate/screens/";
 const OUT = new URL("src/pages.mjs", import.meta.url);
@@ -36,7 +36,7 @@ export const KEYS = Object.freeze({
   "screen.site.steps.head": [], "screen.site.steps.name": ["places"], "screen.site.steps.permission": [], "screen.site.steps.install": [],
   "screen.site.steps.claim": [], "screen.site.steps.setup": [], "screen.site.steps.invite": [],
   "screen.site.costs.head": [], "screen.site.costs.what": [], "screen.site.create": [], "screen.site.back": [],
-  "screen.site.groups.lede": [], "screen.site.groups.listing": [], "screen.site.groups.none": [], "site.groups.rule": [],
+  "screen.site.groups.lede": [], "screen.site.groups.listing": [], "screen.site.groups.none": [], "site.groups.rule": [], "site.groups.rule.head": [], "site.groups.rule.text": [],
   "screen.site.groups.visit": [],
   "screen.site.groups.case.one": [], "screen.site.groups.cases.one": ["editions", "date"],
   "screen.site.groups.case.many": ["cases"], "screen.site.groups.cases.many": ["cases", "editions", "date"],
@@ -250,7 +250,7 @@ export function generate({ commit = SITE_COMMIT, places = placesReady() } = {}) 
   const headHtml = draw(head);
   const title = (s) => (s === "a" ? words("screen.site.name") : `${sentence(norm(textOf(find(states[s], (e) => e.attrs["aria-current"] === "page")[0])))} · ${words("screen.site.name")}`);
   const doc = (t, body) => `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
-    + `<title>${t}</title><link rel="stylesheet" href="/app/assets/civicsmith.css"><link rel="stylesheet" href="/app/assets/shell.css"></head>`
+    + `<title>${t}</title><link rel="stylesheet" href="/app/assets/civicsmith.css"><link rel="stylesheet" href="/app/assets/shell.css"><link rel="icon" type="image/svg+xml" href="/favicon.svg"></head>`
     + `<body class="cs"><div class="cs-frame mk-plain" data-frame="setup"><main class="mk-plainmain">${headHtml}${body}</main></div></body></html>\n`;
   const pages = {};
   for (const [s, [name]] of Object.entries(STATES)) pages[name] = doc(title(s), states[s].kids.map(draw).join("").trim());

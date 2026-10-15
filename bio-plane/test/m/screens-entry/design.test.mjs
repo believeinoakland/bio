@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, has, lacks, said, all, texts, FOUNDER, SCREENS } from "./kit.mjs";
+import { open, has, lacks, said, all, texts, FOUNDER, OLD_FOUNDER, JOINED, SCREENS } from "./kit.mjs";
 import * as SHELL from "../../../src/interface-shell/index.mjs";
 
 // ---- the served stylesheets (interface-shell R56): its own check over what each screen draws, no stand-in ----
@@ -90,12 +90,13 @@ const STATES = [
   ["front", {}], ["front", { session: { state: "signedout", handle: "mai" } }], ["front", { session: { state: "locked", handle: "mai" } }],
   ...[1, 2, 3, 4, 5, 6].map((n) => ["tour", { subject: String(n) }]),
   ["forgot", {}], ["reset", { fragment: { reset: "rl" } }], ["reset", {}],
-  ["setup", { fragment: { boot: "otp" } }], ["setup", { me: FOUNDER }],
+  ["setup", { fragment: { boot: "otp" } }], ["setup", { me: FOUNDER }], ["setup", { me: OLD_FOUNDER }], ["setup", { me: JOINED }],
   ["join", { fragment: { invite: "inv" } }], ["join", { fragment: { join: "jl" } }], ["join", {}],
 ];
 // the states only an act reaches: the codes shown, a part done, a password set
 const ACTED = [
-  ["setup", { fragment: { boot: "otp" } }, "claim", { "su-pw": "a long password!", "su-pw2": "a long password!" }],
+  ["setup", { fragment: { boot: "otp" } }, "claim", { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" }],
+  ["setup", { me: OLD_FOUNDER, table: { founderhandleset: { ok: true, result: { ok: true, handle: "rivera" } } } }, "founderhandleset", { "su-fh": "rivera" }],
   ["setup", { me: FOUNDER, table: { memberadd: { ok: true, result: { ok: true, invite: "i", expires: "2026-10-21" } } } }, "memberadd", { "su-adm-id": "dev", "su-adm-cover": "Dev" }],
   ["forgot", { table: { recover: { ok: true, result: { ok: true, remaining: 3 } } } }, "recover", { "fg-handle": "mai", "fg-code": "C", "fg-pw": "a long password!", "fg-pw2": "a long password!" }],
   ["join", { fragment: { invite: "inv" }, table: { enroll: { ok: true, result: { ok: true, memberId: "mai" } } } }, "enroll", { "jn-handle": "mai", "jn-pw": "a long password!", "jn-pw2": "a long password!" }],
@@ -206,7 +207,7 @@ test("R13 the head: the monogram (or the logo) and the group's name in the serif
 
 test("R14 setup's first part after the codes asks the group's name, before any other part, saying where the name shows", async () => {
   const o = await open("setup", { fragment: { boot: "otp" }, table: { ...EMPTY, login: FULL.login, recoverycodesissue: FULL.recoverycodesissue } });
-  await o.press("claim", { values: { "su-pw": "a long password!", "su-pw2": "a long password!" } });
+  await o.press("claim", { values: { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" } });
   const heads = all(o.tree, (e) => e.tag === "section").map((sec) => texts(all(sec, (e) => e.tag === "h2")[0]).join(""));
   assert.deepEqual(heads.slice(0, 2), [said("screen.entry.codes.heading"), said("screen.setup.name")]);
   const name = all(o.tree, (e) => e.tag === "section")[1];
@@ -229,15 +230,15 @@ test("R14 control: a skipped name keeps its step open, and naming the group clos
   assert.equal(step(n).attrs["aria-current"], undefined);
 });
 
-test("R15 a claimed instance's setup draws no lede, only its own 'already been claimed' box; nor once claimed here or signed in", async () => {
+test("R15 R20 a claimed instance's setup draws no lede, only its own 'Already claimed' box (state c); nor once claimed here or signed in", async () => {
   const lede = (s) => s.text.includes(said("screen.setup.lede"));
   const taken = await open("setup", { table: { bootstrap: { ok: true, result: { ok: true, claimed: true } } } });
   assert.ok(!lede(taken));
-  has(taken, "screen.setup.taken");
+  has(taken, "setup.claimed.heading");
   assert.ok(!lede(await open("setup", { me: FOUNDER, table: FULL })), "signed in");
   const after = await open("setup", { fragment: { boot: "otp" }, table: { ...FULL, login: { ok: false, code: "SIGN_IN_REFUSED" } } });
-  await after.press("claim", { values: { "su-pw": "a long password!", "su-pw2": "a long password!" } });
-  has(after, "screen.setup.claimed.nosignin");
+  await after.press("claim", { values: { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" } });
+  has(after, "screen.setup.claimed.nosignin", { handle: "rivera" });
   assert.ok(!lede(after), "claimed here, not signed in");
   for (const answer of ["pending", "none"]) assert.ok(!lede(await open("setup", { table: { bootstrap: answer } })), "unknown: " + answer);
   // control: an unclaimed instance draws it

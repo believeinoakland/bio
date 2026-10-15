@@ -4,7 +4,9 @@
    the proposals labelled machine work "not yet in the plan" and "Ask the assistant for options" (a planning run, drawn
    running until it ends, R13), its scenarios and their checkpoints, what each started
    option became, and the checks. Every function here is self-contained (interface-shell R21 (1)): it refers only to its
-   parameters, the kit `cs` and the language's own globals. The subject is the plan's id. */
+   parameters, the kit `cs` and the language's own globals. The subject is the plan's id. It holds no member-facing English
+   (R19): each sentence is a key read through the kit's `cs.w`, and the plan names its project and its questions by their
+   titles, each a reference (R18). */
 
 export const plan = Object.freeze({
   id: "plan",
@@ -35,13 +37,56 @@ export const plan = Object.freeze({
   },
 
   parts: {
-    // A matter's own line: its id as the record holds it, linked to its screen where it is a determination.
-    matterName: function (cs, s) {
+    // R18: a matter's own line, named by its title as the record answers it (never an `INQ-…` reference), each a reference
+    // the kit links; a determination links its screen.
+    matterName: function (cs, s, titles) {
       const sub = s && s.subject ? s.subject : {};
       if (sub.kind === "outcome" && sub.determination)
-        return '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(sub.determination + (s.escalation && s.escalation.id ? "~" + s.escalation.id : "")) + '" data-nav>' + cs.esc(sub.determination) + "</a>"
-          + (sub.standard ? " · " + cs.esc(sub.standard) : "");
-      return cs.esc(sub.inquiry || (s && s.key) || "");
+        return '<a class="cs-ref" href="/app/matter/' + encodeURIComponent(sub.determination + (s.escalation && s.escalation.id ? "~" + s.escalation.id : "")) + '" data-nav>'
+          + cs.esc(titles.determination(sub.determination) || sub.determination) + "</a>" + (sub.standard ? " · " + cs.esc(sub.standard) : "");
+      const t = sub.inquiry ? titles.question(sub.inquiry) : "";
+      return t ? cs.ref("question", sub.inquiry, t, [t]) : "";
+    },
+    // R18: the titles the record answers, by the reference a plan holds: a question's from `projectquestions`, a
+    // determination's act from `determinations`; "" where it is not (yet) answered, never the reference itself.
+    titlesOf: function (qs, ds) {
+      const qm = new Map(qs.items.map(function (q) { return [q.inquiry, typeof q.title === "string" ? q.title : ""]; }));
+      const dm = new Map(ds.items.map(function (d) { return [d.id, d.act && typeof d.act.event === "string" ? d.act.event : ""]; }));
+      const ofKey = function (k) {
+        const m = /^(inquiry|outcome):([^#]+)(?:#(.*))?$/.exec(String(k));
+        if (!m) return "";
+        if (m[1] === "inquiry") return qm.get(m[2]) || "";
+        const t = dm.get(m[2]) || "";
+        return t ? t + (m[3] ? " · " + m[3] : "") : "";
+      };
+      return { question: function (id) { return qm.get(id) || ""; }, determination: function (id) { return dm.get(id) || ""; }, ofKey: ofKey,
+        questions: qs, determinations: ds };
+    },
+    // R18: a list the record answers (`projectquestions`, `determinations`), read page after page by its cursor (at most
+    // five), each page once and kept in the page's memory.
+    paged: function (cs, view, key, op, query) {
+      const items = [];
+      let after = null, state = "ok";
+      for (let n = 0; n < 5; n++) {
+        const st = view.parts.later(cs, view, key + ":" + n, op, after ? Object.assign({}, query, { after: after }) : query, "");
+        if (st.state !== "ok") { state = st.state; break; }
+        items.push.apply(items, Array.isArray(st.value.items) ? st.value.items : []);
+        after = st.value.cursor;
+        if (!after) break;
+      }
+      return { items: items, state: state };
+    },
+    // R18 (D29): an answer that is `ok` yet carries a refusal (`started: false` with no run already asked,
+    // `dispatched: false` or `withheld`) is that refusal; drawn by its words where the code has them, else by the words
+    // the answer carries, else "could not be read".
+    refused: function (a) {
+      return !!a && (a.ok === false || (a.started === false && a.existed !== true) || a.dispatched === false || !!a.withheld);
+    },
+    refusalWords: function (cs, a) {
+      const code = String(a.code || (typeof a.withheld === "string" ? a.withheld : "") || "");
+      const key = "refusal." + code;
+      if (code && cs.w(key) !== cs.esc(key)) return cs.w(key);
+      return typeof a.translation === "string" && a.translation ? cs.esc(a.translation) : cs.w("shell.unread");
     },
     // The option's regulated end: the latest of its dates (the order R1 sorts on), or none.
     endOf: function (o) {
@@ -79,9 +124,20 @@ export const plan = Object.freeze({
       const open = p.state !== "closed";
       const subjects = Array.isArray(p.subjects) ? p.subjects : [];
       const options = Array.isArray(p.options) ? p.options : [];
+      // R18: the plan's project and its questions, named by their titles as the record answers them, each a reference.
+      const lists = p.project ? { questions: P.paged(cs, view, "questions", "projectquestions", { project: p.project, limit: "100" }),
+        determinations: P.paged(cs, view, "determinations", "determinations", { project: p.project, live: "true", limit: "100" }) } : null;
+      const titles = P.titlesOf(lists ? lists.questions : { items: [] }, lists ? lists.determinations : { items: [] });
+      const projects = view.data.projects && view.data.projects.state === "ok" && view.data.projects.value && Array.isArray(view.data.projects.value.bundles)
+        ? view.data.projects.value.bundles : [];
+      const projectHit = projects.find(function (b) { return b.bundle_id === p.project; });
+      const projectRef = projectHit && projectHit.title ? cs.ref("project", p.project, projectHit.title, [projectHit.title]) : "";
+      // the plan's opening: when and by whom
+      const opened = p.opened_at && p.opened_by
+        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, "") }) : "";
       const head = cs.title(p.title || p.id)
         + '<p class="mk-sub">' + cs.w("screen.plan.state." + (["open", "paused", "closed"].includes(p.state) ? p.state : "open"))
-        + (p.opened_at ? " · " + cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) } }) : "") + "</p>"
+        + (opened ? " · " + opened : "") + (projectRef ? " · " + projectRef : "") + "</p>"
         + (p.closed ? '<p class="mk-sub">' + cs.w("screen.plan.closedwhy", { reason: p.closed.reason || "" }) + "</p>" : "");
 
       // R1: the checks strip states each check (its own sentence, as the plan read answers it).
@@ -92,8 +148,29 @@ export const plan = Object.freeze({
           + checks.map(function (c) { return "<p>" + cs.esc(c.says || c.check || "") + "</p>"; }).join("") + "</div>"
         : "";
 
+      // R18: a reference is picked from the lists the record answers (the project's questions, the project's determinations
+      // with their standards), never typed; what the plan already holds is not offered again.
+      const held = new Set(subjects.map(function (s) { return s.key; }));
+      const pickable = lists ? lists.questions.items.map(function (q, i) {
+        return { value: "inquiry:" + q.inquiry, text: typeof q.title === "string" && q.title ? q.title : null, n: i + 1 };
+      }).concat(lists.determinations.items.flatMap(function (d) {
+        return (Array.isArray(d.outcomes) ? d.outcomes : []).map(function (o) {
+          const t = d.act && d.act.event ? d.act.event : "";
+          return { value: "outcome:" + d.id + "#" + o.standard, text: t ? t + " · " + o.standard : o.standard, n: 0 };
+        });
+      })).filter(function (o) { return !held.has(o.value); }) : [];
+      const choices = pickable.map(function (o) {
+        return o.text ? { value: o.value, text: o.text } : { value: o.value, key: "screen.plan.matter.n", fills: { n: String(o.n) } };
+      });
+      const listsState = lists ? ["questions", "determinations"].map(function (k) { return lists[k].state; }) : ["ok"];
+      const addMatter = choices.length
+        ? cs.choice("plan-subject-id", "screen.plan.subject.id", choices)
+          + cs.field("plan-subject-reason", "screen.plan.subject.reason", { help: "screen.plan.subject.reason.help" })
+          + '<div class="mk-acts">' + cs.act("plansubjectadd", { label: "act.plansubjectadd.label.plan" }) + "</div>"
+        : listsState.includes("failed") ? cs.state({ state: "failed" }) : "";
+
       // R1, R7: the plan's subjects, called matters.
-      const mattersIn = (subjects.length ? cs.sheet(subjects.map(function (s, i) {
+      const mattersIn =(subjects.length ? cs.sheet(subjects.map(function (s, i) {
         const esc = s.escalation && s.escalation.id
           ? cs.w("screen.plan.escalation", { stage: { html: cs.w("screen.matter.stage." + (Number(s.escalation.stage) >= 1 && Number(s.escalation.stage) <= 7 ? Number(s.escalation.stage) : 1)) } })
           : s.escalation && s.escalation.state === "undetermined" ? cs.w("screen.plan.escalation.undetermined") : "";
@@ -102,15 +179,11 @@ export const plan = Object.freeze({
         const take = s.escalation && s.escalation.id && took["escalation_stage:" + s.escalation.id] ? cs.w("screen.plan.tookup")
           : s.escalation && s.escalation.id && s.escalation.state === "open"
           ? cs.act("itemtakeup", { label: "screen.plan.takeup", data: { kind: "escalation_stage", escalation: s.escalation.id, stage: String(s.escalation.stage || "") } }) : "";
-        return cs.row("<b>" + cs.w("screen.plan.matter.n", { n: String(i + 1) }) + "</b>", P.matterName(cs, s)
+        return cs.row("<b>" + cs.w("screen.plan.matter.n", { n: String(i + 1) }) + "</b>", P.matterName(cs, s, titles)
           + '<span class="meta">' + cs.w("screen.plan.support." + (["hypothetical", "established", "short"].includes(s.support) ? s.support : "undetermined"))
           + (s.why ? " · " + cs.esc(s.why) : "") + live + (esc ? " · " + esc : "") + "</span>", take, "");
       }).join("")) : "")
-        + (open ? cs.choice("plan-subject-kind", "screen.plan.subject.kind", [["inquiry", "screen.plan.subject.kind.inquiry"], ["outcome", "screen.plan.subject.kind.outcome"]])
-          + cs.field("plan-subject-id", "screen.plan.subject.id", { help: "screen.plan.subject.id.help" })
-          + cs.field("plan-subject-standard", "screen.plan.subject.standard")
-          + cs.field("plan-subject-reason", "screen.plan.subject.reason", { help: "screen.plan.subject.reason.help" })
-          + '<div class="mk-acts">' + cs.act("plansubjectadd", { label: "act.plansubjectadd.label.plan" }) + "</div>" : "");
+        + (open ? addMatter : "");
       const matters = mattersIn ? cs.sec("screen.plan.matters", mattersIn) : "";
 
       // R1: the options, sorted by category, regulated end date, matter or disposition, picked as rows.
@@ -120,7 +193,7 @@ export const plan = Object.freeze({
         key: function (o) { return o.id; },
         name: function (o) { return cs.esc(o.summary || o.id); },
         sortKey: function (o, col) {
-          return col === 1 ? String(CATS.indexOf(o.category)) : col === 2 ? (P.endOf(o) || "9999") : col === 3 ? P.subjectKeys(o).join(" ")
+          return col === 1 ? String(CATS.indexOf(o.category)) : col === 2 ? (P.endOf(o) || "9999") : col === 3 ? P.subjectKeys(o).map(titles.ofKey).join(" ")
             : col === 4 ? String(o.disposition || "") : String(o.summary || "");
         },
         cells: function (o) {
@@ -130,7 +203,7 @@ export const plan = Object.freeze({
           return [cs.esc(o.summary || o.id),
             cs.w("screen.plan.category." + (CATS.includes(o.category) ? o.category : "other")),
             end ? cs.date(end) : cs.w("screen.plan.noend"),
-            cs.esc(P.subjectKeys(o).join(", ")),
+            cs.esc(P.subjectKeys(o).map(titles.ofKey).filter(Boolean).join(", ")),
             cs.w("screen.plan.disposition." + disp) + (last && last.reason ? " · " + cs.esc(last.reason) : "")
               + (o.action && o.action.id ? " · " + cs.w("screen.plan.started") : "")];
         },
@@ -148,7 +221,10 @@ export const plan = Object.freeze({
         },
       });
       const subjectChoice = function (id) {
-        return cs.choice(id, "screen.plan.option.matter", subjects.map(function (s) { return { value: s.key, text: s.key }; }));
+        return cs.choice(id, "screen.plan.option.matter", subjects.map(function (s, i) {
+          const t = titles.ofKey(s.key);
+          return t ? { value: s.key, text: t } : { value: s.key, key: "screen.plan.matter.n", fills: { n: String(i + 1) } };
+        }));
       };
       const catChoice = function (id) {
         return cs.choice(id, "screen.plan.option.category", CATS.map(function (c) { return [c, "screen.plan.category." + c]; }));
@@ -174,21 +250,28 @@ export const plan = Object.freeze({
       const pr = view.data.proposals;
       const asked = view.ui.ask || null;
       let askNote = "", fresh = null;
-      if (asked && asked.run) {
+      if (asked && asked.refused) {
+        // R18 (D5, D29): an answer carrying a refusal is drawn as that refusal, never as a run looking for options.
+        askNote = '<p class="mk-note" role="alert" data-run="refused">' + asked.refused + "</p>";
+      } else if (asked && asked.run) {
         const st = P.later(cs, view, "run", "airun", { run: asked.run }, String(view.ui.seq || 0));
         const session = st.state === "ok" && st.value && st.value.session ? st.value.session : null;
         if (session) view.ui.askStatus = { run: asked.run, status: session.status };
-        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked.run ? view.ui.askStatus.status : "running";
-        if (status === "running") {
-          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
+        // R18: "looking for options" is drawn only while `airun` answers the run as running; until it answers, nothing.
+        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked.run ? view.ui.askStatus.status : null;
+        const poll = function () {
           if (st.state !== "loading" && !view.ui.askPolling && (view.ui.askPolls || 0) < 60) {
             view.ui.askPolling = true;
             cs.later(10000, function (k, v) { v.ui.askPolling = false; v.ui.askPolls = (v.ui.askPolls || 0) + 1; k.set("seq", (v.ui.seq || 0) + 1); });
           }
-        } else {
+        };
+        if (status === "running") {
+          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
+          poll();
+        } else if (status) {
           askNote = '<p class="mk-note" role="status" data-run="ended">' + cs.w("screen.plan.ask.ended") + "</p>";
           fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked.run);
-        }
+        } else if (st.state === "failed") poll();
       }
       const trayRows = function (v) {
         const rows = (Array.isArray(v.proposals) ? v.proposals : []).filter(function (x) { return !x.adopted; }).map(function (x) {
@@ -198,7 +281,7 @@ export const plan = Object.freeze({
         return rows.length ? cs.sheet(rows.join("")) : "";
       };
       const trayList = fresh ? (fresh.state === "ok" ? trayRows(fresh.value) : cs.state(fresh)) : pr && pr.state !== "empty" ? cs.state("proposals", trayRows) : "";
-      const trayIn = askNote + trayList + (open ? '<div class="mk-acts">' + cs.act("planask", { label: "act.optionpropose.label.plan" }) + "</div>" : "");
+      const trayIn = askNote + trayList + (open ? '<div class="mk-acts">' + cs.act("planask", {}) + "</div>" : "");
       const tray = view.reachable && pr && trayIn ? '<div class="mk-tray" role="region" aria-label="' + cs.w("screen.plan.suggested") + '"><p class="eyebrow">'
         + cs.w("screen.plan.suggested") + "</p>" + trayIn + "</div>" : "";
 
@@ -249,11 +332,10 @@ export const plan = Object.freeze({
       // R1, R7: "Add a matter": an inquiry, or a determination's outcome against a standard, with the member's reason.
       op: "plansubjectadd", reasonField: "reason",
       send: function (view, el, cs) {
-        const kind = cs.value("plan-subject-kind");
-        const id = String(cs.value("plan-subject-id") || "").trim();
-        if (!id) return { refuse: "screen.plan.subject.needed" };
-        const standard = String(cs.value("plan-subject-standard") || "").trim();
-        const subject = kind === "outcome" ? { kind: "outcome", determination: id, standard: standard } : { kind: "inquiry", inquiry: id };
+        // R18: the reference is picked from the record's lists: `inquiry:<question>` or `outcome:<determination>#<standard>`.
+        const m = /^(inquiry|outcome):([^#]+)(?:#(.*))?$/.exec(String(cs.value("plan-subject-id") || ""));
+        if (!m) return { refuse: "screen.plan.subject.needed" };
+        const subject = m[1] === "outcome" ? { kind: "outcome", determination: m[2], standard: m[3] || "" } : { kind: "inquiry", inquiry: m[2] };
         return { body: { plan: view.subject, subject: subject, reason: String(cs.value("plan-subject-reason") || "").trim() } };
       },
     },
@@ -269,13 +351,16 @@ export const plan = Object.freeze({
       },
     },
     {
-      // R13: "Ask the assistant for options" starts a planning run for this plan, drawn only while the assistant is reachable
-      // (the registry's `optionpropose` label; `interface-shell` R55 admits this op); it records no option and no proposal of
-      // the member's own. `existed` draws the run already asked.
-      op: "planask", label: "act.optionpropose.label.plan",
+      // R13, R15, R18: "Ask the assistant for options" (`act.planask.label.plan`, explained by `act.planask.does`) starts a
+      // planning run for this plan, drawn only while the assistant is reachable (`interface-shell` R55 admits this op); it
+      // records no option and no proposal of the member's own. `existed` draws the run already asked; an answer that
+      // carries a refusal is drawn as that refusal.
+      op: "planask",
       send: function (view) { return { body: { plan: view.subject } }; },
       done: function (view, answer, cs) {
-        if (answer && answer.run) { cs.set("askPolls", 0); cs.set("ask", { run: answer.run, existed: answer.existed === true }); }
+        const a = answer || {};
+        if (view.parts.refused(a)) { cs.set("ask", { refused: view.parts.refusalWords(cs, a) }); return; }
+        if (a.run) { cs.set("askPolls", 0); cs.set("ask", { run: a.run, existed: a.existed === true }); }
       },
       rereads: [],
     },

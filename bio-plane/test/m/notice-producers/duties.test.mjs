@@ -7,6 +7,7 @@ import { world as followingWorld, MEMBER, T0 } from "../following/fixture.mjs";
 import { WORDS } from "../ai-use/fixture.mjs";
 import { producers, fresh, reader, ofKind, sentences, JUDGMENT, notHintFailures } from "./fixture.mjs";
 import { HINT_MARK } from "../../../src/notice-producers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here, never a fallback) */
 const say = (key, fills = {}) => {
@@ -66,7 +67,8 @@ test("R5: an uncertain due date: between the candidates the item reads possibly 
   assert.deepEqual(ofKind(read("bob", { now: "2026-02-28T16:00:00Z" }), KIND), []);
   const between = ofKind(read("bob", { now: "2026-03-01T16:00:00Z" }), KIND);
   assert.equal(between.length, 1);
-  assert.match(between[0].detail, /^Possibly overdue: undetermined, because /);
+  assert.equal(between[0].detail_key, "queue.temporal-expectation-due.undetermined.detail");
+  assert.equal(between[0].fills.reason !== "" && between[0].fills.reason !== undefined, true, "its reason filled");
   assert.equal(between[0].subject.state, "possibly overdue");
   assert.equal(between[0].due, "2026-03-01", "a body's due: the latest candidate");
   assert.deepEqual(between[0].subject.due.candidates.map((c) => c.value), ["2026-02-28", "2026-03-01"]);
@@ -381,7 +383,8 @@ test("R20 R5: an overdue occurrence's summary and detail are queue.temporal-expe
   assert.notEqual(b.fills.reason, b.basis.why.replace(/^possibly overdue: undetermined, because /, "").replace(/\.$/, ""), "control: not the why");
   assert.equal(b.summary, say(b.summary_key, b.fills));
   assert.equal(b.detail, say(b.detail_key, b.fills));
-  assert.equal(b.summary, `Possibly overdue: ${b.fills.duty}`);
+  assert.equal(b.summary_key, "queue.temporal-expectation-due.undetermined.summary");
+  assert.equal(b.summary, word(b.summary_key, { duty: b.fills.duty }));
   assert.ok(!/\{/.test(b.summary + b.detail), "every placeholder filled");
   assert.notEqual(b.detail, say("queue.temporal-expectation-due.overdue.detail", b.fills), "control: not the overdue sentence");
 });
@@ -421,7 +424,7 @@ test("R22 an undetermined occurrence whose trigger is undated answers the words 
   assert.equal(it.reason_code, "trigger_undated");
   assert.equal(it.detail_key, "queue.temporal-expectation-due.undetermined.detail");
   assert.equal(it.detail, say(it.detail_key, it.fills));
-  assert.match(it.detail, /^Possibly overdue: undetermined, because What starts the clock has no date in the record\. /);
+  assert.equal(it.fills.reason, "What starts the clock has no date in the record");
   for (const t of [it.summary, it.detail]) {
     assert.doesNotMatch(t, /\d{4}-\d{2}-\d{2}/, "no ISO date");
     assert.doesNotMatch(t, /America\/Halifax/, "no zone id");
@@ -450,7 +453,7 @@ test("R22 an occurrence answering reason: null fills {reason} with nothing and d
   assert.equal(it.reason_code, null);
   assert.doesNotMatch(it.detail, /because/, "no reason clause");
   assert.doesNotMatch(it.detail, /K1444|2026-01-31|Halifax/, "and never the why");
-  assert.match(it.detail, /^Possibly overdue: undetermined\. /);
+  assert.equal(it.detail_key, "queue.temporal-expectation-due.undetermined.detail");
   assert.ok(!/\{/.test(it.detail), "no placeholder left");
   assert.match(reasoned({ code: "due_not_computed", says: "The due date could not be worked out." }).detail, /because The due date could not be worked out\./, "control");
 });

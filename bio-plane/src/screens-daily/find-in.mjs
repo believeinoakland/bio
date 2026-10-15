@@ -114,7 +114,7 @@ export const findIn = Object.freeze({
         ? (n ? cs.w("screen.find-in.termsection", { term: found.term || "", n: String(n) }) : cs.w("screen.find-in.quote", { words: found.term || "" }))
         : (n ? cs.w("screen.find-in.section", { kind: { html: kindName }, n: String(n) }) : kindName);
       const notRead = Array.isArray(k.not_read) && k.not_read.length
-        ? '<p class="mk-note">' + cs.w("screen.find-in.notread", { n: String(k.not_read.length) }) + "</p>" : "";
+        ? '<p class="mk-note">' + (k.not_read.length === 1 ? cs.w("screen.find-in.notread.one") : cs.w("screen.find-in.notread", { n: String(k.not_read.length) })) + "</p>" : "";
       const body = !items.length
         ? (k.nothing ? '<p class="mk-note"><b>' + cs.w("screen.find-in.nothing") + "</b></p>" : "") + notRead
         : cs.sheet(items.map(function (it, ii) {

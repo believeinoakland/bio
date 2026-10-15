@@ -28,8 +28,8 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 #### T49 (T49-32)
 
-- **R7** (T49; N1072; K3265, "never shown"; DEC-230 (3)) A walk through every screen, signed in as the founder with a handle held and with none, finds no drawn text naming `admin` as a person's name or handle. There is one exception: DEC-230's step for a founder with no handle (`founder.handle.says`, `founder.handle.later.help`), which says she signs in as admin until she chooses. Test: the walk as stated. Control: a screen fixture drawing `admin` as a name fails it. *(not yet met: T49)*
-- **R8** (T49; D29 **M**; amends R2) A step fails on a refusal carried inside an HTTP 200, anywhere in its answer, where the step expects success. That is `ok: false` at any depth, or `started: false`, `dispatched: false`, `found: false` or `withheld` (`walker.mjs`:73 reads only the top level). The refusal a step expects is excused by its code wherever it sits. Test: fixtures of D1's, D3's and D5's answers each fail the step. Control: the expected refusal of a step that tests a refusal passes. *(not yet met: T49)*
+- **R7** (T49; N1072; K3265, "never shown"; DEC-230 (3)) A walk through every screen, signed in as the founder with a handle held and with none, finds no drawn text naming `admin` as a person's name or handle. There is one exception: DEC-230's step for a founder with no handle (`founder.handle.says`, `founder.handle.later.help`), which says she signs in as admin until she chooses. Test: the walk as stated. Control: a screen fixture drawing `admin` as a name fails it.
+- **R8** (T49; D29 **M**; amends R2) A step fails on a refusal carried inside an HTTP 200, anywhere in its answer, where the step expects success. That is `ok: false` at any depth, or `started: false`, `dispatched: false`, `found: false` or `withheld` (`walker.mjs`:73 reads only the top level). The refusal a step expects is excused by its code wherever it sits. Test: fixtures of D1's, D3's and D5's answers each fail the step. Control: the expected refusal of a step that tests a refusal passes.
 - **R9** (T49; K3320, K3324 (2); amends R1 (a)) **The journey as administrator**, each step through the screens' own controls only, with ops called only to observe:
   1. claim with her own handle, and sign in by it;
   2. start a project with a title, and open it;
@@ -52,7 +52,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
   - the same stub answering the subscription sign-in as `agent-runner`'s contract states, at the binding the plane's sign-in part calls, so step 4 and R10's connection walk the screens' own controls (K3347);
   - the test-instance mark, set as its deployer, as `local.mjs`:42 does.
 
-  This replaces the walk worker's scratch harness. Its seam is the `RUNNER` binding (K3351). Test: the local arm walks R9. Control: with no fake model bound, step 9 fails by name. *(not yet met: T49)*
+  This replaces the walk worker's scratch harness. Its seam is the `RUNNER` binding (K3351). Test: the local arm walks R9. Control: with no fake model bound, step 9 fails by name.
 - **R12** (T49; K3296; K3347; amends R1 (b), R5) The live arm walks R9 and R10 on a named test instance through its real subscription sign-in (`agent-runner`). The sign-in's own code is entered by the person signing in; the arm reads nothing secret from its output and prints none. It must pass before BOB's own live walk (K3296). Test: with no sign-in completed, step 4 fails by name before any later act. Control: no token or code in any output. *(not yet met: T49)*
 - **R13** (T49; N1099, N1100; DEC-241, DEC-245; amends R6) R6's comparison covers two things:
   - design journey 29 ("From installing to a first conclusion", DEC-245), step by step;
@@ -62,7 +62,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 
-- **R14** (T49; K3366; `setup-words` R11; amends every requirement here that asserts drawn words) A step that asserts what a screen draws names the word's key and compares the drawn text with `setup-words` `word(key, vars)`, never a hand-copied sentence; its own harness text (DEC-258 lists 75 strings, none drawn to a member) stays in source. Test: a step asserting a keyed word passes on the screen's text and fails on a fixture drawing other words. *(not yet met: T49)*
+- **R14** (T49; K3366; `setup-words` R11; amends every requirement here that asserts drawn words) A step that asserts what a screen draws names the word's key and compares the drawn text with `setup-words` `word(key, vars)`, never a hand-copied sentence; its own harness text (DEC-258 lists 75 strings, none drawn to a member) stays in source. Test: a step asserting a keyed word passes on the screen's text and fails on a fixture drawing other words.
 
 ## Private
 

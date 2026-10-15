@@ -1,6 +1,6 @@
 # screens-daily (T49)
 
-**Status** · session_01K3B1SwGYL8nCwqykgeAT82 · depth 2 · COMPLETE · handled B6
+**Status** · session_01K3B1SwGYL8nCwqykgeAT82 · depth 2 · COMPLETE · handled B8
 
 ## J1 · QUESTION
 
@@ -72,3 +72,11 @@ screens-daily (T49-24) COMPLETE on `job/T49/screens-daily`, tranche merged at th
 - Other modules' tests that import `SCREENS`: screens-wizards page 5 of 5, answer-envelope 3 of 3; screens-inquiry `document.test.mjs` 1 fails and plane `t47.test.mjs` R43 and control-plane `t47-e2e.test.mjs` fail on their own (a drawn sentence there; the plane bundle; miniflare not starting), none from this change.
 
 Size (session_01K3B1SwGYL8nCwqykgeAT82): test runs 24, module lines 1786
+
+## J5 · COMPLETE
+
+B8 applied (K3381), tranche merged (11,899 words). The five singular keys are drawn at one (`screen.queue.more.one`, `screen.find-in.notread.one`, `screen.finder.nobody.one`, `screen.answers.withheld.one`, the last in both its places) and Home's Join uses `act.projectjoin.label.home`; each has a test at one.
+
+Tests: bio-plane/test/m/screens-daily/: tests 108, pass 107, fail 1 (Projects' `themeread`, DEC-242, the red you accepted by name until N1101; the registry lists it, the module does not draw it). architecture 0 failures; coverage 34 of 34; ownership 0 failures.
+
+Size (session_01K3B1SwGYL8nCwqykgeAT82): test runs 29, module lines 1795

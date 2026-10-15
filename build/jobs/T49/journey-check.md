@@ -1,0 +1,132 @@
+# journey-check (T49)
+
+**Status** · session_01AMkuPe1DbyB1By7eVPQ9C2 · depth 2 · COMPLETE · handled B10
+
+## J1 · REPORT
+
+Measure first (your START, item 1), on `tranche/T49` @ 5fa1db6433 with every other L11 job still open.
+
+**The composed walk as it stands** (journey 28, journey 3, the sweep): 94 steps, 0 failures, before and after R8 (built: a refusal at any depth of a 200 now fails the step; walker tests pass, 12/12).
+
+**The fake model's seam (doubt 11): settled as K3351 says.** The built-in release the local installer installs uploads the plane only (no fleet), so the local arm binds, as the deployer: `AGENT_WORKER` → agent-worker run from `agent-worker/src/index.mjs` under the same Miniflare, its `PLANE` → the copy, its `RUNNER` → `journey-check/runner.mjs`, a Durable Object class `AgentRunner` answering agent-runner's sign-in (R17–R21, R27, R31) and conversation (R1–R4, R28) contract with the fake model (`fake-model.mjs`). Measured: the copy's bootstrap answers `part_signin: true`; agent-worker's `/version` answers `runner: true`. No model address is added anywhere. A stub city site answers the copy's outbound requests to its own address.
+
+**`site` on the local arm:** not yet. `site` (T49-31) has no code on the tranche (its job is open). Once it merges it can be served the same way (a static Worker under Miniflare at civicsmith.org's origin) and journey 28's first two steps added; I will build that when your CHANGE says it has merged, unless you rule them out.
+
+**R9's steps on the tranche today, each with its owner** (probe through the screens' own controls; the owners' jobs are open, so most of this may already be in hand):
+1. Claim with her own handle: the claim has no handle field, and setup says "signed in as admin" — screens-entry (T49-21).
+2. Start a project: works (projects' "Start a project" sits in a closed disclosure; the walk opens it). The project screen titles the project by its id ("PROJ-2026-9282-roof-repairs-…") in the title, the crumbs and the question's subtitle — screens-inquiry (`project.mjs`, question). The projects list says "Owner: admin" (R7) — screens-daily (`screen.projects.owner`).
+   - R8 catches `projectdirectory` answering `{ok: true, result: {ok: false, code: PROJECT_DIRECTORY_NEEDS_A_MEMBER}}` on the project screen — screens-inquiry `project.mjs` (or control-plane, if the op should not refuse the founder).
+3. Open a question: works (`promote` on the project).
+4. Connect by subscription on `connect`: the controls are there (`subscriptionsignin`, `mc-code0`); the start asks a re-authentication (`REAUTH_DUE`, the shell's password prompt), which the walk answers. The rest measured once the step is built.
+5. "Add a document" on the question: not drawn (no capture control on the question) — screens-inquiry R43 / screens-intake.
+9. Run from the dock: no `airunopen` on the question — screens-inquiry (R33, D3).
+6–8, 10–12 follow 5 and 9 and are not reached yet.
+
+I go on building R9–R14 against the screens' own controls and the design (journey 29), and I will re-run the walk each time you merge an L11 job. No question for you now.
+
+## J2 · QUESTION
+
+R7: "signed in as the founder, with a handle held and with none". After screens-entry's T49 claim (its open branch: `claim` takes `su-handle`, then she signs in by it), a group claimed now always has a founder with a handle; a handleless founder exists only in a group claimed before T49 (DEC-230's `founderhandleset` step). The local arm makes its group by the screens' own controls, so it cannot make a handleless founder once that claim lands.
+
+My best reading, which I am building:
+- The local arm sweeps every screen as the founder with her handle held (after R9 step 1) and checks R7 with no exception.
+- Where the group's founder has no handle — the local arm today, until screens-entry merges, and a live instance claimed before T49 (biosmoke8, if it still has one) — the sweep runs as the handleless founder before she chooses, with DEC-230's two words excepted (`founder.handle.says`, `founder.handle.later.help`), then she chooses her handle and the held sweep runs.
+- When the claim took a handle, the walk says "R7 with no handle: not walkable here (the claim took a handle)" in its report, as a note, not a failure; the live arm against a pre-T49 instance walks it.
+
+Is that right, or do you want the handleless sweep made some other way?
+
+## Completion (T49-32)
+
+**Read, whole:** `build/requirements/journey-check.md`; my entry T49-32 and the plan's rules in `build/plan/current.md`; layer 11's contract and the helper-module line in `build/layers.md`; all of `bio-plane/src/journey-check/`; the tests naming requirements my entries change (`journey.test.mjs`, `walker.test.mjs`, `live.test.mjs` with `fake-plane.mjs`). Of the services my entries touch: `setup-words` R11–R12 (and its `word`, `hasWord`); agent-runner's contract (R1–R6, R17–R21, R24–R31), which the runner stand-in answers; agent-model's `signin.mjs` (the runner's wire) and `model.mjs`'s judge, sub-session and opening shapes; agent-worker R35, R66 and its `/version`; the installer's binding and fleet code (`newgroup/src/index.mjs`, binding order), `site/src/index.mjs`; design journey 29 and the question's states in `mock-journeys.js`, `mock-screens.js`; the keys asserted, in `words.json`. My other tests (entry, guard) were run, not read.
+
+**Entries applied:**
+- **R7:** `sweepAsFounder` sweeps every screen as the founder and fails any drawn `admin` standing alone (`adminAsName`); with no handle, DEC-230's two words (`founder.handle.says`, `founder.handle.later.help`, by `word`) are excepted, with a handle nothing is. Which sweep runs follows her state (J2 asks how the handleless sweep is made once the claim takes a handle).
+- **R8:** `refusalsIn` finds `ok`, `started`, `dispatched` or `found` false and a non-empty `withheld` at any depth; each fails the step unless the step expects its code (a string, a pattern, or `{at, code}` for one place in the answer).
+- **R9, R10:** `investigation.mjs`: the administrator's twelve steps and the member's journey (project invite, her own subscription, her question, `projectai`, `planask`, her run, Ask), each through the screens' own controls (closed disclosures opened by their summaries; the shell's confirmation, reason and re-authentication answered), each asserting the design's words by key. Step 1 is in `journeys.mjs`: the founder claims with her handle where the claim asks it, else chooses it (`founderhandleset`), then signs in by it.
+- **R11:** the local arm binds, as the deployer: `AGENT_WORKER` → agent-worker from source under the copy's Miniflare; its `RUNNER` → `runner.mjs`, the stand-in for agent-runner (sign-in with attempt and a token minted once; conversations only on that token; the fake model `fake-model.mjs`); a stub city site (`city.mjs`); the stand-in for Anthropic's sign-in page (`signin.mjs`); the test-instance mark. The co-attestation services the local arm does not stand in for answer 503 (`OUTSIDE`), and the capture steps expect exactly their failed attempts. `model: false` binds no fake model.
+- **R12:** the live arm walks R9 and R10 after its sweeps; the sign-in's code is typed by the person at the terminal (not echoed, kept secret, masked); with none, step 4 fails by name and nothing later runs.
+- **R13:** `journeyPairs` pairs each step of design journey 29 (the mock's own walker, journey mode) with the LIVE screenshot of the step that walks it (`JOURNEY_29_STEPS`); a missing pair fails by name. `more` is a working screen, so the live arm's 390 px pairs hold it.
+- **R14:** `words.mjs`: every asserted word is named by key and matched against `word(key, vars)`, an unknown placeholder left open.
+- **B4 (K3379):** journey 28 now starts at civicsmith.org (`site` served on the local arm, `INSTALLER_ADDRESS` set as its deployer): "what Civicsmith is", then "Start a group" and "Create your group" into the installer. Both steps pass.
+
+**Flaws fixed in my module:** the installer's consent click waited on a navigation the install outlasts (now `noWaitAfter` and a long wait for the callback); the shell's question was read after it had gone (now held by handle, and awaited gone before the next).
+
+**Deferred:** the fake model's judgements past step 9 cannot be measured until a run can be opened from the dock (screens-inquiry R33): it answers each mode's answer tool from that tool's schema and what it read, and `judge_compose`'s suggestion may need shaping to `op=suggest`'s checks once the run is reached. I will do that at the CHANGE that brings the dock.
+
+**Found in other modules (for BOB; the walk on `tranche/T49` @ 472d8f6fa4, 98 steps, 19 failures, every one in an open job or placed by K3379):** step 1, no `su-handle` at the claim nor `su-fh` after it (screens-entry); step 2, the project titled by its id, and `projectdirectory` refusing the founder inside a 200 (screens-inquiry; project-roster N1129); R7, `admin` drawn as a name on forgot ("Your handle is admin"), setup ("signed in as admin"), home and projects ("Owner: admin") and account ("YOUR HANDLE admin") (screens-entry, screens-daily, screens-settings); R10 and R13's missing pairs follow from R9 stopping at step 2.
+
+**Tests and checks:** `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 52 tests, 43 pass, 9 fail. The 9: the local arm's walk-through tests (R1 (a), R7 walk, R9, R10, R11, R11 control, R13 local pairs), red only for the defects above, which is what an acceptance test is for; and two fixed and re-run since (R1 (a) world closing, R5 proxy: 2 pass). `node checks/run.mjs /home/user/bio`: architecture 0 failures; format 2 (`site`'s paths, before its merge); coverage 12, all other L11 modules' not-yet-met ids; `coverage.mjs … journey-check` 14 of 14; `ownership.mjs … journey-check tranche/T49`: 0 failures.
+
+Size (session_01AMkuPe1DbyB1By7eVPQ9C2): test runs 14, module lines 2097
+
+## J3 · COMPLETE
+
+T49-32 built: R7–R14 and B4's civicsmith.org steps; record's Completion section. The walk-through tests stay red only on the other L11 modules' open defects listed there (and J2 still open); I re-run at each CHANGE, and shape the fake model past step 9 once the dock lands.
+
+## After B5 (K3380)
+
+R7 swept while the founder has no handle (DEC-230's words excepted), before she chooses one; where the claim takes her handle the report notes "R7 with no handle: not walkable here (the claim took a handle)" (`walk.notes`), never a failure. On D28: the walker reads no console line at all (it fails on a script error, `pageerror`, only), so Chromium's 403 network line and the `[DOM]` password-field line already fail nothing; nothing to admit. Walk on `tranche/T49` with interface-shell and screens-daily merged: 99 steps, 16 failures. Gone since J3: "Owner: admin" on home and projects, the project titled by its id. Left, each in an open job: no `su-fh` (screens-entry); `admin` as a name on forgot, setup, account; `projectdirectory` refusing the founder (project-roster N1129; screens-inquiry not to ask it); the question not drawing `question.empty.heading` (screens-inquiry); R10 and R13's missing pairs follow. Tests: names and walker 17 of 17.
+
+## J4 · REPORT
+
+B5 applied (K3380): R7 swept handleless before she chooses, noted where the claim took a handle; the walker reads no console line, so D28 already fails nothing. Re-walked with interface-shell and screens-daily merged: 99 steps, 16 failures, all in open jobs (record, 'After B5'). Still COMPLETE; waiting for your next CHANGE.
+
+## After B7 (K3383)
+
+Merged the tranche (every L11 job but control-plane) and re-walked; four flaws of my own found and fixed on the way: drawn words are matched as written (`textContent`), since a section heading drawn in capitals by CSS read as other words through `innerText`; the file tab is followed with its subject (`/app/capture/file/<id>`); the upload's file is chosen last, as the screen's redraw while typing empties a file field; step 7 expects the empty generic reading where the page reads it, as the capture steps do. Walk on `tranche/T49` @ ceca2ea2fd: 103 steps, 10 failures. Passing now: journey 28 from civicsmith.org with the claim by her handle (R9 step 1), R7 (held; with none noted as not walkable, the claim took a handle), steps 2–6 (project, question, the subscription's sign-in through the runner's stand-in, capture by address and by upload into the question, both held, one vouched for). It stops at step 7; owners, for BOB to route (J5):
+- the document page draws none of the document's words: the reading `op=reading` answers for the captured HTML notice holds no `passages`, `units` or `text` (624 characters read), so `document.mjs` draws no passage — screens-inquiry R32 (the page) or the reading's owner (extraction / reading-pipeline), whichever owes the text;
+- `versionchain` refuses `VERSION_CHAIN_NO_SUCH_VERSION` inside a 200 for the copy just captured (`at` its own sha) — provenance (`index.mjs`:1318), the record holding no version of a capture it just made;
+- R10 and seven of R13's pairs follow from R9 stopping at 7. Steps 8–12 (cite, the dock's run with the fake model, Ask, accept and conclude) are not reached yet; the fake model is shaped further when they are.
+
+## J5 · REPORT
+
+B7 (K3383): re-walked on tranche/T49 @ ceca2ea2fd, 103 steps, 10 failures. Steps 1–6 now pass (claim by handle, project, question, subscription sign-in, capture by address and upload, held, vouched), and R7. Open failures and owners: (1) the document page draws none of the document's words: op=reading for the captured HTML notice carries no passages/units/text — screens-inquiry R32 or the reading's owner (extraction/reading-pipeline); (2) versionchain refuses VERSION_CHAIN_NO_SUCH_VERSION inside a 200 for the copy just captured — provenance (index.mjs:1318). R10 and 7 of R13's pairs follow from R9 stopping at step 7. Details: record, 'After B7'.
+
+## J6 · COMPLETE
+
+T49-32 complete at B7: built, re-walked, owners named in J5. I re-walk and shape the fake model past step 9 at your next CHANGE.
+
+## After B8 (K3389–K3391)
+
+Merged the tranche (screens-inquiry's step-7 fix, admission, site, control-plane) and walked to the end. Built to the screens as merged: step 7 expects the Passages section's empty state (`screen.document.passages.head`, `state.empty`) and finds the passage with Find-in, opened from the document's own "Find in this", for the question; step 8 cites from the Find-in result with the role chosen (supports) and finds the passage on the question; step 9 opens the assistant's dock from the top bar and starts the run there (`dock.run.yours`); step 11 asks on `answers` (`screen.answers.machine`). A refusal's failure now names its check and its first finding (redacted). Walk on `tranche/T49` (B8 merge): 105 steps, 7 failures. Passing: journey 28 from civicsmith.org, journey 3, R7, R9 steps 1–7. Open, owners for BOB (J7):
+- step 8: `cite` refused `BASIS_REFUSED` [C-45.2: "this record holds no extraction chain for the capture this leg cites, so there is no transcription over ¶3"] — extraction (the captured HTML notice has no extraction chain; K3387's `text_units`, the same gap as the document's words);
+- step 9: `airundispatch` refused `ACCOUNT_MEMBER_NOT_ACTIVE` [C-29.15: "a run's credential is minted only for an active member's own run"] for the founder, connected by her own subscription — credentials R63 (`aiRunCredentialMint`), which does not count the founder as ai-accounts R19 does ("only an active member, or the founder");
+- R10, and R13's pairs for steps 9 and after, follow from R9 stopping at step 9. Steps 10–12 and the fake model's run are still not reached; the fake model is untested past the sign-in.
+
+## J7 · REPORT
+
+B8: walked to the end on the merged tranche, 105 steps, 7 failures; R9 steps 1–7 pass (Find-in route as you set). Open: (1) step 8, cite refused BASIS_REFUSED, C-45.2 'no extraction chain for the capture this leg cites' — extraction (K3387's gap); (2) step 9, airundispatch refused ACCOUNT_MEMBER_NOT_ACTIVE, C-29.15 'a run's credential is minted only for an active member's own run', for the founder connected by her subscription — credentials R63 (aiRunCredentialMint), which does not admit the founder as ai-accounts R19 does. R10 and R13's later pairs follow; steps 10–12 and the fake model's run are not reached. Record: 'After B8'.
+
+## J8 · COMPLETE
+
+T49-32 complete at B8; owners in J7. I re-walk and shape the fake model past step 9 at your next CHANGE.
+
+## After B9 (K3393)
+
+The claim's handle is filled whenever the claim asks one: the step waits for the claim's form before reading whether it holds `su-handle` (it read it before the form was drawn, a race), and a walk with no handle chosen claims with the walk's own (`FOUNDER_HANDLE`). Walk on `tranche/T49` (merge 719aa91b7f): 105 steps, 7 failures; step "1 · setup: claim with her own handle" holds. The open failures are J7's, unchanged: step 8 (extraction, C-45.2) and step 9 (credentials R63, C-29.15).
+
+## J9 · COMPLETE
+
+B9 (K3393) applied: the claim waits for its form and fills su-handle whenever asked. Re-walked: 105 steps, 7 failures; the claim holds. Open failures are J7's unchanged (step 8 extraction C-45.2; step 9 credentials R63 C-29.15).
+
+## After B10 (K3398–K3401)
+
+**The claim stop CREDENTIALS #17 and EXTRACTION #24 saw** is the walk's, and fixed: `tranche/T49` still carries journey-check as T48 left it (this job merges last), whose claim fills no `su-handle`; screens-entry's claim now requires one (R17). This branch fills it since B9 (the form read once drawn, the handle always given when asked). Any job that runs the local arm before journey-check merges meets the old walk.
+
+**Fixed in my module since B9:** step 7 sees the document's words in its Passages (extraction R76); a refusal's failure names its check and first finding; R8 reads a stream of JSON lines (an ask's answer) line by line (test added); a word not drawn says what the screen says instead; step 9 holds on her run at work or already ended (`requireAnyWord`); `JOURNEY_DEBUG` (`bodies`, `facts`) and `JOURNEY_DEBUG_OP` diagnose a walk without entering its report. The runner stand-in accepts the token a member's sign-in minted on any of her instances (agent-runner R28: the instance holds nothing; it had checked one instance's storage, so the run's conversation was refused `SIGNIN_TOKEN_REFUSED`). The fake model: answers the step named last in its transcript (it answered `judge_plan` at every step); reads the newest three held results (it ran out of turns); leaves optional fields unsaid unless they carry what it read (a free `condition` had made each sub-session's log entry refused, so every report was `REPORT_UNLOCATED`); reports the held notice present at the document level, citing its address, and honest absence at the others; answers an ask in the answers contract (no clarifying question, nothing it did not read; it had been `ANSWER_MALFORMED`); composes a basis version with a stated claim (string), a version-form name and a real account (it had been `SUGGEST_BOILERPLATE`, then the name refused). Step 12 accepts and stands on the reading that answers the question, never the table's `level-empty-…` (which states no claim).
+
+**Walk on `tranche/T49` (B10 merge, fa8758ae9a): 108 steps, 3 failures.** Passing: journey 28 from civicsmith.org, journey 3, R7 (held), R9 steps 1–11 (the run dispatched on her own subscription through the stand-in, its proposal drawn, Ask answered labelled machine work) and step 12's accept and stand. Open, owners for BOB (J10):
+- **step 12, `conclude` refused `NO_BASIS`** [C-33.40] on the accepted reading, which rests on no leg. A model cannot name one: the compose step's facts give the held document only by address (`holdings.by_document[].address_norm`, `versions_held: 1`), never the record id a leg's `target` must be (run-productions R1, R9), and the parent has no read tool at compose. **agent-worker** (R21's holdings, R22's compose facts) or agent-harness (the facts contract): the holding's bundle id (or capture) should reach the compose step. Until then no machine reading can rest on a held document, and journey 29's "a reading resting on two passages" cannot be proposed.
+- R10 (the member's journey) follows from R9 stopping at step 12.
+- Seen in walks 28–30 and gone since: home and queue drew "…completed by an unattended writer after admin left it · admin authored this document…" (R7: `admin` as a name) — **screens-daily** (home, queue) or the record's author naming; not reproduced in walks 31–32.
+- Smaller: basis-versions' C-25.2 finding for a name not in the version-name form carries code `VERSION_NAME_NOT_UNIQUE`, whose words speak of duplicate names — **basis-versions**. The question draws "Opened by {name}" with its placeholder unfilled, and names a cited passage by its record id ("INFO-2026-0002-2026-118") — **screens-inquiry** (R6's live comparison would also fail these).
+
+Tests: runner 6 of 6, walker 14 of 14, words 3 of 3; architecture 0 failures for journey-check.
+
+## J10 · REPORT
+
+B10: (1) The claim stop CREDENTIALS #17 / EXTRACTION #24 saw is the walk's: tranche/T49 carries journey-check as T48 left it (I merge last), whose claim fills no su-handle; fixed on my branch since B9. (2) Walked to the end on the B10 merge: 108 steps, 3 failures. R9 steps 1–11 pass (the run on her subscription, its proposal, Ask) and step 12's accept and stand; journey 28 from civicsmith.org, journey 3, R7. Open: step 12 conclude refused NO_BASIS (C-33.40): the accepted reading rests on no leg, and a model cannot name one — compose's facts give a held document only by address (holdings.by_document[].address_norm), never the record id a leg's target needs, and compose has no read tool — agent-worker (R21/R22 holdings and compose facts) or agent-harness. R10 follows. Smaller: basis-versions C-25.2 name-shape finding coded VERSION_NAME_NOT_UNIQUE; screens-inquiry draws 'Opened by {name}' unfilled and a passage by its record id; home/queue drew 'admin authored this document' in three walks (screens-daily), not since. Record: 'After B10'.
+
+## J11 · COMPLETE
+
+T49-32 complete at B10; owners in J10.

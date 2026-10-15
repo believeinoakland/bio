@@ -1,7 +1,7 @@
 /* screens-entry R1, R2: `front`, the group's page, and its members' sign-in, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, has, lacks, said, date, all, actOps, links, texts } from "./kit.mjs";
+import { open, has, lacks, said, date, all, actOps, links, texts, hasWord, FOUNDER, OLD_FOUNDER, JOINED } from "./kit.mjs";
 
 const PUBLISHED = {
   bundles: [{ bundle_id: "F-1", edition: 1, title: "The lease amendment", attestor_member: "dev", ratified_at: "2026-11-19T10:00:00Z" },
@@ -73,9 +73,9 @@ test("R1 each read in its four states: loading, empty, could not read (refused, 
   assert.equal(all(empty.tree, (e) => e.attrs["data-state"] === "failed").length, 0, "an empty read is never drawn as failed");
 });
 
-test("R2 the sign-in panel: handle (its help the founder's hint), password, and 'This device is', own checked by default", async () => {
+test("R2 the sign-in panel: handle (its help signin.handle.help), password, and 'This device is', own checked by default", async () => {
   const o = await open("front", { table: TABLE });
-  has(o, "screen.front.handle"); has(o, "signin.founderhint"); has(o, "screen.front.device"); has(o, "session.keep"); has(o, "session.shared");
+  has(o, "screen.front.handle"); has(o, "signin.handle.help"); has(o, "screen.front.device"); has(o, "session.keep"); has(o, "session.shared");
   const radios = all(o.tree, (e) => e.tag === "input" && e.attrs.type === "radio");
   assert.deepEqual(radios.map((r) => [r.attrs.value, r.attrs.checked !== undefined]), [["own", true], ["shared", false]]);
   assert.equal(all(o.tree, (e) => e.tag === "input" && e.attrs.type === "password").length, 1);
@@ -88,7 +88,9 @@ test("R2 login sends handle, password and device in the body only, and hands the
   const o = await open("front", { table: { ...TABLE, login: { ok: true, result: { ok: true, token: "tok-new", expires: 0 } } } });
   const r = await o.press("login", { values: { "fs-handle": " mai ", "fs-pw": SENT } });
   assert.deepEqual(r.sent.map((x) => [x.op, x.body, x.query]), [["login", { handle: "mai", password: SENT, device: "own" }, {}]]);
-  assert.deepEqual(o.signins.map((s) => [s.answer.token, s.opts]), [["tok-new", { device: "own", handle: "mai" }]]);
+  // handed over and whoami read (R18), then on to the page kept to return to, else Home
+  assert.deepEqual(o.signins.map((s) => [s.answer.token, s.opts]), [["tok-new", { device: "own", handle: "mai", stay: true }], ["tok-new", { device: "own", handle: "mai" }]]);
+  assert.deepEqual(o.gone, []);
   const elsewhere = o.requests.filter((x) => x.op !== "login");
   assert.ok(!JSON.stringify(elsewhere).includes(SENT));
   assert.ok(!o.drawn().includes(SENT), "never drawn");
@@ -96,7 +98,37 @@ test("R2 login sends handle, password and device in the body only, and hands the
   const s = await open("front", { table: { ...TABLE, login: { ok: true, result: { ok: true, token: "t2" } } } });
   await s.press("login", { values: { "fs-handle": "mai", "fs-pw": SENT, "fs-device-1": true, "fs-device-0": false } });
   assert.equal(s.requests.at(-1).body.device, "shared");
-  assert.equal(s.signins[0].opts.device, "shared");
+  assert.deepEqual(s.signins.map((x) => x.opts.device), ["shared", "shared"]);
+});
+
+test("R16 the sign-in panel carries no founder hint: front drawn in every state holds neither withdrawn key and no text naming admin; control: the handle field is drawn and sends handle", async () => {
+  for (const session of [{ state: "none" }, { state: "signedout", handle: "mai" }, { state: "ended", handle: "mai" }, { state: "locked", handle: "mai" }]) {
+    const o = await open("front", { table: TABLE, session });
+    assert.doesNotMatch(o.drawn(), /\badmin\b/i, session.state);
+    for (const k of ["signin.founderhint", "screen.forgot.handle.help"]) {
+      assert.ok(!o.spec.words.includes(k), k + " is read");
+      assert.ok(!o.drawn().includes(k), k + " drawn");
+    }
+  }
+  assert.equal(hasWord("signin.founderhint"), false, "the withdrawn key is gone from the list");
+  const o = await open("front", { table: { ...TABLE, login: { ok: true, result: { ok: true, token: "t" } } } });
+  assert.equal(all(o.tree, (e) => e.attrs.id === "fs-handle").length, 1);
+  const r = await o.press("login", { values: { "fs-handle": "mai", "fs-pw": "a long password" } });
+  assert.equal(r.sent[0].body.handle, "mai");
+});
+
+test("R18 a sign-in whose session is the founder's with no handle (whoami: rootOfTrust, handle null) opens setup's step before Home; control: a member and a founder holding a handle go on", async () => {
+  const T = { ...TABLE, login: { ok: true, result: { ok: true, token: "tok-f" } } };
+  const old = await open("front", { table: T, signinAs: OLD_FOUNDER });
+  await old.press("login", { values: { "fs-handle": "admin", "fs-pw": "the founder's password" } });
+  assert.deepEqual(old.gone, ["setup"]);
+  assert.equal(old.signins.length, 1, "handed over once, kept for the step");
+  for (const me of [JOINED, FOUNDER]) {
+    const o = await open("front", { table: T, signinAs: me });
+    await o.press("login", { values: { "fs-handle": me.handle, "fs-pw": "a long password" } });
+    assert.deepEqual(o.gone, [], me.handle);
+    assert.equal(o.signins.at(-1).opts.stay, undefined, me.handle + ": on to the page kept, else Home");
+  }
 });
 
 test("R2 nothing is sent without a handle and a password", async () => {

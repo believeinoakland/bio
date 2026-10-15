@@ -3,7 +3,6 @@
  * when it is in force), its relations to laws (`lawrelations`) and, only while the assistant is reachable, the proposals
  * (`proposals`), each drawn as machine work, "not a standard until a member adopts it". */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function place(view) {
@@ -100,46 +99,23 @@ const acts = [
     } },
 ];
 
-export const STANDARD_WORDS = [
-  ["sub", "{kind} · {issuer}"],
-  ...["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"].map((k) => ["kind." + k,
-    { statute: "Statute", regulation: "Regulation", ordinance: "Ordinance", court: "Court decision", policy: "Policy", commitment: "Commitment", standard: "Standard" }[k]]),
-  ["inforce.since", "in force since {from}"],
-  ["inforce.span", "in force {from} to {to}"],
-  ["inforce.none", "when it is in force is not recorded"],
-  ["words", "Its words as written:"],
-  ["laws", "Related laws"],
-  ...["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => ["rel." + k,
-    { implements: "Implements", refers_to: "Refers to", amends: "Amends", repeals: "Repeals", renumbers: "Renumbers", recodifies: "Recodifies", defines: "Defines a term of", excepts: "Makes an exception to", incorporates: "Incorporates" }[k]]),
-  ["type", "How it relates"],
-  ["to", "The law it relates to"],
-  ["citation", "The passage that says so (a content id)"],
-  ["effective", "In effect from (for an amendment or repeal)"],
-  ["effective.help", "The day the change takes effect."],
-  ["proposals", "Proposed standards"],
-  ["proposals.more", "More proposals are held than are shown."],
-  ["state.open", "Open"],
-  ["state.adopted", "Adopted"],
-  ["state.all", "All"],
-  ["proposedby", "proposed by {by}, {date}"],
-  ["adopted", "adopted by {by}, {date} as"],
-  ["notyet", "not a standard until a member adopts it"],
-  ["declare", "Hold a standard"],
-  ["cite", "Its citation"],
-  ["cite.help", "As the city cites it, for example \"Administrative Instruction 4.12, §3\"."],
-  ["kindpick", "What it is"],
-  ["issuer", "Who set it"],
-  ["text", "Its words (the passage's content ids, separated by commas)"],
-  ["text.help", "The passage that states the requirement, as captured."],
-  ["from", "In force from (optional)"],
-  ["declare.empty", "Give its citation, who set it and the passage that states it."],
-  ["relate.empty", "Name the law and the passage that relates them."],
-  ["relate.effective", "An amendment or repeal needs the day it takes effect."],
-].map(([k, en]) => row("screen.standard." + k, en));
+const STANDARD_KEYS = [
+  "screen.standard.sub", "screen.standard.kind.statute", "screen.standard.kind.regulation", "screen.standard.kind.ordinance",
+  "screen.standard.kind.court", "screen.standard.kind.policy", "screen.standard.kind.commitment", "screen.standard.kind.standard",
+  "screen.standard.inforce.since", "screen.standard.inforce.span", "screen.standard.inforce.none", "screen.standard.words", "screen.standard.laws",
+  "screen.standard.rel.implements", "screen.standard.rel.refers_to", "screen.standard.rel.amends", "screen.standard.rel.repeals",
+  "screen.standard.rel.renumbers", "screen.standard.rel.recodifies", "screen.standard.rel.defines", "screen.standard.rel.excepts",
+  "screen.standard.rel.incorporates", "screen.standard.type", "screen.standard.to", "screen.standard.citation", "screen.standard.effective",
+  "screen.standard.effective.help", "screen.standard.proposals", "screen.standard.proposals.more", "screen.standard.state.open",
+  "screen.standard.state.adopted", "screen.standard.state.all", "screen.standard.proposedby", "screen.standard.adopted", "screen.standard.notyet",
+  "screen.standard.declare", "screen.standard.cite", "screen.standard.cite.help", "screen.standard.kindpick", "screen.standard.issuer",
+  "screen.standard.text", "screen.standard.text.help", "screen.standard.from", "screen.standard.declare.empty", "screen.standard.relate.empty",
+  "screen.standard.relate.effective",
+];
 
 const words = ["screen.standard.name", "screen.standard.purpose",
   ...["standarddeclare", "standardadopt", "lawrelate"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
   "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...STANDARD_WORDS];
+  "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...STANDARD_KEYS];
 
 export const STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });

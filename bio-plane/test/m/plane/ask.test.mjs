@@ -97,7 +97,7 @@ test("B2 negative controls: no account, another's session, and no assistant memb
   const r3 = await unbound.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(r3.status, 503);
   assert.deepEqual(await r3.json(), { ok: false, reason: "AGENT_WORKER_UNBOUND",
-    detail: word("ai.refused.notdeployed") }, "DEC-149: the member is told in the group's own words, read by key (R56)");
+    detail: word("refusal.AGENT_WORKER_UNBOUND") }, "DEC-149: the member is told in the group's own words, read by key (R56)");
   assert.equal(none.asks.length + x.asks.length + unbound.asks.length, 0, "nothing reached agent-worker");
 });
 
