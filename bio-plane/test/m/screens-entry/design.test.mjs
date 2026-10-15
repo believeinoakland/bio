@@ -238,7 +238,7 @@ test("R15 R20 a claimed instance's setup draws no lede, only its own 'Already cl
   assert.ok(!lede(await open("setup", { me: FOUNDER, table: FULL })), "signed in");
   const after = await open("setup", { fragment: { boot: "otp" }, table: { ...FULL, login: { ok: false, code: "SIGN_IN_REFUSED" } } });
   await after.press("claim", { values: { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" } });
-  has(after, "screen.setup.claimed.nosignin");
+  has(after, "screen.setup.claimed.nosignin", { handle: "rivera" });
   assert.ok(!lede(after), "claimed here, not signed in");
   for (const answer of ["pending", "none"]) assert.ok(!lede(await open("setup", { table: { bootstrap: answer } })), "unknown: " + answer);
   // control: an unclaimed instance draws it

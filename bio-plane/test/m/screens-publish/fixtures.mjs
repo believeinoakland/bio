@@ -3,10 +3,11 @@
  * documented shapes (review, case-inputs, case-authoring, case-check, case-tensions, case-carriage, ratification,
  * publish-schedule, public-read, case-import, docket, doorbell); a test overrides any op. */
 import { webcrypto } from "node:crypto";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
+import { SCREENS } from "../../../src/screens-publish/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
-export { SCREENS, SCREEN_WORDS, ok, refused, refusedIn, silent, pending, settle, bytes };
+export { SCREENS, ok, refused, refusedIn, silent, pending, settle, bytes, word, hasWord };
 
 export const P = "PROJ-2026-0012";
 export const DR = "RVD-2026-0001";
@@ -68,8 +69,10 @@ export function plane(o = {}) {
     publishat: ok({ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "America/Los_Angeles" } }),
     publishedcase: ok({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
       editions: [{ edition: 1 }, { edition: 2 }], manifest_sha: SHA,
+      files: [{ path: "FND-2026-0031/snapshots/minutes.pdf", sha256: E1, kind: "capture", bytes: 512, finding: "FND-2026-0031" }],
       findings: [{ bundle_id: "FND-2026-0031", body: { conclusion: "The 2024 adjustments were made without the council vote the lease requires." },
-        strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "C" }], meets_bar: true }],
+        strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "C" }],
+        standing: { role: "load_bearing", bar: { capture: "B", connection: "C" }, meets: true, short: [], line: "" } }],
       method: { timeline: [{ what: "Council approves amendment 1", at: "2024-01-12" }] },
       people: [{ shown: "The City Administrator", reason: "signed the March 2024 adjustment" }],
       captures: [{ title: "Council minutes, 12 January 2024", sha256: E1 }] }),
@@ -118,7 +121,15 @@ export async function open(path, o = {}) {
 }
 
 export const main = (p) => p.doc.getElementById("cs-main") || p.root();
-export const text = (p, el = main(p)) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();
+export const norm = (s) => String(s).replace(/\s+/g, " ").trim();
+export const text = (p, el = main(p)) => norm(el ? el.textContent : "");
+/* R24: a sentence is asserted by its key, never by its English: `word(key, vars)` is what the page draws. */
+export const drew = (p, key, vars = {}, el = main(p)) => text(p, el).includes(norm(word(key, vars)));
+export const drewIn = (el, key, vars = {}) => norm(el.textContent).includes(norm(word(key, vars)));
+/** The explanation an element carries (`data-tip`): its text, tags removed and entities read. */
+export const tipOf = (el) => norm(String(el.getAttribute("data-tip") || "").replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])));
+/** The day as the page draws a date (`cs.date`, interface-shell R6): day, month name, year. */
+export const day = (iso) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(iso));
 export const ops = (p, el = main(p)) => el.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 export const button = (p, op, nth = 0) => main(p).querySelectorAll(`button[data-act="${op}"]`)[nth] || null;
 export function fill(p, values) {

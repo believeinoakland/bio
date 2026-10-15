@@ -4024,6 +4024,7 @@ response: "S25: B"
 decided: 2026-10-14 · Bob
 reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (the ruling and the rule's draft text); `screens/words-t49.src.py` (`site.groups.rule`); `screens/mock-screens.js` (`SCR.site`, "Groups at work").
 owed: (BOB) when the directory is built: a steward's decline or removal of a listing, recorded with the rule's part and the reason, told to the group's administrators, touching nothing but the directory; the group may ask again. (Bob) approval of the rule's text in §5E; the site draws it once approved.
+amended: 2026-10-15 · the listing rule's text approved by Bob as drafted (DEC-270).
 
 ### DEC-256 · answered
 raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (the standing tail: T49's requirement files on `tranche/T49` read against the screens)
@@ -4192,3 +4193,45 @@ response: **The design session, 2026-10-15.** `refusal.AGENT_WORKER_UNBOUND`: "T
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-267), `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
 owed: (BOB) a module that raises `AGENT_WORKER_UNBOUND` reads `refusal.AGENT_WORKER_UNBOUND`, not `ai.refused.notdeployed`; control-plane's group draft reads `draft.machine.label.group`. (design) none.
+
+### DEC-268 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: T49's requirements against the screens; `screens-intake` R22, Bob's D12, M-T49-5)
+for: bob-session
+question: How the capture screen shows a capture opened with a project or a question as its subject, and draws R22's "Cite a passage".
+why it is Bob's: design detail beneath his D12; decided by the design session, reported to Bob as done.
+provisional: the capture screen drew no filing line and no "Cite a passage" (DEC-245's `capture.forquestion.help` only promised it).
+alternative: the `cite` act on capture itself. Rejected: R22 opens find-in over the document, where the passage is chosen.
+recommendation: as below.
+reversal cost: low: words and a drawing.
+response: **The design session, 2026-10-15.** The captured result says where it is filed: `capture.filed.project` "Filed under {project}" or `capture.filed.question` "Filed under {project}, for the question “{question}”", and for a question offers `capture.cite` "Cite a passage", opening find-in over the document with the question chosen (`capture.cite.tip`). The details' heading reads "Once it is captured: where it is filed, and watching the address". The other T49 requirement changes since DEC-256 (each L11 module's words by key; interface-shell R71, R72; affordances R60; op-grades' `founderhandleset`; op-capabilities R1–R3; op-declarations R72) draw nothing new.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-268), `screens/mock-screens.js`; `words.json`.
+owed: (BOB) screens-intake draws these keys under R22. (design) none.
+
+### DEC-269 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency)
+for: bob-session
+question: Words that break the design's own rules: "overdue" in queue items (DEC-256; screens-daily R31) and British spelling (DEC-221).
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: as below, before.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** Queue items: `queue.temporal-expectation-due.undetermined.detail` "It may be past its date; that is undetermined, because {reason}. …" (was "Possibly overdue"); `machinery-producers.summary.overdue_check_interval` "{bundle} has gone longer than its own interval without its check". Spelling: `screen.people.today.kind.program` "A program"; `money.says.authorising_events_held` and `.authorising_event_held` "authorizing". "Overdue" stays where it is a deadline's recorded status on an action or a due date (`screen.action.clock.overdue`, `screen.due-date.status.overdue`, `screen.open-file.status.overdue` and the refusals naming the statuses), never on Home or in the queue.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-269), `screens/words-mod-3.src.py`; `words.json`.
+owed: (BOB) setup-words' rows regenerated. (design) none.
+
+### DEC-270 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-255's rule: its text, drafted for Bob's approval in Publication §5E)
+for: bob
+question: Does the listing rule, as drafted, say when civicsmith.org's stewards may decline or remove a group's listing?
+why it is Bob's: policy (who may keep what off Civicsmith's own site) and doctrine (never a judgment on a group's views or targets), DEC-255's.
+provisional: the draft in Publication §5E, not drawn.
+alternative: change its grounds or its wording.
+recommendation: approve as drafted.
+reversal cost: low: the directory is not built yet.
+response: "rule: approved"
+decided: 2026-10-15 · Bob
+reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (APPROVED); `screens/words-t49.src.py` (DEC-270: `site.groups.rule.head`, `site.groups.rule.text`, protected), `screens/mock-screens.js` (civicsmith.org's groups page, both states: "The listing rule" beside the stewards' note).
+owed: (BOB) site draws `site.groups.rule.head` and `site.groups.rule.text` on the groups page beside `site.groups.rule` (SITE #1); the directory, when built, records a decline or removal with the rule's numbered part (DEC-255's owed). (design) none.

@@ -91,7 +91,7 @@ test("R5, R26: results by kind, each with its words as written, its document's t
   assert.equal(main(p).querySelectorAll('.cs-row > .cs-origin[data-origin="search"]').length, 5);
   assert.ok(text(p, sections(p)[1]).includes(word("screen.find-in.nothing")));
   assert.ok(!text(p, sections(p)[4]).includes(word("screen.find-in.nothing")), "not \"nothing\" while documents were not read");
-  assert.ok(text(p, sections(p)[4]).includes(word("screen.find-in.notread", { n: "1" })));
+  assert.ok(text(p, sections(p)[4]).includes(word("screen.find-in.notread.one")), "R25: one document, the singular key");
   assert.doesNotMatch(text(p), /\b[0-9a-f]{12}\b|[0-9a-f]{64}/, "R26 control: no drawn text is a digest or a 12-hex label");
   // A result whose answer carries no title is not named by its digest: its passage alone.
   const bare = await shown({ findin: ok({ kinds: [{ kind: "term", items: [{ words: "closed", capture_sha: SHA, extent: { passage: 2 }, recorded: [] }], count: 1 }], term: "closed" }) });

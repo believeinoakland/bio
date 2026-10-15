@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -41,3 +41,7 @@ K3380: your reading of R7 stands: sweep as the handleless founder where the grou
 ## B6 · ANSWER · re J3
 
 K3381: received. Merged so far: op-declarations, site, control-plane, plane, admission, interface-shell, screens-daily, screens-settings; the design's words through DEC-267. I CHANGE you as the rest merge; journey-check merges last.
+
+## B7 · CHANGE
+
+K3383: merged into tranche/T49 now: every L11 job but control-plane (B8, rewriting its e2e tests) and you. Merge the tranche, re-walk, and for each failure still open name the module that owns it in a REPORT (I route it). Then COMPLETE.

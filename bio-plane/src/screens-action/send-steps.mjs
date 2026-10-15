@@ -67,6 +67,9 @@ export function sendSteps(cs, view, filings, o) {
   const d = P.draftsOf(filings);
   const step = P.stepOf(filings);
   const nosend = '<p class="mk-note">' + cs.w("screen.start-send.nosend") + "</p>";
+  // R19: a sentence whose particulars (the law's citation, the portal, its button, the department) the record does not
+  // give is not drawn, never drawn with a placeholder in it
+  const part = function (key) { const s = cs.w(key); return /\{\w+\}/.test(s) ? "" : s; };
   const ui = view.ui;
   const n = String(ui.draftN || 0);
   if (step === "sent") {
@@ -82,8 +85,8 @@ export function sendSteps(cs, view, filings, o) {
   }
   if (step === "send") {
     // R3, R4, R8: the outward warning, then the member's record of the sending: the day, how, and the venue's number.
-    return (req ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + cs.w("screen.request.howsend.1") + "</li><li>"
-      + cs.w("screen.request.howsend.2") + "</li><li>" + cs.w("screen.request.howsend.3") + "</li><li>" + cs.w("screen.request.howsend.4") + "</li></ol>") : "")
+    const how = req ? [1, 2, 3, 4].map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
+    return (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.start-send.outward") + '">' + '<span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w(req ? "screen.request.outward" : "screen.start-send.outward.says") + "</p>"
       + cs.field("send-at", "screen.start-send.sentat", { type: "date", help: "screen.start-send.sentat.help" })
@@ -126,7 +129,7 @@ export function sendSteps(cs, view, filings, o) {
     : cs.act("filingapprove", { tone: "primary", data: { filing: d.open.filing } });
   if (reading) return reading + nosend;
   return fills + (step === "prepare" || draft ? text : "") + blanks + unfilled + advisory + offers
-    + (req ? '<p class="mk-note">' + cs.w("screen.request.describe") + "</p>" : "")
+    + (req && part("screen.request.describe") ? '<p class="mk-note">' + part("screen.request.describe") + "</p>" : "")
     + '<div class="mk-acts">' + acts + "</div>" + '<p class="mk-note">' + cs.w("screen.start-send.approvefixes") + "</p>" + nosend;
 }
 

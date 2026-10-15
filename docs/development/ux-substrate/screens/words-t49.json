@@ -3299,6 +3299,42 @@
    "en": "Draft by the assistant, at your request · edit it until it is your group's",
    "protected": false,
    "note": "DEC-267: draft.machine.label for a field that holds the group's words (control-plane's group draft)"
+  },
+  {
+   "key": "capture.filed.project",
+   "en": "Filed under {project}",
+   "protected": false,
+   "note": "DEC-268: after capture.captured, for a capture opened from a project"
+  },
+  {
+   "key": "capture.filed.question",
+   "en": "Filed under {project}, for the question “{question}”",
+   "protected": false,
+   "note": "DEC-268: after capture.captured, for a capture opened from a question"
+  },
+  {
+   "key": "capture.cite",
+   "en": "Cite a passage",
+   "protected": false,
+   "note": "DEC-268: the captured result's link to find-in, offered for a capture opened from a question (R22)"
+  },
+  {
+   "key": "capture.cite.tip",
+   "en": "Opens Find in this over the document, with your question chosen.",
+   "protected": false,
+   "note": "DEC-268: what capture.cite opens"
+  },
+  {
+   "key": "site.groups.rule.head",
+   "en": "The listing rule",
+   "protected": false,
+   "note": "DEC-270: the details' heading beside site.groups.rule"
+  },
+  {
+   "key": "site.groups.rule.text",
+   "en": "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.",
+   "protected": true,
+   "note": "DEC-270: Bob approved this text (DEC-270); a change is his"
   }
  ],
  "retired": [
@@ -3425,7 +3461,10 @@
   "signing.ceremony.nokey": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
   "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
   "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
-  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it."
+  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+  "screen.capture.address.watchhead": "Once it is captured: where it is filed, and watching the address",
+  "queue.temporal-expectation-due.undetermined.detail": "It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+  "screen.people.today.kind.program": "A program"
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
@@ -3475,6 +3514,9 @@
   "signing.ceremony.nokey": "DEC-266",
   "signing.ceremony.device": "DEC-266",
   "screen.account.key.help": "DEC-266",
-  "refusal.AGENT_WORKER_UNBOUND": "DEC-267"
+  "refusal.AGENT_WORKER_UNBOUND": "DEC-267",
+  "screen.capture.address.watchhead": "DEC-268",
+  "queue.temporal-expectation-due.undetermined.detail": "DEC-269",
+  "screen.people.today.kind.program": "DEC-269"
  }
 }

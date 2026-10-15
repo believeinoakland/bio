@@ -7520,15 +7520,15 @@
   },
   {
    "key": "money.says.authorising_events_held",
-   "en": "the authorising events held toward this event",
+   "en": "the authorizing events held toward this event",
    "protected": false,
-   "note": "DEC-260: money, says"
+   "note": "DEC-260: money, says; American spelling, DEC-269"
   },
   {
    "key": "money.says.authorising_event_held",
-   "en": "no authorising event is held for this event",
+   "en": "no authorizing event is held for this event",
    "protected": false,
-   "note": "DEC-260: money, says"
+   "note": "DEC-260: money, says; American spelling, DEC-269"
   },
   {
    "key": "money.why.money_facts_name",
@@ -8378,9 +8378,9 @@
   },
   {
    "key": "machinery-producers.summary.overdue_check_interval",
-   "en": "{bundle} is overdue for its check by more than its own interval",
+   "en": "{bundle} has gone longer than its own interval without its check",
    "protected": false,
-   "note": "DEC-260: machinery-producers, summary"
+   "note": "DEC-260: machinery-producers, summary; never \"overdue\" in the queue (screens-daily R31), DEC-269"
   },
   {
    "key": "machinery-producers.summary.monitored_check_scheduled",
