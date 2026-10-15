@@ -4861,7 +4861,6 @@
   "shell.unavailable.unreachable.says": "Your device is offline, or your group's Civicsmith isn't answering. Nothing you did is lost: what you saved is kept there, and what you were typing is still on this page.",
   "screen.wizards.basedon": "based on Civicsmith's “{name}”",
   "screen.wizards.copy.note": "A copy becomes your group's own wizard: a draft until approved, like any wizard your group writes. The original stays as it is and is still offered; a required wizard stays required. The copy shows what it is based on, and when Civicsmith's original changes, your wizard editors are told and can bring the change across.",
-  "screen.setup.name": "Set up your group's Civicsmith",
   "screen.setup.lede": "Welcome. Civicsmith is installed and waiting for you. First, claim it, so that only you can run it; it takes about two minutes. Then tell it a little about your group. Only the claim is needed today: every other part starts with a safe choice, and you can change any of it later in Settings.",
   "screen.setup.claim": "Make it yours",
   "screen.setup.otp.help": "Already filled in if you came straight from the installer.",

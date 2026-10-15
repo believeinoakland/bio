@@ -134,7 +134,7 @@
   },
   {
    "id": "setup",
-   "name": "Become your group's first administrator",
+   "name": "Set up your group's Civicsmith",
    "frame": "setup",
    "purpose": "The founder claims it, choosing their own handle, names the group, reviews offices and seats, offers the assistant and records the hosting account; a founder who claimed before handles were chosen picks one once, at the next sign-in.",
    "acts": [

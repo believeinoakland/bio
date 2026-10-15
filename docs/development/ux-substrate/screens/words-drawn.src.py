@@ -975,7 +975,6 @@ w276('screen.review-copy.tip.noemail', 'Civicsmith sends no email: you copy the 
 def w279(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-279' + (': ' + note if note else '')))
 SETUP279 = {
-  'screen.setup.name': "Set up your group's Civicsmith",
   'screen.setup.lede': "Welcome. Civicsmith is installed and waiting for you. First, claim it, so that only you can run it; it takes about two minutes. Then tell it a little about your group. Only the claim is needed today: every other part starts with a safe choice, and you can change any of it later in Settings.",
   'screen.setup.claim': 'Make it yours',
   'screen.setup.otp.help': 'Already filled in if you came straight from the installer.',

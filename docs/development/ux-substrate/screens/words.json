@@ -75914,8 +75914,7 @@
    "key": "screen.setup.name",
    "en": "Set up your group's Civicsmith",
    "protected": false,
-   "source": "registry.json",
-   "note": "DEC-259: reworded"
+   "source": "registry.json"
   },
   {
    "key": "screen.setup.purpose",
