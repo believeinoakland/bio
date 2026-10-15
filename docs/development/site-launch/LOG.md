@@ -29,3 +29,5 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 - Bob approved the redeploy ("yes, deploy"). `civicsmith-site` now at version `b405a963-3765-458d-8e18-075464235f02` (workers.dev). `/`, `/start`, `/groups`, `/favicon.ico`, `/favicon.svg` answer 200; the doubled full stop is gone.
 - **Site D1 (Bob, 2026-10-15):** the stewards' address is `stewards@civicsmith.org`.
 - Still needed from Bob: the inbox its mail forwards to (not to be written in any file), and the Cloudflare key's zone permissions (DNS, Email Routing).
+
+- **Site D2 (Bob, 2026-10-15):** mail to the stewards' address forwards to the inbox Bob named in session (kept out of the repository by his rule). Checked again: the session's token is still refused on the zone's DNS and on Email Routing (zone and account addresses); waiting for Bob to add the permissions.
