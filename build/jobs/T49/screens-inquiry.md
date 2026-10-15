@@ -102,3 +102,20 @@ CHANGE B12 processed (K3387, the step-7 diagnosis): merged `origin/tranche/T49`,
 Tests on the real shell: `test/m/screens-inquiry/` with `control-plane/t46-app`: 119 pass, 0 fail. `screens-daily/answers`, `plane/t47`, `screens-intake/held`, `interface-shell/frame`: 51 pass, 0 fail. Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures.
 
 Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 33, module lines 2206
+
+## J9 · COMPLETE
+
+CHANGE B13 processed (K3402, JOURNEY-CHECK J10): merged `origin/tranche/T49` (journey-check in), then:
+1. **"Opened by {name}" filled.** The question names who opened it: the author of its first promotion, from the image's `_history/promotion_*.json` (earliest `created`), drawn by handle with the founder unnamed by key (R40). When the record names no author it draws `state.undetermined`, never the placeholder. Both `screen.question.opened` and `.opened.noproject` get their `{name}`.
+2. **A cited passage named by its words or its document's title, never its record id (R39).** A leg's name is its own title, else the reading shown's `target_title`, else the cited document's title read from the record (`image`), else `state.undetermined`. Its words come from the leg, or from the reading shown, where either holds them.
+3. **Found in the walk and fixed:** the dock drew "The run ended: [object Object]". `airun`'s `condition` is `{kind, detail, bound, at}` (ai-runs R19), and the ending is now drawn by its `bound`.
+
+Tests: `test/m/screens-inquiry/` with `control-plane/t46-app`: 120 pass, 0 fail. The new test (R2, R39, K3402) covers the opener filled from the first promotion, a passage by its document's title and never its id, and the control: no opener draws undetermined. The R24 fixture now gives its cited documents titles, and the R8 test's ending is the real `condition` object.
+
+journey-check's local arm (`npm ci`; `npm run journey`): 108 steps, 3 failures, all J10's known chain: R9 step 12's `conclude` refused `NO_BASIS` (the accepted reading rests on no leg; agent-worker or agent-harness, J10), its consequent "question.concluded.by not drawn", and R10, which needs R9's project. None is in this module. The walked question now reads "Opened by The group's founder".
+
+**Found in another module:** in the walk, the cited document captured by address is titled "2026-118", its address's last segment. That is the title the record holds, written at capture, so the question draws it as the document's title. The capture's naming is screens-intake's (its `promoteDocument` title) or the acquisition's. On the document page itself R32 already declines a slug title.
+
+Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures.
+
+Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 36, module lines 2228
