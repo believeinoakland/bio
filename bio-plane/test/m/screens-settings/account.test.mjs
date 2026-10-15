@@ -1,9 +1,10 @@
 /* Settings › Your account at the module's interface (R3, R8, R10). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf, WORDS } from "./kit.mjs";
+import { acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf, WORDS, registryOps } from "./kit.mjs";
 import { ADMIN, MEMBER, READER, accountTable, refuse, env } from "./fixtures.mjs";
 import { SCREENS } from "../../../src/screens-settings/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 
@@ -18,7 +19,7 @@ test("R3 the reads: whoami, memberlanguage, the member's own expertiselist, sign
 test("R3 the handle drawn fixed in DEC-197's words; no handlechange act, and no handle.changeable, handle.formerly or handle.refused.* drawn", async () => {
   const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
   assert.ok(textOf(a.tree).includes("dev"));
-  assert.equal(said("handle.fixed"), "Your handle is fixed: it names your work in the group and in published cases, and no one else can ever take it.");
+  assert.ok(hasWord("handle.fixed"), "the handle's sentence is a word of the list (R39)");
   has(a, "handle.fixed");
   assert.ok(!ops(a).includes("handlechange") && !ops(a).includes("handlecheck"));
   for (const k of ["handle.changeable", "handle.formerly", "handle.refused.paused", "handle.free", "handle.taken"].filter((k) => WORDS.has(k)))
@@ -28,7 +29,7 @@ test("R3 the handle drawn fixed in DEC-197's words; no handlechange act, and no 
 
 test("R3, R21 every registry act is drawn (memberlanguageset, setpassword, expertisedeclare, signerregisterown, signerrevokeown, the explanation level, the two sign-outs), and the links to connect and notes", async () => {
   const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
-  assert.deepEqual(ops(a), ["expertisedeclare", "infolevelset", "memberlanguageset", "setpassword", "signerregisterown", "signerrevokeown", "signout", "signouteverywhere"]);
+  assert.deepEqual(ops(a), registryOps("account"), "the registry's acts for the screen (N1073)");
   // the member's own key only: a revoke for theirs, none for another's
   const rev = acts(a.tree).filter((b) => b.attrs["data-act"] === "signerrevokeown");
   assert.equal(rev.length, 1);

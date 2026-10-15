@@ -8,7 +8,8 @@
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, pending, silent } from "../interface-shell/harness.mjs";
 import { decode } from "../interface-shell/dom.mjs";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
+import { SCREENS } from "../../../src/screens-settings/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 export { SCREENS };
 
 // ---- reading HTML ----
@@ -62,14 +63,14 @@ export const ancestor = (e, pred) => { for (let p = e.parent; p; p = p.parent) i
 
 // ---- the words ----
 
-/* The words the served page carries (interface-shell R5): `WORD_ROWS`, the shell's own and each screen's own rows. */
+/* The words the served page carries (interface-shell R5, R70): `WORD_ROWS` and the shell's own, each screen's keys among them. */
 const ROWS = new Map(wordsOf(SCREENS));
 export const WORDS = ROWS;
-/** The shell's `w(key, fills)` (its R5): the screen's own row first, else `WORD_ROWS`; each `{name}` filled, escaped. */
+/** A word as the shell's `w(key, fills)` draws it (R5, R70): `setup-words`' `word`, which throws for a key the list lacks and for a
+ *  `{name}` the fills do not fill, each fill escaped. */
 export function w(key, fills = {}) {
-  if (!ROWS.has(key)) throw new Error(`no word ${key}`);
   used.add(key);
-  return esc(ROWS.get(key).replace(/\{(\w+)\}/g, (m, n) => (n in fills ? String(fills[n]) : m)));
+  return esc(word(key, fills));
 }
 const used = new Set();
 export const usedKeys = () => new Set(used);
@@ -110,7 +111,8 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
-  // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36)
+  // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36). The shell exports
+  // no list of its frame's reads (SHELL_OPS holds its acts and the reads screens share), so these stay listed: deferred, N1073
   const SHELL = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap"]);
   const reqs = () => b.requests.map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
   const out = { b, s: screen(id) || screens.find((x) => x.id === id), refused: null, cs: { w } };
@@ -186,3 +188,10 @@ export function panelOf(tree, key) {
 /** Whether the main area says a word, filled (its text, as the member reads it). */
 export const has = (o, key, fills) => { if (!o.text.includes(said(key, fills))) throw new Error(`not drawn: ${key} "${said(key, fills)}"`); };
 export const lacks = (o, key, fills) => { if (o.text.includes(said(key, fills))) throw new Error(`drawn: ${key}`); };
+
+/** The ops the design's registry lists for a screen (an owed act by the op it owes): the owner's declaration of a screen's acts (N1073). */
+import { readFileSync } from "node:fs";
+export const registryOps = (id) => {
+  const reg = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8")).screens.find((x) => x.id === id);
+  return reg.acts.map((a) => (/^owed:/.test(a.op) ? a.op.slice(5).split(" ")[0] : a.op)).sort();
+};
