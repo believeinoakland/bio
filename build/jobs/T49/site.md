@@ -51,3 +51,10 @@ Built and tested everything but the generated pages (record, Progress). My paths
 ## J3 · COMPLETE
 
 T49-31 complete on job/T49/site (record, Completion): R1–R12 met; site/src/pages.mjs generated and committed. One detail for you: SITE_COMMIT is dc267da296 (DEC-261's commit), not K3372's fa3c8b7e8e, because DEC-261 re-worded site.groups.rule in both the words and SCR.site, so only dc267da296 matches the words in the tree. Tests 24 pass 0 fail; format, architecture, coverage (12/12) and ownership 0 failures for site.
+
+## B5 · CHANGE processed (K3384, DEC-270)
+
+- Tranche merged (`af89fd5931`). `SCR.site` changed there (the listing rule's `<details>` on Groups at work, both states), so `SITE_COMMIT` is `af89fd5931`. KEYS gains `site.groups.rule.head` and `site.groups.rule.text` (protected; drawn whole, as `word` gives it). `pages.mjs` regenerated; both groups pages draw the rule as a `details` element after `site.groups.rule`. The design's inline `style` on the rule's paragraph is not carried (the pages carry no inline style, R8's policy); the paragraph keeps its class `mk-small`.
+- Tests: R4's test and control each assert the rule (heading and text, after its sentence); R12 asserts both keys. `node --test site/test/` 24 pass, 0 fail (the browser pairs included).
+- Checks: format 0; architecture `site` 0 (9 files); coverage `site` 12 of 12; ownership `site` 0.
+- Size (session_01J8PEzpB2y4LnPqzdpgRfCn): test runs 11, module lines 423
