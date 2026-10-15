@@ -4781,6 +4781,36 @@
    "en": "The account your group's Civicsmith runs on. Whoever holds it can reach everything, so write down who that is.",
    "protected": false,
    "note": "DEC-279"
+  },
+  {
+   "key": "shell.working",
+   "en": "Working…",
+   "protected": false,
+   "note": "DEC-280: said to a screen reader (a polite live region) from a button's press until Civicsmith answers; the button shows a turning ring"
+  },
+  {
+   "key": "screen.account.sounds",
+   "en": "Sounds",
+   "protected": false,
+   "note": "DEC-280: Your account › Language and appearance"
+  },
+  {
+   "key": "screen.account.sounds.off",
+   "en": "Off",
+   "protected": false,
+   "note": "DEC-280"
+  },
+  {
+   "key": "screen.account.sounds.on",
+   "en": "On",
+   "protected": false,
+   "note": "DEC-280"
+  },
+  {
+   "key": "screen.account.sounds.help",
+   "en": "On: a soft click when you press a button, and a low tone when something is refused. New members start with it off.",
+   "protected": false,
+   "note": "DEC-280"
   }
  ],
  "rewrite": {

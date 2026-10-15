@@ -31,6 +31,7 @@
 - [P · THE ASSISTANT — one way in, on every surface](#p-the-assistant-one-way-in-on-every-surface)
 - [U · UNDETERMINED — a display primitive, not an act](#u-undetermined-a-display-primitive-not-an-act)
 - [F · FRICTION MATCHES WEIGHT — how an act's rung is felt (Bob, 2026-09-29, DEC-87)](#f-friction-matches-weight-how-an-acts-rung-is-felt-bob-2026-09-29-dec-87)
+  - RULED 2026-10-15 by Bob (DEC-280): a pressed button answers at once; sounds each member's choice, off to start
 - [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
 - [L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)](#l-access-and-language-the-standard-every-screen-meets-bob-2026-10-01-dec-99)
 - [W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)](#w-working-and-published-the-fence-a-member-can-always-see-bob-2026-10-01-dec-106)
@@ -712,6 +713,26 @@ confirms with a reason naming the law or order. **Amended 2026-10-06 (DEC-143, B
 Irreversible weight on its button, whatever rung affordances gives it: the expunge, and the installer's choice of the group's short
 name (it is in every address and beside every signature, and never changes). Neither is a publication, so each opens the full dialog
 that says it is permanent rather than the ceremony.
+
+### RULED 2026-10-15 by Bob (DEC-280): a pressed button answers at once
+
+Bob, of the live site: *"Buttons don't react as buttons should when they're pressed. When a member presses a button, they must be
+given visual feedback that the button was actually pressed. In some cases, the button should be disabled to indicate that no more
+of that input is needed/recognized. Other times a swirling cursor may be the proper feedback. Some workflows provide audible clicks
+to indicate that the button has been pressed."* Of sounds, his pick: *"C"*.
+
+Every button, on every screen, answers in four states (the visual language's `.cs-btn`; drawn on the Screens page):
+
+1. **Pressed.** Held, it visibly sinks; keyboard focus shows a ring.
+2. **Working.** From the press until Civicsmith answers, it shows a turning ring, the pointer becomes the busy pointer, and a
+   second press does nothing, so nothing is sent twice. A screen reader hears "Working…" (`shell.working`).
+3. **Answered.** An act done for good (rung Terminal, Signed or Outward, by this section's weight) stays disabled with a check:
+   nothing more is needed. Any other shows a check for about two seconds and is ready again, while its result appears where the
+   member is looking (as the setup's "Saved. Your group is now called …").
+4. **Refused.** Ready again, the refusal beside it, as before.
+
+**Sounds** are each member's own choice, off to start: Your account › Language and appearance › Sounds. On, a soft click marks
+a press and a low tone a refusal. A screen reader's own speech is never replaced.
 
 ## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
 

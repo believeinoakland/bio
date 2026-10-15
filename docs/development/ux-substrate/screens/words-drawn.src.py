@@ -1067,6 +1067,15 @@ w279('screen.setup.pay.group', 'Your group, with one API key for members who hav
 w279('screen.setup.key.tip', 'An administrator creates the key at console.anthropic.com, under an account that belongs to your group and has a payment method. Setting a monthly spending limit there too is wise.', False, "explains 'Made in Anthropic's Console'")
 w279('screen.setup.hosting.help', "The account your group's Civicsmith runs on. Whoever holds it can reach everything, so write down who that is.")
 # --- end DEC-279
+# --- DEC-280 (Bob, 15 October): a pressed button answers at once; sounds are each member's choice, off to start (his "C")
+def w280(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-280' + (': ' + note if note else '')))
+w280('shell.working', 'Working…', False, "said to a screen reader (a polite live region) from a button's press until Civicsmith answers; the button shows a turning ring")
+w280('screen.account.sounds', 'Sounds', False, "Your account › Language and appearance")
+w280('screen.account.sounds.off', 'Off')
+w280('screen.account.sounds.on', 'On')
+w280('screen.account.sounds.help', 'On: a soft click when you press a button, and a low tone when something is refused. New members start with it off.')
+# --- end DEC-280
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

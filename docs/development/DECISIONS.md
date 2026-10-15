@@ -4347,3 +4347,17 @@ response: **The design session, 2026-10-15.** `words-reads.src.mjs` lists a modu
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-reads.src.mjs` (DEC-278), `screens/words-reads.json`.
 owed: (BOB) admission R28 and screens-entry R21 compare against the new list at the next MERGE, or read their own keys against `hasWord` (N1146), as BOB chooses. (design) none.
+
+### DEC-280 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01HcUUthHRZ9j5aP76mbxgqB; the development process also runs on his primary account since K1428) (Bob's feedback from the live site, biosmoke8, in the session)
+for: bob-session
+question: Buttons give no sign that a press registered. What should every button do when pressed, and should Civicsmith make sounds?
+why it is Bob's: UX (P17); his direction, and sounds are a choice members hear.
+provisional: as below; the visual states were the design's detail beneath his direction.
+alternative: for sounds, A (none at all) or B (on for everyone); for once-only acts, leaving them enabled with a message.
+recommendation: the four states below; sounds C (off to start, each member's own setting).
+reversal cost: low: one stylesheet rule set and the shell's handling of a press.
+response: Bob, 2026-10-15: "Buttons don't react as buttons should when they're pressed. When a member presses a button, they must be given visual feedback that the button was actually pressed. In some cases, the button should be disabled to indicate that no more of that input is needed/recognized. Other times a swirling cursor may be the proper feedback. Some workflows provide audible clicks to indicate that the button has been pressed." Of sounds: "C".
+decided: 2026-10-15 · Bob (direction and pick); the design session (the states' detail, P17)
+reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F (RULED 2026-10-15); `visual-language/components.css` (`.cs-btn:active`, `[aria-busy]`, `[data-done]`); `screens/page.src.html` (the page's simulated answer); `screens/mock-screens.js` (Your account › Sounds); keys `shell.working`, `screen.account.sounds*`.
+owed: (BOB) every act button in the shell: `aria-busy="true"` and no second press from press to answer, a polite live region saying `shell.working`; on success `data-done`, and `disabled` for an act of rung Terminal, Signed or Outward, the check otherwise cleared after about two seconds; a refusal clears both; the member's Sounds setting (off by default, saved with Language and appearance) plays a soft click on a press and a low tone on a refusal. (design) none.
