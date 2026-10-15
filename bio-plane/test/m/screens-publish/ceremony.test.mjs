@@ -71,7 +71,7 @@ test("R4 each photo shown with its marks; areas drawn on the photo and named by 
   assert.ok(ph);
   assert.ok(ph.textContent.includes(word("screen.ceremony.photo.state.unchecked")));
   assert.equal(last(p, "openoriginal").query.capture, PHOTO, "the photo is read as open-file reads it (K3150)");
-  assert.ok(ph.querySelector("img.cs-image") && ph.querySelector('[data-shell="areas-box"]'), "drawn on the photo itself");
+  assert.ok(ph.querySelector("img.mk-image") && ph.querySelector('[data-shell="areas-box"]'), "drawn on the photo itself");
   assert.ok(drew(p, "screen.ceremony.photos.gate"));
   assert.ok(drew(p, "screen.ceremony.photos.copy"));
   await press(p, "obscuremark", { reason: R });
