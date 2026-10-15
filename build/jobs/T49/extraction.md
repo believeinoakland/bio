@@ -16,3 +16,7 @@
 Checks: `format: 170 modules, 169 requirements files; 0 failures` · `architecture: 34 product files, 122 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 52 of 52 live requirement ids named by a test; 0 failures` · `ownership: 1 files changed by extraction between tranche/T49 and HEAD; 0 failures`.
 
 Size (session_01X1a6atrMd6RYfkvAD912aB): test runs 9, module lines 6897
+
+## J1 · COMPLETE
+
+T49-35 / R76 applied: op=reading answers text_units (from unitsOf, withheld with the bundle, [] when read but unindexed, absent when not read). Extraction tests 173/173; format, architecture, coverage (52/52) and ownership checks 0 failures. Screens: 806/809 (the same 3 red without my change); journey-check local arm red at journey 28 setup claim, before any reading (not this module). Details in my record.
