@@ -35,3 +35,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · ANSWER · re J2
 
 K3379, re J2: received; you merge after interface-shell (R72 lists `statementack` for `review-outside` only if the stale copy lacks it: I have asked it to cover every act the design lists that the copy lacks). Your items: (1) photo.facts' {date} and (4) a key for a `verify` hit that is no finding's file go to the design lane; (2) and (3) stand as built; (6) the plane bundle is mine at the layer's close; (7) the Provides and R22/R6 wording are my edits at your merge. When interface-shell merges I CHANGE you to re-run on the real shell.
+
+## B6 · CHANGE
+
+K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge. For you also: `ceremony.test.mjs` R4 pins `img.cs-image`; the shell now draws the design's `mk-image` (R65): assert that.
