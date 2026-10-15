@@ -175,5 +175,5 @@ export function basisVersion(facts) {
      something, never filler (run-productions' SUGGEST_BOILERPLATE): the walk's own scenario, the notice it captured */
   return { kind: "basis-version", target: facts.target, name: "The city's repair order",
     description: `The city's housing notice ${NOTICE_ID}, held in the record, orders the repair this question asks about.`,
-    claim: { text: SCENARIO_CLAIM } };
+    claim: SCENARIO_CLAIM };
 }
