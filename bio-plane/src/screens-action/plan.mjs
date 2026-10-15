@@ -132,11 +132,9 @@ export const plan = Object.freeze({
         ? view.data.projects.value.bundles : [];
       const projectHit = projects.find(function (b) { return b.bundle_id === p.project; });
       const projectRef = projectHit && projectHit.title ? cs.ref("project", p.project, projectHit.title, [projectHit.title]) : "";
-      // the plan's opening: when, by whom, and the reason its opening states (the history's `open` entry); drawn only with all three
-      const openEntry = (Array.isArray(p.history) ? p.history : []).find(function (h) { return h && h.kind === "open"; });
-      const openWhy = openEntry && typeof openEntry.reason === "string" ? openEntry.reason.trim() : "";
-      const opened = p.opened_at && p.opened_by && openWhy
-        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, ""), why: openWhy }) : "";
+      // the plan's opening: when and by whom
+      const opened = p.opened_at && p.opened_by
+        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, "") }) : "";
       const head = cs.title(p.title || p.id)
         + '<p class="mk-sub">' + cs.w("screen.plan.state." + (["open", "paused", "closed"].includes(p.state) ? p.state : "open"))
         + (opened ? " · " + opened : "") + (projectRef ? " · " + projectRef : "") + "</p>"

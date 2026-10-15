@@ -33,13 +33,10 @@ test("R1: reads the plan: its matters (with support and escalation stage), optio
   said(p, "screen.plan.actionstate.awaiting_response");
 });
 
-test("R1, R19: the plan's opening is drawn with its date, who opened it and the reason its opening states; without a reason nothing of it is drawn, and no placeholder ever is", async () => {
-  const withWhy = { ...PLAN, history: [{ kind: "open", author: "member:dev", at: "2026-10-03T10:00:00Z", reason: "the logs came back empty" }] };
-  const p = await open(ROUTES.plan, { ...DATA_PLANE, plan: ok(withWhy) });
-  said(p, "screen.plan.opened", { date: D("2026-10-03"), name: "dev", why: "the logs came back empty" });
-  const bare = await open(ROUTES.plan, DATA_PLANE);
-  assert.ok(!text(bare).includes(W("screen.plan.opened", { date: "x", name: "x", why: "x" }).slice(0, 6)), "no opening line without its reason");
-  for (const q of [p, bare]) assert.doesNotMatch(text(q), /\{\w+\}/);
+test("R1, R19: the plan's opening is drawn with its date and who opened it, and no placeholder ever is", async () => {
+  const p = await open(ROUTES.plan, DATA_PLANE);
+  said(p, "screen.plan.opened", { date: D("2026-10-03"), name: "dev" });
+  assert.doesNotMatch(text(p), /\{\w+\}/);
 });
 
 test("R1: the assistant's suggestions are read and drawn only while it is reachable, labelled machine work not yet in the plan; control: unreachable reads none and draws no ask", async () => {
