@@ -116,7 +116,8 @@ import * as NG from "../src/index.mjs";
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
-import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
+import { RELEASE_VERSION } from "../src/release.mjs";
+import { RELEASE_SOURCE } from "./release-text.mjs";
 import { signer } from "./fixture.mjs";
 
 let pass = 0, fail = 0;

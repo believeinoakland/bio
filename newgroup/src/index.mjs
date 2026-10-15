@@ -27,7 +27,7 @@ import { WIZARD_HTML, updateHtml, PRODUCT, publisherFooter, PROFILE_CHOICES, ASS
   ASSET_PREFIX, UPDATE_KEEPS, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN } from "./ui.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
-import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
+import { RELEASE_BINARY, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* R38, R23 (T46): whether a container image can be pulled, and what your group's Civicsmith lacks without it; held once
    for this fleet step and the pages. */
@@ -110,6 +110,22 @@ async function fetchRepoAsset(man) {
     limits: planeLimits(bytes), capable: reportsBuilds(bytes) };
 }
 
+/* R33 (K3441, K3442) — THE BUILT-IN RELEASE, HELD ONCE. `release.mjs` carries the signed plane as a binary string (one character
+   per byte, so the engine holds it one byte each: 21 MB, where the same release as text is two bytes each, 43 MB, because
+   a few characters are above 255). What an act uploads is one Blob made from it, in the one pass that turns each character
+   back into its byte, and kept for every upload of the act and the isolate's life; its limits and build fields are read from
+   the string as text (they are ASCII); its hash is taken from the Blob's bytes when the read-back first needs it. The bytes
+   uploaded and hashed are exactly the signed release's. */
+let builtInBlob = null;
+function builtInRelease() {
+  if (!builtInBlob) {
+    const bytes = new Uint8Array(RELEASE_BINARY.length);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = RELEASE_BINARY.charCodeAt(i);
+    builtInBlob = new Blob([bytes], { type: "application/javascript+module" });
+  }
+  return { blob: builtInBlob, capable: reportsBuilds(RELEASE_BINARY) };
+}
+
 /* The installer prefers the newest verified release from the public
    repository and always has its built-in copy to stand on. It never installs
    anything that failed verification, and it always says which copy it used
@@ -158,7 +174,7 @@ async function selectRelease(emit) {
   }
   /* R20: the built-in is held to the same rule. One that states no readable limits is refused by name, before any plane
      upload; the caller stops the act (`refused`) and nothing installs. */
-  const lim = planeLimits(RELEASE_SOURCE);
+  const lim = planeLimits(RELEASE_BINARY);
   if (!lim.ok) {
     emit.no("rel", said);
     return { refused: "This installer's built-in release (" + RELEASE_VERSION + ") " + LIMITS_NOT_STATED[lim.why]
@@ -166,7 +182,7 @@ async function selectRelease(emit) {
       + "this installer holds no value of its own to send in their place." };
   }
   emit.ok("rel", said);
-  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
+  return { version: RELEASE_VERSION, ...builtInRelease(), from: "built-in", man, limits: lim.limits };
 }
 
 /* R55 (T48; N1047; DEC-226 (4); K3158) — THE UPDATE INSTALLS THE RELEASE CHOSEN AND NO OTHER. `V` is the version the group's
@@ -175,7 +191,7 @@ async function selectRelease(emit) {
    repository's is held to R8's checks (its bytes hash to its manifest's `sha256`, its `sig` verifies in the release namespace
    against ARMED_SIGNERS, which are `signatures`' RELEASE_KEYS, R43) and to R20's (it states its limits). R8's "newer than the
    built-in" does not choose: V does. A release of any other version, or one failing a check, is not installed, and the answer
-   says why in words; nothing is uploaded. Answers `{version, source | bytes + sha, from, man, limits}` like selectRelease, or `{stop}`. */
+   says why in words; nothing is uploaded. Answers `{version, blob, capable, sha?, from, man, limits}` like selectRelease, or `{stop}`. */
 async function selectChosen(emit, V) {
   emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
   const stop = (why) => { emit.no("rel"); return { stop: why }; };
@@ -200,10 +216,10 @@ async function selectChosen(emit, V) {
     emit.ok("rel", UPDATE_WORDS.progressVerified(V));
     return { version: V, ...rest, from: "repository", man, limits: lim.limits };
   }
-  const lim = planeLimits(RELEASE_SOURCE);
+  const lim = planeLimits(RELEASE_BINARY);
   if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
   emit.ok("rel", UPDATE_WORDS.progressVerified(V));
-  return { version: V, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
+  return { version: V, ...builtInRelease(), from: "built-in", man, limits: lim.limits };
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -385,16 +401,10 @@ async function scriptHash(token, acct, slug) {
   return hex(await crypto.subtle.digest("SHA-256", bytes));
 }
 /* The hash of the bytes a release uploads: a repository release carries the one it was verified against; the built-in
-   release's is taken once (its bytes are encoded once for it, and not kept). */
-let builtInSha = null;
+   release's is taken from its Blob once, and kept on the release. */
 async function releaseSha(release) {
-  if (release.sha) return release.sha;
-  return (builtInSha ??= hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source))));
+  return (release.sha ??= hex(await crypto.subtle.digest("SHA-256", await release.blob.arrayBuffer())));
 }
-/* What a release uploads (the repository's verified bytes as one Blob, or the built-in's string) and whether it can report
-   builds (read once, from the bytes, when a repository release was verified). */
-const planeOf = (release) => release.blob ?? release.source;
-const canReport = (release) => release.capable ?? reportsBuilds(release.source);
 /* After a plane upload the account accepted: up to three reads, stopping at the first that matches. Answers null when the
    bytes are the release's, else the lag to name (R15's list: no success is claimed while it stands). */
 async function readBack(token, acct, slug, release) {
@@ -693,7 +703,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   };
   return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, planeOf(release)) });
+    { method: "PUT", body: uploadForm(meta, release.blob) });
 }
 
 /* The update path. No fork, no CI/CD: the wizard re-uploads the current
@@ -776,7 +786,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
   };
   return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, planeOf(release)) });
+    { method: "PUT", body: uploadForm(meta, release.blob) });
 }
 
 
@@ -1745,7 +1755,7 @@ async function runInstall(emit, code, saved) {
   /* D-116: answering is not serving. Once the address answers, each part's OWN build is read back — the record
      store's, and each capability worker's through the plane's binding — and a part that is not on this release is
      named. A release that cannot report those builds says so (UNDETERMINED_BUILDS) rather than claiming them. */
-  const capable = canReport(release);
+  const capable = release.capable;
   /* An install has always taken the selftest as its "answers"; a release that cannot report builds adds nothing to
      read, so the verdict is the selftest's plus the stated undetermined remainder — no new refusal is invented. */
   /* DIST-6: a bindable member whose upload failed is a lag on either branch, never a success over it. */
@@ -2033,7 +2043,7 @@ async function runUpdate(emit0, code, saved) {
   /* D-116: confirmed means EVERY part answers the release — the address, the record store, and each capability
      worker through the plane's binding (verifyServing). The patient tone stays, because a rollout genuinely takes
      minutes; what goes is reporting an update as done while a named part still runs the old build. */
-  const capable = canReport(release);
+  const capable = release.capable;
   let verdict = null;
   if (base) {
     emit.step("verify", UPDATE_WORDS.progressAnswers);
