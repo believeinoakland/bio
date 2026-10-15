@@ -3,15 +3,14 @@
  * subject guard, R22 the original by its SHA-256 (the document's own link tests are in document.test.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { ok, refusedIn, silent, ADMIN } from "../interface-shell/harness.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
-import { open, main, plane, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
+import { open, main, plane, says, word, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
 
 const RUN = "RUN-" + "b".repeat(16);
 const text = (el) => el.textContent;
-const section = (p, head) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === head);
+const section = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
 const heads = (p) => main(p).querySelectorAll("section").map((s) => s.querySelector("h2").textContent);
 
 /* ---- R17: the dock's bars and meters (screens-settings R26's render, handed in as `view.parts`, a stand-in here) ---- */
@@ -49,7 +48,7 @@ test("R17 a project's account she owns draws its bars; a refusal as a non-owner 
 
 test("R17 the group's key draws its bars to an administrator; a member who does not administer reads and draws none", async () => {
   const member = await dock(Q);
-  assert.match(text(panel(member)), /your group's key/);
+  assert.ok(says(panel(member), "ai.account.group.inline"));
   assert.equal(member.byOp("aiuseovertime").length, 0, "no read is made for an account she does not own");
   assert.ok(!bars(member));
   const admin = await dock(Q, {}, ok(ADMIN));
@@ -71,7 +70,7 @@ function kit(refs, answer) {
     : k === "esc" || k === "w" ? (x) => String(x) : k === "sec" ? (t, inner) => inner : k === "sheet" ? (x) => x
     : k === "row" ? (...a) => a.join("") : k === "date" ? () => "" : () => "") });
 }
-const projectView = (plans) => ({ subject: P, ui: { plans }, data: {}, me: { handle: "mai" } });
+const projectView = (plans) => ({ subject: P, ui: { plans }, data: {}, me: { handle: "mai" }, parts: SCREENS.find((s) => s.id === "project").parts });
 const PROJECT = SCREENS.find((s) => s.id === "project");
 
 test("R18 a plan opened in the project is a reference link to the plan screen, with the plan as subject; opening one sends nothing", () => {
@@ -91,14 +90,11 @@ test("R18 controls: a project with no plan draws no plan link; a kind the shell 
   assert.match(unlinked, /Options/);
 });
 
-/* ---- R19: the held texts ---- */
-test("R19 the module holds no copy of a words.json word, and no held text is spelled \"labelled\"", () => {
-  const words = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
-  const carried = new Set(words.map((w) => w.key));
-  for (const [key, en] of SCREEN_WORDS) {
-    assert.ok(!carried.has(key), `${key} is words.json's: dropped here`);
-    assert.doesNotMatch(en, /labelled/i, key);
-  }
+/* ---- R19: the held texts, since R44 held nowhere: the module holds no word of its own (words.test.mjs) ---- */
+test("R19 the module holds no copy of a words.json word, and none spelled \"labelled\"", () => {
+  assert.deepEqual(SCREEN_WORDS, [], "no row of its own (R44)");
+  for (const s of SCREENS) for (const k of s.words) assert.equal(typeof k, "string", `${s.id}: ${k} is a key`);
+  for (const s of SCREENS) for (const k of s.words) assert.doesNotMatch(word(k, new Proxy({}, { get: () => "x", has: () => true, getOwnPropertyDescriptor: () => ({ value: "x", configurable: true, enumerable: true }) })), /labelled/i, k);
   assert.ok(SCREENS.find((s) => s.id === "document").words.includes("act.pagetranscribe.does"), "the document draws the carried word by its key");
 });
 
@@ -130,7 +126,7 @@ test("R20 every labelled field is drawn with cs.field: no screen draws cs-form o
 });
 
 test("R20 over an empty fixture no section is drawn empty and no count is drawn at zero", async () => {
-  const bare = { image: (r) => ok({ "bundle.md": r.query.id === Q ? inquiryMd(P, []) : r.query.id === D ? DOCUMENT_MD : "" }) };
+  const bare = { image: (r) => ok({ "bundle.md": r.query.id === Q ? inquiryMd(P, [], { legs: [] }) : r.query.id === D ? DOCUMENT_MD : "" }) };
   const project = await open("/app/project/" + P, { plane: { projectstage: ok({ ok: true, project: P, stage: "forming", questions: { read: 0, with_legs: 0, concluded: 0 } }),
     projectquestions: ok({ ok: true, project: P, items: [], cursor: null }), list: ok({ bundles: [] }),
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: true }] }) } });
@@ -138,32 +134,32 @@ test("R20 over an empty fixture no section is drawn empty and no count is drawn 
     hypotheses: ok({ ok: true, inquiry: Q, hypotheses: [] }) } });
   const document = await open("/app/document/" + D, { plane: { reading: ok(READING({ reading: { passages: [], people: [] }, unread_pages: [] })),
     backlinks: ok({ ok: true, target: D, backlinks: [] }), versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
-  for (const [p, absent] of [[project, ["Questions from elsewhere"]], [question, ["Cuts against", "What it waits on"]],
-                             [document, ["Passages", "People it names", "Its versions", "What cites it", "Pages your group's Civicsmith couldn't read"]]]) {
-    for (const h of absent) assert.ok(!heads(p).includes(h), `${h} is not drawn`);
+  for (const [p, absent] of [[project, ["screen.project.draw.head"]], [question, ["screen.question.against.head", "screen.question.waits.head"]],
+                             [document, ["screen.document.passages.head", "screen.document.people.head", "screen.document.versions.head", "screen.document.backlinks.head", "screen.document.unread.head"]]]) {
+    for (const h of absent) assert.ok(!heads(p).includes(word(h)), `${h} is not drawn`);
     for (const s of main(p).querySelectorAll("section")) assert.ok(text(s).length > text(s.querySelector("h2")).length, `${text(s.querySelector("h2"))} holds something`);
-    assert.doesNotMatch(text(main(p)), /\b0 (questions|resting|concluded)\b|Nothing here yet|No hunches kept|Nobody has joined/);
+    for (const k of ["screen.project.stage.read", "screen.project.stage.legs", "screen.project.stage.concluded"]) assert.ok(!says(main(p), k, { count: "0" }), `${k} at zero`);
   }
   const dockP = await dock(Q, { aiusage: ok({ ok: true, today: { used: "$0.00", limit: "$2.00" } }) });
-  assert.doesNotMatch(text(panel(dockP)), /of your/, "no use today, no count");
-  assert.ok(!panel(dockP).querySelectorAll("section").some((s) => text(s.querySelector("h2")) === "What it produced"), "no productions, no section");
+  assert.ok(!says(panel(dockP), "screen.assistant.use", { used: "$0.00", limit: "$2.00" }), "no use today, no count");
+  assert.ok(!panel(dockP).querySelectorAll("section").some((s) => text(s.querySelector("h2")) === word("screen.assistant.productions.head")), "no productions, no section");
 });
 
 test("R20 controls: a read that failed is still drawn failed, beside the rest, in a section that is kept", async () => {
   const q = await open("/app/question/" + Q, { plane: { questionwaits: refusedIn("SOME_REFUSAL", "The plane refused this read.") } });
-  assert.ok(section(q, "What it waits on").querySelector('[data-state="failed"]'));
+  assert.ok(section(q, "screen.question.waits.head").querySelector('[data-state="failed"]'));
   const d = await open("/app/document/" + D, { plane: { backlinks: refusedIn("SOME_REFUSAL", "The plane refused this read."), versionchain: silent } });
-  assert.ok(section(d, "What cites it").querySelector('[data-state="failed"]'));
-  assert.ok(section(d, "Its versions").querySelector('[data-state="failed"]'));
+  assert.ok(section(d, "screen.document.backlinks.head").querySelector('[data-state="failed"]'));
+  assert.ok(section(d, "screen.document.versions.head").querySelector('[data-state="failed"]'));
 });
 
 /* ---- R21: the subject guard ---- */
 test("R21 project, question, projectai and document mark their subject read, and drawn bare each draws nothing of its own", () => {
-  const SUBJECT = { project: "project", question: "inquiry", projectai: "project", document: "capture" };
-  for (const [id, key] of Object.entries(SUBJECT)) {
+  const SUBJECT = { project: ["stage", "projectstage"], question: ["inquiry", "image"], projectai: ["project", "image"], document: ["capture", "image"] };
+  for (const [id, [key, op]] of Object.entries(SUBJECT)) {
     const s = SCREENS.find((x) => x.id === id);
     const r = s.reads({ subject: "X-1" });
-    assert.deepEqual([r[key].subject, r[key].op], [true, "image"], `${id}: ${key} marks the subject`);
+    assert.deepEqual([r[key].subject, r[key].op], [true, op], `${id}: ${key} marks the subject`);
     assert.equal(Object.values(r).filter((x) => x.subject === true).length, 1, `${id}: only the subject read is marked`);
     const refs = [];
     assert.equal(s.render(kit(refs, () => ""), { subject: "", ui: {}, data: {}, me: {} }), "", `${id} bare draws no heading, refusal block or form`);
