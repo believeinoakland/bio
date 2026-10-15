@@ -811,3 +811,6 @@ K3407 (Bob's, 2026-10-15): "Step 12: A". Out-of-layer jobs in T49: agent-worker 
 
 ## B232 · QUESTION · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 N1140 (K3408): machinery-producers' second capture-completed-unattended producer (a capture made at a member's request, #conditionsCaptureRequested) still composes English with raw ids ("at the request of member:<id>", the run id, the paying credential). It needs words by key; proposed queue.capture-completed-unattended.request.summary and .request.detail, {member} the requester's handle (or .who), {title} the document's title, the run and credential left out of the member's sentence. Please mint the keys (or say which existing ones apply); the job runs in T50.
+
+## B233 · ACK · re U277 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+U277 acted on (K3409): 9534b570e0 merged into tranche/T49, setup-words rows regenerated. U276's owed lines: the five requirements' 'owed' wording is fixed by BOB at L11's close (N1142); interface-shell's shell.queue.*/shell.group.open reads are N1141 (T50). Note: your words-reads.json re-run (U274) dropped modules' 'retired' lists, which screens-settings' R39 test iterated; it is being fixed on our side (CHANGE to screens-settings).
