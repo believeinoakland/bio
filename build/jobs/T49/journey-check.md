@@ -100,3 +100,7 @@ B8: walked to the end on the merged tranche, 105 steps, 7 failures; R9 steps 1�
 ## J8 · COMPLETE
 
 T49-32 complete at B8; owners in J7. I re-walk and shape the fake model past step 9 at your next CHANGE.
+
+## After B9 (K3393)
+
+The claim's handle is filled whenever the claim asks one: the step waits for the claim's form before reading whether it holds `su-handle` (it read it before the form was drawn, a race), and a walk with no handle chosen claims with the walk's own (`FOUNDER_HANDLE`). Walk on `tranche/T49` (merge 719aa91b7f): 105 steps, 7 failures; step "1 · setup: claim with her own handle" holds. The open failures are J7's, unchanged: step 8 (extraction, C-45.2) and step 9 (credentials R63, C-29.15).
