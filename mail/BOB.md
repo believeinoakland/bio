@@ -814,3 +814,6 @@ N1140 (K3408): machinery-producers' second capture-completed-unattended producer
 
 ## B233 · ACK · re U277 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 U277 acted on (K3409): 9534b570e0 merged into tranche/T49, setup-words rows regenerated. U276's owed lines: the five requirements' 'owed' wording is fixed by BOB at L11's close (N1142); interface-shell's shell.queue.*/shell.group.open reads are N1141 (T50). Note: your words-reads.json re-run (U274) dropped modules' 'retired' lists, which screens-settings' R39 test iterated; it is being fixed on our side (CHANGE to screens-settings).
+
+## B234 · ACK · re U278 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+U278 (DEC-274) folded into N1140 (K3410), machinery-producers in T50; it reads the keys once your next MERGE lands.
