@@ -25,7 +25,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../record-grammar/actors.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, Membership } from "../membership/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf, ACQUIRE_GRADE_NOTE } from "../capture/index.mjs";
@@ -34,6 +34,7 @@ import { monitoringOf } from "../monitoring/index.mjs";
 import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
@@ -471,6 +472,14 @@ export class MachineryProducers {
       + `names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
   }
 
+  /** R13 (T49; DEC-272): what `{member}` says of the person who started a capture: the handle the founder or a member holds,
+   *  or, with none held (a credential that is no member, or a member with no handle), the word for an unnamed starter. The
+   *  id is never said: a member's id is their record's key, not their name. */
+  #starterOf(author) {
+    const handle = author === Membership.ROOT_ADMIN ? this.#membership.founderHandle() : this.#membership.memberFacts(author)?.handle;
+    return handle || word("queue.capture-completed-unattended.who");
+  }
+
   /** `capture-completed-unattended` (D-61, closed by REC-2).
    *
    *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
@@ -525,17 +534,17 @@ export class MachineryProducers {
       const createdMs = Date.parse(latest.created);
       const title = this.#record.bundleInfo(b.bundle_id);
       const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
+      /* R13 (T49; N1138; DEC-272): the words are read by key, the starter by handle and the title by its own, never an id. */
+      const fills = { member: this.#starterOf(started.author),
+                      title: title && title.title ? title.title : word("screen.held.untitled") };
       out.push({
         id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
         class: "CONDITION",
         kind: "capture-completed-unattended",
         case: this.#conditionHomes([b.bundle_id], viewer),
         subject: { kind: "bundle", id: b.bundle_id },
-        summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended `
-               + `writer after ${started.author} left it`,
-        detail: `${started.author} authored this document and an unattended writer (${latest.author}) `
-              + "wrote the most recent revision, which is the shape D-61 describes: a capture a member "
-              + "walked away from has completed. Nothing is claimed about whether the result is right."
+        summary: word("queue.capture-completed-unattended.summary", fills),
+        detail: word("queue.capture-completed-unattended.detail", fills)
               + MachineryProducers.#gradeNoteSentence(notes),
         basis: { source: "manifest", bundle_id: b.bundle_id,
                  completed_by: latest.author, completed_snap_key: latest.snap_key,

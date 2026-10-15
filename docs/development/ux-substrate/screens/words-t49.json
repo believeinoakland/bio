@@ -2588,9 +2588,9 @@
   },
   {
    "key": "translate.undetermined.language",
-   "en": "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.",
+   "en": "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.",
    "protected": false,
-   "note": "DEC-258: plane's ask: readtranslate"
+   "note": "DEC-258: plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)"
   },
   {
    "key": "consequence.attribute",
@@ -3335,6 +3335,60 @@
    "en": "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.",
    "protected": true,
    "note": "DEC-270: Bob approved this text (DEC-270); a change is his"
+  },
+  {
+   "key": "queue.capture-completed-unattended.summary",
+   "en": "A capture finished after {member} left it: {title}",
+   "protected": false,
+   "note": "DEC-272: machinery-producers' capture-completed-unattended; {title} the document's title, never its record id"
+  },
+  {
+   "key": "queue.capture-completed-unattended.detail",
+   "en": "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-272: machinery-producers' capture-completed-unattended"
+  },
+  {
+   "key": "queue.capture-completed-unattended.who",
+   "en": "your group's Civicsmith",
+   "protected": false,
+   "note": "DEC-272: {member} when the capture was started by a credential that is no member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.summary",
+   "en": "Captured at {member}'s request: {title}",
+   "protected": false,
+   "note": "DEC-274: a capture a member asked for, or the assistant asked for while working for that member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.summary.unnamed",
+   "en": "Captured at a request: {title}",
+   "protected": false,
+   "note": "DEC-274: the summary when the request names no member (a credential that is no member asked)"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail",
+   "en": "{member} asked for this document, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: a member's own request (capture-requests R56)"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail.assistant",
+   "en": "The assistant asked for this document while working for {member}, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: a run's request; the account that paid and the run are on the run's own record, never in this sentence"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail.unnamed",
+   "en": "This document was asked for, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: the detail when the request names no member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.gradenote",
+   "en": "When it was captured, a member there would have read this note on it: {note}",
+   "protected": false,
+   "note": "DEC-274: appended to either producer's detail once per distinct grade note; {note} the note's own words; never a fingerprint"
   }
  ],
  "retired": [

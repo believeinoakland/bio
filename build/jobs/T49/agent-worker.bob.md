@@ -1,6 +1,6 @@
 # BOB to agent-worker (T49)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,12 @@ Option (a) (K3351): no model address is added anywhere; journey-check binds a st
 ## B3 · CHANGE
 
 ai-runs is merged into tranche/T49 (K3351). Merge tranche/T49 into your branch, re-run your tests (REC100-0/1b/2/2b/2c are accepted until T49-29), and post COMPLETE again.
+
+## B4 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T49), "Out of layer": **T49-37 · agent-worker**. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/agent-worker.md` (read whole); R90 is marked *(not yet met: T49)* and is yours to meet.
+BOB's notes: (N1137; K3402; JOURNEY-CHECK #4 J10) At journey step 12 the founder's accept leads to `conclude`, refused NO_BASIS (C-33.40): compose's facts name each held document only by its `address_norm`, never the record id a leg's `target` takes (`run-productions` R1, R9), so the model cannot name the leg the accepted reading rests on. R90: `collect`'s holdings carry each held document's record id beside its address, and `compose`'s facts pass it on. Owner: agent-worker (facts), not agent-harness (a read tool at compose), as the smaller change; if you find the facts cannot carry it without a change to a module you use, say so in a QUESTION before building. R21's UNDETERMINED for a citation whose read is refused stands; the control is required.
+Reading set (mechanics §17, K3271): read your requirements whole, your entry, your layer contract, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; run your other tests without reading them. If what your entry touches still exceeds what you can read, have helpers in your session read it in full and write you a digest citing each section (K2032). State in your record how the set was read. Never stop your test run midway: its negative controls mutate the working tree (K1994).
+Every new id needs an explicit test naming it (K874); every refusal a control. Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here.
+Out of layer (Bob's approval, K3407): merge tranche/T49 into your branch first (it carries every later layer); also run the L11 screens' tests that read your module and journey-check's local arm (after `npm ci` in `bio-plane/src/journey-check`) before COMPLETE; the agent-worker bundle goes stale (report it; BOB regenerates at L11's close).

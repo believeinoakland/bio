@@ -87,5 +87,5 @@ const row = (a, b, c = '', meta = '') => `<div class="cs-row">${a}<span>${b}</sp
 const note = t => `<p class="mk-note">${t}</p>`;
 const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
 const machine = (who, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · the assistant, at ${who === 'you' ? 'your request' : esc(who) + '\'s request'}</span></div>`;
-const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}${n} wizard${n > 1 ? 's' : ''} start here</button>`;
+const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}${n} wizard${n > 1 ? 's start' : ' starts'} here</button>`;
 const crumbs = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map(esc).join(' <i>›</i> ')}</nav>`;

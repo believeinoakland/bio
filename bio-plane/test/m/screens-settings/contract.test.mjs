@@ -70,7 +70,8 @@ test("R39 words by key: the module holds no row, every key it reads is a word of
   const reads = READS();
   for (const k of reads.reads) assert.ok(KEYS.includes(k), `${k} is a key this module reads`);
   for (const k of KEYS) assert.ok(hasWord(k), `${k} is a word`);
-  for (const k of reads.retired) assert.ok(!KEYS.includes(k) && !hasWord(k), `${k} is retired`);
+  // the design's list no longer carries a retired list; the one row known retired stays asserted absent by name (DEC-256)
+  for (const k of [...(reads.retired ?? []), "screen.updates.skip.noreason"]) assert.ok(!KEYS.includes(k) && !hasWord(k), `${k} is retired`);
   for (const s of SCREENS) for (const k of s.words) {
     assert.equal(typeof k, "string", `${s.id}: its words are keys, never rows`);
     assert.ok(hasWord(k), `${s.id}: ${k}`);
@@ -78,7 +79,7 @@ test("R39 words by key: the module holds no row, every key it reads is a word of
   // the keys the requirements name besides the reads list
   for (const k of ["refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "member.founder.unnamed.help", "connect.ifnot", "connect.notnow", "refusal.reference", "updates.running.release_setup", "updates.earlier.installed_setup"])
     assert.ok(hasWord(k), k);
-  assert.equal(reads.unkeyed.length, 0, "no string stays in source");
+  assert.equal((reads.unkeyed ?? []).length, 0, "no string stays in source");
 });
 
 test("R39 what a screen draws for a sample of its keys equals word(key, vars)", async () => {

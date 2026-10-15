@@ -6134,9 +6134,9 @@
   },
   {
    "key": "refusal.GROUP_KIND_UNKNOWN",
-   "en": "A group says what kind it is from the list: professional, issue-specific, neighbourhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
+   "en": "A group says what kind it is from the list: professional, issue-specific, neighborhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: membership, refusal by its code"
+   "note": "DEC-260: membership, refusal by its code; American English, DEC-273"
   },
   {
    "key": "refusal.GROUP_KIND_OTHER_EMPTY",
@@ -6176,9 +6176,9 @@
   },
   {
    "key": "refusal.BAD_MEMBER_ID",
-   "en": "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they enrol.",
+   "en": "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they join.",
    "protected": false,
-   "note": "DEC-260: membership, refusal by its code"
+   "note": "DEC-260: membership, refusal by its code; American English, DEC-273"
   },
   {
    "key": "refusal.EXISTS",
@@ -6512,9 +6512,9 @@
   },
   {
    "key": "refusal.START_RUMOUR_AS_QUESTION",
-   "en": "A rumour is followed as a lead, never put as a question about a person. This proposal put one as a question, so it was not offered.",
+   "en": "A rumor is followed as a lead, never put as a question about a person. This proposal put one as a question, so it was not offered.",
    "protected": false,
-   "note": "DEC-260: wizard-scripts, refusal by its code"
+   "note": "DEC-260: wizard-scripts, refusal by its code; American English, DEC-273"
   },
   {
    "key": "wizard-scripts.why.steps_list",
@@ -8357,12 +8357,6 @@
    "en": "The grade note of {captures} it names ({x}), as a member present would have read it: {note}",
    "protected": false,
    "note": "DEC-260: machinery-producers, .map()#0"
-  },
-  {
-   "key": "machinery-producers.summary.completed_unattended_writer",
-   "en": "{bundle_id} was completed by an unattended writer after {author} left it",
-   "protected": false,
-   "note": "DEC-260: machinery-producers, summary"
   },
   {
    "key": "machinery-producers.summary.captured_daemon_investigative",

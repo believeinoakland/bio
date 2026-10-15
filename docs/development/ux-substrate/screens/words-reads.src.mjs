@@ -226,6 +226,7 @@ function match(text) {
 /* Each: [module, file, how + text, key | {why}]. how: "=" the whole text, "^" its start, "~" anywhere in it. A decision
    comes before a match by English (plane's legacy screen titles match unrelated words by accident). */
 const WHY = {
+  filegrammar: "the record file's own grammar (its front matter and section labels, as record-grammar parses them), not member prose; the sentences inside it are keyed (DEC-272)",
   grade: "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does",
   harness: "the journey walk's test harness: its fixtures, steps and findings; no member reads it",
   generated: "a comment written into a generated asset",
@@ -246,6 +247,10 @@ const WHY = {
 };
 const dev = (k) => ({ why: WHY[k] });
 const DECISIONS = [
+  // DEC-272: on T49 after L11's merges, the record files' own grammar
+  ["screens-daily", "screens-daily/queue.mjs", "^--- object_type: inquiry", dev("filegrammar")],
+  ["screens-daily", "screens-daily/start-project.mjs", "^--- object_type: project", dev("filegrammar")],
+  ["control-plane", "control-plane/archive.mjs", "^Changes: ${…}", dev("filegrammar")],
   // op-grades' four statements and affordances' drifted act.queuemute.does now read their keys in the source (OP-GRADES #11,
   // AFFORDANCES #34, merged K3375): DEC-263 drops their decisions, the keys being read as literals; a client's usage hint
   ["affordances", "affordances/facts.mjs", "^affordances are asked of an object", dev("apiuse")],
@@ -467,7 +472,16 @@ for (const m of MODULES) {
   out.modules[m] = { reads: list, counts: { reads: list.length, minted: list.filter((k) => MINTED.has(k)).length, ...c },
     unkeyed, ...(retired.size ? { retired: [...retired].sort() } : {}), ...(Object.keys(renamed).length ? { renamed } : {}) };
 }
-DECISIONS.forEach((d, i) => { if (!used.has(i)) problems.push(`decision ${i} (${d[0]}, ${d[1]}, ${d[2].slice(0, 60)}) found no string`); });
+/* DEC-272: a decision whose string its module no longer holds (the module now reads keys, K3366) is retired, not a failure,
+   when it named an unkeyed string or its key is still among the module's reads; it fails when the key it gave is no longer read. */
+let retiredDecisions = 0;
+DECISIONS.forEach((d, i) => {
+  if (used.has(i)) return;
+  const [dm, , spec, target] = d;
+  if (typeof target !== "string" || (out.modules[dm] && out.modules[dm].reads.includes(target))) { retiredDecisions++; return; }
+  problems.push(`decision ${i} (${dm}, ${d[1]}, ${spec.slice(0, 60)}) found no string, and ${dm} no longer reads ${target}`);
+});
+if (retiredDecisions) console.log(`${retiredDecisions} decisions retired: their modules now hold keys, not those strings`);
 // DEC-260: the other modules, keyed in batches; each batch's words-reads-mod-<n>.json gives its modules' reads, unkeyed
 // and renamed, and every key it lists must be a word as here.
 for (const f of fs.readdirSync(HERE).filter((f) => /^words-reads-mod-\d+\.json$/.test(f)).sort()) {

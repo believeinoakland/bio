@@ -189,7 +189,7 @@ w('stake.unreadable', 'Civicsmith can\'t read this stake right now; it is not le
 
 # DEC-232: the words BOB asked for in B188 to B194 (T48 and T49), each by its key; BOB's interim words read until these land
 w('signing.openrequest.noquote', '{whom}\'s reply asks not to be quoted, so the case says what it says without quoting its words.', True, 'DEC-232: B188 (1); case-inputs R18, N1076; protected like its siblings (DEC-194)')
-w('translate.read', 'Read in my language', False, 'DEC-232: B188 (2), N670; the control beside a passage, note, question, finding or notice (readtranslate)')
+w('translate.read', 'Read in my language', False, 'DEC-232: B188 (2), N670; the control beside a note, question, finding or notice (readtranslate; plane R50; DEC-273)')
 w('translate.label', 'Machine translation · original in {language}', True, 'DEC-232: the label on every translated text')
 w('translate.label.help', 'Translated by a machine for you to read; it may be wrong. The original is the record: show it to check a word, and quote only the original.', False, 'DEC-232')
 w('translate.original', 'Show the original', False, 'DEC-232')

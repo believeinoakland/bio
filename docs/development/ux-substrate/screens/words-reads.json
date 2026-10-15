@@ -5409,7 +5409,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 11823
+    "generatedRows": 12175
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5428,43 +5428,43 @@
    "unkeyed": [
     {
      "file": "op-declarations/index.mjs",
-     "line": 3373,
+     "line": 2482,
      "text": "src/control-plane/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside SESSION_OPS, purge above all, still requires a machine credential.'",
      "why": "a provenance quote for builders: where an op's admission was ruled"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3375,
+     "line": 2484,
      "text": "src/control-plane/ops.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
      "why": "a provenance quote for builders: where an op's admission was ruled"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3380,
+     "line": 2489,
      "text": "src/control-plane/ops.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member reaching for it by hand would be a person doing the daemon's job with the daemon's conduct rules applied to them.'",
      "why": "a provenance quote for builders: where an op's admission was ruled"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3391,
+     "line": 2500,
      "text": "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/livefire.mjs, header: 'the only channel available for reaching a deployment may be a plain fetch of a URL. Confined to the scratch namespace' — the deployment's live-fire battery, addressed to the operator's credential.",
      "why": "a provenance quote for builders: where an op's admission was ruled"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3404,
+     "line": 2513,
      "text": "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed because a deploy runs the bounded pass once at construction and a large store may need more than one' — a deploy's maintenance pass, addressed to the operator's credential.",
      "why": "a provenance quote for builders: where an op's admission was ruled"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3480,
+     "line": 2592,
      "text": "A read a screen draws from: no control on a screen offers it as an act.",
      "why": "a builder's ground for an op no control offers; no screen draws it"
     },
     {
      "file": "op-declarations/index.mjs",
-     "line": 3518,
+     "line": 2627,
      "text": "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check, a wizard's progress, a capture a tool files (the screen's upload is captureupload), or the mark a screen records of itself when it opens (Home's lookedsince).",
      "why": "a builder's ground for an op no control offers; no screen draws it"
     }
@@ -5472,248 +5472,238 @@
   },
   "admission": {
    "reads": [
-    "refusal.AI_BEYOND_TASK_SCOPE",
-    "refusal.AI_CONFINEMENT_NOT_SCRATCH",
-    "refusal.AI_CREDENTIAL_EXPIRED",
-    "refusal.AI_CREDENTIAL_REVOKED",
-    "refusal.AI_SCOPE_BEYOND_MEMBER_REACH",
-    "refusal.AI_SCOPE_UNKNOWN_OP",
-    "refusal.CLASS_FORBIDDEN",
-    "refusal.CREDENTIAL_IN_ADDRESS",
-    "refusal.DOOR_RATE_LIMITED",
-    "refusal.DOOR_RATE_LIMITED.session",
-    "refusal.GROUP_IDENTITY_NEEDS_SESSION",
-    "refusal.MACHINE_CREDENTIAL_REQUIRED",
-    "refusal.MEMBER_TOKEN_RETIRED",
-    "refusal.NAMESPACE_CONFINED",
-    "refusal.NAMESPACE_PINNED",
-    "refusal.NAMESPACE_UNKNOWN",
-    "refusal.NOT_AUTHENTICATED",
-    "refusal.NOT_CAPABLE",
-    "refusal.OPERATOR_TOKEN_CANNOT_GOVERN",
-    "refusal.ROOT_OF_TRUST_REQUIRED",
-    "refusal.SCOPE_REFUSED",
-    "refusal.SESSION_ROLE_CANNOT_REACH_OP",
-    "refusal.SESSION_ROUTE_NOT_RECORDED"
+    "refusal.DOOR_RATE_LIMITED.session"
    ],
    "counts": {
-    "reads": 23,
-    "minted": 21,
+    "reads": 1,
+    "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 57,
-    "inlineKeyed": 22,
-    "inlineUnkeyed": 35
+    "literalKeys": 1,
+    "inline": 37,
+    "inlineKeyed": 0,
+    "inlineUnkeyed": 37
    },
    "unkeyed": [
     {
      "file": "admission/index.mjs",
-     "line": 86,
+     "line": 93,
      "text": "no namespace ${…} exists on this instance",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 108,
+     "line": 115,
      "text": "op=${…} always answers from the bio namespace and has no ${…} counterpart; nothing was read or written",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 164,
+     "line": 171,
      "text": "credential '${…}' is confined to the ${…} namespace for its whole life and cannot address ${…}; nothing was read or written",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 184,
+     "line": 191,
      "text": "no namespace ${…} exists on this instance; the namespaces are ${…}",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 185,
+     "line": 192,
      "text": "probe class is confined to the ${…} namespace, refused request for ${…}",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 237,
+     "line": 244,
      "text": "a credential was sent in the request's address; send it in the Authorization header or the body",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 238,
+     "line": 245,
      "text": "this request's web address names ${…}, and a credential or a secret is read only from the request's Authorization header (`Bearer",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 238,
+     "line": 245,
      "text": "`) or its JSON body, never from its address, where it is kept in logs and browser history. It was not read, compared or looked up, and nothing was read or written.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 375,
+     "line": 382,
      "text": "credential '${…}' was withdrawn on ${…} by ${…}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 384,
+     "line": 391,
      "text": "credential '${…}' expired on ${…}. An agent credential lives for the days it was minted with and is never renewed: a member mints a new one to replace it, and the entry stays, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 391,
+     "line": 398,
      "text": "no member of this group reaches '${…}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 400,
+     "line": 407,
      "text": "'${…}' answers who a source is, so a member's reach alone does not hand it to an agent: credential '${…}' declares the task scope '${…}', which does not name it. Naming it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 408,
+     "line": 415,
      "text": "credential '${…}' declares the task scope '${…}', whose writes are ${…}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 416,
+     "line": 423,
      "text": "credential '${…}' was made for one run, and writes only to it. This request ${…}, so nothing was written. A run's credential is made by the plane when the member starts that run, and ends with it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 454,
+     "line": 461,
      "text": "'${…}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 461,
+     "line": 468,
      "text": "'${…}' is reached by a member only from that member's own signed-in session, and no agent credential is among the credentials it admits, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: its OPS row names the credentials that reach it, and an agent's is not one.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 465,
+     "line": 472,
      "text": "'${…}' is not reachable by a member of this group, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 487,
+     "line": 494,
      "text": "'${…}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${…}; ${…} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 550,
+     "line": 557,
      "text": "this operation is reserved to the founder's session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 551,
+     "line": 558,
      "text": "'${…}' is reachable from a signed-in session, but only the founder's: the password session made when this instance was claimed with its root credential. This is a member's session, which is what every enrolled member signs in with, an administrator of this group included — so an administrator's session is refused this exactly as this one is, and nothing here says whether you are one. There is no machine credential to go and find: the founder performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 560,
+     "line": 567,
      "text": "this operation is reserved to a member's own session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 561,
+     "line": 568,
      "text": "'${…}' is reachable from a signed-in session, but only a member's own, and this is the founder's session. There is no machine credential to go and find: a member performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 568,
+     "line": 575,
      "text": "this operation requires a machine credential, not a signed-in session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 576,
+     "line": 583,
      "text": "no signed-in session reaches this operation, and no decision on record says why",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 577,
+     "line": 584,
      "text": "'${…}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 601,
+     "line": 608,
      "text": "creating a project needs the create-projects capability. This account may still contribute to projects it has been invited to, if it holds contribute.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 641,
+     "line": 648,
      "text": "the shared member key is retired",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 642,
+     "line": 649,
      "text": "this request presented the group's shared member key, which is retired: it no longer signs anybody in, and nothing was read or written. A member signs in with their own password, and an agent uses an agent credential a member creates for it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 660,
+     "line": 667,
      "text": "a full working-corpus export needs the ADMIN_TOKEN-class credential itself, not a signed-in session, and not in-app administrator status. A session is derived from a password; the root of trust is the token held in the hosting account. This refuses the founder's own browser too, which is the one place in this system where being the founder is not enough. The published record needs no credential at all: see op=publishedmanifest.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 685,
+     "line": 692,
      "text": "forbidden for token class",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 694,
+     "line": 701,
      "text": "this account does not hold the ${…} capability. Capabilities are set by an administrator, so ask one to grant it rather than looking for another route.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 773,
+     "line": 780,
      "text": "section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's `${…}`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus §4.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 784,
+     "line": 791,
      "text": "the group's display name and its domain claim are set by a named administrator's own signed-in session, and the record names who set each one (Publication §7). The credential that asked is the operator's `${…}`-class bearer token, which holds no place on the roster. Nothing was changed.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 868,
+     "line": 875,
      "text": "at most ${…} requests from one source in any ${…} minutes",
      "why": "DOOR_WINDOW_STATED, the limit as a field beside DOOR_RATE_LIMITED; the member reads refusal.DOOR_RATE_LIMITED, which carries {minutes}"
     },
     {
      "file": "admission/index.mjs",
-     "line": 898,
-     "text": "too many requests to the operations anyone may call reached this group's Civicsmith from one source in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in ${…} seconds.",
+     "line": 885,
+     "text": "at most ${…} requests from one signed-in session in any ${…} minutes",
+     "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
+    },
+    {
+     "file": "admission/index.mjs",
+     "line": 917,
+     "text": "this signed-in session",
+     "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
+    },
+    {
+     "file": "admission/index.mjs",
+     "line": 921,
+     "text": "too many requests to the operations anyone may call reached this group's Civicsmith from ${…} in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in ${…} seconds.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     }
    ]
@@ -5748,6 +5738,7 @@
    "reads": [
     "date.daymonth",
     "date.daymonthyear",
+    "instance.test.band",
     "instance.test.notice",
     "level.pause.name",
     "level.prompt.name",
@@ -5759,6 +5750,7 @@
     "mark.outward.means",
     "mark.path.working.means",
     "mark.path.working.name",
+    "refusal.reference",
     "screen.account.name",
     "screen.action.name",
     "screen.answers.name",
@@ -5779,6 +5771,7 @@
     "screen.matter.name",
     "screen.members.name",
     "screen.money.name",
+    "screen.more.sub",
     "screen.notes.name",
     "screen.open-file.name",
     "screen.person.name",
@@ -5804,10 +5797,6 @@
     "session.locked",
     "session.reauth",
     "shell.appearance",
-    "shell.appearance.dark",
-    "shell.appearance.device",
-    "shell.appearance.holds",
-    "shell.appearance.light",
     "shell.areas",
     "shell.areas.add",
     "shell.areas.clear",
@@ -5818,26 +5807,13 @@
     "shell.assistant.holds",
     "shell.band.working",
     "shell.cancel",
-    "shell.card.capture",
-    "shell.card.document",
-    "shell.card.knock",
-    "shell.card.member",
     "shell.card.open",
-    "shell.card.passage",
-    "shell.card.person",
-    "shell.card.proceeding",
-    "shell.card.project",
-    "shell.card.question",
-    "shell.card.standard",
     "shell.confirm",
     "shell.copy",
     "shell.dialog.signed",
     "shell.dialog.signs",
-    "shell.glance.busy",
     "shell.glance.more",
     "shell.glance.people",
-    "shell.glance.quiet",
-    "shell.glance.steady",
     "shell.glance.strip",
     "shell.glance.strip.sum",
     "shell.glance.timeline",
@@ -5899,17 +5875,11 @@
     "shell.step.imported",
     "shell.todo",
     "shell.todo.means",
-    "shell.trace",
     "shell.unavailable.home",
     "shell.unavailable.nothing",
-    "shell.unavailable.nothing.says",
-    "shell.unavailable.nothing.title",
     "shell.unavailable.notyours",
     "shell.unavailable.notyours.says",
-    "shell.unavailable.notyours.title",
     "shell.unavailable.unreachable",
-    "shell.unavailable.unreachable.says",
-    "shell.unavailable.unreachable.title",
     "shell.unpick",
     "shell.unread",
     "shell.width",
@@ -5923,10 +5893,10 @@
     "tab.more.name"
    ],
    "counts": {
-    "reads": 175,
+    "reads": 155,
     "minted": 0,
-    "keyedRows": 113,
-    "literalKeys": 175,
+    "keyedRows": 0,
+    "literalKeys": 155,
     "inline": 3,
     "inlineKeyed": 0,
     "inlineUnkeyed": 3
@@ -5934,19 +5904,19 @@
    "unkeyed": [
     {
      "file": "interface-shell/browser.mjs",
-     "line": 106,
+     "line": 109,
      "text": "Bearer ${…}",
      "why": "an HTTP header's value"
     },
     {
      "file": "interface-shell/index.mjs",
-     "line": 283,
+     "line": 291,
      "text": "the path's element, read by journey-check's walker (its screens.mjs) and the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
     },
     {
      "file": "interface-shell/index.mjs",
-     "line": 285,
+     "line": 293,
      "text": "a row of `cs.rows`, read by the screen modules' tests",
      "why": "a builder's note on an element, read by tests"
     }
@@ -5962,6 +5932,14 @@
     "act.plansubjectadd.does",
     "act.plansubjectadd.label.plan",
     "act.scenarioset.label.plan",
+    "law.change",
+    "law.help",
+    "law.proposal.not",
+    "law.propose",
+    "law.proposed",
+    "law.stated",
+    "law.title",
+    "law.undetermined",
     "mark.due.means",
     "plan.close.lessons",
     "plan.offer.chancetofix",
@@ -5969,6 +5947,18 @@
     "plan.offer.chancetofix.means",
     "plan.offer.document",
     "plan.offer.document.means",
+    "risk.help",
+    "risk.proposal",
+    "risk.proposal.not",
+    "risk.proposed",
+    "risk.revise",
+    "risk.set",
+    "risk.tier",
+    "risk.tier.1",
+    "risk.tier.2",
+    "risk.tier.3",
+    "risk.tier.undetermined",
+    "risk.title",
     "screen.action.clock.met",
     "screen.action.clock.overdue",
     "screen.action.clock.pending",
@@ -6144,13 +6134,9 @@
     "screen.plan.state.paused",
     "screen.plan.subject.id",
     "screen.plan.subject.id.help",
-    "screen.plan.subject.kind",
-    "screen.plan.subject.kind.inquiry",
-    "screen.plan.subject.kind.outcome",
     "screen.plan.subject.needed",
     "screen.plan.subject.reason",
     "screen.plan.subject.reason.help",
-    "screen.plan.subject.standard",
     "screen.plan.suggested",
     "screen.plan.support.established",
     "screen.plan.support.hypothetical",
@@ -6259,30 +6245,27 @@
     "screen.start-send.waitsecond",
     "screen.start-send.wouldrefuse",
     "shell.unavailable.nothing",
+    "shell.unread",
     "state.empty",
     "state.failed",
     "state.loading"
    ],
    "counts": {
-    "reads": 308,
+    "reads": 325,
     "minted": 0,
-    "keyedRows": 292,
-    "literalKeys": 307,
+    "keyedRows": 0,
+    "literalKeys": 325,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0
    },
-   "unkeyed": [],
-   "renamed": {
-    "act.optionpropose.label.plan": "act.planask.label.plan"
-   }
+   "unkeyed": []
   },
   "screens-daily": {
    "reads": [
     "act.actionmove.label.queue",
     "act.adoptversion.label.home",
     "act.adoptversion.label.queue",
-    "act.ask.does",
     "act.ask.label.answers",
     "act.calculationcreate.label.finder",
     "act.cite.label.find-in",
@@ -6294,8 +6277,10 @@
     "act.keepversion.label.queue",
     "act.owed_updatelater.does",
     "act.owed_updatelater.label.queue",
+    "act.projectjoin.does",
+    "act.projectjoin.label.home",
+    "act.projectjoin.label.projects",
     "act.projectkeyset.label.queue",
-    "act.promote.does",
     "act.promote.label.home",
     "act.promote.label.projects",
     "act.promote.label.queue",
@@ -6306,26 +6291,22 @@
     "act.recordfact.label.find-in",
     "act.recordpersonfact.label.find-in",
     "act.reminderanswer.label.queue",
-    "act.ruleanswer.does",
     "act.ruleanswer.label.answers",
-    "act.search.does",
     "act.search.label.answers",
     "act.search.label.find-in",
     "act.search.label.finder",
     "act.select.label.finder",
     "act.selectionrelease.label.finder",
     "act.standarddeclare.label.find-in",
-    "act.standingquestionend.does",
     "act.standingquestionend.label.answers",
-    "act.standingquestionset.does",
     "act.standingquestionset.label.answers",
     "act.standingquestionset.label.find-in",
-    "act.startfrom.does",
     "act.startfrom.label.home",
     "act.tabledeclare.label.find-in",
     "act.taskforward.label.queue",
     "act.taskresolve.label.home",
     "act.taskresolve.label.queue",
+    "action.noreply.title",
     "ai.label.untested",
     "ai.refused.limit",
     "ai.refused.limit.unjudged",
@@ -6362,6 +6343,18 @@
     "mark.origin.accepted.name",
     "mark.origin.search.means",
     "mark.origin.search.name",
+    "member.founder.unnamed",
+    "project.start.go",
+    "project.start.title",
+    "project.start.title.help",
+    "project.visibility.start.discoverable",
+    "project.visibility.start.hidden",
+    "project.visibility.start.later",
+    "project.visibility.title",
+    "projects.empty.note",
+    "projects.empty.sub",
+    "projects.invited.head",
+    "projects.invited.says",
     "queue.source-modified.many",
     "queue.source-modified.one",
     "queue.source-removed.many",
@@ -6373,19 +6366,13 @@
     "queue.update.section",
     "queue.update.section_says",
     "queue.update.see",
+    "refusal.ANSWER_MALFORMED",
     "screen.answers.asread",
     "screen.answers.cadence.weekly",
     "screen.answers.holdings",
     "screen.answers.keeping",
     "screen.answers.kept",
-    "screen.answers.label.computed_fact",
-    "screen.answers.label.legal_information",
-    "screen.answers.label.procedural_fact",
     "screen.answers.legal",
-    "screen.answers.level.content",
-    "screen.answers.level.document",
-    "screen.answers.level.internet",
-    "screen.answers.level.meaning",
     "screen.answers.look",
     "screen.answers.looks",
     "screen.answers.machine",
@@ -6401,12 +6388,10 @@
     "screen.answers.rule.basis",
     "screen.answers.rule.notheld",
     "screen.answers.rule.value",
-    "screen.answers.state.LOOKED_ABSENT",
-    "screen.answers.state.LOOKED_FOUND",
-    "screen.answers.state.NOT_LOOKED",
     "screen.answers.state.other",
     "screen.answers.sub",
     "screen.answers.withheld",
+    "screen.answers.withheld.one",
     "screen.elsewhere.name",
     "screen.elsewhere.purpose",
     "screen.find-in.field.amount",
@@ -6422,12 +6407,6 @@
     "screen.find-in.field.to",
     "screen.find-in.field.value",
     "screen.find-in.keeping",
-    "screen.find-in.kind.dates",
-    "screen.find-in.kind.events",
-    "screen.find-in.kind.money",
-    "screen.find-in.kind.people",
-    "screen.find-in.kind.requirements",
-    "screen.find-in.kind.term",
     "screen.find-in.kindsfirst",
     "screen.find-in.lookin",
     "screen.find-in.lookin.help",
@@ -6435,6 +6414,7 @@
     "screen.find-in.note",
     "screen.find-in.nothing",
     "screen.find-in.notread",
+    "screen.find-in.notread.one",
     "screen.find-in.passage",
     "screen.find-in.purpose",
     "screen.find-in.question",
@@ -6447,6 +6427,7 @@
     "screen.find-in.scope.held",
     "screen.find-in.scope.none",
     "screen.find-in.scope.project",
+    "screen.find-in.scope.this",
     "screen.find-in.section",
     "screen.find-in.sub",
     "screen.find-in.term",
@@ -6466,6 +6447,7 @@
     "screen.finder.name",
     "screen.finder.nobody",
     "screen.finder.nobody.none",
+    "screen.finder.nobody.one",
     "screen.finder.none",
     "screen.finder.noresult",
     "screen.finder.pick",
@@ -6478,18 +6460,15 @@
     "screen.finder.widen",
     "screen.finder.words",
     "screen.finder.wordsfirst",
-    "screen.home.area.action",
-    "screen.home.area.administration",
-    "screen.home.area.investigation",
-    "screen.home.area.members",
+    "screen.findin.cite.against",
+    "screen.findin.cite.norole",
+    "screen.findin.cite.supports",
     "screen.home.area.need.many",
     "screen.home.area.need.one",
     "screen.home.areas",
     "screen.home.areas.holds",
     "screen.home.fieldfirst",
     "screen.home.invite",
-    "screen.home.lastchange",
-    "screen.home.lastchange.none",
     "screen.home.line.ailimit",
     "screen.home.line.aiused",
     "screen.home.line.languages",
@@ -6505,12 +6484,8 @@
     "screen.home.needsyou.holds",
     "screen.home.nothingyet",
     "screen.home.open",
-    "screen.home.owner",
-    "screen.home.owner.none",
     "screen.home.projects",
     "screen.home.purpose",
-    "screen.home.questions.many",
-    "screen.home.questions.one",
     "screen.home.rd.admin",
     "screen.home.rd.admins",
     "screen.home.rd.group",
@@ -6529,46 +6504,19 @@
     "screen.home.since",
     "screen.home.since.changed",
     "screen.home.since.holds",
-    "screen.home.stage.closed",
-    "screen.home.stage.forming",
-    "screen.home.stage.investigating",
-    "screen.home.stage.matured",
-    "screen.home.stage.means",
-    "screen.home.stage.none",
     "screen.home.strip.group",
     "screen.home.strip.you",
-    "screen.home.title",
-    "screen.home.title.help",
     "screen.home.title.needed",
-    "screen.home.truncated",
     "screen.home.why",
     "screen.home.words",
     "screen.home.wordsfirst",
     "screen.imported.name",
-    "screen.projects.lastchange",
-    "screen.projects.lastchange.none",
     "screen.projects.name",
-    "screen.projects.none",
-    "screen.projects.owner",
-    "screen.projects.owner.none",
     "screen.projects.purpose",
-    "screen.projects.questions.many",
-    "screen.projects.questions.one",
-    "screen.projects.stage.closed",
-    "screen.projects.stage.forming",
-    "screen.projects.stage.investigating",
-    "screen.projects.stage.matured",
-    "screen.projects.stage.means",
-    "screen.projects.stage.none",
     "screen.projects.sub",
-    "screen.projects.title",
-    "screen.projects.title.help",
     "screen.projects.title.needed",
-    "screen.projects.truncated",
     "screen.queue.count.many",
     "screen.queue.count.one",
-    "screen.queue.due.on",
-    "screen.queue.due.today",
     "screen.queue.fieldfirst",
     "screen.queue.forward.to",
     "screen.queue.gohome",
@@ -6582,6 +6530,7 @@
     "screen.queue.hint.rate.none",
     "screen.queue.hint.trust",
     "screen.queue.more",
+    "screen.queue.more.one",
     "screen.queue.name",
     "screen.queue.nocase",
     "screen.queue.note",
@@ -6593,11 +6542,6 @@
     "screen.queue.reminder.on",
     "screen.queue.snooze.until",
     "screen.queue.sort",
-    "screen.queue.sort.added",
-    "screen.queue.sort.case",
-    "screen.queue.sort.due",
-    "screen.queue.sort.kind",
-    "screen.queue.sorted",
     "screen.queue.unsent.drop",
     "screen.queue.unsent.keep",
     "screen.queue.unsent.pickup",
@@ -6617,28 +6561,49 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 336,
+    "reads": 296,
     "minted": 3,
-    "keyedRows": 228,
-    "literalKeys": 333,
-    "inline": 3,
-    "inlineKeyed": 3,
-    "inlineUnkeyed": 0
+    "keyedRows": 0,
+    "literalKeys": 296,
+    "inline": 2,
+    "inlineKeyed": 0,
+    "inlineUnkeyed": 2
    },
-   "unkeyed": [],
-   "retired": [
-    "screen.home.strip.overdue",
-    "screen.queue.due.overdue"
+   "unkeyed": [
+    {
+     "file": "screens-daily/queue.mjs",
+     "line": 269,
+     "text": "--- object_type: inquiry question: ${…} current_state: open created: \"${…}\" last_updated: \"${…}\" --- ## Session Log ### Session ${…} | Formation | interactive Trigger: ${…} Changes: created.",
+     "why": "the record file's own grammar (its front matter and section labels, as record-grammar parses them), not member prose; the sentences inside it are keyed (DEC-272)"
+    },
+    {
+     "file": "screens-daily/start-project.mjs",
+     "line": 26,
+     "text": "--- object_type: project title: ${…} objective: ${…} current_state: forming created: \"${…}\" last_updated: \"${…}\" --- ## Session Log ### Session ${…} | Formation | interactive Trigger: ${…} Changes: created.",
+     "why": "the record file's own grammar (its front matter and section labels, as record-grammar parses them), not member prose; the sentences inside it are keyed (DEC-272)"
+    }
    ]
   },
   "screens-entry": {
    "reads": [
+    "forgot.handle.help",
+    "founder.handle.choose",
+    "founder.handle.done",
+    "founder.handle.later",
+    "founder.handle.later.help",
+    "founder.handle.says",
+    "founder.handle.title",
     "handle.characters",
     "handle.fixed",
     "handle.free",
     "handle.refused.paused",
     "handle.taken",
+    "refusal.ALREADY_CLAIMED",
+    "refusal.BAD_HANDLE",
+    "refusal.HANDLE_FIXED",
+    "refusal.HANDLE_TAKEN",
     "refusal.JOIN_LINK_DAILY_CAP",
+    "refusal.NO_HANDLE",
     "refusal.PASSWORD_TOO_SHORT",
     "refusal.RECOVERY_REFUSED",
     "refusal.SIGN_IN_PAUSED",
@@ -6660,41 +6625,17 @@
     "screen.entry.signin",
     "screen.entry.twelve",
     "screen.entry.uses",
-    "screen.forgot.admin",
-    "screen.forgot.admin.what",
-    "screen.forgot.code",
-    "screen.forgot.code.help",
-    "screen.forgot.codes",
-    "screen.forgot.done",
-    "screen.forgot.done.last",
     "screen.forgot.help.heading",
     "screen.forgot.help.s1",
     "screen.forgot.help.s2",
     "screen.forgot.incomplete",
-    "screen.forgot.lede",
     "screen.forgot.name",
     "screen.forgot.purpose",
-    "screen.front.device",
-    "screen.front.doorbell",
-    "screen.front.doorbell.go",
-    "screen.front.doorbell.what",
-    "screen.front.edition",
-    "screen.front.edition.nosigner",
-    "screen.front.forgot",
     "screen.front.handle",
-    "screen.front.how",
-    "screen.front.how.go",
-    "screen.front.how.what",
     "screen.front.incomplete",
-    "screen.front.members",
     "screen.front.name",
     "screen.front.nopassword",
-    "screen.front.notmember",
-    "screen.front.notyou",
-    "screen.front.other",
-    "screen.front.published",
     "screen.front.purpose",
-    "screen.front.untitled",
     "screen.front.welcomeback",
     "screen.hosting.guide",
     "screen.hosting.heading",
@@ -6703,138 +6644,29 @@
     "screen.hosting.s3",
     "screen.hosting.s4",
     "screen.hosting.s5",
-    "screen.join.codes.after",
-    "screen.join.cover",
     "screen.join.cover.empty",
-    "screen.join.cover.help",
-    "screen.join.dead",
-    "screen.join.dead.what",
-    "screen.join.handle",
     "screen.join.handle.empty",
-    "screen.join.handle.help",
     "screen.join.handle.taken",
-    "screen.join.home",
-    "screen.join.invited",
-    "screen.join.invited.as",
-    "screen.join.joined",
-    "screen.join.joined.nosignin",
-    "screen.join.language",
-    "screen.join.language.help",
-    "screen.join.link",
-    "screen.join.link.what",
-    "screen.join.member",
-    "screen.join.member.go",
     "screen.join.name",
     "screen.join.purpose",
-    "screen.reset.dead",
     "screen.reset.dead.what",
-    "screen.reset.done",
-    "screen.reset.for",
-    "screen.reset.forhandle",
-    "screen.reset.keeps",
     "screen.reset.name",
     "screen.reset.purpose",
-    "screen.setup.admins",
-    "screen.setup.admins.cover",
-    "screen.setup.admins.id",
-    "screen.setup.admins.id.help",
     "screen.setup.admins.incomplete",
-    "screen.setup.admins.shown",
-    "screen.setup.admins.what",
-    "screen.setup.again.help",
-    "screen.setup.assistant",
-    "screen.setup.assistant.own",
-    "screen.setup.assistant.paid",
-    "screen.setup.assistant.what",
-    "screen.setup.claim",
-    "screen.setup.claimed",
-    "screen.setup.claimed.nosignin",
-    "screen.setup.court",
-    "screen.setup.court.dont",
-    "screen.setup.court.legend",
-    "screen.setup.court.now.dont",
-    "screen.setup.court.now.tell",
     "screen.setup.court.pick",
-    "screen.setup.court.tell",
-    "screen.setup.court.what",
-    "screen.setup.domain",
     "screen.setup.domain.empty",
-    "screen.setup.domain.help",
-    "screen.setup.domain.verified",
-    "screen.setup.finished",
-    "screen.setup.finished.go",
-    "screen.setup.finished.what",
-    "screen.setup.hosting",
     "screen.setup.hosting.empty",
-    "screen.setup.hosting.field",
-    "screen.setup.hosting.note",
-    "screen.setup.hosting.now",
-    "screen.setup.keepaway",
-    "screen.setup.keepaway.help",
     "screen.setup.keepaway.noreason",
-    "screen.setup.keepaway.on",
-    "screen.setup.keepaway.why",
-    "screen.setup.key",
-    "screen.setup.key.held",
-    "screen.setup.key.help",
     "screen.setup.key.nokey",
-    "screen.setup.key.off",
-    "screen.setup.key.on",
-    "screen.setup.key.switchoff",
-    "screen.setup.key.switchon",
-    "screen.setup.lede",
-    "screen.setup.limit",
     "screen.setup.limit.bad",
-    "screen.setup.limit.help",
-    "screen.setup.limit.set",
     "screen.setup.name",
     "screen.setup.name.empty",
-    "screen.setup.name.field",
-    "screen.setup.name.help",
-    "screen.setup.name.now",
     "screen.setup.nootp",
-    "screen.setup.office.added",
     "screen.setup.office.empty",
-    "screen.setup.office.field",
-    "screen.setup.office.note",
-    "screen.setup.offices",
-    "screen.setup.offices.what",
-    "screen.setup.otp",
-    "screen.setup.otp.help",
-    "screen.setup.own",
-    "screen.setup.own.help",
     "screen.setup.place.empty",
-    "screen.setup.place.wanted",
-    "screen.setup.place.wanted.help",
-    "screen.setup.place.wanted.now",
-    "screen.setup.places",
-    "screen.setup.places.choose",
-    "screen.setup.places.help",
-    "screen.setup.places.none",
-    "screen.setup.places.now",
     "screen.setup.purpose",
-    "screen.setup.security",
-    "screen.setup.security.failed",
-    "screen.setup.security.field",
-    "screen.setup.security.held",
-    "screen.setup.security.keep",
     "screen.setup.security.missing",
     "screen.setup.security.nopick",
-    "screen.setup.security.passed",
-    "screen.setup.security.scanner",
-    "screen.setup.security.what",
-    "screen.setup.step.admins",
-    "screen.setup.step.assistant",
-    "screen.setup.step.claim",
-    "screen.setup.step.court",
-    "screen.setup.step.done",
-    "screen.setup.step.hosting",
-    "screen.setup.step.name",
-    "screen.setup.step.offices",
-    "screen.setup.step.places",
-    "screen.setup.step.security",
-    "screen.setup.steps",
-    "screen.setup.unarmed",
     "screen.tour.back",
     "screen.tour.doorbell",
     "screen.tour.end",
@@ -6843,61 +6675,61 @@
     "screen.tour.nothing",
     "screen.tour.purpose",
     "screen.tour.step",
-    "screen.tour.step1.body",
-    "screen.tour.step1.title",
-    "screen.tour.step2.body",
-    "screen.tour.step2.title",
-    "screen.tour.step3.body",
-    "screen.tour.step3.title",
-    "screen.tour.step4.body",
-    "screen.tour.step4.title",
-    "screen.tour.step5.body",
-    "screen.tour.step5.title",
-    "screen.tour.step6.body",
-    "screen.tour.step6.title",
     "screen.tour.stop",
     "session.ended",
     "session.keep",
     "session.locked",
     "session.shared",
     "session.signedout",
+    "setup.claimed.heading",
+    "setup.claimed.sub",
+    "setup.codes.copy",
+    "setup.codes.once",
+    "setup.codes.save",
+    "setup.member.heading",
+    "setup.member.home",
+    "setup.member.sub",
+    "signin.handle.help",
     "state.empty",
     "state.failed",
     "state.loading"
    ],
    "counts": {
-    "reads": 231,
+    "reads": 107,
     "minted": 0,
-    "keyedRows": 205,
-    "literalKeys": 224,
+    "keyedRows": 0,
+    "literalKeys": 107,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0
    },
-   "unkeyed": [],
-   "retired": [
-    "screen.forgot.handle.help",
-    "screen.setup.taken"
-   ]
+   "unkeyed": []
   },
   "screens-inquiry": {
    "reads": [
     "act.accountusesset.label.projectai",
+    "act.adoptversion.label.document",
     "act.ailimitset.label.projectai",
     "act.airunclose.label.assistant",
+    "act.airunclose.label.question",
     "act.airunopen.label.assistant",
+    "act.airunopen.label.question",
     "act.attest.label.document",
     "act.checkrequest.label.question",
     "act.cite.label.document",
     "act.cite.label.question",
     "act.conclude.label.question",
+    "act.connectionchoose.label.document",
     "act.drawquestion.label.project",
+    "act.explore.label.document",
     "act.findin.label.document",
     "act.findin.label.project",
     "act.gradenote.label.document",
     "act.heldrestore.label.question",
     "act.hypothesishold.label.question",
     "act.identityclaim.label.document",
+    "act.inquiryground.label.question",
+    "act.keepversion.label.document",
     "act.monitor.label.document",
     "act.monitorset.label.document",
     "act.narrow.label.question",
@@ -6910,12 +6742,21 @@
     "act.projectaikeepaway.does",
     "act.projectaikeepaway.label.projectai",
     "act.projectbarset.label.project",
+    "act.projectfork.label.project",
     "act.projectinvite.label.project",
     "act.projectjoin.label.project",
+    "act.projectjoin.label.projectai",
     "act.projectkeynoticeseen.label.projectai",
     "act.projectkeyset.label.projectai",
+    "act.projectleave.label.project",
+    "act.projectowneradd.label.project",
+    "act.projectownerremove.label.project",
+    "act.projectownerrescue.label.project",
+    "act.projectremove.label.project",
     "act.projectsigninset.label.projectai",
+    "act.projectvisibilityset.label.project",
     "act.promote.label.project",
+    "act.readtranslate.label.question",
     "act.reinstate.label.question",
     "act.release.label.document",
     "act.retire.label.document",
@@ -6923,6 +6764,12 @@
     "act.sever.label.question",
     "act.suggest.label.assistant",
     "act.transcribe.label.document",
+    "act.versionaccept.label.question",
+    "act.versionconsider.label.question",
+    "act.versioncurrent.label.question",
+    "act.versionhide.label.question",
+    "act.versionreject.label.question",
+    "act.versionrevert.label.question",
     "act.withdrawconclusion.label.question",
     "ai.account.group.inline",
     "ai.account.own.inline",
@@ -6933,6 +6780,7 @@
     "ai.label.untested",
     "ai.refused.keptaway",
     "ai.refused.limit",
+    "ai.refused.limit.overall",
     "ai.refused.limit.unjudged",
     "ai.refused.limitinvalid",
     "ai.refused.noaccount",
@@ -6943,6 +6791,25 @@
     "ai.refused.signinnotconnected",
     "ai.refused.switchvalue",
     "ai.refused.unitunavailable",
+    "case.links.ceremony",
+    "case.links.docket",
+    "case.links.editor",
+    "case.links.review",
+    "dock.run.yours",
+    "dock.withheld.AGENT_WORKER_UNBOUND",
+    "dock.withheld.CREDENTIAL_RECORD_SILENT",
+    "dock.withheld.MEMBER_PRINCIPAL_RUN",
+    "dock.withheld.NAMESPACE_UNDETERMINED",
+    "dock.withheld.other",
+    "document.links.held",
+    "document.links.help",
+    "document.links.says",
+    "document.links.title",
+    "document.names.chosen.member",
+    "document.names.chosen.record",
+    "document.names.help",
+    "document.names.row",
+    "document.names.title",
     "document.unread.pages",
     "file.recheck.none",
     "file.recheck.revisit",
@@ -6962,34 +6829,120 @@
     "mark.scale.testimony.means",
     "mark.scale.testimony.name",
     "mark.strength.means",
+    "member.founder.unnamed",
+    "project.adddoc",
+    "project.firstquestion",
+    "project.firstquestion.help",
+    "project.member.joined",
+    "project.member.member",
+    "project.member.owner",
+    "project.member.since",
+    "project.owners.agree",
+    "project.owners.pending",
+    "project.owners.pending.remove",
+    "project.owners.rule",
+    "project.rescue.own",
+    "project.rescue.says",
+    "project.rescue.title",
+    "project.start.title",
+    "project.start.title.help",
+    "project.visibility.discoverable",
+    "project.visibility.hidden",
+    "project.visibility.history",
+    "project.visibility.start.discoverable",
+    "project.visibility.start.hidden",
+    "project.visibility.started",
+    "project.visibility.title",
+    "project.work.help",
+    "project.work.title",
+    "projectai.notjoined",
+    "question.adddoc",
+    "question.ai.other",
+    "question.ai.whose",
+    "question.ask",
+    "question.ask.first.says",
+    "question.ask.first.title",
+    "question.ask.help",
+    "question.ask.no",
+    "question.ask.title",
+    "question.ask.which",
+    "question.ask.yes",
+    "question.conclude.commentary",
+    "question.conclude.commentary.help",
+    "question.conclude.falsifier",
+    "question.conclude.falsifier.help",
+    "question.conclude.nofalsifier",
+    "question.conclude.reading",
+    "question.concluded.by",
+    "question.concluded.falsifier",
+    "question.concluded.heading",
+    "question.empty.ask",
+    "question.empty.ask.line",
+    "question.empty.capture",
+    "question.empty.capture.line",
+    "question.empty.conclude.own",
+    "question.empty.find",
+    "question.empty.find.line",
+    "question.empty.heading",
+    "question.empty.note",
+    "question.falls",
+    "question.holds",
+    "question.limit.note",
+    "question.origin.shared",
+    "question.plan.link",
+    "question.plan.link.tip",
+    "question.proposal.heading",
+    "question.reading.accepted",
+    "question.reading.shown",
+    "question.reading.shown.help",
+    "question.reading.standson",
+    "question.reading.strength",
+    "question.reading.suggested",
+    "question.reading.weighing",
+    "question.reading.whatif",
+    "question.readings.help",
+    "question.readings.more",
+    "question.readings.title",
+    "question.relies.cites",
+    "question.relies.help",
+    "question.relies.outofview",
+    "question.relies.project",
+    "question.relies.title",
+    "question.rests.all",
+    "question.rests.any",
+    "question.rests.change",
+    "question.rests.changed",
+    "question.rests.readback",
+    "question.rests.set",
+    "question.rests.title",
+    "question.run.heading",
+    "question.run.leave",
+    "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
+    "refusal.AI_RUN_BOUND_NO_ALLOWANCE",
     "refusal.AI_RUN_CREDENTIAL_MALFORMED",
+    "refusal.AI_RUN_NOT_PRINCIPAL",
+    "refusal.AI_RUN_NOT_RUNNING",
     "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
-    "screen.assistant.dispatch.notactive",
-    "screen.assistant.dispatch.notprincipal",
-    "screen.assistant.dispatch.notrunning",
-    "screen.assistant.dispatch.principal",
-    "screen.assistant.dispatch.silent",
-    "screen.assistant.dispatch.unbound",
+    "refusal.VERSION_AFFIRMATION_INCOMPLETE",
     "screen.assistant.dispatch.unknown",
     "screen.assistant.name",
     "screen.assistant.notevidence",
     "screen.assistant.production",
     "screen.assistant.productions.head",
     "screen.assistant.purpose",
-    "screen.assistant.run.dispatched",
     "screen.assistant.run.ended",
     "screen.assistant.run.head",
     "screen.assistant.run.nocontext",
     "screen.assistant.run.none",
     "screen.assistant.run.notready",
     "screen.assistant.run.running",
-    "screen.assistant.run.yours",
     "screen.assistant.says",
     "screen.assistant.serves",
     "screen.assistant.serves.unknown",
     "screen.assistant.suggest.description",
     "screen.assistant.suggest.name",
     "screen.assistant.use",
+    "screen.calculation.name",
     "screen.document.attest.done",
     "screen.document.backlinks.head",
     "screen.document.backlinks.hidden",
@@ -7007,7 +6960,6 @@
     "screen.document.copy",
     "screen.document.copyacts.head",
     "screen.document.fingerprint",
-    "screen.document.fingerprint.means",
     "screen.document.gradenote.head",
     "screen.document.gradenote.none",
     "screen.document.monitor.done",
@@ -7053,7 +7005,6 @@
     "screen.project.invite.label",
     "screen.project.members.head",
     "screen.project.members.invited",
-    "screen.project.members.owner",
     "screen.project.members.who",
     "screen.project.name",
     "screen.project.notjoined",
@@ -7067,44 +7018,12 @@
     "screen.project.question.empty",
     "screen.project.question.help",
     "screen.project.question.label",
-    "screen.project.questions.empty",
     "screen.project.questions.head",
     "screen.project.questions.notdrawn",
-    "screen.project.stage.closed",
-    "screen.project.stage.concluded",
-    "screen.project.stage.forming",
     "screen.project.stage.head",
-    "screen.project.stage.investigating",
-    "screen.project.stage.legs",
-    "screen.project.stage.matured",
-    "screen.project.stage.read",
-    "screen.project.stage.undetermined",
-    "screen.projectai.account.head",
-    "screen.projectai.account.key",
-    "screen.projectai.account.none",
-    "screen.projectai.account.off",
-    "screen.projectai.account.signin",
-    "screen.projectai.account.since",
-    "screen.projectai.account.suspended",
-    "screen.projectai.keepaway.head",
     "screen.projectai.keepaway.noreason",
-    "screen.projectai.keepaway.off",
-    "screen.projectai.keepaway.on",
-    "screen.projectai.keepaway.reason",
-    "screen.projectai.keepaway.turnoff",
-    "screen.projectai.keepaway.unread",
-    "screen.projectai.key.field",
-    "screen.projectai.key.never",
     "screen.projectai.key.nokey",
-    "screen.projectai.key.replace",
     "screen.projectai.name",
-    "screen.projectai.notice.head",
-    "screen.projectai.notice.seen",
-    "screen.projectai.owners",
-    "screen.projectai.purpose",
-    "screen.projectai.signin.help",
-    "screen.projectai.switch.off",
-    "screen.projectai.switch.on",
     "screen.question.against.head",
     "screen.question.check.empty",
     "screen.question.check.help",
@@ -7112,11 +7031,7 @@
     "screen.question.check.note",
     "screen.question.cite.from",
     "screen.question.conclude.claim",
-    "screen.question.conclude.commentary",
-    "screen.question.conclude.falsifier",
     "screen.question.conclude.who",
-    "screen.question.concluded",
-    "screen.question.concluded.none",
     "screen.question.concluded.withdrawn",
     "screen.question.concluding.head",
     "screen.question.hunch.by",
@@ -7137,7 +7052,6 @@
     "screen.question.opened.noproject",
     "screen.question.plan.empty",
     "screen.question.plan.label",
-    "screen.question.plan.opened",
     "screen.question.purpose",
     "screen.question.strength.against",
     "screen.question.strength.head",
@@ -7152,29 +7066,52 @@
     "screen.question.waits.item",
     "screen.question.waits.setaside",
     "screen.question.waits.since",
+    "screen.standard.name",
+    "screen.timeline.name",
+    "shell.card.calculation",
+    "shell.card.case-editor",
+    "shell.card.ceremony",
+    "shell.card.docket",
+    "shell.card.document",
+    "shell.card.plan",
+    "shell.card.project",
+    "shell.card.question",
+    "shell.card.review-copy",
+    "shell.card.standard",
+    "shell.card.timeline",
+    "shell.reason",
+    "shell.reason.help",
+    "shell.reason.needed",
     "state.empty",
     "state.failed",
-    "state.loading"
+    "state.loading",
+    "state.undetermined",
+    "transcribe.done",
+    "translate.back",
+    "translate.label",
+    "translate.label.help",
+    "translate.original",
+    "translate.read"
    ],
    "counts": {
-    "reads": 273,
+    "reads": 385,
     "minted": 2,
-    "keyedRows": 179,
-    "literalKeys": 271,
-    "inline": 4,
-    "inlineKeyed": 2,
+    "keyedRows": 0,
+    "literalKeys": 385,
+    "inline": 2,
+    "inlineKeyed": 0,
     "inlineUnkeyed": 2
    },
    "unkeyed": [
     {
      "file": "screens-inquiry/project.mjs",
-     "line": 275,
+     "line": 305,
      "text": "## What It Rests On",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
     },
     {
      "file": "screens-inquiry/project.mjs",
-     "line": 275,
+     "line": 305,
      "text": "## What Would Falsify This",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
     }
@@ -7206,6 +7143,11 @@
     "act.testify.label.capture",
     "act.writinghelp.label.capture",
     "ai.label.untested",
+    "capture.cite",
+    "capture.cite.tip",
+    "capture.fieldneeded",
+    "capture.filed.project",
+    "capture.filed.question",
     "mark.gap.refused.means",
     "mark.gap.refused.name",
     "mark.gap.undetermined.means",
@@ -7215,6 +7157,13 @@
     "mark.origin.machine.means",
     "mark.origin.machine.name",
     "photo.reminder",
+    "refusal.BAD_LOCATOR",
+    "refusal.CRUCIAL_IN_BATCH",
+    "refusal.EMPTY",
+    "refusal.ENTRY_REQUIREMENTS",
+    "refusal.FETCH_FAILED",
+    "refusal.SOURCE_REFUSED",
+    "refusal.TOO_LARGE",
     "screen.archive.alreadyheld",
     "screen.archive.col",
     "screen.archive.empty",
@@ -7240,13 +7189,11 @@
     "screen.archive.sum.folders",
     "screen.archive.sum.held",
     "screen.archive.sum.notfiled",
-    "screen.archive.summary",
     "screen.archive.ungraded",
     "screen.archive.waiting",
     "screen.capture.address.archive",
     "screen.capture.address.checked",
     "screen.capture.address.done",
-    "screen.capture.address.empty",
     "screen.capture.address.existed",
     "screen.capture.address.freq",
     "screen.capture.address.freq.daily",
@@ -7260,7 +7207,6 @@
     "screen.capture.address.notpromoted",
     "screen.capture.address.requested",
     "screen.capture.address.requested.waits",
-    "screen.capture.address.watch",
     "screen.capture.address.watchabout",
     "screen.capture.address.watchafter",
     "screen.capture.address.watching",
@@ -7284,12 +7230,7 @@
     "screen.capture.file.wherehelp",
     "screen.capture.help.empty",
     "screen.capture.help.only",
-    "screen.capture.refusal.BAD_LOCATOR",
-    "screen.capture.refusal.EMPTY",
-    "screen.capture.refusal.FETCH_FAILED",
     "screen.capture.refusal.MEMBER_SESSION_REQUIRED",
-    "screen.capture.refusal.SOURCE_REFUSED",
-    "screen.capture.refusal.TOO_LARGE",
     "screen.capture.refusal.UPLOAD_NO_STATEMENT",
     "screen.capture.refusal.upload.EMPTY",
     "screen.capture.refusal.upload.TOO_LARGE",
@@ -7435,14 +7376,15 @@
     "shell.unavailable.home",
     "shell.unavailable.nothing.says",
     "shell.unavailable.nothing.title",
+    "shell.unread",
     "state.loading",
     "state.undetermined"
    ],
    "counts": {
-    "reads": 255,
+    "reads": 260,
     "minted": 0,
-    "keyedRows": 219,
-    "literalKeys": 255,
+    "keyedRows": 0,
+    "literalKeys": 260,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0
@@ -7562,6 +7504,12 @@
     "mark.scale.subject.name",
     "mark.scale.testimony.means",
     "mark.scale.testimony.name",
+    "proceeding.dates.help",
+    "proceeding.dates.lane.group",
+    "proceeding.dates.lane.proceeding",
+    "proceeding.dates.none",
+    "proceeding.dates.stage",
+    "proceeding.dates.title",
     "screen.calculation.accepted",
     "screen.calculation.account",
     "screen.calculation.apart",
@@ -7570,10 +7518,7 @@
     "screen.calculation.content.help",
     "screen.calculation.counts",
     "screen.calculation.counts.disagree",
-    "screen.calculation.counts.no",
     "screen.calculation.counts.notvisited",
-    "screen.calculation.counts.unsure",
-    "screen.calculation.counts.yes",
     "screen.calculation.dq",
     "screen.calculation.draw",
     "screen.calculation.draw.empty",
@@ -7607,7 +7552,6 @@
     "screen.calculation.name",
     "screen.calculation.noestimate",
     "screen.calculation.note",
-    "screen.calculation.notsays",
     "screen.calculation.observed",
     "screen.calculation.outcome",
     "screen.calculation.outcome.agrees",
@@ -7714,6 +7658,7 @@
     "screen.explore.hunch",
     "screen.explore.lead",
     "screen.explore.name",
+    "screen.explore.nocentre",
     "screen.explore.nochains",
     "screen.explore.noscore",
     "screen.explore.nosource",
@@ -8248,62 +8193,88 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 795,
+    "reads": 798,
     "minted": 6,
-    "keyedRows": 658,
-    "literalKeys": 174,
-    "inline": 8,
-    "inlineKeyed": 6,
+    "keyedRows": 0,
+    "literalKeys": 798,
+    "inline": 2,
+    "inlineKeyed": 0,
     "inlineUnkeyed": 2
    },
    "unkeyed": [
     {
      "file": "screens-investigate/explore.mjs",
-     "line": 229,
+     "line": 230,
      "text": "## What It Rests On",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
     },
     {
      "file": "screens-investigate/explore.mjs",
-     "line": 229,
+     "line": 230,
      "text": "## What Would Falsify This",
      "why": "record-grammar's required heading (HEADINGS.inquiry), matched exactly by the grammar: keyed with the grammar, not here"
     }
-   ],
-   "renamed": {
-    "act.connectionassert.label.explore": "act.stepsource.label.explore"
-   }
+   ]
   },
   "screens-publish": {
    "reads": [
+    "act.attribute.does",
     "act.attribute.label.case-editor",
+    "act.casedraft.does",
     "act.casedraft.label.case-editor",
+    "act.caseimport.does",
     "act.caseimport.label.imported",
+    "act.caseratify.does",
     "act.caseratify.label.ceremony",
+    "act.docketfile.does",
     "act.docketfile.label.docket",
+    "act.docketpost.does",
     "act.docketpost.label.docket",
+    "act.importaccept.does",
     "act.importaccept.label.imported",
+    "act.importflag.does",
     "act.importflag.label.imported",
+    "act.importwatch.does",
     "act.importwatch.label.imported",
+    "act.knock.does",
     "act.knock.label.doorbell",
+    "act.obscuremark.does",
     "act.obscuremark.label.ceremony",
+    "act.obscuremarkwithdraw.does",
     "act.obscuremarkwithdraw.label.ceremony",
+    "act.publish.does",
     "act.publish.label.ceremony",
+    "act.publishat.does",
     "act.publishat.label.ceremony",
+    "act.publishatcancel.does",
     "act.publishatcancel.label.ceremony",
+    "act.publishatmove.does",
     "act.publishatmove.label.ceremony",
+    "act.publishedcase.does",
     "act.publishedcase.label.published",
+    "act.publishpreflight.does",
     "act.publishpreflight.label.ceremony",
+    "act.publishtensions.does",
     "act.publishtensions.label.ceremony",
+    "act.reviewcomment.does",
     "act.reviewcomment.label.review-copy",
     "act.reviewcomment.label.review-outside",
+    "act.reviewgrant.does",
     "act.reviewgrant.label.review-copy",
+    "act.reviewrevoke.does",
     "act.reviewrevoke.label.review-copy",
+    "act.signerregisterown.does",
     "act.signerregisterown.label.ceremony",
+    "act.signrequest.does",
     "act.signrequest.label.ceremony",
+    "act.statementack.does",
     "act.statementack.label.case-editor",
+    "act.statementack.label.review-outside",
+    "act.verify.does",
     "act.verify.label.published",
+    "act.whatchangedpropose.does",
     "act.whatchangedpropose.label.case-editor",
+    "act.writinghelp.does",
     "act.writinghelp.label.case-editor",
     "ai.label.untested",
     "ai.label.untested.writinghelp",
@@ -8317,6 +8288,21 @@
     "mark.origin.machine.name",
     "mark.outward.means",
     "photo.refused.format",
+    "published.check.elsewhere",
+    "published.check.field",
+    "published.check.field.help",
+    "published.check.go",
+    "published.check.help",
+    "published.check.no",
+    "published.check.title",
+    "published.check.yes",
+    "refusal.NO_REVIEW_COPY",
+    "refusal.STATEMENT_ACK_NO_REASON",
+    "review.statement.ack",
+    "review.statement.help",
+    "review.statement.note",
+    "review.statement.note.help",
+    "review.statement.title",
     "screen.case-editor.ack.by",
     "screen.case-editor.ack.reason",
     "screen.case-editor.ack.reason.help",
@@ -8337,6 +8323,7 @@
     "screen.case-editor.level.label",
     "screen.case-editor.level.name",
     "screen.case-editor.level.project",
+    "screen.case-editor.name",
     "screen.case-editor.nodrafts",
     "screen.case-editor.people",
     "screen.case-editor.people.nocase",
@@ -8344,6 +8331,7 @@
     "screen.case-editor.people.reason",
     "screen.case-editor.prepared",
     "screen.case-editor.preparedby",
+    "screen.case-editor.purpose",
     "screen.case-editor.rung.distributed",
     "screen.case-editor.rung.draft",
     "screen.case-editor.rung.external",
@@ -8375,9 +8363,11 @@
     "screen.ceremony.keep.legend",
     "screen.ceremony.mark.standing",
     "screen.ceremony.mark.withdrawn",
+    "screen.ceremony.name",
     "screen.ceremony.notready",
     "screen.ceremony.permanent",
     "screen.ceremony.photo.facts",
+    "screen.ceremony.photo.facts.dated",
     "screen.ceremony.photo.format",
     "screen.ceremony.photo.name",
     "screen.ceremony.photo.nothing",
@@ -8389,6 +8379,7 @@
     "screen.ceremony.photos.gate",
     "screen.ceremony.prepared",
     "screen.ceremony.publicpage",
+    "screen.ceremony.purpose",
     "screen.ceremony.ready",
     "screen.ceremony.refused.nokey",
     "screen.ceremony.refused.notowner",
@@ -8441,6 +8432,7 @@
     "screen.docket.kind.response",
     "screen.docket.kind.statement",
     "screen.docket.kind.withdrawal",
+    "screen.docket.name",
     "screen.docket.none",
     "screen.docket.order",
     "screen.docket.posted",
@@ -8450,6 +8442,7 @@
     "screen.docket.proposed.label",
     "screen.docket.proposed.public",
     "screen.docket.proposed.record",
+    "screen.docket.purpose",
     "screen.docket.reason.help",
     "screen.docket.reason.label",
     "screen.docket.sub",
@@ -8461,7 +8454,9 @@
     "screen.doorbell.happens.phrase",
     "screen.doorbell.happens.reads",
     "screen.doorbell.heading",
+    "screen.doorbell.name",
     "screen.doorbell.note.label",
+    "screen.doorbell.purpose",
     "screen.doorbell.received",
     "screen.doorbell.refused.content",
     "screen.doorbell.refused.empty",
@@ -8485,10 +8480,12 @@
     "screen.imported.issue.label",
     "screen.imported.issue.needed",
     "screen.imported.list",
+    "screen.imported.name",
     "screen.imported.none",
     "screen.imported.publisher.help",
     "screen.imported.publisher.label",
     "screen.imported.publisher.needed",
+    "screen.imported.purpose",
     "screen.imported.reason.label",
     "screen.imported.result.no",
     "screen.imported.result.part",
@@ -8507,7 +8504,9 @@
     "screen.published.grouppage",
     "screen.published.howtoread",
     "screen.published.meets",
+    "screen.published.name",
     "screen.published.people",
+    "screen.published.purpose",
     "screen.published.timeline",
     "screen.published.verify.no",
     "screen.published.verify.none",
@@ -8520,9 +8519,11 @@
     "screen.review-copy.heading",
     "screen.review-copy.link.for",
     "screen.review-copy.link.once",
+    "screen.review-copy.name",
     "screen.review-copy.name.label",
     "screen.review-copy.nodraft",
     "screen.review-copy.noemail",
+    "screen.review-copy.purpose",
     "screen.review-copy.reader.needed",
     "screen.review-copy.readers",
     "screen.review-copy.reads.ended",
@@ -8544,7 +8545,9 @@
     "screen.review-outside.comments.go",
     "screen.review-outside.draft",
     "screen.review-outside.heading",
+    "screen.review-outside.name",
     "screen.review-outside.nolink",
+    "screen.review-outside.purpose",
     "screen.review-outside.sent",
     "screen.review-outside.until",
     "screen.review-outside.untilstopped",
@@ -8564,10 +8567,10 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 286,
+    "reads": 347,
     "minted": 0,
-    "keyedRows": 231,
-    "literalKeys": 286,
+    "keyedRows": 0,
+    "literalKeys": 347,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0
@@ -8577,10 +8580,16 @@
   "screens-settings": {
    "reads": [
     "act.aikeepaway.does",
+    "act.declaredstakeset.does",
+    "act.declaredstakeset.label.group",
     "act.groupkeyremove.does",
     "act.memberlanguageset.does",
     "act.owed_passwordresetlink.label.members",
+    "act.reauth.does",
+    "act.reauth.label.connect",
     "act.subscriptionsignin.does",
+    "act.writinghelp.does",
+    "act.writinghelp.label.group",
     "ai.explore.ask",
     "ai.explore.no",
     "ai.explore.yes",
@@ -8600,6 +8609,7 @@
     "ai.use.explore.name",
     "ai.whopays",
     "connect.ifnot",
+    "connect.notnow",
     "handle.fixed",
     "instance.part.safeview.absent",
     "instance.part.safeview.present",
@@ -8611,6 +8621,8 @@
     "level.pause.name",
     "level.prompt.name",
     "mark.outward.means",
+    "member.founder.unnamed",
+    "member.founder.unnamed.help",
     "places.elsewhere.head",
     "places.elsewhere.open",
     "places.elsewhere.says",
@@ -8620,6 +8632,8 @@
     "refusal.SIGNIN_ADDRESS_UNEXPECTED",
     "refusal.SIGNIN_REFUSED",
     "refusal.SIGNIN_UNAVAILABLE",
+    "refusal.UPDATE_SKIP_NO_REASON",
+    "refusal.reference",
     "screen.account.elsewhere.heading",
     "screen.account.expertise.confirmed",
     "screen.account.expertise.declared",
@@ -8661,9 +8675,12 @@
     "screen.connect.group",
     "screen.connect.group.allowance",
     "screen.connect.group.allowance.reached",
+    "screen.connect.group.allowance.used",
     "screen.connect.group.more",
     "screen.connect.grouplimits",
     "screen.connect.grouplimits.heading",
+    "screen.connect.grouplimits.suggestions",
+    "screen.connect.grouplimits.used",
     "screen.connect.keptaway",
     "screen.connect.keptaway.ask",
     "screen.connect.keptaway.unread",
@@ -8679,6 +8696,7 @@
     "screen.connect.own.thengroup",
     "screen.connect.own.until",
     "screen.connect.purpose",
+    "screen.connect.reauth.summary",
     "screen.connect.refusal.reference",
     "screen.connect.refused.AGENT_WORKER_SILENT",
     "screen.connect.refused.AI_KEPT_AWAY",
@@ -9113,8 +9131,20 @@
     "screen.updates.purpose",
     "screen.wizards.name",
     "screen.wizards.purpose",
+    "session.reauth",
+    "session.reauth.head",
     "settings.set.setup",
+    "settings.set.system",
+    "shell.password",
     "signing.ceremony.keepkey",
+    "stake.group.help",
+    "stake.group.label",
+    "stake.group.save",
+    "stake.group.title",
+    "stake.history",
+    "stake.none",
+    "stake.set",
+    "stake.unreadable",
     "state.empty",
     "state.failed",
     "state.loading",
@@ -9124,6 +9154,7 @@
     "updates.act.update",
     "updates.earlier.head",
     "updates.earlier.installed",
+    "updates.earlier.installed_setup",
     "updates.earlier.skipped",
     "updates.handoff.copy",
     "updates.handoff.explain",
@@ -9144,22 +9175,20 @@
     "updates.running.checked_note",
     "updates.running.head",
     "updates.running.release",
+    "updates.running.release_setup",
     "updates.skip.says",
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 570,
+    "reads": 599,
     "minted": 0,
-    "keyedRows": 470,
-    "literalKeys": 551,
+    "keyedRows": 0,
+    "literalKeys": 599,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0
    },
-   "unkeyed": [],
-   "retired": [
-    "screen.updates.skip.noreason"
-   ]
+   "unkeyed": []
   },
   "control-plane": {
    "reads": [
@@ -9180,10 +9209,10 @@
     "reads": 12,
     "minted": 8,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 28,
-    "inlineKeyed": 15,
-    "inlineUnkeyed": 13
+    "literalKeys": 12,
+    "inline": 14,
+    "inlineKeyed": 0,
+    "inlineUnkeyed": 14
    },
    "unkeyed": [
     {
@@ -9193,74 +9222,80 @@
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
+     "file": "control-plane/archive.mjs",
+     "line": 43,
+     "text": "Changes: ${…}",
+     "why": "the record file's own grammar (its front matter and section labels, as record-grammar parses them), not member prose; the sentences inside it are keyed (DEC-272)"
+    },
+    {
      "file": "control-plane/draft.mjs",
-     "line": 108,
+     "line": 110,
      "text": "the draft's ${…} is over its limit, so nothing was drafted and the fields are as they were.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 236,
+     "line": 238,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 432,
+     "line": 434,
      "text": "knockerconsent is a POST",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 464,
+     "line": 466,
      "text": "the pack could not be rendered",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 752,
+     "line": 760,
      "text": "instance has no bootstrap credential set",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 755,
+     "line": 763,
      "text": "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 758,
+     "line": 766,
      "text": "bootstrap credential does not match",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 977,
+     "line": 987,
      "text": "capabilities are set by an administrator and gate what this account may DO, not what it may see",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 978,
+     "line": 988,
      "text": "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 2002,
+     "line": 2012,
      "text": "this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (`provenanceCapture`) that this promotion registers at ${…}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.",
      "why": "a replaying tool's refusal `detail`, never a member's"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3182,
+     "line": 3190,
      "text": "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3205,
+     "line": 3210,
      "text": "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     }
@@ -9308,9 +9343,9 @@
     "reads": 35,
     "minted": 8,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 75,
-    "inlineKeyed": 41,
+    "literalKeys": 33,
+    "inline": 36,
+    "inlineKeyed": 2,
     "inlineUnkeyed": 34
    },
    "unkeyed": [
@@ -9328,145 +9363,145 @@
     },
     {
      "file": "plane/ask.mjs",
-     "line": 85,
+     "line": 84,
      "text": "a draft is a POST",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 87,
+     "line": 86,
      "text": "the draft's body is not JSON",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 367,
+     "line": 366,
      "text": "a reading is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 387,
+     "line": 386,
      "text": "a status report's draft names its plan and hands the items its report is drawn from",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 388,
+     "line": 387,
      "text": "the plan this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 468,
+     "line": 467,
      "text": "a reading names its subject as {kind, id}, kind one of ${…}",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 501,
+     "line": 500,
      "text": "${…}. Nothing was drafted.",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 520,
+     "line": 519,
      "text": "the records this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 521,
+     "line": 520,
      "text": "a draft that reads records is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 525,
+     "line": 524,
      "text": "a bearing draft names the action the reply was received on",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 530,
+     "line": 529,
      "text": "the reply named is not an entry received on this action",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 534,
+     "line": 533,
      "text": "the reply's text is not held in a reading this member may read",
      "why": "a `why` in the records handed to the assistant, not drawn for a member"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 539,
+     "line": 538,
      "text": "an infraction draft names the matter's plan or its actions",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 16,
+     "line": 21,
      "text": "Your accountability record",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 17,
+     "line": 22,
      "text": "The whole record as rows: every bundle your group's Civicsmith holds, with its type and its state.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 27,
+     "line": 32,
      "text": "How something should go, with documents threaded through it and gaps shown.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 65,
+     "line": 66,
      "text": "How this question has been read",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 66,
+     "line": 67,
      "text": "The readings of a question's evidence, each one that has been made, side by side.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 67,
+     "line": 68,
      "text": "Acting on one reading",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 70,
+     "line": 71,
      "text": "One reading of one question's evidence, acted on: adopted, turned down, set aside with a reason, or put back where nobody had acted on it.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 72,
+     "line": 73,
      "text": "What this project stands on",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 74,
+     "line": 75,
      "text": "Which reading a project stands on, and what it concluded on it.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 75,
+     "line": 76,
      "text": "An AI session",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
     {
      "file": "plane/screens.mjs",
-     "line": 76,
+     "line": 77,
      "text": "One running AI session as it runs: that a job is running in this context, the bound it is running under, what it has consumed of that bound so far, and which account is paying.",
      "why": "the legacy interface's screen registry (plane R24, K1475), handed to `answers`; the design draws no such screen, and its own registry replaces these entries when its interface ships"
     },
@@ -9529,15 +9564,35 @@
    "note": "not built yet at T49: no source, so it reads no key yet"
   },
   "journey-check": {
-   "reads": [],
+   "reads": [
+    "dock.run.yours",
+    "founder.handle.done",
+    "founder.handle.later.help",
+    "founder.handle.says",
+    "question.adddoc",
+    "question.concluded.by",
+    "question.empty.heading",
+    "question.proposal.heading",
+    "screen.answers.machine",
+    "screen.assistant.run.ended",
+    "screen.capture.address.done",
+    "screen.capture.file.done",
+    "screen.connect.own.subscription",
+    "screen.document.passages.head",
+    "screen.held.released",
+    "screen.plan.ask.ended",
+    "screen.plan.ask.running",
+    "screen.site.create",
+    "screen.site.start"
+   ],
    "counts": {
-    "reads": 0,
+    "reads": 19,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 75,
+    "literalKeys": 19,
+    "inline": 172,
     "inlineKeyed": 0,
-    "inlineUnkeyed": 75
+    "inlineUnkeyed": 172
    },
    "unkeyed": [
     {
@@ -9601,39 +9656,153 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/city.mjs",
+     "line": 9,
+     "text": "The landlord must repair the roof of 14 Lakeshore Row within 28 days of this notice.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/city.mjs",
+     "line": 11,
+     "text": "Housing notice 2026-118: repair order, 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/city.mjs",
+     "line": 11,
+     "text": "Housing notice 2026-118",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/city.mjs",
+     "line": 11,
+     "text": "Issued by the City of Lakeshore housing department on 2 October 2026, after an inspection of 14 Lakeshore Row prompted by tenants' reports of water coming through the ceilings of flats 4 and 6.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/city.mjs",
+     "line": 11,
+     "text": "If the repair is not made in that time, the department may carry it out itself and recover the cost from the landlord.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/city.mjs",
+     "line": 27,
+     "text": "Not found",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/design.mjs",
-     "line": 91,
+     "line": 92,
      "text": "the page is ${…}px wide in a ${…}px viewport",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/design.mjs",
-     "line": 94,
+     "line": 95,
      "text": "no tabs are drawn at ${…}px",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/design.mjs",
-     "line": 96,
+     "line": 97,
      "text": "the tabs end at ${…}px at the top and ${…}px at the end, not at the viewport's foot (${…}px)",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/design.mjs",
-     "line": 98,
+     "line": 99,
      "text": "the test band is ${…}px wide in a ${…}px frame",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/design.mjs",
-     "line": 99,
+     "line": 100,
      "text": "${…}.${…}: no loaded stylesheet defines the class",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/design.mjs",
-     "line": 100,
+     "line": 101,
      "text": "the page shows ${…}: ${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 19,
+     "text": "The city's housing notice ${…} orders the landlord to repair the roof: \"${…}\"",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 105,
+     "text": "The document read says: ${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 106,
+     "text": "What the record holds was read; nothing in it settles this yet.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 142,
+     "text": "There is nothing to answer with.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 163,
+     "text": "the question asked",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 166,
+     "text": "What the record holds was read; this answer states nothing it did not read.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 167,
+     "text": "Nothing the assistant read settles this yet.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 179,
+     "text": "The city's housing notice ${…} is held and bears on this question.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 181,
+     "text": "Nothing at the ${…} level bears on this question.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 198,
+     "text": "City repair order 2026-118",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 199,
+     "text": "The city's housing notice ${…}, held in the record, orders the repair this question asks about.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 201,
+     "text": "the notice's repair order and its 28 days",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/fake-model.mjs",
+     "line": 202,
+     "text": "the city's own notice ordering the landlord to repair the roof",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
@@ -9655,291 +9824,741 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/investigation.mjs",
+     "line": 15,
+     "text": "Roof repairs at 14 Lakeshore Row",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 16,
+     "text": "Has the landlord been ordered to repair the roof of 14 Lakeshore Row?",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 19,
+     "text": "Flat 4, 14 Lakeshore Row. Water came through the ceiling on 29 September and again on 1 October 2026.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 21,
+     "text": "repair the roof",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 67,
+     "text": "4 · connect an assistant by her own Claude subscription",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 82,
+     "text": "2 · start a project with a title, and open it",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 84,
+     "text": "Tenants of 14 Lakeshore Row report water coming in.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 91,
+     "text": "3 · open a question in it",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 92,
+     "text": "This is what the tenants need answered.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 110,
+     "text": "5 · capture by address into the question, from its \"Add a document\"",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 117,
+     "text": "5 · capture by upload into the question",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 126,
+     "text": "Flat 4, 14 Lakeshore Row, 1 October 2026",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 127,
+     "text": "My note of when the water came through the ceiling.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 134,
+     "text": "6 · see both held, and vouch for one",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 141,
+     "text": "The copy is the notice the city published at that address",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 141,
+     "text": "None remains",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 151,
+     "text": "7 · open the document, see its words, and Find-in a passage",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 170,
+     "text": "8 · cite it with a role (supports)",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 175,
+     "text": "The notice orders the repair.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 183,
+     "text": "9 · run the assistant on the question from the dock",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 190,
+     "text": "10 · read its run's answer and its suggested reading",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 204,
+     "text": "11 · Ask, and read the answer",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 225,
+     "text": "12 · accept a reading, stand on it for the project, and conclude",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 229,
+     "text": "I read the notice; it says the repair was ordered.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 230,
+     "text": "The project stands on the city's own order.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 231,
+     "text": "The city withdrawing or amending notice 2026-118",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 232,
+     "text": "The city's notice orders the landlord to repair the roof within 28 days.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 233,
+     "text": "The notice answers the question.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 248,
+     "text": "What did the city order the landlord to do, and by when?",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 258,
+     "text": "the administrator invites her to the project",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 260,
+     "text": "She lives in flat 4.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 263,
+     "text": "she connects her own Claude subscription",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 265,
+     "text": "she opens the project and a question of her own",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 268,
+     "text": "When did the tenants first report the leak to the landlord?",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 269,
+     "text": "The timeline matters for the order.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 273,
+     "text": "the project's assistant page, as hers (projectai)",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 279,
+     "text": "plan help, as hers (planask)",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 281,
+     "text": "Get the roof repaired",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 281,
+     "text": "The tenants want the repair made.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 283,
+     "text": "Ask the assistant for options.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 294,
+     "text": "Who has the tenants' reports of the leak?",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 304,
+     "text": "install: the installer's first page",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 305,
+     "text": "install: each step finishes, the checks pass",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 307,
+     "text": "4 · connect an assistant",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 308,
+     "text": "home: a new group's home",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 309,
+     "text": "2 · start a project",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 310,
+     "text": "3 · open a question",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 311,
+     "text": "9 · run the assistant",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 312,
+     "text": "9 · run the assistant",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 313,
+     "text": "5 · capture by address",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 314,
+     "text": "6 · see both held",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 316,
+     "text": "10 · read its run's answer",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/investigation.mjs",
+     "line": 317,
+     "text": "12 · accept a reading",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/journeys.mjs",
-     "line": 12,
+     "line": 13,
      "text": "Lakeshore Tenants",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 37,
+     "line": 67,
      "text": "Recorded by the release walk.",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 67,
+     "line": 107,
      "text": "the ten recovery codes",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 79,
+     "line": 117,
+     "text": "civicsmith.org: what Civicsmith is",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 122,
+     "text": "civicsmith.org: start a group, and create it",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 142,
      "text": "install: the installer's first page",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 85,
+     "line": 148,
      "text": "install: the short name, confirmed permanent",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 90,
+     "line": 153,
      "text": "install: before Cloudflare, what it will be asked to allow",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 94,
+     "line": 157,
      "text": "install: Cloudflare's permission, allowed",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 98,
+     "line": 162,
      "text": "install: each step finishes, the checks pass",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 118,
+     "line": 187,
      "text": "hand-over: to the group's address, finishing setup",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 137,
-     "text": "home: a new group's home, inviting members and saying who it is",
+     "line": 195,
+     "text": "1 · setup: claim with her own handle; she is the group's first administrator",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 139,
-     "text": "the invitation to invite members",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 141,
-     "text": "Mai, from flat 4",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 149,
-     "text": "members: an invitation link for ${…}",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 152,
-     "text": "the invitation link",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 162,
-     "text": "join: the invitation link opens the join screen",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 168,
-     "text": "join: a handle, free, and a password; joined and signed in",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 170,
-     "text": "that ${…} is free",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 172,
-     "text": "that she joined",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 174,
-     "text": "join: her ten recovery codes, shown once",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 179,
-     "text": "home: the guided welcome she began when she joined, continued",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 181,
-     "text": "the welcome to continue",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 183,
-     "text": "account: her first settings, her expertise declared",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 185,
-     "text": "Interpreting, Spanish and English",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 186,
-     "text": "text=Interpreting, Spanish and English",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 186,
-     "text": "the expertise declared",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 188,
-     "text": "home: what happened? a problem I live with",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 202,
-     "text": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 203,
-     "text": "Flat 4, second floor",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 204,
-     "text": "the testimony recorded",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 206,
-     "text": "account: sign out on this device",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 209,
-     "text": "the signed-out state",
-     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
-    },
-    {
-     "file": "journey-check/journeys.mjs",
-     "line": 212,
-     "text": "front: on her phone, sign in, kept signed in",
+     "line": 210,
+     "text": "1 · sign in by her handle",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
      "line": 219,
+     "text": "1 · setup: she chooses her own handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 227,
+     "text": "1 · sign out, to sign in by her handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 230,
+     "text": "the signed-out state",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 232,
+     "text": "1 · sign in by her handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 240,
+     "text": "home: a new group's home, inviting members and saying who it is",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 242,
+     "text": "the invitation to invite members",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 244,
+     "text": "Mai, from flat 4",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 265,
+     "text": "members: an invitation link for ${…}",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 268,
+     "text": "the invitation link",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 278,
+     "text": "join: the invitation link opens the join screen",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 284,
+     "text": "join: a handle, free, and a password; joined and signed in",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 286,
+     "text": "that ${…} is free",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 288,
+     "text": "that she joined",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 290,
+     "text": "join: her ten recovery codes, shown once",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 295,
+     "text": "home: the guided welcome she began when she joined, continued",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 297,
+     "text": "the welcome to continue",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 299,
+     "text": "account: her first settings, her expertise declared",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 301,
+     "text": "Interpreting, Spanish and English",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 302,
+     "text": "text=Interpreting, Spanish and English",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 302,
+     "text": "the expertise declared",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 304,
+     "text": "home: what happened? a problem I live with",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 318,
+     "text": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 319,
+     "text": "Flat 4, second floor",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 320,
+     "text": "the testimony recorded",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 322,
+     "text": "account: sign out on this device",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 325,
+     "text": "the signed-out state",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 328,
+     "text": "front: on her phone, sign in, kept signed in",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/journeys.mjs",
+     "line": 335,
      "text": "lock: idle half an hour on her own device",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 223,
+     "line": 339,
      "text": "unlock: her password again, back where she was",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 238,
+     "line": 354,
      "text": "welcome 1–2: join, the language and a handle and a password",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 245,
+     "line": 361,
      "text": "that he joined",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 249,
+     "line": 365,
      "text": "welcome 3: this is your group's home",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 252,
+     "line": 368,
      "text": "the welcome running",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 254,
+     "line": 370,
      "text": "a question's strength, and Undetermined",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 255,
+     "line": 371,
      "text": "optional: connect your own Claude account, skipped",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 255,
+     "line": 371,
      "text": "optional: your own ties, skipped",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/journeys.mjs",
-     "line": 256,
+     "line": 372,
      "text": "a first step",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/local.mjs",
-     "line": 57,
+     "line": 94,
+     "text": "not reachable from the local arm",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/local.mjs",
+     "line": 96,
      "text": "no network in the local arm",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/local.mjs",
-     "line": 80,
+     "line": 121,
      "text": "import worker from ${…}; export default worker;",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/local.mjs",
+     "line": 126,
+     "text": "import site from ${…}; export default site;",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/run.mjs",
-     "line": 89,
+     "line": 104,
      "text": "Teo, from flat 9",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 115,
+     "line": 114,
+     "text": "she signs in on her own computer",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 171,
+     "text": "1 · sign in by her handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 178,
+     "text": "she signs in by her handle",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/run.mjs",
+     "line": 197,
      "text": "the live arm needs the test instance's address (--live",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 116,
+     "line": 198,
      "text": "the environment does not hold ${…}",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
      "file": "journey-check/run.mjs",
-     "line": 135,
+     "line": 217,
      "text": "${…}: open / and sign in",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 38,
+     "text": "no such route",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 40,
+     "text": "the request was not JSON",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 41,
+     "text": "no member was named",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 45,
+     "text": "a sign-in is waiting for someone else",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 50,
+     "text": "a sign-in is waiting for someone else",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 51,
+     "text": "no sign-in is waiting; start again",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 52,
+     "text": "a later sign-in replaced this one",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 53,
+     "text": "the code was not one line",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/runner.mjs",
+     "line": 83,
+     "text": "the turn limit was reached",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
@@ -9985,8 +10604,26 @@
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     },
     {
+     "file": "journey-check/signin.mjs",
+     "line": 10,
+     "text": "Authorize (test sign-in)",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/signin.mjs",
+     "line": 10,
+     "text": "Signed in (the walk's stand-in for Anthropic's page)",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
+     "file": "journey-check/signin.mjs",
+     "line": 10,
+     "text": "Paste this code into your application:",
+     "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
+    },
+    {
      "file": "journey-check/walker.mjs",
-     "line": 13,
+     "line": 14,
      "text": "Your accountability record",
      "why": "the journey walk's test harness: its fixtures, steps and findings; no member reads it"
     }
@@ -30722,7 +31359,6 @@
     "machinery-producers.summary.capture_did_finish",
     "machinery-producers.summary.captured_daemon_investigative",
     "machinery-producers.summary.closed_while_working",
-    "machinery-producers.summary.completed_unattended_writer",
     "machinery-producers.summary.listing_page_sweep",
     "machinery-producers.summary.monitored_check_scheduled",
     "machinery-producers.summary.monthly_attestation_working",
@@ -30740,10 +31376,13 @@
     "machinery-producers.summary.working_notice_will",
     "machinery-producers.text.last_thing_recorded",
     "machinery-producers.text.undetermined_number",
-    "machinery-producers.zone_undetermined"
+    "machinery-producers.zone_undetermined",
+    "queue.capture-completed-unattended.detail",
+    "queue.capture-completed-unattended.summary",
+    "queue.capture-completed-unattended.who"
    ],
    "counts": {
-    "reads": 27,
+    "reads": 29,
     "unkeyed": 0
    },
    "unkeyed": [],
