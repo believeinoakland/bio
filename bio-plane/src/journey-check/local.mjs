@@ -68,7 +68,7 @@ export function planeOptions(bindings, { dir, name, outbound, model = true }) {
     durableObjects: { RUNNER: { className: "AgentRunner", scriptName: AGENT_RUNNER } }, outboundService: outbound };
   const runner = { name: AGENT_RUNNER, scriptPath: RUNNER_ENTRY, script: readFileSync(RUNNER_ENTRY, "utf8"),
     compatibilityDate: BASE.compatibilityDate, modules: true, modulesRoot: "/", modulesRules: BASE.modulesRules, bindings: { FAKE_MODEL: model ? "on" : "off", VERSION: vars.VERSION || "0.0.0",
-      ...(process.env.JOURNEY_DEBUG ? { JOURNEY_DEBUG: "1" } : {}) },
+      ...(process.env.JOURNEY_DEBUG ? { JOURNEY_DEBUG: process.env.JOURNEY_DEBUG } : {}) },
     durableObjects: { AGENT_RUNNER_SELF: { className: "AgentRunner" } } };
   const opts = { workers: [plane, agent, runner],
     durableObjectsPersist: join(dir, "do"), r2Persist: join(dir, "r2") };

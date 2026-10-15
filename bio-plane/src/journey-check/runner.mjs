@@ -103,7 +103,14 @@ export class AgentRunner {
         gen = conversation({ system: m.system, prompt: m.prompt, tools: m.tools || [], max_turns: max });
         return advance(undefined);
       }
-      if (m && m.tool_result) return advance(m.tool_result);
+      if (m && m.tool_result) {
+        /* JOURNEY_DEBUG=facts: the facts a compose or adjust step is handed, for shaping the fake model; the walk's own
+           fixtures, never a token */
+        if (this.env.JOURNEY_DEBUG === "facts" && offered.includes("judge_compose") && calls[calls.length - 1] === "read_facts")
+          console.log(JSON.stringify({ event: "journey.facts", calls, facts: String(typeof m.tool_result.content === "string"
+            ? m.tool_result.content : JSON.stringify(m.tool_result.content)).slice(0, 6000) }));
+        return advance(m.tool_result);
+      }
       return end({ ok: false, code: "BAD_REQUEST", detail: "expected a tool_result" });
     });
     return new Response(null, { status: 101, webSocket: client });
