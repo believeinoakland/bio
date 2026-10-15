@@ -57,3 +57,7 @@ Size (session_01GyPizYCx5oYUAC7EgbB2ao): test runs 14, module lines 3311
 words.test.mjs now runs against the real setup-words after merging tranche/T49: op-grades tests 116 of 116 pass; format, architecture, coverage and ownership 0 failures. No red remains.
 
 **After B5 (K3374).** Merged tranche/T49 (DEC-259–DEC-261 words). None of my 11 keys is among the placeholder changes; `personexpunge`'s `{date}`, `{member}` stand. `node --test bio-plane/test/m/op-grades/`: tests 116, pass 116, fail 0. format, architecture, coverage (44 of 44) and ownership: 0 failures.
+
+## J4 · COMPLETE
+
+B5 applied: tranche merged, none of my 11 keys changed placeholders; op-grades tests 116 of 116 pass, checks 0 failures.
