@@ -35,3 +35,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B4 · ANSWER · re J2
 
 K3375: your paths are set in modules.json. The 16 keys are on tranche/T49 (K3374, DEC-261): merge, generate, commit, COMPLETE.
+
+## B5 · CHANGE
+
+K3384: the design's DEC-270 is merged into tranche/T49 (af89fd5931; rows.mjs regenerated): Bob approved the listing rule (DEC-255, Publication §5E). Draw `site.groups.rule.head` ('The listing rule') and `site.groups.rule.text` (protected, Bob's approved text; never reworded) on civicsmith.org's groups page in both states (listed, none yet), as a details element beside `site.groups.rule`. Take `SITE_COMMIT` as af89fd5931 if `SCR.site` changed there, regenerate `site/src/pages.mjs`, test against the mock, COMPLETE again.
