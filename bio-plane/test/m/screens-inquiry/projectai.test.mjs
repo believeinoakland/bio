@@ -35,10 +35,8 @@ test("R14 reads: the project's account, its notice and keep-away, her sign-in, a
   assert.equal(q("projectaikeepawaystate").project, P);
   assert.equal(q("projectparticipants").projectId, P);
   assert.deepEqual(p.byOp("subscriptionsignin")[0].body, { step: "state" });
-  /* N1073: the panel's reads as the screen itself declares them (its reads naming an owner), never a hand-list */
-  const panelOps = Object.values(SCREENS.find((s) => s.id === "projectai").reads({ subject: P })).filter((r) => r.query && r.query.owner).map((r) => r.op);
-  assert.ok(panelOps.length >= 4);
-  for (const op of panelOps) assert.equal(q(op).owner, OWNER, op);
+  /* K3419: the panel's four reads name the project's account, and are made for an owner only (below: never for a participant) */
+  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(q(op).owner, OWNER, op);
   assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Pothole repairs") && says(p.root().querySelector(".cs-crumbs"), "screen.projectai.name"));
 });
 
@@ -171,4 +169,19 @@ test("R39 the title is the project's, never its id; a project with none draws un
   for (const h of main(p).querySelectorAll("h1, h2")) assert.doesNotMatch(h.textContent, /PROJ-/);
   const bare = await openAi({ sole: true }, { image: ok({ "bundle.md": `---\nid: ${P}\nobject_type: project\n---\n` }) });
   assert.ok(main(bare).querySelector("h1").textContent.startsWith(word("state.undetermined", { reason: "" }).trim()));
+});
+
+test("R14 a joined participant who is not an owner sees what pays, read-only; the owner-only reads are neither made nor drawn for her", async () => {
+  const notOwner = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: true }, { handle: "mai", state: "joined", owner: false }] }) };
+  const refused = refusedIn("PROJECT_ACT_NOT_THE_OWNER");
+  const p = await openAi({}, { ...notOwner, accountuses: refused, ailimits: refused, aiusage: refused, accounthistory: refused });
+  const m = main(p);
+  assert.ok(says(m.querySelector("[data-account]"), "screen.projectai.account.key"), "what pays, read");
+  assert.ok(says(m, "screen.projectai.owners"));
+  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(p.byOp(op).length, 0, op + " is not read for her");
+  assert.ok(!m.textContent.includes("PROJECT_ACT_NOT_THE_OWNER") && m.querySelector('[data-state="failed"]') === null, "no owner refusal drawn");
+  assert.deepEqual(actsIn(m), ["projectkeynoticeseen"], "only the notice, a participant's own; no act of an owner's");
+  /* control: an owner of the project reads and is drawn all four */
+  const o = await openAi({ sole: true });
+  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(o.byOp(op).length, 1, op);
 });

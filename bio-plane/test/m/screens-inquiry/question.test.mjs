@@ -313,6 +313,19 @@ test("R41 state g: concluded, who and when, the reading's words, what would chan
   assert.deepEqual(p.byOp("withdrawconclusion")[0].query, { op: "withdrawconclusion", target: Q, project: P, reason: "new evidence" });
 });
 
+test("R41 state g: concluded over a project is drawn from the read that names the project (basis-versions answers a conclusion only to it)", async () => {
+  const concluded = { conclusion: { claim: { text: "No: 1 in 10 is not repaired in time." }, by: "member:dev", at: "2026-10-13T09:00:00Z" }, conclusion_stance: "concluded" };
+  const basis = (withdrawn) => (r) => ok(BASIS(r.query.project ? { ...concluded, ...(withdrawn ? { conclusion_stance: "withdrawn" } : {}) } : {}));
+  const p = await open(at, { ...A, plane: { basisversions: basis(false) } });
+  const g = section(p, "question.concluded.heading");
+  assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time.") && g.textContent.includes("dev"));
+  assert.deepEqual(actsIn(g).sort(), ["planopen", "withdrawconclusion"]);
+  assert.ok(p.byOp("basisversions").some((c) => c.query.project === P), "read with the project");
+  /* control: the project's read answers the conclusion withdrawn: state g is not drawn */
+  const w = await open(at, { ...A, plane: { basisversions: basis(true) } });
+  assert.equal(w.root().querySelector("#state-g"), null);
+});
+
 test("R36 after planopen, the question links its plan by name; control: no plan, no link", async () => {
   const p = await open(at, { ...A, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0003", title: "Ask the committee" }) } });
   assert.equal(main(p).querySelector("[data-plan]"), null);

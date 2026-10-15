@@ -1,6 +1,6 @@
 # screens-inquiry (T49)
 
-**Status** · session_015AVppQzR1P2zG8LjVeLCKr · depth 2 · COMPLETE · handled B13
+**Status** · session_01D43oSXdsfbcd5qvTuCeR9M · depth 2 · COMPLETE · handled B14
 
 ## J1 · QUESTION
 
@@ -119,3 +119,21 @@ journey-check's local arm (`npm ci`; `npm run journey`): 108 steps, 3 failures, 
 Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures.
 
 Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 36, module lines 2228
+
+## J10 · COMPLETE
+
+**B14 (CHANGE, K3419) applied; the journey walk now passes to the end.**
+
+1. **R41 state g.** `question.mjs` decides the conclusion from the project-aware `basisversions` read it already held (`cur`) when the question states a project, and from the unnamed read otherwise. `conclude` and `withdrawconclusion` now clear that read on success (as the reading acts do), so state g is drawn at once after a conclude; before, the page kept its stale answer.
+2. **R1, R37 (not joined).** `project.mjs` draws the not-joined state, with "Join" alone, for a member the roster lists as `invited`. `projectaccountstate` moved from the declared reads to a read made once the roster has answered, so a member who has not joined never makes the read that answers NO_SUCH_PROJECT; after `projectjoin` (which now rereads the page's reads) the page reads as a participant's. `projectai` draws the same not-joined state for an invited member.
+3. **R14 (a joined non-owner).** `projectai.mjs` no longer declares `accountuses`, `ailimits`, `aiusage` and `accounthistory`; the screen makes them (`later`, over `owner: "project:<id>"`) only for a joined owner, and its owner acts refresh them. A participant who is not an owner sees what pays, read-only, her own notice act, and nothing else.
+
+Tests (each with its control, each failing without the change): R41 state g over a fake that answers the conclusion only to a project-naming read (control: withdrawn draws no state g); R1/R37 an invited member's project page (no `projectaccountstate` before the join, one after; control: a joined member); R14 a non-owner (the four reads not made, no refusal drawn; control: an owner reads all four). `common.test.mjs` now names the reads the screen makes itself. `test/m/screens-inquiry/`: 118 pass, 0 fail.
+
+journey-check's local walk (`cd bio-plane/src/journey-check && npm run journey`): **118 steps, 0 failures**; R9 step 12 and R10 pass to the end. No failure left.
+
+Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures.
+
+Deferred: none new. No generated artifact of another module is stale by this change (the plane bundle includes this module's source: BOB regenerates it at the layer close).
+
+Size (session_01D43oSXdsfbcd5qvTuCeR9M): test runs 12, module lines 2249

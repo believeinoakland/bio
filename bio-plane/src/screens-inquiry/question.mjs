@@ -133,7 +133,8 @@ function render(cs, view) {
   const legName = (l) => legTitle(l) + (l.extent_page ? " · " + T("screen.document.passage.where", { page: l.extent_page }) : "");
 
   /* R41 state g: concluded; c: nothing cited; d: a run of hers at work; e: the assistant's proposal; f: its limit */
-  const b = d.basis && d.basis.state === "ok" ? d.basis.value : null;
+  /* the conclusion is answered only to a read that names the project (`basis-versions` R12, R16): `cur` when there is one */
+  const b = cur && cur.state === "ok" && cur.value ? cur.value : (d.basis && d.basis.state === "ok" ? d.basis.value : null);
   const concluded = !!(b && b.conclusion && b.conclusion_stance !== "withdrawn");
   const member = view.me && view.me.member;
   const runs = view.reachable && member ? later("runs", "airuns", { contextType: "inquiry", contextId: id, limit: "50" }, String(ui.seq || 0)) : null;
@@ -505,13 +506,16 @@ const acts = [
       if (falsifier) q.falsifier = falsifier; else q.no_falsifier = "1";
       if (commentary) q.commentary = commentary;
       return { query: q, raw: "" };
-    } },
+    },
+    /* R41 state g: the conclusion is answered to the project-aware read, read again once it is made or withdrawn */
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
   { op: "withdrawconclusion", label: "act.withdrawconclusion.label.question",
     send(view) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
       return { query: { target: String(view.subject || ""), ...(m ? { project: m[1] } : {}) }, raw: "" };
-    } },
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
   { op: "hypothesishold", label: "act.hypothesishold.label.question",
     send(view, el, cs) {
       const statement = String(cs.value("question-hunch") || "").trim();
