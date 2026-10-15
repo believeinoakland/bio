@@ -87,3 +87,9 @@ B7 processed: tranche/T49 merged (real interface-shell R65–R72, admission); no
 Tests that import my screens: `plane/t47.test.mjs` and `control-plane/t46-app.test.mjs` pass. `answer-envelope/catalogue-end.test.mjs` has 2 failures (R7/R2/R10/R13 and R13: the C-124.30 `SCENARIO_OUT_OF_RANGE` pin against action-plans' words); they concern action-plans' re-worded refusal, not any screen of mine. Owner: answer-envelope / action-plans.
 
 Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 21, module lines 1112
+
+## J7 · COMPLETE
+
+B9 applied (DEC-268). R22: after a capture made from a project or a question the result says `capture.filed.project` ({project}: its title) or `capture.filed.question` ({project}, {question}: the question's title), read through `image` (the id stands in where a title cannot be read; a question stating no project says nothing is filed). From a question only, it offers `capture.cite` with `capture.cite.tip`, to `/app/find-in/<document>/<question>`; from a project, no Cite a passage (no question to choose). `act.cite.label.document` is no longer read. `screen.capture.address.watchhead` is not drawn (R18 draws no watching section before a capture), so the rewording needs no code. Tests 80 pass; coverage 26 of 26; architecture and ownership 0 failures.
+
+Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 24, module lines 1129
