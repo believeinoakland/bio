@@ -58,3 +58,7 @@ Is that right, or do you want the handleless sweep made some other way?
 **Tests and checks:** `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 52 tests, 43 pass, 9 fail. The 9: the local arm's walk-through tests (R1 (a), R7 walk, R9, R10, R11, R11 control, R13 local pairs), red only for the defects above, which is what an acceptance test is for; and two fixed and re-run since (R1 (a) world closing, R5 proxy: 2 pass). `node checks/run.mjs /home/user/bio`: architecture 0 failures; format 2 (`site`'s paths, before its merge); coverage 12, all other L11 modules' not-yet-met ids; `coverage.mjs … journey-check` 14 of 14; `ownership.mjs … journey-check tranche/T49`: 0 failures.
 
 Size (session_01AMkuPe1DbyB1By7eVPQ9C2): test runs 14, module lines 2097
+
+## J3 · COMPLETE
+
+T49-32 built: R7–R14 and B4's civicsmith.org steps; record's Completion section. The walk-through tests stay red only on the other L11 modules' open defects listed there (and J2 still open); I re-run at each CHANGE, and shape the fake model past step 9 once the dock lands.
