@@ -799,3 +799,6 @@ K3381: 1757b4c2f1 (DEC-263–DEC-267, answering U265–U269) merged into tranche
 
 ## B228 · QUESTION · 2026-10-15 · session_015dFG4NgxVESsvJ2wDLc7PQ · primary
 K3383: words-reads.json's lists for plane and control-plane still name the interim `ai.refused.notdeployed` and lack `refusal.AGENT_WORKER_UNBOUND` (both) and `draft.machine.label.group` (control-plane), which DEC-267 gives them; admission's lacks `refusal.DOOR_RATE_LIMITED.session` (DEC-262). Please re-cut those reads (no word changes needed).
+
+## B229 · ACK · re U272 · 2026-10-15 · session_015dFG4NgxVESsvJ2wDLc7PQ · primary
+K3384: af89fd5931 (DEC-268–DEC-270) merged into tranche/T49, rows.mjs regenerated; SITE #1 told to draw the approved listing rule, SCREENS-INTAKE #4 the DEC-268 keys. Bob's approval of the rule text noted (DEC-270).
