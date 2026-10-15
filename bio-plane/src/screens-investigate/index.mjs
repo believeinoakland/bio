@@ -13,7 +13,6 @@ import { PROCEEDING_SCREEN } from "./proceeding.mjs";
 import { DUE_DATE_SCREEN } from "./due-date.mjs";
 import { STANDARD_SCREEN } from "./standard.mjs";
 import { TIES_SCREEN } from "./ties.mjs";
-export { SCREEN_WORDS } from "./words.mjs";
 
 /** interface-shell R21: the eleven registry screens this module draws. */
 export const SCREENS = Object.freeze([PEOPLE_SCREEN, PERSON_SCREEN, EXPLORE_SCREEN, TIMELINE_SCREEN, MONEY_SCREEN, CALCULATION_SCREEN,

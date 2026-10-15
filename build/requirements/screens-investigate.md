@@ -12,7 +12,7 @@ The investigation's tools beside a question: a person the record follows and the
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key)
 
 **person** (People › Person; the registry's 6 acts; N719; DEC-142, DEC-170, DEC-181)
 - **R1** Reads `person` (positions with their dates and sources, career, credentials, memberships, interests, statements, each with its grade), `samepersoncandidates`, and the identity claims as `person` answers them. Acts: `person` "Open the person" (the read again); `recordpersonfact` (a fact read from a passage the member chooses, citing it); `identityclaim` "Say another record is this person…" (with its basis); `withdrawidentityclaim` (with a reason); `followregister` (a register the person appears in, `following`); `personexpunge` "Remove it for good, with this reason": the dialog states `op-grades`' consequence statement (its R21, filled with the date and the member), takes the reason naming the law or order that requires it, and is drawn with the Irreversible weight; at the phone width it is read and not done (`interface-shell` R11, DEC-181). Each position and fact is a reference to its source passage; "Explore connections" opens `explore` from this person.
@@ -82,19 +82,19 @@ The investigation's tools beside a question: a person the record follows and the
 
 #### T49 (T49-26)
 
-- **R27** (T49; N1090; DEC-236 (B204 (3)); `affordances` R60; amends R18, R24) The graph draws a `step_source` step in its own class (`.e-step_source`, a bold line), named by `connection.kind.step_source.name` ("Stated in a source") and explained by `.means`. `explore`'s "Follow" offers six groups: R24's five and "Stated in a source", which sends its kinds by `affordances` R60's group. Test: ticking "Stated in a source" sends exactly its kinds. Control: "Mentioned together" sends no `step_source` kind. *(not yet met: T49)*
+- **R27** (T49; N1090; DEC-236 (B204 (3)); `affordances` R60; amends R18, R24) The graph draws a `step_source` step in its own class (`.e-step_source`, a bold line), named by `connection.kind.step_source.name` ("Stated in a source") and explained by `.means`. `explore`'s "Follow" offers six groups: R24's five and "Stated in a source", which sends its kinds by `affordances` R60's group. Test: ticking "Stated in a source" sends exactly its kinds. Control: "Mentioned together" sends no `step_source` kind.
 - **R28** (T49; N1094; DEC-240 (proceeding); DEC-232; `following` R30; amends R6) On `proceeding`, "Dates" (`proceeding.dates.title`, explained by `.dates.help`):
   - It reads `proceedingdates` and draws `proceeding.dates.stage`.
   - It draws two lanes, `proceeding.dates.lane.proceeding` and `.lane.group`, never interleaved, each date by `cs.date`.
   - With no dates, it draws `proceeding.dates.none`.
   - Nothing is drawn as late.
 
-  Test: two lanes over a fixture. Control: a body's own deadline is never in the group's lane. *(not yet met: T49)*
-- **R29** (T49; D30 **m**; amends R2) `explore` opened with no centre draws its sentence by key, never "no centre is named…". The key is owed by the channel act; until given, this module's own `SCREEN_WORDS` row in plain words. Test: a bare `explore` draws the keyed sentence. Control: with a centre, the graph. *(not yet met: T49)*
+  Test: two lanes over a fixture. Control: a body's own deadline is never in the group's lane.
+- **R29** (T49; D30 **m**; amends R2) `explore` opened with no centre draws its sentence by key, never "no centre is named…". The key is owed by the channel act; until given, this module's own `SCREEN_WORDS` row in plain words. Test: a bare `explore` draws the keyed sentence. Control: with a centre, the graph.
 
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 
-- **R30** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 795 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 2 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. It reads the design's key where the list renames one: `act.connectionassert.label.explore` → `act.stepsource.label.explore`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+- **R30** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 795 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 2 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. It reads the design's key where the list renames one: `act.connectionassert.label.explore` → `act.stepsource.label.explore`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
 
 ## Private
 

@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, HOOK_CLASSES } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
-import { open, main, text, press, tick, ok, refusedIn, plane, COPY, PREFLIGHT, SCREENS, P, DR, C } from "./fixtures.mjs";
+import { open, main, text, drew, press, tick, ok, refusedIn, plane, COPY, PREFLIGHT, SCREENS, P, DR, C } from "./fixtures.mjs";
 
 const tokens = (css) => new Set([...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
 const page = interfacePage(SCREENS);
@@ -83,11 +83,11 @@ test("R20 each screen over an empty fixture shows no empty section and no zero; 
   }
   const ed = await open(PATHS["case-editor"], { plane: EMPTY });
   assert.equal(main(ed).querySelectorAll('[data-state="empty"]').length, 1, "case-editor: one empty state");
-  assert.match(text(ed), /No draft yet\. Prepare the first one below/);
+  assert.ok(drew(ed, "screen.case-editor.nodrafts"));
   const im = await open("/app/imported", { plane: EMPTY });
-  assert.match(text(im), /No case imported yet\. Choose a case file below/);
+  assert.ok(drew(im, "screen.imported.none"));
   const dk = await open(PATHS.docket, { plane: EMPTY });
-  assert.match(text(dk), /No entry yet\. File the first one below/);
+  assert.ok(drew(dk, "screen.docket.none"));
   const out = await open("/app/review", { boot: { session: null, hash: "#grant=S" }, plane: { reviewcopy: ok({ kind: "review-copy", draft: DR, case: { case_id: C, edition: 2, identity: "X" }, authored: {}, findings: [], grant: { recipient: "Ana" } }) } });
   assert.deepEqual(holdsNothing(out).map((s) => s.querySelector("h2").textContent), [], "review-outside: an empty section");
 });

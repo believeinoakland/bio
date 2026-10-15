@@ -4,10 +4,15 @@
   "op-capabilities": {
    "reads": [],
    "counts": {
-    "reads": 0
+    "reads": 0,
+    "minted": 0,
+    "keyedRows": 0,
+    "literalKeys": 0,
+    "inline": 0,
+    "inlineKeyed": 0,
+    "inlineUnkeyed": 0
    },
-   "unkeyed": [],
-   "note": "not built yet at T49: no source, so it reads no key yet"
+   "unkeyed": []
   },
   "op-grades": {
    "reads": [
@@ -27,1564 +32,1618 @@
     "reads": 11,
     "minted": 8,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 813,
-    "inlineKeyed": 12,
-    "inlineUnkeyed": 801
+    "literalKeys": 11,
+    "inline": 803,
+    "inlineKeyed": 0,
+    "inlineUnkeyed": 803
    },
    "unkeyed": [
     {
      "file": "op-grades/index.mjs",
-     "line": 257,
+     "line": 256,
      "text": "the machinery a decided act rides on, not a decision. A member never chooses op=promote; they choose to conclude, or to retire, and the write path is how that lands. A rung is a promise about undoing something a member CHOSE, so there is nothing here to promise.",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 261,
+     "line": 260,
      "text": "the subject is WHO MAY ACT, not what the record says. Adding a member, minting a machine credential or moving a project's roster changes who can write; it writes nothing the record asserts. The ladder grades acts on the record, and these are one layer beneath it.",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 265,
+     "line": 264,
      "text": "the subject is the caller's own server-side or personal state — a selection is a lease the credential that made it owns, a mute is one member's preference about their own feed. None of it is in the record, so undoing it costs the record nothing and claims nothing to anybody.",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 269,
+     "line": 268,
      "text": "the act records WHAT WAS OBSERVED, not what anybody decided. There is nothing to reverse: an observation is corrected by observing again, and the earlier observation stays true of the moment it was made.",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 273,
+     "line": 272,
      "text": "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal establishes one, so the honest answer is that it is UNDETERMINED — stated, never guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as 'light'. Several of these are weighty, and the reason they are undetermined is that the ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed.",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 657,
+     "line": 643,
      "text": "the one write path every act rides",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 659,
+     "line": 645,
      "text": "the courtesy lock around promote",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 660,
+     "line": 646,
      "text": "byte movement, content-addressed",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 661,
+     "line": 647,
      "text": "the fetch layer (M2')",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 662,
+     "line": 648,
      "text": "admits an observed link as an edge, keyed by capture",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 663,
+     "line": 649,
      "text": "the CPU probe — a Worker cannot time itself",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 664,
+     "line": 650,
      "text": "writes an export manifest of what is already there",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 665,
+     "line": 651,
      "text": "the task scheduler's own tick",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 667,
+     "line": 653,
      "text": "the capture-request queue's own tick",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 668,
+     "line": 654,
      "text": "rebuilds the projection from bundles already written",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 669,
+     "line": 655,
      "text": "the self-test write, scratch-confined",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 670,
+     "line": 656,
      "text": "operator maintenance of the store, not an act on the record",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 675,
+     "line": 661,
      "text": "records, once, the producing group every later creation is stamped with",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 677,
+     "line": 663,
      "text": "records the group's own words for itself, a presentation value in no signed bytes",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 678,
+     "line": 664,
      "text": "records a domain CLAIM and its verdict; it moves no document, claim or grade",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 681,
+     "line": 667,
      "text": "records which jurisdiction profiles the instance works under, an administrator's configuration; it moves no document, claim or grade",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 682,
+     "line": 668,
      "text": "DERIVES connections from documents already held; re-running re-derives",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 683,
+     "line": 669,
      "text": "rebuilds the provenance register from what is already recorded",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 684,
+     "line": 670,
      "text": "assesses a route already captured",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 685,
+     "line": 671,
      "text": "an AI run's own progress tick",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 700,
+     "line": 686,
      "text": "declares which engine this instance can probe; registering is not measuring",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 701,
+     "line": 687,
      "text": "records a vendor announcement; it may only SHORTEN the interval to the next probe and changes no grade",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 703,
+     "line": 689,
      "text": "stores an agenda capture's inferred item-to-file containments as system-asserted connections; a member's judgement of each is a separate act",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 708,
+     "line": 694,
      "text": "which capabilities a member holds",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 709,
+     "line": 695,
      "text": "administrator endorsement of a member",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 710,
+     "line": 696,
      "text": "signer governance — the KEY, not what is signed with it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 716,
+     "line": 702,
      "text": "operator tuning of the per-host governor",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 718,
+     "line": 704,
      "text": "an administrator's setting over the instance's own fetching: pauses or resumes the monitoring daemon",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 719,
+     "line": 705,
      "text": "a member's own declaration about themselves",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 720,
+     "line": 706,
      "text": "administrator act on a declaration",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 721,
+     "line": 707,
      "text": "an invitee becoming a member",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 722,
+     "line": 708,
      "text": "an unauthenticated request to be let in",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 727,
+     "line": 713,
      "text": "claims an instance at bootstrap",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 728,
+     "line": 714,
      "text": "mints a machine credential",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 729,
+     "line": 715,
      "text": "revokes a machine credential",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 730,
+     "line": 716,
      "text": "roster act on a project, position-enforced by the store",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 731,
+     "line": 717,
      "text": "roster act on a project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 732,
+     "line": 718,
      "text": "roster act on a project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 735,
+     "line": 721,
      "text": "a member outside a discoverable project asks to be added (§7.14); one open at a time, withdrawn by the requester",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 736,
+     "line": 722,
      "text": "the requester closes their own open request to join",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 737,
+     "line": 723,
      "text": "an owner grants a request to join (an invitation: `invited`, never `joined`) or declines it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 738,
+     "line": 724,
      "text": "roster act on a project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 739,
+     "line": 725,
      "text": "roster act on a project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 742,
+     "line": 728,
      "text": "an administrator resigns their own standing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 743,
+     "line": 729,
      "text": "records who holds hosting access to the instance",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 744,
+     "line": 730,
      "text": "a member (or an administrator) chooses whether a cover-and-handle pairing is published",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 747,
+     "line": 733,
      "text": "a server-side selection snapshot, owned by the credential that made it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 748,
+     "line": 734,
      "text": "releases that selection",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 750,
+     "line": 736,
      "text": "one member's preference about their own feed",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 753,
+     "line": 739,
      "text": "one tick: what the source serves NOW against what was captured",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 774,
+     "line": 760,
      "text": "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 775,
+     "line": 761,
      "text": "the owner withdraws a review grant; the secret then answers as one never issued",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 938,
+     "line": 925,
      "text": "substrate: the one write path every act rides",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 939,
+     "line": 926,
      "text": "substrate: the courtesy lock around promote",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 940,
+     "line": 927,
      "text": "substrate: id allocation",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 941,
+     "line": 928,
      "text": "substrate: byte movement, content-addressed",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 942,
+     "line": 929,
      "text": "substrate: the fetch layer (M2')",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 943,
+     "line": 930,
      "text": "substrate: admits an observed link as an edge, keyed by capture",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 951,
+     "line": 938,
      "text": "capture-directed: co-attestation of a capture's existence in time (metadata published in capture_acts)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 952,
+     "line": 939,
      "text": "capture-directed: the monitor tick on a captured source (metadata published in capture_acts)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 967,
+     "line": 954,
      "text": "content-directed: marks a part of a document as citable, keyed by (document, extent); mints an address and no edge",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 974,
+     "line": 961,
      "text": "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 976,
+     "line": 963,
      "text": "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labelled machine work and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 981,
+     "line": 968,
      "text": "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 991,
+     "line": 978,
      "text": "read: which of the record's own assertions are worth comparing, by the five named keys; forms candidate pairs, judges none of them and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 996,
+     "line": 983,
      "text": "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 997,
+     "line": 984,
      "text": "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 998,
+     "line": 985,
      "text": "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 999,
+     "line": 986,
      "text": "run-directed: a run's recommendation of the respects in which a candidate's sides may differ, keyed by (run, candidate); the run is the subject and no bundle state offers it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1000,
+     "line": 987,
      "text": "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1001,
+     "line": 988,
      "text": "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1002,
+     "line": 989,
      "text": "read: the marks a contradiction leaves on each side the viewer can see — in tension, softened, stale, qualified, held irreconcilable; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1003,
+     "line": 990,
      "text": "read: the facts the record holds that bear on each respect in which a candidate's sides may differ, each labelled the record's; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1007,
+     "line": 994,
      "text": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; the project asks to resolve a conflict with a record its members cannot see, never withdrawn",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1008,
+     "line": 995,
      "text": "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice; a response disclosing only what its author chooses, relayed once the projects are named to each other",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1009,
+     "line": 996,
      "text": "read: the conflicts a project's members are told of on their own side — the side they may see, never the other side or who holds it; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1010,
+     "line": 997,
      "text": "read: one conflict's responses for one project — its own as attributed, the other opted-in projects' as relayed; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1012,
+     "line": 999,
      "text": "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1015,
+     "line": 1002,
      "text": "read: the fee quotes the record holds, by counterparty or by request, side by side; judges none of them and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1024,
+     "line": 1011,
      "text": "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1026,
+     "line": 1013,
      "text": "read: one member's typing by content id — the text, who typed it, who attested it, and what a leg citing it may claim",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1031,
+     "line": 1018,
      "text": "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1035,
+     "line": 1022,
      "text": "member-directed: a member writes a lead in their own words, keyed by nothing the record holds; writes a `leads` row and no edge, and is never evidence",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1041,
+     "line": 1028,
      "text": "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1043,
+     "line": 1030,
      "text": "read: the leads this viewer may read, each once — `leadread`'s fence over a list; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1044,
+     "line": 1031,
      "text": "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1048,
+     "line": 1035,
      "text": "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1049,
+     "line": 1036,
      "text": "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1050,
+     "line": 1037,
      "text": "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1057,
+     "line": 1044,
      "text": "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1060,
+     "line": 1047,
      "text": "read: one identifier recognised in one of the identifier spaces the active profiles declare — its form, its normalised value, its reach against its publishing system's coverage floor, its standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1062,
+     "line": 1049,
      "text": "theme-directed: a member withdraws a placement or rejects a hunch in a theme with a reason, keyed by (theme id, target); the placement is kept, shown as withdrawn",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1063,
+     "line": 1050,
      "text": "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1074,
+     "line": 1061,
      "text": "run-directed: an EXTRACT run's production, keyed by (run, document); the run is the subject and no bundle state offers it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1075,
+     "line": 1062,
      "text": "read: what an EXTRACT run proposed, keyed by a run or a document",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1078,
+     "line": 1065,
      "text": "run-directed: a run's judgement over a pair the plane formed, keyed by (key, both referents at their versions); the run is the subject and no bundle state offers it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1082,
+     "line": 1069,
      "text": "registry write, keyed by entity",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1083,
+     "line": 1070,
      "text": "registry write, keyed by entity pair",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1085,
+     "line": 1072,
      "text": "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1086,
+     "line": 1073,
      "text": "registry correction, keyed by relation id: withdraws a declared relation with a reason and keeps it, shown as withdrawn",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1090,
+     "line": 1077,
      "text": "connection-directed: a member asserts a connection between two held documents with a stated basis, keyed by the document pair; writes an asserted-connection row, grade D, apart from derived ones",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1091,
+     "line": 1078,
      "text": "derivation: stores an agenda capture's inferred item-to-file containments as system-asserted connections, keyed by capture sha; asserts nothing of the caller's",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1092,
+     "line": 1079,
      "text": "connection-directed: a member confirms or rejects one stored containment with a reason, keyed by connection id; the inference and every judgement are kept",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1093,
+     "line": 1080,
      "text": "recogniser write, keyed by capture sha",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1094,
+     "line": 1081,
      "text": "recogniser testimony, keyed by capture sha",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1095,
+     "line": 1082,
      "text": "connection derivation, keyed by entity",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1096,
+     "line": 1083,
      "text": "progression definition, keyed by progression key",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1097,
+     "line": 1084,
      "text": "progression instance write, keyed by (progression, entity)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1098,
+     "line": 1085,
      "text": "exception document, keyed by (progression, entity, stage)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1099,
+     "line": 1086,
      "text": "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1108,
+     "line": 1095,
      "text": "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1109,
+     "line": 1096,
      "text": "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1110,
+     "line": 1097,
      "text": "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1111,
+     "line": 1098,
      "text": "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1112,
+     "line": 1099,
      "text": "read: one capture's late attestations in order, keyed by capture sha; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1113,
+     "line": 1100,
      "text": "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1114,
+     "line": 1101,
      "text": "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1119,
+     "line": 1106,
      "text": "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1120,
+     "line": 1107,
      "text": "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1121,
+     "line": 1108,
      "text": "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1122,
+     "line": 1109,
      "text": "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1123,
+     "line": 1110,
      "text": "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1128,
+     "line": 1115,
      "text": "source-directed: a member appends one disclosure to a source's history — what was revealed, how, to whom it is known, with its evidence — keyed by source id; never edited, a later entry superseding it on read",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1129,
+     "line": 1116,
      "text": "source-directed: a member claims that two sources are one person, with evidence, keyed by the source pair; recorded as a disclosure and merging nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1130,
+     "line": 1117,
      "text": "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1131,
+     "line": 1118,
      "text": "read: the source of one capture as it stood when received, beside the source's current history as this viewer may read it, keyed by capture sha; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1132,
+     "line": 1119,
      "text": "read: where a source stands on the ladder from unknown to publicly known, with who knows and how, keyed by source id; a withheld value stays withheld",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1133,
+     "line": 1120,
      "text": "read: who read a source's stored values under sight, and when, keyed by source id; answered to the listed members and to administrators",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1134,
+     "line": 1121,
      "text": "read: which of a source's disclosures may be shown to one audience at one instant, each with its basis (consent, or public elsewhere, cited), keyed by source id; says nothing of the rest and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1137,
+     "line": 1124,
      "text": "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1147,
+     "line": 1134,
      "text": "case publication: its subject is a case edition keyed (case_id, edition) rather than a bundle in a state, and its refusals turn on gate state and signature verification a surface cannot see — op=publish's answer names it in `next:`",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1154,
+     "line": 1141,
      "text": "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1155,
+     "line": 1142,
      "text": "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1156,
+     "line": 1143,
      "text": "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1159,
+     "line": 1146,
      "text": "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1166,
+     "line": 1153,
      "text": "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1184,
+     "line": 1171,
      "text": "selection lifecycle, owned by the credential that made it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1185,
+     "line": 1172,
      "text": "selection lifecycle, owned by the credential that made it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1193,
+     "line": 1180,
      "text": "creates a NEW project; gated on the create_projects shape, not on the source object's state",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1201,
+     "line": 1188,
      "text": "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1202,
+     "line": 1189,
      "text": "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1203,
+     "line": 1190,
      "text": "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1205,
+     "line": 1192,
      "text": "a member's own declaration, not a corpus act",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1206,
+     "line": 1193,
      "text": "administrator act on a declaration, class-gated",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1221,
+     "line": 1208,
      "text": "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1222,
+     "line": 1209,
      "text": "section 4.7 governance — the subject is a proposed administrator, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1223,
+     "line": 1210,
      "text": "section 4.7 governance — the subject is an administrator's standing, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1225,
+     "line": 1212,
      "text": "section 4.7 governance — an administrator resigns their own standing; the subject is a member, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1226,
+     "line": 1213,
      "text": "operator record of who holds hosting access — the subject is the instance's operators, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1227,
+     "line": 1214,
      "text": "a member's published cover-and-handle pairing — the subject is how a member is shown, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1230,
+     "line": 1217,
      "text": "the group's public display name — the subject is the instance's identity, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1231,
+     "line": 1218,
      "text": "the group's claimed domain — the subject is the instance's identity, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1235,
+     "line": 1222,
      "text": "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1239,
+     "line": 1226,
      "text": "signer governance: a member registers their own signing key, stamped `by` from their session, and every administrator is told; the subject is a key, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1240,
+     "line": 1227,
      "text": "signer governance: a member revokes their own signing key, stamped `by` from their session; the subject is a key, not a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1241,
+     "line": 1228,
      "text": "operator tuning of the per-host governor",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1244,
+     "line": 1231,
      "text": "an administrator's setting over the instance's own fetching, refused NOT_AN_ADMIN to a member who is not one; not an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1247,
+     "line": 1234,
      "text": "task act, assignee-fenced; travels with the task via op=tasks",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1248,
+     "line": 1235,
      "text": "task act, assignee-fenced; travels with the task via op=tasks",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1255,
+     "line": 1242,
      "text": "bias-debt act, keyed by the RUN whose lens moved and gated by that run's read; travels with the queue item via op=queue, never beside a bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1256,
+     "line": 1243,
      "text": "read: one run's bias debt and what settled it, keyed by run id — the record behind the queue item, never an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1263,
+     "line": 1250,
      "text": "read: the member's own feed, keyed by member — not an act on an object; the acts it offers per item ARE this derivation",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1279,
+     "line": 1266,
      "text": "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1285,
+     "line": 1272,
      "text": "read: what the record earns for a candidate basis leg — consulted while composing a citation, never an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1297,
+     "line": 1284,
      "text": "read: the crop of a cited PDF image by content id — what a viewer shows for an image citation; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1298,
+     "line": 1285,
      "text": "read: one content row by content_id — the extent a citation points at, its chain and cap, whether the transcription has moved, and the attestations covering it; the referent a leg resolves through, never an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1303,
+     "line": 1290,
      "text": "read: which captured documents' readings name a registered subject (framework §8.1's grade-C tier), keyed by entity — the candidate list op=resolve is chosen from, never an act on an object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1304,
+     "line": 1291,
      "text": "personal state, keyed (member, case) over the kinds named or (member, item) by the item's own id: a preference about one member's attention, not an act on an object — and never on the same control strip as a record act (D-125)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1305,
+     "line": 1292,
      "text": "personal state, keyed (member, case): defers re-notification for one member, changes nothing about the object or the record (D-125, P-87)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1318,
+     "line": 1305,
      "text": "investigative run lifecycle, keyed by run id: starts a background session in the context of an inquiry or a project and changes NOTHING about that object (§14a)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1319,
+     "line": 1306,
      "text": "investigative run lifecycle, keyed by run id: the run's own heartbeat, budget spend and observation log — no bundle, no state, no record act",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1320,
+     "line": 1307,
      "text": "investigative run lifecycle, keyed by run id: ends a run and names the bound that stopped it (§14b.6); what the run PROPOSED is a separate act with its own author",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1337,
+     "line": 1324,
      "text": "the investigative session's ONE write (§4 group 2), keyed by inquiry and run: proposes a reading of the evidence in state suggested. Not object-directed — no member takes it; the six acts ON the proposal are the member-facing ones and they are ACTS rows",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1359,
+     "line": 1346,
      "text": "creating an agent credential with a declared task scope (D-199): instance-level governance, authored and dated by a member, keyed by nothing in the corpus. Not object-directed — it is the roster ops' territory, not a bundle's",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1360,
+     "line": 1347,
      "text": "withdrawing an agent credential (D-199): the narrowing half of the same governance act, recorded against the member who withdrew it. Not object-directed, for the reason its counterpart is not",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1369,
+     "line": 1356,
      "text": "engine-directed: records what a probe measured of a derivation engine, keyed by (engine, version); moves no claim and no grade (CAL_CANNOT_REGRADE)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1370,
+     "line": 1357,
      "text": "engine-directed: registers an engine this instance can probe, keyed by engine; registering is not measuring",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1371,
+     "line": 1358,
      "text": "engine-directed: records a vendor's announcement about an engine, keyed by engine; may only shorten the interval to the next probe",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1376,
+     "line": 1363,
      "text": "read: a project's progress against its objective, computed against the record, keyed by project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1377,
+     "line": 1364,
      "text": "read: what a project's objective still lacks, keyed by project; the gaps queue renders",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1378,
+     "line": 1365,
      "text": "goal-directed: a member declares a goal, keyed by the new goal; acts on no existing bundle's state",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1379,
+     "line": 1366,
      "text": "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1380,
+     "line": 1367,
      "text": "goal-directed: a member closes a goal with its reason, keyed by goal id",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1381,
+     "line": 1368,
      "text": "read: one goal by id, with its objectives and, once closed, its reason",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1382,
+     "line": 1369,
      "text": "aspiration-directed: a member declares an aspiration of the group, a project or a member, keyed by its scope",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1383,
+     "line": 1370,
      "text": "aspiration-directed: a project records its departure from a held group aspiration with a reason, keyed by (project, aspiration)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1384,
+     "line": 1371,
      "text": "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1385,
+     "line": 1372,
      "text": "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1386,
+     "line": 1373,
      "text": "read: the aspirations of a project or a member, keyed by scope",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1387,
+     "line": 1374,
      "text": "read: the contacts the viewer's aspirations name, keyed by viewer",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1388,
+     "line": 1375,
      "text": "read: one aspiration's pursuit record by id",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1389,
+     "line": 1376,
      "text": "read: the open proposals for a project's objective, keyed by project",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1390,
+     "line": 1377,
      "text": "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1394,
+     "line": 1381,
      "text": "request-directed: retries a capture request the source refused, keyed by request id; travels with the request in op=capturerequests",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1397,
+     "line": 1384,
      "text": "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1405,
+     "line": 1392,
      "text": "standard-directed: a member or a machine proposes a standard with its why, keyed by proposal id; writes a `standard_proposals` row, never a standard",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1407,
+     "line": 1394,
      "text": "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1408,
+     "line": 1395,
      "text": "project-directed: a machine or a member proposes a comparison, rows and questions and never an outcome, keyed by project and optionally naming the contradiction it starts from; writes a `comparison_proposals` row",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1409,
+     "line": 1396,
      "text": "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1410,
+     "line": 1397,
      "text": "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1411,
+     "line": 1398,
      "text": "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1412,
+     "line": 1399,
      "text": "packet-directed: hands a member one packet version's bytes and logs the export, keyed by (packet id, version)",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1413,
+     "line": 1400,
      "text": "action-directed: a member or a machine proposes a candidate theory and remedy with its why, keyed by action (and packet); writes a `theory_proposals` row",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1414,
+     "line": 1401,
      "text": "escalation-directed: a member reads a counterparty's response with a reason, keyed by escalation id; appends to its log",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1415,
+     "line": 1402,
      "text": "escalation-directed: a member advances an escalation along an edge with a reason, keyed by escalation id; appends to its log",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1416,
+     "line": 1403,
      "text": "escalation-directed: a member declines a proposed stage for now with a reason, keyed by escalation id; appends to its log",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1417,
+     "line": 1404,
      "text": "escalation-directed: a member ends an escalation, keyed by escalation id; appends to its log, never reopened",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1418,
+     "line": 1405,
      "text": "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1419,
+     "line": 1406,
      "text": "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1422,
+     "line": 1409,
      "text": "determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1423,
+     "line": 1410,
      "text": "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1428,
+     "line": 1415,
      "text": "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1429,
+     "line": 1416,
      "text": "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1434,
+     "line": 1421,
      "text": "read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1435,
+     "line": 1422,
      "text": "read: for each of 1 to 50 projects, whether a hold in place covers it, with when and by whom it was first stated; names no action, entry or reason, and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1440,
+     "line": 1427,
      "text": "project-directed: a member opens a plan for one project over named subjects, keyed by project; writes a PLN- record object",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1441,
+     "line": 1428,
      "text": "plan-directed: a member adds a subject to a plan with a reason, keyed by (plan, subject); kept in the plan's history",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1442,
+     "line": 1429,
      "text": "plan-directed: a member removes a subject from a plan with a reason, keyed by (plan, subject); options serving it keep it, marked",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1443,
+     "line": 1430,
      "text": "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1444,
+     "line": 1431,
      "text": "option-directed: a member revises an option with a reason, keyed by (plan, option); earlier revisions stay readable",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1445,
+     "line": 1432,
      "text": "plan-directed: a machine or a member proposes an option with its why, keyed by plan; writes a proposal row, never an option",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1446,
+     "line": 1433,
      "text": "proposal-directed: a member adopts a proposal as an option, keyed by proposal; at most once",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1447,
+     "line": 1434,
      "text": "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1448,
+     "line": 1435,
      "text": "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1449,
+     "line": 1436,
      "text": "scenario-directed: a member judges a phase's checkpoint met or not met, keyed by (plan, scenario, phase); judged once",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1450,
+     "line": 1437,
      "text": "option-directed: a member starts a chosen option as an action, keyed by (plan, option); composes and promotes the action",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1451,
+     "line": 1438,
      "text": "plan-directed: a member closes a plan with a reason, keyed by plan id; the plan stays readable",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1455,
+     "line": 1442,
      "text": "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1458,
+     "line": 1445,
      "text": "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1462,
+     "line": 1449,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1463,
+     "line": 1450,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1464,
+     "line": 1451,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1465,
+     "line": 1452,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1466,
+     "line": 1453,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1467,
+     "line": 1454,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1468,
+     "line": 1455,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle; reached also through a review grant's door",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1469,
+     "line": 1456,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle; reached also through a review grant's door",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1470,
+     "line": 1457,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1471,
+     "line": 1458,
      "text": "template-directed: keyed by a template or one of its versions, reached from the template library; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1472,
+     "line": 1459,
      "text": "read: the templates the viewer may see, their offered versions by default, each with its state, attribution and reviews' summary; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1473,
+     "line": 1460,
      "text": "read: one template version with its whole attribution, reviews, approval and comments' count; writes nothing; reached also through a review grant's door",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1474,
+     "line": 1461,
      "text": "read: one template's or version's comments and notes, newest last; writes nothing; reached also through a review grant's door",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1475,
+     "line": 1462,
      "text": "fact-directed: keyed by a profile fact's path, reached from the calendar and offices; moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1476,
+     "line": 1463,
      "text": "read: one local fact's status, the profile's value and the value that governs here, or every fact of the active profiles; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1477,
+     "line": 1464,
      "text": "read: the local facts unconfirmed, lapsed, due or disputed, or those of the paths named; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1480,
+     "line": 1467,
      "text": "address-directed: a source owner sets how often an address is checked, with a canned or custom reason, keyed by address; a later setting replaces it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1485,
+     "line": 1472,
      "text": "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1486,
+     "line": 1473,
      "text": "project-directed: keyed by a project, reached from the project; an owner's signed notice",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1487,
+     "line": 1474,
      "text": "read: an escalation's opening reason pre-assembled from a live noncompliant determination's record, keyed by determination, each sentence naming the record it came from and labelled machine work; never a reason until a member sends it, and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1488,
+     "line": 1475,
      "text": "read: a published case's drafts of its next edition statement, keyed by case, oldest first, each with its label; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1489,
+     "line": 1476,
      "text": "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1490,
+     "line": 1477,
      "text": "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1491,
+     "line": 1478,
      "text": "read: a project's working-on notices, their revisions and attestations, and its sealed weeks without their salts, keyed by project; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1492,
+     "line": 1479,
      "text": "read: public, no credential",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1480,
+     "text": "read: public, no credential",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1481,
+     "text": "read: public, no credential",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1486,
+     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1487,
+     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1488,
+     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1489,
+     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1490,
+     "text": "read: one published case's docket as the viewer may see it — its record entries with their states and marks, and its public shelves; writes nothing",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1491,
+     "text": "read: a docket entry composed for the case's manager to sign, keyed by case, with its statement and digest; publishes nothing and writes nothing",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1492,
+     "text": "read: the request to resend a receipted reply without the private person's name, prefilled for a member to send by their own means; sends nothing and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
@@ -1602,49 +1661,49 @@
     {
      "file": "op-grades/index.mjs",
      "line": 1499,
-     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1500,
-     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1501,
-     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1502,
-     "text": "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1503,
-     "text": "read: one published case's docket as the viewer may see it — its record entries with their states and marks, and its public shelves; writes nothing",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1504,
-     "text": "read: a docket entry composed for the case's manager to sign, keyed by case, with its statement and digest; publishes nothing and writes nothing",
+     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1505,
-     "text": "read: the request to resend a receipted reply without the private person's name, prefilled for a member to send by their own means; sends nothing and writes nothing",
+     "text": "read: every case this copy has imported, with its source group, case, lens and editions, and when each was imported; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1506,
-     "text": "read: public, no credential",
+     "text": "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labelled as the source's, and the acceptance in force and the open flags; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
@@ -1655,211 +1714,157 @@
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1512,
+     "line": 1508,
+     "text": "read: public, no credential",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1510,
      "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1513,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1514,
+     "line": 1511,
      "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1515,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1516,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1517,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1518,
-     "text": "read: every case this copy has imported, with its source group, case, lens and editions, and when each was imported; writes nothing",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1519,
-     "text": "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labelled as the source's, and the acceptance in force and the open flags; writes nothing",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1520,
-     "text": "read: public, no credential",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1521,
-     "text": "read: public, no credential",
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/index.mjs",
+     "line": 1522,
+     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
      "line": 1523,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1524,
-     "text": "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1528,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1529,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1530,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1531,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1532,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1533,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1534,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1535,
-     "text": "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
-    },
-    {
-     "file": "op-grades/index.mjs",
-     "line": 1536,
      "text": "tally: unattributed, keyed by a script's version; names no member",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1537,
+     "line": 1524,
      "text": "read: the wizard scripts the viewer may see, offered versions by default or those in a named state, each with its state, attribution, breaks and use; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1538,
+     "line": 1525,
      "text": "read: one wizard script version with its steps and its whole attribution; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1539,
+     "line": 1526,
      "text": "read: the offered wizard scripts that start on one screen, with the caller's own drafts marked; needs no machine credential and no key, and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1540,
+     "line": 1527,
      "text": "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1541,
+     "line": 1528,
      "text": "read: where offered scripts' step counts drop most and which acts are refused most, never a member, case, target or project; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1542,
+     "line": 1529,
      "text": "read: the checks every wizard script passes, run over a list of steps against the registered screens, naming each refusal's step; reached by any credential, and writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1544,
+     "line": 1531,
      "text": "read: each copy of a wizard script whose base has a newer approved version, with both versions' steps, for the group's wizard editors; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1547,
+     "line": 1534,
      "text": "case-directed: keyed by a case edition (case, edition), reached from the publication ceremony's last step; signs now and publishes at the set time only if every check passes again then",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1548,
+     "line": 1535,
      "text": "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1549,
+     "line": 1536,
      "text": "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1550,
+     "line": 1537,
      "text": "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1552,
+     "line": 1539,
      "text": "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/index.mjs",
-     "line": 1553,
+     "line": 1540,
      "text": "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
     {
      "file": "op-grades/marks.mjs",
-     "line": 21,
+     "line": 22,
      "text": "kit default at ${…}: an op WEIGHT does not name is Reasoned",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     },
@@ -4838,6 +4843,18 @@
      "line": 98,
      "text": "personal state, keyed by member: the instant she last looked at Home, answered to her alone and recorded at the read; moves no bundle",
      "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/t49.mjs",
+     "line": 22,
+     "text": "member-directed: the founder's own handle, the one she signs in and is known by, chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
+    },
+    {
+     "file": "op-grades/t49.mjs",
+     "line": 24,
+     "text": "read: the owner changes of a project still waiting on agreement, who has agreed and who is awaited, answered only to a viewer who sees the project whole",
+     "why": "a grade's rationale for builders (a rung's reason, an absence's ground, an op's note); screens draw weight.* and act.<op>.does"
     }
    ]
   },
@@ -4848,16 +4865,32 @@
     "act.accountusesset.does",
     "act.acquire.does",
     "act.actionbearingpropose.does",
+    "act.actionbearingpropose.name",
     "act.actioncorrespond.does",
+    "act.actioncorrespond.name",
     "act.actioncreate.does",
     "act.actionhold.does",
+    "act.actionhold.name",
+    "act.actionholdrelease.name",
     "act.actionlaws.does",
+    "act.actionlaws.name",
+    "act.actionlawspropose.does",
     "act.actionmove.does",
+    "act.actionmove.name",
     "act.actionpressure.does",
+    "act.actionpressure.name",
     "act.actionpromise.does",
+    "act.actionpromise.name",
     "act.actionreceipt.does",
+    "act.actionreceipt.name",
     "act.actionreplybearing.does",
+    "act.actionreplybearing.name",
+    "act.actionreplyquoting.does",
+    "act.actionreplyquoting.name",
+    "act.actionrisktier.does",
+    "act.actionrisktier.name",
     "act.actionscope.does",
+    "act.actionscope.name",
     "act.addparticipant.does",
     "act.addresseesuggest.does",
     "act.addworkbook.does",
@@ -4870,10 +4903,14 @@
     "act.airunclose.does",
     "act.airundispatch.does",
     "act.airunopen.does",
+    "act.aiuseovertime.does",
     "act.archivelist.does",
     "act.arosefrom.does",
+    "act.arosefrom.name",
     "act.ask.does",
     "act.attest.does",
+    "act.attest.name",
+    "act.attesttext.name",
     "act.attribute.does",
     "act.authoritychain.does",
     "act.bearingdraft.does",
@@ -4882,6 +4919,7 @@
     "act.calculationaccept.does",
     "act.calculationcreate.does",
     "act.calculationdraw.does",
+    "act.captureprogressions.does",
     "act.capturerequest.does",
     "act.captureupload.does",
     "act.casecheck.does",
@@ -4891,14 +4929,22 @@
     "act.checkpointrecord.does",
     "act.checkrequest.does",
     "act.cite.does",
+    "act.cite.name",
     "act.claim.does",
     "act.clockadopt.does",
+    "act.clockadopt.name",
     "act.clockproposals.does",
     "act.clockpropose.does",
+    "act.clockstate.name",
     "act.committedagainstpaid.does",
     "act.communicationprepare.does",
+    "act.communicationprepare.name",
     "act.conclude.does",
+    "act.connect.does",
     "act.connectionassert.does",
+    "act.connectionchoose.does",
+    "act.contradictionresolve.name",
+    "act.counselpacket.name",
     "act.courtlink.does",
     "act.courtnoticeset.does",
     "act.createevent.does",
@@ -4909,30 +4955,42 @@
     "act.declaretie.does",
     "act.declinetoescalate.does",
     "act.deepercheck.does",
+    "act.discharge.does",
     "act.disclosureshown.does",
+    "act.dispose.name",
     "act.docketfile.does",
     "act.docketpost.does",
     "act.drawquestion.does",
     "act.dutiesarising.does",
     "act.dutyfromresponse.does",
     "act.enroll.does",
+    "act.entityalias.does",
     "act.entitycreate.does",
     "act.escalationadvance.does",
+    "act.escalationattach.name",
     "act.escalationend.does",
     "act.escalationopen.does",
+    "act.escalationopen.name",
     "act.escalationreopen.does",
+    "act.escalationreopen.name",
     "act.escalationstoppursuing.does",
+    "act.escalationstoppursuing.name",
     "act.exclude.does",
     "act.expertiseconfirm.does",
     "act.expertisedeclare.does",
     "act.explore.does",
     "act.exploreapprove.does",
+    "act.exploregraph.does",
     "act.explorepreset.does",
     "act.exploreverify.does",
     "act.filingapprove.does",
+    "act.filingapprove.name",
     "act.filingprepare.does",
+    "act.filingprepare.name",
+    "act.filingread.does",
     "act.filingrecordsent.does",
     "act.filingsecondapprove.does",
+    "act.filingsent.name",
     "act.findin.does",
     "act.followend.does",
     "act.followregister.does",
@@ -4953,7 +5011,9 @@
     "act.heldcaptures.does",
     "act.heldrestore.does",
     "act.heldsetaside.does",
+    "act.holdnoticeprepare.name",
     "act.holdnoticesent.does",
+    "act.holdnoticesent.name",
     "act.hostingaccessset.does",
     "act.hypothesishold.does",
     "act.identityclaim.does",
@@ -4965,9 +5025,14 @@
     "act.include.does",
     "act.infolevelset.does",
     "act.infractiondraft.does",
+    "act.inquirydivide.name",
+    "act.inquiryground.does",
+    "act.inquiryground.name",
+    "act.instance.does",
     "act.invitelook.does",
     "act.invitewithdraw.does",
     "act.itemtakeup.does",
+    "act.itemtakeup.name",
     "act.joindoors.does",
     "act.joinlinkenable.does",
     "act.joinlinkinvite.does",
@@ -4976,12 +5041,14 @@
     "act.knock.does",
     "act.lawrelate.does",
     "act.login.does",
+    "act.lookedsince.does",
     "act.matteroutcomeset.does",
     "act.memberadd.does",
     "act.membercaps.does",
     "act.memberlanguageset.does",
     "act.memberset.does",
     "act.monitor.does",
+    "act.monitor.name",
     "act.monitorset.does",
     "act.narrow.does",
     "act.notedelete.does",
@@ -5001,40 +5068,68 @@
     "act.optionstart.does",
     "act.optionstartpreview.does",
     "act.outcomecarry.does",
+    "act.owed_actioninquiry.does",
+    "act.owed_actionstake.does",
+    "act.owed_founderhandleset.does",
     "act.owed_passwordresetlink.does",
+    "act.owed_projectstakeset.does",
+    "act.owed_secondlook.does",
     "act.owed_updatelater.does",
     "act.owed_updateskip.does",
     "act.owed_updatestart.does",
+    "act.owed_watchitem.does",
     "act.pagetranscribe.does",
     "act.passwordreset.does",
     "act.peopledirectory.does",
     "act.person.does",
     "act.personexpunge.does",
     "act.placewanted.does",
+    "act.planask.does",
     "act.planclose.does",
     "act.planopen.does",
     "act.planpause.does",
     "act.planresume.does",
     "act.plansubjectadd.does",
+    "act.pressurefor.does",
     "act.pressurerecord.does",
     "act.procedureguides.does",
+    "act.proceedingdates.does",
     "act.profilesset.does",
+    "act.progression.does",
+    "act.progressiondefine.does",
     "act.projectaccountremove.does",
     "act.projectaccountswitch.does",
     "act.projectaikeepaway.does",
     "act.projectapprovalset.does",
     "act.projectbarset.does",
+    "act.projectfork.does",
     "act.projectinvite.does",
+    "act.projectinvite.name",
     "act.projectjoin.does",
+    "act.projectjoin.name",
     "act.projectkeynoticeseen.does",
     "act.projectkeyset.does",
+    "act.projectleave.does",
+    "act.projectleave.label.project",
     "act.projectlist.does",
+    "act.projectowneradd.does",
+    "act.projectowneradd.name",
+    "act.projectownerremove.does",
+    "act.projectownerremove.name",
+    "act.projectownerrescue.does",
+    "act.projectownerrescue.name",
     "act.projectquestions.does",
+    "act.projectremove.does",
+    "act.projectremove.name",
     "act.projectscopeset.does",
     "act.projectsigninset.does",
+    "act.projectvisibilityset.does",
+    "act.projectvisibilityset.name",
     "act.promote.does",
     "act.proposedispose.does",
+    "act.proposedispose.name.selected",
     "act.publish.does",
+    "act.publish.name",
     "act.publishat.does",
     "act.publishatcancel.does",
     "act.publishatmove.does",
@@ -5044,6 +5139,7 @@
     "act.publishtensions.does",
     "act.queuemute.does",
     "act.queuesnooze.does",
+    "act.readtranslate.does",
     "act.reconcile.does",
     "act.recordcheck.does",
     "act.recorddatedfact.does",
@@ -5053,11 +5149,18 @@
     "act.recover.does",
     "act.recoverycodesissue.does",
     "act.reinstate.does",
+    "act.reinstate.name",
     "act.relate.does",
+    "act.relationdeclare.does",
     "act.release.does",
+    "act.release.name",
     "act.releasescanhold.does",
     "act.reminderanswer.does",
     "act.reminderset.does",
+    "act.reminderset.name",
+    "act.resolve.does",
+    "act.resolve.name.selected",
+    "act.resolvetestify.does",
     "act.retire.does",
     "act.reviewcomment.does",
     "act.reviewgrant.does",
@@ -5080,22 +5183,27 @@
     "act.selectionrelease.does",
     "act.setpassword.does",
     "act.sever.does",
+    "act.sever.name",
     "act.signerregisterown.does",
     "act.signerrevokeown.does",
     "act.signerset.does",
     "act.signout.does",
     "act.signouteverywhere.does",
     "act.signrequest.does",
+    "act.sourceconsent.name",
     "act.sourcelink.does",
     "act.spotcheckvisit.does",
     "act.standardadopt.does",
     "act.standarddeclare.does",
+    "act.standardproposals.does",
     "act.standingendset.does",
     "act.standingquestionend.does",
     "act.standingquestionset.does",
     "act.startfrom.does",
     "act.statementack.does",
     "act.statusreportassist.does",
+    "act.stepsource.does",
+    "act.stepsourcewithdraw.does",
     "act.strengthbarset.does",
     "act.subscriptiondisconnect.does",
     "act.subscriptionsignin.does",
@@ -5103,9 +5211,17 @@
     "act.suggest.does",
     "act.tabledeclare.does",
     "act.taskforward.does",
+    "act.taskforward.name.selected",
     "act.taskresolve.does",
+    "act.taskresolve.name.selected",
     "act.testify.does",
     "act.textcheck.does",
+    "act.themedeclare.does",
+    "act.themeplace.does",
+    "act.themepropose.does",
+    "act.themeread.does",
+    "act.themewithdraw.does",
+    "act.thread.does",
     "act.transcribe.does",
     "act.translationadopt.does",
     "act.translationconfirm.does",
@@ -5113,12 +5229,26 @@
     "act.translationgrant.does",
     "act.translationrevert.does",
     "act.unlock.does",
+    "act.updatenotice.does",
     "act.verify.does",
+    "act.versionaccept.does",
+    "act.versionaccept.name",
+    "act.versionconsider.does",
+    "act.versionconsider.name",
+    "act.versioncurrent.does",
+    "act.versioncurrent.name",
+    "act.versionhide.does",
+    "act.versionhide.name",
+    "act.versionreject.does",
+    "act.versionreject.name",
+    "act.versionrevert.does",
+    "act.versionrevert.name",
     "act.watchanswer.does",
     "act.watchlink.does",
     "act.websitekeycreate.does",
     "act.whatchangedpropose.does",
     "act.withdrawconclusion.does",
+    "act.withdrawconclusion.name",
     "act.withdrawidentityclaim.does",
     "act.withdrawtie.does",
     "act.wizardapprove.does",
@@ -5247,17 +5377,21 @@
     "label.moneystages.collected",
     "label.moneystages.encumbered",
     "label.moneystages.incurred",
-    "label.moneystages.paid"
+    "label.moneystages.paid",
+    "prompt.attest.fence",
+    "prompt.inquirydivide",
+    "prompt.inquiryground",
+    "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 405,
+    "reads": 522,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 0,
-    "inline": 285,
-    "inlineKeyed": 284,
+    "literalKeys": 33,
+    "inline": 66,
+    "inlineKeyed": 65,
     "inlineUnkeyed": 1,
-    "actHelp": 285,
+    "actHelp": 337,
     "vocabulary": 120
    },
    "unkeyed": [
@@ -5275,7 +5409,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 1895
+    "generatedRows": 11823
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -8464,6 +8598,7 @@
     "ai.usage.today",
     "ai.use.explore.name",
     "ai.whopays",
+    "connect.ifnot",
     "handle.fixed",
     "instance.part.safeview.absent",
     "instance.part.safeview.present",
@@ -8512,6 +8647,7 @@
     "screen.account.password.heading",
     "screen.account.password.help",
     "screen.account.password.new",
+    "screen.account.purpose",
     "screen.account.signout.heading",
     "screen.connect.apikey.field",
     "screen.connect.apikey.heading",
@@ -8541,6 +8677,8 @@
     "screen.connect.own.subscription",
     "screen.connect.own.thengroup",
     "screen.connect.own.until",
+    "screen.connect.purpose",
+    "screen.connect.refusal.reference",
     "screen.connect.refused.AGENT_WORKER_SILENT",
     "screen.connect.refused.AI_KEPT_AWAY",
     "screen.connect.refused.ATTEMPT_SUPERSEDED",
@@ -8593,6 +8731,7 @@
     "screen.group-identity.none",
     "screen.group-identity.now.heading",
     "screen.group-identity.other.field",
+    "screen.group-identity.purpose",
     "screen.group-identity.purpose.field",
     "screen.group-identity.visibility.choice.members",
     "screen.group-identity.visibility.choice.public",
@@ -8649,6 +8788,7 @@
     "screen.group.name.heading",
     "screen.group.name.none",
     "screen.group.name.now",
+    "screen.group.purpose",
     "screen.members.cap.administer",
     "screen.members.cap.contribute",
     "screen.members.cap.create_projects",
@@ -8706,6 +8846,7 @@
     "screen.members.more.heading",
     "screen.members.name",
     "screen.members.nohandle",
+    "screen.members.purpose",
     "screen.members.recovery.add",
     "screen.members.recovery.codes",
     "screen.members.recovery.issue",
@@ -8746,6 +8887,7 @@
     "screen.notes.onlyyou",
     "screen.notes.private",
     "screen.notes.protects",
+    "screen.notes.purpose",
     "screen.notes.revise.field",
     "screen.notes.revised",
     "screen.notes.turn.about",
@@ -8843,6 +8985,7 @@
     "screen.places.profiles.heading",
     "screen.places.profiles.none",
     "screen.places.profiles.warning",
+    "screen.places.purpose",
     "screen.places.seeded",
     "screen.places.wanted.field",
     "screen.places.wanted.heading",
@@ -8855,6 +8998,7 @@
     "screen.recovery.issue.heading",
     "screen.recovery.name",
     "screen.recovery.none",
+    "screen.recovery.purpose",
     "screen.recovery.shown",
     "screen.recovery.spends",
     "screen.recovery.spent",
@@ -8911,6 +9055,7 @@
     "screen.security.parts.heading",
     "screen.security.period",
     "screen.security.period.bad",
+    "screen.security.purpose",
     "screen.security.queue",
     "screen.security.sharing.none",
     "screen.security.sharing.public",
@@ -8927,7 +9072,11 @@
     "screen.security.tools.none",
     "screen.security.total",
     "screen.settings.groups",
+    "screen.settings.name",
+    "screen.settings.purpose",
     "screen.settings.yours",
+    "screen.ties.name",
+    "screen.ties.purpose",
     "screen.translations.adopted",
     "screen.translations.changed",
     "screen.translations.choose",
@@ -8947,6 +9096,7 @@
     "screen.translations.name",
     "screen.translations.pick",
     "screen.translations.protected",
+    "screen.translations.purpose",
     "screen.translations.reading.ask",
     "screen.translations.reading.label",
     "screen.translations.state.awaiting",
@@ -8959,6 +9109,9 @@
     "screen.translations.words.heading",
     "screen.updates.admins",
     "screen.updates.name",
+    "screen.updates.purpose",
+    "screen.wizards.name",
+    "screen.wizards.purpose",
     "settings.set.setup",
     "signing.ceremony.keepkey",
     "state.empty",
@@ -8994,7 +9147,7 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 551,
+    "reads": 570,
     "minted": 0,
     "keyedRows": 470,
     "literalKeys": 551,
@@ -9012,6 +9165,7 @@
     "ai.refused.notdeployed",
     "credential.token.once",
     "draft.machine.label",
+    "draft.machine.label.group",
     "file.archive.entry.summary",
     "file.archive.entry.title",
     "file.archive.provenance",
@@ -9022,7 +9176,7 @@
     "template.review.secret.once"
    ],
    "counts": {
-    "reads": 11,
+    "reads": 12,
     "minted": 8,
     "keyedRows": 0,
     "literalKeys": 0,

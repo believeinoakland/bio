@@ -68,7 +68,7 @@ export const finder = Object.freeze({
       const n = typeof f.never_looked_count === "number" ? f.never_looked_count : (f.never_looked || []).length;
       // R21: no count at zero.
       if (!n) return '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>";
-      return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + cs.w("screen.finder.nobody", { n: String(n) }) + "</p>"
+      return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</p>"
         + '<ul class="mk-list">' + (f.never_looked || []).slice(0, 20).map(function (x) {
           const t = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
           return "<li>" + cs.esc(String(t)) + "</li>";

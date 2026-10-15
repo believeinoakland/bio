@@ -12,7 +12,7 @@ The Action layer's working screens: a project's action plan, starting an option 
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key)
 
 **plan** (Projects › <project> › Action plan; the registry's 10 acts; K608 (4); `views/plan-page.html`)
 - **R1** Reads the plan (`plan`: its subjects, called matters in member words, each with its determination and escalation stage; its options with category, regulated end date, subject and disposition; its scenarios and their phases; what each started option became) and its checks (`planproposals`, the assistant's suggestions, drawn only while the assistant is reachable, labelled machine work "not yet in the plan"). The checks strip states each check, such as a scenario with no branch for a hostile response. Options sort by category, regulated end date, matter or disposition, and are picked as rows (`interface-shell` R19). Acts: `plansubjectadd` "Add a matter"; `optionadd`; `optionpropose` "Ask the assistant for options" (reachable only); `optionadopt` (a suggestion, by the member's own act); `optiondispose` "Choose" or "Decline" (with a reason where declining); `scenarioset` "Lay out a scenario"; `checkpointrecord` "Judge" a checkpoint; `optionstartpreview` "Start…" (opening `start-send` for the option); `itemtakeup` "Take this up" on an item nobody has taken up (routing its to-dos to the member; nobody assigns anybody); `planclose` "Close plan…" with a reason.
@@ -57,32 +57,32 @@ The Action layer's working screens: a project's action plan, starting an option 
 
 #### T49 (T49-28)
 
-- **R15** (T49; N1090; DEC-236 (B203); amends R13) On `plan`, "Ask the assistant for options" is explained by `act.planask.does`, never `act.optionpropose.does`. Test: the help drawn is `act.planask.does`'s. *(not yet met: T49)*
+- **R15** (T49; N1090; DEC-236 (B203); amends R13) On `plan`, "Ask the assistant for options" is explained by `act.planask.does`, never `act.optionpropose.does`. Test: the help drawn is `act.planask.does`'s.
 - **R16** (T49; N1093; DEC-239 (1); `actions` R18, R25; `action-records` R1; amends R5) On `action`, "The law it goes under" (`law.title`, explained by `law.help`):
   - **The law chosen.** It draws the action's `governing_laws` from `action`: each law by level and citation, with its window as `action` answers it, then `law.stated` (who, when). An undetermined list is drawn as `law.undetermined`.
   - **Change the law.** "Change the law…" (`law.change`) sends `actionlaws` with the laws chosen from those the group's places name.
   - **The proposals.** "Proposed, not chosen:" (`law.proposed`) lists each of `governing_laws_proposals` as `law.proposal.not` (who, when).
   - **Propose.** "Propose another law…" (`law.propose`) sends `actionlawspropose`.
 
-  Refusals are drawn by their words. Test: a stated law and one proposal drawn apart. Control: a proposal is never drawn as the law. *(not yet met: T49)*
+  Refusals are drawn by their words. Test: a stated law and one proposal drawn apart. Control: a proposal is never drawn as the law.
 - **R17** (T49; N1093; DEC-239 (2); `actions` R23–R25; `action-records` R2) On `action`, "Its risk" (`risk.title`, explained by `risk.help`):
   - **The tier.** It draws `risk_tier` as `risk.tier` with the tier's own words, `risk.tier.1`, `.2`, `.3` or `risk.tier.undetermined`, read by key in place of `RISK_TIERS`' English.
   - **Its history.** The latest history entry is drawn as `risk.set` (who, when, the reason, the prior tier's words).
   - **Revise.** "Revise, with a reason…" (`risk.revise`) sends `actionrisktier` with the tier and the reason.
   - **The proposals.** A machine proposal in `risk_tier_proposals` is drawn only while the assistant is reachable, under "Proposed, not set:" (`risk.proposed`), each as `risk.proposal` with `risk.proposal.not` and `mark.origin.machine`. A member's proposal is drawn there whether or not the assistant is reachable.
 
-  `RISK_TIER_UNCHANGED` and the others are drawn by their words. Test: tier 2 with its history, drawn by key. Control: a machine proposal is not drawn while the assistant is unreachable. *(not yet met: T49)*
+  `RISK_TIER_UNCHANGED` and the others are drawn by their words. Test: tier 2 with its history, drawn by key. Control: a machine proposal is not drawn while the assistant is unreachable.
 - **R18** (T49; D5 **B**, its half; D20 **M**; `ai-runs` R81; amends R13, R1) On `plan`, four rules:
   - **The run.** `planask`'s refusal is drawn by its words. "The assistant is looking for options" is drawn only while its run is running, as `airun` answers it. An answer of `ok: true` that carries `started: false`, `dispatched: false` or `withheld` is drawn as its refusal (rule 6).
   - **Titles.** The plan names its project and question by their titles, each a reference, never `INQ-…` or `inquiry:INQ-…`.
   - **References.** A reference is picked from a list the record answers (`cs.choice` over record data), never typed.
   - **Categories.** These are drawn by their words, never as lowercase codes.
 
-  Test: each over a fixture. Control: a running plan run draws the sentence, and an ended one does not. *(not yet met: T49)*
+  Test: each over a fixture. Control: a running plan run draws the sentence, and an ended one does not.
 
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 
-- **R19** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 308 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. It reads the design's key where the list renames one: `act.optionpropose.label.plan` → `act.planask.label.plan`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+- **R19** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 308 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. It reads the design's key where the list renames one: `act.optionpropose.label.plan` → `act.planask.label.plan`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
 
 ## Private
 

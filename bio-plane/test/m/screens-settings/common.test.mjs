@@ -190,7 +190,7 @@ test("R28 every element every screen draws uses a class a served stylesheet defi
   }
 });
 
-test("R28 every labelled field is drawn with cs.field: its label and its help are boxes of their own, tied by aria-describedby; a field has no bare label with a help beside it", async () => {
+test("R28 every labeled field is drawn with cs.field: its label and its help are boxes of their own, tied by aria-describedby; a field has no bare label with a help beside it", async () => {
   for (const [id, opt] of RUNS) {
     const o = await open(id, { ...opt, reachable: true });
     for (const inp of all(o.tree, (e) => ["input", "textarea"].includes(e.tag) && !["checkbox", "radio", "hidden"].includes(e.attrs.type))) {

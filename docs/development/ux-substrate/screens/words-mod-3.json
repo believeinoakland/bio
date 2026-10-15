@@ -5930,9 +5930,9 @@
   },
   {
    "key": "case-checker.departure.lens_given_published",
-   "en": "the lens given is not as_published, removed, or a reader's own {statements, applications}, so the case is answered as published",
+   "en": "the lens given is not one a case is read through (as published, as removed, or with a reader's own statements and applications), so the case is answered as published",
    "protected": false,
-   "note": "DEC-260: case-checker, departure"
+   "note": "DEC-260: case-checker, departure; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "case-checker.why.statement_among_lens",
@@ -6530,9 +6530,9 @@
   },
   {
    "key": "wizard-scripts.why.step",
-   "en": "a step is {screen, act, what, why, draft?, via?}",
+   "en": "a step names its screen, its act, what it does and why, and may name a draft and the way it is reached",
    "protected": false,
-   "note": "DEC-260: wizard-scripts, why"
+   "note": "DEC-260: wizard-scripts, why; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "wizard-scripts.why.step_carries_screen",
@@ -7346,9 +7346,9 @@
   },
   {
    "key": "money.push.canonical_table_row",
-   "en": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
+   "en": "a canonical table row read through a binding a member adopted (its source names the table, the row and the binding)",
    "protected": false,
-   "note": "DEC-260: money, lacks.push()#0"
+   "note": "DEC-260: money, lacks.push()#0; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "money.push.party_named_registered",

@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -37,3 +37,11 @@ K3379, re J1. Thank you; the measure stands. site has merged into tranche/T49 (w
 ## B5 · ANSWER · re J2
 
 K3380: your reading of R7 stands: sweep as the handleless founder where the group's founder has none (DEC-230's two words excepted), then as her with her handle; where the claim took a handle, report 'R7 with no handle: not walkable here' as a note, not a failure. Also: interface-shell and screens-daily are merged; D28 is Chromium's own network log of the 403 (interface-shell J1 (2)), so your console check admits 'Failed to load resource: the server responded with a status of 403' for a status the step expects, and does not count '[DOM] Password field is not contained in a form'. Merge the tranche branch.
+
+## B6 · ANSWER · re J3
+
+K3381: received. Merged so far: op-declarations, site, control-plane, plane, admission, interface-shell, screens-daily, screens-settings; the design's words through DEC-267. I CHANGE you as the rest merge; journey-check merges last.
+
+## B7 · CHANGE
+
+K3383: merged into tranche/T49 now: every L11 job but control-plane (B8, rewriting its e2e tests) and you. Merge the tranche, re-walk, and for each failure still open name the module that owns it in a REPORT (I route it). Then COMPLETE.

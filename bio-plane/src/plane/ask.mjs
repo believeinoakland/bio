@@ -270,7 +270,7 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   if (gate.refusal) return json(gate.refusal, 403);
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("ai.refused.notdeployed") }, 503);
+    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("refusal.AGENT_WORKER_UNBOUND") }, 503);
   /* K1690, N765 (instance-setup R55; credentials R35; K231, K2200 (3)): while the group keeps its material away from
      every assistant, or that setting cannot be read, every ask is refused as instance-setup's `assistantGate()` answers
      it, `credentials`' `AI_KEPT_AWAY` row as given, before any grant is minted or any account read. */
@@ -353,7 +353,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   untested = gate.untested;
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("ai.refused.notdeployed") });
+    return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: word("refusal.AGENT_WORKER_UNBOUND") });
   const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx), acc = aiAccountsOf(ctx);   /* R53: the grant is credentials'; the account reads are ai-accounts' */

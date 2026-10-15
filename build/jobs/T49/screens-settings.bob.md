@@ -1,6 +1,6 @@
 # BOB to screens-settings (T49)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -40,3 +40,7 @@ K3379, re J2. (1) `reauth` on connect: build it now as the mock draws it and com
 ## B6 · CHANGE
 
 K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge. For you also: `words.test.mjs` imports `SHELL_WORDS`, no longer exported (the shell reads its words by key): re-point it; and apply my B5 (R40, DEC-262) in the same pass.
+
+## B7 · CHANGE
+
+K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: (1) DEC-265 lists `screen.<id>.name` and `.purpose` for `settings` and its thirteen sections in your reads (your R39 contract test is red on `screen.settings.name`): read them. (2) DEC-267: AGENT_WORKER_UNBOUND is drawn by `refusal.AGENT_WORKER_UNBOUND`, no longer `ai.refused.notdeployed`. Re-run your tests and COMPLETE again.
