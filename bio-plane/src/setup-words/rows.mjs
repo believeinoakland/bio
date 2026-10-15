@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
    docs/development/ux-substrate/screens/words.json (12393 words, 865 protected; SHA-256
-   76be5409fb3288b0a0aa178f03b3cfa05742f7683b4151c486e5489ed9f55ba3), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   f53f56461b66f5b6833d4899a180c8244d879f2987f488889a6d45ab3df312d4), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "76be5409fb";
+export const WORDS_COMMIT = "f53f56461b";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5192,7 +5192,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.start-send.tip.request","asks an office for copies of public records under the public records law","DEC-276: a records request, its card",null,false],
   ["screen.start-send.tip.request_reply","the office must reply within its window","DEC-276: a records request, its card",null,false],
   ["screen.start-send.tip.request_why","This action only asks for records; it accuses no one.","DEC-276: a records request, its card",null,false],
-  ["screen.start-send.tip.hypothetical","the subject is assumed, not shown","DEC-276: a hypothetical subject, its card",null,false],
+  ["screen.start-send.tip.hypothetical","the matter is assumed, not shown","DEC-276: a hypothetical matter, its card; never 'subject' (DEC-114)",null,false],
   ["screen.start-send.tip.hypothetical_none","no finding supports it yet","DEC-276: a hypothetical subject, its card",null,false],
   ["screen.start-send.tip.hypothetical_why","Since nothing is shown, the request asserts no breach and asks only for records.","DEC-276: a hypothetical subject, its card",null,false],
   ["screen.start-send.tip.law","The public records law","DEC-276: the law the group's profile names, its card",null,false],
@@ -5305,14 +5305,14 @@ export const WORD_ROWS = Object.freeze([
   ["screen.standard.tip.proposed","a requirement suggested for the record","DEC-276: a proposed standard, its card",null,false],
   ["screen.standard.tip.proposed_held","held as a standard only once a member adopts it, with a reason","DEC-276: a proposed standard, its card",null,false],
   ["screen.standard.tip.proposed_why","Until someone adopts it, nothing in the project is measured against it.","DEC-276: a proposed standard, its card",null,false],
-  ["screen.plan.tip.title","{plan}: {name}'s action plan, opened {date} when the inquiry began, about {subject}. Its options, the order to try them and what to check are here.","DEC-276: the plan's title, its explanation; {plan} and {subject} the plan's own words",null,false],
+  ["screen.plan.tip.title","{plan}: {name}'s action plan, opened {date} when the inquiry began, about {matter}. Its options, the order to try them and what to check are here.","DEC-276: the plan's title, its explanation; {plan} and {subject} the plan's own words",null,false],
   ["screen.plan.tip.scenario","the scenario laid out so far","DEC-276: a scenario, its card",null,false],
   ["screen.plan.tip.scenario_phase","phase {n}: {step}, then a checkpoint judged by a member","DEC-276: a scenario, its card",null,false],
   ["screen.plan.tip.scenario_why","The check above is about this scenario: it has no branch for a refusal or a stall.","DEC-276: a scenario, its card",null,false],
   ["screen.plan.tip.hostile","a refusal, obstruction or retaliation in answer to an action","DEC-276: a hostile response, its card",null,false],
   ["screen.plan.tip.hostile_example","for example a blanket denial, or silence past the due date","DEC-276: a hostile response, its card",null,false],
   ["screen.plan.tip.hostile_why","Scenario {scenario} says nothing about what follows one; a branch can be added before the reply is due on {date}.","DEC-276: a hostile response, its card",null,false],
-  ["screen.plan.tip.hypothetical","a subject the plan assumes","DEC-276: a hypothetical subject, its card",null,false],
+  ["screen.plan.tip.hypothetical","a matter the plan assumes","DEC-276: a hypothetical matter, its card; never 'subject' (DEC-114)",null,false],
   ["screen.plan.tip.hypothetical_why","The options here rest on something unproven; the inspection logs could show it or rule it out.","DEC-276: a hypothetical subject, its card",null,false],
   ["screen.plan.tip.enddate","the date a law or rule closes an option, such as a filing deadline or a response window","DEC-276: a regulated end date, its card",null,false],
   ["screen.plan.tip.enddate_why","Sorting by it puts first the options that lapse if the group waits.","DEC-276: a regulated end date, its card",null,false],
