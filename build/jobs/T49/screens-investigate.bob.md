@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T49)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -31,3 +31,15 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B5 · ANSWER · re J2
+
+K3376: (1) leave the person/timeline acts unplaced in T49 (your R10 pin stands); N1127 places them in T50. (2) as built; the design lane has it. (3) no default: right. setup-words has merged: merge the tranche (CHANGE B-K3374 too), re-run, COMPLETE again. You merge after interface-shell.
+
+## B6 · CHANGE
+
+K3379: the design's DEC-262 (7ed8feb945) is merged into tranche/T49 with rows.mjs regenerated. It rewords four of your keys: `screen.calculation.counts` and `screen.calculation.range` take {answer} as "yes"/"no" (so `counts` can now be drawn); `screen.due-date.of` is "{who}'s reply"; `screen.due-date.step.counted` is "Counted {amount} {units}." Merge the tranche, fill exactly those placeholders, re-run, and COMPLETE again. Your two guessed fills (money.didnotmove's {date} as the figure's period start; timeline.order.evidence's {examples} as the event's keyed kind word) stand; I put both to the design lane. You merge after interface-shell (plan rule 1).
+
+## B7 · CHANGE
+
+K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge. Apply my B6 (DEC-262's four rewordings) in the same pass.

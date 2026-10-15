@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as G from "../../../src/op-grades/index.mjs";
 
-const { RUNG_LADDER, RUNGS, RUNG_ABSENT, RUNG_ABSENCE_GROUNDS, JUSTIFICATION_REFUSALS, IRREVERSIBLE_CORRECTION_PATH,
+const { RUNG_LADDER, RUNGS, RUNG_ABSENT, RUNG_ABSENCE_GROUNDS, JUSTIFICATION_REFUSALS, IRREVERSIBLE_CORRECTION_KEY,
         CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS, MACHINE_REFUSALS, NON_ACTS, OP_ALIASES, phoneOf } = G;
 const words = (s) => s.trim().split(/[\s,]+/).filter(Boolean);
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
@@ -59,10 +59,10 @@ test("R1: RUNG_LADDER is reversible, reasoned, terminal, attested, irreversible,
   assert.deepEqual(wrong({ ...RUNGS, retire: "reasoned" }), ["retire"]);
 });
 
-test("R1: IRREVERSIBLE_CORRECTION_PATH states that correction moves forward and nothing is erased (DEC-19), and "
+test("R1 R44: the correction path DEC-19 requires beside the top rung is a key, never a sentence, and "
    + "JUSTIFICATION_REFUSALS is the family of codes by which an owner asks the member's own account", () => {
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /FORWARD/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /Nothing is\s+erased/);
+  assert.equal(IRREVERSIBLE_CORRECTION_KEY, "screen.ceremony.permanent");
+  assert.ok(!Object.hasOwn(G, "IRREVERSIBLE_CORRECTION_PATH"), "the sentence's old name is gone, so no reader takes a key for it");
   assert.equal(new Set(JUSTIFICATION_REFUSALS).size, JUSTIFICATION_REFUSALS.length, "no code twice");
   for (const c of ["NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION", "NO_FALSIFIER", "NO_JUSTIFICATION",
     "NO_EVIDENCE", "PLAN_NO_REASON", "HOLD_REFUSED", "SET_ASIDE_NO_REASON", "FREQUENCY_NO_REASON", "ESCALATION_NO_REASON"])
@@ -114,7 +114,7 @@ test("R3 R35: no rung is added for an act corrected forward: DEC-88 left 21 `und
 });
 
 /* ---- R4 ------------------------------------------------------------------------------------------------------------ */
-test("R4: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {friction, statement}: dialog for attribute, "
+test("R4 R44: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {friction, key}: dialog for attribute, "
    + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective; frozen, their rungs unchanged", () => {
   const SIX = { attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog",
     filingapprove: "dialog", workobjective: "in-place" };
@@ -122,16 +122,15 @@ test("R4: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {friction,
   for (const [op, friction] of Object.entries(SIX)) {
     const e = CONSEQUENCE_STATEMENTS[op];
     assert.ok(Object.isFrozen(e), op);
-    assert.deepEqual(Object.keys(e), ["friction", "statement"], op);
+    assert.deepEqual(Object.keys(e), ["friction", "key"], op);
     assert.equal(e.friction, friction, op);
-    assert.ok(e.statement.length > 60, op);
+    assert.equal(e.key, `consequence.${op}`, op);
   }
   assert.deepEqual([RUNGS.attribute, RUNGS.leadshare, RUNGS.entitycreate, RUNGS.strengthbar, RUNGS.filingapprove,
     RUNGS.workobjective], ["reasoned", "reasoned", "reasoned", "reasoned", "terminal", "reasoned"]);
-  /* each statement says its act's effect */
-  assert.match(CONSEQUENCE_STATEMENTS.attribute.statement, /permanently/);
-  assert.match(CONSEQUENCE_STATEMENTS.leadshare.statement, /cannot be un-read/);
-  assert.match(CONSEQUENCE_STATEMENTS.workobjective.statement, /budget and scope/);
+  /* an entry holds no English (R44): control, a copy carrying a sentence is seen */
+  for (const e of Object.values(CONSEQUENCE_STATEMENTS)) assert.ok(!Object.hasOwn(e, "statement"));
+  assert.ok(Object.hasOwn({ ...CONSEQUENCE_STATEMENTS.attribute, statement: "x" }, "statement"));
   /* only the six, R8's actionholdrelease, R21's personexpunge and (K2049) standardrelease, and R24's openwithwarning
      (beside its ground) carry one */
   assert.deepEqual(Object.keys(CONSEQUENCE_STATEMENTS).sort(),
@@ -216,7 +215,7 @@ test("R19: nothing here writes — every export is data or a pure function, and 
 test("R20: no place is named in this module's outward text — no sentence it serves (grounds, correction path, consequence "
    + "statements, absences, NON_ACTS reasons) names a jurisdiction, and NON_ACTS.idmatch names no local identifier system "
    + "or publisher", () => {
-  const served = JSON.stringify([RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_PATH, CONSEQUENCE_STATEMENTS, RUNG_ABSENT,
+  const served = JSON.stringify([RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_KEY, CONSEQUENCE_STATEMENTS, RUNG_ABSENT,
     NON_ACTS, LARGER_SCREEN_ACTS, G.IRREVERSIBLE_WEIGHT]);
   const PLACES = /\b(Oakland|Alameda|California|Berkeley|San Francisco|Sacramento|Legistar|Granicus|Municode|OPD)\b/i;
   assert.equal(PLACES.exec(served), null);

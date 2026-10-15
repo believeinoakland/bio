@@ -54,6 +54,8 @@ import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, to
 /* R95 (T48; K3254; walk C2 (a)): whether this is a test instance is `ai-runs`' own fact (its R78, as `bootstrap` answers
    it), asked of the Worker environment alone. */
 import { AiRuns } from "../ai-runs/index.mjs";
+/* R99 (T49; K3366, K3368; DEC-257, DEC-258): every member-facing sentence is read by key through setup-words. */
+import { word } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -531,6 +533,12 @@ const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials",
                                   projectkeyset: Object.freeze(["key"]),
                                   setpassword: Object.freeze(["current", "password", "role"]) });
 const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
+/* R96 (T49; D1 B, N1095; amends R17, R29, R92): the ops whose body `member` is the session's own, stamped in the address
+   and never the body's, so the body's is deleted. Any other op declaring a `member` stamp (`accountreferenceset` and
+   `accountreferenceremove` among them) names the account in its body, which reaches its owner as given: `ai-accounts`
+   judges it against the `by` stamped from the session (its R1, NOT_YOUR_ACCOUNT). The address's `member` is set, and a
+   caller's copy there deleted, for every op that declares it (the stamp loop above). */
+const SESSION_MEMBER_BODY_OPS = Object.freeze(["stepsource", "stepsourcewithdraw"]);
 /* R17 (T46; K3003): the acts whose owner reads `at` as the time the act is recorded (its clock, now when absent): that
    time is the record's, never the caller's, so a caller's `at` leaves the address and the body before the owner reads
    either. An op whose `at` is a date the caller states (a letter's, a reminder's day, a read's as-of) keeps it. */
@@ -720,7 +728,7 @@ export function makeFetch(hooks = {}) {
       /* R28, R58 (admission R21; F4): the public ops' window first, before the op reads or writes anything; then who is
          calling, as admission knows them (a keyed fingerprint and a country, never the address), the stamps `claim`,
          `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
-      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
+      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer, credential, background });
       if (windowed.refusal) return refused(windowed.refusal);
       /* (T38; K2326) the window's answer carries the source; when the window was not read, `sourceOf` is asked again
          only where it needs no store (the fingerprint key bound), so a store fault is never asked a second time and the
@@ -757,8 +765,10 @@ export function makeFetch(hooks = {}) {
           return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match" }, 403);
         /* END DEC-49 REGION is-bootstrap-claim */
+        /* R97 (T49; N1072, K3265; credentials R74, R75): the body's `handle` crosses beside `password`, and no `role` (the
+           claim names the founder by `admin`, credentials R67); the answer is relayed with the `handle` it carries */
         return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}${doorStamps ? `&${doorStamps}` : ""}`, {
-          method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) })), "claim");
+          method: "POST", body: JSON.stringify({ handle: body.handle, password: body.password }) })), "claim");
       }
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT (R20) ====== */
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT ======
@@ -2098,8 +2108,9 @@ export function makeFetch(hooks = {}) {
        spec). A conversation that reached the model is counted to the member's day as a draft (ai-use R1). */
     /* (T46) an object that offers no draft door or member-run dispatch is an instance with no assistant bound (plane's
        `AGENT_WORKER_UNBOUND`, as R65's): nothing is sent */
-    const unboundRun = (what) => json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
-      detail: `your group's Civicsmith has no assistant bound to it, so ${what} and nothing was sent.` }, 503);
+    /* R99 (U260): the refusal's sentence is `ai.refused.notdeployed`, as the design words it */
+    const unboundRun = () => json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
+      detail: word("ai.refused.notdeployed") }, 503);
     /* R93 (T48; N1015; K3103): THE TRACE AND THE MEMBER REF of a request that reaches the plane's ask, run, draft or
        transcribe call, minted here for each (a fresh trace; the member ref naming the session's member, signin-door R3's
        form, never a handle or a credential) and handed to that call in process. Neither is taken from the caller: a
@@ -2112,7 +2123,7 @@ export function makeFetch(hooks = {}) {
        door with the body's `subject` and `language` alone; the plane reads the subject only as the member may and answers
        the translation labelled (`plane` R50). */
     if (op === TEXT_CHECK || op === READ_TRANSLATE) {
-      if (!viaSession || typeof stub.draft !== "function") return unboundRun(op === TEXT_CHECK ? "the text was not checked" : "nothing was translated");
+      if (!viaSession || typeof stub.draft !== "function") return unboundRun();
       const asked = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
       const ask = op === TEXT_CHECK
         ? { op, member: sessMember, session: credential.token, text: asked.text ?? null, trace, memberRef }
@@ -2141,7 +2152,7 @@ export function makeFetch(hooks = {}) {
        a session is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and refusals are
        ai-runs', as given. */
     if (op === "airundispatch") {
-      if (typeof stub.dispatchMemberRun !== "function") return unboundRun("the run was not started");
+      if (typeof stub.dispatchMemberRun !== "function") return unboundRun();
       const who = viaSession ? sessViewer : actor;
       const run = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.run === "string"
         ? reqBody.run : null;
@@ -2474,7 +2485,8 @@ export function makeFetch(hooks = {}) {
            from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
-                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session" || k === "member")];   /* R92 (T48): `stepsource`'s member is the session's, never the body's */
+                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session"
+                                                 || (k === "member" && SESSION_MEMBER_BODY_OPS.includes(op)))];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
@@ -3151,9 +3163,7 @@ export function makeFetch(hooks = {}) {
            nothing here kept it — losing it means minting another and revoking
            this one, which leaves both acts on the record where they belong. */
         token: secret,
-        tokenIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is not stored "
-          + "and cannot be recovered — the record holds the credential's NAME and who created it, "
-          + "never the value. If it is lost, withdraw this credential and create another.",
+        tokenIsShownOnce: word("credential.token.once"),
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -3176,9 +3186,7 @@ export function makeFetch(hooks = {}) {
       return json({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
-          + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
-          + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
+        secretIsShownOnce: word("screen.review-copy.link.once"),
         read: "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }
@@ -3198,10 +3206,7 @@ export function makeFetch(hooks = {}) {
       return json({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
-          + "fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, "
-          + "COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw "
-          + "this grant and open another.",
+        secretIsShownOnce: word("template.review.secret.once"),
         read: "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }

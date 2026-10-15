@@ -1,6 +1,6 @@
 # BOB to screens-intake (T49)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -35,3 +35,11 @@ K3372: 1(a) and 2(a) as you built: /app/capture/<tab>/<id>; result links /app/fi
 ## B5 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B6 · ANSWER · re J3
+
+K3376: all stand. Your R22/R25 now say /app/capture/<tab>/<id>; Provides' SCREEN_WORDS line is my edit at merge. archive phrases instead of summary: stands. held_at is N1126 (T50). You merge after interface-shell (plan rule 1); stay available.
+
+## B7 · CHANGE
+
+K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge. For you also: `inbox.test.mjs` imports `interface-shell/words.mjs`, deleted by the shell's R70: read those sentences by key through setup-words instead.

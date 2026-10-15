@@ -8,6 +8,8 @@
    grant read (none when no grant was sent) before the member sees anything, answering it in its owner's shape. The grant
    itself is never answered. */
 import { checkDraft } from "../wizard-scripts/index.mjs";
+/* R99 (T49; K3366): the note a checked draft carries is read by key. */
+import { word } from "../setup-words/index.mjs";
 
 /** The ops whose draft is asked of the object (`instance-setup` R65, `wizard-scripts` R27; T37, N669, K2201: `instance-setup`
  *  R67's `translationdraft`, the third). */
@@ -97,7 +99,7 @@ export function checkedDraft(ask, drafted, status, askedBy) {
     const k = checkDraft(typeof draft.text === "string" ? draft.text : "", opts);
     if (!k || k.ok !== true) return refused(k);
     return { status: 200, body: { ok: true, text: k.text, label: k.label, withheld: k.withheld, ...untested,
-                                  note: "a draft: nothing is saved until you edit it and keep it, and then the words are yours." } };
+                                  note: word("draft.machine.label") } };
   }
   const out = { ok: true, withheld: [] };
   for (const f of ["focus", "purpose"]) {
@@ -110,7 +112,7 @@ export function checkedDraft(ask, drafted, status, askedBy) {
     out.withheld.push(...(k.withheld || []).map((x) => ({ field: f, ...x })));
   }
   Object.assign(out, untested);
-  out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
+  out.note = word("draft.machine.label");
   return { status: 200, body: out };
 }
 
