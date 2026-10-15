@@ -29,3 +29,29 @@ Work done and pushed (`182f5c9b4e` on `job/T49/screens-entry`, the tranche merge
 **A word for the design lane (REPORT, not mine to change).** `screen.setup.claimed.nosignin`'s English still names the founder's old id: "Claimed. Sign in on your group's page with the handle admin and the password you just chose." It is drawn only when a claim succeeds and the sign-in after it fails. Under R17 (no drawn word in the flow holds `admin` as a handle) it should say the handle she chose, e.g. with a `{handle}` placeholder. I draw it by its key (R21: the quotation binds no wording), so a re-worded `words.json` needs no code here.
 
 Checks on my module: format 0, architecture 0, coverage 21 of 21, ownership 0 (12 files). `checks/run.mjs` over the product: format, architecture and channels 0; coverage's 14 failures are other modules' rule 5 (1) reds, none screens-entry's. The tests of the modules that compose my screens (control-plane `t46-app`, plane `t47`, interface-shell, journey-check) fail the same 23 tests with and without my change (journey-check's browser walks and two shell tests); I add none.
+
+## J4 · COMPLETE
+
+**Complete** (T49-21), on `job/T49/screens-entry` with `tranche/T49` merged through B7 (`a94ac704cf`).
+
+**Read whole** (plan rule 2): my requirements, entry T49-21 and plan rules 1–7, layer 11's contract, my code (all 8 files), setup-words R10–R13, the interface-shell kit and gate parts my entries touch (`checkScreens`, `wordsOf`/`pageWords`, `signedIn`, `run`, `call`), credentials' `claim`/`login`/`recoveryCodesState`, membership's `sessionRights`/`founderHandleSet`, control-plane's `whoami`, and every test of mine (all name R2, R4, R6, R9 or R12–R15, which my entries change). Measured first: a pre-T49 founder's whoami is `member: "admin"`, `handle: null`, `rootOfTrust: true`; after a claim with a handle, `handle` is hers (J1).
+
+**Entries applied:**
+- R21 words by key: no English held; `SCREEN_WORDS` empty; `words.mjs` holds the keys each screen reads (words-reads.json's 231 with every key a requirement names); `HOSTING_CONTROL`/`FORGOT_HELP` by their keys (the `setup-fleet` import gone); retired `screen.forgot.handle.help`, `screen.setup.taken`, `signin.founderhint` read by none. Tests assert keys with `hasWord`, sample drawings against `word(key, vars)`, and hold no English.
+- R16: `signin.handle.help` and `forgot.handle.help`; no `admin` drawn on front or forgot in any state.
+- R17: the claim asks the handle between the one-time password and the password, sends `claim` with it, signs in by the handle the claim answers (never `admin`), draws `screen.setup.claimed` with `{group}`, `{handle}`; its four refusals by key, the handle kept and passwords cleared; no handle typed is refused locally (K3369 (3)).
+- R18: front's sign-in reads whoami first; a founder with `rootOfTrust` and no handle is taken to setup's step (`founderhandleset`, "Later" a link to Home); done draws `founder.handle.done` with "Go to Home" (K3369 (1)).
+- R19: a member or a non-founder administrator on setup reads nothing and sees `setup.member.*` with Home; "Show my recovery codes" only to the founder while `recoverycodesstate` answers `held: false` (K3369 (2)).
+- R20: the codes under `setup.codes.once` with `setup.codes.copy`/`save`; state c (`setup.claimed.heading`, `.sub`, `refusal.ALREADY_CLAIMED`, "Sign in") for a refused claim and a visit to a claimed instance.
+- R2, R4, R6 re-worded: met as above. R9's registry red cleared (an owed act read by its op). N1073: `common:80` reads the screens' own acts and bodied reads; `setup:88` reads the registry's acts for setup. D29: a nested `ok: false` is a refusal (the kit mirrors the shell); tested on the claim. N1068: no English held, so nothing to re-spell. `admin` grep: `setup.mjs`'s `login`/`signin` as `admin` and the two words removed; `role: "admin"` in `memberadd` is a role, not the founder's id.
+- Flaw fixed in passing: a refused claim no longer leaves the password in the page's memory (every claim refusal clears `ui.pending`).
+
+**Deferred:** none.
+
+**Other modules (reported):** J1 interface-shell's `RE_POINTS.setup` (done, K3369/R71); J3 `screen.setup.claimed.nosignin`'s English names `admin` (design lane, K3375).
+
+**Tests:** `node --test bio-plane/test/m/screens-entry/` on the real shell, op-declarations and setup-words: 73 pass, 0 fail. Importers: interface-shell, control-plane `t46-app`, plane `t47`, instance-setup `page`: pass; membership `module-order` 5 fail (rule 5 (10), accepted); journey-check 21 fail (`playwright-core` not installed in this container; same with and without my change).
+
+**Checks:** format 0 failures; architecture 16 files, 0 failures; coverage 21 of 21, 0 failures; ownership 12 files, 0 failures. `checks/run.mjs`: format, architecture, channels 0; coverage 7 failures, none screens-entry's (other modules' rule 5 (1) reds).
+
+Size (session_01H73fxUtMGo1PPXKWMHzAzS): test runs 20, module lines 940
