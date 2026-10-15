@@ -62,6 +62,8 @@ test("R2: each item drawn by its kind mark (To do, Noticed, Status), grouped by 
   assert.deepEqual(heads, ["Pothole repairs", "The Coliseum lease", word("screen.queue.nocase")]);
   assert.ok(text(p).includes(`${word("screen.queue.count.many", { n: "8" })} · ${word("screen.queue.grouped")}`));
   assert.ok(text(p).includes(word("screen.queue.more", { n: "2" })));
+  const one = await open("/app/queue", { queue: ok({ items: ITEMS, item_count: 7, truncated: true }) });
+  assert.ok(text(one).includes(word("screen.queue.more.one")), "R25: one more, the singular key");
 });
 
 test("R2, R25: an item's summary and detail are its queue.<kind> words where keyed, filled, else its own summary and detail; the count picks its singular or plural key", async () => {

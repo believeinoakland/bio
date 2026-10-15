@@ -404,7 +404,7 @@ test("R29: a project the member is invited to is hers to do on Home, with Join (
   const you = main(p).querySelectorAll("section")[0];
   assert.equal(you.querySelector("h2").textContent, word("screen.home.needsyou"));
   const join = you.querySelector('button[data-act="projectjoin"]');
-  assert.ok(join && join.textContent.startsWith(word("act.projectjoin.label.projects")));
+  assert.ok(join && join.textContent.startsWith(word("act.projectjoin.label.home")));
   assert.ok(you.querySelector('a.cs-ref[href="/app/project/PROJ-9"]'), "the project is a reference");
   assert.equal(main(p).querySelectorAll('button[data-act="projectjoin"]').length, 1, "control: the joined project offers none");
   assert.deepEqual(p.byOp("projectparticipants").map((r) => r.query.projectId).sort(), ["PROJ-1", "PROJ-9"], "each project's participants read once");
