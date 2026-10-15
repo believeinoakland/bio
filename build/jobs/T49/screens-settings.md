@@ -48,6 +48,12 @@ Merged tranche/T49 (interface-shell, admission) with no local stand-in of the sh
 
 Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 33, module lines 2509
 
+## Completion, fourth round (B7)
+
+Merged tranche/T49 (DEC-263 to DEC-267; 570 keys now in this module's reads). (1) `screen.settings.name`, `screen.ties.name` and `screen.wizards.name` added to the keys `settings` reads. (2) DEC-267: `AGENT_WORKER_UNBOUND` is drawn by `refusal.AGENT_WORKER_UNBOUND`; the module never held `ai.refused.notdeployed`. `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fail 0. Checks: format, architecture, ownership 0 failures; coverage 39 of 39.
+
+Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 35, module lines 2509
+
 ## J1 · QUESTION
 
 QUESTION (my best reading is carried out meanwhile). Seven of the 551 keys DEC-257 reworded now hold a `{fill}` that nothing the plane answers today can fill. R37 forbids drawing a sentence with an empty or default fill, and R39 forbids inline English, so I cannot draw them as the design words them.
