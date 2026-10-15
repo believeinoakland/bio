@@ -72,6 +72,8 @@ export class Walk {
     this.whoami = null;
     /* R6: the LIVE and DESIGN pairs written, relative to `out`, put to BOB before a release is called ready */
     this.pairs = [];
+    /* what the walk could not walk here and says so, never a failure (R7 with no handle, K3380) */
+    this.notes = [];
     /* Elements whose text is a secret (a one-time password, a probe credential, an invitation link): masked in every
        screenshot. */
     this.mask = [];
@@ -155,10 +157,11 @@ export class Walk {
     const lines = [`journey-check (${this.arm}): ${this.steps.length} steps, ${this.failures.length} failures`];
     for (const s of this.steps) lines.push(`${s.ok ? "ok  " : "FAIL"} ${s.journey} · ${s.label} (${s.screenshot})`);
     for (const f of this.failures) lines.push(`  ${f.kind}: ${f.journey} · ${f.step ?? "between steps"}: ${f.detail}`);
+    for (const n of this.notes) lines.push(`note: ${n}`);
     if (this.pairs.length) lines.push(`${this.pairs.length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):`, ...this.pairs.map((p) => `  ${p}`));
     const text = this.redact(lines.join("\n")) + "\n";
     writeFileSync(join(this.out, "report.txt"), text);
-    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs }, null, 1)));
+    writeFileSync(join(this.out, "report.json"), this.redact(JSON.stringify({ arm: this.arm, steps: this.steps, failures: this.failures, pairs: this.pairs, notes: this.notes }, null, 1)));
     return text;
   }
 }

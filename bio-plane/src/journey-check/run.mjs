@@ -87,7 +87,14 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     walk.copyHost = new URL(copy).host;
     /* R3: before the hand-over writes anything, the copy must be a test instance. */
     await requireTestInstance(copy, (req) => world.fetchCopy(req));
-    const { invite } = await walkFounder(walk, founder.page, { base: copy, founder: who.founder });
+    /* R7 (K3380): every screen swept as the founder while she has no handle, DEC-230's words excepted; where the claim
+       took her handle there is no such founder here, which the report notes */
+    const handleless = parts.includes("sweep") ? async (p) => {
+      await sweepAsFounder(walk, p, copy, { handle: null });
+      walk.journey = "journey 28";
+    } : null;
+    const { invite, byHandle } = await walkFounder(walk, founder.page, { base: copy, founder: who.founder, whileHandleless: handleless });
+    if (byHandle && parts.includes("sweep")) walk.notes.push("R7 with no handle: not walkable here (the claim took a handle)");
     const mai = await device(walk, b, route);
     const phone = await device(walk, b, route, { width: 390, height: 844 });
     await walkMember(walk, mai.page, { base: copy, invite, member: who.member, phone: phone.page });
@@ -108,7 +115,8 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
         await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: r9.project });
       })().catch(going);
     }
-    if (parts.includes("sweep")) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
+    /* the sweep with her handle held (a founder who could not choose one was swept handleless above) */
+    if (parts.includes("sweep") && who.founder.handle) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
     /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
     if (parts.includes("R13")) {
       walk.journey = "R13 design journey 29";

@@ -179,8 +179,10 @@ export async function walkInstaller(walk, page, installerOrigin) {
    codes, the group's name, Home in a new group, and an invitation for the first member. She claims by her handle where
    the claim asks it (screens-entry R6), or, where the claim does not, chooses it on setup once claimed
    (`founderhandleset`, DEC-230); either way she then signs in by it. `founder.handle` null claims with none (R7's
-   handleless founder, DEC-230), as a group claimed before T49 was. */
-export async function walkFounder(walk, page, { base, founder }) {
+   handleless founder, DEC-230), as a group claimed before T49 was. `whileHandleless(page)`, when given, is walked while
+   she has no handle yet (R7's sweep with none, K3380), before she chooses one. Answers the invitation link and whether
+   the claim itself took her handle. */
+export async function walkFounder(walk, page, { base, founder, whileHandleless = null }) {
   await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
     await p.waitForURL((u) => u.origin === base && u.pathname === "/app/setup", { timeout: 20000 });
@@ -203,6 +205,7 @@ export async function walkFounder(walk, page, { base, founder }) {
     if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await tenCodes(p);
   });
+  if (!byHandle && whileHandleless) await whileHandleless(page);
   if (founder.handle && !byHandle) {
     /* a handle not chosen fails the walk, and she goes on as she is signed in, so the rest is still walked */
     let chosen = true;
@@ -232,7 +235,7 @@ export async function walkFounder(walk, page, { base, founder }) {
     await shown(p, "a[href='/app/members']", "the invitation to invite members");
   });
   const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
-  return { invite };
+  return { invite, byHandle };
 }
 
 /* Signs `who` in by her handle on the front screen; `whoami` must then answer that handle (R9 step 1). */

@@ -56,3 +56,11 @@ test("R7: what counts as admin drawn as a name: the word alone, lower case; not 
   assert.deepEqual(adminAsName("The administrator, admin-tools, https://x.test/admin/y, Admin settings"), []);
   assert.deepEqual(ADMIN_WORDS, ["founder.handle.says", "founder.handle.later.help"]);
 });
+
+test("R7 (K3380): what the walk cannot walk here it notes in its report, as a note and never a failure", () => {
+  const walk = new Walk({ out: join(dir, "notes"), arm: "local" });
+  walk.notes.push("R7 with no handle: not walkable here (the claim took a handle)");
+  const text = walk.report();
+  assert.match(text, /^note: R7 with no handle: not walkable here \(the claim took a handle\)$/m);
+  assert.match(text, /0 failures/);
+});

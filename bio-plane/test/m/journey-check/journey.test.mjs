@@ -108,7 +108,10 @@ test("R11 control: with no fake model bound, step 9 fails by name", { timeout: 2
 
 test("R7: the walk as stated: signed in as the founder, no screen draws admin as a person's name or handle", { timeout: 2400000 }, async () => {
   const { r } = await local();
-  assert.ok(r.walk.steps.some((s) => s.journey.startsWith("R7 as the founder")));
+  assert.ok(r.walk.steps.some((s) => s.journey === "R7 as the founder, her handle held"), r.report);
+  /* with none (K3380): swept while she had none, or, where the claim took her handle, noted as not walkable here */
+  assert.ok(r.walk.steps.some((s) => s.journey === "R7 as the founder, with no handle")
+    || r.walk.notes.includes("R7 with no handle: not walkable here (the claim took a handle)"), r.report);
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.ADMIN_NAME).map((f) => f.detail), []);
 });
 
