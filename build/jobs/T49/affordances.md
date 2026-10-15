@@ -57,3 +57,7 @@ B2 and B3 applied: rung_correction_key published (old rung_correction_path remov
 Tranche merged (the later words, K3374). B4: the only placeholder I fill is `label.connectionkinds.holds`'s `{capacity}`, unchanged by DEC-259. B5 (K3393): `t36.test.mjs` now reads `plansubjectadd` (DEC-263) and `signerregister` (re-worded since `f498560a37`) by key, not by their text at the commit (`REWORDED_SINCE`). Module run: 262 tests, 261 pass, 1 fail: R62's `hasWord` over the reads list, which fails on DEC-264's 60 `act.*.name` keys (the accepted red until N1125; no change here). format, architecture, coverage (46 of 46): 0 failures.
 
 Size (session_01Sg9Baej6PovaKSxFXZivNf): test runs 13, module lines 2,614
+
+## J4 · COMPLETE
+
+B4 and B5 applied: tranche merged; t36 reads plansubjectadd and signerregister (re-worded since f498560a37) by key. Module 262 tests, 261 pass; the 1 red is R62 hasWord on DEC-264 act.*.name keys (accepted until N1125). format, architecture, coverage 0 failures.
