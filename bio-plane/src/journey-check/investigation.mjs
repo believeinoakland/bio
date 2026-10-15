@@ -22,8 +22,10 @@ export const FIND_PHRASE = "repair the roof";
 /* How long the walk waits for a run to end and its proposal to be drawn (steps 9, 10). */
 export const RUN_WAIT_MS = 180000;
 /* The co-attestations a capture asks for that the local arm does not stand in for (local.mjs `OUTSIDE`): their failed
-   attempts, and an empty generic reading, are expected where they sit in the capture's answer, and nowhere else. */
-export const CAPTURE_EXPECTS = Object.freeze([{ at: /\.attestation_attempts\[\d+\]$/, code: "ok: false" }, { at: /(?:^|\.)reading$/, code: "found: false" }]);
+   attempts, and an empty generic reading (no entities found, a measured outcome, not a refusal), are expected where
+   they sit in the capture's answer, and the empty reading where the document's page reads it, and nowhere else. */
+export const READING_EXPECTS = Object.freeze([{ at: /(?:^|\.)reading$/, code: "found: false" }]);
+export const CAPTURE_EXPECTS = Object.freeze([{ at: /\.attestation_attempts\[\d+\]$/, code: "ok: false" }, ...READING_EXPECTS]);
 
 const where = (page) => new URL(page.url()).pathname;
 
@@ -156,7 +158,7 @@ async function readAndCite(walk, page, { document }) {
     await box.press("Enter");
     await settle(p);
     if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("Find-in found no passage holding the phrase");
-  });
+  }, { expect: READING_EXPECTS });
   await walk.step(page, "8 · cite it with a role (supports)", async (p) => {
     /* the role is chosen before citing (screen.findin.cite.norole) */
     const role = p.locator('#cs-main select[id*="role"]:visible').first();

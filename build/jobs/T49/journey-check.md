@@ -70,3 +70,10 @@ R7 swept while the founder has no handle (DEC-230's words excepted), before she 
 ## J4 · REPORT
 
 B5 applied (K3380): R7 swept handleless before she chooses, noted where the claim took a handle; the walker reads no console line, so D28 already fails nothing. Re-walked with interface-shell and screens-daily merged: 99 steps, 16 failures, all in open jobs (record, 'After B5'). Still COMPLETE; waiting for your next CHANGE.
+
+## After B7 (K3383)
+
+Merged the tranche (every L11 job but control-plane) and re-walked; four flaws of my own found and fixed on the way: drawn words are matched as written (`textContent`), since a section heading drawn in capitals by CSS read as other words through `innerText`; the file tab is followed with its subject (`/app/capture/file/<id>`); the upload's file is chosen last, as the screen's redraw while typing empties a file field; step 7 expects the empty generic reading where the page reads it, as the capture steps do. Walk on `tranche/T49` @ ceca2ea2fd: 103 steps, 10 failures. Passing now: journey 28 from civicsmith.org with the claim by her handle (R9 step 1), R7 (held; with none noted as not walkable, the claim took a handle), steps 2–6 (project, question, the subscription's sign-in through the runner's stand-in, capture by address and by upload into the question, both held, one vouched for). It stops at step 7; owners, for BOB to route (J5):
+- the document page draws none of the document's words: the reading `op=reading` answers for the captured HTML notice holds no `passages`, `units` or `text` (624 characters read), so `document.mjs` draws no passage — screens-inquiry R32 (the page) or the reading's owner (extraction / reading-pipeline), whichever owes the text;
+- `versionchain` refuses `VERSION_CHAIN_NO_SUCH_VERSION` inside a 200 for the copy just captured (`at` its own sha) — provenance (`index.mjs`:1318), the record holding no version of a capture it just made;
+- R10 and seven of R13's pairs follow from R9 stopping at 7. Steps 8–12 (cite, the dock's run with the fake model, Ask, accept and conclude) are not reached yet; the fake model is shaped further when they are.
