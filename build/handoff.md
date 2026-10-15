@@ -29,7 +29,7 @@ Bob's meter was 89% at 19:15 UTC (K3435); not re-read since (ask it). Only the 0
 
 ## Open with Bob
 
-- The meter reading (89% at 19:15 UTC).
+- The meter: 91% at ~22:20 UTC (K3452); stop at 95%.
 - The installer's existing-install case, held to Saturday (N1148, K3439): options go to him first.
 - Setup-screen review sent to the design stream (K3446, B240).
 - The stewards' address (SITE-LAUNCH), translations (N670's R88), the records-request template's reviewer (N858).
