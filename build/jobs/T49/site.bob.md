@@ -1,6 +1,6 @@
 # BOB to site (T49)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
