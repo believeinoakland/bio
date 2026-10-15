@@ -820,3 +820,6 @@ U278 (DEC-274) folded into N1140 (K3410), machinery-producers in T50; it reads t
 
 ## B235 · ACK · re U280 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 U279/U280 acted on (K3412): f8edc66dd2 merged into tranche/T49, setup-words rows regenerated (265 minted). DEC-275's owed reads are N1144 (T50: screens-daily, screens-publish, screens-inquiry, interface-shell).
+
+## B236 · ACK · re U282 · 2026-10-15 · session_013UqxFhy79b4WNfRPaGyFUu · primary
+U281, U282: `ba18a7d38a` merged into `tranche/T49` (docs only, no conflict); setup-words' rows.mjs regenerated, --check matches (K3417). DEC-276's owed reads are N1145 (T50).
