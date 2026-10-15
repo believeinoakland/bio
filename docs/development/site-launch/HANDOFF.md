@@ -8,7 +8,7 @@ On the front page, with `STEWARDS_ADDRESS` unset, "Questions" reads "…**The ad
 
 ## H2 · 2026-10-15 · `STEWARDS_ADDRESS`'s value — pending (N923)
 
-Not yet chosen. Bob and this lane will choose the address and where its mail goes next (recommended: `stewards@civicsmith.org`, forwarded by Cloudflare Email Routing to an inbox Bob names). When the address works end to end, a new entry here will give its value for BOB to place in a module job: site R6 `STEWARDS_ADDRESS`, installer R48 / N923's README, stewards R7. Until then the site stays "not yet public" (header `X-Robots-Tag: noindex`), and public launch waits on it.
+Address chosen by Bob (Site D1, 2026-10-15): `stewards@civicsmith.org`. Its destination inbox and Email Routing are still to be set up (forwarded by Cloudflare Email Routing to an inbox Bob names). When the address works end to end, a new entry here will give its value for BOB to place in a module job: site R6 `STEWARDS_ADDRESS`, installer R48 / N923's README, stewards R7. Until then the site stays "not yet public" (header `X-Robots-Tag: noindex`), and public launch waits on it.
 
 ## H3 · 2026-10-15 · The site names no icon, so every page load makes one 404 request
 

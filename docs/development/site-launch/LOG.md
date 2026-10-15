@@ -23,3 +23,9 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 ## 2026-10-15 · H1 and H3 fixed upstream
 
 - BOB #181 (K3390, K3391) reports H1 (doubled stop) and H3 (icon at `/favicon.svg`, `/favicon.ico`) fixed on tranche/T49. Merged `origin/tranche/T49` into this branch; site tests re-run. Not yet deployed: the redeploy needs Bob's approval in session (K1715) and will go with the domain step.
+
+## 2026-10-15 · redeploy with H1/H3 fixes; Site D1
+
+- Bob approved the redeploy ("yes, deploy"). `civicsmith-site` now at version `b405a963-3765-458d-8e18-075464235f02` (workers.dev). `/`, `/start`, `/groups`, `/favicon.ico`, `/favicon.svg` answer 200; the doubled full stop is gone.
+- **Site D1 (Bob, 2026-10-15):** the stewards' address is `stewards@civicsmith.org`.
+- Still needed from Bob: the inbox its mail forwards to (not to be written in any file), and the Cloudflare key's zone permissions (DNS, Email Routing).
