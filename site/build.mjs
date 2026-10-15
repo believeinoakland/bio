@@ -250,7 +250,7 @@ export function generate({ commit = SITE_COMMIT, places = placesReady() } = {}) 
   const headHtml = draw(head);
   const title = (s) => (s === "a" ? words("screen.site.name") : `${sentence(norm(textOf(find(states[s], (e) => e.attrs["aria-current"] === "page")[0])))} · ${words("screen.site.name")}`);
   const doc = (t, body) => `<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
-    + `<title>${t}</title><link rel="stylesheet" href="/app/assets/civicsmith.css"><link rel="stylesheet" href="/app/assets/shell.css"></head>`
+    + `<title>${t}</title><link rel="stylesheet" href="/app/assets/civicsmith.css"><link rel="stylesheet" href="/app/assets/shell.css"><link rel="icon" type="image/svg+xml" href="/favicon.svg"></head>`
     + `<body class="cs"><div class="cs-frame mk-plain" data-frame="setup"><main class="mk-plainmain">${headHtml}${body}</main></div></body></html>\n`;
   const pages = {};
   for (const [s, [name]] of Object.entries(STATES)) pages[name] = doc(title(s), states[s].kids.map(draw).join("").trim());

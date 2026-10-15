@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { word, hasWord } from "../../bio-plane/src/setup-words/index.mjs";
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
-import worker, { CSP } from "../src/index.mjs";
+import worker, { CSP, FAVICON } from "../src/index.mjs";
 import { SITE_COMMIT as SERVED_COMMIT } from "../src/pages.mjs";
 import { KEYS, STATES, SITE_COMMIT, designMain, parse, find, generate, render, placesReady, esc } from "../build.mjs";
 
@@ -217,13 +217,40 @@ test("R5 control: null draws no section; a malformed edition is refused, never d
 test("R6: STEWARDS_ADDRESS unset draws the marked placeholder, and every response says not yet public", async () => {
   const env = { ...ENV, STEWARDS_ADDRESS: undefined };
   const { r, t } = await html("/", env);
-  assert.ok(t.includes(w("screen.site.questions.write", { address: `<b>${word("screen.site.questions.unset")}</b>` }).replace(/&lt;(\/?)b&gt;/g, "<$1b>")));
+  assert.ok(t.includes(w("screen.site.questions.write", { address: `<b>${word("screen.site.questions.unset")}</b>` }).replace(/&lt;(\/?)b&gt;/g, "<$1b>").replace(/([.!?])<\/b>\.$/, "$1</b>")));
   assert.ok(!t.includes("mailto:"));
   for (const path of ["/", "/start", "/groups", "/nonesuch", "/app/assets/civicsmith.css"]) {
     assert.equal((await get(path, env)).headers.get("x-robots-tag"), "noindex", path);
     assert.equal((await get(path, { ...env, STEWARDS_ADDRESS: "" })).headers.get("x-robots-tag"), "noindex", path);
   }
   assert.equal(r.headers.get("x-robots-tag"), "noindex");
+});
+
+test("R6: the placeholder's own full stop ends the sentence, never followed by a second", async () => {
+  const { t } = await html("/", { ...ENV, STEWARDS_ADDRESS: undefined });
+  const q = find(mainOf(t), (e) => e.tag === "section" && find(e, (h) => h.tag === "h2" && textOf(h) === word("screen.site.questions.head")).length)[0];
+  const said = norm(textOf(q).slice(word("screen.site.questions.head").length));
+  assert.match(word("screen.site.questions.unset"), /[.!?]$/);
+  assert.equal(said, norm(word("screen.site.questions.write", { address: word("screen.site.questions.unset") })).replace(/([.!?])\.$/, "$1"));
+  assert.doesNotMatch(said, /[.!?]\.$/);
+  /* set: the address takes the sentence's own stop */
+  const { t: s2 } = await html("/");
+  assert.ok(s2.includes(`${ENV.STEWARDS_ADDRESS}</a>.`));
+});
+
+test("R8: the page's icon is the mark, served from the site itself", async () => {
+  for (const path of ["/", "/start", "/groups", "/nonesuch"]) assert.ok((await html(path)).t.includes('<link rel="icon" type="image/svg+xml" href="/favicon.svg">'), path);
+  for (const path of ["/favicon.svg", "/favicon.ico"]) {
+    const r = await get(path);
+    assert.equal(r.status, 200, path);
+    assert.match(r.headers.get("content-type"), /^image\/svg\+xml/);
+    assert.equal(r.headers.get("content-security-policy"), CSP);
+    const body = await r.text();
+    assert.equal(body, FAVICON);
+    assert.doesNotMatch(body, /<script|<style|href=|url\(/);
+    const mark = /<symbol id="i-mark"[^>]*>([\s\S]*?)<\/symbol>/.exec(ASSET_FILES["icons.svg"].body)[1];
+    assert.ok(body.includes(/ d="([^"]+)"/.exec(mark)[1]));
+  }
 });
 
 test("R6 control: set, it draws the mailto: link and no header", async () => {
@@ -270,6 +297,7 @@ test("R8: every page loads only the site's own files, runs no script, and every 
       const [, attr, v] = m, tagStart = t.lastIndexOf("<", m.index), tag = /^<(\w+)/.exec(t.slice(tagStart))[1];
       assert.notEqual(attr, "src", path);
       if (tag === "a") { assert.ok(v.startsWith("/") ? ["/", "/start", "/groups"].includes(v) : outside.has(v), `${path}: ${v}`); continue; }
+      if (v === "/favicon.svg") { assert.equal((await get(v)).status, 200); continue; }
       assert.ok(/^\/app\/assets\/[\w./-]+(#[\w-]+)?$/.test(v), `${path}: <${tag}> ${v}`);
       const file = v.slice("/app/assets/".length).replace(/#.*/, "");
       assert.ok(Object.hasOwn(ASSET_FILES, file), file);

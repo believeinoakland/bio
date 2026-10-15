@@ -7,6 +7,7 @@ import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { PAGES, PARTS } from "./pages.mjs";
 
 const ROUTES = { "/": "home", "/start": "start", "/groups": "groups" };
+const ICON_PATHS = new Set(["/favicon.svg", "/favicon.ico"]);
 const ASSETS = "/app/assets/";
 export const CSP = "default-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
@@ -18,6 +19,22 @@ function fill(template, values) {
     return values[n];
   });
 }
+
+/* The page's icon (K3390): the mark, the `i-mark` symbol of interface-assets' icons.svg, drawn in its accent colour on a
+   square, served at /favicon.svg (and /favicon.ico, which browsers ask for unprompted). Derived from the served files,
+   so the site holds no second copy of the mark (R9). */
+function favicon() {
+  const mark = /<symbol id="i-mark" viewBox="([^"]+)">([\s\S]*?)<\/symbol>/.exec(ASSET_FILES["icons.svg"].body);
+  const accent = /--c-accent:\s*(#[0-9A-Fa-f]{3,8})\s*;/.exec(ASSET_FILES["civicsmith.css"].body);
+  if (!mark || !accent) throw new Error("site: icons.svg has no i-mark, or civicsmith.css no --c-accent");
+  const [x, y, w, h] = mark[1].split(/\s+/).map(Number), side = Math.max(w, h);
+  const box = [x - (side - w) / 2, y - (side - h) / 2, side, side].join(" ");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}">${mark[2].replace(/class="f"/g, `fill="${accent[1]}"`)}</svg>`;
+}
+export const FAVICON = favicon();
+
+/* After a sentence's slot, the sentence's own full stop is dropped when what fills the slot already ends one (K3390). */
+const stopAfter = (t, slot, value) => (/[.!?]$/.test(value.replace(/<[^>]*>/g, "").trim()) ? t.replace(`{{${slot}}}.`, `{{${slot}}}`) : t);
 
 export class ConfigError extends Error {}
 const bad = (what) => { throw new ConfigError(`site: ${what}`); };
@@ -82,7 +99,7 @@ export function page(name, c) {
   const featured = c.featured === null ? "" : fill(PARTS.featured, Object.fromEntries(Object.entries(c.featured).map(([k, v]) => [k, esc(v)])));
   if (name === "groups" && !c.groups.length) name = "groupsEmpty";
   const rows = c.groups.map((g) => fill(PARTS.groupRow, { name: esc(g.name), place: esc(g.place), focus: esc(g.focus), href: esc(g.href), cases: casesOf(g) })).join("");
-  return fill(PAGES[name], { stewards, installer, featured, rows });
+  return fill(stopAfter(PAGES[name], "stewards", stewards), { stewards, installer, featured, rows });
 }
 
 function headers(c, type) {
@@ -119,6 +136,7 @@ export default {
     const path = new URL(request.url).pathname;
     let status = 200, type = "text/html; charset=utf-8", body;
     if (Object.hasOwn(ROUTES, path)) body = page(ROUTES[path], c);
+    else if (ICON_PATHS.has(path)) { type = "image/svg+xml; charset=utf-8"; body = FAVICON; }
     else if (path.startsWith(ASSETS) && asset(path.slice(ASSETS.length))) {
       const a = asset(path.slice(ASSETS.length));
       type = a.type.startsWith("text/") || a.type === "image/svg+xml" ? `${a.type}; charset=utf-8` : a.type;

@@ -13,10 +13,10 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
 const SESSION_KEY = "refusal.DOOR_RATE_LIMITED.session";
 const ROW_CODES = Object.values(C).flatMap((rows) => Object.keys(rows));
 
-test("R28: every key admission reads is held by setup-words (hasWord), and the keys it reads are exactly the refusal.<CODE> of its rows — no row without a key, no key without a row", () => {
+test("R28: every key admission reads is held by setup-words (hasWord), and the keys it reads are exactly the refusal.<CODE> of its rows plus the session window's own (refusal.DOOR_RATE_LIMITED.session, DEC-262, DEC-271) — no row without a key, no key without a row", () => {
   assert.ok(Array.isArray(READS) && READS.length > 0);
   for (const key of READS) assert.equal(hasWord(key), true, key);
-  assert.deepEqual([...READS].sort(), ROW_CODES.map((code) => `refusal.${code}`).sort());
+  assert.deepEqual([...READS].sort(), [...ROW_CODES.map((code) => `refusal.${code}`), SESSION_KEY].sort());
   /* the session window's own sentence (R27; DEC-262) */
   assert.equal(hasWord(SESSION_KEY), true);
   /* control: a key nobody holds is no word, and reading it is a loud failure, never a fallback */
