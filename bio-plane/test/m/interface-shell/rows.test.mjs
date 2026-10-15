@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, pending, controls, accessibleName, ADMIN } from "./harness.mjs";
 import { ALL } from "./screens.fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }, { id: "h2", title: "Budget", at: "2026-10-02" }] });
@@ -18,7 +19,7 @@ test("R19 each row's acts are in a panel opened beneath it, by its name or the k
   assert.equal(p.root().querySelectorAll('button[data-act="heldrestore"]').every((b) => b.closest("tr.cs-panel")), true, "only in its row's panel");
   const open = rowsOf(p)[0].querySelector('[data-shell="row"]');
   assert.equal(open.getAttribute("aria-label"), "Acts for Minutes");
-  assert.equal(open.closest(".cs-rowname").textContent, "Minutes" + open.textContent, "beside the row's name");
+  assert.equal(open.closest(".mk-rowname").textContent, "Minutes" + open.textContent, "beside the row's name");
   assert.equal(open.getAttribute("aria-expanded"), "false");
   await p.click(open);
   assert.equal(panel(0).hidden, false);
@@ -57,7 +58,7 @@ test("R19 R62 sorting keeps each open panel with its row; at the phone width eac
   await p.click(sort);
   await p.click(p.root().querySelectorAll('[data-shell="sort"]')[0]);
   assert.equal(p.root().querySelectorAll("th")[1].getAttribute("aria-sort"), "descending");
-  const names = rowsOf(p).map((r) => r.querySelector('[data-shell="row"]').getAttribute("aria-label").replace("Acts for ", ""));
+  const names = rowsOf(p).map((r) => r.querySelector('[data-shell="row"]').getAttribute("aria-label").replace(word("shell.row.open", { name: "" }), ""));
   assert.deepEqual(names, ["Minutes", "Budget"]);
   const budget = rowsOf(p).find((r) => r.textContent.includes("Budget"));
   assert.equal(rowsOf(p).indexOf(budget), 1);
@@ -69,7 +70,7 @@ test("R19 R62 sorting keeps each open panel with its row; at the phone width eac
   assert.equal(b2.nextElementSibling.hidden, false);
   const q = await boot({ screens: ALL, path: "/app/held", plane: PLANE, phone: true });
   for (const r of rowsOf(q)) {
-    assert.ok(r.querySelector(".cs-rowname").textContent.includes("1 October") || r.querySelector(".cs-rowname").textContent.includes("2 October"), "the first value on the name's line");
+    assert.ok(r.querySelector(".mk-rowname").textContent.includes("1 October") || r.querySelector(".mk-rowname").textContent.includes("2 October"), "the first value on the name's line");
     for (const td of r.querySelectorAll("td").slice(2)) assert.ok(td.getAttribute("data-label"), td.outerHTML);
   }
 });

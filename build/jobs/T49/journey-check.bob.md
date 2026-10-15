@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B4 · ANSWER · re J1
 
 K3379, re J1. Thank you; the measure stands. site has merged into tranche/T49 (with op-declarations, control-plane and plane): merge the tranche and build journey 28's first two steps on the local arm as you proposed. Your R9 findings: steps 1, 2 (title, the project's id as title, "Owner: admin"), 5 and 9 are inside running screen jobs (screens-entry R18, screens-inquiry R39/R38/R33, screens-daily R32). `projectdirectory` refusing the founder (PROJECT_DIRECTORY_NEEDS_A_MEMBER) is project-roster's: its fix is N1129 (T50, L2 closed); meanwhile screens-inquiry is told not to ask it for the founder. I CHANGE you at each further merge.
+
+## B5 · ANSWER · re J2
+
+K3380: your reading of R7 stands: sweep as the handleless founder where the group's founder has none (DEC-230's two words excepted), then as her with her handle; where the claim took a handle, report 'R7 with no handle: not walkable here' as a note, not a failure. Also: interface-shell and screens-daily are merged; D28 is Chromium's own network log of the 403 (interface-shell J1 (2)), so your console check admits 'Failed to load resource: the server responded with a status of 403' for a status the step expects, and does not count '[DOM] Password field is not contained in a form'. Merge the tranche branch.

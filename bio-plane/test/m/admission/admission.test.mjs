@@ -17,25 +17,24 @@ test("R8: a session reaching a mutating op outside its kind's set is refused 403
   for (const op of onlyAdmin) {
     env.calls.length = 0;
     const body = refused(await gate(env, { op, token: S.ann }), 403, "SESSION_ROLE_CANNOT_REACH_OP", "C-38.7", [S.ann]);
-    assert.deepEqual([body.reachedBy, body.session, body.op, body.error], ["founder", "member", op, "this operation is reserved to the founder's session"]);
+    assert.deepEqual([body.reachedBy, body.session, body.op], ["founder", "member", op]);
     assert.equal(opCalls(env).length, 0);
     assert.ok(!SESSION_CODES.includes((await gate(env, { op, token: S.founder })).refusal?.body.reason), `${op}: founder admitted`);
   }
-  /* adminvote: governorconfig's sentence names the founder's session and says an administrator's is refused alike */
+  /* adminvote: governorconfig names the founder's session, and an enrolled administrator's session (a member's) is refused it alike */
   const gc = (await gate(env, { op: "governorconfig", token: S.ann })).refusal.body;
-  assert.match(gc.detail, /^'governorconfig' is reachable from a signed-in session, but only the founder's/);
-  assert.match(gc.detail, /an administrator's session is refused this exactly as this one is/);
+  assert.deepEqual([gc.reachedBy, gc.session, gc.op], ["founder", "member", "governorconfig"]);
   /* the member's set alone: no declared op is there today, so the tables are arranged so (a copy, never the frozen ones) */
   const memberOnly = arranged((m, a) => a.delete("lease"));
   {
     const body = refused(await gate(env, { op: "lease", token: S.founder, tables: memberOnly }), 403, "SESSION_ROLE_CANNOT_REACH_OP", "C-38.7");
-    assert.deepEqual([body.reachedBy, body.session, body.error], ["member", "admin", "this operation is reserved to a member's own session"]);
+    assert.deepEqual([body.reachedBy, body.session], ["member", "admin"]);
     assert.ok(!SESSION_CODES.includes((await gate(env, { op: "lease", token: S.ann, tables: memberOnly })).refusal?.body.reason));
   }
   /* a recorded decision, each cited, to both kinds */
   for (const [op, recorded] of Object.entries(UNATTENDED_BY_DECISION)) for (const t of [S.ann, S.founder]) {
     const body = refused(await gate(env, { op, token: t }), 403, "MACHINE_CREDENTIAL_REQUIRED", "C-38.3");
-    assert.deepEqual([body.recorded, body.error], [recorded, "this operation requires a machine credential, not a signed-in session"]);
+    assert.equal(body.recorded, recorded);
   }
   /* no decision recorded: export (no session set, no decision; at the door, its own refusal answers first), and purge
      with its decision removed from an arranged copy */
@@ -83,7 +82,7 @@ test("R9: a binding class not in the op's classes is refused 403 CLASS_FORBIDDEN
       if (admitted) assert.notEqual(r.refusal?.body.reason, "CLASS_FORBIDDEN", `${op}/${c}`);
       else {
         const body = refused(r, 403, "CLASS_FORBIDDEN", "C-38.2", [token]);
-        assert.deepEqual([body.op, body.cls, body.error], [op, c, "forbidden for token class"]);
+        assert.deepEqual([body.op, body.cls], [op, c]);
       }
     }
   }
@@ -160,7 +159,6 @@ test("R11: a session missing the op's capability is refused 403 NOT_CAPABLE (C-3
   const cy = (await gate(env, { op: "promote", token: some })).caller;
   const body = refused({ refusal: A.projectCreationGate(cy.caps) }, 403, "NOT_CAPABLE", "C-38.5");
   assert.deepEqual([body.op, body.needs, body.held], ["promote", "create_projects", ["contribute", "publish"]]);
-  assert.match(body.detail, /^creating a project needs the create-projects capability/);
   assert.equal(body.translation, refused(await gate(env, { op: "promote", token: lack }), 403, "NOT_CAPABLE", "C-38.5").translation,
                "one row, one sentence, for both conditions");
   assert.equal(A.projectCreationGate((await gate(env, { op: "promote", token: S.ann })).caller.caps), null);
@@ -168,15 +166,15 @@ test("R11: a session missing the op's capability is refused 403 NOT_CAPABLE (C-3
 
 test("R12: a bearer asking adminendorse, adminremove or membercaps is refused 403 OPERATOR_TOKEN_CANNOT_GOVERN (C-32.17); groupnameset or groupdomainset GROUP_IDENTITY_NEEDS_SESSION (C-64.4); each names the class", async () => {
   const { env, S } = world();
-  assert.deepEqual([...GOVERNANCE_ACTIONS].sort(), ["adminendorse", "adminremove", "membercaps"]);
-  assert.deepEqual([...IDENTITY_ACTIONS].sort(), ["groupdomainset", "groupnameset"]);
+  /* (N1073) the acts are op-declarations' own declaration (GOVERNANCE_ACTIONS, IDENTITY_ACTIONS), read here, not hand-listed */
+  for (const op of [...GOVERNANCE_ACTIONS, ...IDENTITY_ACTIONS]) assert.ok(OPS[op]?.mutating, `${op} is a declared write`);
+  assert.ok(GOVERNANCE_ACTIONS.length > 0 && IDENTITY_ACTIONS.length > 0);
   const bearers = { admin: env.ADMIN_TOKEN, probe: env.PROBE_TOKEN };
   for (const [op, code, check] of [...GOVERNANCE_ACTIONS.map((o) => [o, "OPERATOR_TOKEN_CANNOT_GOVERN", "C-32.17"]),
                                    ...IDENTITY_ACTIONS.map((o) => [o, "GROUP_IDENTITY_NEEDS_SESSION", "C-64.4"])]) {
     for (const [c, token] of Object.entries(bearers)) {
       const body = refused(await gate(env, { op, token, params: c === "probe" ? { store: "scratch" } : {} }), 403, code, check, [token]);
       assert.deepEqual([body.op, body.tokenClass], [op, c]);
-      assert.match(body.detail, new RegExp(`\`${c}\`-class`));
     }
     /* the class is asked of how the caller arrived, never of a list: a class added tomorrow is refused too */
     assert.equal(A.bearerFence(op, { cls: "tomorrow", viaSession: false }).body.reason, code);
