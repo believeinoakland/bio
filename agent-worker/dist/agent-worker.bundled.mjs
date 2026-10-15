@@ -4695,6 +4695,40 @@ function holdingsNote(h) {
   return s;
 }
 
+// src/holdings.mjs
+var isStr = (x) => typeof x === "string" && x.length > 0;
+function withRecordIds(holdings, resolved) {
+  if (!holdings || typeof holdings !== "object") return holdings;
+  const list2 = Array.isArray(resolved) ? resolved : [];
+  const readOf = /* @__PURE__ */ new Map();
+  for (const r of list2) {
+    if (!r || typeof r !== "object" || r.refused) continue;
+    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
+    const key = chain && isStr(chain.address_norm) ? chain.address_norm : "";
+    const versions = (Array.isArray(chain?.versions) ? chain.versions : []).filter((v) => v && isStr(v.bundle_id));
+    if (!key || versions.length < 1) continue;
+    const cited = r.bundle ? versions.filter((v) => v.bundle_id === r.bundle) : [];
+    const pick = (cited.length ? cited : versions).at(-1);
+    const seen = readOf.get(key);
+    if (!seen || cited.length && !seen.cited)
+      readOf.set(key, { record_id: pick.bundle_id, capture_sha: pick.capture_sha ?? null, cited: cited.length > 0 });
+  }
+  const bundleOf = /* @__PURE__ */ new Map();
+  for (const r of list2)
+    if (r && typeof r === "object" && !r.refused && r.bundle && isStr(r.citation)) bundleOf.set(r.citation, r.bundle);
+  return {
+    ...holdings,
+    by_document: (Array.isArray(holdings.by_document) ? holdings.by_document : []).map((d) => {
+      const got = readOf.get(d?.address_norm);
+      return { ...d, record_id: got ? got.record_id : null, capture_sha: got ? got.capture_sha : null };
+    }),
+    unchained_items: (Array.isArray(holdings.unchained_items) ? holdings.unchained_items : []).map((u) => ({
+      ...u,
+      record_id: bundleOf.get(u?.citation) ?? null
+    }))
+  };
+}
+
 // ../bio-plane/src/tokens.mjs
 var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
   // dist/SECRETS.txt of the 0.2.0 test deployment
@@ -5267,7 +5301,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         }
         resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
       }
-      const holdings = documentHoldings(resolved);
+      const holdings = withRecordIds(documentHoldings(resolved), resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
       out.note = `${taken.length} REPORT(s) taken, ${refused2.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} read(s) could NOT be made \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD rather than empty` : "") + `; ${holdingsNote(holdings)}. No document was returned by a sub-session and none was loaded`;
       out.state = {
