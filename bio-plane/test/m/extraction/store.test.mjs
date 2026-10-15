@@ -394,3 +394,28 @@ test("R30 R45 (N100): readingOf answers pageBoxes as the reading stored them: ab
   assert.equal("pageBoxes" in w.x.readingOf(S2), true);
   assert.equal("pageBoxes" in w.x.readingOf(S3), false);
 });
+
+test("R76 R27 R36 (T49; K3387): op=reading answers text_units, the capture's units as unitsOf answers them (extent, reference, text, truncated, in seq order); [] for a capture read and never indexed; withheld from a viewer refused the bundle; absent for a capture not read", async () => {
+  const w = fresh();
+  bundle(w.s, "PROJ-1", { type: "project" });
+  const html = (i, text, extra = {}) => ({ extent: { kind: "doc-para", para: i, run: null }, reference: `¶${i + 1}`, text, seq: i, ...extra });
+  const units = [html(1, "second", { truncated: true }), html(0, "first")];
+  w.x.writeReading({ bundleId: "PROJ-1", captureSha: S1, reading: await reading([]), textUnits: units });
+  const mine = w.x.readingFor(S1, "class:admin");
+  const stored = w.x.unitsOf(S1).units;
+  assert.deepEqual(mine.text_units, stored.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })));
+  assert.deepEqual(mine.text_units.map((u) => [u.text, u.truncated, u.extent.para]), [["first", false, 0], ["second", true, 1]], "seq order");
+  assert.deepEqual(Object.keys(mine.text_units[0]).sort(), ["extent", "reference", "text", "truncated"]);
+  /* control: the viewer refused the bundle receives none, and the bundle is withheld as before */
+  const hidden = w.x.readingFor(S1, "member:outsider");
+  assert.equal(hidden.bundle_id, null);
+  assert.equal("text_units" in hidden, false);
+  /* a read capture with no unit indexed answers an empty list; a capture not read answers none */
+  w.x.writeReading({ bundleId: "PROJ-1", captureSha: S2, reading: await reading([]) });
+  assert.deepEqual(w.x.readingFor(S2, "class:admin").text_units, []);
+  assert.equal("text_units" in w.x.readingFor(S3, "class:admin"), false);
+  /* the bound: no more than 4,096 */
+  const many = Array.from({ length: CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 3 }, (_, i) => html(i, `t${i}`));
+  w.x.writeReading({ bundleId: "PROJ-1", captureSha: S3, reading: await reading([]), textUnits: many });
+  assert.equal(w.x.readingFor(S3, "class:admin").text_units.length, CAPTURE_TEXT_CAPTURE_UNIT_BOUND);
+});
