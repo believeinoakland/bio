@@ -60,3 +60,9 @@ Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 19, module lines 1547
 COMPLETE (after B6). Merged tranche/T49. doors.test.mjs R18: the derived administrator's acts already exclude founderhandleset (only acts every session reaches); a new test reads it from its spec (op-declarations R71, control-plane R97): only SESSION_OPS.admin holds it, the founder's session is admitted, a member's session is refused 403 SESSION_ROLE_CANNOT_REACH_OP naming the founder, admission adds no fence.
 Tests: admission 55, pass 55, fail 0. format 0 failures; architecture 0 (21 files); coverage 28 of 28; ownership 0 (5 files vs tranche/T49).
 Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 22, module lines 1547
+
+## J6 · COMPLETE
+
+COMPLETE (after B7). Merged tranche/T49 (DEC-271's re-cut words-reads.json). words.test.mjs R28 now expects the rows' keys plus refusal.DOOR_RATE_LIMITED.session, which it already asserted with hasWord and as the session refusal's sentence.
+Tests: admission 55, pass 55, fail 0. format 0 failures; architecture 0 (21 files); coverage 28 of 28; ownership 0 (1 file vs tranche/T49).
+Size (session_01UMUMxYiouq4PiTjhcRQTAV): test runs 24, module lines 1547
