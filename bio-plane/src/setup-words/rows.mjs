@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (11899 words, 864 protected; SHA-256
-   d92c561bf7f5f42437c2ec8f73746fc20286c3cbb0abcb6ac88acc448ff61794), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (11905 words, 865 protected; SHA-256
+   56ba4b32956c994c0cd153e71f0336682378d4343301aed11c16f82a1a855b51), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "d92c561bf7";
+export const WORDS_COMMIT = "56ba4b3295";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -648,7 +648,7 @@ export const WORD_ROWS = Object.freeze([
   ["queue.temporal-expectation-due.overdue.summary","Nothing recorded by {date}: {duty}","R5, state overdue (after the latest due date)",null,false],
   ["queue.temporal-expectation-due.overdue.detail","{office} was due to {what} by {date} ({basis}). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.",null,null,true],
   ["queue.temporal-expectation-due.undetermined.summary","Its date may have passed: {duty}","R5, state undetermined (between candidate dates); DEC-256: reworded",null,false],
-  ["queue.temporal-expectation-due.undetermined.detail","Possibly overdue: undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",null,null,true],
+  ["queue.temporal-expectation-due.undetermined.detail","It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).","DEC-269: reworded",null,true],
   ["queue.inquiry-recheck-due.summary","Look again: {question}","R6; only the member who set the wait",null,false],
   ["queue.inquiry-recheck-due.detail","You set today to look again at what {question} waits on: {what}, from {who}, by {date}. Record a look, set a new date, or remove the wait. Only you are told.",null,null,false],
   ["queue.policy-changed-noticed.summary","Changed without notice: {policy}","R13",null,false],
@@ -2594,7 +2594,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.people.today.kind.institution","An organization","adopted from screens-investigate's own rows",null,false],
   ["screen.people.today.kind.movement","A movement or campaign","adopted from screens-investigate's own rows",null,false],
   ["screen.people.today.kind.fund","A fund","adopted from screens-investigate's own rows",null,false],
-  ["screen.people.today.kind.program","A programme","adopted from screens-investigate's own rows",null,false],
+  ["screen.people.today.kind.program","A program","adopted from screens-investigate's own rows; DEC-269: reworded",null,false],
   ["screen.people.counts","named in {list}","adopted from screens-investigate's own rows",null,false],
   ["screen.people.count.document","{n} document","adopted from screens-investigate's own rows",null,false],
   ["screen.people.count.documents","{n} documents","adopted from screens-investigate's own rows",null,false],
@@ -4221,7 +4221,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.projects.columns.note","Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.","under the projects' table",null,false],
   ["screen.capture.title","Add to the record",null,null,false],
   ["screen.capture.address.later","Ask for this later","capturerequest's button",null,false],
-  ["screen.capture.address.watchhead","Once it is captured: watching the address",null,null,false],
+  ["screen.capture.address.watchhead","Once it is captured: where it is filed, and watching the address","DEC-268: reworded",null,false],
   ["screen.capture.address.from","from {office}'s own site","a capture fetched from the office's own site",null,false],
   ["screen.capture.address.watchbutton","Watch this address for changes","monitorset's button",null,false],
   ["screen.capture.file.taken","taken {date}, {time}, by the phone that took it","a photo's own record of when it was taken",null,false],
@@ -4576,6 +4576,12 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.uncatalogued","Civicsmith has no explanation of this refusal in its words yet, so its code is shown as the act gave it.","affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word",null,false],
   ["screen.ceremony.photo.facts.dated","taken by {by}, {date} · relied on by {findings}","screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)",null,false],
   ["draft.machine.label.group","Draft by the assistant, at your request · edit it until it is your group's","draft.machine.label for a field that holds the group's words (control-plane's group draft)",null,false],
+  ["capture.filed.project","Filed under {project}","after capture.captured, for a capture opened from a project",null,false],
+  ["capture.filed.question","Filed under {project}, for the question “{question}”","after capture.captured, for a capture opened from a question",null,false],
+  ["capture.cite","Cite a passage","the captured result's link to find-in, offered for a capture opened from a question (R22)",null,false],
+  ["capture.cite.tip","Opens Find in this over the document, with your question chosen.","what capture.cite opens",null,false],
+  ["site.groups.rule.head","The listing rule","the details' heading beside site.groups.rule",null,false],
+  ["site.groups.rule.text","civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.","Bob approved this text (DEC-270); a change is his",null,true],
   ["screen.account.explain.help","Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.","under the Explanations choice",null,false],
   ["screen.account.signout.note","Everywhere ends your sign-in on every phone and computer, this one included. Use it if you lost a device or signed in somewhere you shouldn't have.","under the two sign-out buttons",null,false],
   ["screen.account.passwordkey.heading","Password and signing key",null,null,false],
@@ -8931,8 +8937,8 @@ export const WORD_ROWS = Object.freeze([
   ["money.says.fact_held_side","no fact is held on this side","money, says",null,false],
   ["money.says.summed_through_calc","summed through calc-grammar; not stored","money, says",null,false],
   ["money.says.fact_concerns_event","the fact concerns no event, so no chain of authority is read","money, says",null,false],
-  ["money.says.authorising_events_held","the authorising events held toward this event","money, says",null,false],
-  ["money.says.authorising_event_held","no authorising event is held for this event","money, says",null,false],
+  ["money.says.authorising_events_held","the authorizing events held toward this event","money, says; American spelling, DEC-269",null,false],
+  ["money.says.authorising_event_held","no authorizing event is held for this event","money, says; American spelling, DEC-269",null,false],
   ["money.why.money_facts_name","more than {hub} money facts name this node","money, why",null,false],
   ["textchain.label.document_text_layer","the document's own text layer","textchain, label",null,false],
   ["textchain.label.page_pixels","the page as pixels","textchain, label",null,false],
@@ -9074,7 +9080,7 @@ export const WORD_ROWS = Object.freeze([
   ["machinery-producers.summary.completed_unattended_writer","{bundle_id} was completed by an unattended writer after {author} left it","machinery-producers, summary",null,false],
   ["machinery-producers.summary.captured_daemon_investigative","{address} was captured by the daemon at the investigative session's request","machinery-producers, summary",null,false],
   ["machinery-producers.summary.stopped_answering_often","{address} has stopped answering often enough that its archived copy may be fetched instead","machinery-producers, summary",null,false],
-  ["machinery-producers.summary.overdue_check_interval","{bundle} is overdue for its check by more than its own interval","machinery-producers, summary",null,false],
+  ["machinery-producers.summary.overdue_check_interval","{bundle} has gone longer than its own interval without its check","machinery-producers, summary; never \"overdue\" in the queue (screens-daily R31), DEC-269",null,false],
   ["machinery-producers.summary.monitored_check_scheduled","{bundle} is monitored and has no check scheduled","machinery-producers, summary",null,false],
   ["machinery-producers.text.last_thing_recorded","The last thing recorded against it ({code}) has no cataloged sentence.","machinery-producers, text",null,false],
   ["machinery-producers.summary.render_performed_held","the render of {address} was never performed: it was held until its request expired, and what the page showed is UNDETERMINED","machinery-producers, summary",null,false],
