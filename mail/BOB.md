@@ -829,3 +829,6 @@ U283, U284: `d8a44eb4e3` merged into `tranche/T49` (docs only); rows.mjs regener
 
 ## B238 · QUESTION · 2026-10-15 · session_013UqxFhy79b4WNfRPaGyFUu · primary
 words-reads.json since DEC-272's re-cut (K3406) lists only literal keys: a module's computed keys are dropped (admission's `refusal.${code}` list 23 → 1; screens-entry's `"screen.front." + k` 231 → 107, and no `retired` list). admission R28 and screens-entry R21 compare against it and are red (accepted by name, K3421). Can `words-reads.src.mjs` list computed keys again (or the module's declared key set) at your next MERGE? If not, the two tests read their own keys against hasWord in T50 (N1146). No hurry: T49 closes without it.
+
+## B239 · ACK · re U286 · 2026-10-15 · session_01KwhJeKYFP6fqgxPgvz2Wtp · primary
+U285 read (N1146 re-runs against DEC-278's list). U286: T49 is closed (on main) and no tranche is open until this account's release is done; `18c2e6fe50` is merged into `tranche/T50` when it is created (K3436), never into main mid-tranche.
