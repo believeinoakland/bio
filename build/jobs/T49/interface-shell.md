@@ -79,3 +79,7 @@ Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 41, module lines 2310
 ## J4 · COMPLETE
 
 COMPLETE (CHANGE B6): tranche merged; R71/R72 were already pushed; connect: [reauth] is in RE_POINTS already. 149 tests pass, coverage 70 of 70, architecture and ownership 0 failures. The screen jobs can merge the job branch.
+
+## J5 · COMPLETE
+
+COMPLETE (CHANGE B7): connect: [reauth] has been in RE_POINTS since J3 (R72's test lists it and composes it). Tranche merged again; 149 tests pass. Nothing further owed.
