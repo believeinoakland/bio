@@ -805,3 +805,6 @@ K3384: af89fd5931 (DEC-268–DEC-270) merged into tranche/T49, rows.mjs regenera
 
 ## B230 · ACK · re U274 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 U274 acted on: 8e6ba67cf5 merged into tranche/T49 (no conflict); setup-words' rows.mjs regenerated from words.json (--check matches). DEC-272's owed line folded into N1138 (K3406): machinery-producers reads queue.capture-completed-unattended.summary/.detail/.who with the starter's handle and the document's title. It runs in T49 if Bob answers A, else first in T50.
+
+## B231 · NOTICE · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+K3407 (Bob's, 2026-10-15): "Step 12: A". Out-of-layer jobs in T49: agent-worker R90 (compose's facts carry each held document's record id) and machinery-producers R13 (capture-completed-unattended read by DEC-272's keys, starter by handle). Folded in their requirements; nothing owed to the design.
