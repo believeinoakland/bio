@@ -3353,6 +3353,42 @@
    "en": "your group's Civicsmith",
    "protected": false,
    "note": "DEC-272: {member} when the capture was started by a credential that is no member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.summary",
+   "en": "Captured at {member}'s request: {title}",
+   "protected": false,
+   "note": "DEC-274: a capture a member asked for, or the assistant asked for while working for that member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.summary.unnamed",
+   "en": "Captured at a request: {title}",
+   "protected": false,
+   "note": "DEC-274: the summary when the request names no member (a credential that is no member asked)"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail",
+   "en": "{member} asked for this document, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: a member's own request (capture-requests R56)"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail.assistant",
+   "en": "The assistant asked for this document while working for {member}, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: a run's request; the account that paid and the run are on the run's own record, never in this sentence"
+  },
+  {
+   "key": "queue.capture-completed-unattended.request.detail.unnamed",
+   "en": "This document was asked for, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "protected": false,
+   "note": "DEC-274: the detail when the request names no member"
+  },
+  {
+   "key": "queue.capture-completed-unattended.gradenote",
+   "en": "When it was captured, a member there would have read this note on it: {note}",
+   "protected": false,
+   "note": "DEC-274: appended to either producer's detail once per distinct grade note; {note} the note's own words; never a fingerprint"
   }
  ],
  "retired": [
