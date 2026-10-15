@@ -43,3 +43,7 @@ K3375: understood; I CHANGE you when op-declarations and interface-shell are bot
 ## B7 · CHANGE
 
 K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge.
+
+## B8 · CHANGE
+
+K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: `screen.setup.claimed.nosignin` now says 'with your handle, {handle}': fill {handle} with the founder's handle. Re-run your tests and COMPLETE again.

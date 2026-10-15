@@ -72,7 +72,7 @@ w('screen.ceremony.signednow.told', 'Members who follow this case are told once.
 w('screen.ceremony.nokey.keyfile', 'Unless you keep it on this device, you save it as a key file, protected by a passphrase you choose.')
 w('screen.ceremony.nokey.elsewhere', 'Registered a key on another computer? Sign from that one, or register a key here too. Lost a key? Withdraw it under Settings › Your account and make a new one here; cases it already signed can still be checked. Your signing keys are listed there.')
 REWRITE.update({
-  'screen.ceremony.photo.facts': 'taken by {by}, {date} · relied on by {findings}',
+  'screen.ceremony.photo.facts': 'taken by {by} · relied on by {findings}',   # DEC-265 (B226 (2)): photosOf answers no date; .dated when it does
   'screen.ceremony.photos.copy': 'Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured, labeled “Faces, plates and camera details removed for publication; the group holds the original”, and the original stays inside the group. Every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), labeled “Camera details removed for publication; the group holds the original”. City staff at work are part of what the case is about; obscure one only with a reason.',
   'screen.ceremony.signs.count': 'One confirmation signs all {n}: the edition, its {findings} findings, and the {evidence} pieces of evidence they rest on. Each signature can be checked on its own, so a reader can trust one finding without trusting the rest.',
   'screen.ceremony.signs.case': 'Edition {edition} of {case}',
@@ -241,7 +241,7 @@ w('screen.money.saysneither', 'It says neither where the money went nor on what 
 w('screen.money.gap.yearonly', 'Undetermined: the source gives only the year.')
 w('screen.money.findin.date', 'Look for its date in this project', False, "findin's button, looking for the day a figure moved")
 REWRITE.update({
-  'screen.money.didnotmove': 'did not move: a {phase} figure, adopted {date}',
+  'screen.money.didnotmove': 'did not move: a {phase} figure',   # DEC-265 (B226 (4)): the figure carries no adoption date
   'screen.money.gap.to': 'Undetermined: not stated in {source}, the only source holding this figure.',
 })
 # open-file
@@ -290,7 +290,7 @@ w('screen.plan.check.hostile', 'Scenario {scenario}: no branch answers a hostile
 w('screen.plan.subject.from', 'from the inquiry "{title}" ({status}, {date})', False, "where a plan's subject comes from; {status} such as suspected")
 w('screen.plan.phase.checkpoint', '{item} → checkpoint: "{checkpoint}" (judged by a member)', False, "a scenario's phase")
 w('screen.plan.item.untaken', 'nobody has taken it up', False, 'a started item no member has taken up')
-REWRITE.update({'screen.plan.opened': 'opened {date} by {name}, when {why}'})
+REWRITE.update({'screen.plan.opened': 'opened {date} by {name}'})   # DEC-265 (B226 (3)): planopen records no reason
 # proceeding
 w('screen.proceeding.now', 'Now: awaiting the {event}', False, "where the proceeding stands, such as awaiting the hearing")
 REWRITE.update({'screen.proceeding.login.note': "The court's register needs a login, so new filings come only by a member's own capture."})
@@ -437,7 +437,7 @@ w('screen.timeline.req.unless', 'Required: Unless a lawful exception applies')
 w('screen.timeline.progression.prior', 'Version {n}, {date}, had no {step} step.', False, 'how the earlier version differed')
 w('screen.timeline.progression.name.help', 'The kind of happening it follows, such as “{example}”.')
 w('screen.timeline.progression.steps.note', 'Then add its steps, each with what comes before it, how soon, whether it is required, and how many documents it holds.')
-REWRITE.update({'screen.timeline.order.evidence': 'More evidence could order them: a passage that gives either one its day ({examples}), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.'})
+REWRITE.update({'screen.timeline.order.evidence': 'More evidence could order them: a passage that gives either one its day (a ledger entry, a meeting\'s agenda, a letter\'s date), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.'})
 # translations
 def wt(k, en, prot=False, note=''): w('screen.translations.' + k, en, prot, note)
 wt('who', 'Who may translate {language}')
