@@ -126,3 +126,7 @@ Tests: runner 6 of 6, walker 14 of 14, words 3 of 3; architecture 0 failures for
 ## J10 · REPORT
 
 B10: (1) The claim stop CREDENTIALS #17 / EXTRACTION #24 saw is the walk's: tranche/T49 carries journey-check as T48 left it (I merge last), whose claim fills no su-handle; fixed on my branch since B9. (2) Walked to the end on the B10 merge: 108 steps, 3 failures. R9 steps 1–11 pass (the run on her subscription, its proposal, Ask) and step 12's accept and stand; journey 28 from civicsmith.org, journey 3, R7. Open: step 12 conclude refused NO_BASIS (C-33.40): the accepted reading rests on no leg, and a model cannot name one — compose's facts give a held document only by address (holdings.by_document[].address_norm), never the record id a leg's target needs, and compose has no read tool — agent-worker (R21/R22 holdings and compose facts) or agent-harness. R10 follows. Smaller: basis-versions C-25.2 name-shape finding coded VERSION_NAME_NOT_UNIQUE; screens-inquiry draws 'Opened by {name}' unfilled and a passage by its record id; home/queue drew 'admin authored this document' in three walks (screens-daily), not since. Record: 'After B10'.
+
+## J11 · COMPLETE
+
+T49-32 complete at B10; owners in J10.
