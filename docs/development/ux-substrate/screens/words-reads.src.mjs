@@ -277,6 +277,8 @@ const DECISIONS = [
   ["control-plane", "control-plane/archive.mjs", "^An archive captured by the record", "file.archive.summary"],
   ["control-plane", "control-plane/archive.mjs", "^Filed at collected and never higher", "file.archive.provenance"],
   ["control-plane", "control-plane/archive.mjs", "^Changes: created from the archive's unpack", "file.log.unpacked"],
+  // DEC-267: the group's fields (its description) read their own label; a member's fields the member's
+  ["control-plane", "control-plane/draft.mjs", "~and then the words are your group's", "draft.machine.label.group"],
   ["control-plane", "control-plane/draft.mjs", "^a draft: nothing is saved until you edit it", "draft.machine.label"],
   ["control-plane", "control-plane/draft.mjs", "^the draft's ${…} is over its limit", dev("wire")],
   ["control-plane", "control-plane/index.mjs", "^this answer exactly as served", dev("diag")],

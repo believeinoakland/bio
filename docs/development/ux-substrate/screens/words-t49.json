@@ -3293,6 +3293,12 @@
    "en": "taken by {by}, {date} · relied on by {findings}",
    "protected": false,
    "note": "DEC-265: screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)"
+  },
+  {
+   "key": "draft.machine.label.group",
+   "en": "Draft by the assistant, at your request · edit it until it is your group's",
+   "protected": false,
+   "note": "DEC-267: draft.machine.label for a field that holds the group's words (control-plane's group draft)"
   }
  ],
  "retired": [
@@ -3418,7 +3424,8 @@
   "screen.setup.claimed.nosignin": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose.",
   "signing.ceremony.nokey": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
   "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
-  "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose."
+  "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
+  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it."
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
@@ -3467,6 +3474,7 @@
   "screen.setup.claimed.nosignin": "DEC-263",
   "signing.ceremony.nokey": "DEC-266",
   "signing.ceremony.device": "DEC-266",
-  "screen.account.key.help": "DEC-266"
+  "screen.account.key.help": "DEC-266",
+  "refusal.AGENT_WORKER_UNBOUND": "DEC-267"
  }
 }

@@ -9165,6 +9165,7 @@
     "ai.refused.notdeployed",
     "credential.token.once",
     "draft.machine.label",
+    "draft.machine.label.group",
     "file.archive.entry.summary",
     "file.archive.entry.title",
     "file.archive.provenance",
@@ -9175,7 +9176,7 @@
     "template.review.secret.once"
    ],
    "counts": {
-    "reads": 11,
+    "reads": 12,
     "minted": 8,
     "keyedRows": 0,
     "literalKeys": 0,

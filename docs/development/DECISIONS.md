@@ -4178,3 +4178,17 @@ response: **The design session, 2026-10-15.** Both paths are true, and one claim
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-266), `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/library.src.py`, `screens/words-reads.src.mjs`; `words.json`, `library.json`.
 owed: (BOB) the jobs and affordances draw these as reworded (`setup-words`' rows regenerated); wizard-scripts' ceremony step's why. (design) none.
+
+### DEC-267 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-258's owed: line: `refusal.AGENT_WORKER_UNBOUND`'s words speak of signing in; a group's own draft note shares `draft.machine.label`)
+for: bob-session
+question: The words for the assistant not installed, wherever it is refused; and the label of an assistant's draft of the group's own words.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: modules other than connect read `ai.refused.notdeployed` for `AGENT_WORKER_UNBOUND`; control-plane's two draft notes ("the words are yours", "the words are your group's") read one label.
+alternative: a connect-only key beside a general one. Rejected: one sentence is true at every act that raises the code, connect's sign-in included.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `refusal.AGENT_WORKER_UNBOUND`: "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it." (connect draws it so). `draft.machine.label.group`: "Draft by the assistant, at your request · edit it until it is your group's", for a draft of the group's own words (control-plane's group draft); a member's fields keep `draft.machine.label`.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-267), `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB) a module that raises `AGENT_WORKER_UNBOUND` reads `refusal.AGENT_WORKER_UNBOUND`, not `ai.refused.notdeployed`; control-plane's group draft reads `draft.machine.label.group`. (design) none.

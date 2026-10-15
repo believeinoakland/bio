@@ -619,6 +619,14 @@ DEC266_REWORDED = {
 REWRITE7.update(DEC266_REWORDED)
 # --- end DEC-266
 
+# --- DEC-267 (DEC-258's owed: line): refusal.AGENT_WORKER_UNBOUND said "signing in" wherever it was raised; it now says what is
+# true at every act that raises it. An assistant's draft of the group's own words (its description) has its own label.
+w14 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-267' + (': ' + note if note else '')))
+w14('draft.machine.label.group', "Draft by the assistant, at your request · edit it until it is your group's", False, "draft.machine.label for a field that holds the group's words (control-plane's group draft)")
+DEC267_REWORDED = {'refusal.AGENT_WORKER_UNBOUND': "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it."}
+REWRITE7.update(DEC267_REWORDED)
+# --- end DEC-267
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -626,5 +634,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

@@ -6,7 +6,7 @@
   "weight": 11,
   "mark": 55,
   "state": 4,
-  "draft": 4,
+  "draft": 5,
   "photo": 13,
   "handle": 7,
   "ai": 126,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11898,
+  "total": 11899,
   "protected": 864
  },
  "words": [
@@ -3813,9 +3813,10 @@
   },
   {
    "key": "refusal.AGENT_WORKER_UNBOUND",
-   "en": "The assistant isn't installed in your group's Civicsmith yet, so signing in can't finish here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+   "en": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
    "protected": false,
-   "source": "DEC-198"
+   "source": "DEC-198",
+   "note": "DEC-267: reworded"
   },
   {
    "key": "refusal.DISCLOSURE_DUE",
@@ -31635,6 +31636,13 @@
    "protected": false,
    "source": "DEC-265",
    "note": "screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)"
+  },
+  {
+   "key": "draft.machine.label.group",
+   "en": "Draft by the assistant, at your request · edit it until it is your group's",
+   "protected": false,
+   "source": "DEC-267",
+   "note": "draft.machine.label for a field that holds the group's words (control-plane's group draft)"
   },
   {
    "key": "screen.account.explain.help",
