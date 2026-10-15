@@ -144,27 +144,36 @@ async function captureAndVouch(walk, page, base, { question, password }) {
   return document;
 }
 
-/* Steps 7 and 8: the document opened, its words seen, a passage found in it, and cited on the question as supporting. */
-async function readAndCite(walk, page, { document }) {
+/* Steps 7 and 8: the document opened; its words, until extraction answers them by passage (K3387, B8), are its
+   Passages section's empty state, so the passage is found with Find-in (from the document's own "Find in this"), for the
+   question, and cited from the result as supporting it (screens-daily R24: the role chosen, none preselected). The
+   question then holds the passage. */
+async function readAndCite(walk, page, { document, question }) {
   await walk.step(page, "7 · open the document, see its words, and Find-in a passage", async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
-    if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(NOTICE_PASSAGE))
-      throw new Error("the document's words are not drawn on its page");
+    await requireWord(p, "screen.document.passages.head", { within: "#cs-main" });
+    await requireWord(p, "state.empty", { within: "#cs-main" });
     await act(p, "findin");
-    const box = p.locator('#cs-main input[type="search"]:visible, #cs-main [data-findin] input:visible').first();
-    try { await box.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error(`Find-in shows no field to type in on ${where(p)}`); }
-    await box.fill(FIND_PHRASE);
-    await box.press("Enter");
+    await p.waitForURL((u) => u.pathname.startsWith("/app/find-in/"), { timeout: 15000 });
     await settle(p);
+    await requireDrawn(walk, p, "find-in");
+    const term = p.locator("#findin-kind-term");
+    if (await term.count() && !(await term.isChecked())) await term.check();
+    await type(p, "findin-term", FIND_PHRASE);
+    const pick = p.locator("#findin-question");
+    if (await pick.count()) await pick.selectOption(decodeURIComponent(new URL(question).pathname.split("/").pop()));
+    await act(p, "findin");
     if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("Find-in found no passage holding the phrase");
   }, { expect: READING_EXPECTS });
   await walk.step(page, "8 · cite it with a role (supports)", async (p) => {
-    /* the role is chosen before citing (screen.findin.cite.norole) */
-    const role = p.locator('#cs-main select[id*="role"]:visible').first();
-    if (await role.count()) await role.selectOption("supports");
-    await act(p, "cite", { reason: "The notice orders the repair." });
-    await requireWord(p, "ref.here.cited.support", { within: "#cs-main", timeout: 15000 });
+    const cite = p.locator('#cs-main details:has([data-act="cite"])').first();
+    try { await cite.waitFor({ state: "attached", timeout: 10000 }); } catch { throw new Error(`no result offers to cite it on ${where(p)}`); }
+    if (!(await cite.evaluate((d) => d.open))) await cite.locator("summary").first().click();
+    await cite.locator('input[type="radio"][id$="-role-supports"]').check();
+    await act(p, "cite", { within: '#cs-main details[open]:has([data-act="cite"])', reason: "The notice orders the repair." });
+    await p.goto(question); await settle(p);
+    if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("the question does not hold the cited passage");
   });
 }
 
@@ -172,8 +181,9 @@ async function readAndCite(walk, page, { document }) {
 async function runAndRead(walk, page, { question }) {
   await walk.step(page, "9 · run the assistant on the question from the dock", async (p) => {
     await p.goto(question); await settle(p);
-    await act(p, "airunopen", { within: '[data-dock], #cs-dock, .cs-dock' });
-    await requireWord(p, "question.run.heading", { timeout: 20000 });
+    await openDock(p);
+    await act(p, "airunopen", { within: DOCK });
+    await requireWord(p, "dock.run.yours", { within: DOCK, timeout: 30000 });
   });
   await walk.step(page, "10 · read its run's answer and its suggested reading", async (p) => {
     const until = Date.now() + RUN_WAIT_MS;
@@ -187,18 +197,25 @@ async function runAndRead(walk, page, { question }) {
   });
 }
 
-/* Step 11: Ask, and the answer read. */
-async function ask(walk, page, { question, words }) {
+/* Step 11: Ask (the `answers` screen), and the answer read: drawn as the machine's work (`screen.answers.machine`). */
+async function ask(walk, page, { words }) {
   await walk.step(page, "11 · Ask, and read the answer", async (p) => {
-    await p.goto(question); await settle(p);
-    const field = p.locator('[data-dock] textarea:visible, #cs-dock textarea:visible, .cs-dock textarea:visible').first();
-    await (await control(p, "ask")).click().catch(() => {});
-    try { await field.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error(`the dock shows no field to Ask in on ${where(p)}`); }
-    await field.fill(words);
-    await act(p, "ask");
-    /* the answer is drawn labelled machine work (screen.assistant.notevidence) */
-    await requireWord(p, "screen.assistant.notevidence", { timeout: 60000 });
+    await p.goto(new URL("/app/answers", p.url()).href); await settle(p);
+    await requireDrawn(walk, p, "answers");
+    await act(p, "ask", { fields: { "answers-q": words } });
+    await requireWord(p, "screen.answers.machine", { within: "#cs-main", timeout: 90000 });
   });
+}
+
+/* The assistant's dock (interface-shell's panel, opened from the top bar), the question's run started from it (R9 step 9). */
+export const DOCK = '.cs-dock[data-panel="assistant"]';
+async function openDock(page) {
+  if (await page.locator(`${DOCK}:visible`).count()) return;
+  const b = page.locator('[data-shell="dock"][aria-expanded]:visible').first();
+  try { await b.waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error(`no way to open the assistant's dock on ${where(page)}`); }
+  await b.click();
+  try { await page.locator(DOCK).first().waitFor({ state: "visible", timeout: 10000 }); } catch { throw new Error("the assistant's dock did not open"); }
+  await settle(page);
 }
 
 /* Step 12: the proposed reading accepted, stood on for the project, and concluded. */
@@ -222,9 +239,9 @@ export async function walkAdministrator(walk, page, { base, founder, codeOf = nu
   const { project, question } = await projectAndQuestion(walk, page, base, { title: PROJECT_TITLE, question: QUESTION });
   await connectSubscription(walk, page, base, { password: founder.password, codeOf });
   const document = await captureAndVouch(walk, page, base, { question, password: founder.password });
-  await readAndCite(walk, page, { document });
+  await readAndCite(walk, page, { document, question });
   await runAndRead(walk, page, { question });
-  await ask(walk, page, { question, words: "What did the city order the landlord to do, and by when?" });
+  await ask(walk, page, { words: "What did the city order the landlord to do, and by when?" });
   await concludeOn(walk, page, { question, project });
   return { project, question };
 }
@@ -270,7 +287,7 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
     }
   });
   await runAndRead(walk, page, { question });
-  await ask(walk, page, { question, words: "Who has the tenants' reports of the leak?" });
+  await ask(walk, page, { words: "Who has the tenants' reports of the leak?" });
   return { question };
 }
 
