@@ -8359,12 +8359,6 @@
    "note": "DEC-260: machinery-producers, .map()#0"
   },
   {
-   "key": "machinery-producers.summary.completed_unattended_writer",
-   "en": "{bundle_id} was completed by an unattended writer after {author} left it",
-   "protected": false,
-   "note": "DEC-260: machinery-producers, summary"
-  },
-  {
    "key": "machinery-producers.summary.captured_daemon_investigative",
    "en": "{address} was captured by the daemon at the investigative session's request",
    "protected": false,

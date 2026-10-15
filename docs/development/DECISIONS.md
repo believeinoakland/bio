@@ -4249,3 +4249,17 @@ response: **The design session, 2026-10-15.** plane's and control-plane's `AGENT
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-reads.src.mjs` (its decisions and `REQUIREMENT_READS`); `words-reads.json`.
 owed: (BOB) the three modules read these keys. (design) none.
+
+### DEC-272 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (K3402, K3403, N1138: Home and the queue draw "admin authored this document", machinery-producers' own English; and `words-reads.json` against T49 after L11's merges)
+for: bob-session
+question: The words of the queue item for a capture finished without the member who started it; and the reads inventory once L11's modules hold keys.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: DEC-260 keyed only its summary ("{bundle_id} was completed by an unattended writer after {author} left it": a record id, a raw author id, the jargon "unattended writer") and missed its detail (an internal code, "D-61", in member text).
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `queue.capture-completed-unattended.summary` "A capture finished after {member} left it: {title}"; `.detail` "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it."; `.who` "your group's Civicsmith", for `{member}` when the capture was started by a credential that is no member. `{member}` is a handle and `{title}` the document's title, never a record or credential id. `machinery-producers.summary.completed_unattended_writer` gives way to them (machinery-producers' reads re-pointed). `words-reads.src.mjs` re-run on T49 as it stands after L11's merges: a decision whose string its module no longer holds is retired when the module reads its key (61 retired), failing only when the key is no longer read; the record files' own grammar (a new question's and project's front matter, an archive log's "Changes:" label) is listed unkeyed.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-272), `screens/words-mod-3.src.py`, `screens/words-reads-mod-3.json`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB, N1138) machinery-producers' `capture-completed-unattended` reads these keys, filling `{member}` with the starter's handle (or `.who`) and `{title}` with the document's title. (design) none.

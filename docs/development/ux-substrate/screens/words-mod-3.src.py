@@ -1412,7 +1412,7 @@ w('machinery-producers.zone_undetermined', "no time zone is held for it by your 
 w('machinery-producers.summary.pacing_holding_captures', 'our own pacing is holding {host}: captures from it are PACED, not broken', note='machinery-producers, summary')
 w('machinery-producers.summary.capture_did_finish', 'the capture of {locator} did not finish: support material is still outstanding', note='machinery-producers, summary')
 w('machinery-producers.map.grade_note_names', 'The grade note of {captures} it names ({x}), as a member present would have read it: {note}', note='machinery-producers, .map()#0')
-w('machinery-producers.summary.completed_unattended_writer', '{bundle_id} was completed by an unattended writer after {author} left it', note='machinery-producers, summary')
+# DEC-272: machinery-producers.summary.completed_unattended_writer gave way to queue.capture-completed-unattended.summary and .detail (words-t49.src.py)
 w('machinery-producers.summary.captured_daemon_investigative', "{address} was captured by the daemon at the investigative session's request", note='machinery-producers, summary')
 w('machinery-producers.summary.stopped_answering_often', '{address} has stopped answering often enough that its archived copy may be fetched instead', note='machinery-producers, summary')
 w('machinery-producers.summary.overdue_check_interval', '{bundle} has gone longer than its own interval without its check', note='machinery-producers, summary; never "overdue" in the queue (screens-daily R31), DEC-269')
