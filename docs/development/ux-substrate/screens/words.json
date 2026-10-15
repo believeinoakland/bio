@@ -13,7 +13,7 @@
   "date": 14,
   "queue": 69,
   "transcribe": 19,
-  "capture": 58,
+  "capture": 62,
   "document": 49,
   "question": 74,
   "connection": 32,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11899,
+  "total": 11903,
   "protected": 864
  },
  "words": [
@@ -29326,9 +29326,10 @@
   },
   {
    "key": "screen.capture.address.watchhead",
-   "en": "Once it is captured: watching the address",
+   "en": "Once it is captured: where it is filed, and watching the address",
    "protected": false,
-   "source": "DEC-257"
+   "source": "DEC-257",
+   "note": "DEC-268: reworded"
   },
   {
    "key": "screen.capture.address.from",
@@ -31643,6 +31644,34 @@
    "protected": false,
    "source": "DEC-267",
    "note": "draft.machine.label for a field that holds the group's words (control-plane's group draft)"
+  },
+  {
+   "key": "capture.filed.project",
+   "en": "Filed under {project}",
+   "protected": false,
+   "source": "DEC-268",
+   "note": "after capture.captured, for a capture opened from a project"
+  },
+  {
+   "key": "capture.filed.question",
+   "en": "Filed under {project}, for the question “{question}”",
+   "protected": false,
+   "source": "DEC-268",
+   "note": "after capture.captured, for a capture opened from a question"
+  },
+  {
+   "key": "capture.cite",
+   "en": "Cite a passage",
+   "protected": false,
+   "source": "DEC-268",
+   "note": "the captured result's link to find-in, offered for a capture opened from a question (R22)"
+  },
+  {
+   "key": "capture.cite.tip",
+   "en": "Opens Find in this over the document, with your question chosen.",
+   "protected": false,
+   "source": "DEC-268",
+   "note": "what capture.cite opens"
   },
   {
    "key": "screen.account.explain.help",

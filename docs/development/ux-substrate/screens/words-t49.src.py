@@ -627,6 +627,17 @@ DEC267_REWORDED = {'refusal.AGENT_WORKER_UNBOUND': "The assistant isn't installe
 REWRITE7.update(DEC267_REWORDED)
 # --- end DEC-267
 
+# --- DEC-268 (screens-intake R22, T49; Bob's D12): a capture opened with a project or a question as its subject says where it
+# is filed, and from a question offers "Cite a passage", opening find-in over the document with the question chosen
+w15 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-268' + (': ' + note if note else '')))
+w15('capture.filed.project', 'Filed under {project}', False, 'after capture.captured, for a capture opened from a project')
+w15('capture.filed.question', 'Filed under {project}, for the question “{question}”', False, 'after capture.captured, for a capture opened from a question')
+w15('capture.cite', 'Cite a passage', False, "the captured result's link to find-in, offered for a capture opened from a question (R22)")
+w15('capture.cite.tip', 'Opens Find in this over the document, with your question chosen.', False, 'what capture.cite opens')
+DEC268_REWORDED = {'screen.capture.address.watchhead': 'Once it is captured: where it is filed, and watching the address'}
+REWRITE7.update(DEC268_REWORDED)
+# --- end DEC-268
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -634,5 +645,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-268' if k in DEC268_REWORDED else 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

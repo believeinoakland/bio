@@ -4192,3 +4192,17 @@ response: **The design session, 2026-10-15.** `refusal.AGENT_WORKER_UNBOUND`: "T
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-267), `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
 owed: (BOB) a module that raises `AGENT_WORKER_UNBOUND` reads `refusal.AGENT_WORKER_UNBOUND`, not `ai.refused.notdeployed`; control-plane's group draft reads `draft.machine.label.group`. (design) none.
+
+### DEC-268 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (the standing tail: T49's requirements against the screens; `screens-intake` R22, Bob's D12, M-T49-5)
+for: bob-session
+question: How the capture screen shows a capture opened with a project or a question as its subject, and draws R22's "Cite a passage".
+why it is Bob's: design detail beneath his D12; decided by the design session, reported to Bob as done.
+provisional: the capture screen drew no filing line and no "Cite a passage" (DEC-245's `capture.forquestion.help` only promised it).
+alternative: the `cite` act on capture itself. Rejected: R22 opens find-in over the document, where the passage is chosen.
+recommendation: as below.
+reversal cost: low: words and a drawing.
+response: **The design session, 2026-10-15.** The captured result says where it is filed: `capture.filed.project` "Filed under {project}" or `capture.filed.question` "Filed under {project}, for the question “{question}”", and for a question offers `capture.cite` "Cite a passage", opening find-in over the document with the question chosen (`capture.cite.tip`). The details' heading reads "Once it is captured: where it is filed, and watching the address". The other T49 requirement changes since DEC-256 (each L11 module's words by key; interface-shell R71, R72; affordances R60; op-grades' `founderhandleset`; op-capabilities R1–R3; op-declarations R72) draw nothing new.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-268), `screens/mock-screens.js`; `words.json`.
+owed: (BOB) screens-intake draws these keys under R22. (design) none.
