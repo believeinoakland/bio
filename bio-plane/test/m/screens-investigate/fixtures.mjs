@@ -3,8 +3,15 @@
  * shapes as surveyed on `tranche/T47` (J1); a test overrides any op. */
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
 import { boot, ok, textNodes } from "../interface-shell/harness.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
+import assert from "node:assert/strict";
 
-export { SCREENS };
+export { SCREENS, word, hasWord };
+/** R30: `el` draws the word `key` (filled with `vars`) as `word` gives it; no test holds a sentence's English. */
+/** A calendar day (`YYYY-MM-DD`) as the kit draws it, by its words (`date.daymonthyear`, `date.month.*`). */
+export const dayOf = (iso) => { const [y, m, d] = iso.split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"][m - 1]), year: String(y) }); };
+export const drew = (el, key, vars, msg) => assert.ok(el.textContent.includes(word(key, vars)), msg || `${key} drawn`);
+export const notDrew = (el, key, vars, msg) => assert.ok(!el.textContent.includes(word(key, vars)), msg || `${key} not drawn`);
 export const P = "PROJ-2026-0007";
 export const ENT = "ENT-2026-0012";
 export const ORG = "ENT-2026-0003";
@@ -44,7 +51,7 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
     grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: "declared, not evidenced" }], at_date: "in" }],
   hubs: [], fanout_truncated: [], owner_refusals: [], visited: 5, depth: 8, budget_ms: 10000, elapsed_ms: 4, owner_calls: 3, complete: true, note: "", ...o });
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
-  words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "mentioned together", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "stated in a source", group: "pos" } } } } };
+  words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "mentioned together", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "stated in a source", group: "step_source" } } } } };
 VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
 export const GRAPH_PERSON = "ENT-2026-0200";
@@ -95,6 +102,11 @@ export const ACTION = { ok: true, id: ACT, kind: "records_request", counterparty
 export const PROPOSALS = { ok: true, action: ACT, proposals: [{ key: "pra_10day@member:mai", rule: "pra_10day", date: "2026-10-14", undetermined: null, basis: "Gov. Code §7922.535(a) (profile basis: the 10-day window)",
   entry: {}, trace: { anchor_day: "2026-10-02", amount: 10, units: "days", count: "calendar", skipped: [{ day: "2026-10-12", why: "Indigenous Peoples' Day (office calendar)" }], zone: "America/Los_Angeles",
     calendar: { entries: [{ day: "2026-10-12", basis: "the group's profile" }] } }, label: { by: "member:mai", state: "proposed", machine_work: false }, proposed_by: "member:mai" }], limit: 500, truncated: false };
+/** `proceedingdates`' answer (following R30): the proceeding's own lane (a hearing, a filing deadline the body set) and the group's. */
+export const DATES = (o = {}) => ({ ok: true, proceeding: PROC, from: null, to: null, lanes: {
+  proceeding: { items: [{ event: "EVT-2026-0050", kind: "hearing", status: "EventScheduled", label: "Hearing on the motion", when: { value: "2026-11-04", precision: "day" }, captures: [SHA] },
+    { event: "EVT-2026-0051", kind: "filing", status: "EventScheduled", label: "The body's own answer due", when: { value: "2026-10-20", precision: "day" }, captures: [] }], limit: 500, truncated: false, status: { stage: "motions", label: "Motions pending" } },
+  group: { items: [{ action: ACT, entry: 0, date: "2026-10-14", basis: "Gov. Code §7922.535(a)", text: "The City Clerk's reply", zone: "America/Los_Angeles" }], limit: 500, truncated: false } }, note: "kept apart", ...o });
 export const STANDARD = { ok: true, id: STD, cite: "Administrative Instruction 4.12, §3", kind: "policy", issuer: "Public Works", reason: "The Director shall repair each reported pothole within seven calendar days of the report.",
   text: ["CNT-2026-0001"], texts: [{ content_id: "CNT-2026-0001", standing: "current", newer: null }], period: { from: "2023-01-01", to: null } };
 export const RELATIONS = { ok: true, standard: STD, temporal: [], referential: [{ id: "lrel-1", type: "implements", from: { standard: STD }, to: { standard: "STD-2026-0001-ordinance" }, reason: "The instruction implements the repair ordinance.", direction: "out", withdrawn: null }], truncated: false };
@@ -129,6 +141,7 @@ export function plane(o = {}) {
     entity: ok(ENTITY),
     partiesof: ok(PARTIES),
     follows: ok(FOLLOWS),
+    proceedingdates: ok(DATES()),
     dutiesof: ok(DUTIES),
     action: ok(ACTION),
     clockproposals: ok(PROPOSALS),

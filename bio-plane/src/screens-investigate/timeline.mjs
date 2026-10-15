@@ -4,7 +4,6 @@
  * part and its grade. An event whose order is undetermined is drawn so, with the evidence that would order it, never
  * guessed into order; undated events are listed apart. */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 const S = "screen.timeline.";
@@ -37,12 +36,7 @@ function render(cs, view) {
   const doc = proj && proj.state === "ok" ? P.front(proj.value["bundle.md"]) : null;
   const out = [cs.title(cs.w("screen.timeline.name"), { thing: { kind: "project", facts: [doc && doc.title ? doc.title : id] } })];
   /* an event's date, as precise as its source states it: a day, a month marked "month known", "on or before" */
-  const when = (w) => {
-    if (!w) return cs.mark("gap", "undetermined", { reason: cs.w(S + "undated") });
-    if (w.precision === "edtf") { const m = P.month(cs, w.value); if (m) return cs.w(S + "month", m); }
-    if (w.precision === "upper_bound") return cs.w(S + "onorbefore", { date: cs.date(w.end || w.value || "") });
-    return cs.date(w.value || w.start || "") || cs.esc(String(w.value || ""));
-  };
+  const when = (w) => P.when(cs, w);
   /* R20: who took part and the event's grade, as `timeline` answers them for the item (no read per event) */
   const detail = (it) => {
     const ps = Array.isArray(it.participants) ? it.participants : [];
@@ -65,7 +59,7 @@ function render(cs, view) {
     const open = it.order && it.order.undetermined;
     const order = open
       ? `<div class="mk-gapblock">${cs.mark("gap", "undetermined", { reason: cs.w(S + "order.why", { with: (it.order.with || []).join(", ") }) })}`
-        + `<p class="mk-small">${cs.w(S + "order.evidence")}</p>`
+        + `<p class="mk-small">${cs.w(S + "order.evidence", { examples: it.kind && ["vote", "meeting", "decision", "award", "statement", "filing"].includes(it.kind) ? cs.w(S + "evkind." + it.kind) : cs.w(S + "evkind.other") })}</p>`
         + `<div class="mk-acts">${cs.act("recorddatedfact", { label: S + "cite.date", data: { event: it.event_id } })}${cs.act("relate", { label: S + "cite.first", data: { event: it.event_id, kind: "precedes" } })}`
         + `${cs.act("findin", { label: S + "find.dates" })}</div></div>${citedOrder(it)}` : "";
     return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it)}${order}</div>`;
@@ -160,7 +154,7 @@ const acts = [
       const v = String(cs.value("tl-date") || "").trim();
       if (!at || !/^\d{4}-\d{2}(-\d{2})?$/.test(v)) return { refuse: "screen.timeline.date.empty" };
       return { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
-        value: v.length === 7 ? { value: v, precision: "edtf" } : v, method: "a member's reading of the passage" } };
+        value: v.length === 7 ? { value: v, precision: "edtf" } : v, method: view.parts.plain(cs, "screen.timeline.method.member") } };
     },
     done(view) { view.ui.later = {}; } },
   /* a suspected cause kept as a hunch beside one of the project's questions, never evidence */
@@ -176,88 +170,31 @@ const acts = [
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
 ];
 
-export const TIMELINE_WORDS = [
-  row(S + "more.people", "and {n} more"),
-  row(S + "order.cited.before", "Order cited, not dated: this came before {other}."),
-  row(S + "order.cited.after", "Order cited, not dated: this came after {other}."),
-  row(S + "order.relation", "the relation that says so"),
-  row(S + "undated", "the source states no date"),
-  row(S + "month", "{month} {year} (month known)"),
-  row(S + "onorbefore", "on or before {date}"),
-  row(S + "role", "{role}:"),
-  row(S + "nobody", "who took part is not recorded"),
-  row(S + "source", "the source"),
-  row(S + "kind", "{kind}"),
-  row(S + "order.why", "the order of this and {with} is undetermined, because the sources date them no closer than this"),
-  row(S + "order.evidence", "More evidence could order them: a passage that gives either one its day, or a source that says which came first. Until a source orders them they are kept as they are, never guessed into order."),
-  row(S + "cite.date", "Cite an exact date for one of them"),
-  row(S + "cite.first", "Cite which came first"),
-  row(S + "find.dates", "Look for their dates in this project"),
-  row(S + "noset", "This project's document names no person, organization or event yet, so its timeline holds nothing. Start with “Record an event” below."),
-  row(S + "empty", "No event is recorded yet for the people and events this project follows. Start with “Record an event” below."),
-  row(S + "lane.world", "What they did"),
-  row(S + "lane.ours", "What we did"),
-  row(S + "lane.failed", "what {source} holds could not be read"),
-  row(S + "more", "More events are held than are shown."),
-  row(S + "undated.head", "Undated"),
-  row(S + "undated.apart", "listed apart, never guessed into place"),
-  row(S + "record.head", "Add to the timeline"),
-  row(S + "record.head.holds", "Each act records from a passage you name: the document's fingerprint, and its page."),
-  row(S + "sha", "The document"),
-  row(S + "sha.help", "The document's fingerprint, as its page shows it."),
-  row(S + "page", "Page (optional)"),
-  row(S + "evkind", "What happened"),
-  row(S + "evkind.vote", "A vote"),
-  row(S + "evkind.meeting", "A meeting"),
-  row(S + "evkind.decision", "A decision"),
-  row(S + "evkind.award", "An award"),
-  row(S + "evkind.statement", "A statement"),
-  row(S + "evkind.filing", "A filing"),
-  row(S + "evkind.other", "Something else"),
-  row(S + "event", "The event"),
-  row(S + "who", "Who took part"),
-  row(S + "rolepick", "As"),
-  row(S + "roles.decider", "Decided"),
-  row(S + "roles.voted", "Voted"),
-  row(S + "roles.signatory", "Signed"),
-  row(S + "roles.actor", "Acted"),
-  row(S + "roles.party", "A party"),
-  row(S + "roles.present", "Present"),
-  row(S + "roles.speaker", "Spoke"),
-  row(S + "roles.author", "Wrote it"),
-  row(S + "vote", "How they voted (for a vote)"),
-  row(S + "to", "The other event"),
-  row(S + "rel", "How they are linked"),
-  row(S + "rel.authorises", "The first authorised the second"),
-  row(S + "rel.answers", "The first answered the second"),
-  row(S + "rel.amends", "The first amended the second"),
-  row(S + "rel.reverses", "The first reversed the second"),
-  row(S + "rel.stated_cause", "A source states the first caused the second"),
-  row(S + "rel.within", "The first happened within the second"),
-  row(S + "date", "The date, as the passage states it"),
-  row(S + "date.help", "A day (2024-01-12), or a month when that is all it gives (2024-03)."),
-  row(S + "datekind", "What the date is"),
-  row(S + "datekind.meeting", "A meeting"),
-  row(S + "datekind.adopted", "Adopted"),
-  row(S + "datekind.effective", "In effect"),
-  row(S + "datekind.signed", "Signed"),
-  row(S + "datekind.issued", "Issued"),
-  row(S + "datekind.published", "Published"),
-  row(S + "datekind.received", "Received"),
-  row(S + "question", "Beside which question"),
-  row(S + "hunch", "Your suspected cause"),
-  row(S + "hunch.empty", "Choose the question and write your hunch."),
-  row(S + "hunch.kept", "Kept as your hunch beside the question. It is never evidence."),
-  row(S + "passage.empty", "Name the passage: the document's fingerprint, and its page."),
-  row(S + "who.empty", "Choose the event, name who took part, and the passage that says so."),
-  row(S + "relate.empty", "Choose two events and the passage that links them."),
-  row(S + "date.empty", "Name the passage and the date as it states it."),
+const TIMELINE_KEYS = [
+  "screen.timeline.more.people", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
+  "screen.timeline.undated", "screen.timeline.month", "screen.timeline.onorbefore", "screen.timeline.role", "screen.timeline.nobody",
+  "screen.timeline.source", "screen.timeline.kind", "screen.timeline.order.why", "screen.timeline.order.evidence", "screen.timeline.cite.date",
+  "screen.timeline.cite.first", "screen.timeline.find.dates", "screen.timeline.noset", "screen.timeline.empty", "screen.timeline.lane.world",
+  "screen.timeline.lane.ours", "screen.timeline.lane.failed", "screen.timeline.more", "screen.timeline.undated.head",
+  "screen.timeline.undated.apart", "screen.timeline.record.head", "screen.timeline.record.head.holds", "screen.timeline.sha",
+  "screen.timeline.sha.help", "screen.timeline.page", "screen.timeline.evkind", "screen.timeline.evkind.vote", "screen.timeline.evkind.meeting",
+  "screen.timeline.evkind.decision", "screen.timeline.evkind.award", "screen.timeline.evkind.statement", "screen.timeline.evkind.filing",
+  "screen.timeline.evkind.other", "screen.timeline.event", "screen.timeline.who", "screen.timeline.rolepick", "screen.timeline.roles.decider",
+  "screen.timeline.roles.voted", "screen.timeline.roles.signatory", "screen.timeline.roles.actor", "screen.timeline.roles.party",
+  "screen.timeline.roles.present", "screen.timeline.roles.speaker", "screen.timeline.roles.author", "screen.timeline.vote", "screen.timeline.to",
+  "screen.timeline.rel", "screen.timeline.rel.authorises", "screen.timeline.rel.answers", "screen.timeline.rel.amends",
+  "screen.timeline.rel.reverses", "screen.timeline.rel.stated_cause", "screen.timeline.rel.within", "screen.timeline.date",
+  "screen.timeline.date.help", "screen.timeline.datekind", "screen.timeline.datekind.meeting", "screen.timeline.datekind.adopted",
+  "screen.timeline.datekind.effective", "screen.timeline.datekind.signed", "screen.timeline.datekind.issued", "screen.timeline.datekind.published",
+  "screen.timeline.datekind.received", "screen.timeline.question", "screen.timeline.hunch", "screen.timeline.hunch.empty",
+  "screen.timeline.hunch.kept", "screen.timeline.passage.empty", "screen.timeline.who.empty", "screen.timeline.relate.empty",
+  "screen.timeline.date.empty",
 ];
 
 const words = ["screen.timeline.name", "screen.timeline.purpose",
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "state.empty", "state.loading", "state.failed", ...TIMELINE_WORDS];
+  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...TIMELINE_KEYS];
 
 export const TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads, place, render, acts, words, parts: PARTS });
