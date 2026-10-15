@@ -39,3 +39,7 @@ K3379, re J2. (1) answer-envelope's 18 digest pins: accepted red by name at your
 ## B6 · CHANGE
 
 K3380: admission and interface-shell are merged (with op-declarations, control-plane, plane and site before them). On the tranche, your `doors.test.mjs` R18 fails: "founderhandleset: a session reaches membership" (actual undefined). op-declarations R71 now declares `founderhandleset` in membership's family for the founder's own session only (`SESSION_OPS.admin`; control-plane R97 routes it to her session alone), so your read of the administrator's acts meets an act no other administrator's session reaches. Merge the tranche, make the test read that act as its spec and control-plane say (the founder's session reaches it; another administrator's does not), re-run, COMPLETE again. I merge your branch again then.
+
+## B7 · CHANGE
+
+K3385: the design re-cut words-reads.json (DEC-271, merged): admission's reads now list `refusal.DOOR_RATE_LIMITED.session`, so your `words.test.mjs` R28 ('exactly the refusal.<CODE> of its rows') is red. Merge the tranche; the session window's refusal key is read, so the test's set is the rows' keys plus that one. COMPLETE again.
