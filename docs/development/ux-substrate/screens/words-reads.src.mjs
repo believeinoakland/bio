@@ -246,13 +246,8 @@ const WHY = {
 };
 const dev = (k) => ({ why: WHY[k] });
 const DECISIONS = [
-  // op-grades: the correction path beside the Irreversible rung, and the two statements the design already words
-  ["op-grades", "op-grades/index.mjs", "^Publishing cannot be undone: what it published never stops answering", "screen.ceremony.permanent"],
-  ["op-grades", "op-grades/t35.mjs", "^This removes the value for good", "screen.person.expunge.statement"],
-  ["op-grades", "op-grades/t35.mjs", "^\". Published cases change only through the docket", "screen.person.expunge.statement"],
-  ["op-grades", "op-grades/t36.mjs", "^This file is high risk, for the reasons shown beside this", "screen.open-file.warn.ends"],
-  // affordances: ACT_HELP's drifted copy reads the design's act.queuemute.does; a client's usage hint
-  ["affordances", "affordances/act-help.mjs", "^Stops this kind of item reaching you", "act.queuemute.does"],
+  // op-grades' four statements and affordances' drifted act.queuemute.does now read their keys in the source (OP-GRADES #11,
+  // AFFORDANCES #34, merged K3375): DEC-263 drops their decisions, the keys being read as literals; a client's usage hint
   ["affordances", "affordances/facts.mjs", "^affordances are asked of an object", dev("apiuse")],
   ["op-declarations", "op-declarations/index.mjs", "^A read a screen draws from", dev("ground")],
   ["op-declarations", "op-declarations/index.mjs", "^A step another act takes", dev("ground")],
@@ -282,6 +277,8 @@ const DECISIONS = [
   ["control-plane", "control-plane/archive.mjs", "^An archive captured by the record", "file.archive.summary"],
   ["control-plane", "control-plane/archive.mjs", "^Filed at collected and never higher", "file.archive.provenance"],
   ["control-plane", "control-plane/archive.mjs", "^Changes: created from the archive's unpack", "file.log.unpacked"],
+  // DEC-267: the group's fields (its description) read their own label; a member's fields the member's
+  ["control-plane", "control-plane/draft.mjs", "~and then the words are your group's", "draft.machine.label.group"],
   ["control-plane", "control-plane/draft.mjs", "^a draft: nothing is saved until you edit it", "draft.machine.label"],
   ["control-plane", "control-plane/draft.mjs", "^the draft's ${…} is over its limit", dev("wire")],
   ["control-plane", "control-plane/index.mjs", "^this answer exactly as served", dev("diag")],
@@ -341,6 +338,10 @@ const DECISIONS = [
       ["A published case", "screen.published.name"], ["One published case at one edition", "screen.published.purpose"],
   ].map(([t, k]) => ["plane", "plane/screens.mjs", (k.endsWith(".name") ? "=" : "^") + t, k]),
 ];
+/* DEC-264 (N1125): affordances.mjs's act names and prompts, keyed in words-t49.src.py (AFFORDANCES_NAMES: key -> the module's
+   present text, a whole label or a prompt's start) */
+for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HERE, "words-t49.json"), "utf8")).affordances_names || {}))
+  DECISIONS.push(["affordances", "affordances.mjs", (key.startsWith("act.") ? "=" : "^") + was, key]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {
   "op-grades": "grade", "journey-check": "harness", "interface-assets": "generated", "interface-shell": "elementnote",
@@ -348,6 +349,13 @@ const DEFAULTS = {
 };
 const DEFAULT_BY_FILE = { "plane/screens.mjs": "legacy", "plane/unpack.mjs": "diag", "plane/wiring.mjs": "diag", "plane/wizards.mjs": "diag" };
 /* A key a module names that the design holds under another name: the design's governs. */
+/* DEC-265 (B226 (5)): reads a module's requirements name ahead of its source: screens-settings R32 draws each section's
+   name and purpose (the settings index's thirteen sections and its own), R38 connect.ifnot and the refusal reference. */
+const REQUIREMENT_READS = {
+  "screens-settings": [...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members",
+    "places", "security", "updates", "translations", "wizards"].flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`]),
+    "connect.ifnot", "screen.connect.refusal.reference"],
+};
 const RENAMED = {
   "screens-action": { "act.optionpropose.label.plan": "act.planask.label.plan" },
   "screens-investigate": { "act.connectionassert.label.explore": "act.stepsource.label.explore" },
@@ -411,7 +419,9 @@ for (const m of MODULES) {
       else problems.push(`${m}: keyed row ${r[0]} is not in words.json`);
     }
   }
-  const files = walkDir(dir).filter((f) => /\.(mjs|js|cjs|html)$/.test(f) && !/test/i.test(path.basename(f)));
+  /* DEC-264 (N1125): a module whose main file sits beside its folder (affordances.mjs) reads through that file too */
+  const files = [...walkDir(dir), ...(fs.existsSync(dir + ".mjs") && m === "affordances" ? [dir + ".mjs"] : [])]
+    .filter((f) => /\.(mjs|js|cjs|html)$/.test(f) && !/test/i.test(path.basename(f)));
   for (const f of files) {
     const rel = path.relative(SRC, f).split(path.sep).join("/");
     const src = fs.readFileSync(f, "utf8");
@@ -435,12 +445,15 @@ for (const m of MODULES) {
   }
   for (const k of lits) if (!RETIRED.has(k)) reads.add(k);
   c.literalKeys = lits.size;
+  /* DEC-265 (B226 (5)): keys a module's requirements name that its merged source does not read yet */
+  for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
   if (m === "affordances") {
-    const { ACT_HELP } = await import(pathToFileURL(path.join(dir, "act-help.mjs")).href);
+    const { ACT_HELP, ACT_HELP_KEYS = {} } = await import(pathToFileURL(path.join(dir, "act-help.mjs")).href);
     let n = 0;
     for (const [op, text] of Object.entries(ACT_HELP)) {
-      const k = KEYS.has(`act.${op}.does`) ? `act.${op}.does` : match(clean(text)).key;
+      /* DEC-266: the key act-help binds the op to (ACT_HELP_KEYS, AFFORDANCES R62) governs, so a reworded text still finds it */
+      const k = KEYS.has(ACT_HELP_KEYS[op]) ? ACT_HELP_KEYS[op] : KEYS.has(`act.${op}.does`) ? `act.${op}.does` : match(clean(text)).key;
       if (k) { reads.add(k); n++; } else problems.push(`affordances: ACT_HELP.${op} has no act.${op}.does and its text is no word`);
     }
     const vocab = W.filter((w) => VOCAB_SETS.some((s) => w.key.startsWith(`label.${s}.`))).map((w) => w.key);
