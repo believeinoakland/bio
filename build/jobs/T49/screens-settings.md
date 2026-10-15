@@ -91,3 +91,7 @@ screens-settings T49-22 complete again on job/T49/screens-settings: B5 applied (
 ## J5 · COMPLETE
 
 screens-settings complete after B6: tranche merged on the real shell, words.test re-pointed, B5 (R40, reauth, DEC-262) in. Module tests 119 of 119 including the contract test; checks 0 failures, coverage 39 of 39. screens-inquiry's seven reds are its own (projectai must read PANEL_KEYS).
+
+## J6 · COMPLETE
+
+screens-settings complete after B7: DEC-263-267 merged; the three DEC-265 name keys read; AGENT_WORKER_UNBOUND already by refusal key. Module tests 119 of 119; checks 0 failures, coverage 39 of 39.
