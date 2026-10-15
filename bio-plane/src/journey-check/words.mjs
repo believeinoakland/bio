@@ -38,7 +38,8 @@ export async function requireWord(page, key, { vars = {}, within = "body", timeo
   try {
     await page.waitForFunction(([sel, src, flags]) => {
       const el = document.querySelector(sel);
-      return !!el && new RegExp(src, flags).test(el.innerText.replace(/\s+/g, " ").trim());
+      /* the words as written, before CSS: a heading drawn in capitals (text-transform) is still the word */
+      return !!el && new RegExp(src, flags).test(el.textContent.replace(/\s+/g, " ").trim());
     }, [within, re.source, re.flags], { timeout });
   } catch {
     throw new Error(`the screen does not draw the word ${key} on ${new URL(page.url()).pathname}`);

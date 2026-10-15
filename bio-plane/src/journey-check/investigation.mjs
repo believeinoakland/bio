@@ -146,7 +146,7 @@ async function readAndCite(walk, page, { document }) {
   await walk.step(page, "7 · open the document, see its words, and Find-in a passage", async (p) => {
     await p.goto(document); await settle(p);
     await requireDrawn(walk, p, "document");
-    if (!(await p.locator("#cs-main").innerText()).replace(/\s+/g, " ").includes(NOTICE_PASSAGE))
+    if (!(await p.locator("#cs-main").textContent()).replace(/\s+/g, " ").includes(NOTICE_PASSAGE))
       throw new Error("the document's words are not drawn on its page");
     await act(p, "findin");
     const box = p.locator('#cs-main input[type="search"]:visible, #cs-main [data-findin] input:visible').first();
@@ -154,7 +154,7 @@ async function readAndCite(walk, page, { document }) {
     await box.fill(FIND_PHRASE);
     await box.press("Enter");
     await settle(p);
-    if (!(await p.locator("#cs-main").innerText()).includes(FIND_PHRASE)) throw new Error("Find-in found no passage holding the phrase");
+    if (!(await p.locator("#cs-main").textContent()).includes(FIND_PHRASE)) throw new Error("Find-in found no passage holding the phrase");
   });
   await walk.step(page, "8 · cite it with a role (supports)", async (p) => {
     /* the role is chosen before citing (screen.findin.cite.norole) */
@@ -176,7 +176,7 @@ async function runAndRead(walk, page, { question }) {
     const until = Date.now() + RUN_WAIT_MS;
     for (;;) {
       await p.goto(question); await settle(p);
-      if (wordPattern("question.proposal.heading").test((await p.locator("body").innerText()).replace(/\s+/g, " "))) break;
+      if (wordPattern("question.proposal.heading").test((await p.locator("body").textContent()).replace(/\s+/g, " "))) break;
       if (Date.now() > until) throw new Error("the run's proposal was not drawn within its wait");
       await p.waitForTimeout(3000);
     }
@@ -234,7 +234,7 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
   await walk.step(inviter, "the administrator invites her to the project", async (p) => {
     await p.goto(project); await settle(p);
     await act(p, "projectinvite", { fields: { "project-invite": member.handle }, reason: "She lives in flat 4." });
-    if (!(await p.locator("#cs-main").innerText()).includes(member.handle)) throw new Error("the project does not list her as a member");
+    if (!(await p.locator("#cs-main").textContent()).includes(member.handle)) throw new Error("the project does not list her as a member");
   });
   await connectSubscription(walk, page, base, { password: member.password, codeOf, label: "she connects her own Claude subscription" });
   let question = null;
@@ -261,7 +261,7 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
     const until = Date.now() + RUN_WAIT_MS;
     for (;;) {
       await p.reload(); await settle(p);
-      if (wordPattern("screen.plan.ask.ended").test((await p.locator("body").innerText()).replace(/\s+/g, " "))) break;
+      if (wordPattern("screen.plan.ask.ended").test((await p.locator("body").textContent()).replace(/\s+/g, " "))) break;
       if (Date.now() > until) throw new Error("the plan's assistant did not finish within its wait");
       await p.waitForTimeout(3000);
     }

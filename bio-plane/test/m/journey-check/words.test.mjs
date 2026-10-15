@@ -36,6 +36,9 @@ test("R14: a step asserting a keyed word passes on the screen's text and fails o
   await on(`<main id="cs-main"><p>${setupWord("screen.held.released", { count: 2 })}</p></main>`, async (p) => {
     await assert.rejects(requireWord(p, "screen.held.released", { vars: { count: 1 }, within: "#cs-main", timeout: 1000 }));
   });
+  /* a heading the stylesheet draws in capitals is still its word */
+  await on(`<style>h2{text-transform:uppercase}</style><main id="cs-main"><h2>${setupWord("question.empty.heading")}</h2></main>`,
+    (p) => requireWord(p, "question.empty.heading", { within: "#cs-main", timeout: 2000 }));
   /* a control found by its word */
   await on(`<main id="cs-main"><a href="/app/capture">${setupWord("question.adddoc")}</a></main>`, async (p) => assert.equal(await byWord(p, "question.adddoc").count(), 1));
 });
