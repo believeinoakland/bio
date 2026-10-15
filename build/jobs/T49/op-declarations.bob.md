@@ -36,3 +36,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · CHANGE
 
 K3375: op-grades and affordances are merged (affordances' ACT_HELP holds 337 ops). Merge the tranche: re-pin ACT_HELP_ABSENT against the merged ACT_HELP (rule 5 (8)); your R72 now says the project field is projectId (wording). Then COMPLETE; control-plane and screens-entry wait on your merge.
+
+## B6 · CHANGE
+
+K3393: on tranche/T49, `t46.test.mjs` R52 and `t48.test.mjs` R65 pin 119 function acts; the design's registry holds 120 since DEC-263–DEC-267 (merged). Merge the tranche and read the count from the registry (never a pinned number, K3268), test, COMPLETE again.
