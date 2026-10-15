@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J9
+**Read** · handled J11
 
 ## B1 · START
 
