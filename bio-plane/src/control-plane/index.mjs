@@ -2108,9 +2108,9 @@ export function makeFetch(hooks = {}) {
        spec). A conversation that reached the model is counted to the member's day as a draft (ai-use R1). */
     /* (T46) an object that offers no draft door or member-run dispatch is an instance with no assistant bound (plane's
        `AGENT_WORKER_UNBOUND`, as R65's): nothing is sent */
-    /* R99 (U260): the refusal's sentence is `ai.refused.notdeployed`, as the design words it */
+    /* R99 (U260): the refusal's sentence is `refusal.AGENT_WORKER_UNBOUND`, as the design words it */
     const unboundRun = () => json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
-      detail: word("ai.refused.notdeployed") }, 503);
+      detail: word("refusal.AGENT_WORKER_UNBOUND") }, 503);
     /* R93 (T48; N1015; K3103): THE TRACE AND THE MEMBER REF of a request that reaches the plane's ask, run, draft or
        transcribe call, minted here for each (a fresh trace; the member ref naming the session's member, signin-door R3's
        form, never a handle or a credential) and handed to that call in process. Neither is taken from the caller: a

@@ -152,7 +152,9 @@ test("R48 (public-read R21; DEC-116 item 8, DEC-100 item 2): `docketpublic` and 
     const r = await call(env, { op, token, hooks, params: { case: "CASE-1", viewer: FORGED, by: FORGED, author: FORGED, secret: "s" } });
     assert.deepEqual(handed, [op], `${op}: answered by the public hook`);
     assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
-    assert.deepEqual(env.calls.map((c) => [c.route, c.ns, c.params]), [[op, "bio", { case: "CASE-1" }]], `${op}: one read of bio, the case alone`);
+    /* admission R27: a presented live session is resolved once before the one read */
+    assert.deepEqual(env.calls.filter((c) => c.route !== "session").map((c) => [c.route, c.ns, c.params]), [[op, "bio", { case: "CASE-1" }]], `${op}: one read of bio, the case alone`);
+    assert.deepEqual(env.calls.filter((c) => c.route === "session").length, token === S.ann ? 1 : 0, `${op}: the session resolved once, only when presented`);
     if (op === "docketfeed") { assert.equal(r.text, feed); assert.match(r.headers.get("content-type"), /^application\/atom\+xml/); }
     else assert.deepEqual([r.json.ok, r.json.case], [true, "CASE-1"]);
     env.calls.length = 0;

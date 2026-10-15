@@ -180,8 +180,9 @@ test("R49 (case-checker R15; public-read R18): `casechecker` and `casefilespec` 
         params: { ...asked.params, version: "1", viewer: FORGED, by: FORGED, author: FORGED } });
       assert.equal(r.status, 200, `${asked.op}/${name}: ${r.text.slice(0, 200)}`);
       assert.deepEqual([r.json.ok, r.json.read, r.json.module], [true, name, "case-checker"]);
-      assert.equal(env.calls.length, 1, `${name}: one read`);
-      const [c] = env.calls;
+      /* admission R27: a presented live session is resolved once (a `session` lookup) before the one read */
+      assert.deepEqual(env.calls.map((x) => x.route), [...(token === S.ann ? ["session"] : []), "publicread"], `${name}: one read`);
+      const c = env.calls.at(-1);
       assert.deepEqual([c.route, c.ns, c.params.name, c.params.version], ["publicread", "bio", name, "1"]);
       for (const k of ["token", ...QUERY_STAMPS]) assert.equal(c.params[k] ?? null, null, `${name}: ?${k} reaches the read`);
       env.calls.length = 0;

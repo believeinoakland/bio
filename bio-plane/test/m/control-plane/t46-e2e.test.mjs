@@ -109,15 +109,32 @@ test("R75, R82, R83 end to end (T47): `GET /` answers the interface's page (the 
   assert.equal(Object.hasOwn(wrong.result ?? wrong, "token"), false, "no session answered");
 });
 
+/* Wait until the page has gone quiet: no new request for several rounds (the merged screens ask many reads, so a fixed
+   number of rounds is a race). Bounded, so a page that never settles still fails by its own assertion. */
+async function quiet(p) {
+  let last = -1, stable = 0;
+  for (let i = 0; i < 600 && stable < 10; i++) {
+    await p.settle(20); await new Promise((r) => setTimeout(r, 10));
+    stable = p.requests.length === last ? stable + 1 : 0; last = p.requests.length;
+  }
+}
+
 /* The real served page, booted with the session, at `path`, every request answered by the plane. */
 async function appAt(path) {
   const html = await (await mf.dispatchFetch(`${ORIGIN}${path}`)).text();
   const p = await boot({ html, session, path, plane: real });
-  for (let i = 0; i < 30; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 5)); }
+  await quiet(p);
   return p;
 }
 const main = (p) => p.doc.getElementById("cs-main");
+/* the plane is real, so an answer takes real time: wait (bounded) until the page has asked `op` */
+async function waitFor(p, ok, ms = 20000) {
+  const end = Date.now() + ms;
+  while (Date.now() < end && !ok()) { await p.settle(20); await new Promise((r) => setTimeout(r, 10)); }
+  return ok();
+}
 const answered = async (p, op) => {
+  await waitFor(p, () => p.byOp(op).length > 0);
   const sent = p.byOp(op);
   assert.ok(sent.length > 0, `${op} was asked`);
   for (const r of sent) assert.match(r.headers.Authorization || r.headers.authorization || "", /^Bearer /, `${op}: the session in the header`);
@@ -138,11 +155,12 @@ test("R75 end to end: `home` reads its world from the real plane under the membe
 test("R75 end to end: `capture` uploads a file's raw bytes with its statement through `captureupload`; the capture is read back through the real ops; `held` lists what the member holds and `release` vouches for it, read back as no longer held", async () => {
   assert.ok(session, "signed in");
   const p = await appAt("/app/capture/file");
+  await waitFor(p, () => p.doc.getElementById("ci-file"));
   const file = new File(["e2e photo bytes, unique " + Date.now()], "pothole.jpg", { type: "image/jpeg" });
   const set = (id, v) => { const el = p.doc.getElementById(id); assert.ok(el, id); if (el.type === "checkbox" || el.type === "radio") el.checked = v; else if (el.type === "file") el.files = [v]; else el.value = v; };
   set("ci-file", file); set("ci-how-made", true); set("ci-where", "Seminary Ave, 4 October"); set("ci-what", "The pothole, still open.");
   await p.click(main(p).querySelector('button[data-act="captureupload"]'));
-  for (let i = 0; i < 30; i++) { await p.settle(20); await new Promise((r) => setTimeout(r, 5)); }
+  await quiet(p);
   const [up] = await answered(p, "captureupload");
   assert.equal(up.query.name, "pothole.jpg");
   const bytes = Buffer.from(await file.arrayBuffer());
@@ -151,36 +169,29 @@ test("R75 end to end: `capture` uploads a file's raw bytes with its statement th
   /* the upload is the record's: asked again, the same bytes are a capture it already holds */
   const twice = await (await toPlane(`/api/?op=captureupload&statement=again&name=pothole.jpg`, { method: "POST", headers: auth, body: bytes })).json();
   assert.deepEqual([twice.ok, twice.result.ok, twice.result.existed, twice.result.capture.sha256], [true, true, true, sha], JSON.stringify(twice).slice(0, 300));
-  /* filed as an Information document at `collected` over that capture (op=promote, the member's own act), it is held */
-  const id = `INFO-${new Date().getUTCFullYear()}-4646-e2e-pothole`, at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-  const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2", 'title: "The pothole on Seminary Ave"',
-    "current_state: collected", "prior_state: null", `created: "${at}"`, `last_updated: "${at}"`, "references: []", "state_history: []",
-    "criticality: supporting", "source_status: unchanged", `content_hash: sha256:${sha}`, "source:", `  locator: "upload:${sha}"`,
-    `  retrieved: ${at}`, "---", "", "## Summary", "", "A photo the member took.", "", "## Provenance Notes", "", "## Session Log", "",
-    "## Review Notes", ""].join("\n");
-  const mdSha = (await import("node:crypto")).createHash("sha256").update(md).digest("hex");
-  const dataset = JSON.stringify({ captured: sha, how: "made", where: "Seminary Ave" });
-  const dsSha = (await import("node:crypto")).createHash("sha256").update(dataset).digest("hex");
-  const filed = await (await toPlane("/api/?op=promote", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({
-    bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_e2e46000`,
-    meta: { object_type: "information", title: "The pothole on Seminary Ave", current_state: "collected", prior_state: null,
-            created: at, last_updated: at, criticality: "supporting" },
-    files: [{ path: "bundle.md", text: md, bytes: Buffer.byteLength(md), sha256: mdSha },
-            { path: "data/dataset.json", text: dataset, bytes: Buffer.byteLength(dataset), sha256: dsSha },
-            { path: "snapshots/pothole.jpg", blobSha: sha, sha256: sha, bytes: bytes.length }],
-    register: [{ sha256: sha, path: "snapshots/pothole.jpg", encoding: "binary", bytes: bytes.length }] }) })).json();
-  assert.equal(filed.ok && filed.result?.ok, true, JSON.stringify(filed).slice(0, 400));
-  const listed = await (await toPlane("/api/?op=heldcaptures&limit=200", { headers: auth })).json();
-  assert.ok((listed.result.held || []).some((x) => (x.bundleId ?? x.bundle_id ?? x.id) === id), JSON.stringify(listed).slice(0, 400));
+  /* screens-intake R21: the upload's document is promoted by the screen itself as an information bundle at `collected`, the
+     member's own act (op=promote), so it is held: read the real list until it holds a document over these bytes */
+  await waitFor(p, () => p.byOp("promote").length > 0);
+  let held = [];
+  for (let i = 0; i < 100; i++) {
+    const listed = await (await toPlane("/api/?op=heldcaptures&limit=200", { headers: auth })).json();
+    held = (listed.result.held || []).filter((x) => JSON.stringify(x).includes(sha));
+    if (held.length) break;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  assert.equal(held.length, 1, "the uploaded document is held: " + JSON.stringify(held).slice(0, 300));
+  const id = held[0].bundleId ?? held[0].bundle_id ?? held[0].id;
+  assert.equal(typeof id, "string");
 
   const h = await appAt("/app/held");
+  await waitFor(h, () => h.byOp("heldcaptures").length > 0 && main(h).querySelector(`#pick-held-${id}`));
   await answered(h, "heldcaptures");
   assert.ok(main(h).querySelector(`#pick-held-${id}`), "the held screen draws the document from the real list");
   await h.click(main(h).querySelector(`#pick-held-${id}`));
   const fill = (k, v) => { h.doc.getElementById(k).value = v; };
   fill("ch-ack", "This copy is what I took."); fill("ch-mitigation", "Compared with the street.");
   await h.click(main(h).querySelector('button[data-act="release"]'));
-  for (let i = 0; i < 30; i++) { await h.settle(20); await new Promise((r) => setTimeout(r, 5)); }
+  await quiet(h);
   await answered(h, "select");
   await answered(h, "release");
   /* the release's answer is ratification's own (R20–R24), relayed by the door as given */

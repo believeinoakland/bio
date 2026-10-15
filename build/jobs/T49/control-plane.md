@@ -1,6 +1,6 @@
 # control-plane (T49)
 
-**Status** · session_01QMJqW2szJbMpxeJUYG9Lo1 · depth 2 · COMPLETE · handled B5
+**Status** · session_01QMJqW2szJbMpxeJUYG9Lo1 · depth 2 · COMPLETE · handled B8
 
 ## Completion (T49-29)
 
@@ -47,3 +47,27 @@ Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 11, module lines 3763
 
 CHANGE B2 and B3 processed (record "Completion (CHANGE B2, B3)", pushed). B2: doorWindowGate now receives credential and background (admission's merge makes it count them). B3: tranche/T49 merged; against the real setup-words: 287 tests, 283 pass (op-declarations R71/R72 still a local stand-in). Reds: totality census (rule 5 (3)) and three e2e (t46 home and capture, t47 wizard front door), which fail identically on tranche/T49 without my change (screens unmerged, rule 5 (7) (B)). Checks: architecture 0, coverage 67/67, ownership 0 failures. Still waiting on op-declarations (T49-17) to re-run R97/R98 against the real specs.
 Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 15, module lines 3763
+
+## Completion (CHANGE B6)
+`tranche/T49` merged (admission R27, interface-shell, and op-declarations with the real R71/R72 specs: no stand-in is used any more). Two test fixes: R45, R48, R49 now expect a presented live session resolved once (`session` lookup) before the one read, and nothing for any other caller; `t48-door.test.mjs` R95 asserts the design's `.cs-band[data-band="test"]`. `test/m/control-plane/`: 287 tests, 284 pass; red only the accepted `t46-e2e` `home`, `capture` and `t47-e2e` wizard front door (screens-daily and screens-intake unmerged). `totality.test.mjs` and R97/R98 now pass against the real specs.
+
+## J3 · COMPLETE
+
+CHANGE B6 processed (record "Completion (CHANGE B6)", pushed). Tranche merged, now with the real op-declarations specs (no stand-in). Fixed: R45/R48/R49 expect the presented session's one lookup before the read; R95 asserts `.cs-band[data-band="test"]`. test/m/control-plane: 287 tests, 284 pass; red only the accepted t46-e2e home/capture and t47-e2e wizard door (screens-daily, screens-intake unmerged). totality, R97, R98 pass. Checks: format, architecture, coverage 67/67, ownership: 0 failures.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 19, module lines 3763
+
+## Completion (CHANGE B7)
+`tranche/T49` merged (DEC-263–267). `AGENT_WORKER_UNBOUND`'s detail reads `refusal.AGENT_WORKER_UNBOUND`; the group description's draft note reads `draft.machine.label.group` (the writing help keeps `draft.machine.label`). Note: `words-reads.json` still lists `ai.refused.notdeployed` for this module and not the two new keys, so my test asserts the keys the module draws by name and every key on the file's list with `hasWord`, not the list's exact contents. `test/m/control-plane/`: 287 tests, 284 pass; red only the accepted `t46-e2e` `home`, `capture` and `t47-e2e` wizard door.
+
+## J4 · COMPLETE
+
+CHANGE B7 processed (record "Completion (CHANGE B7)", pushed). AGENT_WORKER_UNBOUND reads refusal.AGENT_WORKER_UNBOUND; the group description draft note reads draft.machine.label.group. Note for BOB/design: words-reads.json still lists ai.refused.notdeployed for control-plane and lacks the two new keys. test/m/control-plane: 287 tests, 284 pass; red only the accepted t46-e2e home/capture and t47-e2e wizard door. Checks: architecture, coverage 67/67, ownership: 0 failures.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 20, module lines 3763
+
+## Completion (CHANGE B8)
+`tranche/T49` merged (screens-daily, -settings, -entry, -intake, -inquiry, -investigate). The three e2e tests failed on the merged screens for two reasons, both in the tests: (1) the merged Home and capture screens ask many more reads against the real plane, so the fixed 30 rounds of waiting were a race (failing at random): the tests now wait, bounded, until the page has asked the op or drawn the element they assert (`waitFor`/`until`; Home's `queue` and `startfrom`, the capture form's `ci-file`, the held list); (2) screens-intake R21 now promotes an upload's document itself (op=promote, the member's own act), so the test's own promote of the same bytes was refused `CAPTURE_HELD_BY_ANOTHER_BUNDLE`: the test now reads the real held list for the document the screen filed and releases that. The controls are read from the screens' own markup (ids and `data-act`s), not a hand-list. No screen failed the walk. `test/m/control-plane/`: **287 tests, 287 pass** (three runs of the e2e pair, then the whole folder), nothing red.
+
+## J5 · COMPLETE
+
+CHANGE B8 processed with B6 and B7 (record "Completion (CHANGE B8)", pushed). The e2e failures were in the tests: the merged Home/capture screens ask more reads (a fixed number of waiting rounds was a race, now a bounded wait for the op or element asserted), and screens-intake R21 now files an upload's document itself, so the test's own promote collided (CAPTURE_HELD_BY_ANOTHER_BUNDLE); it now reads the held list for the screen's document. No screen failed the walk. test/m/control-plane: 287 tests, 287 pass, nothing red (e2e pair run 3 times). Checks: format, architecture, coverage 67/67, ownership: 0 failures.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 30, module lines 3763
