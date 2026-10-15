@@ -1,6 +1,6 @@
 # BOB to admission (T49)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · ANSWER · re J2
 
 K3379, re J2. (1) answer-envelope's 18 digest pins: accepted red by name at your merge; its re-pin by key is N1128 (T50). (2) control-plane's R45/R48/R49 tests: control-plane has merged; when you merge I CHANGE it for the one session lookup R27 adds. (3) t46-e2e/t47-e2e are pre-existing reds, accepted by name until the screens they draw merge. (4) DEC-262 (merged, rows.mjs regenerated) adds `refusal.DOOR_RATE_LIMITED.session` ("You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written."): R27's session window refuses by that key. Merge the tranche branch. Then COMPLETE.
+
+## B6 · CHANGE
+
+K3380: admission and interface-shell are merged (with op-declarations, control-plane, plane and site before them). On the tranche, your `doors.test.mjs` R18 fails: "founderhandleset: a session reaches membership" (actual undefined). op-declarations R71 now declares `founderhandleset` in membership's family for the founder's own session only (`SESSION_OPS.admin`; control-plane R97 routes it to her session alone), so your read of the administrator's acts meets an act no other administrator's session reaches. Merge the tranche, make the test read that act as its spec and control-plane say (the founder's session reaches it; another administrator's does not), re-run, COMPLETE again. I merge your branch again then.
