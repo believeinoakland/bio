@@ -3415,7 +3415,10 @@
   "screen.setup.limit": "Each member's daily use of the group's key (optional)",
   "screen.setup.limit.help": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
   "screen.setup.court.what": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk.",
-  "screen.setup.claimed.nosignin": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose."
+  "screen.setup.claimed.nosignin": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose.",
+  "signing.ceremony.nokey": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+  "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
+  "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose."
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
@@ -3461,6 +3464,9 @@
   "screen.setup.limit": "DEC-257",
   "screen.setup.limit.help": "DEC-257",
   "screen.setup.court.what": "DEC-257",
-  "screen.setup.claimed.nosignin": "DEC-263"
+  "screen.setup.claimed.nosignin": "DEC-263",
+  "signing.ceremony.nokey": "DEC-266",
+  "signing.ceremony.device": "DEC-266",
+  "screen.account.key.help": "DEC-266"
  }
 }

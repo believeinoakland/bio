@@ -608,6 +608,17 @@ def w13(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=p
 w13('screen.ceremony.photo.facts.dated', 'taken by {by}, {date} · relied on by {findings}', False, "screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)")
 # --- end DEC-265
 
+# --- DEC-266 (DEC-259's owed: line): a signing key is made in the browser and never sent to Civicsmith; it stays on the
+# device only when the member keeps it there, otherwise it is saved as a key file (interface-shell R40, R42). "Never leaves
+# this device" was true of one path only, so every sentence says what is true of both.
+DEC266_REWORDED = {
+  'signing.ceremony.nokey': 'You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.',
+  'signing.ceremony.device': 'Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.',
+  'screen.account.key.help': 'Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.',
+}
+REWRITE7.update(DEC266_REWORDED)
+# --- end DEC-266
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -615,5 +626,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

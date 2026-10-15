@@ -447,10 +447,11 @@ for (const m of MODULES) {
   for (const k of REQUIREMENT_READS[m] || []) { if (KEYS.has(k)) reads.add(k); else problems.push(`${m}: its requirements read ${k}, not in words.json`); }
   /* affordances: ACT_HELP's acts read act.<op>.does (or the design's key its text is); DEC-253's vocabularies */
   if (m === "affordances") {
-    const { ACT_HELP } = await import(pathToFileURL(path.join(dir, "act-help.mjs")).href);
+    const { ACT_HELP, ACT_HELP_KEYS = {} } = await import(pathToFileURL(path.join(dir, "act-help.mjs")).href);
     let n = 0;
     for (const [op, text] of Object.entries(ACT_HELP)) {
-      const k = KEYS.has(`act.${op}.does`) ? `act.${op}.does` : match(clean(text)).key;
+      /* DEC-266: the key act-help binds the op to (ACT_HELP_KEYS, AFFORDANCES R62) governs, so a reworded text still finds it */
+      const k = KEYS.has(ACT_HELP_KEYS[op]) ? ACT_HELP_KEYS[op] : KEYS.has(`act.${op}.does`) ? `act.${op}.does` : match(clean(text)).key;
       if (k) { reads.add(k); n++; } else problems.push(`affordances: ACT_HELP.${op} has no act.${op}.does and its text is no word`);
     }
     const vocab = W.filter((w) => VOCAB_SETS.some((s) => w.key.startsWith(`label.${s}.`))).map((w) => w.key);

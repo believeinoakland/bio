@@ -4587,10 +4587,10 @@
   },
   {
    "key": "signing.ceremony.device",
-   "en": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.",
+   "en": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
    "protected": true,
    "source": "DEC-200",
-   "note": "while the device confirms"
+   "note": "while the device confirms; DEC-266: reworded"
   },
   {
    "key": "signing.ceremony.declined",
@@ -4615,10 +4615,10 @@
   },
   {
    "key": "signing.ceremony.nokey",
-   "en": "You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+   "en": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
    "protected": true,
    "source": "DEC-200",
-   "note": "NO_ATTESTING_KEY before signing"
+   "note": "NO_ATTESTING_KEY before signing; DEC-266: reworded"
   },
   {
    "key": "signing.ceremony.keepkey",
@@ -25041,10 +25041,10 @@
   },
   {
    "key": "screen.account.key.help",
-   "en": "Your signing key is made on this device, in your browser: the private part never leaves it, and only the public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
+   "en": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-266: reworded"
   },
   {
    "key": "screen.account.key.declined",
@@ -75662,7 +75662,7 @@
   },
   {
    "key": "act.signerregisterown.does",
-   "en": "Registers the key you sign published cases with. Readers check a signature against it.",
+   "en": "Makes your signing key in this browser and registers its public half with your group, so readers can check what you sign. Civicsmith never sees the key.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -77990,7 +77990,7 @@
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.why",
-   "en": "Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one.",
+   "en": "Only you can sign, and Civicsmith never sees your key. Publishing is permanent; corrections come as a new edition, never by changing this one.",
    "protected": false,
    "source": "library.json"
   },

@@ -4164,3 +4164,17 @@ response: **The design session, 2026-10-14.** (1) The plane's titles ("Subjects"
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (its rewrites), `screens/words-t49.src.py` (DEC-265), `screens/mock-screens.js`, `screens/words-reads.src.mjs` (`REQUIREMENT_READS`); `words.json`, `words-reads.json`.
 owed: (BOB) the jobs draw these as reworded; screens-publish draws `.dated` when a photo's date is answered (T50); the plane's list replaced by the design's registry when BOB plans it (K1475). (design) none.
+
+### DEC-266 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-259's owed: line: the ceremony's sentence on saving a signing key as a file contradicts "never leaves this device")
+for: bob-session
+question: Which is true of a member's signing key: that it never leaves the device, or that it is saved as a key file?
+why it is Bob's: design detail (the words must say what the build does; interface-shell R40 settles it); decided by the design session, reported to Bob as done.
+provisional: five sentences say the key "never leaves" the device, beside the sentence that saves it as a file.
+alternative: none: R40 is the fact.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** Both paths are true, and one claim holds for both: the key is made in the browser and never sent to Civicsmith (`interface-shell` R40, R42). It stays on the device only when the member keeps it there; otherwise the member saves it as a passphrase-protected key file, which does leave the browser, in the member's hands. So "never leaves this device" is gone wherever it spoke of the key at rest: `signing.ceremony.nokey` ("made in this browser and never sent to Civicsmith"), `signing.ceremony.device` ("The key stays in your browser, and Civicsmith never sees it", true while signing either way), `screen.account.key.help`, the ceremony wizard step's why ("Civicsmith never sees your key"), and the register button's own help, drawn apart from its act's and now its act's explanation, `act.signerregisterown.does` ("Makes your signing key in this browser and registers its public half with your group, so readers can check what you sign. Civicsmith never sees the key."), so the two no longer compete. `words-reads` now follows the key act-help binds each op to (`ACT_HELP_KEYS`), not its English.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-266), `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/library.src.py`, `screens/words-reads.src.mjs`; `words.json`, `library.json`.
+owed: (BOB) the jobs and affordances draw these as reworded (`setup-words`' rows regenerated); wizard-scripts' ceremony step's why. (design) none.

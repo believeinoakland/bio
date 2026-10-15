@@ -53,7 +53,7 @@ const ACT_HELP = {
   setpassword: 'Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.',
   signrequest: 'Tells the project\'s owners, in their queues, that this edition is prepared and ready to sign. It signs nothing.',
   signerset: 'Withdraws a member\'s signing key, for a lost or stolen device. It stops working at once; what it already signed can still be checked.',
-  signerregisterown: 'Registers the key you sign published cases with. Readers check a signature against it.',
+  signerregisterown: 'Makes your signing key in this browser and registers its public half with your group, so readers can check what you sign. Civicsmith never sees the key.',
   signerrevokeown: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
   infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
