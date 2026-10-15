@@ -879,6 +879,13 @@ const REG = {{REG}};
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-lvl]'); if (b) setLevel(+b.dataset.lvl); if (e.target.closest && e.target.closest('[data-lvltoggle]')) setLevel(window.CS_LEVEL === 2 ? 1 : 2); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
     var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button') && !el.closest('summary')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
+  /* DEC-280 (Bob, 15 October): a pressed button answers at once (the stylesheet draws it). Here Civicsmith's answer is
+     simulated after a short wait: an act done for good (Terminal, Signed, Outward) then stays disabled with a check; any
+     other shows a check for a moment and is ready again. Drawing the screen again resets every button. */
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.mk-page button.cs-btn[data-act]'); if (!b || b.disabled || b.getAttribute('aria-busy') === 'true') return;
+    hide(); b.setAttribute('aria-busy', 'true');
+    setTimeout(function () { b.removeAttribute('aria-busy'); b.setAttribute('data-done', '');
+      if (/Terminal|Signed|Outward/.test((b.querySelector('.w') || {}).textContent || '')) b.disabled = true; else setTimeout(function () { b.removeAttribute('data-done'); }, 1800); }, 900); });
   window.addEventListener('scroll', hide, true);
   new MutationObserver(function () { document.querySelectorAll('.mk-page').forEach(untangle); mark(); }).observe(document.body, { childList: true, subtree: true });
   mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };
