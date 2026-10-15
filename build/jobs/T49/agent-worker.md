@@ -68,3 +68,7 @@ agent-worker T49-9 complete again after B3: tranche/T49 merged, tests re-run (on
 **Deferred.** Nothing. **Other modules.** The `question.concluded.by` word above. The model must be told to use `record_id`; the pack's wording is `skills`', not changed here.
 
 Size (session_01QQKrdbySyBGRG7N21Hwafa): test runs 9, module lines 3711
+
+## J4 · COMPLETE
+
+agent-worker T49-37 complete: R90 met (holdings carry record_id and capture_sha per held document; compose's facts pass them on; refused read stays UNDETERMINED with no id). 14 new tests, checks clean. Journey step 12 no longer NO_BASIS; it now stops at the screen word question.concluded.by (not agent-worker's; route to screens/words), R10 follows. agent-worker bundle is stale (fleetbundles red for it only): BOB regenerates. See 'T49-37 completion record'.
