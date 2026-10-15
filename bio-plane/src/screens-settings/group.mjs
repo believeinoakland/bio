@@ -107,6 +107,24 @@ export const group = {
       }
       return h;
     }));
+
+    // R40 (DEC-231; instance-setup R11, R77): the group's declared stake, in its own words, who set it and when; an administrator edits it
+    // (an emptied field clears it) and may ask the assistant for a draft, kept only by their own save
+    section("stake.group.title", cs.state(data.identity, (v) => {
+      if (!v.declared_stake || !("stake" in v.declared_stake)) return `<p data-state="stake">${W("stake.unreadable")}</p>`;
+      const d = v.declared_stake;
+      const ui = view.ui || {};
+      const who = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? (me.member === "admin" && me.handle ? me.handle : T("member.founder.unnamed")) : id; };
+      const earlier = Array.isArray(v.declared_stake_history) ? Math.max(0, v.declared_stake_history.length - 1) : 0;
+      let h = d.stake ? `<p data-state="stake"><span class="rec">${E(d.stake)}</span></p><p class="mk-small">${W("stake.set", { who: who(d.set_by), date: D(d.set_at) })}${earlier ? " · " + W("stake.history", { n: earlier }) : ""}</p>` : `<p data-state="stake">${W("stake.none")}</p>`;
+      const save = A("declaredstakeset");
+      if (save) {
+        const dr = ui.draft && ui.draft.field === "stake" ? ui.draft : null;
+        const help = view.reachable ? A("writinghelp", { data: { field: "stake", id: "gr-stake" } }) : "";
+        h += `<p class="mk-note">${W("stake.group.help")}</p>${cs.field("gr-stake", "stake.group.label", { rec: true, max: 1000, value: dr ? dr.text : d.stake || "", autocomplete: "off", ...(dr ? { draft: "screen.group-identity.draft.label", draftFills: { handle: dr.askedBy } } : {}) })}${dr && dr.untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : ""}${help}${save}`;
+      }
+      return h;
+    }));
     return out.join("");
   },
 
@@ -135,6 +153,25 @@ export const group = {
       send(view, el, cs) {
         const holders = String(cs.value("gr-holders") || "").trim(), note = String(cs.value("gr-hnote") || "").trim();
         return holders ? { body: note ? { holders, note } : { holders } } : { refuse: "screen.group.hosting.empty" };
+      } },
+    // R40: an emptied field clears the statement (`null`); the owner judges the text (STAKE_MALFORMED, NOT_AN_ADMIN)
+    { op: "declaredstakeset", rereads: ["identity"],
+      send(view, el, cs) { const stake = String(cs.value("gr-stake") || "").trim(); return { body: { stake: stake || null } }; },
+      done(view, answer, cs) { if (view.ui && view.ui.draft) cs.set("draft", null); } },
+    // the assistant's help with the statement (wizard-scripts R27): nothing is kept until the administrator saves; the words it is told
+    // are its reason (interface-shell R11's `reasonField`), as `notes` does
+    { op: "writinghelp", rereads: [], reasonField: "told",
+      send(view, el, cs) {
+        const told = String(cs.value(el.dataset.id) || "").trim();
+        cs.set("helping", el.dataset.field);
+        return { body: { op: "declaredstakeset", field: "stake", told } };
+      },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        const me = view.me || {};
+        const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
+        if (a && typeof a.text === "string") cs.fill("gr-stake", a.text);
+        cs.set("draft", { field: "stake", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
       } },
     // the bar's reason is the administrator's own words, in its field (interface-shell R11's `reasonField`)
     { op: "strengthbarset", rereads: ["bar"], reasonField: "reason",
