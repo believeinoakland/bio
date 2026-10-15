@@ -25,6 +25,8 @@ const WORLD = {
   "/app/d1": page(`<main id="cs-main"><script>fetch("/api/?op=accountconnect")</script></main>`),
   "/app/d3": page(`<main id="cs-main"><script>fetch("/api/?op=airunopen")</script></main>`),
   "/app/d5": page(`<main id="cs-main"><script>fetch("/api/?op=planask")</script></main>`),
+  /* R8: a refusal in a stream of JSON lines (an ask's answer) */
+  "/app/stream": page(`<main id="cs-main"><script>fetch("/api/?op=ask")</script></main>`),
   "/": `<!doctype html><html><head><title>${SETUP_PAGE_TITLE}</title></head><body>setup</body></html>`,
   "/other": `<!doctype html><html><head><title>x</title></head><body>an old page</body></html>`,
 };
@@ -48,6 +50,8 @@ async function walked(path, { expect = [] } = {}) {
   await ctx.route("**/*", async (r) => {
     const u = new URL(r.request().url());
     if (u.origin !== COPY) { walk.foreign(u.href); return r.abort("blockedbyclient"); }
+    if (u.pathname === "/api/" && u.searchParams.get("op") === "ask")
+      return r.fulfill({ status: 200, contentType: "application/x-ndjson", body: '{"ok":true,"stage":"reading"}\n{"ok":false,"code":"ASK_REFUSED"}\n' });
     if (u.pathname === "/api/") { const j = API[u.searchParams.get("op")]; return r.fulfill({ status: j.ok ? 200 : 409, contentType: "application/json", body: JSON.stringify(j) }); }
     if (u.pathname === INTERFACE_MARK) return r.fulfill({ status: 200, contentType: "text/css", body: "main{}" });
     if (WORLD[u.pathname]) return r.fulfill({ status: 200, contentType: "text/html", body: WORLD[u.pathname] });
@@ -90,6 +94,13 @@ test("R8 (D29): a refusal carried inside an HTTP 200 fails the step: fixtures of
     /* control: the expected refusal is excused by its code wherever it sits */
     assert.deepEqual((await walked(path, { expect: [code] })).failures, [], path);
   }
+});
+
+test("R8: a refusal on any line of a stream of JSON lines fails the step; control: expected, it passes", async () => {
+  const w = await walked("/app/stream");
+  assert.deepEqual(kinds(w), [FAIL.REFUSED]);
+  assert.match(w.failures[0].detail, /op=ask answered ok: false at \[1\] \(ASK_REFUSED, HTTP 200\)/);
+  assert.deepEqual((await walked("/app/stream", { expect: ["ASK_REFUSED"] })).failures, []);
 });
 
 test("R8: an expected refusal is excused where the step names it, `{at, code}`, and nowhere else", async () => {

@@ -109,7 +109,11 @@ export class Walk {
     const where = `${req.method()} ${url.host}${url.pathname}${url.searchParams.get("op") ? "?op=" + url.searchParams.get("op") : ""}`;
     let body = null;
     const type = res.headers()["content-type"] || "";
-    if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
+    /* a JSON answer, or a stream of JSON lines (an ask's answer, `application/x-ndjson`): each line is part of the answer */
+    if (/ndjson/.test(type)) {
+      const text = await res.text().catch(() => "");
+      body = text.split("\n").filter((l) => l.trim()).map((l) => { try { return JSON.parse(l); } catch { return { unreadable_line: l.slice(0, 200) }; } });
+    } else if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
     if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
     /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
        code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
