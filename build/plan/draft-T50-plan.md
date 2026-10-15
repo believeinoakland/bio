@@ -140,7 +140,7 @@ N1093's `actioninquiry` (action-records) and N1121's records help are left out.
 
 ## Count
 
-**53 jobs** (T50-48 and T50-49 dropped, K3407; T50-52, T50-53 added by BOB #184, K3416): L1 1, L2 5, L3 2, L4 1, L5 3, L6 5, L7 1, L8 2, L9 5, L10 1, L11 25. **Models:** Haiku 18 (T50-1, -5, -18, -25, -26, -36, -39…-47, -49, -50, -51), default 1 (T50-28), Sonnet 32. N1130 to N1144 folded (N1142 applied by BOB's edit, K3415) (N1133 applied in T49 as T49-36, K3398); T50-48 and T50-49 drop if run in T49. Every job carries a journey entry, clears an accepted red, provides a journey screen, or is the stamp or the split.
+**51 jobs** (T50-48 and T50-49 dropped, K3407; T50-52, T50-53 added, K3416): L1 1, L2 5, L3 2, L4 1, L5 3, L6 5, L7 1, L8 2, L9 5, L10 1, L11 25. **Models:** Haiku 17 (T50-1, -5, -18, -25, -26, -36, -39…-47, -50, -51), default 1 (T50-28), Sonnet 33. N1130 to N1144 folded (N1142 applied by BOB's edit, K3415) (N1133 applied in T49 as T49-36, K3398); T50-48 and T50-49 drop if run in T49. Every job carries a journey entry, clears an accepted red, provides a journey screen, or is the stamp or the split.
 
 ## BOB's acts (no job)
 
