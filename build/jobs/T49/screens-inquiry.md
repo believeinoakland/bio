@@ -1,6 +1,6 @@
 # screens-inquiry (T49)
 
-**Status** · session_015AVppQzR1P2zG8LjVeLCKr · depth 2 · COMPLETE · handled B10
+**Status** · session_015AVppQzR1P2zG8LjVeLCKr · depth 2 · COMPLETE · handled B12
 
 ## J1 · QUESTION
 
@@ -91,3 +91,14 @@ On the real shell: `node --test test/m/screens-inquiry/ test/m/control-plane/t46
 Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures. Everything else in J5 and J6 stands (the reads N1124 owes, R33's test playing run-rules' rule for want of a `uses` edge).
 
 Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 30, module lines 2194
+
+## J8 · COMPLETE
+
+CHANGE B12 processed (K3387, the step-7 diagnosis): merged `origin/tranche/T49`, then:
+1. **The capture's sha.** `document.mjs` keys every capture read (`reading`, `gradenote`, the held row's grade, `versionchain`'s `at`, `links`, `connections`, Find in's scope, `pagetranscribe`, and `identityclaim`'s evidence) on `data/provenance.json` `documents[0].capture.sha256` from the `image` answer, never `content_hash` (the dataset digest, C-2.7). A bundle whose provenance names no capture draws none of those reads, and no "Open the original". `fixtures.mjs` now gives the document a dataset digest that differs from the capture's sha, plus a provenance document. New test (R3, R32, K3387): each read is sent at the capture's sha and never at `content_hash`, and Find in opens at the capture's sha.
+2. **Versions' dates** are read from `first_retrieved` (the fixture corrected).
+3. **The document's words** come from the reading's `text_units` (in the answer's order). `passages`, `units` and `text` are no longer read. A found reading with no units draws its Passages section with `state.empty`, as B12 asks. That section is the one exception I now make to R20's "a section that holds nothing is not drawn", and the T48 R20 test now expects it. `READING` is corrected to the real shape (reading-pipeline R1's object with no text, `text_units` beside it). New test (R3, K3387): the words come from `text_units`; with none the section says so, and invented fields are never drawn. The words appear on the served page once extraction's `text_units` change lands (B12's ruling to Bob).
+
+Tests on the real shell: `test/m/screens-inquiry/` with `control-plane/t46-app`: 119 pass, 0 fail. `screens-daily/answers`, `plane/t47`, `screens-intake/held`, `interface-shell/frame`: 51 pass, 0 fail. Checks: format 0 failures; architecture screens-inquiry 0 failures; coverage 44 of 44 named; ownership 0 failures.
+
+Size (session_015AVppQzR1P2zG8LjVeLCKr): test runs 33, module lines 2206

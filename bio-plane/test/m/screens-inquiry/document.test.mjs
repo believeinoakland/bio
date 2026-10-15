@@ -3,13 +3,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, READING, DOCUMENT_MD, P, Q, D, SHA } from "./fixtures.mjs";
+import { open, main, actsIn, fill, press, rawKeys, plane, says, section, lead, word, READING, DOCUMENT_MD, DATASET, provenanceOf, P, Q, D, SHA } from "./fixtures.mjs";
 
 const at = "/app/document/" + D;
 const DOCUMENT_MD_NO_HASH = ["---", `id: ${D}`, "object_type: information", "title: \"Policy\"", "source:", "  locator: https://example.org/ai-4-12.pdf",
   "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
 /* a member's firsthand observation (provenance's op=testify) */
-const TESTIMONY_MD = ["---", `id: ${D}`, "object_type: information", "title: \"The pothole at 4th and Main\"", `content_hash: sha256:${SHA}`, `project: ${P}`,
+const TESTIMONY_MD = ["---", `id: ${D}`, "object_type: information", "title: \"The pothole at 4th and Main\"", `project: ${P}`,
   "source:", "  locator: \"a member's firsthand observation, authored in this record\"", "  authority: the observing member", "  retrieved: 2026-10-04T09:00:00Z",
   "---", "", "## Summary", "", "## Provenance Notes", "", "Authored through op=testify. Observed 2026-10-04.", ""].join("\n");
 /* the assistant reachable for this member (interface-shell R20) */
@@ -61,13 +61,13 @@ test("R32 control: a capture graded B draws B; one no read grades draws no grade
 
 test("R32 R39 the title is the document's, never the address's last segment or its id", async () => {
   const slug = DOCUMENT_MD.replace(/^title: .*$/m, "title: \"ai-4-12.pdf\"");
-  const p = await open(at, { images: { [D]: { "bundle.md": slug } } });
+  const p = await open(at, { images: { [D]: { "bundle.md": slug, "data/provenance.json": provenanceOf(SHA) } } });
   assert.ok(main(p).querySelector("h1").textContent.startsWith(lead("state.undetermined")));
   for (const h of main(p).querySelectorAll("h1, h2")) assert.doesNotMatch(h.textContent, /INFO-|ai-4-12/);
 });
 
 test("R32 a testimony offers Find in as a link and its words, and neither Watch for changes nor Check for a new version", async () => {
-  const p = await open(at, { images: { [D]: { "bundle.md": TESTIMONY_MD } } });
+  const p = await open(at, { images: { [D]: { "bundle.md": TESTIMONY_MD, "data/provenance.json": provenanceOf(SHA) } } });
   const m = main(p);
   const link = m.querySelector('[data-findin="link"]');
   assert.equal(link.getAttribute("href"), "/app/find-in/" + SHA);
@@ -208,8 +208,34 @@ test("R8 the question a passage is cited in, and an unread page, are choices amo
   assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
 });
 
-test("R22 control: a document with no capture digest draws no Open the original link, and none opens by its bundle id", async () => {
+test("R22 control: a document whose provenance names no capture digest draws no Open the original link, and none opens by its bundle id", async () => {
   const p = await open(at, { plane: { image: (r) => ok(r.query.id === D ? { "bundle.md": DOCUMENT_MD_NO_HASH } : null) } });
   assert.equal(main(p).querySelectorAll('a[href^="/app/open-file/"]').length, 0);
   assert.ok(!says(main(p), "screen.document.open"));
+});
+
+test("R3 R32 (K3387) every capture read is keyed on the capture's sha from its provenance document, never content_hash (the dataset digest)", async () => {
+  const p = await open(at);
+  assert.notEqual(DATASET, SHA);
+  assert.ok(DOCUMENT_MD.includes(DATASET), "the bundle's content_hash is the dataset digest");
+  for (const [op, key] of [["reading", "sha256"], ["gradenote", "capture"], ["versionchain", "at"], ["links", "capture"], ["connections", "sha256"]]) {
+    assert.equal(p.byOp(op)[0].query[key], SHA, `${op} at the capture's sha`);
+    assert.ok(!p.byOp(op).some((r) => JSON.stringify(r.query).includes(DATASET)), `${op} never at content_hash`);
+  }
+  await press(p, "findin");
+  assert.equal(p.location.pathname, "/app/find-in/" + SHA);
+  /* the versions' dates are provenance's first_retrieved */
+  const d = await open(at);
+  assert.ok(section(d, "screen.document.versions.head").textContent.includes("9 October 2026"));
+});
+
+test("R3 (K3387) the document's words are the reading's text_units; a reading with none says so, and no invented field is read", async () => {
+  const p = await open(at);
+  const q = main(p).querySelectorAll("blockquote");
+  assert.equal(q.length, 2);
+  assert.ok(q[0].textContent.includes("within seven calendar days"));
+  const none = await open(at, { plane: { reading: ok(READING({ text_units: [], reading: { passages: [{ text: "invented" }], units: [{ text: "invented" }], text: "invented" } })) } });
+  const s = section(none, "screen.document.passages.head");
+  assert.ok(says(s, "state.empty"));
+  assert.ok(!main(none).textContent.includes("invented"), "passages, units and text are never read");
 });
