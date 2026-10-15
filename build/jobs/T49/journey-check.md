@@ -66,3 +66,7 @@ T49-32 built: R7–R14 and B4's civicsmith.org steps; record's Completion sectio
 ## After B5 (K3380)
 
 R7 swept while the founder has no handle (DEC-230's words excepted), before she chooses one; where the claim takes her handle the report notes "R7 with no handle: not walkable here (the claim took a handle)" (`walk.notes`), never a failure. On D28: the walker reads no console line at all (it fails on a script error, `pageerror`, only), so Chromium's 403 network line and the `[DOM]` password-field line already fail nothing; nothing to admit. Walk on `tranche/T49` with interface-shell and screens-daily merged: 99 steps, 16 failures. Gone since J3: "Owner: admin" on home and projects, the project titled by its id. Left, each in an open job: no `su-fh` (screens-entry); `admin` as a name on forgot, setup, account; `projectdirectory` refusing the founder (project-roster N1129; screens-inquiry not to ask it); the question not drawing `question.empty.heading` (screens-inquiry); R10 and R13's missing pairs follow. Tests: names and walker 17 of 17.
+
+## J4 · REPORT
+
+B5 applied (K3380): R7 swept handleless before she chooses, noted where the claim took a handle; the walker reads no console line, so D28 already fails nothing. Re-walked with interface-shell and screens-daily merged: 99 steps, 16 failures, all in open jobs (record, 'After B5'). Still COMPLETE; waiting for your next CHANGE.
