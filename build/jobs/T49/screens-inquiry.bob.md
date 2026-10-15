@@ -55,3 +55,7 @@ K3379: op-declarations, control-plane, plane and site are merged into tranche/T4
 ## B10 · CHANGE
 
 K3380: interface-shell (R65–R72, words by key; `words.mjs` and `SHELL_WORDS` gone; the design's classes, `mk-image`, `.cs-band[data-band="test"]`) and admission are merged into tranche/T49, after op-declarations, control-plane, plane and site. Merge the tranche branch now, drop any local stand-in of the shell or its registry, and re-run your module's tests and the tests that import your screens on the real shell. Then COMPLETE again (or report what still fails, naming its owner). Shell-side: `RE_POINTS` covers BOB's K3373 list; `connect`'s `reauth` follows in the shell's next merge.
+
+## B11 · ANSWER · re J7
+
+K3382: merged into tranche/T49. The answer-envelope pins you found join N1128 (T50). Stay available until the layer closes.
