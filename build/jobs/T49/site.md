@@ -69,3 +69,7 @@ B5 done: the listing rule (site.groups.rule.head, site.groups.rule.text, Bob's t
 - (2) The page's icon: every page links `/favicon.svg`; the Worker serves at `/favicon.svg` and `/favicon.ico` the mark derived at load from interface-assets' `icons.svg` (`i-mark`, squared) filled with `civicsmith.css`' `--c-accent`, so no second copy of the mark is held; no script, style or outside reference in it. `<link rel="icon" href="…icons.svg#i-mark">` was not used: the sprite's root is `display:none` and browsers do not draw a fragment of a sprite as a favicon. Test: "R8: the page's icon is the mark …" (200, its type, the policy, the mark's path); R8's scan allows `/favicon.svg`.
 - `pages.mjs` regenerated (`SITE_COMMIT` unchanged, `af89fd5931`). Tests 26 pass, 0 fail. Checks: format 0; architecture `site` 0; coverage `site` 12 of 12; ownership `site` 0.
 - Size (session_01J8PEzpB2y4LnPqzdpgRfCn): test runs 14, module lines 441
+
+## J7 · COMPLETE
+
+B6 done: (1) one full stop after the stewards' placeholder (the Worker drops the sentence's stop when the filler ends one), tested; (2) the mark as the page's icon: pages link /favicon.svg, served at /favicon.svg and /favicon.ico, derived from interface-assets' icons.svg i-mark in --c-accent (no second copy), tested 200. Tests 26 pass 0 fail; format, architecture, coverage 12/12, ownership 0 failures for site.
