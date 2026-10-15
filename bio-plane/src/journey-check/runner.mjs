@@ -21,6 +21,11 @@ const memberOk = (m) => typeof m === "string" && m.length > 0 && m.length <= 200
 const SIGNIN_ADDRESS = "https://claude.ai/oauth/authorize?code=true&client_id=journey-check-local-arm";
 const refuse = (code, status, detail) => json({ ok: false, code, detail, trace: crypto.randomUUID(), trace_detail: { ms: 0, cold: false, uptime_s: 0 } }, status);
 
+/* Every token a sign-in minted here, by its member (the instances of this class share one isolate in the local arm) */
+const MINTED = new Map();
+/* A member as the door names it (`member:<id>`) or bare: one member */
+const memberKey = (m) => String(m).replace(/^member:/, "");
+
 export class AgentRunner {
   constructor(state, env) { this.state = state; this.env = env; this.waiting = null; }
 
@@ -49,7 +54,7 @@ export class AgentRunner {
       const { attempt } = this.waiting;
       this.waiting = null;
       const token = "sk-ant-oat01-journey-" + Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
-      await this.state.storage.put("token", { member, token });
+      MINTED.set(token, memberKey(member));
       return json({ ok: true, connected: true, member, attempt, token, valid_for: "1 year", ...trace });
     }
     if (step === "state") return json({ ok: true, connected: false, waiting: !!(this.waiting && this.waiting.member === member), member, ...trace });
@@ -87,8 +92,10 @@ export class AgentRunner {
         const c = m && m.credential;
         if (!c || c.kind !== "signin" || !memberOk(c.member)) return end({ ok: false, code: "NO_CREDENTIAL", detail: "no sign-in credential" });
         if (typeof c.secret !== "string" || !c.secret) return end({ ok: false, code: "SIGNIN_NOT_HELD", detail: "no token was handed down" });
-        const held = await this.state.storage.get("token");
-        if (!held || held.member !== c.member || held.token !== c.secret)
+        /* agent-runner R28: the instance holds nothing; the token arrives with the conversation (credentials holds it).
+           Standing in for Anthropic, which accepts only a token it minted for that account, the stand-in accepts only
+           a token it minted at that member's sign-in, whichever instance ran it. */
+        if (MINTED.get(c.secret) !== memberKey(c.member))
           return end({ ok: false, code: "SIGNIN_TOKEN_REFUSED", detail: "the token is not one this sign-in minted" });
         if (this.env.FAKE_MODEL === "off") return end({ ok: false, code: "NO_FAKE_MODEL", detail: "the local arm's runner has no fake model bound" });
         max = Math.max(1, Number(m.max_turns) || 1);

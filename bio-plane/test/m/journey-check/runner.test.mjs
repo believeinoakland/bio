@@ -97,6 +97,13 @@ test("R11: a conversation runs only on the token the sign-in minted for that mem
   assert.equal(end.num_turns, 3);
 });
 
+test("R11 (agent-runner R28): the instance holds nothing: a conversation on another instance of the same member, named bare or as the door names it, runs on the token her sign-in minted", async () => {
+  const runner = await runnerOf();
+  const { token } = await signedIn(runner, "member:ana");
+  const seen = await converse(runner("ana"), { credential: { kind: "signin", member: "ana", secret: token }, prompt: "Answer by calling judge_plan.", tools: TOOLS, max_turns: 4 });
+  assert.equal(seen.at(-1).ok, true, JSON.stringify(seen));
+});
+
 test("R11 control: with no fake model bound, the sign-in still answers and a conversation on the held token ends NO_FAKE_MODEL", async () => {
   const runner = await runnerOf({ model: false });
   const { s, token } = await signedIn(runner, "member:ana");
