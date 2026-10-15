@@ -77,3 +77,7 @@ Merged the tranche (every L11 job but control-plane) and re-walked; four flaws o
 - the document page draws none of the document's words: the reading `op=reading` answers for the captured HTML notice holds no `passages`, `units` or `text` (624 characters read), so `document.mjs` draws no passage — screens-inquiry R32 (the page) or the reading's owner (extraction / reading-pipeline), whichever owes the text;
 - `versionchain` refuses `VERSION_CHAIN_NO_SUCH_VERSION` inside a 200 for the copy just captured (`at` its own sha) — provenance (`index.mjs`:1318), the record holding no version of a capture it just made;
 - R10 and seven of R13's pairs follow from R9 stopping at 7. Steps 8–12 (cite, the dock's run with the fake model, Ask, accept and conclude) are not reached yet; the fake model is shaped further when they are.
+
+## J5 · REPORT
+
+B7 (K3383): re-walked on tranche/T49 @ ceca2ea2fd, 103 steps, 10 failures. Steps 1–6 now pass (claim by handle, project, question, subscription sign-in, capture by address and upload, held, vouched), and R7. Open failures and owners: (1) the document page draws none of the document's words: op=reading for the captured HTML notice carries no passages/units/text — screens-inquiry R32 or the reading's owner (extraction/reading-pipeline); (2) versionchain refuses VERSION_CHAIN_NO_SUCH_VERSION inside a 200 for the copy just captured — provenance (index.mjs:1318). R10 and 7 of R13's pairs follow from R9 stopping at step 7. Details: record, 'After B7'.
