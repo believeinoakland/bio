@@ -173,7 +173,7 @@ export function plainAnswer(schema, prompt, read) {
 export function basisVersion(facts) {
   /* a composed reading states its claim, what a conclusion adopts (basis-versions' NO_CLAIM), as an account of
      something, never filler (run-productions' SUGGEST_BOILERPLATE): the walk's own scenario, the notice it captured */
-  return { kind: "basis-version", target: facts.target, name: "The city's repair order",
+  return { kind: "basis-version", target: facts.target, name: "City repair order 2026-118",
     description: `The city's housing notice ${NOTICE_ID}, held in the record, orders the repair this question asks about.`,
     claim: SCENARIO_CLAIM };
 }
