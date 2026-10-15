@@ -121,7 +121,8 @@ test("R31 (K2488; ai-use R7, R69): ai-use is the one instance the plane built, i
   const u = new URL("http://do/x?viewer=member:nobody&by=member:nobody");
   const map = x.s.routes(u, {});
   const own = aiUseOps(aiUseOf(x.ctx), u, {});
-  assert.deepEqual(OPS(own), ["ailimitset", "ailimits", "aiusage", "exploreapprove", "aiuseovertime"]);
+  /* (T49; N1073, K3268) the ops are read from ai-use's own map, its declaration, not hand-listed here */
+  assert.ok(OPS(own).length > 0, "ai-use declares ops");
   for (const op of OPS(own)) assert.ok(Object.hasOwn(map, op), `op=${op}`);
   for (const op of ["ailimits", "aiusage"]) assert.equal(JSON.stringify(await map[op]()), JSON.stringify(await own[op]()), `op=${op}`);
   const keys = OPS(map);

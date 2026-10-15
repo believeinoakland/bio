@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, hold, doc, member, withEntry, i2, noText, folio, ocrAnswer } from "./fixture.mjs";
+import { checkChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { ACQUIRE_TEXT_UNITS_BUDGET, CAPTURE_TEXT_UNIT_CAP, ACQUIRE_TEXT_UNIT_ENVELOPE, ReadHooks, tier4Extend } from "../../../src/reading-pipeline/index.mjs";
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
@@ -46,7 +47,8 @@ test("R32 R1: an HTML capture read as text with no format entry answers one doc-
   assert.equal(reading.text_chars, PAGE.length);
   assert.equal(reading.provenance.text_sha256.length, 64);
   assert.equal(reading.provenance.text_chars, PAGE.length);
-  assert.equal(reading.text_source, undefined);
+  /* R33 amends R10: the units' chain is stored with the reading (the test of it follows) */
+  assert.equal(reading.text_source.length, 1);
 });
 
 test("R32 R1: a plain-text capture answers one doc-para unit per run of text between blank lines, in the text's order; a blank-looking line separates, a wrapped line does not; the units' text is the paragraph", async () => {
@@ -134,6 +136,52 @@ test("R32 R1: the units never change what R1 reads: the content type's reader st
   assert.deepEqual(r.reading.entities.map((e) => e.ref), ["meeting:2101"], "the reader saw the markup, not the visible text");
   assert.ok(r.text_units.some((u) => /City Council/.test(u.text)));
   assert.equal(r.reading.text_chars, calendar.length);
+});
+
+/* ---------------------------------------------------------------- R33 (T49-34; K3392) */
+
+test("R33 R32 R10 R14: a capture read as text that has text units carries the chain they were formed by: the plane's layer at tier null with its text_container, a chain the record's extent gate accepts; R14's provenance stays at tier null on the plane", async () => {
+  for (const [name, out, container] of [["html", await html(PAGE), "html"], ["plain", await plain("one\n\ntwo"), "text"]]) {
+    const r = out.reading;
+    assert.equal(Array.isArray(r.text_source) && r.text_source.length, 1, name);
+    const [step] = r.text_source;
+    assert.deepEqual([step.step, step.tier, step.container, step.cap], ["layer", null, container, null], name);
+    assert.equal(r.text_container, container, name);
+    assert.equal(checkChain(r.text_source), null, `${name}: a chain text-chain accepts`);
+    assert.ok(out.text_units.length > 0, name);
+    assert.equal(r.provenance.text_tier, null, `${name}: R14 stays true`);
+    assert.equal(r.provenance.container, container, name);
+    assert.equal(r.provenance.text_sha256.length, 64, name);
+    assert.equal(r.text_chars, name === "html" ? PAGE.length : 8, `${name}: R17 still over the text the reader was handed`);
+  }
+});
+
+test("R33 (control) R32: a reading with no text units has no chain: a capture whose text holds no glyph, one not read as text, and one whose bytes are not held carry no text_source and no text_container, as before", async () => {
+  const w = fresh();
+  const blank = (await plain(" \n\n\t\n")).reading;
+  assert.equal(blank.text_source, undefined);
+  assert.equal(blank.text_container, undefined);
+  const words = "words that would be a unit";
+  const d = await hold(w.evidence, words);
+  const multi = (await w.read(doc({ digest: d, bytes: words.length, ct: "text/plain", format: "undetermined", fromText: true, headers: [],
+    parts: [{ index: 0, sha256: d, bytes: words.length }] }))).reading;
+  const absent = (await w.read(doc({ digest: "e".repeat(64), ct: "text/plain", format: "undetermined", fromText: true, headers: [] }))).reading;
+  for (const r of [multi, absent]) assert.equal(r.text_source, undefined);
+});
+
+test("R33 R1 R32: the chain is carried whatever the content type's reader does, and R1's reading is otherwise unchanged: a reader that finds entities keeps them, and text units never change what the reader was handed", async () => {
+  const w = fresh();
+  const ROW = `<tr><td><a href="MeetingDetail.aspx?ID=2101&GUID=X">City Council</a></td><td>7/15/2026</td><td><a href="View.ashx?M=A&ID=52101">Agenda</a></td></tr>`;
+  const calendar = ['<!DOCTYPE html><html><head><title>Council Calendar</title></head><body><form id="aspnetForm" method="post">',
+    '<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="STATE" />', '<main id="mainContent" role="main">',
+    '<select id="lstYears_Input" name="lstYears" value="This Month"><option>This Month</option></select>',
+    '<table><tr><th>Name</th><th>Date</th><th>Agenda</th></tr>', ROW, '</table></main></form></body></html>'].join("");
+  const hdr = [["content-type", "text/html; charset=utf-8"], ["x-powered-by", "ASP.NET"], ["server", "Microsoft-IIS/10.0"]];
+  const r = (await readAs(w, calendar, { ct: "text/html", format: "html", headers: hdr })).reading;
+  assert.deepEqual(r.entities.map((e) => e.ref), ["meeting:2101"]);
+  assert.equal(r.text_chars, calendar.length);
+  assert.equal(r.text_source.length, 1);
+  assert.equal(r.text_container, "html");
 });
 
 /* ---------------------------------------------------------------- R22 (N1065) */

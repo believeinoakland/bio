@@ -1,6 +1,6 @@
 # credentials (T49)
 
-**Status** · session_01C6HsrkoFjNZGt4BJNLj9Gm · depth 2 · COMPLETE · handled B3
+**Status** · session_01NoBA3fcJk59ceBYV2BeCwj · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -38,3 +38,20 @@ credentials is built and green against a stand-in for membership R144 (151/151; 
 ## J3 · COMPLETE
 
 T49-3 complete on job/T49/credentials (tranche merged, shim deleted). 153/153 tests against real membership; format, architecture, coverage 53/53, ownership 0 failures. K3337 applied: handle optional, NO_TOKEN_FP and C-29.48 dropped, founder-Ask project test added. R72 stays (callers named in the record).
+
+## J4 · COMPLETE
+
+T49-33 complete (R78, the founder's own run credential). Entry applied.
+
+**Change.** `aiRunCredentialMint` (credentials/index.mjs) admits the `member` that resolves to the founder (`ROOT`, in either form `admin` / `member:admin`) as an active member for her own run, using R76's one test, now factored as `#isFounder(role)` (membership.sessionRights, R144: `rootOfTrust` and her id) and shared with `#ownSession`. Every other R63 refusal stands in its order: `ACCOUNT_MEMBER_NOT_ACTIVE` (C-29.15), `AI_RUN_CREDENTIAL_MALFORMED`, `AI_KEPT_AWAY`. A founder credential is member-scoped (`member:admin`), bound to its run, revoked by the next segment, by `aiRunCredentialsEnd`, and by R73 like any member's.
+
+**Tests** (t49.test.mjs, named R78): the founder's run minted (both id forms; row, digest-only, lookup, run end, next-segment revocation); controls: an inactive enrolled member, machine, unknown, empty and look-alike ids refused C-29.15 with nothing minted; her malformed and kept-away refusals stand; a member's own run still minted. Verified red without the change (2 fail), green with it.
+
+**Ran.** `node --test bio-plane/test/m/credentials/`: tests 155, pass 155, fail 0. Users: `test/m/ai-runs/` and `test/m/screens-*/`, `journey-check/` after `npm ci` in `bio-plane/src/journey-check` (playwright-core was missing): 946 tests, 24 fail before `npm ci`, all the missing package; after it journey-check is 26 pass, 1 fail. That one (`R1 (a)` local arm) fails at "journey 28 · setup: claim: the claim is not shown on /app/setup", identically with and without my change; it stops the walk before journey step 9, so step 9 (`airundispatch`) is NOT yet re-walked by the local arm. Not mine (setup screen, screens-entry/instance-setup); BOB to route.
+Checks: format 0 failures; architecture 0 (26 files); coverage 54 of 54; ownership 0.
+
+**Deferred / other modules.** None deferred. Requirements text: R78 still reads "(not yet met: T49)"; BOB to clear it. Found elsewhere: the setup claim screen failure above.
+
+**Reading set.** Read whole by me: requirements/credentials.md, credentials/index.mjs lines 1190–1450 (the mint, grants, `#ownSession`) plus greps of the rest, t49.test.mjs R76 sections; no helpers used.
+
+Size (session_01NoBA3fcJk59ceBYV2BeCwj): test runs 9, module lines 2120

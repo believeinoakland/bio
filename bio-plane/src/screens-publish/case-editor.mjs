@@ -95,7 +95,7 @@ export const CASE_EDITOR = Object.freeze({
           return cs.row("", cs.w("screen.case-editor.ack.by", { who: a.by || a.recipient || "" }), '<span class="rec">' + cs.esc(a.reason || "") + "</span>", a.at ? cs.date(a.at) : "");
         }).join("")) : "")
         + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
-        + '<div class="mk-acts">' + cs.act("statementack") + "</div>";
+        + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack");
     }) : ""));
 
     // The people it names, each with its reason or that the reason is missing (R1; `attribute`).
@@ -110,11 +110,13 @@ export const CASE_EDITOR = Object.freeze({
           + cs.field("ce-why-" + i, "screen.case-editor.people.reason", { area: true });
         return cs.row("", '<span class="rec">' + cs.esc(o.observation) + "</span>" + (level ? " · " + level : "") + " · " + why, "",
           fields + cs.act("attribute", { data: { observation: o.observation, index: String(i) } }));
-      }).join(""));
+      }).join("")) + P.said(view, "attribute");
     }) : ""));
 
-    // What changed since the last edition: the member's words, the drafts labelled machine work, writing help (R1).
-    if (caseOf && caseOf.case_id) {
+    // What changed since the last edition: the member's words, the drafts labeled machine work, writing help (R1).
+    // The section is "What changed since Edition {n}": drawn for an edition that has one before it.
+    const before = Number(edition) - 1;
+    if (caseOf && caseOf.case_id && before >= 1) {
       const changed = P.later(cs, view, "changed", "whatchangeddrafts", { query: { case: caseOf.case_id } },
         function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; });
       out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, help: "screen.case-editor.changed.help" })
@@ -126,7 +128,7 @@ export const CASE_EDITOR = Object.freeze({
             return cs.row(machine ? cs.mark("origin", "machine") : "", '<span class="rec">' + cs.esc(x.text) + "</span>"
               + (x.untested ? '<span class="mk-note">' + cs.w("ai.label.untested") + "</span>" : ""), "", x.at ? cs.date(x.at) : "");
           }).join(""));
-        })));
+        }), { fills: { n: String(before) } }));
     }
     if (doc) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");
@@ -145,10 +147,14 @@ export const CASE_EDITOR = Object.freeze({
         if (view.ui.draft) body.draft = view.ui.draft.draft_id; else body.project = String(view.subject || "").split("/")[0];
         return { body: body };
       },
-      done: function (view, answer, cs) { view.parts.forget(view); view.parts.say(cs, view, "casedraft", cs.w("screen.case-editor.prepared")); },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "casedraft", answer)) return; // D29: a refusal inside a success is not success
+        view.parts.forget(view);
+        view.parts.say(cs, view, "casedraft", cs.w("screen.case-editor.prepared"));
+      },
     },
     {
-      // R1: a draft of "what changed", recorded labelled by who proposed it, while the assistant is reachable.
+      // R1: a draft of "what changed", recorded labeled by who proposed it, while the assistant is reachable.
       op: "whatchangedpropose", label: "act.whatchangedpropose.label.case-editor",
       send: function (view, el, cs) {
         const c = view.ui.draft && view.ui.draft.case;
@@ -158,6 +164,7 @@ export const CASE_EDITOR = Object.freeze({
         return { query: { case: c.case_id }, body: { text: text } };
       },
       done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "whatchangedpropose", answer)) return; // D29
         const r = view.parts.value(answer) || {};
         view.parts.forget(view);
         view.parts.say(cs, view, "whatchangedpropose", cs.w("screen.case-editor.changed.kept") + (r.untested ? " " + cs.w("ai.label.untested") : ""));
@@ -171,7 +178,7 @@ export const CASE_EDITOR = Object.freeze({
         if (!view.ui.draft) return null;
         return { query: { draft: view.ui.draft.draft_id }, body: { reason: String(cs.value("ce-ackreason") || "").trim() } };
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "statementack", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R1: a person the case names, with the reason it must (its consequence in the shell's dialog, op-grades R4).
@@ -183,10 +190,10 @@ export const CASE_EDITOR = Object.freeze({
         return { body: { caseId: c.case_id, edition: Number(c.edition), observation: el.dataset.observation,
           level: String(cs.value("ce-level-" + i) || "name"), reason: String(cs.value("ce-why-" + i) || "").trim() } };
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "attribute", answer)) view.parts.forget(view); }, // D29
     },
     {
-      // R1 (interface-shell R20): help with the scope's or "what changed"'s words, never a reason; drawn as a labelled draft.
+      // R1 (interface-shell R20): help with the scope's or "what changed"'s words, never a reason; drawn as a labeled draft.
       op: "writinghelp", label: "act.writinghelp.label.case-editor",
       send: function (view, el, cs) {
         const field = el.dataset.field === "whatchanged" ? "whatchanged" : "scope";
@@ -196,8 +203,9 @@ export const CASE_EDITOR = Object.freeze({
         return { body: { op: field === "scope" ? "casedraft" : "whatchangedpropose", field: field, told: told } };
       },
       done: function (view, answer, cs) {
-        const r = view.parts.value(answer) || {};
         const which = view.ui.helpFor || "scope";
+        if (view.parts.refused(cs, view, "help-" + which, answer)) return { stay: true }; // D29
+        const r = view.parts.value(answer) || {};
         view.parts.say(cs, view, "help-" + which, cs.w("screen.case-editor.help.draft") + ' <span class="rec">' + cs.esc(r.text || "") + "</span>"
           + (r.untested ? " " + cs.w("ai.label.untested.writinghelp") : ""));
         return { stay: true };

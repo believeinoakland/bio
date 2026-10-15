@@ -13,7 +13,7 @@
    an instant or null); a row answering none of them draws none. `w` is the screen's own word prefix (`screen.home`,
    `screen.projects`). */
 
-export function projectRows(cs, view, w, glance) {
+export function projectRows(cs, view, w, glance, join, states) {
   const STAGES = ["forming", "investigating", "matured", "closed"];
   const ui = view.ui;
   if (!ui.counts || typeof ui.counts !== "object") ui.counts = {};
@@ -62,10 +62,14 @@ export function projectRows(cs, view, w, glance) {
   const glanceOf = function (p) {
     if (!glance) return "";
     // An owner answered with no handle is drawn by its member id; `null` is an opener no longer active (R27).
-    const who = p.owner && (p.owner.handle || p.owner.member) ? String(p.owner.handle || p.owner.member) : "";
+    const unnamed = function (x) { return !!x && x.founder === true && !x.handle; };
+    const plain = function (t) { return String(t).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
+    const who = p.owner && (p.owner.handle || (!unnamed(p.owner) && p.owner.member)) ? String(p.owner.handle || p.owner.member) : "";
     const owner = !("owner" in p) ? ""
-      : '<span class="muted">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, []) : cs.w(w + ".owner.none")) + "</span>";
-    const members = Array.isArray(p.members) ? p.members.map(function (m) { return String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
+      : '<span class="muted">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, [])
+        : unnamed(p.owner) ? cs.w(w + ".owner", { handle: "" }) + cs.w("member.founder.unnamed") : cs.w(w + ".owner.none")) + "</span>";
+    const members = Array.isArray(p.members)
+      ? p.members.map(function (m) { return unnamed(m) ? plain(cs.w("member.founder.unnamed")) : String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
     const activity = Array.isArray(p.activity) && p.activity.length === 8 ? p.activity.map(function (n) { return Number(n) || 0; }) : null;
     const last = "lastChange" in p
       ? '<span class="muted">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
@@ -84,7 +88,9 @@ export function projectRows(cs, view, w, glance) {
     const projects = list && Array.isArray(list.projects) ? list.projects : [];
     return cs.sheet(projects.map(function (p) {
       const id = String(p.id);
-      return cs.row("", cs.ref("project", id, p.name || id, []) + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })(), ladder(p.stage), glanceOf(p));
+      const joinAct = join && states && states[id] === "invited" ? cs.act("projectjoin", { label: join, data: { project: id } }) : "";
+      return cs.row("", cs.ref("project", id, p.name || id, []) + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })()
+        + (joinAct ? '<span class="meta">' + joinAct + "</span>" : ""), ladder(p.stage), glanceOf(p));
     }).join("")) + (list && list.truncated ? '<p class="mk-note">' + cs.w(w + ".truncated") + "</p>" : "");
   };
 }

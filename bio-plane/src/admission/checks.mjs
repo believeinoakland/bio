@@ -18,20 +18,37 @@
  *
  * T36-36 (R14): two new rows, C-38.10 CREDENTIAL_IN_ADDRESS (R20; F1's tail, K2111, K2129: BOB's translation with its
  * protective sentence, the UX stream's to revise) and C-38.11 MEMBER_TOKEN_RETIRED (R5; N711, K1936 Q3), each with its
- * test; both await promotion's stamp (T37; plan T36 accepted red 4). */
+ * test; both await promotion's stamp (T37; plan T36 accepted red 4).
+ *
+ * T49-18 (R28; K3366, K3368; DEC-257, DEC-258): the rows hold no English. Each row is its check id and its site; the
+ * member's sentence is the word `refusal.<CODE>` (words.json, read through setup-words' `word`), which `worded` below
+ * gives each row as its `translation` and `rowOf` in index.mjs puts on each refusal. The comments below record why each
+ * sentence said what it said; they bind no wording. */
+
+import { word } from "../setup-words/index.mjs";
+
+/* R28: a row's `translation` is the word `refusal.<CODE>`, read through setup-words' `word` each time it is read (the
+   getter holds no sentence and keeps the row's `{check, translation}` shape for the readers of the families: the
+   envelope's decoration, the door). DOOR_RATE_LIMITED's one placeholder is left as written, `{minutes}`, since a row
+   knows no wait; the refusal itself (index.mjs `doorRateLimited`) fills it. */
+function worded(rows) {
+  for (const code of Object.keys(rows)) {
+    const vars = code === "DOOR_RATE_LIMITED" ? { minutes: "{minutes}" } : {};
+    Object.defineProperty(rows[code], "translation", { enumerable: true, get: () => word(`refusal.${code}`, vars) });
+  }
+  return rows;
+}
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
    for what it requires, not what it forbids, and does not match the doctrine pack's `MACHINE_CANNOT_` prefix. */
-export const ADMISSION_CHECKS = {
+export const ADMISSION_CHECKS = worded({
   /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
      do rather than what happened, because a person reading this has not yet done
      anything wrong — they have simply not said who they are. */
   NOT_AUTHENTICATED: {
     check: 'C-38.1',
     where: 'src/admission/index.mjs admit > is-admission',
-    translation: 'Nothing in this request said who you are. Sign in, or send a credential this '
-      + 'group\'s Civicsmith issued, and try again.',
   },
   /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
      sentence: this is not a rung on a ladder the caller can climb. A credential
@@ -40,9 +57,6 @@ export const ADMISSION_CHECKS = {
   CLASS_FORBIDDEN: {
     check: 'C-38.2',
     where: 'src/admission/index.mjs admit > is-admission',
-    translation: 'The credential you sent is not one this operation accepts. Credentials here are '
-      + 'issued for a particular purpose, and widening this one is not the way through: use the '
-      + 'credential meant for this work.',
   },
   /* The mirror of the row above, and it exists separately because the two are
      opposite facts about the caller. This one is a PERSON asking for something
@@ -64,10 +78,6 @@ export const ADMISSION_CHECKS = {
   MACHINE_CREDENTIAL_REQUIRED: {
     check: 'C-38.3',
     where: 'src/admission/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'This operation is performed by an unattended writer, not by a person at a '
-      + 'browser. A signed-in session cannot do it; it needs a machine credential an administrator '
-      + 'has issued. Your group\'s Civicsmith holds a recorded decision to that effect and names it beside '
-      + 'this message.',
   },
   /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
      OUTCOMES, and the one the plane could ALWAYS have said: it is about the
@@ -86,11 +96,6 @@ export const ADMISSION_CHECKS = {
   SESSION_ROLE_CANNOT_REACH_OP: {
     check: 'C-38.7',
     where: 'src/admission/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'A signed-in person does perform this operation, but from a different session than '
-      + 'this one, and this refusal names which. Where it names the founder\'s session, being an '
-      + 'administrator of this group does not reach it: every enrolled member, an administrator '
-      + 'included, signs in with a member\'s session. No machine credential is needed and finding '
-      + 'one is not the way through: ask the person who holds the session it names.',
   },
   /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
      otherwise have to cover a case neither is true of.
@@ -120,9 +125,6 @@ export const ADMISSION_CHECKS = {
   SESSION_ROUTE_NOT_RECORDED: {
     check: 'C-38.8',
     where: 'src/admission/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'No signed-in session reaches this operation, and your group\'s Civicsmith holds no recorded '
-      + 'decision saying it is not meant for a person. That is a gap in the record rather than a '
-      + 'rule you have run into, and it is worth reporting as one.',
   },
   /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
      ENOUGH, and the translation says so, because a member refused here will
@@ -132,10 +134,6 @@ export const ADMISSION_CHECKS = {
   ROOT_OF_TRUST_REQUIRED: {
     check: 'C-38.4',
     where: 'src/admission/index.mjs admit > is-admission',
-    translation: 'This needs the administrator token itself, not a signed-in session — and that '
-      + 'includes the founder\'s own browser. A session is derived from a password; the root of '
-      + 'trust is the token held in the hosting account. The published record needs no credential '
-      + 'at all.',
   },
   /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
      `civicos-ui/app.html` hand-authored a sentence for this code:
@@ -152,16 +150,12 @@ export const ADMISSION_CHECKS = {
   NOT_CAPABLE: {
     check: 'C-38.5',
     where: 'src/admission/index.mjs notCapable > is-not-capable',
-    translation: 'Your account does not hold the capability this needs. Capabilities are granted '
-      + 'by an administrator, so ask one rather than looking for another route to the same thing.',
   },
   /* A credential that MAY act, but not HERE. Distinct from every row above,
      which are all about whether the caller may act at all. */
   SCOPE_REFUSED: {
     check: 'C-38.6',
     where: 'src/admission/index.mjs admit > is-admission',
-    translation: 'That credential is allowed to act, but not on the part of the record this '
-      + 'request named. It is confined to its own namespace and this request reached outside it.',
   },
   /* T35 (R21; F4, K1881): the one limit admission adds, a window per source over the operations anyone may call with
      no credential. It is a protective limit that refuses only abuse, so the sentence says it is about pace and not
@@ -170,9 +164,6 @@ export const ADMISSION_CHECKS = {
   DOOR_RATE_LIMITED: {
     check: 'C-38.9',
     where: 'src/admission/index.mjs doorRateLimited > is-door-window',
-    translation: 'Too many requests reached your group\'s Civicsmith from the same place in a short time, so this one '
-      + 'was turned away before anything was read or changed. It is about the pace, not about you: wait the time '
-      + 'given beside this message and try again. The limit is stated beside it too.',
   },
   /* T36 (R20; F1, K1874, K2111, K2129): a credential or a secret sent in the web address. An address is kept in logs
      and browser history, so the request is refused rather than served; the sentence says where to send it instead and,
@@ -181,9 +172,6 @@ export const ADMISSION_CHECKS = {
   CREDENTIAL_IN_ADDRESS: {
     check: 'C-38.10',
     where: 'src/admission/index.mjs credentialAddressGate > is-credential-in-address',
-    translation: 'A sign-in credential or a secret was sent in the web address, where it can be kept in logs and '
-      + 'browser history. Send it in the request\'s Authorization header or in its body instead. Nothing was done. '
-      + 'If it was sent in a link, treat it as seen by others: sign out everywhere, or ask for a new link.',
   },
   /* T36 (R5; N711, K1936 Q3): the group's shared member key is retired; each member signs in as themselves. The
      sentence says the key is retired, not wrong, so its holder does not go looking for a newer one, and names the one
@@ -191,19 +179,14 @@ export const ADMISSION_CHECKS = {
   MEMBER_TOKEN_RETIRED: {
     check: 'C-38.11',
     where: 'src/admission/index.mjs admit > is-admission',
-    translation: 'The shared member key this request used is retired and no longer signs anybody in. Each member now '
-      + 'signs in with their own password. Nothing was read or changed.',
   },
-};
+});
 
 /* C-78 · A NAMESPACE (D-456, D-461, D-463). */
-export const NAMESPACE_CHECKS = {
+export const NAMESPACE_CHECKS = worded({
   NAMESPACE_UNKNOWN: {
     check: 'C-78.1',
     where: 'src/admission/index.mjs namespaceGate > is-namespace-gate',
-    translation: 'This request named a part of the record that does not exist in your group\'s Civicsmith, so '
-      + 'nothing was read or changed. It has two: the record itself, and a scratch area kept apart for testing. The '
-      + 'name must match one of them exactly; the names are listed beside this message.',
   },
   /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
      Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
@@ -211,9 +194,6 @@ export const NAMESPACE_CHECKS = {
   NAMESPACE_PINNED: {
     check: 'C-78.2',
     where: 'src/admission/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate',
-    translation: 'This request asked for the scratch area, but this operation only ever answers from the record '
-      + 'itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area '
-      + 'out of the request, knowing it then reaches the real record.',
   },
   /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
      named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
@@ -225,15 +205,12 @@ export const NAMESPACE_CHECKS = {
   NAMESPACE_CONFINED: {
     check: 'C-78.3',
     where: 'src/admission/index.mjs confinedNamespaceGate > is-confined-namespace-gate',
-    translation: 'The credential used for this request can only ever reach the scratch area kept apart for '
-      + 'testing, and this request asked for a different part of the record, so nothing was read or changed. '
-      + 'Leave the part out of the request and it reaches scratch, which is the only place this credential goes.',
   },
-};
+});
 
 /* C-29.6–.10 · AN AGENT CREDENTIAL'S REACH (PL-11 / IS-5, D-199): the gate on every call (.6, .7) and the declaration
    judged at the mint (.8–.10). The mint's and the revocation's rows are credentials'. */
-export const AI_SCOPE_CHECKS = {
+export const AI_SCOPE_CHECKS = worded({
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
 
   /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
@@ -244,16 +221,10 @@ export const AI_SCOPE_CHECKS = {
   AI_BEYOND_TASK_SCOPE: {
     check: 'C-29.6',
     where: 'src/admission/index.mjs aiTaskScope > is-ai-task-scope',
-    translation: 'This credential was created for a particular piece of work and that is not part of '
-      + 'it. What an agent may do here is written down on the record by the member who set it up, so '
-      + 'widening it means somebody amending that entry, not the agent asking again.',
   },
   AI_CREDENTIAL_REVOKED: {
     check: 'C-29.7',
     where: 'src/admission/index.mjs aiTaskScope > is-ai-task-scope',
-    translation: 'This agent credential has been withdrawn by a member of the group, so it no longer '
-      + 'reaches anything here. The record keeps the entry and the date rather than deleting it, so '
-      + 'what it did while it was live remains readable.',
   },
   /* T35 (R10; K1934 (5), credentials R42): an agent credential lives for the days it was minted with and is never
      renewed. Refused by name, as a withdrawn one is, so its holder is told the remedy (a new one) rather than met with
@@ -262,9 +233,6 @@ export const AI_SCOPE_CHECKS = {
   AI_CREDENTIAL_EXPIRED: {
     check: 'C-29.30',
     where: 'src/admission/index.mjs aiTaskScope > is-ai-task-scope',
-    translation: 'This agent credential has reached the end of the time it was created for, so it no longer reaches '
-      + 'anything here. Credentials are not renewed: a member of the group creates a new one to replace it. The '
-      + 'record keeps the entry, so what it did while it was live remains readable.',
   },
 
   /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
@@ -275,9 +243,6 @@ export const AI_SCOPE_CHECKS = {
   AI_SCOPE_UNKNOWN_OP: {
     check: 'C-29.8',
     where: 'src/admission/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
-    translation: 'The list of things this credential may change names something your group\'s Civicsmith '
-      + 'does not do. An entry nothing recognises would sit in the record looking like a permission while '
-      + 'meaning nothing, so it is refused rather than stored.',
   },
   /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
      forbidden ops — a property of the op: can a MEMBER reach it. The unattended
@@ -286,10 +251,6 @@ export const AI_SCOPE_CHECKS = {
   AI_SCOPE_BEYOND_MEMBER_REACH: {
     check: 'C-29.9',
     where: 'src/admission/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
-    translation: 'An agent may only be given things a member of this group could hand to it, and '
-      + 'this is not one of them. The background worker\'s own jobs, and the acts a member performs '
-      + 'only from their own signed-in session, are outside what anybody can hand to an agent, so '
-      + 'this cannot be written into a credential at all.',
   },
   /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
      A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
@@ -304,15 +265,11 @@ export const AI_SCOPE_CHECKS = {
   AI_CONFINEMENT_NOT_SCRATCH: {
     check: 'C-29.10',
     where: 'src/admission/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration',
-    translation: 'A credential can be confined to the scratch area and to nothing else, spelt exactly. '
-      + 'Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; '
-      + 'naming the record itself is not a confinement, so it is refused rather than written down as one. '
-      + 'Nothing was created.',
   },
-};
+});
 
 /* C-32.17 · THE OPERATOR FENCE ON SECTION 4 GOVERNANCE (D-136). */
-export const OPERATOR_FENCE_CHECKS = {
+export const OPERATOR_FENCE_CHECKS = worded({
   /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
      the same doctrine rather than a new one: *the credential that delivers an
      act decides when the record changes, and the record names the actor.* A
@@ -331,24 +288,15 @@ export const OPERATOR_FENCE_CHECKS = {
   OPERATOR_TOKEN_CANNOT_GOVERN: {
     check: 'C-32.17',
     where: 'src/admission/index.mjs bearerFence > is-operator-governance-act',
-    translation: 'Endorsing an administrator, voting to remove one, and setting what a member may do '
-      + 'are things the group holds a named administrator answerable for, and the record names who did '
-      + 'them. The credential that asked here is one of the operator\'s access tokens for your group\'s '
-      + 'Civicsmith, not a person: it holds no place on the roster, so it cannot be one of the administrators whose '
-      + 'agreement the rule requires. Sign in as that administrator and do it from there.',
   },
-};
+});
 
 /* C-64.4 · THE SAME FENCE FOR THE GROUP'S PUBLIC IDENTITY (REC-164). */
-export const GROUP_IDENTITY_FENCE_CHECKS = {
+export const GROUP_IDENTITY_FENCE_CHECKS = worded({
   /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
      administrator's own signed-in session, and the record names who set each one. */
   GROUP_IDENTITY_NEEDS_SESSION: {
     check: 'C-64.4',
     where: 'src/admission/index.mjs bearerFence > is-group-identity-session',
-    translation: 'The name this group shows the public, and the web address it claims, are set by one of its '
-      + 'administrators, and the record names who set each one. The credential that asked here is one of the '
-      + 'operator\'s access tokens for your group\'s Civicsmith, not a person, so it cannot be that administrator. Sign in as '
-      + 'the administrator and set it from there. Nothing was changed.',
   },
-};
+});

@@ -69,9 +69,9 @@ Terms. A **template** is R1's record; a **version** R2's. A version's **state** 
 
 - **R33** (T48; N880; Actions D13, H17; v0.2 rule 8; K231, K922 (1), K2953; amends R10, R15, R23; `filings` R57) **The quoting sentence and its one check.**
   - This module holds `RFC_QUOTING_SENTENCE`, moved here from `filings` unchanged: "Your reply may be quoted unless it says otherwise." (`filings`' `KEYED["rfc.quoting"]` before T48).
-  - It is not read from `words.json`: K2953 and `filings` R52 keep `words.json`'s re-wording returned to the design stream, because a new wording would refuse every request already prepared.
+  - It is not read from `words.json`, which holds no `rfc.quoting` since DEC-234 (K3357): a new wording would refuse every request already prepared (K2953).
   - `rfcQuotingRefusal(text, extra)` answers C-115.47 `RFC_QUOTING_MISSING` with its row, `extra` fields merged, when `text` does not hold the sentence; otherwise null. Pure.
-  - The row moves here from `filings` with its code, number and translation unchanged; the translation is read by key from `refusal.RFC_QUOTING_MISSING` (`filings` R51). Its `where` names this one function (R23's table), as R32 does for C-125.4.
+  - The row moves here from `filings` with its code, number and translation unchanged. Its translation is this module's own word `refusal.RFC_QUOTING_MISSING` (with `rfc.quoting`, the sentence's key), declared in this module and no longer in `words.json`, which withdrew both at BOB's request (DEC-234; B200 (5); K3357); the text is unchanged. Its `where` names this one function (R23's table), as R32 does for C-125.4.
   - `templateApprove` (R10) refuses through it, after `REVIEWS_INSUFFICIENT`, a version whose `use` is `file`, whose kind is `request_for_comment` (`action-grammar`'s `PRODUCT_KINDS`) and whose text lacks the sentence. Nothing is written.
   - A profile template of that kind and use that lacks the sentence is not offered and reads the same code (R15's form).
   - Controls: the same version with the sentence is approved; a `brief` template, and a template of another kind, is never asked.

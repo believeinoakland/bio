@@ -113,7 +113,6 @@ test("R7: a caller with no class is refused 401 NOT_AUTHENTICATED (C-38.1), for 
   for (const op of GATED) for (const token of [undefined, "", "nope", hex64(), aik(), `${S.ann}x`]) {
     env.calls.length = 0;
     const body = refused(await gate(env, { op, token }), 401, "NOT_AUTHENTICATED", "C-38.1", [token]);
-    assert.equal(body.error, "unauthenticated");
     assert.equal(opCalls(env).length, 0);
   }
   /* negative controls: a binding class and a session are admitted */

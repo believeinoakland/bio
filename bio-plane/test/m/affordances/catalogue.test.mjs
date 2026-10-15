@@ -37,7 +37,7 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES } = A;
-const { NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_PATH, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
+const { NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_KEY, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
 const ids = (xs) => xs.map((a) => a.id).sort();
 /* op-grades R13 (T33-85): T33's grades and reasons, the tables spread into RUNGS, RUNG_ABSENT and NON_ACTS; held to the op
    maps in t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
@@ -118,7 +118,7 @@ test("R4 R36 R51: VOCABULARIES carries exactly the named vocabularies", () => {
   assert.deepEqual(Object.keys(VOCABULARIES).sort(), ["action_kind", "law_levels", "dispositions", "subject_positions",
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
-    "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_path",
+    "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_key",
     "rung_absence_grounds", "rung_consequences" /* op-grades R4 */, "sufficiency_claim_states", "content_mint_states",
     /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
     "dismissal_reasons",
@@ -142,7 +142,7 @@ test("R4 R51: each fixed value is the very object its enforcing module refuses a
     ["resolutions", actionGrammar.RESOLUTIONS], ["risk_tiers", actionGrammar.RISK_TIERS],
     ["version_states", basisVersions.VERSION_MACHINE.legal], ["version_edges", basisVersions.VERSION_MACHINE.edges],
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
-    ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
+    ["rung_correction_key", IRREVERSIBLE_CORRECTION_KEY], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
     ["rung_consequences", G.CONSEQUENCE_STATEMENTS] /* R4: op-grades' (its R4, R21) */,
     ["sufficiency_claim_states", basisVersions.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
     /* N345: inquiry R46's frozen vocabularies and contradiction R31's dismissal reasons */
@@ -363,7 +363,7 @@ const outward = () => {
     else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) add(`${where}.${k}`, x); };
   for (const a of [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]) { add(`${a.id}.label`, a.label); add(`${a.id}.prompt`, a.prompt); }
   add("NON_ACTS", NON_ACTS); add("RUNG_ABSENT", RUNG_ABSENT); add("RUNG_ABSENCE_GROUNDS", RUNG_ABSENCE_GROUNDS);
-  add("IRREVERSIBLE_CORRECTION_PATH", IRREVERSIBLE_CORRECTION_PATH);
+  add("IRREVERSIBLE_CORRECTION_KEY", IRREVERSIBLE_CORRECTION_KEY);
   add("VOCABULARIES", VOCABULARIES); add("MACHINE_REFUSALS", MACHINE_REFUSALS);
   /* R48, R49: what each act does, published with the no-target answer, is outward text too */
   add("ACT_HELP", A.ACT_HELP);

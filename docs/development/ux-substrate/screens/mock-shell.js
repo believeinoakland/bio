@@ -23,9 +23,17 @@ function assistantPanel(screen, c) {
   const [q, a] = ASSIST[screen] || ASSIST._;
   return `<aside class="cs-dock" aria-label="The assistant">
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
-   <div class="body"><p class="mk-small muted">Runs on your own Claude account, or on your group's API key where it offers one; only for you. It finds, reads and checks; it never concludes, signs or sends.</p>
-    <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}</div>
+   <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the group's key or a project's account serves you instead, this says “On the group's key” or “On {project}'s account”.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
+    <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
+}
+/* DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
+   start says in the panel (each withheld or refused dispatch by its words, never blank), and the serving account's thirty
+   days of bars, drawn only for that account's owner. */
+function dockMore() {
+  return `<p class="mk-small">${I('machine')} A run of yours is working on this.</p>
+   <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your group\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your group\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your group\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
+   <details class="mk-details"><summary>Your account's use, last 30 days</summary>${usageBars(4.10, 61, 4)}</details>`;
 }
 const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another group\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
 function wizardGuide(w) {
@@ -46,7 +54,7 @@ function mast(c, s) {
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
     <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
-    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
+    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><details class="mk-usermenu"><summary class="mk-avatar" aria-label="Mai: your menu" data-tip="<b>Your menu</b>: your account, and signing out of this device.">M</summary><div class="mk-menu" role="menu"><span class="mk-small muted">Mai · signed in as mai-k</span><a href="#" role="menuitem" onclick="return false">Your account</a><a href="#" role="menuitem" onclick="return false" data-tip="<b>Sign out</b>: ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.">Sign out</a></div></details></header>`;
 }
 // DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
 // (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
@@ -206,6 +214,8 @@ function decorate(html, id, c) {
   return t.innerHTML;
 }
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
+/* DEC-249: the test-copy band (interface-shell R36, R53, R58), its words instance.test.band and instance.test.notice. */
+const testBand = c => c.test ? `<div class="cs-testband" role="note"><b>Test Civicsmith</b><span>This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.</span></div>` : '';
 function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
@@ -217,11 +227,11 @@ function renderFrame(screenId, c) {
   }
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
-  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
+  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published">${testBand(c)}<header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
-  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
+  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}">${testBand(c)}<main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
-  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
+  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${testBand(c)}${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="${railW() < 120 ? 1 : 2}" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;

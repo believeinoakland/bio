@@ -28,7 +28,7 @@ test("R14 groupdescriptionset sends the whole record: kinds, the other kind, foc
   assert.deepEqual(r.sent[0].body, { kinds: ["issue"], visibility: "public", focus: "Repair.", purpose: "Accountability." });
 });
 
-test("R14 groupdescriptiondraft: the draft filled into the focus and purpose fields, labelled the assistant's, kept only by the administrator's own save; R11 untested beside it only when the answer carries it", async () => {
+test("R14 groupdescriptiondraft: the draft filled into the focus and purpose fields, labeled the assistant's, kept only by the administrator's own save; R11 untested beside it only when the answer carries it", async () => {
   const a = await open("group-identity", { me: ADMIN, table: identityTable(), reachable: true });
   const r = await a.press("groupdescriptiondraft", { values: { "gi-q-what": "We track potholes." } });
   assert.deepEqual(r.sent.map((x) => [x.op, x.body]), [["groupdescriptiondraft", { answers: [{ question: "what", text: "We track potholes." }] }]], "nothing is saved");

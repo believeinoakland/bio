@@ -158235,8 +158235,9 @@ var AiRuns = class _AiRuns {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects2 = this.#runContextProjects(contextType, contextId);
     const who3 = actor == null ? "" : String(actor).trim();
+    const asked = memberIdOf3(who3) ?? who3;
     const joined2 = who3 && runConsultsProjects(contextType) ? projects2.filter((p3) => {
-      const part = this.#membership().participation(p3, who3);
+      const part = this.#membership().participation(p3, asked);
       return !!part && part.state === "joined";
     }) : [];
     const g = projectGate({ actor: who3, contextType, contextId, projects: projects2, projectsJoined: joined2 });
@@ -169184,7 +169185,8 @@ var CASE_INPUTS_WORDS = Object.freeze({
   "signing.openrequest.nowindow.line": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; the reply answers {answered} of the {claims} claims the request laid out.",
   "signing.openrequest.nowindow.noreply": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply is recorded.",
   "signing.openrequest.nowindow.notlaidout": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply laid out claim by claim is recorded.",
-  "signing.openrequest.unread": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here."
+  "signing.openrequest.unread": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+  "signing.openrequest.noquote": "{whom}'s reply asks not to be quoted, so the case says what it says without quoting its words."
 });
 function fillWords3(key2, fill = {}) {
   const en = CASE_INPUTS_WORDS[key2];
@@ -169467,9 +169469,9 @@ function openRequestRow(r) {
     ...r.quotable === void 0 ? {} : { quotable: r.quotable }
   };
 }
-var OPEN_REQUEST_NOQUOTE_PLAIN = "{whom}'s reply asks not to be quoted.";
+var OPEN_REQUEST_NOQUOTE_KEY = "signing.openrequest.noquote";
 function openRequestLine(r) {
-  const quoting = r.quotable === false ? { quoting: { key: null, says: OPEN_REQUEST_NOQUOTE_PLAIN.replace("{whom}", () => r.whom) } } : {};
+  const quoting = r.quotable === false ? { quoting: { key: OPEN_REQUEST_NOQUOTE_KEY, says: fillWords3(OPEN_REQUEST_NOQUOTE_KEY, { whom: r.whom }) } } : {};
   const reply = r.answers ? "line" : r.replied === false ? "noreply" : "notlaidout";
   const key2 = OPEN_REQUEST_KEYS[r.window_closes ? reply : `nowindow.${reply}`];
   return {
@@ -194376,7 +194378,7 @@ var FilingTemplates = class _FilingTemplates {
   #machine(act2, who3) {
     if (str45(who3) && !isMachineIdentity(who3)) return null;
     const code = act2 === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act2 === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
-    return refuse21(code, str45(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse21(code, str45(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */

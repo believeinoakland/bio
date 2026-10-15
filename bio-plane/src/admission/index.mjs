@@ -40,8 +40,14 @@
    writes only to that run (R23); a locked session is admitted only to `unlock`, `reauth` and `signout`, any other op
    answered credentials' `SESSION_LOCKED` as given (R24); and an act op-declarations' `REAUTH_ACTS` names is admitted
    only while the session's password re-ask window is open, else answered credentials' `REAUTH_DUE` as given (R25).
-   Both codes are credentials' rows, minted there once (K231): this module relays them and mints neither. */
+   Both codes are credentials' rows, minted there once (K231): this module relays them and mints neither.
+
+   T49 (T49-18; D24, K1881, K3333, K3366, K3368): a public read presenting a live session is counted in that session's own
+   window, `SESSION_WINDOW` (R27), and every other request to a public op stays in its source's (R21); the sentence of
+   every refusal is the word `refusal.<CODE>` read through setup-words' `word`, the rows (checks.mjs) holding only
+   their check id and site (R28). */
 import { liveToken, sha256hex } from "../tokens.mjs";
+import { word } from "../setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../op-declarations/index.mjs";
 import * as OP_DECLARATIONS from "../op-declarations/index.mjs";
@@ -52,17 +58,18 @@ export const SCRATCH = "scratch";
 /* D-456 (C-78.1): the namespaces, exact and case-sensitive (a Durable Object name is an exact string). */
 export const NAMESPACES = Object.freeze(["bio", SCRATCH]);
 
-/* A row's DEC-49 fields, read from the ONE row. It THROWS rather than returning a partial row: DEC-49 exists because a
-   refusal once shipped `translation: undefined` to a member, and a throw is a loud failure where a missing sentence is
-   a silent one that reaches a person. */
-function rowOf(table, family, code) {
+/* A row's DEC-49 fields: the code, its check id (the one row, in checks.mjs) and the member's sentence, which is the
+   word `refusal.<CODE>` read through setup-words' `word` (R28), `vars` its placeholders. It THROWS rather than returning
+   a partial row: DEC-49 exists because a refusal once shipped `translation: undefined` to a member, and a throw is a
+   loud failure where a missing sentence is a silent one that reaches a person. `word` itself throws for a key the list
+   does not hold, so a code with no sentence behind it cannot reach a member either. */
+function rowOf(table, family, code, vars = {}, key = `refusal.${code}`) {
   const row = table[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`admission: ${code} has no ${family} row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
+  if (!row || typeof row.check !== "string" || !row.check)
+    throw new Error(`admission: ${code} has no ${family} row (DEC-49). A code with no row must not reach a member.`);
+  return { code, check: row.check, translation: word(key, vars) };
 }
-const admissionRow = (code) => rowOf(ADMISSION_CHECKS, "ADMISSION_CHECKS", code);
+const admissionRow = (code, vars, key) => rowOf(ADMISSION_CHECKS, "ADMISSION_CHECKS", code, vars, key);
 const namespaceRow = (code) => rowOf(NAMESPACE_CHECKS, "NAMESPACE_CHECKS", code);
 const aiScopeRow = (code) => rowOf(AI_SCOPE_CHECKS, "AI_SCOPE_CHECKS", code);
 const operatorFenceRow = (code) => rowOf(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_CHECKS", code);
@@ -867,6 +874,16 @@ export const DOOR_WINDOW = Object.freeze({ limit: 300, windowMs: 10 * 60 * 1000 
 export const DOOR_WINDOW_STATED =
   `at most ${DOOR_WINDOW.limit} requests from one source in any ${DOOR_WINDOW.windowMs / 60000} minutes`;
 
+/* R27 (T49; D24; K1881, a protective limit, BOB's) — A SIGNED-IN SESSION'S OWN WINDOW, for the public reads
+   (`classes: null`, `mutating: false`) it makes: at most `limit` per session in any `windowMs`, estimated as R21's is
+   (the same two buckets, `doorWindowEstimate`). A member's ordinary page loads (`bootstrap`, `groupidentity`, ...) are
+   public reads that a signed-in page makes several times each, and would otherwise meet the source's 300. 3,000 was
+   confirmed at START against M-T49-4 (at most 5 public requests per signed-in load; 400 loads in 10 minutes fit
+   with room). `stated` is composed from the same constants. */
+export const SESSION_WINDOW = Object.freeze({ limit: 3000, windowMs: 10 * 60 * 1000 });
+export const SESSION_WINDOW_STATED =
+  `at most ${SESSION_WINDOW.limit} requests from one signed-in session in any ${SESSION_WINDOW.windowMs / 60000} minutes`;
+
 /* R21: the two-bucket sliding estimate, `prev × (1 − elapsed/W) + cur`, `elapsedFrac` the share of the current
    bucket's window already gone. */
 export function doorWindowEstimate({ prev = 0, cur = 0, elapsedFrac = 0 } = {}) {
@@ -889,16 +906,22 @@ export function doorRetryAfter({ prev = 0, cur = 0, elapsedFrac = 0, limit = DOO
   return Math.max(1, Math.ceil((waitFrac * windowMs) / 1000) + 1);
 }
 
-/* R21 — THE REFUSAL: 429, the bound in `stated`, the wait in `retryAfter`. It names no address, fingerprint or
-   credential, and says nothing of who the caller is (R15): the window knows neither. */
-export function doorRateLimited(retryAfter) {
+/* R21, R27 — THE REFUSAL: 429, the bound in `stated`, the wait in `retryAfter` (whole seconds) and, for the member's
+   sentence (R28: `refusal.DOOR_RATE_LIMITED` holds `{minutes}`), in `minutes`. It names no address, fingerprint or
+   credential, and says nothing of who the caller is (R15): the window knows neither. `session` is the session's own
+   window (R27); the code and the row are the one row's (C-38.9, K3333), the session's sentence the word
+   `refusal.DOOR_RATE_LIMITED.session` (DEC-262). */
+export function doorRateLimited(retryAfter, { session = false } = {}) {
   const wait = Math.max(1, Math.ceil(Number(retryAfter) || 1));
+  const minutes = Math.ceil(wait / 60);
+  const where = session ? "this signed-in session" : "one source";
   /* DEC-49 REGION is-door-window */
-  return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED"),
-    detail: `too many requests to the operations anyone may call reached this group's Civicsmith from one source in `
+  return { status: 429, body: { ok: false, reason: "DOOR_RATE_LIMITED", ...admissionRow("DOOR_RATE_LIMITED", { minutes },
+      session ? "refusal.DOOR_RATE_LIMITED.session" : undefined),
+    detail: `too many requests to the operations anyone may call reached this group's Civicsmith from ${where} in `
       + `a short time, so this one was turned away before the operation ran; nothing was read or written. Try again `
       + `in ${wait} seconds.`,
-    stated: DOOR_WINDOW_STATED, retryAfter: wait } };
+    stated: session ? SESSION_WINDOW_STATED : DOOR_WINDOW_STATED, retryAfter: wait, minutes } };
   /* END DEC-49 REGION is-door-window */
 }
 
@@ -951,19 +974,54 @@ async function storeSource(address, env) {
   return source;
 }
 
-/* R21 — THE WINDOW, AS THE FIRST GATE OF THE PUBLIC OPS (control-plane R28's order): every request to an op whose spec
-   is public (`classes: null`), whoever calls and whatever it presents, is asked of its source's window in the store
-   (`doorwindow`, this module's store map, `window.mjs`), the connecting address in the request's body. A request to
-   any other op is never counted or refused here. Answers `{ refusal }` (R21's 429, nothing of the op read or written)
-   or `{ source }` (the fingerprint the store answered, for the door's stamps; `null` when it could not be read). A
-   window that cannot be read or written ADMITS the request (it fails open, so a fault in it never refuses a caller)
-   and is named in the log by its correlation id only. */
-export async function doorWindowGate({ req = null, env = null, spec = null, doAnswer = null, now = null } = {}) {
+/* R27 — THE LIVE SESSION A PUBLIC READ PRESENTS, as the digest its own window is kept under, or `null` for a request
+   that is counted by source: one presenting no credential or one that is not a session's shape; a binding token (a
+   64-hex binding is no session); an `aik-` credential; a session the store does not know, or ended, or locked
+   (readerOf reads a locked session as no one); and a session the store could not be asked about (R6's silence, named in
+   the log by correlation id only). `credential` is the door's `presentedCredential` answer (R20: the header's token,
+   else the body's); absent, the header of `req` alone. `background` marks a request the page makes on its own timer
+   (credentials R71 (7)), so this read of the session is no activity; absent, the request's own `background=1`. The
+   token itself goes nowhere but the session lookup's header (R20); the digest is all that is kept. */
+const backgroundOf = (req) => {
+  try { return new URL(req.url).searchParams.get("background") === "1"; } catch { return false; }
+};
+async function liveSessionDigest({ req, env, doAnswer, credential, background }) {
+  const t = (credential && typeof credential === "object" ? credential : presentedCredential({ req })).token;
+  if (typeof t !== "string" || !SESSION_TOKEN_SHAPE.test(t) || typeof doAnswer !== "function") return null;
+  try {
+    if ((await bindingOf(t, env)) !== null) return null;
+    const looked = await sessionPresented(t, env, doAnswer, background === null ? backgroundOf(req) : background === true);
+    if (looked.silent) {
+      console.warn(`admission: the session was not read for the door's window; the request is counted by source (correlation ${
+        typeof looked.silent.correlation === "string" ? looked.silent.correlation : "none"})`);
+      return null;
+    }
+    if (!looked.sess || looked.sess.locked === true) return null;
+    return await sha256hex(t);
+  } catch { return null; }
+}
+
+/* R21, R27 — THE WINDOW, AS THE FIRST GATE OF THE PUBLIC OPS (control-plane R28's order): every request to an op whose
+   spec is public (`classes: null`), whoever calls and whatever it presents, is asked of a window in the store
+   (`doorwindow`, this module's store map, `window.mjs`), the connecting address in the request's body. A public READ
+   (`mutating: false`) presenting a live session (`liveSessionDigest`) is counted in that session's own window
+   (R27, `SESSION_WINDOW`), the digest of its token in the body beside the address, which the store uses for the
+   fingerprint the stamps need and counts nowhere else; every other request is counted in its source's. A request to any
+   other op is never counted or refused here. Answers `{ refusal }` (R21's or R27's 429, nothing of the op read or
+   written) or `{ source }` (the fingerprint the store answered, for the door's stamps; `null` when it could not be
+   read). A window that cannot be read or written ADMITS the request (it fails open, so a fault in it never refuses a
+   caller) and is named in the log by its correlation id only. `credential` and `background`, the door's (R27). */
+export async function doorWindowGate({ req = null, env = null, spec = null, doAnswer = null, now = null,
+                                       credential = null, background = null } = {}) {
   if (!spec || spec.classes !== null) return { source: null };
   let out = null;
   try {
     const body = { address: connectingAddress(req) };
     if (now !== null) body.now = now;
+    if (spec.mutating === false) {
+      const digest = await liveSessionDigest({ req, env, doAnswer, credential, background });
+      if (digest !== null) body.session = digest;
+    }
     const asked = bioStore(env).fetch(new Request("http://do/doorwindow", {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
     out = typeof doAnswer === "function" ? await doAnswer(asked) : null;
@@ -974,7 +1032,7 @@ export async function doorWindowGate({ req = null, env = null, spec = null, doAn
     return { source: null };
   }
   const r = out.result;
-  if (r.refused === true) return { refusal: doorRateLimited(r.retryAfter) };
+  if (r.refused === true) return { refusal: doorRateLimited(r.retryAfter, { session: r.window === "session" }) };
   return { source: typeof r.source === "string" ? r.source : null };
 }
 

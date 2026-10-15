@@ -26,17 +26,24 @@ export const updates = {
     const data = view.data || {};
     const out = [cs.title()];
     if (me.administer !== true) { out.push(`<p data-state="admins">${W(S + "admins")}</p>`); return out.join(""); }
-    // who allowed or skipped a release, as plain text for a word's fill: a value recorded at setup or by the system is
-    // "set at setup", never a credential's name (R33)
+    // who allowed or skipped a release, as plain text for a word's fill (R37: every fill filled). A member by their handle; the founder
+    // by hers while her own session answers it. An install with no member behind it (setup, the founder before she has a handle, a
+    // token or a seed) has no one to name: it is drawn by the `_setup` words, never as "allowed by set at setup" (R33, R37)
     const T = (k) => String(W(k)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
-    const by = (x) => { const id = String(x || "").replace(/^member:/, ""); return id === "" || id === "admin" || /^(token|class):/.test(id) ? T("settings.set.setup") : id; };
+    const who = (x) => {
+      const id = String(x || "").replace(/^member:/, "");
+      if (id === "" || /^(token|class):/.test(id) || ["daemon", "system", "seed", "bootstrap"].indexOf(id) >= 0) return null;
+      if (id === "admin") return me.member === "admin" && me.handle ? me.handle : null;
+      return id;
+    };
     const secure = (r) => (r.security === true ? ` <span class="cs-risk" data-risk="raised" tabindex="0" data-level="1" data-tip="${W("updates.ready.security_says")}">${W("updates.ready.security")}</span>` : "");
 
     out.push(cs.state(data.notice, (v) => {
       let h = "";
       const run = v.running;
       if (run && run.version) {
-        const rows = [cs.row("", `${W("updates.running.release", { version: run.version, date: D(run.installed_at), who: by(run.allowed_by) })}`)];
+        const by = who(run.allowed_by);
+        const rows = [cs.row("", by ? W("updates.running.release", { version: run.version, date: D(run.installed_at), who: by }) : W("updates.running.release_setup", { version: run.version, date: D(run.installed_at) }))];
         if (v.last_check && v.last_check.at) rows.push(cs.row("", W("updates.running.checked", { when: D(v.last_check.at) }), "", W("updates.running.checked_note")));
         h += cs.sec("updates.running.head", cs.sheet(rows.join("")));
       }
@@ -74,8 +81,9 @@ export const updates = {
       // the earlier releases
       const earlier = Array.isArray(v.earlier) ? v.earlier : [];
       if (earlier.length) h += cs.sec("updates.earlier.head", cs.sheet(earlier.map((e) => cs.row("", e.skipped_at
-        ? W("updates.earlier.skipped", { version: e.version, date: D(e.skipped_at), who: by(e.skipped_by), reason: e.reason || "" })
-        : W("updates.earlier.installed", { version: e.version, date: D(e.installed_at), who: by(e.allowed_by) }))).join("")));
+        // a skip is a member's act: the founder with no handle yet is `member.founder.unnamed`, never `admin`
+        ? W("updates.earlier.skipped", { version: e.version, date: D(e.skipped_at), who: who(e.skipped_by) || T(String(e.skipped_by || "").replace(/^member:/, "") === "admin" ? "member.founder.unnamed" : "settings.set.system"), reason: e.reason || "" })
+        : who(e.allowed_by) ? W("updates.earlier.installed", { version: e.version, date: D(e.installed_at), who: who(e.allowed_by) }) : W("updates.earlier.installed_setup", { version: e.version, date: D(e.installed_at) }))).join("")));
       return h;
     }));
     return out.join("");
@@ -95,7 +103,7 @@ export const updates = {
     { op: "updateskip", rereads: ["notice"], reasonField: "reason",
       send(view, el, cs) {
         const reason = String(cs.value("up-skipwhy") || "").replace(/\s+/g, " ").trim();
-        return reason && reason.length <= 1000 ? { body: { version: el.dataset.version, reason } } : { refuse: "screen.updates.skip.noreason" };
+        return reason && reason.length <= 1000 ? { body: { version: el.dataset.version, reason } } : { refuse: "refusal.UPDATE_SKIP_NO_REASON" };
       } },
   ],
 };

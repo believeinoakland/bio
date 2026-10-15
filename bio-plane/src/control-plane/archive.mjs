@@ -8,6 +8,8 @@
    of the archive, which files nothing twice, offers it again (acquisition R38's resume). The bytes are the captures the
    acquisition already holds: each file of the bundle is a blob reference to a digest, never bytes carried here. */
 import { createSha256 } from "../record-grammar/index.mjs";
+/* R99 (T49; K3366, DEC-258): the bundle's words are read by key. */
+import { word } from "../setup-words/index.mjs";
 
 const enc = (text) => {
   const b = new TextEncoder().encode(text);
@@ -22,7 +24,8 @@ function filing(id, doc, { project, archiveSha, at }) {
   const cap = doc.capture || {};
   const fromArchive = !!(doc.container && doc.container.archive_sha256);
   const path = fromArchive ? clean(doc.container.path ?? `entry ${doc.container.index}`, 200) : null;
-  const title = clean(fromArchive ? `${path}, from the archive ${archiveSha}` : `Archive captured from ${doc.locator ?? cap.sha256}`, 200);
+  const title = clean(fromArchive ? word("file.archive.entry.title", { path, archive: archiveSha })
+                                  : word("file.archive.title", { source: doc.locator ?? cap.sha256 }), 200);
   const blobs = Array.isArray(doc.parts) && doc.parts.length
     ? doc.parts.map((p) => ({ path: p.file, sha256: p.sha256, bytes: p.bytes }))
     : [{ path: doc.file, sha256: cap.sha256, bytes: cap.bytes }];
@@ -35,11 +38,9 @@ function filing(id, doc, { project, archiveSha, at }) {
     `content_hash: sha256:${cap.sha256}`,
     "source:", `  locator: ${JSON.stringify(String(doc.locator ?? `zip:${archiveSha}`))}`, `  retrieved: ${doc.retrieved || at}`,
     "---", "", "## Summary", "",
-    fromArchive
-      ? `A file cut out of the archive \`${archiveSha}\` the record holds, as it sat in the archive. Its bytes are filed exactly as cut; nothing here summarises them.`
-      : `An archive captured by the record, held beside the files cut out of it. Its bytes are filed exactly as captured; nothing here summarises them.`,
-    "", "## Provenance Notes", "", "Filed at collected and never higher: releasing it is a named member's decision.", "",
-    "## Session Log", "", `### Session ${at} | Collected`, "Changes: created from the archive's unpack.", "",
+    fromArchive ? word("file.archive.entry.summary", { archive: archiveSha }) : word("file.archive.summary"),
+    "", "## Provenance Notes", "", word("file.archive.provenance"), "",
+    "## Session Log", "", `### Session ${at} | Collected`, `Changes: ${word("file.log.unpacked")}`, "",
     "## Review Notes", ""].join("\n");
   return {
     md, title, blobs,

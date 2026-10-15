@@ -33,7 +33,7 @@ The visual language every member screen uses (DEC-138), as frozen data copied fr
   - `shell.css` carries DEC-236's design classes: `.mk-menuwrap`, `.mk-menu`, `.mk-actwrap`, `.mk-slot`, `.mk-rowname`, `.mk-scrim`, `.mk-image`, `.mk-imgareas`, `.mk-imgarea`, `button.mk-avatar` and `.mk-grp`. It also carries the graph's `.e-step_source` and DEC-241's `.mk-morerows` and `.mk-morerow`;
   - `civicsmith.css` carries `.cs-band[data-band="test"]`.
 
-  Test: R1's byte equality and R7's transform. A scan finds each named rule. Control: no selector names `mk-device` or `mk-scaler`. *(not yet met: T49)*
+  Test: R1's byte equality and R7's transform. A scan finds each named rule. Control: no selector names `mk-device` or `mk-scaler`.
 
 ## Private
 

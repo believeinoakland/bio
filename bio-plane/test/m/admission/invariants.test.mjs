@@ -1,6 +1,7 @@
 /* admission: its refusal rows (R14) and what its refusals never carry (R15). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { A, C, O, world, gate, refused, member, hex64, aik, cred, PLACES } from "./harness.mjs";
 
 const { UNATTENDED_BY_DECISION } = O;
@@ -40,7 +41,7 @@ async function sweep() {
   return { out, secrets };
 }
 
-test("R14: the admission share of the checks is this module's own — C-38.1–C-38.11, C-78.1–C-78.3, C-29.6–C-29.10, C-29.30, C-32.17, C-64.4 — each raised by a gate here, carrying its row's check and words, each row's `where` naming a site in this module", async () => {
+test("R14: the admission share of the checks is this module's own — C-38.1–C-38.11, C-78.1–C-78.3, C-29.6–C-29.10, C-29.30, C-32.17, C-64.4 — each raised by a gate here, carrying its row's check and its word (R28: `refusal.<CODE>`), each row's `where` naming a site in this module", async () => {
   const own = {};
   for (const [fam, rows] of Object.entries(C)) {
     assert.match(fam, /_CHECKS$/);
@@ -52,7 +53,9 @@ test("R14: the admission share of the checks is this module's own — C-38.1–C
   for (const r of out) {
     const row = own[r.body.reason];
     assert.ok(row, r.body.reason);
-    assert.deepEqual([r.body.code, r.body.check, r.body.translation], [r.body.reason, row.check, row.translation], r.body.reason);
+    /* the sentence is the word of the code, read through setup-words; minutes is the one placeholder any of them holds */
+    assert.deepEqual([r.body.code, r.body.check, r.body.translation],
+                     [r.body.reason, row.check, word(`refusal.${r.body.reason}`, { minutes: r.body.minutes })], r.body.reason);
     got[r.body.reason] = r.body.check;
   }
   assert.deepEqual(got, {
@@ -67,7 +70,10 @@ test("R14: the admission share of the checks is this module's own — C-38.1–C
   assert.deepEqual(Object.keys(own).sort(), Object.keys(got).sort(), "every row is raised, and nothing is raised without one");
   for (const [code, row] of Object.entries(own)) {
     assert.match(row.where, /^src\/admission\/index\.mjs [A-Za-z]+ > is-[a-z-]+$/, code);
-    assert.ok(row.translation.length > 40, code);
+    /* the row holds its check, its site and the word of its code as `translation`, which the families' readers (the envelope's
+       decoration) take as ever; the placeholder DOOR_RATE_LIMITED's word holds is left as written, a row knowing no wait */
+    assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
+    assert.equal(row.translation, word(`refusal.${code}`, code === "DOOR_RATE_LIMITED" ? { minutes: "{minutes}" } : {}), code);
   }
 });
 
@@ -87,30 +93,6 @@ test("R15: no credential, session token or secret appears in any refusal this mo
   assert.equal(r.refusal.body.tokenId, "named");
   assert.equal(JSON.stringify(r).includes(v), false);
   /* the outward text at rest: every row, and the recorded decisions' citations read here */
-  for (const rows of Object.values(C)) for (const row of Object.values(rows)) assert.doesNotMatch(row.translation, PLACES);
+  for (const rows of Object.values(C)) for (const code of Object.keys(rows)) assert.doesNotMatch(word(`refusal.${code}`, { minutes: 1 }), PLACES, code);
   for (const t of Object.values(UNATTENDED_BY_DECISION)) assert.doesNotMatch(String(t), PLACES);
-});
-
-test("R14 (T34-87, DEC-149): the rows that called the group's Civicsmith \"this instance\" or \"this copy\" name it — \"this group's Civicsmith\" to a caller who said nothing of who they are (C-38.1), \"your group's Civicsmith\" to a member or credential holder; no translation says this instance, copy, plane or server", async () => {
-  const row = (fam, code) => C[fam][code].translation;
-  assert.equal(row("ADMISSION_CHECKS", "NOT_AUTHENTICATED"),
-    "Nothing in this request said who you are. Sign in, or send a credential this group's Civicsmith issued, and try again.");
-  assert.match(row("ADMISSION_CHECKS", "MACHINE_CREDENTIAL_REQUIRED"),
-    /has issued\. Your group's Civicsmith holds a recorded decision to that effect and names it beside this message\.$/);
-  assert.match(row("ADMISSION_CHECKS", "SESSION_ROUTE_NOT_RECORDED"),
-    /^No signed-in session reaches this operation, and your group's Civicsmith holds no recorded decision saying/);
-  assert.match(row("NAMESPACE_CHECKS", "NAMESPACE_UNKNOWN"),
-    /^This request named a part of the record that does not exist in your group's Civicsmith, so nothing was read or changed\. It has two: the record itself, and a scratch area/);
-  assert.match(row("AI_SCOPE_CHECKS", "AI_SCOPE_UNKNOWN_OP"),
-    /^The list of things this credential may change names something your group's Civicsmith does not do\. /);
-  /* C-32.17 and C-64.4 worded as ratification R47 */
-  for (const [fam, code] of [["OPERATOR_FENCE_CHECKS", "OPERATOR_TOKEN_CANNOT_GOVERN"], ["GROUP_IDENTITY_FENCE_CHECKS", "GROUP_IDENTITY_NEEDS_SESSION"]])
-    assert.match(row(fam, code), /The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person/);
-  for (const rows of Object.values(C)) for (const [code, r] of Object.entries(rows))
-    assert.doesNotMatch(r.translation, /\b(this|the) (instance|copy|plane|server)\b|\bon this copy\b/i, code);
-  /* each changed row reaches the wire as written (negative control: an unchanged row is untouched) */
-  const { env, S } = world();
-  assert.equal((await gate(env, { op: "index" })).refusal.body.translation, row("ADMISSION_CHECKS", "NOT_AUTHENTICATED"));
-  assert.equal((await gate(env, { op: "purge", token: S.ann })).refusal.body.translation, row("ADMISSION_CHECKS", "MACHINE_CREDENTIAL_REQUIRED"));
-  assert.match(row("ADMISSION_CHECKS", "CLASS_FORBIDDEN"), /^The credential you sent is not one this operation accepts\./);
 });

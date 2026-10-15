@@ -9,7 +9,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
-const COMMIT = "4664e8efd4";
+const COMMIT = "f498560a37"; // R8 (T49): main at PR #37's merge, which carries DEC-236's classes and DEC-240's test band
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
 

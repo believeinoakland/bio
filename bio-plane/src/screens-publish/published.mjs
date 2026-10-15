@@ -1,7 +1,7 @@
 /* A published case (registry screen `published`; R6; DEC-112, DEC-147 (5)), drawn in the public frame with no session
  * (interface-shell R30) at `/app/published/<case>`: the edition's findings, each with its two strengths and whether it
  * meets the project's bar, its timeline, the people it names, its evidence, when it was signed and when published; whose
- * work it is and how to read it; "Check the signature". Nothing here needs an account. Every function is
+ * work it is and how to read it; "Check the signature"; "Check a file you hold" (R22). Nothing here needs an account. Every function is
  * self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
 
@@ -49,10 +49,14 @@ export const PUBLISHED = Object.freeze({
       const body = f.body || {};
       const st = Array.isArray(f.strength) ? f.strength : [];
       const axis = function (a) { const x = st.find(function (y) { return y.axis === a; }); return x && x.grade ? cs.grade(a, String(x.grade)) : ""; };
-      const meets = f.meets_bar === true || f.meetsBar === true ? "yes" : f.meets_bar === false || f.meetsBar === false ? "no" : null;
+      // `standing` is the plane's reading of the finding against the project's bar (`case-grammar` R15): `meets` is true
+      // or false when the bar was asked of it, else "not_asked" or "no_bar", for which nothing is said.
+      const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
+      const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null;
+      const bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
       return '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id || f.id || String(i)) + '"><span class="eyebrow">' + cs.w("screen.published.finding", { n: String(i + 1) }) + "</span>"
         + '<p class="rec">' + cs.esc(body.conclusion || body.question || f.title || "") + "</p><p>" + axis("capture") + " " + axis("connection")
-        + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below") : "") + "</p></article>";
+        + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "") + "</p></article>";
     }).join("") : ""));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
@@ -77,6 +81,11 @@ export const PUBLISHED = Object.freeze({
 
     out.push('<div class="mk-acts">' + cs.act("verify", { data: { sha: String(e.manifest_sha || "") } }) + cs.act("publishedcase")
       + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "") + "</div>" + P.said(view, "verify") + P.said(view, "download"));
+
+    // R22 (N1094; DEC-240 (P1)): "Check a file you hold": the member of the public pastes the file's SHA-256 (the file itself
+    // never reaches the page); `verify` answers whether this case rests on it, as a public op with no credential.
+    out.push(cs.sec("published.check.title", cs.field("pb-sha", "published.check.field", { rec: true, help: "published.check.field.help" })
+      + '<div class="mk-acts">' + cs.act("verify", { label: "published.check.go", data: { check: "1" } }) + "</div>" + P.said(view, "check"), { help: "published.check.help" }));
     return out.join("");
   },
 
@@ -84,10 +93,51 @@ export const PUBLISHED = Object.freeze({
     {
       // R6: "Check the signature": the edition's manifest checked against what the group published, without the group.
       op: "verify", label: "act.verify.label.published",
-      send: function (view, el) { return /^[0-9a-f]{64}$/.test(el.dataset.sha || "") ? { query: { sha256: el.dataset.sha } } : { refuse: "screen.published.verify.none" }; },
-      done: function (view, answer, cs) {
-        const r = view.parts.value(answer) || {};
-        view.parts.say(cs, view, "verify", cs.w(r.published && Array.isArray(r.matches) && r.matches.length ? "screen.published.verify.ok" : "screen.published.verify.no"), !!r.published);
+      // R22: the same act also takes the 64-character fingerprint a reader typed ("Check it"); nothing but that hash is sent.
+      send: function (view, el, cs) {
+        view.ui.checking = "";
+        if (el.dataset.check === "1") {
+          const typed = String(cs.value("pb-sha") || "").trim().toLowerCase();
+          if (!/^[0-9a-f]{64}$/.test(typed)) return { refuse: "published.check.field.help" };
+          view.ui.checking = typed;
+          return { query: { sha256: typed } };
+        }
+        return /^[0-9a-f]{64}$/.test(el.dataset.sha || "") ? { query: { sha256: el.dataset.sha } } : { refuse: "screen.published.verify.none" };
+      },
+      done: async function (view, answer, cs) {
+        const P = view.parts, typed = view.ui.checking || "";
+        view.ui.checking = "";
+        const key = typed ? "check" : "verify";
+        if (P.refused(cs, view, key, answer)) return { stay: true }; // D29
+        const r = P.value(answer) || {};
+        const published = r.published === true && Array.isArray(r.matches) && r.matches.length > 0;
+        if (!typed) { P.say(cs, view, "verify", cs.w(published ? "screen.published.verify.ok" : "screen.published.verify.no"), !!r.published); return { stay: true }; }
+        // R22: held by this edition when the hash is published and `publishedcase`, read by that hash, names a finding of the
+        // edition on this page. A finding's pinned hash is answered by `publishedcase` itself; a file the findings rest on is
+        // not, so the edition's own parts (`files`, each with its finding) name the finding for it.
+        const e = view.data.edition && view.data.edition.state === "ok" ? view.data.edition.value : null;
+        const findings = e && Array.isArray(e.findings) ? e.findings : [];
+        const at = function (id) {
+          for (let i = 0; i < findings.length; i++) if (String(findings[i].bundle_id || findings[i].id || "") === String(id)) return i;
+          return -1;
+        };
+        let i = -1;
+        if (published && e) {
+          let c = null;
+          try { c = P.value(await cs.call("publishedcase", { query: { sha256: typed } })); } catch (x) { c = null; }
+          if (c && c.ok !== false && String(c.caseId) === String(e.caseId) && String(c.edition) === String(e.edition)) {
+            const pinned = (Array.isArray(c.findings) ? c.findings : []).find(function (f) { return String(f.version_sha || "").toLowerCase() === typed; });
+            i = at(pinned ? pinned.bundle_id : c.asked);
+          }
+          if (i < 0 && Array.isArray(e.files)) {
+            const part = e.files.find(function (x) { return x && String(x.sha256 || "").toLowerCase() === typed && x.finding; });
+            if (part) i = at(part.finding);
+          }
+        }
+        const body = i >= 0 ? findings[i].body || {} : {};
+        // A hash the group published that no finding of this edition rests on is "elsewhere"; one it never published is "no".
+        P.say(cs, view, "check", i >= 0 ? cs.w("published.check.yes", { n: String(i + 1), finding: body.conclusion || body.question || findings[i].title || "" })
+          : cs.w(published ? "published.check.elsewhere" : "published.check.no"), i >= 0);
         return { stay: true };
       },
     },

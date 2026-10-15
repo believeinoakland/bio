@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { OPS } from "../../../src/op-declarations/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { boot, ok, refused, pending, nestedTips } from "./harness.mjs";
 import { ALL } from "./screens.fixture.mjs";
 
@@ -36,7 +36,7 @@ test("R14 timings: a pointer resting 0.5 s opens level 1, and level 2 at Explain
     await p.clock.tick(499); assert.equal(tip(p).hidden, true);
     await p.clock.tick(1); assert.equal(tip(p).hidden, false, "level 1 at 0.5 s");
     assert.equal(grade.getAttribute("aria-describedby"), "cs-tip");
-    assert.ok(tip(p).textContent.startsWith("Capture"));
+    assert.ok(tip(p).textContent.startsWith(word("mark.scale.capture.name")));
     p.fire(grade, "pointerout", { relatedTarget: tip(p) });
     await p.clock.tick(2000); assert.equal(tip(p).hidden, false, "stays while on the explanation");
     p.fire(tip(p), "pointerout", { relatedTarget: p.root() });
@@ -47,17 +47,17 @@ test("R14 timings: a pointer resting 0.5 s opens level 1, and level 2 at Explain
     const wait = level === "pause" ? 1500 : 500;
     await p.clock.tick(wait - 1); assert.equal(tip(p).hidden, true, level);
     await p.clock.tick(1); assert.equal(tip(p).hidden, false, level);
-    assert.ok(tip(p).textContent.startsWith("Cite a passage"));
+    assert.ok(tip(p).textContent.startsWith(word("act.cite.label.document")));
     p.fire(p.doc.body, "keydown", { key: "Escape" });
     assert.equal(tip(p).hidden, true, "Escape closes");
     p.root().querySelector(".cs-origin").focus();
     assert.equal(tip(p).hidden, false, "focus opens at once");
-    assert.ok(tip(p).textContent.startsWith("Found by search"));
+    assert.ok(tip(p).textContent.startsWith(word("mark.origin.search.name")));
     act.focus();
-    assert.ok(tip(p).textContent.startsWith("Cite a passage"), "one at a time, at once on focus at either level");
+    assert.ok(tip(p).textContent.startsWith(word("act.cite.label.document")), "one at a time, at once on focus at either level");
     assert.equal(p.root().querySelector(".cs-origin").getAttribute("aria-describedby"), null);
     p.fire(grade, "pointerover", { pointerType: "touch" });
-    assert.ok(tip(p).textContent.startsWith("Capture"), "a tap at once");
+    assert.ok(tip(p).textContent.startsWith(word("mark.scale.capture.name")), "a tap at once");
   }
 });
 
@@ -92,16 +92,16 @@ test("R16 an item the record holds is a link opening its screen where one is bui
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
   const link = p.root().querySelector("a.cs-ref");
   assert.equal(link.getAttribute("href"), "/app/document/c1%231");
-  assert.ok(link.getAttribute("data-tip").includes("A passage of a document"));
-  assert.ok(link.getAttribute("data-tip").includes("Click to open it."));
+  assert.ok(link.getAttribute("data-tip").includes(word("shell.card.passage")));
+  assert.ok(link.getAttribute("data-tip").includes(word("shell.card.open")));
   link.focus();
-  assert.ok(tip(p).textContent.startsWith("A passage of a document"));
+  assert.ok(tip(p).textContent.startsWith(word("shell.card.passage")));
   const h = await boot({ screens: ALL, plane: PLANE });
   const card = h.root().querySelector("span.cs-card");
   assert.equal(card.textContent, "Pothole");
   assert.equal(card.getAttribute("tabindex"), "0");
-  assert.ok(card.getAttribute("data-tip").includes("A project") && card.getAttribute("data-tip").includes("2 questions"));
-  assert.ok(!card.getAttribute("data-tip").includes("Click to open"));
+  assert.ok(card.getAttribute("data-tip").includes(word("shell.card.project")) && card.getAttribute("data-tip").includes("2 questions"));
+  assert.ok(!card.getAttribute("data-tip").includes(word("shell.card.open")));
   await h.click(card);
   assert.ok(tip(h).textContent.includes("2 questions"), "a tap shows the card");
   await p.click(link);
@@ -153,7 +153,7 @@ test("R18 appearance is Follow my device, Light or Dark, kept on the device; pri
   assert.equal(html.getAttribute("data-theme"), null);
   await p.click('[data-shell="menu"]');
   const names = p.root().querySelectorAll('[data-shell="theme"]').map((b) => b.textContent);
-  assert.deepEqual(names, ["Follow my device", "Light", "Dark"]);
+  assert.deepEqual(names, [word("shell.appearance.device"), word("shell.appearance.light"), word("shell.appearance.dark")]);
   await p.click('[data-theme-to="dark"]');
   assert.equal(html.getAttribute("data-theme"), "dark");
   assert.equal(p.local.get("cs-theme"), "dark");

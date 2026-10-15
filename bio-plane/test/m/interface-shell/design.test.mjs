@@ -11,6 +11,7 @@ import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
 import { boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
 
 const styleOf = (html) => /<style>([\s\S]*?)<\/style>/.exec(html)[1];
@@ -25,7 +26,7 @@ test("R52 no style the shell carries gives cursor: help to any element, nor a po
   assert.doesNotMatch(style, /cursor\s*:\s*pointer/, "the shell styles no control's cursor of its own; civicsmith.css does");
   assert.doesNotMatch(style, /\.cs-mark\b/, "the mark's rule is the design's, in shell.css");
   /* control: the cursor still changes over a control */
-  assert.match(style, /\.cs-areas-box\{[^}]*cursor:crosshair/);
+  assert.match(ASSET_FILES["shell.css"].body, /\.mk-imgareas\s*\{[^}]*cursor:\s*crosshair/, "the areas control is the design's, with its crosshair");
   assert.match(ASSET_FILES["civicsmith.css"].body, /\.cs-grip\s*\{[^}]*cursor:\s*col-resize/);
 });
 
@@ -34,12 +35,12 @@ test("R53 the test-instance band spans the working frame: above the frame, outsi
     const p = await boot({ screens: ALL, phone, plane: { bootstrap: ok({ test_instance: true }) } });
     const band = p.doc.getElementById("cs-testband");
     assert.ok(band, "drawn");
-    assert.ok(band.classList.contains("cs-testband"));
+    assert.ok(band.classList.contains("cs-band") && band.getAttribute("data-band") === "test", "R67: the design's band");
     assert.equal(band.parentElement, p.doc.body, "a block of the page, not of a column");
     assert.equal(band.nextElementSibling, p.root(), "directly above the frame");
-    assert.equal(p.root().querySelector(".cs-testband"), null, "never inside the rail or the work");
+    assert.equal(p.root().querySelector(".cs-band[data-band=test]"), null, "never inside the rail or the work");
     assert.equal(p.root().children[0].getAttribute("data-frame"), "working");
-    assert.match(band.textContent, /test Civicsmith/);
+    assert.ok(band.textContent.includes(word("instance.test.band")) && band.textContent.includes(word("instance.test.notice")));
     /* as wide as the frame: the body is one column (R57's page rules), the band and the frame each its full width */
     assert.match(styleOf(p.html), /body\.cs\{[^}]*flex-direction:column/);
   }
@@ -55,13 +56,13 @@ test("R54 the paths of the screens PR #34's registry adds are mock-shell.js' PAT
   const step = (k) => (/^screen\./.test(k) ? DESIGN_WORDS.get(k) : DESIGN_WORDS.get("rail." + k + ".name"));
   assert.deepEqual(PATHS.elsewhere.map(step), PATH.elsewhere);
   assert.deepEqual(PATHS.updates.map(step), PATH.updates);
-  assert.deepEqual(PATH.elsewhere, ["Home", "Where else to go"]);
-  assert.deepEqual(PATH.updates, ["Settings", "Updates"]);
+  assert.deepEqual(PATH.elsewhere, [word("rail.home.name"), word("screen.elsewhere.name")]);
+  assert.deepEqual(PATH.updates, [word("rail.settings.name"), word("screen.updates.name")]);
   assert.equal(SETTINGS_SCREENS.indexOf("updates"), SETTINGS_SCREENS.indexOf("security") + 1, "after Security");
   assert.deepEqual(ADMIN_SCREENS, ["updates"]);
   /* drawn: each path, its place linked and current */
   const own = (id) => ({ id, reads: () => ({}), acts: [], render: (cs) => cs.title() });
-  for (const [id, place, words] of [["elsewhere", "home", ["Home", "Where else to go"]], ["updates", "settings", ["Settings", "Updates"]]]) {
+  for (const [id, place, words] of [["elsewhere", "home", [word("rail.home.name"), word("screen.elsewhere.name")]], ["updates", "settings", [word("rail.settings.name"), word("screen.updates.name")]]]) {
     const p = await boot({ screens: [...ALL, own(id)], path: "/app/" + id, plane: { whoami: ok(ADMIN) } });
     const steps = p.root().querySelector(".cs-crumbs").children.filter((e) => e.localName !== "i");
     assert.deepEqual(steps.map((e) => e.textContent), words, id);
@@ -99,7 +100,7 @@ test("R56 the page links civicsmith.css and then shell.css, both before its own 
   /* a screen's part and act functions are its functions too */
   assert.throws(() => interfacePage([{ ...stand("mk-door"), parts: { x: () => '<b class="zz-unstyled"></b>' } }]), /home.*zz-unstyled/);
   /* control: a design class, a class civicsmith.css draws on its own elements, the shell's own and a hook compose */
-  for (const cls of ["mk-door", "cs-btn", "spacer", "cs-overlay", ...Object.keys(HOOK_CLASSES)]) assert.ok(interfacePage([stand(cls)]).length > 1000, cls);
+  for (const cls of ["mk-door", "cs-btn", "spacer", "mk-scrim", ...Object.keys(HOOK_CLASSES)]) assert.ok(interfacePage([stand(cls)]).length > 1000, cls);
   for (const [c, reader] of Object.entries(HOOK_CLASSES)) assert.ok(typeof reader === "string" && reader.length > 10, c + " names what reads it");
   /* the shell's own program draws only defined classes */
   const defined = stylesheetClasses(ASSET_FILES["civicsmith.css"].body, ASSET_FILES["shell.css"].body, styleOf(html));
@@ -119,19 +120,19 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame.classList.contains("cs-frame") && frame.getAttribute("data-frame") === "working");
   const mast = frame.querySelector(".cs-mast");
-  assert.ok(mast.querySelector(".cs-mark") && mast.querySelector(".grp"));
+  assert.ok(mast.querySelector(".cs-mark") && mast.querySelector(".mk-grp"));
   const search = mast.querySelector(".mk-mastsearch");
-  assert.equal(search.getAttribute("aria-label"), "Search");
+  assert.equal(search.getAttribute("aria-label"), word("shell.search"));
   assert.equal(search.textContent, "", "an icon only");
   assert.ok(search.querySelector("svg"));
   const level = mast.querySelector('[data-shell="level"]');
-  assert.equal(level.getAttribute("aria-label"), "Explain promptly");
+  assert.equal(level.getAttribute("aria-label"), word("level.prompt.name"));
   assert.equal(level.textContent, "");
   assert.equal(mast.querySelector('[data-shell="dock"]').textContent, "");
   assert.ok(mast.querySelector(".mk-avatar"));
   assert.equal(mast.querySelector('[data-kind="todo"]'), null, "no count beside the icons");
   assert.equal(frame.children.at(-1).classList.contains("cs-tabs"), true, "the tabs last inside the frame");
-  assert.equal(frame.querySelector(".cs-band").textContent, "Working · not public · seen by your group's members", "the band's words");
+  assert.equal(frame.querySelector(".cs-band").textContent, word("mark.path.working.name") + " " + word("shell.band.working"), "the band's words");
   /* fixed-height: the page never scrolls, the frame fills the viewport's height and its main column scrolls */
   const style = styleOf(p.html);
   assert.match(style, /body\.cs\{[^}]*height:100dvh[^}]*overflow:hidden/);
@@ -140,9 +141,9 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   /* control: at 1280 px the labels are drawn, and civicsmith.css hides the tabs outside its 760 px query */
   const q = await boot({ screens: ALL, plane: { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } });
   const m2 = q.root().querySelector(".cs-mast");
-  assert.equal(m2.querySelector(".mk-mastsearch").textContent, "Search");
-  assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, "Explain promptly");
-  assert.equal(m2.querySelector('[data-shell="dock"] .mk-hide-phone').textContent, "Assistant");
+  assert.equal(m2.querySelector(".mk-mastsearch").textContent, word("shell.search"));
+  assert.equal(m2.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("level.prompt.name"));
+  assert.equal(m2.querySelector('[data-shell="dock"] .mk-hide-phone').textContent, word("shell.assistant"));
   const css = ASSET_FILES["civicsmith.css"].body;
   assert.ok(/\.cs-tabs\s*\{\s*display:\s*none/.test(css.slice(0, css.indexOf("@media (max-width: 760px)"))));
 });
@@ -153,12 +154,12 @@ test("R58 while testInstance is true the band is part of the page as served, bef
   const band = before.getElementById("cs-testband");
   assert.ok(band, "in the served HTML");
   assert.equal(band.nextElementSibling.id, "cs-root", "above the frame");
-  assert.match(band.textContent, /test Civicsmith/);
+  assert.ok(band.textContent.includes(word("instance.test.band")) && band.textContent.includes(word("instance.test.notice")));
   /* bootstrap answering true: the same band, not a second one; no answer keeps it */
   for (const b of [ok({ test_instance: true }), { silent: true }]) {
     const p = await boot({ screens: ALL, testInstance: true, plane: { bootstrap: b } });
-    assert.equal(p.doc.querySelectorAll(".cs-testband").length, 1);
-    assert.equal(p.doc.querySelector(".cs-testband").nextElementSibling, p.root());
+    assert.equal(p.doc.querySelectorAll(".cs-band[data-band=test]").length, 1);
+    assert.equal(p.doc.querySelector(".cs-band[data-band=test]").nextElementSibling, p.root());
   }
   const q = await boot({ screens: ALL, testInstance: true, plane: { bootstrap: ok({ test_instance: false }) } });
   assert.equal(q.doc.getElementById("cs-testband"), null, "removed by an answer that is not true");
@@ -196,16 +197,16 @@ test("R60 the masthead never draws a count at zero, never the group's slug (\"Yo
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector('[data-kind="todo"]'), null, "zero To-do items draw no count");
   assert.ok(!mast.textContent.includes("0"));
-  assert.equal(mast.querySelector(".grp").textContent, "Your group");
+  assert.equal(mast.querySelector(".mk-grp").textContent, word("shell.group.unnamed"));
   assert.ok(!p.root().innerHTML.includes("river-town"), "no slug anywhere the shell draws");
   assert.equal(p.doc.title, "", "nor the page's title");
-  assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, "Explain promptly", "level.prompt.name alone");
+  assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("level.prompt.name"), "level.prompt.name alone");
   assert.ok(!p.root().innerHTML.includes("Explanations:"), "shell.level retired");
   await p.click('[data-shell="level"]');
-  assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, "On a longer pause");
+  assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("level.pause.name"));
   /* control: a set name is drawn, and a count above zero */
   const q = await boot({ screens: ALL });
-  assert.equal(q.root().querySelector(".cs-mast .grp").textContent, "River Town");
+  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, "River Town");
   assert.equal(q.root().querySelector('.cs-mast [data-kind="todo"]').textContent, "2 to do");
 });
 
@@ -217,7 +218,7 @@ test("R61 absence: a subject read refused with an absence code draws only Nothin
     const p = await boot({ screens: [calc], path: "/app/calculation/c9", plane: { calculation: refused(code, "words of its own") } });
     const { main, kind } = only(p);
     assert.equal(kind, "nothing", code);
-    assert.equal(main.querySelector("h1").textContent, "Nothing is here");
+    assert.equal(main.querySelector("h1").textContent, word("shell.unavailable.nothing.title"));
     assert.equal(btn(p, "testify"), null, "nothing else of the screen");
     assert.ok(!main.textContent.includes(code) && !main.textContent.includes("words of its own"));
     const back = main.querySelector('[data-unavailable] + p a, p > a.cs-btn');
@@ -235,8 +236,8 @@ test("R61 absence: a subject read refused with an absence code draws only Nothin
   assert.equal(bare.byOp("calculation").length, 0);
   /* a refusal's own words alone; a failure without words, "could not be read" with its reference and no code */
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
-  assert.equal(await words(refused("NOT_AN_ADMIN", "Only an administrator can do this.")), "Only an administrator can do this.");
-  assert.equal(await words(refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" })), "This could not be read. Reference: 01234567");
+  assert.equal(await words(refused("NOT_AN_ADMIN", "Only an administrator can do this.")), word("refusal.NOT_AN_ADMIN"));
+  assert.equal(await words(refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" })), word("shell.unread") + " " + word("refusal.reference", { ref: "01234567" }));
   /* control: a 5xx still draws can't be reached */
   const down = await boot({ screens: [calc], path: "/app/calculation/c9", plane: { calculation: httpError(503) } });
   assert.equal(only(down).kind, "unreachable");
@@ -255,7 +256,7 @@ test("R62 cs.field draws the label bold with its help beneath, tied by aria-desc
   assert.equal(label.localName, "label");
   assert.ok(help.classList.contains("help"));
   assert.notEqual(label, help);
-  assert.equal(label.textContent, "Your reason", "the label alone");
+  assert.equal(label.textContent, word("shell.reason"), "the label alone");
   assert.equal(f.doc.getElementById("lang").getAttribute("aria-describedby"), help.id);
   assert.ok(/\.cs-field\s*>\s*label\s*\{[^}]*font-weight:\s*600/.test(ASSET_FILES["civicsmith.css"].body), "bold");
   const roster = { id: "members", reads: () => ({ m: { op: "members" } }), acts: [{ op: "memberset" }],
@@ -264,27 +265,32 @@ test("R62 cs.field draws the label bold with its help beneath, tied by aria-desc
   const M = ok({ items: [{ id: "a", name: "Mai", role: "member", expertise: "" }, { id: "b", name: "Rosa", role: "administrator", expertise: "law" }] });
   const p = await boot({ screens: [roster], path: "/app/members", phone: true, plane: { members: M } });
   const rows = p.root().querySelectorAll("tr.cs-r");
-  assert.equal(rows[0].querySelector(".cs-rowname").textContent, "Maimember", "the name and its first value on one line");
+  assert.equal(rows[0].querySelector(".mk-rowname").textContent, "Maimember", "the name and its first value on one line");
   assert.ok(rows[0].classList.contains("mk-r"));
   assert.equal(rows[0].querySelectorAll("td[data-label]").length, 0, "no label for Mai's empty expertise");
-  assert.deepEqual(rows[1].querySelectorAll("td[data-label]").map((t) => t.getAttribute("data-label")), ["Confirm"], "Rosa's expertise labelled");
+  assert.deepEqual(rows[1].querySelectorAll("td[data-label]").map((t) => t.getAttribute("data-label")), [word("shell.confirm")], "Rosa's expertise labelled");
   assert.equal(p.root().querySelectorAll("th").length, 3, "the column empty in every row is not drawn");
-  assert.ok(!p.root().querySelector("thead").textContent.includes("Sections"));
+  assert.ok(!p.root().querySelector("thead").textContent.includes(word("shell.sections")));
   /* control: on a wide screen every column is drawn */
   const q = await boot({ screens: [roster], path: "/app/members", plane: { members: M } });
   assert.equal(q.root().querySelectorAll("th").length, 4);
   assert.equal(q.root().querySelectorAll("tr.cs-r")[0].querySelectorAll("td").length, 4);
 });
 
-test("R63 the phone's More page lists the places the tabs do not hold as the design draws rail rows: each place's icon and name as its reference, with rail.<k>.holds beneath; control: no <ul> without a class", async () => {
+test("R63 R69 the phone's More page heads with screen.more.sub and lists the places the tabs do not hold as the design's more rows (mk-morerows, mk-morerow): each place's icon and name as its reference, explained by rail.<k>.holds, with rail.<k>.line beneath, the More tab lit; control: no <ul> without a class", async () => {
   const p = await boot({ screens: ALL, path: "/app/more", phone: true });
-  const rows = p.root().querySelectorAll("#cs-main .cs-row");
-  assert.deepEqual(rows.map((r) => r.querySelector("a.cs-ref").textContent), ["Projects", "People", "Settings"]);
-  for (const r of rows) {
+  const main = p.root().querySelector("#cs-main");
+  assert.equal(main.querySelector(".mk-sub").textContent, word("screen.more.sub"), "the page's line");
+  const rows = main.querySelectorAll(".mk-morerows > .mk-morerow");
+  assert.deepEqual(rows.map((r) => r.querySelector("a.cs-ref").textContent), ["projects", "people", "settings"].map((k) => word("rail." + k + ".name")));
+  rows.forEach((r, i) => {
+    const k = ["projects", "people", "settings"][i];
     assert.ok(r.querySelector("svg use").getAttribute("href").includes("#i-"), "its icon");
-    assert.ok(r.querySelector(".meta").textContent.length > 10, "what it holds, beneath");
-  }
-  assert.ok(rows[0].querySelector(".meta").textContent.startsWith("Projects:"));
+    assert.equal(r.querySelector("p").textContent, word("rail." + k + ".line"), "what it holds, beneath");
+    assert.equal(r.querySelector("a.cs-ref").getAttribute("data-tip"), word("rail." + k + ".holds").replace(/'/g, "&#39;"), "explained by what it holds");
+  });
+  assert.equal(p.root().querySelectorAll(".cs-tabs a[aria-current=page]").length, 1, "the More tab lit");
+  assert.equal(p.root().querySelector(".cs-tabs a[aria-current=page]").getAttribute("href"), "/app/more");
   for (const path of ["/app/more", "/app/settings"]) {
     const q = await boot({ screens: ALL, path, phone: true });
     assert.equal(q.root().querySelectorAll("ul").filter((u) => !u.getAttribute("class")).length, 0, path);

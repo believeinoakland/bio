@@ -51,17 +51,14 @@ test("R7: T23's ops — whatchangedpropose `undetermined`, noticepost `attested`
 
 /* ---- R8 ------------------------------------------------------------------------------------------------------------ */
 test("R8: actionholdrelease is `terminal`, a named exception (actionhold stays `reasoned`), HOLD_REFUSED backs both, its "
-   + "consequence statement is the dialog DEC-113 words; (T45, K2887) both are ACTS rows, in MACHINE_REFUSALS by "
+   + "consequence entry is the dialog DEC-113 words, by key (R44); (T45, K2887) both are ACTS rows, in MACHINE_REFUSALS by "
    + "MACHINE_CANNOT_SET_HOLD and no longer in NON_ACTS",
 () => {
   assert.deepEqual([RUNGS.actionholdrelease, RUNGS.actionhold], ["terminal", "reasoned"]);
   assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
   const s = CONSEQUENCE_STATEMENTS.actionholdrelease;
   assert.equal(s.friction, "dialog");
-  assert.match(s.statement, /restarts deletion for the projects shown beside this/);
-  assert.match(s.statement, /purged/);
-  assert.match(s.statement, /assistant transcripts/);
-  assert.match(s.statement, /This cannot be undone\.$/);
+  assert.equal(s.key, "consequence.actionholdrelease");
   for (const op of ["actionholdpreview", "projectholds"]) assert.ok(isRead(op), op);
   for (const op of ["actionholdrelease", "actionhold"]) {
     assert.equal(MACHINE_REFUSALS[op], "MACHINE_CANNOT_SET_HOLD", op);

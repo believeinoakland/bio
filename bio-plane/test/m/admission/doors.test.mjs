@@ -8,9 +8,16 @@ import { A, O, world, gate, urlOf, refused, opCalls, hex64, aik, cred } from "./
 
 const { OPS, SESSION_OPS, NEEDS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } = O;
 const DOORS = ["joinlinkinvite", "websiteinvite"];
-const ADMIN_ACTS = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                    "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
-const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
+/* (N1073) read from the owners' declarations, never hand-listed: the administrator's acts are membership's session-only
+   mutating ops (those carrying a machineClasses list) that every session reaches and that are neither governance nor identity acts, and the group
+   key's ops are credentials' `groupkey*` ops that op-declarations declares for a session alone (R24) */
+const { membershipOps } = await import("../../../src/membership/index.mjs");
+const { credentialsOps } = await import("../../../src/credentials/index.mjs");
+const declared = (ops) => Object.keys(ops({}, new URL("http://do/"), {}, {}));
+const ADMIN_ACTS = declared(membershipOps).filter((op) => OPS[op]?.mutating && Array.isArray(OPS[op].machineClasses)
+  && SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op)
+  && !GOVERNANCE_ACTIONS.includes(op) && !IDENTITY_ACTIONS.includes(op));
+const GROUP_KEY_OPS = declared(credentialsOps).filter((op) => /^groupkey/.test(op) && OPS[op]?.classes !== null);
 const SECRET = "wk_" + hex64(), LINK = "jl_" + hex64(), COVER = "Rosa from the tenants' union", APIKEY = "sk-ant-api03-" + hex64();
 
 test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header or body) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {
@@ -96,6 +103,20 @@ test("R18: the administrator's acts op-declarations R22 declares are admitted as
   }
   /* negative control: a governance act from a bearer still meets R12's fence */
   refused(await gate(env, { op: "adminendorse", token: env.ADMIN_TOKEN }), 403, "OPERATOR_TOKEN_CANNOT_GOVERN", "C-32.17");
+});
+
+test("R18 (T49; op-declarations R71, control-plane R97): founderhandleset is the founder's own session's act — read from its spec, only SESSION_OPS.admin holds it: the founder's session is admitted, a member's session (an enrolled administrator's included) is refused 403 SESSION_ROLE_CANNOT_REACH_OP naming the founder, and admission adds no fence of its own", async () => {
+  const op = "founderhandleset", spec = OPS[op];
+  assert.ok(spec?.mutating, `${op} is declared (op-declarations R71)`);
+  assert.deepEqual([SESSION_OPS.admin.has(op), SESSION_OPS.member.has(op)], [true, false]);
+  assert.equal(A.bearerFence(op, { cls: "admin", viaSession: false }), null, "no fence of admission's");
+  const { env, S } = world();
+  assert.ok((await gate(env, { op, token: S.founder })).caller?.viaSession, "the founder's session reaches it");
+  for (const t of [S.ann, S.bare]) {
+    const body = refused(await gate(env, { op, token: t }), 403, "SESSION_ROLE_CANNOT_REACH_OP", "C-38.7", [t]);
+    assert.deepEqual([body.op, body.reachedBy, body.session], [op, "founder", "member"]);
+    assert.equal(opCalls(env).length, 0);
+  }
 });
 
 test("R19: the group key's ops are admitted only from a session — a bearer, a machine credential and an operator token are refused CLASS_FORBIDDEN naming the class, an ai credential is refused before any store call, none is on AI_GRANT_OPS; a member's session reaches credentials, which answers NOT_AN_ADMIN; groupkeyset's key is read from the body only and appears in no refusal", async () => {

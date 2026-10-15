@@ -82,10 +82,12 @@ test("R21 (T38; N788; DEC-183; K2300): on PR #15's registry the owed act obscure
   assert.ok(Object.hasOwn(OPS, "obscuremarkwithdraw") && familyOf("obscuremarkwithdraw") === "case-carriage");
   assert.equal(Object.values(OP_FAMILIES).filter((f) => Object.hasOwn(f.kinds, "obscuremarkwithdraw")).length, 1);
   assert.ok(!Object.hasOwn(OP_ALIASES, "obscuremarkwithdraw"));
-  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's) */
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), []);
+  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's); (T49,
+     K3321 (B)) but the five PR #36 owes whose ops T49 leaves out (N933, DEC-238, DEC-239), named, with no spec */
+  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), LEFT_OUT);
   /* negative control */
-  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op)), ["nosuchowedact"]);
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op)), ["nosuchowedact"]);
   assert.ok(inNoTable("nosuchowedact"));
 });
 
