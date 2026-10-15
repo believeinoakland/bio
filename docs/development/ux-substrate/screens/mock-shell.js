@@ -251,6 +251,9 @@ function ring(root, act, label) {
   const sel = `[data-act="${CSS.escape(act)}"]`;
   const el = root.querySelector(`button${sel}`) || root.querySelector(sel);
   if (!el) return false;
+  for (let a = el.parentElement; a && a !== root; a = a.parentElement) { // DEC-279: a wizard opens the part, and the choice's block, it points into
+    if (a.tagName === 'DETAILS') a.open = true;
+    if (a.dataset && a.dataset.opens) { const [cls, r] = a.dataset.opens.split('|'); const m = a.closest('main'); if (m) m.classList.add(cls); const ri = r && root.querySelector('#' + r); if (ri) ri.checked = true; } }
   const det = el.closest('tr.mk-detail[hidden]'); if (det) { det.hidden = false; const ob = det.previousElementSibling.querySelector('.mk-open'); if (ob) ob.setAttribute('aria-expanded', 'true'); } // DEC-176: a wizard opens the row it points into
   el.classList.add('cs-target');
   const tag = document.createElement('span');

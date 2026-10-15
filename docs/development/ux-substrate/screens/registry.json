@@ -2144,7 +2144,6 @@
      "op": "projectfork",
      "label": "Start a project from this one",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "promotion"
      ]
@@ -2397,7 +2396,6 @@
      "op": "versionconsider",
      "label": "Weigh a reading",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "basis-versions"
      ]
@@ -2406,7 +2404,6 @@
      "op": "versionreject",
      "label": "Reject a reading",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "basis-versions"
      ]
@@ -2415,7 +2412,6 @@
      "op": "versionrevert",
      "label": "Undo the decision on a reading",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "basis-versions"
      ]
@@ -2424,7 +2420,6 @@
      "op": "versioncurrent",
      "label": "Stand on a reading for a project",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "basis-versions"
      ]
@@ -2433,7 +2428,6 @@
      "op": "readtranslate",
      "label": "Read in my language",
      "status": "declared",
-     "onTranche": "origin/tranche/T49",
      "modules": [
       "plane"
      ]

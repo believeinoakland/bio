@@ -3397,7 +3397,17 @@
   "screen.queue.due.overdue",
   "screen.setup.taken",
   "screen.updates.skip.noreason",
-  "question.empty.conclude"
+  "question.empty.conclude",
+  "screen.setup.choice.head",
+  "screen.setup.choice.own",
+  "screen.setup.choice.both",
+  "screen.setup.choice.none",
+  "screen.setup.setting.head",
+  "screen.setup.setting.groupkey",
+  "screen.setup.setting.own",
+  "screen.setup.leaves.head",
+  "screen.setup.keepaway.head",
+  "screen.setup.people.head"
  ],
  "affordances_names": {
   "act.attest.name": "Co-attest this capture",

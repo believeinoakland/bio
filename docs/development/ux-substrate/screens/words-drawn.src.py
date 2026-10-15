@@ -970,6 +970,99 @@ w276('screen.review-copy.tip.links', "Made when you share with a named reader: o
 w276('screen.review-copy.tip.link', 'opens the draft as it stands, for the reader you named, until {date} or until you stop sharing.', False, "the reader's link, its explanation")
 w276('screen.review-copy.tip.noemail', 'Civicsmith sends no email: you copy the link and send it yourself, by whatever means you trust.', False, "the reader's link, its explanation")
 # --- end DEC-276
+# --- DEC-279 (Bob's review of the live setup screen, K3446, B240): setup rewritten for a newly made administrator. Every part
+# says first what it is for; long explanations move into hover help; the parts are numbered cards that open and close.
+def w279(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-279' + (': ' + note if note else '')))
+SETUP279 = {
+  'screen.setup.name': "Set up your group's Civicsmith",
+  'screen.setup.lede': "Welcome. Civicsmith is installed and waiting for you. First, claim it, so that only you can run it; it takes about two minutes. Then tell it a little about your group. Only the claim is needed today: every other part starts with a safe choice, and you can change any of it later in Settings.",
+  'screen.setup.claim': 'Make it yours',
+  'screen.setup.otp.help': 'Already filled in if you came straight from the installer.',
+  'screen.setup.handle': 'Your handle',
+  'screen.setup.handle.help': "The name you sign in with, shown on your work and on every case you sign. Choose it with care: it can't be changed later.",
+  'screen.setup.own': 'Your password',
+  'screen.setup.own.help': 'At least 12 characters. From now on you sign in with your handle and this password.',
+  'screen.setup.name.field': "Your group's name",
+  'screen.setup.name.help': 'Shown at the top of every page, on invitations and on everything your group publishes. You can change it any time.',
+  'screen.setup.name.now': 'Saved. Your group is now called {name}.',
+  'screen.setup.domain': 'Its address',
+  'screen.setup.domain.help': "Civicsmith gives you one small file to put on your website. Once it's there, anyone reading what your group publishes can check that it really comes from you. Whoever looks after your website can do this in a few minutes.",
+  'screen.setup.places': 'Where your group works',
+  'screen.setup.places.choose': 'Your place',
+  'screen.setup.places.now': 'Your place',
+  'screen.setup.places.help': 'Not listed? Choose “Somewhere else”. Everything still works; you enter deadlines and offices yourself.',
+  'screen.setup.places.chosen': 'You chose {place} when you installed. Change it if you need to.',
+  'screen.setup.place.wanted': 'Where is your group?',
+  'screen.setup.place.wanted.help': "When an update brings its rules, Civicsmith tells you, and you can switch to it here. What you type stays in your group's Civicsmith and is never sent anywhere.",
+  'screen.setup.languages': 'Languages your members read',
+  'screen.setup.offices': 'The officials you deal with',
+  'screen.setup.offices.what': "Civicsmith can fill in the public offices of {place}, and who holds each one today, from the place's own records. Check the list, then confirm it. You can add others at any time.",
+  'screen.setup.offices.none': "Civicsmith doesn't know the offices of {place} yet, so this list starts empty. Add the offices your group deals with, now or whenever they come up. When an update brings their rules, you'll be told, and the offices you added stay.",
+  'screen.setup.office.note': 'Anything your group should know about it (optional)',
+  'screen.setup.assistant': 'The AI assistant',
+  'screen.setup.assistant.what': "Civicsmith can include an AI assistant, built on Anthropic's Claude. Members ask it, in everyday words, to find, read and check things in your group's material. It works only from what your group holds, gives legal information but never legal advice, and never decides, signs or sends anything. Everything in Civicsmith also works without it.",
+  'screen.setup.keepaway': 'No, keep our material away from AI',
+  'screen.setup.keepaway.why': 'Tell your members why',
+  'screen.setup.keepaway.help': 'Required. Every member will see it.',
+  'screen.setup.assistant.own': 'A member who wants the assistant connects their own Claude subscription or API key. It serves only them, at their own cost, and costs your group nothing.',
+  'screen.setup.assistant.paid': "One Anthropic API key, paid for by your group, serves every member who has no account of their own. A member's own account still comes first.",
+  'screen.setup.key': "Your group's Anthropic API key",
+  'screen.setup.key.help': "Made in Anthropic's Console, under an account your group pays for. Civicsmith locks it away and never shows it again.",
+  'screen.setup.limit': 'The most each member may use per day',
+  'screen.setup.limit.help': "Applies only to your group's key, never to a member's own account. More limits are in Settings › Members.",
+  'screen.setup.people.what': "Facts about a person that come from public documents are as visible as those documents are. Your group's own notes about a person stay inside the project where they were written.",
+  'screen.setup.court': 'Privacy and the law',
+  'screen.setup.court.what': "Civicsmith keeps your group's unpublished work private, from the public and from the people you look into. But a court order your group can't defeat can still require anything not public to be shown, such as members' notes, sources and hidden projects. Much work never draws such an order, and journalists, lawyers and auditors may have protections others lack.",
+  'screen.setup.court.legend': 'Should members be told about this?',
+  'screen.setup.court.tell': 'Yes, when they join, and the first time they save something not public',
+  'screen.setup.court.dont': 'No, just keep the explanation one tap away',
+  'screen.setup.admins.what': "Right now you're the only administrator. If you're away or lose access, no one else can run your group's Civicsmith. Invite someone you trust as a second administrator, now or later.",
+  'screen.setup.security': 'Security',
+  'screen.setup.security.scanner': "Civicsmith's own file scanner checks every file your group brings in, and risky ones open in a safe view. You don't need to do anything.",
+  'screen.setup.security.what': 'If your organization already uses its own file scanner, a tool that makes safe copies of files, or a log service, you can connect it here or later in Settings › Security.',
+  'screen.setup.security.add': 'Connect a tool',
+  'screen.setup.finished': "You're ready",
+  'screen.setup.finished.what': 'Anything you left is waiting in Settings. Next, invite your first members.',
+}
+REWRITE.update(SETUP279)
+w279('screen.setup.after', 'Civicsmith is yours now. Each part below starts with a safe choice: open the ones you want to set today, and leave the rest for later.', False, 'under the title once claimed (the lede shows only before)')
+w279('screen.setup.coming', 'Then, when you like, seven more parts. Each starts with a safe choice, and none has to be done today.', False, 'before the claim, above the parts to come')
+w279('screen.setup.state.needed', 'Needed first', False, "a part's state")
+w279('screen.setup.state.done', 'Done', False, "a part's state")
+w279('screen.setup.state.optional', 'Optional', False, "a part's state")
+w279('screen.setup.state.off', 'Kept out', False, "the assistant's part when AI is kept out")
+w279('screen.setup.part.claim.why', 'So that only you can run it. About two minutes.', False, "the claim's one line")
+w279('screen.setup.part.group', 'Your group', False, "the name and website's part")
+w279('screen.setup.part.group.why', 'Its name, logo and website, as members and readers will see them.')
+w279('screen.setup.part.places.why', 'So Civicsmith can count deadlines and fill in public offices for you.')
+w279('screen.setup.part.offices.why', 'The public offices your group watches, and who holds each one.')
+w279('screen.setup.part.assistant.why', 'Whether members may use it, and who pays.')
+w279('screen.setup.part.court.why', 'What stays private, and what a court could still see.')
+w279('screen.setup.part.security.why', 'Civicsmith checks every file. Add your own tools if you have them.')
+w279('screen.setup.part.admins.why', 'So your group never depends on one person.')
+w279('screen.setup.claim.intro', "The installer gave you a one-time password. Whoever holds it could take charge of your group's Civicsmith, so trade it now for a handle and a password of your own. You become your group's first administrator.")
+w279('screen.setup.otp.tip', "It was shown once, on the installer's last page. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to your group's Cloudflare account can set a new one.", False, "explains 'Already filled in'")
+w279('screen.setup.handle.tip', "Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your group can ever take it.", False, "explains 'Choose it with care'")
+w279('screen.setup.codes.intro', "Save your ten recovery codes now. Civicsmith sends no email, so if you ever forget your password, one of these codes is your way back in. You'll see them only this once: keep them with your password, somewhere only you can reach.")
+w279('screen.setup.name.tip', "Only the name people read changes. Your group's short name, chosen when you installed, stays the same in its web address and signatures.", False, "explains 'You can change it any time'")
+w279('screen.setup.site.q', 'Does your group have a website of its own?')
+w279('screen.setup.site.no', 'No, or not yet')
+w279('screen.setup.site.yes', 'Yes')
+w279('screen.setup.site.tip', 'Your public page will then name your website, so a group that wants to stay anonymous should choose “No”. You can add a website later in Settings.', False, "explains 'Yes'")
+w279('screen.setup.places.intro', 'Civicsmith knows the rules of a number of cities, counties and states: the deadlines officials must meet, their holidays, their public offices and their public-records laws, each with its source. Choose your place, and Civicsmith counts deadlines and fills in offices for you.')
+w279('screen.setup.place.other', 'Somewhere else', False, "the place list's last choice")
+w279('screen.setup.ai.q', 'Should your group use the assistant?')
+w279('screen.setup.ai.yes', 'Yes, members may use it')
+w279('screen.setup.ai.yes.help', 'Nothing goes to Anthropic until a member asks a question.')
+w279('screen.setup.ai.no.help', "No assistant may be used in your group: not the group's, and not a member's own. Searching, counting and your group's own templates take its place.")
+w279('screen.setup.ai.off', 'The assistant is kept out, so nothing else about AI is asked here. You can change this later in Settings.')
+w279('screen.setup.pay.q', 'Who pays for it?')
+w279('screen.setup.pay.own', 'Each member, with their own Claude account')
+w279('screen.setup.pay.group', 'Your group, with one API key for members who have none')
+w279('screen.setup.key.tip', 'An administrator creates the key at console.anthropic.com, under an account that belongs to your group and has a payment method. Setting a monthly spending limit there too is wise.', False, "explains 'Made in Anthropic's Console'")
+w279('screen.setup.hosting.help', "The account your group's Civicsmith runs on. Whoever holds it can reach everything, so write down who that is.")
+# --- end DEC-279
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

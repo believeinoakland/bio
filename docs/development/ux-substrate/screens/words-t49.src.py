@@ -676,6 +676,8 @@ w18('queue.capture-completed-unattended.gradenote', 'When it was captured, a mem
 # --- end DEC-274
 
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
+# DEC-279: setup's long assistant panel and its headings, no longer drawn (the parts say it in their own words)
+RETIRED += ['screen.setup.choice.head', 'screen.setup.choice.own', 'screen.setup.choice.both', 'screen.setup.choice.none', 'screen.setup.setting.head', 'screen.setup.setting.groupkey', 'screen.setup.setting.own', 'screen.setup.leaves.head', 'screen.setup.keepaway.head', 'screen.setup.people.head']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
            'queue.temporal-expectation-due.undetermined.summary': 'Its date may have passed: {duty}'}

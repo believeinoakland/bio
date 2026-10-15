@@ -46,67 +46,67 @@
       {
        "screen": "setup",
        "act": "claim",
-       "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.",
+       "what": "Make it yours: with the one-time password (already filled in if you came straight from the installer), choose your handle and your own password, and claim.",
        "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent."
       },
       {
        "screen": "setup",
        "act": "groupnameset",
-       "what": "Name the group as people should read it, and add its logo if it has one.",
+       "what": "Open “Your group”: type its name as people should read it, and add its logo if it has one.",
        "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures."
       },
       {
        "screen": "setup",
        "act": "groupdomainset",
-       "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.",
+       "what": "If your group has a website of its own, choose “Yes” and verify its address: put the small file Civicsmith gives you on the site.",
        "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this."
       },
       {
        "screen": "setup",
        "act": "profilesset",
-       "what": "Choose the places whose rules apply, and the languages your members use.",
+       "what": "Open “Where your group works”: choose your place, and the languages your members read.",
        "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself."
       },
       {
        "screen": "setup",
        "act": "officesseed",
-       "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.",
+       "what": "Open “The officials you deal with”: check the offices and who holds them, then confirm the list. Each is marked with where it came from.",
        "why": "Requests go to offices by role, so correct anything before members rely on it."
       },
       {
        "screen": "setup",
        "act": null,
-       "what": "Read who in the group will see facts about people.",
+       "what": "Open “Privacy and the law” and read who will see facts about people.",
        "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project."
       },
       {
        "screen": "setup",
        "act": "aikeepaway",
-       "what": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.",
+       "what": "Open “The AI assistant”, read what it is, then choose whether your group uses it. Choosing “No” keeps the group's material away from AI and hides the rest.",
        "why": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."
       },
       {
        "screen": "setup",
        "act": "groupkeyset",
-       "what": "If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.",
+       "what": "If your group will pay for the assistant, choose “Your group, with one API key” and paste the key. It is never shown again.",
        "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account. Leave it empty and members bring their own."
       },
       {
        "screen": "setup",
        "act": "courtnoticeset",
-       "what": "Choose whether members are told what a court can reach.",
+       "what": "In “Privacy and the law”, choose whether members are told what a court can reach.",
        "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away."
       },
       {
        "screen": "setup",
        "act": "hostingaccessset",
-       "what": "Record who holds the hosting account.",
+       "what": "In “A second administrator”, record who holds the hosting account.",
        "why": "If you are ever unreachable, this is how the group gets back in."
       },
       {
        "screen": "setup",
        "act": "memberadd",
-       "what": "Invite your first members, and a second administrator now or later.",
+       "what": "Invite a second administrator, now or later; your first members come after.",
        "why": "With one administrator the group depends on one person. A second means it is never stuck."
       },
       {

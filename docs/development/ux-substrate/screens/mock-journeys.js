@@ -124,7 +124,7 @@ const J = [
    { s: 'install', v: 'done', act: null, say: 'The checks pass, run by the installer as part of installing. She saves the one-time password in her password manager and continues to her group\'s address.' },
    { s: 'setup', act: 'claim', say: 'The one-time password is already filled in. She chooses her own password and claims: she is the group\'s first administrator.' },
    { s: 'setup', act: 'recoverycodesissue', say: 'She saves her ten recovery codes, shown once: her way back in if she ever loses her password.' },
-   { s: 'setup', act: 'groupnameset', say: 'She names the group, decides how members reach the assistant, and finishes. “Open your group\'s Civicsmith” takes her in.' },
+   { s: 'setup', act: 'groupnameset', say: 'She opens “Your group”, names it and sees it saved, leaves the other parts at their safe choices, and finishes. “Open your group\'s Civicsmith” takes her in.' },
    { s: 'home', v: 'newgroup', act: null, say: 'Her group\'s home says nothing is here yet, and offers inviting members and saying who the group is.' },
    { s: 'members', act: 'memberadd', say: 'She makes an invitation link for Mai, with the cover the group knows her by, and sends it herself: Civicsmith sends no email.' },
    { s: 'join', v: 'free', act: 'enroll', say: 'Mai opens the link. She chooses her language, a handle (mai-k is free) and a password, and joins. She is signed in.' },
