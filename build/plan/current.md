@@ -269,6 +269,14 @@ No job. N1069 and N1070 (reevaluation) are left out.
 | D31 | m | T49-20 R68; T49-24 R25 | interface-shell, screens-daily |
 | D32 | m | T49-25 R37 | `screens-inquiry/projectai.mjs` |
 
+### Out of layer (Bob's A, K3398; K1548, K3392)
+
+Approved by Bob ("A", 2026-10-15) for T49 only; no precedent. Each job runs concurrently from `tranche/T49`, merges when complete (ownership, its tests, and the L11 screens' tests), then journey-check re-walks to the end, re-capturing.
+- **T49-33 · credentials** (L2) · (K3392 (2)) R78: the founder's own run credential · claude-sonnet-5-5.
+- **T49-34 · reading-pipeline** (L4) · (K3392 (1)) R33: a text-path reading carries its chain · claude-sonnet-5-5.
+- **T49-35 · extraction** (L4) · (K3387) R76: `op=reading` answers `text_units` · claude-sonnet-5-5.
+- **T49-36 · notice-producers** (L11) · (N1133, K3393) R23: its words read by key; its five reds cleared · claude-haiku-5-5.
+
 ## Count
 
 **32 jobs:** L2 4, L3 1, L4 1, L5 1, L6 2, L8 1, L9 1, L10 1, L11 20. L1 and L7 have none. Of these, 6 run on Haiku (T49-7, -10, -11, -15, -19, -30), 4 on the default model (T49-21, -25, -31, -32), and 22 on Sonnet. 16 of the 32 jobs carry at least one walk defect (T49-1, -3, -6, -8, -9, -18, -20 to -26, -28, -29, -32). The other 16 carry the journey's named entries (T49-2 N1072, N1091; T49-5 N1080), K3321's reds (T49-7, -10, -11, -12, -13, -27), the stamp (T49-4), the split (T49-16, -17), a provider of a journey screen (T49-14, -15, -19), the wiring (T49-30), or K3296's site (T49-31).
