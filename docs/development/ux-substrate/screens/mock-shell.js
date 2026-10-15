@@ -23,9 +23,17 @@ function assistantPanel(screen, c) {
   const [q, a] = ASSIST[screen] || ASSIST._;
   return `<aside class="cs-dock" aria-label="The assistant">
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
-   <div class="body"><p class="mk-small muted">Runs on your own Claude account, or on your group's API key where it offers one; only for you. It finds, reads and checks; it never concludes, signs or sends.</p>
-    <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}</div>
+   <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the group's key or a project's account serves you instead, this says so.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
+    <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
+}
+/* DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
+   start says in the panel (each withheld or refused dispatch by its words, never blank), and the serving account's thirty
+   days of bars, drawn only for that account's owner. */
+function dockMore() {
+  return `<p class="mk-small">${I('machine')} A run of yours is working on this.</p>
+   <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your group\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your group\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your group\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
+   <details class="mk-details"><summary>Your account's use, last 30 days</summary>${usageBars(4.10, 61, 4)}</details>`;
 }
 const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another group\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
 function wizardGuide(w) {
@@ -44,9 +52,9 @@ function wizardGuide(w) {
 function mast(c, s) {
   return `<header class="cs-mast"><span class="cs-mark" role="img" aria-label="Civicsmith"><svg viewBox="0 0 60 90"><use href="#i-mark"/></svg></span><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
-    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
+    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
-    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
+    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><details class="mk-usermenu"><summary class="mk-avatar" aria-label="Mai: your menu" data-tip="<b>Your menu</b>: your account, and signing out of this device.">M</summary><div class="mk-menu" role="menu"><span class="mk-small muted">Mai · signed in as mai-k</span><a href="#" role="menuitem" onclick="return false">Your account</a><a href="#" role="menuitem" onclick="return false" data-tip="<b>Sign out</b>: ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.">Sign out</a></div></details></header>`;
 }
 // DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
 // (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
@@ -87,7 +95,7 @@ const REFS = {
   members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The group\'s only administrator: the group depends on her and the hosting account.'],
             ['Dev', null, '<b>Dev</b> · member · owner of The Coliseum lease', 'Signs the group\'s cases for that project.'],
             ['Ana', null, '<b>Ana</b> · member · works on Sewer fund transfers', 'Has a question waiting on a held document.'],
-            ['Teo', null, '<b>Teo</b> · member · reporter at the Bay Courier · declared expertise: journalism', 'Runs the story that cites Edition 2.']],
+            ['Teo', null, '<b>Teo</b> · member · <span class=mk-data>reporter at the Bay Courier</span> · declared expertise: journalism', 'Runs the story that cites Edition 2.']],
   queue: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · computed from the city\'s work orders', 'One of its inputs changed: check whether the count still holds.'],
           ['pothole work orders', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured by Dev from the city\'s open-data portal, capture B', 'The input that changed.']],
   finder: [['Public Works work orders, FY2025 (CSV)', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The city\'s own record of every pothole report: what your search matched most.'],
@@ -113,29 +121,29 @@ const REFS = {
 // Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
 // (usually none: a screen's own REFS add that), screens where it is not attached].
 const GLOBAL_REFS = [
-  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 18 September', null, ['project']],
-  ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · whether the city repairs reported potholes within the seven days its own policy sets · 2 questions', null, ['project']],
-  ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorized · owner: Ana', null, []],
-  ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
+  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · <span class=mk-data>whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote</span> · owner: Dev · Edition 2 published 18 September', null, ['project']],
+  ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · <span class=mk-data>whether the city repairs reported potholes within the seven days its own policy sets</span> · 2 questions', null, ['project']],
+  ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · <span class=mk-data>where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorized</span> · owner: Ana', null, []],
+  ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
   ['Rosa', 'members', '<b>Rosa</b> · member of your group · administrator', null, ['members']],
   ['Dev', 'members', '<b>Dev</b> · member of your group · owns The Coliseum lease and signs its cases', null, ['members']],
   ['Mai', 'members', '<b>Mai</b> · member of your group · works on Pothole repairs · translates Español', null, ['members']],
   ['Ana', 'members', '<b>Ana</b> · member of your group · works on Sewer fund transfers', null, ['members']],
-  ['Teo', 'members', '<b>Teo</b> · member of your group · a reporter at the Bay Courier · declared expertise: journalism', null, ['members']],
+  ['Teo', 'members', '<b>Teo</b> · member of your group · <span class=mk-data>a reporter at the Bay Courier</span> · declared expertise: journalism', null, ['members']],
   ['Asha Rao', 'person', '<b>Asha Rao</b> · a person the record follows · City Clerk since March 2021, from the city\'s roster', null, []],
   ['L. Chen', 'person', '<b>L. Chen</b> · a person the record follows · Director of Public Works since 2022, from the city\'s roster', null, ['person']],
   ['J. Ortega', 'person', '<b>J. Ortega</b> · a person the record follows · Council District 3 since 2023, from Legistar', null, []],
-  ['Office of the City Clerk', null, '<b>Office of the City Clerk</b> · an office · keeps the city\'s records and answers records requests · held today by Asha Rao', null, []],
-  ['City Clerk', null, '<b>City Clerk</b> · an office · keeps the city\'s records and answers records requests · held today by Asha Rao', null, []],
-  ['City Administrator', null, '<b>City Administrator</b> · an office · runs the city\'s departments and answers to the council', null, []],
-  ['Director of Public Works', null, '<b>Director of Public Works</b> · an office · runs the department that repairs streets · held today by L. Chen', null, []],
+  ['Office of the City Clerk', null, '<b>Office of the City Clerk</b> · an office · <span class=mk-data>keeps the city\'s records and answers records requests</span> · held today by Asha Rao', null, []],
+  ['City Clerk', null, '<b>City Clerk</b> · an office · <span class=mk-data>keeps the city\'s records and answers records requests</span> · held today by Asha Rao', null, []],
+  ['City Administrator', null, '<b>City Administrator</b> · an office · <span class=mk-data>runs the city\'s departments and answers to the council</span>', null, []],
+  ['Director of Public Works', null, '<b>Director of Public Works</b> · an office · <span class=mk-data>runs the department that repairs streets</span> · held today by L. Chen', null, []],
   ['Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · a document · the city\'s pothole repair policy · Public Works · capture B · sets seven calendar days', null, ['document']],
   ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved 12 January 2024', null, []],
   ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
   ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 18 September 2026 at the time Dev set when signing', null, ['published']],
   ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
   ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another group · its published cases can be imported and recreated here', null, ['imported']],
-  ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · Teo reports for it; its story cites Edition 2', null, []],
+  ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · <span class=mk-data>Teo reports for it; its story cites Edition 2</span>', null, []],
 ];
 // Attach references by text: every occurrence on the screen, inside running text too, never inside a link, button, field,
 // heading or an element that already explains itself. Per-screen entries win over GLOBAL ones (things named on many screens).
@@ -172,9 +180,9 @@ const railW = () => window.CS_RAILW || 184;
 // DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
 // (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
 // screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
-const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · checks whether the city keeps its own rules and promises · 6 members<span class=more>Click to see who your group is.</span>';
-const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · a tenants\' group near the Oakland Coliseum · checks whether the city keeps its own rules and promises · its published cases are signed by its project owners';
-const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization the record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · <span class=mk-data>tenants near the Coliseum, meeting since 2025</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · 6 members<span class=more>Click to see who your group is.</span>';
+const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · <span class=mk-data>a tenants\' group near the Oakland Coliseum</span> · <span class=mk-data>checks whether the city keeps its own rules and promises</span> · its published cases are signed by its project owners';
+const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organization your group\'s record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
 const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'people', Settings: 'account' };
 function decorate(html, id, c) {
   if (typeof document === 'undefined') return html;
@@ -182,14 +190,14 @@ function decorate(html, id, c) {
   const set = (el, tip, lvl, go) => { if (!el || el.dataset.tip) return; el.dataset.tip = tip; if (lvl) el.dataset.level = lvl; if (go) el.dataset.goto = go; };
   set(R.querySelector('.cs-mast .cs-mark'), '<b>Civicsmith</b>: the plumb bob is Civicsmith\'s mark. Wherever you see it, you are in your group\'s own Civicsmith, and the name beside it says whose.', 2);
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
-  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more. Press / to start typing.', 2);
+  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more.', 2);
   set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);
   set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
   set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
   R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
     if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });
   R.querySelectorAll('.cs-tabs a').forEach(a => { const k = Object.keys(RAIL_HELP).find(k => a.textContent.trim().toLowerCase().startsWith(k === 'find' ? 'find' : k)); if (k) set(a, RAIL_HELP[k], 2); else if (/more/i.test(a.textContent)) set(a, '<b>More</b>: projects, people and settings.', 2); });
-  R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
+  R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b><br>${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
   R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
   R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
@@ -206,6 +214,8 @@ function decorate(html, id, c) {
   return t.innerHTML;
 }
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
+/* DEC-249: the test-copy band (interface-shell R36, R53, R58), its words instance.test.band and instance.test.notice. */
+const testBand = c => c.test ? `<div class="cs-testband" role="note"><b>Test Civicsmith</b><span>This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.</span></div>` : '';
 function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
@@ -217,11 +227,11 @@ function renderFrame(screenId, c) {
   }
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
-  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
+  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published">${testBand(c)}<header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
-  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
+  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}">${testBand(c)}<main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
-  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
+  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${testBand(c)}${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="${railW() < 120 ? 1 : 2}" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;

@@ -1,6 +1,6 @@
 # screens-publish — requirements
 
-**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-75: R18 new, amending R2 and R17, the reader's link's end date, N1038, `review` R34; R19 new, amending R6, the published page's evidence and complete edition, K3190 census P1, DEC-228; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R20 new, the common line); marked not yet met (T48).
+**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-75: R18 new, amending R2 and R17, the reader's link's end date, N1038, `review` R34; R19 new, amending R6, the published page's evidence and complete edition, K3190 census P1, DEC-228; K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R20 new, the common line); marked not yet met (T48). Last changed T49 (T49-27: R22, R23 new; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,600–3,200 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -12,7 +12,7 @@ From a case's draft to its public page, and what comes in from outside: preparin
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key)
 
 **case-editor** (Projects › <project> › Case; the registry's 5 acts)
 - **R1** Reads the project's case drafts (`casedrafts`), the draft's document (`casedocument`), its check (`casecheck`) and the "what changed" drafts (`whatchangeddrafts`). Draws the readiness ladder (Draft, Internally checked, Externally compliant, Distributed, each "not yet evaluated" until checked), the scope, what it leaves out with its acknowledgements, the people it names each with its reason (or that the reason is missing), and what changed since the last edition. Acts: `casedraft` "Prepare the draft"; `whatchangedpropose` "Draft what changed" (only while the assistant is reachable, drawn labelled machine work, `ai.label.untested` where its answer carries `untested`, kept only by the member's own words); `statementack` "Acknowledge what it leaves out", with the acknowledger's own reason (`case-inputs` R1, `STATEMENT_ACK_NO_REASON`); `attribute` "Name with the reason" (its consequence statement in the dialog, `op-grades` R4); `writinghelp` under the scope and "what changed" fields only (`interface-shell` R20; never under a reason).
@@ -65,9 +65,24 @@ From a case's draft to its public page, and what comes in from outside: preparin
 
   Test: the module's real `SCREENS` compose under `interface-shell` R56, and each screen drawn over an empty fixture shows no empty section and no zero. Control: a failed read is drawn `state.failed`.
 
+#### T49 (T49-27)
+
+- **R22** (T49; N1094; DEC-240 (P1); `public-read` R1, R3; amends R6, R19) On `published`, "Check a file you hold" (`published.check.title`, explained by `published.check.help`):
+  - a field "Its SHA-256" (`published.check.field`, help `.field.help`), 64 hexadecimal characters, case-folded;
+  - "Check it" (`published.check.go`), which sends `verify` with it as a public op with no `Authorization` header.
+
+  A match in this edition reads `published.check.yes`, with `{n}` and `{finding}` from `publishedcase` read by that `sha256`. No match reads `published.check.no`. No file is read or sent: the page takes the fingerprint only. R19's "the Verify any hash panel is not drawn" is retired. Test: a pinned evidence hash draws the finding. Control: an unknown hash draws `.no`, and no request carries anything but the hash.
+- **R23** (T49; N1094; DEC-240 (C2); `case-inputs` R1, R5; `review` R15, R28; amends R17) On `review-outside`, "What the case says it does not cover" (`review.statement.title`, explained by `review.statement.help`) draws the group's statement from `reviewcopy`. Beneath it are "Your note" (`review.statement.note`, help `.note.help`, required) and "Acknowledge it" (`review.statement.ack`). That act sends `statementack` with the draft, the note as `reason`, and the grant's secret through the grant door as `reviewcomment` sends it, never in an address. `STATEMENT_ACK_NO_REASON` and the dead answer are drawn by their words, and the note is kept. A copy whose statement is absent draws no section. Test: the acknowledgement sends the note and the secret in the body only. Control: an empty note is refused, and nothing is sent.
+
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R24** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 286 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the public frame (its R30).
 - `setup-words`: `WORD_ROWS` keys.

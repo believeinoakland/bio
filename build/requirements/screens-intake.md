@@ -1,6 +1,6 @@
 # screens-intake — requirements
 
-**Status** · New in T46 (T46-56; K657, K1043): a module built fresh, layer 11 after `screens-settings` (N897 (1), Bob's K2816; DEC-97, DEC-153, DEC-168; N821's upload surface; N714's screen side; N747). Drafted in `build/plan/draft-T46-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-59: R10 new, the writing-help draft filled into its field and a knock's card, N987; R11 new, a held row's grade and thumbnail, N979; R12 new, the knock's source read with no typed ids, N980; R13 new, the set-aside list, N969; R14 new, watching from Add through `monitorset` and "Ask for this later" as a member's own request, N969; R15 new, the `archive` screen, N688's screen part); marked not yet met (T47). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R17 new, the common line; R18 new, the tab bar and act row; R19 new, no empty Set aside, the `heldcaptures` stall traced; R20 new, bare `archive` and `open-file`); marked not yet met (T48).
+**Status** · New in T46 (T46-56; K657, K1043): a module built fresh, layer 11 after `screens-settings` (N897 (1), Bob's K2816; DEC-97, DEC-153, DEC-168; N821's upload surface; N714's screen side; N747). Drafted in `build/plan/draft-T46-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-59: R10 new, the writing-help draft filled into its field and a knock's card, N987; R11 new, a held row's grade and thumbnail, N979; R12 new, the knock's source read with no typed ids, N980; R13 new, the set-aside list, N969; R14 new, watching from Add through `monitorset` and "Ask for this later" as a member's own request, N969; R15 new, the `archive` screen, N688's screen part); marked not yet met (T47). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R17 new, the common line; R18 new, the tab bar and act row; R19 new, no empty Set aside, the `heldcaptures` stall traced; R20 new, bare `archive` and `open-file`); marked not yet met (T48). Last changed T49 (T49-23: R21–R25 new; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,000–2,600 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -12,7 +12,7 @@ Bringing material in and deciding what enters the record: capturing from an addr
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key)
 
 **capture** (Add; three tabs, each its own; the registry's 6 acts, `capture` re-pointed to `captureupload`)
 - **R1** "From an address": `acquire` with the address; `capturerequest` ("Ask for this later"); `monitor` ("Watch this address"). `acquire`'s refusals `BAD_LOCATOR`, `SOURCE_REFUSED`, `FETCH_FAILED`, `EMPTY` and `TOO_LARGE` are drawn each in its own sentence (as `setup-page` R10), any other by `interface-shell` R13. (N747; `control-plane` R58) An acquire whose answer carries `promoted` (an archive the door already promoted) is not promoted again by the screen; one without it is promoted as the screen's flow does.
@@ -58,9 +58,31 @@ Bringing material in and deciding what enters the record: capturing from an addr
 - **R19** (T48; K3250, K3254; walk row 14; amends R4, R13) `held` draws "Set aside" only when it holds something, and every read leaves "still loading" by answering or failing (`interface-shell` R10). The unfiltered `heldcaptures` read that stalled on `biosmoke7` is traced at START to its cause and fixed where the cause lies. Test: an empty set-aside list is not drawn. Control: a read that never answers is drawn failed at the shell's limit.
 - **R20** (T48; K3250, K3254; walk row 20; amends R5, R15) `archive` and `open-file` opened bare or not found draw `interface-shell` R61's "Nothing is here" with the way back, and never "Name an archive to open" or "Name a file to open". Test: each screen bare.
 
+#### T49 (T49-23)
+
+- **R21** (T49; D9 **B**; K3324 (1); `capture` R86; `control-plane` R72; amends R2) An upload's answer (a provenance document, `capture` R86) is promoted as an information bundle at `collected`, exactly as R1 promotes `acquire`'s document (`allocid`, then `promote` with the same composition, R23's files included). Its refusals are drawn on the tab. "It waits in Held captures" is said only once that promotion answers. An answer with `existed: true` promotes nothing new. Test: an upload draws its document in `heldcaptures`. Control: a refused promotion draws its refusal and not "It waits".
+- **R22** (T49; D12 **M**; M-T49-5; amends R1, R2) `capture` opened with a project or a question as its subject (`/app/capture/<tab>/<id>`, from screens-inquiry R38) files what it captures there. The promoted bundle names that project in the field M-T49-5 finds the project's reads count (the question's project, for a question). The result offers "Cite a passage", which opens `find-in` over the document with the question chosen. Test: a capture from a question is held under the question's project (`heldcaptures` with `project`), and the project's Find counts it. Control: a capture with no subject is filed under no project. Its naming of the question as `captured_for` waits on N1117 (K3369); the project filing is met in T49.
+- **R23** (T49; D13 **M**; `ratification` R22's entry requirements; amends R1, R2, R4) Two rules:
+  - **The bundle meets `verified`'s entry.** The bundle R1 and R21 compose carries every file `verified`'s entry requirements name: `data/dataset.json`, at least one file under `snapshots/`, and a well-formed `content_hash` (`ratification/release.mjs`:192–197). So `release` of a well-formed capture is not refused `ENTRY_REQUIREMENTS`.
+  - **Refusals in words.** A held row's refusal (`eligible: false`, or a `release` refusal) is drawn by its words (`interface-shell` R61), never as raw catalogue text (`held.mjs`:21).
+
+  Test: a captured address and an upload are each vouched for. Control: a crucial capture is still refused `CRUCIAL_IN_BATCH`, in words.
+- **R24** (T49; D22 **M**, its first half) The capture's result links the document it made: a reference to `document` at the bundle the promotion answered. Test: the result's link opens the document. Control: a refused promotion draws no link.
+- **R25** (T49; N1100; DEC-245, DEC-246; K3327 (BOB's: `capturerequest`'s `lead_inquiry`); `capture-requests` R48, `capture` R83; amends R1, R2) Two parts:
+  - **"For which question".** Opened from a question, "From an address" draws "For which question" (`capture.forquestion`, help `capture.forquestion.help`), preset to that question and changeable among the questions the member may see (`cs.choice` over record data). Before `acquire`, the screen sends `capturerequest` with the address and `lead_inquiry` the chosen question, so the held row's `captured_for` names it. It is filed as R22 files it, and once vouched for it opens beside that question (DEC-245). The measure in START line 1 governs this clause (finding 7).
+  - **Refusals beside the address.** `refusal.BAD_LOCATOR`, `refusal.SOURCE_REFUSED`, `refusal.FETCH_FAILED`, `refusal.EMPTY` and `refusal.TOO_LARGE` are drawn by key beside the address. An empty required field draws `capture.fieldneeded` with `{field}` its label. R1's own `screen.capture.refusal.*` rows go.
+
+  Test: a capture from a question answers `captured_for` with that question. Each refusal draws its key's words. Controls: no subject, no request; an empty address draws `capture.fieldneeded`.
+
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R26** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 255 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21).
 - `setup-words`: `WORD_ROWS` keys.

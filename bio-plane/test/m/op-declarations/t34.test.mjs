@@ -205,15 +205,25 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
   /* T48 (R65, R66; PR #34, `4664e8efd4`; DEC-226): the registry marks the update screen's three acts owed (`updatelater`
      also on the queue); each is read as served once R66 declares it under its own name, with no alias */
   const OWED_T48 = ["updatelater", "updateskip", "updatestart"];
-  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47, ...OWED_T48].sort());
+  /* T49 (R71; PR #36's registry, K3321 (B)): `owed:founderhandleset K3265` is read as served once R71 declares it under its
+     own name in membership's family, with no alias, in the founder's session set alone */
+  const OWED_T49 = ["founderhandleset"];
+  /* T49 (K3321 (B); PR #36): the registry's owed acts whose ops T49 leaves out (N933, DEC-238, DEC-239): no op is declared
+     for them, so each is owed and has no spec, named here and tolerated by name (negative control: any other owed act with
+     no spec is seen) */
+  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
+  for (const op of LEFT_OUT) assert.ok(owed.includes(op) && !Object.hasOwn(OPS, op), `${op}: owed and declared, or not owed`);
+  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47, ...OWED_T48, ...OWED_T49, ...LEFT_OUT].sort());
+  assert.ok(Object.hasOwn(OP_FAMILIES.membership.kinds, "founderhandleset") && SESSION_OPS.admin.has("founderhandleset")
+            && !SESSION_OPS.member.has("founderhandleset"), "founderhandleset: not membership's founder-only op");
   for (const op of OWED_T48) assert.ok(both(op) && OP_FAMILIES["instance-setup"].kinds[op] === "admin", `${op}: not an instance-setup admin act`);
-  for (const op of [...DECLARED, ...STILL_OWED, ...SERVED_T44, ...OWED_T46, ...OWED_T47, ...OWED_T48]) {
+  for (const op of [...DECLARED, ...STILL_OWED, ...SERVED_T44, ...OWED_T46, ...OWED_T47, ...OWED_T48, ...OWED_T49]) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is owed or re-pointed and declared: no spec`);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), `${op} is aliased`);
   }
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), []);
-  /* negative control: an owed act with no spec would be seen */
-  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op)), ["nosuchowedact"]);
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), [...LEFT_OUT].sort());
+  /* negative control: an owed act with no spec, left out by no name, would be seen */
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op) && !LEFT_OUT.includes(op)), ["nosuchowedact"]);
 });
 
 test("R22, R6: membership's T34 ops — the ten administrator's acts with hostingaccessset's spec (admin, member, probe; machineClasses admin, probe), mutating, by stamped from the query, a present null NEEDS row, in both session sets and in neither bearer fence; the two doors public, mutating, stamped nothing, in no session set and no NEEDS row; courtnotice a read of admin, member, probe stamped nothing; groupdescription a public read with viewer set; checkaddressees no spec (R6)", async () => {

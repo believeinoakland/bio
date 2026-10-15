@@ -3,7 +3,7 @@
  * each act sent with what its owner takes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, fill, last, ok, refusedIn, P, DR, C, plane } from "./fixtures.mjs";
+import { open, main, text, drew, word, ops, press, fill, last, ok, refusedIn, P, DR, C, plane } from "./fixtures.mjs";
 
 const PATH = `/app/case-editor/${P}`;
 
@@ -23,9 +23,9 @@ test("R1 the readiness ladder: Draft, Internally checked, Externally compliant, 
   assert.deepEqual(main(p).querySelectorAll("[data-rung]").map((r) => r.getAttribute("data-rung")), ["draft", "internal", "external", "distributed"]);
   assert.equal(rung(p, "internal").className, "on", "casecheck held: internally checked");
   assert.equal(rung(p, "external").className, "on", "the copy's gates passed");
-  assert.match(rung(p, "distributed").textContent, /not yet evaluated/);
+  assert.ok(rung(p, "distributed").textContent.includes(word("screen.case-editor.rung.notyet")));
   p = await open(PATH, { plane: { casecheck: ok({ state: "none" }), reviewcopy: ok({ ...(plane().reviewcopy.json.result), gates: "undetermined" }) } });
-  for (const k of ["internal", "external", "distributed"]) assert.match(rung(p, k).textContent, /not yet evaluated/, k);
+  for (const k of ["internal", "external", "distributed"]) assert.ok(rung(p, k).textContent.includes(word("screen.case-editor.rung.notyet")), k);
 });
 
 test("R1 the scope, what it leaves out with each acknowledgement and its reason, the people named with their reason or that it is missing, what changed", async () => {
@@ -34,9 +34,9 @@ test("R1 the scope, what it leaves out with each acknowledgement and its reason,
   const scope = p.doc.getElementById("ce-scope");
   assert.equal(scope.value || scope.textContent, "Rent adjustments under the Coliseum lease, 2024 to 2026.");
   assert.match(t, /Whether the rents are fair/);
-  assert.match(t, /Acknowledged by mai.*The fairness question is another project's/);
-  assert.match(t, /OBS-2026-0001 · By name · signed the March 2024 adjustment/);
-  assert.match(t, /OBS-2026-0002.*reason missing/);
+  assert.ok(drew(p, "screen.case-editor.ack.by", { who: "mai" }) && t.includes("The fairness question is another project's."));
+  assert.ok(t.includes(`OBS-2026-0001 · ${word("screen.case-editor.level.name")} · signed the March 2024 adjustment`));
+  assert.ok(t.includes(`OBS-2026-0002`) && drew(p, "screen.case-editor.people.noreason"));
   assert.match(t, /Adds the 2025 rent schedules/);
   assert.ok(main(p).querySelector('[data-origin="machine"]'), "a machine draft of what changed is labelled machine work");
 });
@@ -61,7 +61,7 @@ test("R1 \"Acknowledge what it leaves out\" carries the acknowledger's own reaso
   const q = await open(PATH, { plane: { statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });
   fill(q, { "ce-ackreason": "x" });
   const { slot } = await press(q, "statementack");
-  assert.match(slot().textContent, /Give your own reason/);
+  assert.ok(slot().textContent.includes(word("screen.case-editor.ack.reason.needed")));
 });
 
 test("R1 \"Name with the reason\" sends attribute with the case, the observation, the level and the reason", async () => {
@@ -86,5 +86,5 @@ test("R1 \"Draft what changed\" only while the assistant is reachable, its answe
   p = await open(PATH, { plane: { writinghelp: ok({ ok: true, text: "Rent adjustments, 2024–2026.", untested: true }) } });
   await press(p, "writinghelp", { values: { "ce-scope": "rents 2024 2026" } });
   assert.equal(last(p, "writinghelp").body.field, "scope");
-  assert.match(text(p), /machine work.*Rent adjustments, 2024–2026\..*Not yet tested/);
+  assert.ok(drew(p, "screen.case-editor.help.draft") && text(p).includes("Rent adjustments, 2024–2026.") && drew(p, "ai.label.untested.writinghelp"));
 });

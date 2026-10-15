@@ -48,7 +48,9 @@ test("R28 members: each listed project's participants as R1 lists them to a view
       for (const p of w.r.projectList({ viewer: v }).projects) {
         assert.equal(w.m.inSight(p.id, v), true, `${v} ${p.id}: listed only at FULL`);
         if (w.m.projectOwners(p.id).length) assert.deepEqual(handles(p), r1(p.id), `${v} ${p.id}: R1's roster`);
-        for (const x of p.members) assert.deepEqual(Object.keys(x).sort(), ["handle", "member"], `${v} ${p.id}`);
+        for (const x of p.members)
+          assert.deepEqual(Object.keys(x).sort(), x.member === "admin" ? ["founder", "handle", "member"] : ["handle", "member"],
+            `${v} ${p.id}`);
       }
   };
   check();
@@ -58,11 +60,11 @@ test("R28 members: each listed project's participants as R1 lists them to a view
   w.m.projectRemove({ projectId: "PROJ-A", handle: "cal", by: "ann", viewer: V("ann") });
   w.m.projectInvite({ projectId: "PROJ-A", handle: "zed", by: "ann", viewer: V("ann") });
   assert.deepEqual(handles(of(w.r.projectList({ viewer: V("zed") }), "PROJ-A")), ["ann", "bob", "dee", "old", "zed"]);
-  /* the founder invited to a project: a participant with no roster row, named as R27 names the founder */
+  /* the founder invited to a project: a participant with no roster row, named as R29 names her */
   w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
               VALUES ('PROJ-E','admin','invited',0,'t','t')`);
   assert.deepEqual(of(w.r.projectList({ viewer: V("eve") }), "PROJ-E").members,
-    [{ member: "eve", handle: "eve" }, { member: "admin", handle: "admin" }]);
+    [{ member: "eve", handle: "eve" }, { member: "admin", handle: null, founder: true }]);
   check();
   /* control: a viewer who may not see a project is shown none of its members; nobody else's appear anywhere */
   for (const v of [V("bob"), V("zed"), V("second"), V("dee")])   // the founder, invited above, is in E

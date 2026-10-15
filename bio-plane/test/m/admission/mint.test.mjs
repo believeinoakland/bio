@@ -15,11 +15,17 @@ test("R13: an agent credential's scope is judged at the mint — AI_SCOPE_UNKNOW
   const beyond = Object.keys(OPS).filter((k) => !A.aiReachesAsMember(OPS[k], k));
   for (const op of [...GOVERNANCE_ACTIONS, ...IDENTITY_ACTIONS, "purge", "capturerequestdrain", "memberadd", "export", "claim", "knock"])
     assert.ok(beyond.includes(op), op);
+  const details = {};
   for (const op of beyond) {
     const body = refused(A.aiScopeDeclaration(["index", op]), 403, "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9");
     assert.deepEqual([body.op, body.classes], [op, Array.isArray(OPS[op].classes) ? OPS[op].classes : null]);
-    assert.match(body.detail, Array.isArray(OPS[op].machineClasses) ? /own signed-in session/ : /not reachable by a member/);
+    /* the two reasons are told apart: one detail for the ops a member reaches only from a session, another for the rest */
+    const shape = Array.isArray(OPS[op].machineClasses) ? "session" : "unreachable";
+    (details[shape] ??= new Set()).add(body.detail.split(op.slice(0, 60)).join("<op>"));
   }
+  assert.deepEqual(Object.keys(details).sort(), ["session", "unreachable"]);
+  for (const k of Object.keys(details)) assert.equal(details[k].size, 1, `${k}: one detail for each reason`);
+  assert.notEqual([...details.session][0], [...details.unreachable][0]);
   /* negative control: every op a member reaches is declarable; trimmed, de-duplicated, sorted */
   const reachable = Object.keys(OPS).filter((k) => A.aiReachesAsMember(OPS[k], k));
   assert.deepEqual(A.aiScopeDeclaration(reachable), { writes: [...reachable].sort() });

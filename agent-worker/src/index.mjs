@@ -183,6 +183,8 @@ import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs"
 import {
   SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
+/* R90 (T49; N1137): the record id a leg names, added beside each held document's address. */
+import { withRecordIds } from "./holdings.mjs";
 
 /* R32, R33, R71 (K1502, K1755, K2373) — WHICH ACCOUNT SERVES THE ACT: the one that arrived, judged at its own level
  * (`project`, `member` or `group`), in its own file and pure. The account arrives PER CALL beside the `ai` credential and is retained exactly
@@ -1041,7 +1043,9 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         if (chain.refused) { rereadRefused.push(chain.refused); resolved.push({ citation: address, refused: chain.refused }); continue; }
         resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
       }
-      const holdings = documentHoldings(resolved);
+      /* R90: beside its `address_norm`, each held document carries the record id and capture a leg can be cited
+         by, read off the same chains; compose's facts pass `holdings` on whole. A refused read has none (R21). */
+      const holdings = withRecordIds(documentHoldings(resolved), resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
 
       out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of `

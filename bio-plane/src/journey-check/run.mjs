@@ -8,9 +8,11 @@ import http from "node:http";
 import https from "node:https";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
-import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs } from "./journeys.mjs";
+import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
+  signInBy, sweepAsFounder, walkSite } from "./journeys.mjs";
+import { walkAdministrator, walkMemberJourney, journey29Live } from "./investigation.mjs";
 import { sweepScreens } from "./screens.mjs";
-import { designMock, pageLimits, pair, WIDTHS, viewportOf } from "./design.mjs";
+import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs } from "./design.mjs";
 
 export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -61,34 +63,69 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
   return { context, page };
 }
 
-/* The local arm (R1 (a)), with no account. `world` starts the world, `launch` the browser. Whatever stops the walk (a
-   step, the guard's refusal, a world or a browser that cannot start), the browser and the world, with their servers and
-   Miniflare instances, are closed before it answers. */
-export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser } = {}) {
-  const { localWorld, INSTALLER_ORIGIN } = await import("./local.mjs");
-  const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com"] });
+/* The local arm (R1 (a), R9–R11), with no account. `world` starts the world, `launch` the browser; `model: false` binds
+   the runner with no fake model (R11's control); `parts` names which walks follow journey 28 and R9 (all by default:
+   `journey 3`, `R10`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
+   3, then the journey to a first conclusion as administrator (R9) and as the member journey 28 joined (R10), then the
+   sweep. Whatever stops the walk (a step, the guard's refusal, a world or a browser that cannot start), the browser and
+   the world, with their servers and Miniflare instances, are closed before it answers. */
+export const PARTS = Object.freeze(["journey 3", "R10", "sweep", "R13"]);
+export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, parts = PARTS } = {}) {
+  const { localWorld, INSTALLER_ORIGIN, SITE_ORIGIN } = await import("./local.mjs");
+  const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com", new URL(SITE_ORIGIN).host] });
   const who = credentials();
   for (const p of [who.founder.password, who.member.password, who.newcomer.password]) walk.keepSecret(p);
   let world = null, b = null;
   try {
-    world = await (makeWorld || localWorld)();
+    world = await (makeWorld || localWorld)({ model });
     b = await launch();
     const route = (ctx) => world.route(ctx, (u) => walk.foreign(u));
     walk.journey = "journey 28";
     const founder = await device(walk, b, route);
+    await walkSite(walk, founder.page, SITE_ORIGIN, INSTALLER_ORIGIN);
     const { copy } = await walkInstaller(walk, founder.page, INSTALLER_ORIGIN);
     walk.copyHost = new URL(copy).host;
     /* R3: before the hand-over writes anything, the copy must be a test instance. */
     await requireTestInstance(copy, (req) => world.fetchCopy(req));
-    const { invite } = await walkFounder(walk, founder.page, { base: copy, founder: who.founder });
+    /* R7 (K3380): every screen swept as the founder while she has no handle, DEC-230's words excepted; where the claim
+       took her handle there is no such founder here, which the report notes */
+    const handleless = parts.includes("sweep") ? async (p) => {
+      await sweepAsFounder(walk, p, copy, { handle: null });
+      walk.journey = "journey 28";
+    } : null;
+    const { invite, byHandle } = await walkFounder(walk, founder.page, { base: copy, founder: who.founder, whileHandleless: handleless });
+    if (byHandle && parts.includes("sweep")) walk.notes.push("R7 with no handle: not walkable here (the claim took a handle)");
     const mai = await device(walk, b, route);
     const phone = await device(walk, b, route, { width: 390, height: 844 });
     await walkMember(walk, mai.page, { base: copy, invite, member: who.member, phone: phone.page });
-    const teo = await device(walk, b, route);
-    walk.journey = "journey 3";
-    const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
-    await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
-    await sweep(walk, founder.page, copy);
+    if (parts.includes("journey 3")) {
+      const teo = await device(walk, b, route);
+      walk.journey = "journey 3";
+      const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
+      await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
+    }
+    /* each journey that stops has said why; the next is still walked, and the sweep after them */
+    const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
+    const made = {};
+    await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder, made }).catch(going);
+    if (parts.includes("R10")) {
+      walk.journey = "R10 as member";
+      if (!made.project) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
+      else await (async () => {
+        await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
+        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: made.project });
+      })().catch(going);
+    }
+    /* the sweep with her handle held (a founder who could not choose one was swept handleless above) */
+    if (parts.includes("sweep") && who.founder.handle) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
+    /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
+    if (parts.includes("R13")) {
+      walk.journey = "R13 design journey 29";
+      const mock = await designMock(b, { dir: join(out, "design") });
+      try {
+        for (const f of await journeyPairs(walk, b, mock, { out, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
+      } finally { await mock.close(); }
+    }
   } catch (e) {
     failed(walk, e);
   } finally {
@@ -99,14 +136,61 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
   return { walk, report: walk.report(), ok: walk.failures.length === 0 };
 }
 
-/* The live arm (R1 (b), R5, R6): `base` a named test instance; the credentials are read from the environment and never
+/* R12: the sign-in's code, typed by the person signing in at the terminal the walk runs in, as she reads it on
+   Anthropic's page at `address`; what she types is not echoed, and the walk keeps it secret. With no terminal, or nothing
+   typed, there is no code, and step 4 fails by name. */
+export async function askCode(role, address) {
+  if (!process.stdin.isTTY) return null;
+  const { createInterface } = await import("node:readline");
+  const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: true });
+  process.stderr.write(`\nAs the ${role}: open ${address.replace(/\?.*$/, "")} (the link the connect screen shows), sign in to Claude, `
+    + "approve, then type the code Anthropic's page shows (it is not echoed) and press Enter:\n");
+  rl._writeToOutput = () => {};
+  const code = await new Promise((done) => rl.question("", done));
+  rl.close();
+  process.stderr.write("\n");
+  return code.trim() || null;
+}
+
+/* R12: the administrator's journey (R9) and the member's (R10), each signed in by her own credentials on her own device,
+   connecting her own subscription through the real sign-in. A journey that stops has said why. */
+async function investigateLive(walk, b, base, { founder, member, codeOf }) {
+  const devices = [];
+  const device = async () => {
+    const ctx = await b.newContext({ viewport: viewportOf(1280) });
+    devices.push(ctx);
+    await ctx.route("**/*", (r) => { const u = new URL(r.request().url());
+      return u.host === walk.copyHost || u.protocol === "https:" && /(^|\.)(claude\.ai|claude\.com|anthropic\.com)$/.test(u.hostname) ? r.continue()
+        : (walk.foreign(r.request().url()), r.abort("blockedbyclient")); });
+    return walk.watch(await ctx.newPage());
+  };
+  const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
+  try {
+    const admin = await device();
+    walk.journey = "R9 as administrator";
+    const made = {};
+    await (async () => {
+      await signInBy(walk, admin, base, founder, "1 · sign in by her handle");
+      return walkAdministrator(walk, admin, { base, founder, made, codeOf: (address) => codeOf("administrator", address) });
+    })().catch(going);
+    walk.journey = "R10 as member";
+    if (!made.project) { walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made"); return; }
+    const mine = await device();
+    await (async () => {
+      await signInBy(walk, mine, base, member, "she signs in by her handle");
+      await walkMemberJourney(walk, mine, { base, member, inviter: admin, project: made.project, codeOf: (address) => codeOf("member", address) });
+    })().catch(going);
+  } finally { for (const c of devices) await c.close().catch(() => {}); }
+}
+
+/* The live arm (R1 (b), R5, R6, R12): `base` a named test instance; the credentials are read from the environment and never
    printed: JOURNEY_ADMIN_HANDLE, JOURNEY_ADMIN_PASSWORD, JOURNEY_MEMBER_HANDLE, JOURNEY_MEMBER_PASSWORD. It reaches the
    instance directly (R5). Each role signs in, `whoami` must answer it as that role, and it walks every working screen;
    on each, at 1280 and 390 px, the page's limits are measured and the page is paired with the design mock's drawing
    (R6). The administrator must be drawn every act the member is, and somewhere an act the member is not. `screens`
    narrows the sweep; `commit` names the mock's commit (the interface's ASSETS_COMMIT when not given). */
 export async function runLive({ base, env = process.env, out = join(OUT, "live"), fetchOf = directFetch, launch = browser,
-  screens = null, commit = undefined } = {}) {
+  screens = null, commit = undefined, investigate = true, codeOf = askCode } = {}) {
   const walk = new Walk({ out, arm: "live" });
   const need = ["JOURNEY_ADMIN_HANDLE", "JOURNEY_ADMIN_PASSWORD", "JOURNEY_MEMBER_HANDLE", "JOURNEY_MEMBER_PASSWORD"];
   for (const k of need) if (env[k]) walk.keepSecret(env[k]);
@@ -164,6 +248,10 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
       };
       await sweepAs("administrator", env.JOURNEY_ADMIN_HANDLE, env.JOURNEY_ADMIN_PASSWORD, true);
       await sweepAs("member", env.JOURNEY_MEMBER_HANDLE, env.JOURNEY_MEMBER_PASSWORD, false);
+      /* R12: R9 and R10 on the instance, each through its real subscription sign-in, whose code the person types */
+      if (investigate) await investigateLive(walk, b, base, {
+        founder: { handle: env.JOURNEY_ADMIN_HANDLE, password: env.JOURNEY_ADMIN_PASSWORD },
+        member: { handle: env.JOURNEY_MEMBER_HANDLE, password: env.JOURNEY_MEMBER_PASSWORD }, codeOf });
       /* R5: the acts only an administrator is drawn */
       walk.journey = "roles";
       if (acts.administrator.size && acts.member.size) {

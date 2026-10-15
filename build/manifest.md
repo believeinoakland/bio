@@ -44,10 +44,12 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 | `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` | `agent-worker` | `agent-worker/`: `npm run build` | `agent-worker`, the plane's `bio-plane/src/tokens.mjs` (runtime-limits) and `run-rules` (with observation-log's `checks.mjs` and `vocabulary.mjs` through it, and record-grammar's `ids.mjs` through those since T33-30; K1598); no catalogue, skills or ai-runs input since T18 layer 6 (R48 reads the rendered pack from `op=agentpack` since T36-24, K2135; K683) |
 | `newgroup/dist/newgroup.bundled.mjs` | `installer` | `newgroup/`: `npm run build` | `installer`, and `signatures` (`sshsig.mjs`) and `record-grammar` (`document.mjs`; found at T24 L1, K1182) |
 | `bio-plane/src/case-checker/program.mjs` (the standalone checker, with its own SHA-256) | `case-checker` | repository root: `node bio-plane/src/case-checker/build-program.mjs` | `case-checker` and the modules it uses (record-grammar, signatures, content, strength, case-grammar), through `bundler` (K1315; verified byte-identical by case-checker's own test) |
+| `bio-plane/src/setup-words/rows.mjs` (the interface's word list, K3366) | `setup-words` | repository root: `node bio-plane/src/setup-words/build.mjs` (check: `--check`) | the design stream's `docs/development/ux-substrate/screens/words.json` (R10) |
+| `site/src/pages.mjs` (civicsmith.org's pages, K3372) | `site` | repository root: `node site/build.mjs` (check: `--check`) | `site`'s design drawing `SCR.site` at `SITE_COMMIT`, `words.json` through setup-words, `jurisdictions/profiles/` |
 | `court-citations/court-data.mjs` (reporters-db and courts-db, translated) | `court-citations` | repository root: `node court-citations/build.mjs` (check: `--check`) | the vendored, pinned packages under `court-citations/vendor/` (K1518) |
 | `sheet-worker/dist/sheet-worker.bundled.mjs`, `.bundle.json` | `sheet-worker` | `sheet-worker/`: `npm run build` (the vendored engine `assets/sheet-engine.wasm` is rebuilt only by `npm run build:engine`, which needs rustup's `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.126; K1531) | `sheet-worker`, and `runtime-limits`' `cpu.mjs` |
 
-**Order (K1540):** regenerate `program.mjs` and `court-data.mjs` first, then the bundles with `node bio-plane/scripts/bundles.mjs` from the repository root (it rebuilds every stale bundle; the plane bundles `program.mjs`), then `newgroup`.
+**Order (K1540):** regenerate `program.mjs`, `court-data.mjs` and setup-words' `rows.mjs` first, then the bundles with `node bio-plane/scripts/bundles.mjs` from the repository root (it rebuilds every stale bundle; the plane bundles `program.mjs`), then `newgroup`.
 
 **Verify, after regenerating:** `node --test bio-plane/test/system/fleetbundles.test.mjs` from the repository root (`verifyStatic` and `verifyFresh` over every member: input hashes, byte identity, externals). Also `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs` for the installer's bundle. Each must print `0 fail` with no `SKIP`; a `SKIP` means a member's `node_modules` is missing (`npm ci` there first). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
 
@@ -67,6 +69,10 @@ Bob's design of the investigation engine and the project as an investigation (K1
 ## Parallel work: the actions design lane (Bob, 2026-10-09; K2433)
 
 Bob's research and design of actions (requirements, current capabilities, capabilities needed, design and use cases; N817, his D43) runs in its own session, **ACTIONS-DESIGN** (#2: `session_01RukQneSYmxg4FvfJ9aXccd`, primary account, started by BOB #149 on Bob's direction, K2521; #1 `session_01VDxYUZBV7s4gVx8xWwmCVY` on the secondary account), on branch `design/actions`, writing only `docs/development/actions-design/`. It works as the investigation lane does: Bob's decisions are its own D-numbers ("Actions D<n>"), never K or DEC; its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and every backstop check and folded into requirements with a K; its screens are owed to the UX design stream. A successor is started by the BOB of the day when the lane asks.
+
+## Parallel work: the site launch lane (Bob, 2026-10-15; K3385)
+
+Bob's launch of civicsmith.org and the stewards' contact address (N923) runs in its own session, **SITE-LAUNCH** (#1: `session_01EJn5bA3WQ4g4R1XeaKrTca`, started by BOB #181), on branch `ops/site-launch`, writing only `docs/development/site-launch/`. It deploys and walks the `site` module, routes it to civicsmith.org and sets up Email Routing for the stewards' address with Bob; each deploy act is Bob's approval in its session (K1715). Its decisions with Bob are "Site D<n>"; its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and every backstop check and folded into a module job with a K. A successor is started by the BOB of the day when the lane asks.
 
 ## Starting a session
 

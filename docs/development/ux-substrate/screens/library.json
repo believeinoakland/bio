@@ -259,7 +259,7 @@
        "screen": "ceremony",
        "act": "caseratify",
        "what": "Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.",
-       "why": "Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one."
+       "why": "Only you can sign, and Civicsmith never sees your key. Publishing is permanent; corrections come as a new edition, never by changing this one."
       },
       {
        "screen": "ceremony",

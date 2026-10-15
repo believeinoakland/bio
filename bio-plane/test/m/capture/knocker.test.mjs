@@ -234,15 +234,17 @@ test("R37 (K2607, K2609; T43, N849, N851): capture's own rows are C-118.1, .5, .
   /* the raisers' answers carry the rows: R63's absence */
   const absent = evidenceAbsent(H("a1"), "bio").body;
   assert.deepEqual([absent.code, absent.check, absent.translation], ["EVIDENCE_NOT_HELD", "C-118.1", want.EVIDENCE_NOT_HELD[1]]);
-  /* the moved rows: no code and no number of them anywhere in capture's checks file, and no KNOCK_CHECKS family */
-  const MOVED_CODES = ["RATE_IP", "RATE_GLOBAL", "KNOCK_ENVELOPE_TOO_LARGE", "KNOCK_PAYLOAD_TOO_LARGE", "KNOCK_EMPTY",
-                       "NO_SUCH_KNOCK", "KNOCKER_SECRET_WEAK", "KNOCK_DISCARDED", "RESOLVE_NO_REASON"];
-  const MOVED_CHECKS = ["C-85.1", "C-85.2", "C-85.3", "C-85.4", "C-85.5", "C-118.2", "C-118.3", "C-118.4", "C-118.7"];
+  /* the moved rows (N1073, K3268): no hand-list of `doorbell`'s rows is kept here. `doorbell` is later in the order and
+     `capture` does not use it, so its table cannot be read from this module's tests; what the move means is judged from
+     this side: the file exports capture's own table alone (no KNOCK_CHECKS family), every row is raised at a site in
+     capture, and none belongs to the knock's families (C-85, or a C-118 number outside the six capture mints). */
   assert.deepEqual(Object.keys(CHECKS).sort(), ["CAPTURE_CHECKS"], "the file exports capture's own table alone: no KNOCK_CHECKS");
   const rows = Object.values(CHECKS).flatMap((family) => Object.entries(family));
-  for (const code of MOVED_CODES) assert.ok(!rows.some(([k]) => k === code), `${code} is not defined here`);
-  for (const check of MOVED_CHECKS) assert.ok(!rows.some(([, r]) => r.check === check), `${check} is not defined here`);
-  assert.ok(!rows.some(([, r]) => /src\/doorbell\//.test(r.where)), "no row here names a doorbell raiser");
+  assert.deepEqual(rows.map(([k]) => k).sort(), Object.keys(want).sort(), "no code of another module's table is defined here");
+  for (const [code, r] of rows) {
+    assert.match(r.where, /^src\/capture\//, `${code}: raised at a site in capture`);
+    assert.ok(!/^C-85\./.test(r.check), `${code}: the knock's family is not defined here`);
+  }
   /* C-118's numbers here: capture's own, so the next free number capture mints is C-118.11 */
   const nums = Object.values(CAPTURE_CHECKS).map((r) => Number(/^C-118\.(\d+)$/.exec(r.check)[1])).sort((a, b) => a - b);
   assert.deepEqual(nums, [1, 5, 6, 8, 9, 10]);

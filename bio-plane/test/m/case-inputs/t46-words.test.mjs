@@ -40,7 +40,7 @@ const T46_BAD_CARRIED_OUTCOME = "An outcome carried into a case is its kind (a s
 const C82 = { count: 7, sha256: "3409003afeb4ce8483647ae08a128ed74bc9f415ea88bbda79091326388d1fa9" };
 const SENTENCES = ["signing.openrequest.line", "signing.openrequest.noreply", "signing.openrequest.notlaidout",
                    "signing.openrequest.nowindow.line", "signing.openrequest.nowindow.noreply",
-                   "signing.openrequest.nowindow.notlaidout", "signing.openrequest.unread"];
+                   "signing.openrequest.nowindow.notlaidout", "signing.openrequest.unread", "signing.openrequest.noquote"];
 
 test("R10, R12: C-136.3, .4, .6, .7 and .8 read words.json's refusal.<CODE> by key from CASE_INPUTS_WORDS, never a copy; every word the table holds is words.json's, verbatim; codes, numbers and wheres as R12 moves them", () => {
   assert.ok(Object.isFrozen(CASE_INPUTS_WORDS));

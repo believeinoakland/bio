@@ -28,7 +28,9 @@ export function sourceItems() {
       const s = it.subject || {};
       const id = s.id !== undefined && s.id !== null ? String(s.id) : "";
       const title = typeof it.title === "string" && it.title.trim() ? it.title : null;
-      const name = title ? cs.ref("document", id, title, []) : cs.ref("document", id, cs.w("queue.source.untitled"), []);
+      // The untitled word names when the document was captured: the item's own date, else when the notice arose.
+      const since = it.captured || s.captured || (it.age && it.age.since) || "";
+      const name = title ? cs.ref("document", id, title, []) : cs.ref("document", id, cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
       const acts = actsOf ? actsOf(it) : "";
       return "<li>" + name + (acts ? ' <span class="mk-acts">' + acts + "</span>" : "") + "</li>";
     }).join("");

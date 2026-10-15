@@ -4,7 +4,7 @@
    and count. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, FOUNDER_HANDLE } from "./fixture.mjs";
 import { SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_DAYS, SECURITY_NOTE, SECURITY_THRESHOLD, Credentials }
   from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
@@ -66,7 +66,7 @@ test("R44 counts older than 90 days are dropped", async () => {
 
 test("R44 DEC-166: a refused sign-in is counted at once without a place; its country is added only once an hour has passed with no success under the role, and while it waits nothing names the role but a keyed digest", async () => {
   const w = await world().group("ann", "bob");
-  await at(NOW - 2 * 60e3, () => w.c.login({ role: "member:ann", password: "wrong-passphrase", source: "s1", country: "de" }));
+  await at(NOW - 2 * 60e3, () => w.c.login({ handle: "ann", password: "wrong-passphrase", source: "s1", country: "de" }));
   assert.deepEqual(tally(w), [{ kind: "signin", hour: HOUR, country: "", count: 1 }], "held without a place");
   const waiting = w.rows(`SELECT * FROM security_pending`);
   assert.equal(waiting.length, 1);
@@ -84,13 +84,13 @@ test("R44 DEC-166: a refused sign-in is counted at once without a place; its cou
   assert.deepEqual([m2.countries, m2.unplaced], [[{ country: "DE", count: 1 }], 0]);
   assert.equal(w.snapshot(), before, "the map writes nothing");
   /* a success under another role in between changed nothing; the next write places it and drops the digest */
-  await at(NOW + 10 * 60e3, () => w.c.login({ role: "member:bob", password: PASSWORD("bob"), source: "s2" }));
+  await at(NOW + 10 * 60e3, () => w.c.login({ handle: "bob", password: PASSWORD("bob"), source: "s2" }));
   assert.equal(w.rows(`SELECT * FROM security_pending`).length, 1);
   await at(NOW + 61 * 60e3, () => w.c.securityCount({ kind: "handover", country: null }));
   assert.deepEqual(w.rows(`SELECT * FROM security_pending`), [], "the digest dropped when its hour ended");
   assert.deepEqual(tally(w).filter((r) => r.kind === "signin"), [{ kind: "signin", hour: HOUR, country: "DE", count: 1 }]);
   /* a session read drops a waiting place that is due, as any write does */
-  await at(NOW, () => w.c.login({ role: "member:bob", password: "wrong-passphrase", source: "s3", country: "FR" }));
+  await at(NOW, () => w.c.login({ handle: "bob", password: "wrong-passphrase", source: "s3", country: "FR" }));
   await at(NOW + 2 * H, () => w.c.session("no-such-token"));
   assert.deepEqual(w.rows(`SELECT * FROM security_pending`), []);
 });
@@ -98,10 +98,10 @@ test("R44 DEC-166: a refused sign-in is counted at once without a place; its cou
 test("R44 DEC-166: a success under the same role within the hour means the counts are never placed; a member's own refused attempts before their sign-in are never given a country", async () => {
   const w = await world().group("ann");
   await at(NOW - 20 * 60e3, async () => {
-    await w.c.login({ role: "member:ann", password: "wrong-passphrase", source: "home", country: "FR" });
-    await w.c.login({ role: "member:ann", password: "wrong-passphrase-2", source: "home", country: "FR" });
+    await w.c.login({ handle: "ann", password: "wrong-passphrase", source: "home", country: "FR" });
+    await w.c.login({ handle: "ann", password: "wrong-passphrase-2", source: "home", country: "FR" });
   });
-  await at(NOW + 30 * 60e3, () => w.c.login({ role: "member:ann", password: PASSWORD("ann"), source: "home", country: "FR" }));
+  await at(NOW + 30 * 60e3, () => w.c.login({ handle: "ann", password: PASSWORD("ann"), source: "home", country: "FR" }));
   assert.deepEqual(w.rows(`SELECT * FROM security_pending`), []);
   await at(NOW + 5 * H, () => w.c.securityCount({ kind: "credential", country: null }));
   const m = await at(NOW + 5 * H, () => map(w, NOW - 3 * H, NOW + 5 * H));
@@ -115,17 +115,17 @@ test("R44 DEC-166: a success under the same role within the hour means the count
 test("R44 R38 `through`: a sign-in or recovery that succeeds under a role paused in the hour before it, never placed; none without a pause, or after a pause over an hour old", async () => {
   const w = await world().group("ann", "bob");
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
-  const pause = async (role) => {
-    for (let i = 0; i < 10; i++) await w.c.login({ role, password: "wrong-passphrase", source: `${role}-${i}`, country: "RU" });
-    assert.equal((await w.c.login({ role, password: "x", source: "again", country: "RU" })).reason, "SIGN_IN_PAUSED");
+  const pause = async (handle) => {
+    for (let i = 0; i < 10; i++) await w.c.login({ handle, password: "wrong-passphrase", source: `${handle}-${i}`, country: "RU" });
+    assert.equal((await w.c.login({ handle, password: "x", source: "again", country: "RU" })).reason, "SIGN_IN_PAUSED");
   };
-  await at(NOW - 40 * 60e3, () => pause("member:ann"));
-  await at(NOW - 40 * 60e3, () => pause("member:second"));
-  await at(NOW - 3 * H, () => pause("member:bob"));
+  await at(NOW - 40 * 60e3, () => pause("ann"));
+  await at(NOW - 40 * 60e3, () => pause("second"));
+  await at(NOW - 3 * H, () => pause("bob"));
   await at(NOW, async () => {
-    assert.equal((await w.c.login({ role: "member:ann", password: PASSWORD("ann"), source: "home", country: "RU" })).ok, true);
-    assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "new-passphrase-1" })).ok, true);
-    assert.equal((await w.c.login({ role: "member:bob", password: PASSWORD("bob"), source: "home" })).ok, true);
+    assert.equal((await w.c.login({ handle: "ann", password: PASSWORD("ann"), source: "home", country: "RU" })).ok, true);
+    assert.equal((await w.c.recover({ handle: "second", code: codes[0], password: "new-passphrase-1" })).ok, true);
+    assert.equal((await w.c.login({ handle: "bob", password: PASSWORD("bob"), source: "home" })).ok, true);
   });
   assert.deepEqual(tally(w).filter((r) => r.kind === "through"), [{ kind: "through", hour: HOUR, country: "", count: 2 }]);
   assert.equal((await at(NOW, () => map(w, NOW - 4 * H, NOW))).level, "High");
@@ -135,12 +135,12 @@ test("R44 a count that cannot be written is dropped and never changes the answer
   const w = await world().group("ann");
   w.sql.exec(`DROP TABLE security_counts`);
   w.sql.exec(`DROP TABLE security_pending`);
-  assert.deepEqual(await w.c.login({ role: "member:ann", password: "wrong-passphrase", source: "s", country: "US" }),
+  assert.deepEqual(await w.c.login({ handle: "ann", password: "wrong-passphrase", source: "s", country: "US" }),
     { ok: false, reason: "SIGN_IN_REFUSED", detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED });
-  assert.deepEqual(await w.c.claim({ password: "another-passphrase", tokenFp: "fp-1", source: "s" }),
+  assert.deepEqual(await w.c.claim({ password: "another-passphrase", handle: FOUNDER_HANDLE, tokenFp: "fp-1", source: "s" }),
     { ok: false, reason: "ALREADY_CLAIMED", consumedAt: w.c.bootstrapState("fp-1").consumedAt });
   assert.deepEqual(w.c.securityCount({ kind: "credential", country: "US" }), { ok: true, kind: "credential", counted: false });
-  assert.equal((await w.c.login({ role: "member:ann", password: PASSWORD("ann"), source: "s" })).ok, true);
+  assert.equal((await w.c.login({ handle: "ann", password: PASSWORD("ann"), source: "s" })).ok, true);
   assert.equal(w.c.session("x"), null);
 });
 

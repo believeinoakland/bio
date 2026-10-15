@@ -7,9 +7,9 @@
    keeps anything in the browser.
 
    `SCREENS`: per screen `{id, reads, render, acts, words, parts}` as interface-shell R21 states them (K2996, K2998);
-   every function self-contained. `words` lists the `WORD_ROWS` keys a screen draws and, as `[key, en, protected]`
-   rows, its own (`SCREEN_WORDS`). `parts` holds the AI account panel's functions, handed to `members` and `connect` as
-   `view.parts` (J2 (1)). `SCREEN_WORDS`: this module's own words (interface-shell R5). */
+   every function self-contained. `words` lists the keys a screen draws, all keys (R39: this module holds no English;
+   `keys.mjs`). `parts` holds the AI account panel's functions, handed to `members` and `connect` as `view.parts`
+   (J2 (1)). `SCREEN_WORDS` is empty (words.mjs). */
 import { members } from "./members.mjs";
 import { account } from "./account.mjs";
 import { connect } from "./connect.mjs";
@@ -22,49 +22,47 @@ import { identity } from "./identity.mjs";
 import { security } from "./security.mjs";
 import { translations } from "./translations.mjs";
 import { updates } from "./updates.mjs";
-import { aiPanel, aiPanelSend, aiUsageBars } from "./panel.mjs";
+import { aiPanel, aiPanelSend, aiUsageBars, PANEL_KEYS } from "./panel.mjs";
 import { SCREEN_WORDS } from "./words.mjs";
+import { KEYS } from "./keys.mjs";
 
-export { SCREEN_WORDS };
+export { SCREEN_WORDS, KEYS };
 
-const ROW = new Map(SCREEN_WORDS.map((r) => [r[0], r]));
-const own = (...prefixes) => SCREEN_WORDS.filter((r) => prefixes.some((p) => r[0].startsWith(p))).map((r) => r[0]);
-const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
-const PANEL = [...own("screen.panel."), ...USES.map((u) => `ai.use.${u}.name`), "ai.explore.no", "ai.explore.ask", "ai.explore.yes",
-  "ai.refused.limitinvalid", "ai.refused.unitunavailable", "ai.refused.switchvalue",
-  ...["bars", "bars.means", "day", "today", "summary", "meter", "meter.means", "meter.near", "nolimit"].map((k) => `ai.usage.${k}`),
-  ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
+const own = (...prefixes) => KEYS.filter((k) => prefixes.some((p) => k.startsWith(p)));
+const PANEL = PANEL_KEYS;
 const STATES = ["state.loading", "state.empty", "state.failed"];
 const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 
-/** The words each screen draws: its own rows, and the `WORD_ROWS` keys it reads (interface-shell R5, R21). */
+/** The keys each screen draws (interface-shell R5, R21; R39). */
 const WORDS = {
-  members: [...STATES, "screen.members.name", ...own("screen.members."), ...PANEL, "ai.whopays", "screen.group.name", "screen.places.name", "screen.recovery.name",
+  members: [...STATES, "screen.members.name", ...own("screen.members."), "member.founder.unnamed", "member.founder.unnamed.help", ...PANEL, "ai.whopays", "screen.group.name", "screen.places.name", "screen.recovery.name",
     ...LABELS("members", ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
       "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "accountusesset", "ailimitset", "groupkeyremove", "aikeepaway", "signerset"]),
     "act.owed_passwordresetlink.label.members"],
   account: [...STATES, "screen.account.name", ...own("screen.account."), "handle.fixed", "level.prompt.name", "level.pause.name", "signing.ceremony.keepkey",
     "screen.connect.name", "screen.notes.name",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "infolevelset", "signout", "signouteverywhere"])],
-  connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "screen.members.founder", ...PANEL, "ai.whopays", "mark.outward.means",
+  connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "member.founder.unnamed", ...PANEL, "ai.whopays", "mark.outward.means",
+    "connect.ifnot", "connect.notnow", "refusal.reference", "session.reauth", "shell.password", "session.reauth.head", "screen.panel.amount", "ai.usage.today",
     "instance.part.signin.absent", "instance.part.unknown",
     ...["NO_SIGNIN_WAITING", "SIGNIN_REFUSED", "SIGNIN_UNAVAILABLE", "SIGNIN_ADDRESS_UNEXPECTED", "AGENT_WORKER_UNBOUND", "DISCLOSURE_DUE"].map((c) => "refusal." + c),
-    ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
+    ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "reauth", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
   settings: [...STATES, ...own("screen.settings."), ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "updates", "translations", "wizards"]
     .flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`])],
-  group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup",
-    ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset"])],
+  group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup", "stake.group.title", "stake.group.help", "stake.group.label", "stake.group.save", "stake.set", "stake.none", "stake.history", "stake.unreadable", "ai.label.untested",  "screen.group-identity.draft.label",
+    ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset", "declaredstakeset", "writinghelp"])],
   places: [...STATES, "screen.places.name", ...own("screen.places."), "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
-  recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add",
+  recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add", "member.founder.unnamed",
     ...LABELS("recovery", ["recoverycodesissue"])],
   "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested",
     ...LABELS("group-identity", ["groupdescriptionset", "groupdescriptiondraft"])],
   security: [...STATES, "screen.security.name", ...own("screen.security."), "instance.part.scanner.present", "instance.part.scanner.absent",
     "instance.part.safeview.present", "instance.part.safeview.absent", "instance.part.unknown", "instance.scanner.absent.step",
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
-  updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "settings.set.setup", "updates.running.head", "updates.running.release", "updates.running.checked",
+  updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "settings.set.system",
+    "updates.running.release_setup", "updates.earlier.installed_setup", "updates.running.head", "updates.running.release", "updates.running.checked",
     "updates.running.checked_note", "updates.ready.head", "updates.ready.release", "updates.ready.security", "updates.ready.security_says", "updates.ready.signed",
     "updates.notes.members", "updates.notes.admins", "updates.notes.must", "updates.notes.plain", "updates.act.later", "updates.act.update", "updates.act.skip",
     "updates.act.skip_with_reason", "updates.skip.why", "updates.skip.says", "updates.handoff.head", "updates.handoff.says", "updates.handoff.for", "updates.handoff.explain",
@@ -77,8 +75,7 @@ const PARTS = Object.freeze({ aiPanel, aiPanelSend, aiUsageBars });
 const freeze = (s) => Object.freeze({
   ...s,
   acts: Object.freeze(s.acts.map((a) => Object.freeze({ ...a }))),
-  // a key of this module's own words is given as its row (interface-shell R21 (1)), any other as its key
-  words: Object.freeze([...new Set(WORDS[s.id])].map((k) => (ROW.has(k) ? ROW.get(k) : k))),
+  words: Object.freeze([...new Set(WORDS[s.id])]),
   parts: PARTS,
 });
 

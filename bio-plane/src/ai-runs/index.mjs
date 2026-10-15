@@ -806,6 +806,11 @@ export class AiRuns {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects = this.#runContextProjects(contextType, contextId);
     const who = actor == null ? "" : String(actor).trim();
+    /* R81 (T49; D5): PARTICIPATION IS KEYED BY THE BARE MEMBER ID, and the actor arrives as `member:<id>` (action-plans'
+       `planAsk` passes its stamped author), `member:<id>/<tokenId>` or `<id>`. All three are asked as `<id>`. An actor that
+       names no member (a machine identity, a `class:` or `token:` stamp) has no id here and is asked as given, so it is
+       judged as before and never read as an absent actor. */
+    const asked = memberIdOf(who) ?? who;
     /* REC-145 (DEC-63 as amended by Bob, 2026-09-18; Membership v2 §7, BOB #16): OVER A QUESTION NO
        PROJECT IS CONSULTED, so no participation question is asked at all — `runConsultsProjects` is the
        one answer to which contexts are gated, shared with `projectGate` so the facts fed to the verdict
@@ -813,7 +818,7 @@ export class AiRuns {
        count below and for nothing else. A PROJECT context keeps the joined-participant gate. */
     const joined = who && runConsultsProjects(contextType)
       ? projects.filter((p) => {
-          const part = this.#membership().participation(p, who);
+          const part = this.#membership().participation(p, asked);
           return !!part && part.state === "joined";
         })
       : [];
@@ -2070,7 +2075,7 @@ export class AiRuns {
   async #aiRunDispatch(d, resumer, iso) {
     /* R52, K1514, K1601, K1755 (agent-worker R6, R10): the body carries `account`, the account `ai-accounts.accountFor`
        answers for the act of the run's member (its R7, R11), `{kind, level, secret, member, suggestions}`: `level` `member`
-       for their own reference or (T38; K2299) their own sign-in, `signin`, never re-labelled an API key (K1553), `group`
+       for their own reference or (T38; K2299) their own sign-in, `signin`, never re-labeled an API key (K1553), `group`
        for the group's API key, whose use is still that member's act; `secret` is its R7's `key`, named as agent-worker R6
        reads it: (R79; T47, K3060 D10, K3068; ai-accounts R19) a held sign-in's token carried as an API key's, never logged, stored or
        answered (the T38 "no secret" sentence retired);

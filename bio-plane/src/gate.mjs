@@ -1109,7 +1109,28 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    gate step, so no gate's order moves).
    ROW_CENSUS (R50) re-pinned to this tree: 1898 rows. Rows a T48 job in layers 3–11 adds or changes are T49's stamp
    (plan T48, rule 5 item 2). */
-export const CATALOG_VERSION = "1.75.0";
+/* 1.76.0 (PROMOTION #47, T49-4, 2026-10-14; T48's rule 5 item 2, T49's rules 5 (2) and 7; K3321 (D), K3336, K3337, K3338):
+   MINOR. The stamp of every row awaiting it at T48's close (T48's layers 3-11) and of T49's layer 2, read by diffing R50's
+   census lines of `tranche/T49` (after membership, project-roster and credentials merged) against 1.75.0's own
+   (`test/fixtures/row-census-1.75.0.jsonl`: 1898 rows, c57e3cf8...): thirty-four lines, ten new rows, twenty-three changed,
+   one retired. Each is one a T48 or T49 job record names.
+   ARRIVED (10): action-replies C-150.8 MACHINE_CANNOT_RECORD_QUOTING, C-150.9 QUOTING_NOT_RFC, C-150.10 QUOTING_REFUSED;
+   following C-137.26 BAD_PROCEEDING_DATES; instance-setup C-64.31 LANGUAGE_NOT_SET, C-64.32 UPDATE_NOT_READY, C-64.33
+   UPDATE_SKIP_NO_REASON; review C-87.17 REVIEW_BAD_UNTIL; entities C-91.9 NOT_A_PROCEEDING (the row C-117.28 moved to
+   C-91.9); membership C-96.54 FOUNDER_HANDLE_NOT_FOUNDER (T49-1, N1072).
+   RETIRED (1), its number never reused: C-117.28 NOT_A_PROCEEDING (now C-91.9).
+   CHANGED (23), code and number unmoved: conformance C-113.6 NO_FINDINGS; filing-templates C-115.47
+   RFC_QUOTING_MISSING and filings C-115.48 NOT_A_PARTNER; action-grammar C-117.34 MACHINE_CANNOT_SET_PARTNERS, C-117.35
+   PARTNERS_REFUSED, C-32.4 MACHINE_CANNOT_CORRESPOND, C-33.5-.9 (BAD_DIRECTION, BAD_DATE, CAPTURE_AND_TESTIMONY,
+   NEITHER_CAPTURE_NOR_TESTIMONY, UNREGISTERED_ARTIFACT); wizard-scripts C-131.7, C-131.24; reading-guides C-144.4,
+   C-144.13; credentials C-29.41 AI_RUN_CREDENTIAL_MALFORMED and (T49-3, N1075, words read by key) C-96.39 SIGN_IN_PAUSED,
+   C-96.40 NOT_SIGNED_IN, C-96.41 RECOVERY_REFUSED, C-96.46 CURRENT_PASSWORD_WRONG; membership (T49-1, N1075) C-96.32
+   NO_SUCH_JOIN_LINK, C-96.33 JOIN_LINK_DAILY_CAP and C-96.52 HANDLE_FIXED (`where` and translation).
+   THE FAMILIES THAT ARRIVED: none. CHANGED IN WHAT THE GATES RUN, no row line moving: none a T48 L3-L11 or T49 L2 job
+   record names. Credentials added no row (K3337).
+   ROW_CENSUS (R50) re-pinned to this tree: 1907 rows. Rows a T49 job in layers 3-11 adds or changes are T50's stamp
+   (plan T49, rule 5 item 2). */
+export const CATALOG_VERSION = "1.76.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1201,8 +1222,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1898,
-  digest: "c57e3cf866aa8b4982482de07a5c5d1a6d49409d00ecafd948fce4d8779195df" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1907,
+  digest: "e20355819ac78cfe8991def71b3c719c0dd7507f573703422b58d5b049149835" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

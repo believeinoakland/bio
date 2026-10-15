@@ -1,6 +1,6 @@
 # screens-daily — requirements
 
-**Status** · New in T46 (T46-57; K657, K1043): a module built fresh, layer 11 after `screens-intake` (N897 (1), Bob's K2816; DEC-110, DEC-131, DEC-139, DEC-164; N698's screen part). Drafted in `build/plan/draft-T46-interface.md` §2.5, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-60: R8 new, amending R1, Home's projects from `projectlist` with each one's question count from `projectquestions`, N972; R9 new, the front door "What happened?" from `startfrom`'s doors, its scripts started through the wizard runner, DEC-198 (4)); marked not yet met (T47). Last changed T48 (T48-72: R14 new, amending R9, Home's sixth door; R15, R16 new, the screen `elsewhere`, N847, DEC-227; R17 new, amending R1 and R11, Home as every member's nerve centre, arrangement C, N1036, DEC-218, DEC-219, K3146, K3189, K3211; R18 new, `queuemute`'s case form, K3190 census Q1; R19 new, the update to-do, N1047, DEC-226 (1); R20 new, Projects links to `imported`, DEC-228 (4); K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R21 new, the common line; R22 new, amending R2 and R17, source notices keyed, one per kind with a count; R23 new, door cards, the title on press, "Your group", the name as a first step); marked not yet met (T48).
+**Status** · New in T46 (T46-57; K657, K1043): a module built fresh, layer 11 after `screens-intake` (N897 (1), Bob's K2816; DEC-110, DEC-131, DEC-139, DEC-164; N698's screen part). Drafted in `build/plan/draft-T46-interface.md` §2.5, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-60: R8 new, amending R1, Home's projects from `projectlist` with each one's question count from `projectquestions`, N972; R9 new, the front door "What happened?" from `startfrom`'s doors, its scripts started through the wizard runner, DEC-198 (4)); marked not yet met (T47). Last changed T48 (T48-72: R14 new, amending R9, Home's sixth door; R15, R16 new, the screen `elsewhere`, N847, DEC-227; R17 new, amending R1 and R11, Home as every member's nerve centre, arrangement C, N1036, DEC-218, DEC-219, K3146, K3189, K3211; R18 new, `queuemute`'s case form, K3190 census Q1; R19 new, the update to-do, N1047, DEC-226 (1); R20 new, Projects links to `imported`, DEC-228 (4); K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R21 new, the common line; R22 new, amending R2 and R17, source notices keyed, one per kind with a count; R23 new, door cards, the title on press, "Your group", the name as a first step); marked not yet met (T48). Last changed T49 (T49-24: R24–R33 new; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,200–2,800 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -12,7 +12,7 @@ Where a member starts and works each day: the group's home, their queue, (T48) w
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key, R34)
 
 **home** (Home; the registry's acts `promote`, `startfrom`)
 - **R1** Reads `queue` (the first items waiting on the member, each by its kind mark, under "Your queue (<n>)") and `projectdirectory` (each project the member may see, its question count and its stage ladder Forming, Investigating, Matured, Closed). Heading: the group's name and its description, from the public `groupidentity` read. Act: `promote` "Start a project" (a new project, as `control-plane` R73 and `promotion` take it: its title, the member its owner), opening `project` on success. `startfrom` is not drawn in T46 (no runner can yet start what it lists).
@@ -89,9 +89,40 @@ Where a member starts and works each day: the group's home, their queue, (T48) w
   - **A new group.** Its home is as R17 draws it: that it is ready, its first steps, and "What happened?". To an administrator, while the group has no name, "Name your group" (`home.first.name`; interim, for UX-DESIGN) leads the first steps and opens `group`.
   - Test: pressing a door opens its offer, and no script name is drawn before that. Control: a named group draws its name, and no "Name your group" step.
 
+#### T49 (T49-24)
+
+- **R24** (T49; D7 **B**; `citation` R14's `found` form; amends R5) On `find-in`, "Cite in the question" draws the choice "supports" or "against" (`role`, none preselected) beside each result. It sends `cite` with that `role`, and with the question and that question's project as `citation` takes them. It is refused in place until a role is chosen. Test: a cite sends `role: "supports"`. Control: with no role chosen, nothing is sent (`find-in.mjs`:223–231).
+- **R25** (T49; D11 **M**, D30 **m**, D31 **m**; amends R1, R9, R10, R23) Four rules:
+  - **The title.** Home's blank start and "Start a project" write the project's `title` (`home.mjs`:318 writes `objective` only), so every screen reads it as the project's title.
+  - **Door cards.** Each card draws its title and its description as separate elements.
+  - **Counts.** Every count picks its singular or plural key ("1 question", never "1 questions").
+  - **Closed doors.** Each closed door's button carries an accessible name.
+
+  Test: each over a fixture. Control: a project started on Home draws its title on `project`.
+- **R26** (T49; D16 **M**; amends R5) `find-in` names its scope by the document's title, and each result by its document's title and its place in it, never by a digest or a 12-hex label. A testimony's page reaches `find-in` by a link (screens-inquiry R32), never by typing its address. Test: a scope and a result each draw a title. Control: no drawn text matches a 12-hex or 64-hex run.
+- **R27** (T49; D17 **M**; `agent-worker` R89; amends R6) `answers` draws a refusal of `ask` by its words (`interface-shell` R61), never "This could not be read". It draws an answer's `not_established` as the design does. Test: an `ANSWER_MALFORMED` refusal draws its words, and a `not_established` answer draws its sentences. Control: a full answer is drawn as before.
+- **R28** (T49; D21 **M**; amends R2, R17) Each `queue` and Home item names its subject by its title (a reference) and its act by the act's label (`act.<op>.label.queue`). Never a bare address with "Act on an item". Test: a to-do on a document reads the document's title and the act's label. Control: an item whose subject has no title draws `queue.source.untitled`.
+- **R29** (T49; D25 **M**; `project-roster` R26, R29; amends R10, R17) A project the member is invited to, as `projectlist`'s participation state answers (confirmed at START), is drawn on `projects` and in Home's "Needs you" with "Join" (`projectjoin`). The queue item for an invitation is drawn by its keys, which the design gives (DEC-273). Test: an invited project offers Join. Control: a joined project does not.
+- **R30** (T49; N1091; DEC-237 (projects); `promotion` R19; amends R1, R10, R23) "Start a project", on `projects` and on Home's blank start, opens a form on press:
+  - "What it is about" (`project.start.title`, help `.title.help`);
+  - "Who can find it": `project.visibility.start.hidden` (preselected) or `.start.discoverable`;
+  - `project.visibility.start.later`;
+  - "Start the project" (`project.start.go`).
+
+  The last sends `promote` with the title (R25) and the chosen `visibility` (absent meaning hidden), and opens the new project on success. `PROJECT_VISIBILITY_NO_OWNER` and `NAME_TAKEN` are drawn by their words. Test: choosing findable sends `visibility: "discoverable"`. Control: an untouched form sends hidden.
+- **R31** (T49; N1093; DEC-239 ("everywhere"); `action-producers` R1; amends R2, R17) A reply owed by another side whose date has passed is drawn as "no reply recorded", never "overdue": `action.noreply.title` with `{date}` in a row, and in Home's strip as a reading's label. The rows `screen.home.strip.overdue` and `screen.queue.due.overdue` go, and the strip counts no item as overdue. A group's own passed date is drawn by its key, which the design gives (DEC-273). Test: Home and the queue draw a passed reply as "no reply recorded". Control: no drawn text contains "overdue".
+- **R32** (T49; N1072; DEC-230 (4); `project-roster` R29; amends R10) `projects`' rows draw a member answered `founder: true, handle: null` by `member.founder.unnamed`, never by the member id (`project-rows.mjs`:64–65). Test: such a member draws "The group's founder". Control: no row draws `admin`.
+- **R33** (T49; N1100; DEC-245; amends R10, R12) `projects` with no project draws its designed empty state: `projects.empty.sub` and `projects.empty.note`, with "Start a project" (R30) below. The new project's first question is the project page's (`screens-inquiry` R43; finding 4). Test: no project draws the empty state and the act. Control: one project draws its row and no empty state.
+
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R34** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 336 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. It no longer draws the rows DEC-256 retired: `screen.home.strip.overdue`, `screen.queue.due.overdue`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21).
 - `setup-words`: `WORD_ROWS` keys.

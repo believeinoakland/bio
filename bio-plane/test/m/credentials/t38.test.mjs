@@ -13,7 +13,7 @@ const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECK
 test("R27 R32 R73 a member served by their own sign-in is granted an ask (no notice asked, the group key on or off); refused NO_ACCOUNT once disconnected with no other account; (T41; N796) their standing questions governed by their sign-in's own standing switch, off by default, and its grant ended when the sign-in is disconnected", async () => {
   const w = await world().group("ann", "bob");
   await w.signin("ann");
-  const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const s = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   const mint = () => w.c.aiGrantMint({ member: "ann", by: "ann", session: s });
   const g = await mint();
   assert.deepEqual(Object.keys(g).sort(), ["expires", "ok", "token"]);

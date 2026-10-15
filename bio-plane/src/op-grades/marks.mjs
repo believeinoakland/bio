@@ -10,16 +10,16 @@
  * `phoneOf` do not read it, and no op in `RUNGS` is here, so a mark is a drawn mark and its explanation only, never a rung.
  * Data only; this module imports nothing, so a new registry or kit is a change of the rows below.
  *
- * (K3284; UX-DESIGN U218) `acquire` is Reversible, its weight sitting on `release`; it is taken so here even before the
- * kit's next build names it (the kit at `MARKS_KIT_COMMIT` has it at 2). */
+ * (K3321 (B), T49) Re-taken against the design files as they moved: the registry lists 16 more rungless acts than at PR #34, and
+ * the kit now names `acquire` Reversible (K3284, UX-DESIGN U218), so its override is no longer needed. */
 
-/* the commit of `main` the kit and the registry are read at: `ASSETS_COMMIT` (`interface-assets` R5), PR #34's merge */
-export const MARKS_KIT_COMMIT = "4664e8efd4";
+/* the commit the kit and the registry are read at: the merge of PR #39's branch (`fa3c8b7e8e`, K3366), which moved both files
+   on from `ASSETS_COMMIT`'s PR #34 (K3321 (B)) */
+export const MARKS_KIT_COMMIT = "fa3c8b7e8e";
 
 const SOURCES = {
   kit: `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`,
   default: `kit default at ${MARKS_KIT_COMMIT}: an op WEIGHT does not name is Reasoned`,
-  K3284: "K3284 (UX-DESIGN U218): Reversible, its weight sitting on release; overrides the kit's acquire",
 };
 
 /* [op, weight name, source key], in the op's name order */
@@ -27,7 +27,9 @@ const ROWS = [
   ["accountreferenceremove", "Terminal", "kit"],
   ["accountreferenceset", "Reasoned", "kit"],
   ["accountusesset", "Reasoned", "kit"],
-  ["acquire", "Reversible", "K3284"],
+  ["acquire", "Reversible", "kit"],
+  ["actioninquiry", "Reasoned", "default"],
+  ["actionstake", "Reasoned", "kit"],
   ["addresseesuggest", "Reversible", "kit"],
   ["adminendorse", "Reasoned", "kit"],
   ["ailimitset", "Reasoned", "kit"],
@@ -35,9 +37,11 @@ const ROWS = [
   ["ask", "Reasoned", "default"],
   ["authoritychain", "Reversible", "kit"],
   ["bootstrap", "Irreversible", "kit"],
+  ["captureprogressions", "Reversible", "kit"],
   ["capturerequest", "Reversible", "kit"],
   ["claim", "Signed", "kit"],
   ["committedagainstpaid", "Reversible", "kit"],
+  ["connect", "Reversible", "kit"],
   ["courtnoticeset", "Reasoned", "default"],
   ["deepercheck", "Reversible", "kit"],
   ["disclosureshown", "Reversible", "kit"],
@@ -49,6 +53,7 @@ const ROWS = [
   ["explorepreset", "Reversible", "kit"],
   ["exploreverify", "Reversible", "kit"],
   ["findin", "Reversible", "kit"],
+  ["founderhandleset", "Reasoned", "kit"],
   ["frontier", "Reversible", "kit"],
   ["gradenote", "Reversible", "kit"],
   ["groupdescriptiondraft", "Reasoned", "default"],
@@ -63,6 +68,7 @@ const ROWS = [
   ["heldcaptures", "Reversible", "kit"],
   ["hostingaccessset", "Reasoned", "kit"],
   ["infolevelset", "Reasoned", "default"],
+  ["instance", "Reversible", "kit"],
   ["invitelook", "Reversible", "kit"],
   ["invitewithdraw", "Reasoned", "default"],
   ["itemtakeup", "Reasoned", "default"],
@@ -88,19 +94,26 @@ const ROWS = [
   ["person", "Reversible", "kit"],
   ["placewanted", "Reasoned", "default"],
   ["profilesset", "Reasoned", "kit"],
+  ["progression", "Reversible", "kit"],
   ["projectaccountremove", "Terminal", "kit"],
   ["projectaccountswitch", "Reasoned", "kit"],
   ["projectinvite", "Reasoned", "kit"],
   ["projectjoin", "Reversible", "kit"],
   ["projectkeynoticeseen", "Reversible", "kit"],
   ["projectkeyset", "Reasoned", "kit"],
+  ["projectleave", "Reasoned", "default"],
+  ["projectowneradd", "Reasoned", "default"],
+  ["projectremove", "Reasoned", "default"],
   ["projectsigninset", "Reasoned", "kit"],
+  ["projectstakeset", "Reasoned", "kit"],
   ["promote", "Reasoned", "kit"],
   ["publishedcase", "Reversible", "kit"],
   ["publishpreflight", "Reversible", "kit"],
   ["publishtensions", "Reversible", "kit"],
   ["queuemute", "Reversible", "kit"],
   ["queuesnooze", "Reversible", "kit"],
+  ["readtranslate", "Reversible", "kit"],
+  ["reauth", "Reasoned", "default"],
   ["reconcile", "Reasoned", "kit"],
   ["recorddatedfact", "Reasoned", "kit"],
   ["recover", "Reasoned", "kit"],
@@ -112,6 +125,7 @@ const ROWS = [
   ["ruleanswer", "Reversible", "kit"],
   ["safeview", "Reversible", "kit"],
   ["search", "Reversible", "kit"],
+  ["secondlook", "Reasoned", "default"],
   ["securitymap", "Reversible", "kit"],
   ["securitytooladd", "Reasoned", "kit"],
   ["securitytoolremove", "Reasoned", "kit"],
@@ -129,10 +143,12 @@ const ROWS = [
   ["startfrom", "Reversible", "kit"],
   ["subscriptiondisconnect", "Terminal", "kit"],
   ["subscriptionsignin", "Reasoned", "default"],
+  ["themeread", "Reversible", "kit"],
   ["translationdraft", "Reversible", "kit"],
   ["translationgrant", "Reasoned", "default"],
   ["unlock", "Reversible", "kit"],
   ["verify", "Reversible", "kit"],
+  ["watchitem", "Reasoned", "default"],
   ["websitekeycreate", "Reasoned", "default"],
   ["wizards", "Reversible", "kit"],
   ["writinghelp", "Reasoned", "default"],

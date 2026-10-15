@@ -273,7 +273,8 @@ export function notTheOwner(by, projectId, extra = null) {
    layer 11. T47-82 (R140; K3064, K3069): `screens-entry` directly after `interface-shell`, before `screens-wizards`, in
    layer 11. T48-9 (K657, K3100, K3190, K3196; N1014, N1055): `ai-accounts` after `project-roster` and before `credentials`
    in layer 2, `signin-door` after `store-door` in layer 11 and `journey-check` last; `setup-page` gone, as its row left the
-   file; `legacy-ui` kept. */
+   file; `legacy-ui` kept. T49-1 (R145; K657, K3328): `op-capabilities` directly before `op-declarations` and `site`
+   directly after `installer`, both in layer 11, each tolerated by name as not yet built until its job merges. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -300,10 +301,10 @@ export const MODULE_ORDER = Object.freeze([
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
-           "notice-producers", "queue", "setup-words", "instance-setup", "op-declarations", "admission",
+           "notice-producers", "queue", "setup-words", "instance-setup", "op-capabilities", "op-declarations", "admission",
            "answer-envelope", "store-door", "signin-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards",
            "screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate",
-           "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "stewards",
+           "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "site", "stewards",
            "journey-check",
 ]);
 
@@ -777,7 +778,7 @@ export class Membership {
   #rightsOf(role, none) {
     if (role === Membership.ROOT_ADMIN)
       return { capabilities: [...Membership.CAPABILITIES], administer: true,
-               member: Membership.ROOT_ADMIN, handle: null, rootOfTrust: true };
+               member: Membership.ROOT_ADMIN, handle: this.founderHandle(), rootOfTrust: true };   /* R92, R144 */
     if (typeof role !== "string" || !role.startsWith("member:")) return none;
     const id = role.slice(7);
     const m = this.#one(
@@ -1231,7 +1232,7 @@ export class Membership {
   /* C-70.1, minted here and only here; every act RELAYS it through `existenceAct`. Its two forms (R77, D54): at a
      discoverable project's EXISTENCE, the id and the name, which the directory already showed this caller, and nothing
      else; at a hidden project's, which only an administrator neither invited nor joined reaches (R44), the id, the name
-     and `owners`, the owners' current handles in R65's order (null for an owner with none, the founder), so a hold or a
+     and `owners`, the owners' current handles in R65's order (null for an owner with none; the founder's is her own handle once she holds one, R144, never `admin`), so a hold or a
      complaint can name who to ask. No act, no state, no other participant, ever. */
   #existenceOnly(projectId) {
     const title = this.#titleOf(projectId);
@@ -1240,7 +1241,7 @@ export class Membership {
       const row = PROJECT_VISIBILITY_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
                project: projectId, name: title,
-               ...(hidden ? { owners: this.projectOwners(projectId).map((o) => this.memberFacts(o)?.handle ?? null) } : {}) };
+               ...(hidden ? { owners: this.projectOwners(projectId).map((o) => this.#handleOf(o)) } : {}) };
     };
     /* DEC-49 REGION is-project-existence-only */
     return refusal("PROJECT_SEEN_NOT_A_PARTICIPANT", hidden
@@ -2134,15 +2135,8 @@ export class Membership {
        across the instance, because a roster in which two people can answer to one
        name defeats the purpose of having one. */
     const h = String(handle ?? "").trim();
-    if (!h) return { ok: false, reason: "NO_HANDLE",
-      detail: "choose a handle. It is what the record shows: the author of a promotion, the attestor of a "
-            + "ratification, the participant list of a project. It is yours, not the label the administrator "
-            + "used to invite you." };
-    if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))
-      return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    /* R16 (T40, T46; DEC-184 (1), DEC-186 (2), DEC-196): taken when another member holds it now, whatever their status
-       (a member who has left keeps theirs), or held it before (the history R124's changes left). */
-    if (this.#heldByAnother(h, m.member_id)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
+    const refused = this.#handleRefusal(h, m.member_id);
+    if (refused) return refused;
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
     /* R95 (K774): the password is set by the registered setter, inside this act and before anything here is
@@ -2162,6 +2156,22 @@ export class Membership {
        enrolment succeeds once per member); otherwise the key is absent. */
     return { ok: true, memberId: m.member_id, handle: h,
              ...(this.courtNotice().choice === "tell" ? { courtStatement: Membership.COURT_STATEMENT } : {}) };
+  }
+
+  /* R16, R144: the one judgment of a chosen handle, `h` already trimmed, for an enrolment and for the founder's set:
+     `NO_HANDLE`, `BAD_HANDLE` (R12's pattern), then `HANDLE_TAKEN` (R16 (T40, T46; DEC-184 (1), DEC-186 (2), DEC-196): taken
+     when another member holds it now, whatever their status (a member who has left keeps theirs), or held it before, the
+     founder's included, R144; `admin` always, R141). `self` is the member who may keep it, none for the founder. Null when
+     the handle is free. */
+  #handleRefusal(h, self) {
+    if (!h) return { ok: false, reason: "NO_HANDLE",
+      detail: "choose a handle. It is what the record shows: the author of a promotion, the attestor of a "
+            + "ratification, the participant list of a project. It is yours, not the label the administrator "
+            + "used to invite you." };
+    if (!Membership.HANDLE_PATTERN.test(h))
+      return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
+    if (this.#heldByAnother(h, self)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
+    return null;
   }
 
   /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
@@ -2256,7 +2266,7 @@ export class Membership {
   /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
      (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
   #heldByAnother(handle, self) {
-    if (handle === Membership.ROOT_ADMIN) return true;
+    if (handle === Membership.ROOT_ADMIN || handle === this.founderHandle()) return true;   /* R141, R144 */
     return !!this.#one(`SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
                         UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
       handle, self ?? "", handle, self ?? "");
@@ -2277,10 +2287,12 @@ export class Membership {
      none fits 41 characters. The handles so far taken under that stem are read once. */
   #suggestion(h, self) {
     const stem = `${h}-`;
+    const founder = this.founderHandle();   /* R144: the founder's handle is taken to everyone */
     const taken = new Set(this.#rows(
       `SELECT handle AS h FROM members WHERE substr(handle, 1, ?) = ? AND member_id<>?
        UNION SELECT from_handle AS h FROM handle_history WHERE substr(from_handle, 1, ?) = ? AND member_id<>?`,
       stem.length, stem, self ?? "", stem.length, stem, self ?? "").map((r) => r.h));
+    if (founder) taken.add(founder);
     for (let n = 2; ; n++) {
       const cand = `${stem}${n}`;
       if (cand.length > 41) return null;
@@ -2373,11 +2385,56 @@ export class Membership {
    *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
    *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
   handleChange() {
+    return Membership.#handleFixed("a handle is chosen when a member joins and is never changed, by the member or anyone "
+      + "(DEC-197). Nothing was written.");
+  }
+
+  /* R129, R144: HANDLE_FIXED is minted here alone; `handleChange` and a second `founderHandleSet` answer through it. */
+  static #handleFixed(detail) {
     /* DEC-49 REGION is-handle-fixed */
-    return Membership.#rowRefusal("HANDLE_FIXED",
-      "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was "
-      + "written.");
+    return Membership.#rowRefusal("HANDLE_FIXED", detail);
     /* END DEC-49 REGION is-handle-fixed */
+  }
+
+  /* ===== T49 (T49-1; N1072; Bob's K3265) — THE FOUNDER'S OWN HANDLE (R144) =====
+   *
+   * The founder has no members row, so the handle she signs in and is known by is held in a table of its own, one row at
+   * most. It is chosen once and never changed (a second set is HANDLE_FIXED, R129's row). Her member id stays `admin` in
+   * every viewer, stamp and participation row (R43, R44, R64, R86, R94); the id is a reserved name, the handle of no one
+   * (R141). */
+
+  /* An owner's current handle as a reader sees it (R77): a member's, or the founder's own once she holds one (R144), and
+     never the founder's id `admin`; null for an owner with none. */
+  #handleOf(memberId) {
+    return memberId === Membership.ROOT_ADMIN ? this.founderHandle() : this.memberFacts(memberId)?.handle ?? null;
+  }
+
+  /** R144: the founder's held handle, or null while none is held. Writes nothing; never throws. */
+  founderHandle() {
+    try { return this.#one(`SELECT handle FROM founder_handle WHERE id=1`)?.handle ?? null; } catch { return null; }
+  }
+
+  /** R144 (`op=founderhandleset`; called in-plane by `credentials`' claim inside its act): records the handle the founder
+   *  signs in and is known by. Refusals in order, each writing nothing: a `by` that is not the founder (`admin` or
+   *  `member:admin`) is FOUNDER_HANDLE_NOT_FOUNDER (a machine credential included); a handle already held is
+   *  HANDLE_FIXED; then R16's NO_HANDLE, BAD_HANDLE and HANDLE_TAKEN. Answers `{ok: true, handle}`. */
+  founderHandleSet(args = {}) {
+    const { handle = null, by = null } = isObj(args) ? args : {};
+    /* DEC-49 REGION is-founder-handle-founder */
+    if (by !== Membership.ROOT_ADMIN && by !== `member:${Membership.ROOT_ADMIN}`)
+      return Membership.#rowRefusal("FOUNDER_HANDLE_NOT_FOUNDER",
+        "the founder's handle is chosen by the founder, under the founder's own session, and the caller is not the "
+        + "founder. Nothing was written.", { by: Membership.#echo(by ?? null) });
+    /* END DEC-49 REGION is-founder-handle-founder */
+    if (this.founderHandle() !== null)
+      return Membership.#handleFixed("the founder's handle is chosen once and never changed (DEC-197), and one is held. "
+        + "Nothing was written.");
+    const h = String(handle ?? "").trim();
+    const refused = this.#handleRefusal(h, null);
+    if (refused) return refused;
+    /* a write that fails throws into the caller's transaction (the claim's act), which then writes nothing */
+    this.sql.exec(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, h, new Date().toISOString());
+    return { ok: true, handle: h };
   }
 
   memberSet({ memberId, status, by = null } = {}) {
@@ -2971,6 +3028,9 @@ export function membershipOps(m, url, body, env) {
                                            viewer: url.searchParams.get("viewer") }),
         /* R129 (T46; DEC-197): declared and routed, and refusing every call; nothing it is sent is read. */
         handlechange: () => m.handleChange({ handle: body?.handle ?? null, by: url.searchParams.get("by") }),
+        /* R144 (T49; N1072): the founder's own handle, from the body; `by` the control plane's stamp from the query, so
+           a body's copy never names the founder. Routed to the founder's own session only (control-plane's R97). */
+        founderhandleset: () => m.founderHandleSet({ handle: body?.handle ?? null, by: url.searchParams.get("by") }),
         invitelook: () => m.inviteLook(body || {}),
         /* R18 (D54, T41-3): `viewer`, the control plane's stamp, says which administrator reads the roster's projects. */
         memberlist: () => m.memberList({ administer: url.searchParams.get("administer"),

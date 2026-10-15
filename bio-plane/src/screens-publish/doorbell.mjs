@@ -24,7 +24,7 @@ export const DOORBELL = Object.freeze({
     out.push(cs.field("db-file", "screen.doorbell.file.label", { type: "file", help: "screen.doorbell.file.help" })
       + cs.field("db-note", "screen.doorbell.note.label", { area: true })
       + cs.field("db-secret", "screen.doorbell.secret.label", { type: "password", autocomplete: "off", help: "screen.doorbell.secret.help" })
-      + '<div class="mk-acts">' + cs.act("knock", { tone: "primary" }) + "</div>");
+      + '<div class="mk-acts">' + cs.act("knock", { tone: "primary" }) + "</div>" + view.parts.said(view, "knock"));
     return out.join("");
   },
 
@@ -51,6 +51,7 @@ export const DOORBELL = Object.freeze({
         return { body: body };
       },
       done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "knock", answer)) return { stay: true }; // D29: nothing is received on a refusal
         view.ui.received = { at: new Date(cs.now()).toISOString() };
         cs.fill("db-note", "");
         return { stay: true };

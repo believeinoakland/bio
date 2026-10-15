@@ -6,7 +6,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import * as shell from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
-import { open, main, button, fill, PATHS, ENT, ORG, MSR, CALC, PROC, STD, P, ACT, PERSON, TRAIL } from "./fixtures.mjs";
+import { open, main, button, fill, PATHS, ENT, ORG, MSR, CALC, PROC, STD, P, ACT, PERSON, TRAIL, word, drew, notDrew } from "./fixtures.mjs";
 
 const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
 const css = page.split("<style>")[1].split("</style>")[0] + readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8") + (shell.STYLE || "");
@@ -66,7 +66,8 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
       const body = s.textContent.replace(h ? h.textContent : "", "").trim();
       assert.ok(body.length > 0 || s.querySelector("button, input, select, textarea"), `${id}: an empty section "${h && h.textContent}" is drawn`);
     }
-    assert.doesNotMatch(main(p).textContent, /(^|[^\d.])0 (documents|questions|projects|chains|events|figures|items|steps)|: 0\b|· 0\b|Chains found: 0/, `${id}: a zero count is drawn`);
+    assert.doesNotMatch(main(p).textContent, /: 0\b|· 0\b/, `${id}: a zero count is drawn`);
+    for (const k of ["screen.people.count.documents", "screen.people.count.questions", "screen.people.count.projects", "screen.explore.chains"]) notDrew(main(p), k, { n: "0" }, `${id}: ${k} at zero`);
   }
   const q = await open(PATHS.explore);
   fill(q, { "explore-at": "2025-06-30" });
@@ -74,8 +75,8 @@ test("R22 a section, list or reading that holds nothing is not drawn, and no cou
   fill(zero, { "explore-at": "2025-06-30" });
   await zero.click(button(zero, "explore"));
   await zero.settle();
-  assert.doesNotMatch(main(zero).textContent, /Chains found: 0/);
-  assert.match(main(zero).textContent, /No chain was found/, "the member's search answered");
+  notDrew(main(zero), "screen.explore.chains", { n: "0" });
+  drew(main(zero), "screen.explore.nochains", undefined, "the member's search answered");
 });
 
 test("R22 control: a read that failed is still drawn as failed on every screen", async () => {
@@ -109,7 +110,7 @@ test("R23 the other people fields are choices too: a claim's other record, a tim
   for (const id of ["pr-party", "pr-obligor", "pr-forum"]) assert.deepEqual(opts(pr, id), names, id);
   assert.deepEqual(opts(pr, "pr-court"), ["Municipal Code §12.04", "Administrative Instruction 4.12, §3"]);
   const ex = await open(PATHS.explore);
-  assert.deepEqual(opts(ex, "explore-to"), ["Anyone: show where the connections lead", ...names]);
+  assert.deepEqual(opts(ex, "explore-to"), [word("screen.explore.to.any"), ...names]);
   const st = await open("/app/standard/" + STD);
   assert.deepEqual(opts(st, "st-to"), ["Municipal Code §12.04"], "the standard itself is not offered as its own law");
   const mo = await open(PATHS.money);
@@ -129,8 +130,8 @@ test("R26 person, calculation, proceeding and standard mark their subject read s
 
 test("R26 a bare calculation (refused NO_CALC) draws \"Nothing is here\" and nothing else of the screen (interface-shell R61); control: a calculation that is there is drawn", async () => {
   const p = await open("/app/calculation/" + CALC, { plane: { calculation: refusedIn("NO_CALC", "No such calculation.") } });
-  assert.match(main(p).textContent, /Nothing is here/);
+  drew(main(p), "shell.unavailable.nothing.title");
   assert.equal(main(p).querySelectorAll("section").length, 0, "nothing else of the screen is drawn");
   const q = await open("/app/calculation/" + CALC);
-  assert.doesNotMatch(main(q).textContent, /Nothing is here/);
+  notDrew(main(q), "shell.unavailable.nothing.title");
 });

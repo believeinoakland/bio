@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
-import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE, OPEN_REQUEST_NOQUOTE_PLAIN } from "../../../src/case-inputs/index.mjs";
+import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE, OPEN_REQUEST_NOQUOTE_KEY } from "../../../src/case-inputs/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -160,11 +160,10 @@ test("R17: when R8 reads undetermined the step's one sentence is signing.openreq
   assert.ok(!JSON.stringify(lines(ok)).includes(OPEN_REQUESTS_UNREAD_SENTENCE));
 });
 
-test("R18: a row answering quotable: false also answers quoting, {key: null, says: \"{whom}'s reply asks not to be quoted.\"} (the key signing.openrequest.noquote is not yet in words.json), shown once beside its row's line for each shape of row; the row's own line is unchanged, and nothing is refused or written", () => {
+test("R18: a row answering quotable: false also answers quoting, {key: signing.openrequest.noquote, says} read by key from words.json and filled with {whom}, shown once beside its row's line for each shape of row; the row's own line is unchanged, and nothing is refused or written", () => {
   const { w } = setup();
-  assert.equal(WORDS.some((x) => x.key === "signing.openrequest.noquote"), false,
-    "the key is not yet given: when it is, this test and the module read it by key");
-  assert.equal(OPEN_REQUEST_NOQUOTE_PLAIN, "{whom}'s reply asks not to be quoted.");
+  assert.equal(OPEN_REQUEST_NOQUOTE_KEY, "signing.openrequest.noquote");
+  assert.ok(WORDS.some((x) => x.key === OPEN_REQUEST_NOQUOTE_KEY), "words.json holds the key (DEC-232)");
   const rows = [
     { ...ROWS[0], quotable: false },
     { ...ROWS[1], quotable: false },
@@ -179,12 +178,13 @@ test("R18: a row answering quotable: false also answers quoting, {key: null, say
   for (const [i, l] of o.entries()) {
     const plain = openRequestLine({ ...rows[i], quotable: undefined });
     assert.deepEqual([l.key, l.says], [plain.key, plain.says], "the row's own line is unchanged");
-    assert.deepEqual(l.quoting, { key: null, says: `${rows[i].whom}'s reply asks not to be quoted.` });
+    assert.deepEqual(l.quoting, { key: OPEN_REQUEST_NOQUOTE_KEY, says: fill(OPEN_REQUEST_NOQUOTE_KEY, { whom: rows[i].whom }) });
     assert.deepEqual(Object.keys(l.quoting), ["key", "says"], "one line, shown once");
     assert.ok(!/\{[a-z_]+\}/.test(l.quoting.says), "filled");
   }
   /* a whom holding a $ pattern is filled as written */
-  assert.equal(openRequestLine({ ...rows[0], whom: "the $& Office" }).quoting.says, "the $& Office's reply asks not to be quoted.");
+  assert.equal(openRequestLine({ ...rows[0], whom: "the $& Office" }).quoting.says,
+    "the $& Office's reply asks not to be quoted, so the case says what it says without quoting its words.");
   assert.deepEqual(w.snapshot(), before, "nothing written");
 });
 

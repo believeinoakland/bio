@@ -23,7 +23,7 @@ import { ACT_HELP } from "./act-help.mjs";
 
 const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; "
   + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
-  + "at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is "
+  + "at the top per DEC-19 with vocabularies.rung_correction_key beside it) and is "
   + "null only where the act carries a STATED absence — read rung_absence for the "
   + "ground, and vocabularies.rung_absence_grounds for what that ground means; "
   + "capture_acts are keyed by a capture sha rather than by a record, so they are "

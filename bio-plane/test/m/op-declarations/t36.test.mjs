@@ -300,14 +300,19 @@ test("R34 (affordances R48): every op in SESSION_OPS.member has an explanation i
   assert.ok(ACT_HELP && typeof ACT_HELP === "object", "affordances' ACT_HELP (its R48) is not exported");
   const absent = new Set(Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]));
   const explained = (op) => Object.hasOwn(ACT_HELP, op) && typeof ACT_HELP[op] === "string" && ACT_HELP[op].length > 0;
-  const member = [...SESSION_OPS.member];
+  /* T49 (R71): `founderhandleset` is in the founder's set alone, and R71 holds R34 over it all the same: explained by
+     ACT_HELP under its own name, or named in ACT_HELP_ABSENT until it is. It is the one op beside the member set's that
+     the partition covers. */
+  const FOUNDER_ONLY = [...SESSION_OPS.admin].filter((op) => !SESSION_OPS.member.has(op) && op === "founderhandleset");
+  assert.deepEqual(FOUNDER_ONLY, ["founderhandleset"]);
+  const member = [...SESSION_OPS.member, ...FOUNDER_ONLY];
   const neitherOne = member.filter((op) => !explained(op) && !absent.has(op));
   const bothOnes = member.filter((op) => explained(op) && absent.has(op));
   assert.deepEqual(neitherOne, [], `member ops with no text and no ground: ${neitherOne}`);
   assert.deepEqual(bothOnes, [], `member ops explained and named absent: ${bothOnes}`);
   /* no op in ACT_HELP_ABSENT is outside the member set (it names member ops only) or explained */
   for (const op of absent) {
-    assert.ok(SESSION_OPS.member.has(op), `${op} is no member op`);
+    assert.ok(SESSION_OPS.member.has(op) || FOUNDER_ONLY.includes(op), `${op} is no member op`);
     assert.ok(!explained(op), `${op} is explained`);
   }
   assert.equal(member.filter(explained).length + absent.size, member.length);

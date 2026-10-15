@@ -229,6 +229,15 @@ CREATE TABLE IF NOT EXISTS home_looks (
   at        TEXT NOT NULL
 );
 
+-- R144 (T49; N1072; Bob's K3265): THE FOUNDER'S OWN HANDLE, at most one row (id is always 1), chosen once and never
+-- changed (a second set is refused HANDLE_FIXED). The founder has no members row, so her handle is held here; her member id
+-- stays 'admin'. Exempt from purge as the members are (R115).
+CREATE TABLE IF NOT EXISTS founder_handle (
+  id     INTEGER PRIMARY KEY CHECK (id = 1),
+  handle TEXT NOT NULL,
+  at     TEXT NOT NULL
+);
+
 -- R107 (DEC-136 (1)): WHETHER MEMBERS ARE TOLD WHAT A COURT CAN REACH, an administrator's choice, append-only; the
 -- latest row is the setting and no row means nobody has chosen (nothing preselected). Exempt from purge (R111).
 CREATE TABLE IF NOT EXISTS court_notice (
@@ -265,7 +274,9 @@ export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_v
   /* R57, R16 (was R124's, T40) and R123: the handle history and the handle check's window. */
   "handle_history", "handle_check_window",
   /* R143 (T48): the members' Home marks. */
-  "home_looks"];
+  "home_looks",
+  /* R144 (T49): the founder's own handle. */
+  "founder_handle"];
 /* R131 (T46; K2928): the tables declared through record-core's `declareTable` (its R21) with classes of their own rather
    than its default form. `join_doors` holds each door's `secret_hash`, so it is `export: never`: no export, an
    administrator's included, carries a door's secret or its hash (R130's read is the only way its settings and history

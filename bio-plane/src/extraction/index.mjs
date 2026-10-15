@@ -955,6 +955,11 @@ export class Extraction {
     const ts = this.#one(
       `SELECT transcribed, terminal_step, engines, derivation_cap, steps FROM reading_text_source WHERE capture_sha=?`, captureSha);
     const chain = reading && reading.text_source !== undefined ? reading.text_source : null;
+    /* R76 (T49; K3387): the capture's units as `unitsOf` (R36) answers them, withheld with the bundle (as R27's
+       `unread_pages`); `[]` for a capture read and never indexed, absent only for a capture not read (R45). */
+    const withheld = !!row.bundle_id && this.#redactor(viewer)(row.bundle_id) === null;
+    const text_units = withheld ? undefined
+      : this.unitsOf(row.capture_sha).units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated }));
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
@@ -976,7 +981,8 @@ export class Extraction {
                    why: `this reading carries no text provenance, which is not the same as its `
                       + `text not having been transcribed -- nobody recorded how it was produced` },
              reading_history: this.#readingHistoryOf(row.capture_sha),
-             ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format) };
+             ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
+             ...(text_units ? { text_units } : {}) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

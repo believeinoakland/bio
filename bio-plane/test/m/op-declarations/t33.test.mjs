@@ -166,7 +166,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     /* T45 (R49) */
     "owners", "publishgate",
     /* T46 (R51): the member-run door's act, a member's session or her own agent credential */
-    "memberrun"].sort());
+    "memberrun",
+    /* T49 (R71): the founder's own act, the founder's session alone */
+    "founder"].sort());
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -232,6 +234,8 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     publishgate: [{ classes: MP, mutating: true }, "publish"],
     /* T46 (R51): a member's own run act, her session or her own `ai` credential (no machineClasses), no probe, null */
     memberrun: [{ classes: ["admin", "member"], mutating: true }, null],
+    /* T49 (R71): the founder's session alone (classes `admin`, no bearer), no working capability */
+    founder: [{ classes: ["admin"], machineClasses: [], mutating: true }, null],
   };
   const PUBLIC = ["door", "public", "publicread"];
   let n = 0;
@@ -252,6 +256,12 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
     if (PUBLIC.includes(k)) {
       assert.ok(!SESSION_OPS.member.has(op) && !SESSION_OPS.admin.has(op), `${op} is public and in a session set`);
+      continue;
+    }
+    /* T49 (R71): a founder-only op is in the founder's set alone, reached as an admin session */
+    if (k === "founder") {
+      assert.ok(SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), `${op} is not in the founder's set alone`);
+      assert.equal(ACT_GATE.mode(op), "admin-session", op);
       continue;
     }
     assert.ok(both(op), `${op} is not in both session sets`);

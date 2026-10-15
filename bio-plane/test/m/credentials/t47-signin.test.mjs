@@ -4,7 +4,8 @@
    Each limit is tested at a fake clock, one second either side. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD, FOUNDER_PASSWORD, SIGNIN_TOKEN, sha } from "./fixture.mjs";
+import { CREDENTIALS_WORDS } from "../../../src/credentials/checks.mjs";
+import { world, PASSWORD, FOUNDER_PASSWORD, SIGNIN_TOKEN, sha, FOUNDER_HANDLE } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, SIGN_IN_CHECKS, Credentials, SESSION_DEVICES, SESSION_LIMITS, REAUTH_WINDOW_MS, RESET_LINK_DAYS }
   from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
@@ -21,7 +22,7 @@ const windowCount = (w) => w.row(`SELECT COALESCE(SUM(count), 0) AS n FROM signi
 /* ann signs in on `device` at T0. */
 async function signedIn(device, extra = {}) {
   const w = await world().group("ann", "bob");
-  const s = await at(T0, () => w.c.login({ role: "member:ann", password: PASSWORD("ann"), device, ...extra }));
+  const s = await at(T0, () => w.c.login({ handle: "ann", password: PASSWORD("ann"), device, ...extra }));
   assert.equal(s.ok, true);
   return { w, token: s.token, s };
 }
@@ -35,13 +36,13 @@ test("R65 login takes device own or shared (absent or anything else: shared), re
                                      ownMax: 30 * 24 * 3600 * S });
   const w = await world().group("ann");
   for (const [device, want] of [["own", "own"], ["shared", "shared"], [undefined, "shared"], ["OWN", "shared"], [7, "shared"]]) {
-    const s = await at(T0, () => w.c.login({ role: "member:ann", password: PASSWORD("ann"), device }));
+    const s = await at(T0, () => w.c.login({ handle: "ann", password: PASSWORD("ann"), device }));
     assert.equal(s.device, want, String(device));
     assert.equal(w.row(`SELECT device FROM sessions WHERE token_sha=?`, sha(s.token)).device, want);
     assert.equal(s.expires, T0 + (want === "own" ? SESSION_LIMITS.ownMax : 43200 * S), "R4's 12 hours for shared");
     assert.equal((await at(T0, () => w.c.session(s.token))).device, want);
   }
-  const short = await at(T0, () => w.c.login({ role: "member:ann", password: PASSWORD("ann"), ttlSeconds: 60 }));
+  const short = await at(T0, () => w.c.login({ handle: "ann", password: PASSWORD("ann"), ttlSeconds: 60 }));
   assert.equal(short.expires, T0 + 60 * S, "R71 (7): a shared session keeps ttlSeconds' cap");
 });
 
@@ -187,16 +188,15 @@ async function handleWorld() {
   return w;
 }
 
-test("R67 login takes a handle, resolved through membership.memberByHandle; the handle admin is the founder's; control: the right handle and password sign in", async () => {
+test("R67 login takes a handle, resolved through membership.memberByHandle; the founder's is her chosen handle (T49, R75); control: the right handle and password sign in", async () => {
   const w = await handleWorld();
   const s = await w.c.login({ handle: "hana", password: PASSWORD("hana") });
   assert.deepEqual([s.ok, s.role], [true, "member:h1"]);
   assert.equal(w.c.session(s.token).handle, "hana");
-  const f = await w.c.login({ handle: "admin", password: FOUNDER_PASSWORD });
+  /* (T49; R75) the founder signs in by the handle she chose at the claim, not by `admin` */
+  const f = await w.c.login({ handle: FOUNDER_HANDLE, password: FOUNDER_PASSWORD });
   assert.deepEqual([f.ok, f.role], [true, "admin"]);
   assert.equal(w.c.session(f.token).rootOfTrust, true);
-  /* a handle wins over a role in the same call */
-  assert.equal((await w.c.login({ handle: "hana", role: "admin", password: PASSWORD("hana") })).role, "member:h1");
   /* the route passes the body's handle */
   assert.equal((await w.ops("", { handle: "hana", password: PASSWORD("hana"), device: "own" }).login()).device, "own");
 });
@@ -238,21 +238,21 @@ test("R68 any active member issues their own ten codes and recovers with one: a 
   const first = w.c.recoveryCodesIssue({ by: "ann" });
   assert.equal(first.codes.length, 10);
   const codes = w.c.recoveryCodesIssue({ by: "member:ann" }).codes;
-  assert.equal((await w.c.recover({ role: "member:ann", code: first.codes[0], password: "new-passphrase-1" })).reason,
+  assert.equal((await w.c.recover({ handle: "ann", code: first.codes[0], password: "new-passphrase-1" })).reason,
     "RECOVERY_REFUSED", "the earlier issue spent");
-  const sA = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
-  const sB = (await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).token;
-  assert.deepEqual(await w.c.recover({ role: "member:ann", code: codes[0], password: "new-passphrase-1" }),
+  const sA = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
+  const sB = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
+  assert.deepEqual(await w.c.recover({ handle: "ann", code: codes[0], password: "new-passphrase-1" }),
     { ok: true, role: "member:ann", remaining: 9 });
   assert.equal(w.c.session(sA), null, "her sessions ended");
   assert.equal(w.c.session(sB).role, "member:bob", "another's stand");
-  assert.equal((await w.c.recover({ role: "member:ann", code: codes[0], password: "new-passphrase-2" })).reason,
+  assert.equal((await w.c.recover({ handle: "ann", code: codes[0], password: "new-passphrase-2" })).reason,
     "RECOVERY_REFUSED", "spent");
-  assert.equal((await w.c.login({ role: "member:ann", password: "new-passphrase-1" })).ok, true);
+  assert.equal((await w.c.login({ handle: "ann", password: "new-passphrase-1" })).ok, true);
   /* control: revoked, her codes die (R16) and a code she kept is refused */
   const bobs = w.c.recoveryCodesIssue({ by: "bob" }).codes;
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
-  assert.equal((await w.c.recover({ role: "member:bob", code: bobs[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED");
+  assert.equal((await w.c.recover({ handle: "bob", code: bobs[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED");
 });
 
 test("R68 R71 recoveryCodesIssue by anyone but an active member or the claimed founder is RECOVERY_CODES_NOT_A_MEMBER (C-96.53), issuing nothing; RECOVERY_REFUSED says member; control: the founder issues", async () => {
@@ -265,8 +265,11 @@ test("R68 R71 recoveryCodesIssue by anyone but an active member or the claimed f
       SIGN_IN_CHECKS.RECOVERY_CODES_NOT_A_MEMBER.translation], String(by));
   }
   assert.equal(w.snapshot(), before);
-  assert.match(SIGN_IN_CHECKS.RECOVERY_REFUSED.translation, /member/);
-  assert.doesNotMatch(SIGN_IN_CHECKS.RECOVERY_REFUSED.translation, /administrator it was given to/);
+  /* the refusal says "member": its detail does; (T49; N1075) its row's translation is words.json's, read by key */
+  const refused = await w.c.recover({ handle: "nobody-here", code: "x", password: "new-passphrase-1" });
+  assert.match(refused.detail, /active member's/);
+  assert.doesNotMatch(refused.detail, /administrator/);
+  assert.equal(SIGN_IN_CHECKS.RECOVERY_REFUSED.translation, CREDENTIALS_WORDS["refusal.RECOVERY_REFUSED"]);
   assert.equal(w.c.recoveryCodesIssue({ by: "admin" }).ok, true, "control: the founder");
   const unclaimed = world();
   assert.equal(unclaimed.c.recoveryCodesIssue({ by: "admin" }).code, "RECOVERY_CODES_NOT_A_MEMBER", "before the claim, no founder");
@@ -326,20 +329,20 @@ test("R69 R71 passwordResetLook answers a live link {live, handle, expiresAt} an
 test("R69 passwordReset sets the password as R3 does, ends every session of that member, spends the link and records it; reuse refused RESET_LINK_DEAD, counted under R38; 12 characters or more; control: another member's sessions stay", async () => {
   const w = await world().group("ann", "bob");
   const link = w.c.passwordResetLinkMake({ member: "bob", by: "second" }).link;
-  const sB = (await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).token;
-  const sA = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const sB = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
+  const sA = (await w.c.login({ handle: "ann", password: PASSWORD("ann") })).token;
   assert.deepEqual(await w.c.passwordReset({ link, password: "short" }), { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
   assert.equal(w.c.passwordResetLook({ link }).live, true, "a short password spends nothing");
   assert.deepEqual(await w.c.passwordReset({ link, password: "bobs-new-passphrase" }), { ok: true, member: "bob", ended: 1 });
   assert.equal(w.c.session(sB), null, "his sessions ended");
   assert.equal(w.c.session(sA).role, "member:ann", "control: another's stand");
-  assert.equal((await w.c.login({ role: "member:bob", password: "bobs-new-passphrase" })).ok, true);
-  assert.deepEqual(await w.c.login({ role: "member:bob", password: PASSWORD("bob") }), refused, "the old one no more");
+  assert.equal((await w.c.login({ handle: "bob", password: "bobs-new-passphrase" })).ok, true);
+  assert.deepEqual(await w.c.login({ handle: "bob", password: PASSWORD("bob") }), refused, "the old one no more");
   assert.ok(w.row(`SELECT spent_at FROM password_reset_links`).spent_at, "spent, recorded");
   const n0 = windowCount(w);
   assert.deepEqual(said(await w.c.passwordReset({ link, password: "bobs-other-passphrase" })), row("RESET_LINK_DEAD"));
   assert.equal(windowCount(w), n0 + 2, "a dead link counted under R38's window");
-  assert.equal((await w.c.login({ role: "member:bob", password: "bobs-new-passphrase" })).ok, true, "reuse changed nothing");
+  assert.equal((await w.c.login({ handle: "bob", password: "bobs-new-passphrase" })).ok, true, "reuse changed nothing");
   /* the route, public, from the body only; under the window */
   const l2 = w.c.passwordResetLinkMake({ member: "ann", by: "second" }).link;
   assert.equal((await w.ops(`link=${l2}&password=anns-new-passphrase`).passwordreset()).reason, "PASSWORD_TOO_SHORT",

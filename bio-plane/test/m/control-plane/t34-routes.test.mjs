@@ -337,8 +337,8 @@ test("R22, R32, R33 (DEC-149, K1821; T34-87): the door's own rows call the group
   const tgrant = await call(env, { op: "templatereviewgrant", token: S.founder, method: "POST", body: {} });
   for (const [r, key] of [[mint, "tokenIsShownOnce"], [grant, "secretIsShownOnce"], [tgrant, "secretIsShownOnce"]]) {
     assert.equal(r.status, 200, r.text.slice(0, 200));
-    assert.ok(r.json.result[key].startsWith("This is the only time your group's Civicsmith will show this value."), key);
-    assert.doesNotMatch(r.json.result[key], OLD);
+    /* R99 (T49): the sentence is read by key through setup-words (asserted in t49-door.test.mjs), no English held here */
+    assert.equal(typeof r.json.result[key], "string", key);
   }
   for (const old of ["This copy has no operation by that name.", "this instance could not consult its own record",
                      "This is the only time this instance will show this value.", "the plane could not check that"])

@@ -11,6 +11,18 @@
 
 const at = (fn, region) => `src/credentials/index.mjs ${fn} > ${region}`;
 
+/* (T49; N1075, K3269) The words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
+   refusals carry, each `en` verbatim, read by key: the translation of each of the five rows that file keys is the word
+   itself, never a copy. `{time}` in SIGN_IN_PAUSED's is left for the screen. */
+export const CREDENTIALS_WORDS = Object.freeze({
+  'refusal.SIGN_IN_PAUSED': 'Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn\'t a judgment on you. Try again at {time}.',
+  'refusal.NOT_SIGNED_IN': 'You aren\'t signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.',
+  'refusal.RECOVERY_REFUSED': 'That didn\'t work: the handle, the code or both aren\'t right, or the code was already used. Check them and try again. Nothing was changed.',
+  'refusal.CURRENT_PASSWORD_WRONG': 'Your current password isn\'t right, so it wasn\'t changed. Check it and try again.',
+  'refusal.AI_RUN_CREDENTIAL_MALFORMED': 'The run couldn\'t start: the pass it needs to work for you was malformed. Nothing was sent. Try again; if it happens again, tell an administrator.',
+});
+
+
 /* D-158 / C-63: a signing key is registered to a member who can attest (Membership Architecture v2 §6). Two codes for
    two facts: a member with no handle has never enrolled; one who has a handle and is not `active` is not standing. Both
    are minted in one region, `#signerMemberBar`, which R6, R7's activation and R9 consume. */
@@ -95,9 +107,7 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
      new row, awaiting promotion's stamp (T47-10). */
   AI_RUN_CREDENTIAL_MALFORMED: Object.freeze({
     check: 'C-29.41', where: at("aiRunCredentialMint", "is-ai-run-credential-shape"),
-    translation: 'The assistant\'s run could not be given its credential, because the request did not name the run, or '
-      + 'asked for something a run does not do. Nothing was created. Start the run again; if it keeps happening, tell '
-      + 'whoever hosts your group\'s Civicsmith.',
+    translation: CREDENTIALS_WORDS['refusal.AI_RUN_CREDENTIAL_MALFORMED'],
   }),
 });
 
@@ -201,21 +211,15 @@ export const KEYED_SERVICE_CHECKS = Object.freeze({
 export const SIGN_IN_CHECKS = Object.freeze({
   SIGN_IN_PAUSED: Object.freeze({
     check: 'C-96.39', where: at("#paused", "is-sign-in-window"),
-    translation: 'Signing in is paused for a few minutes, because too many attempts were refused in a short time. '
-      + 'Nothing was checked or changed. Wait ten minutes and try again; if it keeps happening, tell an administrator, '
-      + 'since someone may be trying to guess a password.',
+    translation: CREDENTIALS_WORDS['refusal.SIGN_IN_PAUSED'],
   }),
   NOT_SIGNED_IN: Object.freeze({
     check: 'C-96.40', where: at("#notSignedIn", "is-session-live"),
-    translation: 'There is no signed-in session to end here: it has already ended, it expired, or it never existed. '
-      + 'Nothing was changed.',
+    translation: CREDENTIALS_WORDS['refusal.NOT_SIGNED_IN'],
   }),
   RECOVERY_REFUSED: Object.freeze({
     check: 'C-96.41', where: at("#recoveryRefused", "is-recovery-code"),
-    /* (T47; R68) re-worded: every member holds codes. A row change, joining the census red until T48's stamp. */
-    translation: 'That recovery did not go through. A recovery code works once, only for the account it was given to, '
-      + 'and only while that member is active. Nothing was changed. Check the code and the account it belongs to, or '
-      + 'ask an administrator for help.',
+    translation: CREDENTIALS_WORDS['refusal.RECOVERY_REFUSED'],
   }),
   SECURITY_KIND_UNKNOWN: Object.freeze({
     check: 'C-96.42', where: at("securityCount", "is-security-kind"),
@@ -244,9 +248,7 @@ export const SIGN_IN_CHECKS = Object.freeze({
   }),
   CURRENT_PASSWORD_WRONG: Object.freeze({
     check: 'C-96.46', where: at("passwordChange", "is-current-password"),
-    translation: 'The current password you typed is not the one your account holds, so your password was not '
-      + 'changed. Nothing was changed. Type your current password again; if you have forgotten it, ask an administrator '
-      + 'for help.',
+    translation: CREDENTIALS_WORDS['refusal.CURRENT_PASSWORD_WRONG'],
   }),
   /* T47 (T47-81; R68, K3060 D4): recovery codes issued to anyone but an active member, the next free number of C-96.
      A new row, joining the row census red until T48's stamp. */

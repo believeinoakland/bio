@@ -1,5 +1,5 @@
 /* screens-daily against interface-shell R21's screen contract and R7's common rules, at the module's interface
-   (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry is read from git at
+   (`SCREENS`) and on the real served page (interface-shell's harness). It holds no sentence's English (R34): its words are keys. The registry is read from git at
    6f0d88d8d5, PR #33's head as merged into `tranche/T47` at L11's START (wizard-scripts R35, K3127), so a later edit of the
    working copy does not move it. Since T48 (wizard-scripts R38) it is read at PR #34's merge, 4664e8efd4: `elsewhere` (no acts),
    the queue's `owed:updatelater`, Home's item acts. */
@@ -9,10 +9,10 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-daily/index.mjs";
+import { SCREENS } from "../../../src/screens-daily/index.mjs";
 import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { checkScreens, interfacePage } from "../../../src/interface-shell/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
+import { checkScreens, interfacePage, RE_POINTS } from "../../../src/interface-shell/index.mjs";
 import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
 import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
 
@@ -25,21 +25,15 @@ const atCommit = (path) => {
 // An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13).
 const REGISTRY = atCommit("docs/development/ux-substrate/screens/registry.json").screens
   .map((r) => ({ ...r, acts: r.acts.map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
-const WORD_KEYS = new Set(WORD_ROWS.map((r) => r[0]));
 const byId = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
-// The acts a screen draws: the registry's (`startfrom` drawn on Home since T47, R9; `actionmove` on the queue, R13; an item's
-// `taskresolve`, `adoptversion`, `keepversion` on Home and `updatelater` on the queue since T48, R17, R19).
-const EXPECTED = {
-  home: ["startfrom", "promote", "taskresolve", "adoptversion", "keepversion"],
-  elsewhere: [],
-  projects: ["promote"],
-  queue: ["taskresolve", "taskforward", "updatelater", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote", "projectkeyset", "exploreapprove", "actionmove"],
-  finder: ["search", "select", "findin", "selectionrelease", "frontier", "calculationcreate"],
-  "find-in": ["findin", "standingquestionset", "recordpersonfact", "recorddatedfact", "standarddeclare", "recordfact", "tabledeclare", "cite", "search"],
-  answers: ["ask", "ruleanswer", "search", "standingquestionset", "standingquestionend"],
-};
+const SCREEN_IDS = SCREENS.map((s) => s.id);
+// The acts a screen draws are the registry's for it (the owner's declaration, N1073: read, never listed here) less the ones this
+// module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs), with a named re-point
+// of the shell (interface-shell R21: R29's "Join" on Home and Projects, until the registry lists it there).
 // Registered acts this module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs).
 const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"] };
+const EXPECTED = Object.fromEntries(REGISTRY.filter((r) => SCREEN_IDS.includes(r.id)).map((r) => [r.id,
+  [...new Set([...r.acts.map((a) => a.op), ...(RE_POINTS[r.id] || [])])].filter((op) => !(ELSEWHERE_DRAWN[r.id] || []).includes(op))]));
 
 test("R1–R6, R10, R15 (interface-shell R21): SCREENS is the seven registry screens home, elsewhere, projects, queue, finder, find-in, answers, each {id, reads, render, acts, words}", () => {
   assert.deepEqual(SCREENS.map((s) => s.id), ["home", "elsewhere", "projects", "queue", "finder", "find-in", "answers"]);
@@ -59,7 +53,7 @@ test("R1–R13 (interface-shell R21, R38): each screen's acts are exactly its re
     assert.deepEqual([...mine].sort(), [...EXPECTED[s.id]].sort(), s.id);
     for (const op of mine) {
       assert.ok(OPS[op], `${s.id}: ${op} is in OPS`);
-      assert.ok(reg.includes(op), `${s.id}: ${op} is registered`);
+      assert.ok(reg.includes(op) || (RE_POINTS[s.id] || []).includes(op), `${s.id}: ${op} is registered, or a named re-point`);
     }
     for (const op of reg) assert.ok(mine.includes(op) || (ELSEWHERE_DRAWN[s.id] || []).includes(op), `${s.id}: registered ${op} is offered`);
     for (const a of s.acts) {
@@ -73,20 +67,31 @@ test("R1–R13 (interface-shell R21, R38): each screen's acts are exactly its re
   assert.equal(OP_ALIASES.ruleanswer, "rule");
 });
 
-test("R7, R22, R23 (interface-shell R5): every word a screen lists is a WORD_ROWS key or its own row; own rows are screen.<id>.*, the four shared keys, or R22's and R23's interim keys", () => {
-  const SHARED_OWN = ["mark.origin.search.means", "queue.step-cost-shared.detail", "ai.refused.limit.unjudged", "ai.label.untested",
-    "queue.source-modified.one", "queue.source-modified.many", "queue.source-removed.one", "queue.source-removed.many", "queue.source.detail", "queue.source.untitled", "home.first.name"];
-  for (const r of SCREEN_WORDS) {
-    assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[1] === "string" && typeof r[2] === "boolean", r[0]);
-    assert.ok(/^screen\.(home|projects|queue|finder|find-in|answers)\./.test(r[0]) || SHARED_OWN.includes(r[0]), r[0]);
-    assert.ok(!/Civicsmith(?! ?'s tests)/.test(r[1].replace(/your group's Civicsmith/gi, "")), `${r[0]} names the group's Civicsmith in DEC-149's form`);
+test("R34 (K3366, K3368; interface-shell R5): every word a screen lists is a key of the word list, read through setup-words; the module holds no row of English", () => {
+  for (const s of SCREENS) {
+    assert.ok(Object.isFrozen(s.words), `${s.id}: its words are frozen`);
+    for (const w of s.words) {
+      assert.equal(typeof w, "string", `${s.id}: ${String(w)} is a key, not a row`);
+      assert.ok(hasWord(w), `${s.id}: ${w} is a word of the list`);
+    }
+    assert.equal(new Set(s.words).size, s.words.length, `${s.id}: its keys are distinct`);
   }
-  assert.equal(new Set(SCREEN_WORDS.map((r) => r[0])).size, SCREEN_WORDS.length, "own keys distinct");
-  for (const k of SCREEN_WORDS.map((r) => r[0])) if (!SHARED_OWN.slice(0, 4).includes(k)) assert.ok(!WORD_KEYS.has(k), `${k} does not shadow a WORD_ROWS key`);
-  for (const s of SCREENS) for (const w of s.words) {
-    if (typeof w === "string") assert.ok(WORD_KEYS.has(w), `${s.id}: ${w} is a WORD_ROWS key`);
-    else assert.ok(SCREEN_WORDS.includes(w), `${s.id}: ${w[0]} is an own row`);
-  }
+  // DEC-256's retired rows are read by no screen.
+  const all = new Set(SCREENS.flatMap((s) => s.words));
+  for (const k of ["screen.home.strip.overdue", "screen.queue.due.overdue"]) assert.ok(!all.has(k), `${k} is retired`);
+  // The module exports no sentence: its interface is SCREENS alone.
+  return import("../../../src/screens-daily/index.mjs").then((m) => assert.deepEqual(Object.keys(m), ["SCREENS"]));
+});
+
+test("R34: every key the module's requirements name is a word of the list and is read by the screen that draws it", () => {
+  const read = (id) => new Set(byId[id].words);
+  for (const k of ["project.start.title", "project.start.title.help", "project.visibility.title", "project.visibility.start.hidden", "project.visibility.start.discoverable",
+    "project.visibility.start.later", "project.start.go", "action.noreply.title", "member.founder.unnamed", "projects.empty.sub", "projects.empty.note", "refusal.ANSWER_MALFORMED"]) assert.ok(hasWord(k), k);
+  for (const k of ["project.start.title", "project.start.go", "projects.empty.sub", "projects.empty.note", "member.founder.unnamed"]) assert.ok(read("projects").has(k), `projects reads ${k}`);
+  for (const k of ["project.start.title", "project.start.go", "action.noreply.title", "member.founder.unnamed"]) assert.ok(read("home").has(k), `home reads ${k}`);
+  for (const k of ["screen.findin.cite.supports", "screen.findin.cite.against", "screen.findin.cite.norole"]) assert.ok(read("find-in").has(k), `find-in reads ${k}`);
+  assert.ok(read("answers").has("refusal.ANSWER_MALFORMED"));
+  assert.ok(read("queue").has("action.noreply.title"));
 });
 
 // Each screen drawn with data, as the harness's plane answers its reads.
@@ -155,7 +160,7 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
-    const listed = new Set(s.words.map((w) => (typeof w === "string" ? w : w[0])));
+    const listed = new Set(s.words);
     for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });

@@ -1,4 +1,4 @@
-/* reading-pipeline: `read` (R1–R17, R21, R22, R24) at the module's interface, called directly over a stored capture
+/* reading-pipeline: `read` (R1–R17, R21, R24) at the module's interface, called directly over a stored capture
    with the evidence store, the bindings, the view and the live-calibration callback a caller hands in, scripted fleet
    members and format entries standing in for the tiers. Moved from `extraction`'s read.test.mjs (N513), its
    assertions unchanged; `extraction` keeps the arms that are its own (R1's store binding, R18's view, the acquire
@@ -468,7 +468,7 @@ test("R16: nothing about the source is fetched: tiers 2 and 3 are reached only t
   } finally { globalThis.fetch = orig; }
 });
 
-test("R24 R22: every recogniser runs over the jurisdiction view the caller hands in (extraction R18 composes it), never a view of its own", async () => {
+test("R24: every recogniser runs over the jurisdiction view the caller hands in (extraction R18 composes it), never a view of its own", async () => {
   const w = fresh();
   const memo = "OFFICER'S MEMORANDUM\nPROPOSAL\nThe Officer Proposes that the Selectboard adopt P.E.B.L. 4.\nCOSTS\nNone.\nCONSULTATION\nThe Harbour Commission.\n";
   const d = await hold(w.evidence, memo);
@@ -484,9 +484,7 @@ test("R24 R22: every recogniser runs over the jurisdiction view the caller hands
   w.profiles = [];
   const e = (await w.read(doc({ digest: d, format: "undetermined", ct: "text/plain", fromText: true, headers: [] }))).reading;
   assert.equal(e.content_type, withEmpty.type.key);
-  /* R22: nothing this module says names the place a profile describes */
-  const oakland = /oakland|alameda/i;
-  for (const said of [r.basis, e.basis]) assert.doesNotMatch(said, oakland);
+  /* R22 is proven over the module's whole outward text against jurisdictions' full place list: text-units.test.mjs */
 });
 
 test("R3 R11 (N253): image_unread markers count no undecoded character: a photo page whose only residue is its unread images does not escalate to tier 2, and its text reads determined", async () => {

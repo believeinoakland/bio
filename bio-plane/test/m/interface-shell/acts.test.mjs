@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import { NEEDS, SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 import { boot, ok, refused, refusedIn, httpError, silent, pending, bytes, MEMBER, ADMIN } from "./harness.mjs";
-import { ALL, HOME, HELD } from "./screens.fixture.mjs";
+import { ALL, HOME, HELD, FIXTURE_WORDS } from "./screens.fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
 const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }, { id: "h2", title: "Budget", at: "2026-10-02" }] });
@@ -15,7 +16,7 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
   assert.equal(RUNGS.cite, "reversible"); assert.equal(RUNGS.retire, "terminal"); assert.equal(RUNGS.attest, "attested"); assert.equal(RUNGS.release, "reasoned");
   assert.equal(RUNGS.promote, undefined);
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
-  const cases = [["cite", "Reversible", 1], ["retire", "Terminal", 3], ["attest", "Signed", 4], ["release", "Reasoned", 2]];
+  const cases = [["cite", word("weight.reversible.name"), 1], ["retire", word("weight.terminal.name"), 3], ["attest", word("weight.signed.name"), 4], ["release", word("weight.reasoned.name"), 2]];
   for (const [op, name, on] of cases) {
     const b = btn(p, op);
     assert.equal(b.localName, "button");
@@ -23,11 +24,11 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
     assert.equal(b.querySelectorAll(".cs-pips i.on").length, on, op);
     assert.ok(b.getAttribute("data-tip").includes(name + ":"), op);
   }
-  assert.ok(btn(p, "cite").textContent.startsWith("Cite a passage"));
+  assert.ok(btn(p, "cite").textContent.startsWith(word("act.cite.label.document")));
   /* R64 amends: promote, RUNG_ABSENT under substrate, carries no weight of its own, only the design kit's mark */
   const h = await boot({ screens: ALL, plane: PLANE });
   assert.equal(btn(h, "promote").querySelector(".w").getAttribute("data-mark"), "reasoned");
-  assert.ok(btn(h, "promote").textContent.startsWith("Start a project"));
+  assert.ok(btn(h, "promote").textContent.startsWith(word("act.promote.label.home")));
 });
 
 test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither table names, is drawn and frictioned as reasoned; under substrate, credential, caller-owned or observational it carries no weight mark and runs on press", async () => {
@@ -36,7 +37,7 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   assert.equal(RUNG_ABSENT.memberadd.ground !== "undetermined", true);
   const s = { id: "capture", reads: () => ({}), acts: [{ op: "captureupload" }, { op: "acquire" }], render: (cs) => cs.act("captureupload") + cs.act("acquire") };
   const p = await boot({ screens: [s], path: "/app/capture" });
-  assert.equal(btn(p, "captureupload").querySelector(".w").textContent, "Reasoned");
+  assert.equal(btn(p, "captureupload").querySelector(".w").textContent, word("weight.reasoned.name"));
   await p.click(btn(p, "captureupload"));
   assert.equal(p.byOp("captureupload").length, 0, "asks a reason first");
   assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
@@ -59,7 +60,7 @@ test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the mem
   await p.click(btn(p, "heldsetaside"));
   assert.equal(p.byOp("heldsetaside").length, 0);
   assert.equal(p.root().querySelector('[data-slot="m:0"] textarea'), null, "no second reason asked");
-  assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes("Say why first"));
+  assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes(word("shell.reason.needed")));
   p.doc.getElementById("why").value = "a duplicate";
   await p.click(btn(p, "heldsetaside"));
   assert.deepEqual(p.byOp("heldsetaside")[0].body, { ids: ["h1"], reason: "a duplicate" });
@@ -73,10 +74,10 @@ test("R11 friction: a reversible act runs on press; a reasoned act opens a reaso
   assert.equal(p.byOp("release").length, 0);
   const slot = p.root().querySelector('[data-slot="m:3"]');
   assert.ok(slot.querySelector("textarea"));
-  assert.ok(slot.querySelector("label").textContent === "Your reason");
+  assert.ok(slot.querySelector("label").textContent === word("shell.reason"));
   await p.click(slot.querySelector('[data-shell="reason-send"]'));
   assert.equal(p.byOp("release").length, 0, "no reason, nothing sent");
-  assert.ok(slot.textContent.includes("Say why first"));
+  assert.ok(slot.textContent.includes(word("shell.reason.needed")));
   slot.querySelector("textarea").value = "  it was checked  ";
   await p.click(slot.querySelector('[data-shell="reason-send"]'));
   assert.deepEqual(p.byOp("release")[0].body, { ids: ["c1"], reason: "it was checked" });
@@ -102,14 +103,14 @@ test("R11 friction: a reversible act runs on press; a reasoned act opens a reaso
 test("R11 a terminal act's dialog states what the act does (act.<op>.does)", async () => {
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
   await p.click(btn(p, "retire"));
-  assert.ok(p.root().querySelector('[role="dialog"] .ends').textContent.startsWith("Stops using this copy"));
+  assert.ok(p.root().querySelector('[role="dialog"] .ends').textContent.startsWith(word("act.retire.does")));
 });
 
 test("R11 an act that leaves the group carries mark.outward.means; one that does not, none", async () => {
   const s = { id: "connect", reads: () => ({}), acts: [{ op: "disclosureshown", outward: true }, { op: "groupkeynoticeseen" }], render: (cs) => cs.act("disclosureshown") + cs.act("groupkeynoticeseen") };
   const p = await boot({ screens: [s], path: "/app/connect" });
   assert.ok(btn(p, "disclosureshown").querySelector('use[href$="#i-outward"]'));
-  assert.ok(btn(p, "disclosureshown").getAttribute("data-tip").includes("Outward: this leaves"));
+  assert.ok(btn(p, "disclosureshown").getAttribute("data-tip").includes(word("mark.outward.means").replace(/'/g, "&#39;")));
   assert.equal(btn(p, "groupkeynoticeseen").querySelector('use[href$="#i-outward"]'), null);
 });
 
@@ -117,7 +118,7 @@ test("R11 (DEC-181) at the phone width a signed act is drawn with what it does a
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE, phone: true });
   assert.equal(btn(p, "attest"), null);
   const phone = p.root().querySelector('[data-phone-act="attest"]');
-  assert.ok(phone.textContent.includes("Finish this on a larger screen"));
+  assert.ok(phone.textContent.includes(word("shell.phone.larger")));
   assert.equal(phone.querySelector("button"), null);
   await p.click(phone);
   assert.equal(p.byOp("attest").length, 0);
@@ -155,7 +156,7 @@ test("R12 before whoami answers, no act is drawn; an act the screen does not lis
 });
 
 test("R13 R61 a refusal of each kind (ok: false at the top level, in result, an HTTP error, no answer) is drawn beside the act it answers, never in place of the screen, an HTTP error without words naming no code; a form keeps what the member typed; nothing else changes", async () => {
-  const kinds = [[refused("NO_SUCH_THING_ZZ", "The thing is gone."), "The thing is gone."], [refusedIn("ZZ_IN", "Inside words."), "Inside words."], [httpError(500), "This could not be read."], [silent, "did not answer"]];
+  const kinds = [[refused("NO_SUCH_THING_ZZ", "The thing is gone."), "The thing is gone."], [refusedIn("ZZ_IN", "Inside words."), "Inside words."], [httpError(500), word("shell.unread")], [silent, "did not answer"]];
   const code = "PROJECT_SCOPE_UNKNOWN";
   for (const [answer, words] of kinds) {
     const p = await boot({ screens: ALL, plane: { promote: answer, projectdirectory: ok({ projects: [] }) } });
@@ -166,7 +167,7 @@ test("R13 R61 a refusal of each kind (ok: false at the top level, in result, an 
     assert.ok(slot.querySelector('[data-gap="refused"]'), words);
     assert.ok(slot.textContent.includes(words), slot.textContent);
     assert.equal(p.doc.getElementById("home-title").value, "Typed title");
-    for (const sl of p.root().querySelectorAll(".cs-slot")) sl.innerHTML = "";
+    for (const sl of p.root().querySelectorAll(".mk-slot")) sl.innerHTML = "";
     assert.equal(p.root().querySelector("#cs-main").innerHTML.replace(' value="Typed title"', ""), before.replace(/ value="[^"]*"/, ' value=""'), "nothing else changes");
   }
   /* refusal.<code> when held, and the screen's own key for a code first */
@@ -176,7 +177,7 @@ test("R13 R61 a refusal of each kind (ok: false at the top level, in result, an 
   assert.ok(!held.root().querySelector('[data-slot="m:0"]').textContent.includes("ignored"));
   const own = await boot({ screens: ALL, path: "/app/document/c1", plane: { ...PLANE, cite: refused("CITE_GONE", "ignored") } });
   await own.click(btn(own, "cite"));
-  assert.equal(own.root().querySelector('[data-slot="m:0"]').textContent, "Passages");
+  assert.equal(own.root().querySelector('[data-slot="m:0"]').textContent, FIXTURE_WORDS.find((r) => r[0] === "screen.document.t.passages")[1]);
 });
 
 test("R21 an act's send: null sends nothing; {refuse: key} draws that word beside the act; a promise is awaited; done runs on success, then the reads named in rereads (all when absent)", async () => {
@@ -184,7 +185,7 @@ test("R21 an act's send: null sends nothing; {refuse: key} draws that word besid
   p.doc.getElementById("home-title").value = "";
   await p.click(btn(p, "promote"));
   assert.equal(p.byOp("promote").length, 0);
-  assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes("Say why first"));
+  assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes(word("shell.reason.needed")));
   const q = await boot({ screens: ALL, plane: { promote: ok({ project: "P9" }), projectdirectory: ok({ projects: [] }) } });
   q.doc.getElementById("home-title").value = "New";
   await q.click(btn(q, "promote"));
@@ -347,5 +348,5 @@ test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mar
   assert.equal(OPS.cite.mutating, true);
   const c = { id: "document", reads: () => ({}), acts: [{ op: "cite" }], render: (cs) => cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
-  assert.equal(btn(q, "cite").querySelector(".w").textContent, "Reversible", "control: a mutating act keeps its weight");
+  assert.equal(btn(q, "cite").querySelector(".w").textContent, word("weight.reversible.name"), "control: a mutating act keeps its weight");
 });

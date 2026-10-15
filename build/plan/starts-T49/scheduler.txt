@@ -1,0 +1,13 @@
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 10, scheduler: **T49-12 · scheduler**.
+Your requirements: `build/requirements/scheduler.md` (read whole); unchanged unless R12 is re-scoped through BOB.
+BOB's notes for this job:
+scheduler (T49-12): (N1096, K3321 (A)) `plane` R12 ("a run waiting on a request that reaches expired is woken … exactly once") still fails at `pr.ok` about 108 s past N1095's refusal. Diagnose it, fix your own part, or propose R12's re-scope to BOB in a QUESTION (P9; the text is BOB's at CHANGE).
+1. Measure first: run `plane` R12's test in a scratch copy that has N1095's one-line fix at `control-plane/index.mjs`:2477 (strip `member` only for `stepsource` and `stepsourcewithdraw`). Name the step at which `pr.ok` fails and the time to failure. Never commit the scratch fix: control-plane is T49-29's.
+2. Inherited red: `plane` R12, from rule 5 (7) (A), until both T49-12 and T49-29 merge; coverage only if R12 is re-scoped. You are alone in L10.
+Reading set (mechanics §17, K3271): measured 1015 KB with all your tests, 814 KB without them (the used public parts are an upper bound), over the 600 KB limit. Read your requirements, entries, layer contract and own code whole; for the used modules' services your entries touch, if they exceed what you can read, give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you: N1075 (read member-facing sentences by key where `words.json` keys them), N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-lists), and D29 (no `ok: true` carrying a refusal treated as success).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).

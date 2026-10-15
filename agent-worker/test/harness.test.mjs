@@ -115,6 +115,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_
 import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 import { planeEntry } from "./plane-world.mjs";
+import { PLANE_OPS_PINNED } from "./owners.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -125,10 +126,7 @@ const t = (label, got, want) => {
 
 /* R37, R53: the op declaration this member exports, pinned here floor and ceiling (N402: never parsed from the plane). */
 /* R78 (T45): a re-examination run's reads, action, reading and procedureguides. */
-const PINNED_READS = ["action", "agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
-  "consequencesof", "determination", "meaningrows", "plan", "plans", "procedureguides", "profiles", "publishededitions",
-  "reading", "search", "standard", "versionchain", "whoami"];
-const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
+const [PINNED_READS, PINNED_WRITES] = PLANE_OPS_PINNED;  /* N1073: ai-runs', capture-requests' and action-plans' ops read from them (owners.mjs) */
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");
 const PLANE_INDEX = readFileSync(fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url)), "utf8");

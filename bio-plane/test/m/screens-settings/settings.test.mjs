@@ -48,7 +48,10 @@ test("R20 recovery: the member's own codes (recoverycodesstate); new codes shown
   const m = await open("recovery", { me: MEMBER, table: recoveryTable() });
   assert.ok(m.p.requests.some((r) => r.op === "recoverycodesstate"));
   assert.ok(!m.p.requests.some((r) => r.op === "adminrecoverystep"), "a member is not asked the administrators' step");
-  has(m, "screen.recovery.held", { remaining: 7, date: day("2026-10-02") });
+  // credentials R46 issues ten codes: the sentence's total is ten while the plane does not answer it, the plane's own when it does
+  has(m, "screen.recovery.held", { remaining: 7, total: 10, date: day("2026-10-02") });
+  const t = await open("recovery", { me: MEMBER, table: recoveryTable({ recoverycodesstate: env({ ok: true, held: true, remaining: 7, total: 12, issuedAt: "2026-10-02T00:00:00Z" }) }) });
+  has(t, "screen.recovery.held", { remaining: 7, total: 12, date: day("2026-10-02") });
   has(m, "screen.recovery.spends");
   assert.deepEqual(acts(m.tree).map((b) => b.attrs["data-act"]), ["recoverycodesissue"], "every member issues their own (K3060 D4)");
   const r = await m.press("recoverycodesissue");
@@ -68,7 +71,14 @@ test("R20 recovery: the member's own codes (recoverycodesstate); new codes shown
 
 test("R20 recovery: to an administrator, adminrecoverystep's note while not met; nothing once met, and a step that did not answer is never drawn as not met", async () => {
   const a = await open("recovery", { me: ADMIN, table: recoveryTable() });
-  has(a, "screen.members.recovery.one");
+  has(a, "screen.members.recovery.one", { name: said("member.founder.unnamed") });
+  // the sole administrator by handle: a roster administrator with the founder not claimed
+  const roster = [{ member_id: "rosa", handle: "rosa", role: "admin", status: "active", capabilities: [], cover: "R", expertise: [], invitation: "spent" }];
+  const named = await open("recovery", { me: ADMIN, table: recoveryTable({ memberlist: env({ members: roster }), bootstrap: { ok: true, claimed: false } }) });
+  has(named, "screen.members.recovery.one", { name: "rosa" });
+  // control: a step the roster cannot name is told no name, never an empty one
+  const unnamed = await open("recovery", { me: ADMIN, table: recoveryTable({ memberlist: "none" }) });
+  assert.ok(!/\{\w+\}|undefined/.test(unnamed.html));
   const met = await open("recovery", { me: ADMIN, table: recoveryTable({ adminrecoverystep: env({ ok: true, administrators: 2, codes_held: true, remaining: 7, met: true }) }) });
   assert.equal(all(met.tree, (e) => e.attrs["data-note"] === "step").length, 0);
   const silent = await open("recovery", { me: ADMIN, table: recoveryTable({ adminrecoverystep: refuse("STORE_DID_NOT_ANSWER") }) });

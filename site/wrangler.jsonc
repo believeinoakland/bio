@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "civicsmith-site",
+  // Believe in Oakland's account, pinned, as every Worker of this repository is (K3296).
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-01",
+  // No binding beyond the four plain-text deploy values (R10): no storage, no logs, no counters. Each deploy is
+  // Bob's approval in session (K1715). Until the release, INSTALLER_ADDRESS and STEWARDS_ADDRESS stay unset, so the
+  // site answers every page with X-Robots-Tag: noindex (R6, K3296).
+  "observability": { "enabled": false },
+  "vars": {
+    // FEATURED_CASE is unset (null: R5's section is not drawn) until the stewards name a real published edition.
+    "LISTED_GROUPS": []
+  }
+}

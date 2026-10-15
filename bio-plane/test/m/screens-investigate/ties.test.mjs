@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, word, drew } from "./fixtures.mjs";
 
 const at = "/app/ties";
 
@@ -11,17 +11,19 @@ test("R9 reads memberties (her own ties, seen only by her and the administrators
   assert.equal(p.byOp("memberties").length, 1);
   assert.deepEqual(Object.keys(p.byOp("memberties")[0].query), ["op"], "her own, as the plane stamps her");
   const m = main(p);
-  assert.match(m.textContent, /Why you are asked.*trusted only if readers know/s);
-  assert.match(m.textContent, /Inside the group: only you and the group's administrators\. Other members never see this list\./);
+  for (const k of ["why", "why.1", "who", "who.1"]) drew(m, "screen.ties." + k);
   const rows = m.querySelectorAll("tr.cs-r");
   assert.equal(rows.length, 2);
-  assert.match(rows[0].textContent, /Employer.*East Bay Transit.*"a member of the group who worked on this case has this tie"/s);
-  assert.match(rows[1].textContent, /Relative.*naming you: "mai, who worked on this case/s);
+  drew(rows[0], "screen.ties.kind.employer");
+  assert.ok(rows[0].textContent.includes("East Bay Transit"));
+  drew(rows[0], "screen.ties.says.group");
+  drew(rows[1], "screen.ties.kind.relative");
+  drew(rows[1], "screen.ties.says.name", { handle: "mai" });
 });
 
 test("R9 declaretie \"Add this tie\": its kind, who, her words, and whether a case names her by her handle or says \"a member of the group\", the disclosure stated either way", async () => {
   const p = await open(at, { plane: { declaretie: ok({ ok: true, tie_id: "MTI-2026-0003" }) } });
-  assert.match(main(p).textContent, /Either way the tie is disclosed to readers of the case\./);
+  drew(main(p), "screen.ties.either");
   fill(p, { "tie-kind": "business", "tie-who": "ENT-2026-0702", "tie-note": "member-owner of Lakeshore Hardware Co-op", "tie-says-0": true, "tie-says-1": false });
   await press(p, "declaretie");
   assert.deepEqual(p.byOp("declaretie")[0].body, { entity: "ENT-2026-0702", kind: "business", note: "member-owner of Lakeshore Hardware Co-op", attribution: "name" });

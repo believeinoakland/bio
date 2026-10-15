@@ -409,7 +409,7 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-more summary { cursor: pointer; font-weight: 600; color: var(--c-accent-strong, var(--c-accent)); }
 .mk-more h4 { margin: 12px 0 4px; font-size: var(--t-sm); }
 .mk-more p { font-weight: 400; margin: 4px 0; }
-.st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f, main[data-st="g"] .st-g { display: block; }
+.st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f, main[data-st="g"] .st-g, main[data-st="h"] .st-h { display: block; }
 main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, main[data-st="b"] .mk-frontgrid.st-b, main[data-st="c"] .mk-frontgrid.st-c, main[data-st="d"] .mk-frontgrid.st-d, main[data-st="e"] .mk-frontgrid.st-e { display: grid; }
 .mk-mockctl { border: 1px dashed var(--c-rule-strong); padding: 6px 10px; font-size: var(--t-sm); color: var(--c-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .mk-mockctl select { width: auto; max-width: 100%; font-size: var(--t-sm); padding: 2px 6px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; } .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }
@@ -421,6 +421,10 @@ main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, ma
 .mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
 .foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
+/* DEC-251 (interface-shell R4): the member's menu under the masthead's initial. */
+.mk-usermenu { position: relative; flex: none; } .mk-usermenu > summary { list-style: none; cursor: pointer; } .mk-usermenu > summary::-webkit-details-marker { display: none; }
+.mk-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; display: grid; gap: 2px; min-width: 200px; padding: 6px; background: var(--c-sheet); border: var(--hair); border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+.mk-menu > span { padding: 4px 8px; } .mk-menu a { padding: 6px 8px; color: var(--c-ink); text-decoration: none; border-radius: 4px; } .mk-menu a:hover, .mk-menu a:focus-visible { background: var(--c-accent-tint); }
 </style>
 {{SPRITE}}
 <div class="cs"><div class="doc">
@@ -439,6 +443,7 @@ main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, ma
 <span class="opts">
  <span class="seg" role="group" aria-label="The assistant"><button type="button" data-ai="1" aria-pressed="true">With the assistant</button><button type="button" data-ai="0" aria-pressed="false">Without</button></span>
  <span class="seg" role="group" aria-label="Explanations" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="2" aria-pressed="true">Explain promptly</button><button type="button" data-lvl="1" aria-pressed="false">On a longer pause</button></span>
+ <span class="seg" role="group" aria-label="Which copy"><button type="button" data-test="0" aria-pressed="true">A released copy</button><button type="button" data-test="1" aria-pressed="false">A test copy</button></span>
  <span class="seg" role="group" aria-label="Device"><button type="button" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
  <span class="seg" role="group" aria-label="Theme"><button type="button" data-th="" aria-pressed="true">Auto</button><button type="button" data-th="light" aria-pressed="false">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></span>
  <label for="srcToggle"><input type="checkbox" id="srcToggle"> Sources</label>
@@ -692,7 +697,7 @@ const REG = {{REG}};
     $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
     $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
     $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
-    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act };
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act, test: !!st.test };
     const sc = $('vscale'); sc.innerHTML = render(x.s, c); if (window.CS_TIPFIX) window.CS_TIPFIX(sc);
     $('vdev').dataset.device = st.dev;
     fit();
@@ -708,11 +713,12 @@ const REG = {{REG}};
     const rp = e.target.closest('[data-replay]'); if (rp) { replay($('vscale')); return; }
     const o = e.target.closest('[data-open]'); if (o) { const [m, id, ai, v] = o.dataset.open.split(':'); st.mode = m; st.id = id; st.step = 0; st.list = 's'; st.ai = ai === '1'; st.v = v || undefined; syncSeg(); draw(); document.getElementById('walk').scrollIntoView(); return; }
     const a = e.target.closest('[data-ai]'); if (a) { st.ai = a.dataset.ai === '1'; syncSeg(); draw(); return; }
+    const tc = e.target.closest('[data-test]'); if (tc) { st.test = tc.dataset.test === '1'; syncSeg(); draw(); return; }
     const v = e.target.closest('[data-dev]'); if (v) { st.dev = v.dataset.dev; syncSeg(); draw(); return; }
     const h = e.target.closest('[data-th]'); if (h) { if (h.dataset.th) document.documentElement.setAttribute('data-theme', h.dataset.th); else document.documentElement.removeAttribute('data-theme'); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b === h)); try { localStorage.setItem('cs-th', h.dataset.th); } catch (e) {} return; }
   });
   $('vprev').onclick = () => { st.step--; draw(); }; $('vnext').onclick = () => { st.step++; draw(); };
-  function syncSeg() { document.querySelectorAll('[data-ai]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.ai === '1') === st.ai)); document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dev === st.dev)); }
+  function syncSeg() { document.querySelectorAll('[data-ai]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.ai === '1') === st.ai)); document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dev === st.dev)); document.querySelectorAll('[data-test]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.test === '1') === !!st.test)); }
   const t = $('srcToggle'); t.addEventListener('change', () => document.body.classList.toggle('show-src', t.checked));
   try { const th = localStorage.getItem('cs-th'); if (th) { document.documentElement.setAttribute('data-theme', th); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === th)); } } catch (e) {}
   window.addEventListener('resize', fit);

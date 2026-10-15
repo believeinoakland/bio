@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { world, realWorld, sqlOver, V } from "./fixture.mjs";
-import { hiddenBundles } from "../../../src/membership/index.mjs";
+import { hiddenBundles, MEMBERSHIP_DECLARED_TABLES } from "../../../src/membership/index.mjs";
 import { recordCoreOps } from "../../../src/record-core/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 import { ProjectRoster, PROJECT_ROSTER_TABLES } from "../../../src/project-roster/index.mjs";
@@ -135,10 +135,13 @@ test("R18 owner votes, requests, ownership decisions, scope records and approval
     "project_scopes", "project_approval_settings"]
     .map((name) => ({ name, keys: ["project_id"] })));
   assert.deepEqual([...PROJECT_ROSTER_TABLES], mine[0].tables.map((t) => t.name));
-  /* N940 (T47): the fixture's record-core offers `declareTable`, so membership declares `join_doors` explicitly (its
-     R131) beside this module's default-form declaration, as on a real host */
+  /* N940 (T47): the fixture's record-core offers `declareTable`, so membership declares its own tables explicitly
+     beside this module's default-form declaration, as on a real host. Which tables, and how, is membership's
+     declaration, read here and never listed (N1098, K3321 (C)) */
   const doors = w.declared.filter((d) => d.module === "membership" && d.explicit);
-  assert.deepEqual(doors.map((d) => d.tables.map((t) => [t.name, t.export])), [[["join_doors", "never"]]]);
+  assert.deepEqual(doors.map((d) => d.tables.map((t) => [t.name, t.export])),
+    [MEMBERSHIP_DECLARED_TABLES.map((t) => [t.name, t.export])]);
+  assert.ok(MEMBERSHIP_DECLARED_TABLES.length > 0, "membership declares something, so the read compares something");
   for (const t of PROJECT_ROSTER_TABLES)
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "project_id"), `${t} is keyed by project`);
   w.r.migrate();

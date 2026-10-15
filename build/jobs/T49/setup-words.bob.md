@@ -1,0 +1,21 @@
+# BOB to setup-words (T49)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 11, setup-words: **T49-15 · setup-words**.
+Your requirements: `build/requirements/setup-words.md` (read whole), folded by K3366 and K3368; the ids marked `*(not yet met: T49)*` are yours to meet (R10, R11, R12, R13). R9 is retired before your job ran: do not build it.
+BOB's notes for this job:
+setup-words (T49-15; K3366, K3368; DEC-257): the words move out of the source. R10: `WORD_ROWS` is generated from `docs/development/ux-substrate/screens/words.json` as it stands in the tree (merged into `tranche/T49` at `fa3c8b7e8e`: 5,810 words) by your own generator, `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` exits non-zero naming the first difference); rows `[key, en, note, means, protected]` by R1's rule; `WORDS_COMMIT` kept by name, now the first 10 hex of the file's SHA-256 (its one reader is `instance-setup`'s `words_commit`, `setup.mjs`:44, :929). R11 `word(key, vars)` with `UNKNOWN_WORD` and `WORD_VAR_MISSING` thrown; R12 `hasWord(key)`; R13 the keys-only rule (stated here; each user meets it). (N1073) `word-list.test.mjs`:130 reads membership's words from membership.
+1. Measure first: the file's word count and placeholder forms (`{name}`; report any other form you find), and every importer of `WORD_ROWS`/`WORDS_COMMIT` (`screens-wizards/index.mjs`:11, `interface-shell/index.mjs`:8, `setup.mjs`:44): each keeps working (same export names and row form). The suggested layout is `rows.mjs` (generated) beside `index.mjs` (`word`, `hasWord`, a `Map` built on first call); the generator is never imported by `index.mjs`, so it is not bundled.
+2. Inherited reds: coverage on R10–R13 (rule 5 (1)); the plane bundle (5 (5)); legacy-ui (5 (4)); membership R83's `MODULE_ORDER` from your move to first in L11 (5 (10)), not yours. Your merge opens screens-entry's `signin.founderhint` reads if the file no longer holds that key (5 (8)), cleared by T49-21: name what you find in your record.
+Merge order in L11: **first**. Every module that reads words (all of L11 but op-capabilities, op-declarations and interface-assets) builds against your R11–R12 and merges the tranche after you; finish quickly and completely.
+Model: claude-sonnet-5-5 (new code, two small services; K3368).
+Reading set (mechanics §17, K3271): your requirements, your entries, the layer contract, your own code (generated data excluded) and the tests that name R1–R9 (the old ones you replace); `words.json` is data, read its structure and its `_note`/`for_builders`, not every word.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you as a check of your own words: N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-list), D29 (not applicable: you answer no ops).
+Every new id needs an explicit test naming it (K874); every refusal (`UNKNOWN_WORD`, `WORD_VAR_MISSING`) a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).

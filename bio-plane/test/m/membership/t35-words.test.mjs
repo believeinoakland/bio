@@ -114,11 +114,11 @@ test("R112 every row this module holds translates without calling the group's Ci
       assert.equal(typeof row.translation, "string", `${table}.${code}`);
       assert.doesNotMatch(row.translation, FORBIDDEN, `${table}.${code} (${row.check})`);
     }
-  /* T47-82 (P8): exactly the rows held: 46 since T46 (T38's 43, then C-96.48, C-56.6 and C-96.52); a row added or
-     dropped is a change this test is re-pinned for, never passed by a lower bound. */
+  /* T47-82 (P8): exactly the rows held: 46 since T46 (T38's 43, then C-96.48, C-56.6 and C-96.52), 47 since T49-1 (C-96.54);
+     a row added or dropped is a change this test is re-pinned for, never passed by a lower bound. */
   assert.deepEqual(Object.keys(TABLES).sort(), ["CASE_AUTHORITY_CHECKS", "CUSTODIAL_CHECKS", "MEMBERSHIP_CHECKS",
     "MEMBER_ID_CHECKS", "PROJECT_AUTHORITY_CHECKS", "PROJECT_VISIBILITY_CHECKS"]);
-  assert.equal(n, 46, `every row read (${n})`);
+  assert.equal(n, 47, `every row read (${n})`);
   /* the rows the sweep moved now name it */
   for (const row of [MEMBERSHIP_CHECKS.LISTENER_MALFORMED, MEMBERSHIP_CHECKS.LISTENER_DECLARED,
                      MEMBER_ID_CHECKS.MEMBER_ID_RESERVED, CUSTODIAL_CHECKS.NO_HOLDERS])

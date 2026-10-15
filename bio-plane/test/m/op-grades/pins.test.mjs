@@ -12,7 +12,7 @@ import { T36_RUNG_ABSENT } from "../../../src/op-grades/t36.mjs";
 import { T41_RUNG_ABSENT } from "../../../src/op-grades/t41.mjs";
 import { T45_RUNGS, T45_RUNG_ABSENT } from "../../../src/op-grades/t45.mjs";
 
-const { RUNGS, RUNG_ABSENT, NON_ACTS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_CORRECTION_PATH,
+const { RUNGS, RUNG_ABSENT, NON_ACTS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_CORRECTION_KEY,
         OP_ALIASES } = G;
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const ungraded = (op) => !Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op);
@@ -229,20 +229,19 @@ test("R2 R5 R6 (N891): the substrate and directed forms — the provenance pair 
 });
 
 /* ---- R4, R8: the consequence statements' keys --------------------------------------------------------------------- */
-test("R4 R8 R21 R24 (N891): every CONSEQUENCE_STATEMENTS entry is {friction, statement} with a statement over 80 "
-   + "characters; filingapprove's names that it is approved once; actionholdrelease's names what is purged again and the "
-   + "transcripts deleted; the correction path names the further edition and the withdrawal", () => {
+test("R4 R8 R21 R24 R44 (N891): every CONSEQUENCE_STATEMENTS entry is {friction, key} naming one key of words.json, no two "
+   + "alike; the correction path is the key screen.ceremony.permanent", () => {
+  const keys = [];
   for (const [op, c] of Object.entries(CONSEQUENCE_STATEMENTS)) {
-    assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
+    assert.deepEqual(Object.keys(c).sort(), ["friction", "key"], op);
     assert.ok(["dialog", "in-place"].includes(c.friction), op);
-    assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
+    assert.match(c.key, /^(consequence|screen)\.[a-z.-]+$/, op);
+    keys.push(c.key);
   }
-  assert.match(CONSEQUENCE_STATEMENTS.filingapprove.statement, /approved once/);
-  assert.match(CONSEQUENCE_STATEMENTS.actionholdrelease.statement, /material may be purged again/);
-  assert.match(CONSEQUENCE_STATEMENTS.actionholdrelease.statement,
-    /assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /edition/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /withdrawal/);
+  assert.equal(new Set(keys).size, keys.length, "no key twice");
+  assert.equal(CONSEQUENCE_STATEMENTS.filingapprove.key, "consequence.filingapprove");
+  assert.equal(CONSEQUENCE_STATEMENTS.actionholdrelease.key, "consequence.actionholdrelease");
+  assert.equal(IRREVERSIBLE_CORRECTION_KEY, "screen.ceremony.permanent");
   /* negative control */
   assert.ok(!Object.hasOwn(CONSEQUENCE_STATEMENTS, "publishcheck"));
 });

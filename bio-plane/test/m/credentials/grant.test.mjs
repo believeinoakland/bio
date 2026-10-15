@@ -17,8 +17,8 @@ async function grantWorld() {
   for (const id of ["ann", "bob", "dee"])
     assert.equal((await w.c.accountReferenceSet({ member: id, kind: "apikey", secret: `sk-${id}`, by: id })).ok, true);
   w.session = {};
-  for (const id of ["ann", "bob", "dee"]) w.session[id] = (await w.c.login({ role: `member:${id}`, password: PASSWORD(id) })).token;
-  w.session.second = (await w.c.login({ role: "member:second", password: PASSWORD("second") })).token;
+  for (const id of ["ann", "bob", "dee"]) w.session[id] = (await w.c.login({ handle: `${id}`, password: PASSWORD(id) })).token;
+  w.session.second = (await w.c.login({ handle: "second", password: PASSWORD("second") })).token;
   return w;
 }
 
@@ -73,12 +73,14 @@ test("R27 a grant ends at its time, with its session, and with the member's revo
   for (const t of [null, "", "nope", 7]) assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: t, op: "search" })), refusal("GRANT_NOT_HELD"));
 });
 
-test("R28 AI_GRANT_OPS names each op as the plane routes it: `rule` held, the six renamed ops held by their routed names (`linesof` and `structureat` for `lines`), the old names gone; 27 entries, every other entry unchanged", () => {
-  assert.deepEqual([...AI_GRANT_OPS], [
-    "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
-    "eventsfor", "explore", "frontier", "holderat", "linesof", "meaningrows", "money", "moneyof", "profiles", "relation",
-    "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
-    "structureat", "timeline"]);
+test("R28 AI_GRANT_OPS names each op as the plane routes it: `rule` held, the six renamed ops held by their routed names (`linesof` and `structureat` for `lines`), the old names gone; every entry a routed op's own name, frozen, sorted, each once", () => {
+  /* (T49; N1073, K3268) it asserts this module's own list and never hand-lists the other modules' ops it names: each
+     entry is a routed op's name (lowercase letters only, as every routed op is spelt), and the requirement's own
+     renames are held below */
+  assert.ok(Object.isFrozen(AI_GRANT_OPS) && AI_GRANT_OPS.length > 0);
+  assert.deepEqual([...AI_GRANT_OPS], [...AI_GRANT_OPS].sort());
+  assert.equal(new Set(AI_GRANT_OPS).size, AI_GRANT_OPS.length);
+  for (const op of AI_GRANT_OPS) assert.match(op, /^[a-z]+$/, op);
   for (const gone of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"])
     assert.ok(!AI_GRANT_OPS.includes(gone), gone);
   for (const held of ["rule", "career", "dutyoccurrences", "linesof", "structureat", "dutiesof", "calculation", "money"])

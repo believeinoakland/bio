@@ -1,6 +1,6 @@
 # screens-investigate — requirements
 
-**Status** · New in T47 (T47-62; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-inquiry`, first of three (`screens-investigate`, `screens-publish`, `screens-action`), before `control-plane` (N897 (1); N719, N728, N735's spot-check; DEC-139, DEC-142, DEC-160, DEC-164, DEC-170, DEC-176, DEC-181; K1462, K1490, K1494, K1457, K1468, K1469, K1487, K1431, K1444). Drafted in `build/plan/draft-T47-interface.md` §2.2, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-74: R15 new, amending R12, R13, "Added at setup" from `today.machine`, N1050, K3178; R16 new, amending R6, "Follow its register" names the proceeding, N882; R17 new, amending R2, a source attached to a declared step by `stepsource`; R18 new, amending R1, R2 and R4, the connection graph, N1027, N1030, DEC-215 (2); R19 new, amending R8, a project's standard proposals, N1029; R20 new, amending R3, participants, grades and order on the timeline, N1031; R21 new, amending R1, an identity claim withdrawn by its id, N1032; K3145, K3190, K3195, K3203); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R22 new, the common line; R23 new, no id fields; R24 new, explore's five groups; R25 new, people's empty state; R26 new, the subject guard); marked not yet met (T48).
+**Status** · New in T47 (T47-62; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-inquiry`, first of three (`screens-investigate`, `screens-publish`, `screens-action`), before `control-plane` (N897 (1); N719, N728, N735's spot-check; DEC-139, DEC-142, DEC-160, DEC-164, DEC-170, DEC-176, DEC-181; K1462, K1490, K1494, K1457, K1468, K1469, K1487, K1431, K1444). Drafted in `build/plan/draft-T47-interface.md` §2.2, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-74: R15 new, amending R12, R13, "Added at setup" from `today.machine`, N1050, K3178; R16 new, amending R6, "Follow its register" names the proceeding, N882; R17 new, amending R2, a source attached to a declared step by `stepsource`; R18 new, amending R1, R2 and R4, the connection graph, N1027, N1030, DEC-215 (2); R19 new, amending R8, a project's standard proposals, N1029; R20 new, amending R3, participants, grades and order on the timeline, N1031; R21 new, amending R1, an identity claim withdrawn by its id, N1032; K3145, K3190, K3195, K3203); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R22 new, the common line; R23 new, no id fields; R24 new, explore's five groups; R25 new, people's empty state; R26 new, the subject guard); marked not yet met (T48). Last changed T49 (T49-26: R27–R29 new; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,600–3,200 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -12,7 +12,7 @@ The investigation's tools beside a question: a person the record follows and the
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key)
 
 **person** (People › Person; the registry's 6 acts; N719; DEC-142, DEC-170, DEC-181)
 - **R1** Reads `person` (positions with their dates and sources, career, credentials, memberships, interests, statements, each with its grade), `samepersoncandidates`, and the identity claims as `person` answers them. Acts: `person` "Open the person" (the read again); `recordpersonfact` (a fact read from a passage the member chooses, citing it); `identityclaim` "Say another record is this person…" (with its basis); `withdrawidentityclaim` (with a reason); `followregister` (a register the person appears in, `following`); `personexpunge` "Remove it for good, with this reason": the dialog states `op-grades`' consequence statement (its R21, filled with the date and the member), takes the reason naming the law or order that requires it, and is drawn with the Irreversible weight; at the phone width it is read and not done (`interface-shell` R11, DEC-181). Each position and fact is a reference to its source passage; "Explore connections" opens `explore` from this person.
@@ -80,9 +80,27 @@ The investigation's tools beside a question: a person the record follows and the
 - **R25** (T48; K3250, K3254; walk row 18; amends R12, R13) With nothing followed, `people` draws only its empty state ("follows no one yet", with Add and Capture), and no search, filters or counts. Its words use DEC-221's spelling ("organizations"). Test: the empty fixture shows no search box. Control: one follow draws the full screen.
 - **R26** (T48; K3250, K3254; walk C7, row 6) `person`, `calculation`, `proceeding` and `standard` mark their subject read `subject: true`, and list `NO_ENTITY` and `NO_CALC` in `ABSENT_CODES` (`interface-shell` R61). Test: a bare `calculation` draws "Nothing is here".
 
+#### T49 (T49-26)
+
+- **R27** (T49; N1090; DEC-236 (B204 (3)); `affordances` R60; amends R18, R24) The graph draws a `step_source` step in its own class (`.e-step_source`, a bold line), named by `connection.kind.step_source.name` ("Stated in a source") and explained by `.means`. `explore`'s "Follow" offers six groups: R24's five and "Stated in a source", which sends its kinds by `affordances` R60's group. Test: ticking "Stated in a source" sends exactly its kinds. Control: "Mentioned together" sends no `step_source` kind.
+- **R28** (T49; N1094; DEC-240 (proceeding); DEC-232; `following` R30; amends R6) On `proceeding`, "Dates" (`proceeding.dates.title`, explained by `.dates.help`):
+  - It reads `proceedingdates` and draws `proceeding.dates.stage`.
+  - It draws two lanes, `proceeding.dates.lane.proceeding` and `.lane.group`, never interleaved, each date by `cs.date`.
+  - With no dates, it draws `proceeding.dates.none`.
+  - Nothing is drawn as late.
+
+  Test: two lanes over a fixture. Control: a body's own deadline is never in the group's lane.
+- **R29** (T49; D30 **m**; amends R2) `explore` opened with no centre draws its sentence by key, never "no centre is named…". The design gives the key (DEC-273). Test: a bare `explore` draws the keyed sentence. Control: with a centre, the graph.
+
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R30** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 795 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 2 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. It reads the design's key where the list renames one: `act.connectionassert.label.explore` → `act.stepsource.label.explore`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), rows and the hold strip (its R19), `cs.download` (its R21).
 - `setup-words`: `WORD_ROWS` keys.

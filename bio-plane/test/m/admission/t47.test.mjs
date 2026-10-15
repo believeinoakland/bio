@@ -15,7 +15,8 @@ const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
 /* ---------------------------------------------------------------------------------------------------------------- */
 
 test("R23: an ai credential whose row carries a run is admitted to a write only when the write names that run — a write naming another run, none, or two that differ is refused AI_BEYOND_TASK_SCOPE (C-29.6) before any store call; its reads are the floor; control: a credential bound to no run writes as before", async () => {
-  const RUN_WRITES = ["airuntick", "suggest", "capturerequest", "airunclose", "optionpropose"].filter((k) => OPS[k]);
+  /* (N1073) the runner's writes are read from op-declarations' declaration of the ai-runs ops, not hand-listed */
+  const RUN_WRITES = [...O.AI_RUN_ACTIONS].filter((k) => OPS[k]?.mutating && A.aiReachesAsMember(OPS[k], k));
   assert.ok(RUN_WRITES.length >= 4, "the runner's writes are declared");
   for (const op of RUN_WRITES) assert.ok(OPS[op].mutating && A.aiReachesAsMember(OPS[op], op), `${op}: a write an agent can reach`);
   const runCred = aik(), free = aik();
@@ -33,7 +34,6 @@ test("R23: an ai credential whose row carries a run is admitted to a write only 
       env.calls.length = 0;
       const body = refused(await gate(env, { op, token: runCred, ...named }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6", [runCred]);
       assert.deepEqual([body.op, body.cls, body.tokenId, body.run], [op, "ai", "run-seg-1", "run-1"], JSON.stringify(named));
-      assert.match(body.detail, /made for one run/);
       assert.equal(opCalls(env).length, 0, `${op}: before any store call`);
     }
     /* control: a credential bound to no run writes whatever run is named, or none */

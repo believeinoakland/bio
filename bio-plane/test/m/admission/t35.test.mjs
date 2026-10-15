@@ -3,7 +3,8 @@
    and the refusals counted in credentials' security tally (R22). Each is driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { A, C, O, world, gate, requestOf, urlOf, refused, doAnswer, makeEnv, hex64, aik, cred, sha } from "./harness.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
+import { A, O, world, gate, requestOf, urlOf, refused, doAnswer, makeEnv, hex64, aik, cred, sha } from "./harness.mjs";
 
 const { OPS } = O;
 
@@ -158,7 +159,8 @@ test("R21: countryOf answers Cloudflare's two-character label or null; the windo
   /* the refusal */
   const body = refused({ refusal: A.doorRateLimited(225) }, 429, "DOOR_RATE_LIMITED", "C-38.9");
   assert.deepEqual([body.stated, body.retryAfter], [A.DOOR_WINDOW_STATED, 225]);
-  assert.equal(body.translation, C.ADMISSION_CHECKS.DOOR_RATE_LIMITED.translation);
+  assert.equal(body.minutes, 4, "225 seconds, in whole minutes, for the word's {minutes}");
+  assert.equal(body.translation, word("refusal.DOOR_RATE_LIMITED", { minutes: 4 }));
   assert.equal(A.doorRateLimited(0.2).body.retryAfter, 1);
   assert.equal(A.doorRateLimited(undefined).body.retryAfter, 1);
   assert.doesNotMatch(JSON.stringify(body), /\b\d{1,3}(\.\d{1,3}){3}\b|[0-9a-f]{32}/, "no address, no fingerprint");

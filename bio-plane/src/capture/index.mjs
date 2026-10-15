@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, a member's upload (R86) and the information grammar
  * (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R90). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R91). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -189,6 +189,19 @@ export const HELD_STATES = Object.freeze(["held", "set_aside"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
 export const HELD_FILES_IN_ROW = 50;
+/* R91 (T49; N1080; M-T49-3): the one wait a page of held captures gives its documents' answers, in milliseconds: R78's
+   examination of each document the page shows and the archive grouping (DEC-167 (8)) of each row, asked together for
+   the whole page. CHOSEN, not measured, like `file-safety`'s `SCAN_WAIT_MS` and `acquisition`'s `REPUTATION_TIMEOUT_MS`
+   (both 5 s, the waits on another module's answer); recorded by BOB. An answer not given within it reads undetermined. */
+export const HELD_PAGE_WAIT_MS = 5000;
+/* R91: how many rows of a page are answered at once. Work is begun only while the page's wait has not run out, so a page
+   that cannot be answered in time asks no more of the evidence store than it can wait for. */
+const HELD_PAGE_LANES = 8;
+/* R91: what a wait answers when it ran out first. */
+const TOO_LATE = Symbol("the page's wait ran out");
+/* R91: the answers of an examination that ran out of time, so a file beside an archive can say so (R77's file keeps its shape
+   otherwise); held by identity, never carried into an answer. */
+const RAN_OUT = new WeakSet();
 
 /* R77 (T47; N979): the capture the register files under a document (provenance R48's read contract), the one first
    registered, ties by digest. `registered` is compared as an instant (a whole-second and a millisecond spelling of one
@@ -980,7 +993,11 @@ export class Capture {
    *  that row carries `archive` (`acquisition.archiveList`'s summary) and `files`, its held files the viewer may see
    *  passing the same filters, in index order, at most `HELD_FILES_IN_ROW` with `files_total` and `files_truncated`. A
    *  file whose archive is not a row is a row of its own, with `archive: {sha256}`. `limit` counts rows, never files:
-   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows. */
+   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows.
+   *
+   *  R91 (T49; N1080): the examination of each document the page shows and the archive grouping of each row are asked
+   *  together, once each, under one wait of `HELD_PAGE_WAIT_MS`; an answer not given in time reads undetermined
+   *  (`#pageAnswers`). Nothing else in the answer changes. */
   async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
                        now = null, state = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
@@ -1037,15 +1054,18 @@ export class Capture {
     }
     const page = kept.slice(0, cap), truncated = kept.length > cap, last = page[page.length - 1];
     const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
+    /* R91: R78's examination and the archive grouping, asked once for each document the page shows, together, under the
+       page's one wait. */
+    const answers = await this.#pageAnswers(page, { viewer, rowOf });
     const rows = [];
     for (const r of page) {
       const since = Date.parse(r.since);
       const asked = this.#questionsOf(r.bundle_id, viewer);
-      const grouped = await this.#archiveRow(r.bundle_id, { viewer, rowOf });
+      const { eligibility, grouped } = answers.get(r.bundle_id);
       rows.push({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
                   source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
                   collected_since: r.since, age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at - since) / 86400000)) : null,
-                  ...(await this.#eligibility(r.bundle_id)),
+                  ...eligibility,
                   ...(asked.questions ? { captured_for: Capture.#shown(asked.questions) }
                                       : { captured_for: null, captured_for_basis: asked.basis }),
                   ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})),
@@ -1107,17 +1127,83 @@ export class Capture {
     return out;
   }
 
-  /* R77 (DEC-167 (8)): an archive's row additions, when the row's document holds an archive `acquisition.archiveList`
-     answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its summary, and `files`, the held files beside it (filed, or already held and
-     found in it) whose documents are rows of this list for the viewer, in index order, at most `HELD_FILES_IN_ROW`, each
-     `{document, sha256, index, name, grade, eligible}` (the grade the archive's), with `files_total` and
-     `files_truncated`. Null for a document that holds no archive. The entries are read through `archiveList`, a page of
-     at most 1000 at a time, never by this module's own SQL over acquisition's tables. */
-  async #archiveRow(bundleId, { viewer, rowOf }) {
-    let shas = [];
-    try { shas = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
-    catch { shas = []; }
+  /* R91: a page's one wait. `within(p)` answers what `p` answers, or `TOO_LATE` when the wait ran out first; `over()` says
+     whether it has (also by the clock, for an examination that blocks the thread so no timer could fire); `stop()`
+     clears the timer. */
+  static #pageWait(ms) {
+    const began = performance.now();
+    let timer, ran = false;
+    const late = new Promise((resolve) => { timer = setTimeout(() => { ran = true; resolve(TOO_LATE); }, ms); });
+    return { over: () => ran || performance.now() - began >= ms, within: (p) => Promise.race([p, late]), stop: () => clearTimeout(timer) };
+  }
+
+  /* R77: the digests the register files under a document, in digest order. */
+  #capturesOf(bundleId) {
+    try { return this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
+    catch { return []; }
+  }
+
+  /* R91 (T49; N1080): for the documents of one page, R78's examination and the archive grouping (R77, DEC-167 (8)), each
+     asked at most once for each document the page shows (a row, or a file beside an archive), all under the page's one
+     wait (`HELD_PAGE_WAIT_MS`): the examinations all at once, the archive groupings `HELD_PAGE_LANES` rows at a time.
+     Nothing is asked once the wait has run out. An answer
+     not given in time is undetermined: a row's or a file's `eligible: null` with its basis; a row whose grouping did not
+     answer carries `archive: {sha256, grouping: null}` and `files: null` with `files_basis`, its files neither dropped
+     without being named nor counted as listed. A thread-blocking examination cannot be interrupted: the wait then ends
+     after the one in progress. Answers a map of the page's rows to `{eligibility, grouped}` (`grouped` null for a document
+     that holds no archive). */
+  async #pageAnswers(page, { viewer, rowOf }) {
+    const answers = new Map();
+    if (!page.length) return answers;
+    const wait = Capture.#pageWait(HELD_PAGE_WAIT_MS);
+    const examined = new Map();
+    const examine = (bundleId) => {
+      if (!examined.has(bundleId)) examined.set(bundleId, this.#eligibility(bundleId, wait));
+      return examined.get(bundleId);
+    };
+    const answer = async (r) => {
+      const shas = this.#capturesOf(r.bundle_id);
+      const progress = { sha: shas[0] ?? null };
+      const [eligibility, group] = await Promise.all([
+        examine(r.bundle_id),
+        shas.length === 0 ? null : wait.over() ? TOO_LATE : (() => {
+          const g = this.#archiveGroup(shas, r.bundle_id, { viewer, rowOf, progress, wait });
+          g.catch(() => {});
+          return wait.within(g);
+        })(),
+      ]);
+      if (group === TOO_LATE)
+        return { eligibility, grouped: { archive: { sha256: progress.sha, grouping: null }, files: null,
+                                         files_basis: "the archive grouping of this document did not answer in time, so the files beside it, if it is an archive, are undetermined" } };
+      if (!group) return { eligibility, grouped: null };
+      const shown = await Promise.all(group.files.slice(0, HELD_FILES_IN_ROW).map(async (f) => {
+        const e = await examine(f.document);
+        return { ...f, grade: group.grade, eligible: e.eligible, ...(RAN_OUT.has(e) ? { eligibility_basis: e.eligibility_basis } : {}) };
+      }));
+      return { eligibility, grouped: { archive: group.archive, files: shown, files_total: group.files.length,
+                                       files_truncated: group.files.length > HELD_FILES_IN_ROW } };
+    };
+    try {
+      /* The examinations of the page's rows are all asked at once, so one that never settles holds up no other row. */
+      for (const r of page) examine(r.bundle_id);
+      let next = 0;
+      const lane = async () => { while (next < page.length) { const r = page[next++]; answers.set(r.bundle_id, await answer(r)); } };
+      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, page.length) }, lane));
+    } finally { wait.stop(); }
+    return answers;
+  }
+
+  /* R77 (DEC-167 (8)): an archive's row additions, when one of the row's document's captures (`shas`) is an archive
+     `acquisition.archiveList` answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its
+     summary, `grade` its grade, and `files`, the held files beside it (filed, or already held and found in it) whose
+     documents are rows of this list for the viewer, in index order, each once, `{document, sha256, index, name}`; the
+     caller shows at most `HELD_FILES_IN_ROW`, each with its grade and R78's eligibility. Null for a document that holds
+     no archive, `TOO_LATE` when the page's wait ran out before it was done. `progress.sha` names the capture being asked. The entries are read through `archiveList`, a page of at
+     most 1000 at a time, never by this module's own SQL over acquisition's tables. */
+  async #archiveGroup(shas, bundleId, { viewer, rowOf, progress, wait }) {
     for (const sha of shas) {
+      if (wait.over()) return TOO_LATE;
+      progress.sha = sha;
       let first;
       try { first = await this.archiveList({ archiveSha: sha, viewer, limit: 1 }); } catch { first = null; }
       /* An archive is one acquisition recorded opening (`opened`), or a held one whose listing reads entries; a capture
@@ -1127,6 +1213,7 @@ export class Capture {
       for (const state of ["filed", "already_held"]) {
         let after = null;
         for (;;) {
+          if (wait.over()) return TOO_LATE;
           let page;
           try { page = await this.archiveList({ archiveSha: sha, viewer, state, limit: READ_LIMIT.max, after }); } catch { page = null; }
           if (!page || page.ok !== true || !Array.isArray(page.entries)) break;
@@ -1143,26 +1230,37 @@ export class Capture {
       }
       files.sort((a, b) => a.index - b.index || (a.document < b.document ? -1 : a.document > b.document ? 1 : 0));
       const seen = new Set(), unique = files.filter((f) => (seen.has(f.document) ? false : (seen.add(f.document), true)));
-      const shown = [];
-      for (const f of unique.slice(0, HELD_FILES_IN_ROW))
-        shown.push({ ...f, grade: first.archive.grade ?? null, eligible: (await this.#eligibility(f.document)).eligible });
       const sum = first.summary || {};
       return { archive: { sha256: sha, entries: first.archive.entries ?? null, filed: sum.filed ?? null,
                           already_held: sum.already_held ?? null, not_filed: sum.not_filed ?? null, waiting: sum.waiting ?? null },
-               files: shown, files_total: unique.length, files_truncated: unique.length > HELD_FILES_IN_ROW };
+               grade: first.archive.grade ?? null, files: unique };
     }
     return null;
   }
 
-  /* R78: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
-     false with the class it fails first and that class's reason; with none registered, or one that fails or answers
-     neither, `eligible: null`, stated undetermined. */
-  async #eligibility(bundleId) {
+  /* R78, R91: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
+     false with the class it fails first and that class's reason; with none registered, or one that fails, answers
+     neither, or does not answer within the page's wait (`wait`), `eligible: null`, stated undetermined with a basis
+     saying which. Once the wait has run out the examination is not asked. */
+  async #eligibility(bundleId, wait) {
     const reader = this.#readers.get("batch-examination");
     const undetermined = (basis) => ({ eligible: null, eligibility_basis: basis });
     if (!reader) return undetermined("no batch-release examination is registered, so eligibility is undetermined");
+    const tooLate = () => {
+      const a = undetermined(`${reader.module}'s examination did not answer in time, so eligibility is undetermined`);
+      RAN_OUT.add(a);
+      return a;
+    };
+    if (wait.over()) return tooLate();
     let v;
-    try { v = await reader.fn(bundleId); } catch { v = null; }
+    try {
+      const asked = reader.fn(bundleId);
+      if (asked && typeof asked.then === "function") {
+        Promise.resolve(asked).catch(() => {});
+        v = await wait.within(asked);
+        if (v === TOO_LATE) return tooLate();
+      } else v = asked;
+    } catch { v = null; }
     if (v && v.eligible === true) return { eligible: true };
     if (v && v.eligible === false && typeof v.class === "string" && v.class)
       return { eligible: false, class: v.class, reason: typeof v.reason === "string" ? v.reason : null };

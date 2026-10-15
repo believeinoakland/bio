@@ -3,6 +3,7 @@
    `securitycount` (N744, K2038). Each is driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { A, C, O, world, gate, requestOf, urlOf, presenting, refused, doAnswer, hex64, aik, cred, sha, PLACES } from "./harness.mjs";
 
 const { OPS } = O;
@@ -50,7 +51,7 @@ test("R20: a sentinel credential sent by header and by body to one op of each ki
       const r = A.credentialAddressGate(url, credential);
       const b = refused({ refusal: r }, 400, "CREDENTIAL_IN_ADDRESS", "C-38.10", [sentinel, sha(sentinel)]);
       assert.deepEqual(b.named, ["token", "secret"].filter((k) => url.searchParams.has(k)), `${kind}/${i}`);
-      assert.equal(b.translation, C.ADMISSION_CHECKS.CREDENTIAL_IN_ADDRESS.translation);
+      assert.equal(b.translation, word("refusal.CREDENTIAL_IN_ADDRESS"));
       assert.equal("deprecated" in b, false, "no answer carries deprecated");
       answers.push(b);
       /* and through the door's order: refused before any lookup, confinement, public op or admission */
@@ -104,15 +105,9 @@ test("R5 (T36): no binding class member exists — a live MEMBER_TOKEN presented
     env.calls.length = 0;
     const body = refused(await gate(env, { op, token: v, via, params: { store: op === "livefire" ? "scratch" : undefined } }),
                          401, "MEMBER_TOKEN_RETIRED", "C-38.11", [v, sha(v)]);
-    assert.equal(body.error, "the shared member key is retired");
-    assert.match(body.detail, /own password/);
     assert.equal(env.calls.length, 0, `${op}/${via}: nothing read or written`);
   }
-  /* the sentence: the key is retired, and a member signs in with their own password */
-  const row = C.ADMISSION_CHECKS.MEMBER_TOKEN_RETIRED;
-  assert.match(row.translation, /shared member key/);
-  assert.match(row.translation, /retired/);
-  assert.match(row.translation, /their own password/);
+  /* the sentence is the word refusal.MEMBER_TOKEN_RETIRED (R28: words.test.mjs) */
   /* the bearer fences and the scope never see it: it is refused before them */
   refused(await gate(env, { op: "adminendorse", token: v }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");
   refused(await gate(env, { op: "groupnameset", token: v }), 401, "MEMBER_TOKEN_RETIRED", "C-38.11");

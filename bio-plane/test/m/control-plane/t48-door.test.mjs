@@ -314,7 +314,7 @@ test("R94 (T48; N996; K3101; amends R53, R56, R63, R69): the 24 account ops `op-
 
 /* ================================================================ R95 */
 
-const BAND = /class="[^"]*\bcs-testband\b[^"]*"/;
+const BAND = /<div class="cs-band" data-band="test"[^>]*>/;
 const asTest = (w) => { w.env.CIVICSMITH_TEST_INSTANCE = "dev-1"; w.env.INSTANCE_NAME = "dev-1"; return w; };
 
 test("R95 (T48; K3250, K3254; walk C2 (a); `interface-shell` R58): a test instance's `/app` (and `/`) HTML holds the test-instance band as served, before any script runs", async () => {

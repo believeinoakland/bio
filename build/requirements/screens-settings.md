@@ -1,6 +1,6 @@
 # screens-settings — requirements
 
-**Status** · New in T46 (T46-55; K657, K1043): a module built fresh, layer 11 directly after `interface-shell` (N897 (1), (3), Bob's K2816; K2147; DEC-136, DEC-153, DEC-156, DEC-188; DEC-197 and N934: a handle fixed at joining). Drafted in `build/plan/draft-T46-interface.md` §2.3, amended by DEC-197, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-58: R11 new, `writinghelp`'s `untested` drawn, N984; R12 new, the kit's row reference and appearance control, N985; R13 new, amending R4, `connect` reads `part_signin`, N989; R14–R16 new, `group-identity`, `security` and `translations` redrawn from the setup page, N897 (1), N551, N669, N703, N710); marked not yet met (T47). Places and offices and recovery codes stay on the setup page: no registry screen draws them in the working frame. Last changed T48 (T48-71: R25 new, amending R19, Places' count of where else to go, N847, DEC-227 (1); R26 new, amending R9, thirty days of bars and a meter on the AI account panel, N1026, DEC-215 (1), K3198; R27 new, amending R17, the screen `updates`, N1047, DEC-226 (2), (3); K3189, K3190, K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R28 new, the common line; R29 new, members' counts; R30 new, the connect chooser; R31 new, languages by name, no keys; R32 new, the link list; R33 new, no credential names); marked not yet met (T48).
+**Status** · New in T46 (T46-55; K657, K1043): a module built fresh, layer 11 directly after `interface-shell` (N897 (1), (3), Bob's K2816; K2147; DEC-136, DEC-153, DEC-156, DEC-188; DEC-197 and N934: a handle fixed at joining). Drafted in `build/plan/draft-T46-interface.md` §2.3, amended by DEC-197, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-58: R11 new, `writinghelp`'s `untested` drawn, N984; R12 new, the kit's row reference and appearance control, N985; R13 new, amending R4, `connect` reads `part_signin`, N989; R14–R16 new, `group-identity`, `security` and `translations` redrawn from the setup page, N897 (1), N551, N669, N703, N710); marked not yet met (T47). Places and offices and recovery codes stay on the setup page: no registry screen draws them in the working frame. Last changed T48 (T48-71: R25 new, amending R19, Places' count of where else to go, N847, DEC-227 (1); R26 new, amending R9, thirty days of bars and a meter on the AI account panel, N1026, DEC-215 (1), K3198; R27 new, amending R17, the screen `updates`, N1047, DEC-226 (2), (3); K3189, K3190, K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R28 new, the common line; R29 new, members' counts; R30 new, the connect chooser; R31 new, languages by name, no keys; R32 new, the link list; R33 new, no credential names); marked not yet met (T48). Last changed T49 (T49-22: R34, R35, R37, R38 new; R36 retired, K3347; K3334); marked not yet met (T49).
 
 **Size (P6).** Estimated 2,400–3,000 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -12,7 +12,7 @@ The settings a member and an administrator use day to day: the roster and the gr
 
 ### Provides
 
-**`SCREENS`, `SCREEN_WORDS`** (the screen contract, `interface-shell` R21; words, its R5)
+**`SCREENS`** (the screen contract, `interface-shell` R21; each sentence read by key, R39)
 
 **members** (Settings › Members; the registry's 15 acts)
 - **R1** Reads: `memberlist` (the roster: handle, cover, role, capabilities, status; no "formerly" is drawn, DEC-197), `expertiselist`, `adminrecoverystep` (the one-administrator note while not met, as `setup-page` R16 states it), and for the group's key `groupkeystate`, `accountuses`, `ailimits`, `aiusage` and `accounthistory` with `owner: "group"`, and `aikeepawaystate`. Use is drawn summed, naming no member (DEC-188 (5)).
@@ -82,9 +82,32 @@ The settings a member and an administrator use day to day: the roster and the gr
 - **R32** (T48; K3250, K3254; walk row 9; amends R17) `settings` draws its sections as the design's link list (`mk-links`): each has its icon and its screen's name as the reference, with its purpose beneath, and the two never run together. Test: each section's name and purpose are separate boxes.
 - **R33** (T48; K3250, K3254; walk C8) A value recorded at setup or by the system (`by` the founder's bootstrap, a seed, or a machine credential) is drawn as "set at setup" (`settings.set.setup`; interim, for UX-DESIGN), never as a credential's name such as `admin`. Test: the slug's history row reads "set at setup".
 
+#### T49 (T49-22)
+
+- **R34** (T49; N1090; DEC-236 (B203); amends R27, R29, R30) `updates`' "Skip this version" sent without a reason is refused in place by `refusal.UPDATE_SKIP_NO_REASON`, and the row `screen.updates.skip.noreason` goes. `screen.members.count`, `screen.connect.way.field`, `.subscription`, `.apikey`, `.later` and `screen.updates.admins` are read by key in DEC-236's words, and their inline rows go. Test: a skip with an empty reason draws the refusal's words and sends nothing. Control: no `SCREEN_WORDS` row holds those keys.
+- **R35** (T49; D26 **M**; N1072; `membership` R144, R64, R86; `project-roster` R29; amends R29, R1) On `members`:
+  - **Counts.** "Active members" counts the founder, once claimed, among the active members, so it is never fewer than the administrators it counts.
+  - **The founder's row.** Her row is drawn whether or not the roster holds one, named by her handle, or by `member.founder.unnamed` (explained by `member.founder.unnamed.help`) while she has none. Never by `admin`.
+
+  Test: a founder with no roster row and one roster member read "Active members: 2 · Administrators: 1", with her row drawn. Control: with a handle held, the row draws it.
+- **R36** *(retired: T49; withdrawn by Bob, K3347: no API-key support is added until subscription support is fully running and debugged; never asked again)*: `connect` gains no pointer to the group key and no API-key preselection; R30 stands (the subscription preselected).
+- **R37** (T49; D30 **m**; amends R27, R4, R16) Two rules:
+  - **Every fill filled.** Each sentence `updates` and `connect` draw is read by key with every `{fill}` filled from its read. No sentence is drawn with an empty or default fill: no "allowed by set at setup", no "you held the key".
+  - **Translations' empty state.** `translations` with nothing to show draws its empty state by key, never a bare screen. The design gives the key (DEC-273).
+
+  Test: each over a fixture. Control: a filled `who` draws the member's handle.
+- **R38** (T49; N1100; DEC-246; `interface-shell` R69; amends R5, R24) Beside the code field, under `connect.ifnot`, `connect` draws the sign-in's refusals by their keys. These are `refusal.NO_SIGNIN_WAITING`, `refusal.SIGNIN_REFUSED` (with `{detail}`), `refusal.SIGNIN_UNAVAILABLE`, `refusal.SIGNIN_ADDRESS_UNEXPECTED`, `refusal.AGENT_WORKER_UNBOUND` and `instance.part.signin.absent`, each with its reference (`refusal.reference`, `interface-shell` R69). The `SCREEN_WORDS` rows R5 held for these codes go. R30's four words are R34's keys (finding 6). Test: each refusal over a fixture draws its key's words and reference. Control: the typed code is never drawn.
+
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R39** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 551 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. It no longer draws the rows DEC-256 retired: `screen.updates.skip.noreason`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
+- **R40** (T49; DEC-231; `instance-setup` R11, R77; amends R18) **The group's declared stake** on `group`, the registry's `declaredstakeset` and `writinghelp`: drawn from `groupidentity`'s declared stake (`stake.group.title`, `stake.group.help`), its text with who set it and when (`stake.set`), or that none is declared while `stake` is null. An administrator (`whoami`'s `administer`) edits it in a field (`stake.group.label`) and saves it with `declaredstakeset` (`stake.group.save`); an emptied field saves `null`, which clears it. `writinghelp` under the field, only while the assistant is reachable, places its draft in the field as R6 does (R11's label where it carries `untested`), kept only by the administrator's own save. `STAKE_MALFORMED` and `NOT_AN_ADMIN` are drawn by their words (`interface-shell` R13). A member reads the statement and is drawn no act. Test: the statement drawn, saved, cleared, and drafted; control: a member is drawn no act.
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the act gate and refusals (its R11–R13, R19, R20).
 - `setup-words`: `WORD_ROWS` keys.

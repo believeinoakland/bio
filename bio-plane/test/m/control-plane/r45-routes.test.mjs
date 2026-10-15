@@ -200,7 +200,8 @@ test("R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads 
       assert.deepEqual(handed.map((h) => h.op), byName ? [] : ["publicread"], `${name}: who answered`);
       assert.equal(r.status, 200, `${name}: ${r.text.slice(0, 200)}`);
       assert.deepEqual([r.json.ok, r.json.read, r.json.module, r.json.result], [true, name, "network-notices", { n: 1 }]);
-      assert.deepEqual(env.calls.map((c) => [c.route, c.ns]), [["publicread", "bio"]], `${name}: one read of bio's store, no credential looked up`);
+      /* admission R27: a session presented is resolved once, before the window's count; any other credential is looked up for nothing */
+      assert.deepEqual(env.calls.map((c) => [c.route, c.ns]), [...(token === S.ann ? [["session", "bio"]] : []), ["publicread", "bio"]], `${name}: one read of bio's store, the presented session resolved once and no other credential looked up`);
       const q = answered[0].params;
       assert.deepEqual([q.name, q.after, q.limit], [name, "2026-01-01", "5"]);
       for (const k of ["token", "viewer", "by", "author", "secret", "op", "store"]) assert.equal(Object.hasOwn(q, k), false, `${name}: ?${k} reached the store`);

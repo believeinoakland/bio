@@ -1,33 +1,26 @@
-/* The interface's word list (R1–R8; DEC-179; K2200 (4)) at the module's interface: `WORD_ROWS` read against
-   `docs/development/ux-substrate/screens/words.json` as it stands on `main` at PR #34's merge (4664e8efd4; R8, amending R7,
-   which amended R6, R5, R1's counts and R2's commit), word by word. The file is read from git at that commit, so a later edit of the working copy does not move the
-   list (a later list is carried only by a later requirement, R2); when git cannot read it the working copy is read, and
-   the commit's own counts still bind. */
+/* The interface's word list at the module's interface (R3, R4, R10–R13; DEC-179, DEC-257; K3366). `WORD_ROWS` is read
+   against `docs/development/ux-substrate/screens/words.json` as it stands in the tree, word by word, with R1's rule
+   stated here independently of the generator. Nothing here pins a commit, a count or a key: the file is the contract. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import * as words from "../../../src/setup-words/index.mjs";
-import { WORD_ROWS, WORDS_COMMIT } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, WORDS_COMMIT, word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const SOURCE = join(ROOT, "bio-plane/src/setup-words/index.mjs");
-const PATH = "docs/development/ux-substrate/screens/words.json";
-const COMMIT = "4664e8efd4";
-const ROWS = 1895;
-const PROTECTED = 652;
-function atCommit(commit) {
-  try { return JSON.parse(execFileSync("git", ["show", `${commit}:${PATH}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 })); }
-  catch { return undefined; }
-}
-function theFile() {
-  return atCommit(COMMIT) ?? JSON.parse(readFileSync(join(ROOT, PATH), "utf8"));
-}
+const BUILD = join(ROOT, "bio-plane/src/setup-words/build.mjs");
+const FILE = join(ROOT, "docs/development/ux-substrate/screens/words.json");
+const bytes = readFileSync(FILE);
+const file = JSON.parse(bytes.toString("utf8"));
 
-/* The sibling a word's meaning is read from, stated independently of the module: the nearest dotted prefix (at least
-   two segments) holding a `.means` or `.does` entry other than the word itself; none for a `.means`/`.does` entry. */
+/* The sibling a word's meaning is read from: the nearest dotted prefix (at least two segments) holding a `.means` or
+   `.does` entry other than the word itself; none for a `.means`/`.does` entry. */
 function siblingOf(key, byKey) {
   const s = key.split(".");
   if (s.at(-1) === "means" || s.at(-1) === "does") return null;
@@ -39,183 +32,91 @@ function siblingOf(key, byKey) {
   return null;
 }
 
-/* R1's full check, as a list of failures, so a negative control can show it refusing a list that is wrong. */
-function r1Failures(rows, file) {
+/* R10's full check, as a list of failures, so a control can show it refusing a list that is wrong. */
+function failures(rows, f) {
   const out = [];
-  const byKey = new Map(file.words.map((w) => [w.key, w]));
-  if (rows.length !== ROWS) out.push(`rows ${rows.length}, not ${ROWS}`);
-  if (rows.filter((r) => r[4] === true).length !== PROTECTED) out.push(`protected count not ${PROTECTED}`);
+  const byKey = new Map(f.words.map((w) => [w.key, w]));
+  if (rows.length !== f.words.length) out.push(`rows ${rows.length}, file ${f.words.length}`);
   if (new Set(rows.map((r) => r[0])).size !== rows.length) out.push("keys not distinct");
-  if (rows.length !== file.words.length) out.push("not one row per word");
-  file.words.forEach((f, i) => {
-    const want = [f.key, f.en, f.note ?? null, siblingOf(f.key, byKey), f.protected === true];
-    try { assert.deepEqual(rows[i], want); } catch { out.push(`row ${i} (${f.key})`); }
+  f.words.forEach((w, i) => {
+    const want = [w.key, w.en, w.note ?? null, siblingOf(w.key, byKey), w.protected === true];
+    try { assert.deepEqual(rows[i], want); } catch { out.push(`row ${i} (${w.key})`); }
   });
-  for (const r of rows) {
-    if (!Array.isArray(r) || r.length !== 5) { out.push(`${r?.[0]}: not five fields`); continue; }
-    if (typeof r[0] !== "string" || typeof r[1] !== "string") out.push(`${r[0]}: key or en not a string`);
-    if (!(r[2] === null || typeof r[2] === "string")) out.push(`${r[0]}: note`);
-    if (!(r[3] === null || typeof r[3] === "string")) out.push(`${r[0]}: means`);
-    if (typeof r[4] !== "boolean") out.push(`${r[0]}: protected`);
-  }
   return out;
 }
 
-/* Rows for acts retired or no longer served, carried as the file gives them, never re-keyed here (R2; R5; R6; K2484;
-   K2903): the acts DEC-188 (8) retires, whose rows the file no longer holds since 3f40899950, and `handle.*`, which built
-   code reads while `handlechange` is kept as a refusing op (seven rows since DEC-198 dropped two, R6). */
-const RETIRED = /^(act\.(accountswitchset|groupswitchset|aiceilingset|aicopyceilingset)\.|handle\.)/;
-function r2Failures(rows, file) {
-  const out = [];
-  const want = file.words.filter((w) => RETIRED.test(w.key));
-  const got = rows.filter((r) => RETIRED.test(r[0]));
-  if (got.length !== want.length) out.push(`retired rows ${got.length}, file ${want.length}`);
-  for (const w of want) {
-    const r = rows.find((x) => x[0] === w.key);
-    if (!r) out.push(`${w.key} missing`);
-    else if (r[1] !== w.en || r[4] !== (w.protected === true) || r[2] !== (w.note ?? null)) out.push(`${w.key} not as given`);
-  }
-  return out;
-}
+const run = (...args) => {
+  try { return { code: 0, out: execFileSync("node", [BUILD, ...args], { cwd: ROOT, encoding: "utf8", stdio: "pipe" }) }; }
+  catch (e) { return { code: e.status, out: `${e.stdout}${e.stderr}` }; }
+};
 
-test("R1 R5 R6 R7 R8 WORD_ROWS equals words.json at WORDS_COMMIT 4664e8efd4 (PR #34's merge) word by word: 1,895 rows, 652 protected, in the file's order, keys distinct, each [key, en, note, means, protected] with key, en, protected and note (or null) as the file gives them and means the en of its sibling .means or .does entry, or null", () => {
-  const file = theFile();
-  const byKey = new Map(file.words.map((w) => [w.key, w]));
-  assert.equal(WORDS_COMMIT, COMMIT);
-  assert.equal(file.counts.total, ROWS);
-  assert.equal(file.counts.protected, PROTECTED);
-  assert.equal(file.words.length, ROWS);
-  assert.equal(file.words.filter((w) => w.protected === true).length, PROTECTED);
-  assert.deepEqual(r1Failures(WORD_ROWS, file), []);
-  /* the readings the sibling rule gives, by example */
+test("R10 WORD_ROWS equals words.json in the tree word by word: one row per word of the file, in its order, keys distinct, each [key, en, note, means, protected] with key, en, protected and note (or null) as the file gives them and means the en of its sibling .means or .does entry, or null", () => {
+  assert.ok(file.words.length > 0);
+  assert.deepEqual(failures(WORD_ROWS, file), []);
+  assert.equal(WORD_ROWS.length, file.counts.total);
+  assert.equal(WORD_ROWS.filter((r) => r[4]).length, file.counts.protected);
+  WORD_ROWS.forEach((r) => {
+    assert.equal(r.length, 5);
+    assert.equal(typeof r[0], "string");
+    assert.equal(typeof r[1], "string");
+    assert.ok(r[2] === null || typeof r[2] === "string");
+    assert.ok(r[3] === null || typeof r[3] === "string");
+    assert.equal(typeof r[4], "boolean");
+  });
+  /* the sibling rule by example */
   const at = (k) => WORD_ROWS.find((r) => r[0] === k);
-  assert.equal(at("weight.reversible.name")[3], byKey.get("weight.reversible.means").en);
-  assert.equal(at("act.publish.label.ceremony")[3], byKey.get("act.publish.does").en);
+  assert.equal(at("weight.reversible.name")[3], at("weight.reversible.means")[1]);
+  assert.equal(at("act.publish.label.ceremony")[3], at("act.publish.does")[1]);
   assert.equal(at("weight.reversible.means")[3], null);
   assert.equal(at("act.publish.does")[3], null);
   assert.equal(at("state.undetermined")[2], "the reason always follows");
   assert.equal(at("state.empty")[2], null);
 });
 
-test("R1 R5 R6 R7 R8 negative control: the check refuses a list that differs from the file in one word, its order, a count, a note, a means or a protected mark, and the lists at the earlier commits 6f0d88d8d5 (R7), a0fab7abf0 (R6), 3f40899950 (R5), 3660c18803 and e08cd35ecb", () => {
-  const file = theFile();
-  const rows = WORD_ROWS.map((r) => [...r]);
-  const swap = (f) => { const c = rows.map((r) => [...r]); f(c); return c; };
-  assert.notDeepEqual(r1Failures(swap((c) => { c[3][1] = c[3][1] + "!"; }), file), []);
-  assert.notDeepEqual(r1Failures(swap((c) => { [c[0], c[1]] = [c[1], c[0]]; }), file), []);
-  assert.notDeepEqual(r1Failures(swap((c) => { c.pop(); }), file), []);
-  assert.notDeepEqual(r1Failures(swap((c) => { c.push([...c[0]]); }), file), []);
-  const noted = rows.findIndex((r) => r[2] !== null);
-  assert.notDeepEqual(r1Failures(swap((c) => { c[noted][2] = null; }), file), []);
-  const meant = rows.findIndex((r) => r[3] !== null);
-  assert.notDeepEqual(r1Failures(swap((c) => { c[meant][3] = null; }), file), []);
-  assert.notDeepEqual(r1Failures(swap((c) => { c[0][4] = !c[0][4]; }), file), []);
-  /* the lists frozen at the earlier commits (a0fab7abf0: 1,608 rows; 3f40899950: 1,503; 3660c18803: 1,006;
-     e08cd35ecb: 921) are not this one */
-  for (const [commit, n] of [["6f0d88d8d5", 1788], ["a0fab7abf0", 1608], ["3f40899950", 1503], ["3660c18803", 1006], ["e08cd35ecb", 921]]) {
-    const earlier = atCommit(commit);
-    if (!earlier) continue;
-    const eByKey = new Map(earlier.words.map((w) => [w.key, w]));
-    const old = earlier.words.map((w) => [w.key, w.en, w.note ?? null, siblingOf(w.key, eByKey), w.protected === true]);
-    assert.equal(old.length, n);
-    assert.notDeepEqual(r1Failures(old, file), []);
-  }
+test("R10 WORDS_COMMIT is the first 10 hex digits of the SHA-256 of the file's bytes, the list's version; the generator's --check passes on the tree", () => {
+  assert.equal(WORDS_COMMIT, createHash("sha256").update(bytes).digest("hex").slice(0, 10));
+  assert.match(WORDS_COMMIT, /^[0-9a-f]{10}$/);
+  const r = run("--check");
+  assert.equal(r.code, 0, r.out);
 });
 
-test("R2 R5 R6 R7 R8 WORDS_COMMIT is \"4664e8efd4\", the commit R1's file is read at; the file's rows for acts retired or no longer served are carried as the file gives them, not re-keyed: handle.*'s seven, while DEC-188 (8)'s four retired acts have no rows left in the file and so none in the list; negative control: a list with one re-keyed, dropped, re-worded or brought back refuses", () => {
-  assert.equal(WORDS_COMMIT, "4664e8efd4");
-  assert.equal(typeof WORDS_COMMIT, "string");
-  const file = theFile();
-  const given = file.words.filter((w) => RETIRED.test(w.key)).map((w) => w.key).sort();
-  assert.deepEqual(given, ["handle.changeable", "handle.characters", "handle.fixed", "handle.formerly", "handle.free",
-    "handle.refused.paused", "handle.taken"]);
-  assert.deepEqual(r2Failures(WORD_ROWS, file), []);
-  assert.deepEqual(WORD_ROWS.filter((r) => /^act\.(accountswitchset|groupswitchset|aiceilingset|aicopyceilingset)\./.test(r[0])), []);
-  /* negative controls: one re-keyed, one dropped, one re-worded, a retired act's row brought back from the earlier list */
-  const rekeyed = WORD_ROWS.map((r) => (r[0] === "handle.free" ? ["handle.available", ...r.slice(1)] : r));
-  assert.notDeepEqual(r2Failures(rekeyed, file), []);
-  assert.notDeepEqual(r2Failures(WORD_ROWS.filter((r) => r[0] !== "handle.taken"), file), []);
-  const reworded = WORD_ROWS.map((r) => (r[0] === "handle.fixed" ? [r[0], "changed", ...r.slice(2)] : r));
-  assert.notDeepEqual(r2Failures(reworded, file), []);
-  const revived = [...WORD_ROWS, ["act.aiceilingset.does", "Sets the AI ceiling.", null, null, false]];
-  assert.notDeepEqual(r2Failures(revived, file), []);
-});
-
-/* The 18 keys the file stopped holding at PR #31's merge (R6): DEC-198's three dropped rows, DEC-199's replaced sentence,
-   and the `act.capture.*` / `act.owed_<op>.*` rows of the six acts DEC-198 (1) re-keyed to their served names. */
-const R6_GONE = ["handle.refused.unchecked", "handle.refused.notmember", "refusal.DRAFT_NEEDS_GRANT",
-  "signing.openrequest.nowindow", "act.owed_infolevelset.label.account", "act.owed_subscriptionsignin.label.connect",
-  "act.capture.label.capture", "act.owed_itemtakeup.label.plan", "act.owed_filingsecondapprove.label.start-send",
-  "act.owed_actionscope.label.action", "act.owed_escalationstoppursuing.label.matter", "act.owed_infolevelset.does",
-  "act.owed_subscriptionsignin.does", "act.capture.does", "act.owed_actionscope.does", "act.owed_filingsecondapprove.does",
-  "act.owed_escalationstoppursuing.does", "act.owed_itemtakeup.does"];
-const R6_SERVED = ["captureupload", "actionscope", "escalationstoppursuing", "filingsecondapprove", "infolevelset",
-  "itemtakeup", "subscriptionsignin"];
-
-test("R6 the 18 keys R6 drops (DEC-198's three rows, DEC-199's signing.openrequest.nowindow, the act.capture.* and act.owed_<op>.* rows of the six re-keyed acts) are in neither the file at WORDS_COMMIT nor WORD_ROWS, and each re-keyed act carries its served name's .does; R6's list (a0fab7abf0: 1,608 rows, 570 protected) is moved by R7, not kept; negative control: a list with one of the 18 brought back refuses", () => {
-  const file = theFile();
-  const keys = new Set(WORD_ROWS.map((r) => r[0]));
-  assert.equal(R6_GONE.length, 18);
-  assert.deepEqual(R6_GONE.filter((k) => keys.has(k)), []);
-  assert.deepEqual(R6_GONE.filter((k) => file.words.some((w) => w.key === k)), []);
-  assert.deepEqual(R6_SERVED.filter((op) => !keys.has(`act.${op}.does`)), []);
-  assert.notEqual(WORDS_COMMIT, "a0fab7abf0");
-  const r6 = atCommit("a0fab7abf0");
-  if (r6) {
-    assert.equal(r6.words.length, 1608);
-    assert.equal(r6.words.filter((w) => w.protected === true).length, 570);
-    assert.deepEqual(R6_GONE.filter((k) => r6.words.some((w) => w.key === k)), []);
-  }
-  const revived = [...WORD_ROWS, ["refusal.DRAFT_NEEDS_GRANT", "x", null, null, true]];
-  assert.notDeepEqual(r1Failures(revived, file), []);
-});
-
-test("R7 R8 the list R7 carried (6f0d88d8d5, the merge into tranche/T47 at L11's START of PR #33's head f90b187c7b: 1,788 rows, 651 protected) is moved by R8, not kept; the file at that merge is the file at that head; negative control: the list at 6f0d88d8d5 and the list at PR #33 @ 1d41495eda (1,749 rows, 631 protected) each refuse", () => {
-  const file = theFile();
-  assert.notEqual(WORDS_COMMIT, "6f0d88d8d5");
-  assert.deepEqual(r1Failures(WORD_ROWS, file), []);
-  const r7 = atCommit("6f0d88d8d5");
-  if (r7) {
-    assert.equal(r7.words.length, 1788);
-    assert.equal(r7.words.filter((w) => w.protected === true).length, 651);
-    let parents;
-    try { parents = execFileSync("git", ["log", "-1", "--format=%P", "6f0d88d8d5"], { cwd: ROOT, encoding: "utf8" }).trim().split(" "); }
-    catch { parents = undefined; }
-    if (parents) {
-      assert.equal(parents.length, 2);
-      assert.ok(parents[1].startsWith("f90b187c7b"), parents[1]);
-      assert.deepEqual(atCommit("f90b187c7b"), r7);
-    }
-  }
-  const earlier = atCommit("1d41495eda");
-  if (earlier) {
-    const eByKey = new Map(earlier.words.map((w) => [w.key, w]));
-    const old = earlier.words.map((w) => [w.key, w.en, w.note ?? null, siblingOf(w.key, eByKey), w.protected === true]);
-    assert.equal(old.length, 1749);
-    assert.equal(old.filter((r) => r[4]).length, 631);
-    assert.notDeepEqual(r1Failures(old, file), []);
-  }
-});
-
-const R8_NEW = [/^updates\./, /^queue\.update\./, /^home\.update\./, /^installer\.update\./, /^elsewhere\./, /^door\.front\.elsewhere\./,
-  /^wizard\.guide\.elsewhere/, /^places\.elsewhere\./];
-
-test("R8 WORDS_COMMIT is \"4664e8efd4\", PR #34's merge to main (before T48 \"6f0d88d8d5\"); WORD_ROWS carries its 1,895 rows, 652 protected, equal word by word, so DEC-226's and DEC-227's words (updates.*, queue.update.*, home.update.*, installer.update.*, elsewhere.*, door.front.elsewhere.*, wizard.guide.elsewhere*, places.elsewhere.*) are present as the file gives them; control: no row's en holds \"labelled\" (DEC-221's spelling), and a list with one row in the earlier spelling, or one new word dropped, refuses", () => {
-  const file = theFile();
-  assert.equal(WORDS_COMMIT, "4664e8efd4");
-  assert.equal(WORD_ROWS.length, 1895);
-  assert.equal(WORD_ROWS.filter((r) => r[4] === true).length, 652);
-  assert.equal(file.counts.total, 1895);
-  assert.equal(file.counts.protected, 652);
-  assert.deepEqual(r1Failures(WORD_ROWS, file), []);
-  for (const re of R8_NEW) assert.ok(WORD_ROWS.some((r) => re.test(r[0])), String(re));
-  assert.deepEqual(WORD_ROWS.filter((r) => /labelled/i.test(r[1])).map((r) => r[0]), []);
-  const old = WORD_ROWS.map((r) => (r[0] === "rfc.quoting" ? [r[0], r[1].replace("quoted", "labelled"), ...r.slice(2)] : r));
-  assert.notDeepEqual(r1Failures(old, file), []);
-  const i = WORD_ROWS.findIndex((r) => R8_NEW[0].test(r[0]));
-  assert.notDeepEqual(r1Failures(WORD_ROWS.filter((_, j) => j !== i), file), []);
-  const respelt = WORD_ROWS.map((r, j) => (j === i ? [r[0], `${r[1]} labelled`, ...r.slice(2)] : r));
-  assert.deepEqual(respelt.filter((r) => /labelled/i.test(r[1])).map((r) => r[0]), [WORD_ROWS[i][0]]);
+test("R10 control: a fixture file with one en changed makes --check fail, naming the first difference; so does one with a key dropped, one with a protected mark flipped, and one with a repeated key; the check refuses a list that differs in one word, its order, a count, a note, a means or a protected mark", () => {
+  const dir = mkdtempSync(join(tmpdir(), "setup-words-"));
+  try {
+    const variant = (name, edit) => {
+      const f = structuredClone(file);
+      edit(f);
+      const p = join(dir, name);
+      writeFileSync(p, JSON.stringify(f));
+      return p;
+    };
+    const rows = join(ROOT, "bio-plane/src/setup-words/rows.mjs");
+    const changed = variant("en.json", (f) => { f.words[3].en += "!"; });
+    const r = run("--check", "--words", changed, "--out", rows);
+    assert.notEqual(r.code, 0);
+    assert.match(r.out, /stale: word \d+/);
+    assert.match(r.out, new RegExp(file.words[3].key.replace(/\./g, "\\.")), "names the word that differs");
+    assert.notEqual(run("--check", "--words", variant("drop.json", (f) => { f.words.pop(); }), "--out", rows).code, 0);
+    assert.notEqual(run("--check", "--words", variant("prot.json", (f) => { f.words[0].protected = !f.words[0].protected; }), "--out", rows).code, 0);
+    const dup = run("--check", "--words", variant("dup.json", (f) => { f.words[1].key = f.words[0].key; }), "--out", rows);
+    assert.notEqual(dup.code, 0);
+    assert.match(dup.out, /not distinct/);
+    assert.notEqual(run("--check", "--words", changed, "--out", join(dir, "absent.mjs")).code, 0);
+    /* the writing form, over the fixture, agrees with the check */
+    const out = join(dir, "rows.mjs");
+    assert.equal(run("--words", changed, "--out", out).code, 0);
+    assert.equal(run("--check", "--words", changed, "--out", out).code, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+  const swap = (f) => { const c = WORD_ROWS.map((r) => [...r]); f(c); return c; };
+  assert.notDeepEqual(failures(swap((c) => { c[3][1] += "!"; }), file), []);
+  assert.notDeepEqual(failures(swap((c) => { [c[0], c[1]] = [c[1], c[0]]; }), file), []);
+  assert.notDeepEqual(failures(swap((c) => { c.pop(); }), file), []);
+  assert.notDeepEqual(failures(swap((c) => { c.push([...c[0]]); }), file), []);
+  const noted = WORD_ROWS.findIndex((r) => r[2] !== null);
+  assert.notDeepEqual(failures(swap((c) => { c[noted][2] = null; }), file), []);
+  const meant = WORD_ROWS.findIndex((r) => r[3] !== null);
+  assert.notDeepEqual(failures(swap((c) => { c[meant][3] = null; }), file), []);
+  assert.notDeepEqual(failures(swap((c) => { c[0][4] = !c[0][4]; }), file), []);
 });
 
 test("R3 WORD_ROWS and each of its rows are frozen: no write changes the list, a row or a field", () => {
@@ -223,6 +124,7 @@ test("R3 WORD_ROWS and each of its rows are frozen: no write changes the list, a
   assert.ok(Object.isFrozen(WORD_ROWS));
   WORD_ROWS.forEach((r) => assert.ok(Object.isFrozen(r), r[0]));
   const first = JSON.stringify(WORD_ROWS[0]);
+  const n = WORD_ROWS.length;
   assert.throws(() => { WORD_ROWS.push(["x", "x", null, null, false]); }, TypeError);
   assert.throws(() => { WORD_ROWS[0] = ["x", "x", null, null, false]; }, TypeError);
   assert.throws(() => { WORD_ROWS.length = 0; }, TypeError);
@@ -231,19 +133,104 @@ test("R3 WORD_ROWS and each of its rows are frozen: no write changes the list, a
   assert.throws(() => { WORD_ROWS[0][4] = !WORD_ROWS[0][4]; }, TypeError);
   assert.throws(() => { WORD_ROWS[0].push("extra"); }, TypeError);
   assert.throws(() => { WORD_ROWS.at(-1).length = 0; }, TypeError);
-  assert.equal(WORD_ROWS.length, ROWS);
+  assert.equal(WORD_ROWS.length, n);
   assert.equal(JSON.stringify(WORD_ROWS[0]), first);
 });
-test("R4 the module imports nothing and holds no code that decides anything: its source, strings and comments set aside, is only its two frozen exports; it exports exactly WORDS_COMMIT and WORD_ROWS; every load answers the same", async () => {
+
+test("R4 the module does nothing when loaded beyond defining its exports and imports only its own generated list: its exports are exactly WORDS_COMMIT, WORD_ROWS, hasWord and word; its code never imports the generator or any other module; every load answers the same", async () => {
   const code = readFileSync(SOURCE, "utf8")
     .replace(/\/\*[^]*?\*\//g, " ")
     .replace(/"(?:[^"\\\n]|\\.)*"/g, '""');
-  assert.doesNotMatch(code, /\bimport\b|\brequire\b|\bexport\s*\*|\bfrom\b/);
-  const names = new Set(code.match(/[A-Za-z_$][\w$]*/g));
-  const allowed = new Set(["export", "const", "WORDS_COMMIT", "WORD_ROWS", "Object", "freeze", "map", "row", "null", "true", "false"]);
-  assert.deepEqual([...names].filter((n) => !allowed.has(n)), []);
-  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS"]);
+  const imports = [...code.matchAll(/\bimport\b[^;]*;/g)].map((m) => m[0]);
+  assert.equal(imports.length, 1);
+  assert.match(readFileSync(SOURCE, "utf8"), /import \{ WORD_ROWS, WORDS_COMMIT \} from "\.\/rows\.mjs";/);
+  assert.doesNotMatch(code, /\brequire\b|build\.mjs|\bprocess\b|\bDate\b|\bMath\b|\bfetch\b|\bsetTimeout\b/);
+  assert.deepEqual(Object.keys(words).sort(), ["WORDS_COMMIT", "WORD_ROWS", "hasWord", "word"]);
   const again = await import(`${pathToFileURL(SOURCE).href}?again`);
   assert.equal(again.WORDS_COMMIT, WORDS_COMMIT);
   assert.deepEqual(again.WORD_ROWS, WORD_ROWS);
+  assert.equal(again.word("weight.reversible.name"), word("weight.reversible.name"));
+});
+
+/* two placeholders, one placeholder, and none, read from the file itself, not from a hand list */
+const placeholders = (en) => [...new Set([...en.matchAll(/\{([A-Za-z0-9_]+)\}/g)].map((m) => m[1]))];
+const two = WORD_ROWS.find((r) => placeholders(r[1]).length >= 2);
+const one = WORD_ROWS.find((r) => placeholders(r[1]).length === 1);
+const none = WORD_ROWS.find((r) => placeholders(r[1]).length === 0);
+
+test("R11 word(key, vars) returns the English of key with each {name} placeholder filled by vars[name], a string or a number as String gives it; a word with two placeholders is filled, a word with none is returned as the list holds it", () => {
+  assert.ok(two && one && none, "the file holds words of each kind");
+  const [a, b] = placeholders(two[1]);
+  const filled = word(two[0], { [a]: "Ada", [b]: 42 });
+  assert.equal(filled, two[1].split(`{${a}}`).join("Ada").split(`{${b}}`).join("42"));
+  assert.doesNotMatch(filled, /\{[A-Za-z0-9_]+\}/);
+  assert.equal(word(one[0], { [placeholders(one[1])[0]]: 0 }), one[1].split(`{${placeholders(one[1])[0]}}`).join("0"));
+  assert.equal(word(none[0]), none[1]);
+  assert.equal(word(none[0], {}), none[1]);
+  /* a name the English does not hold is ignored; a value is written as String gives it, braces in it left alone */
+  assert.equal(word(none[0], { extra: "x" }), none[1]);
+  const [n] = placeholders(one[1]);
+  assert.equal(word(one[0], { [n]: "{other}", extra: 1 }), one[1].split(`{${n}}`).join("{other}"));
+  /* a placeholder repeated in one sentence is filled everywhere */
+  const rep = WORD_ROWS.find((r) => [...r[1].matchAll(/\{([A-Za-z0-9_]+)\}/g)].length > placeholders(r[1]).length);
+  if (rep) assert.doesNotMatch(word(rep[0], Object.fromEntries(placeholders(rep[1]).map((p) => [p, "v"]))), /\{[A-Za-z0-9_]+\}/);
+  /* every word of the list is returned whole when its placeholders are given */
+  for (const r of WORD_ROWS) {
+    const vars = Object.fromEntries(placeholders(r[1]).map((p) => [p, `<${p}>`]));
+    assert.equal(word(r[0], vars), r[1].replace(/\{([A-Za-z0-9_]+)\}/g, (_, p) => `<${p}>`), r[0]);
+  }
+});
+
+test("R11 control: an unknown key throws UNKNOWN_WORD naming the key; a missing placeholder throws WORD_VAR_MISSING naming the key and the placeholder; neither falls back to the key, another word or an empty string", () => {
+  assert.throws(() => word("no.such.word"), (e) => e.code === "UNKNOWN_WORD" && /no\.such\.word/.test(e.message));
+  assert.throws(() => word(""), (e) => e.code === "UNKNOWN_WORD");
+  assert.throws(() => word(undefined), (e) => e.code === "UNKNOWN_WORD");
+  assert.throws(() => word("constructor"), (e) => e.code === "UNKNOWN_WORD");
+  assert.throws(() => word("__proto__"), (e) => e.code === "UNKNOWN_WORD");
+  const [a, b] = placeholders(two[1]);
+  for (const vars of [undefined, {}, { [b]: "x" }, { [a]: undefined, [b]: "x" }, { [a]: null, [b]: "x" }]) {
+    assert.throws(() => word(two[0], vars), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes(two[0]) && e.message.includes(`{${a}}`), JSON.stringify(vars));
+  }
+  assert.throws(() => word(two[0], { [a]: "x" }), (e) => e.code === "WORD_VAR_MISSING" && e.message.includes(`{${b}}`));
+  /* an inherited property is not a value */
+  assert.throws(() => word(two[0], Object.create({ [a]: "x", [b]: "y" })), (e) => e.code === "WORD_VAR_MISSING");
+  assert.throws(() => word(one[0], { toString: "x" }), (e) => e.code === "WORD_VAR_MISSING");
+});
+
+test("R12 hasWord(key) is true exactly when the list holds key: every key of the list, and none that is not", () => {
+  for (const r of WORD_ROWS) assert.equal(hasWord(r[0]), true, r[0]);
+  for (const k of ["no.such.word", "", "weight.reversible", "WEIGHT.REVERSIBLE.NAME", "constructor", "__proto__", "toString", undefined, null, 7])
+    assert.equal(hasWord(k), false, String(k));
+  assert.equal(hasWord(WORD_ROWS[0][0]), true);
+  assert.equal(hasWord(`${WORD_ROWS[0][0]} `), false);
+});
+
+test("R13 the keys-only rule at this module's interface: a sentence is read through word from the list and only from it, so every key of the list answers its English filled, an unknown key never answers a sentence, and the list holds no key whose English is empty, so a module holding keys alone has a sentence to show", () => {
+  for (const r of WORD_ROWS) {
+    assert.ok(r[1].length > 0, r[0]);
+    assert.ok(hasWord(r[0]));
+    assert.notEqual(r[1], r[0], `${r[0]}: the English is not the key`);
+  }
+  for (const k of ["not.a.key", "weight.reversible.nam"]) {
+    assert.equal(hasWord(k), false);
+    assert.throws(() => word(k), (e) => e.code === "UNKNOWN_WORD");
+  }
+  /* placeholders are {name} with name of letters, digits and _, and no other brace form occurs in the file (measured at T49) */
+  for (const r of WORD_ROWS) assert.doesNotMatch(r[1].replace(/\{[A-Za-z0-9_]+\}/g, ""), /[{}]/, r[0]);
+  /* DEC-221 (N1068): the file's English spells "labeled" */
+  assert.deepEqual(WORD_ROWS.filter((r) => /labelled/i.test(r[1])).map((r) => r[0]), []);
+  assert.equal(hasWord("signin.founderhint"), WORD_ROWS.some((r) => r[0] === "signin.founderhint"));
+});
+
+test("R2 R5 R6 R7 R8 (their pinned commits and counts retired by R10): WORDS_COMMIT is no earlier pinned commit but the version of the file in the tree, and WORD_ROWS moves with the file, so no earlier list or count is kept; control: no row's en holds \"labelled\" (R8) and a list with one en re-spelled refuses", () => {
+  for (const pinned of ["3660c18803", "e08cd35ecb", "3f40899950", "a0fab7abf0", "6f0d88d8d5", "4664e8efd4", "f498560a37"])
+    assert.notEqual(WORDS_COMMIT, pinned);
+  assert.equal(WORDS_COMMIT, createHash("sha256").update(bytes).digest("hex").slice(0, 10));
+  assert.equal(WORD_ROWS.length, file.words.length);
+  assert.deepEqual(WORD_ROWS.filter((r) => /labelled/i.test(r[1])).map((r) => r[0]), []);
+  const i = WORD_ROWS.findIndex((r) => /labeled/.test(r[1]));
+  if (i >= 0) {
+    const old = WORD_ROWS.map((r, j) => (j === i ? [r[0], r[1].replace("labeled", "labelled"), ...r.slice(2)] : r));
+    assert.notDeepEqual(failures(old, file), []);
+  }
 });
