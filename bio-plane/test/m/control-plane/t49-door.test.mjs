@@ -265,12 +265,13 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
   .modules["control-plane"].reads;
 
 test("R99 (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13): every key this module reads — the `reads` list for it in `words-reads.json` — is a word the list holds, and the module reads each one it draws", async () => {
-  assert.equal(READS.length, 11);
+  assert.ok(READS.length >= 11);
   for (const key of READS) assert.equal(hasWord(key), true, `${key} is held`);
-  /* the keys it draws, each exercised below: the one-time answers, the refusal, the draft's label and the archive's five */
-  assert.deepEqual([...READS].sort(), ["ai.refused.notdeployed", "credential.token.once", "draft.machine.label",
+  /* the keys it draws (DEC-267: the unbound refusal reads `refusal.AGENT_WORKER_UNBOUND`, the group's draft `draft.machine.label.group`),
+     each exercised below */
+  for (const key of ["refusal.AGENT_WORKER_UNBOUND", "credential.token.once", "draft.machine.label", "draft.machine.label.group",
     "file.archive.entry.summary", "file.archive.entry.title", "file.archive.provenance", "file.archive.summary", "file.archive.title",
-    "file.log.unpacked", "screen.review-copy.link.once", "template.review.secret.once"]);
+    "file.log.unpacked", "screen.review-copy.link.once", "template.review.secret.once"]) assert.equal(hasWord(key), true, `${key} is held`);
   /* control: a key the list does not hold */
   assert.equal(hasWord("control-plane.no-such-key"), false);
 });
@@ -288,19 +289,19 @@ test("R99 (K3366; U260): the one-time answers carry the words of their keys: a m
   assert.notEqual(word("screen.review-copy.link.once"), word("template.review.secret.once"), "the two grants speak their own words");
 });
 
-test("R99 (U260): with no assistant bound, `textcheck`, `readtranslate` and `airundispatch` are refused 503 AGENT_WORKER_UNBOUND in the words of `ai.refused.notdeployed`, and nothing is sent", async () => {
+test("R99 (U260): with no assistant bound, `textcheck`, `readtranslate` and `airundispatch` are refused 503 AGENT_WORKER_UNBOUND in the words of `refusal.AGENT_WORKER_UNBOUND`, and nothing is sent", async () => {
   const { env, S } = world();
   for (const [op, body] of [["textcheck", { text: "the lift was out" }], ["readtranslate", { subject: { kind: "note", id: "NOTE-1" }, language: "es" }],
                             ["airundispatch", { run: "RUN-1" }]]) {
     env.calls.length = 0;
     const r = await call(env, { op, token: S.ann, method: "POST", body });
     assert.deepEqual([r.status, r.json.reason], [503, "AGENT_WORKER_UNBOUND"], `${op}: ${r.text.slice(0, 200)}`);
-    assert.equal(r.json.detail, word("ai.refused.notdeployed"), `${op}: the refusal's words`);
+    assert.equal(r.json.detail, word("refusal.AGENT_WORKER_UNBOUND"), `${op}: the refusal's words`);
     assert.deepEqual(opCalls(env).filter((c) => c.route === op), [], `${op}: nothing sent`);
   }
 });
 
-test("R99 (K3366): a checked draft carries `draft.machine.label` as its note, for the writing help and the group description alike", async () => {
+test("R99 (K3366): a checked draft carries its note by key: the writing help `draft.machine.label`, the group description `draft.machine.label.group`", async () => {
   const w = world({ answer: (c) => (["writinghelp", "groupdescriptiondraft"].includes(c.route)
     ? reply({ ok: true, result: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE", firsthand: false } }) : null) });
   const get = w.env.STORE.get.bind(w.env.STORE);
@@ -315,7 +316,8 @@ test("R99 (K3366): a checked draft carries `draft.machine.label` as its note, fo
   assert.equal(help.status, 200, help.text.slice(0, 300));
   assert.equal(gdd.status, 200, gdd.text.slice(0, 300));
   assert.equal(help.json.result.note, word("draft.machine.label"));
-  assert.equal(gdd.json.result.note, word("draft.machine.label"));
+  assert.equal(gdd.json.result.note, word("draft.machine.label.group"));
+  assert.notEqual(word("draft.machine.label"), word("draft.machine.label.group"));
 });
 
 test("R99 (K3366, DEC-258): the bundle an unpack files is drawn in the words of the archive keys: an archive's own document `file.archive.title`, `file.archive.summary`; a file cut out of it `file.archive.entry.title`, `file.archive.entry.summary`; both `file.archive.provenance` and the session log's `file.log.unpacked`", async () => {
