@@ -152,9 +152,10 @@ test("R8 a run the dock dispatched is read again on the page clock, at most ever
   assert.equal(reads(), before, "not before 10 seconds");
   await p.clock.tick(1000);
   assert.equal(reads(), before + 1, "once at 10 seconds");
-  s.held.status = "completed"; s.held.condition = "completed";
+  s.held.status = "completed"; s.held.condition = { kind: "", detail: "completed: the run finished", bound: "completed", at: "2026-10-15T00:00:00Z" };
   await p.clock.tick(10000);
-  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: "completed" }), "without her next act");
+  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: "completed" }), "without her next act, its ending by its bound, never the object");
+  assert.ok(!panel(p).textContent.includes("[object Object]"));
   assert.ok(!says(panel(p), "dock.run.yours"), "R33: no longer said working");
   const ended = reads();
   await p.clock.tick(60000);

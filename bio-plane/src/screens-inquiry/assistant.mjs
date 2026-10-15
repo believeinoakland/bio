@@ -158,7 +158,10 @@ function render(cs, view) {
     const log = later("log", "airunlog", { run: run.id, limit: "200" }, String(ui.seq || 0));
     const session = st.state === "ok" && st.value.session ? st.value.session : null;
     /* while the run is read again, the last answer stands (a read in flight is not the run's state) */
-    if (session) ui.lastStatus = { run: run.id, status: session.status, ticks: session.ticks, condition: session.condition };
+    /* the ending as `airun` answers it: `condition` is `{kind, detail, bound, at}` (ai-runs R19), its `bound` the ending's
+       name; never the object itself (K3402's walk) */
+    const ending = (c) => (c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || ""));
+    if (session) ui.lastStatus = { run: run.id, status: session.status, ticks: session.ticks, condition: ending(session.condition) };
     const last = ui.lastStatus && ui.lastStatus.run === run.id ? ui.lastStatus : null;
     status = last ? last.status : null;
     const untested = (session && session.untested) || run.untested || null;

@@ -109,13 +109,15 @@ test("R24 the read-back: one single part and one two-passage part in both shapes
   const log = ["### Session 2026-10-08T09:00:00Z | Restructured | member:mai", "Trigger: op=inquiryground on " + Q, "Reason: the audit stands alone",
     "Strength before: capture B, connection C.", ""];
   const md = inquiryMd(P, refs, { legs, grounds: [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }], log });
-  const p = await open(at, { images: { [Q]: { "bundle.md": md } }, plane: {
+  const titled = (id, t) => ({ "bundle.md": `---\nid: ${id}\ntitle: "${t}"\n---\n` });
+  const docs = { "INFO-2026-0007": titled("INFO-2026-0007", "The count"), "INFO-2026-0009": titled("INFO-2026-0009", "The audit") };
+  const p = await open(at, { images: { [Q]: { "bundle.md": md }, ...docs }, plane: {
     partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }) } });
   const r = section(p, "question.rests.title");
   assert.ok(says(r, "question.rests.any"));
   assert.ok(r.textContent.includes("Administrative Instruction 4.12"), "the single part, by its title as the reading shown names it");
-  assert.ok(says(r, "question.rests.all", { passages: "INFO-2026-0007, INFO-2026-0009" }));
-  assert.ok(says(r, "question.origin.shared", { passages: "Administrative Instruction 4.12, INFO-2026-0007, INFO-2026-0009", origin: "Public Works" }));
+  assert.ok(says(r, "question.rests.all", { passages: "The count, The audit" }));
+  assert.ok(says(r, "question.origin.shared", { passages: "Administrative Instruction 4.12, The count, The audit", origin: "Public Works" }));
   assert.ok(r.textContent.includes(lead("question.rests.set")) && r.textContent.includes("dev"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("the audit stands alone"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B, C"), "the strength before, as the Session Log records it");
@@ -417,4 +419,22 @@ test("R12 sever and reinstate select the leg's target, then act on the question 
   const slot = await press(s, "sever", { reason: "why", within: section(s, "screen.question.supports.head") });
   assert.ok(says(slot, "screen.question.leg.unselectable"));
   assert.equal(s.byOp("sever").length, 0);
+});
+
+test("R2 R39 (K3402) the question says who opened it, by handle from the record's first promotion; a cited passage is named by its words or its document's title, never its id", async () => {
+  const hist = JSON.stringify({ target: Q, base: null, created: "2026-10-03T10:00:00Z", author: "member:dev" });
+  const later = JSON.stringify({ target: Q, base: "x", created: "2026-10-05T10:00:00Z", author: "member:mai" });
+  const legs = [{ target: "INFO-2026-0002-2026-118", role: "supports", grade: "B" }];
+  const md = inquiryMd(P, [["INFO-2026-0002-2026-118", "cites", "confirmed", null]], { legs });
+  const p = await open(at, { images: { [Q]: { "bundle.md": md, "_history/promotion_a.json": hist, "_history/promotion_b.json": later },
+    "INFO-2026-0002-2026-118": { "bundle.md": "---\nid: INFO-2026-0002-2026-118\ntitle: \"The 2026 performance report\"\n---\n" } },
+    plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  const sub = main(p).querySelector(".mk-sub");
+  assert.ok(sub.textContent.includes(word("screen.question.opened", { name: "dev", date: "3 October 2026", project: "" }).trim()), "the opener filled");
+  assert.doesNotMatch(main(p).textContent, /\{name\}/);
+  assert.ok(main(p).textContent.includes("The 2026 performance report"), "the document's title");
+  for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, /INFO-2026-0002-2026-118/, "never the record id");
+  /* control: a record that names no opener draws undetermined, never the placeholder */
+  const none = await open(at, { images: { [Q]: { "bundle.md": md } }, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
+  assert.ok(main(none).querySelector(".mk-sub").textContent.includes(lead("screen.question.opened") + word("state.undetermined", { reason: "" }).trim()));
 });
