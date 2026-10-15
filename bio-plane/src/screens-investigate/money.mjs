@@ -7,9 +7,8 @@
  * only rows with something undetermined (the address `…/<trail>/undetermined`). Two sources that disagree are both
  * drawn, compared, never one picked. */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
-import { graphRows, GRAPH_SHARED } from "./graphwords.mjs";
+import { GRAPH_SHARED } from "./graphwords.mjs";
 
 const S = "screen.money.";
 
@@ -80,7 +79,7 @@ function render(cs, view) {
     if (L.state !== "ok") return [cs.state(L, () => ""), "", "", "", "", "", "", "", ""];
     const f = L.value;
     const tr = e.trail || {};
-    const moved = f.phase !== "actual" ? cs.w(S + "didnotmove", { phase: cs.w(S + "phase." + (f.phase || "adopted")) })
+    const moved = f.phase !== "actual" ? cs.w(S + "didnotmove", { phase: cs.w(S + "phase." + (f.phase || "adopted")), date: cs.date((f.period && f.period.from) || "") })
       : tr.moved && tr.moved.state === "dated" ? (cs.date((tr.moved.when && (tr.moved.when.value || tr.moved.when.start)) || "") || cs.esc((tr.moved.when && tr.moved.when.value) || ""))
         + (tr.moved.event ? " " + P.refOf(cs, tr.moved.event, cs.w(S + "event"), [], "event") : "")
       : gap(e, "moved", (tr.moved && tr.moved.why) || cs.w(S + "moved.why"));
@@ -160,7 +159,7 @@ function render(cs, view) {
     + cs.field("mf-payer", S + "f.payer", {}) + cs.field("mf-payee", S + "f.payee", {})
     + cs.field("mf-sha", S + "f.sha", { help: S + "f.sha.help" }) + cs.field("mf-page", S + "f.page", {})
     + cs.field("mf-contract", S + "f.contract", {}) + cs.field("mf-label", S + "label", {})
-    + cs.field("mf-expertise", S + "f.expertise", { value: "municipal budget", help: S + "f.expertise.help" })
+    + cs.field("mf-expertise", S + "f.expertise", { help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
     + cs.choice("mf-question", S + "f.question", view.parts.options(view, "questions", (v) => v.bundles, (b) => ({ value: b.bundle_id, text: b.title || b.bundle_id })), { help: S + "f.question.help" }) + cs.field("mf-hunch", S + "f.hunch", { area: true, rec: true })));
   return out.join("");
@@ -290,7 +289,7 @@ const acts = [
       const label = String(cs.value("mf-expertise") || "").trim();
       if (!target || !label) return { refuse: "screen.money.f.noexpertise" };
       const keys = el && el.dataset && el.dataset.fact ? [el.dataset.fact] : (extra && extra.picked) || [];
-      return { body: { target, label, note: cs.w("screen.money.check.note", { facts: keys.join(", ") }) } };
+      return { body: { target, label, note: view.parts.plain(cs, "screen.money.check.note", { facts: keys.join(", ") }) } };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; cs.set("checked", r && r.addressed); } },
   { op: "hypothesishold", label: "act.hypothesishold.label.money",
@@ -301,135 +300,38 @@ const acts = [
     } },
 ];
 
-const ROWS = [
-  ["graph", "Connections"],
-  ["graph.holds", "Everything the record joins this trail to, two steps out, each step cited and graded. A line stopped at its limit is undetermined, not absent."],
-  ["notrail", "No money trail is open here yet. Start one: a named set of figures you include or leave out, each with a reason."],
-  ["label", "The trail's name"],
-  ["label.help", "What the trail follows, for example \"Sewer fund transfers, FY2022\"."],
-  ["startedby", "started by {by}"],
-  ["read", "Read a figure"],
-  ["readother", "Read it from another source"],
-  ["readfor", "Reading another source for {fact}: fill in the figure below and press Read a figure."],
-  ["event", "the event"],
-  ["source", "the source"],
-  ["notstated", "not stated in this source"],
-  ["didnotmove", "did not move: a {phase} figure"],
-  ["moved.why", "the source gives no date it moved"],
-  ["period", "{from} to {to}"],
-  ["period.why", "the source states no end to its period"],
-  ["range", "{low} to {high} {currency}"],
-  ["amount", "{sign}{amount} {currency}"],
-  ["stage", "{phase} {stage}"],
-  ["included", "included · \"{reason}\""],
-  ["excluded", "left out · \"{reason}\""],
-  ["proposed", "proposed by the machine; not included"],
-  ["notyet", "read here, not yet in this trail"],
-  ["gap.open", "Open this figure at {what}"],
-  ["col.from", "Where it came from"],
-  ["col.to", "Where it went"],
-  ["col.moved", "When it moved"],
-  ["col.basis", "Its accounting basis"],
-  ["col.period", "Its period"],
-  ["gap.from", "not stated in the only source holding this figure"],
-  ["gap.to", "not stated in the only source holding this figure"],
-  ["gap.moved", "no source dates it"],
-  ["gap.basis", "the source does not say on what basis it counts"],
-  ["gap.period", "the source states no end to its period"],
-  ["evidence.from", "Evidence that names the payer would help: a journal entry, a transfer schedule, a contract. Read it in from there, citing the passage; if the group holds none, ask the city for the record."],
-  ["evidence.to", "Evidence that names the payee would help: a cost-allocation plan, a journal entry, the budget's transfer schedule. Read it in from there, citing the passage; if the group holds none, ask the city for the record."],
-  ["evidence.moved", "A passage that dates it would help: a ledger line, a journal entry, a council report. Record the movement as an event, citing that passage; until a source dates it, it is never placed by its year."],
-  ["evidence.basis", "The source's own notes on its accounting basis would help: read the figure again from a source that states it."],
-  ["evidence.period", "A passage that states the period's end would help: the report's cover, its notes, a schedule."],
-  ["asread", "As the source writes it: \"{as_read}\" · read by {by}"],
-  ["rec.same", "The two readings agree in every dimension compared."],
-  ["rec.differs", "The two readings differ in: {dims}. Both stay, compared, never merged."],
-  ["rec.two", "Choose the two figures to compare."],
-  ["with", "Compare with"],
-  ["auth.chain", "{n} authorising steps toward {event}"],
-  ["auth.none", "The record holds nothing that authorised it."],
-  ["note.none", "No grade note is held for this copy."],
-  ["filter.gaps", "Only figures with something undetermined · {n}"],
-  ["filter.gaps.none", "Only figures with something undetermined"],
-  ["filter.all", "Every figure"],
-  ["empty", "This trail holds no figure yet. Read one in from a document."],
-  ["nogaps", "No figure in this trail has anything undetermined."],
-  ["tension", "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. Where two sources disagree, both stay, shown in tension, and the table never picks one."],
-  ["cap.head", "Committed against paid"],
-  ["cap.diff", "Committed {committed}, paid {paid}: {difference} committed and not yet paid."],
-  ["cap.none", "the record holds no committed or no paid figure for this contract"],
-  ["form.head", "Read a figure, and what the acts ask"],
-  ["f.amount", "The amount"],
-  ["f.amount.help", "Exactly as printed, without the currency sign: 1,250,000.00."],
-  ["f.asread", "As the source writes it"],
-  ["f.currency", "Currency"],
-  ["f.sign", "Money"],
-  ["f.sign.in", "in"],
-  ["f.sign.out", "out"],
-  ["f.kind", "What kind of figure"],
-  ["f.kind.expenditure", "An expenditure"],
-  ["f.kind.payment", "A payment"],
-  ["f.kind.transfer", "A transfer"],
-  ["f.kind.allocation", "An allocation"],
-  ["f.kind.revenue", "Revenue"],
-  ["f.kind.contribution", "A contribution"],
-  ["f.kind.settlement", "A settlement"],
-  ["f.kind.other", "Something else"],
-  ["f.phase", "Stage"],
-  ["f.phase.adopted", "Adopted (budgeted)"],
-  ["f.phase.proposed", "Proposed"],
-  ["f.phase.adjusted", "Adjusted"],
-  ["f.phase.actual", "Actual"],
-  ["f.stage", "For an actual figure"],
-  ["f.stage.none", "Not stated"],
-  ["f.stage.encumbered", "Committed"],
-  ["f.stage.incurred", "Incurred"],
-  ["f.stage.paid", "Paid"],
-  ["f.stage.assessed", "Assessed"],
-  ["f.stage.collected", "Collected"],
-  ["f.basis", "Accounting basis"],
-  ["f.basis.undetermined", "Not stated"],
-  ["f.basis.budgetary", "Budgetary"],
-  ["f.basis.cash", "Cash"],
-  ["f.basis.modified_accrual", "Modified accrual"],
-  ["f.basis.accrual", "Accrual"],
-  ["f.periodfrom", "Period from"],
-  ["f.periodto", "Period to"],
-  ["f.fiscal", "Or its fiscal year (FY2022-23)"],
-  ["f.payer", "Who paid (as the source writes it)"],
-  ["f.payee", "Who received it (as the source writes it)"],
-  ["f.sha", "The document"],
-  ["f.sha.help", "The document's fingerprint, as its page shows it; the figure cites the passage."],
-  ["f.page", "Page (optional)"],
-  ["f.contract", "The contract, for committed against paid (a record id)"],
-  ["f.expertise", "The expertise asked for"],
-  ["f.expertise.help", "Members who declared this expertise are asked; the one who read the figure is not."],
-  ["f.address", "The city's own address for the document"],
-  ["f.address.help", "Fetched by your group's Civicsmith and kept exactly as the city sends it."],
-  ["f.question", "Beside which question"],
-  ["f.question.help", "A hunch is kept beside a question, labelled as yours, and is never evidence."],
-  ["f.hunch", "Your reading, as a hunch"],
-  ["f.empty", "Give the amount, how the source writes it, and the passage it comes from."],
-  ["f.nocontract", "Name the contract by its record id."],
-  ["f.nopassage", "Name the passage that dates the movement."],
-  ["f.noaddress", "Give the city's address for the document, starting https://."],
-  ["f.noexpertise", "Name the expertise to ask for."],
-  ["f.nohunch", "Name the question and write your reading."],
-  ["check.note", "Please check how these figures were read: {facts}"],
-  ["phase.adopted", "adopted"],
-  ["phase.proposed", "proposed"],
-  ["phase.adjusted", "adjusted"],
-  ["phase.actual", "actual"],
-  ["stage.encumbered", "(committed)"],
-  ["stage.incurred", "(incurred)"],
-  ["stage.paid", "(paid)"],
-  ["stage.assessed", "(assessed)"],
-  ["stage.collected", "(collected)"],
-  ...["revenue", "expenditure", "transfer", "allocation", "payment", "contribution", "gift", "income", "behested", "settlement", "debt", "balance", "fee_charged", "other"]
-    .map((k) => ["kind." + k, { revenue: "Revenue", expenditure: "Expenditure", transfer: "Transfer", allocation: "Allocation", payment: "Payment", contribution: "Contribution",
-      gift: "Gift", income: "Income", behested: "Behested payment", settlement: "Settlement", debt: "Debt", balance: "Balance", fee_charged: "Fee charged", other: "Other" }[k]]),
+const MONEY_KEYS = [
+  "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",
+  "screen.money.startedby", "screen.money.read", "screen.money.readother", "screen.money.readfor", "screen.money.event", "screen.money.source",
+  "screen.money.notstated", "screen.money.didnotmove", "screen.money.moved.why", "screen.money.period", "screen.money.period.why",
+  "screen.money.range", "screen.money.amount", "screen.money.stage", "screen.money.included", "screen.money.excluded", "screen.money.proposed",
+  "screen.money.notyet", "screen.money.gap.open", "screen.money.col.from", "screen.money.col.to", "screen.money.col.moved", "screen.money.col.basis",
+  "screen.money.col.period", "screen.money.gap.from", "screen.money.gap.to", "screen.money.gap.moved", "screen.money.gap.basis",
+  "screen.money.gap.period", "screen.money.evidence.from", "screen.money.evidence.to", "screen.money.evidence.moved", "screen.money.evidence.basis",
+  "screen.money.evidence.period", "screen.money.asread", "screen.money.rec.same", "screen.money.rec.differs", "screen.money.rec.two",
+  "screen.money.with", "screen.money.auth.chain", "screen.money.auth.none", "screen.money.note.none", "screen.money.filter.gaps",
+  "screen.money.filter.gaps.none", "screen.money.filter.all", "screen.money.empty", "screen.money.nogaps", "screen.money.tension",
+  "screen.money.cap.head", "screen.money.cap.diff", "screen.money.cap.none", "screen.money.form.head", "screen.money.f.amount",
+  "screen.money.f.amount.help", "screen.money.f.asread", "screen.money.f.currency", "screen.money.f.sign", "screen.money.f.sign.in",
+  "screen.money.f.sign.out", "screen.money.f.kind", "screen.money.f.kind.expenditure", "screen.money.f.kind.payment", "screen.money.f.kind.transfer",
+  "screen.money.f.kind.allocation", "screen.money.f.kind.revenue", "screen.money.f.kind.contribution", "screen.money.f.kind.settlement",
+  "screen.money.f.kind.other", "screen.money.f.phase", "screen.money.f.phase.adopted", "screen.money.f.phase.proposed",
+  "screen.money.f.phase.adjusted", "screen.money.f.phase.actual", "screen.money.f.stage", "screen.money.f.stage.none",
+  "screen.money.f.stage.encumbered", "screen.money.f.stage.incurred", "screen.money.f.stage.paid", "screen.money.f.stage.assessed",
+  "screen.money.f.stage.collected", "screen.money.f.basis", "screen.money.f.basis.undetermined", "screen.money.f.basis.budgetary",
+  "screen.money.f.basis.cash", "screen.money.f.basis.modified_accrual", "screen.money.f.basis.accrual", "screen.money.f.periodfrom",
+  "screen.money.f.periodto", "screen.money.f.fiscal", "screen.money.f.payer", "screen.money.f.payee", "screen.money.f.sha",
+  "screen.money.f.sha.help", "screen.money.f.page", "screen.money.f.contract", "screen.money.f.expertise", "screen.money.f.expertise.help",
+  "screen.money.f.address", "screen.money.f.address.help", "screen.money.f.question", "screen.money.f.question.help", "screen.money.f.hunch",
+  "screen.money.f.empty", "screen.money.f.nocontract", "screen.money.f.nopassage", "screen.money.f.noaddress", "screen.money.f.noexpertise",
+  "screen.money.f.nohunch", "screen.money.check.note", "screen.money.phase.adopted", "screen.money.phase.proposed", "screen.money.phase.adjusted",
+  "screen.money.phase.actual", "screen.money.stage.encumbered", "screen.money.stage.incurred", "screen.money.stage.paid",
+  "screen.money.stage.assessed", "screen.money.stage.collected", "screen.money.kind.revenue", "screen.money.kind.expenditure",
+  "screen.money.kind.transfer", "screen.money.kind.allocation", "screen.money.kind.payment", "screen.money.kind.contribution",
+  "screen.money.kind.gift", "screen.money.kind.income", "screen.money.kind.behested", "screen.money.kind.settlement", "screen.money.kind.debt",
+  "screen.money.kind.balance", "screen.money.kind.fee_charged", "screen.money.kind.other", "screen.money.g.cited", "screen.money.g.declared",
+  "screen.money.g.hunch", "screen.money.g.nosource",
 ];
-export const MONEY_WORDS = [...ROWS.map(([k, en]) => row(S + k, en)), ...graphRows(S)];
 
 const words = ["screen.money.name", "screen.money.purpose",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
@@ -438,6 +340,6 @@ const words = ["screen.money.name", "screen.money.purpose",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
   ...GRAPH_SHARED,
-  "state.empty", "state.loading", "state.failed", ...MONEY_WORDS];
+  "state.empty", "state.loading", "state.failed", ...MONEY_KEYS];
 
 export const MONEY_SCREEN = Object.freeze({ id: "money", reads, place, render, acts, words, parts: PARTS });

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, DIRECTORY, ENT, ORG } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, DIRECTORY, ENT, ORG, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/people";
 
@@ -13,12 +13,13 @@ test("R12 the directory is people's peopledirectory, read whole at first; the co
   assert.deepEqual(r[0].query.op, "peopledirectory");
   assert.deepEqual(Object.keys(r[0].query).filter((k) => k !== "op"), [], "nothing typed: the whole directory");
   const m = main(p);
-  assert.match(m.textContent, /The record follows 3 people and organizations; 1 are named in your projects/);
+  drew(m, "screen.people.countline", { following: "3", mine: "1" });
   const secs = m.querySelectorAll("section");
   const heads = secs.map((s) => s.querySelector("h2").textContent);
-  assert.ok(heads.indexOf("In your projects") < heads.indexOf("Everyone else the record follows"));
-  assert.match(secs[heads.indexOf("In your projects")].textContent, /L\. Chen/);
-  assert.match(secs[heads.indexOf("Everyone else the record follows")].textContent, /Public Works Department/);
+  const yours = word("screen.people.yours"), others = word("screen.people.others");
+  assert.ok(heads.indexOf(yours) < heads.indexOf(others));
+  assert.ok(secs[heads.indexOf(yours)].textContent.includes("L. Chen"));
+  assert.ok(secs[heads.indexOf(others)].textContent.includes("Public Works Department"));
   assert.ok(m.querySelector('a[href="/app/members"]'), "the group's members are under Settings › Members");
 });
 
@@ -30,7 +31,7 @@ test("R12 search: Name or office and the four filters read the directory again, 
   assert.equal(r.length, 2);
   assert.deepEqual({ q: r[1].query.q, show: r[1].query.show, office: r[1].query.office, namedIn: r[1].query.namedIn, since: r[1].query.since },
     { q: "chen", show: "people", office: ORG, namedIn: "mine", since: "90" });
-  assert.equal(p.doc.getElementById("people-q").getAttribute("aria-label") || p.doc.querySelector('label[for="people-q"]').textContent, "Name or office");
+  assert.equal(p.doc.getElementById("people-q").getAttribute("aria-label") || p.doc.querySelector('label[for="people-q"]').textContent, word("screen.people.q"));
   const q = await open(at, { plane: { peopledirectory: (req) => (req.query.q ? refusedIn("BAD_ARGUMENT", "The search could not be read.") : ok(DIRECTORY())) } });
   fill(q, { "people-q": "x".repeat(3) });
   await press(q, "search");
@@ -46,11 +47,12 @@ test("R13 each row: the kind's mark, the name opening person, who they are today
   assert.equal(rows[0].querySelector('[data-kind="person"]').getAttribute("data-tip").length > 0, true);
   assert.ok(rows[1].querySelector('[data-kind="organisation"]'));
   assert.equal(rows[0].querySelector(`a.cs-ref[href="/app/person/${ENT}"]`).textContent, "L. Chen");
-  assert.match(rows[0].textContent, /Director of Public Works, Public Works Department/);
-  assert.match(rows[0].textContent, /named in 14 documents, 2 questions, 1 project · newest added 2 October 2026/);
-  assert.match(rows[1].textContent, /A city department/);
-  assert.match(rows[1].textContent, /named in 11 documents/);
-  assert.doesNotMatch(rows[1].textContent, /\b0 (questions|projects)|no question or project/, "R22: no count is drawn at zero");
+  assert.ok(rows[0].textContent.includes("Director of Public Works, Public Works Department"), "who they are today, from the record");
+  drew(rows[0], "screen.people.counts", { list: [word("screen.people.count.documents", { n: "14" }), word("screen.people.count.questions", { n: "2" }), word("screen.people.count.project", { n: "1" })].join(", ") });
+  drew(rows[0], "screen.people.newest", { date: dayOf("2026-10-02") });
+  assert.ok(rows[1].textContent.includes("A city department"));
+  drew(rows[1], "screen.people.counts", { list: word("screen.people.count.documents", { n: "11" }) });
+  for (const k of ["screen.people.count.questions", "screen.people.count.projects"]) notDrew(rows[1], k, { n: "0" }, "R22: no count is drawn at zero");
   await press(p, "explore", { el: rows[0].querySelector('button[data-act="explore"]') });
   assert.equal(p.location.pathname, "/app/explore/" + ENT);
   assert.deepEqual(rawKeys(p.root()), []);
@@ -67,19 +69,20 @@ test("R13 Add someone the record follows sends entitycreate with the name, the k
   fill(q, { "people-add-name": "K. Osei" });
   await press(q, "entitycreate");
   assert.equal(q.byOp("entitycreate").length, 0);
-  assert.match(main(q).textContent, /Give their name and your note/);
+  drew(main(q), "screen.people.add.empty");
 });
 
 test("R13 the two empty states: a record that follows no one yet, and a search that finds no one", async () => {
   const none = ok({ ok: true, following: 0, in_your_projects: 0, rows: [], truncated: false });
   const p = await open(at, { plane: { peopledirectory: none } });
-  assert.match(main(p).textContent, /Your group's record follows no one yet\..*ties a name in a captured document/s);
+  drew(main(p), "screen.people.none");
+  drew(main(p), "screen.people.none.how");
   assert.ok(main(p).querySelector('a[href="/app/capture"]'));
   assert.ok(button(p, "entitycreate"));
   const q = await open(at, { plane: { peopledirectory: (r) => (r.query.q ? none : ok(DIRECTORY())) } });
   fill(q, { "people-q": "Alvarez" });
   await press(q, "search");
-  assert.match(main(q).textContent, /No one the record follows matches “Alvarez”\./);
+  drew(main(q), "screen.people.nomatch", { q: "Alvarez" });
   assert.ok(main(q).querySelector('a[href="/app/finder"]'));
   assert.deepEqual(actsIn(main(q)).sort(), ["entitycreate", "search"]);
 });
@@ -92,12 +95,12 @@ test("R15 people draws \"Added at setup from your group's place\" for an organis
   const p = await open(at, { plane: { peopledirectory: ok(DIRECTORY({ rows, following: 3, in_your_projects: 0 })) } });
   const m = main(p);
   const [a, b, c] = m.querySelectorAll(".cs-row");
-  assert.match(a.textContent, /City Clerk · Added at setup from your group's place/);
+  assert.ok(a.textContent.includes("City Clerk · " + word("screen.people.today.seeded")));
   assert.doesNotMatch(p.root().textContent + m.innerHTML, /counterparties\[0\]|oakland-alameda|jurisdiction profile/, "no machine note anywhere, card included");
-  assert.match(b.textContent, /A city department · repairs streets and sewers/);
-  assert.doesNotMatch(b.textContent, /Added at setup/);
-  assert.match(c.textContent, /Run by the port; it is seeded at setup\./, "a member's note is drawn as written, whatever it ends with");
-  assert.doesNotMatch(c.textContent, /Added at setup/);
+  assert.ok(b.textContent.includes("A city department · repairs streets and sewers"));
+  notDrew(b, "screen.people.today.seeded");
+  assert.ok(c.textContent.includes("Run by the port; it is seeded at setup."), "a member's note is drawn as written, whatever it ends with");
+  notDrew(c, "screen.people.today.seeded");
   assert.deepEqual(rawKeys(p.root()), []);
 });
 
@@ -105,16 +108,17 @@ test("R25 with nothing followed people draws only its empty state (follows no on
   const none = ok({ ok: true, following: 0, in_your_projects: 0, rows: [], truncated: false });
   const p = await open(at, { plane: { peopledirectory: none } });
   const m = main(p);
-  assert.match(m.textContent, /Your group's record follows no one yet/);
+  drew(m, "screen.people.none");
   assert.ok(m.querySelector('a[href="/app/capture"]'));
   assert.ok(button(p, "entitycreate"));
   assert.equal(p.doc.getElementById("people-q"), null, "no search box");
   assert.equal(p.doc.getElementById("people-show"), null, "no filters");
   assert.equal(button(p, "search"), null);
-  assert.doesNotMatch(m.textContent, /The record follows \d+ people|Organisations|organisations/);
+  notDrew(m, "screen.people.countline", { following: "0", mine: "0" });
+  notDrew(m, "screen.people.countline.none", { following: "0" });
   const one = ok(DIRECTORY({ rows: [DIRECTORY().rows[0]], following: 1, in_your_projects: 1 }));
   const q = await open(at, { plane: { peopledirectory: one } });
   assert.ok(q.doc.getElementById("people-q"), "one follow draws the full screen");
   assert.ok(button(q, "search"));
-  assert.match(main(q).textContent, /Organizations/, "DEC-221's spelling");
+  drew(main(q), "screen.people.show.organizations", undefined, "DEC-221's spelling");
 });

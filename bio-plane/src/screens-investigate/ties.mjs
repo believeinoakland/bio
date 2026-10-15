@@ -3,7 +3,6 @@
  * sees the list in the screen's own sentences. A tie is added with its kind, who, and whether a case that concerns it
  * names her by her handle or says "a member of the group", the disclosure stated either way. */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function reads() {
@@ -34,7 +33,7 @@ function render(cs, view) {
     + cs.choice("tie-who", S + "whofield", who, {})
     + cs.field("tie-note", S + "note", { area: true, rec: true, help: S + "note.help" })
     + cs.checks("tie-says", S + "says", [["name", S + "says.name.choice", false], ["group", S + "says.group.choice", true]], { radio: true })
-    + `<p class="mk-note">${cs.w(S + "either", { handle: me })}</p>`
+    + `<p class="mk-note">${cs.w(S + "either")}</p>`
     + cs.act("declaretie", { label: "act.declaretie.label.ties", tone: "primary" })));
   return out.join("");
 }
@@ -52,41 +51,17 @@ const acts = [
     send(view, el) { return { body: { tieId: String(el.dataset.tie || "") } }; } },
 ];
 
-export const TIES_WORDS = [
-  ["why", "Why you are asked"],
-  ["why.1", "A published case is trusted only if readers know of anything that could pull the people behind it one way. Saying so openly protects you and the group."],
-  ["why.2", "When a case your group publishes concerns one of your ties, the case says so, in the way you choose below."],
-  ["why.3", "Before the group publishes, each member who signs confirms they have no tie they have not listed here."],
-  ["why.4", "Only what could matter: an employer, a relative in a public body, a business you have an interest in. Not your opinions, politics or private life."],
-  ["who", "Who sees it"],
-  ["who.1", "Inside the group: only you and the group's administrators. Other members never see this list.", true],
-  ["who.2", "Outside the group: no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.", true],
-  ["who.3", "It is kept with your group's records, so a court order could reach it like the rest of them.", true],
-  ["list", "Your ties"],
-  ["first", "Nothing is listed yet. Start with “Add this tie”: say who it is with, and how you want a case to name it."],
-  ["col.kind", "Kind"],
-  ["col.who", "Who"],
-  ["col.disclosed", "A case would say"],
-  ["kind", "Kind"],
-  ["kind.employer", "Employer"],
-  ["kind.relative", "Relative"],
-  ["kind.business", "A business I have an interest in"],
-  ["kind.other", "Other"],
-  ["add", "Add a tie"],
-  ["whofield", "Who"],
-  ["note", "The tie, in your words"],
-  ["note.help", "For example \"member-owner\", or \"my cousin works on its staff\"."],
-  ["says", "If a case the group publishes concerns them, the case discloses this tie", true],
-  ["says.name.choice", "Naming me by my handle", true],
-  ["says.group.choice", "Without naming me: \"a member of the group\"", true],
-  ["says.name", "naming you: \"{handle}, who worked on this case, has this tie\"", true],
-  ["says.group", "\"a member of the group who worked on this case has this tie\"", true],
-  ["either", "Either way the tie is disclosed to readers of the case. Inside the group, only you ({handle}) and the administrators see this list.", true],
-  ["add.empty", "Name who the tie is with and describe it."],
-].map(([k, en, p]) => row("screen.ties." + k, en, !!p));
+const TIES_KEYS = [
+  "screen.ties.why", "screen.ties.why.1", "screen.ties.why.2", "screen.ties.why.3", "screen.ties.why.4", "screen.ties.who", "screen.ties.who.1",
+  "screen.ties.who.2", "screen.ties.who.3", "screen.ties.list", "screen.ties.first", "screen.ties.col.kind", "screen.ties.col.who",
+  "screen.ties.col.disclosed", "screen.ties.kind", "screen.ties.kind.employer", "screen.ties.kind.relative", "screen.ties.kind.business",
+  "screen.ties.kind.other", "screen.ties.add", "screen.ties.whofield", "screen.ties.note", "screen.ties.note.help", "screen.ties.says",
+  "screen.ties.says.name.choice", "screen.ties.says.group.choice", "screen.ties.says.name", "screen.ties.says.group", "screen.ties.either",
+  "screen.ties.add.empty",
+];
 
 const words = ["screen.ties.name", "screen.ties.purpose",
   ...["declaretie", "withdrawtie"].flatMap((op) => ["act." + op + ".label.ties", "act." + op + ".does"]),
-  "state.empty", "state.loading", "state.failed", ...TIES_WORDS];
+  "state.empty", "state.loading", "state.failed", ...TIES_KEYS];
 
 export const TIES_SCREEN = Object.freeze({ id: "ties", reads, render, acts, words, parts: PARTS });

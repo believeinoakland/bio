@@ -2,13 +2,13 @@
  * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
-import { SCREENS, SCREEN_WORDS } from "../../../src/screens-intake/index.mjs";
+import { interfacePage, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS, SESSION_OPS, NEEDS } from "../../../src/op-declarations/index.mjs";
 import { pending } from "../interface-shell/harness.mjs";
-import { open, html, text, main, ok, refused, MEMBER, rawKeys, fill, press } from "./page.mjs";
+import { open, html, text, main, ok, refused, MEMBER, rawKeys, fill, press, word, hasWord } from "./page.mjs";
 
 const SHA = "a".repeat(64);
 const PATHS = { capture: ["/app/capture/address", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"], archive: [`/app/archive/${SHA}`],
@@ -85,24 +85,23 @@ test("R8 (interface-shell R5, R10) every screen in each read's four states draws
   }
 });
 
-test("R8 (interface-shell R5) SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, the screens' own or the re-held two", () => {
-  assert.ok(Object.isFrozen(SCREEN_WORDS));
-  const keys = SCREEN_WORDS.map((r) => r[0]);
-  assert.equal(new Set(keys).size, keys.length);
-  for (const r of SCREEN_WORDS) {
-    assert.equal(r.length, 3);
-    assert.equal(typeof r[1], "string");
-    assert.equal(typeof r[2], "boolean");
-    assert.ok(/^screen\.(capture|held|archive|open-file|inbox)\./.test(r[0]) || ["mark.gap.refused.means", "ai.label.untested"].includes(r[0]), r[0]);
+test("R26 (interface-shell R5) each screen's words are the keys it reads, all of them words of the list; the module holds none of its own English", async () => {
+  const mod = await import("../../../src/screens-intake/index.mjs");
+  assert.equal(mod.SCREEN_WORDS, undefined, "no list of the module's own sentences");
+  for (const s of SCREENS) {
+    assert.ok(Object.isFrozen(s.words), s.id);
+    assert.equal(new Set(s.words).size, s.words.length, `${s.id}: keys distinct`);
+    for (const w of s.words) {
+      assert.equal(typeof w, "string", `${s.id}: a key, never a [key, en] row`);
+      assert.ok(hasWord(w), `${s.id}: ${w} is a word of the list`);
+    }
   }
-  /* DEC-149: the re-held mark names the group's Civicsmith, never bare */
-  assert.match(SCREEN_WORDS.find((r) => r[0] === "mark.gap.refused.means")[1], /your group's Civicsmith/);
-  assert.equal(SCREEN_WORDS.find((r) => r[0] === "ai.label.untested")[1],
-    "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.");
-  const WR = new Set(WORD_ROWS.map((r) => r[0]));
-  for (const s of SCREENS) for (const w of s.words) if (!Array.isArray(w)) assert.ok(WR.has(w), `${s.id}: ${w} is a WORD_ROWS key`);
-  const listed = new Set(SCREENS.flatMap((s) => s.words.map((w) => (Array.isArray(w) ? w[0] : w))));
-  for (const k of keys) assert.ok(listed.has(k), k);
+  assert.ok(SCREENS.every((s) => s.words.every((w) => WORD_ROWS.some((r) => r[0] === w))));
+});
+
+test("R26 word(key, vars): a missing placeholder and an unknown key throw their codes, so a screen never draws a key or a half-filled sentence", () => {
+  assert.throws(() => word("screen.held.age", {}), /WORD_VAR_MISSING/);
+  assert.throws(() => word("screen.nothing.here"), /UNKNOWN_WORD/);
 });
 
 test("R8 (interface-shell R12) an act is drawn only when the session may do it: without contribute no act needing it appears", async () => {
@@ -117,9 +116,10 @@ test("R8 (interface-shell R12) an act is drawn only when the session may do it: 
 });
 
 test("R9 no act or read records which member opened which file: every request is an op naming no member, and the screens store nothing", async () => {
-  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band) */
-  const FRAME = new Set(["bootstrap", "whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select"]);
+  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
+     the shell's declaration of them (N1073) */
+  const FRAME = new Set(SHELL_OPS);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];
