@@ -56,7 +56,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.ceremony.areas.needed", "screen.ceremony.asked", "screen.ceremony.checks", "screen.ceremony.device.next",
     "screen.ceremony.disclosed", "screen.ceremony.disclosed.count", "screen.ceremony.heading",
     "screen.ceremony.keep.legend", "screen.ceremony.mark.standing", "screen.ceremony.mark.withdrawn",
-    "screen.ceremony.notready", "screen.ceremony.permanent", "screen.ceremony.photo.facts",
+    "screen.ceremony.notready", "screen.ceremony.permanent", "screen.ceremony.photo.facts", "screen.ceremony.photo.facts.dated",
     "screen.ceremony.photo.format", "screen.ceremony.photo.name", "screen.ceremony.photo.nothing",
     "screen.ceremony.photo.state.marked", "screen.ceremony.photo.state.nothing",
     "screen.ceremony.photo.state.unchecked", "screen.ceremony.photos", "screen.ceremony.photos.copy",
@@ -86,7 +86,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.published.timeline", "screen.published.verify.no", "screen.published.verify.none",
     "screen.published.verify.ok", "screen.published.whose", "screen.published.withdrawn", "published.check.title",
     "published.check.help", "published.check.field", "published.check.field.help", "published.check.go",
-    "published.check.yes", "published.check.no", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
+    "published.check.yes", "published.check.no", "published.check.elsewhere", "shell.unavailable.nothing.says", "shell.unavailable.nothing.title",
   ]),
   imported: Object.freeze([
     "state.loading", "state.empty", "state.failed", "screen.imported.name", "screen.imported.purpose",

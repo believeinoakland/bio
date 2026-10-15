@@ -98,11 +98,11 @@ export const CEREMONY = Object.freeze({
       + (photos.map(function (ph, i) {
         const sha = ph.sha || ph.capture || "";
         const marks = P.later(cs, view, "marks:" + sha, "photomarks", { query: { capture: sha } });
-        // The sentence of facts needs the day the photo was taken, which the Photos step answers only when it carries one
-        // (`taken_at`); with none, no sentence is drawn, never one with a gap in it.
-        const when = ph.taken_at || ph.taken || "";
-        const facts = when ? cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", date: { html: cs.date(when) },
-          findings: (ph.relied_on_by || []).map(function (r) { return r && (r.target || r.member) || ""; }).filter(Boolean).join(", ") }) : "";
+        // The sentence of facts: with the day the photo was taken when the Photos step carries one (`taken_at`), else without it.
+        const when = ph.taken_at || "";
+        const relied = (ph.relied_on_by || []).map(function (r) { return r && (r.target || r.member) || ""; }).filter(Boolean).join(", ");
+        const facts = when ? cs.w("screen.ceremony.photo.facts.dated", { by: ph.taken_by || "", date: { html: cs.date(when) }, findings: relied })
+          : cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", findings: relied });
         return '<div class="cs-sheet" data-photo="' + cs.esc(sha) + '"><p><b>' + cs.w("screen.ceremony.photo.name", { n: String(i + 1) }) + "</b> "
           + '<span class="id">' + cs.esc(String(sha).slice(0, 12)) + "</span>" + (facts ? " · " + facts : "") + "</p>"
           + (ph.refused || ph.words === "photo.refused.format" ? '<p role="alert">' + cs.w("screen.ceremony.photo.format") + "</p>" : "")

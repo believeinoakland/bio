@@ -285,7 +285,7 @@ test("R22 an unknown hash draws \"no match\", and a hash published in another ed
   const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([other], {
     publishedcase: (req) => ok(req.query.sha256 ? { ...EDITION(), edition: 1, asked: FIND, findings: [{ ...EDITION().findings[0], version_sha: other }] } : EDITION()) }) });
   await checkIt(q, other);
-  assert.ok(drew(q, "published.check.no"), "published in Edition 1, not in the Edition 2 on the page");
+  assert.ok(drew(q, "published.check.elsewhere") && !drew(q, "published.check.no"), "published in Edition 1, not in the Edition 2 on the page");
   assert.ok(!drew(q, "published.check.yes", { n: "1", finding: FINDING_SAYS }));
 });
 

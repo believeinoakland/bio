@@ -225,3 +225,14 @@ test("R15 at the phone width the Sign step draws signing.ceremony.phone and send
   carries(last(p, "signrequest").body, { case: C, edition: 2 });
   assert.ok(drew(p, "screen.ceremony.asked"));
 });
+
+test("R4 a photo's facts: taken by and relied on, with the day when the step carries `taken_at` and without it when it does not", async () => {
+  const p = await open(PATH);
+  const ph = main(p).querySelector(`[data-photo="${PHOTO}"]`);
+  assert.ok(drewIn(ph, "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "no day: the sentence without one");
+  const pre = PREFLIGHT();
+  pre.steps[3].photos[0].taken_at = "2026-03-02T10:00:00Z";
+  const q = await open(PATH, { plane: { publishpreflight: ok(pre) } });
+  assert.ok(drewIn(main(q).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts.dated", { by: "dev", date: day("2026-03-02"), findings: "FND-2026-0031" }));
+  assert.deepEqual(q.root().innerHTML.match(/\{[a-z]\w*\}/g) || [], []);
+});
