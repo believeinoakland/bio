@@ -1,6 +1,6 @@
 # screens-entry (T49)
 
-**Status** · session_01H73fxUtMGo1PPXKWMHzAzS · depth 2 · COMPLETE · handled B7
+**Status** · session_01H73fxUtMGo1PPXKWMHzAzS · depth 2 · COMPLETE · handled B8
 
 ## J1 · REPORT
 
@@ -55,3 +55,13 @@ Checks on my module: format 0, architecture 0, coverage 21 of 21, ownership 0 (1
 **Checks:** format 0 failures; architecture 16 files, 0 failures; coverage 21 of 21, 0 failures; ownership 12 files, 0 failures. `checks/run.mjs`: format, architecture, channels 0; coverage 7 failures, none screens-entry's (other modules' rule 5 (1) reds).
 
 Size (session_01H73fxUtMGo1PPXKWMHzAzS): test runs 20, module lines 940
+
+## J5 · COMPLETE
+
+**Complete again** after B8 (K3381), on `job/T49/screens-entry` with `tranche/T49` merged (DEC-263–DEC-267's words).
+
+- `screen.setup.claimed.nosignin` is filled with `{handle}`, the founder's chosen handle (the one the claim answered); the test now asserts it drawn with her handle and no `admin` in the drawing (setup R6/R17, design R15). Nothing else changed; J4's record otherwise stands.
+- Tests: screens-entry 73 pass, 0 fail; interface-shell, control-plane `t46-app`, plane `t47`, instance-setup `page`: 166 pass, 0 fail.
+- Checks: format 0; architecture 0 (16 files); coverage 21 of 21; ownership 0 (12 files).
+
+Size (session_01H73fxUtMGo1PPXKWMHzAzS): test runs 23, module lines 940
