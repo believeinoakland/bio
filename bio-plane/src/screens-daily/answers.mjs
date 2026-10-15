@@ -61,11 +61,21 @@ export const answers = Object.freeze({
             const state = STATES.indexOf(l.state) >= 0 ? cs.w("screen.answers.state." + l.state) : cs.w("screen.answers.state.other", { state: String(l.state || "") });
             return "<li><span>" + level + "</span> <span>" + state + "</span></li>";
           }).join("") + "</ul>" : "";
+        // R27: what the answer says is not established, each as the sentence it is (the system's own entry for withheld sentences
+        // says how many); drawn beneath a heading, only when it holds something.
+        const unsure = (Array.isArray(a.not_established) ? a.not_established : []).map(function (e) {
+          if (typeof e === "string") return e.trim() ? cs.esc(e) : "";
+          if (e && typeof e === "object" && typeof e.text === "string" && e.text.trim()) return cs.esc(e.text);
+          if (e && typeof e === "object" && typeof e.withheld === "number" && e.withheld > 0) return e.withheld === 1 ? cs.w("screen.answers.withheld.one") : cs.w("screen.answers.withheld", { n: String(e.withheld) });
+          return "";
+        }).filter(Boolean);
+        const notEstablished = unsure.length ? "<h3>" + cs.w("screen.answers.notestablished") + '</h3><ul class="mk-list">'
+          + unsure.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ul>" : "";
         const withheld = Array.isArray(ui.withheld) && ui.withheld.length
-          ? '<p class="mk-note">' + cs.w("screen.answers.withheld", { n: String(ui.withheld.length) }) + "</p>" : "";
+          ? '<p class="mk-note">' + (ui.withheld.length === 1 ? cs.w("screen.answers.withheld.one") : cs.w("screen.answers.withheld", { n: String(ui.withheld.length) })) + "</p>" : "";
         const asRead = a.question_as_read ? '<p class="mk-small">' + cs.w("screen.answers.asread", { question: String(a.question_as_read) }) + "</p>" : "";
         const untested = ui.untested ? '<p class="mk-tag" data-untested="true">' + cs.w("ai.label.untested") + "</p>" : "";
-        drawn = '<div class="cs-machinework">' + asRead + summary + sentences + where + looked + withheld
+        drawn = '<div class="cs-machinework">' + asRead + summary + sentences + notEstablished + where + looked + withheld
           + '<p class="mk-note">' + cs.w("screen.answers.legal") + "</p>" + untested
           + '<span class="by">' + cs.w("screen.answers.machine") + "</span></div>";
       }
@@ -107,6 +117,7 @@ export const answers = Object.freeze({
         AI_LIMIT_REACHED: "ai.refused.limit", AI_LIMIT_UNJUDGED: "ai.refused.limit.unjudged", AI_USE_SWITCHED_OFF: "ai.refused.off",
         AI_KEPT_AWAY: "ai.refused.projectkeptaway", NO_ACCOUNT: "ai.refused.signinnotconnected",
         ASSISTANT_OFF: "screen.answers.refused.off", AI_PART_NOT_DEPLOYED: "screen.answers.refused.notdeployed",
+        ANSWER_MALFORMED: "refusal.ANSWER_MALFORMED",
       },
       send: function (view, el, cs) {
         const q = String(cs.value("answers-q") || "").trim();

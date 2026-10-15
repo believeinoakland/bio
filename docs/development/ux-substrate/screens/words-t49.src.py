@@ -136,14 +136,14 @@ w6('screen.explore.nocentre', 'Choose where to start: a person, an organization,
 def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
 REWRITE7 = {
   'screen.capture.file.wherehelp': 'Filled from the photo where it says; correct it if it is wrong.',
-  'screen.connect.group.allowance': 'The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).',
+  'screen.connect.group.allowance': 'The group pays, up to {limit} for each member, a limit your administrators set.',   # DEC-262
   'screen.connect.group.allowance.reached': 'At the limit, the assistant pauses for you until the next {period}; everything else works as usual.',
-  'screen.connect.own.apikey': 'The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.',
-  'screen.connect.own.subscription': "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+  'screen.connect.own.apikey': 'The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.',   # DEC-262: no part of a key is shown
+  'screen.connect.own.subscription': "The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",   # DEC-262
   'screen.connect.none': "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
   'screen.connect.keptaway.ask': "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
   'screen.connect.signin.help': "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
-  'screen.connect.grouplimits': "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
+  'screen.connect.grouplimits': "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",   # DEC-262
   'screen.setup.otp.help': "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   'screen.setup.security.scanner': 'Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.',
   'screen.setup.assistant.own': "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -160,7 +160,7 @@ REWRITE7 = {
   'screen.find-in.scope.project': 'Everything in {project} ({count} documents)',
   'screen.home.line.languages': 'languages: {languages}',
   'screen.home.line.ailimit': "This month on the group's key: {used} of the {limit} limit",
-  'screen.members.recovery.one': 'With one administrator, the group depends on {name} and the hosting account.',
+  'screen.members.recovery.one': 'With one administrator, the group depends on that one person and the hosting account.',   # DEC-262
   'screen.members.invite.noemail': "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
   'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
   'screen.project.account.project': "Paid for by the project's own API key",
@@ -497,6 +497,163 @@ for k, t in [('nav.home', 'What Civicsmith is'), ('nav.start', 'Start a group'),
              ('notfound', 'There is no such page on civicsmith.org.')]:
     w9('screen.site.' + k, t, False, 'nav.groups is also the groups page heading' if k == 'nav.groups' else ('fills screen.site.uses.ask {example}' if k == 'uses.ask.example' else ("site R6's marked placeholder until the stewards' address is set" if k == 'questions.unset' else '')))
 
+# --- DEC-262 (BOB's B220): a sentence is drawn only when every {placeholder} is answered; the parts whose fills cannot always
+# be answered are their own sentences, each drawn only when answered (the rows above that lost them are reworded, DEC262_REWORDED)
+def w10(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-262' + (': ' + note if note else '')))
+w10('screen.connect.group.allowance.used', 'You have used {used} of it {when}.', False, "after screen.connect.group.allowance; drawn only to an account's owners, when answered")
+w10('screen.connect.grouplimits.used', 'You have used {used} of it today.', False, 'after screen.connect.grouplimits; drawn only when answered')
+w10('screen.connect.grouplimits.suggestions', 'Suggestions: {suggestions}.', False, 'after screen.connect.grouplimits; drawn only when answered')
+w10('refusal.DOOR_RATE_LIMITED.session', 'You have made too many requests in the last ten minutes. Try again in {minutes} minutes.' + NW, False, "a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED")
+DEC262_REWORDED = ['screen.connect.own.subscription', 'screen.connect.own.apikey', 'screen.connect.group.allowance', 'screen.connect.grouplimits', 'screen.members.recovery.one']
+# --- end DEC-262
+
+# --- DEC-263 (BOB's B222, B223, B224 (1)): L11's further words. A count drawn at one reads its own .one row (setup-words
+# has no plural rule: the screen picks the key); the base key stays the many case.
+def w11(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-263' + (': ' + note if note else '')))
+w11('screen.queue.more.one', 'One more item is not shown here; act on these first.', False, 'screen.queue.more when {n} is 1')
+w11('screen.find-in.notread.one', 'One document could not be read for this, so “nothing” is not said for it.', False, 'screen.find-in.notread when {n} is 1')
+w11('screen.finder.nobody.one', 'Nobody has looked yet at one place your group holds.', False, 'screen.finder.nobody when {n} is 1')
+w11('screen.answers.withheld.one', 'One sentence was held back because it could not be checked against what your group holds.', False, 'screen.answers.withheld when {n} is 1')
+w11('published.check.elsewhere', 'The group published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.', False, "screens-publish R22: verify answers published, with no evidence row of this edition's findings")
+DEC263_REWORDED = {'screen.setup.claimed.nosignin': "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose."}
+REWRITE7.update(DEC263_REWORDED)   # the founder chooses their handle (DEC-230); no longer 'admin'
+# --- end DEC-263
+
+# --- DEC-264 (BOB's B224 (2), N1125): affordances.mjs, the module's main file beside its folder, was never inventoried. Each
+# act it publishes is named by act.<op>.name, its name wherever it is named outside a screen (the screens keep their own
+# act.<op>.label.<screen>); a per-item act over a selection is act.<op>.name.selected. The names speak the design's words
+# (Vouch, Set aside, readings, Remove a citation) and none uses "ground", "branch", "disjunction", "AND" or "OR" (affordances
+# R5). AFFORDANCES_NAMES maps each key to the module's present text, which words-reads.src.mjs keys to it.
+def w12(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-264' + (': ' + note if note else '')))
+AFFORDANCES_NAMES = {}
+for op, was, name in [
+  ('attest', 'Co-attest this capture', 'Certify when this copy existed'),
+  ('monitor', 'Check this source against what was captured', 'Check this address for a new version now'),
+  ('attesttext', 'Attest that this text matches the page image', 'Vouch that this text matches the page image'),
+  ('release', 'Release (verify)', 'Vouch for this copy'),
+  ('dispose', 'Dispose (defer or dismiss)', 'Set this question aside, or dismiss it'),
+  ('contradictionresolve', 'Resolve this contradiction (conclude with what it turned out to be)', 'Settle this contradiction: say what it turned out to be'),
+  ('publish', 'Publish (author the case)', 'Publish the signed edition'),
+  ('inquirydivide', 'Divide (split this question)', 'Split this question into narrower ones'),
+  ('inquiryground', 'Group what this rests on', 'Say what each passage carries'),
+  ('actionmove', 'Move this action', 'Move the action to its next stage'),
+  ('actioncorrespond', 'Record correspondence', 'Record a reply or letter received'),
+  ('actionlaws', 'State governing laws', 'Choose the laws it goes under'),
+  ('actionrisktier', 'Revise risk tier', 'Revise the risk tier, with a reason'),
+  ('actionhold', 'Place a litigation hold (with a reason)', 'Record a litigation hold, with a reason'),
+  ('actionholdrelease', 'Release a litigation hold (with a reason)', 'End a litigation hold, with a reason'),
+  ('actionpressure', 'Mark a reply as pressure on the group', 'Mark a reply as pressure on the group'),
+  ('holdnoticeprepare', 'Prepare the hold notice for members', 'Prepare the hold notice for members'),
+  ('holdnoticesent', 'Record that the hold notice was sent', 'Record that the hold notice was sent'),
+  ('actionreceipt', 'Record that a sending was received', 'Record that what you sent was received'),
+  ('actionscope', 'Keep this action confidential, or no longer (with a reason)', 'Make the action confidential, or not, with a reason'),
+  ('actionpromise', 'Note a promise the group made', 'Record a promise the group made'),
+  ('actionreplybearing', 'Record what a reply says to each claim', 'Lay out the reply claim by claim'),
+  ('actionbearingpropose', 'Propose what a reply says to each claim', 'Propose a claim-by-claim layout of the reply'),
+  ('actionreplyquoting', 'Record that a reply asks not to be quoted', 'Record that a reply asks not to be quoted'),
+  ('arosefrom', 'Link a matter that arose from this reply', 'Record a matter that arose from this reply'),
+  ('escalationopen', 'Open an escalation of the determination this rests on (with a reason)', 'Open an escalation, with a reason'),
+  ('escalationattach', 'Attach this action to its escalation (with a reason)', 'Attach this action to its escalation, with a reason'),
+  ('escalationstoppursuing', 'Stop pursuing this escalation (with a reason)', 'Stop pursuing this escalation, with a reason'),
+  ('escalationreopen', 'Reopen an escalation the group stopped pursuing (with a reason)', 'Reopen the escalation where it stopped, with a reason'),
+  ('filingprepare', 'Prepare a filing', 'Prepare the filing'),
+  ('communicationprepare', 'Prepare a communication', 'Prepare what is sent'),
+  ('clockadopt', "Put a proposed deadline on this action's clock", 'Confirm the due date'),
+  ('filingapprove', 'Approve a prepared draft', 'Approve the text for sending'),
+  ('filingsent', 'Record that an approved draft was sent', 'Record that the approved text was sent'),
+  ('counselpacket', 'Brief counsel (with a reason)', 'Prepare the packet for counsel, with a reason'),
+  ('clockstate', 'State a deadline and its basis', 'Give a due date and where it comes from'),
+  ('reminderset', 'Set a reminder for a date', 'Remind me on a date'),
+  ('itemtakeup', 'Take this up myself', 'Take this item up yourself'),
+  ('versionaccept', 'Accept a reading of the evidence', 'Accept this reading'),
+  ('versionreject', 'Turn down a reading (with a reason)', 'Reject this reading, with a reason'),
+  ('versionconsider', 'Set a reading aside for now (with a reason)', 'Weigh this reading, with a reason'),
+  ('versionrevert', 'Put a reading back to where nobody had acted on it', 'Undo the decision on this reading, with a reason'),
+  ('versioncurrent', 'Stand this project on a reading', 'Stand the project on this reading, with a reason'),
+  ('withdrawconclusion', "Withdraw this project's conclusion (it stays in the record)", 'Withdraw the conclusion; it stays on the record'),
+  ('versionhide', 'Hide a reading from the display (it stays in the record)', 'Hide this reading; it stays on the record'),
+  ('cite', 'Cite material into a case or a question', 'Cite in a question or a case'),
+  ('sever', 'Sever a citation', 'Remove a citation, with a reason'),
+  ('reinstate', 'Reinstate a severed citation', 'Reinstate a removed citation'),
+  ('projectinvite', 'Invite a member to this project', 'Invite a member to the project'),
+  ('projectjoin', 'Join this project', 'Join this project'),
+  ('projectremove', 'Remove a participant', 'Remove a member from the project, with a reason'),
+  ('projectowneradd', 'Add an owner', 'Make an owner, or agree to it'),
+  ('projectownerremove', 'Remove an owner (with a reason)', 'Remove an owner, with a reason'),
+  ('projectownerrescue', 'Add an owner to a project whose owners are all inactive (with a reason)', 'Become the owner of a project whose owners are gone, with a reason'),
+  ('projectvisibilityset', 'Choose whether this project can be found', 'Change who can find the project'),
+  ('sourceconsent', "Record a source's consent to publish (with its evidence)", "Record a source's consent to publish, with its evidence"),
+  ('proposedispose.selected', 'Defer or dismiss the selected findings', 'Set aside or dismiss the selected findings'),
+  ('taskresolve.selected', 'Resolve the selected obligations', 'Act on the selected items'),
+  ('taskforward.selected', 'Forward the selected obligations', 'Forward the selected items to a member'),
+  ('resolve.selected', "Resolve the selected documents' references", "Match the selected documents' mentions"),
+]:
+    op0, _, sel = op.partition('.')
+    key = f'act.{op0}.name' + ('.selected' if sel else '')
+    w12(key, name, False, "affordances' name for the act" + (' over a selection (per-item)' if sel else ''))
+    AFFORDANCES_NAMES[key] = was
+w12('prompt.inquirydivide', 'Dividing does not remove anything. Every leg this question rests on gets a home on one of the children, including any leg that cuts against you, and this question stays on the record as the divided parent, recording where each leg went. Each child names this parent and every sibling, and when a child is published it names them to its readers. If you mean to drop material rather than re-home it, remove the citation, with a reason, instead.', False, "affordances' DIVIDE_PROMPT (R5), shown before a question is divided")
+AFFORDANCES_NAMES['prompt.inquirydivide'] = 'Dividing does not remove anything.'
+w12('prompt.inquiryground', "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest group rather than from its weakest single reason, so your name and the time go on each group you make and stay there until that group's reasons change. Nothing is hidden: every reason stays visible under the group you put it in, and a published case carries each group and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.", False, "affordances' GROUND_PROMPT (R5; DEC-32 clause 1), shown before reasons are grouped")
+AFFORDANCES_NAMES['prompt.inquiryground'] = 'Grouping says these reasons are enough on their own'
+w12('prompt.attest.fence', "What co-attestation answers: when did these bytes exist? It asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. What it does not answer: whether the document is TRUE, whether its source is authoritative, or how close it stands to the fact you are citing it for. A secondhand report that is co-attested is still a secondhand report. What it is worth: it strengthens a Grade {ceiling} capture toward evidentiary weight. It never reaches Grade {unreachable} — that needs a chain-of-custody web archive this surface cannot produce.", True, "affordances' attestFence (R5): DEC-39's wording verbatim, its two grade letters filled from the capture ceiling and the grade above it")
+AFFORDANCES_NAMES['prompt.attest.fence'] = 'What co-attestation answers: when did these bytes exist?'
+w12('refusal.uncatalogued', "Civicsmith has no explanation of this refusal in its words yet, so its code is shown as the act gave it.", False, "affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word")
+AFFORDANCES_NAMES['refusal.uncatalogued'] = 'This refusal is not in the catalogue of refusals'
+# --- end DEC-264
+
+# --- DEC-265 (BOB's B226, K3379): L11's further words; the rewordings are words-drawn.src.py's (screen.ceremony.photo.facts,
+# screen.money.didnotmove, screen.plan.opened, screen.timeline.order.evidence)
+def w13(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-265' + (': ' + note if note else '')))
+w13('screen.ceremony.photo.facts.dated', 'taken by {by}, {date} · relied on by {findings}', False, "screen.ceremony.photo.facts when the photo's date is answered (a provider's, T50)")
+# --- end DEC-265
+
+# --- DEC-266 (DEC-259's owed: line): a signing key is made in the browser and never sent to Civicsmith; it stays on the
+# device only when the member keeps it there, otherwise it is saved as a key file (interface-shell R40, R42). "Never leaves
+# this device" was true of one path only, so every sentence says what is true of both.
+DEC266_REWORDED = {
+  'signing.ceremony.nokey': 'You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.',
+  'signing.ceremony.device': 'Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.',
+  'screen.account.key.help': 'Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.',
+}
+REWRITE7.update(DEC266_REWORDED)
+# --- end DEC-266
+
+# --- DEC-267 (DEC-258's owed: line): refusal.AGENT_WORKER_UNBOUND said "signing in" wherever it was raised; it now says what is
+# true at every act that raises it. An assistant's draft of the group's own words (its description) has its own label.
+w14 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-267' + (': ' + note if note else '')))
+w14('draft.machine.label.group', "Draft by the assistant, at your request · edit it until it is your group's", False, "draft.machine.label for a field that holds the group's words (control-plane's group draft)")
+DEC267_REWORDED = {'refusal.AGENT_WORKER_UNBOUND': "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it."}
+REWRITE7.update(DEC267_REWORDED)
+# --- end DEC-267
+
+# --- DEC-268 (screens-intake R22, T49; Bob's D12): a capture opened with a project or a question as its subject says where it
+# is filed, and from a question offers "Cite a passage", opening find-in over the document with the question chosen
+w15 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-268' + (': ' + note if note else '')))
+w15('capture.filed.project', 'Filed under {project}', False, 'after capture.captured, for a capture opened from a project')
+w15('capture.filed.question', 'Filed under {project}, for the question “{question}”', False, 'after capture.captured, for a capture opened from a question')
+w15('capture.cite', 'Cite a passage', False, "the captured result's link to find-in, offered for a capture opened from a question (R22)")
+w15('capture.cite.tip', 'Opens Find in this over the document, with your question chosen.', False, 'what capture.cite opens')
+DEC268_REWORDED = {'screen.capture.address.watchhead': 'Once it is captured: where it is filed, and watching the address'}
+REWRITE7.update(DEC268_REWORDED)
+# --- end DEC-268
+
+# --- DEC-269 (the standing tail: the words' consistency): never "overdue" in the queue (DEC-256; screens-daily R31), and
+# American spelling (DEC-221)
+DEC269_REWORDED = {
+  'queue.temporal-expectation-due.undetermined.detail': 'It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).',
+  'screen.people.today.kind.program': 'A program',
+}
+REWRITE7.update(DEC269_REWORDED)
+# --- end DEC-269
+
+# --- DEC-270 (Bob, 2026-10-15: "rule: approved"): the listing rule's text (DEC-255; Publication §5E), as he approved it, drawn on
+# civicsmith.org's groups page beside site.groups.rule
+w16 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-270' + (': ' + note if note else '')))
+w16('site.groups.rule.head', 'The listing rule', False, "the details' heading beside site.groups.rule")
+w16('site.groups.rule.text', "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.", True, 'Bob approved this text (DEC-270); a change is his')
+# --- end DEC-270
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -504,5 +661,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-269' if k in DEC269_REWORDED else 'DEC-268' if k in DEC268_REWORDED else 'DEC-267' if k in DEC267_REWORDED else 'DEC-266' if k in DEC266_REWORDED else 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

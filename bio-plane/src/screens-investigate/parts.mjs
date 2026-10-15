@@ -29,6 +29,10 @@ export const PARTS = Object.freeze({
     }
     return L[key];
   },
+  /** A word as plain text for a record or a request body, not for the page: `cs.w` escapes it as HTML, this undoes that. */
+  plain(cs, key, fills) {
+    return cs.w(key, fills).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
+  },
   /** The page clock's calendar day, `YYYY-MM-DD` (the shell's `cs.now()`, the harness's fake clock in tests). */
   today(cs) {
     return new Date(cs.now()).toISOString().slice(0, 10);
@@ -73,15 +77,18 @@ export const PARTS = Object.freeze({
     }
     return out;
   },
-  /** A date known only by its month (`YYYY-MM`): its month's name, as `date.month.*` holds it (interface-shell R6). */
-  month(cs, ym) {
-    const m = /^(\d{4})-(\d{2})$/.exec(String(ym || ""));
-    if (!m) return null;
-    const names = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-    const n = Number(m[2]) - 1;
-    return n >= 0 && n < 12 ? { month: cs.w("date.month." + names[n]), year: m[1] } : null;
+  /** An event's date, as precise as its source states it: a day, a month marked "month known", "on or before"; else undetermined
+   *  with `why` (the record's own reason) or the keyed "the source states no date". */
+  when(cs, w, why) {
+    if (!w) return cs.mark("gap", "undetermined", { reason: why || cs.w("screen.timeline.undated") });
+    if (w.precision === "edtf") {
+      const m = /^(\d{4})-(\d{2})$/.exec(String(w.value || ""));
+      const names = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+      if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12) return cs.w("screen.timeline.month", { month: cs.w("date.month." + names[Number(m[2]) - 1]), year: m[1] });
+    }
+    if (w.precision === "upper_bound") return cs.w("screen.timeline.onorbefore", { date: cs.date(w.end || w.value || "") });
+    return cs.date(w.value || w.start || "") || cs.esc(String(w.value || ""));
   },
-
   /** R18: the connection graph, drawn from `exploregraph`'s answer `g` ({centre, nodes, steps, stopped}) as the design's SVG
    *  (lines in their class's mark, a grade chip on each, the stops dashed) and beneath it the same things as a list: each
    *  node a reference with its kind's word and a control to make it the centre, each step with its word, grade and
@@ -98,7 +105,9 @@ export const PARTS = Object.freeze({
     const stops = (Array.isArray(g.stopped) ? g.stopped : []).concat((Array.isArray(g.at_depth) ? g.at_depth : []).map((n) => ({ node: n, why: "ring" })));
     const limit = new Set(stops.map((s) => s.node));
     const hidden = (st) => st.class === "declared" || st.class === "hunch" || st.label === "declared, not evidenced" || st.label === "hunch";
-    const classOf = (st) => (hidden(st) ? "lead" : (o && o.groupOf && o.groupOf(st.kind)) || "ment");
+    /* R27: a step a member backed with a passage is drawn in its own class (`affordances` R60 answers its group `step_source`;
+       the kind itself is enough where the vocabulary has not been read) */
+    const classOf = (st) => (hidden(st) ? "lead" : st.kind === "step_source" ? "step_source" : (o && o.groupOf && o.groupOf(st.kind)) || "ment");
     const adj = (id) => steps.filter((s) => s.from === id || s.to === id).map((s) => (s.from === id ? s.to : s.from));
     const ring1 = nodes.filter((n) => n.ring === 1).map((n) => n.id);
     const pos = {}; pos[centre] = [CX, CY];
@@ -171,13 +180,13 @@ export const PARTS = Object.freeze({
     const trail = (o && Array.isArray(o.trail) ? o.trail : [centre]);
     const trailHtml = `<div class="mk-trail"><span class="k" data-tip="${cs.esc(cs.w("connection.graph.trail.means"))}">${cs.w("connection.graph.trail.label")}</span>`
       + trail.map((id, i) => (i === trail.length - 1 ? `<b class="mk-trailbtn now">${cs.esc(label(id))}</b>` : (o && o.act ? cs.act(o.act, { label: "connection.graph.trail.label", data: { node: id } }) : ""))).join("") + "</div>";
-    const legendKinds = ["pos", "part", "money", "ment", "same", "lead"];
+    const legendKinds = ["pos", "part", "money", "ment", "same", "step_source", "lead"];
     const legend = `<div class="mk-glegend">${legendKinds.map((k) => `<span class="li" data-tip="${cs.esc(cs.w("connection.kind." + k + ".means"))}"><svg viewBox="0 0 36 12" aria-hidden="true"><line class="e e-${k}" x1="1" y1="6" x2="35" y2="6"/>${k === "money" ? '<line class="e e-money-in" x1="1" y1="6" x2="35" y2="6"/>' : ""}</svg>${cs.w("connection.kind." + k + ".name")}</span>`).join("")}`
       + `<span class="li" data-tip="${cs.esc(cs.w("connection.graph.grade.means"))}">${cs.w("connection.graph.legend.grade")}</span></div>`;
     return `<div class="mk-graph" data-centre="${cs.esc(centre)}">${trailHtml}<div class="gwrap"><svg class="g" viewBox="0 0 ${W} ${H}" role="group" aria-label="${cs.esc(label(centre))}">${edgeSvg}${nodeSvg}</svg></div>${legend}`
       + (stops.length ? `<p class="mk-small">${cs.w("connection.graph.limit.means")}</p>` : "") + cs.sheet(list) + (stepList ? cs.sheet(stepList) : "") + "</div>";
   },
-  /** R24: the group a connection kind belongs to (`pos`, `part`, `money`, `ment`, `same`), from the vocabulary `affordances` answers. */
+  /** R24, R27: the group a connection kind belongs to (`pos`, `part`, `money`, `ment`, `same`, `step_source`), from the vocabulary `affordances` answers. */
   groupMap(v) {
     const ck = v && v.vocabularies && v.vocabularies.connection_kinds;
     const m = {};

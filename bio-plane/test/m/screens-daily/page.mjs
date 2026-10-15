@@ -4,8 +4,16 @@
 import { SCREENS } from "../../../src/screens-daily/index.mjs";
 import { wordsOf } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER } from "../interface-shell/harness.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
-export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER };
+export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER, word, hasWord };
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+/** A day as the page draws it (R6 of interface-shell): by the date words, from an ISO day. */
+export const dmy = (iso) => word("date.daymonthyear", { day: String(Number(iso.slice(8, 10))), month: word("date.month." + MONTHS[Number(iso.slice(5, 7)) - 1]), year: iso.slice(0, 4) });
+/** True when each of `parts` is found in `hay`, one after the other (a screen's words read in their order). */
+export const inOrder = (hay, parts) => { let at = 0; for (const x of parts) { const i = hay.indexOf(x, at); if (i < 0) return false; at = i + x.length; } return true; };
+/** The seven screens and a bare stand-in for each other screen named, so a reference to it is a link (the screen's page is another module's). */
+export const withScreens = (...ids) => [...SCREENS, ...ids.map((id) => ({ id, reads: () => ({}), acts: [], render: () => "", words: [] }))];
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
 /** Opens `path` (`/app/<screen>[/<subject>]`) with the plane answering `plane`. */

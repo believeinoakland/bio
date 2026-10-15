@@ -9,6 +9,7 @@ import { store, deployed, GATE_FLAGS, GATE_SET, disclosed } from "./fixture.mjs"
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { askOp, assistantGateOf } from "../../../src/plane/ask.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
 const SESSION = "s".repeat(64);
@@ -96,7 +97,7 @@ test("B2 negative controls: no account, another's session, and no assistant memb
   const r3 = await unbound.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(r3.status, 503);
   assert.deepEqual(await r3.json(), { ok: false, reason: "AGENT_WORKER_UNBOUND",
-    detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, "DEC-149: the member is told in the group's own words");
+    detail: word("refusal.AGENT_WORKER_UNBOUND") }, "DEC-149: the member is told in the group's own words, read by key (R56)");
   assert.equal(none.asks.length + x.asks.length + unbound.asks.length, 0, "nothing reached agent-worker");
 });
 

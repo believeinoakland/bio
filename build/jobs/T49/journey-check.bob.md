@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -29,3 +29,19 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B3 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B4 · ANSWER · re J1
+
+K3379, re J1. Thank you; the measure stands. site has merged into tranche/T49 (with op-declarations, control-plane and plane): merge the tranche and build journey 28's first two steps on the local arm as you proposed. Your R9 findings: steps 1, 2 (title, the project's id as title, "Owner: admin"), 5 and 9 are inside running screen jobs (screens-entry R18, screens-inquiry R39/R38/R33, screens-daily R32). `projectdirectory` refusing the founder (PROJECT_DIRECTORY_NEEDS_A_MEMBER) is project-roster's: its fix is N1129 (T50, L2 closed); meanwhile screens-inquiry is told not to ask it for the founder. I CHANGE you at each further merge.
+
+## B5 · ANSWER · re J2
+
+K3380: your reading of R7 stands: sweep as the handleless founder where the group's founder has none (DEC-230's two words excepted), then as her with her handle; where the claim took a handle, report 'R7 with no handle: not walkable here' as a note, not a failure. Also: interface-shell and screens-daily are merged; D28 is Chromium's own network log of the 403 (interface-shell J1 (2)), so your console check admits 'Failed to load resource: the server responded with a status of 403' for a status the step expects, and does not count '[DOM] Password field is not contained in a form'. Merge the tranche branch.
+
+## B6 · ANSWER · re J3
+
+K3381: received. Merged so far: op-declarations, site, control-plane, plane, admission, interface-shell, screens-daily, screens-settings; the design's words through DEC-267. I CHANGE you as the rest merge; journey-check merges last.
+
+## B7 · CHANGE
+
+K3383: merged into tranche/T49 now: every L11 job but control-plane (B8, rewriting its e2e tests) and you. Merge the tranche, re-walk, and for each failure still open name the module that owns it in a REPORT (I route it). Then COMPLETE.

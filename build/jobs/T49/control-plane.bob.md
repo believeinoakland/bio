@@ -1,6 +1,6 @@
 # BOB to control-plane (T49)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -36,3 +36,15 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · ANSWER · re J1
 
 K3375: R72 says projectId now. setup-words merged (B-CHANGE earlier); op-declarations is next; I CHANGE you when it merges.
+
+## B6 · CHANGE
+
+K3380: admission (R27) and interface-shell are merged into tranche/T49. Merge the tranche and fix two things in your tests, then COMPLETE again: (1) R45, R48, R49 ("one read of bio's store, no credential looked up"): under admission R27 a public read that presents a session has it resolved once (a `session` lookup before the `doorwindow` count); a public read presenting a live session now sees lookup then count, presenting nothing the count alone (ADMISSION J2 (2)). (2) `t48-door.test.mjs` R95 (line 317) pins `cs-testband`; interface-shell R67 draws the design's `.cs-band[data-band="test"]`: assert that. `t46-e2e`/`t47-e2e` stay accepted red until screens-daily and screens-intake merge.
+
+## B7 · CHANGE
+
+K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: Also (with my B6): DEC-267: a refusal AGENT_WORKER_UNBOUND reads `refusal.AGENT_WORKER_UNBOUND`, no longer `ai.refused.notdeployed`; the group's assistant draft is labelled `draft.machine.label.group`. Re-run your tests and COMPLETE again.
+
+## B8 · CHANGE
+
+K3382: screens-daily, -settings, -entry, -intake, -inquiry and -investigate are merged into tranche/T49. Your `t46-e2e` R75 ('home ... queue was asked'; 'capture ... ci-file') and `t47-e2e` R81 (Home's front doors) still fail: they pin the old screens' elements and reads. Merge the tranche and rewrite them against the merged screens (read each screen's controls and reads from its own declaration, K3268, never a hand-list); if a screen itself fails the walk, REPORT it naming the screen module. Together with B6 and B7, then COMPLETE.

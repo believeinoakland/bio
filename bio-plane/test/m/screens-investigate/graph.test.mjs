@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, silent, pending } from "../interface-shell/harness.mjs";
-import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA } from "./fixtures.mjs";
+import { open, main, button, GRAPH, GRAPH_PERSON, ENT, ORG, MSR, SHA, word, drew, notDrew } from "./fixtures.mjs";
 
 const graphOf = (p) => main(p).querySelector(".mk-graph");
 
@@ -19,13 +19,12 @@ test("R18 explore draws the graph from exploregraph with the screen's subject as
   assert.ok(g.querySelector(".gwrap .e-ment"), "a mentioned-together line in its class");
   assert.ok(g.querySelector(".gwrap .e-pos"), "a position line in its class");
   assert.equal(g.querySelector(".gwrap .e-money"), null, "no line of a class the walk did not meet");
-  assert.match(g.textContent, /an organization/, "the far end of a position is an organization, by its kind's word");
-  assert.match(g.textContent, /a person/, "the near end of a position is a person");
+  drew(g, "connection.thing.org", undefined, "the far end of a position is an organization, by its kind's word");
+  drew(g, "connection.thing.person", undefined, "the near end of a position is a person");
   assert.deepEqual(g.querySelectorAll("svg .gchip text").map((t) => t.textContent).sort(), ["B", "C"], "each line carries its grade's letter");
-  assert.match(g.textContent, /mentioned together/);
-  assert.match(g.textContent, /held the post \(employee\)/);
-  assert.ok(g.querySelector("[data-limit]").textContent.includes("Stopped at the limit"), "the stop is drawn at its node");
-  assert.match(g.querySelector(`[data-limit="${ORG}"]`).textContent, /undetermined, not absent/);
+  assert.ok(g.textContent.includes("mentioned together") && g.textContent.includes("held the post (employee)"), "each step's word, as the plane gives it");
+  drew(g.querySelector("[data-limit]"), "connection.graph.limit", undefined, "the stop is drawn at its node");
+  drew(g.querySelector(`[data-limit="${ORG}"]`), "connection.graph.limit.means");
   assert.ok(g.querySelector(".cs-ref[data-tip], .cs-card[data-tip]"), "the citation");
   assert.doesNotMatch(main(p).textContent, /most connected|score|rank(ed)?:/i, "no score, rank or most connected (K1486)");
 });
@@ -38,7 +37,7 @@ test("R18 pressing a node makes it the centre; the centres are kept as the trail
   assert.equal(p.byOp("exploregraph").at(-1).body.centre, GRAPH_PERSON, "the read again from the pressed node");
   assert.equal(p.byOp("explore").length, 0, "no walk is sent by it");
   const trail = graphOf(p).querySelector(".mk-trail");
-  assert.match(trail.textContent, /Trail/);
+  drew(trail, "connection.graph.trail.label");
   assert.equal(trail.querySelectorAll('button[data-act="explore"]').length, 1, "the first centre is a control back");
   assert.equal(p.location.pathname, "/app/explore/" + ENT, "the address is unchanged: page memory only");
   for (const variant of [refusedIn("NO_NODE", "No such record."), silent]) {
@@ -69,14 +68,14 @@ test("R18 a declared step is drawn \"declared, not evidenced\" as a lead and a h
   const p = await open("/app/explore/" + ENT, { plane: { exploregraph: ok(g) } });
   const m = graphOf(p);
   assert.equal(m.querySelectorAll(".gwrap .e-lead").length, 2, "both are drawn as leads");
-  assert.match(m.textContent, /declared, not evidenced/);
-  assert.match(m.textContent, /a hunch, not evidence/);
+  drew(m, "screen.explore.g.declared");
+  drew(m, "screen.explore.g.hunch");
 });
 
 test("R18 person draws \"Connections\" from exploregraph with this person as the centre; control: a failed read is state.failed", async () => {
   const p = await open("/app/person/" + ENT);
   assert.equal(p.byOp("exploregraph")[0].body.centre, ENT);
-  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === "Connections");
+  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.person.connections"));
   assert.ok(sec.querySelector(".mk-graph svg g.node.center"), "the centre is drawn");
   assert.ok(sec.querySelector(`a.cs-ref[href="/app/person/${ORG}"]`));
   const node = sec.querySelectorAll('button[data-act="explore"]').find((b) => b.getAttribute("data-node") === GRAPH_PERSON);
@@ -85,16 +84,16 @@ test("R18 person draws \"Connections\" from exploregraph with this person as the
   assert.equal(p.byOp("exploregraph").at(-1).body.centre, GRAPH_PERSON);
   assert.equal(p.location.pathname, "/app/person/" + ENT, "pressing a node on person recentres, it does not leave");
   const q = await open("/app/person/" + ENT, { plane: { exploregraph: refusedIn("NO_NODE", "No such record.") } });
-  assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === "Connections").querySelector('[data-state="failed"]'));
+  assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.person.connections")).querySelector('[data-state="failed"]'));
 });
 
 test("R18 the money trail draws the graph with the trail's set as the centre; a node opens Explore connections at it", async () => {
   const p = await open("/app/money/" + MSR);
   assert.equal(p.byOp("exploregraph")[0].body.centre, MSR);
-  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === "Connections");
+  const sec = main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.money.graph"));
   assert.ok(sec.querySelector(".mk-graph svg"));
   const link = sec.querySelectorAll("a.cs-btn").find((a) => a.getAttribute("href") === "/app/explore/" + GRAPH_PERSON);
   assert.ok(link, "a node on the money trail opens Explore connections at it (the registry lists no explore act on money)");
   const q = await open("/app/money/" + MSR, { plane: { exploregraph: silent } });
-  assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === "Connections").querySelector('[data-state="failed"]'));
+  assert.ok(main(q).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.money.graph")).querySelector('[data-state="failed"]'));
 });

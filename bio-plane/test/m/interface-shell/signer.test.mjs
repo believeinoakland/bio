@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { webcrypto } from "node:crypto";
 import { verifySshsig, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { boot, STORE_KEY } from "./harness.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 /* `account`'s two signer acts drive the kit: register (keep from the screen's own tick) and sign a listed set */
 const ACCOUNT = {
@@ -128,8 +129,8 @@ test("R41 cs.signer.sign draws What your key signs, exactly (each statement), as
   const reg = out(p, "reg");
   await press(p, "signerrevokeown");
   const dlg = overlay(p, "sign");
-  assert.equal(dlg.querySelector("h2").textContent, "What your key signs, exactly");
-  assert.deepEqual(dlg.querySelectorAll("li pre").map((x) => x.textContent), STATEMENTS);
+  assert.equal(dlg.querySelector("h2").textContent, word("shell.signer.exactly"));
+  assert.deepEqual(dlg.querySelectorAll("li code").map((x) => x.textContent), STATEMENTS);
   assert.deepEqual(dlg.querySelectorAll("li b").map((x) => x.textContent), ["The case", "A finding", "Evidence"]);
   assert.equal(dlg.querySelector("#cs-key-file"), null, "a kept key asks for no file");
   assert.equal(p.root().querySelectorAll('[data-shell="dialog-yes"]').length, 1, "one confirmation for the whole list");
@@ -155,7 +156,7 @@ test("R41 a declined confirmation answers no signature (declined), signing nothi
   await press(p, "signerregisterown");
   await until(p, () => out(p, "reg"));
   await press(p, "signerrevokeown");
-  assert.ok(p.root().querySelector('[data-overlay="sign"]').textContent.includes("Your device is asking you to confirm"));
+  assert.ok(p.root().querySelector('[data-overlay="sign"]').textContent.includes(word("signing.ceremony.device")));
   await p.click('[data-shell="dialog-no"]');
   await until(p, () => out(p, "sig"));
   assert.deepEqual(out(p, "sig"), { ok: false, declined: true });
@@ -190,4 +191,21 @@ test("R42 the only key material any page keeps is the non-extractable kept key; 
   assert.equal(stored.length, 1);
   assert.equal(stored[0].priv.extractable, false, "the one key kept, non-extractable");
   assert.equal(p.local.has(STORE_KEY), true);
+});
+
+test("R68 R41 at the phone width a statement the key signs, a long unbroken line of it, wraps in the dialog (a break opportunity every 16 characters) and stays whole as text", async () => {
+  const LINE = "bio-ratify " + "9f8e7d6c5b4a3928".repeat(6);
+  const ACCOUNT_LONG = { ...ACCOUNT, acts: [{ op: "signerrevokeown", async send(view, el, cs) {
+    const r = await cs.signer.sign([{ label: "9f8e7d6c5b4a3928".repeat(4), bytes: "bio-ratify " + "9f8e7d6c5b4a3928".repeat(6), namespace: "bio-ratify" }]);
+    cs.set("sig", JSON.stringify(r)); return null; } }],
+    render(cs) { return cs.act("signerrevokeown") + '<pre id="sig"></pre>'; } };
+  const p = await boot({ screens: [ACCOUNT_LONG], path: "/app/account", phone: true });
+  await press(p, "signerrevokeown");
+  const dlg = overlay(p, "sign");
+  const code = dlg.querySelector("li code");
+  assert.equal(code.textContent, LINE, "the statement whole");
+  assert.ok(code.querySelector("wbr"), "breaks where it may");
+  for (const n of code.childNodes.filter((c) => c.nodeType === 3)) for (const run of n.data.split(/\s+/)) assert.ok(run.length <= 24, "a run of " + run.length);
+  assert.ok(dlg.querySelector("li b").querySelector("wbr"), "its label too");
+  await p.click('[data-shell="dialog-no"]');
 });

@@ -1,8 +1,9 @@
 /* interface-shell R1, R2, R21, R23: the page as `interfacePage` composes it and the door serves it, and the screen
    contract it checks before composing anything. */
 import test from "node:test";
+import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
-import { interfacePage, NONCE_SLOT, SHELL_WORDS, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, NONCE_SLOT, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { randomBytes } from "node:crypto";
@@ -52,7 +53,8 @@ test("R2 no resource on another origin in any src, href, @import, url() or fetch
   const html = interfacePage(ALL);
   for (const m of html.replace(/<script[\s\S]*<\/script>/, "").matchAll(/\b(?:src|href)\s*=\s*"([^"]*)"/g)) assert.match(m[1], /^\/(?!\/)/, m[0]);
   assert.doesNotMatch(html, /@import|@font-face|url\(\s*["']?(?:https?:|\/\/)/i);
-  assert.doesNotMatch(scriptOf(html), /https?:\/\/|["'`]\/\//, "the script names no other origin");
+  /* the words are data (a word may tell a member what an address starts with); the program and the screens name no origin */
+  assert.doesNotMatch(scriptOf(html).replace(/"words":\[[\s\S]*?\],"ops":/, '"words":[],"ops":'), /https?:\/\/|["'`]\/\//, "the script names no other origin");
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: { image: IMAGE } });
   for (const el of p.root().querySelectorAll("[href], [src]")) assert.match(el.getAttribute("href") || el.getAttribute("src"), /^\/(?!\/)/);
   assert.ok(p.requests.length > 3);
@@ -129,27 +131,12 @@ test("R30 a screen of the public or published frame naming an act that is not a 
 
 test("R23 no place is named in the shell's behaviour or words: its words, paths and program name none", () => {
   const PLACES = /Oakland|California|Alameda|Coliseum|Lakeshore|San Francisco|Berkeley|United States|\bCity of\b/;
-  for (const [k, en] of SHELL_WORDS) assert.doesNotMatch(en, PLACES, k);
+  for (const [k, en] of WORD_ROWS.filter(([k]) => /^(shell|rail|tab)\./.test(k))) assert.doesNotMatch(en, PLACES, k);
   assert.doesNotMatch(JSON.stringify(PATHS), PLACES);
   assert.doesNotMatch(scriptOf(interfacePage([])), PLACES);
   /* control: the pattern finds one */
   assert.match("the Coliseum lease", PLACES);
 });
-
-test("R5 the shell's own words: frozen [key, en, protected] rows, keys shell.<part>, distinct", () => {
-  assert.ok(Object.isFrozen(SHELL_WORDS));
-  const keys = new Set();
-  for (const r of SHELL_WORDS) {
-    assert.ok(Object.isFrozen(r));
-    assert.equal(r.length, 3);
-    assert.match(r[0], /^shell\.[a-z.-]+$/);
-    assert.equal(typeof r[1], "string");
-    assert.equal(typeof r[2], "boolean");
-    assert.ok(!keys.has(r[0]), r[0]);
-    keys.add(r[0]);
-  }
-});
-
 
 test("R21 (K3297) a screen's functions may use Intl beside JSON, Math, String, Number, Array, Object and Date: composed and drawn, a language's name read through it", async () => {
   const s = { id: "account", reads: () => ({}), acts: [], render: (cs) => "<p id=lang>" + cs.esc(new Intl.DisplayNames(["en"], { type: "language" }).of("es")) + "</p>" };

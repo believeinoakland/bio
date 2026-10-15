@@ -1,8 +1,9 @@
-/* The group's home (R1, R8, R9, R11) on the real served page (interface-shell's harness): what it reads, what it draws in
-   each state, and the acts it offers, run through the shell's kit, gate and re-reads. */
+/* The group's home (R1, R8, R9, R11, R17, R23, R25, R28–R31) on the real served page (interface-shell's harness): what it
+   reads, what it draws in each state, and the acts it offers, run through the shell's kit, gate and re-reads. Every
+   sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, beside, last, main, screen, settle, MEMBER } from "./page.mjs";
+import { open, ok, refused, text, ops, button, press, beside, last, main, screen, settle, MEMBER, word, hasWord, dmy, inOrder, withScreens } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 // A busy group's home, as the plane answers each read Home draws (R17).
@@ -57,55 +58,62 @@ test("R17: Home reads the queue, projectlist, startfrom, lookedsince and groupid
   assert.equal(a.byOp("aiuseovertime")[0].query.owner, "group");
 });
 
-test("R17: a busy home draws, in order, the strip, Needs you, Needs the group, each area at a glance, the projects, Since you last looked and What happened?", async () => {
-  const p = await open("/app", ADMIN_PLANE);
+test("R17, R28, R31: a busy home draws, in order, the strip, Needs you, Needs the group, each area at a glance, the projects, Since you last looked and What happened?", async () => {
+  const p = await open("/app", ADMIN_PLANE, { screens: withScreens("document") });
   await settle();
-  assert.deepEqual(sections(p), ["Needs you", "Needs the group", "Each area at a glance", "Projects", "Since you last looked", "What happened?"]);
+  assert.deepEqual(sections(p), [word("screen.home.needsyou"), word("screen.home.needsgroup"), word("screen.home.areas"), word("screen.home.projects"),
+    word("screen.home.since"), word("door.front.head")]);
   const strip = main(p).querySelector(".mk-strip");
   const order = main(p).querySelectorAll(".mk-strip, h1, section");
   assert.ok(strip && order[0] === strip, "the strip comes first, above the heading and every block");
-  assert.deepEqual(strip.querySelectorAll("a").map((a) => text(p, a)), ["2 need you", "1 overdue", "4 need the group"]);
+  // R31: the strip counts no item as overdue.
+  assert.deepEqual(strip.querySelectorAll("a").map((a) => text(p, a)), [`2 ${word("screen.home.strip.you")}`, `4 ${word("screen.home.strip.group")}`]);
   const you = main(p).querySelectorAll("section")[0];
-  assert.match(text(p, you), /Vouch for 3 photos/);
-  assert.ok(you.querySelector('button[data-act="taskresolve"]'), "its options (R3)");
+  // R28: a to-do on a document names the document, a reference (here untitled: it carries none), and its act by the act's label.
+  assert.ok(you.querySelector('a.cs-ref[href="/app/document/INF-7"]'), "its subject is a reference to the document");
+  assert.ok(you.querySelector('button[data-act="taskresolve"]').textContent.startsWith(word("act.taskresolve.label.home")), "its act is named by the act's label");
   // R19: the update to-do on Needs you, with its security mark, and "See what changes" opening `updates`.
-  assert.match(text(p, you), /An update to your group's Civicsmith is ready: release 0\.84\.0, with a security fix/);
+  assert.ok(text(p, you).includes(word("home.update.ready", { version: "0.84.0", security: word("home.update.security") })));
   assert.ok(you.querySelector('a[href="/app/updates"]'));
   // Needs the group: whose move it is.
   const group = main(p).querySelectorAll("section")[1];
-  assert.match(text(p, group), /Send the follow-up letter.*an administrator's move/);
-  assert.match(text(p, group), /A reply is due.*anyone's move/);
+  assert.ok(inOrder(text(p, group), [word("screen.home.move.admin")]));
+  assert.ok(text(p, group).includes(word("screen.home.move.anyone")));
   // R22: the two source notices are one item with their count, in members' words.
-  assert.match(text(p, group), /2 documents changed at their source/);
+  assert.ok(text(p, group).includes(word("queue.source-modified.many", { n: "2" })));
   assert.doesNotMatch(text(p), /B-1|404/);
   // The four areas, each named as its reference; Since you last looked holds the project changed since then.
   const areas = main(p).querySelectorAll(".mk-ablock").map((b) => b.getAttribute("data-area"));
   assert.deepEqual(areas, ["investigation", "action", "members", "administration"]);
-  assert.match(text(p, main(p).querySelector('[data-area="members"]')), /3 members1 administrator1 invited/);
-  assert.match(text(p, main(p).querySelector('[data-area="administration"]')), /0\.83\.0 this release.*Places: River Town.*Languages: English, español.*\$31\.40 of \$60\.00/);
-  assert.match(text(p, main(p).querySelector('[data-area="investigation"]')), /3 projects4 questions/);
+  assert.equal(text(p, main(p).querySelector('[data-area="members"]')).replace(word("screen.home.area.members"), "").trim(),
+    `3 ${word("screen.home.rd.members")}1 ${word("screen.home.rd.admin")}1 ${word("screen.home.rd.invited")}`);
+  assert.ok(inOrder(text(p, main(p).querySelector('[data-area="administration"]')), [`0.83.0 ${word("screen.home.rd.release")}`,
+    word("screen.home.line.places", { places: "River Town" }), word("screen.home.line.languages", { languages: "English, español" }),
+    word("screen.home.line.ailimit", { used: "$31.40", limit: "$60.00" })]));
+  assert.ok(text(p, main(p).querySelector('[data-area="investigation"]')).includes(`3 ${word("screen.home.rd.projects")}4 ${word("screen.home.rd.questions")}`));
   const since = main(p).querySelectorAll("section")[4];
-  assert.match(text(p, since), /The Coliseum lease.*changed 12 October 2026/);
-  assert.doesNotMatch(text(p, since), /Pothole repairs/, "changed before the last look: not drawn");
+  assert.ok(inOrder(text(p, since), ["The Coliseum lease", word("screen.home.since.changed", { date: dmy("2026-10-12") })]));
+  assert.ok(!text(p, since).includes("Pothole repairs"), "changed before the last look: not drawn");
 });
 
 test("R17: controls: a reading at zero is not drawn, and an empty block is not drawn; a failed read is drawn failed in its block", async () => {
   const quiet = await open("/app", { ...PLANE, queue: ok({ items: [], item_count: 0 }) });
   await settle();
   assert.ok(!main(quiet).querySelector(".mk-strip"), "no strip with nothing to count");
-  assert.doesNotMatch(text(quiet), /Needs you|Needs the group|0 need|0 to do|\b0 questions?/);
+  assert.ok(!text(quiet).includes(word("screen.home.needsyou")) && !text(quiet).includes(word("screen.home.needsgroup")));
+  assert.doesNotMatch(text(quiet), /\b0 (questions?|need|to do)/);
   assert.ok(!main(quiet).querySelector('[data-area="action"]'), "an area with nothing to show is left out");
   const failed = await open("/app", { ...PLANE, queue: refused("STORE_DID_NOT_ANSWER", null, 502), projectlist: refused("STORE_DID_NOT_ANSWER", null, 502), lookedsince: refused("STORE_DID_NOT_ANSWER", null, 502) });
   assert.ok(main(failed).querySelectorAll('[data-state="failed"]').length >= 3, "the queue, the projects and lookedsince each drawn failed");
-  assert.match(text(failed), /Needs you/);
-  assert.match(text(failed), /Since you last looked/);
+  assert.ok(text(failed).includes(word("screen.home.needsyou")));
+  assert.ok(text(failed).includes(word("screen.home.since")));
 });
 
 test("R17, R11: a new member's first visit (lookedsince answers null) draws no Needs you and no Since you last looked", async () => {
   const p = await open("/app", { ...PLANE, lookedsince: ok({ since: null }) });
   await settle();
-  assert.doesNotMatch(text(p), /Needs you|Since you last looked/);
-  assert.match(text(p), /Needs the group/, "the group's items are still drawn");
+  assert.ok(!text(p).includes(word("screen.home.needsyou")) && !text(p).includes(word("screen.home.since")));
+  assert.ok(text(p).includes(word("screen.home.needsgroup")), "the group's items are still drawn");
 });
 
 test("R23: the heading is the group's name, or \"Your group\" while none is set, never the slug", async () => {
@@ -113,7 +121,7 @@ test("R23: the heading is the group's name, or \"Your group\" while none is set,
   assert.equal(main(p).querySelector("h1").textContent, "Lakeshore Tenants");
   assert.match(text(p), /Rents and leases on city land\./);
   const unnamed = await open("/app", { ...PLANE, groupidentity: ok({ ok: true, group: "lakeshore", display_name: null }) });
-  assert.equal(main(unnamed).querySelector("h1").textContent, "Your group");
+  assert.equal(main(unnamed).querySelector("h1").textContent, word("shell.group.unnamed"));
   assert.doesNotMatch(text(unnamed), /lakeshore/);
 });
 
@@ -121,18 +129,19 @@ test("R17, R23, R11: a new group's home draws that it is ready, its first steps 
   const fresh = { ...ADMIN_PLANE, groupidentity: ok({ ok: true, group: "lakeshore", display_name: null }), projectlist: ok({ ok: true, projects: [] }), queue: ok({ items: [] }),
     memberlist: ok({ members: [{ member_id: "mai", handle: "mai", role: "admin", status: "active" }] }) };
   const p = await open("/app", fresh);
-  assert.deepEqual(sections(p), ["Your group's Civicsmith is ready", "What happened?"]);
+  assert.deepEqual(sections(p), [word("screen.home.ready"), word("door.front.head")]);
   assert.deepEqual(main(p).querySelectorAll(".mk-links a").map((a) => [a.textContent, a.getAttribute("href")]),
-    [["Name your group", "/app/group"], ["Invite your first members", "/app/members"], ["Say who your group is", "/app/group-identity"]]);
+    [[word("home.first.name"), "/app/group"], [word("screen.home.invite"), "/app/members"], [word("screen.home.saywho"), "/app/group-identity"]]);
   assert.ok(!main(p).querySelector(".mk-ablocks, .mk-strip"));
   // Controls: a named group draws no "Name your group"; a group with a project, or a second active member, is not new.
   const named = await open("/app", { ...fresh, groupidentity: PLANE.groupidentity });
-  assert.doesNotMatch(text(named), /Name your group/);
-  assert.match(text(named), /Nothing is here yet/);
-  assert.doesNotMatch(text(await open("/app", { ...fresh, projectlist: PLANE.projectlist })), /Nothing is here yet/);
-  assert.doesNotMatch(text(await open("/app", { ...fresh, memberlist: ADMIN_PLANE.memberlist })), /Nothing is here yet/);
-  assert.doesNotMatch(text(await open("/app", { ...fresh, whoami: ok({ ...MEMBER, capabilities: ["contribute"] }) })), /Nothing is here yet/);
-  assert.doesNotMatch(text(await open("/app", { ...fresh, projectlist: refused("STORE_DID_NOT_ANSWER", null, 502) })), /Nothing is here yet/);
+  assert.ok(!text(named).includes(word("home.first.name")));
+  assert.ok(text(named).includes(word("screen.home.nothingyet")));
+  const notNew = async (plane) => !text(await open("/app", plane)).includes(word("screen.home.nothingyet"));
+  assert.ok(await notNew({ ...fresh, projectlist: PLANE.projectlist }));
+  assert.ok(await notNew({ ...fresh, memberlist: ADMIN_PLANE.memberlist }));
+  assert.ok(await notNew({ ...fresh, whoami: ok({ ...MEMBER, capabilities: ["contribute"] }) }));
+  assert.ok(await notNew({ ...fresh, projectlist: refused("STORE_DID_NOT_ANSWER", null, 502) }));
 });
 
 test("R1, R8: each project the member sees is a reference opening project, with its stage ladder Forming, Investigating, Matured, Closed", async () => {
@@ -148,18 +157,18 @@ test("R1, R8: each project the member sees is a reference opening project, with 
   assert.deepEqual(on(ladders[0]), [true, true, false, false]);
   assert.deepEqual(on(ladders[1]), [true, false, false, false]);
   assert.deepEqual(on(ladders[2]), [false, false, false, false], "an unknown stage draws no step on");
-  assert.equal(ladders[0].querySelector("[aria-current]").textContent, "Investigating");
-  assert.deepEqual(ladders[0].children.map((s) => s.textContent), ["Forming", "Investigating", "Matured", "Closed"]);
+  assert.equal(ladders[0].querySelector("[aria-current]").textContent, word("screen.home.stage.investigating"));
+  assert.deepEqual(ladders[0].children.map((s) => s.textContent), ["forming", "investigating", "matured", "closed"].map((s) => word(`screen.home.stage.${s}`)));
 });
 
-test("R8, R21: each project's question count is read from projectquestions, paged to its end, and drawn with the project; a count at zero is not drawn", async () => {
+test("R8, R21, R25: each project's question count is read from projectquestions, paged to its end, and drawn with the project, picking the singular or plural key; a count at zero is not drawn", async () => {
   const p = await open("/app", PLANE);
   await settle();
   const reads = p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`);
   assert.deepEqual(reads.sort(), ["PROJ-1:", "PROJ-1:INQ-2", "PROJ-2:", "PROJ-3:"], "PROJ-1 paged on past its first page's cursor");
-  assert.match(text(p), /The Coliseum lease3 questions/);
-  assert.match(text(p), /Pothole repairs1 questionForming/);
-  assert.doesNotMatch(text(p), /0 questions/);
+  assert.ok(text(p).includes("The Coliseum lease" + word("screen.home.questions.many", { n: "3" })));
+  assert.ok(text(p).includes("Pothole repairs" + word("screen.home.questions.one")), "R25: one question, the singular key");
+  assert.ok(!text(p).includes(word("screen.home.questions.many", { n: "0" })));
 });
 
 test("R8: a page shorter than its limit with a cursor is not the end: the count pages on until the cursor is null", async () => {
@@ -168,7 +177,7 @@ test("R8: a page shorter than its limit with a cursor is not the end: the count 
       cursor: req.query.after === "c2" ? null : req.query.after === "c1" ? "c2" : "c1" }) });
   await settle();
   assert.equal(p.byOp("projectquestions").length, 3);
-  assert.match(text(p), /A2 questions/);
+  assert.ok(text(p).includes("A" + word("screen.home.questions.many", { n: "2" })));
 });
 
 test("R8: a count is loading until its pages are read, and a failed read is drawn failed, never as none", async () => {
@@ -181,16 +190,16 @@ test("R8: a count is loading until its pages are read, and a failed read is draw
   await settle();
   assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 1, "PROJ-1's second page failed: its count is failed");
   assert.doesNotMatch(text(failed), /The Coliseum lease\d+ question/, "control: never drawn as a count from the pages read");
-  assert.match(text(failed), /Pothole repairs1 question/);
+  assert.ok(text(failed).includes("Pothole repairs" + word("screen.home.questions.one")));
 });
 
 test("R8: a project whose stage is null is drawn undetermined; a list answered truncated says more projects exist", async () => {
   const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null }] }) });
   await settle();
-  assert.match(text(p), /UnstagedUndetermined, because no stage is recorded for it/);
+  assert.ok(text(p).includes("Unstaged" + word("state.undetermined", { reason: word("screen.home.stage.none") })));
   assert.equal(main(p).querySelectorAll(".cs-ladder [aria-current]").length, 0);
-  assert.match(text(p), /Your group has more projects than are shown here\./);
-  assert.doesNotMatch(text(await open("/app", PLANE)), /more projects than are shown/, "control: not truncated, not said");
+  assert.ok(text(p).includes(word("screen.home.truncated")));
+  assert.ok(!text(await open("/app", PLANE)).includes(word("screen.home.truncated")), "control: not truncated, not said");
 });
 
 test("R1, R17 (interface-shell R10): Home's reads drawn loading, failed or with data; an empty read draws no block", async () => {
@@ -198,10 +207,10 @@ test("R1, R17 (interface-shell R10): Home's reads drawn loading, failed or with 
   const loading = await open("/app", { groupidentity: pend, queue: pend, projectlist: pend, startfrom: pend, lookedsince: pend });
   assert.ok(main(loading).querySelectorAll('[data-state="loading"]').length >= 2);
   const empty = await open("/app", { ...PLANE, queue: ok({ items: [], item_count: 0 }), projectlist: ok({ ok: true, projects: [] }) });
-  assert.doesNotMatch(text(empty), /Nothing is waiting|No projects yet|Needs you|Projects/);
+  for (const k of ["screen.home.needsyou", "screen.home.projects"]) assert.ok(!sections(empty).includes(word(k)), k);
   const failed = await open("/app", { ...PLANE, projectlist: refused("STORE_DID_NOT_ANSWER", "the store did not answer", 502) });
   assert.ok(main(failed).querySelectorAll('[data-state="failed"]').length >= 1);
-  assert.doesNotMatch(text(failed), /No projects yet/, "a failed read is never drawn as empty");
+  assert.ok(!text(failed).includes(word("projects.empty.sub")), "a failed read is never drawn as empty");
 });
 
 test("R17: an item's own acts on Home send their bodies and re-read the queue, never lookedsince", async () => {
@@ -212,9 +221,9 @@ test("R17: an item's own acts on Home send their bodies and re-read the queue, n
   assert.ok(p.byOp("queue").length >= 2, "the queue re-read");
 });
 
-test("R1: \"Start a project\" sends promote with the member's title as a new forming project, and opens project on success", async () => {
+test("R1, R25, R30: \"Start a project\" sends promote with the member's title as a new forming project, written as its title, and opens project on success", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77", owner: "mai" }) });
-  assert.ok(button(p, "promote").textContent.startsWith("Start a project"), "its label, then the weight the shell draws (interface-shell R11, R64)");
+  assert.ok(button(p, "promote").textContent.startsWith(word("project.start.go")), "the form's own act: its label, then the weight the shell draws");
   await press(p, "promote", { values: { "home-title": "  Park bond oversight " } });
   const r = last(p, "promote");
   assert.equal(r.method, "POST");
@@ -224,24 +233,47 @@ test("R1: \"Start a project\" sends promote with the member's title as a new for
   assert.deepEqual([body.meta.object_type, body.meta.title, body.meta.current_state], ["project", "Park bond oversight", "forming"]);
   assert.match(body.snapKey, /^\d{8}T\d{6}Z_[0-9a-f]{8}$/);
   assert.equal(body.files[0].path, "bundle.md");
-  assert.match(body.files[0].text, /^---\nobject_type: project\nobjective: "Park bond oversight"\ncurrent_state: forming\n/);
+  // R25: the document names the title (every screen reads it), beside the objective.
+  assert.match(body.files[0].text, /^---\nobject_type: project\ntitle: "Park bond oversight"\nobjective: "Park bond oversight"\ncurrent_state: forming\n/);
+  assert.ok(body.files[0].text.includes(`Trigger: ${word("file.trigger.home")}\n`), "the session log's trigger is the keyed word, as text");
   assert.doesNotMatch(body.files[0].text, /^id:/m, "no id is sent: the project's id is minted (promotion R19)");
   assert.equal("owner" in body || "author" in body, false, "the owner is the door's stamp, never the page's");
   assert.equal(p.location.pathname, "/app/project/PROJ-77");
   // A title with a quote or newline stays one YAML string.
   const q = await open("/app", { ...PLANE, ...CREATOR });
   await press(q, "promote", { values: { "home-title": 'A "quoted"\ntitle' } });
-  assert.match(last(q, "promote").body.files[0].text, /objective: "A \\"quoted\\"\\ntitle"\n/);
+  assert.match(last(q, "promote").body.files[0].text, /\ntitle: "A \\"quoted\\"\\ntitle"\n/);
 });
 
-test("R1: control: with no title nothing is sent and the member is told in the screen's words; a refusal is drawn beside the act", async () => {
+test("R30: the form asks the title and who can find it; hidden is preselected and an untouched form sends it; choosing findable sends discoverable", async () => {
+  const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77" }) });
+  const start = main(p).querySelector('details[data-start="project"]');
+  const sel = start.querySelector("#home-visibility");
+  assert.ok(start.querySelector("label[for=home-title]").textContent.includes(word("project.start.title")));
+  assert.ok(start.textContent.includes(word("project.start.title.help")) && start.textContent.includes(word("project.visibility.start.later")));
+  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
+  assert.equal(sel.value, "hidden", "preselected");
+  await press(p, "promote", { values: { "home-title": "Parks" } });
+  assert.equal(last(p, "promote").body.visibility, "hidden", "control: an untouched form sends hidden");
+  const q = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-78" }) });
+  await press(q, "promote", { values: { "home-title": "Parks", "home-visibility": "discoverable" } });
+  assert.equal(last(q, "promote").body.visibility, "discoverable");
+  // PROJECT_VISIBILITY_NO_OWNER and NAME_TAKEN are drawn by their words.
+  for (const code of ["PROJECT_VISIBILITY_NO_OWNER", "NAME_TAKEN"]) {
+    const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused(code, null, 409) });
+    const b = await press(t, "promote", { values: { "home-title": "Parks" } });
+    assert.equal(beside(t, b).replace(/\s+/g, " "), word(`refusal.${code}`), code);
+  }
+});
+
+test("R1, R25: control: with no title nothing is sent and the member is told in the screen's words; a refusal is drawn beside the act", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR });
   const b = await press(p, "promote", { values: { "home-title": "   " } });
   assert.equal(p.byOp("promote").length, 0);
-  assert.equal(beside(p, b), "Give the project a title first.");
-  const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused("NAME_TAKEN", "A project already has this title.") });
+  assert.equal(beside(p, b), word("screen.home.title.needed"));
+  const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused("NAME_TAKEN", null, 409) });
   const c = await press(t, "promote", { values: { "home-title": "Parks" } });
-  assert.match(beside(t, c), /already has this title|NAME_TAKEN/);
+  assert.equal(beside(t, c), word("refusal.NAME_TAKEN"));
   assert.equal(t.doc.getElementById("home-title").value, "Parks", "the form keeps what the member typed (interface-shell R13)");
   assert.equal(t.location.pathname, "/app");
 });
@@ -249,7 +281,7 @@ test("R1: control: with no title nothing is sent and the member is told in the s
 test("R1 (interface-shell R12): \"Start a project\" is drawn only to a session that may contribute", async () => {
   const p = await open("/app", { ...PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) });
   assert.ok(!ops(p).includes("promote"));
-  assert.doesNotMatch(text(p), /Start a project/, "nor its disclosure");
+  assert.ok(!text(p).includes(word("act.promote.label.home")), "nor its disclosure");
   assert.ok(screen("home"));
 });
 
@@ -270,18 +302,20 @@ const DOORS = ok({ ok: true,
 const doorOf = (p, door) => main(p).querySelector(`[data-door="${door}"]`);
 const doorOps = (p, door) => doorOf(p, door).querySelectorAll("button[data-act]").map((b) => [b.dataset.script, b.dataset.version]);
 
-test("R9, R14, R23: \"What happened?\" draws each door startfrom answers as the design's card (mk-door), the sixth door last; a door left out is not drawn", async () => {
+test("R9, R14, R23, R25: \"What happened?\" draws each door startfrom answers as the design's card (mk-door), the sixth door last; a door left out is not drawn", async () => {
   const p = await open("/app", { ...PLANE, startfrom: DOORS });
   assert.equal(p.byOp("startfrom").length, 1);
   const sec = main(p).querySelector('[data-front="doors"]');
-  assert.match(text(p, sec), /^What happened\?Choose what fits, or describe it in your own words\. Nothing here is the one right way in\./);
+  assert.ok(text(p, sec).startsWith(word("door.front.head") + word("door.front.intro")));
   assert.deepEqual(main(p).querySelectorAll(".mk-door").map((d) => d.getAttribute("data-door")), ["problem", "money", "elsewhere"], "person, read and tip (no script) are not drawn");
-  assert.match(text(p, doorOf(p, "problem").querySelector("summary")), /^A problem I live withPotholes, dumping, a bill, a service$/);
-  assert.match(text(p, doorOf(p, "elsewhere")), /^Help for my own situationA notice, a bill, a repair, a deadline that's yours alone/);
+  // R25: each card's title and its description are two elements, and the closed door's summary carries its name.
+  const head = doorOf(p, "problem").querySelector("summary");
+  assert.deepEqual(head.children.filter((c) => c.localName !== "br").map((c) => c.textContent), [word("door.front.problem.name"), word("door.front.problem.hint")]);
+  assert.equal(head.getAttribute("aria-label"), word("door.front.problem.name"), "the closed door's button has its name");
+  assert.deepEqual(doorOf(p, "elsewhere").querySelectorAll("b, span").map((c) => c.textContent), [word("door.front.elsewhere.name"), word("door.front.elsewhere.hint")]);
   assert.deepEqual(doorOps(p, "problem"), [["WIZ-33b5887790b7561b", "1"], ["WIZ-cb0ad18a17a04233", "2"]]);
   // Control: with "Follow the money" not offered, the money door names only what startfrom names.
   assert.deepEqual(doorOps(p, "money").map(([id]) => id), ["WIZ-cb0ad18a17a04233"]);
-  assert.doesNotMatch(text(p), /Follow the money/);
 });
 
 test("R23: pressing a door opens its offer in place: its scripts are inside the door, closed, and no script name is drawn before that", async () => {
@@ -337,20 +371,94 @@ test("R9: a door's script starts in the wizard runner (cs.wizard) at its version
 
 test("R9, R23: beside the doors, the matching work (the member's words searched) and the blank start, \"Start a project\" opening its title field on press", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, startfrom: DOORS, search: ok({ hits: [{ bundle_id: "PROJ-2", title: "Pothole repairs" }, { bundle_id: "INF-7", title: "Work orders FY2025" }] }) });
-  assert.match(text(p), /None of these: start a project from a blank page\./);
+  assert.ok(text(p).includes(word("door.front.blank")));
   const start = main(p).querySelector('details[data-start="project"]');
-  assert.equal(text(p, start.querySelector("summary")), "Start a project", "the act's own words");
+  assert.equal(text(p, start.querySelector("summary")), word("act.promote.label.home"), "the act's own words");
   assert.equal(start.getAttribute("open"), null, "never an always-open field");
   assert.ok(start.querySelector("#home-title") && start.querySelector('button[data-act="promote"]'));
   const words = main(p).querySelectorAll('button[data-act="startfrom"]').find((x) => !x.dataset.script);
-  assert.match(words.textContent, /^Start from…/);
+  assert.ok(words.textContent.startsWith(word("act.startfrom.label.home")));
   const none = await press(p, "startfrom", { nth: main(p).querySelectorAll('button[data-act="startfrom"]').indexOf(words), values: { "home-words": "  " } });
-  assert.equal(beside(p, none), "Write what happened first.");
+  assert.equal(beside(p, none), word("screen.home.wordsfirst"));
   assert.equal(p.byOp("search").length, 0, "control: no words, nothing searched");
   await press(p, "startfrom", { nth: main(p).querySelectorAll('button[data-act="startfrom"]').findIndex((x) => !x.dataset.script), values: { "home-words": " potholes on Seminary " } });
   assert.equal(last(p, "search").query.q, "potholes on Seminary");
   const m = main(p).querySelector('[data-front="matching"]');
-  assert.match(text(p, m), /^Already in your group: Pothole repairs, Work orders FY2025$/);
+  assert.equal(text(p, m), word("door.front.matching", { items: "" }).trim() + " Pothole repairs, Work orders FY2025");
   assert.equal(p.doc.getElementById("home-words").value, " potholes on Seminary ", "the field keeps what the member typed");
   assert.equal(p.byOp("lookedsince").length, 1, "re-reading the doors never re-reads lookedsince");
+});
+
+// A project's participants (project-roster R1): the member's own row there says whether she is invited or has joined.
+const PARTICIPANTS = (states) => (req) => ok({ ok: true, projectId: req.query.projectId, participants: [{ handle: "rosa", state: "joined", owner: true },
+  ...(states[req.query.projectId] ? [{ handle: "mai", state: states[req.query.projectId], owner: false }] : [])] });
+
+test("R29: a project the member is invited to is hers to do on Home, with Join (projectjoin), as the project's participants answer her place; a joined project offers none", async () => {
+  const list = ok({ ok: true, projects: [
+    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating" },
+    { id: "PROJ-9", name: "Library hours", stage: "forming" },
+  ] });
+  const p = await open("/app", { ...PLANE, projectlist: list, projectparticipants: PARTICIPANTS({ "PROJ-1": "joined", "PROJ-9": "invited" }),
+    projectjoin: ok({ ok: true, projectId: "PROJ-9", state: "joined" }) }, { screens: withScreens("project") });
+  await settle();
+  const you = main(p).querySelectorAll("section")[0];
+  assert.equal(you.querySelector("h2").textContent, word("screen.home.needsyou"));
+  const join = you.querySelector('button[data-act="projectjoin"]');
+  assert.ok(join && join.textContent.startsWith(word("act.projectjoin.label.home")));
+  assert.ok(you.querySelector('a.cs-ref[href="/app/project/PROJ-9"]'), "the project is a reference");
+  assert.equal(main(p).querySelectorAll('button[data-act="projectjoin"]').length, 1, "control: the joined project offers none");
+  assert.deepEqual(p.byOp("projectparticipants").map((r) => r.query.projectId).sort(), ["PROJ-1", "PROJ-9"], "each project's participants read once");
+  await press(p, "projectjoin");
+  assert.equal(last(p, "projectjoin").query.projectId, "PROJ-9");
+  assert.ok(p.byOp("projectlist").length >= 2, "the projects are read again");
+  assert.equal(p.byOp("lookedsince").length, 1);
+  // A project row that answers the member's participation itself (N1118) is taken at its word, and read no further.
+  const told = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Library hours", stage: "forming", participation: "invited" }] }) });
+  await settle();
+  assert.ok(told.byOp("projectparticipants").length === 0 && main(told).querySelector('button[data-act="projectjoin"]'));
+  // Controls: a read that failed, or one holding no row of hers, offers nothing on a guess.
+  const failed = await open("/app", { ...PLANE, projectlist: list, projectparticipants: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  await settle();
+  assert.equal(main(failed).querySelectorAll('button[data-act="projectjoin"]').length, 0);
+  const none = await open("/app", { ...PLANE, projectlist: list, projectparticipants: PARTICIPANTS({}) });
+  await settle();
+  assert.equal(main(none).querySelectorAll('button[data-act="projectjoin"]').length, 0);
+});
+
+test("R28: a to-do names its subject by its title, a reference, and its act by the act's label; a subject with no title draws the untitled word", async () => {
+  const items = [
+    { id: "TSK-1", class: "OBLIGATION", kind: "check", summary: "https://example.org/permit.pdf", assignee: "mai", assignee_role: "member", options: [],
+      disposition: { instead: "taskresolve" }, subject: { kind: "bundle", id: "INF-7", title: "Permit application" } },
+    { id: "TSK-2", class: "OBLIGATION", kind: "check", summary: "INF-9", assignee: "mai", assignee_role: "member", options: [],
+      disposition: { instead: "taskresolve" }, subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" } },
+  ];
+  const p = await open("/app", { ...PLANE, queue: ok({ items, item_count: 2 }) }, { screens: withScreens("document") });
+  const you = main(p).querySelectorAll("section")[0];
+  const [titled, bare] = you.querySelectorAll(".cs-row");
+  assert.ok(titled.querySelector('a.cs-ref[href="/app/document/INF-7"]').textContent === "Permit application", "the title, a reference to the document");
+  assert.ok(titled.querySelector('button[data-act="taskresolve"]').textContent.startsWith(word("act.taskresolve.label.home")));
+  assert.doesNotMatch(text(p, titled), /https?:/, "never a bare address");
+  assert.equal(bare.querySelector("a.cs-ref").textContent, word("queue.source.untitled", { date: dmy("2026-10-03") }), "control: no title, the untitled word");
+  assert.doesNotMatch(text(p, bare), /INF-9/);
+});
+
+test("R31: a reply owed by another side whose date has passed is drawn \"no reply recorded\", never \"overdue\"; the strip counts no item as overdue", async () => {
+  const items = [{ id: "CONDITION::c", class: "CONDITION", kind: "action-clock-overdue.theirs", assignee: "unassigned", assignee_role: "member",
+    fills: { office: "Public Works", what: "send the records", date: "2026-10-02" }, due: "2026-10-02", subject: { kind: "action", id: "ACT-5" } },
+  { id: "TSK-3", class: "OBLIGATION", kind: "check", summary: "Late to-do", due: "2026-10-01", assignee: "mai", assignee_role: "member", options: [], disposition: { instead: "taskresolve" } }];
+  const p = await open("/app", { ...PLANE, queue: ok({ items, item_count: 2 }) });
+  await settle();
+  assert.ok(text(p).includes(word("action.noreply.title", { date: dmy("2026-10-02") })));
+  assert.doesNotMatch(text(p), /overdue/i, "control: no drawn text contains it");
+  assert.doesNotMatch(main(p).querySelector(".mk-strip").textContent, /overdue/i);
+  assert.ok(text(p).includes(dmy("2026-10-01")), "a passed date of the group's own is drawn with its date and no word");
+});
+
+test("R34: every key Home reads is a word of the list, and what it draws for a sample of its keys equals word(key, vars)", async () => {
+  for (const k of screen("home").words) assert.ok(hasWord(k), k);
+  assert.ok(!screen("home").words.includes("screen.home.strip.overdue"), "DEC-256's retired row is not read");
+  const p = await open("/app", ADMIN_PLANE);
+  await settle();
+  for (const k of ["screen.home.needsyou", "screen.home.areas", "door.front.head", "door.front.intro", "door.front.elsewhere.name", "door.front.elsewhere.hint"])
+    assert.ok(text(p).includes(word(k)), k);
 });

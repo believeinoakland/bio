@@ -2,11 +2,13 @@
    owner's arguments; a member is drawn none. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, open, said } from "./kit.mjs";
-import { ADMIN, MEMBER, env, groupTable } from "./fixtures.mjs";
+import { acts, all, day, has, lacks, open, said, SCREENS } from "./kit.mjs";
+import { ADMIN, MEMBER, env, refuse, groupTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
-const ALL = ["courtnoticeset", "groupdomainset", "grouplanguagesset", "grouplogoset", "groupnameset", "hostingaccessset", "strengthbarset"];
+// the acts the screen draws: its own declaration (contract.test holds it to the registry's)
+// (writinghelp only while the assistant is reachable, R40)
+const ALL = SCREENS.find((s) => s.id === "group").acts.map((a) => a.op).filter((op) => op !== "writinghelp").sort();
 
 test("R18 group: what the group chose is drawn to every member; the acts only to an administrator (control: a member is drawn none)", async () => {
   const a = await open("group", { me: ADMIN, table: groupTable() });
@@ -100,4 +102,51 @@ test("R28 group: a section that holds nothing is not drawn, and nothing says the
   // control: a read that failed is still drawn as failed
   const f = await open("group", { me: MEMBER, table: groupTable({ groupidentity: "none" }) });
   assert.ok(all(f.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);
+});
+
+/* R40 (T49; DEC-231; instance-setup R11, R77): the group's declared stake */
+test("R40 the statement is drawn with who set it and when, or that none is declared; a member reads it and is drawn no act", async () => {
+  const STAKE = "Several of our members rent from landlords the city regulates.";
+  const a = await open("group", { me: ADMIN, table: groupTable() });
+  assert.ok(a.text.includes(said("stake.group.title")) && a.text.includes(STAKE));
+  has(a, "stake.set", { who: "rosa", date: day("2026-10-04") });
+  has(a, "stake.history", { n: 1 });
+  assert.ok(acts(a.tree).some((b) => b.attrs["data-act"] === "declaredstakeset") && a.text.includes(said("stake.group.label")));
+  const m = await open("group", { me: MEMBER, table: groupTable() });
+  assert.ok(m.text.includes(STAKE));
+  assert.deepEqual(ops(m), [], "control: a member is drawn no act");
+  // none declared; a read that does not carry it is told unreadable, never none
+  const none = await open("group", { me: ADMIN, table: groupTable({ groupidentity: env({ display_name: "East Oakland Watch", declared_stake: { stake: null, set_by: null, set_at: null }, declared_stake_history: [] }) }) });
+  has(none, "stake.none");
+  const unread = await open("group", { me: ADMIN, table: groupTable({ groupidentity: env({ display_name: "East Oakland Watch" }) }) });
+  has(unread, "stake.unreadable");
+  assert.ok(!unread.text.includes(said("stake.none")));
+});
+
+test("R40 declaredstakeset saves the statement; an emptied field clears it (null); STAKE_MALFORMED and NOT_AN_ADMIN are drawn by their words", async () => {
+  const a = await open("group", { me: ADMIN, table: groupTable() });
+  assert.deepEqual((await a.press("declaredstakeset", { values: { "gr-stake": "  We rent in the flats.  " } })).sent[0].body, { stake: "We rent in the flats." });
+  assert.deepEqual((await a.press("declaredstakeset", { values: { "gr-stake": "" } })).sent[0].body, { stake: null });
+  for (const code of ["STAKE_MALFORMED", "NOT_AN_ADMIN"]) {
+    const r = await open("group", { me: ADMIN, table: groupTable({ declaredstakeset: refuse(code) }) });
+    await r.press("declaredstakeset", { values: { "gr-stake": "x" } });
+    assert.ok(r.refused.text.includes(said("refusal." + code)), code);
+  }
+});
+
+test("R40 writinghelp under the field only while the assistant is reachable; its draft in the field, labeled, untested where the answer says so, kept only by the administrator's own save", async () => {
+  const off = await open("group", { me: ADMIN, table: groupTable() });
+  assert.ok(!ops(off).includes("writinghelp"));
+  const a = await open("group", { me: ADMIN, table: groupTable(), reachable: true });
+  assert.ok(ops(a).includes("writinghelp"));
+  const r = await a.press("writinghelp", { data: { field: "stake", id: "gr-stake" }, values: { "gr-stake": "we rent" }, reason: "we rent" });
+  assert.deepEqual(r.sent.map((x) => [x.op, x.body]), [["writinghelp", { op: "declaredstakeset", field: "stake", told: "we rent" }]], "nothing is saved: no declaredstakeset");
+  assert.equal(a.b.doc.getElementById("gr-stake").value, "The group's members rent in East Oakland.");
+  has(a, "screen.group-identity.draft.label", { handle: "rosa" });
+  lacks(a, "ai.label.untested");
+  const k = await a.press("declaredstakeset", { values: {} });
+  assert.deepEqual(k.sent[0].body, { stake: "The group's members rent in East Oakland." }, "kept by the administrator's own save");
+  const u = await open("group", { me: ADMIN, reachable: true, table: groupTable({ writinghelp: () => env({ ok: true, text: "Draft.", untested: true, label: { kind: "machine", asked_by: "member:rosa" }, withheld: [] }) }) });
+  await u.press("writinghelp", { data: { field: "stake", id: "gr-stake" }, values: { "gr-stake": "we rent" }, reason: "we rent" });
+  has(u, "ai.label.untested");
 });

@@ -13,35 +13,35 @@ import { helpRecords } from "./help-records.mjs";
 
 export { SCREEN_WORDS };
 
-// The `WORD_ROWS` keys each screen draws beside its acts' labels and explanations (setup-words R7, at PR #33's head).
-const SHARED = ["state.loading", "state.empty", "state.failed"];
+// The keys each screen draws beside its acts' labels and explanations (R19: keys only, read through `setup-words`).
+const SHARED = ["state.loading", "state.empty", "state.failed", "shell.unread"];
 const EXTRA = {
   plan: ["plan.offer.document", "plan.offer.document.means", "plan.offer.chancetofix", "plan.offer.chancetofix.means",
     "plan.offer.chancetofix.again", "plan.close.lessons", "mark.due.means"],
   "start-send": [],
   request: ["screen.help-records.name"],
-  action: ["mark.due.means"],
+  action: ["mark.due.means", "law.title", "law.help", "law.stated", "law.undetermined", "law.change", "law.proposed", "law.proposal.not", "law.propose",
+    "risk.title", "risk.help", "risk.tier", "risk.tier.1", "risk.tier.2", "risk.tier.3", "risk.tier.undetermined", "risk.set", "risk.revise", "risk.proposed",
+    "risk.proposal", "risk.proposal.not"],
   matter: [],
   "help-records": [],
 };
-// Own rows a screen draws under another screen's prefix (one sentence, one key, wherever it is drawn).
+// Keys a screen draws under another screen's prefix (one sentence, one key, wherever it is drawn).
 const BORROWS = {
   plan: ["screen.matter.stage."],
   "start-send": ["screen.plan.support.", "screen.request.", "screen.start-send."],
   request: ["screen.start-send."],
-  action: ["screen.plan.actionstate.", "screen.request.holder"],
+  action: ["screen.plan.actionstate.", "screen.request.holder", "screen.request.level", "screen.request.window.", "screen.request.law"],
   "help-records": ["screen.request.window."],
 };
 const SHARED_OWN = { plan: ["act.plansubjectadd.label.plan", "act.plansubjectadd.does", "act.planask.does"], "start-send": ["act.filingrecordsent.does"], request: ["act.filingrecordsent.does"] };
 
 const wordsOf = (s) => {
   const id = s.id;
-  const own = SCREEN_WORDS.filter((r) => r[0].startsWith(`screen.${id}.`) || (BORROWS[id] || []).some((p) => r[0].startsWith(p))
-    || (SHARED_OWN[id] || []).includes(r[0]));
-  const ownKeys = new Set(own.map((r) => r[0]));
+  const own = SCREEN_WORDS.filter((k) => k.startsWith(`screen.${id}.`) || (BORROWS[id] || []).some((p) => k.startsWith(p))
+    || (SHARED_OWN[id] || []).includes(k));
   const acts = s.acts.flatMap((a) => [a.label || `act.${a.op}.label.${id}`, `act.${a.op}.does`]);
-  const keys = [...SHARED, `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id]].filter((k) => !ownKeys.has(k));
-  return Object.freeze([...new Set(keys), ...own]);
+  return Object.freeze([...new Set([...SHARED, `screen.${id}.name`, `screen.${id}.purpose`, ...acts, ...EXTRA[id], ...own])]);
 };
 
 /** The six screens, in the order a member meets them: the plan, starting and sending, a records request, one action,

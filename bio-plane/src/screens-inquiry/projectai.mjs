@@ -11,14 +11,19 @@
  * and her sign-in is connected (`credentials` R54); keep-away switched on only with a reason, saying first what it does.
  * Self-contained functions (interface-shell R21 (1)). */
 
-import { ownRows } from "./words.mjs";
-import { aiPanel, aiPanelSend } from "../screens-settings/panel.mjs";
-import { SCREEN_WORDS as SETTINGS_WORDS } from "../screens-settings/words.mjs";
+import * as settingsPanel from "../screens-settings/panel.mjs";
+import { SCREEN_WORDS as SETTINGS_ROWS } from "../screens-settings/index.mjs";
+
+const { aiPanel, aiPanelSend } = settingsPanel;
 
 /** R14: the reads, each as its owner documents it. */
 function reads(view) {
   const id = String(view.subject || "");
   const owner = "project:" + id;
+  /* K3379 (D29): the founder (`whoami`'s member `admin`) sees every discoverable project whole, and project-roster
+     answers her `projectdirectory` with a refusal inside a 200 (N1129): it is not asked for her, nor before `whoami` */
+  const me = view.me && view.me.member;
+  const directory = me && me !== "admin" ? { directory: { op: "projectdirectory", query: {} } } : {};
   return {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     participants: { op: "projectparticipants", query: { projectId: id } },
@@ -30,6 +35,8 @@ function reads(view) {
     limits: { op: "ailimits", query: { owner } },
     usage: { op: "aiusage", query: { owner } },
     history: { op: "accounthistory", query: { owner } },
+    /* R37: the projects she may see but has not joined (project-roster's directory) */
+    ...directory,
   };
 }
 
@@ -41,7 +48,8 @@ function place(view) {
   const m = typeof text === "string" ? /^title:\s*(.*)$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
   let title = m ? m[1].trim() : "";
   try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* the raw value is drawn */ }
-  return { project: { id, title: title || id } };
+  /* R39: never the record's id as a title; a project read without one is undetermined (the shell's step) */
+  return { project: { id, title: title || "" } };
 }
 
 /** R14: the project's account and its notice, the panel over its account, and keeping its material away from AI. */
@@ -52,13 +60,17 @@ function render(cs, view) {
   const d = view.data || {};
   const W = cs.w, E = cs.esc, S = "screen.projectai.";
   const owner = "project:" + id;
+  /* R39: the title read from the record (or, for a project she has not joined, the directory's name), never its id */
+  const listed = d.directory && d.directory.state === "ok" && Array.isArray(d.directory.value.projects)
+    ? d.directory.value.projects.find((p) => p && p.id === id) : null;
   const titleOf = () => {
     const text = d.project && d.project.state === "ok" && d.project.value ? d.project.value["bundle.md"] : null;
     const m = typeof text === "string" ? /^title:\s*(.*)$/m.exec(text.split(/\n---\s*\n/)[0] || "") : null;
     let t = m ? m[1].trim() : "";
     try { if (t.startsWith("\"")) t = JSON.parse(t); } catch { /* raw */ }
-    return t || id;
+    return t || (listed && (listed.name || listed.title)) || "";
   };
+  const plain = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
   const me = view.me && view.me.handle;
   const parts = d.participants && d.participants.state === "ok" && Array.isArray(d.participants.value.participants)
     ? d.participants.value.participants.filter((x) => x && x.state !== "removed") : null;
@@ -67,7 +79,19 @@ function render(cs, view) {
   const sole = !!(parts && parts.length === 1 && mine);
   const connected = d.signin && d.signin.state === "ok" && d.signin.value && d.signin.value.connected === true;
   const out = [];
-  out.push(cs.title(titleOf(), { thing: "project" }));
+  const title = titleOf();
+  out.push(cs.title(title || plain("state.undetermined"), { thing: "project" }));
+  /* R37: a member who has not joined the project sees the not-joined state, and Join where she may; never "What pays"
+     failed with the plane's "no project answers to that id" */
+  const NOT_JOINED = ["PROJECT_SEEN_NOT_A_PARTICIPANT", "PROJECT_NOT_FOUND", "NOT_A_PARTICIPANT"];
+  const refusedHer = ["project", "participants", "state", "notice", "keepaway"].some((k) => d[k] && d[k].state === "failed"
+    && d[k].refusal && NOT_JOINED.includes(d[k].refusal.code));
+  const absent = parts && !parts.some((x) => x.handle === me && x.state === "joined");
+  if (listed || refusedHer || (absent && !(mine && mine.state === "invited"))) {
+    out.push(`<p data-state="notjoined">${W("projectai.notjoined", { project: title || plain("state.undetermined") })}</p>`
+      + cs.act("projectjoin", { label: "act.projectjoin.label.projectai", data: { project: id }, tone: "primary" }));
+    return out.join("");
+  }
   out.push(`<p class="mk-sub">${W(S + "purpose")}</p>`);
 
   /* the project's account: what it is, who set it and when; an owner's acts on it */
@@ -146,6 +170,9 @@ const acts = [
                 LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
   /* on only with a reason of 1 to 2,000 characters in the owner's own words, its field the act's reason (interface-shell
      R11's `reasonField`; credentials R57, R51's reason rule); off with the reason for turning it off */
+  /* R37: she joins the project from here (project-roster's join, by the project's id) */
+  { op: "projectjoin", label: "act.projectjoin.label.projectai", rereads: null,
+    send(view) { return { query: { projectId: String(view.subject || "") } }; } },
   { op: "projectaikeepaway", label: "act.projectaikeepaway.label.projectai", rereads: ["keepaway", "history", "uses"], reasonField: "reason",
     send(view, el, cs) {
       const reason = String(cs.value("pa-why") || "").trim();
@@ -154,24 +181,28 @@ const acts = [
     } },
 ];
 
-/** The panel's words (screens-settings R9): its own rows, and the `WORD_ROWS` keys it draws, as `screens-settings`
- *  lists them for its own two panels. */
+/** The keys the panel draws over the project's account: `screens-settings`' `PANEL_KEYS` (its R9; K3369), and the
+ *  `words.json` keys this module draws in its refusals and the panel's uses. */
 const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
-const PANEL = [...SETTINGS_WORDS.filter((r) => r[0].startsWith("screen.panel.")),
-  ...USES.map((u) => `ai.use.${u}.name`), "ai.explore.no", "ai.explore.ask", "ai.explore.yes",
-  "ai.refused.limitinvalid", "ai.refused.unitunavailable", "ai.refused.switchvalue",
-  ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
+const PANEL = [...(Array.isArray(settingsPanel.PANEL_KEYS) ? settingsPanel.PANEL_KEYS
+  /* until screens-settings answers PANEL_KEYS (K3369), the keys of its own panel rows, read as keys only */
+  : SETTINGS_ROWS.map((r) => (Array.isArray(r) ? r[0] : r)).filter((k) => typeof k === "string" && k.startsWith("screen.panel."))),
+  ...USES.map((u) => `ai.use.${u}.name`), "ai.explore.no", "ai.explore.ask", "ai.explore.yes", "ai.refused.limitinvalid", "ai.refused.unitunavailable",
+  "ai.refused.switchvalue", ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
 
-/** The keys the screen may draw. */
-const words = [
+/** The keys the screen may draw (R44: keys only). */
+const words = Object.freeze([
   "screen.projectai.name",
   ...["projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove", "projectkeynoticeseen",
-    "accountusesset", "ailimitset", "projectaikeepaway"].flatMap((op) => ["act." + op + ".label.projectai", "act." + op + ".does"]),
-  "ai.refused.notsole", "ai.refused.signinnotconnected", "mark.outward.means",
-  "state.empty", "state.loading", "state.failed",
+    "accountusesset", "ailimitset", "projectaikeepaway", "projectjoin"].map((op) => "act." + op + ".label.projectai"),
+  "act.projectaikeepaway.does", "ai.refused.notsole", "ai.refused.signinnotconnected", "mark.outward.means",
+  "state.undetermined", "projectai.notjoined",
   ...PANEL,
-  ...ownRows("screen.projectai."),
-];
+  ...["purpose", "account.head", "account.none", "account.key", "account.signin", "account.off", "account.suspended",
+    "account.since", "owners", "key.field", "key.replace", "key.nokey", "key.never", "signin.help", "switch.on", "switch.off",
+    "notice.head", "notice.seen", "keepaway.head", "keepaway.on", "keepaway.off", "keepaway.reason", "keepaway.noreason",
+    "keepaway.turnoff", "keepaway.unread"].map((k) => "screen.projectai." + k),
+]);
 
 /** The project's AI account (interface-shell R21), with the panel's functions as its parts. */
 export const PROJECTAI_SCREEN = Object.freeze({ id: "projectai", reads, place, render, acts, words,

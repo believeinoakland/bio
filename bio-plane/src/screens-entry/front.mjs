@@ -3,8 +3,9 @@
    (`groupdescription`'s public parts), what it has published (`publishedlist`), the doorbell and the tour, and members'
    sign-in as a panel: `login` with the handle, the password and the device in the body only, the session handed to the
    shell (`cs.signin`, interface-shell R32); the signed-out, ended and locked states from the record the shell reads
-   (`view.session`), the lock's `unlock` and its "Not <handle>?" sign-out (`cs.signout`, interface-shell R47). Every
-   function is self-contained (interface-shell R21). */
+   (`view.session`), the lock's `unlock` and its "Not <handle>?" sign-out (`cs.signout`, interface-shell R47). R16: the
+   handle's help is `signin.handle.help`, never a founder hint. R18: a founder signed in with no handle held is taken to
+   `setup`, which asks it, before Home. Every function is self-contained (interface-shell R21). */
 
 export const front = {
   id: "front",
@@ -75,7 +76,7 @@ export const front = {
     const said = session.state === "signedout" ? `<p class="cs-row" data-state="signedout">${W("session.signedout")}</p>`
       : session.state === "ended" ? `<p class="cs-row" data-state="ended">${W("session.ended")}</p>` : "";
     const panel = cs.sec(S + "members", said
-      + cs.field("fs-handle", S + "handle", { help: "signin.founderhint", autocomplete: "username", value: session.handle || "" })
+      + cs.field("fs-handle", S + "handle", { help: "signin.handle.help", autocomplete: "username", value: session.handle || "" })
       + cs.field("fs-pw", "screen.entry.password", { type: "password", autocomplete: "current-password" })
       + cs.checks("fs-device", S + "device", [["own", "session.keep", true], ["shared", "session.shared", false]], { radio: true })
       + `<div class="mk-acts">${cs.act("login", { tone: "primary" })}<a href="/app/forgot" data-nav>${W(S + "forgot")}</a></div>`
@@ -97,9 +98,15 @@ export const front = {
         if (!handle || !password) return { refuse: "screen.front.incomplete" };
         return { body: { handle, password, device: cs.value("fs-device-1") === true ? "shared" : "own" } };
       },
-      done(view, answer, cs) {
+      async done(view, answer, cs) {
         const a = answer && answer.result !== undefined ? answer.result : answer;
-        cs.signin(a, { device: cs.value("fs-device-1") === true ? "shared" : "own", handle: String(cs.value("fs-handle") || "").trim() });
+        const opts = { device: cs.value("fs-device-1") === true ? "shared" : "own", handle: String(cs.value("fs-handle") || "").trim() };
+        // R18: the session handed over and whoami read first; a founder holding no handle chooses it on `setup` before
+        // Home, anyone else goes on to the page kept to return to, else Home (the record written again, as it was)
+        const signed = await cs.signin(a, { ...opts, stay: true });
+        const me = cs.me || {};
+        if (signed && me.rootOfTrust === true && !me.handle) cs.go("setup");
+        else if (signed) await cs.signin(a, opts);
         return { stay: true };
       },
       // a refusal keeps the handle and clears the password (R2)

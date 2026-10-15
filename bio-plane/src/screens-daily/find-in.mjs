@@ -1,32 +1,44 @@
 /* Find in this (registry screen `find-in`; screens-daily R5, R7, R21; DEC-164, N698, K1468). One control over a document, the
    documents held together, or a project: the member ticks what to find, with an optional name or term and question;
    `findin` answers results by kind, each with its words as written, its passage and "Found by search"; each result offers
-   only the recording act of its kind, and finding itself records nothing. The scope is the route's subject: a project's
-   id (`PROJ-…`), a held set's handle (`sel-…`), else a document's capture digest. Every function is self-contained
-   (interface-shell R21 (1)). */
+   only the recording act of its kind, and finding itself records nothing. The scope is the route's first step: a project's
+   id (`PROJ-…`), a held set's handle (`sel-…`), else a document's capture digest; its second, if any, is the question
+   chosen (K3372). Every function is self-contained (interface-shell R21 (1)). */
+import { frontTitle } from "./front-title.mjs";
 
 export const findIn = Object.freeze({
   id: "find-in",
+  parts: { frontTitle },
 
   reads: function (view) {
-    return {
+    const s = String(view.subject || "").split("/")[0];
+    const out = {
       // The questions a result may be recorded for (R5's optional question): those the member may see.
       questions: {
         op: "search", query: { q: "type:inquiry", limit: "200" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       },
     };
+    // R26: a project scope is named by the project's title, read from its document.
+    if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
+    return out;
   },
 
-  // The path's project step (interface-shell R8) when the scope is a project.
+  // The path's project step (interface-shell R8) when the scope is a project: by its title, never its address (R26).
   place: function (view) {
-    const s = String(view.subject || "");
-    return s.indexOf("PROJ-") === 0 ? { project: { id: s, title: s } } : null;
+    const s = String(view.subject || "").split("/")[0];
+    if (s.indexOf("PROJ-") !== 0) return null;
+    const r = view.data && view.data.project;
+    const title = r && r.state === "ok" ? view.parts.frontTitle(r.value) : null;
+    return title ? { project: { id: s, title: title } } : null;
   },
 
   render: function (cs, view) {
     const ui = view.ui || {};
-    const s = String(view.subject || "");
+    const s = String(view.subject || "").split("/")[0];
+    // K3372: `/app/find-in/<scope>/<question>` opens with that question chosen (capture's "Cite a passage" opens it so).
+    const routed = String(view.subject || "").split("/").slice(1).join("/");
+    if (ui.question === undefined && routed) ui.question = routed;
     const form = !s ? "" : s.indexOf("PROJ-") === 0 ? "project" : s.indexOf("sel-") === 0 ? "held" : "document";
     const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
     const RECORD = { people: "recordpersonfact", money: "recordfact", dates: "recorddatedfact", events: "recorddatedfact", requirements: "standarddeclare", term: "cite" };
@@ -42,6 +54,14 @@ export const findIn = Object.freeze({
     const recordAct = function (op, ki, ii) {
       const f = "fr-" + ki + "-" + ii;
       const button = cs.act(op, { label: "act." + op + ".label.find-in", data: { k: String(ki), i: String(ii), f: f } });
+      // R24: "Cite in the question" asks whether the passage supports the question or cuts against it, none preselected.
+      if (button && op === "cite") {
+        return '<details class="mk-details"><summary>' + cs.w("act.cite.label.find-in") + "</summary>"
+          + '<fieldset class="mk-checks" id="' + f + '-role"><legend>' + cs.w("act.cite.label.find-in") + "</legend>"
+          + ["supports", "against"].map(function (r) {
+            return '<label><input type="radio" name="' + f + '-role" id="' + f + "-role-" + r + '" value="' + r + '"> ' + cs.w("screen.findin.cite." + r) + "</label>";
+          }).join("") + "</fieldset>" + button + "</details>";
+      }
       if (!button || !FIELDS[op]) return button;
       return '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.find-in") + "</summary>"
         + FIELDS[op].map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>";
@@ -55,8 +75,18 @@ export const findIn = Object.freeze({
     }
 
     // "Look in": the scope, set by where it was opened (not a field: nothing is typed here).
-    const scope = '<div><p class="mk-note"><b>' + cs.w("screen.find-in.lookin") + "</b> " + cs.w("screen.find-in.scope." + form)
-      + (form === "held" ? "" : " " + (form === "project" ? cs.ref("project", s, s, []) : cs.ref("document", s, s, []))) + "</p>"
+    // R26: the scope by its title, never by its address or digest; a document's title is the answer's, once it has answered.
+    const pr = view.data.project;
+    const ptitle = form === "project" && pr && pr.state === "ok" ? view.parts.frontTitle(pr.value) : null;
+    const foundScope = ui.found && ui.found.scope && typeof ui.found.scope === "object" ? ui.found.scope : {};
+    const dtitle = form === "document" ? (typeof foundScope.title === "string" && foundScope.title.trim() ? foundScope.title : null) : null;
+    // The scope's sentence: a project by its title and how many documents it holds (once the answer says), a document by its title.
+    const ref = function (kind, title) { return { html: cs.ref(kind, s, title, []) }; };
+    const named = form === "project" ? (ptitle && typeof foundScope.captures === "number"
+        ? cs.w("screen.find-in.scope.project", { project: ref("project", ptitle), count: String(foundScope.captures) }) : ptitle ? cs.ref("project", s, ptitle, []) : "")
+      : form === "held" ? cs.w("screen.find-in.scope.held")
+      : dtitle ? cs.w("screen.find-in.scope.this", { document: ref("document", dtitle) }) : cs.w("screen.find-in.scope.document");
+    const scope = '<div><p class="mk-note"><b>' + cs.w("screen.find-in.lookin") + "</b> " + named + "</p>"
       + '<p class="mk-small muted">' + cs.w("screen.find-in.lookin.help") + "</p></div>";
     const ticked = ui.kinds && typeof ui.kinds === "object" ? ui.kinds : { people: true, money: true, dates: true, requirements: true };
     const what = '<fieldset class="mk-checks"><legend>' + cs.w("screen.find-in.what") + "</legend>"
@@ -84,14 +114,16 @@ export const findIn = Object.freeze({
         ? (n ? cs.w("screen.find-in.termsection", { term: found.term || "", n: String(n) }) : cs.w("screen.find-in.quote", { words: found.term || "" }))
         : (n ? cs.w("screen.find-in.section", { kind: { html: kindName }, n: String(n) }) : kindName);
       const notRead = Array.isArray(k.not_read) && k.not_read.length
-        ? '<p class="mk-note">' + cs.w("screen.find-in.notread", { n: String(k.not_read.length) }) + "</p>" : "";
+        ? '<p class="mk-note">' + (k.not_read.length === 1 ? cs.w("screen.find-in.notread.one") : cs.w("screen.find-in.notread", { n: String(k.not_read.length) })) + "</p>" : "";
       const body = !items.length
         ? (k.nothing ? '<p class="mk-note"><b>' + cs.w("screen.find-in.nothing") + "</b></p>" : "") + notRead
         : cs.sheet(items.map(function (it, ii) {
           const extent = it.extent && typeof it.extent === "object" ? it.extent : {};
           const p = extent.passage !== undefined ? extent.passage : extent.paragraph;
-          const where = (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span> " : "")
-            + (it.capture_sha ? cs.ref("document", String(it.capture_sha), String(it.capture_sha).slice(0, 12), []) : "");
+          // R26: the result by its document's title and its place in it; a document the answer does not title is not named by its digest.
+          const dt = typeof it.title === "string" && it.title.trim() ? it.title : it.document && typeof it.document.title === "string" && it.document.title.trim() ? it.document.title : null;
+          const where = (dt && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt, []) + " " : "")
+            + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
           const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
           const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
           const right = rec
@@ -113,7 +145,7 @@ export const findIn = Object.freeze({
     // R5: finding records nothing (`findin` is a read, K1468); the answer is kept in the screen's page memory.
     { op: "findin", label: "act.findin.label.find-in", rereads: [],
       send: function (view, el, cs) {
-        const s = String(view.subject || "");
+        const s = String(view.subject || "").split("/")[0];
         if (!s) return { refuse: "screen.find-in.scope.none" };
         const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
         const on = function (id) { const v = cs.value(id); return v === true || v === "on" || v === "true"; };
@@ -137,7 +169,7 @@ export const findIn = Object.freeze({
     // Keep finding over the scope as documents arrive (answers R15's `find` form); the member's question, if chosen.
     { op: "standingquestionset", label: "act.standingquestionset.label.find-in", rereads: [],
       send: function (view, el, cs) {
-        const s = String(view.subject || "");
+        const s = String(view.subject || "").split("/")[0];
         if (!s) return { refuse: "screen.find-in.scope.none" };
         const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
         const on = function (id) { const v = cs.value(id); return v === true || v === "on" || v === "true"; };
@@ -227,7 +259,12 @@ export const findIn = Object.freeze({
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
         if (!ui.question) return { refuse: "screen.find-in.questionfirst" };
-        return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it) }, body: {} };
+        // R24: refused in place until a role is chosen; the question is the citing object (`citation` R1: a role is a question's),
+        // and the one the passage was looked for.
+        const chosen = cs.value(el.dataset.f + "-role");
+        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] : "";
+        if (!role) return { refuse: "screen.findin.cite.norole" };
+        return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it), role: role }, body: {} };
       } },
     // "See all in Find": the term searched in Find.
     { op: "search", label: "act.search.label.find-in", rereads: [],

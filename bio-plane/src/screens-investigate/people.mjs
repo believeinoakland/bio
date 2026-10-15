@@ -3,7 +3,6 @@
  * and order are `people`' `peopledirectory` (its R37), searched by name or office and filtered four ways. "Search" is
  * the registry's `search` act: it reads the directory again with what the member typed and chose. */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 const S = "screen.people.";
@@ -115,7 +114,7 @@ const acts = [
       view.ui.searching = true;
       cs.call("peopledirectory", { query }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
-        const refused = !a || a.ok === false || (r && r.ok === false);
+        const refused = !a || a.ok === false || (r && (r.ok === false || typeof r.refused === "string"));
         view.data.directory = refused
           ? { state: "failed", value: null, refusal: { code: String((r && (r.code || r.reason)) || (a && (a.code || a.reason)) || ""), words: cs.esc((r && r.translation) || (a && a.translation) || (r && (r.code || r.reason)) || cs.w("shell.noanswer")) } }
           : (!r || !Array.isArray(r.rows) || !r.rows.length ? { state: "empty", value: r, refusal: null } : { state: "ok", value: r, refusal: null });
@@ -140,69 +139,24 @@ const acts = [
     } },
 ];
 
-export const PEOPLE_WORDS = [
-  row(S + "notmembers", "The people and organizations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under"),
-  row(S + "members", "Settings › Members"),
-  row(S + "q", "Name or office"),
-  row(S + "show", "Show"),
-  row(S + "show.both", "People and organizations"),
-  row(S + "show.people", "People"),
-  row(S + "show.organizations", "Organizations"),
-  row(S + "office", "Holding an office in"),
-  row(S + "office.any", "Any body"),
-  row(S + "named", "Named in"),
-  row(S + "named.any", "Any project"),
-  row(S + "named.mine", "Your projects"),
-  row(S + "since", "Named recently"),
-  row(S + "since.any", "At any time"),
-  row(S + "since.30", "In the last 30 days"),
-  row(S + "since.90", "In the last 90 days"),
-  row(S + "since.365", "In the last year"),
-  row(S + "countline.none", "The record follows {following} people and organizations. Each row counts the documents, questions and projects that name them, among those you may see, and says when the newest of them was added to the record."),
-  row(S + "countline", "The record follows {following} people and organizations; {mine} are named in your projects. Each row counts the documents, questions and projects that name them, among those you may see, and says when the newest of them was added to the record."),
-  row(S + "yours", "In your projects"),
-  row(S + "yours.holds", "Named in the projects you work on. Newest added first."),
-  row(S + "others", "Everyone else the record follows"),
-  row(S + "others.holds", "Followed by your group but not named in your projects. Newest added first."),
-  row(S + "kind.person", "Person"),
-  row(S + "kind.person.means", "a person the record follows: their page holds their positions, career and interests, each dated and cited"),
-  row(S + "kind.organization", "Organization"),
-  row(S + "kind.organization.means", "an organization or public body the record follows: its page holds what the record holds on it and who holds its offices"),
-  row(S + "today.none", "no current office recorded"),
-  row(S + "today.seeded", "Added at setup from your group's place"),
-  row(S + "today.kind.office", "An office"),
-  row(S + "today.kind.body", "A public body"),
-  row(S + "today.kind.institution", "An organization"),
-  row(S + "today.kind.movement", "A movement or campaign"),
-  row(S + "today.kind.fund", "A fund"),
-  row(S + "today.kind.program", "A programme"),
-  row(S + "counts", "named in {list}"),
-  row(S + "count.document", "{n} document"),
-  row(S + "count.documents", "{n} documents"),
-  row(S + "count.question", "{n} question"),
-  row(S + "count.questions", "{n} questions"),
-  row(S + "count.project", "{n} project"),
-  row(S + "count.projects", "{n} projects"),
-  row(S + "newest", "newest added {date}"),
-  row(S + "more", "The first {n} are shown. Search or filter to find the rest."),
-  row(S + "none", "Your group's record follows no one yet."),
-  row(S + "none.how", "A person or organization comes in one of two ways: a member ties a name in a captured document to them, on the document under “People it names”, or adds them here with a note on who they are and why the group follows them."),
-  row(S + "none.capture", "Capture a document"),
-  row(S + "nomatch", "No one the record follows matches “{q}”."),
-  row(S + "nomatch.how", "Someone appears here only once your group follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here."),
-  row(S + "nomatch.find", "Look for them in documents"),
-  row(S + "add.head", "Add someone the record follows"),
-  row(S + "add.name", "Their name"),
-  row(S + "add.kind", "A person or an organization"),
-  row(S + "add.kind.person", "A person"),
-  row(S + "add.kind.organization", "An organization"),
-  row(S + "add.note", "Your note: who they are, and why the group follows them"),
-  row(S + "add.note.help", "Facts about them are then added from documents, each cited."),
-  row(S + "add.empty", "Give their name and your note on who they are."),
+const PEOPLE_KEYS = [
+  "screen.people.notmembers", "screen.people.members", "screen.people.q", "screen.people.show", "screen.people.show.both",
+  "screen.people.show.people", "screen.people.show.organizations", "screen.people.office", "screen.people.office.any", "screen.people.named",
+  "screen.people.named.any", "screen.people.named.mine", "screen.people.since", "screen.people.since.any", "screen.people.since.30",
+  "screen.people.since.90", "screen.people.since.365", "screen.people.countline.none", "screen.people.countline", "screen.people.yours",
+  "screen.people.yours.holds", "screen.people.others", "screen.people.others.holds", "screen.people.kind.person", "screen.people.kind.person.means",
+  "screen.people.kind.organization", "screen.people.kind.organization.means", "screen.people.today.none", "screen.people.today.seeded",
+  "screen.people.today.kind.office", "screen.people.today.kind.body", "screen.people.today.kind.institution", "screen.people.today.kind.movement",
+  "screen.people.today.kind.fund", "screen.people.today.kind.program", "screen.people.counts", "screen.people.count.document",
+  "screen.people.count.documents", "screen.people.count.question", "screen.people.count.questions", "screen.people.count.project",
+  "screen.people.count.projects", "screen.people.newest", "screen.people.more", "screen.people.none", "screen.people.none.how",
+  "screen.people.none.capture", "screen.people.nomatch", "screen.people.nomatch.how", "screen.people.nomatch.find", "screen.people.add.head",
+  "screen.people.add.name", "screen.people.add.kind", "screen.people.add.kind.person", "screen.people.add.kind.organization",
+  "screen.people.add.note", "screen.people.add.note.help", "screen.people.add.empty",
 ];
 
 const words = ["screen.people.name", "screen.people.purpose", "act.search.label.people", "act.search.does",
   "act.explore.label.people", "act.explore.does", "act.entitycreate.label.people", "act.entitycreate.does",
-  "state.empty", "state.loading", "state.failed", ...PEOPLE_WORDS];
+  "state.empty", "state.loading", "state.failed", ...PEOPLE_KEYS];
 
 export const PEOPLE_SCREEN = Object.freeze({ id: "people", reads, render, acts, words, parts: PARTS });

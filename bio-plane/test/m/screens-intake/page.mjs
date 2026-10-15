@@ -3,14 +3,19 @@
  * open a screen, fill its fields and press its acts as a member would. */
 import { boot, ok, refused, refusedIn, bytes, MEMBER, ADMIN } from "../interface-shell/harness.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
-export { ok, refused, refusedIn, bytes, MEMBER, ADMIN };
+export { ok, refused, refusedIn, bytes, MEMBER, ADMIN, word, hasWord };
 
 /* The assistant reachable for this member (interface-shell R20): on, with the group's key held and on. */
 const REACH = { assistantstate: ok({ on: true }), groupkeystate: ok({ on: true, held: true }) };
 
-export async function open(path, { plane = {}, me = MEMBER, reachable = false } = {}) {
-  const p = await boot({ screens: SCREENS, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...plane } });
+/* A stand-in for the `document` screen (screens-inquiry), so a reference of that kind is drawn as the link it is on the whole
+   page; it draws nothing of its own. */
+export const DOCUMENT_STUB = Object.freeze({ id: "document", reads: () => ({}), render: () => "", acts: Object.freeze([]), words: Object.freeze([]) });
+
+export async function open(path, { plane = {}, me = MEMBER, reachable = false, screens = SCREENS } = {}) {
+  const p = await boot({ screens, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...plane } });
   await p.settle();
   return p;
 }
@@ -51,3 +56,8 @@ export async function press(p, op, { reason, sel = "" } = {}) {
 /* Every word a page drew is a word: no raw key (`screen.…`, `act.…`, `mark.…`) is left in the text (interface-shell R5). */
 export const rawKeys = (p) => (text(p).match(/\b(screen|act|mark|shell|state|refusal|photo|draft|ai)\.[a-z][\w.-]*\b/g) || [])
   .filter((k) => !/^(screen|act)\.[a-z-]+$/.test(k) || k.split(".").length > 2);
+
+/* R26: a sentence is asserted by its key, never by its English: `says(p, key, vars)` is true when the page's text holds
+   `word(key, vars)`; `saysIn(el, key, vars)` the same for one element (an act's refusal slot, a row). */
+export const says = (p, key, vars) => text(p).includes(word(key, vars));
+export const saysIn = (el, key, vars) => el.textContent.includes(word(key, vars));

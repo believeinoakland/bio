@@ -2,7 +2,8 @@
    member's recovery codes (`recover`, the handle, the code and the new password in the body only, the password typed
    twice alike), an administrator's reset link, and, when no administrator can get in, the hosting account's way in
    members' words (`FORGOT_HELP`, instance-setup R47), drawn for every visitor; the founder's `HOSTING_CONTROL` block
-   is setup's only (R6). Every refusal of a code is one sentence.
+   is setup's only (R6). Every refusal of a code is one sentence. R16: the handle's help is `forgot.handle.help`, never
+   a founder hint.
    Self-contained (interface-shell R21). */
 
 export const forgot = {
@@ -18,7 +19,7 @@ export const forgot = {
       // R12: no count at zero: the last code spent has its own sentence
       out.push(`<p class="cs-row" data-state="done">${ui.done.remaining > 0 ? W(S + "done", { remaining: String(ui.done.remaining) }) : W(S + "done.last")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
     } else {
-      out.push(cs.sec(S + "codes", cs.field("fg-handle", "screen.front.handle", { help: S + "handle.help", autocomplete: "username" })
+      out.push(cs.sec(S + "codes", cs.field("fg-handle", "screen.front.handle", { help: "forgot.handle.help", autocomplete: "username" })
         + cs.field("fg-code", S + "code", { help: S + "code.help", autocomplete: "off" })
         + cs.field("fg-pw", "screen.entry.newpassword", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("fg-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })

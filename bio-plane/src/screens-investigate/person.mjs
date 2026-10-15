@@ -4,9 +4,8 @@
  * fact is removed for good only by `personexpunge`, behind its consequence statement (op-grades R21), with the
  * Irreversible weight, and at the phone width it is read and not done (interface-shell R11). */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
-import { graphRows, GRAPH_SHARED } from "./graphwords.mjs";
+import { GRAPH_SHARED } from "./graphwords.mjs";
 
 const S = "screen.person.";
 
@@ -168,75 +167,23 @@ const acts = [
     } },
 ];
 
-export const PERSON_WORDS = [
-  ...graphRows(S),
-  row(S + "connections", "Connections"),
-  row(S + "connections.holds", "Everything the record joins this person to, two steps out: positions, what they took part in, who they are named with, and records claimed to be the same person. Each line is cited and graded."),
-  row(S + "source", "the source passage"),
-  row(S + "page", "page {page}"),
-  row(S + "nocitation", "the record holds no passage for this"),
-  row(S + "span", "{from}–{to}"),
-  row(S + "since", "since {from}"),
-  row(S + "positions", "Positions"),
-  row(S + "positions.holds", "The posts and offices the record holds for this person, each dated and cited, with how easily the link can be checked."),
-  row(S + "facts", "Career, credentials, memberships, interests and statements"),
-  row(S + "kind.name", "Name"),
-  row(S + "kind.birth", "Born"),
-  row(S + "kind.death", "Died"),
-  row(S + "kind.locality", "Where they live or work"),
-  row(S + "kind.address", "Address"),
-  row(S + "kind.contact", "Contact"),
-  row(S + "kind.other", "Fact"),
-  row(S + "fact.kind", "What the passage says"),
-  row(S + "fact.value", "The fact, as the passage states it"),
-  row(S + "fact.from", "True from (optional)"),
-  row(S + "fact.sha", "The document it is read from"),
-  row(S + "fact.sha.help", "The document's fingerprint, as its page shows it. The fact cites the passage."),
-  row(S + "fact.page", "Page (optional)"),
-  row(S + "fact.empty", "Give the fact as the passage states it and the document it comes from."),
-  row(S + "follow.address", "The register's address"),
-  row(S + "follow.help", "A public register (licences, filings) that lists this person. You are told when an entry changes."),
-  row(S + "follow.empty", "Give the register's public address, starting https://."),
-  row(S + "same", "Same person?"),
-  row(S + "same.holds", "Records claimed to be this person stay linked, never merged; each claim is graded and anyone can see its reason or withdraw it with theirs."),
-  row(S + "same.claimed", "claimed the same person; the records stay linked, never merged"),
-  row(S + "candidates", "Records that might be the same person. These are not claims: a member decides."),
-  row(S + "field.names", "names"),
-  row(S + "field.identifiers", "identifiers"),
-  row(S + "field.posts", "posts"),
-  row(S + "field.life", "birth and death"),
-  row(S + "state.agrees", "agree"),
-  row(S + "state.differs", "differ"),
-  row(S + "state.absent", "not recorded"),
-  row(S + "claim.other", "The other record"),
-  row(S + "claim.kind", "You say"),
-  row(S + "claim.same_as", "It is the same person"),
-  row(S + "claim.not_same_as", "It is not the same person"),
-  row(S + "claim.unsure", "You are unsure"),
-  row(S + "claim.basis", "Because"),
-  row(S + "basis.testimony", "I know it myself"),
-  row(S + "basis.name", "Both records carry the name"),
-  row(S + "basis.corroborated_name", "The name, and the same post on the dates cited"),
-  row(S + "basis.identifier", "The same identifier, on the dates cited"),
-  row(S + "claim.sha.a", "The document for this person (unless you know it yourself)"),
-  row(S + "claim.sha.b", "The document for the other record"),
-  row(S + "claim.note", "Why, in your words"),
-  row(S + "claim.empty", "Name the other record and say why."),
-  row(S + "claim.evidence", "This basis cites a document for each record."),
-  row(S + "claim.by", "by {by}, {date}"),
-  row(S + "expunge.head", "Correction"),
-  row(S + "expunge.statement", "This removes the value for good: from the person's page, from every question that cited it and from every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law requires, {date}, by {member}\". Published cases change only through the docket. Confirm with a reason naming the law or order that requires it: \"Remove it for good, with this reason\".", true),
-  row(S + "expunge.fact", "The value to remove"),
-  row(S + "expunge.ground", "What requires it"),
-  row(S + "ground.court_order", "A court order"),
-  row(S + "ground.unlawful", "Holding it is unlawful"),
-  row(S + "ground.confidential", "The law makes it confidential"),
-  row(S + "ground.lawful_demand", "A lawful demand"),
-  row(S + "expunge.order", "The order"),
-  row(S + "expunge.order.help", "For a court order: which order, as captured."),
-  row(S + "expunge.reason", "The law or order that requires it", true),
-  row(S + "expunge.empty", "Choose the value and name the law or order that requires its removal."),
-  row(S + "expunge.noorder", "Name the court order."),
+const PERSON_KEYS = [
+  "screen.person.g.cited", "screen.person.g.declared", "screen.person.g.hunch", "screen.person.g.nosource", "screen.person.connections",
+  "screen.person.connections.holds", "screen.person.source", "screen.person.page", "screen.person.nocitation", "screen.person.span",
+  "screen.person.since", "screen.person.positions", "screen.person.positions.holds", "screen.person.facts", "screen.person.kind.name",
+  "screen.person.kind.birth", "screen.person.kind.death", "screen.person.kind.locality", "screen.person.kind.address", "screen.person.kind.contact",
+  "screen.person.kind.other", "screen.person.fact.kind", "screen.person.fact.value", "screen.person.fact.from", "screen.person.fact.sha",
+  "screen.person.fact.sha.help", "screen.person.fact.page", "screen.person.fact.empty", "screen.person.follow.address", "screen.person.follow.help",
+  "screen.person.follow.empty", "screen.person.same", "screen.person.same.holds", "screen.person.same.claimed", "screen.person.candidates",
+  "screen.person.field.names", "screen.person.field.identifiers", "screen.person.field.posts", "screen.person.field.life",
+  "screen.person.state.agrees", "screen.person.state.differs", "screen.person.state.absent", "screen.person.claim.other", "screen.person.claim.kind",
+  "screen.person.claim.same_as", "screen.person.claim.not_same_as", "screen.person.claim.unsure", "screen.person.claim.basis",
+  "screen.person.basis.testimony", "screen.person.basis.name", "screen.person.basis.corroborated_name", "screen.person.basis.identifier",
+  "screen.person.claim.sha.a", "screen.person.claim.sha.b", "screen.person.claim.note", "screen.person.claim.empty", "screen.person.claim.evidence",
+  "screen.person.claim.by", "screen.person.expunge.head", "screen.person.expunge.statement", "screen.person.expunge.fact",
+  "screen.person.expunge.ground", "screen.person.ground.court_order", "screen.person.ground.unlawful", "screen.person.ground.confidential",
+  "screen.person.ground.lawful_demand", "screen.person.expunge.order", "screen.person.expunge.order.help", "screen.person.expunge.reason",
+  "screen.person.expunge.empty", "screen.person.expunge.noorder",
 ];
 
 const words = ["screen.person.name", "screen.person.purpose",
@@ -246,6 +193,6 @@ const words = ["screen.person.name", "screen.person.purpose",
   "mark.scale.subject.name", "mark.scale.subject.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
   ...GRAPH_SHARED,
-  "state.empty", "state.loading", "state.failed", ...PERSON_WORDS];
+  "state.empty", "state.loading", "state.failed", ...PERSON_KEYS];
 
 export const PERSON_SCREEN = Object.freeze({ id: "person", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, render, acts, words, parts: PARTS });

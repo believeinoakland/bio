@@ -1,6 +1,6 @@
 # BOB to plane (T49)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ K3372: not complete yet. setup-words has merged (word, hasWord): merge the tranc
 ## B3 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B4 · CHANGE
+
+K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: DEC-267: AGENT_WORKER_UNBOUND now has its own word: read `refusal.AGENT_WORKER_UNBOUND` in `src/plane/ask.mjs` (both paths) instead of the interim `ai.refused.notdeployed` (K3368). The rest of your J2 report stands (DEC-265: the old screen list's titles stay unkeyed). Re-run your tests and COMPLETE again.
