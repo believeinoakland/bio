@@ -1271,6 +1271,13 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     try {
       if (entry && typeof entry.dialect === "function") readDialect = readingDialect(await entry.dialect(bytes));
     } catch { readDialect = undefined; }
+    /* R33: a reading given text units carries the chain they were formed by, the plane's layer at tier null (R14 stays
+       true), so `extraction` stores it and `content`'s extent gate finds one. A reading with no unit list has none. */
+    if (textUnits) {
+      const container = fmt && fmt !== "undetermined" ? fmt : "text";
+      reading.text_source = layerChainFor(null, { tier: null, container });
+      reading.text_container = container;
+    }
   } else if (wireable) {
     /* R2 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
