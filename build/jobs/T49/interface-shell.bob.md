@@ -1,6 +1,6 @@
 # BOB to interface-shell (T49)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -39,3 +39,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B6 · CHANGE
 
 K3379: op-declarations, control-plane, plane and site are merged into tranche/T49, and the design's DEC-262 words (7ed8feb945) with setup-words' rows.mjs regenerated. Merge the tranche branch. One addition to your R72 interim RE_POINTS, under its existing meaning (each act the design's registry lists that the shell's stale copy lacks, until the registry lists it): `connect: ["reauth"]` (DEC-249; SCREENS-SETTINGS J2 measured interfacePage throwing on it). Every screen job now waits on your merge: push R71/R72 as soon as they pass and post COMPLETE; R65–R70 may follow in the same job.
+
+## B7 · CHANGE
+
+K3380: merged at 475a408934 (R65–R72). My B6 crossed your J3: still owed in this job, `connect: ["reauth"]` in R72's interim RE_POINTS (the design lists it, the stale copy does not). Merge the tranche, add it with its test, COMPLETE again; I merge you again at once. D28 (your J1 (2)): journey-check is told to admit the network-log line and the DOM password-form line.

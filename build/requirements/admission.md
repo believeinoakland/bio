@@ -54,7 +54,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 
-- **R28** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 22 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 35 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+- **R28** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 22 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 35 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
 
 ## Private
 
@@ -96,7 +96,7 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
   - The session window's counts hold a digest of the session token (never the token), the bucket and the count, nothing else. They are dropped once both buckets have passed. A count that cannot be read or written admits the request (it fails open), named in the log by correlation id only.
   - The source is still made and stamped wherever R21's stamps need it.
   - A refusal is counted in R22's tally as kind `rate`, with `country` `null` (a credential naming a member, DEC-166 (2)).
-  - The limit is confirmed at this job's START against M-T49-4, so that at least 400 page loads in 10 minutes fit within it. If M-T49-4 finds more than 7 public requests per page load, BOB re-sets `limit` (K1881) before the job's work. *(not yet met: T49)*
+  - The limit is confirmed at this job's START against M-T49-4, so that at least 400 page loads in 10 minutes fit within it. If M-T49-4 finds more than 7 public requests per page load, BOB re-sets `limit` (K1881) before the job's work.
   - Tests:
     - 400 signed-in page loads in 10 minutes, under one session and from one source, are admitted (each load makes the public reads M-T49-4 measures, at least `bootstrap` and `groupidentity`), and that source's window is not counted by them.
     - The session's request past `limit` is refused 429 with `SESSION_WINDOW_STATED`.

@@ -18,8 +18,8 @@ test("R21 (store side): one window per source over the requests to public ops â€
   for (const env of [{ KNOCK_FINGERPRINT_KEY: "bound-key-0123" }, {}]) {
     const w = storeWorld({ env });
     /* declared once, admission's, with record-core R21's classes; the same instance per storage */
-    assert.deepEqual(w.declared, [{ module: "admission", entries: [{ name: W.DOOR_WINDOW_TABLE, purge: "exempt", expunge: "none",
-      export: "never", sight: "group", derive: "stored", version_chain: false }] }]);
+    assert.deepEqual(w.declared, [{ module: "admission", entries: [W.DOOR_WINDOW_TABLE, W.SESSION_WINDOW_TABLE].map((name) => ({
+      name, purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored", version_chain: false })) }]);
     assert.equal(W.admissionOf(w.ctx, { record: w.record }), w.a);
     assert.equal(w.declared.length, 1);
     /* the map serves exactly the one store-internal route, which no spec declares (op-declarations R6) */

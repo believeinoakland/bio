@@ -9,10 +9,11 @@
    notices of one kind are one item with their count, opening the list of their documents (R22, the `sourceItems` part).
    Every function is self-contained (interface-shell R21 (1)). */
 import { sourceItems } from "./source-items.mjs";
+import { itemWords } from "./item-words.mjs";
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems },
+  parts: { sourceItems, itemWords },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind).
   reads: function (view) {
@@ -37,13 +38,6 @@ export const queue = Object.freeze({
       versionkeep: "keepversion", reminderanswer: "reminderanswer", promote: "promote", projectkeyset: "projectkeyset",
       exploreapprove: "exploreapprove", updatelater: "updatelater",
     };
-    // The queue's words keyed in WORD_ROWS (`queue.<kind>.summary` / `.detail`); an item of any other kind draws its own.
-    const KEYED = ["question-find", "step-later-found", "step-date-due", "step-reminder", "step-cost-shared", "step-cost-message",
-      "milestone-overdue", "milestone-reminder", "project-quiet", "review-comment-left-out", "action-clock-overdue.ours",
-      "action-clock-overdue.theirs", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again",
-      "litigation-hold.docket"];
-    // The screens T46 builds, by the kind of subject an item names (R3's "Open").
-    const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
     // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
     // a terminal or signed act's; these are not), each read by the act's `send` through `cs.value`.
@@ -76,17 +70,10 @@ export const queue = Object.freeze({
       a.sort(function (x, y) { return (Number(x.depth) || 0) - (Number(y.depth) || 0); });
       return a[0] || null;
     };
-    const keyOf = function (it) {
-      if (typeof it.word === "string") {
-        const m = /^queue\.(.+)\.summary$/.exec(it.word);
-        if (m && KEYED.indexOf(m[1]) >= 0) return m[1];
-      }
-      return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
-    };
     const today = new Date(cs.now()).toISOString().slice(0, 10);
     const dueOf = function (iso) {
       const day = String(iso).slice(0, 10);
-      if (day < today) return cs.due(String(iso), "overdue");
+      if (day < today) return cs.due(String(iso), "");
       const soon = new Date(cs.now() + 2 * 86400000).toISOString().slice(0, 10);
       return cs.due(String(iso), day === today || day <= soon ? "near" : "");
     };
@@ -94,11 +81,15 @@ export const queue = Object.freeze({
       const h = it.hint && typeof it.hint === "object" ? it.hint : null;
       if (!h) return "";
       const rate = typeof h.false_alarm_rate === "number" ? h.false_alarm_rate : (typeof h.rate === "number" ? h.rate : null);
+      // The false-alarm sentence names the rate, how many of the hints looked into were false and why most were (the word's own
+      // placeholders); a rate the hint gives without those is not drawn, and no rate recorded says so.
+      const known = rate !== null && h.looked !== undefined && h.looked !== null && h.false !== undefined && h.false !== null && typeof h.reason === "string" && h.reason;
+      const trust = rate === null ? cs.w("screen.queue.hint.rate.none")
+        : known ? cs.w("screen.queue.hint.rate", { rate: String(Math.round(rate <= 1 ? rate * 100 : rate)), false: String(h.false), looked: String(h.looked), reason: h.reason }) : "";
       const dl = '<dl class="mk-dl">'
         + (h.matched ? "<dt>" + cs.w("screen.queue.hint.matched") + "</dt><dd>" + cs.esc(h.matched) + "</dd>" : "")
         + (h.how ? "<dt>" + cs.w("screen.queue.hint.method") + "</dt><dd>" + cs.esc(h.how) + "</dd>" : "")
-        + "<dt>" + cs.w("screen.queue.hint.trust") + "</dt><dd>"
-        + (rate === null ? cs.w("screen.queue.hint.rate.none") : cs.w("screen.queue.hint.rate", { rate: String(Math.round(rate <= 1 ? rate * 100 : rate)) })) + "</dd>"
+        + (trust ? "<dt>" + cs.w("screen.queue.hint.trust") + "</dt><dd>" + trust + "</dd>" : "")
         + "<dt>" + cs.w("screen.queue.hint.not") + "</dt><dd>" + (h.not ? cs.esc(h.not) : cs.w("screen.queue.hint.not.text")) + "</dd></dl>";
       return '<details class="mk-hintd"><summary>' + cs.hint() + " " + cs.w("screen.queue.hint.how") + "</summary>" + dl + "</details>";
     };
@@ -129,10 +120,8 @@ export const queue = Object.freeze({
         project: d.project ? String(d.project) : (Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : (cas ? String(cas.id) : "")),
       };
       const drawn = ops.map(function (op) { return actOf(op, data); }).join("");
-      const screen = it.subject && OPENS[it.subject.kind];
-      const open = other && screen && it.subject.id
-        ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/' + screen + "/" + encodeURIComponent(String(it.subject.id)) + '">' + cs.w("screen.queue.open") + "</a>"
-        : "";
+      const to = iw.open(it);
+      const open = other && to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.queue.open") + "</a>" : "";
       return drawn + open;
     };
     // R13 (DEC-212; `action-producers` R25): the unsent request: "Pick up where you left off" opens the records request at
@@ -149,6 +138,7 @@ export const queue = Object.freeze({
       return pick + snooze + drop;
     };
     const src = view.parts.sourceItems();
+    const iw = view.parts.itemWords();
     const itemRow = function (it) {
       // R22: one kind's source notices as one item with its count; each document with its own options.
       if (it.sources) {
@@ -156,12 +146,10 @@ export const queue = Object.freeze({
         return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "noticed"), g.list + '<span class="meta">' + g.detail + "</span>", "", "");
       }
       const cas = caseOf(it);
-      const k = keyOf(it);
-      const fills = it.fills && typeof it.fills === "object" ? it.fills : {};
-      const summary = k ? cs.w("queue." + k + ".summary", fills) : cs.esc(it.summary || "");
-      const detail = k ? cs.w("queue." + k + ".detail", fills) : (it.detail ? cs.esc(it.detail) : "");
+      // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
+      const wd = iw.words(cs, it);
       return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"),
-        summary + (detail ? '<span class="meta">' + detail + "</span>" : "") + hintOf(it)
+        wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "") + hintOf(it)
           + '<span class="mk-acts">' + (it.kind === "request-unsent" ? unsentActs(it, cas) : actsOf(it, cas)) + "</span>",
         it.due ? dueOf(it.due) : "", "");
     };
@@ -274,11 +262,13 @@ export const queue = Object.freeze({
       send: function (view, el, cs) {
         const q = String(cs.value(el.dataset.f + "-question") || "").trim();
         if (!q) return { refuse: "screen.queue.fieldfirst" };
+        // `cs.w` answers HTML; the session log is text, so the entities it made are undone.
+        const plain = function (t) { return String(t).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
         const iso = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
         const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
         const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + "\ncurrent_state: open\ncreated: \"" + iso
           + "\"\nlast_updated: \"" + iso + "\"\n---\n\n## Session Log\n\n### Session " + iso
-          + " | Formation | interactive\nTrigger: opened from a hint in the queue (" + String(el.dataset.item).replace(/[\n\r]/g, " ") + ")\nChanges: created.\n";
+          + " | Formation | interactive\nTrigger: " + plain(cs.w("file.trigger.queue", { item: String(el.dataset.item).replace(/[\n\r]/g, " ") })) + "\nChanges: created.\n";
         return {
           query: el.dataset.project ? { project: el.dataset.project } : {},
           body: {
