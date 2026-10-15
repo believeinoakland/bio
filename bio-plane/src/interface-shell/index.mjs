@@ -1,18 +1,15 @@
 /* interface-shell (T46-54; N897 (1); DEC-87, -98, -99, -122, -138, -139, -154, -155, -159–-163, -175–-177, -179, -181;
    N672, N673; K2893): the member interface's page and frame. `interfacePage(screens)` composes one HTML document from the
    shell's browser program (`browser.mjs`) and each registered screen's self-contained functions (draft-T46-interface
-   §1.3), with the data they read: the words (R5), the act gate's tables (R12), the grades (R11) and the paths (R8). It
+   §1.3), with the data they read: the words (R5, R70: keys only; the sentences are `setup-words`'), the act gate's tables (R12), the grades (R11) and the paths (R8). It
    checks the screen contract (R21) before it composes anything, so a broken screen is never served. Pure: it reads no
    table and writes nothing; every read and act is an op the plane serves, from the browser. */
 import { ASSET_FILES } from "../interface-assets/index.mjs";
-import { WORD_ROWS } from "../setup-words/index.mjs";
+import { WORD_ROWS, word } from "../setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { shellProgram } from "./browser.mjs";
-import { SHELL_WORDS } from "./words.mjs";
-
-export { SHELL_WORDS };
 
 /* R32 (N999; K3052; replaces setup-page R31): the session record's key in the browser's `localStorage`, this module's:
    `{t, e, d, w}`, `t` the token `login` answered, `e` its expiry in milliseconds (0 when none), `d` the device kind
@@ -82,9 +79,13 @@ export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", 
 export const ADMIN_SCREENS = Object.freeze(["updates"]);
 
 /* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
-   the record follows opens `person`, a proceeding `proceeding`, a standard `standard`). */
+   the record follows opens `person`, a proceeding `proceeding`, a standard `standard`; R66: a project's plan, timeline,
+   money, calculation, case editor, review copy, ceremony and docket open their screens), each card its
+   `shell.card.<kind>` word. */
 export const REF_SCREENS = Object.freeze({ document: "document", passage: "document", question: "question", project: "project",
-  member: "members", capture: "open-file", knock: "inbox", person: "person", proceeding: "proceeding", standard: "standard" });
+  member: "members", capture: "open-file", knock: "inbox", person: "person", proceeding: "proceeding", standard: "standard",
+  plan: "plan", timeline: "timeline", money: "money", calculation: "calculation", "case-editor": "case-editor",
+  "review-copy": "review-copy", ceremony: "ceremony", docket: "docket" });
 
 /* R30, R45: the frames of `registry.json` other than `working` that the shell draws: `public` and `published` without a
    session, `setup` with or without one; the dock's panel is `dock`. A screen not named here is drawn in the working
@@ -104,11 +105,31 @@ export const ADDRESSES = Object.freeze({ review: "review-outside" });
    until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2);
    R55: `planask` on `plan` (`screens-action` R13), `stepsource` and `stepsourcewithdraw` on `explore` (`screens-investigate`
    R17). */
+/* R72 (K3373): until the screen registry is re-taken from the design's `registry.json` (N1122, T50), the acts that file lists
+   at fa3c8b7e8e and the generated registry (4664e8efd4) lacks, each admitted on its screen; R71: `founderhandleset` on
+   `setup`. Each entry goes when the registry lists it. */
 export const RE_POINTS = Object.freeze({
+  connect: Object.freeze(["reauth"]),
+  group: Object.freeze(["declaredstakeset", "writinghelp"]),
+  projects: Object.freeze(["themeread", "projectjoin"]),
+  theme: Object.freeze(["themeread", "themedeclare", "themeplace", "themewithdraw"]),
+  queue: Object.freeze(["projectjoin", "release", "filingapprove"]),
+  finder: Object.freeze(["themeread"]),
+  document: Object.freeze(["adoptversion", "keepversion", "connectionchoose", "explore", "themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"]),
+  project: Object.freeze(["projectvisibilityset", "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue", "writinghelp"]),
+  projectai: Object.freeze(["projectjoin"]),
+  question: Object.freeze(["inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "themeplace", "airunopen", "airunclose"]),
+  person: Object.freeze(["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]),
+  timeline: Object.freeze(["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"]),
+  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
+  plan: Object.freeze(["planask"]),
+  "start-send": Object.freeze(["writinghelp"]),
+  action: Object.freeze(["actionrisktier", "actionlaws", "actionlawspropose"]),
+  "review-outside": Object.freeze(["statementack"]),
+  home: Object.freeze(["projectjoin"]),
   ceremony: Object.freeze(["ratify"]),
   front: Object.freeze(["unlock"]),
-  plan: Object.freeze(["planask"]),
-  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
+  setup: Object.freeze(["founderhandleset"]),
 });
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
 
@@ -189,22 +210,21 @@ export function toSource(v) {
   return v === undefined ? "undefined" : JSON.stringify(v);
 }
 
-/* R5: every word the page may draw, `[key, en]`: `WORD_ROWS`, the shell's own and each screen's own rows. A screen's own
-   row under a key `WORD_ROWS` holds wins (DEC-149's conformed form, R5). */
+/* R5, R70: every word the page may draw, `[key, en]`: `WORD_ROWS` (the shell's own keys are its rows) and each screen's
+   own rows. A screen's own row under a key `WORD_ROWS` holds wins (DEC-149's conformed form, R5). */
 export function wordsOf(screens) {
   const m = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
-  for (const [k, en] of SHELL_WORDS) m.set(k, en);
   for (const s of screens) for (const x of s.words || []) if (Array.isArray(x)) m.set(x[0], x[1]);
   return [...m.entries()];
 }
 
-/* The words the page carries: the families the shell and its kit draw (R5–R7, R10, R11, R13, R14, R16, R32–R36, R40),
+/* The words the page carries (R70: the keys of `setup-words`' list, read from it, never English held here): the families the shell and its kit draw (R5–R7, R10, R11, R13, R14, R16, R32–R36, R40),
    each act's label and explanation, each registered screen's, and every key a screen (or the guide) names. */
 const FAMILIES = ["shell.", "rail.", "tab.", "state.", "weight.", "mark.", "level.", "date.", "refusal.", "ai.refused.", "session.",
-  "signing.ceremony.", "instance.test.notice"];
+  "signing.ceremony.", "instance.test."];
 function pageWords(screens, ops) {
   const named = new Set(screens.flatMap((s) => (s.words || []).map((x) => (Array.isArray(x) ? x[0] : x))));
-  const ids = screens.map((s) => s.id).filter(Boolean).concat(Object.keys(PATHS), ["unavailable"]);
+  const ids = screens.map((s) => s.id).filter(Boolean).concat(Object.keys(PATHS), ["unavailable", "more"]);
   const keep = (k) => named.has(k) || FAMILIES.some((f) => k.startsWith(f))
     || ids.some((id) => k.startsWith("screen." + id + ".")) || [...ops].some((op) => k.startsWith("act." + op + "."));
   return wordsOf(screens).filter(([k]) => keep(k));
@@ -256,26 +276,14 @@ function dataOf(screens, guide) {
   };
 }
 
-/* The shell's own styles (R56: only where no design class fits, each listed in R56 with an ASK to UX-DESIGN; never a
-   hand copy of a design rule, which `shell.css` carries): the frame's fixed height, so its main column scrolls and the
-   page never does (R57); the member menu; an act's wrapper and the slot beside it (R13); the row name's line (R27); the
-   test band (R53, R58); the lock and the dialogs over the screen (R33, R34, R41); the image and the areas over it (R49);
-   the avatar drawn as a button; and motion stopped under reduced motion (R22). No rule gives `cursor: help`, nor a
-   pointer to an element that only explains itself (R52): `cs.areas` keeps `crosshair`, a control. */
+/* The shell's own styles (R56, R65: only these two, never a hand copy of a design rule, which `shell.css` carries): the
+   page's height settings, so the frame's main column scrolls and the page never does (R57; the frame's own fixed height is
+   the design's `.cs-frame`), and motion stopped under reduced motion (R22). Every element the shell draws is a design
+   class (R65), so nothing else is carried; no rule gives `cursor: help`, nor a pointer to an element that only explains
+   itself (R52). */
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
-.cs-mast{min-width:0}.cs-mast .grp{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit;text-decoration:none}
-button.mk-avatar{border:0;padding:0;flex:none}
-.cs-menuwrap{position:relative}.cs-menu{position:absolute;right:0;top:100%;z-index:40;min-width:220px;padding:var(--s-3);gap:var(--s-2)}
-.cs-menu[hidden]{display:none}.cs-actwrap{display:inline-grid;gap:var(--s-2);justify-items:start}.cs-slot:empty{display:none}
-.cs-rowname{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2)}
-.cs-testband{flex:none;padding:var(--s-2) var(--s-4);border-bottom:var(--hair);border-top:3px solid var(--c-attn,var(--c-ink));background:var(--c-ground-2);font-size:var(--t-sm)}
-.cs-overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:var(--s-4);background:color-mix(in srgb,var(--c-ground) 82%,transparent)}
-.cs-overlay>.cs-dialog{max-width:440px;width:100%;display:grid;gap:var(--s-3)}
-.cs-image{max-width:100%;height:auto;display:block}.cs-areas-box{position:relative;display:inline-block;max-width:100%;touch-action:none;cursor:crosshair}
-.cs-area{position:absolute;border:2px solid var(--c-accent);background:color-mix(in srgb,var(--c-accent) 18%,transparent);padding:0;min-width:8px;min-height:8px}
-.cs-area:focus-visible{outline:3px solid var(--c-ink);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
 /* R56: the script-hook classes, each with what reads it; a class here needs no style. */
@@ -284,6 +292,7 @@ export const HOOK_CLASSES = Object.freeze({
   "cs-rows": "the kit's table of rows (R19), read by the screen modules' tests",
   "cs-r": "a row of `cs.rows`, read by the screen modules' tests",
   "cs-panel": "a row's panel, read by the shell's ring (R31) and `cs.fieldOf`, and by the screen modules' tests",
+  "mk-lvlbtn": "the explanation-level control (R65), read by the design's script and journey-check (`mock-shell.js`:47)",
 });
 
 /* R56: every class a served stylesheet defines: `civicsmith.css` (whose own elements' classes count with it), `shell.css`
@@ -330,6 +339,9 @@ export function checkClasses(screens, guide, program) {
   return true;
 }
 
+/* the page's own escaping of a served word */
+const escape = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 /**
  * R1: the page. One document, `<html lang>` `en` until the member's language is read; `interface-assets`' `civicsmith.css`
  * and then its `shell.css` (R56), both before the shell's own `<style>`; icons referenced from its `icons.svg`; one
@@ -347,10 +359,10 @@ export function interfacePage(screens = [], options = {}) {
   const D = dataOf(screens, guide);
   const script = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`
     .replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
-  /* R58: the band as served, in the English of its word until the member's words are read (R5) */
-  const notice = (WORD_ROWS.find((r) => r[0] === "instance.test.notice") || [])[1] || "";
+  /* R58, R67: the band as served: the design's `.cs-band[data-band="test"]`, the machine icon, `instance.test.band` and
+     `instance.test.notice`, in the English of their words until the member's words are read (R5) */
   const band = options && options.testInstance === true
-    ? `<div class="cs-testband" id="cs-testband" role="note">${notice.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))}</div>\n` : "";
+    ? `<div class="cs-band" data-band="test" id="cs-testband" role="note"><svg class="i" aria-hidden="true"><use href="${ICONS}#i-machine"/></svg><b>${escape(word("instance.test.band"))}</b> <span>${escape(word("instance.test.notice"))}</span></div>\n` : "";
   return `<!doctype html>
 <html lang="en">
 <head>
