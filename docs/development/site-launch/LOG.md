@@ -34,3 +34,6 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 
 - Bob updated the token. Verified read access: the zone `civicsmith.org` has no DNS records yet; Email Routing is `unconfigured`.
 - Attaching the custom domains (`civicsmith.org`, `www.civicsmith.org` to Worker `civicsmith-site`) was refused by the session's permission guard as a domain/DNS change. Not worked around. Waiting for Bob to allow it (see the question put to him).
+
+- Bob allowed Cloudflare domain/DNS changes in this session. Custom domains `civicsmith.org` and `www.civicsmith.org` attached to Worker `civicsmith-site`; over HTTPS (valid certificate) `/`, `/start`, `/groups`, `/favicon.ico` answer 200 on both, still with `X-Robots-Tag: noindex` (address unset in the product).
+- Email Routing enabled on the zone: three MX records (route1–3.mx.cloudflare.net), SPF `v=spf1 include:_spf.mx.cloudflare.net ~all`, a DKIM record. Destination address added to the account (Cloudflare sent its confirmation link to it; Bob to click). Rule `stewards@civicsmith.org` → that destination: see the next entry for whether it could be created before verification.
