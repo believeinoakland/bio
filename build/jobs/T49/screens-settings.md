@@ -54,6 +54,12 @@ Merged tranche/T49 (DEC-263 to DEC-267; 570 keys now in this module's reads). (1
 
 Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 35, module lines 2509
 
+## Completion, fifth round (B8)
+
+Merged tranche/T49 (design @ 9534b570e0). `contract.test.mjs` R39 no longer iterates `reads.retired` (the design's list gives none): it guards it (`?? []`) and keeps `screen.updates.skip.noreason` asserted absent by name; `unkeyed` guarded the same way. `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fail 0. No source change.
+
+Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 37, module lines 2509
+
 ## J1 · QUESTION
 
 QUESTION (my best reading is carried out meanwhile). Seven of the 551 keys DEC-257 reworded now hold a `{fill}` that nothing the plane answers today can fill. R37 forbids drawing a sentence with an empty or default fill, and R39 forbids inline English, so I cannot draw them as the design words them.
