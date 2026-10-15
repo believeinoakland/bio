@@ -1025,6 +1025,11 @@ SETUP279 = {
   'screen.setup.finished.what': 'Anything you left is waiting in Settings. Next, invite your first members.',
 }
 REWRITE.update(SETUP279)
+# DEC-279 (the standing tail, DEC-276's owed note): two acts' general explanations covered only one of what they do
+REWRITE.update({
+  'act.queuemute.does': "Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",
+  'act.promote.does': 'Turns what you are looking at into something the group will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.',
+})
 w279('screen.setup.after', 'Civicsmith is yours now. Each part below starts with a safe choice: open the ones you want to set today, and leave the rest for later.', False, 'under the title once claimed (the lede shows only before)')
 w279('screen.setup.coming', 'Then, when you like, seven more parts. Each starts with a safe choice, and none has to be done today.', False, 'before the claim, above the parts to come')
 w279('screen.setup.state.needed', 'Needed first', False, "a part's state")

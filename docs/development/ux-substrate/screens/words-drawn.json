@@ -4908,6 +4908,8 @@
   "screen.setup.security.what": "If your organization already uses its own file scanner, a tool that makes safe copies of files, or a log service, you can connect it here or later in Settings › Security.",
   "screen.setup.security.add": "Connect a tool",
   "screen.setup.finished": "You're ready",
-  "screen.setup.finished.what": "Anything you left is waiting in Settings. Next, invite your first members."
+  "screen.setup.finished.what": "Anything you left is waiting in Settings. Next, invite your first members.",
+  "act.queuemute.does": "Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",
+  "act.promote.does": "Turns what you are looking at into something the group will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it."
  }
 }

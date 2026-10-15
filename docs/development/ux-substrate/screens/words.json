@@ -79512,9 +79512,10 @@
   },
   {
    "key": "act.queuemute.does",
-   "en": "Stops this kind of item, or a project's items, reaching your queue. What you muted is listed under Muted at the foot of your queue, where you can turn each back on.",
+   "en": "Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",
    "protected": false,
-   "source": "mock-acts.js ACT_HELP"
+   "source": "mock-acts.js ACT_HELP",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.adoptversion.does",
@@ -79536,9 +79537,10 @@
   },
   {
    "key": "act.promote.does",
-   "en": "Opens a question the group will answer with the record, from this hint, chain or suggestion. The source is kept with it.",
+   "en": "Turns what you are looking at into something the group will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.",
    "protected": false,
-   "source": "mock-acts.js ACT_HELP"
+   "source": "mock-acts.js ACT_HELP",
+   "note": "DEC-259: reworded"
   },
   {
    "key": "act.search.does",
