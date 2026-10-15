@@ -12,7 +12,7 @@
    `report`, the ask's `answer` (agent-worker R54, R89) after `done_reading`, the drafts' `draft`, the transcriber's
    its own tool. */
 
-import { NOTICE_PASSAGE } from "./city.mjs";
+import { NOTICE_PASSAGE, NOTICE_ADDRESS } from "./city.mjs";
 
 /* The fake model knows the walk's own scenario (city.mjs): the notice the walk captures, and what it says. */
 export const NOTICE_ID = "2026-118";
@@ -145,6 +145,7 @@ export function* conversation({ system = "", prompt = "", tools = [], max_turns 
   const facts = results.filter((r) => r && typeof r === "object" && !Array.isArray(r)).pop() || {};
   const input = final === "answer" && isAnswersContract(schema) ? plainAnswer(schema, prompt, read)
     : final === "judge_compose" && facts.target ? { candidates: [basisVersion(facts)] }
+    : final === "report" ? levelReport(system, schema)
     : fill(schema, read);
   yield { name: final, input };
   return "Answered.";
@@ -168,12 +169,35 @@ export function plainAnswer(schema, prompt, read) {
   return Object.fromEntries(Object.keys(schema.properties).map((k) => [k, k in values ? values[k] : fill(schema.properties[k], read, k)]));
 }
 
-/* A run's composed reading (`judge_compose`): one basis version of the question it is run on, its words taken from
-   what the reports and holdings said (the body of `op=suggest`, run-productions R1). */
+/* A search sub-session's report (agent-harness R5): at the document level the scenario's notice is held, so it is
+   reported present, cited by its address for the parent to re-read; at every other level, honestly, nothing found. */
+export function levelReport(system, schema) {
+  const level = (/"level":"([a-z]+)"/.exec(String(system)) || [])[1] || "";
+  const states = ((schema.properties || {}).state || {}).enum || [];
+  const pick = (re, fallback) => states.find((x) => re.test(String(x))) ?? fallback;
+  if (level === "document")
+    return { state: pick(/^present$/i, "PRESENT"), summary: `The city's housing notice ${NOTICE_ID} is held and bears on this question.`,
+      citations: [{ address: NOTICE_ADDRESS }] };
+  return { state: pick(/absent/i, "LOOKED_ABSENT"), summary: `Nothing at the ${level || "searched"} level bears on this question.` };
+}
+
+/* The held document the run's collect step found for an address it re-read (its holdings), by its bundle id. */
+export function heldDocument(facts) {
+  const ids = [];
+  const visit = (v) => { if (typeof v === "string" && /^INFO-\d{4}-/.test(v)) ids.push(v); else if (v && typeof v === "object") Object.values(v).forEach(visit); };
+  visit(facts.holdings);
+  return ids[0] || null;
+}
+
+/* A run's composed reading (`judge_compose`): one basis version of the question it is run on (the body of
+   `op=suggest`, run-productions R1), resting on the held notice when the run found it, in one part, as a machine
+   composes one (C-25.6). Its claim is an account of something, never filler (SUGGEST_BOILERPLATE), and is what a
+   conclusion adopts (NO_CLAIM). */
 export function basisVersion(facts) {
-  /* a composed reading states its claim, what a conclusion adopts (basis-versions' NO_CLAIM), as an account of
-     something, never filler (run-productions' SUGGEST_BOILERPLATE): the walk's own scenario, the notice it captured */
+  const doc = heldDocument(facts);
   return { kind: "basis-version", target: facts.target, name: "City repair order 2026-118",
     description: `The city's housing notice ${NOTICE_ID}, held in the record, orders the repair this question asks about.`,
-    claim: SCENARIO_CLAIM };
+    claim: SCENARIO_CLAIM,
+    ...(doc ? { legs: [{ target: doc, role: "supports", ground: "paper", note: "the notice's repair order and its 28 days" }],
+      grounds: [{ ground: "paper", statement: "the city's own notice ordering the landlord to repair the roof" }] } : {}) };
 }
