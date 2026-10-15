@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 126,
   "date": 14,
-  "queue": 69,
+  "queue": 72,
   "transcribe": 19,
   "capture": 62,
   "document": 49,
@@ -168,7 +168,7 @@
   "plan-work": 27,
   "provenance-routes": 13,
   "case-carriage": 20,
-  "machinery-producers": 27,
+  "machinery-producers": 26,
   "leg-earning": 20,
   "ai-use": 3,
   "publication": 9,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11905,
+  "total": 11907,
   "protected": 865
  },
  "words": [
@@ -31689,6 +31689,27 @@
    "note": "Bob approved this text (DEC-270); a change is his"
   },
   {
+   "key": "queue.capture-completed-unattended.summary",
+   "en": "A capture finished after {member} left it: {title}",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "machinery-producers' capture-completed-unattended; {title} the document's title, never its record id"
+  },
+  {
+   "key": "queue.capture-completed-unattended.detail",
+   "en": "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "machinery-producers' capture-completed-unattended"
+  },
+  {
+   "key": "queue.capture-completed-unattended.who",
+   "en": "your group's Civicsmith",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "{member} when the capture was started by a credential that is no member"
+  },
+  {
    "key": "screen.account.explain.help",
    "en": "Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.",
    "protected": false,
@@ -61951,13 +61972,6 @@
    "protected": false,
    "source": "DEC-260",
    "note": "machinery-producers, .map()#0"
-  },
-  {
-   "key": "machinery-producers.summary.completed_unattended_writer",
-   "en": "{bundle_id} was completed by an unattended writer after {author} left it",
-   "protected": false,
-   "source": "DEC-260",
-   "note": "machinery-producers, summary"
   },
   {
    "key": "machinery-producers.summary.captured_daemon_investigative",

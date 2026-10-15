@@ -654,6 +654,14 @@ w16('site.groups.rule.head', 'The listing rule', False, "the details' heading be
 w16('site.groups.rule.text', "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.", True, 'Bob approved this text (DEC-270); a change is his')
 # --- end DEC-270
 
+# --- DEC-272 (K3402, K3403, N1138): the queue item a capture finished without the member who started it. Its summary and
+# detail name the member by handle, never a raw id; a credential that is no member reads queue.capture-completed-unattended.who.
+w17 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-272' + (': ' + note if note else '')))
+w17('queue.capture-completed-unattended.summary', 'A capture finished after {member} left it: {title}', False, "machinery-producers' capture-completed-unattended; {title} the document's title, never its record id")
+w17('queue.capture-completed-unattended.detail', "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.", False, "machinery-producers' capture-completed-unattended")
+w17('queue.capture-completed-unattended.who', "your group's Civicsmith", False, '{member} when the capture was started by a credential that is no member')
+# --- end DEC-272
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
