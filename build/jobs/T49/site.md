@@ -58,3 +58,7 @@ T49-31 complete on job/T49/site (record, Completion): R1–R12 met; site/src/pag
 - Tests: R4's test and control each assert the rule (heading and text, after its sentence); R12 asserts both keys. `node --test site/test/` 24 pass, 0 fail (the browser pairs included).
 - Checks: format 0; architecture `site` 0 (9 files); coverage `site` 12 of 12; ownership `site` 0.
 - Size (session_01J8PEzpB2y4LnPqzdpgRfCn): test runs 11, module lines 423
+
+## J6 · COMPLETE
+
+B5 done: the listing rule (site.groups.rule.head, site.groups.rule.text, Bob's text whole) drawn on Groups at work in both states as a details element after site.groups.rule; SITE_COMMIT af89fd5931 (SCR.site changed there); pages.mjs regenerated. Tests 24 pass 0 fail; format, architecture, coverage 12/12 and ownership 0 failures for site.
