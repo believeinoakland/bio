@@ -8,9 +8,15 @@ import { A, O, world, gate, urlOf, refused, opCalls, hex64, aik, cred } from "./
 
 const { OPS, SESSION_OPS, NEEDS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } = O;
 const DOORS = ["joinlinkinvite", "websiteinvite"];
-const ADMIN_ACTS = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                    "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
-const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
+/* (N1073) read from the owners' declarations, never hand-listed: the administrator's acts are membership's session-only
+   mutating ops (those carrying a machineClasses list) that are neither governance nor identity acts, and the group
+   key's ops are credentials' `groupkey*` ops that op-declarations declares for a session alone (R24) */
+const { membershipOps } = await import("../../../src/membership/index.mjs");
+const { credentialsOps } = await import("../../../src/credentials/index.mjs");
+const declared = (ops) => Object.keys(ops({}, new URL("http://do/"), {}, {}));
+const ADMIN_ACTS = declared(membershipOps).filter((op) => OPS[op]?.mutating && Array.isArray(OPS[op].machineClasses)
+  && !GOVERNANCE_ACTIONS.includes(op) && !IDENTITY_ACTIONS.includes(op));
+const GROUP_KEY_OPS = declared(credentialsOps).filter((op) => /^groupkey/.test(op) && OPS[op]?.classes !== null);
 const SECRET = "wk_" + hex64(), LINK = "jl_" + hex64(), COVER = "Rosa from the tenants' union", APIKEY = "sk-ant-api03-" + hex64();
 
 test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header or body) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {

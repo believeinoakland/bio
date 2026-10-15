@@ -1,6 +1,6 @@
 # BOB to control-plane (T49)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -36,3 +36,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B5 · ANSWER · re J1
 
 K3375: R72 says projectId now. setup-words merged (B-CHANGE earlier); op-declarations is next; I CHANGE you when it merges.
+
+## B6 · CHANGE
+
+K3380: admission (R27) and interface-shell are merged into tranche/T49. Merge the tranche and fix two things in your tests, then COMPLETE again: (1) R45, R48, R49 ("one read of bio's store, no credential looked up"): under admission R27 a public read that presents a session has it resolved once (a `session` lookup before the `doorwindow` count); a public read presenting a live session now sees lookup then count, presenting nothing the count alone (ADMISSION J2 (2)). (2) `t48-door.test.mjs` R95 (line 317) pins `cs-testband`; interface-shell R67 draws the design's `.cs-band[data-band="test"]`: assert that. `t46-e2e`/`t47-e2e` stay accepted red until screens-daily and screens-intake merge.

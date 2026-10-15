@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, checkClasses } from "../../../src/interface-shell/index.mjs";
-import { SCREENS, open, main, text, ok, refused, MEMBER } from "./page.mjs";
+import { SCREENS, open, main, text, ok, refused, MEMBER, word } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 // A class the shell's own check (interface-shell R56) accepts: one a served stylesheet defines, or a hook class.
@@ -68,7 +68,7 @@ test("R21: every labelled field is drawn with the kit's field; no screen draws c
 });
 
 test("R21 (DEC-219 (3)): each screen drawn over an empty fixture shows no empty section and no zero; a screen with nothing to show draws its one designed empty state", async () => {
-  const ZERO = /(^|[^\d.,$])0 (questions?|items?|documents?|results?|need|to do|members?|places?|projects?)\b|· 0\b/;
+  const ZERO = /(^|[^\d.,$])0 [a-z]|· 0\b/i;
   for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, EMPTY);
     for (const s of main(p).querySelectorAll("section")) {
@@ -78,8 +78,8 @@ test("R21 (DEC-219 (3)): each screen drawn over an empty fixture shows no empty 
     }
     assert.doesNotMatch(text(p), ZERO, `${id} draws a zero`);
   }
-  assert.match(text(await open("/app/queue", EMPTY)), /You are up to date/, "the queue's designed empty state");
-  assert.match(text(await open("/app/projects", EMPTY)), /No projects yet\. “Start a project” opens the first\./, "Projects' designed empty state names the first step");
+  assert.ok(text(await open("/app/queue", EMPTY)).includes(word("screen.queue.uptodate")), "the queue's designed empty state");
+  assert.ok(text(await open("/app/projects", EMPTY)).includes(word("projects.empty.sub")), "Projects' designed empty state names the first step");
   const finder = await open("/app/finder/pothole", EMPTY);
   assert.ok(!main(finder).querySelector(".cs-hold"), "finder draws no empty hold tray");
 });
