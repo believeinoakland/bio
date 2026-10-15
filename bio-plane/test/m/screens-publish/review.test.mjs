@@ -3,7 +3,7 @@
  * reader's page, its secret only in a request's body. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, fill, last, ok, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
+import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, plane, PREFLIGHT, COPY, P, DR, C, GRANT_SECRET, GRANT_UNTIL } from "./fixtures.mjs";
 
 const PATH = `/app/review-copy/${P}`;
 /* Each field the act's owner takes, as sent; a reason the shell adds by the act's weight (interface-shell R11) aside. */
@@ -16,8 +16,8 @@ const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { va
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
-  assert.match(text(p), /Prof\. N\. Iyer · housing law.*can read Edition 2 until 20 October 2099/);
-  assert.doesNotMatch(text(p), /21 October 2099/, "the group's day, not the UTC day");
+  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-copy.reads.until", { edition: "2", until: day("2099-10-20") }));
+  assert.ok(!text(p).includes(day("2099-10-21")), "the group's day, not the UTC day");
   assert.equal(main(p).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "until");
   await press(p, "reviewrevoke");
   carries(last(p, "reviewrevoke").body, { grant: "GRT-1" });
@@ -26,10 +26,10 @@ test("R2 R18 each named reader is a row with what they may read and until when, 
 test("R18 a lapsed grant is drawn ended; a grant with no end date draws \"until you stop sharing\" (controls)", async () => {
   const lapsed = await open(PATH, { plane: withGrants([{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: "2020-03-11T06:59:59Z" }]) });
   assert.equal(main(lapsed).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "ended");
-  assert.match(text(lapsed), /could read Edition 2 until 10 March 2020: ended/);
-  assert.doesNotMatch(text(lapsed), /can read Edition 2/);
+  assert.ok(drew(lapsed, "screen.review-copy.reads.ended", { edition: "2", until: day("2020-03-10") }));
+  assert.ok(!drew(lapsed, "screen.review-copy.reads.until", { edition: "2", until: day("2020-03-10") }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
   const open_ = await open(PATH, { plane: withGrants([{ grant_id: "GRT-2", recipient: "Ana · editor" }]) });
-  assert.match(text(open_), /Ana · editor.*can read Edition 2 until you stop sharing/);
+  assert.ok(text(open_).includes("Ana · editor") && drew(open_, "screen.review-copy.reads.stop", { edition: "2" }));
   assert.equal(main(open_).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "open");
 });
 
@@ -52,7 +52,7 @@ test("R18 with no time zone held, or a date that is no day, nothing is shared an
   const p = await open(PATH, { plane: zoned(null) });
   await share(p, "2099-10-20");
   assert.equal(p.byOp("reviewgrant").length, 0);
-  assert.match(text(p), /time zone is not set/);
+  assert.ok(drew(p, "screen.review-copy.until.nozone"));
   const q = await open(PATH, { plane: zoned("America/Los_Angeles") });
   await share(q, "2099-02-31");
   assert.equal(q.byOp("reviewgrant").length, 0, "31 February is no day");
@@ -65,7 +65,7 @@ test("R18 REVIEW_BAD_UNTIL is drawn by its words, the form keeps what was typed,
   const p = await open(PATH, { plane: { ...zoned("America/Los_Angeles"), reviewgrant: refusedIn("REVIEW_BAD_UNTIL", "The end date is not after now.") } });
   const { slot } = await share(p, "2020-01-01");
   assert.equal(p.byOp("reviewgrant").length, 1, "the plane is asked");
-  assert.match(slot().textContent + text(p), /Choose a day that has not yet ended/);
+  assert.ok((slot().textContent + text(p)).includes(word("screen.review-copy.until.bad")));
   assert.equal(p.doc.getElementById("rc-name").value, "Prof. N. Iyer");
   assert.equal(p.doc.getElementById("rc-until").value, "2020-01-01");
   assert.equal(main(p).querySelector("[data-reader-link]"), null, "no link is shown");
@@ -74,7 +74,7 @@ test("R18 REVIEW_BAD_UNTIL is drawn by its words, the form keeps what was typed,
 test("R2 \"Share with a named reader\" takes a name, a role and an end date, is marked outward, and sends nothing without them (control)", async () => {
   const p = await open(PATH, { plane: zoned("America/Los_Angeles") });
   const b = main(p).querySelector('button[data-act="reviewgrant"]');
-  assert.match(b.getAttribute("data-tip"), /Outward/, "mark.outward.means");
+  assert.ok(tipOf(b).includes(word("mark.outward.means")), "mark.outward.means");
   await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "", "rc-until": "2099-10-20" } });
   assert.equal(p.byOp("reviewgrant").length, 0);
   await press(p, "reviewgrant", { values: { "rc-name": "Prof. N. Iyer", "rc-role": "housing law", "rc-until": "" } });
@@ -89,7 +89,7 @@ test("R2 R11 the grant's secret is shown once as the reader's link with \"Civics
   const link = main(p).querySelector("[data-reader-link]");
   assert.ok(link);
   assert.match(link.textContent, new RegExp(`https://group\\.example/app/review#grant=${GRANT_SECRET}`));
-  assert.match(link.textContent, /Civicsmith sends no email/);
+  assert.ok(link.textContent.includes(word("screen.review-copy.noemail")));
   const before = p.requests.length;
   await press(p, "reviewrevoke");
   for (const r of p.requests.slice(before)) assert.ok(!JSON.stringify([r.url, r.body, r.headers]).includes(GRANT_SECRET), "no later request carries the secret");
@@ -102,7 +102,7 @@ test("R2 R11 the grant's secret is shown once as the reader's link with \"Civics
 test("R2 the readers' comments, each answered by \"Reply\" (reviewcomment with the draft and the member's words)", async () => {
   const p = await open(PATH);
   assert.equal(last(p, "reviewcomments").query.case, C);
-  assert.match(text(p), /Finding 1 should say which schedule the council approved\..*Prof\. N\. Iyer, an outside reader/);
+  assert.ok(text(p).includes("Finding 1 should say which schedule the council approved.") && drew(p, "screen.review-copy.from.reader", { who: "Prof. N. Iyer" }));
   await press(p, "reviewcomment", { values: { "rc-reply-0": "Thank you: it is schedule B." } });
   assert.equal(last(p, "reviewcomment").query.draft, DR);
   carries(last(p, "reviewcomment").body, { text: "Thank you: it is schedule B." });
@@ -118,24 +118,90 @@ test("R17 review-outside: the fragment's secret goes only in reviewcopy's body, 
     assert.ok(!q.url.includes(GRANT_SECRET), "never in an address");
     assert.equal(q.headers.Authorization, undefined, "no credential");
   }
-  assert.match(text(p), /A review copy of The Coliseum lease, Edition 2/);
-  assert.match(text(p), /Rent adjustments under the Coliseum lease/);
+  assert.ok(drew(p, "screen.review-outside.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.review-outside.draft", { case: "The Coliseum lease", edition: "2" }), "the draft's title names the case and edition");
+  assert.ok(text(p).includes("Rent adjustments under the Coliseum lease"));
 });
 
 test("R17 review-outside: the link's end date, and \"Send your comment\" with the secret in the body; with no link nothing is read (control)", async () => {
   const until = { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z" } }) };
   const p = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: until });
-  assert.match(text(p), /until 20 October 2026 at 06:59 UTC/, "K3295: date and time with UTC named");
+  assert.ok(drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: "06:59" }), "K3295: date and time with UTC named");
   const none = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana" } }) } });
-  assert.match(text(none), /until the group stops sharing/, "R18: a grant with no end date");
+  assert.ok(drew(none, "screen.review-outside.untilstopped"), "R18: a grant with no end date");
   await press(p, "reviewcomment", { values: { "ro-comment": "Finding 1 needs the schedule." } });
   const r = last(p, "reviewcomment");
   assert.equal(r.query.draft, DR);
   carries(r.body, { text: "Finding 1 needs the schedule.", secret: GRANT_SECRET });
-  assert.match(text(p), /Sent to the group/);
+  assert.ok(drew(p, "screen.review-outside.sent"));
   const q = await open("/app/review", { boot: { session: null } });
   assert.equal(q.byOp("reviewcopy").length, 0);
-  assert.match(text(q), /carries no review link/);
+  assert.ok(drew(q, "screen.review-outside.nolink"));
+});
+
+/* R23 (N1094; DEC-240 (C2); case-inputs R1, R5; review R15, R28): the reader's acknowledgement on review-outside. */
+const OUTSIDE = { session: null, hash: "#grant=" + GRANT_SECRET };
+const STATEMENT = "The case leaves out whether the rents were fair.";
+const outsideCopy = (authored = { scope: "Rents.", statement: STATEMENT }) => ({ reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR,
+  case: { case_id: C, edition: 2, identity: "The Coliseum lease" }, authored, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z" } }) });
+const NOTE = "I read it, and the gap is fairly stated.";
+
+test("R23 review-outside draws \"What the case says it does not cover\" with the group's statement, the reader's note and \"Acknowledge it\"", async () => {
+  const p = await open("/app/review", { boot: OUTSIDE, plane: outsideCopy() });
+  const head = main(p).querySelectorAll("h2").find((h) => h.textContent === word("review.statement.title"));
+  assert.ok(head, "the section");
+  assert.ok(tipOf(head).includes(word("review.statement.help")), "explained by review.statement.help");
+  const section = head.closest("section");
+  assert.ok(section.textContent.includes(STATEMENT), "the group's statement");
+  assert.ok(drewIn(section, "review.statement.note") && drewIn(section, "review.statement.note.help"), "the note and its help");
+  assert.ok(p.doc.getElementById("ro-note"));
+  assert.ok(section.querySelector('button[data-act="statementack"]').textContent.includes(word("review.statement.ack")), "Acknowledge it");
+  assert.equal(p.byOp("whoami").length, 0, "no session read");
+});
+
+test("R23 \"Acknowledge it\" sends statementack with the draft, the note as the reason and the secret, the secret in the body only, never in an address", async () => {
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true, acknowledged: true }) } });
+  const n = p.requests.length;
+  await press(p, "statementack", { values: { "ro-note": `  ${NOTE}  ` } });
+  const r = last(p, "statementack");
+  assert.deepEqual(r.query, { op: "statementack", draft: DR }, "the draft is the only thing in the address");
+  assert.deepEqual(r.body, { reason: NOTE, secret: GRANT_SECRET });
+  assert.equal(r.headers.Authorization, undefined, "no credential");
+  for (const q of p.requests.slice(n)) assert.ok(!q.url.includes(GRANT_SECRET), `${q.op}: the secret in no address`);
+  for (const v of [...p.store.values(), ...p.local.values()]) assert.ok(!String(v).includes(GRANT_SECRET), "nor in storage");
+  assert.equal(p.byOp("whoami").length, 0);
+  assert.ok(drew(p, "screen.review-outside.sent"), "said sent");
+  assert.equal(p.doc.getElementById("ro-note").value, "", "the note is cleared once it is sent");
+});
+
+test("R23 an empty note is refused and nothing is sent (control); STATEMENT_ACK_NO_REASON and the dead answer are drawn by their words and the note is kept", async () => {
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true }) } });
+  const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } });
+  assert.equal(p.byOp("statementack").length, 0, "an empty note sends nothing");
+  assert.ok((slot().textContent + text(p)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "an empty note, in the code's own words");
+  const q = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });
+  const a = await press(q, "statementack", { values: { "ro-note": NOTE } });
+  assert.equal(q.byOp("statementack").length, 1, "the plane is asked");
+  assert.ok((a.slot().textContent + text(q)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "STATEMENT_ACK_NO_REASON by its words");
+  assert.equal(q.doc.getElementById("ro-note").value, NOTE, "the note is kept");
+  const dead = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refused("NO_REVIEW_COPY", "There is no review copy here.", 404) } });
+  const d = await press(dead, "statementack", { values: { "ro-note": NOTE } });
+  assert.ok((d.slot().textContent + text(dead)).includes(word("refusal.NO_REVIEW_COPY")), "the dead answer by its words");
+  assert.equal(dead.doc.getElementById("ro-note").value, NOTE, "the note is kept");
+  assert.ok(!drew(dead, "screen.review-outside.sent"));
+});
+
+test("R23 a copy whose statement is absent draws no section and no acknowledgement (control); a statementack answered ok that carries a refusal is not sent (D29)", async () => {
+  for (const authored of [{ scope: "Rents." }, { scope: "Rents.", statement: "" }, { scope: "Rents.", statement: null }]) {
+    const p = await open("/app/review", { boot: OUTSIDE, plane: outsideCopy(authored) });
+    assert.ok(!drew(p, "review.statement.title"), JSON.stringify(authored));
+    assert.equal(main(p).querySelector('button[data-act="statementack"]'), null);
+    assert.equal(p.doc.getElementById("ro-note"), null);
+  }
+  const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ started: false, code: "NOT_RECORDED", translation: "It was not recorded." }) } });
+  await press(p, "statementack", { values: { "ro-note": NOTE } });
+  assert.ok(text(p).includes("It was not recorded.") && !drew(p, "screen.review-outside.sent"));
+  assert.equal(p.doc.getElementById("ro-note").value, NOTE, "kept");
 });
