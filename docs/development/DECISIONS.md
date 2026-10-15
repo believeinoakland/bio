@@ -4122,3 +4122,73 @@ response: **The design session, 2026-10-14.** Reworded: `screen.connect.own.subs
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-262; REWRITE7's entries), `screens/words-drawn.src.py`, `screens/mock-screens.js`; `words.json`.
 owed: (BOB) the jobs draw these as reworded; the three new sentences when their fills are answered. (design) none.
+
+### DEC-263 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B222 (K3373), B223 (K3374) and B224 (1) (K3375): more words the L11 jobs need, and words whose English holds literal braces)
+for: bob-session
+question: The words L11's jobs still lack or cannot read: the plan's add act's noun, refusal translations, counts at one, Home's Join, the fingerprint check's third answer, the founder's handle in the claimed sentence, and four words with literal braces.
+why it is Bob's: design detail beneath his rulings (DEC-114's "matter"; DEC-230's chosen handle); decided by the design session, reported to Bob as done.
+provisional: each job draws a nearby key meanwhile (K3373); `refusal.TEMPLATE_BLANK_UNKNOWN` is red by name (K3374).
+alternative: a plural rule in `setup-words`' `word`. Rejected: a screen picks its key (the precedent of `count.*.one`, `queue.*.one`), and nothing else needs one.
+recommendation: as below.
+reversal cost: low: words, the registry and drawings only.
+response: **The design session, 2026-10-14.** (1) What a plan addresses is a "matter" (DEC-114; `action-producers` R19): `act.plansubjectadd.label.plan` "Add a matter", `act.plansubjectadd.does` "Adds a matter to the plan: one problem the group wants to act on, with your reason." (the module's former row), and the plan drawing's section "Matters" and sort "matter". The seventeen refusal codes B222 names (`PLAN_CLOSED` to `MACHINE_CANNOT_SET_RISK_TIER`) are words already, as `refusal.<CODE>`, since DEC-260 (`dc267da296`, merged K3374): none is new. (2) A count at one reads its own row, the base key staying the many case: `screen.queue.more.one`, `screen.find-in.notread.one`, `screen.finder.nobody.one`, `screen.answers.withheld.one`; Home offers `projectjoin` "Join" on a project invitation in "Needs you" (the registry's home acts; drawn there, DEC-248's `project-invitation` kind). (3) `published.check.elsewhere`: the hash is published (`verify` answers `published`) but no finding of this edition rests on it ("The group published a file with this fingerprint, but no finding in this edition rests on it: …"). (4) B223: no word holds a literal brace: `refusal.TEMPLATE_BLANK_UNKNOWN` ("each written as its name inside two pairs of curly brackets"), `case-checker.departure.lens_given_published`, `wizard-scripts.why.step`, `money.push.canonical_table_row`, each reworded. (5) B224 (1): `screen.setup.claimed.nosignin` "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose." `words-reads.json` regenerated on T49 as it stands: op-grades' and affordances' merged sources read their keys (DEC-258's five decisions for them dropped), and affordances now reads its 52 further `act.<op>.does` keys (B224 (2)'s first part).
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-263), `screens/words-mod-1.src.py`, `screens/words-mod-3.src.py`, `screens/registry.src.py`, `screens/mock-acts.js`, `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB) `setup-words`' rows regenerated from these words; screens-action, screens-daily, screens-publish and screens-setup draw the keys named; wizard-scripts' registry (N1122) carries `home`'s `projectjoin` and the label "Add a matter". (design) B224 (2)'s remaining part: affordances' act labels and prompts (N1125), DEC-264.
+
+### DEC-264 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B224 (2), K3375, N1125: affordances' unkeyed words, for T50)
+for: bob-session
+question: The member-facing English in `affordances.mjs` (the module's main file, beside its `affordances/` folder): its act labels (`ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`), `DIVIDE_PROMPT`, `GROUND_PROMPT`, `attestFence`'s sentence and `NOT_CATALOGUED`; `door.mjs`'s `CATALOGUE_DETAIL`; and `reauth`'s help.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: DEC-258's inventory walked `affordances/` only, so `affordances.mjs` was never read: 64 strings untriaged.
+alternative: key each label under the screens' `act.<op>.label.<screen>`. Rejected: affordances names an act outside any screen, and a screen's button is worded for its place.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-14.** `words-reads.src.mjs` now walks a module's main file beside its folder (`affordances.mjs`). Each act affordances publishes is named by `act.<op>.name` (60 names; a per-item act over a selection by `act.<op>.name.selected`), in the design's words ("Vouch for this copy", "Set this question aside, or dismiss it", "Remove a citation, with a reason", "Say what each passage carries"), none using "ground", "branch", "disjunction", "AND" or "OR" (affordances R5). The prompts: `prompt.inquirydivide` (the module's text, "sever it" now "remove the citation"), `prompt.inquiryground` (as written, DEC-32), `prompt.attest.fence` (DEC-39's wording verbatim, protected, with `{ceiling}` and `{unreachable}` for the two grade letters), and `refusal.uncatalogued` for `NOT_CATALOGUED`. `CATALOGUE_DETAIL` is the `affordances` op's usage note for a client (`target=<record id>`, field names), never drawn: the inventory reads it as code, beside `facts.mjs`'s note already listed unkeyed. `reauth`'s help is a word already, `act.reauth.does`, since DEC-249: `ACT_HELP`'s op list lacks only the op.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-264, `AFFORDANCES_NAMES`), `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB, T50, N1125) affordances reads these keys: each act's label by `act.<op>.name` (`.selected` for `PER_ITEM_ACTS`), the three prompts and `refusal.uncatalogued` through `word`, `attestFence` filling `{ceiling}` and `{unreachable}`; `ACT_HELP_OPS` gains `reauth`. (design) none.
+
+### DEC-265 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B226, K3379: more words L11's jobs need; B225's note on `refusal.TEMPLATE_BLANK_UNKNOWN`)
+for: bob-session
+question: The plane's old screen titles; fills no provider answers (a photo's date, a plan's reason, a figure's adoption date, a timeline's examples); screens-settings' reads.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: each job draws without the sentence meanwhile, or fills by guess.
+alternative: keep each fill for T50's providers. Rejected where no provider answers it (a plan records no reason; a figure no adoption date).
+recommendation: as below.
+reversal cost: low: words and drawings only.
+response: **The design session, 2026-10-14.** (1) The plane's titles ("Subjects", "Progressions", "Themes", "Projects", "Review", "Case files", "Your accountability record") stay unkeyed: they are the old interface's screen list (plane R24, K1475), which no T49 screen draws, the reason DEC-260 gave its other entries; when the plane's list gives way to the design's registry, each screen reads `screen.<id>.name` and `screen.<id>.purpose`, all words already. (2) `screen.ceremony.photo.facts` "taken by {by} · relied on by {findings}"; `screen.ceremony.photo.facts.dated` keeps the date for when `photosOf` answers one (T50). The `verify` hit that is no finding's evidence is `published.check.elsewhere` (DEC-263). (3) `screen.plan.opened` "opened {date} by {name}": `planopen` records no reason. (4) `screen.money.didnotmove` "did not move: a {phase} figure" (the figure carries no adoption date; its period start is not one); `screen.timeline.order.evidence` holds its examples in its own words ("a ledger entry, a meeting's agenda, a letter's date"), no `{examples}`. (5) `words-reads.json` lists the reads screens-settings' requirements name before its source does: each section's `screen.<id>.name` and `.purpose` (R32: the settings index's thirteen sections and its own), `connect.ifnot` and `screen.connect.refusal.reference` (R38). (6) Noted: the group's stake is screens-settings R40. B225: `refusal.TEMPLATE_BLANK_UNKNOWN` holds no brace since DEC-263 (`6a589b5a33`).
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (its rewrites), `screens/words-t49.src.py` (DEC-265), `screens/mock-screens.js`, `screens/words-reads.src.mjs` (`REQUIREMENT_READS`); `words.json`, `words-reads.json`.
+owed: (BOB) the jobs draw these as reworded; screens-publish draws `.dated` when a photo's date is answered (T50); the plane's list replaced by the design's registry when BOB plans it (K1475). (design) none.
+
+### DEC-266 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-259's owed: line: the ceremony's sentence on saving a signing key as a file contradicts "never leaves this device")
+for: bob-session
+question: Which is true of a member's signing key: that it never leaves the device, or that it is saved as a key file?
+why it is Bob's: design detail (the words must say what the build does; interface-shell R40 settles it); decided by the design session, reported to Bob as done.
+provisional: five sentences say the key "never leaves" the device, beside the sentence that saves it as a file.
+alternative: none: R40 is the fact.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** Both paths are true, and one claim holds for both: the key is made in the browser and never sent to Civicsmith (`interface-shell` R40, R42). It stays on the device only when the member keeps it there; otherwise the member saves it as a passphrase-protected key file, which does leave the browser, in the member's hands. So "never leaves this device" is gone wherever it spoke of the key at rest: `signing.ceremony.nokey` ("made in this browser and never sent to Civicsmith"), `signing.ceremony.device` ("The key stays in your browser, and Civicsmith never sees it", true while signing either way), `screen.account.key.help`, the ceremony wizard step's why ("Civicsmith never sees your key"), and the register button's own help, drawn apart from its act's and now its act's explanation, `act.signerregisterown.does` ("Makes your signing key in this browser and registers its public half with your group, so readers can check what you sign. Civicsmith never sees the key."), so the two no longer compete. `words-reads` now follows the key act-help binds each op to (`ACT_HELP_KEYS`), not its English.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-266), `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/library.src.py`, `screens/words-reads.src.mjs`; `words.json`, `library.json`.
+owed: (BOB) the jobs and affordances draw these as reworded (`setup-words`' rows regenerated); wizard-scripts' ceremony step's why. (design) none.
+
+### DEC-267 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-258's owed: line: `refusal.AGENT_WORKER_UNBOUND`'s words speak of signing in; a group's own draft note shares `draft.machine.label`)
+for: bob-session
+question: The words for the assistant not installed, wherever it is refused; and the label of an assistant's draft of the group's own words.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: modules other than connect read `ai.refused.notdeployed` for `AGENT_WORKER_UNBOUND`; control-plane's two draft notes ("the words are yours", "the words are your group's") read one label.
+alternative: a connect-only key beside a general one. Rejected: one sentence is true at every act that raises the code, connect's sign-in included.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `refusal.AGENT_WORKER_UNBOUND`: "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it." (connect draws it so). `draft.machine.label.group`: "Draft by the assistant, at your request · edit it until it is your group's", for a draft of the group's own words (control-plane's group draft); a member's fields keep `draft.machine.label`.
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-267), `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB) a module that raises `AGENT_WORKER_UNBOUND` reads `refusal.AGENT_WORKER_UNBOUND`, not `ai.refused.notdeployed`; control-plane's group draft reads `draft.machine.label.group`. (design) none.
