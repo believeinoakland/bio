@@ -31,3 +31,6 @@ Lane started 2026-10-15 by BOB #181 (K3385): get civicsmith.org's pages installe
 - Still needed from Bob: the inbox its mail forwards to (not to be written in any file), and the Cloudflare key's zone permissions (DNS, Email Routing).
 
 - **Site D2 (Bob, 2026-10-15):** mail to the stewards' address forwards to the inbox Bob named in session (kept out of the repository by his rule). Checked again: the session's token is still refused on the zone's DNS and on Email Routing (zone and account addresses); waiting for Bob to add the permissions.
+
+- Bob updated the token. Verified read access: the zone `civicsmith.org` has no DNS records yet; Email Routing is `unconfigured`.
+- Attaching the custom domains (`civicsmith.org`, `www.civicsmith.org` to Worker `civicsmith-site`) was refused by the session's permission guard as a domain/DNS change. Not worked around. Waiting for Bob to allow it (see the question put to him).
