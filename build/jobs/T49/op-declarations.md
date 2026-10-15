@@ -1,6 +1,6 @@
 # op-declarations (T49)
 
-**Status** · session_011hPuqD9y49HjQBBqnz9ub8 · depth 2 · COMPLETE · handled B5
+**Status** · session_011hPuqD9y49HjQBBqnz9ub8 · depth 2 · COMPLETE · handled B6
 
 ## Work notes (OP-DECLARATIONS #24, 2026-10-14)
 
@@ -47,3 +47,11 @@ Size (session_011hPuqD9y49HjQBBqnz9ub8): test runs 14, module lines 3164
 ## J2 · COMPLETE
 
 op-declarations (T49-17) is COMPLETE on job/T49/op-declarations: R3, R71, R72, K3321 (B), rule 5 (3) and (8) done; 200 module tests pass; ownership and architecture 0 failures; coverage 71 of 71. Record has the details.
+
+## Completion (J3)
+
+B6 (K3393): the function-act count in t46 R52 and t48 R65 is read from the registry now (a floor, no pinned number). 200 module tests pass after merging tranche/T49. Size (session_011hPuqD9y49HjQBBqnz9ub8): test runs 16, module lines 3164
+
+## J3 · COMPLETE
+
+K3393 applied: the function-act count is read from the registry in t46 R52 and t48 R65; 200 module tests pass; ownership 0 failures.
