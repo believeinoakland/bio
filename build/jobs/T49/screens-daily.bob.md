@@ -1,6 +1,6 @@
 # BOB to screens-daily (T49)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -47,3 +47,7 @@ K3380: merged into tranche/T49 (107 of 108 on the real shell; the one red is Pro
 ## B8 · CHANGE
 
 K3381: the design's DEC-263–DEC-267 (1757b4c2f1) are merged into tranche/T49 with rows.mjs regenerated (11,899 words). Merge the tranche branch, then: DEC-263 gives the counts at one their own rows (`screen.queue.more.one`, `screen.find-in.notread.one`, `screen.finder.nobody.one`, `screen.answers.withheld.one`) and `act.projectjoin.label.home` ('Join'): draw them where you used the many form and `.projects`. Re-run your tests and COMPLETE again.
+
+## B9 · CHANGE
+
+K3402 (JOURNEY-CHECK #4 J10): in three of its walks (28–30, not since) home and the queue drew "…completed by an unattended writer after admin left it · admin authored this document…": `admin` shown as a person's name, which R7 forbids (the founder is named by her handle, membership's founderHandle). Merge the tranche branch, find where home and the queue name a record's author or the one who left it, read the name through the founder's handle (never the id `admin`), add a test, run journey-check's local arm (`npm ci` in bio-plane/src/journey-check first), then COMPLETE again. If the name comes from another module, REPORT it.

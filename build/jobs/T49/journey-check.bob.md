@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J9
+**Read** · handled J11
 
 ## B1 · START
 
@@ -58,3 +58,8 @@ K3393 (with B8): the audit finds the local arm's step 07 'setup: claim' red sinc
 
 K3398–K3401: Bob approved the out-of-layer fixes and all four are merged into tranche/T49: credentials R78 (the founder's own run credential, your step 9), reading-pipeline R33 (a text-path reading carries its chain, your step 8), extraction R76 (`op=reading` answers `text_units`), notice-producers R23 (words by key). Merge the tranche branch and re-walk the whole journey to the end, re-capturing (a capture stored before has no chain until re-read).
 First: CREDENTIALS #17 and EXTRACTION #24 both saw your local arm (R1 (a), after `npm ci` in `bio-plane/src/journey-check`) stop at "journey 28 · setup: claim: the claim is not shown on /app/setup", the same with and without their changes. Diagnose it: if it is the walk's, fix it; if the product's, REPORT the module and the evidence. Then walk on and report every step past 7 as you find it; COMPLETE when the walk passes or each remaining failure is reported with its owner.
+
+## B11 · CHANGE
+
+CHANGE (K3411). Merge tranche/T49 into your branch: it now carries agent-worker R90 (compose's facts carry each held document's record_id; K3411), machinery-producers R13 (K3408), screens-inquiry's B13 fixes (K3405), screens-settings (K3410) and the design stream @ 9534b570e0 with setup-words' rows regenerated. Run `npm ci` in `bio-plane/src/journey-check` if needed.
+Re-walk the whole journey on the tranche (R1 (a), the local arm). AGENT-WORKER #24 saw step 12 no longer refused NO_BASIS; it now stops at "the screen does not draw the word `question.concluded.by` on /app/question/…", and R10 follows. Diagnose that stop first: if the walk expects the word where the screen draws the conclusion otherwise, or reads before the page settles, it is the walk's own (fix it); if the question page does not draw the conclusion after an admitted `conclude`, REPORT it naming screens-inquiry's requirement it misses. Then walk R10 through. Record COMPLETE with the steps passed and every remaining red by name and owner.

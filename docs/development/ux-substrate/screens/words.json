@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 126,
   "date": 14,
-  "queue": 69,
+  "queue": 72,
   "transcribe": 19,
   "capture": 62,
   "document": 49,
@@ -63,7 +63,7 @@
   "proceeding": 6,
   "duty": 6,
   "published": 9,
-  "shell": 127,
+  "shell": 130,
   "settings": 2,
   "entity": 33,
   "find": 26,
@@ -168,7 +168,7 @@
   "plan-work": 27,
   "provenance-routes": 13,
   "case-carriage": 20,
-  "machinery-producers": 27,
+  "machinery-producers": 26,
   "leg-earning": 20,
   "ai-use": 3,
   "publication": 9,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11905,
+  "total": 11910,
   "protected": 865
  },
  "words": [
@@ -5845,7 +5845,7 @@
    "en": "Read in my language",
    "protected": false,
    "source": "DEC-232",
-   "note": "DEC-232: B188 (2), N670; the control beside a passage, note, question, finding or notice (readtranslate)"
+   "note": "DEC-232: B188 (2), N670; the control beside a note, question, finding or notice (readtranslate; plane R50; DEC-273)"
   },
   {
    "key": "translate.label",
@@ -30828,10 +30828,10 @@
   },
   {
    "key": "translate.undetermined.language",
-   "en": "Your group's Civicsmith couldn't tell what language this passage is in, so nothing was translated. Try again in a moment.",
+   "en": "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.",
    "protected": false,
    "source": "DEC-258",
-   "note": "plane's ask: readtranslate"
+   "note": "plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)"
   },
   {
    "key": "consequence.attribute",
@@ -31687,6 +31687,27 @@
    "protected": true,
    "source": "DEC-270",
    "note": "Bob approved this text (DEC-270); a change is his"
+  },
+  {
+   "key": "queue.capture-completed-unattended.summary",
+   "en": "A capture finished after {member} left it: {title}",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "machinery-producers' capture-completed-unattended; {title} the document's title, never its record id"
+  },
+  {
+   "key": "queue.capture-completed-unattended.detail",
+   "en": "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "machinery-producers' capture-completed-unattended"
+  },
+  {
+   "key": "queue.capture-completed-unattended.who",
+   "en": "your group's Civicsmith",
+   "protected": false,
+   "source": "DEC-272",
+   "note": "{member} when the capture was started by a credential that is no member"
   },
   {
    "key": "screen.account.explain.help",
@@ -33478,6 +33499,27 @@
    "protected": false,
    "source": "DEC-259",
    "note": "a document threaded to a step, with the date it bears"
+  },
+  {
+   "key": "shell.queue.waiting",
+   "en": "{n} items wait on you in your queue: {todo} to do, {noticed} noticed, {status} status.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-273: the queue count's explanation in the masthead; {n} their sum"
+  },
+  {
+   "key": "shell.queue.open",
+   "en": "Click to open your queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-273: the queue count's explanation, its second line"
+  },
+  {
+   "key": "shell.group.open",
+   "en": "Click to see who your group is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-273: the group's card in the masthead, its second line; the group's description and purpose are its own words (data)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -59357,10 +59399,10 @@
   },
   {
    "key": "refusal.GROUP_KIND_UNKNOWN",
-   "en": "A group says what kind it is from the list: professional, issue-specific, neighbourhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
+   "en": "A group says what kind it is from the list: professional, issue-specific, neighborhood or community, catch-all, or one it describes itself, and may choose none. Something else was given. Nothing was written.",
    "protected": false,
    "source": "DEC-260",
-   "note": "membership, refusal by its code"
+   "note": "membership, refusal by its code; American English, DEC-273"
   },
   {
    "key": "refusal.GROUP_KIND_OTHER_EMPTY",
@@ -59406,10 +59448,10 @@
   },
   {
    "key": "refusal.BAD_MEMBER_ID",
-   "en": "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they enrol.",
+   "en": "A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with a letter or a digit. Nothing was written. It is the name the record keeps for this person; the handle they sign in with is theirs to choose when they join.",
    "protected": false,
    "source": "DEC-260",
-   "note": "membership, refusal by its code"
+   "note": "membership, refusal by its code; American English, DEC-273"
   },
   {
    "key": "refusal.EXISTS",
@@ -59798,10 +59840,10 @@
   },
   {
    "key": "refusal.START_RUMOUR_AS_QUESTION",
-   "en": "A rumour is followed as a lead, never put as a question about a person. This proposal put one as a question, so it was not offered.",
+   "en": "A rumor is followed as a lead, never put as a question about a person. This proposal put one as a question, so it was not offered.",
    "protected": false,
    "source": "DEC-260",
-   "note": "wizard-scripts, refusal by its code"
+   "note": "wizard-scripts, refusal by its code; American English, DEC-273"
   },
   {
    "key": "wizard-scripts.why.steps_list",
@@ -61951,13 +61993,6 @@
    "protected": false,
    "source": "DEC-260",
    "note": "machinery-producers, .map()#0"
-  },
-  {
-   "key": "machinery-producers.summary.completed_unattended_writer",
-   "en": "{bundle_id} was completed by an unattended writer after {author} left it",
-   "protected": false,
-   "source": "DEC-260",
-   "note": "machinery-producers, summary"
   },
   {
    "key": "machinery-producers.summary.captured_daemon_investigative",
@@ -76128,7 +76163,7 @@
   },
   {
    "key": "act.readtranslate.does",
-   "en": "Shows this passage in the language you read, as machine work, with the original one tap away. Nothing is saved, and the original is never replaced.",
+   "en": "Shows this in the language you read, translated by a machine for you alone and marked as machine work; passages it quotes stay in their own words. Nothing is saved: the original stays the record, one tap away, and you quote only the original.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
