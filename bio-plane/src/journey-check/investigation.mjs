@@ -12,7 +12,8 @@ import { act, control, type, open, requireDrawn } from "./journeys.mjs";
 import { requireWord, requireAnyWord, byWord, wordPattern } from "./words.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE } from "./city.mjs";
 
-export const PROJECT_TITLE = "Roof repairs at 14 Lakeshore Row";
+export const PLAN_TITLE = "Get the roof repaired";
+const PROJECT_TITLE = "Roof repairs at 14 Lakeshore Row";
 export const QUESTION = "Has the landlord been ordered to repair the roof of 14 Lakeshore Row?";
 /* The file the walk uploads into the question (R9 step 5): a tenant's own note, written by the walk into its output. */
 export const UPLOAD_NAME = "flat-4-ceiling-note.txt";
@@ -238,9 +239,11 @@ async function concludeOn(walk, page, { question, project }) {
 /** R9: the administrator's journey, from her claimed group (journey 28 has claimed it and signed her in by her handle,
  *  step 1) to a first conclusion. `codeOf` (live arm, R12) asks the person for the sign-in's code. Answers the
  *  project's and question's addresses. */
-export async function walkAdministrator(walk, page, { base, founder, codeOf = null }) {
+export async function walkAdministrator(walk, page, { base, founder, codeOf = null, made = {} }) {
   walk.journey = "R9 as administrator";
   const { project, question } = await projectAndQuestion(walk, page, base, { title: PROJECT_TITLE, question: QUESTION });
+  /* the project exists from here on: R10 invites a member to it even when a later step of this journey stops (`made`) */
+  made.project = project; made.question = question;
   await connectSubscription(walk, page, base, { password: founder.password, codeOf });
   const document = await captureAndVouch(walk, page, base, { question, password: founder.password });
   await readAndCite(walk, page, { document, question });
@@ -261,6 +264,12 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
     if (!(await p.locator("#cs-main").textContent()).includes(member.handle)) throw new Error("the project does not list her as a member");
   });
   await connectSubscription(walk, page, base, { password: member.password, codeOf, label: "she connects her own Claude subscription" });
+  /* an invited member has view rights only (membership §7.5): the work inside the project is hers once she joins */
+  await walk.step(page, "she joins the project she was invited to (projectjoin)", async (p) => {
+    await p.goto(project); await settle(p);
+    await act(p, "projectjoin", { reason: "I was invited." });
+    await p.locator('#cs-main [data-act="projectjoin"]:visible').waitFor({ state: "detached", timeout: 15000 }).catch(() => { throw new Error("the project still offers her to join after she joined it"); });
+  });
   let question = null;
   await walk.step(page, "she opens the project and a question of her own", async (p) => {
     await p.goto(project); await settle(p);
@@ -278,7 +287,10 @@ export async function walkMemberJourney(walk, page, { base, member, inviter, pro
   });
   await walk.step(page, "plan help, as hers (planask)", async (p) => {
     await p.goto(project); await settle(p);
-    await act(p, "planopen", { fields: { "project-plan": "Get the roof repaired" }, reason: "The tenants want the repair made." });
+    await act(p, "planopen", { fields: { "project-plan": PLAN_TITLE }, reason: "The tenants want the repair made." });
+    /* screens-inquiry R36: the project then lists the plan by name, a link opening it (the act itself goes nowhere) */
+    await p.locator("#cs-main a", { hasText: PLAN_TITLE }).first().click();
+    await settle(p);
     await requireDrawn(walk, p, "plan");
     await act(p, "planask", { reason: "Ask the assistant for options." });
     await requireWord(p, "screen.plan.ask.running", { timeout: 20000 });
