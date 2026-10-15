@@ -42,3 +42,9 @@ COMPLETE (screens-publish, T49-27). Read at START: my requirements, the plan ent
 - `node checks/format.mjs` 170 modules, 0 failures. `node checks/architecture.mjs bio screens-publish` 0 failures. `node checks/coverage.mjs bio screens-publish`: 24 of 24 live ids named, 0 failures (every new id named: R22 6 tests, R23 4, R24 3, D29 1, N1068 in R24's test). `node checks/ownership.mjs bio screens-publish tranche/T49`: 20 files, 0 failures. `node checks/run.mjs`: format and architecture 0 failures; coverage fails for other modules only (admission, affordances, control-plane, interface-shell, journey-check, op-grades, screens-action/daily/entry/inquiry/intake/investigate/settings, site).
 
 Size (session_016LMFaLD8DrK4YxdZxPyQuM): test runs 14, module lines 1613
+
+## J3 · COMPLETE
+
+COMPLETE again (re B6). Merged tranche/T49 (interface-shell, admission); no local stand-in of the shell or its registry remains. On the real shell: `bio-plane/test/m/screens-publish/` 82 of 82 pass (the five "Nothing is here" tests and every page now pass); control-plane t46-app 5/5, plane t47 9/9, interface-shell frame 21/21. One change: `ceremony.test.mjs` R4 asserts the design's `mk-image`. Checks: format 0 failures; architecture (18 files, 0 not judged) 0 failures; coverage 24 of 24 ids named, 0 failures; ownership 0 failures. Items (1), (4), (6), (7) of J2 stand as BOB answered them in B5.
+
+Size (session_016LMFaLD8DrK4YxdZxPyQuM): test runs 18, module lines 1613
