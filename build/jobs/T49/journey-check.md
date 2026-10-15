@@ -130,3 +130,19 @@ B10: (1) The claim stop CREDENTIALS #17 / EXTRACTION #24 saw is the walk's: tran
 ## J11 · COMPLETE
 
 T49-32 complete at B10; owners in J10.
+
+## After B11 (K3411)
+
+Merged tranche/T49 (agent-worker R90, machinery-producers R13, screens-inquiry's B13 fixes, screens-settings, the design stream; `npm ci` run). I read my other tests by running them, not reading them.
+
+**Step 12's stop (your question): not the walk's.** `conclude` is admitted (HTTP 200, `ok: true`, claim adopted, `basis_legs: 1`), and the project screen then reads "1 concluded", "Matured". The question page still draws the assistant's proposals and never state g. The cause is in screens-inquiry's `question.mjs`: state g is decided from `d.basis` (`basisversions` read with `{id}` only, line 21), but `basisversions` answers `conclusion` and `conclusion_stance` only when a `project` is named (basis-versions `index.mjs`:527–529, "an unnamed project gets no field at all"); the page reads the project-aware answer only as `cur` (line 109), for `current`. So `concluded` (line 137) is never true for a project's conclusion. screens-inquiry **R41 state g** (and R35's "Concluding") is missed; the question's id is the one in the walk's report. Fix there: read `conclusion` and `conclusion_stance` from the project-aware read.
+
+**Fixed in my module (R10 was never reached before):** (1) R10 no longer waits on R9's last step: `walkAdministrator` hands over its project as soon as it exists (`made`), so a late stop in R9 does not hide R10. (2) The member's walk was missing a step: an invited member has view rights only (membership §7.5), so she now presses "Join" (`projectjoin`) before opening a question (`drawquestion` had refused `PROJECT_ACT_NOT_A_PARTICIPANT`). (3) `planopen` goes nowhere (screens-inquiry R36); the walk opens the plan from the link the project then draws.
+
+**Walk on tranche/T49 @ the B11 merge (local arm): 118 steps, 7 failures, in 3 steps; R10 now walks to the end.** Passing: journey 28 from civicsmith.org, journey 3, R7 (held; with none noted as not walkable), R9 steps 1–11, R10's invite, subscription, her own question, planask and her run and Ask. Open, each named by owner (J12):
+- **R9 step 12**, screens-inquiry R41 state g, as above.
+- **R10 "she joins the project"**: the project page, before she joins, reads `projectaccountstate` and it answers `NO_SUCH_PROJECT` (C-70.5) to the invited, not-yet-joined member (R8 fails it, rightly): screens-inquiry R1/R37 (do not read it before joining; R37 says it for `projectai`, the project page does the same), or credentials `projectaccountstate` if an invited member should see it.
+- **R10 `projectai` as a joined member who is not an owner**: the panel reads `accounthistory`, `accountuses`, `ailimits`, `aiusage` with `owner: "project:<id>"` and each is refused `PROJECT_ACT_NOT_THE_OWNER` (C-56.2): screens-inquiry R14 (reads owner-only ops for a participant who is not an owner; a member's panel should draw only what she may read).
+Tests: `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 56 tests, 53 pass, 3 fail (R1 (a) local walk, R9, R10: red only for the two screens-inquiry items above and the step-12 one). Checks: `format` 0 failures (170 modules); `architecture … journey-check` 0 failures; `coverage … journey-check` 14 of 14; `ownership … journey-check tranche/T49` 0 failures.
+
+Size (session_013z7NcUn9hLQf4ocmtFLxNU): test runs 2, module lines 2292
