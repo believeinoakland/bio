@@ -26,6 +26,7 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
    - `modules.json`: **`translations`** (new, L11, directly before `instance-setup`, empty `paths` and `tests`, K1043). Its `uses` come from the extraction map; `instance-setup` gains `translations`.
    - `layers.md`: L1's and L11's lists and the status line, each move stated.
    - membership's `MODULE_ORDER` entry is T50-2 (N1115).
+   - (K3436) the design branch's `18c2e6fe50` (DEC-278: `words-reads.json` lists computed keys; docs only, no `rows.mjs` regeneration) is merged into `tranche/T50` at its creation, with the release cut (K2273), so N1146's re-run reads it.
    - `build/extraction/instance-setup-split.md` (the translation workspace: R67–R75, R87, its code, tables and ops) is written by a worker before L11's START and reviewed (P18).
    - The requirements fold (P5): N1109's change of meaning, Bob's ("S24: A", K3359), into basis-versions and screens-inquiry; the owed lines of DEC-247 to DEC-256 (N1106, N1108, N1112) once PR #39 is on `main` (T49's close); every "text to write" below.
 5. **Accepted reds at the opening**, each until the entry named (K2704):
