@@ -3608,9 +3608,9 @@
   },
   {
    "key": "screen.start-send.tip.hypothetical",
-   "en": "the subject is assumed, not shown",
+   "en": "the matter is assumed, not shown",
    "protected": false,
-   "note": "DEC-276: a hypothetical subject, its card"
+   "note": "DEC-276: a hypothetical matter, its card; never 'subject' (DEC-114)"
   },
   {
    "key": "screen.start-send.tip.hypothetical_none",
@@ -4286,7 +4286,7 @@
   },
   {
    "key": "screen.plan.tip.title",
-   "en": "{plan}: {name}'s action plan, opened {date} when the inquiry began, about {subject}. Its options, the order to try them and what to check are here.",
+   "en": "{plan}: {name}'s action plan, opened {date} when the inquiry began, about {matter}. Its options, the order to try them and what to check are here.",
    "protected": false,
    "note": "DEC-276: the plan's title, its explanation; {plan} and {subject} the plan's own words"
   },
@@ -4328,9 +4328,9 @@
   },
   {
    "key": "screen.plan.tip.hypothetical",
-   "en": "a subject the plan assumes",
+   "en": "a matter the plan assumes",
    "protected": false,
-   "note": "DEC-276: a hypothetical subject, its card"
+   "note": "DEC-276: a hypothetical matter, its card; never 'subject' (DEC-114)"
   },
   {
    "key": "screen.plan.tip.hypothetical_why",

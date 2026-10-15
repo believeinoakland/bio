@@ -4319,3 +4319,17 @@ response: **The design session, 2026-10-15.** Every explanation on the 69 screen
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-276, and DEC-275's rows templated), `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-screens.js`, `screens/mock-shell.js`, `screens/words-drawn-tips-baseline.json`; `words.json` (12,393 words).
 owed: (BOB) `setup-words`' rows regenerated (218 minted; 31 of DEC-275's reworded to placeholders); where a module explains these acts in these places it reads the `.here.` keys: `act.acquire.here.money`, `act.actionmove.here.queue`, `act.entitycreate.here.people`, `act.exclude.here.money_picked`, `act.explore.here.person`, `act.findin.here.money_when`, `act.findin.here.money_where`, `act.hypothesishold.here.money`, `act.include.here.money_picked`, `act.promote.here.project`, `act.queuemute.here.queue_kind`, `act.queuemute.here.queue_project`, `act.reconcile.here.money_picked`, `act.recordfact.here.money`, `act.recordfact.here.money_where`, `act.search.here.people`; a module filling `{government}` or `{council}` fills it from the group's own place, never a fixed "city". (design) none: the explanations are done.
+
+### DEC-277 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_01EPwenCi4PznbtLzRxkEMSw; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency, over DEC-273 to DEC-276's keys)
+for: bob-session
+question: Retired vocabulary in the explanations DEC-276 keyed.
+why it is Bob's: design detail beneath DEC-114; decided by the design session, reported to Bob as done.
+provisional: three explanations called a plan's or a request's matter its "subject" ("a subject the plan assumes", "the subject is assumed, not shown", "…about {subject}").
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-15.** `screen.plan.tip.hypothetical` "a matter the plan assumes", `screen.start-send.tip.hypothetical` "the matter is assumed, not shown", `screen.plan.tip.title` "…about {matter}…" (DEC-114: a plan's matter, never its subject). The rest of DEC-273 to DEC-276's 477 keys hold no retired word ("overdue" in a queue item, "sever", "Release" for vouching, British spellings).
+decided: 2026-10-15 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-276's rows), `screens/mock-refs.js`; `words.json`.
+owed: (BOB) `setup-words`' rows regenerated (three reworded). (design) none.
