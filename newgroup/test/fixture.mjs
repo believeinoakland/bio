@@ -7,7 +7,8 @@
  * the steps, the refusal and the final panel it emits.
  */
 import worker, { CFG, ARMED_SIGNERS, planeLimits } from "../src/index.mjs";
-import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
+import { RELEASE_VERSION } from "../src/release.mjs";
+import { RELEASE_SOURCE } from "./release-text.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
 import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";

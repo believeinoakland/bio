@@ -103,7 +103,7 @@ console.log("\n--- only the signed asset is embedded ---");
 
   const emb = await import("../src/release.mjs");
   t("the committed embed IS the signed release asset",
-    createHash("sha256").update(emb.RELEASE_SOURCE, "utf8").digest("hex"), manifest.sha256);
+    createHash("sha256").update(Buffer.from(emb.RELEASE_BINARY, "latin1")).digest("hex"), manifest.sha256);
   t("and its label is RELEASE.json's version", emb.RELEASE_VERSION, manifest.version);
 }
 

@@ -1,0 +1,53 @@
+# installer (R085)
+
+**Status** · session_014NJFRDyaFqVZ3Rve2MDf5G · depth 2 · COMPLETE · handled B2
+
+## J1 · COMPLETE
+
+**Entry R085-1 (N1149): applied.** installer R33 as amended is met; the four tests that name it at the real size fail on the code as it was and pass now. Code is pushed on `job/R085/installer` (commit `ca8351e808`).
+
+**What changed** (`newgroup/src/index.mjs`; the bundle `newgroup/dist/newgroup.bundled.mjs` rebuilt with `npm run build`; `src/release.mjs` unchanged and byte-identical):
+1. `scriptHash` no longer decodes the download. It finds the `index.mjs` part by byte offsets (the boundary, the header end, the next delimiter) and hashes a view (`subarray`) of the downloaded bytes; a non-multipart answer is hashed as is. No string, no `Uint8Array.from`. The windows-1252 mapping is gone with the decode, so bytes 0x80-0x9F hash as they are.
+2. The release's own hash is no longer recomputed from a re-encoding: a repository release carries the hash it was verified against (`man.sha256`, over the downloaded bytes); the built-in's is taken once per isolate (`releaseSha`) instead of at each read-back (up to 6 times) and at the fleet check.
+3. A repository release is no longer decoded into a string. `fetchRepoAsset` verifies the bytes as before, reads what it needs from them as bytes (R20's limits, R15's build fields: `planeLimits` and `reportsBuilds` now also take bytes, and read them exactly as they read text), keeps one `Blob` of them (every upload of the act, install PUT, retry, step-3 re-PUT, update PUT, shares that Blob, nothing is copied again) and lets the downloaded bytes go. A 21.4 MB module with a few non-Latin-1 characters is a 43 MB string; that copy is gone.
+
+**Peak of each path** (the child-process harness `realsize-child.mjs`: the built bundle in a Node process, the live set read after a full collection at every point a large buffer is made or consumed, baseline 79 MB = the bundle's own 21.4 MB release literal (a two-byte string, 43 MB) and its source; the upload body is held as `fetch` buffers it). All at the 0.85.0 real size, 21.4 MB:
+- Plane upload (install PUT, its step-3 re-PUT, the update PUT): baseline + the Blob (21.4) + the serialised body (21.4) = **123 MB**. Unchanged by this job; it is the step Bob's live run passed.
+- Read-back (`scriptHash`): baseline + the response bytes (21.4), the digest over a view = 101 MB for the built-in release, 121 MB when a repository release's Blob is also held. Before: 143-188 MB sampled and **895 MB** of resident growth (BOB's ~515 MB in Node for the read-back alone).
+- Built-in release's hash (`releaseSha`, once): one 21.4 MB encode, 101 MB.
+- Repository fetch (`fetchRepoAsset`): the downloaded bytes (21.4) + the Blob made from them (21.4) = 123 MB at the instant both exist; the bytes are then let go.
+- Fleet members (`installFleet`: fetch, hash, Blob, upload; sequential): the largest, `ocr-worker` (0.3 MB bundle, 5.95 MB of parts), peaks at 119 MB with a repository release's Blob held. `fetchVerified` and `uploadMember` copy a member 3 times (bytes, Blob, serialised body); at 6.3 MB it is not the bound.
+- `bindMembers`' re-PUT: the same as the plane upload, 122-123 MB; the update's read-backs: as the install's.
+- Largest of all: **123 MB**, at the plane upload, in every scenario run (install and update; built-in, repository, repository with the real fleet), under the 128 MB the test asserts, with the act's growth of the process's resident high-water mark at 0 MB.
+
+**Tests** (`newgroup/test/realsize.test.mjs`, `realsize-child.mjs`; the file is added to `npm test`; all four name R33): (1) a ~21 MB multipart read-back, and a raw one, whose module holds bytes 0x80-0x9F, hashes equal to the release, for a repository release and for the built-in, through the fixture's stateful account; a changed byte and a failed read stay named. (2) the install, (3) the update, at the real size in a child process under the 128 MB bound: built-in (multipart and raw read-back), a signed 21.4 MB repository release, and that release naming the real fleet (its six members and their parts, the two container members left out as R38 says, R15 claiming no success over them); (4) a one-byte difference in the multipart read-back is named under the same bound. Before the change: tests 1, 2, 3 and 4 fail (hash never matches; 143 MB live and 895 MB resident growth); after: all pass. The existing fixture holds three copies of every uploaded module (`sources`, `planePuts`) and so cannot stand for a Worker's memory; the child process uses a lean stand-in account that keeps each script on disk, and the fixture is unchanged.
+
+**Run** (all green):
+- `npm test` in `newgroup/` (embed.test, wizard.test, then `node --test` over requirements, t47, t48 and realsize): wizard 209 passed, 0 failed; `node --test`: tests 75, pass 72, fail 0, todo 3 (the 3 todo are R13, R24 and R48, not yet met before this job).
+- `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs` from the root: 4 passed, 0 failed (the committed bundle is byte-identical to a fresh build).
+- `node checks/format.mjs bio`: 170 modules, 169 requirements files; 0 failures. `node checks/architecture.mjs bio installer`: 22 product files, 58 relative imports (1 naming no tracked file, not judged); 0 failures. `node checks/coverage.mjs bio installer`: 55 of 55 live requirement ids named by a test; 0 failures. `node checks/ownership.mjs bio installer tranche/R085`: 6 files changed by installer; 0 failures.
+
+**Deferred, with why:**
+- **The baseline is 79 of the 128 MB and the margin is 5 MB** (123 vs 128). Most of the baseline is the embedded release: `src/release.mjs` holds the 21.4 MB plane as one string literal, and because the plane has 2,703 non-Latin-1 characters V8 keeps it as a two-byte string, 43 MB, resident for the life of the isolate whether or not it is used. A release 5 MB larger than 0.85.0 would put the plane upload (not the read-back) over the bound, and the test is written to fail then. The cure is in the installer's own module (`scripts/embed-release.mjs` writing the literal so it stays one-byte, e.g. each non-Latin-1 character written as its UTF-8 bytes in a binary string, and the installer reading it with `Uint8Array.from(s, c => c.charCodeAt(0))` into one 21.4 MB buffer held in place of the string, or the plane carried as a Worker asset rather than a literal), which would take about 22 MB from the baseline. I did not do it: your entry says `src/release.mjs` is unchanged and the signed release stays embedded, and it changes what the embed step writes and the module's R26 reading. It is the next thing to do before the plane grows, and it is yours to decide.
+- **Not shown on a real Worker.** The bound is measured in Node, where Blob and serialised-body copies are what `fetch` makes of a FormData body in `undici`; workerd may keep either outside the 128 MB, or hold more. What it rests on is that the same upload step (123 MB here, as before the job) passed in Bob's live install of biosmoke8 and only the read-back failed.
+
+**Found in another module:** nothing. (`signatures`' `verifySshsig` digests the message it is given directly, no copy; the plane's source is not touched.)
+
+Size (session_014NJFRDyaFqVZ3Rve2MDf5G): test runs 24, module lines 2749
+
+## J2 · COMPLETE
+
+**B2 CHANGE applied** (commit `81a67ea976`, pushed with this entry). The embed fix is done and the 5 MB margin is now 26 MB.
+
+**What changed**
+1. `scripts/embed-release.mjs` writes the plane as `RELEASE_BINARY`: a binary string, one character per byte (each 0-255), as a printable-ASCII literal (`\xNN` for any byte that is not a plain printable character, `"` or `\`). A string whose characters are all under 256 is held one byte each: 21.4 MB, where the same release as text was 43 MB. Deterministic: two runs of `npm run embed` give byte-identical `src/release.mjs` (sha256 `587a729c…`, 24.3 MB of source). `RELEASE_SOURCE` is gone from `release.mjs`; nothing outside `newgroup/` read it (only records and docs name it).
+2. The installer holds the built-in release as one Blob made from that string in one pass (each character back to its byte), kept for every upload of the act; its limits and build fields are read from the string as text (they are ASCII); its hash is taken from the Blob's bytes when the read-back first needs it. A repository release was already one Blob (J1). So both kinds of release are `{blob, capable, sha?}` and every read (hash, limits, build fields, uploads, the R26 reading) goes through the bytes. The bytes uploaded and hashed are exactly the signed release's (`aa48b8cb…d649`); a test asserts the embedded string equals `release/bio-plane.bundled.mjs` byte for byte and hashes to RELEASE.json's sha256.
+3. Tests read the release through `test/release-text.mjs` (the bytes and their text); `embed.test.mjs`, the R26/R49 arms and `newgroup-bundle-fresh.test.mjs` (arm B reads `RELEASE_BINARY` and hashes the bytes it holds) follow the new name; R26 gains a test that every byte value survives the literal, that it is printable ASCII, reproducible, and holds nothing above 255.
+
+**Real-size harness, re-run** (same 128 MB assertion, kept; the same metric as J1): baseline **58 MB** (was 79); largest peak **101 MB** (102 in one update run) in every scenario (install and update; built-in, repository, repository with the real fleet), was 123. The peak is at the plane upload: baseline + the one Blob (21.4) + the body as `fetch` buffers it (21.4). The built-in's one-time conversion (the byte array and the Blob, 43 MB on 58) peaks at 101 as well; the read-back, the fleet members (largest 6.3 MB) and the re-upload sit below it. Resident-growth guard: 0 MB. Margin to 128: 26 MB, five times J1's.
+
+**Run** (all green): `npm test` in `newgroup/`: embed 23 passed 0 failed; wizard 209 passed, 0 failed; `node --test` tests 76, pass 73, fail 0, todo 3 (R13, R24, R48). `newgroup-bundle-fresh` from the root: 4 passed, 0 failed. Checks: format (170 modules, 169 requirements files; 0 failures), architecture (23 product files, 63 relative imports, 1 naming no tracked file, not judged; 0 failures), coverage (55 of 55 live ids named; 0 failures), ownership (14 files changed by installer; 0 failures). The bundle is rebuilt and committed.
+
+**Deferred:** nothing new. Still not shown on a real Worker; what it rests on is unchanged (the same upload step passed in Bob's live run at a higher peak, 123 MB in Node, and this one is 101).
+
+Size (session_014NJFRDyaFqVZ3Rve2MDf5G): test runs 34, module lines 2767

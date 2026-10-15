@@ -11,8 +11,8 @@
  * fleet): the build is re-run from source in memory, with `newgroup/package.json`'s own `build` flags and the same
  * esbuild the lockfiles pin, and byte-compared to the committed artifact.
  *
- * Arms: (A) the bundle embeds the RELEASE_VERSION `src/release.mjs` carries; (B) its RELEASE_SOURCE literal, evaluated,
- * hashes equal to `src/release.mjs`'s RELEASE_SOURCE; (C) the WHOLE bundle is byte-identical to a fresh build of
+ * Arms: (A) the bundle embeds the RELEASE_VERSION `src/release.mjs` carries; (B) its RELEASE_BINARY literal, evaluated,
+ * hashes equal to `src/release.mjs`'s RELEASE_BINARY; (C) the WHOLE bundle is byte-identical to a fresh build of
  * `newgroup/src`. (C) implies (A) and (B); they are kept so a failure NAMES which kind of staleness it is.
  * The fix for any failure is one act: `cd newgroup && npm run build`, and commit the bundle.
  *
@@ -40,6 +40,8 @@ const t = (name, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : `  want ${JSON.stringify(want)} got ${JSON.stringify(got)}`}`);
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
+/* A binary string (one character per byte, newgroup R33) hashed as the bytes it holds. */
+const shaBinary = (s) => createHash("sha256").update(Buffer.from(s ?? "", "latin1")).digest("hex");
 /* The literal `NAME = "…"` or `NAME = '…'` evaluated, found by scanning its escapes (the esbuild output re-quotes it). */
 const literal = (src, name) => {
   const i = src.indexOf(name + " = ");
@@ -52,7 +54,7 @@ const literal = (src, name) => {
 console.log("\n--- DIST-13: newgroup's committed bundle equals a fresh build of newgroup/src ---");
 const committed = readFileSync(DIST, "utf8");
 const releaseSrc = readFileSync(NG + "src/release.mjs", "utf8");
-const want = { version: literal(releaseSrc, "RELEASE_VERSION"), source: sha(literal(releaseSrc, "RELEASE_SOURCE") ?? "") };
+const want = { version: literal(releaseSrc, "RELEASE_VERSION"), source: shaBinary(literal(releaseSrc, "RELEASE_BINARY")) };
 
 /* The build flags are READ from newgroup/package.json, never restated here, so the guard cannot drift from the build. */
 const buildLine = JSON.parse(readFileSync(NG + "package.json", "utf8")).scripts.build;
@@ -63,8 +65,8 @@ t("PIN: newgroup's build is the esbuild line this guard mirrors (bundle, esm, ne
 
 t("(A) the bundle embeds the RELEASE_VERSION src/release.mjs carries",
   literal(committed, "RELEASE_VERSION"), want.version);
-t("(B) the bundle's RELEASE_SOURCE is the one src/release.mjs carries (by sha256)",
-  sha(literal(committed, "RELEASE_SOURCE") ?? ""), want.source);
+t("(B) the bundle's RELEASE_BINARY is the one src/release.mjs carries (by sha256)",
+  shaBinary(literal(committed, "RELEASE_BINARY")), want.source);
 
 const built = await esbuild.build({ absWorkingDir: NG, entryPoints: ["src/index.mjs"], bundle: true,
   format: flags.format, platform: flags.platform, outfile: flags.outfile, write: false, logLevel: "silent" });
