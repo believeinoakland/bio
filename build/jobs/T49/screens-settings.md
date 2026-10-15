@@ -1,6 +1,6 @@
 # screens-settings (T49)
 
-**Status** · session_01VgMT6xBjEGeP2RQvFHHZjs · depth 2 · COMPLETE · handled B6
+**Status** · session_01VgMT6xBjEGeP2RQvFHHZjs · depth 2 · COMPLETE · handled B7
 
 ## Completion (T49-22)
 
@@ -48,6 +48,12 @@ Merged tranche/T49 (interface-shell, admission) with no local stand-in of the sh
 
 Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 33, module lines 2509
 
+## Completion, fourth round (B7)
+
+Merged tranche/T49 (DEC-263 to DEC-267; 570 keys now in this module's reads). (1) `screen.settings.name`, `screen.ties.name` and `screen.wizards.name` added to the keys `settings` reads. (2) DEC-267: `AGENT_WORKER_UNBOUND` is drawn by `refusal.AGENT_WORKER_UNBOUND`; the module never held `ai.refused.notdeployed`. `node --test bio-plane/test/m/screens-settings/`: tests 119, pass 119, fail 0. Checks: format, architecture, ownership 0 failures; coverage 39 of 39.
+
+Size (session_01VgMT6xBjEGeP2RQvFHHZjs): test runs 35, module lines 2509
+
 ## J1 · QUESTION
 
 QUESTION (my best reading is carried out meanwhile). Seven of the 551 keys DEC-257 reworded now hold a `{fill}` that nothing the plane answers today can fill. R37 forbids drawing a sentence with an empty or default fill, and R39 forbids inline English, so I cannot draw them as the design words them.
@@ -85,3 +91,7 @@ screens-settings T49-22 complete again on job/T49/screens-settings: B5 applied (
 ## J5 · COMPLETE
 
 screens-settings complete after B6: tranche merged on the real shell, words.test re-pointed, B5 (R40, reauth, DEC-262) in. Module tests 119 of 119 including the contract test; checks 0 failures, coverage 39 of 39. screens-inquiry's seven reds are its own (projectai must read PANEL_KEYS).
+
+## J6 · COMPLETE
+
+screens-settings complete after B7: DEC-263-267 merged; the three DEC-265 name keys read; AGENT_WORKER_UNBOUND already by refusal key. Module tests 119 of 119; checks 0 failures, coverage 39 of 39.
