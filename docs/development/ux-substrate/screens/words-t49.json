@@ -3323,6 +3323,18 @@
    "en": "Opens Find in this over the document, with your question chosen.",
    "protected": false,
    "note": "DEC-268: what capture.cite opens"
+  },
+  {
+   "key": "site.groups.rule.head",
+   "en": "The listing rule",
+   "protected": false,
+   "note": "DEC-270: the details' heading beside site.groups.rule"
+  },
+  {
+   "key": "site.groups.rule.text",
+   "en": "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.",
+   "protected": true,
+   "note": "DEC-270: Bob approved this text (DEC-270); a change is his"
   }
  ],
  "retired": [

@@ -90,7 +90,7 @@
   "inbox": 1,
   "request-unsent": 5,
   "standard": 15,
-  "site": 1,
+  "site": 3,
   "projectai": 1,
   "consequence": 8,
   "credential": 1,
@@ -208,8 +208,8 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 11903,
-  "protected": 864
+  "total": 11905,
+  "protected": 865
  },
  "words": [
   {
@@ -31673,6 +31673,20 @@
    "protected": false,
    "source": "DEC-268",
    "note": "what capture.cite opens"
+  },
+  {
+   "key": "site.groups.rule.head",
+   "en": "The listing rule",
+   "protected": false,
+   "source": "DEC-270",
+   "note": "the details' heading beside site.groups.rule"
+  },
+  {
+   "key": "site.groups.rule.text",
+   "en": "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.",
+   "protected": true,
+   "source": "DEC-270",
+   "note": "Bob approved this text (DEC-270); a change is his"
   },
   {
    "key": "screen.account.explain.help",

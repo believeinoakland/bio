@@ -647,6 +647,13 @@ DEC269_REWORDED = {
 REWRITE7.update(DEC269_REWORDED)
 # --- end DEC-269
 
+# --- DEC-270 (Bob, 2026-10-15: "rule: approved"): the listing rule's text (DEC-255; Publication §5E), as he approved it, drawn on
+# civicsmith.org's groups page beside site.groups.rule
+w16 = lambda key, en, prot=False, note='': W.append(dict(key=key, en=en, protected=prot, note='DEC-270' + (': ' + note if note else '')))
+w16('site.groups.rule.head', 'The listing rule', False, "the details' heading beside site.groups.rule")
+w16('site.groups.rule.text', "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.", True, 'Bob approved this text (DEC-270); a change is his')
+# --- end DEC-270
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',

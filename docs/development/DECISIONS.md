@@ -4024,6 +4024,7 @@ response: "S25: B"
 decided: 2026-10-14 · Bob
 reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (the ruling and the rule's draft text); `screens/words-t49.src.py` (`site.groups.rule`); `screens/mock-screens.js` (`SCR.site`, "Groups at work").
 owed: (BOB) when the directory is built: a steward's decline or removal of a listing, recorded with the rule's part and the reason, told to the group's administrators, touching nothing but the directory; the group may ask again. (Bob) approval of the rule's text in §5E; the site draws it once approved.
+amended: 2026-10-15 · the listing rule's text approved by Bob as drafted (DEC-270).
 
 ### DEC-256 · answered
 raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (the standing tail: T49's requirement files on `tranche/T49` read against the screens)
@@ -4220,3 +4221,17 @@ response: **The design session, 2026-10-15.** Queue items: `queue.temporal-expec
 decided: 2026-10-15 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-269), `screens/words-mod-3.src.py`; `words.json`.
 owed: (BOB) setup-words' rows regenerated. (design) none.
+
+### DEC-270 · answered
+raised: 2026-10-15 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (DEC-255's rule: its text, drafted for Bob's approval in Publication §5E)
+for: bob
+question: Does the listing rule, as drafted, say when civicsmith.org's stewards may decline or remove a group's listing?
+why it is Bob's: policy (who may keep what off Civicsmith's own site) and doctrine (never a judgment on a group's views or targets), DEC-255's.
+provisional: the draft in Publication §5E, not drawn.
+alternative: change its grounds or its wording.
+recommendation: approve as drafted.
+reversal cost: low: the directory is not built yet.
+response: "rule: approved"
+decided: 2026-10-15 · Bob
+reasoning recorded in: this entry; `docs/architecture/BIO_Publication_v0_1.md` §5E (APPROVED); `screens/words-t49.src.py` (DEC-270: `site.groups.rule.head`, `site.groups.rule.text`, protected), `screens/mock-screens.js` (civicsmith.org's groups page, both states: "The listing rule" beside the stewards' note).
+owed: (BOB) site draws `site.groups.rule.head` and `site.groups.rule.text` on the groups page beside `site.groups.rule` (SITE #1); the directory, when built, records a decline or removal with the rule's numbered part (DEC-255's owed). (design) none.
