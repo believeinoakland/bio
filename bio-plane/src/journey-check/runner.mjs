@@ -62,13 +62,22 @@ export class AgentRunner {
     server.accept();
     const send = (o) => { try { server.send(JSON.stringify(o)); } catch { /* closed */ } };
     let gen = null, turns = 0, max = 1;
-    const end = (o) => { send(o); try { server.close(1000, "done"); } catch { /* closed */ } };
+    /* one line per conversation when it ends, for the walk's debugging (JOURNEY_DEBUG): the tools offered, the calls made
+       and how it ended, by name and code only; never a prompt, a result, an input or the token */
+    const calls = [];
+    let offered = [];
+    const end = (o) => {
+      send(o);
+      if (this.env.JOURNEY_DEBUG) console.log(JSON.stringify({ event: "journey.runner", offered, calls, ok: o.ok, code: o.code ?? null }));
+      try { server.close(1000, "done"); } catch { /* closed */ }
+    };
     const advance = (result) => {
       let r;
       try { r = gen.next(result); } catch (e) { return end({ ok: false, code: "FAKE_MODEL_FAILED", detail: String(e && e.message).slice(0, 300) }); }
       if (r.done) return end({ ok: true, result: String(r.value ?? ""), stop_reason: "end_turn", num_turns: turns + 1, usage: usage() });
       if (turns + 1 >= max) return end({ ok: false, code: "MAX_TURNS", detail: "the turn limit was reached" });
       turns += 1;
+      calls.push(r.value.name);
       send({ tool_use: { id: `toolu_journey_${turns}`, name: r.value.name, input: r.value.input ?? {} } });
     };
     server.addEventListener("message", async (ev) => {
@@ -83,6 +92,7 @@ export class AgentRunner {
           return end({ ok: false, code: "SIGNIN_TOKEN_REFUSED", detail: "the token is not one this sign-in minted" });
         if (this.env.FAKE_MODEL === "off") return end({ ok: false, code: "NO_FAKE_MODEL", detail: "the local arm's runner has no fake model bound" });
         max = Math.max(1, Number(m.max_turns) || 1);
+        offered = (m.tools || []).map((t) => t && t.name);
         gen = conversation({ system: m.system, prompt: m.prompt, tools: m.tools || [], max_turns: max });
         return advance(undefined);
       }
