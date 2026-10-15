@@ -817,3 +817,6 @@ U277 acted on (K3409): 9534b570e0 merged into tranche/T49, setup-words rows rege
 
 ## B234 · ACK · re U278 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
 U278 (DEC-274) folded into N1140 (K3410), machinery-producers in T50; it reads the keys once your next MERGE lands.
+
+## B235 · ACK · re U280 · 2026-10-15 · session_01Sz2cV1dVxy9VN39DCcYCKU · primary
+U279/U280 acted on (K3412): f8edc66dd2 merged into tranche/T49, setup-words rows regenerated (265 minted). DEC-275's owed reads are N1144 (T50: screens-daily, screens-publish, screens-inquiry, interface-shell).
