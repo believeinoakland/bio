@@ -105,6 +105,20 @@ test("R18: the administrator's acts op-declarations R22 declares are admitted as
   refused(await gate(env, { op: "adminendorse", token: env.ADMIN_TOKEN }), 403, "OPERATOR_TOKEN_CANNOT_GOVERN", "C-32.17");
 });
 
+test("R18 (T49; op-declarations R71, control-plane R97): founderhandleset is the founder's own session's act — read from its spec, only SESSION_OPS.admin holds it: the founder's session is admitted, a member's session (an enrolled administrator's included) is refused 403 SESSION_ROLE_CANNOT_REACH_OP naming the founder, and admission adds no fence of its own", async () => {
+  const op = "founderhandleset", spec = OPS[op];
+  assert.ok(spec?.mutating, `${op} is declared (op-declarations R71)`);
+  assert.deepEqual([SESSION_OPS.admin.has(op), SESSION_OPS.member.has(op)], [true, false]);
+  assert.equal(A.bearerFence(op, { cls: "admin", viaSession: false }), null, "no fence of admission's");
+  const { env, S } = world();
+  assert.ok((await gate(env, { op, token: S.founder })).caller?.viaSession, "the founder's session reaches it");
+  for (const t of [S.ann, S.bare]) {
+    const body = refused(await gate(env, { op, token: t }), 403, "SESSION_ROLE_CANNOT_REACH_OP", "C-38.7", [t]);
+    assert.deepEqual([body.op, body.reachedBy, body.session], [op, "founder", "member"]);
+    assert.equal(opCalls(env).length, 0);
+  }
+});
+
 test("R19: the group key's ops are admitted only from a session — a bearer, a machine credential and an operator token are refused CLASS_FORBIDDEN naming the class, an ai credential is refused before any store call, none is on AI_GRANT_OPS; a member's session reaches credentials, which answers NOT_AN_ADMIN; groupkeyset's key is read from the body only and appears in no refusal", async () => {
   const { AI_GRANT_OPS } = await import("../../../src/credentials/index.mjs");
   const { env, S } = world();
