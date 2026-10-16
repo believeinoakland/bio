@@ -75,3 +75,6 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-34 · plane** · R57 (the registration hands `wizard-scripts` the administrator's acts and screens, so R40 holds live; found by WIZARD-SCRIPTS #11 J1; new `uses` edge `interface-shell`, earlier in the order) · claude-haiku-5-5.
 - **R085-35 · agent-runner** · R33 (the container at instance type `standard-1`; study-assistant-link T1–T2) · claude-haiku-5-5.
 - **R085-36 · screens-daily** · R24 (the "against" choice sends `cuts_against`); JOURNEYS J-2 (K3550; R36, R37 moved to T50 by Bob's K3551) · claude-haiku-5-5.
+- **R085-37 · skills** · R50 (wizard scripts in the pack carry no use counts or approvals, so the version holds through a run; S4 N1; K3557) · claude-sonnet-5-5.
+- **R085-38 · agent-harness** · R16 (no `completed` close when a composed candidate was never written; S4 N4; K3557) · claude-sonnet-5-5.
+- **R085-39 · agent-worker** · R107 (a refused segment writes what it composed or closes visibly), R108 (every dedup drop logged); S4 N1, N4; K3557; rebuilds its own bundle last · claude-sonnet-5-5.
