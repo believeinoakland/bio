@@ -547,54 +547,6 @@
      "modules": [
       "membership"
      ]
-    },
-    {
-     "op": "groupkeyset",
-     "label": "Hold the team's API key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "groupkeyswitch",
-     "label": "Switch the team's key on or off",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "accountusesset",
-     "label": "Set what the team's key pays for",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "ailimitset",
-     "label": "Set a limit on the team's key",
-     "status": "function",
-     "modules": [
-      "ai-use"
-     ]
-    },
-    {
-     "op": "groupkeyremove",
-     "label": "Remove the team's key",
-     "status": "function",
-     "modules": [
-      "ai-accounts"
-     ]
-    },
-    {
-     "op": "aikeepaway",
-     "label": "Keep the team's material away from AI, with a reason",
-     "status": "declared",
-     "modules": [
-      "ai-accounts"
-     ]
     }
    ],
    "journeys": [
@@ -806,6 +758,63 @@
     4,
     17
    ]
+  },
+  {
+   "id": "teamai",
+   "name": "The team's assistant",
+   "frame": "working",
+   "purpose": "Administrators: the team's API key and whether it is on; what it pays for; its limits, overall and for each member; its use, summed over members and naming none; keeping the team's material away from AI; every change (moved from Members, DEC-284; the walk's D2).",
+   "acts": [
+    {
+     "op": "groupkeyset",
+     "label": "Hold the team's API key",
+     "status": "function",
+     "modules": [
+      "ai-accounts"
+     ]
+    },
+    {
+     "op": "groupkeyswitch",
+     "label": "Switch the team's key on or off",
+     "status": "function",
+     "modules": [
+      "ai-accounts"
+     ]
+    },
+    {
+     "op": "accountusesset",
+     "label": "Set what the team's key pays for",
+     "status": "declared",
+     "modules": [
+      "ai-accounts"
+     ]
+    },
+    {
+     "op": "ailimitset",
+     "label": "Set a limit on the team's key",
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
+    },
+    {
+     "op": "groupkeyremove",
+     "label": "Remove the team's key",
+     "status": "function",
+     "modules": [
+      "ai-accounts"
+     ]
+    },
+    {
+     "op": "aikeepaway",
+     "label": "Keep the team's material away from AI, with a reason",
+     "status": "declared",
+     "modules": [
+      "ai-accounts"
+     ]
+    }
+   ],
+   "journeys": []
   },
   {
    "id": "places",

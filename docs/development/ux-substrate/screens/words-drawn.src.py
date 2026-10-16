@@ -1140,6 +1140,22 @@ w283(C + 'use.last30', 'Last 30 days')
 w283(C + 'use.subscription', 'On your subscription')
 w283(C + 'whopays.summary', 'Which account pays, and when')
 # --- end DEC-283
+# --- DEC-284 (the walk's D2, B244): the team's key leaves Members for its own page, The team's assistant
+def w284(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-284' + (': ' + note if note else '')))
+T = 'screen.teamai.'
+w284(T + 'sub', "The team's API key serves members who have no account of their own.")
+w284(T + 'held', "The team's API key is held and on.")
+w284(T + 'setby', '{who} set it on {date}.')
+w284(T + 'on', 'On')
+w284(T + 'uses.why', 'Everyday help is {everyday}; exploring is {explore}.', False, '{everyday}: on, off or partly on; {explore}: on, off or asked each day')
+w284(T + 'limits.why', '{overall} overall; {each} for each member.', False, 'when no limit is set: screen.teamai.limits.none')
+w284(T + 'limits.none', 'None set.')
+w284(T + 'use.why', 'Summed over members; nobody is named.')
+w284(T + 'key', 'The key itself')
+w284(T + 'key.why', 'Replace it, switch it off or remove it.')
+w284(T + 'changes.why', 'Every change, with who made it and when.')
+# --- end DEC-284
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

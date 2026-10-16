@@ -6792,6 +6792,8 @@
     "screen.start-send.unfilled.why",
     "screen.start-send.waitsecond",
     "screen.start-send.wouldrefuse",
+    "screen.teamai.name",
+    "screen.teamai.purpose",
     "screen.theme.name",
     "screen.theme.purpose",
     "screen.ties.name",
@@ -6817,14 +6819,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 805,
+    "reads": 807,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 325,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 480
+    "computedKeys": 482
    },
    "unkeyed": []
   },
@@ -11122,6 +11124,8 @@
     "screen.standard.purpose",
     "screen.start-send.name",
     "screen.start-send.purpose",
+    "screen.teamai.name",
+    "screen.teamai.purpose",
     "screen.theme.name",
     "screen.theme.purpose",
     "screen.ties.name",
@@ -11219,14 +11223,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1067,
+    "reads": 1069,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 599,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 468
+    "computedKeys": 470
    },
    "unkeyed": []
   },

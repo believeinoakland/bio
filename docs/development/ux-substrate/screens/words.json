@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3743,
+  "screen": 3756,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 12485,
+  "total": 12498,
   "protected": 881
  },
  "words": [
@@ -37505,6 +37505,83 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-283"
+  },
+  {
+   "key": "screen.teamai.sub",
+   "en": "The team's API key serves members who have no account of their own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.held",
+   "en": "The team's API key is held and on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.setby",
+   "en": "{who} set it on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.on",
+   "en": "On",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.uses.why",
+   "en": "Everyday help is {everyday}; exploring is {explore}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284: {everyday}: on, off or partly on; {explore}: on, off or asked each day"
+  },
+  {
+   "key": "screen.teamai.limits.why",
+   "en": "{overall} overall; {each} for each member.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284: when no limit is set: screen.teamai.limits.none"
+  },
+  {
+   "key": "screen.teamai.limits.none",
+   "en": "None set.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.use.why",
+   "en": "Summed over members; nobody is named.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.key",
+   "en": "The key itself",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.key.why",
+   "en": "Replace it, switch it off or remove it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.changes.why",
+   "en": "Every change, with who made it and when.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-284"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -76415,6 +76492,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.teamai.name",
+   "en": "The team's assistant",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.teamai.purpose",
+   "en": "Administrators only: the team's API key, what it pays for, its limits, its use summed over members, and keeping the team's material away from AI.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.places.name",
    "en": "Places and offices",
    "protected": false,
@@ -77375,42 +77464,6 @@
    "source": "registry.json"
   },
   {
-   "key": "act.groupkeyset.label.members",
-   "en": "Hold the team's API key",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.groupkeyswitch.label.members",
-   "en": "Switch the team's key on or off",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.accountusesset.label.members",
-   "en": "Set what the team's key pays for",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.ailimitset.label.members",
-   "en": "Set a limit on the team's key",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.groupkeyremove.label.members",
-   "en": "Remove the team's key",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.aikeepaway.label.members",
-   "en": "Keep the team's material away from AI, with a reason",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
    "key": "act.securitymap.label.security",
    "en": "Show the level for a period",
    "protected": true,
@@ -77533,6 +77586,42 @@
   {
    "key": "act.accountreferenceremove.label.connect",
    "en": "Disconnect",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.groupkeyset.label.teamai",
+   "en": "Hold the team's API key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.groupkeyswitch.label.teamai",
+   "en": "Switch the team's key on or off",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.accountusesset.label.teamai",
+   "en": "Set what the team's key pays for",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.ailimitset.label.teamai",
+   "en": "Set a limit on the team's key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.groupkeyremove.label.teamai",
+   "en": "Remove the team's key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.aikeepaway.label.teamai",
+   "en": "Keep the team's material away from AI, with a reason",
    "protected": true,
    "source": "registry.json"
   },

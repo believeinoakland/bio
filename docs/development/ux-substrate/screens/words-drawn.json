@@ -5129,6 +5129,72 @@
    "en": "Which account pays, and when",
    "protected": false,
    "note": "DEC-283"
+  },
+  {
+   "key": "screen.teamai.sub",
+   "en": "The team's API key serves members who have no account of their own.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.held",
+   "en": "The team's API key is held and on.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.setby",
+   "en": "{who} set it on {date}.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.on",
+   "en": "On",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.uses.why",
+   "en": "Everyday help is {everyday}; exploring is {explore}.",
+   "protected": false,
+   "note": "DEC-284: {everyday}: on, off or partly on; {explore}: on, off or asked each day"
+  },
+  {
+   "key": "screen.teamai.limits.why",
+   "en": "{overall} overall; {each} for each member.",
+   "protected": false,
+   "note": "DEC-284: when no limit is set: screen.teamai.limits.none"
+  },
+  {
+   "key": "screen.teamai.limits.none",
+   "en": "None set.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.use.why",
+   "en": "Summed over members; nobody is named.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.key",
+   "en": "The key itself",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.key.why",
+   "en": "Replace it, switch it off or remove it.",
+   "protected": false,
+   "note": "DEC-284"
+  },
+  {
+   "key": "screen.teamai.changes.why",
+   "en": "Every change, with who made it and when.",
+   "protected": false,
+   "note": "DEC-284"
   }
  ],
  "rewrite": {

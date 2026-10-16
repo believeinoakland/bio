@@ -447,6 +447,7 @@ const SCREEN_HELP = {
   recovery: 'Your own recovery codes, which let you set a new password if you lose yours. Each works once.',
   security: 'Administrators only: how hard your team\'s Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.',
   account: 'Your own settings: your handle, password, signing key, language and expertise.',
+  teamai: 'Administrators only: the team\'s API key, what it pays for, its limits, its use summed over members, and keeping the team\'s material away from AI.',
   connect: 'Whether and how the assistant serves you: on your team\'s key, your own Claude account, or not at all. Set your limit and suggestions here.',
   ties: 'Your own ties to people or organizations the team may look into. Only you and the administrators see this list.',
   notes: 'Your private notes. Only you can see them in your team; turn one into an observation, a hunch or a question when you choose.',
