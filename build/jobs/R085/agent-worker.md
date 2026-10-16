@@ -53,3 +53,9 @@ Size (session_01XU6wVrjDVTctSBNoqW3NmS): test runs 16, module lines 3899
 ## J3 · REPORT
 
 R93 met: SegmentDriver.alarm() now marks the segment not running (via a beforeEnd hook in runSegment) before it sends the segment_end tick; test r085.test.mjs drives a fake plane that dispatches the next /run from inside the segment_end tick (202) and a control /run during a running segment (409 SEGMENT_RUNNING); the R93 test fails without the fix. R94 (checkFinal -> checkReport less observed_at, REPORT_UNLOCATED not handed back) and R95 (role: 'subsession' on a check's sub-session converse) are built in src/index.mjs, with their own tests in r085.test.mjs, but those tests fail until agent-model R18/R19 merge into tranche/R085 (origin/job/R085/agent-model has no code yet): R94 700/300-character case, R95 model names. Everything else in the module's tests passes; format, architecture, coverage, ownership checks pass; dist rebuilt. Waiting for your CHANGE once agent-model merges; I will then merge tranche/R085, re-run, and post COMPLETE.
+
+## Round 3 completion (R93, R94, R95)
+
+Entries applied: R93 (`runSegment` takes a `beforeEnd` hook; `SegmentDriver.alarm()` clears `running` before the `segment_end` tick); R94 (`checkFinal` runs agent-harness' `checkReport` on the report, less `observed_at`, so `REPORT_UNLOCATED` is never handed back); R95 (`role: "subsession"` on a check's sub-session `converse`, and on no other). Deferred: none. Found in another module: none.
+Tests: `agent-worker` `npm test` 21 files, 21 pass, 0 fail (`r085.test.mjs`: 28 passed, 0 failed; R93's test fails without the fix). Checks: format 0 failures; architecture 0 failures; coverage 86 of 86 ids named, 0 failures; ownership 0 failures. Bundle rebuilt (`npm run build`), sha256 fc05369c43….
+Size (session_018F9Doyf71vyGxPLnaNguLq): test runs 4, module lines 2025
