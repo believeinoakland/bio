@@ -1,6 +1,6 @@
 # Plan R085
 
-**Status** · OPEN · BOB #189 · session_01YQ4yT2XcSToaGFfTUtnjeH · depth 1
+**Status** · OPEN · BOB #190 · session_01HqQ2d1HjF7g1iniy8y5mNx · depth 1
 
 **Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; control-plane: CONTROL-PLANE #35 session_013MCbxDMa9jH48CQ4Ks4wqm; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-daily: SCREENS-DAILY #5 session_01KMKGKQB8H39uXLhH43ccYQ; agent-runner: AGENT-RUNNER #8 session_01CnAYmpK7zwcNdBC9r85K5y; observation-log: OBSERVATION-LOG #13 session_01SJrWSUDWk4ygPEnF4edtGH; ai-runs: AI-RUNS #24 session_014E6HztL3Ehb1nLBpG9td7t; agent-harness: AGENT-HARNESS #6 session_01P5ZBwkcJzw7ejUkCfh91qF; agent-model: AGENT-MODEL #10 session_01QxtF2G4H6Q337jE4Ti6TBN; agent-worker: AGENT-WORKER #27 session_01HesGHMU4B19YsjqB1nVyxV; machinery-producers: MACHINERY-PRODUCERS #4 session_01WdZWF2N7iamL2RKVC1vFPM; screens-inquiry: SCREENS-INQUIRY #7 session_01L2wDs5DhuwdscrBezRCF3P
 
@@ -44,3 +44,13 @@ All seven run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-18 · agent-worker** · R96 (forward `ids`), R97 (contracts carry subjects, targets and arms), R98 (each usage entry's real model), R99 (wallclock measured), R100 (a cited address with an extent resolves to its record) · claude-sonnet-5-5.
 - **R085-19 · machinery-producers** · R14 (no "capture finished" item for a record holding no capture) · claude-haiku-5-5.
 - **R085-20 · screens-inquiry** · R46 (the founder drawn by handle) · claude-haiku-5-5.
+
+## Fix round 5 (K3510; passage reads with bare words, and the run shown on the question), out of layer on the cut
+
+All five run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2–4). The diagnosis is `build/plan/diag-085-r5.md`. Merge order: query-language and agent-harness before agent-worker (its bundle takes both); screens-inquiry and control-plane any time. Not in the round, each with its hard reason: the dock's pass, level and cost (words missing, K3366; the cost is DEC-296's, T50, N1167); a `level-empty` proposal drawn by key (its sentence is missing from `words.json`); a backfill of pre-R38 captures' index state (only biosmoke8's trial capture is affected; the walk uses a fresh capture); `airunopen`'s project-gate wording (a permitting ground, not a bug); `/app/ai-session/<run>` (a legacy-interface registry entry, no requirement asks for it).
+
+- **R085-21 · query-language** · R31 (bare words under `rows=passage` read as passage words) · claude-sonnet-5-5.
+- **R085-22 · agent-worker** · R101 (a dedup drop is logged), R102 (`¶` ends a cited record id) · claude-sonnet-5-5.
+- **R085-23 · agent-harness** · R13 (an empty-level description names "this question") · claude-haiku-5-5.
+- **R085-24 · screens-inquiry** · R47 (the question page draws its run beside waiting proposals), R48 (the dock draws the latest ended run) · claude-sonnet-5-5.
+- **R085-25 · control-plane** · R101 (`/favicon.ico` answers 204) · claude-haiku-5-5.
