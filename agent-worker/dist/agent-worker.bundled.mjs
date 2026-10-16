@@ -2856,6 +2856,15 @@ function factsOf(messages) {
   }
   return { content: "no facts were given for this work", error: true };
 }
+async function finalRefusal(checkFinal, input) {
+  if (typeof checkFinal !== "function") return null;
+  try {
+    const r = await checkFinal(input && typeof input === "object" ? input : {});
+    return r && typeof r === "object" && r.code != null ? `${String(r.code)}: ${String(r.detail ?? "")}` : null;
+  } catch {
+    return null;
+  }
+}
 
 // ../agent-model/src/apikey.mjs
 var MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
@@ -2999,10 +3008,11 @@ function traceHeaders({ trace, memberRef } = {}, secret) {
   const fit = (v) => typeof v === "string" && v.length > 0 && v.length <= TRACE_HEADER_MAX && !(typeof secret === "string" && secret && v.includes(secret));
   return { ...fit(trace) ? { [TRACE_HEADER2]: trace } : {}, ...fit(memberRef) ? { [MEMBER_REF_HEADER2]: memberRef } : {} };
 }
-function conversationRequest({ member, secret }, { model, system, messages, tools, maxTurns }) {
+function conversationRequest({ member, secret }, { model, effort, system, messages, tools, maxTurns }) {
   return {
     credential: { kind: "signin", member, secret },
     model,
+    ...effort ? { effort } : {},
     system: systemText(system),
     prompt: renderTranscript(messages),
     tools: offeredTools(tools, heldResults(messages)),
@@ -3091,18 +3101,19 @@ function ending(m, usage) {
 async function signinConverse(args) {
   return scrubDeep(await conversation(args), args.account.secret);
 }
-async function conversation({ account, runner, model, system, messages, tools, finalTool, onTool, maxTurns, charge }) {
+async function conversation({ account, runner, model, effort, system, messages, tools, finalTool, onTool, checkFinal, maxTurns, charge }) {
   const { member, secret } = account;
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
   let calls = 0;
   let k = 0;
+  let handedBack = false;
   const unstated = () => sumUsage(usage, usageOf(null));
   const imagesRelayed = imageGate(runner, member);
   if (imageOutsideResult(messages)) return notRelayed();
   if (resultHoldsImage(messages) && !await imagesRelayed()) return notRelayed();
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(account, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(account, { model, effort, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
@@ -3127,8 +3138,15 @@ async function conversation({ account, runner, model, system, messages, tools, f
           content = AFTER_ANSWER;
           isError = true;
         } else if (u.name === finalTool) {
-          answer = input;
-          content = ANSWERED;
+          const refusedFinal = handedBack ? null : await finalRefusal(checkFinal, input);
+          if (refusedFinal) {
+            handedBack = true;
+            content = refusedFinal;
+            isError = true;
+          } else {
+            answer = input;
+            content = ANSWERED;
+          }
         } else if (here) {
           content = here.content;
           isError = !!here.error;
@@ -3182,21 +3200,26 @@ async function conversation({ account, runner, model, system, messages, tools, f
 
 // ../agent-model/src/model.mjs
 var MODEL_FOR_MODE = Object.freeze({
-  check: "claude-opus-5",
-  investigate: "claude-opus-5",
-  extract: "claude-opus-5",
-  plan: "claude-opus-5",
-  ask: "claude-opus-5",
+  check: "claude-opus-5-5",
+  investigate: "claude-opus-5-5",
+  extract: "claude-opus-5-5",
+  plan: "claude-opus-5-5",
+  ask: "claude-opus-5-5",
   /* K1983: `agent-worker` R59's `POST /draft`; provisional like the rest until M-Q9. */
-  draft: "claude-opus-5",
+  draft: "claude-opus-5-5",
   /* N832, K2611: `agent-worker` R72's `POST /transcribe`, a model that reads images (R14); provisional like the rest
      until M-Q9. */
-  transcribe: "claude-opus-5"
+  transcribe: "claude-opus-5-5"
 });
+var SUBSESSION_MODEL = "claude-sonnet-5-5";
+var SUBSESSION_ROLE = "subsession";
+var EFFORT_SUBSESSION = "low";
+var EFFORT_DEFAULT = "medium";
 var MODEL_MAX_TOKENS = 16e3;
 var rates = (input, output, cache_read, cache_write) => Object.freeze({ input, output, cache_read, cache_write });
 var MODEL_PRICES = Object.freeze({
-  "claude-opus-5": rates(5, 25, 0.5, 6.25)
+  "claude-opus-5-5": rates(4, 20, 0.4, 5),
+  "claude-sonnet-5-5": rates(2, 10, 0.2, 2.5)
 });
 var RATE_OF = Object.freeze({
   input_tokens: "input",
@@ -3266,20 +3289,25 @@ async function converse({
   reference,
   runner,
   mode,
+  role,
   meter,
   system,
   messages,
   tools,
   finalTool,
   onTool,
+  checkFinal,
   maxTurns = CONVERSATION_MAX_TURNS,
   trace,
   memberRef
 }) {
   const { ref, refusal: refusal6 } = precheck(reference, runner);
   if (refusal6) return refusal6;
-  const model = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode) ? MODEL_FOR_MODE[mode] : null;
-  if (!model) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
+  const known = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode);
+  if (!known) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
+  const sub = role === SUBSESSION_ROLE;
+  const model = sub ? SUBSESSION_MODEL : MODEL_FOR_MODE[mode];
+  const effort = sub ? EFFORT_SUBSESSION : EFFORT_DEFAULT;
   const charge = (serialized) => {
     if (meter.turns >= meter.turnsBound) {
       meter.stopped = "turns";
@@ -3298,16 +3326,19 @@ async function converse({
       account: signinAccount(ref, { trace, memberRef }),
       runner,
       model,
+      effort,
       system,
       messages,
       tools,
       finalTool,
       onTool,
+      checkFinal,
       maxTurns,
       charge
     });
   let usage = null;
   let calls = 0;
+  let handedBack = false;
   for (let k = 0; k < maxTurns; k += 1) {
     const serialized = JSON.stringify(withCache({
       model,
@@ -3315,7 +3346,8 @@ async function converse({
       system,
       messages,
       tools,
-      tool_choice: { type: "auto" }
+      tool_choice: { type: "auto" },
+      output_config: { effort }
     }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
@@ -3329,6 +3361,17 @@ async function converse({
     messages.push({ role: "assistant", content });
     const uses = content.filter((b) => b && b.type === "tool_use");
     const final = uses.find((u) => u.name === finalTool);
+    const refusedFinal = final && !handedBack ? await finalRefusal(checkFinal, final.input) : null;
+    if (refusedFinal) {
+      handedBack = true;
+      messages.push({ role: "user", content: uses.map((u) => ({
+        type: "tool_result",
+        tool_use_id: u.id,
+        content: u === final ? refusedFinal : "not performed: the answer was handed back",
+        is_error: true
+      })) });
+      continue;
+    }
     if (final) {
       messages.push({ role: "user", content: uses.map((u) => ({
         type: "tool_result",
@@ -3532,6 +3575,11 @@ function subsessionOpening(contract) {
 }
 function subsessionTools(contract) {
   const r = contract.returns || {};
+  const conditions = Array.isArray(r.conditions) && r.conditions.length ? r.conditions : null;
+  const summaryMax = r.summary_max || 500;
+  const citationsMax = r.citations_max || 20;
+  const addressMax = r.address_max || 200;
+  const bounds = ` The summary is at most ${summaryMax} characters; give at most ${citationsMax} citations, each address at most ${addressMax} characters.` + (conditions ? ` condition is one of: ${conditions.join(", ")}.` : "");
   return [
     {
       name: "meaningrows",
@@ -3544,22 +3592,22 @@ function subsessionTools(contract) {
     },
     {
       name: "report",
-      description: String(r.rule || "return a REPORT with a citation, never documents"),
+      description: String(r.rule || "return a REPORT with a citation, never documents") + bounds,
       input_schema: {
         type: "object",
         properties: {
           state: { type: "string", enum: r.states || [] },
-          summary: { type: "string", maxLength: r.summary_max || 500 },
-          citations: { type: "array", maxItems: r.citations_max || 20, items: {
+          summary: { type: "string", maxLength: summaryMax },
+          citations: { type: "array", maxItems: citationsMax, items: {
             type: "object",
             properties: {
-              address: { type: "string", maxLength: r.address_max || 200 }
+              address: { type: "string", maxLength: addressMax }
             },
             required: ["address"],
             additionalProperties: false
           } },
           governed: { type: "boolean" },
-          condition: { type: "string" }
+          condition: conditions ? { type: "string", enum: conditions } : { type: "string" }
         },
         required: ["state"],
         additionalProperties: false
@@ -4527,6 +4575,8 @@ function spawnContract({ level, payload } = {}) {
       citation_keys: Object.keys(CITATION_KEYS),
       states: Object.keys(REPORT_STATES),
       summary_max: SUMMARY_MAX,
+      /* R11: the condition kinds the plane admits, in the vocabulary's fixed order. */
+      conditions: Object.keys(CONDITION_KINDS),
       citations_max: CITATIONS_MAX,
       address_max: ADDRESS_MAX,
       rule: "return a REPORT with a citation, never documents. The parent re-reads by address."
@@ -5623,6 +5673,16 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       messages: subsessionOpening(contract),
       tools: subsessionTools(contract),
       finalTool: "report",
+      /* R95 (agent-model R19): a check's sub-sessions, and no other conversation, run as sub-sessions. */
+      role: "subsession",
+      /* R94 (agent-model R18): the report is checked as `checkReport` will check it, less its location (the log gives
+         that after, so its absence is never handed back), and a refusal goes back once with its detail to be rewritten. */
+      checkFinal: (input) => {
+        const notObject = input == null || typeof input !== "object" || Array.isArray(input);
+        const { observed_at: _located, ...said2 } = notObject ? {} : input;
+        const bad = checkReport(notObject ? input : { ...said2, level: contract.level, observed_at: "log:0" });
+        return bad ? { code: bad.code, detail: bad.detail } : null;
+      },
       onTool: async (name, input) => {
         if (!contract.scope.includes(name))
           return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
@@ -5920,7 +5980,7 @@ async function checkRun(body, env) {
     ) };
   return { runId, store, credential, account, cascade, bound, requested };
 }
-async function runSegment(env, checked, body, whoami, traced, deadline = null) {
+async function runSegment(env, checked, body, whoami, traced, deadline = null, beforeEnd = null) {
   const { runId, store, credential } = checked;
   let answer;
   try {
@@ -5936,6 +5996,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null) {
       end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" }
     };
   }
+  if (beforeEnd) await beforeEnd();
   if (answer.end)
     await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end }).catch(() => null);
   return answer.response;
@@ -6106,10 +6167,15 @@ var SegmentDriver = class {
     this.pending = null;
     if (!p) return;
     this.running = true;
-    try {
-      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env));
-    } finally {
+    let released = false;
+    const release = () => {
+      released = true;
       this.running = false;
+    };
+    try {
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env), release);
+    } finally {
+      if (!released) this.running = false;
     }
   }
 };

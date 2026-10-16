@@ -105,11 +105,15 @@ function modelAnswer(body) {
   return [{ type: "tool_use", id: "j", name: `judge_${step}`, input }];
 }
 
-async function modelRun(planeCfg) {
-  const rec = { calls: [], landed: [] };
+async function modelRun(planeCfg, answer = modelAnswer) {
+  const rec = { calls: [], landed: [], requests: [] };
   const saved = globalThis.fetch;
-  globalThis.fetch = async (url, init) => Response.json({ id: "msg", type: "message", role: "assistant",
-    content: modelAnswer(JSON.parse(init.body)), stop_reason: "tool_use", usage: { input_tokens: 1, output_tokens: 1 } });
+  globalThis.fetch = async (url, init) => {
+    const sent = JSON.parse(init.body);
+    rec.requests.push(sent);
+    return Response.json({ id: "msg", type: "message", role: "assistant",
+      content: answer(sent), stop_reason: "tool_use", usage: { input_tokens: 1, output_tokens: 1 } });
+  };
   try {
     const res = await worker.fetch(new Request("http://agent-worker/run", { method: "POST", body: JSON.stringify({
       run_id: "RUN-r085", store: "scratch", credential: AIK, account: ACCOUNT }) }),
@@ -154,6 +158,43 @@ console.log("\n--- R92 · a check run's tick entries and its sub-agents' reports
     [levelsLooked, 0, true]);
 }
 
+/** R94: a sub-session that reports a summary of `long` characters on its first `report` and `short` on its next. */
+const reportSizes = (long, short) => (body) => {
+  const names = (body.tools || []).map((x) => x.name);
+  if (!names.includes("report")) return modelAnswer(body);
+  const reported = body.messages.filter((m) => m.role === "assistant" && Array.isArray(m.content)
+    && m.content.some((b) => b.type === "tool_use" && b.name === "report")).length;
+  return [{ type: "tool_use", id: `r${reported}`, name: "report",
+            input: { state: "LOOKED_ABSENT", summary: "x".repeat(reported === 0 ? long : short) } }];
+};
+
+console.log("\n--- R94 · a refused report is handed back once to be rewritten ---");
+{
+  const levels = (await modelRun({ tick: "real" })).out.fanout?.levels?.length ?? 0;
+  const fixed = await modelRun({ tick: "real" }, reportSizes(700, 300));
+  t("R94: a sub-session whose first report carries a 700-character summary and whose second carries 300 is taken, at every level",
+    [levels > 0, fixed.out.reports_taken, (fixed.out.reports_refused || []).length], [true, levels, 0]);
+  t("R94: …each report is located and logged as before (observed_at is the log's, not the sub-session's)",
+    [fixed.out.logged > 0, (fixed.out.reports_refused || []).filter((r) => r.code === "REPORT_UNLOCATED").length], [true, 0]);
+  const over = await modelRun({ tick: "real" }, reportSizes(700, 700));
+  t("R94 (control): two over-bound reports leave that level refused REPORT_OVER_BOUND, named and never read as an absence",
+    [over.out.reports_taken, (over.out.reports_refused || []).filter((r) => r.code === "REPORT_OVER_BOUND").length],
+    [0, levels]);
+}
+
+console.log("\n--- R95 · a check's sub-sessions call converse as sub-sessions ---");
+{
+  const run = await modelRun({ tick: "real" });
+  const sub = run.rec.requests.filter((b) => (b.tools || []).some((x) => x.name === "report"));
+  const rest = run.rec.requests.filter((b) => !(b.tools || []).some((x) => x.name === "report"));
+  t("R95: each of a check's sub-sessions' requests names the sub-session model (claude-sonnet-5-5), at low effort",
+    [sub.length > 0, sub.every((b) => b.model === "claude-sonnet-5-5"), sub.every((b) => b.output_config?.effort === "low")],
+    [true, true, true]);
+  t("R95 (control): the coordinating rows' requests do not: claude-opus-5-5 at medium effort",
+    [rest.length > 0, rest.every((b) => b.model === "claude-opus-5-5"), rest.every((b) => b.output_config?.effort === "medium")],
+    [true, true, true]);
+}
+
 console.log("\n--- R91 · an error ends the segment, and the plane is told ---");
 {
   const { status, out, rec } = await modelRun({ throwAt: "airunspawn" });
@@ -178,14 +219,23 @@ const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.ur
 /* The fake plane: answers a check run's ops, records every call, and serves the record at `op=__calls`. */
 const FAKE_PLANE = `
 const CALLS = [];
+let chained = false;
 const ok = (result) => Response.json({ ok: true, result, store: "scratch", tokenClass: "ai", version: "r085" });
-export default { async fetch(req) {
+export default { async fetch(req, env) {
   const u = new URL(req.url);
   const op = u.searchParams.get("op") || "";
   if (op === "__calls") return Response.json(CALLS);
   const body = req.method === "POST" ? await req.json() : null;
   CALLS.push({ op, body });
   const run = u.searchParams.get("run") || body?.run;
+  /* R93: the plane's continuation (ai-runs R84): from inside the first segment_end tick of RUN-r085-chain, the next
+     segment of the run is dispatched to the member, and the status it answers is recorded. */
+  if (op === "airuntick" && body?.segment_end && run === "RUN-r085-chain" && !chained) {
+    chained = true;
+    const next = await env.WORKER.fetch("http://agent-worker/run", { method: "POST", body: env.NEXT_BODY });
+    CALLS.push({ op: "__continued", status: next.status, code: (await next.json()).code ?? null });
+  }
+  if (op === "airunspawn" && run === "RUN-r085-slow") await new Promise((r) => setTimeout(r, 1500));
   switch (op) {
     case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
     case "airun": return ok({ run, found: true, session: { id: run, mode: "check", status: "running",
@@ -209,7 +259,9 @@ const mf = new Miniflare({ workers: [
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     bindings: { VERSION: "r085" }, serviceBindings: { PLANE: "fake-plane" },
     durableObjects: { SEGMENTS: { className: "SegmentDriver", useSQLite: true } } },
-  { name: "fake-plane", modules: true, script: FAKE_PLANE, compatibilityDate: "2026-07-01" },
+  { name: "fake-plane", modules: true, script: FAKE_PLANE, compatibilityDate: "2026-07-01",
+    serviceBindings: { WORKER: "agent-worker" },
+    bindings: { NEXT_BODY: JSON.stringify(withAccount({ run_id: "RUN-r085-chain", store: "scratch", credential: AIK, max_steps: 2 })) } },
 ] });
 try {
   const plane = await mf.getWorker("fake-plane");
@@ -263,6 +315,30 @@ try {
   const bad = await runOp({ run_id: "RUN-r085-bad", store: "scratch", credential: "hunter2" });
   t("R91 (control): a body refused before any plane call answers as today", [bad.status, (await bad.json()).code],
     [400, "BAD_CREDENTIAL_SHAPE"]);
+
+  /* R93: the segment is marked not running before its segment_end tick is sent, so the continuation the plane dispatches
+     from inside that tick is accepted. */
+  const n1 = (await calls()).length;
+  const first = await runOp({ run_id: "RUN-r085-chain", store: "scratch", credential: AIK, max_steps: 2 });
+  let chain = [];
+  for (let i = 0; i < 100 && !chain.some((c) => c.op === "__continued"); i += 1) {
+    await new Promise((r) => setTimeout(r, 100));
+    chain = (await calls()).slice(n1);
+  }
+  t("R93: the first segment is accepted, and the segment the plane dispatches from inside its segment_end tick is accepted too (202)",
+    [first.status, chain.find((c) => c.op === "__continued")?.status, chain.find((c) => c.op === "__continued")?.code],
+    [202, 202, null]);
+  /* The continuation then runs: a second segment_end follows (the chain is dispatched once). */
+  for (let i = 0; i < 100 && chain.filter((c) => c.body?.segment_end).length < 2; i += 1) {
+    await new Promise((r) => setTimeout(r, 100));
+    chain = (await calls()).slice(n1);
+  }
+  t("R93: …and the dispatched segment runs to its own segment_end", chain.filter((c) => c.body?.segment_end).length, 2);
+  /* Control: a /run while the run's segment is still running is refused 409 SEGMENT_RUNNING. */
+  const slow1 = await runOp({ run_id: "RUN-r085-slow", store: "scratch", credential: AIK });
+  const slow2 = await runOp({ run_id: "RUN-r085-slow", store: "scratch", credential: AIK });
+  t("R93 (control): a /run while a segment of the run is still running is refused 409 SEGMENT_RUNNING",
+    [slow1.status, slow2.status, (await slow2.json()).code], [202, 409, "SEGMENT_RUNNING"]);
 } finally {
   await mf.dispose();
 }
