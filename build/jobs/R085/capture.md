@@ -27,3 +27,10 @@ Size (session_01QG6bQ8xzeWQzwTQkGBvb2w): test runs 3, module lines 3374
 ## J1 · COMPLETE
 
 R092 applied (R085-3): uploadCapture takes type; a text type over UTF-8 no-NUL bytes profiles from text (profiled_from_text true), every given type recorded as declared_by uploader. Tests 154 pass 0 fail (3 new R92 tests); format, architecture, coverage, ownership all 0 failures. One reading to confirm: formats.mjs has no plain-text entry, so profile.format stays undetermined for text/plain, as for a fetched .txt; my test asserts profiled_from_text, source_content_type, declared_by, not a determined format. See the record.
+
+## J2 · COMPLETE
+
+R085-31 applied (R93). `uploadCapture` reads an untyped upload as text when its name ends .txt, .md or .csv and its bytes are valid UTF-8 with no NUL. A declared type still wins; a name-derived read records no declaration. Commit a3cdc83e29 on job/R085/capture; record in build/jobs/R085/capture.md (Completion, fix round 6).
+
+Tests: capture suite 156 pass, 0 fail (two new R93 tests in test/m/capture/upload.test.mjs). Neighbours (control-plane upload door, acquisition profile) 15 pass, 0 fail.
+Checks: format, architecture, coverage (46 of 46), ownership: 0 failures each.
