@@ -276,7 +276,10 @@ function sendUpload(view, el, cs) {
                      `${cs.w("screen.capture.file.where")}: ${where}`, `${cs.w("screen.capture.file.what")}: ${what}`]
     .join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2000) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
-  return { query: { statement, name: file.name }, raw: file };
+  /* R27 (control-plane R100): the file's declared media type rides beside `statement` and `name`; an empty type sends none */
+  const query = { statement, name: file.name };
+  if (typeof file.type === "string" && file.type) query.type = file.type;
+  return { query, raw: file };
 }
 /* R21 (D9; capture R86, control-plane R72): an upload's answer is a provenance document; it is promoted as an information
  * bundle at `collected`, as R1 promotes `acquire`'s (`promoteDocument`), filed under the subject's project (R22). "It waits

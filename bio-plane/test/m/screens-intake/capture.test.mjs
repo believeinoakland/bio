@@ -292,6 +292,27 @@ test("R2 the statement is composed from the three answers in order, each with it
   assert.match(r.headers.Authorization, /^Bearer /);
 });
 
+test("R27 the upload sends the file's declared media type as type, beside statement and name", async () => {
+  const TXT = new File(["plain words"], "notes.txt", { type: "text/plain" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": TXT });
+  await press(p, "captureupload");
+  const r = p.byOp("captureupload")[0];
+  assert.equal(r.query.type, "text/plain", "R27: the browser's file.type is sent as type");
+  assert.equal(r.query.name, "notes.txt");
+  assert.equal(r.query.statement, STATEMENT);
+});
+
+test("R27 control: a file whose declared type is empty sends no type", async () => {
+  const BLOB = new File(["unknown bytes"], "scan.bin", { type: "" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": BLOB });
+  await press(p, "captureupload");
+  const r = p.byOp("captureupload")[0];
+  assert.equal(Object.prototype.hasOwnProperty.call(r.query, "type"), false, "R27 control: no type key when the browser declares none");
+  assert.equal(r.query.name, "scan.bin");
+});
+
 test("R2 nothing is sent while a file or any answer is missing, saying which, or over 2,000 characters", async () => {
   const labels = (...ks) => ks.map((k) => word(k)).join(", ");
   const cases = [[{ ...filled, "ci-file": null }, "screen.capture.file.nofile", {}],
