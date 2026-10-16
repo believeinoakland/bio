@@ -10,6 +10,6 @@
 - **Not mine, noted:** the SAFE_VIEW_ONLY refusal on opening a .txt was not examined here (control-plane/screens); `controlplane` `captureupload` must pass `type` (R085-4).
 - **Deferred:** none. **Found in another module:** none beyond the above.
 - **Tests:** `node --test test/m/capture/ test/cap13-reuse-pages.test.mjs test/d57selflink.test.mjs` (from `bio-plane/`): tests 154, pass 154, fail 0. New: three `R92` tests in `test/m/capture/upload.test.mjs`.
-- **Checks:** format 170 modules, 0 failures; architecture 0 failures; coverage 45 of 45 live ids named, 0 failures; ownership (see below).
+- **Checks:** format 170 modules, 0 failures; architecture 0 failures; coverage 45 of 45 live ids named, 0 failures; ownership 3 files changed by capture, 0 failures.
 
 Size (session_01FvYpkWVNKobnL3zvXh2oyY): test runs 3, module lines 3353
