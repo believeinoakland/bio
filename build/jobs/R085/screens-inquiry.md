@@ -1,6 +1,6 @@
 # screens-inquiry (R085)
 
-**Status** · session_01L2wDs5DhuwdscrBezRCF3P · depth 2 · COMPLETE · handled B2
+**Status** · session_01XMC7d8bfcv7DEh1in4Bov7 · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -45,3 +45,28 @@ Correction to J1's last line: I wrote that the bundles are rebuilt by BOB at the
 - `node checks/ownership.mjs bio screens-inquiry tranche/R085`: 1 file changed by screens-inquiry between tranche/R085 and HEAD (before the record commit); 0 failures.
 
 Size (session_01L2wDs5DhuwdscrBezRCF3P): test runs 1, module lines 2283
+
+## J4 · COMPLETE
+
+**Entry R085-24 (screens-inquiry R47, R48; K3510; WALK-085 r4): applied.** Existing keys only; no new key needed.
+
+**What changed** (`bio-plane/src/screens-inquiry/`, commit 681ec655a4)
+1. `question.mjs` (R47): `myRun` is now any running run of hers that `airuns` shows (started on this page, from the dock, or found on a fresh load), so state d is drawn and `airuns` is read again every 10 s as R45 says, until it ends. The old test (`ticks > 1` or dispatched by this page) is replaced by "not a run this page saw opened and then withheld" (`ui.withheld`, set in the withheld branch of the press), so R33's D29 control still holds. The ended run's ending (`screen.assistant.run.ended`) and the ask are drawn above the waiting proposals (state e) whether or not any wait; state c draws the ending whether or not proposals wait.
+2. `assistant.mjs` (R48): when none of hers is running, the dock draws her latest ended run (`airuns` is newest first) with `screen.assistant.run.ended` and its ending's name (condition `bound`/`kind`, else the status, as before); `screen.assistant.run.none` only when `airuns` holds no run of hers there. "Work on this" stays offered.
+
+**Tests** (`test/m/screens-inquiry/r47.test.mjs`, new, five, each naming R47 or R48): an ended run with a proposal waiting draws the ending and the ask above the proposal (and in state c); a running run found on load, not pressed, is drawn as state d, read again once at 10 s and not at 9 s, its ticks move, its end is then stated and reading stops (another member's running run is not hers); control: no run with a proposal pending draws the proposal and no ending; the dock with two ended runs draws the later's ending, not "No run yet" (also a status-named ending, and another member's ended run leaves "No run yet"); control: no run draws "No run yet". In `assistant.test.mjs`, the R13 control that expected "No run yet" for her own ended run (`completed`) now expects its ending, as R48 amends; the other-member control keeps "No run yet".
+
+**Deferred:** nothing. **Found in another module:** nothing. **Note for BOB:** a run the *dock* opened and had withheld (still `running`, ticks 1, never dispatched) is now drawn at work on a question page opened afterwards, with "Stop the run" offered: the page cannot know the dock's withholding, and R47 says any running run of hers. Only `ai-runs`' view (a withheld flag in `airuns`) would tell them apart. **Stale generated artifacts (not mine to write, mechanics §14):** `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs` and newgroup's bundle embed `question.mjs` and `assistant.mjs` and are stale against R47 and R48 until BOB rebuilds them at the round's close. The R47 and R48 lines in `build/requirements/screens-inquiry.md` (and R46's) still read "not yet met": requirements are outside this job's write paths, so BOB marks them met.
+
+**Run**
+- `node --test test/m/screens-inquiry/` (bio-plane): tests 130, pass 130, fail 0. `test/m/interface-shell/` (the shell it runs on): tests 149, pass 149, fail 0.
+- `node checks/format.mjs /home/user/bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio screens-inquiry`: 19 product files, 42 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio screens-inquiry`: 48 of 48 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio screens-inquiry tranche/R085`: 5 files changed by screens-inquiry; 0 failures.
+
+Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2514
+
+## J5 · REPORT
+
+Correction to J4's last line: I wrote module lines 2514 without counting. The count of bio-plane/src/screens-inquiry/*.mjs is 2293. Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2293
