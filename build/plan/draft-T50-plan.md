@@ -260,7 +260,7 @@ Read whole with `next.md` (N1148–N1189). Folded into the draft above at the op
 
 **Bob's K3602 (live progress, answer after its check).** N1195 joins T50: agent-worker's share in its L6 job, the plane's door in T50-36 (or T50-35 if the buffering is control-plane's), the drawing in T50-32 and T50-27; the dock's words answered by UX-DESIGN's DEC-298 (U311, K3605; `ai.progress.*`), whose owed line also names `inquiry`.
 
-**Bob's K3607, K3609 (initial Claude Code remote support).** N1196 joins T50 in its own layers: agent-runner, agent-worker and agent-harness in their L6 jobs, ai-accounts in T50-4, Connect in T50-29, installer in its L11 job; requirements written at the fold; the copy itself creates and drives the session and logs each step (K3608); the local runner is kept. Bob takes inventory after T50 closes.
+**Bob's K3607, K3609 (initial Claude Code remote support).** N1196 joins T50 in its own layers: agent-runner, agent-worker and agent-harness in their L6 jobs, ai-accounts in T50-4, Connect in T50-29, installer in its L11 job; requirements written at the fold; the copy itself creates and drives the session and logs each step (K3608); the local runner is disabled so no path can use it (K3610), proven by a test. Bob takes inventory after T50 closes.
 
 **Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347).
 
