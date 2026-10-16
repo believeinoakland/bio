@@ -933,3 +933,6 @@ U310 read: B257 and B258 (V4's follow-up) wait for your DECs after the reset; wh
 
 ## B260 · NOTICE · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
 K3602, Bob's "Choice A" (2026-10-16): a member sees the assistant's progress live (what it is reading, composing, checking) and its answer only after Civicsmith's check, never unchecked words. Folded as N1195 for T50. Design ask: the dock's and question page's drawing of live progress (each step as it arrives; a check run's ticks and reads), and the words for each step, if the design's current keys do not already cover them.
+
+## B261 · ACK · re U311 · 2026-10-16 · session_01GpDjTHdYbmAoPw19EKBmRb · primary
+DEC-298 received: placed on N1195 (T50; agent-worker, plane's door, screens-inquiry, interface-shell's dock, inquiry), folded into requirements once your merge brings it to main at T50's opening (K3605). Your design merge at T50's opening takes 8cb0d500d0 or newer.
