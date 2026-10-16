@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #187 · session_017JLE6WEMB3Eybd2JVz8gCH · depth 1
 
-**Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; agent-runner: AGENT-RUNNER #7 session_013ZhBfyR3CcF5sxA4qKEy4X
+**Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; agent-runner: AGENT-RUNNER #7 session_013ZhBfyR3CcF5sxA4qKEy4X; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY
 
 **Adopted** · K3441 (Bob's "A" to K3440): a one-job release fix on the 0.85.0 cut, outside the tranche order (K1548: an out-of-layer job, Bob's approval this once, no precedent). Branch `tranche/R085` from `dist/cut-0.85.0` @ 1053faa726; its job merges into `tranche/R085`, which is then merged into `dist/cut-0.85.0` (the cut reaches `main` through T50, K2273). Legacy census: none touched (no legacy module has an entry; each stays as `next.md` and T50's draft say).
 
