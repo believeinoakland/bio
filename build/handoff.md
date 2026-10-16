@@ -1,37 +1,44 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #192 (`session_01PsqvgyoB1fJsGCazEA2bQZ`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~16:20 UTC. Read `build/rulings-active.md` whole, then K3524–K3540 (BOB #192's).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #193 (`session_01KHqxV8EgzsJHt2ehAsdqHK`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~18:05 UTC, at 40% context. Read `build/rulings-active.md` whole (brought current today, K3559), then, whole with the Read tool, rulings K3549, K3551, K3557, K3558, K3561–K3563.
 
-## RELEASE ONLY (K3425, K3426)
+## Standing tonight (rulings-active §1)
 
-Only release 0.85.0 work, and the lanes' studies and walks, proceed until T50 opens (Bob's K3425: Saturday 2026-10-17).
+- **Overage** (K3549): the primary account's weekly limit is spent; work continues on overage (4× cost) until Bob says stop. Cheapest able model everywhere; no speculative workers; one deploy per fix round.
+- **Fix rounds only for the focus journey** (K3551): a finding enters a round on the 0.85.0 cut only if it blocks K3320's journey and is fixable there; all else to `next.md` for T50, which opens at the weekly reset, **2026-10-17 11:00 UTC**.
+- **Bottom up** (K3558): the assistant is not walked end to end again until each layer below is proven live (the nine-step ladder in K3558).
 
 ## Where things stand
 
-- **Fix round 6 is merged** on `tranche/R085` @ be46ca9d2e (R085-26–R085-35: retrieval R79, query-language R32, agent-model R22, agent-harness R14–R15, agent-worker R103–R105 (R106 retired), capture R93, screens-intake R28, wizard-scripts R40, plane R57, agent-runner R33 `standard-1`); every mark struck; `checks/run.mjs` 0 failures; the plane bundle rebuilt (be46ca9d2e); fleetbundles 148 pass, 1 fail ("agent-worker's 28 inputs", N1156's known hand list). Job sessions of round 6 still live: RETRIEVAL #18, QUERY-LANGUAGE #9, AGENT-MODEL #11, AGENT-HARNESS #8, AGENT-WORKER #29, CAPTURE #34, SCREENS-INTAKE #6, WIZARD-SCRIPTS #11, AGENT-RUNNER #10, PLANE #39 (ids in `build/plan/current.md`'s Jobs line on `tranche/R085`); archive each and write its row under R085's metrics (or T49's, as earlier R085 rows) at the close.
-- **Round 6's close is not done.** `module-tests.mjs` stalled after 50 modules. Reds seen on the new head: plane `store.test.mjs` "R2, R10", screens-daily "R1–R13", screens-wizards "R1 every refusal…" and "R8 the path Settings › Wizards" (all red on `dist/cut-0.85.0` too); not yet compared with the base: bundler 1, membership 6, ai-accounts 1, promotion 2, row-census (R39/R45/R46 MODULE_ORDER), R83/R140/R145 MODULE_ORDER, R79 listeners order, refusal keys R10/R14/R11/R22/R12. Suspect: BOB #192 rewrote `build/modules.json` with `json.dumps` when adding the edge plane → interface-shell (K3531), reformatting the whole file; check whether a test reads it textually.
-- **The setup script** is Bob's guarded block (K3534); new sessions start. Whether Chromium now trusts the egress CA is unknown until a walk tries.
-- **Lanes (manifest):** ASSISTANT-HOSTING #1 `session_01YE7nwvJxdhu4Xc9nnb77MX` (the assistant lane, K3538, K3539; its S1, S2 read; S1's two questions put to Bob, open), JOURNEYS #1 `session_01FL4s5VPpJ8jsCWyMjj1Rih` (K3539; writing its walk plan). Both wait for BOB's word that round 6 is deployed. Read both `HANDOFF.md`s at takeover and each backstop check.
-- `member-sign-in.txt` sits in BOB #192's container only; Bob has set `JOURNEY_MEMBER_*` (K3526), which new sessions read.
-- Channel: read through U308; nothing owed. INVESTIGATION-DESIGN: nothing past H43.
+- **Fix round 6 is deployed** to biosmoke8 (K3543): cut `dist/cut-0.85.0` @ 84317f9bc4; plane sha256 `99b30d0f…`; agent-runner `standard-1`. Every module red on its head is red on the base (K3543, K3557, accepted by name; N1171 for T50).
+- **Fix round 7 runs on `tranche/R085`** (plan `build/plan/current.md` R085-36–R085-42; Jobs line holds the addresses):
+  - merged: R085-36 screens-daily R24; R085-38 agent-harness R16; R085-40 screens-inquiry R49.
+  - running: R085-37 SKILLS #1 (R50); R085-41 RUN-RULES #1 (R34, `nothing-written` ending; started 17:58, unconfirmed at 18:00); R085-39 AGENT-WORKER #30 (R107, R108 applied, J12 read; waits for BOB's CHANGE that skills and run-rules are merged, then merges the tranche, fixes its R11 key-list test, rebuilds its bundle last); R085-42 SCREENS-DAILY #6 re-opened on CHANGE B5 (R38, R39: Find in from a document; results draw the cite act).
+- **Lanes:** JOURNEYS #1 and #2 and ASSISTANT-HOSTING #1 are archived (rows under T49). Their files: `build/plan/lane-journeys/` (J-1–J-11), `lane-journeys/browser/` (B-1–B-26), `study-assistant-hosting/` (S1–S4, `walk-r6.md`). Funnelled: N1172–N1184 in `next.md` (K3545–K3562).
+- **Channel:** read through U309; B256 ACK posted. INVESTIGATION-DESIGN: nothing past H43.
+- **Format check:** one old failure, K3441 lacks its standing-list statement (rulings are not edited; a new line naming it may state it).
+- Worktrees in BOB #193's container only; nothing to carry.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1) with `mail bob --tranche R085` (from a checkout of `tranche/R085`). Archive BOB #192 once idle and write its BOB-final row under T49. Delete its routines: backstop `trig_01MZrmWnjgcmWiPitLNToXxR`, WATCH `trig_01MVW4iYXCRcpPNwJvAGMqcn`, and any other into it. Arm your own WATCH into ROOT #5 and a backstop.
-2. **Triage the reds** with one worker (sonnet, medium, K3518): run each red test file listed above on `dist/cut-0.85.0` (with `npm ci` where needed) and on `tranche/R085`; any red only on R085 is this round's, fixed by its module's job (restart it, one model up if it blocks) or by BOB if it is `modules.json` formatting (restore the file's original layout with only the one `uses` edge added); then let `module-tests.mjs` finish (run it in the background, never stopped midway, K1994). Record the outcome; accept a base red only by name (§5.5).
-3. **Merge `tranche/R085` into `dist/cut-0.85.0` and deploy to biosmoke8** (fleet, plane, installer as the round needs): Bob's standing permission K3466, but auto mode refuses each in session (K3481, K3495, K3504, K3514); ask Bob for his one-line approval in your session, naming the act, then act. Confirm biosmoke8 serves the round (`/favicon.ico` 204; a fresh `op=airunopen` uses `standard-1`).
-4. **Tell both lanes it is deployed** (`send_message` to each). JOURNEYS walks; the assistant lane runs its baseline walk. Funnel their findings: each defect an entry (a fix round on the cut when it blocks the release, else `next.md` for T50).
-5. Tell Bob, rendered, whether his journey works end to end (K3320's bar), with the lanes' first findings.
-6. **T50 opens Saturday** (K3425): the cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273), with the design stream's branch (`e074feaa46` or newer, U305). `next.md` gained N1170 (the release descriptor's instance type, K3535).
+1. **Take over** (§5.1) with `mail bob --tranche R085`. Archive BOB #193 once idle (its BOB-final row under T49). Delete its routines: backstop (the newest "BOB #193 backstop", fires ~18:18), WATCH `trig_01BUxXzBHhnE5PsiRHMXp4KT`. Arm your WATCH into ROOT #5 and a backstop (jobs run).
+2. **Merge each round-7 job when COMPLETE** (§5.5), striking its marks. When SKILLS #1 and RUN-RULES #1 are merged, post AGENT-WORKER #30 a CHANGE (merge the tranche, rebuild its bundle last), then merge it.
+3. **Close round 7:** regenerate artifacts in the manifest's order (the plane bundle is stale from screens-inquiry R49, skills, run-rules); `fleetbundles`, `checks/run.mjs`; archive the round's job sessions with their rows under R085.
+4. **Deploy** (Bob's one-line approval in your session, §16, as K3542): push `tranche/R085` to `dist/cut-0.85.0`; plane by `deploy.mjs`, agent-worker by `deploy-fleet.mjs` (start `dockerd` first if agent-runner changes; it does not this round). Reach the instance directly (rulings-active §4).
+5. **Start ASSISTANT-HOSTING #2 on sonnet** (K3553) to climb K3558's ladder from step 1, stopping at the first failing layer; its files are its handoff. Check N2 (another project's records cited) as a member at the ladder's step 9.
+6. Tell Bob, rendered, where the ladder stands and whether his journey works.
+7. **T50 opens at 11:00 UTC Saturday** (K3551, K3425): cut merged into `tranche/T50` at its opening (K2273), with the design stream's branch (`e074feaa46` or newer, U305); plan from `next.md` (N1170–N1184 among it).
+
+## Pruning done at this handoff (K3559)
+
+rulings-active brought current (17 rules added, 11 stale lines fixed); 166 finished drafts, starts and notes through T48 moved to `build/plan/archive/`. Still to prune at the next handoff: rulings-active is 105 lines (over its ~80 guide); R085's finished diagnoses (`diag-085-*`, `walk-085*`) move to the archive once R085 closes.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- Deploys to biosmoke8 and pushes to `dist/cut-0.85.0`: Bob's standing permission K3466, but auto mode refuses them in session (K3481, K3495, K3504, K3514); each needs his one-line approval in the refusing session (§16).
-- A sign-in by a handle other than the environment's was refused even with Bob's approval (K3523): sign in only by the variables.
-- Deleting branch `draft/r085-r6` was refused (HTTP 403 at the proxy, K3528): leave it.
+- Deploys and pushes to `dist/cut-0.85.0`: refused by auto mode despite K3466; Bob's one-line approval in the refused session each time (K3542, rulings-active §2).
+- biosmoke8 holds nothing secret (K3556): its credentials' exposure is not raised.
 - The cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273).
 
 ## Open with Bob
 
-- None from the assistant lane: Bob chose method A, weights only where clear (K3540); the AT-19 item is withdrawn (K3540).
-- His walk page: https://claude.ai/artifact/WuVghhRHhkrcHF1z1QjDL6 (BOB #192's; update or replace).
+None.
