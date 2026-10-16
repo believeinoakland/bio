@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #188 · session_016xoGmXybw1rw8mt7UkRL6U · depth 1
 
-**Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; agent-runner: AGENT-RUNNER #7 session_013ZhBfyR3CcF5sxA4qKEy4X; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; control-plane: CONTROL-PLANE #35 session_013MCbxDMa9jH48CQ4Ks4wqm; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-inquiry: SCREENS-INQUIRY #6 session_01C32QGvXWpSbZKJMKWKdBMX; ai-runs: AI-RUNS #23 session_01RDWpf3BhWXAiW97xm3Ppkk; agent-worker: AGENT-WORKER #25 session_01XU6wVrjDVTctSBNoqW3NmS
+**Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; agent-runner: AGENT-RUNNER #7 session_013ZhBfyR3CcF5sxA4qKEy4X; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; control-plane: CONTROL-PLANE #35 session_013MCbxDMa9jH48CQ4Ks4wqm; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-inquiry: SCREENS-INQUIRY #6 session_01C32QGvXWpSbZKJMKWKdBMX; ai-runs: AI-RUNS #23 session_01RDWpf3BhWXAiW97xm3Ppkk; agent-worker: AGENT-WORKER #26 session_018F9Doyf71vyGxPLnaNguLq
 
 **Adopted** · K3441 (Bob's "A" to K3440): a one-job release fix on the 0.85.0 cut, outside the tranche order (K1548: an out-of-layer job, Bob's approval this once, no precedent). Branch `tranche/R085` from `dist/cut-0.85.0` @ 1053faa726; its job merges into `tranche/R085`, which is then merged into `dist/cut-0.85.0` (the cut reaches `main` through T50, K2273). Legacy census: none touched (no legacy module has an entry; each stays as `next.md` and T50's draft say).
 
