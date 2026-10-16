@@ -49,3 +49,7 @@ My readings for R91 and R92. I am building on them now; answer only where you di
 - format: 0 failures. architecture: 0 failures. coverage: 83 of 83 live ids named, 0 failures. ownership: 11 files changed, 0 failures.
 
 Size (session_01XU6wVrjDVTctSBNoqW3NmS): test runs 16, module lines 3899
+
+## J3 · REPORT
+
+R93 met: SegmentDriver.alarm() now marks the segment not running (via a beforeEnd hook in runSegment) before it sends the segment_end tick; test r085.test.mjs drives a fake plane that dispatches the next /run from inside the segment_end tick (202) and a control /run during a running segment (409 SEGMENT_RUNNING); the R93 test fails without the fix. R94 (checkFinal -> checkReport less observed_at, REPORT_UNLOCATED not handed back) and R95 (role: 'subsession' on a check's sub-session converse) are built in src/index.mjs, with their own tests in r085.test.mjs, but those tests fail until agent-model R18/R19 merge into tranche/R085 (origin/job/R085/agent-model has no code yet): R94 700/300-character case, R95 model names. Everything else in the module's tests passes; format, architecture, coverage, ownership checks pass; dist rebuilt. Waiting for your CHANGE once agent-model merges; I will then merge tranche/R085, re-run, and post COMPLETE.
