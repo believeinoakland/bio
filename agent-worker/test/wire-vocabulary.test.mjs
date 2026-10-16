@@ -189,7 +189,7 @@ console.log("\n--- W5 · WHY `description` HAD TO BE COMPOSED: a REPORT has no s
   const c = CANDIDATES[0];
   t("the composed description names the level it is about", c.description.includes("meaning"), true);
   t("and the observation-log address that establishes it", c.description.includes("log:1"), true);
-  t("and the question it belongs to", c.description.includes("INQ-1"), true);
+  t("and the question it belongs to, as \"this question\" and never its record id (agent-harness R13)", [c.description.includes("this question"), c.description.includes("INQ-1")], [true, false]);
 }
 
 console.log("\n--- W6 · THE MODEL'S SUMMARY IS APPENDED, NEVER SUBSTITUTED ---");
