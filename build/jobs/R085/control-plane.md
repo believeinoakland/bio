@@ -9,3 +9,7 @@
 - **Run:** `node --test test/m/control-plane/*.test.mjs`: 291 tests, 290 pass, 1 fail. The one failure is that Miniflare test, and only for lack of capture R92 on this branch (the upload's reading is attached, but the profile is `generic` because `type` is not yet used, so no text units). It must be re-run after `tranche/R085` carries capture's merge.
 - **Checks:** format 0 failures; architecture 0 failures; coverage 68 of 68 ids named; ownership 4 files, 0 failures.
 - **Deferred / other modules:** none found.
+
+## J1 · REPORT
+
+R100 is built and pushed: the door passes the address's type to uploadCapture and reads a new upload with extraction's acquireReadingOp (reading and text_units on the answer's document); controls and tests in test/m/control-plane/r100-upload.test.mjs. Control-plane suite 290 of 291 pass; the one failure is R100's own real-plane test (upload, promote, op=reading), which needs capture R92 merged into tranche/R085 (without it the profile is generic and no text units are made). Format, architecture, coverage (68/68) and ownership are clean. Please tell me when capture is merged into tranche/R085; I will merge it, re-run, and post COMPLETE.
