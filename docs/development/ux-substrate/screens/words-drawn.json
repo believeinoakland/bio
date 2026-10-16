@@ -5309,6 +5309,36 @@
    "en": "Administrators add members and change what each may do.",
    "protected": false,
    "note": "DEC-287: under the roster, for a member who is not an administrator"
+  },
+  {
+   "key": "question.steps.source",
+   "en": "Bring in a source",
+   "protected": false,
+   "note": "DEC-288: the question's first step: a document that answers it"
+  },
+  {
+   "key": "question.steps.mark",
+   "en": "Mark what it says",
+   "protected": false,
+   "note": "DEC-288: the second step: the part of a document that answers, cited"
+  },
+  {
+   "key": "question.steps.conclude",
+   "en": "Say what you conclude",
+   "protected": false,
+   "note": "DEC-288: the third step: the conclusion"
+  },
+  {
+   "key": "question.more",
+   "en": "More you can do with this question",
+   "protected": false,
+   "note": "DEC-288: folds narrowing, another source, a check by expertise and a plan"
+  },
+  {
+   "key": "question.around",
+   "en": "Themes and what relies on this",
+   "protected": false,
+   "note": "DEC-288: folds the themes the question's passages are in and the projects that rely on it"
   }
  ],
  "rewrite": {
@@ -5444,6 +5474,13 @@
   "screen.security.admins": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
   "screen.members.cap.contribute": "add and revise work",
   "screen.members.cap.publish": "sign and publish cases",
-  "screen.members.cap.administer": "look after the team's Civicsmith"
+  "screen.members.cap.administer": "look after the team's Civicsmith",
+  "question.empty.heading": "Next: bring in a source",
+  "question.empty.note": "A question is answered from documents: your government's own records, a report, what a member saw. Start with one; you can add more at any time.",
+  "question.empty.capture": "Add a document",
+  "question.empty.capture.line": "Its web address, a file, or what you saw yourself. Civicsmith keeps the copy for you to confirm, then you mark the part that answers.",
+  "question.empty.find": "Find one the team has",
+  "question.empty.find.line": "Search the team's documents, open one, and mark the part that answers.",
+  "question.empty.ask.line": "It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it."
  }
 }

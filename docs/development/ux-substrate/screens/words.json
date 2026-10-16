@@ -15,7 +15,7 @@
   "transcribe": 19,
   "capture": 62,
   "document": 49,
-  "question": 74,
+  "question": 79,
   "connection": 34,
   "guide": 7,
   "prepared": 2,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12531,
+  "total": 12536,
   "protected": 888
  },
  "words": [
@@ -8061,45 +8061,45 @@
   },
   {
    "key": "question.empty.heading",
-   "en": "Nothing cited yet",
+   "en": "Next: bring in a source",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: the new question, state c"
+   "note": "DEC-245: the new question, state c; DEC-259: reworded"
   },
   {
    "key": "question.empty.note",
-   "en": "A question stands on passages the team holds. Bring in the first one any of three ways.",
+   "en": "A question is answered from documents: your government's own records, a report, what a member saw. Start with one; you can add more at any time.",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.empty.capture",
-   "en": "Capture a document for it",
+   "en": "Add a document",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.empty.capture.line",
-   "en": "Its address, a file, or what you saw yourself; the capture is held for you to vouch for, then you cite the passage that answers.",
+   "en": "Its web address, a file, or what you saw yourself. Civicsmith keeps the copy for you to confirm, then you mark the part that answers.",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.empty.find",
-   "en": "Find one the team already holds",
+   "en": "Find one the team has",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.empty.find.line",
-   "en": "Search the team's documents; cite a passage from the one you open.",
+   "en": "Search the team's documents, open one, and mark the part that answers.",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.findsource",
@@ -8117,10 +8117,10 @@
   },
   {
    "key": "question.empty.ask.line",
-   "en": "It reads what the team holds and proposes passages and a reading; nothing counts until a member accepts it.",
+   "en": "It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it.",
    "protected": false,
    "source": "DEC-245",
-   "note": "DEC-245: state c"
+   "note": "DEC-245: state c; DEC-259: reworded"
   },
   {
    "key": "question.askassistant",
@@ -37715,6 +37715,41 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-287: under the roster, for a member who is not an administrator"
+  },
+  {
+   "key": "question.steps.source",
+   "en": "Bring in a source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-288: the question's first step: a document that answers it"
+  },
+  {
+   "key": "question.steps.mark",
+   "en": "Mark what it says",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-288: the second step: the part of a document that answers, cited"
+  },
+  {
+   "key": "question.steps.conclude",
+   "en": "Say what you conclude",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-288: the third step: the conclusion"
+  },
+  {
+   "key": "question.more",
+   "en": "More you can do with this question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-288: folds narrowing, another source, a check by expertise and a plan"
+  },
+  {
+   "key": "question.around",
+   "en": "Themes and what relies on this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-288: folds the themes the question's passages are in and the projects that rely on it"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

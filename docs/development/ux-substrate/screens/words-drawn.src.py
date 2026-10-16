@@ -1201,6 +1201,24 @@ REWRITE.update({
   'screen.members.cap.administer': "look after the team's Civicsmith",
 })
 # --- end DEC-287
+# --- DEC-288 (the walk's D6, B244): the question page's three steps, the next one plain; the rest folded
+def w288(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-288' + (': ' + note if note else '')))
+w288('question.steps.source', 'Bring in a source', False, "the question's first step: a document that answers it")
+w288('question.steps.mark', 'Mark what it says', False, 'the second step: the part of a document that answers, cited')
+w288('question.steps.conclude', 'Say what you conclude', False, 'the third step: the conclusion')
+w288('question.more', 'More you can do with this question', False, 'folds narrowing, another source, a check by expertise and a plan')
+w288('question.around', 'Themes and what relies on this', False, "folds the themes the question's passages are in and the projects that rely on it")
+REWRITE.update({
+  'question.empty.heading': 'Next: bring in a source',
+  'question.empty.note': "A question is answered from documents: your government's own records, a report, what a member saw. Start with one; you can add more at any time.",
+  'question.empty.capture': 'Add a document',
+  'question.empty.capture.line': 'Its web address, a file, or what you saw yourself. Civicsmith keeps the copy for you to confirm, then you mark the part that answers.',
+  'question.empty.find': 'Find one the team has',
+  'question.empty.find.line': "Search the team's documents, open one, and mark the part that answers.",
+  'question.empty.ask.line': 'It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it.',
+})
+# --- end DEC-288
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
