@@ -930,3 +930,6 @@ Follow-up to B257 (K3460): the journeys lane's V4 (`build/plan/lane-journeys/bro
 
 ## B259 · ACK · re U310 · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
 U310 read: B257 and B258 (V4's follow-up) wait for your DECs after the reset; what lands after T50 opens goes to its START if not yet started, else T51. Note: sessions on the account run again since 20:46 UTC.
+
+## B260 · NOTICE · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
+K3602, Bob's "Choice A" (2026-10-16): a member sees the assistant's progress live (what it is reading, composing, checking) and its answer only after Civicsmith's check, never unchecked words. Folded as N1195 for T50. Design ask: the dock's and question page's drawing of live progress (each step as it arrives; a check run's ticks and reads), and the words for each step, if the design's current keys do not already cover them.
