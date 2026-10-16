@@ -25,3 +25,15 @@ Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order 
 Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). Fix round 6 (K3528, K3531). Your entry is R085-35: agent-runner R33. The study `build/plan/study-assistant-link.md` on tranche/T49 (`git show origin/tranche/T49:build/plan/study-assistant-link.md`, its tests T1–T2) found that at the `lite` size (1/16 vCPU, 256 MiB, wrangler's default when none is named) one conversation's start-up takes about 27 s, against 2.7 s at 1/2 vCPU, and memory reached 427 MB. Name `"instance_type": "standard-1"` in `agent-runner/wrangler.jsonc`'s container block, and anywhere else your module declares the container's deployment (check fleet-member.json and the release assembly that reads it). R33 needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership). If agent-runner's bundle or manifest goes stale, REPORT it; BOB regenerates it. Lean: change only what R33 needs. COMPLETE as soon as green.
 
 Model: claude-haiku-5-5. Workers you spawn name model and effort: haiku at low for mechanical work, sonnet at medium for reading and diagnosis, never above your own model.
+
+## B4 · START
+
+START (R085-43, fix round 8; K3580). Depth 2.
+
+Entry: agent-runner R34 (build/requirements/agent-runner.md): every outbound request the egress gate refuses is logged by the Worker side, one JSON line {event: "runner.egress.refused", instance_ref, host, method, path_template, status}, never query, headers or body, and still refused exactly as before (520, nothing forwarded).
+
+Why: ASSISTANT-HOSTING S8 (build/plan/study-assistant-hosting/HANDOFF.md on tranche/T49): each conversation waits ~40 s before the CLI's first allowed call, warm, CPU idle; the leading candidate is a connection to a host outside `egress` waiting on a timer, which nothing logs today. The library's ContainerProxy (`@cloudflare/containers` 0.3.7, dist/lib/container.js ~197–211) answers such hosts 520 "Origin is disallowed" before any handler runs; `worker.mjs` re-exports ContainerProxy. One way (yours to choose): export a subclass of ContainerProxy whose fetch logs the refused host when the library's answer is that 520 for a host not in `member.egress`, then returns it unchanged. Keep R10 and R30 exactly as they are.
+
+Scope: Worker side only (`src/worker.mjs` and its tests); the container image, `entry.mjs` and `runner.mjs` are not touched, so no image rebuild. Rebuild agent-runner's bundle last (`node bio-plane/scripts/bundles.mjs` from the repository root; commit only agent-runner's dist). Test R34 explicitly by name (K874). Run agent-runner's tests and the checks; record completion with your Size line.
+
+Doorbell: ring BOB for the next whole minute (§13), not later.
