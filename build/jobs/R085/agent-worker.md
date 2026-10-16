@@ -59,3 +59,7 @@ R93 met: SegmentDriver.alarm() now marks the segment not running (via a beforeEn
 Entries applied: R93 (`runSegment` takes a `beforeEnd` hook; `SegmentDriver.alarm()` clears `running` before the `segment_end` tick); R94 (`checkFinal` runs agent-harness' `checkReport` on the report, less `observed_at`, so `REPORT_UNLOCATED` is never handed back); R95 (`role: "subsession"` on a check's sub-session `converse`, and on no other). Deferred: none. Found in another module: none.
 Tests: `agent-worker` `npm test` 21 files, 21 pass, 0 fail (`r085.test.mjs`: 28 passed, 0 failed; R93's test fails without the fix). Checks: format 0 failures; architecture 0 failures; coverage 86 of 86 ids named, 0 failures; ownership 0 failures. Bundle rebuilt (`npm run build`), sha256 fc05369c43….
 Size (session_018F9Doyf71vyGxPLnaNguLq): test runs 4, module lines 2025
+
+## J4 · COMPLETE
+
+R93, R94, R95 met and green against agent-model R17-R19 (merged tranche/R085; bundle rebuilt). Module tests 21/21; format, architecture, coverage, ownership 0 failures. Record updated. Ready for the agent-harness R11 CHANGE if it affects me.
