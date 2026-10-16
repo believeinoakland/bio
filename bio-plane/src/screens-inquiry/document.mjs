@@ -17,7 +17,9 @@
  * for a new version; times by `cs.date`. Its reads gain the links the page carries (`links`, capture R57), the links it
  * makes into held documents (`links_to`, connections R24, its own references) and the mention that counts for each name
  * it holds (`on_point`, `connections`, connections R4); its acts gain `adoptversion` and `keepversion` (a newer version's
- * notice, reevaluation R15), `connectionchoose` and `explore`. Every sentence is a word by key (R44). */
+ * notice, reevaluation R15), `connectionchoose` and `explore`. Every sentence is a word by key (R44).
+ * R49 (K3560): "In which question" preselects the question the capture was held for, never the group's first; the
+ * document's own project's questions come first (passages section). */
 
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
@@ -147,13 +149,23 @@ function render(cs, view) {
   /* passages: the reading's, each citable in a question the member chooses (citation R1's `found`) */
   const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
+  /* R49 (K3560): the question the capture was held for (its held row's `captured_for`, the questions she may see) is
+     preselected, else none is; the document's own project's questions come first, then the others she may cite into */
+  const pq = project ? later("projectq:" + project, "projectquestions", { project, limit: "100" }) : { state: "empty" };
+  const ownQ = new Set(pq.state === "ok" && Array.isArray(pq.value.items) ? pq.value.items.filter((x) => x && x.inquiry).map((x) => String(x.inquiry)) : []);
+  const heldFor = row && row.captured_for && Array.isArray(row.captured_for.questions) ? row.captured_for.questions.filter((x) => x && x.question) : [];
+  const askable = qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
+  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
+  const preset = heldFor.length ? String(heldFor[0].question) : "";
   out.push(secOf("screen.document.passages.head", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
     if (!list.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    const pick = qs.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => ({ value: String(q.bundle_id), text: String(q.title || q.bundle_id) })), {})
+    /* a blank first choice, so that none is preselected unless the capture was held for one; a cite with it blank is refused */
+    const pick = cites.length
+      ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset })
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
@@ -162,7 +174,7 @@ function render(cs, view) {
       const page = extent && Number.isInteger(extent.page) ? extent.page : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
         + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
-        + (extent && qs.length ? cs.act("cite", { label: "act.cite.label.document",
+        + (extent && cites.length ? cs.act("cite", { label: "act.cite.label.document",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
     }).join("") + pick + own("cite");
   }));

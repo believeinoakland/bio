@@ -204,7 +204,7 @@ test("R15 Watch for changes sends monitorset and Check for a new version now sen
 test("R8 the question a passage is cited in, and an unread page, are choices among record data", async () => {
   const p = await open(at, { plane: { list: ok({ bundles: [{ bundle_id: Q, title: "screen.document.copy" }] }) } });
   const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
-  assert.deepEqual(opts("document-cite-question"), [[Q, "screen.document.copy"]], "a title is drawn as data, never read as a key");
+  assert.deepEqual(opts("document-cite-question"), [["", ""], [Q, "screen.document.copy"]], "R49: none preselected, a title is drawn as data, never read as a key");
   assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
 });
 
