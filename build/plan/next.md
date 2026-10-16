@@ -5,6 +5,7 @@
 ## Entries
 
 - N1170 · bundler (release descriptor; K3535) · `bio-plane/scripts/fleet-bundle.mjs`' container descriptor (`containerDescriptor`, `classDescriptor`) carries the member's `instance_type` from its `wrangler.jsonc` (agent-runner R33: `standard-1`; file-scanner's too), so a group installed from the release, not only a fleet deployed by `deploy-fleet.mjs`, runs the assistant's container at its size; check the installer's container create passes it (AGENT-RUNNER #10 J4) · K3535 · req: bundler, installer as amended
+- N1171 · membership, promotion, plane, screens-daily, screens-wizards, ai-accounts, action-plans (test reds on the 0.85.0 cut; K3543) · each red K3543 names is made green against the module's requirements as they stand: the hand MODULE_ORDER lists (membership R83, R140, R145, R79 listeners order; promotion R39, R45, R46; plane store R2, R10) assembled from `modules.json` rather than hand-listed (K3268), screens-daily R1–R13 with the projects screen's `themeread` act, screens-wizards R1 and R8, ai-accounts R10–R22 refusal keys, action-plans R47; each job diagnoses its own · K3543 · req: as they stand
 
 - N1156 · bundler (test only; K3454) · `fleetbundles.test.mjs`'s "agent-worker's 28 inputs are all recorded" hand-lists the inputs and lags the bundle (36 recorded: answers, calc-grammar, record-grammar json, holdings); assert the recorded inputs against what the build reaches, never a hand list (K3268). · K3454
 
