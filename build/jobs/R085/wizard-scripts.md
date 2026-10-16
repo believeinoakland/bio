@@ -19,3 +19,7 @@ R40 applied and green: wizard-scripts 100 pass, checks clean (format, architectu
 
 ## B2 handled
 r40.test.mjs no longer imports op-declarations: its op table is the acts and owed ops the carried registry names. Tests 97 pass, 0 fail; `checks/run.mjs`: format and architecture 0 failures; coverage fails only for other modules (agent-runner R33; agent-worker R103–R105); wizard-scripts 40 of 40.
+
+## J2 · COMPLETE · re B2
+
+B2 done: r40.test.mjs uses a local op table (no op-declarations import). wizard-scripts 97 pass; run.mjs: format and architecture 0 failures; coverage failures only in agent-runner R33 and agent-worker R103-R105 (not mine). Pushed.
