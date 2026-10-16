@@ -81,3 +81,7 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-40 · screens-inquiry** · R49 (citing from a document preselects the document's own question, never the group's first; JOURNEYS #2 B-7; K3560) · claude-haiku-5-5.
 - **R085-41 · run-rules** · R34 (`RUN_ENDINGS` gains `nothing-written`, the ending agent-harness R16 names; K3561) · claude-haiku-5-5.
 - **R085-42 · screens-daily** · R38 (Find in from a document scopes by its fingerprint), R39 (the chosen question stays and each result draws its act); JOURNEYS #2 B-25, B-26; K3562 · claude-haiku-5-5 (SCREENS-DAILY #6, re-opened).
+
+## Fix round 8 (K3580; ASSISTANT-HOSTING S8 F1), out of layer on the cut
+
+- **R085-43 · agent-runner** · R34 (each refused egress request logged by host, Worker side only; the container image is unchanged) · claude-sonnet-5-5.
