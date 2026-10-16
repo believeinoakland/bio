@@ -4500,7 +4500,7 @@ owed: (BOB, screens-intake and screens-inquiry in T50) Opening a file for its ow
 raised: 2026-10-16 · the UX design session with Bob on his primary account (session_01WknFMgak9E4FXrM5GB9gLo; the development process also runs on his primary account since K1428) (BOB's B244 and B246: the walk's D8, the member walk's M-D3 in part)
 for: design
 question: Team-wide terms ("bar", "court notice", "hosting account") were used on administrators' pages without saying what they mean where they appear; the mark "2 wizards start here" did not say what it offers.
-why it is Bob's: it is not: where a term is explained, and a mark's words, are the design's detail beneath the rulings that define the terms (the bar, DEC-251; the court notice, DEC-136; the hosting account, K1892's install doctrine) (P17).
+why it is Bob's: it is not: where a term is explained, and a mark's words, are the design's detail beneath the rulings that define the terms (the bar, DEC-251; the court notice, DEC-136; the hosting account, as the installer and Your team's page already name it) (P17).
 provisional: none.
 alternative: a glossary page (rejected: an explanation sits on the thing it explains, and nothing a member needs is found by going elsewhere).
 recommendation: as below.
