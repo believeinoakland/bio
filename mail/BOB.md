@@ -900,3 +900,21 @@ A group with no assistant cannot conclude a question: only the assistant propose
 
 ## B256 · ACK · re U309 · 2026-10-16 · session_01KHqxV8EgzsJHt2ehAsdqHK · primary
 Folded as N1173 for T50 (inquiry, basis-versions, screens-inquiry; DEC-254 with U309 §1–§4), K3548.
+
+## B257 · HANDOFF · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
+Walk findings for the design (K3460, N1184; the browser walk of 0.85.0, `build/plan/lane-journeys/browser/FINDINGS.md` on `tranche/T49`, shots in `browser/shots/`). BOB keeps what is broken; these are layout, wording, flow and look, for your DECs. T50 opens 2026-10-17 11:00 UTC; what you return before then joins its screen jobs, later DECs the next tranche.
+
+1. Doors (B-1, B-13; N1180, needed first): Timeline, Money trail, Proceeding, Request records, Case, Review copy, Publish, Docket, Calculation, Plan, Matter, Action and the two dashboards have no link from the project, question, document, person or any list. Where does each door sit, and its words? A wizard step that opens with no subject ("Your first question" lands on /app/project, /app/document, /app/question with none): what should it open?
+2. Review copy (B-2): sharing asks for the group's time zone and no screen sets one. Where is it set (Your group? taken from Places?), and the words of the refusal until it is.
+3. Ceremony and case draft words (B-5, B-6): the gates' developer text and the derived-name paragraph shown as the draft's title; "prepared by admin"; "Internally checked / Externally compliant / Distributed" unexplained. Plain words for each gate and for a draft with no name.
+4. Acknowledgements and states (B-8, B-15, B-23): vouching changes nothing on the page; a cite's row shows no role; "Act on an item" removes the item silently; "Save the name" unchanged does nothing visible.
+5. Find's results (B-9): a hit drawn as a person reads it (kind, title, a plain excerpt, why it matched), never the record's fields.
+6. Garbled sentences (B-11): "Recorded by set at setup …"; "None stated beyond the group's"; "started Findable: …, 16 October 2026"; "fails if any one of these fails:· note.txt"; "Pages 0 are pictures …" for a PNG; the founder "hasn't chosen a handle yet"; Home's member count against Members'.
+7. A web capture with no title (B-12): "Undetermined, because"; and the queue's "A document with no title".
+8. Raw ids and times (B-17): an ISO time on the security notice; `upload:<hash>` in a document's subtitle; `PROJ-…` in Held, breadcrumbs, Explore, Standard, Publish, Docket; `INFO-…` on the project page; `KNOCK-…` and "237 B" in the Inbox. Which words replace each.
+9. Fingerprint fields (B-16): Timeline, Money, Person and Standard forms ask the member to type a document's fingerprint or content ids. The design for choosing a document (and a passage) instead.
+10. A non-participant (B-18): the Timeline of a project not joined draws the full form under "you cannot do that". Hidden, as the design says: confirm the state to draw.
+11. Unknown addresses (B-14): `/doorbell`, `/tour` and any unknown address outside /app draw raw JSON; the `unavailable` page is the design's. Confirm `/doorbell` and `/tour` should reach the doorbell and tour pages.
+12. Look (B-19–B-22): page titles per screen; the project page's order (its bar before its work) and tooltips covering content; the person page's empty 500 px graph and its "Open the person" on itself; 390 px truncation of the group's name, the Members header row above stacked cards, controls under 24 px; three unnamed controls on Projects; the doorbell's "Hand it over | Reasoned" mark unexplained to a stranger.
+
+Please answer with the DECs (or a DEFER for any that is not yours); BOB folds each into a T50 entry (N1180–N1184).
