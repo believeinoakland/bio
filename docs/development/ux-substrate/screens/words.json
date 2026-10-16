@@ -9,7 +9,7 @@
   "draft": 5,
   "photo": 13,
   "handle": 7,
-  "ai": 142,
+  "ai": 152,
   "date": 14,
   "queue": 80,
   "transcribe": 19,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3788,
+  "screen": 3790,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -209,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12581,
+  "total": 12593,
   "protected": 890
  },
  "words": [
@@ -38066,6 +38066,90 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-294: the add form's button"
+  },
+  {
+   "key": "screen.assistant.run.cost.sofar",
+   "en": "So far: {cost}, on {account}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: after the run's working line, on the question page and in the panel, while it runs"
+  },
+  {
+   "key": "screen.assistant.run.cost.final",
+   "en": "It used {cost}, on {account}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: after \"The run ended: {why}.\" once session.cost is final"
+  },
+  {
+   "key": "ai.run.cost.money",
+   "en": "{amount} in {calls} calls",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: when the account reports money; {amount} such as \"$1.49\""
+  },
+  {
+   "key": "ai.run.cost.money.one",
+   "en": "{amount} in 1 call",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296"
+  },
+  {
+   "key": "ai.run.cost.tokens",
+   "en": "{tokens} tokens in {calls} calls",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: when the account reports no money"
+  },
+  {
+   "key": "ai.run.cost.tokens.one",
+   "en": "{tokens} tokens in 1 call",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296"
+  },
+  {
+   "key": "ai.run.cost.on.subscription",
+   "en": "your Claude subscription",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296"
+  },
+  {
+   "key": "ai.run.cost.on.apikey",
+   "en": "your API key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296"
+  },
+  {
+   "key": "ai.run.cost.on.team",
+   "en": "the team's key",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: to the team account's owners"
+  },
+  {
+   "key": "ai.run.cost.on.project",
+   "en": "{project}'s own account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: to the project account's owners"
+  },
+  {
+   "key": "ai.run.cost.means",
+   "en": "What this run has cost the account that pays for it. Only that account's owners see it, never another member.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: the explanation on the cost line"
+  },
+  {
+   "key": "ai.run.cost.tokens.means",
+   "en": "Your subscription reports tokens and calls, not money. They count against your plan's own allowance.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-296: added to the explanation when the cost is in tokens"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

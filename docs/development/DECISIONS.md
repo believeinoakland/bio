@@ -4601,3 +4601,18 @@ decided: 2026-10-16 · Bob
 the design: Only an act heavier than Reversible (Reasoned, Terminal, Signed, Irreversible) shows its dots and name on its button; a button without a mark does something the member can undo. The scale is said once, in plain words, the first time a member opens a marked button's explanation: `weight.dots.means`, reworded "The dots show how much an act weighs, from two to five. A button without dots does something you can undo." Each marked button's explanation still says what its own weight means. Friction is unchanged (DEC-87's rules for each rung, DEC-88's full dialog, DEC-280's four states for every button).
 reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §F (RULED 2026-10-16); `screens/mock-kit.js` (`btn()`), `screens/page.src.html` (`weightLine`, the page's notes), `screens/build_words.mjs`.
 owed: (BOB, the shell and the kit's button in T50) no weight mark on a weight-1 act; `weight.dots.means` once per member, the first time a marked button's explanation opens (remembered with the member's other explanation settings), never on every button.
+
+### DEC-296 · answered
+raised: 2026-10-16 · the UX design session with Bob on his primary account (session_01Lp2GDaCwrxidvmsD7PAcpt; the development process also runs on his primary account since K1428) (BOB's B251, N1167, K3501: Bob's check run cost $1.49 for 89 calls and nothing on screen said so)
+for: design
+question: Where a run's cost shows (ai-runs R76's `session.cost`), in what words, and to whom.
+why it is Bob's: it is not: who sees the cost is settled (R76, ai-use R4: the paying account's owners only); where and how it reads is the design's detail (P17).
+provisional: none.
+alternative: a cost only in the account's use (Settings › The assistant, "Your use") (rejected: the member who started the run is looking at the question, and R76 answers the run's own cost).
+recommendation: as below.
+reversal cost: low: two lines and their keys.
+response: none needed (the design's detail).
+decided: 2026-10-16 · the design session (P17)
+the design: To the paying account's owners only (a member on the team's key sees no cost line; the team account's owners do), the run's cost follows its status line: while it works, "So far: {cost}, on {account}." (`screen.assistant.run.cost.sofar`), on the question page after "Working on this: step {ticks}." and in the assistant panel after "A run of yours is working on this."; once `session.cost` is final, "It used {cost}, on {account}." (`screen.assistant.run.cost.final`) after "The run ended: {why}." on the question page and in the panel. {cost} is money where the account reports it, "{amount} in {calls} calls" (`ai.run.cost.money`, `.one` for one call), else "{tokens} tokens in {calls} calls" (`ai.run.cost.tokens`, `.one`); {account} is "your Claude subscription", "your API key", "the team's key" or "{project}'s own account" (`ai.run.cost.on.*`). The line carries its explanation (`ai.run.cost.means`), with `ai.run.cost.tokens.means` added when the cost is in tokens. No cost line when `session.cost` is absent (not the owner, or nothing reported yet); never a zero shown for a figure the account did not report.
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.question` state i), `mock-shell.js` (`dockMore`), words-drawn's DEC-296 block.
+owed: (BOB, screens-inquiry and the shell's assistant panel in T50, N1167) the two lines from `session.cost` as above, owners only.

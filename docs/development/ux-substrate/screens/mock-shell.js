@@ -27,11 +27,13 @@ function assistantPanel(screen, c) {
     <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
 }
-/* DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
+/* DEC-296 (BOB's B251, N1167; ai-runs R76): a run's cost, "so far" while it works and in full when it ends, shown only to the
+   paying account's owners; money where the account reports it, else tokens and calls.
+   DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
    start says in the panel (each withheld or refused dispatch by its words, never blank), and the serving account's thirty
    days of bars, drawn only for that account's owner. */
 function dockMore() {
-  return `<p class="mk-small">${I('machine')} A run of yours is working on this.</p>
+  return `<p class="mk-small">${I('machine')} A run of yours is working on this. ${card('So far: $0.62 in 31 calls, on your Claude subscription.', "What this run has cost the account that pays for it. Only that account's owners see it, never another member.")}</p>
    <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your team\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your team\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your team\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
    <details class="mk-details"><summary>Your account's use, last 30 days</summary>${usageBars(4.10, 61, 4)}</details>`;
 }

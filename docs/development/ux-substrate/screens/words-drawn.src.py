@@ -1299,6 +1299,23 @@ REWRITE.update({
   'screen.people.add.kind': 'A person or an organization?',
 })
 # --- end DEC-294
+# --- DEC-296 (BOB's B251, N1167; ai-runs R76): a run's cost on the question page and the assistant panel, to the paying
+#     account's owners only: {cost} from ai.run.cost.<form>, {account} from ai.run.cost.on.<kind>
+def w296(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-296' + (': ' + note if note else '')))
+w296('screen.assistant.run.cost.sofar', 'So far: {cost}, on {account}.', False, 'after the run\'s working line, on the question page and in the panel, while it runs')
+w296('screen.assistant.run.cost.final', 'It used {cost}, on {account}.', False, 'after "The run ended: {why}." once session.cost is final')
+w296('ai.run.cost.money', '{amount} in {calls} calls', False, 'when the account reports money; {amount} such as "$1.49"')
+w296('ai.run.cost.money.one', '{amount} in 1 call')
+w296('ai.run.cost.tokens', '{tokens} tokens in {calls} calls', False, 'when the account reports no money')
+w296('ai.run.cost.tokens.one', '{tokens} tokens in 1 call')
+w296('ai.run.cost.on.subscription', 'your Claude subscription')
+w296('ai.run.cost.on.apikey', 'your API key')
+w296('ai.run.cost.on.team', "the team's key", False, "to the team account's owners")
+w296('ai.run.cost.on.project', "{project}'s own account", False, "to the project account's owners")
+w296('ai.run.cost.means', "What this run has cost the account that pays for it. Only that account\'s owners see it, never another member.", False, 'the explanation on the cost line')
+w296('ai.run.cost.tokens.means', "Your subscription reports tokens and calls, not money. They count against your plan's own allowance.", False, 'added to the explanation when the cost is in tokens')
+# --- end DEC-296
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
