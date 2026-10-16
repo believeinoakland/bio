@@ -111,3 +111,7 @@ B11 handled: merged tranche/R085 (ai-runs R85) again; the payload's subjects.ite
 **Bundle:** rebuilt now (1,789,237 B, 153 inputs) so the module is green; query-language R31 and agent-harness R13 are inputs of it, so it must be rebuilt again, last, on BOB's CHANGE after they merge.
 
 Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 4, module lines 4004
+
+## J8 · COMPLETE
+
+R101 and R102 met, each named by test/r101.test.mjs (12 arms, controls beside; 7 fail with the fix off). agent-worker npm test green (requirements 304, r101 12); format, architecture, coverage (93 of 93), ownership 0 failures. Bundle rebuilt now; query-language R31 and agent-harness R13 are its inputs, so send a CHANGE after they merge and I will merge tranche/R085 and rebuild it last. Details in my record, Round 5.
