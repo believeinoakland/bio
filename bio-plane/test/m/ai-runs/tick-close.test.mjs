@@ -81,7 +81,7 @@ test("R12: one transaction — entries appended as the run's machine rows (a ref
   assert.equal(w.row(`SELECT state FROM ai_runs WHERE run='R1'`).state, '{"page":2}');
   await tick(w, { at: T(6) });
   assert.equal(w.row(`SELECT state FROM ai_runs WHERE run='R1'`).state, '{"page":2}', "no state given leaves the state");
-  assert.equal(w.row(`SELECT expires FROM ai_runs WHERE run='R1'`).expires, "2026-07-01T01:06:00Z", "the standard lease");
+  assert.equal(w.row(`SELECT expires FROM ai_runs WHERE run='R1'`).expires, "2026-07-01T00:16:00Z", "the standard lease (R83: ten minutes)");
   /* a bound declared at no ceiling is made at 0 by the tick; a runtime exhaustion ends it with its condition */
   await tick(w, { consume: { subsessions: 4 }, at: T(7) });
   assert.deepEqual(w.row(`SELECT allowed, consumed FROM ai_run_bounds WHERE run='R1' AND bound='subsessions'`), { allowed: 0, consumed: 4 });

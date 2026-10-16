@@ -358,7 +358,8 @@ test("R18 (T46): the wake still withholds a member's own sign-in run as MEMBER_P
   }
   const slow = await memberWorld(agentWorker("hang"));
   const r = await slow.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
-  assert.deepEqual([r.dispatched, r.dispatch.state, runLog(slow.w).length], [true, "RUNNING", 0]);
+  assert.deepEqual([r.dispatched, r.dispatch.state, runLog(slow.w).length], [false, "SILENT", 1], "R82: no acceptance within the bound");
+  assert.match(runLog(slow.w)[0].detail, /did not complete .*still resumable/);
 });
 
 test("R14 (T47; N955; credentials R63): after the exit commits a run's ending, every segment credential minted for it is revoked — by a close, a tick that exhausts a bound, and the reaper alike; another run's stays live; a credentials call that throws never changes the exit or its answer", async () => {
@@ -374,8 +375,8 @@ test("R14 (T47; N955; credentials R63): after the exit commits a run's ending, e
   assert.notEqual(runCreds(w, "R1")[0].revoked_at, null, "the close revokes R1's");
   assert.equal(runCreds(w, "R2")[0].revoked_at, null, "another run's stays live");
   assert.equal(w.credentials.aiCredentialLook({ secretSha: runCreds(w, "R1")[0].secret_sha }).credential.revoked, true);
-  /* the reaper's ending */
-  assert.equal(w.runs.reap(Date.parse("2026-07-02T00:00:00Z")).reaped.find((x) => x.run === "R2").terminated, true);
+  /* the reaper's ending (the dispatch extended R2's lease from the real clock, R83) */
+  assert.equal(w.runs.reap(Date.now() + 3600000).reaped.find((x) => x.run === "R2").terminated, true);
   assert.notEqual(runCreds(w, "R2")[0].revoked_at, null);
   /* a tick that exhausts a bound */
   const t = await memberWorld(agentWorker());
