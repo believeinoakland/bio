@@ -29,6 +29,7 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
          TEXT_CHECK, READ_TRANSLATE, DRAFT_OPS } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
+import { acquireReadingOp } from "../extraction/ops.mjs";
 /* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
    nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
    interface-assets' files. */
@@ -2193,6 +2194,21 @@ export function makeFetch(hooks = {}) {
       if (!out.answered) return { early: storeSilent(op, out.correlation) };
       return { body: out.reply.body, status: out.reply.status };
     }
+    /* R100 (R085-4; WALK-085 F1; extraction R1, R20): A NEW UPLOAD IS READ AS AN ACQUIRED DOCUMENT IS. When capture answers
+       the upload as new (`ok`, not `existed`, a document), the door hands the document to extraction's reading, exactly
+       as `op=acquire` does (`acquireReadingOp`), and the answer's document carries `reading` and `text_units`, so the
+       promotion the capture screen sends with it stores the reading. A reading that fails is answered as the failed
+       reading, relayed as acquire relays it; the upload stands, filed already. Bytes already held (`existed`), a refusal
+       and a silence are relayed unread. */
+    async function readUploaded(got) {
+      if (got.early) return got;
+      const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
+      if (!r || r.ok !== true || r.existed === true || !r.document || typeof r.document !== "object") return got;
+      const read = await acquireReadingOp({ ok: true, document: r.document }, stub, { json, storeSilent, doAnswer, storeName,
+        storeRefusal: (out) => storeRefusal(out, { store: storeName, tokenClass: cls }) });
+      if (read.response) return { early: read.response };
+      return { body: { ...got.body, result: { ...r, document: read.body.document } }, status: got.status };
+    }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
        (its answer `ok`, naming the capture's digest), the door asks the store's internal route `capturestepproduct` to
        tie it there (`steps.recordProduct`), for a step the member may see; a capture by any other caller, or one that did
@@ -2470,7 +2486,7 @@ export function makeFetch(hooks = {}) {
         headers: { "content-type": "application/octet-stream",
                    ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },
         ...(req.body ? { duplex: "half" } : {}) })));
-      return tieToStep(await forwarded(uploaded), url.searchParams.get("step"));
+      return tieToStep(await readUploaded(await forwarded(uploaded)), url.searchParams.get("step"));
     }
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* R17, R29: and every body stamp, for every op; the ops that declare one set it below. */
