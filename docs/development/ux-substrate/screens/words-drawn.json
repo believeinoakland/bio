@@ -5477,6 +5477,48 @@
    "en": "Ordinary: around your team's usual. Raised: well above the usual at some point, and nothing got through. High: well above the usual and still going on, or something unusual got through; only then are administrators told, in their queue.",
    "protected": false,
    "note": "DEC-291: the risk mark in an ordinary period: its own state first"
+  },
+  {
+   "key": "screen.capture.forq",
+   "en": "What you add here is filed under {project}, for the question {question}",
+   "protected": false,
+   "note": "DEC-292: above the tabs when Add is opened from a question; {question} in quotation marks"
+  },
+  {
+   "key": "screen.recovery.onlyyou",
+   "en": "They were shown once, to you alone, when they were issued. Nobody else has seen them, an administrator included, and Civicsmith can't show them again. If you didn't keep them, get new ones.",
+   "protected": false,
+   "note": "DEC-292"
+  },
+  {
+   "key": "screen.wizards.own.fold",
+   "en": "Writing your own wizards",
+   "protected": false,
+   "note": "DEC-292"
+  },
+  {
+   "key": "screen.wizards.own.says",
+   "en": "Most teams use the wizards Civicsmith comes with. Write your own only for a way of working your team repeats.",
+   "protected": false,
+   "note": "DEC-292"
+  },
+  {
+   "key": "project.settings.fold",
+   "en": "This project's settings",
+   "protected": false,
+   "note": "DEC-292: folds the bar, who can find it, at the project page's foot"
+  },
+  {
+   "key": "shell.level.button.prompt",
+   "en": "Explanations: prompt",
+   "protected": false,
+   "note": "DEC-292: the header's explanations button while explanations open promptly (level.prompt.name names the choice itself)"
+  },
+  {
+   "key": "shell.level.button.pause",
+   "en": "Explanations: on a pause",
+   "protected": false,
+   "note": "DEC-292: the header's explanations button while they open on a longer pause"
   }
  ],
  "rewrite": {

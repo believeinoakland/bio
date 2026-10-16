@@ -20,7 +20,7 @@
   "guide": 7,
   "prepared": 2,
   "label": 192,
-  "project": 47,
+  "project": 48,
   "grouprule": 1,
   "refusal": 1933,
   "signing": 17,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3782,
+  "screen": 3786,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 6,
   "duty": 6,
   "published": 9,
-  "shell": 144,
+  "shell": 146,
   "settings": 2,
   "entity": 33,
   "find": 26,
@@ -209,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12559,
+  "total": 12566,
   "protected": 890
  },
  "words": [
@@ -37912,6 +37912,55 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-291: the risk mark in an ordinary period: its own state first"
+  },
+  {
+   "key": "screen.capture.forq",
+   "en": "What you add here is filed under {project}, for the question {question}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292: above the tabs when Add is opened from a question; {question} in quotation marks"
+  },
+  {
+   "key": "screen.recovery.onlyyou",
+   "en": "They were shown once, to you alone, when they were issued. Nobody else has seen them, an administrator included, and Civicsmith can't show them again. If you didn't keep them, get new ones.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292"
+  },
+  {
+   "key": "screen.wizards.own.fold",
+   "en": "Writing your own wizards",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292"
+  },
+  {
+   "key": "screen.wizards.own.says",
+   "en": "Most teams use the wizards Civicsmith comes with. Write your own only for a way of working your team repeats.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292"
+  },
+  {
+   "key": "project.settings.fold",
+   "en": "This project's settings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292: folds the bar, who can find it, at the project page's foot"
+  },
+  {
+   "key": "shell.level.button.prompt",
+   "en": "Explanations: prompt",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292: the header's explanations button while explanations open promptly (level.prompt.name names the choice itself)"
+  },
+  {
+   "key": "shell.level.button.pause",
+   "en": "Explanations: on a pause",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-292: the header's explanations button while they open on a longer pause"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

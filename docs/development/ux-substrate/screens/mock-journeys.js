@@ -147,7 +147,7 @@ const J = [
    { s: 'question', v: 'new', act: 'airunopen', only: 'ai', say: 'The question has nothing cited yet. He asks the assistant to look through what the team holds.' },
    { s: 'question', v: 'running', act: null, only: 'ai', say: 'The assistant is at work; he can leave, and what it proposes will wait for him.' },
    { s: 'question', v: 'new', act: 'search', only: 'noai', say: 'The question has nothing cited yet. He looks for a source the team already holds; there is none, so he captures one.' },
-   { s: 'capture', act: 'acquire', say: 'He captures the city\'s 2026 performance report from its address, for this question.' },
+   { s: 'capture', v: 'question', act: 'acquire', say: 'Add says where what he adds is filed: under the project, for this question. He captures the city\'s 2026 performance report from its address.' },
    { s: 'document', v: 'held', act: 'release', say: 'The copy opens on its page, held: only he can see it until he vouches for it. He reads it, and vouches for it there, under his name.' },
    { s: 'document', act: 'cite', say: 'He selects the passage that answers and cites it on the question.' },
    { s: 'question', v: 'proposal', act: 'versionaccept', only: 'ai', say: 'The assistant proposes a reading resting on two passages, marked as its work. He reads both and accepts it.' },

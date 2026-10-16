@@ -1260,6 +1260,17 @@ w291('screen.security.counts.fold', 'The counts, by kind, hour and place')
 w291('screen.security.add.fold', 'Add another checker (advanced)', False, 'folds adding an outside tool and the catalog of kinds')
 w291('screen.security.risk.means.ordinary', "Ordinary: around your team's usual. Raised: well above the usual at some point, and nothing got through. High: well above the usual and still going on, or something unusual got through; only then are administrators told, in their queue.", False, 'the risk mark in an ordinary period: its own state first')
 # --- end DEC-291
+# --- DEC-292 (the walk's minors D9, D12, D14, D15, D16; D13 reaffirmed): smaller pages said plainly
+def w292(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-292' + (': ' + note if note else '')))
+w292('screen.capture.forq', 'What you add here is filed under {project}, for the question {question}', False, 'above the tabs when Add is opened from a question; {question} in quotation marks')
+w292('screen.recovery.onlyyou', "They were shown once, to you alone, when they were issued. Nobody else has seen them, an administrator included, and Civicsmith can't show them again. If you didn't keep them, get new ones.")
+w292('screen.wizards.own.fold', 'Writing your own wizards')
+w292('screen.wizards.own.says', 'Most teams use the wizards Civicsmith comes with. Write your own only for a way of working your team repeats.')
+w292('project.settings.fold', "This project's settings", False, "folds the bar, who can find it, at the project page's foot")
+w292('shell.level.button.prompt', 'Explanations: prompt', False, "the header's explanations button while explanations open promptly (level.prompt.name names the choice itself)")
+w292('shell.level.button.pause', 'Explanations: on a pause', False, "the header's explanations button while they open on a longer pause")
+# --- end DEC-292
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
