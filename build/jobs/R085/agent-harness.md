@@ -1,6 +1,6 @@
 # agent-harness (R085)
 
-**Status** · session_013YmnX8vmq9VJkF9WjDtBtS · depth 2 · COMPLETE · handled B3
+**Status** · session_01Mr967LwxSZH1sPQMA8xnn2 · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -94,3 +94,25 @@ Checks:
 R13 in build/requirements/agent-harness.md still reads "not yet met: R085"; that line is BOB's to clear.
 
 Size (session_013YmnX8vmq9VJkF9WjDtBtS): test runs 1, module lines 1808
+
+## J7 · COMPLETE
+
+R085-23 (R13, already met), R085-29 (R14, R15) applied.
+
+- `src/harness.mjs` R14: `emptyLevelCandidates` no longer appends the sub-session's summary; the description holds no record id (the report and its words stay in the run log).
+- `src/harness.mjs` R15: new table field `passAdded`. `advance` sets it when a candidate survives dedup into `submit` and clears it on `next-pass` to `plan`; `nextStep` at `next-pass` closes (bound `completed`, why "pass N added no new candidate ...") when it is not true. `passAdded` is in `RESUMABLE`, `resumeFrom` and the over-ceiling restart, so a segment break or a state restart mid-pass cannot close a run that did add something.
+- `test/agent-harness.test.mjs`: R14 x2, R15 x3 tests named by id; the `walk` helper gains `newEachPass` so the R3 and R4 multi-pass tests (which used empty passes) stand for passes that add a candidate, not weakened.
+
+Deferred: none.
+
+REPORT, agent-worker (not mine, no change made; all caused by this change):
+1. `agent-worker/test/requirements.test.mjs`: "R22: its description is composed from those facts, with the report's summary appended" (line ~866) and `wire-vocabulary.test.mjs` "a real summary is carried through" expect the old appended summary (R14 removes it).
+2. `requirements.test.mjs` "R11: the published state carries the table's fields ..." lists the exact keys; `passAdded` is a new key of `resumableState`.
+3. `requirements.test.mjs` "agent-harness R3 ... max_passes" (2 -> two passes, and 3 when none named) and "R27: max_steps is at most 400" drive empty passes; under R15 they close after pass 1.
+4. `requirements.test.mjs` R45 (x2): agent-worker's bundle is stale against `agent-harness/src/harness.mjs`; rebuild is BOB's (`node bio-plane/scripts/bundles.mjs`).
+Baseline on this branch before my change: agent-worker 23 files pass, 0 fail; after: requirements and wire-vocabulary files fail (8 + 1 assertions, all the above).
+
+Tests: `node --test agent-harness/test/`: 45 tests, 45 pass, 0 fail.
+Checks: format 170 modules, 169 requirements files; 0 failures. architecture: 3 product files, 6 relative imports; 0 failures. coverage: 15 of 15 live requirement ids named by a test; 0 failures. ownership: 1 files changed by agent-harness between tranche/R085 and HEAD; 0 failures.
+
+Size (session_01Mr967LwxSZH1sPQMA8xnn2): test runs 6, module lines 1827

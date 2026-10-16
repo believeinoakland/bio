@@ -43,7 +43,7 @@
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
 import { RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, READ_RESULT, TRACE_HEADER, MEMBER_REF_HEADER, TRACE_HEADER_MAX,
          signinTurn, signinConverse, renderTranscript, traceHeaders } from "./signin.mjs";
-import { USAGE_FIGURES, ESTIMATE, finalRefusal, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
+import { USAGE_FIGURES, ESTIMATE, finalRefusal, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf, toolInput, PASSAGE_SNIPPET } from "./outcome.mjs";
 
 export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, TRACE_HEADER, MEMBER_REF_HEADER,
          TRACE_HEADER_MAX, USAGE_FIGURES, ESTIMATE,
@@ -259,7 +259,7 @@ async function converseRun({ reference, runner, mode, role, meter, system, messa
     const results = [];
     for (const u of uses) {
       /* R12: a call to read the step's facts again is answered from the transcript's own opening, as data. */
-      const r = u.name === READ_FACTS.name ? factsOf(messages) : await onTool(u.name, u.input || {});
+      const r = u.name === READ_FACTS.name ? factsOf(messages) : await onTool(u.name, toolInput(u.name, u.input || {}));
       if (r && r.halt) return r.halt;
       results.push({ type: "tool_result", tool_use_id: u.id, content: toolResultContent(r),
                      ...(r?.error ? { is_error: true } : {}) });
@@ -440,12 +440,13 @@ export function subsessionTools(contract) {
       description: "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the "
         + "records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. "
         + "`ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that "
-        + "document's passages. Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
+        + "document's passages; a passage comes back as a snippet of about a sentence (up to " + PASSAGE_SNIPPET + " tokens). Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
       input_schema: { type: "object", properties: {
         q: { type: "string" },
         rows: { type: "string", ...(arms ? { enum: arms } : {}), description: "the meaning arm, e.g. leg" },
         ids: { type: "array", maxItems: 20, items: { type: "string" }, description: "record ids that limit the read" },
-        limit: { type: "integer", minimum: 1, maximum: 50 } }, required: ["rows"], additionalProperties: false } },
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+        snippet: { type: "integer", minimum: 4, maximum: PASSAGE_SNIPPET, description: "tokens of each passage snippet; passage reads send 64" } }, required: ["rows"], additionalProperties: false } },
     { name: "report",
       description: String(r.rule || "return a REPORT with a citation, never documents") + bounds,
       input_schema: { type: "object", properties: {

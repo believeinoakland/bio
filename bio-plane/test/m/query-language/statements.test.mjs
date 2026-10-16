@@ -362,3 +362,45 @@ test("R31 rows=passage reads bare words as passage: words, with the warning; tex
   assert.ok(!b.warnings.includes(WARN));
   assert.deepEqual(compile({ q: "pothole", viewer: V, rows: "leg" }).meaningArms, []);
 });
+
+test("R32 rows=leg ignores bare words, with the warning; text:, negations and selectors keep their meaning", () => {
+  const WARN = "bare words ignored (rows=leg); use text: for the record's own text";
+  const w = world();
+  w.bundle("Q1", { type: "inquiry", body: "is the crosswalk light working", current_state: "open" });
+  w.bundle("Q2", { type: "inquiry", body: "the crosswalk was repaired last week", current_state: "open" });
+  w.bundle("T", { type: "information", body: "a target" });
+  w.insert("inquiry_basis", { bundle_id: "Q1", ord: 0, target_id: "T", role: "supports" });
+  w.insert("inquiry_basis", { bundle_id: "Q2", ord: 0, target_id: "T", role: "supports" });
+  const run = (o, mode) => w.run({ viewer: V, rows: "leg", ...o }, "meaning", mode ? { mode } : undefined);
+  const ids = (o) => run(o).rows.map((r) => r.bundle_id).sort();
+  /* the question's own text lacks `repaired`, yet its leg is answered, with the warning */
+  const r = run({ q: "crosswalk repaired", ids: ["Q1"] });
+  assert.deepEqual(r.rows.map((x) => x.bundle_id), ["Q1"]);
+  assert.ok(r.plan.warnings.includes(WARN));
+  assert.deepEqual(run({ q: "crosswalk repaired", ids: ["Q1"] }, "count").rows, [{ n: 1 }]);
+  /* no ids: the words no longer narrow the scope to Q2, whose own text holds them all */
+  assert.deepEqual(ids({ q: "crosswalk repaired" }), ["Q1", "Q2"]);
+  assert.deepEqual(run({ q: "crosswalk repaired" }, "levels").rows, run({ q: "" }, "levels").rows,
+    "the scope is the other arms' scope: the bare words no longer narrow it");
+  /* phrases, prefixes and NEAR groups are bare words too */
+  assert.deepEqual(ids({ q: '"crosswalk repaired"', ids: ["Q1"] }), ["Q1"]);
+  assert.deepEqual(ids({ q: "repair*", ids: ["Q1"] }), ["Q1"]);
+  assert.deepEqual(ids({ q: "NEAR(crosswalk repaired, 5)", ids: ["Q1"] }), ["Q1"]);
+  /* control: text: reads the record's own text and answers no row there */
+  const t = run({ q: "text:repaired", ids: ["Q1"] });
+  assert.deepEqual(t.rows, []);
+  assert.ok(!t.plan.warnings.includes(WARN));
+  assert.deepEqual(ids({ q: "text:repaired" }), ["Q2"]);
+  /* with a text: term beside bare words, nothing is ignored */
+  assert.deepEqual(ids({ q: "text:crosswalk repaired" }), ["Q2"]);
+  /* a negated word and selectors keep their meaning */
+  const n = compile({ q: "crosswalk -zebra", viewer: V, rows: "leg" });
+  assert.ok(n.warnings.includes(WARN));
+  assert.deepEqual(n.terms, ["zebra"]);
+  assert.ok(!compile({ q: "type:inquiry", viewer: V, rows: "leg" }).warnings.includes(WARN));
+  assert.deepEqual(ids({ q: "type:inquiry repaired" }), ["Q1", "Q2"]);
+  /* without rows=leg, bare words are the record's text as before */
+  const b = compile({ q: "crosswalk", viewer: V });
+  assert.deepEqual(b.terms, ["crosswalk"]);
+  assert.ok(!b.warnings.includes(WARN));
+});

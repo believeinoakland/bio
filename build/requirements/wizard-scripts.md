@@ -149,7 +149,7 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 
 **The design walk folded** (T48; WALK-084 #2; K3250, K3254)
 - **R39** (T48; K3250, K3254; walk row 17; amends R10; `screens-wizards` R1, R12) `wizards` also answers every active member with the scripts offered to her: Civicsmith's library and every approved group script she may run, with name, whose, `based_on` and the finished count. The other states (drafts, submitted, withdrawn, retired, broken, proposals) stay as R10 answers them. Test: a member who owns no project sees the library. Control: her `state: "draft"` read answers only her own drafts.
-- **R40** *(not yet met: R085)* (R085-33; K3528; `walk-085-r5` D9; amends R11, R23) A library script whose first act sets up the group (an administrator's act) is offered, in `startFrom` and its doors, only to a viewer who holds the `administer` capability (`membership` R92); a plain member is not offered it. Test: a plain member's `startFrom` omits "Say who your group is", "Invite a member" and "Update your group's Civicsmith"; control: an administrator's lists them, and a plain member still sees scripts whose acts she may take.
+- **R40** (R085-33; K3528; `walk-085-r5` D9; amends R11, R23) A library script whose first act sets up the group (an administrator's act) is offered, in `startFrom` and its doors, only to a viewer who holds the `administer` capability (`membership` R92); a plain member is not offered it. Test: a plain member's `startFrom` omits "Say who your group is", "Invite a member" and "Update your group's Civicsmith"; control: an administrator's lists them, and a plain member still sees scripts whose acts she may take.
 
 ## Private
 

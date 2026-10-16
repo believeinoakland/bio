@@ -2283,6 +2283,32 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
       }
     }
   }
+  /* R32 (R085-27): under `rows=leg`, a query with no `text:` term ignores its positive bare words, so the scope
+     is not narrowed to bundles whose own text holds them. `text:`, a negated word and every selector keep their
+     meaning. */
+  if (rowArm === "leg") {
+    const hasText = (n) => !!n && typeof n === "object"
+      && ((n.op === "text" && !n.bare) || hasText(n.kid) || (Array.isArray(n.kids) && n.kids.some(hasText)));
+    if (!hasText(ast)) {
+      const moved = new Set();
+      const drop = (n, negated) => {
+        if (!n || typeof n !== "object") return n;
+        if (n.op === "not") { const k = drop(n.kid, !negated); return k === n.kid ? n : k ? { ...n, kid: k } : null; }
+        if (Array.isArray(n.kids)) {
+          const kids = n.kids.map((k) => drop(k, negated)).filter(Boolean);
+          return !kids.length ? null : kids.length === 1 ? kids[0] : { ...n, kids };
+        }
+        if (n.op !== "text" || !n.bare || negated) return n;
+        moved.add(n);
+        return null;
+      };
+      ast = drop(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("bare words ignored (rows=leg); use text: for the record's own text");
+      }
+    }
+  }
   /* An explicit sort parameter outranks a `sort:` token in the query string:
      the parameter is a header the member just clicked, the token is what they
      typed earlier. */

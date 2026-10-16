@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (R085)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order 
 Workers you spawn name model and effort: haiku at low for mechanical work, sonnet at medium for reading and diagnosis, never above your own model.
 
 Model: claude-sonnet-5-5. Entry R085-33: wizard-scripts R40. Read diag-085-r6.md section D9 (first bullet). In `startFrom` and `#offeredScripts` (bio-plane/src/wizard-scripts/index.mjs ~766-779, ~1380) offer a script whose acts are an administrator's only to a viewer who holds the `administer` capability (`isAdministrator`, membership R64/R92); read the act's capability from the registry, hand-list no act. Users to run (P11): screens-daily's Home tests that draw the doors, and screens-wizards' tests (REPORT any that fail; do not edit them).
+
+## B2 · CHANGE
+
+Your merge is in tranche/R085, but the architecture check fails on it: bio-plane/test/m/wizard-scripts/r40.test.mjs imports bio-plane/src/op-declarations/index.mjs, which is later in the order than wizard-scripts (P4). Your branch now holds tranche/R085. Make the R40 test independent of op-declarations (a small local op table in the test, or the fixture's own), keep R40 named, run node checks/run.mjs and record COMPLETE again. The live wiring is plane R57 (PLANE #38), not yours.
