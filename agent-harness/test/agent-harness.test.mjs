@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R10 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R11 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -11,7 +11,8 @@ import { readdirSync } from "node:fs";
 
 import * as HARNESS from "../src/harness.mjs";
 import * as SUBSESSION from "../src/subsession.mjs";
-import { DEPLOYED_MODES, RUN_MODES } from "../../bio-plane/src/run-rules/index.mjs";
+import { DEPLOYED_MODES, RUN_MODES, checkCondition } from "../../bio-plane/src/run-rules/index.mjs";
+import { CONDITION_KINDS } from "../../bio-plane/src/observation-log/vocabulary.mjs";
 
 const {
   CONTROL_FLOW, PLAN_FLOW, FIRST_STEP, MODES, LEVELS, BUDGET_BOUNDS, PLAN_BUDGET_BOUNDS, PLAN_MAX_PASSES,
@@ -489,7 +490,8 @@ test("R7: each returns only reports: the contract it is briefed with is R5's, an
   for (const c of contracts)
     assert.deepEqual(c.returns, {
       keys: Object.keys(REPORT_KEYS), required: ["level", "state"], citation_keys: ["address"],
-      states: Object.keys(REPORT_STATES), summary_max: SUMMARY_MAX, citations_max: CITATIONS_MAX, address_max: ADDRESS_MAX,
+      states: Object.keys(REPORT_STATES), summary_max: SUMMARY_MAX, conditions: Object.keys(CONDITION_KINDS),
+      citations_max: CITATIONS_MAX, address_max: ADDRESS_MAX,
       rule: "return a REPORT with a citation, never documents. The parent re-reads by address." });
   const returns = [good, { level: "content", state: "LOOKED_ABSENT", observed_at: "log:2", text: "the document" }, "bytes",
                    { level: "internet", state: "NEVER_LOOKED" }];
@@ -573,4 +575,25 @@ test("R9: no file of this module exports PLANE_OPS, NAMESPACES or MEANING_ARM (t
     for (const name of ["PLANE_OPS", "NAMESPACES", "MEANING_ARM"]) if (name in mod) found.push(`${f}: ${name}`);
   }
   assert.deepEqual(found, []);
+});
+
+/* ============================================================ R11: the contract's condition kinds */
+test("R11: a contract's returns.conditions is non-empty, in the vocabulary's fixed order, and each kind passes checkCondition", () => {
+  const { contracts } = spawnContracts(payload);
+  for (const c of contracts) {
+    assert.ok(Array.isArray(c.returns.conditions) && c.returns.conditions.length > 0, "conditions is a non-empty list");
+    assert.deepEqual(c.returns.conditions, Object.keys(CONDITION_KINDS));
+    for (const kind of c.returns.conditions) assert.equal(checkCondition(kind), null, kind);
+  }
+  /* the same list the plane's own checker admits: every kind, and only those, passes it */
+  assert.deepEqual(spawnContract({ level: "meaning", payload }).contract.returns.conditions, Object.keys(CONDITION_KINDS));
+});
+
+test("R11: control: a kind outside the vocabulary is not offered in returns.conditions, and checkCondition refuses it", () => {
+  const { contracts } = spawnContracts(payload);
+  for (const word of ["not-a-condition", "host-held", "CAPTURE_COMPLETED", " monitoring-recheck-due"]) {
+    assert.equal(contracts[0].returns.conditions.includes(word), false, word);
+    const refused = checkCondition(word);
+    assert.deepEqual([refused.ok, refused.code], [false, "AI_RUN_CONDITION_UNKNOWN"], word);
+  }
 });
