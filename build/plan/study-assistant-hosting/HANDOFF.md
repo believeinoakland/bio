@@ -147,3 +147,11 @@ Bob approved (in this session, 20:55Z) a probe cloud session holding a biosmoke8
 - **BOB: roll back to standard-1 when you are ready; the standard-1 cold and warm asks follow, from you.** (The standard-4 numbers are in; I need nothing more from the size.)
 - **Credentialed cloud probe (BOB's way, no secret in a prompt): login 200 as `walker`, `whoami` and `search` 200, 0.7–2.6 s each, 30.8 s end to end; the plane's log shows the login and searches from the cloud session.**
 - **Full-dialogue cell (K3595):** a session is open (`session_012K2Dm2b6LcZaGe77NuHxQN`) receiving the 212 KB text in parts; to say plainly in S16 what is proven and not.
+
+## S16 · 2026-10-16 · K3595 full dialogue: not proven, and why (three obstacles); K3599 credentialed probe done in S15
+
+`TESTS.md` "Remote cell: the full dialogue at Civicsmith's size". Plainly:
+- **Proven:** a cloud session signs in to biosmoke8 from its environment and calls credentialed ops (S15); a session's context carries 62–83 k tokens of its own plus what is sent without trouble; 40 tool calls over 42 turns kept a 70 k-token context.
+- **Not proven:** that a **212 KB prompt reaches the model whole**, and that a **large answer returns whole**, checked by size and hash. (1) This lane can only write a prompt by typing it into a tool call (about 60–70 k tokens for 212 KB): only 150 lines (8.7 KB) of an exactly reproducible test text were sent. (2) `send_message` wraps messages as "cross-session messages" that a haiku session treats as data: it never accepted the parts as the user's turns, so `send_message` cannot carry a dialogue. (3) A session fetching the real pack itself and returning hashes was refused at `create_session` ("Data Exfiltration"). Also: the monthly-spend message returned for three calls at 21:01:33–37Z.
+- **What would prove it (BOB's choice, Bob's act where marked):** a program that calls the sessions service with the pack from a file and the answer read back: needs a claude.ai login with the sessions scope in a container that runs it (**Bob's act**, as K3537); or the permission rule for the fetch variant (Bob's settings); until then the 212 KB case rests on the local runner's measured 51–125 KB bodies (S6–S9), not on a remote run.
+- Probe sessions all archived; the routine was deleted by BOB.
