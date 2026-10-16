@@ -73,14 +73,16 @@ export function plain(cs, key, fills) {
   return String(cs.w(key, fills)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
 }
 
-/** A member as drawn (R40): her handle; the founder with no handle by `member.founder.unnamed`, never `admin`. */
-export function who(cs, x) {
+/** A member as drawn (R40): her handle; the founder with no handle by `member.founder.unnamed`, never `admin`. A screen
+    that reads the founder's handle passes it as `founder` (R46): the credential `admin` is then drawn by that handle. */
+export function who(cs, x, founder) {
   if (x && typeof x === "object") {
     if (x.handle) return String(x.handle);
     if (x.founder === true) return String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     return "";
   }
   const s = String(x == null ? "" : x).replace(/^(member:|token:)/, "");
+  if (s === "admin" && founder) return String(founder);
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) : s;
 }
 
