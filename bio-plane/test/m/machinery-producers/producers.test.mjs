@@ -27,7 +27,9 @@ test("R2: partial-capture-outstanding per live session; capture-completed-unatte
       host: "y.example", purpose: "investigate", ua_mode: "civicos", capture_sha: "z", captured_at: iso(NOW - 1),
       attribution: { ok: true, statement: "the daemon captured this" } }] }) } });
   w.bundle("INF-P"); w.bundle("INF-U"); w.bundle("INQ-1", "inquiry");
-  const man = (key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json) VALUES ('INF-U',?, 'revision', 'b', ?, ?, '[]')`, key, author, created);
+  /* R14: a machine-completed document holds a capture (its register row) */
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('cu','INF-U','snapshots/u','utf8',?,1)`, iso(NOW));
+  const man =(key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json) VALUES ('INF-U',?, 'revision', 'b', ?, ?, '[]')`, key, author, created);
   man("k1", "alice", iso(NOW - 100)); man("k2", "token:daemon", iso(NOW - 50));
   const m = byId(w.read(null, "class:admin"));
   const p = m["CONDITION::partial-capture-outstanding::S1"];

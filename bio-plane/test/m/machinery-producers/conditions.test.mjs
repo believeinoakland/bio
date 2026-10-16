@@ -153,7 +153,9 @@ test("R13 (T49; N1138; DEC-272; K3366): capture-completed-unattended reads its s
   const add = (bundle, key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json)
     VALUES (?, ?, 'revision', 'b', ?, ?, '[]')`, bundle, key, author, created);
   const starts = (bundle, author, title) => {
-    if (bundle !== "INFO-88") { w.bundle(bundle, "information", { title }); w.cite("PRJ-1", bundle); }
+    /* R14: a captured document holds a register row; the fixtures give each one (INFO-88 holds cap88 already) */
+    if (bundle !== "INFO-88") { w.bundle(bundle, "information", { title }); w.cite("PRJ-1", bundle);
+      w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES (?,?,?,'binary',?,1)`, `cap${bundle.replace(/\D/g, "")}`, bundle, "snapshots/x", iso(NOW)); }
     add(bundle, `${bundle}-1`, author, "2026-07-31T12:00:00Z");
     add(bundle, `${bundle}-2`, `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
   };
@@ -182,4 +184,22 @@ test("R13 (T49; N1138; DEC-272; K3366): capture-completed-unattended reads its s
   for (const it of [held, founder, nameless])
     for (const s of [it.summary, it.detail])
       assert.ok(!/carol|admin|dave|token:|INFO-|member:/.test(s), `no id in: ${s}`);
+});
+
+test("R14 (R085-19; K3501 (b)): capture-completed-unattended is raised only for a bundle holding a capture; a question carrying a run's machine-written proposal raises none, and a machine-written capture still does", () => {
+  const { w, manifest } = corpus();
+  /* a question a person started, then a run's proposal finished: no capture is registered under it */
+  w.bundle("INQ-9", "inquiry", { title: "Pothole question" }); w.cite("PRJ-1", "INQ-9");
+  const q = (key, author, created) => w.run(`INSERT INTO manifest (bundle_id, snap_key, kind, base, author, created, files_json)
+    VALUES ('INQ-9', ?, 'revision', 'b', ?, ?, '[]')`, key, author, created);
+  q("q1", "carol", "2026-07-31T12:00:00Z"); q("q2", `${MACHINE_AUTHOR_PREFIX}ai`, "2026-07-31T18:00:00Z");
+  const id = "CONDITION::capture-completed-unattended::INQ-9";
+  for (const who of ["carol", "dave"]) assert.equal(byId(w.read(who))[id], undefined, `the run's proposal raises no item for ${who}`);
+  assert.equal(w.read("carol").items.filter((i) => i.kind === "capture-completed-unattended" && i.subject.id === "INQ-9").length, 0);
+  /* control: the same sequence on a question holding a capture (a register row under it) raises the item */
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('capq','INQ-9','snapshots/q','binary',?,1)`, iso(NOW));
+  assert.ok(byId(w.read("carol"))[id], "a question holding a capture is a document a daemon finished: the item stands");
+  /* control: a machine-written capture still raises it */
+  manifest("k1", "carol", "2026-07-31T12:00:00Z"); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
+  assert.ok(byId(w.read("dave"))["CONDITION::capture-completed-unattended::INFO-88"], "a machine-written capture still raises its item");
 });
