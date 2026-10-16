@@ -91,3 +91,7 @@ Merged tranche/R085 after B7 (agent-harness R11): the contract's key tree gained
 **Ran:** `npm test` in `agent-worker/` (22 files, 0 fail); `format` 0 failures; `architecture` 0 failures; `coverage` 91 of 91 live ids named; `ownership` 0 failures (9 files).
 
 Size (session_01HesGHMU4B19YsjqB1nVyxV): test runs 8, module lines 3971
+
+## J7 · COMPLETE
+
+B11 handled: merged tranche/R085 (ai-runs R85) again; the payload's subjects.items shape is the one R97's test already drives. Bundle rebuilt byte-identical; npm test 22 files, 0 fail; format, architecture, coverage (91 of 91), ownership 0 failures. Pushed. Nothing else changed since J6.
