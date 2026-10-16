@@ -1,32 +1,33 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #186 (`session_01FGmgKV8kyoiWGVhKe6MwQJ`, depth 1, parent ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1`), 2026-10-16 ~00:05 UTC, at ~29% context. Read `build/rulings-active.md` whole first, then K3453–K3474 (BOB #186's): they are the release's state and Bob's new directions.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #187 (`session_017JLE6WEMB3Eybd2JVz8gCH`, depth 1, parent ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1`), 2026-10-16 ~01:30 UTC, at ~33% context. Read `build/rulings-active.md` whole first, then K3475–K3486 (BOB #187's): they are the release's state.
 
 ## RELEASE ONLY (K3425, K3426)
 
-Bob's meter 91% at ~23:20 UTC (K3461). Only release 0.85.0 work proceeds on this account until Bob reports 95%; T50 opens Saturday (2026-10-17) on the other account. Bob wants no babysitting (K3450) and no technical steps handed to him (K3466, his words: standing permission for the steps development needs; the safety rules in CLAUDE.md stand; an act a safety check refuses is told to him in one line).
+Bob's meter was 91% at ~23:20 UTC 2026-10-15 (K3461). Only release 0.85.0 work proceeds on this account until Bob reports 95%; T50 opens Saturday (2026-10-17) on the other account. Bob wants no babysitting (K3450) and no technical steps handed to him (K3466); an act a session's own safety check refuses is told to him in one line with the approval to type (§16), as K3481–K3482 did.
 
 ## Where the release stands
 
-- **Sign-in fixed and proven live** (K3454–K3457): agent-runner R18 (code, then "\r" 250 ms later) merged on `tranche/R085`, cut `dist/cut-0.85.0` @ be10e02db1, image `agent-runner@sha256:e7050ca4…82fc0` deployed to biosmoke8. Bob connected his own subscription (K3459). `tranche/R085` = the cut; its one job layer is closed, no job running.
-- **Walk route** (K3467): Bob deleted the environment's "BIO instance reach" network secret, so a browser now walks through the session's network signed in, in sessions started after 23:30 UTC 2026-10-15 (this session predates it: start a walk session, as WALK-085 #1 was). K3246's direct route is replaced for browsers; curl `--noproxy '*'` still works.
-- **WALK-085 #1** (K3473; `build/plan/walk-085.md`): as administrator, not usable end to end. FUNCTIONAL blockers F1 (a captured file's words never shown, not citable, not listed under its question) and F2 (the assistant run shows "working" with no progress or result), majors F3–F7, minors F8–F11: N1161. DESIGN D1–D18 sent to UX-DESIGN (B244).
+- **Fix round 2 merged and deployed** (K3477–K3483): capture R92, control-plane R100, screens-intake R27, screens-inquiry R45, ai-runs R82–R84, agent-worker R91–R92 on `tranche/R085` @ b83e9d83cb = `dist/cut-0.85.0`; biosmoke8's plane (sha `1a9036b8…`) and agent-worker (`SEGMENTS` bound) deployed. No job is running.
+- **Re-walk** (K3484): F1 fixed live (capture, read, cite, listed under the question, warned open). F2 partly: the press is answered at once, the run's ticks advance, Stop works; but no proposal.
+- **Diagnosis** (K3486): the run is stuck by a bug (continuation refused `SEGMENT_RUNNING`) and produces nothing because sub-session reports overrun 500 characters; Find never sends `passage:`.
+- **Member walk** (K3480): a plain member cannot start a project (correct by grant; the form shown to her is N1163, design DEC-286); report `build/plan/walk-085m.md`.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1) with `mail bob --tranche R085`; archive BOB #186 and write its BOB-final row under T49. Delete WATCH #186 `trig_018Lb3yqQQvYq1GyQZPfNufn` (into ROOT, 00:15 UTC; move it if it has not fired) and arm your own. No backstop is armed (no job runs). Read the channel (B241–B244 await the design stream).
-2. **Diagnose F1 and F2** with a worker (read-only, live and code): the cause of each by module and requirement. If the run from WALK-085 (INQ-2026-0001 on biosmoke8) is still "working", that is F2's live evidence; stop it after reading it.
-3. **Fix on the cut** what blocks Bob's journey (K3320: create a project, connect, work on a real investigation): out-of-layer jobs on `tranche/R085` as R085-3… K1548 asks Bob's approval for each; BOB #186 reads K3466 ("all the other steps that you need to do in order for development to continue") as covering it: say so to Bob in one line when one starts. Then push the cut, deploy (K3466), re-walk the failed steps.
-4. **The member walk** as `bob-test` (a plain member; it signs in with handle `bob-test` and `$JOURNEY_ADMIN_PASSWORD`, as `build/plan/signin-harness.py` does, while `JOURNEY_ADMIN_HANDLE` is sparky, the administrator) is owed: a walk session, same prompt shape as WALK-085 #1 (its prompt is in this session's transcript; the report's "Plain-member differences" lists what to confirm).
-5. Before Saturday's T50 plan: the install register `build/plan/install-situations.md` (K3456, K3458, K3471; N1148, N1157) is read whole by the installer job; T50 carries N1152 and N1158 (approved designs, K3468), N1159 (stewards' email, debugged from Saturday, K3470), N1160 ("team", K3472), N1161, N1156.
+1. **Take over** (§5.1) with `mail bob --tranche R085`; archive BOB #187 and write its BOB-final row under T49. Delete BOB #187's routines: WATCH #187 `trig_018YHK2rYZweqWKj4yihA2pC` (into ROOT) and the backstop `trig_015bSLJJHK8E5riMX4fm2TCQ` (into BOB #187, 01:39 UTC); arm your own WATCH. Read the channel (UX-DESIGN is now `session_01WknFMgak9E4FXrM5GB9gLo`, read through U300).
+2. **Fix round 3 on the cut** (K3486, out of layer under K3466 as K3477): write the requirements on `tranche/R085` (next free ids: agent-worker R93, agent-model, agent-harness and screens-daily: read their files), STARTs under `build/plan/starts-R085/`, plan entries in `build/plan/current.md` under a "Fix round 3" heading, then the four jobs: agent-worker (sonnet; `segment_end` after `running` cleared), agent-model (sonnet; the 500-character summary limit stated and `CONDITION_KINDS` as an enum in the sub-session tools), agent-harness (sonnet; an over-bound report handed back once to be rewritten), screens-daily (haiku; Find sends `(<words>) OR passage:(<words>)`). Tell Bob in one line when they start (K1548 read as covered by K3466). K3477's START text is the model.
+3. **Close the round** as K3481 did: merge, regenerate artifacts in the manifest's order (`npm ci` in bio-plane, agent-runner `--ignore-scripts`, sheet-worker first; agent-worker has no lock file), `fleetbundles` red only on K3454's accepted arm, `checks/run.mjs` 0, archive the jobs with rows in `build/metrics/R085.csv` (on `tranche/T49`).
+4. **Push and deploy:** pushing `tranche/R085` to `dist/cut-0.85.0` and deploying is refused by auto mode in any BOB session ("Production Deploy"); K3482's approval was one-off in BOB #187's session. Tell Bob in one line, with the exact approval to type in your session (§16): `Approved: push tranche/R085 to dist/cut-0.85.0 and deploy biosmoke8's plane and agent-worker from it.` Then `node bio-plane/scripts/deploy-fleet.mjs agent-worker --instance biosmoke8` and, in `bio-plane/`, `CF_TOKEN=proxy-injected CF_ACCT=20b533579290b9b93168345edd3b7f72 node scripts/deploy.mjs biosmoke8 0.85.0 dist/bio-plane.bundled.mjs` (the proxy injects the Cloudflare credential).
+5. **Re-walk** F2 and Find live as administrator (a worker, as K3484's): one Ask, watch up to ~40 minutes (three passes), stop it if still running; note the cost (each pass ~$2.50 on Bob's subscription; tell Bob the figure).
+6. Then tell Bob, rendered, whether his journey works end to end (K3320's bar).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- Deploys to biosmoke8 and Cloudflare changes: Bob's standing permission K3466 (replaces asking per act under K1715 for development work in his words; a refusal by a session's safety check is told to him in one line).
-- The cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273), with the design stream's branch (K3436).
-- ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`, primary account) is ended but unreachable from here: leave it (K3469).
+- Deploys to biosmoke8: Bob's standing permission K3466, but auto mode refuses them in session (K3481); each needs his one-line approval in the refusing session (§16), K3482's was one-off.
+- The cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273), with the design stream's branch (newest commit UX-DESIGN names then; now `cc0ff593a5`).
 
 ## Open with Bob
 
-- None waiting on him. Saturday: T50 on the other account; the installer's existing-install handling is now an install situation, not a question (K3471).
-- BOB #186's scratch holds Bob's admin credentials for biosmoke8 (K3461) and his expired code; a successor reads `JOURNEY_ADMIN_*` instead (sparky).
+- None waiting on him.
+- Left on biosmoke8: "WALK-085 project", INQ-2026-0001 citing INFO-2026-0003, held INFO-2026-0001/0002, two cancelled runs.
