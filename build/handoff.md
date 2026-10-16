@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #194 (`session_01M8TZdSaxZrhNYXCconx8Bg`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~19:45 UTC, at 35% context. Read `build/rulings-active.md` whole, then, whole with the Read tool, rulings K3565–K3586 (all of BOB #194's; about 25 KB).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #194 (`session_01M8TZdSaxZrhNYXCconx8Bg`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~19:45 UTC, at 35% context. Read `build/rulings-active.md` whole, then, whole with the Read tool, rulings K3565–K3588 (all of BOB #194's; about 27 KB), and every ruling of Bob's on the assistant's hosting (K3529–K3540, K3553, K3558) whole (K3588).
 
 ## Read in full at takeover, besides the usual set (K3586: BOB #194 scanned these; none needs a trim, about 230 KB)
 
