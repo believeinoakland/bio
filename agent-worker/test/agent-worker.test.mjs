@@ -465,8 +465,8 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
 
   console.log("\n  -- it holds no binding but the plane: no store, no bucket, no write route --");
   /* R91 (R085): SEGMENTS, its own segment driver, joins them; it is read to learn whether a segment is handed over. */
-  t("R35, R91: the only keys of env it reads are PLANE, RUNNER, SEGMENTS and its configuration (VERSION, the two segment bounds)",
-    [...all.envKeys].filter((k) => !["PLANE", "RUNNER", "SEGMENTS", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES"].includes(k)), []);
+  t("R35, R91, R99: the only keys of env it reads are PLANE, RUNNER, SEGMENTS and its configuration (VERSION, the two segment bounds, CLOCK)",
+    [...all.envKeys].filter((k) => !["PLANE", "RUNNER", "SEGMENTS", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES", "CLOCK"].includes(k)), []);
   t("R35: offered STORE, CAPTURES, PUBLISHED, a KV, a D1 and a queue, it read and touched none of them",
     all.forbiddenTouched, []);
   t("R35: of the PLANE binding it touches `fetch` and nothing else — no put, delete, get or list on any binding",

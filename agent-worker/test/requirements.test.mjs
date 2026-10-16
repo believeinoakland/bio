@@ -1070,9 +1070,14 @@ section("R28 · the 200 answer carries exactly its fields");
      r.out.plane, r.out.worker],
     [true, "harness", ["id", "basis"], ["of_pass", "levels", "scope", "contracts"], ["token_class", "store", "session"],
      { version: "plane-test", op: "whoami" }, { name: "agent-worker", version: "req-test" }]);
+  /* R99: the wallclock bound is measured, so its consumption is the segment's elapsed milliseconds, not zero. */
+  const wallBudget = r.out.budget.find((b) => b.bound === "wallclock");
   t("R28: budget lists the three spendable bounds as the record holds them after the segment",
-    r.out.budget, BUDGET_BOUNDS.map((b) => ({ bound: b, ...{ fetches: { allowed: 50, consumed: 0 }, subsessions: { allowed: 50, consumed: 4 },
+    r.out.budget.map((b) => (b.bound === "wallclock" ? { ...b, consumed: 0 } : b)),
+    BUDGET_BOUNDS.map((b) => ({ bound: b, ...{ fetches: { allowed: 50, consumed: 0 }, subsessions: { allowed: 50, consumed: 4 },
       wallclock: { allowed: 500000, consumed: 0 } }[b] })));
+  t("R28, R99: …and the wallclock consumed is a non-negative whole number of milliseconds",
+    [Number.isInteger(wallBudget.consumed), wallBudget.consumed >= 0], [true, true]);
 }
 
 section("R29 · claude_account and principal");

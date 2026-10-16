@@ -183,6 +183,8 @@ import { AI_RUN_STATE_MAX_BYTES, checkCondition, DEFINITIVE_STATES } from "../..
 import {
   SUBSESSION_OPS, spawnContract, checkReport, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
+/* R97 (R085-18; K3268): the meaning arms a sub-session may be told of, read from query-language's own registry, never listed. */
+import { MEANING } from "../../bio-plane/src/query.mjs";
 /* R90 (T49; N1137): the record id a leg names, added beside each held document's address. */
 import { withRecordIds } from "./holdings.mjs";
 
@@ -353,6 +355,9 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
  * rule and the one this Worker already applies to a silent plane. */
 const MAX_STEPS = 400;
 
+/* R99 — the clock `wallclock` is measured on: `env.CLOCK` when a function (a test injects one), else `Date.now`. */
+const wallNow = (env) => (typeof env?.CLOCK === "function" ? Number(env.CLOCK()) : Date.now());
+
 /** FL-3's DRIVER. It turns each row of `agent-harness`' table into plane calls
  *  and appends an observation entry for EVERY step — including the last one, and
  *  including the steps of a run that ends badly (§14b.6: log-always).
@@ -476,9 +481,17 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { status: 403, body: logRead.refused.plane ?? null }) };
   const priorLog = logRead.result ?? {};
   const resumedFrom = Array.isArray(priorLog.entries) ? priorLog.entries.length : 0;
+  /* R99 (R085-18; K3501 (e)): the wall time the `wallclock` bound measures. Each tick carries the milliseconds since the
+     segment's previous tick (its start for the first), never negative; `env.CLOCK`, when a function, is the clock (a
+     test's), else `Date.now`. */
+  const wall = { last: wallNow(env), extra: 0,
+                 /* a tick other than a step's spends wall time the table's copy of the budget has not seen: kept for the next
+                    step's update of it */
+                 spend() { const ms = this.take(); this.extra += ms; return ms; },
+                 take() { const now = wallNow(env), ms = Math.max(0, Math.round(now - this.last)); this.last = now; return ms; } };
   /* THE ADDRESS OF A LOOK THIS SEGMENT WRITES: `log:<seq>`, the ordinal `op=airunlog` answers (agent-harness R7's reports
      cite it as `observed_at`). Knowable only from a whole log: a truncated read leaves it UNDETERMINED. */
-  const logSeq = { next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
+  const logSeq = { wall, next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
                    landed: () => { logged += 1; },
                    refused: (named) => { logRefused.push(named); refusals.push(named); } };
 
@@ -534,6 +547,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      starts" answers. `preflight` stops here, for `/run` to answer those refusals before it hands the segment over. */
   if (preflight) return { ready: true };
   if (progress) progress.started = true;
+  wall.last = wallNow(env);
 
   while (steps < maxSteps) {
     /* R91: the segment's wall bound, met between steps (a durable segment runs inside an alarm, which has a wall limit
@@ -634,7 +648,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        ends the run through the plane's one exit and the plane writes the
        condition. */
     const spentThisStep = calls - callsAtStepStart + 1; /* +1: the tick is a subrequest too */
-    const consume = { ...(work.consume || {}), runtime: spentThisStep };
+    const consume = { ...(work.consume || {}), runtime: spentThisStep, wallclock: wall.take() };
     /* R26, K148: the entry only when the step's judgement states a look; a step that looked at nothing still
        ticks, for its spend and its lease, and sends no entry. */
     /* R92: in the record's own words — a condition outside its vocabulary, or a governed definitive look, was refused
@@ -715,6 +729,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       state = { ...state, budget: { ...state.budget } };
       for (const [k, v] of Object.entries(consume))
         if (state.budget[k]) state.budget[k] = { ...state.budget[k], consumed: state.budget[k].consumed + Number(v) };
+      if (wall.extra && state.budget.wallclock)
+        state.budget.wallclock = { ...state.budget.wallclock, consumed: state.budget.wallclock.consumed + wall.extra };
+      wall.extra = 0;
       /* THE PLANE ENDED IT. This is the `runtime` path above all: the harness
          spends and the plane decides, so an ending that arrives HERE rather than
          from the table is the record telling this member something it could not
@@ -977,7 +994,9 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
            mechanism believed on the strength of its existence rather than its
            behaviour is the defect this project meets most, so the flag is gone
            and `spawnContract` REFUSES the payload instead. */
-        const made = spawnContract({ level, payload });
+        /* R97: the level's targets the plan judgement named (the model's `target`, an id with an optional extent) and the
+           meaning arms `query-language` declares go into the brief beside the payload's subjects (agent-harness R12). */
+        const made = spawnContract({ level, payload, arms: Object.keys(MEANING), targets: levelTargets(state, level) });
         if (!made.ok) return { contract: made, level };
         contracts.push(made.contract);
       }
@@ -1049,7 +1068,11 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          the parent resolves it itself, which is the whole trade the memory model
          is making. Bounded by `citedAddresses`, so a report cannot turn the
          parent's context into the reading it was supposed to replace. */
+      /* R100: a cited address is a record id with an optional extent after it (`INFO-… ¶1`, `INFO-…#p1`), else a source
+         address. Its record id is the part before the first space or `#`: the re-read and the document count use it,
+         and an address that names no held record is read as the address it is. */
       const addresses = citedAddresses(taken);
+      const idOf = new Map(addresses.map((a) => [a, splitAddress(a).id]));
       /* D-276: `reread` COUNTS READS THAT ANSWERED, never calls that were made.
          It used to climb once per address regardless of what came back, so a
          refused read was published as `citations_reread` — this member claiming
@@ -1059,7 +1082,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       let reread = 0;
       const rereadRefused = [];
       for (const address of addresses) {
-        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [address] });
+        const got = await meaningRead(call, { rows: MEANING_ARM, limit: 1, ids: [idOf.get(address)] });
         if (got.silent) return { silent: got.silent };
         if (got.refused) { rereadRefused.push(got.refused); continue; }
         reread += 1;
@@ -1083,14 +1106,19 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          makes that citation's document UNDETERMINED and is published, never a zero. */
       const resolved = [];
       for (const address of addresses) {
-        const found = planeAnswer(await call("search",
-          { q: `id:"${address.replace(/"/g, "")}"`, limit: 1, facets: "none" }), "search");
+        const rid = idOf.get(address);
+        const lookup = async (id) => {
+          const f = planeAnswer(await call("search",
+            { q: `id:"${id.replace(/"/g, "")}"`, limit: 1, facets: "none" }), "search");
+          const h = f.result ? (Array.isArray(f.result.hits) ? f.result.hits : []).find((x) => x && x.bundle_id === id) || null : null;
+          return { f, h };
+        };
+        let { f: found, h: hit } = await lookup(rid);
+        if (!found.silent && !found.refused && !hit && rid !== address) ({ f: found, h: hit } = await lookup(address));
         if (found.silent) return { silent: found.silent };
         if (found.refused) { rereadRefused.push(found.refused); resolved.push({ citation: address, refused: found.refused }); continue; }
-        const hit = (Array.isArray(found.result?.hits) ? found.result.hits : [])
-          .find((h) => h && h.bundle_id === address) || null;
         if (hit && !(typeof hit.source_locator === "string" && hit.source_locator.trim())) {
-          resolved.push({ citation: address, bundle: address, address: null, chain: null,
+          resolved.push({ citation: address, bundle: hit.bundle_id, address: null, chain: null,
                           reason: "the cited record names no source address, so no version chain can hold it" });
           continue;
         }
@@ -1098,7 +1126,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         const chain = planeAnswer(await call("versionchain", { address: target, limit: 1000 }), "versionchain");
         if (chain.silent) return { silent: chain.silent };
         if (chain.refused) { rereadRefused.push(chain.refused); resolved.push({ citation: address, refused: chain.refused }); continue; }
-        resolved.push({ citation: address, bundle: hit ? address : null, address: target, chain: chain.result });
+        resolved.push({ citation: address, bundle: hit ? hit.bundle_id : null, address: target, chain: chain.result });
       }
       /* R90: beside its `address_norm`, each held document carries the record id and capture a leg can be cited
          by, read off the same chains; compose's facts pass `holdings` on whole. A refused read has none (R21). */
@@ -1431,6 +1459,27 @@ async function reexaminationReads(ask, response, undetermined) {
   else undetermined.push({ op: "procedureguides", id: action, code: null, why: "the action answered names no kind" });
 }
 
+/** R97 — the targets the plan judgement named for one level, as `agent-harness` R12 takes them, `{id, extent}`. A
+ *  target names its subject in `target` (an id), optionally followed by an extent (` ¶n`, `#…`, R100's form); one that
+ *  names none, or whose level is another, is not this level's. An internet target's `url` is the fetch's (R18), not a subject. */
+function levelTargets(state, level) {
+  const out = [];
+  for (const t of Array.isArray(state.targets) ? state.targets : []) {
+    if (!t || typeof t !== "object" || t.level !== level || typeof t.target !== "string" || !t.target.trim()) continue;
+    const { id, extent } = splitAddress(t.target.trim());
+    out.push({ id, extent });
+  }
+  return out;
+}
+
+/** R100 — a cited address as a record id and the extent after it: the id is the part before the first space or `#`,
+ *  the extent what follows (` ¶1`, `#p1`), or null. */
+function splitAddress(address) {
+  const at = address.search(/[\s#]/);
+  if (at <= 0) return { id: address, extent: null };
+  return { id: address.slice(0, at), extent: address.slice(at).trim() || null };
+}
+
 /** agent-harness R7 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
  *  frozen contract, the contract's `scope` as its only plane tool, and `report` as its answer. Its look is logged
  *  at its level, and that entry's address is the report's `observed_at`. A sub-session that returns no report is
@@ -1460,7 +1509,11 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         if (!contract.scope.includes(name))
           return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
         const lim = Math.min(50, Math.max(1, Math.floor(Number(input.limit)) || 20));
-        const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim });
+        /* R96: `ids` limits a read to named records: at most 20, each a non-empty string, others dropped. */
+        const ids = (Array.isArray(input.ids) ? input.ids : [])
+          .filter((x) => typeof x === "string" && x.length > 0).slice(0, 20);
+        const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim,
+                                            ids: ids.length ? ids : null });
         if (r.silent) return { halt: { planeSilent: r.silent } };
         /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
         const told = toolContent(r.refused ? (r.refused.plane ?? { code: r.refused.code }) : r.result);
@@ -1491,7 +1544,8 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         detail: String(typeof report.summary === "string" ? report.summary : "").slice(0, 500),
       });
       if (governedDowngrade && report.state === governedDowngrade) report.state = "LOOKED_INDETERMINATE";
-      const tick = planeAnswer(await call("airuntick", null, { run: runId, log: [entry] }), "airuntick");
+      const tick = planeAnswer(await call("airuntick", null,
+        { run: runId, log: [entry], ...(logSeq?.wall ? { consume: { wallclock: logSeq.wall.spend() } } : {}) }), "airuntick");
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
@@ -1545,7 +1599,8 @@ function modelHalf({ reference, runner, meter, suggestions, traced = {} }) {
        covers, so the plane counts each model call, never a conversation as one. A `calls` it did not state is passed
        as `null` (which the plane counts as one call), never invented here. */
     spent(got, mode) {
-      if (got && got.usage) pending.push({ mode, model: MODEL_FOR_MODE[mode] ?? null, usage: got.usage,
+      /* R98: the model `converse` answers for that conversation (agent-model R21), the mode's only when it states none. */
+      if (got && got.usage) pending.push({ mode, model: got.model ?? MODEL_FOR_MODE[mode] ?? null, usage: got.usage,
                                            calls: got.calls === undefined ? null : got.calls });
     },
     drain() { return pending.splice(0, pending.length); },
