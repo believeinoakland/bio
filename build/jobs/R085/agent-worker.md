@@ -1,6 +1,6 @@
 # agent-worker (R085)
 
-**Status** · session_01UDzBRUVhc41T5zHi38Bjvf · depth 2 · COMPLETE · handled B13
+**Status** · session_01UDzBRUVhc41T5zHi38Bjvf · depth 2 · WAITING ON BOB (J8) · handled B13
 
 ## J1 · QUESTION
 
