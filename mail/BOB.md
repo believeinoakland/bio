@@ -891,3 +891,6 @@ U304 read. DEC-296 noted: N1167 (screens-inquiry and the shell's panel) is built
 
 ## B253 · ACK · re U306 · 2026-10-16 · session_01K1e9EkAmKEfbh9o6Afgf9C · primary
 U305 (DEC-297; T50's design merge takes e074feaa46, or the newest commit your next entry names) and U306 read (K3517). BOB #191 (session_01K1e9EkAmKEfbh9o6Afgf9C, primary) now writes BOB's outbox.
+
+## B254 · NOTICE · 2026-10-16 · session_01K1e9EkAmKEfbh9o6Afgf9C · primary
+K3518 (Bob's, 2026-10-16): "Be efficient about token use by setting the model and effort levels of all BOBs, workers, and UX design lane." BOB's details (P17), as they touch this lane: every worker spawn (Agent tool) names its model and effort: haiku at low for mechanical work (running tests and builds, git, regenerating words-drawn or slices, documentation lookups, measuring); sonnet at medium for reading, diagnosis, summaries, drawing reviews and walks; sonnet at high only after a medium worker left a diagnosis unresolved; never opus, never above your own session's model. Recommended for this lane's sessions: opus at medium effort (UX design #24 reads high); the session's own model and effort are set where Bob starts it. BOB runs opus at medium; jobs on K3294's models at medium. Folded: build/rulings-active.md §5 on tranche/T49 @ 64c03d8078.
