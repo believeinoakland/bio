@@ -7,7 +7,7 @@
  },
  {
   "key": "updates.says",
-  "en": "Administrators only. Your group's Civicsmith checks once a day whether a new release is out and tells you here. Nothing is installed until an administrator chooses it.",
+  "en": "Administrators only. Your team's Civicsmith checks once a day whether a new release is out and tells you here. Nothing is installed until an administrator chooses it.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -31,7 +31,7 @@
  },
  {
   "key": "updates.running.checked_note",
-  "en": "once a day; the check sends nothing about your group",
+  "en": "once a day; the check sends nothing about your team",
   "protected": false,
   "note": "DEC-226"
  },
@@ -97,7 +97,7 @@
  },
  {
   "key": "updates.act.update_does",
-  "en": "Opens the installer's update page for your group, set to release {version} and no other. There you allow it in Cloudflare, as at setup; nothing changes until you do.",
+  "en": "Opens the installer's update page for your team, set to release {version} and no other. There you allow it in Cloudflare, as at setup; nothing changes until you do.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -133,7 +133,7 @@
  },
  {
   "key": "updates.skip.says",
-  "en": "Skipping says your group will not install release {version}. The next release is offered as usual. A security fix can be skipped too; your reason stays on the record for every administrator.",
+  "en": "Skipping says your team will not install release {version}. The next release is offered as usual. A security fix can be skipped too; your reason stays on the record for every administrator.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -145,13 +145,13 @@
  },
  {
   "key": "updates.handoff.says",
-  "en": "{holder} holds your group's Cloudflare account, so the update runs through them. Copy the link below and pass it on: it opens the installer's update page set to this release.",
+  "en": "{holder} holds your team's Cloudflare account, so the update runs through them. Copy the link below and pass it on: it opens the installer's update page set to this release.",
   "protected": false,
   "note": "DEC-226"
  },
  {
   "key": "updates.handoff.explain",
-  "en": "The update runs only with Cloudflare's consent, given by the account's holder on Cloudflare's own page. This link opens the installer's update page for your group, set to release {version} and no other; it carries no password and lets nobody in. Civicsmith sends no email: you copy the link and pass it on yourself.",
+  "en": "The update runs only with Cloudflare's consent, given by the account's holder on Cloudflare's own page. This link opens the installer's update page for your team, set to release {version} and no other; it carries no password and lets nobody in. Civicsmith sends no email: you copy the link and pass it on yourself.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -169,7 +169,7 @@
  },
  {
   "key": "updates.none",
-  "en": "Nothing to install. Your group's Civicsmith runs the newest release. When a new one is out, it appears here and in every administrator's queue.",
+  "en": "Nothing to install. Your team's Civicsmith runs the newest release. When a new one is out, it appears here and in every administrator's queue.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -193,13 +193,13 @@
  },
  {
   "key": "queue.update.section",
-  "en": "Your group's Civicsmith",
+  "en": "Your team's Civicsmith",
   "protected": false,
-  "note": "DEC-226: the queue section for to-dos about the running of the group's Civicsmith"
+  "note": "DEC-226: the queue section for to-dos about the running of the team's Civicsmith"
  },
  {
   "key": "queue.update.section_says",
-  "en": "To-dos about the running of your group's Civicsmith itself. Every administrator gets them, and when one administrator acts, the item leaves every queue.",
+  "en": "To-dos about the running of your team's Civicsmith itself. Every administrator gets them, and when one administrator acts, the item leaves every queue.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -217,7 +217,7 @@
  },
  {
   "key": "home.update.ready",
-  "en": "An update to your group's Civicsmith is ready: release {version}{security}",
+  "en": "An update to your team's Civicsmith is ready: release {version}{security}",
   "protected": false,
   "note": "DEC-226: the home's Needs you; {security} is home.update.security or empty"
  },
@@ -229,13 +229,13 @@
  },
  {
   "key": "installer.update.running",
-  "en": "Your group's Civicsmith runs release {version}",
+  "en": "Your team's Civicsmith runs release {version}",
   "protected": false,
   "note": "DEC-226: installer R52, R54"
  },
  {
   "key": "installer.update.chosen",
-  "en": "This update: release {version}, {date}, the release chosen in your group's Settings › Updates",
+  "en": "This update: release {version}, {date}, the release chosen in your team's Settings › Updates",
   "protected": false,
   "note": "DEC-226"
  },
@@ -253,13 +253,13 @@
  },
  {
   "key": "installer.update.progress.title",
-  "en": "Updating your group's Civicsmith",
+  "en": "Updating your team's Civicsmith",
   "protected": false,
   "note": "DEC-226: installer R51"
  },
  {
   "key": "installer.update.progress.says",
-  "en": "From release {from} to {to}, in the Cloudflare account “{account}”. A few minutes; leave this page open. Until the last step, your group's Civicsmith keeps running as it was.",
+  "en": "From release {from} to {to}, in the Cloudflare account “{account}”. A few minutes; leave this page open. Until the last step, your team's Civicsmith keeps running as it was.",
   "protected": false,
   "note": "DEC-226"
  },
@@ -289,7 +289,7 @@
  },
  {
   "key": "installer.update.stopped",
-  "en": "Stopped: Cloudflare refused the upload. Your group's Civicsmith runs release {version} as before; nothing changed. Try again; if it stops again, the stop names the step and what to do.",
+  "en": "Stopped: Cloudflare refused the upload. Your team's Civicsmith runs release {version} as before; nothing changed. Try again; if it stops again, the stop names the step and what to do.",
   "protected": false,
   "note": "DEC-226: installer R17, R51, R52"
  },
@@ -301,7 +301,7 @@
  },
  {
   "key": "installer.update.done.title",
-  "en": "Your group's Civicsmith is updated",
+  "en": "Your team's Civicsmith is updated",
   "protected": false,
   "note": "DEC-226: installer R54"
  },
@@ -325,13 +325,13 @@
  },
  {
   "key": "installer.update.done.note",
-  "en": "The to-do leaves every administrator's queue on its own, and Settings › Updates now shows {to} running. The installer keeps nothing of your group's Civicsmith.",
+  "en": "The to-do leaves every administrator's queue on its own, and Settings › Updates now shows {to} running. The installer keeps nothing of your team's Civicsmith.",
   "protected": false,
   "note": "DEC-226"
  },
  {
   "key": "installer.update.back",
-  "en": "Back to your group's Civicsmith",
+  "en": "Back to your team's Civicsmith",
   "protected": false,
   "note": "DEC-226"
  },
@@ -367,13 +367,13 @@
  },
  {
   "key": "elsewhere.says",
-  "en": "Civicsmith is for a group checking whether its government keeps its word. It gives legal information, never legal advice, and it can't act for you in a matter that is yours alone. The places below can; your group's place lists them, each with where that came from.",
+  "en": "Civicsmith is for a team checking whether its government keeps its word. It gives legal information, never legal advice, and it can't act for you in a matter that is yours alone. The places below can; your team's place lists them, each with where that came from.",
   "protected": false,
   "note": "DEC-227"
  },
  {
   "key": "elsewhere.records_nothing",
-  "en": "Opening this page records nothing, and nobody in your group is told.",
+  "en": "Opening this page records nothing, and nobody in your team is told.",
   "protected": false,
   "note": "DEC-227: R23, leaving the choice is a non-event"
  },
@@ -385,7 +385,7 @@
  },
  {
   "key": "elsewhere.kind.legalaid_says",
-  "en": "Organizations that give legal advice, which Civicsmith never does, free or at low cost. Listed by your group's place from its rules, not chosen by your group.",
+  "en": "Organizations that give legal advice, which Civicsmith never does, free or at low cost. Listed by your team's place from its rules, not chosen by your team.",
   "protected": false,
   "note": "DEC-227"
  },
@@ -409,7 +409,7 @@
  },
  {
   "key": "elsewhere.kind.service_says",
-  "en": "For getting one thing fixed for yourself. If the same thing keeps not getting fixed, that may be the group's question: go back to Home and start from \"A problem I live with\".",
+  "en": "For getting one thing fixed for yourself. If the same thing keeps not getting fixed, that may be the team's question: go back to Home and start from \"A problem I live with\".",
   "protected": false,
   "note": "DEC-227"
  },
@@ -433,7 +433,7 @@
  },
  {
   "key": "elsewhere.kind.representative_says",
-  "en": "The office of the person elected for your district. Its staff take up residents' own problems with the city; that is a different thing from the group's question about the member's record.",
+  "en": "The office of the person elected for your district. Its staff take up residents' own problems with the city; that is a different thing from the team's question about the member's record.",
   "protected": false,
   "note": "DEC-227"
  },
@@ -445,7 +445,7 @@
  },
  {
   "key": "elsewhere.kind.tipline_says",
-  "en": "For something that should be reported but is not the group's question. Your group's own published cases reach readers without a newsroom; a tip is for what the group will not take up.",
+  "en": "For something that should be reported but is not the team's question. Your team's own published cases reach readers without a newsroom; a tip is for what the team will not take up.",
   "protected": false,
   "note": "DEC-227"
  },
@@ -499,13 +499,13 @@
  },
  {
   "key": "elsewhere.none.says",
-  "en": "Your group's place lists nothing here yet. Civicsmith names a place only from its place's rules, with where that came from, and {place} has none for this yet. Your group's administrators can ask for the place in Settings › Places and offices; when an update brings its rules, this page fills in.",
+  "en": "Your team's place lists nothing here yet. Civicsmith names a place only from its place's rules, with where that came from, and {place} has none for this yet. Your team's administrators can ask for the place in Settings › Places and offices; when an update brings its rules, this page fills in.",
   "protected": false,
   "note": "DEC-227"
  },
  {
   "key": "elsewhere.none.noplace",
-  "en": "Your group follows no place's rules, so Civicsmith has no list to show. An administrator can choose a place in Settings › Places and offices.",
+  "en": "Your team follows no place's rules, so Civicsmith has no list to show. An administrator can choose a place in Settings › Places and offices.",
   "protected": false,
   "note": "DEC-227"
  },
@@ -721,7 +721,7 @@
  },
  {
   "key": "document.links.says",
-  "en": "{n} links on this page; {held} point at documents the group holds. An outward link opens the site as it is today, in a new window, which may differ from what was captured; it takes you outside Civicsmith. The site's own navigation links are left out.",
+  "en": "{n} links on this page; {held} point at documents the team holds. An outward link opens the site as it is today, in a new window, which may differ from what was captured; it takes you outside Civicsmith. The site's own navigation links are left out.",
   "protected": true,
   "note": "DEC-229: the one-line warning, D2"
  },
@@ -799,13 +799,13 @@
  },
  {
   "key": "signin.handle.help",
-  "en": "The name the group knows you by: chosen when you joined, or when you set the group up.",
+  "en": "The name the team knows you by: chosen when you joined, or when you set the team up.",
   "protected": false,
   "note": "DEC-230: the front door's handle field"
  },
  {
   "key": "forgot.handle.help",
-  "en": "The handle you sign in with: the name the group knows you by.",
+  "en": "The handle you sign in with: the name the team knows you by.",
   "protected": false,
   "note": "DEC-230: the recovery page's handle field"
  },
@@ -835,7 +835,7 @@
  },
  {
   "key": "founder.handle.says",
-  "en": "Until now you've signed in as admin, a name every Civicsmith group's founder shared. Choose the handle you'll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can't be changed.",
+  "en": "Until now you've signed in as admin, a name every Civicsmith team's founder shared. Choose the handle you'll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can't be changed.",
   "protected": false,
   "note": "DEC-230"
  },
@@ -865,31 +865,31 @@
  },
  {
   "key": "member.founder.unnamed",
-  "en": "The group's founder",
+  "en": "The team's founder",
   "protected": false,
   "note": "DEC-230: shown wherever the founder's name would be, until a handle is chosen; never admin"
  },
  {
   "key": "member.founder.unnamed.help",
-  "en": "The person who set up this group's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.",
+  "en": "The person who set up this team's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.",
   "protected": false,
   "note": "DEC-230"
  },
  {
   "key": "stake.group.title",
-  "en": "What the group has at stake",
+  "en": "What the team has at stake",
   "protected": false,
-  "note": "DEC-231: Settings › Your group"
+  "note": "DEC-231: Settings › Your team"
  },
  {
   "key": "stake.group.label",
-  "en": "The group's statement",
+  "en": "The team's statement",
   "protected": false,
   "note": "DEC-231"
  },
  {
   "key": "stake.group.help",
-  "en": "In your group's own words: what the group itself stands to gain or lose in the matters it works on. It goes beside your group's name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.",
+  "en": "In your team's own words: what the team itself stands to gain or lose in the matters it works on. It goes beside your team's name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.",
   "protected": false,
   "note": "DEC-231"
  },
@@ -913,13 +913,13 @@
  },
  {
   "key": "stake.project.title",
-  "en": "What the group has at stake here",
+  "en": "What the team has at stake here",
   "protected": false,
   "note": "DEC-231: the project page"
  },
  {
   "key": "stake.project.group",
-  "en": "The group's own statement, on everything it sends: {stake}",
+  "en": "The team's own statement, on everything it sends: {stake}",
   "protected": false,
   "note": "DEC-231"
  },
@@ -931,7 +931,7 @@
  },
  {
   "key": "stake.project.help",
-  "en": "Only what this matter adds to the group's usual stake. It goes beside the group's statement on what this project sends or publishes, never in its place. A member of the project or an administrator can set it; each change is dated and kept. Empty means the group's statement alone.",
+  "en": "Only what this matter adds to the team's usual stake. It goes beside the team's statement on what this project sends or publishes, never in its place. A member of the project or an administrator can set it; each change is dated and kept. Empty means the team's statement alone.",
   "protected": false,
   "note": "DEC-231"
  },
@@ -943,7 +943,7 @@
  },
  {
   "key": "stake.ask.title",
-  "en": "Does the group have a stake in this matter beyond its usual one?",
+  "en": "Does the team have a stake in this matter beyond its usual one?",
   "protected": false,
   "note": "DEC-231: the question at preparation, when stakeatpreparation answers higher_stakes"
  },
@@ -955,7 +955,7 @@
  },
  {
   "key": "stake.ask.says",
-  "en": "{kind} puts the group's own interest on the record, so readers will ask what it stands to gain. Your group's statement goes with this action already. If this matter touches the group more than usual, such as a member who is a party or a decision that changes your rent, say so here. It goes beside the group's statement on what this action sends. You can approve either way.",
+  "en": "{kind} puts the team's own interest on the record, so readers will ask what it stands to gain. Your team's statement goes with this action already. If this matter touches the team more than usual, such as a member who is a party or a decision that changes your rent, say so here. It goes beside the team's statement on what this action sends. You can approve either way.",
   "protected": false,
   "note": "DEC-231: {kind} the action's kind in words, e.g. Taking part as a party"
  },
@@ -973,7 +973,7 @@
  },
  {
   "key": "stake.action.help",
-  "en": "What this one action adds to the group's usual stake and the project's. It goes beside them on what this action sends, never in their place, and is dated and kept. Empty means the project's stake, or the group's alone.",
+  "en": "What this one action adds to the team's usual stake and the project's. It goes beside them on what this action sends, never in their place, and is dated and kept. Empty means the project's stake, or the team's alone.",
   "protected": false,
   "note": "DEC-231"
  },
@@ -1009,7 +1009,7 @@
  },
  {
   "key": "stake.none",
-  "en": "None stated beyond the group's",
+  "en": "None stated beyond the team's",
   "protected": false,
   "note": "DEC-231"
  },
@@ -1099,7 +1099,7 @@
  },
  {
   "key": "proceeding.dates.help",
-  "en": "The proceeding's own dates beside your group's deadlines on it. A deadline the body set for itself is never in your group's lane. Nothing here says anyone is late.",
+  "en": "The proceeding's own dates beside your team's deadlines on it. A deadline the body set for itself is never in your team's lane. Nothing here says anyone is late.",
   "protected": false,
   "note": "DEC-232"
  },
@@ -1129,7 +1129,7 @@
  },
  {
   "key": "refusal.NO_FINDINGS",
-  "en": "A determination rests on at least one finding: one your group published, one checked and held for publication, or another group's finding your group has accepted. Name the findings it rests on. Nothing was written.",
+  "en": "A determination rests on at least one finding: one your team published, one checked and held for publication, or another team's finding your team has accepted. Name the findings it rests on. Nothing was written.",
   "protected": false,
   "note": "DEC-232: B188 (4); conformance R40, C-113.6"
  },
@@ -1201,7 +1201,7 @@
  },
  {
   "key": "places.elsewhere.help",
-  "en": "The places Civicsmith sends a member to when what they need is their own matter, not the group's question. They come with the place's rules; your group neither chooses nor edits them.",
+  "en": "The places Civicsmith sends a member to when what they need is their own matter, not the team's question. They come with the place's rules; your team neither chooses nor edits them.",
   "protected": false,
   "note": "DEC-232: B188 (5); the section help on Places and offices"
  },
@@ -1213,7 +1213,7 @@
  },
  {
   "key": "places.elsewhere.noplace",
-  "en": "Your group has no place chosen, so there is nothing to list. Choose one under Places and languages.",
+  "en": "Your team has no place chosen, so there is nothing to list. Choose one under Places and languages.",
   "protected": false,
   "note": "DEC-232: no place"
  },
@@ -1225,7 +1225,7 @@
  },
  {
   "key": "duty.reason.deadline_not_held",
-  "en": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "en": "Your team's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
   "protected": false,
   "note": "DEC-232"
  },
@@ -1261,7 +1261,7 @@
  },
  {
   "key": "refusal.UPDATE_SKIP_NO_REASON",
-  "en": "Say why your group skips this release, on one line: every administrator will see it. Nothing was recorded.",
+  "en": "Say why your team skips this release, on one line: every administrator will see it. Nothing was recorded.",
   "protected": false,
   "note": "DEC-232: B190; instance-setup R90"
  },
@@ -1273,7 +1273,7 @@
  },
  {
   "key": "home.ready.title",
-  "en": "Your group's Civicsmith is ready",
+  "en": "Your team's Civicsmith is ready",
   "protected": false,
   "note": "DEC-232"
  },
@@ -1285,7 +1285,7 @@
  },
  {
   "key": "home.needsgroup.title",
-  "en": "Needs the group",
+  "en": "Needs the team",
   "protected": false,
   "note": "DEC-232"
  },
@@ -1315,13 +1315,13 @@
  },
  {
   "key": "shell.band.working",
-  "en": "· not public · seen by your group's members",
+  "en": "· not public · seen by your team's members",
   "protected": false,
   "note": "DEC-232: B194; follows mark.path.working.name in the band"
  },
  {
   "key": "shell.group.unnamed",
-  "en": "Your group",
+  "en": "Your team",
   "protected": false,
   "note": "DEC-232: B194; never the short name in its place"
  },
@@ -1369,7 +1369,7 @@
  },
  {
   "key": "queue.source.detail",
-  "en": "Your group's Civicsmith noticed this when it checked. The copies your group holds are unchanged. Open each one to see what changed; nothing has been decided.",
+  "en": "Your team's Civicsmith noticed this when it checked. The copies your team holds are unchanged. Open each one to see what changed; nothing has been decided.",
   "protected": false,
   "note": "DEC-232"
  },
@@ -1381,9 +1381,9 @@
  },
  {
   "key": "home.first.name",
-  "en": "Name your group",
+  "en": "Name your team",
   "protected": false,
-  "note": "DEC-232: B194; leads an administrator's first steps while the group has no name"
+  "note": "DEC-232: B194; leads an administrator's first steps while the team has no name"
  },
  {
   "key": "settings.set.setup",
@@ -1393,13 +1393,13 @@
  },
  {
   "key": "entity.says.title",
-  "en": "What the group says about them",
+  "en": "What the team says about them",
   "protected": false,
   "note": "DEC-233: the section on a person's page"
  },
  {
   "key": "entity.says.title.org",
-  "en": "What the group says about it",
+  "en": "What the team says about it",
   "protected": false,
   "note": "DEC-233: on an organization's page"
  },
@@ -1435,7 +1435,7 @@
  },
  {
   "key": "entity.alias.help",
-  "en": "A name documents use for them: a short form, a former name, a title used as a name. Civicsmith then looks for it in the documents your group holds. Two people can share a name; nothing here decides which one a document means.",
+  "en": "A name documents use for them: a short form, a former name, a title used as a name. Civicsmith then looks for it in the documents your team holds. Two people can share a name; nothing here decides which one a document means.",
   "protected": false,
   "note": "DEC-233"
  },
@@ -1543,7 +1543,7 @@
  },
  {
   "key": "entity.naming.says",
-  "en": "Found by their names in the documents your group holds. Not yet matched: a document names them once Civicsmith matches an identifier or name, or a member says so from what they know.",
+  "en": "Found by their names in the documents your team holds. Not yet matched: a document names them once Civicsmith matches an identifier or name, or a member says so from what they know.",
   "protected": false,
   "note": "DEC-233"
  },
@@ -1591,13 +1591,13 @@
  },
  {
   "key": "installer.update.chosen.nodate",
-  "en": "This update: release {version}, the release chosen in your group's Settings › Updates",
+  "en": "This update: release {version}, the release chosen in your team's Settings › Updates",
   "protected": false,
   "note": "DEC-234: B200 (1); the update address carries no date"
  },
  {
   "key": "screen.review-copy.until.nozone",
-  "en": "Set your group's time zone first: a review link's end date is counted in it. Then share.",
+  "en": "Set your team's time zone first: a review link's end date is counted in it. Then share.",
   "protected": false,
   "note": "DEC-234: B200 (2), B201; screens-publish R18"
  },
@@ -1609,7 +1609,7 @@
  },
  {
   "key": "shell.card.timeline",
-  "en": "The project's timeline: what the officials did and what the group did, in two lanes, each event with its source.",
+  "en": "The project's timeline: what the officials did and what the team did, in two lanes, each event with its source.",
   "protected": false,
   "note": "DEC-234: B200 (4)"
  },
@@ -1627,13 +1627,13 @@
  },
  {
   "key": "shell.card.case-editor",
-  "en": "The case being prepared: its findings, what it leaves out, the people it names, and the group's statement.",
+  "en": "The case being prepared: its findings, what it leaves out, the people it names, and the team's statement.",
   "protected": false,
   "note": "DEC-234: B200 (4)"
  },
  {
   "key": "shell.card.review-copy",
-  "en": "A copy of the draft case shared with a named outside reader, through a link the group can end at any time.",
+  "en": "A copy of the draft case shared with a named outside reader, through a link the team can end at any time.",
   "protected": false,
   "note": "DEC-234: B200 (4)"
  },
@@ -1677,7 +1677,7 @@
   "key": "home.move.ours",
   "en": "our move",
   "protected": false,
-  "note": "DEC-234: B201: an action waiting on the group"
+  "note": "DEC-234: B201: an action waiting on the team"
  },
  {
   "key": "home.move.theirs",
@@ -1849,7 +1849,7 @@
  },
  {
   "key": "question.readings.help",
-  "en": "A reading is one complete account of what supports this question, named and kept exactly as written. The group can weigh several; each project stands on one accepted reading. Its strength is worked out from that reading alone.",
+  "en": "A reading is one complete account of what supports this question, named and kept exactly as written. The team can weigh several; each project stands on one accepted reading. Its strength is worked out from that reading alone.",
   "protected": false,
   "note": "DEC-235"
  },
@@ -1957,7 +1957,7 @@
  },
  {
   "key": "screen.updates.admins",
-  "en": "Only your group's administrators install updates. If something needs updating, ask one of them.",
+  "en": "Only your team's administrators install updates. If something needs updating, ask one of them.",
   "protected": false,
   "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees"
  },
@@ -1975,7 +1975,7 @@
  },
  {
   "key": "screen.imported.list.says",
-  "en": "Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.",
+  "en": "Cases other teams published that your team brought in to check. Each opens read-only, recreated finding by finding.",
   "protected": false,
   "note": "DEC-236"
  },
@@ -1999,7 +1999,7 @@
  },
  {
   "key": "screen.imported.list.tip",
-  "en": "Cases other groups published that your group brought in to check, each read-only",
+  "en": "Cases other teams published that your team brought in to check, each read-only",
   "protected": false,
   "note": "DEC-236: the card on Projects' link"
  },
@@ -2029,7 +2029,7 @@
  },
  {
   "key": "shell.card.proceeding",
-  "en": "A proceeding the project follows: a hearing, a rulemaking or a case before a public body, with its dates and the group's deadlines on it.",
+  "en": "A proceeding the project follows: a hearing, a rulemaking or a case before a public body, with its dates and the team's deadlines on it.",
   "protected": false,
   "note": "DEC-237: the reference card, beside DEC-234's"
  },
@@ -2053,7 +2053,7 @@
  },
  {
   "key": "project.visibility.discoverable",
-  "en": "Findable: every member of the group sees it in Projects and can ask to join.",
+  "en": "Findable: every member of the team sees it in Projects and can ask to join.",
   "protected": true,
   "note": "DEC-237: `discoverable`"
  },
@@ -2065,7 +2065,7 @@
  },
  {
   "key": "project.visibility.start.discoverable",
-  "en": "Findable: every member of the group sees it in Projects and can ask to join",
+  "en": "Findable: every member of the team sees it in Projects and can ask to join",
   "protected": false,
   "note": "DEC-237"
  },
@@ -2173,7 +2173,7 @@
  },
  {
   "key": "project.rescue.own",
-  "en": "A project a member kept for themselves alone is never taken over: when they leave the group, it stays as they left it.",
+  "en": "A project a member kept for themselves alone is never taken over: when they leave the team, it stays as they left it.",
   "protected": true,
   "note": "DEC-237: K2782, project-roster R22"
  },
@@ -2209,7 +2209,7 @@
  },
  {
   "key": "find.browse.says",
-  "en": "With no words, Find lists everything your group holds, newest first.",
+  "en": "With no words, Find lists everything your team holds, newest first.",
   "protected": false,
   "note": "DEC-238: F1"
  },
@@ -2365,7 +2365,7 @@
  },
  {
   "key": "risk.help",
-  "en": "How carefully the group should act on this, from 1 (file freely) to 3 (do not file without counsel). Only a member sets it, with a reason; a filing waits while it is not assessed.",
+  "en": "How carefully the team should act on this, from 1 (file freely) to 3 (do not file without counsel). Only a member sets it, with a reason; a filing waits while it is not assessed.",
   "protected": false,
   "note": "DEC-239; filings R2"
  },
@@ -2545,7 +2545,7 @@
  },
  {
   "key": "published.check.help",
-  "en": "Anyone can check whether a file they were given is one this case rests on, without asking the group.",
+  "en": "Anyone can check whether a file they were given is one this case rests on, without asking the team.",
   "protected": false,
   "note": "DEC-240"
  },
@@ -2605,7 +2605,7 @@
  },
  {
   "key": "review.statement.help",
-  "en": "The group says what its case leaves out, so no reader mistakes the gap for something the case covers. You can acknowledge that you read it.",
+  "en": "The team says what its case leaves out, so no reader mistakes the gap for something the case covers. You can acknowledge that you read it.",
   "protected": false,
   "note": "DEC-240"
  },
@@ -2839,7 +2839,7 @@
  },
  {
   "key": "refusal.SOURCE_REFUSED",
-  "en": "The site refused to give the page to your group's Civicsmith. Try again later, or save the page yourself and add it as a file.",
+  "en": "The site refused to give the page to your team's Civicsmith. Try again later, or save the page yourself and add it as a file.",
   "protected": false,
   "note": "DEC-246: screens-intake R1"
  },
@@ -2857,7 +2857,7 @@
  },
  {
   "key": "refusal.TOO_LARGE",
-  "en": "The file at that address is larger than your group's Civicsmith keeps. Ask an administrator, or add a smaller part of it as a file.",
+  "en": "The file at that address is larger than your team's Civicsmith keeps. Ask an administrator, or add a smaller part of it as a file.",
   "protected": false,
   "note": "DEC-246: screens-intake R1"
  },
@@ -2911,7 +2911,7 @@
  },
  {
   "key": "setup.claimed.sub",
-  "en": "Your group's Civicsmith already has its first administrator.",
+  "en": "Your team's Civicsmith already has its first administrator.",
   "protected": false,
   "note": "DEC-246: screens-entry R15"
  },
@@ -2923,7 +2923,7 @@
  },
  {
   "key": "question.ai.whose",
-  "en": "The dock and this page say whose account serves you: “On the group's key” or “On your own account”.",
+  "en": "The dock and this page say whose account serves you: “On the team's key” or “On your own account”.",
   "protected": false,
   "note": "DEC-246: screens-inquiry R4"
  },
@@ -2935,7 +2935,7 @@
  },
  {
   "key": "question.empty.note",
-  "en": "A question stands on passages the group holds. Bring in the first one any of three ways.",
+  "en": "A question stands on passages the team holds. Bring in the first one any of three ways.",
   "protected": false,
   "note": "DEC-245: state c"
  },
@@ -2953,13 +2953,13 @@
  },
  {
   "key": "question.empty.find",
-  "en": "Find one the group already holds",
+  "en": "Find one the team already holds",
   "protected": false,
   "note": "DEC-245: state c"
  },
  {
   "key": "question.empty.find.line",
-  "en": "Search the group's documents; cite a passage from the one you open.",
+  "en": "Search the team's documents; cite a passage from the one you open.",
   "protected": false,
   "note": "DEC-245: state c"
  },
@@ -2977,7 +2977,7 @@
  },
  {
   "key": "question.empty.ask.line",
-  "en": "It reads what the group holds and proposes passages and a reading; nothing counts until a member accepts it.",
+  "en": "It reads what the team holds and proposes passages and a reading; nothing counts until a member accepts it.",
   "protected": false,
   "note": "DEC-245: state c"
  },
@@ -3109,15 +3109,15 @@
  },
  {
   "key": "projects.empty.sub",
-  "en": "No projects yet. A project is one problem the group wants to get to the bottom of, such as the repair of potholes on your streets.",
+  "en": "No projects yet. A project is one problem the team wants to get to the bottom of, such as the repair of potholes on your streets.",
   "protected": false,
-  "note": "DEC-245: Projects, a new group"
+  "note": "DEC-245: Projects, a new team"
  },
  {
   "key": "projects.empty.note",
   "en": "Start one below; you become its owner, and you open its first question on its page.",
   "protected": false,
-  "note": "DEC-245: Projects, a new group"
+  "note": "DEC-245: Projects, a new team"
  },
  {
   "key": "capture.forquestion",
@@ -3295,19 +3295,19 @@
  },
  {
   "key": "dock.withheld.AGENT_WORKER_UNBOUND",
-  "en": "The assistant isn't installed in your group's Civicsmith yet, so this run can't start. Nothing was sent. Whoever installed your group's Civicsmith can add it; everything else works without it.",
+  "en": "The assistant isn't installed in your team's Civicsmith yet, so this run can't start. Nothing was sent. Whoever installed your team's Civicsmith can add it; everything else works without it.",
   "protected": false,
   "note": "DEC-248: D18"
  },
  {
   "key": "dock.withheld.NAMESPACE_UNDETERMINED",
-  "en": "The run can't start: your group's Civicsmith couldn't tell which of its stores to use. Nothing was sent. This is a fault in Civicsmith, not something you did: tell an administrator, with the reference below.",
+  "en": "The run can't start: your team's Civicsmith couldn't tell which of its stores to use. Nothing was sent. This is a fault in Civicsmith, not something you did: tell an administrator, with the reference below.",
   "protected": false,
   "note": "DEC-248"
  },
  {
   "key": "dock.withheld.CREDENTIAL_RECORD_SILENT",
-  "en": "The run can't start: your group's Civicsmith didn't answer in time while preparing it. Nothing was sent. Try again in a moment.",
+  "en": "The run can't start: your team's Civicsmith didn't answer in time while preparing it. Nothing was sent. Try again in a moment.",
   "protected": false,
   "note": "DEC-248"
  },
@@ -3319,7 +3319,7 @@
  },
  {
   "key": "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
-  "en": "The run can't start: your membership isn't active in your group's Civicsmith just now. Nothing was sent. An administrator can tell you why.",
+  "en": "The run can't start: your membership isn't active in your team's Civicsmith just now. Nothing was sent. An administrator can tell you why.",
   "protected": false,
   "note": "DEC-248: R13"
  },
@@ -3355,7 +3355,7 @@
  },
  {
   "key": "ai.serves.group",
-  "en": "On the group's key",
+  "en": "On the team's key",
   "protected": false,
   "note": "DEC-248"
  },
@@ -3397,25 +3397,25 @@
  },
  {
   "key": "ai.log.withheld.NO_INSTANCE_AI_CREDENTIAL",
-  "en": "Stopped before it began: your group's Civicsmith has no pass of its own for running the assistant. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it.",
+  "en": "Stopped before it began: your team's Civicsmith has no pass of its own for running the assistant. Nothing went to the assistant. Whoever installed your team's Civicsmith can set it.",
   "protected": false,
   "note": "DEC-248"
  },
  {
   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD",
-  "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant isn't on its record. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it again.",
+  "en": "Stopped before it began: the pass your team's Civicsmith uses for the assistant isn't on its record. Nothing went to the assistant. Whoever installed your team's Civicsmith can set it again.",
   "protected": false,
   "note": "DEC-248"
  },
  {
   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_REVOKED",
-  "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant was withdrawn. Nothing went to the assistant. Whoever installed your group's Civicsmith can set a new one.",
+  "en": "Stopped before it began: the pass your team's Civicsmith uses for the assistant was withdrawn. Nothing went to the assistant. Whoever installed your team's Civicsmith can set a new one.",
   "protected": false,
   "note": "DEC-248"
  },
  {
   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION",
-  "en": "Stopped before it began: the pass your group's Civicsmith holds for the assistant is of the wrong kind. Nothing went to the assistant. Whoever installed your group's Civicsmith can set the right one.",
+  "en": "Stopped before it began: the pass your team's Civicsmith holds for the assistant is of the wrong kind. Nothing went to the assistant. Whoever installed your team's Civicsmith can set the right one.",
   "protected": false,
   "note": "DEC-248"
  },
@@ -3457,13 +3457,13 @@
  },
  {
   "key": "updates.running.release_setup",
-  "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+  "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
   "note": "DEC-248: D30, screens-settings R37; for an install with no member behind it (setup, admin before a handle, a token)"
  },
  {
   "key": "updates.earlier.installed_setup",
-  "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+  "en": "Release {version} · installed {date}, when your team's Civicsmith was set up",
   "protected": false,
   "note": "DEC-248"
  },
@@ -3511,7 +3511,7 @@
  },
  {
   "key": "translations.none",
-  "en": "Your group uses no language but English yet, so there is nothing to translate. When your group adds a language, its words wait here for members who speak it to translate.",
+  "en": "Your team uses no language but English yet, so there is nothing to translate. When your team adds a language, its words wait here for members who speak it to translate.",
   "protected": false,
   "note": "DEC-248: D30, screens-settings R37"
  },
@@ -3553,7 +3553,7 @@
  },
  {
   "key": "due.ours.passed_says",
-  "en": "A date your group set itself, not one a law or an office set. Passing it binds nobody; it tells you your own plan has slipped.",
+  "en": "A date your team set itself, not one a law or an office set. Passing it binds nobody; it tells you your own plan has slipped.",
   "protected": false,
   "note": "DEC-248"
  },
@@ -3745,7 +3745,7 @@
  },
  {
   "key": "capture.watch.freq_says",
-  "en": "How often your group's Civicsmith fetches the address again to see whether it changed. At each meeting: after each meeting of the body that publishes it. A change is captured as a new version, and whoever cited the old one is told in their queue.",
+  "en": "How often your team's Civicsmith fetches the address again to see whether it changed. At each meeting: after each meeting of the body that publishes it. A change is captured as a new version, and whoever cited the old one is told in their queue.",
   "protected": false,
   "note": "DEC-250"
  },
@@ -3901,13 +3901,13 @@
  },
  {
   "key": "court.statement",
-  "en": "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.",
+  "en": "Your team's Civicsmith keeps this from the public and the people the team looks into. A court order your team can't defeat could still require it to be shown. Write accordingly.",
   "protected": true,
   "note": "DEC-251: screens-settings R7, membership R108's words exactly (DEC-136)"
  },
  {
   "key": "join.cap.says",
-  "en": "On a busy day, the group's join link says this instead",
+  "en": "On a busy day, the team's join link says this instead",
   "protected": false,
   "note": "DEC-251: screens-entry R7; the words are refusal.JOIN_LINK_DAILY_CAP"
  },

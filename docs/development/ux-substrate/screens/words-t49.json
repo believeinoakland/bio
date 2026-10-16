@@ -902,9 +902,9 @@
   },
   {
    "key": "standard.text.withheld",
-   "en": "This standard's words can be read only by the group's members, inside the group.",
+   "en": "This standard's words can be read only by the team's members, inside the team.",
    "protected": false,
-   "note": "DEC-253: in place of a reading-room or paywalled text, for a reader outside the group"
+   "note": "DEC-253: in place of a reading-room or paywalled text, for a reader outside the team"
   },
   {
    "key": "standard.note",
@@ -956,13 +956,13 @@
   },
   {
    "key": "site.groups.rule",
-   "en": "The people who make Civicsmith decline or remove a listing only under a published listing rule, never for a group's views or for whom it holds to account. A group is always told why.",
+   "en": "The people who make Civicsmith decline or remove a listing only under a published listing rule, never for a team's views or for whom it holds to account. A team is always told why.",
    "protected": true,
-   "note": "DEC-255: under Groups at work"
+   "note": "DEC-255: under Teams at work"
   },
   {
    "key": "refusal.PROJECT_VISIBILITY_NOT_THE_OWNER",
-   "en": "Only the project's owners can change whether it can be found; administrators and the group's founder cannot. Ask an owner. Nothing was changed.",
+   "en": "Only the project's owners can change whether it can be found; administrators and the team's founder cannot. Ask an owner. Nothing was changed.",
    "protected": false,
    "note": "DEC-256: T49's requirement draws it by its words"
   },
@@ -974,13 +974,13 @@
   },
   {
    "key": "refusal.NAME_TAKEN",
-   "en": "A project in this group already has that name. Choose another. Nothing was written.",
+   "en": "A project in this team already has that name. Choose another. Nothing was written.",
    "protected": false,
    "note": "DEC-256: T49's requirement draws it by its words"
   },
   {
    "key": "refusal.CONSENSUS_REQUIRED",
-   "en": "Your endorsement is recorded. While the group has two or more administrators, a new one is invited only once every administrator endorses. Still to endorse: {awaiting}.",
+   "en": "Your endorsement is recorded. While the team has two or more administrators, a new one is invited only once every administrator endorses. Still to endorse: {awaiting}.",
    "protected": false,
    "note": "DEC-256: T49's requirement draws it by its words"
   },
@@ -1076,7 +1076,7 @@
   },
   {
    "key": "question.plan.link.tip",
-   "en": "The action plan opened from this question: what the group means to do about it, and what each option became.",
+   "en": "The action plan opened from this question: what the team means to do about it, and what each option became.",
    "protected": false,
    "note": "DEC-256: screens-inquiry R36"
   },
@@ -1112,13 +1112,13 @@
   },
   {
    "key": "setup.member.heading",
-   "en": "Your group is set up",
+   "en": "Your team is set up",
    "protected": false,
    "note": "DEC-256: screens-entry R19: setup opened by a member, or an administrator who is not the founder"
   },
   {
    "key": "setup.member.sub",
-   "en": "Your group's Civicsmith is already set up, so there is nothing to do here. Your group's work is on Home.",
+   "en": "Your team's Civicsmith is already set up, so there is nothing to do here. Your team's work is on Home.",
    "protected": false,
    "note": "DEC-256: screens-entry R19"
   },
@@ -1130,7 +1130,7 @@
   },
   {
    "key": "setup.member.home.tip",
-   "en": "Your group's home: what needs you, and what changed since you last looked.",
+   "en": "Your team's home: what needs you, and what changed since you last looked.",
    "protected": false,
    "note": "DEC-256: screens-entry R19"
   },
@@ -1244,9 +1244,9 @@
   },
   {
    "key": "screen.connect.outward",
-   "en": "Outward · leaves your group's Civicsmith",
+   "en": "Outward · leaves your team's Civicsmith",
    "protected": true,
-   "note": "DEC-257: the mark on what leaves the group (protected: says who can see something)"
+   "note": "DEC-257: the mark on what leaves the team (protected: says who can see something)"
   },
   {
    "key": "screen.connect.read.button",
@@ -1256,7 +1256,7 @@
   },
   {
    "key": "screen.connect.own.instead",
-   "en": "If you connect your own account, it serves you instead of the group's key, and only you.",
+   "en": "If you connect your own account, it serves you instead of the team's key, and only you.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1298,7 +1298,7 @@
   },
   {
    "key": "screen.connect.limits.none",
-   "en": "Your limits bind only your own account; the group's and a project's limits never bind it. With no limit, nothing is capped here except Anthropic's own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.",
+   "en": "Your limits bind only your own account; the team's and a project's limits never bind it. With no limit, nothing is capped here except Anthropic's own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1310,7 +1310,7 @@
   },
   {
    "key": "screen.connect.meter.groupshare",
-   "en": "Today on the group's key, your share of it",
+   "en": "Today on the team's key, your share of it",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1412,7 +1412,7 @@
   },
   {
    "key": "screen.find-in.proposed.later",
-   "en": "Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can't match, such as \"{example}\" in {document}, a person your group doesn't follow yet.",
+   "en": "Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can't match, such as \"{example}\" in {document}, a person your team doesn't follow yet.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1436,7 +1436,7 @@
   },
   {
    "key": "screen.home.welcome.what",
-   "en": "The guided start you began when you joined shows you around in about ten minutes more: how the group judges evidence, your settings, and a first step. Stop it at any point and pick it up later here.",
+   "en": "The guided start you began when you joined shows you around in about ten minutes more: how the team judges evidence, your settings, and a first step. Stop it at any point and pick it up later here.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1670,7 +1670,7 @@
   },
   {
    "key": "ai.limit.period.help",
-   "en": "By your group's calendar. A month starts again on the 1st.",
+   "en": "By your team's calendar. A month starts again on the 1st.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1694,7 +1694,7 @@
   },
   {
    "key": "ai.keepaway.group.help",
-   "en": "Binds every account, the group's, any project's and members' own: for the uses you choose, no assistant reads your group's material, whoever pays.",
+   "en": "Binds every account, the team's, any project's and members' own: for the uses you choose, no assistant reads your team's material, whoever pays.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1718,37 +1718,37 @@
   },
   {
    "key": "screen.members.key.uses.head",
-   "en": "What the group's key pays for",
+   "en": "What the team's key pays for",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.members.key.limits.head",
-   "en": "Limits on the group's key",
+   "en": "Limits on the team's key",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.members.key.use.head",
-   "en": "Use of the group's key",
+   "en": "Use of the team's key",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.members.ai.changes.head",
-   "en": "Changes to the group's AI settings",
+   "en": "Changes to the team's AI settings",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.members.ai.change.limit",
-   "en": "{name} set each member's use of the group's key to at most {amount} a day",
+   "en": "{name} set each member's use of the team's key to at most {amount} a day",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.members.ai.change.held",
-   "en": "{name} held the group's API key and switched it on",
+   "en": "{name} held the team's API key and switched it on",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1838,13 +1838,13 @@
   },
   {
    "key": "screen.question.conclude.adopts",
-   "en": "A conclusion adopts one reading as the group's answer, in that reading's own words; it rests on the passages the reading stands on.",
+   "en": "A conclusion adopts one reading as the team's answer, in that reading's own words; it rests on the passages the reading stands on.",
    "protected": false,
    "note": "DEC-257: under question.conclude.reading"
   },
   {
    "key": "screen.question.airun.reading",
-   "en": "Reading the {count} documents the group holds on {subject} for passages that bear on this question",
+   "en": "Reading the {count} documents the team holds on {subject} for passages that bear on this question",
    "protected": false,
    "note": "DEC-257: the assistant's run, while it works"
   },
@@ -1904,7 +1904,7 @@
   },
   {
    "key": "screen.queue.hint.method.text",
-   "en": "The check “{check}” compared {inputs} in the documents your group holds, matching {by}.",
+   "en": "The check “{check}” compared {inputs} in the documents your team holds, matching {by}.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -1982,7 +1982,7 @@
   },
   {
    "key": "screen.setup.places.chosen",
-   "en": "You chose {place} when you created your group's Civicsmith. Change it here if you need to.",
+   "en": "You chose {place} when you created your team's Civicsmith. Change it here if you need to.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2024,7 +2024,7 @@
   },
   {
    "key": "screen.setup.offices.none",
-   "en": "Nothing is filled in here: Civicsmith does not hold the offices and seats for {place} yet. Add the offices your group deals with yourself, now or at any time; each is marked as added by your group. When an update brings {place}'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.",
+   "en": "Nothing is filled in here: Civicsmith does not hold the offices and seats for {place} yet. Add the offices your team deals with yourself, now or at any time; each is marked as added by your team. When an update brings {place}'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2054,13 +2054,13 @@
   },
   {
    "key": "screen.setup.choice.both",
-   "en": "Both. A member's own account comes first; the group's key serves the rest.",
+   "en": "Both. A member's own account comes first; the team's key serves the rest.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.setup.choice.none",
-   "en": "No assistant. Every journey still works. Members lose asking in plain words, suggestions, translation drafts, and the assistant reading new results for their standing questions; searching, counting and the group's own templates take its place.",
+   "en": "No assistant. Every journey still works. Members lose asking in plain words, suggestions, translation drafts, and the assistant reading new results for their standing questions; searching, counting and the team's own templates take its place.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2072,7 +2072,7 @@
   },
   {
    "key": "screen.setup.setting.groupkey",
-   "en": "The group's key: an administrator creates an API key in Anthropic's Console (console.anthropic.com), under an account that belongs to the group and has a payment method, and pastes it below. Civicsmith seals it and never shows it again. Setting a monthly spending limit in the Console as well is wise.",
+   "en": "The team's key: an administrator creates an API key in Anthropic's Console (console.anthropic.com), under an account that belongs to the team and has a payment method, and pastes it below. Civicsmith seals it and never shows it again. Setting a monthly spending limit in the Console as well is wise.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2084,13 +2084,13 @@
   },
   {
    "key": "screen.setup.leaves.head",
-   "en": "What leaves your group's Civicsmith",
+   "en": "What leaves your team's Civicsmith",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.setup.leaves.what",
-   "en": "When a member asks, their question and the material read to answer it go to Anthropic, under whichever account serves them. Nothing goes unless a member asks. You can change this choice at any time in your group's settings.",
+   "en": "When a member asks, their question and the material read to answer it go to Anthropic, under whichever account serves them. Nothing goes unless a member asks. You can change this choice at any time in your team's settings.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2108,13 +2108,13 @@
   },
   {
    "key": "screen.setup.key.told",
-   "en": "Each member is told once, before their first question under it, that their questions go to Anthropic under the group's account.",
+   "en": "Each member is told once, before their first question under it, that their questions go to Anthropic under the team's account.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.setup.court.matters",
-   "en": "Work done in Civicsmith can matter. Checking whether officials and agencies keep their own rules can show money misspent, deadlines ignored or promises broken, and a published case can lead to a correction, an audit or a lawsuit. People and organizations a group looks into sometimes go to court to see the work behind it.",
+   "en": "Work done in Civicsmith can matter. Checking whether officials and agencies keep their own rules can show money misspent, deadlines ignored or promises broken, and a published case can lead to a correction, an audit or a lawsuit. People and organizations a team looks into sometimes go to court to see the work behind it.",
    "protected": true,
    "note": "DEC-257: the court notice (protected)"
   },
@@ -2132,7 +2132,7 @@
   },
   {
    "key": "screen.setup.finished.title",
-   "en": "Your group's Civicsmith is set up.",
+   "en": "Your team's Civicsmith is set up.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2150,43 +2150,43 @@
   },
   {
    "key": "screen.site.line1",
-   "en": "Civicsmith is free software for a group of people who want to know whether their government is doing what it must: obeying the laws that bind it and the court decisions it is subject to, keeping the rules it set for itself and the promises it made.",
+   "en": "Civicsmith is free software for a team of people who want to know whether their government is doing what it must: obeying the laws that bind it and the court decisions it is subject to, keeping the rules it set for itself and the promises it made.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.line2",
-   "en": "The group gathers the records, works out what they show, and publishes what it finds in a form anyone can check. Neighborhood groups, newsrooms, professional associations and offices checking their own work all use it the same way.",
+   "en": "The team gathers the records, works out what they show, and publishes what it finds in a form anyone can check. Neighborhood groups, newsrooms, professional associations and offices checking their own work all use it the same way.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.start",
-   "en": "Start a group's Civicsmith",
+   "en": "Start a team's Civicsmith",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.seegroups",
-   "en": "See what groups have published",
+   "en": "See what teams have published",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.uses.head",
-   "en": "How a group uses it",
+   "en": "How a team uses it",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.uses.gather",
-   "en": "Gather the records. Members collect the records that bear on the question, from wherever they were published: the city's minutes, budgets, contracts and letters; state and federal regulations and reports; court decisions; the press releases and filings of private firms. Civicsmith keeps each one exactly as its source published it, with where and when it came from. Together these are the group's record.",
+   "en": "Gather the records. Members collect the records that bear on the question, from wherever they were published: the city's minutes, budgets, contracts and letters; state and federal regulations and reports; court decisions; the press releases and filings of private firms. Civicsmith keeps each one exactly as its source published it, with where and when it came from. Together these are the team's record.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.uses.ask",
-   "en": "Ask a question. In the group’s own words: “{example}”",
+   "en": "Ask a question. In the team’s own words: “{example}”",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2198,43 +2198,43 @@
   },
   {
    "key": "screen.site.uses.finding",
-   "en": "Reach a finding. The group's answer to its question, resting on named evidence, with how strong that evidence is. A hunch is kept as a hunch; it never becomes a finding.",
+   "en": "Reach a finding. The team's answer to its question, resting on named evidence, with how strong that evidence is. A hunch is kept as a hunch; it never becomes a finding.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.uses.publish",
-   "en": "Publish a case. The findings, their evidence and their strength, published together and signed by a member of the group. Anyone can read it and check it without asking the group.",
+   "en": "Publish a case. The findings, their evidence and their strength, published together and signed by a member of the team. Anyone can read it and check it without asking the team.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.gets.head",
-   "en": "What a group gets",
+   "en": "What a team gets",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.gets.copy",
-   "en": "Its own copy of Civicsmith. Each group runs its own copy, in a Cloudflare account the group controls. Nobody else holds the group's work, the people who make Civicsmith included.",
+   "en": "Its own copy of Civicsmith. Each team runs its own copy, in a Cloudflare account the team controls. Nobody else holds the team's work, the people who make Civicsmith included.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.gets.check",
-   "en": "Findings anyone can check. Every finding points to the passages it rests on and says how strong that evidence is, so a reader never has to take the group's word for it.",
+   "en": "Findings anyone can check. Every finding points to the passages it rests on and says how strong that evidence is, so a reader never has to take the team's word for it.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.gets.help",
-   "en": "Help for people who have never done this. A guide walks each common job step by step, from asking an office for a record to publishing a case. An AI assistant is optional: it answers only from what the group holds, says where it looked, and never concludes, signs or sends. Everything works without it.",
+   "en": "Help for people who have never done this. A guide walks each common job step by step, from asking an office for a record to publishing a case. An AI assistant is optional: it answers only from what the team holds, says where it looked, and never concludes, signs or sends. Everything works without it.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.gets.free",
-   "en": "Free software. Civicsmith costs nothing. The group pays Cloudflare $5 a month for the account its copy runs in.",
+   "en": "Free software. Civicsmith costs nothing. The team pays Cloudflare $5 a month for the account its copy runs in.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2264,19 +2264,19 @@
   },
   {
    "key": "screen.site.onecase.open",
-   "en": "Open it as any reader does: each finding, its evidence and how strong it is, and a way to check the signature without asking the group.",
+   "en": "Open it as any reader does: each finding, its evidence and how strong it is, and a way to check the signature without asking the team.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.member.head",
-   "en": "Already a member of a group?",
+   "en": "Already a member of a team?",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.member.where",
-   "en": "Your group's Civicsmith has its own address, and you sign in there, not here: civicsmith.org holds no accounts. Ask your group for its address, or find it on your group's own website.",
+   "en": "Your team's Civicsmith has its own address, and you sign in there, not here: civicsmith.org holds no accounts. Ask your team for its address, or find it on your team's own website.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2288,25 +2288,25 @@
   },
   {
    "key": "screen.site.start.lede",
-   "en": "For a group that has decided to create its own copy. This page says what you need, who should hold what, what happens step by step, and what it costs. Reading it takes five minutes; the installer takes about twenty.",
+   "en": "For a team that has decided to create its own copy. This page says what you need, who should hold what, what happens step by step, and what it costs. Reading it takes five minutes; the installer takes about twenty.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.fit.head",
-   "en": "Is it right for your group?",
+   "en": "Is it right for your team?",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.fit.what",
-   "en": "It fits if your group wants to find out whether a government, agency or public body is keeping the laws, rules and promises that bind it, and to show what the records say in a way others can check. It does not fit a group that wants a place to post opinions, or one that needs a lawyer's advice: Civicsmith gives neither.",
+   "en": "It fits if your team wants to find out whether a government, agency or public body is keeping the laws, rules and promises that bind it, and to show what the records say in a way others can check. It does not fit a team that wants a place to post opinions, or one that needs a lawyer's advice: Civicsmith gives neither.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.need.cloudflare",
-   "en": "A Cloudflare account on the Workers Paid plan, $5 a month, with a payment method. Cloudflare is the company whose computers will run your group's copy. Open the account in your group's name, not a person's.",
+   "en": "A Cloudflare account on the Workers Paid plan, $5 a month, with a payment method. Cloudflare is the company whose computers will run your team's copy. Open the account in your team's name, not a person's.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2330,7 +2330,7 @@
   },
   {
    "key": "screen.site.hold.what",
-   "en": "Whoever can sign in to that account controls your group's Civicsmith. They can read everything in it, and they are the way back in if every administrator is ever locked out. Agree as a group on who that is, and add a second trusted person to the account, so it never depends on one person. The installer says this again at the moment it matters.",
+   "en": "Whoever can sign in to that account controls your team's Civicsmith. They can read everything in it, and they are the way back in if every administrator is ever locked out. Agree as a team on who that is, and add a second trusted person to the account, so it never depends on one person. The installer says this again at the moment it matters.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2342,31 +2342,31 @@
   },
   {
    "key": "screen.site.steps.name",
-   "en": "You choose a short name and your places. The short name is a fixed label in your group's addresses and beside every signature; it never changes. The places are the city, county and state whose rules apply to you. Places ready now: {places}. For each, Civicsmith already holds the local facts it works from: its offices, where its records are published, its deadlines and its holidays.",
+   "en": "You choose a short name and your places. The short name is a fixed label in your team's addresses and beside every signature; it never changes. The places are the city, county and state whose rules apply to you. Places ready now: {places}. For each, Civicsmith already holds the local facts it works from: its offices, where its records are published, its deadlines and its holidays.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.steps.permission",
-   "en": "Cloudflare asks your permission, on its own page, to let the installer create your group's copy in your account.",
+   "en": "Cloudflare asks your permission, on its own page, to let the installer create your team's copy in your account.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.steps.install",
-   "en": "The installer puts your group's Civicsmith in place and checks it. About ten minutes. If a step stops, the installer says why and what to do; a stop before setup has begun creates nothing.",
+   "en": "The installer puts your team's Civicsmith in place and checks it. About ten minutes. If a step stops, the installer says why and what to do; a stop before setup has begun creates nothing.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.steps.claim",
-   "en": "You claim it. The installer shows you a one-time password; you use it once, choose your own password, and become the group's first administrator. More administrators can be added later.",
+   "en": "You claim it. The installer shows you a one-time password; you use it once, choose your own password, and become the team's first administrator. More administrators can be added later.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.steps.setup",
-   "en": "You set it up. Your group's name, the languages its members use, and whether members may use the assistant. All of it can be changed later.",
+   "en": "You set it up. Your team's name, the languages its members use, and whether members may use the assistant. All of it can be changed later.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2378,7 +2378,7 @@
   },
   {
    "key": "screen.site.costs.what",
-   "en": "$5 a month to Cloudflare for the account. If members use the assistant, its use is paid to Anthropic by whoever connected the account that serves it, and the group can set limits. Nothing is paid to the people who make Civicsmith.",
+   "en": "$5 a month to Cloudflare for the account. If members use the assistant, its use is paid to Anthropic by whoever connected the account that serves it, and the team can set limits. Nothing is paid to the people who make Civicsmith.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2390,19 +2390,19 @@
   },
   {
    "key": "screen.site.groups.lede",
-   "en": "The groups that chose to be listed here, each with what it has published. A group may keep itself to its members; then it is not listed, and nothing on this page is asked of it.",
+   "en": "The teams that chose to be listed here, each with what it has published. A team may keep itself to its members; then it is not listed, and nothing on this page is asked of it.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.groups.listing",
-   "en": "A group chooses in its settings whether it is listed, and what it says about itself here. Being listed changes nothing about what its members see or do.",
+   "en": "A team chooses in its settings whether it is listed, and what it says about itself here. Being listed changes nothing about what its members see or do.",
    "protected": false,
    "note": "DEC-257"
   },
   {
    "key": "screen.site.groups.none",
-   "en": "No group is listed yet. A group appears here once its administrators choose, in their own group's Civicsmith, to list it and what it has published.",
+   "en": "No team is listed yet. A team appears here once its administrators choose, in their own team's Civicsmith, to list it and what it has published.",
    "protected": false,
    "note": "DEC-257"
   },
@@ -2420,7 +2420,7 @@
   },
   {
    "key": "refusal.NOT_AUTHENTICATED",
-   "en": "This request didn't say who you are. Sign in, or send a credential this group's Civicsmith issued, and try again. Nothing was changed.",
+   "en": "This request didn't say who you are. Sign in, or send a credential this team's Civicsmith issued, and try again. Nothing was changed.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
@@ -2432,7 +2432,7 @@
   },
   {
    "key": "refusal.MACHINE_CREDENTIAL_REQUIRED",
-   "en": "This is done by an automated writer, not by a person signed in, and your group's Civicsmith records the decision that says so. It needs a machine credential an administrator has issued. Nothing was changed.",
+   "en": "This is done by an automated writer, not by a person signed in, and your team's Civicsmith records the decision that says so. It needs a machine credential an administrator has issued. Nothing was changed.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
@@ -2444,7 +2444,7 @@
   },
   {
    "key": "refusal.SESSION_ROUTE_NOT_RECORDED",
-   "en": "No one signed in can do this, and your group's Civicsmith records no decision that it isn't meant for a person. That is a gap, not a rule: report it to whoever installed your group's Civicsmith. Nothing was changed.",
+   "en": "No one signed in can do this, and your team's Civicsmith records no decision that it isn't meant for a person. That is a gap, not a rule: report it to whoever installed your team's Civicsmith. Nothing was changed.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
@@ -2498,7 +2498,7 @@
   },
   {
    "key": "refusal.AI_SCOPE_UNKNOWN_OP",
-   "en": "The list of what this credential may do names something your group's Civicsmith doesn't do. Take it out of the list, or name what you meant. Nothing was written.",
+   "en": "The list of what this credential may do names something your team's Civicsmith doesn't do. Take it out of the list, or name what you meant. Nothing was written.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
@@ -2516,13 +2516,13 @@
   },
   {
    "key": "refusal.GROUP_IDENTITY_NEEDS_SESSION",
-   "en": "Your group's public name and web address are set by an administrator, signed in, and the record names who set each. This came from an operator's access token, not a person. Sign in as an administrator and set it there. Nothing was changed.",
+   "en": "Your team's public name and web address are set by an administrator, signed in, and the record names who set each. This came from an operator's access token, not a person. Sign in as an administrator and set it there. Nothing was changed.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
   {
    "key": "refusal.NAMESPACE_UNKNOWN",
-   "en": "This request named a part of the record your group's Civicsmith doesn't have. It has two: the record itself, and a test area kept apart. Name one of them exactly. Nothing was read or changed.",
+   "en": "This request named a part of the record your team's Civicsmith doesn't have. It has two: the record itself, and a test area kept apart. Name one of them exactly. Nothing was read or changed.",
    "protected": false,
    "note": "DEC-258: admission's translation (R14), keyed"
   },
@@ -2570,7 +2570,7 @@
   },
   {
    "key": "ai.keepaway.unread",
-   "en": "Your group's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.",
+   "en": "Your team's Civicsmith couldn't check just now whether this project keeps its material away from AI, so the assistant did nothing. Try again in a moment.",
    "protected": false,
    "note": "DEC-258: plane's ask: UNDETERMINED keep-away, for a translation or a draft"
   },
@@ -2588,7 +2588,7 @@
   },
   {
    "key": "translate.undetermined.language",
-   "en": "Your group's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.",
+   "en": "Your team's Civicsmith couldn't tell what language this is written in, so nothing was translated. Try again in a moment.",
    "protected": false,
    "note": "DEC-258: plane's ask: readtranslate; DEC-273: readtranslate translates a note, question, finding or notice, never a passage (plane R50)"
   },
@@ -2606,13 +2606,13 @@
   },
   {
    "key": "consequence.entitycreate",
-   "en": "This names a person or a body in the group's registry, in your name and with your note. Documents that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, never erased.",
+   "en": "This names a person or a body in the team's registry, in your name and with your note. Documents that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, never erased.",
    "protected": true,
    "note": "DEC-258: op-grades' consequence statement, read by the act's id"
   },
   {
    "key": "consequence.strengthbar",
-   "en": "This sets the strength the whole group's work is held to by default: every new project starts from it. It stands as the group's bar, in your name and with your reason, until it is set again.",
+   "en": "This sets the strength the whole team's work is held to by default: every new project starts from it. It stands as the team's bar, in your name and with your reason, until it is set again.",
    "protected": true,
    "note": "DEC-258: op-grades' consequence statement, read by the act's id"
   },
@@ -2636,19 +2636,19 @@
   },
   {
    "key": "consequence.standardrelease",
-   "en": "Releasing this policy lets every member of your group see it, and every read of it, from now on. It cannot be undone: once released, it is never held back at its source's sight again. The release is recorded with your name, the time and your reason.",
+   "en": "Releasing this policy lets every member of your team see it, and every read of it, from now on. It cannot be undone: once released, it is never held back at its source's sight again. The release is recorded with your name, the time and your reason.",
    "protected": true,
    "note": "DEC-258: op-grades' consequence statement, read by the act's id"
   },
   {
    "key": "credential.token.once",
-   "en": "This is the only time your group's Civicsmith shows this value. It isn't stored and can't be recovered: the record keeps the credential's name and who created it, never the value. If it is lost, withdraw this credential and create another.",
+   "en": "This is the only time your team's Civicsmith shows this value. It isn't stored and can't be recovered: the record keeps the credential's name and who created it, never the value. If it is lost, withdraw this credential and create another.",
    "protected": true,
    "note": "DEC-258: control-plane: an agent credential minted"
   },
   {
    "key": "template.review.secret.once",
-   "en": "This is the only time your group's Civicsmith shows this value. It is kept only as a fingerprint and can't be recovered. Give it to the reviewer: it lets them read this one template version, comment on it and review it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
+   "en": "This is the only time your team's Civicsmith shows this value. It is kept only as a fingerprint and can't be recovered. Give it to the reviewer: it lets them read this one template version, comment on it and review it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
    "protected": true,
    "note": "DEC-258: control-plane: a template review grant"
   },
@@ -2690,7 +2690,7 @@
   },
   {
    "key": "file.trigger.home",
-   "en": "started from the group's home",
+   "en": "started from the team's home",
    "protected": false,
    "note": "DEC-258: screens-daily: the session log's Trigger"
   },
@@ -2762,19 +2762,19 @@
   },
   {
    "key": "screen.site.nav.start",
-   "en": "Start a group",
+   "en": "Start a team",
    "protected": false,
    "note": "DEC-261"
   },
   {
    "key": "screen.site.nav.groups",
-   "en": "Groups at work",
+   "en": "Teams at work",
    "protected": false,
-   "note": "DEC-261: nav.groups is also the groups page heading"
+   "note": "DEC-261: nav.groups is also the teams page heading"
   },
   {
    "key": "screen.site.onecase.head",
-   "en": "One group's work",
+   "en": "One team's work",
    "protected": false,
    "note": "DEC-261"
   },
@@ -2798,7 +2798,7 @@
   },
   {
    "key": "screen.site.create",
-   "en": "Create your group",
+   "en": "Create your team",
    "protected": false,
    "note": "DEC-261"
   },
@@ -2888,19 +2888,19 @@
   },
   {
    "key": "screen.finder.nobody.one",
-   "en": "Nobody has looked yet at one place your group holds.",
+   "en": "Nobody has looked yet at one place your team holds.",
    "protected": false,
    "note": "DEC-263: screen.finder.nobody when {n} is 1"
   },
   {
    "key": "screen.answers.withheld.one",
-   "en": "One sentence was held back because it could not be checked against what your group holds.",
+   "en": "One sentence was held back because it could not be checked against what your team holds.",
    "protected": false,
    "note": "DEC-263: screen.answers.withheld when {n} is 1"
   },
   {
    "key": "published.check.elsewhere",
-   "en": "The group published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.",
+   "en": "The team published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.",
    "protected": false,
    "note": "DEC-263: screens-publish R22: verify answers published, with no evidence row of this edition's findings"
   },
@@ -2996,7 +2996,7 @@
   },
   {
    "key": "act.actionpressure.name",
-   "en": "Mark a reply as pressure on the group",
+   "en": "Mark a reply as pressure on the team",
    "protected": false,
    "note": "DEC-264: affordances' name for the act"
   },
@@ -3026,7 +3026,7 @@
   },
   {
    "key": "act.actionpromise.name",
-   "en": "Record a promise the group made",
+   "en": "Record a promise the team made",
    "protected": false,
    "note": "DEC-264: affordances' name for the act"
   },
@@ -3272,7 +3272,7 @@
   },
   {
    "key": "prompt.inquiryground",
-   "en": "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest group rather than from its weakest single reason, so your name and the time go on each group you make and stay there until that group's reasons change. Nothing is hidden: every reason stays visible under the group you put it in, and a published case carries each group and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.",
+   "en": "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest team rather than from its weakest single reason, so your name and the time go on each team you make and stay there until that team's reasons change. Nothing is hidden: every reason stays visible under the team you put it in, and a published case carries each team and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.",
    "protected": false,
    "note": "DEC-264: affordances' GROUND_PROMPT (R5; DEC-32 clause 1), shown before reasons are grouped"
   },
@@ -3296,9 +3296,9 @@
   },
   {
    "key": "draft.machine.label.group",
-   "en": "Draft by the assistant, at your request · edit it until it is your group's",
+   "en": "Draft by the assistant, at your request · edit it until it is your team's",
    "protected": false,
-   "note": "DEC-267: draft.machine.label for a field that holds the group's words (control-plane's group draft)"
+   "note": "DEC-267: draft.machine.label for a field that holds the team's words (control-plane's team draft)"
   },
   {
    "key": "capture.filed.project",
@@ -3332,7 +3332,7 @@
   },
   {
    "key": "site.groups.rule.text",
-   "en": "civicsmith.org lists every group whose administrators choose to list it. We decline or remove a listing only when it (1) is not a group using Civicsmith, or is advertising or spam; (2) pretends to be another group, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a group's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the group which part of this rule applies and why; once it is fixed, the group can ask again.",
+   "en": "civicsmith.org lists every team whose administrators choose to list it. We decline or remove a listing only when it (1) is not a team using Civicsmith, or is advertising or spam; (2) pretends to be another team, person or office; (3) publishes something a court has ordered removed, or that is unlawful to publish; or (4) aims at a private person rather than at a government's work: their home, family or private life. We never decline or remove a listing for a team's views, its conclusions, or whom it holds to account, public officials and companies included. We tell the team which part of this rule applies and why; once it is fixed, the team can ask again.",
    "protected": true,
    "note": "DEC-270: Bob approved this text (DEC-270); a change is his"
   },
@@ -3344,13 +3344,13 @@
   },
   {
    "key": "queue.capture-completed-unattended.detail",
-   "en": "{member} started capturing this document and left before it finished; your group's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.",
+   "en": "{member} started capturing this document and left before it finished; your team's Civicsmith finished it. Nothing here says whether what it captured is right: open it and check it before anyone vouches for it.",
    "protected": false,
    "note": "DEC-272: machinery-producers' capture-completed-unattended"
   },
   {
    "key": "queue.capture-completed-unattended.who",
-   "en": "your group's Civicsmith",
+   "en": "your team's Civicsmith",
    "protected": false,
    "note": "DEC-272: {member} when the capture was started by a credential that is no member"
   },
@@ -3368,19 +3368,19 @@
   },
   {
    "key": "queue.capture-completed-unattended.request.detail",
-   "en": "{member} asked for this document, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "en": "{member} asked for this document, and your team's Civicsmith captured it. Capturing adds it to what your team holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
    "protected": false,
    "note": "DEC-274: a member's own request (capture-requests R56)"
   },
   {
    "key": "queue.capture-completed-unattended.request.detail.assistant",
-   "en": "The assistant asked for this document while working for {member}, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "en": "The assistant asked for this document while working for {member}, and your team's Civicsmith captured it. Capturing adds it to what your team holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
    "protected": false,
    "note": "DEC-274: a run's request; the account that paid and the run are on the run's own record, never in this sentence"
   },
   {
    "key": "queue.capture-completed-unattended.request.detail.unnamed",
-   "en": "This document was asked for, and your group's Civicsmith captured it. Capturing adds it to what your group holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
+   "en": "This document was asked for, and your team's Civicsmith captured it. Capturing adds it to what your team holds; nothing any question or finding rests on has changed. Open it and check it before anyone vouches for it.",
    "protected": false,
    "note": "DEC-274: the detail when the request names no member"
   },
@@ -3479,53 +3479,53 @@
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
   "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
   "screen.capture.file.wherehelp": "Filled from the photo where it says; correct it if it is wrong.",
-  "screen.connect.group.allowance": "The group pays, up to {limit} for each member, a limit your administrators set.",
+  "screen.connect.group.allowance": "The team pays, up to {limit} for each member, a limit your administrators set.",
   "screen.connect.group.allowance.reached": "At the limit, the assistant pauses for you until the next {period}; everything else works as usual.",
   "screen.connect.own.apikey": "The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.",
   "screen.connect.own.subscription": "The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
-  "screen.connect.none": "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
-  "screen.connect.keptaway.ask": "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
-  "screen.connect.signin.help": "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
-  "screen.connect.grouplimits": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",
+  "screen.connect.none": "The assistant isn't serving you yet. Your team doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
+  "screen.connect.keptaway.ask": "Everything else works: searching, counting and your team's templates take the assistant's place. If you think this should change, ask an administrator.",
+  "screen.connect.signin.help": "Your team's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your team's Civicsmith on Workers Paid.",
+  "screen.connect.grouplimits": "On the team's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",
   "screen.setup.otp.help": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   "screen.setup.security.scanner": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
-  "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
+  "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your team's material away from AI.",
   "screen.setup.places.now": "The places whose rules apply",
-  "screen.ties.either": "Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.",
+  "screen.ties.either": "Either way the tie is disclosed to readers of the case. Inside the team, only you and the administrators see this list.",
   "screen.money.tension": "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. New evidence may agree or disagree; where two sources disagree, both stay, shown in tension, and the table never picks one.",
   "screen.help.random.p": "Civicsmith draws the sample from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones.",
   "screen.imported.none": "No case imported yet. Choose a case file to import the first.",
   "screen.projectai.keepaway.head": "Keeping this project's material away from AI",
   "screen.proceeding.register": "Register the proceeding",
-  "screen.connect.apikey.help": "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
+  "screen.connect.apikey.help": "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your team's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
   "screen.capture.file.choosehelp": "on a phone, the camera opens",
-  "screen.home.strip.group": "Needs the group",
+  "screen.home.strip.group": "Needs the team",
   "screen.find-in.scope.project": "Everything in {project} ({count} documents)",
   "screen.home.line.languages": "languages: {languages}",
-  "screen.home.line.ailimit": "This month on the group's key: {used} of the {limit} limit",
-  "screen.members.recovery.one": "With one administrator, the group depends on that one person and the hosting account.",
-  "screen.members.invite.noemail": "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
+  "screen.home.line.ailimit": "This month on the team's key: {used} of the {limit} limit",
+  "screen.members.recovery.one": "With one administrator, the team depends on that one person and the hosting account.",
+  "screen.members.invite.noemail": "Your team's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
   "screen.project.questions.empty": "Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.",
   "screen.project.account.project": "Paid for by the project's own API key",
   "screen.question.opened": "Opened by {name}, {date} · {project}",
   "screen.question.opened.noproject": "Opened by {name}, {date}",
   "screen.question.strength.raise": "What raises it: {raise}",
   "screen.queue.hint.rate": "Of this check's past hints that members looked into, {rate}% were false alarms ({false} of {looked}), most often {reason}.",
-  "screen.setup.lede": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Seven short parts; you can leave and come back.",
+  "screen.setup.lede": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your team and choose its places. Seven short parts; you can leave and come back.",
   "screen.setup.own.help": "At least 12 characters. From now on you sign in with your handle and this, never the one-time password.",
   "screen.entry.codes.what": "Once you have claimed, you get ten one-time codes. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. They are shown once: save them with your password, somewhere only you can reach.",
-  "screen.setup.domain.help": "Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you: Civicsmith gives you one small file to place on the site, then checks it. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.",
+  "screen.setup.domain.help": "Only if your team has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you: Civicsmith gives you one small file to place on the site, then checks it. Your public page will name the site, so a team that wants to stay unnamed leaves this empty. You can add it later.",
   "screen.setup.places.help": "The places Civicsmith holds the rules for: their deadlines, holidays, offices and records laws, each with its source. Your place not listed? Choose “Other”: everything else works, and you enter due dates and offices yourself. New places arrive with Civicsmith's releases.",
-  "screen.setup.assistant.what": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds; it can suggest questions and documents, and draft translations. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. What it does is labeled as the assistant's. Everything in Civicsmith also works without it.",
-  "screen.setup.assistant.paid": "The group's API key. One Anthropic API key, held by your group, serves every member who has no account of their own. Anthropic bills the key's owner for each use, so your group pays. It is off until an administrator switches it on. Each member is told once, before their first question under it, that their questions and the material read to answer them go to Anthropic under the group's account. Administrators see the key's use summed over members, never who used it or what was asked, and set the daily limit and whether the assistant may make suggestions unprompted.",
-  "screen.setup.limit": "Each member's daily use of the group's key (optional)",
-  "screen.setup.limit.help": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
-  "screen.setup.court.what": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A group doing work that could draw one should make sure its members understand the risk.",
-  "screen.setup.claimed.nosignin": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose.",
+  "screen.setup.assistant.what": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your team holds; it can suggest questions and documents, and draft translations. It answers only from what your team holds, gives legal information but never legal advice, and never concludes, signs or sends anything. What it does is labeled as the assistant's. Everything in Civicsmith also works without it.",
+  "screen.setup.assistant.paid": "The team's API key. One Anthropic API key, held by your team, serves every member who has no account of their own. Anthropic bills the key's owner for each use, so your team pays. It is off until an administrator switches it on. Each member is told once, before their first question under it, that their questions and the material read to answer them go to Anthropic under the team's account. Administrators see the key's use summed over members, never who used it or what was asked, and set the daily limit and whether the assistant may make suggestions unprompted.",
+  "screen.setup.limit": "Each member's daily use of the team's key (optional)",
+  "screen.setup.limit.help": "The most one member's acts may use of the team's key in a day. It binds only the team's key, never a member's own account or a project's. More limits, by use or by month, are in Settings › Members.",
+  "screen.setup.court.what": "Your team's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your team cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. Some work is unlikely ever to draw such an order; journalists, lawyers and auditors may have protections others lack, such as shield laws or privilege. A team doing work that could draw one should make sure its members understand the risk.",
+  "screen.setup.claimed.nosignin": "Claimed. Sign in on your team's page with your handle, {handle}, and the password you just chose.",
   "signing.ceremony.nokey": "You have no signing key in this browser. Register one here: it is made in this browser and never sent to Civicsmith, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
   "signing.ceremony.device": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key stays in your browser, and Civicsmith never sees it.",
   "screen.account.key.help": "Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.",
-  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your group's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+  "refusal.AGENT_WORKER_UNBOUND": "The assistant isn't installed in your team's Civicsmith yet, so it can't do this here. Everything else works without it; whoever installed your team's Civicsmith can add it.",
   "screen.capture.address.watchhead": "Once it is captured: where it is filed, and watching the address",
   "queue.temporal-expectation-due.undetermined.detail": "It may be past its date; that is undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
   "screen.people.today.kind.program": "A program"

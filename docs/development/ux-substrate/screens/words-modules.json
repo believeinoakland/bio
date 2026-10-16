@@ -50,7 +50,7 @@
   },
   {
    "key": "shell.search.holds",
-   "en": "Search: everything your group holds, documents, questions, people and more.",
+   "en": "Search: everything your team holds, documents, questions, people and more.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -62,7 +62,7 @@
   },
   {
    "key": "shell.assistant.holds",
-   "en": "The assistant: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.",
+   "en": "The assistant: opens beside your work. It answers only from what your team holds, on the account that serves you, and never concludes, signs or sends.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -104,7 +104,7 @@
   },
   {
    "key": "shell.signout.does",
-   "en": "Ends this session on this device and returns to your group's page.",
+   "en": "Ends this session on this device and returns to your team's page.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -164,7 +164,7 @@
   },
   {
    "key": "shell.later",
-   "en": "{place} comes later: its screens are not built yet in your group's Civicsmith.",
+   "en": "{place} comes later: its screens are not built yet in your team's Civicsmith.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -248,7 +248,7 @@
   },
   {
    "key": "shell.noanswer",
-   "en": "your group's Civicsmith did not answer",
+   "en": "your team's Civicsmith did not answer",
    "protected": false,
    "module": "interface-shell"
   },
@@ -332,7 +332,7 @@
   },
   {
    "key": "shell.card.member",
-   "en": "A member of your group",
+   "en": "A member of your team",
    "protected": false,
    "module": "interface-shell"
   },
@@ -344,13 +344,13 @@
   },
   {
    "key": "shell.card.knock",
-   "en": "Material handed to your group at its doorbell",
+   "en": "Material handed to your team at its doorbell",
    "protected": false,
    "module": "interface-shell"
   },
   {
    "key": "shell.card.person",
-   "en": "A person or organization your group's record follows",
+   "en": "A person or organization your team's record follows",
    "protected": false,
    "module": "interface-shell"
   },
@@ -380,13 +380,13 @@
   },
   {
    "key": "shell.mark.means",
-   "en": "The plumb bob is Civicsmith's mark. Wherever you see it, you are in your group's own Civicsmith, and the name beside it says whose.",
+   "en": "The plumb bob is Civicsmith's mark. Wherever you see it, you are in your team's own Civicsmith, and the name beside it says whose.",
    "protected": false,
    "module": "interface-shell"
   },
   {
    "key": "shell.unavailable.nothing",
-   "en": "Nothing is here: this address leads nowhere in your group's Civicsmith.",
+   "en": "Nothing is here: this address leads nowhere in your team's Civicsmith.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -398,7 +398,7 @@
   },
   {
    "key": "shell.unavailable.unreachable",
-   "en": "Your group's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.",
+   "en": "Your team's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -410,7 +410,7 @@
   },
   {
    "key": "shell.unavailable.nothing.says",
-   "en": "This address leads nowhere in your group's Civicsmith.",
+   "en": "This address leads nowhere in your team's Civicsmith.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -434,7 +434,7 @@
   },
   {
    "key": "shell.unavailable.unreachable.says",
-   "en": "Your group's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.",
+   "en": "Your team's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.",
    "protected": false,
    "module": "interface-shell"
   },
@@ -842,7 +842,7 @@
   },
   {
    "key": "screen.plan.options.holds",
-   "en": "What the group could do: sort them, pick some, choose or decline them, and start a chosen one.",
+   "en": "What the team could do: sort them, pick some, choose or decline them, and start a chosen one.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1046,7 +1046,7 @@
   },
   {
    "key": "screen.plan.scenarios.holds",
-   "en": "The order the group means to try its chosen options in, and the checkpoints between.",
+   "en": "The order the team means to try its chosen options in, and the checkpoints between.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1334,13 +1334,13 @@
   },
   {
    "key": "screen.start-send.text",
-   "en": "What the group sends",
+   "en": "What the team sends",
    "protected": false,
    "module": "screens-action"
   },
   {
    "key": "screen.start-send.text.help",
-   "en": "From your group's template for this kind where it has one, else your own words. Edit it until it is yours.",
+   "en": "From your team's template for this kind where it has one, else your own words. Edit it until it is yours.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1352,7 +1352,7 @@
   },
   {
    "key": "screen.start-send.draft.template",
-   "en": "From your group's template · each filled blank names its source",
+   "en": "From your team's template · each filled blank names its source",
    "protected": false,
    "module": "screens-action"
   },
@@ -1412,7 +1412,7 @@
   },
   {
    "key": "screen.start-send.nosend",
-   "en": "Your group's Civicsmith sends nothing: you send it by the office's own means (its web form, mail, or in person), then record it here.",
+   "en": "Your team's Civicsmith sends nothing: you send it by the office's own means (its web form, mail, or in person), then record it here.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1424,13 +1424,13 @@
   },
   {
    "key": "screen.start-send.outward",
-   "en": "Outward · seen outside your group",
+   "en": "Outward · seen outside your team",
    "protected": false,
    "module": "screens-action"
   },
   {
    "key": "screen.start-send.outward.says",
-   "en": "Sending this tells the office what your group is looking at.",
+   "en": "Sending this tells the office what your team is looking at.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1706,7 +1706,7 @@
   },
   {
    "key": "screen.request.text.help",
-   "en": "Drafted from your group's template for this law, with your records, period, form and cost limit filled in. Edit it until it is yours.",
+   "en": "Drafted from your team's template for this law, with your records, period, form and cost limit filled in. Edit it until it is yours.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1748,7 +1748,7 @@
   },
   {
    "key": "screen.request.outward",
-   "en": "Sending this tells the office what your group is looking at, and the portal shows the request's text to anyone. Whatever the request says about your work becomes public.",
+   "en": "Sending this tells the office what your team is looking at, and the portal shows the request's text to anyone. Whatever the request says about your work becomes public.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1802,7 +1802,7 @@
   },
   {
    "key": "screen.action.confidential",
-   "en": "Confidential: seen inside the group and never published.",
+   "en": "Confidential: seen inside the team and never published.",
    "protected": false,
    "module": "screens-action"
   },
@@ -1952,7 +1952,7 @@
   },
   {
    "key": "screen.action.pressuremarks.holds",
-   "en": "Pressure that reached the group over this action, each with where it arrived.",
+   "en": "Pressure that reached the team over this action, each with where it arrived.",
    "protected": false,
    "module": "screens-action"
   },
@@ -2120,7 +2120,7 @@
   },
   {
    "key": "screen.matter.samecare",
-   "en": "A compliant outcome is recorded with the same care. No significance or priority is recorded here; that judgment lives in the group's acts and reasons.",
+   "en": "A compliant outcome is recorded with the same care. No significance or priority is recorded here; that judgment lives in the team's acts and reasons.",
    "protected": false,
    "module": "screens-action"
   },
@@ -2294,7 +2294,7 @@
   },
   {
    "key": "screen.matter.declined",
-   "en": "The group declined to escalate: {reason}",
+   "en": "The team declined to escalate: {reason}",
    "protected": false,
    "module": "screens-action"
   },
@@ -2390,13 +2390,13 @@
   },
   {
    "key": "screen.help-records.does",
-   "en": "What your group's Civicsmith does with it",
+   "en": "What your team's Civicsmith does with it",
    "protected": false,
    "module": "screens-action"
   },
   {
    "key": "screen.help-records.does.text",
-   "en": "When you record the sending, your group's Civicsmith works out the due date from the law and your group's calendar, shows how it counted, and puts it in your queue once you confirm it. If no answer comes by then, the queue says so once.",
+   "en": "When you record the sending, your team's Civicsmith works out the due date from the law and your team's calendar, shows how it counted, and puts it in your queue once you confirm it. If no answer comes by then, the queue says so once.",
    "protected": false,
    "module": "screens-action"
   },
@@ -2480,7 +2480,7 @@
   },
   {
    "key": "screen.home.truncated",
-   "en": "Your group has more projects than are shown here.",
+   "en": "Your team has more projects than are shown here.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2522,13 +2522,13 @@
   },
   {
    "key": "screen.home.ready",
-   "en": "Your group's Civicsmith is ready",
+   "en": "Your team's Civicsmith is ready",
    "protected": false,
    "module": "screens-daily"
   },
   {
    "key": "screen.home.nothingyet",
-   "en": "Nothing is here yet. Most groups start by inviting a few members and opening one project about a problem they already know; “What happened?” below is the door to the first one.",
+   "en": "Nothing is here yet. Most teams start by inviting a few members and opening one project about a problem they already know; “What happened?” below is the door to the first one.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2540,7 +2540,7 @@
   },
   {
    "key": "screen.home.saywho",
-   "en": "Say who your group is",
+   "en": "Say who your team is",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2558,7 +2558,7 @@
   },
   {
    "key": "screen.home.strip.group",
-   "en": "need the group",
+   "en": "need the team",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2576,13 +2576,13 @@
   },
   {
    "key": "screen.home.needsgroup",
-   "en": "Needs the group",
+   "en": "Needs the team",
    "protected": false,
    "module": "screens-daily"
   },
   {
    "key": "screen.home.needsgroup.holds",
-   "en": "What waits on someone in the group: whose move it is, and when it is due.",
+   "en": "What waits on someone in the team: whose move it is, and when it is due.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2702,7 +2702,7 @@
   },
   {
    "key": "screen.home.rd.group",
-   "en": "waiting on the group",
+   "en": "waiting on the team",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2762,13 +2762,13 @@
   },
   {
    "key": "screen.home.line.aiused",
-   "en": "This month on the group's key: {used}, estimated",
+   "en": "This month on the team's key: {used}, estimated",
    "protected": false,
    "module": "screens-daily"
   },
   {
    "key": "screen.home.line.ailimit",
-   "en": "This month on the group's key: {used} of {limit}, estimated",
+   "en": "This month on the team's key: {used} of {limit}, estimated",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2798,7 +2798,7 @@
   },
   {
    "key": "screen.projects.sub",
-   "en": "Each project is one problem the group wants to get to the bottom of. These are the ones you can see.",
+   "en": "Each project is one problem the team wants to get to the bottom of. These are the ones you can see.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -2882,7 +2882,7 @@
   },
   {
    "key": "screen.projects.truncated",
-   "en": "Your group has more projects than are shown here.",
+   "en": "Your team has more projects than are shown here.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3128,7 +3128,7 @@
   },
   {
    "key": "screen.finder.sub",
-   "en": "Search everything your group holds, then hold a set together to act on it.",
+   "en": "Search everything your team holds, then hold a set together to act on it.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3152,13 +3152,13 @@
   },
   {
    "key": "screen.finder.none",
-   "en": "Nothing your group holds matches these words.",
+   "en": "Nothing your team holds matches these words.",
    "protected": false,
    "module": "screens-daily"
   },
   {
    "key": "screen.finder.noresult",
-   "en": "Nothing your group holds matches “{q}”.",
+   "en": "Nothing your team holds matches “{q}”.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3206,13 +3206,13 @@
   },
   {
    "key": "screen.finder.nobody",
-   "en": "Nobody has looked yet at {n} places your group holds.",
+   "en": "Nobody has looked yet at {n} places your team holds.",
    "protected": false,
    "module": "screens-daily"
   },
   {
    "key": "screen.finder.nobody.none",
-   "en": "Somebody has looked everywhere your group holds.",
+   "en": "Somebody has looked everywhere your team holds.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3308,7 +3308,7 @@
   },
   {
    "key": "screen.find-in.kind.people",
-   "en": "People and offices your group follows",
+   "en": "People and offices your team follows",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3428,7 +3428,7 @@
   },
   {
    "key": "screen.find-in.note",
-   "en": "Search finds words as written, figures, dates and the names of people and offices your group already follows. A name it doesn't follow yet is found only as a word: open the passage and add the person yourself.",
+   "en": "Search finds words as written, figures, dates and the names of people and offices your team already follows. A name it doesn't follow yet is found only as a word: open the passage and add the person yourself.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3464,7 +3464,7 @@
   },
   {
    "key": "screen.find-in.field.reason",
-   "en": "Why your group holds them to it",
+   "en": "Why your team holds them to it",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3518,7 +3518,7 @@
   },
   {
    "key": "screen.answers.sub",
-   "en": "In plain words. The assistant answers only from what your group holds, and says where it looked.",
+   "en": "In plain words. The assistant answers only from what your team holds, and says where it looked.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3584,7 +3584,7 @@
   },
   {
    "key": "screen.answers.level.internet",
-   "en": "Outside your group",
+   "en": "Outside your team",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3614,7 +3614,7 @@
   },
   {
    "key": "screen.answers.withheld",
-   "en": "{n} sentences were held back because they could not be checked against what your group holds.",
+   "en": "{n} sentences were held back because they could not be checked against what your team holds.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3638,7 +3638,7 @@
   },
   {
    "key": "screen.answers.offsub",
-   "en": "Search what your group holds and count what matches.",
+   "en": "Search what your team holds and count what matches.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3680,7 +3680,7 @@
   },
   {
    "key": "screen.answers.refused.off",
-   "en": "Your group keeps its material away from the assistant, so it can't answer here. Find and count still work.",
+   "en": "Your team keeps its material away from the assistant, so it can't answer here. Find and count still work.",
    "protected": false,
    "module": "screens-daily"
   },
@@ -3716,7 +3716,7 @@
   },
   {
    "key": "screen.entry.group",
-   "en": "Your group",
+   "en": "Your team",
    "protected": false,
    "module": "screens-entry"
   },
@@ -3770,7 +3770,7 @@
   },
   {
    "key": "screen.entry.backtofront",
-   "en": "Back to your group's page",
+   "en": "Back to your team's page",
    "protected": false,
    "module": "screens-entry"
   },
@@ -3842,13 +3842,13 @@
   },
   {
    "key": "screen.front.doorbell.what",
-   "en": "Documents, photos or a tip: you can hand them to the group without an account. Nobody is told who you are unless you say.",
+   "en": "Documents, photos or a tip: you can hand them to the team without an account. Nobody is told who you are unless you say.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.front.doorbell.go",
-   "en": "Hand material to the group",
+   "en": "Hand material to the team",
    "protected": false,
    "module": "screens-entry"
   },
@@ -3902,7 +3902,7 @@
   },
   {
    "key": "screen.front.notmember",
-   "en": "Not a member yet? Members join by an invitation from one of the group's administrators: open the link you were sent and it brings you to join.",
+   "en": "Not a member yet? Members join by an invitation from one of the team's administrators: open the link you were sent and it brings you to join.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -3980,7 +3980,7 @@
   },
   {
    "key": "screen.tour.step1.body",
-   "en": "Our group looks into whether a government, an agency or a public body keeps its own rules and promises. We check what it says against its own records, and publish what the records show.",
+   "en": "Our team looks into whether a government, an agency or a public body keeps its own rules and promises. We check what it says against its own records, and publish what the records show.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4046,7 +4046,7 @@
   },
   {
    "key": "screen.forgot.lede",
-   "en": "Civicsmith sends no email, so getting back in goes through your group, not a mailbox.",
+   "en": "Civicsmith sends no email, so getting back in goes through your team, not a mailbox.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4058,7 +4058,7 @@
   },
   {
    "key": "screen.forgot.handle.help",
-   "en": "Did you set this group up? Your handle is admin.",
+   "en": "Did you set this team up? Your handle is admin.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4094,7 +4094,7 @@
   },
   {
    "key": "screen.forgot.admin.what",
-   "en": "An administrator can make you a reset link, like an invitation: it works once, for seven days, and lets you choose a new password. Ask an administrator in person or however your group talks. No administrator can see your password, and you keep your handle and everything you did.",
+   "en": "An administrator can make you a reset link, like an invitation: it works once, for seven days, and lets you choose a new password. Ask an administrator in person or however your team talks. No administrator can see your password, and you keep your handle and everything you did.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4136,7 +4136,7 @@
   },
   {
    "key": "screen.setup.lede",
-   "en": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Every part below can be skipped and done later in Settings.",
+   "en": "You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your team and choose its places. Every part below can be skipped and done later in Settings.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4250,25 +4250,25 @@
   },
   {
    "key": "screen.setup.claimed.nosignin",
-   "en": "Claimed. Sign in on your group's page with the handle admin and the password you just chose.",
+   "en": "Claimed. Sign in on your team's page with the handle admin and the password you just chose.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.taken",
-   "en": "Your group's Civicsmith has already been claimed. Its administrators sign in on its page.",
+   "en": "Your team's Civicsmith has already been claimed. Its administrators sign in on its page.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.unarmed",
-   "en": "Your group's Civicsmith has no one-time password set, so it can't be claimed yet. Whoever holds the hosting account sets one.",
+   "en": "Your team's Civicsmith has no one-time password set, so it can't be claimed yet. Whoever holds the hosting account sets one.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.name.field",
-   "en": "Group name",
+   "en": "Team name",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4280,25 +4280,25 @@
   },
   {
    "key": "screen.setup.name.now",
-   "en": "Your group is called {name}.",
+   "en": "Your team is called {name}.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.name.empty",
-   "en": "Type the group's name first. Nothing was sent.",
+   "en": "Type the team's name first. Nothing was sent.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.domain",
-   "en": "Your group's website (optional)",
+   "en": "Your team's website (optional)",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.domain.help",
-   "en": "Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.",
+   "en": "Only if your team has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you. Your public page will name the site, so a team that wants to stay unnamed leaves this empty. You can add it later.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4328,7 +4328,7 @@
   },
   {
    "key": "screen.setup.places.none",
-   "en": "No place is chosen: your group's Civicsmith reads no local rules, and you enter due dates and offices yourself.",
+   "en": "No place is chosen: your team's Civicsmith reads no local rules, and you enter due dates and offices yourself.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4352,7 +4352,7 @@
   },
   {
    "key": "screen.setup.place.wanted.help",
-   "en": "Kept in your group's Civicsmith and never sent anywhere. When an update brings its rules and offices, your administrators are told once in their queue and can choose it here.",
+   "en": "Kept in your team's Civicsmith and never sent anywhere. When an update brings its rules and offices, your administrators are told once in their queue and can choose it here.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4376,13 +4376,13 @@
   },
   {
    "key": "screen.setup.offices.what",
-   "en": "Confirming fills in the offices and seats the places you chose name, each from its source. A place with none, or an office not listed, you add yourself; each is marked as added by your group.",
+   "en": "Confirming fills in the offices and seats the places you chose name, each from its source. A place with none, or an office not listed, you add yourself; each is marked as added by your team.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.office.field",
-   "en": "An office your group deals with",
+   "en": "An office your team deals with",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4412,31 +4412,31 @@
   },
   {
    "key": "screen.setup.assistant.what",
-   "en": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. Everything in Civicsmith also works without it.",
+   "en": "The assistant is an optional helper, built on Anthropic's Claude. A member can ask it in plain words to find, read, answer or check things in what your team holds. It answers only from what your team holds, gives legal information but never legal advice, and never concludes, signs or sends anything. Everything in Civicsmith also works without it.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.assistant.own",
-   "en": "Any member may connect their own Claude subscription or API key, which then serves only them, at their own cost, unless you keep your group's material away from AI.",
+   "en": "Any member may connect their own Claude subscription or API key, which then serves only them, at their own cost, unless you keep your team's material away from AI.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.assistant.paid",
-   "en": "The group's key: one Anthropic API key, held by your group, serves every member who has no account of their own, and your group pays for each use. It is off until an administrator switches it on. Administrators see its use summed over members, never who used it or what was asked.",
+   "en": "The team's key: one Anthropic API key, held by your team, serves every member who has no account of their own, and your team pays for each use. It is off until an administrator switches it on. Administrators see its use summed over members, never who used it or what was asked.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.keepaway",
-   "en": "Keep our material away from AI: no assistant may be used in our group, not the group's and not a member's own",
+   "en": "Keep our material away from AI: no assistant may be used in our team, not the team's and not a member's own",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.keepaway.on",
-   "en": "Your group's material is kept away from AI.",
+   "en": "Your team's material is kept away from AI.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4460,13 +4460,13 @@
   },
   {
    "key": "screen.setup.key",
-   "en": "The group's Anthropic API key (optional)",
+   "en": "The team's Anthropic API key (optional)",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.key.help",
-   "en": "Only if the group pays for the assistant; leave it empty and members bring their own accounts. Sealed in your group's Civicsmith and never shown again.",
+   "en": "Only if the team pays for the assistant; leave it empty and members bring their own accounts. Sealed in your team's Civicsmith and never shown again.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4478,7 +4478,7 @@
   },
   {
    "key": "screen.setup.key.held",
-   "en": "The group's key is held and {state}.",
+   "en": "The team's key is held and {state}.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4508,13 +4508,13 @@
   },
   {
    "key": "screen.setup.limit",
-   "en": "Each member's daily use of the group's key, in dollars (optional)",
+   "en": "Each member's daily use of the team's key, in dollars (optional)",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.setup.limit.help",
-   "en": "The most one member's acts may use of the group's key in a day. It binds only the group's key, never a member's own account. More limits are in Settings › Members.",
+   "en": "The most one member's acts may use of the team's key in a day. It binds only the team's key, never a member's own account. More limits are in Settings › Members.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4538,7 +4538,7 @@
   },
   {
    "key": "screen.setup.court.what",
-   "en": "Your group's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your group cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. A group doing work that could draw one should make sure its members understand the risk. The explanation is always one tap away for every member; you choose whether members are also told when they join and the first time they record something not public.",
+   "en": "Your team's Civicsmith keeps unpublished work from the public and from the people you look into, but a court order your team cannot defeat can still require anything not public to be shown: members' notes, sources, hidden projects. A team doing work that could draw one should make sure its members understand the risk. The explanation is always one tap away for every member; you choose whether members are also told when they join and the first time they record something not public.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4616,7 +4616,7 @@
   },
   {
    "key": "screen.setup.admins.what",
-   "en": "With one administrator, the group depends on one person. A second means it is never stuck. You can add one now or later.",
+   "en": "With one administrator, the team depends on one person. A second means it is never stuck. You can add one now or later.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4634,7 +4634,7 @@
   },
   {
    "key": "screen.setup.admins.cover",
-   "en": "Who they are, as the group knows them",
+   "en": "Who they are, as the team knows them",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4718,7 +4718,7 @@
   },
   {
    "key": "screen.setup.finished.go",
-   "en": "Open your group's Civicsmith",
+   "en": "Open your team's Civicsmith",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4742,25 +4742,25 @@
   },
   {
    "key": "screen.join.link.what",
-   "en": "You came through the group's join link. First, the name the group will know you by; then you choose your handle and password.",
+   "en": "You came through the team's join link. First, the name the team will know you by; then you choose your handle and password.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.join.cover",
-   "en": "The name the group will know you by",
+   "en": "The name the team will know you by",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.join.cover.help",
-   "en": "Not your handle and not necessarily your legal name: how the group's administrators will know who you are. Only they see it.",
+   "en": "Not your handle and not necessarily your legal name: how the team's administrators will know who you are. Only they see it.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.join.cover.empty",
-   "en": "Say what the group should call you first. Nothing was sent.",
+   "en": "Say what the team should call you first. Nothing was sent.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4772,7 +4772,7 @@
   },
   {
    "key": "screen.join.dead.what",
-   "en": "It may have been used already, passed its seven days, or been withdrawn, or the group turned its join link off. Ask whoever sent it for a new one.",
+   "en": "It may have been used already, passed its seven days, or been withdrawn, or the team turned its join link off. Ask whoever sent it for a new one.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4802,7 +4802,7 @@
   },
   {
    "key": "screen.join.handle.taken",
-   "en": "That handle is already taken in your group. Choose another. Nothing was changed.",
+   "en": "That handle is already taken in your team. Choose another. Nothing was changed.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4814,7 +4814,7 @@
   },
   {
    "key": "screen.join.codes.after",
-   "en": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your group's home opens.",
+   "en": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your team's home opens.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4826,13 +4826,13 @@
   },
   {
    "key": "screen.join.joined.nosignin",
-   "en": "You have joined. Sign in on your group's page with your handle and password.",
+   "en": "You have joined. Sign in on your team's page with your handle and password.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.join.home",
-   "en": "Go to your group's home",
+   "en": "Go to your team's home",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4850,19 +4850,19 @@
   },
   {
    "key": "screen.hosting.heading",
-   "en": "Before you choose a password: who controls your group's Civicsmith",
+   "en": "Before you choose a password: who controls your team's Civicsmith",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.hosting.s1",
-   "en": "Whoever can sign in to the hosting account your group's Civicsmith runs in (its Cloudflare account) controls it. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
+   "en": "Whoever can sign in to the hosting account your team's Civicsmith runs in (its Cloudflare account) controls it. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the team's administrators can stop them.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.hosting.s2",
-   "en": "Use a group account for it, not anyone's personal login.",
+   "en": "Use a team account for it, not anyone's personal login.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4874,19 +4874,19 @@
   },
   {
    "key": "screen.hosting.s4",
-   "en": "Where possible, let someone other than the group's administrators hold it.",
+   "en": "Where possible, let someone other than the team's administrators hold it.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.hosting.s5",
-   "en": "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your group's Civicsmith to be claimed again.",
+   "en": "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for your team's Civicsmith to be claimed again.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.hosting.guide",
-   "en": "If the one-time password may have been seen, replace it: follow the guide “Replace the one-time password” in your group's Civicsmith, on its first page and in its members and keys section.",
+   "en": "If the one-time password may have been seen, replace it: follow the guide “Replace the one-time password” in your team's Civicsmith, on its first page and in its members and keys section.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4898,13 +4898,13 @@
   },
   {
    "key": "screen.forgot.help.s1",
-   "en": "Your group's administrators can help you: ask one of them for a reset link.",
+   "en": "Your team's administrators can help you: ask one of them for a reset link.",
    "protected": false,
    "module": "screens-entry"
   },
   {
    "key": "screen.forgot.help.s2",
-   "en": "If none of them can sign in either, whoever holds your group's hosting account can open the way back in for them.",
+   "en": "If none of them can sign in either, whoever holds your team's hosting account can open the way back in for them.",
    "protected": false,
    "module": "screens-entry"
   },
@@ -4976,7 +4976,7 @@
   },
   {
    "key": "screen.project.bar.declared",
-   "en": "An answer must be at least this strong before the group relies on it.",
+   "en": "An answer must be at least this strong before the team relies on it.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5000,7 +5000,7 @@
   },
   {
    "key": "screen.project.bar.help",
-   "en": "Choose neither axis to withdraw the project's bar. It never changes the group's bar, and it holds nothing back.",
+   "en": "Choose neither axis to withdraw the project's bar. It never changes the team's bar, and it holds nothing back.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5012,7 +5012,7 @@
   },
   {
    "key": "screen.project.questions.empty",
-   "en": "No questions yet. Open the first one: it is what the group will answer with the record.",
+   "en": "No questions yet. Open the first one: it is what the team will answer with the record.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5096,7 +5096,7 @@
   },
   {
    "key": "screen.project.account.member",
-   "en": "No project account: each member's own account, or the group's key, pays as usual.",
+   "en": "No project account: each member's own account, or the team's key, pays as usual.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5384,7 +5384,7 @@
   },
   {
    "key": "screen.question.conclude.who",
-   "en": "Recorded as the group's answer, under your name. Every member of the project sees it.",
+   "en": "Recorded as the team's answer, under your name. Every member of the project sees it.",
    "protected": true,
    "module": "screens-inquiry"
   },
@@ -5510,7 +5510,7 @@
   },
   {
    "key": "screen.document.unread.head",
-   "en": "Pages your group's Civicsmith couldn't read",
+   "en": "Pages your team's Civicsmith couldn't read",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5540,7 +5540,7 @@
   },
   {
    "key": "screen.document.gradenote.none",
-   "en": "No grade note: this copy was handed to the group rather than fetched from its source.",
+   "en": "No grade note: this copy was handed to the team rather than fetched from its source.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5636,13 +5636,13 @@
   },
   {
    "key": "screen.document.release.mitigation",
-   "en": "What the group does about what remains",
+   "en": "What the team does about what remains",
    "protected": false,
    "module": "screens-inquiry"
   },
   {
    "key": "screen.document.release.empty",
-   "en": "Say what you checked, and what the group does about what remains.",
+   "en": "Say what you checked, and what the team does about what remains.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5738,7 +5738,7 @@
   },
   {
    "key": "screen.assistant.run.none",
-   "en": "No run yet. Ask it to work on this, and it reads what the group holds about it.",
+   "en": "No run yet. Ask it to work on this, and it reads what the team holds about it.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5804,7 +5804,7 @@
   },
   {
    "key": "screen.assistant.dispatch.silent",
-   "en": "The run can't start: your group's Civicsmith couldn't record the pass the assistant works under just now. Nothing was sent. Try again in a moment.",
+   "en": "The run can't start: your team's Civicsmith couldn't record the pass the assistant works under just now. Nothing was sent. Try again in a moment.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5816,7 +5816,7 @@
   },
   {
    "key": "screen.assistant.dispatch.unbound",
-   "en": "The assistant's worker isn't connected to your group's Civicsmith, so the run can't start. An administrator can connect it.",
+   "en": "The assistant's worker isn't connected to your team's Civicsmith, so the run can't start. An administrator can connect it.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5846,13 +5846,13 @@
   },
   {
    "key": "screen.projectai.account.none",
-   "en": "This project holds no account of its own: each member's own account, or the group's key, pays as usual.",
+   "en": "This project holds no account of its own: each member's own account, or the team's key, pays as usual.",
    "protected": false,
    "module": "screens-inquiry"
   },
   {
    "key": "screen.projectai.account.key",
-   "en": "The project's own API key pays for members' acts here, before their own accounts or the group's key.",
+   "en": "The project's own API key pays for members' acts here, before their own accounts or the team's key.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5864,7 +5864,7 @@
   },
   {
    "key": "screen.projectai.account.off",
-   "en": "The project's account is held but switched off: members' own accounts, then the group's key, serve here.",
+   "en": "The project's account is held but switched off: members' own accounts, then the team's key, serve here.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -5954,7 +5954,7 @@
   },
   {
    "key": "screen.projectai.keepaway.off",
-   "en": "This project's material is not kept away from AI beyond what the group decides.",
+   "en": "This project's material is not kept away from AI beyond what the team decides.",
    "protected": false,
    "module": "screens-inquiry"
   },
@@ -6026,7 +6026,7 @@
   },
   {
    "key": "screen.capture.address.note",
-   "en": "Your group's Civicsmith fetches it itself and keeps exactly what the site sent, with when and from where. Capturing through a public archive tells that archive what your group is looking at. A site known for malware is still captured, as high risk: it opens only in a safe view.",
+   "en": "Your team's Civicsmith fetches it itself and keeps exactly what the site sent, with when and from where. Capturing through a public archive tells that archive what your team is looking at. A site known for malware is still captured, as high risk: it opens only in a safe view.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6044,7 +6044,7 @@
   },
   {
    "key": "screen.capture.address.existed",
-   "en": "Your group's record already held exactly these bytes: {title}. Nothing new was written.",
+   "en": "Your team's record already held exactly these bytes: {title}. Nothing new was written.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6074,7 +6074,7 @@
   },
   {
    "key": "screen.capture.address.requested.waits",
-   "en": "Asked for later: {address}. Your request waits until your group's Civicsmith captures on its own, unattended, which is not set up yet.",
+   "en": "Asked for later: {address}. Your request waits until your team's Civicsmith captures on its own, unattended, which is not set up yet.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6212,7 +6212,7 @@
   },
   {
    "key": "screen.capture.file.downloaded",
-   "en": "Downloaded from a website? Capture it from its address instead: a copy your group's Civicsmith fetches itself holds up better.",
+   "en": "Downloaded from a website? Capture it from its address instead: a copy your team's Civicsmith fetches itself holds up better.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6242,7 +6242,7 @@
   },
   {
    "key": "screen.capture.file.note",
-   "en": "Who made or obtained it, when, and with what are kept with it, so anyone can check where it came from. It waits in Held captures until you or another member vouches for it. A file your group's Civicsmith did not fetch itself opens in the safe view until it has been checked.",
+   "en": "Who made or obtained it, when, and with what are kept with it, so anyone can check where it came from. It waits in Held captures until you or another member vouches for it. A file your team's Civicsmith did not fetch itself opens in the safe view until it has been checked.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6272,7 +6272,7 @@
   },
   {
    "key": "screen.capture.file.existed",
-   "en": "Your group's record already held exactly this file. Nothing new was written; your account of it is kept as a second sighting.",
+   "en": "Your team's record already held exactly this file. Nothing new was written; your account of it is kept as a second sighting.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6656,7 +6656,7 @@
   },
   {
    "key": "screen.open-file.risk.low.means",
-   "en": "Low risk: your group's Civicsmith fetched it itself, and it holds nothing that acts on its own. It opens as it is.",
+   "en": "Low risk: your team's Civicsmith fetched it itself, and it holds nothing that acts on its own. It opens as it is.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6728,7 +6728,7 @@
   },
   {
    "key": "screen.open-file.safe.about",
-   "en": "A copy made by your group's Civicsmith: each page as a picture, nothing in it can run.",
+   "en": "A copy made by your team's Civicsmith: each page as a picture, nothing in it can run.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6788,7 +6788,7 @@
   },
   {
    "key": "screen.open-file.deeper.about",
-   "en": "A deeper check reads the file whole and runs the built-in scanner again and every outside tool your group added; a clean result from a scanner other than the built-in one opens the original to every member for 24 hours. The safe view needs no check.",
+   "en": "A deeper check reads the file whole and runs the built-in scanner again and every outside tool your team added; a clean result from a scanner other than the built-in one opens the original to every member for 24 hours. The safe view needs no check.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -6830,7 +6830,7 @@
   },
   {
    "key": "screen.open-file.warn.ends",
-   "en": "Opening it puts the file on your device. If it hides something no scanner knows yet, your device's own protections are all that stand between it and your device, and through your device, your sign-in to the group.",
+   "en": "Opening it puts the file on your device. If it hides something no scanner knows yet, your device's own protections are all that stand between it and your device, and through your device, your sign-in to the team.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -7016,7 +7016,7 @@
   },
   {
    "key": "screen.inbox.ladder.group",
-   "en": "Known to the group",
+   "en": "Known to the team",
    "protected": false,
    "module": "screens-intake"
   },
@@ -7028,7 +7028,7 @@
   },
   {
    "key": "screen.inbox.ladder.basis",
-   "en": "Known from this inbox only: a secret phrase marks the same knocker; what the group knows more is kept with the source.",
+   "en": "Known from this inbox only: a secret phrase marks the same knocker; what the team knows more is kept with the source.",
    "protected": false,
    "module": "screens-intake"
   },
@@ -7280,7 +7280,7 @@
   },
   {
    "key": "screen.people.notmembers",
-   "en": "The people and organizations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under",
+   "en": "The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -7412,7 +7412,7 @@
   },
   {
    "key": "screen.people.others.holds",
-   "en": "Followed by your group but not named in your projects. Newest added first.",
+   "en": "Followed by your team but not named in your projects. Newest added first.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -7448,7 +7448,7 @@
   },
   {
    "key": "screen.people.today.seeded",
-   "en": "Added at setup from your group's place",
+   "en": "Added at setup from your team's place",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -7544,13 +7544,13 @@
   },
   {
    "key": "screen.people.none",
-   "en": "Your group's record follows no one yet.",
+   "en": "Your team's record follows no one yet.",
    "protected": false,
    "module": "screens-investigate"
   },
   {
    "key": "screen.people.none.how",
-   "en": "A person or organization comes in one of two ways: a member ties a name in a captured document to them, on the document under “People it names”, or adds them here with a note on who they are and why the group follows them.",
+   "en": "A person or organization comes in one of two ways: a member ties a name in a captured document to them, on the document under “People it names”, or adds them here with a note on who they are and why the team follows them.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -7568,7 +7568,7 @@
   },
   {
    "key": "screen.people.nomatch.how",
-   "en": "Someone appears here only once your group follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here.",
+   "en": "Someone appears here only once your team follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -7610,7 +7610,7 @@
   },
   {
    "key": "screen.people.add.note",
-   "en": "Your note: who they are, and why the group follows them",
+   "en": "Your note: who they are, and why the team follows them",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -8984,13 +8984,13 @@
   },
   {
    "key": "screen.money.evidence.from",
-   "en": "Evidence that names the payer would help: a journal entry, a transfer schedule, a contract. Read it in from there, citing the passage; if the group holds none, ask the city for the record.",
+   "en": "Evidence that names the payer would help: a journal entry, a transfer schedule, a contract. Read it in from there, citing the passage; if the team holds none, ask the city for the record.",
    "protected": false,
    "module": "screens-investigate"
   },
   {
    "key": "screen.money.evidence.to",
-   "en": "Evidence that names the payee would help: a cost-allocation plan, a journal entry, the budget's transfer schedule. Read it in from there, citing the passage; if the group holds none, ask the city for the record.",
+   "en": "Evidence that names the payee would help: a cost-allocation plan, a journal entry, the budget's transfer schedule. Read it in from there, citing the passage; if the team holds none, ask the city for the record.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -9398,7 +9398,7 @@
   },
   {
    "key": "screen.money.f.address.help",
-   "en": "Fetched by your group's Civicsmith and kept exactly as the city sends it.",
+   "en": "Fetched by your team's Civicsmith and kept exactly as the city sends it.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -10172,7 +10172,7 @@
   },
   {
    "key": "screen.help.sub",
-   "en": "Help · for any calculation your group can test against what members see",
+   "en": "Help · for any calculation your team can test against what members see",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -10430,7 +10430,7 @@
   },
   {
    "key": "screen.proceeding.login.note",
-   "en": "A register that needs a login is not read by your group's Civicsmith: new filings come only by a member's own capture.",
+   "en": "A register that needs a login is not read by your team's Civicsmith: new filings come only by a member's own capture.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -10562,7 +10562,7 @@
   },
   {
    "key": "screen.proceeding.label.help",
-   "en": "How the group refers to it, saying nothing of who is right, for example \"the lease rent case\".",
+   "en": "How the team refers to it, saying nothing of who is right, for example \"the lease rent case\".",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -11048,19 +11048,19 @@
   },
   {
    "key": "screen.ties.why.1",
-   "en": "A published case is trusted only if readers know of anything that could pull the people behind it one way. Saying so openly protects you and the group.",
+   "en": "A published case is trusted only if readers know of anything that could pull the people behind it one way. Saying so openly protects you and the team.",
    "protected": false,
    "module": "screens-investigate"
   },
   {
    "key": "screen.ties.why.2",
-   "en": "When a case your group publishes concerns one of your ties, the case says so, in the way you choose below.",
+   "en": "When a case your team publishes concerns one of your ties, the case says so, in the way you choose below.",
    "protected": false,
    "module": "screens-investigate"
   },
   {
    "key": "screen.ties.why.3",
-   "en": "Before the group publishes, each member who signs confirms they have no tie they have not listed here.",
+   "en": "Before the team publishes, each member who signs confirms they have no tie they have not listed here.",
    "protected": false,
    "module": "screens-investigate"
   },
@@ -11078,19 +11078,19 @@
   },
   {
    "key": "screen.ties.who.1",
-   "en": "Inside the group: only you and the group's administrators. Other members never see this list.",
+   "en": "Inside the team: only you and the team's administrators. Other members never see this list.",
    "protected": true,
    "module": "screens-investigate"
   },
   {
    "key": "screen.ties.who.2",
-   "en": "Outside the group: no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.",
+   "en": "Outside the team: no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.",
    "protected": true,
    "module": "screens-investigate"
   },
   {
    "key": "screen.ties.who.3",
-   "en": "It is kept with your group's records, so a court order could reach it like the rest of them.",
+   "en": "It is kept with your team's records, so a court order could reach it like the rest of them.",
    "protected": true,
    "module": "screens-investigate"
   },
@@ -11180,7 +11180,7 @@
   },
   {
    "key": "screen.ties.says",
-   "en": "If a case the group publishes concerns them, the case discloses this tie",
+   "en": "If a case the team publishes concerns them, the case discloses this tie",
    "protected": true,
    "module": "screens-investigate"
   },
@@ -11192,7 +11192,7 @@
   },
   {
    "key": "screen.ties.says.group.choice",
-   "en": "Without naming me: \"a member of the group\"",
+   "en": "Without naming me: \"a member of the team\"",
    "protected": true,
    "module": "screens-investigate"
   },
@@ -11204,13 +11204,13 @@
   },
   {
    "key": "screen.ties.says.group",
-   "en": "\"a member of the group who worked on this case has this tie\"",
+   "en": "\"a member of the team who worked on this case has this tie\"",
    "protected": true,
    "module": "screens-investigate"
   },
   {
    "key": "screen.ties.either",
-   "en": "Either way the tie is disclosed to readers of the case. Inside the group, only you ({handle}) and the administrators see this list.",
+   "en": "Either way the tie is disclosed to readers of the case. Inside the team, only you ({handle}) and the administrators see this list.",
    "protected": true,
    "module": "screens-investigate"
   },
@@ -11402,7 +11402,7 @@
   },
   {
    "key": "screen.case-editor.level.group",
-   "en": "As the group",
+   "en": "As the team",
    "protected": false,
    "module": "screens-publish"
   },
@@ -11420,7 +11420,7 @@
   },
   {
    "key": "screen.case-editor.changed.help",
-   "en": "In your words: what this edition adds or corrects. A draft is never the group's statement until a member keeps it.",
+   "en": "In your words: what this edition adds or corrects. A draft is never the team's statement until a member keeps it.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -11516,7 +11516,7 @@
   },
   {
    "key": "screen.review-copy.until.help",
-   "en": "The link stops working at the end of this day, in your group's time zone. You can stop it sooner.",
+   "en": "The link stops working at the end of this day, in your team's time zone. You can stop it sooner.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -11696,7 +11696,7 @@
   },
   {
    "key": "screen.ceremony.photos.copy",
-   "en": "Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured and labeled, and goes out without its camera details; the group holds the original. City staff at work are part of what the case is about: obscure one only with a reason.",
+   "en": "Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured and labeled, and goes out without its camera details; the team holds the original. City staff at work are part of what the case is about: obscure one only with a reason.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -11882,7 +11882,7 @@
   },
   {
    "key": "screen.ceremony.when.help",
-   "en": "Now, with \"Sign and publish now\"; or at a date and time in your group's time zone ({zone}), with the other button. Until then the signed edition waits, not public, and is checked again at that time.",
+   "en": "Now, with \"Sign and publish now\"; or at a date and time in your team's time zone ({zone}), with the other button. Until then the signed edition waits, not public, and is checked again at that time.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12074,13 +12074,13 @@
   },
   {
    "key": "screen.published.verify.ok",
-   "en": "The signature checks: this is what the group published.",
+   "en": "The signature checks: this is what the team published.",
    "protected": false,
    "module": "screens-publish"
   },
   {
    "key": "screen.published.verify.no",
-   "en": "The signature does not check against what the group published.",
+   "en": "The signature does not check against what the team published.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12110,7 +12110,7 @@
   },
   {
    "key": "screen.published.grouppage",
-   "en": "Go to the group's public page",
+   "en": "Go to the team's public page",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12170,7 +12170,7 @@
   },
   {
    "key": "screen.imported.reason.label",
-   "en": "Why your group may rely on it",
+   "en": "Why your team may rely on it",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12206,7 +12206,7 @@
   },
   {
    "key": "screen.imported.publisher.help",
-   "en": "The https address of the group that published it.",
+   "en": "The https address of the team that published it.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12236,7 +12236,7 @@
   },
   {
    "key": "screen.imported.file.help",
-   "en": "The complete edition another group published.",
+   "en": "The complete edition another team published.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12374,7 +12374,7 @@
   },
   {
    "key": "screen.docket.proposed.record",
-   "en": "The group's record only",
+   "en": "The team's record only",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12434,7 +12434,7 @@
   },
   {
    "key": "screen.doorbell.happens.only",
-   "en": "Your files go only to this group's own Civicsmith.",
+   "en": "Your files go only to this team's own Civicsmith.",
    "protected": true,
    "module": "screens-publish"
   },
@@ -12488,7 +12488,7 @@
   },
   {
    "key": "screen.doorbell.received",
-   "en": "Received, {at}. A member of the group will read it.",
+   "en": "Received, {at}. A member of the team will read it.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12536,7 +12536,7 @@
   },
   {
    "key": "screen.review-outside.nolink",
-   "en": "This address carries no review link. Open the link the group sent you.",
+   "en": "This address carries no review link. Open the link the team sent you.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12548,13 +12548,13 @@
   },
   {
    "key": "screen.review-outside.untilstopped",
-   "en": "It is not public: only people with this link can read it, until the group stops sharing.",
+   "en": "It is not public: only people with this link can read it, until the team stops sharing.",
    "protected": true,
    "module": "screens-publish"
   },
   {
    "key": "screen.review-outside.comments.go",
-   "en": "Your comments go to the group. They may publish without your comments, and if they do, you can still file a response in the case's public docket, as anyone may.",
+   "en": "Your comments go to the team. They may publish without your comments, and if they do, you can still file a response in the case's public docket, as anyone may.",
    "protected": true,
    "module": "screens-publish"
   },
@@ -12578,7 +12578,7 @@
   },
   {
    "key": "screen.review-outside.comment.help",
-   "en": "Name the passage you mean. Say who you are if you want the group to know; you need not.",
+   "en": "Name the passage you mean. Say who you are if you want the team to know; you need not.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12590,7 +12590,7 @@
   },
   {
    "key": "screen.review-outside.sent",
-   "en": "Sent to the group.",
+   "en": "Sent to the team.",
    "protected": false,
    "module": "screens-publish"
   },
@@ -12608,19 +12608,19 @@
   },
   {
    "key": "screen.members.empty",
-   "en": "Nobody is in the group yet but you.",
+   "en": "Nobody is in the team yet but you.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.recovery.one",
-   "en": "Your group has one administrator, so it depends on that person and on the hosting account.",
+   "en": "Your team has one administrator, so it depends on that person and on the hosting account.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.recovery.many",
-   "en": "Your group has {administrators} administrators.",
+   "en": "Your team has {administrators} administrators.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12848,13 +12848,13 @@
   },
   {
    "key": "screen.members.invite.incomplete",
-   "en": "Give both a short id and the cover the group knows them by. Nothing was sent.",
+   "en": "Give both a short id and the cover the team knows them by. Nothing was sent.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.invite.cover",
-   "en": "The cover the group knows them by, not a legal name",
+   "en": "The cover the team knows them by, not a legal name",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12866,7 +12866,7 @@
   },
   {
    "key": "screen.members.invite.noemail",
-   "en": "Your group's Civicsmith sends no email. Copy the invitation and send it yourself. It works once and expires after seven days.",
+   "en": "Your team's Civicsmith sends no email. Copy the invitation and send it yourself. It works once and expires after seven days.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12884,7 +12884,7 @@
   },
   {
    "key": "screen.members.reset.noemail",
-   "en": "Your group's Civicsmith sends no email: give the link to them yourself, by a way you trust.",
+   "en": "Your team's Civicsmith sends no email: give the link to them yourself, by a way you trust.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12914,7 +12914,7 @@
   },
   {
    "key": "screen.members.website.what",
-   "en": "Let your website invite people: an open form, or an application someone approves. Anyone let through can see the group's shared work.",
+   "en": "Let your website invite people: an open form, or an application someone approves. Anyone let through can see the team's shared work.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12950,13 +12950,13 @@
   },
   {
    "key": "screen.members.key.heading",
-   "en": "The group's API key",
+   "en": "The team's API key",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.key.none",
-   "en": "No key is held. Members bring their own account, or use your group's Civicsmith without the assistant.",
+   "en": "No key is held. Members bring their own account, or use your team's Civicsmith without the assistant.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -12974,19 +12974,19 @@
   },
   {
    "key": "screen.members.key.on",
-   "en": "The group's key is on.",
+   "en": "The team's key is on.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.key.off",
-   "en": "The group's key is not on.",
+   "en": "The team's key is not on.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.members.key.field",
-   "en": "The group's Anthropic API key",
+   "en": "The team's Anthropic API key",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13022,7 +13022,7 @@
   },
   {
    "key": "screen.members.keepaway.off",
-   "en": "Off. Members may use the group's key, a project's account or their own.",
+   "en": "Off. Members may use the team's key, a project's account or their own.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13034,7 +13034,7 @@
   },
   {
    "key": "screen.members.keepaway.unread",
-   "en": "Whether the group keeps its material away from AI couldn't be read just now.",
+   "en": "Whether the team keeps its material away from AI couldn't be read just now.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13454,7 +13454,7 @@
   },
   {
    "key": "screen.account.language.help",
-   "en": "The languages your group offers. Choose none to follow your device's setting.",
+   "en": "The languages your team offers. Choose none to follow your device's setting.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13496,7 +13496,7 @@
   },
   {
    "key": "screen.account.expertise.help",
-   "en": "The group can ask you to check work in your field. An administrator may confirm it; it gates nothing.",
+   "en": "The team can ask you to check work in your field. An administrator may confirm it; it gates nothing.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13592,7 +13592,7 @@
   },
   {
    "key": "screen.connect.optional",
-   "en": "Optional. Everything in your group's Civicsmith works without the assistant.",
+   "en": "Optional. Everything in your team's Civicsmith works without the assistant.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13604,13 +13604,13 @@
   },
   {
    "key": "screen.connect.keptaway",
-   "en": "Your group keeps its material away from AI. No assistant can be used here, the group's or your own. {by}, an administrator, turned this on on {date}, and gave this reason:",
+   "en": "Your team keeps its material away from AI. No assistant can be used here, the team's or your own. {by}, an administrator, turned this on on {date}, and gave this reason:",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.connect.keptaway.unread",
-   "en": "Your group's Civicsmith couldn't read whether the group keeps its material away from AI, so no assistant serves you for now.",
+   "en": "Your team's Civicsmith couldn't read whether the team keeps its material away from AI, so no assistant serves you for now.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13634,13 +13634,13 @@
   },
   {
    "key": "screen.connect.own.thengroup",
-   "en": "If you disconnect it, the group's API key serves you instead.",
+   "en": "If you disconnect it, the team's API key serves you instead.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.connect.group",
-   "en": "The assistant serves you on the group's API key.",
+   "en": "The assistant serves you on the team's API key.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13664,7 +13664,7 @@
   },
   {
    "key": "screen.connect.none",
-   "en": "The assistant isn't serving you yet. Your group doesn't offer its key; if you want the assistant, connect your own account below, or skip it.",
+   "en": "The assistant isn't serving you yet. Your team doesn't offer its key; if you want the assistant, connect your own account below, or skip it.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13676,7 +13676,7 @@
   },
   {
    "key": "screen.connect.notice.group",
-   "en": "Your questions, and the material read to answer them, go to Anthropic under the group's account. Administrators see how much the group's key is used in total, never what you ask or who asked.",
+   "en": "Your questions, and the material read to answer them, go to Anthropic under the team's account. Administrators see how much the team's key is used in total, never what you ask or who asked.",
    "protected": true,
    "module": "screens-settings"
   },
@@ -13706,7 +13706,7 @@
   },
   {
    "key": "screen.connect.signin.step1",
-   "en": "Open Anthropic's sign-in page. It opens in a new tab: Anthropic's own page, not your group's Civicsmith.",
+   "en": "Open Anthropic's sign-in page. It opens in a new tab: Anthropic's own page, not your team's Civicsmith.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13742,7 +13742,7 @@
   },
   {
    "key": "screen.connect.signin.help",
-   "en": "Your group's Civicsmith never sees your Claude password. Your subscription then serves only your own questions, and you can disconnect at any time.",
+   "en": "Your team's Civicsmith never sees your Claude password. Your subscription then serves only your own questions, and you can disconnect at any time.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13772,7 +13772,7 @@
   },
   {
    "key": "screen.connect.signin.statefailed",
-   "en": "Your group's Civicsmith couldn't check your sign-in just now, so it can't say whether your subscription is connected. Open this page again in a moment.",
+   "en": "Your team's Civicsmith couldn't check your sign-in just now, so it can't say whether your subscription is connected. Open this page again in a moment.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13808,7 +13808,7 @@
   },
   {
    "key": "screen.connect.apikey.help",
-   "en": "Made in your web browser at console.anthropic.com: sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
+   "en": "Made in your web browser at console.anthropic.com: sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your team's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13820,7 +13820,7 @@
   },
   {
    "key": "screen.connect.skip",
-   "en": "Or skip it: everything in your group's Civicsmith works without the assistant, and you can connect later.",
+   "en": "Or skip it: everything in your team's Civicsmith works without the assistant, and you can connect later.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13832,7 +13832,7 @@
   },
   {
    "key": "screen.connect.grouplimits",
-   "en": "On the group's key, your administrators set what it pays for and its limits. If they change either, this shows the new setting.",
+   "en": "On the team's key, your administrators set what it pays for and its limits. If they change either, this shows the new setting.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13850,7 +13850,7 @@
   },
   {
    "key": "screen.connect.refused.RUNNER_NOT_CONFIGURED",
-   "en": "Signing in with a subscription isn't set up on your group's Civicsmith yet. You can connect an API key instead.",
+   "en": "Signing in with a subscription isn't set up on your team's Civicsmith yet. You can connect an API key instead.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13862,13 +13862,13 @@
   },
   {
    "key": "screen.connect.refused.RUNNER_SILENT",
-   "en": "The part of your group's Civicsmith that signs you in didn't answer in time. Try again in a moment.",
+   "en": "The part of your team's Civicsmith that signs you in didn't answer in time. Try again in a moment.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.connect.refused.AGENT_WORKER_SILENT",
-   "en": "The assistant's part of your group's Civicsmith didn't answer in time. Try again in a moment.",
+   "en": "The assistant's part of your team's Civicsmith didn't answer in time. Try again in a moment.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13898,7 +13898,7 @@
   },
   {
    "key": "screen.connect.refused.SIGNIN_NOT_HELD",
-   "en": "Your subscription shows as connected, but your group's Civicsmith no longer holds the sign-in. Connect again.",
+   "en": "Your subscription shows as connected, but your team's Civicsmith no longer holds the sign-in. Connect again.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13910,19 +13910,19 @@
   },
   {
    "key": "screen.connect.refused.SIGNOUT_FAILED",
-   "en": "Anthropic's side didn't confirm the sign-out. Your group's Civicsmith no longer uses it; try again to be sure.",
+   "en": "Anthropic's side didn't confirm the sign-out. Your team's Civicsmith no longer uses it; try again to be sure.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.connect.refused.AI_KEPT_AWAY",
-   "en": "Your group keeps its material away from AI, so no account can be connected. If you think this should change, ask an administrator.",
+   "en": "Your team keeps its material away from AI, so no account can be connected. If you think this should change, ask an administrator.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.updates.skip.noreason",
-   "en": "Say why your group skips this release, in one line: every administrator will see it. Nothing was recorded.",
+   "en": "Say why your team skips this release, in one line: every administrator will see it. Nothing was recorded.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13934,13 +13934,13 @@
   },
   {
    "key": "screen.settings.groups",
-   "en": "The group's",
+   "en": "The team's",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group.admins",
-   "en": "These are your group's settings. Administrators change them; you can read them here.",
+   "en": "These are your team's settings. Administrators change them; you can read them here.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13952,19 +13952,19 @@
   },
   {
    "key": "screen.group.name.now",
-   "en": "Your group is called {name}.",
+   "en": "Your team is called {name}.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group.name.none",
-   "en": "Your group has no name yet beyond its short name.",
+   "en": "Your team has no name yet beyond its short name.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group.name.field",
-   "en": "The group's name",
+   "en": "The team's name",
    "protected": false,
    "module": "screens-settings"
   },
@@ -13976,13 +13976,13 @@
   },
   {
    "key": "screen.group.logo.set",
-   "en": "Your group has a logo.",
+   "en": "Your team has a logo.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group.logo.none",
-   "en": "Your group has no logo; its name is shown alone.",
+   "en": "Your team has no logo; its name is shown alone.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14048,7 +14048,7 @@
   },
   {
    "key": "screen.group.domain.verdict.mismatched",
-   "en": "The last check found proof for another group's Civicsmith.",
+   "en": "The last check found proof for another team's Civicsmith.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14060,7 +14060,7 @@
   },
   {
    "key": "screen.group.domain.field",
-   "en": "Your group's web address",
+   "en": "Your team's web address",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14180,7 +14180,7 @@
   },
   {
    "key": "screen.group.bar.heading",
-   "en": "The group's bar",
+   "en": "The team's bar",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14192,7 +14192,7 @@
   },
   {
    "key": "screen.group.bar.none",
-   "en": "Your group has set no bar.",
+   "en": "Your team has set no bar.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14246,7 +14246,7 @@
   },
   {
    "key": "screen.places.profiles.none",
-   "en": "No place is chosen: your group's Civicsmith reads no local facts, and each one is answered as not known.",
+   "en": "No place is chosen: your team's Civicsmith reads no local facts, and each one is answered as not known.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14300,7 +14300,7 @@
   },
   {
    "key": "screen.places.wanted.help",
-   "en": "Leave it empty to clear it. It stays inside your group's Civicsmith.",
+   "en": "Leave it empty to clear it. It stays inside your team's Civicsmith.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14318,7 +14318,7 @@
   },
   {
    "key": "screen.places.offices.bygroup",
-   "en": "added by your group",
+   "en": "added by your team",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14360,7 +14360,7 @@
   },
   {
    "key": "screen.places.add.help",
-   "en": "In your own words: where it comes from, and how your group deals with it.",
+   "en": "In your own words: where it comes from, and how your team deals with it.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14420,19 +14420,19 @@
   },
   {
    "key": "screen.group-identity.now.heading",
-   "en": "Who your group is",
+   "en": "Who your team is",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group-identity.none",
-   "en": "Your group hasn't said who it is yet.",
+   "en": "Your team hasn't said who it is yet.",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.group-identity.kinds",
-   "en": "What kind of group: ",
+   "en": "What kind of team: ",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14456,7 +14456,7 @@
   },
   {
    "key": "screen.group-identity.kind.catch-all",
-   "en": "a group for many things",
+   "en": "a team for many things",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14468,7 +14468,7 @@
   },
   {
    "key": "screen.group-identity.kinds.field",
-   "en": "What kind of group",
+   "en": "What kind of team",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14540,7 +14540,7 @@
   },
   {
    "key": "screen.group-identity.ask.q.what",
-   "en": "What does your group do?",
+   "en": "What does your team do?",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14570,7 +14570,7 @@
   },
   {
    "key": "screen.security.level.heading",
-   "en": "How hard your group's Civicsmith was tried",
+   "en": "How hard your team's Civicsmith was tried",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14702,7 +14702,7 @@
   },
   {
    "key": "screen.security.tools.none",
-   "en": "Your group uses no security tool of its own.",
+   "en": "Your team uses no security tool of its own.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -14966,13 +14966,13 @@
   },
   {
    "key": "screen.translations.languages.heading",
-   "en": "Your group's languages",
+   "en": "Your team's languages",
    "protected": false,
    "module": "screens-settings"
   },
   {
    "key": "screen.translations.languages.none",
-   "en": "Your group uses no language but English yet.",
+   "en": "Your team uses no language but English yet.",
    "protected": false,
    "module": "screens-settings"
   },
@@ -15134,19 +15134,19 @@
   },
   {
    "key": "screen.notes.private",
-   "en": "Only you can see these in your group.",
+   "en": "Only you can see these in your team.",
    "protected": true,
    "module": "screens-settings"
   },
   {
    "key": "screen.notes.protects",
-   "en": "Not public: nobody else in your group sees your notes, administrators included, and they are never cited, published or counted. They are kept with your group's records.",
+   "en": "Not public: nobody else in your team sees your notes, administrators included, and they are never cited, published or counted. They are kept with your team's records.",
    "protected": true,
    "module": "screens-settings"
   },
   {
    "key": "screen.notes.court",
-   "en": "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.",
+   "en": "Your team's Civicsmith keeps this from the public and the people the team looks into. A court order your team can't defeat could still require it to be shown. Write accordingly.",
    "protected": true,
    "module": "screens-settings"
   },
@@ -15350,7 +15350,7 @@
   },
   {
    "key": "screen.wizards.empty",
-   "en": "No wizards to show here. Your group's wizards are listed to the owners of their projects and to administrators.",
+   "en": "No wizards to show here. Your team's wizards are listed to the owners of their projects and to administrators.",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15392,13 +15392,13 @@
   },
   {
    "key": "screen.wizards.whose.group",
-   "en": "This group's",
+   "en": "This team's",
    "protected": false,
    "module": "screens-wizards"
   },
   {
    "key": "screen.wizards.whose.widened",
-   "en": "This group's, group-wide",
+   "en": "This team's, team-wide",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15542,13 +15542,13 @@
   },
   {
    "key": "screen.wizards.civicsmith.only",
-   "en": "Civicsmith's wizards come with each release and are not changed by a group: copy one to change the copy.",
+   "en": "Civicsmith's wizards come with each release and are not changed by a team: copy one to change the copy.",
    "protected": false,
    "module": "screens-wizards"
   },
   {
    "key": "screen.wizards.copy.note",
-   "en": "A copy becomes your group's own wizard: a draft until approved, like any wizard your group writes. The original stays as it is and is still offered; a required wizard stays required.",
+   "en": "A copy becomes your team's own wizard: a draft until approved, like any wizard your team writes. The original stays as it is and is still offered; a required wizard stays required.",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15626,7 +15626,7 @@
   },
   {
    "key": "screen.wizards.steps.draft.template",
-   "en": "Places a draft from your group's template.",
+   "en": "Places a draft from your team's template.",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15806,7 +15806,7 @@
   },
   {
    "key": "screen.wizards.act.widen",
-   "en": "Make it group-wide",
+   "en": "Make it team-wide",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15926,7 +15926,7 @@
   },
   {
    "key": "screen.guide.draft.template",
-   "en": "Draft · from your group's template",
+   "en": "Draft · from your team's template",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -15950,7 +15950,7 @@
   },
   {
    "key": "screen.guide.draft.template.held",
-   "en": "Start from your group's template for this, if it has one.",
+   "en": "Start from your team's template for this, if it has one.",
    "protected": false,
    "module": "screens-wizards"
   },
@@ -16058,7 +16058,7 @@
   },
   {
    "key": "screen.guide.welcome",
-   "en": "Welcome. Your group's wizard can walk you through your first screens; start it when you are ready.",
+   "en": "Welcome. Your team's wizard can walk you through your first screens; start it when you are ready.",
    "protected": false,
    "module": "screens-wizards"
   },

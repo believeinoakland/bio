@@ -19,19 +19,19 @@
  },
  {
   "key": "refusal.SIGNIN_ADDRESS_UNEXPECTED",
-  "en": "The sign-in answered with an address that isn't Anthropic's, so your group's Civicsmith didn't open it. Nothing was sent. Tell whoever installed your group's Civicsmith.",
+  "en": "The sign-in answered with an address that isn't Anthropic's, so your team's Civicsmith didn't open it. Nothing was sent. Tell whoever installed your team's Civicsmith.",
   "protected": true,
   "note": "a safety stop: says what was not opened"
  },
  {
   "key": "ai.refused.signinabsent",
-  "en": "Signing in with Claude is not installed in your group's Civicsmith yet. An API key works instead; whoever installed your group's Civicsmith can add it.",
+  "en": "Signing in with Claude is not installed in your team's Civicsmith yet. An API key works instead; whoever installed your team's Civicsmith can add it.",
   "protected": false,
   "note": "the translation control-plane R65 relays with agent-worker's runner-not-configured answer"
  },
  {
   "key": "refusal.AGENT_WORKER_UNBOUND",
-  "en": "The assistant isn't installed in your group's Civicsmith yet, so signing in can't finish here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+  "en": "The assistant isn't installed in your team's Civicsmith yet, so signing in can't finish here. Everything else works without it; whoever installed your team's Civicsmith can add it.",
   "protected": false,
   "note": ""
  },
@@ -43,19 +43,19 @@
  },
  {
   "key": "ai.refused.keptaway",
-  "en": "Your group keeps its material away from AI, so no assistant works here, the group's or your own. {member} set this on {date}: “{reason}”. Everything else works as usual.",
+  "en": "Your team keeps its material away from AI, so no assistant works here, the team's or your own. {member} set this on {date}: “{reason}”. Everything else works as usual.",
   "protected": true,
-  "note": "the group-level keep-away; says who sees what"
+  "note": "the team-level keep-away; says who sees what"
  },
  {
   "key": "ai.refused.noaccount",
-  "en": "No account serves the assistant for you yet: your group doesn't offer its key, and you haven't connected your own. Connect one in Settings › The assistant, or carry on without it.",
+  "en": "No account serves the assistant for you yet: your team doesn't offer its key, and you haven't connected your own. Connect one in Settings › The assistant, or carry on without it.",
   "protected": false,
   "note": ""
  },
  {
   "key": "ai.refused.notdeployed",
-  "en": "This part of the assistant isn't switched on in your group's Civicsmith yet. Nothing was sent. Everything else works as usual.",
+  "en": "This part of the assistant isn't switched on in your team's Civicsmith yet. Nothing was sent. Everything else works as usual.",
   "protected": false,
   "note": "a run mode or an assistant part not deployed"
  },
@@ -115,19 +115,19 @@
  },
  {
   "key": "instance.scanner.absent.step",
-  "en": "Your group's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.",
+  "en": "Your team's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.",
   "protected": true,
   "note": "setup-page R30, in place of the scanning sentences while no scanner is present"
  },
  {
   "key": "refusal.SCANNER_ABSENT",
-  "en": "Your group's Civicsmith has no file scanner installed, so this file wasn't scanned. It is kept and shown; whoever installed your group's Civicsmith can add a scanner.",
+  "en": "Your team's Civicsmith has no file scanner installed, so this file wasn't scanned. It is kept and shown; whoever installed your team's Civicsmith can add a scanner.",
   "protected": false,
   "note": "file-safety R42"
  },
  {
   "key": "refusal.RENDERER_ABSENT",
-  "en": "Your group's Civicsmith has no safe view installed, so this file can't be shown safely here. The original stays held; whoever installed your group's Civicsmith can add a safe view.",
+  "en": "Your team's Civicsmith has no safe view installed, so this file can't be shown safely here. The original stays held; whoever installed your team's Civicsmith can add a safe view.",
   "protected": false,
   "note": "file-safety R42"
  },
@@ -157,7 +157,7 @@
  },
  {
   "key": "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
-  "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
+  "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the team's account can run it, where one serves you.",
   "protected": false,
   "note": "ai-runs R18 (K2920): any mode other than check or plan on a member's own sign-in"
  },
@@ -165,7 +165,7 @@
   "key": "members.websitekey.live",
   "en": "Website key: live. Lets in up to {cap} people a day, as {capabilities}, until {expires}. Created by {member} on {date}.",
   "protected": true,
-  "note": "says who may join and see the group's shared work"
+  "note": "says who may join and see the team's shared work"
  },
  {
   "key": "members.websitekey.none",
@@ -313,7 +313,7 @@
  },
  {
   "key": "door.front.matching",
-  "en": "Already in your group: {items}",
+  "en": "Already in your team: {items}",
   "protected": false,
   "note": "existing work that matches what the member wrote"
  },
@@ -475,7 +475,7 @@
  },
  {
   "key": "ref.here.person.unfollowed",
-  "en": "Named here, but not a person your group follows yet.",
+  "en": "Named here, but not a person your team follows yet.",
   "protected": false,
   "note": "a card's Here: line"
  },

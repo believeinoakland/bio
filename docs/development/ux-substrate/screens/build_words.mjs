@@ -39,6 +39,11 @@ const retiredSeen = new Set(), rewriteSeen = new Set();
 // DEC-259: the remaining screens' drawn words, written by words-drawn.src.py; its rewrites apply like T49's, to any row
 const DRAWN = JSON.parse(R('words-drawn.json'));
 const drawnSeen = new Set();
+// DEC-281 (K3472): "team", never "group", names the people of one Civicsmith in every word people read; identifiers ({group},
+// group-identity) keep "group". These rows keep the word in another sense: a grouping of reasons, legs or cases, or a kind of
+// organization in the world (a community group, neighborhood groups).
+const TEAM_WORD = /(^|[^{\w.-])[Gg]roups?\b(?![}\w-])/;
+const GROUP_SENSE = /^(refusal\.PARTITION_INDEPENDENCE_\w+|inquiry\.next\.group_strength_weakest|calculations\.(says\.group_two_like|why\.act_undetermined_falls|why\.groups_act_like)|basis-versions\.(claimed|unclaimed|unstated)|entity\.relation\.kind\.help|screen\.group-identity\.kind\.(community|issue|professional)|screen\.site\.line2|public-read\.neighborhood_issue_groups|refusal\.ADDRESSEE_REFUSED)$/;
 const add = (key, en, prot, source, note) => {
   if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
   if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + ((T49.rewrite_dec || {})[key] || 'DEC-256') + ': reworded'; }
@@ -47,6 +52,7 @@ const add = (key, en, prot, source, note) => {
   if (!en || !String(en).trim()) fail('empty text for ' + key);
   seen.add(key);
   if (/\b(DEC|K)-?\d{2,4}\b|\bN\d{3}\b/.test(plain(en))) fail(`an internal code in member words: ${key}`);
+  if (TEAM_WORD.test(plain(en)) && !GROUP_SENSE.test(key)) fail(`"group" where a member reads "team" (DEC-281, K3472): ${key} (team_words.py rewrites it; a grouping or a kind of organization goes in GROUP_SENSE)`);
   words.push({ key, en: plain(en), protected: !!prot, source, ...(note ? { note } : {}) });
 };
 // a phrase written here by hand must appear, word for word, in the source it names (a drift guard)
@@ -71,10 +77,10 @@ for (const [k, t] of Object.entries(G.kind)) { add(`mark.kind.${k}.name`, (t.mat
 for (const [k, t] of Object.entries(G.path)) add(`mark.path.${k.toLowerCase().replace(/\s+/g, '-')}.means`, t, true, 'page.src.html marks');
 const fixed = [
   ['mark.strength.means', 'An answer is only as strong as the weakest thing it depends on'],
-  ['mark.due.means', 'counted on your group\\\'s local day.'],
+  ['mark.due.means', 'counted on your team\\\'s local day.'],
   ['mark.hint.means', 'something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.'],
   ['mark.hunch.means', 'a member\\\'s suspicion, labeled as one. Never evidence, and it never moves a finding.'],
-  ['mark.outward.means', 'this leaves your group\\\'s Civicsmith. Someone outside will see it.'],
+  ['mark.outward.means', 'this leaves your team\\\'s Civicsmith. Someone outside will see it.'],
   ['mark.band.means', 'this band says who can see what you are working on.'],
 ];
 const tipLine = (key, frag) => {
@@ -101,16 +107,16 @@ add('state.failed', 'Could not read this, because {reason}', false, 'DEC-98', 't
 add('state.undetermined', 'Undetermined, because {reason}', true, 'DEC-98', 'the reason always follows');
 
 // 4. Labeled drafts (DEC-120 G5, DEC-153): who wrote what is in a field
-for (const [k, s] of [['machine', 'Draft by the assistant, at your request · edit it until it is yours'], ['template', 'Draft from your group\\\'s template · edit it until it is yours'], ['wizard', 'Draft from the wizard · edit it until it is yours']])
+for (const [k, s] of [['machine', 'Draft by the assistant, at your request · edit it until it is yours'], ['template', 'Draft from your team\\\'s template · edit it until it is yours'], ['wizard', 'Draft from the wizard · edit it until it is yours']])
   add(`draft.${k}.label`, must(kit, 'mock-kit.js', s).replace(/\\'/g, "'"), false, 'mock-kit.js field');
 add('draft.writing-help.act', 'Help me write this', false, 'mock-kit.js writeHelp');
 
 // 4a. Photos in a published case (DEC-180, DEC-183): the reminder, the copy's label and the Photos step's words (protected: they say
 //     who can see something)
 const scr = R('mock-screens.js');
-add('photo.reminder', must(scr, 'mock-screens.js', 'Frame what you are checking, and leave out people\\\'s faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your group.').replace(/\\'/g, "'"), true, 'mock-screens.js PHOTO_REMINDER');
-add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces, plates and camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label a published copy with marked areas carries');
-add('photo.published.label', must(scr, 'mock-screens.js', 'Camera details removed for publication; the group holds the original'), true, 'mock-screens.js ceremony', 'the label every other published photo carries (K2248)');
+add('photo.reminder', must(scr, 'mock-screens.js', 'Frame what you are checking, and leave out people\\\'s faces and number plates where you can. If a published case carries this photo, anyone in it who is not part of a finding, and any number plate, is obscured in the public copy; the original stays inside your team.').replace(/\\'/g, "'"), true, 'mock-screens.js PHOTO_REMINDER');
+add('photo.obscured.label', must(scr, 'mock-screens.js', 'Faces, plates and camera details removed for publication; the team holds the original'), true, 'mock-screens.js ceremony', 'the label a published copy with marked areas carries');
+add('photo.published.label', must(scr, 'mock-screens.js', 'Camera details removed for publication; the team holds the original'), true, 'mock-screens.js ceremony', 'the label every other published photo carries (K2248)');
 add('photo.step.gate', must(scr, 'mock-screens.js', 'Every photo the case carries must be checked before signing, including one that only supports a finding: marked, or “nothing to obscure”. A mark that covers the wrong thing is withdrawn with a reason, never erased. Text read from a photo, such as a number plate, is never published with it; a passage you quote in the case still is.'), true, 'mock-screens.js ceremony');
 add('photo.state.nothing', must(scr, 'mock-screens.js', 'nothing to obscure'), true, 'mock-screens.js ceremony');
 add('photo.refused.format', 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it.', true, 'DEC-183', 'PHOTO_NOT_COVERABLE');
@@ -136,10 +142,10 @@ must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and 
 add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
-add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
+add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the team\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
 for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['enquire', 'Interviews and planning'], ['read', 'Reading inside documents'], ['transcribe', 'Reading page pictures'], ['account', 'A case\'s account'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
 for (const [k, t] of [['no', 'No'], ['ask', 'Ask every day'], ['yes', 'Yes']]) add(`ai.explore.${k}`, t, false, 'mock-screens.js aiExplore');
-add('ai.whose.group', 'your group\'s', false, 'DEC-188', 'whose, in the refusals');
+add('ai.whose.group', 'your team\'s', false, 'DEC-188', 'whose, in the refusals');
 add('ai.whose.project', 'this project\'s', false, 'DEC-188', 'whose, in the refusals');
 add('ai.whose.own', 'your own', false, 'DEC-188', 'whose, in the refusals');
 add('ai.refused.limit', 'The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.', true, 'DEC-188', 'AI_LIMIT_REACHED, scope a use; {period} daily or monthly; never a cost');
@@ -157,12 +163,12 @@ add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscr
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
 add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
 must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 12 October. It pauses runs until 1 November; its other uses go on.');
-add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the group\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
+add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the team\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
-add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'DEC-189', 'shown only to the paying account\'s owners (question-explorer R5); {owner}: the group, the project\'s name, or the member\'s handle');
+add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'DEC-189', 'shown only to the paying account\'s owners (question-explorer R5); {owner}: the team, the project\'s name, or the member\'s handle');
 add('ai.label.explored.member', must(scr, 'mock-screens.js', 'Machine work · found while exploring'), true, 'DEC-189', 'what every other member sees: which account paid, and who enabled it, are answered only to its owners');
-add('ai.owner.group', 'the group', false, 'DEC-188', 'enabled_by for the group');
+add('ai.owner.group', 'the team', false, 'DEC-188', 'enabled_by for the team');
 
 // 4c'. The fills of the AI sentences (DEC-189; BOB's B124 and B126): each placeholder above that names a fixed word has a key
 for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${k}`, t, false, 'DEC-189', '{period}');
@@ -172,7 +178,7 @@ add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.qu
 add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
-add('ai.refused.limit.unjudged', 'The assistant stopped here: your group\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
+add('ai.refused.limit.unjudged', 'The assistant stopped here: your team\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
 for (const [k, t] of [
   ['owner', 'it doesn\'t say which account it is for'],
   ['scope', 'that isn\'t something a limit can cover'],
@@ -185,10 +191,10 @@ for (const [k, t] of [
 ]) add(`ai.limitfield.${k}`, t, false, 'DEC-189', '{field} in ai.refused.limitinvalid');
 for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['enquire', 'interviews and planning'], ['read', 'reading inside documents'], ['transcribe', 'reading page pictures'], ['account', 'a case\'s account'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
   add(`ai.use.${k}.inline`, t, false, 'DEC-189', '{use} inside a sentence; {Use} at a sentence\'s start is ai.use.*.name');
-add('ai.account.group', 'Your group\'s key', false, 'DEC-189', '{account} at a sentence\'s start');
+add('ai.account.group', 'Your team\'s key', false, 'DEC-189', '{account} at a sentence\'s start');
 add('ai.account.project', '{project}\'s account', false, 'DEC-189', '{account} at a sentence\'s start');
 add('ai.account.own', 'Your own account', false, 'DEC-189', '{account} at a sentence\'s start');
-add('ai.account.group.inline', 'your group\'s key', false, 'DEC-189', '{account} inside a sentence');
+add('ai.account.group.inline', 'your team\'s key', false, 'DEC-189', '{account} inside a sentence');
 add('ai.account.project.inline', 'the project\'s account', false, 'DEC-189', '{account} inside a sentence');
 add('ai.account.own.inline', 'your own account', false, 'DEC-189', '{account} inside a sentence');
 add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.', true, 'DEC-189', 'the told-once Noticed item, scope overall; names no member; {when} from ai.until.*');
@@ -197,7 +203,7 @@ add('ai.refused.exploreoutofscope', 'The assistant can\'t explore this question 
 add('ai.refused.exploreaskinvalid', 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.', false, 'DEC-191', 'EXPLORE_ASK_INVALID (C-143.6); ai-use\'s sentence kept');
 add('date.daymonthyear', '{day} {month} {year}', false, 'DEC-192', 'a local day not in the current year, such as 3 March 2027');
 add('date.daymonth', '{day} {month}', false, 'DEC-191', 'a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
-add('ai.scope.group', 'your group\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the group\'s key');
+add('ai.scope.group', 'your team\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the team\'s key');
 add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
 
 // 4c''. Queue items from steps, milestones, projects and reviews (DEC-189; BOB's B126 (2), notice-producers R17): each kind's
@@ -221,19 +227,19 @@ add('queue.request-unsent.summary.others', 'A request was left unsent: {what}', 
 add('queue.request-unsent.detail', 'Approved on {date}, not yet sent: nothing has gone to the office.', false, 'DEC-212');
 
 // 4c'''. The assistant's reading of page pictures (DEC-190; BOB's B128, B129; extraction R71, C-51.7)
-add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
+add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your team\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
 add('transcribe.label', 'The assistant\'s reading of the page image · undetermined until a member checks a passage against the page', true, 'DEC-190', 'the label on words from pagetranscribe (reading-pipeline R29\'s "the AI\'s reading")');
 add('transcribe.none', 'The assistant read pages {pages} but found no words it could give: {why}', false, 'DEC-190', 'only when the assistant was asked and read nothing (DEC-191); {why} the reason as answered');
 add('transcribe.notsent', 'Nothing was sent to the assistant: {why}. The pages are as they were.', false, 'DEC-191', 'agent-worker never asked: {why} from transcribe.why.*');
-add('transcribe.why.unbound', 'the assistant can\'t be reached from your group\'s Civicsmith just now', false, 'DEC-191', 'AGENT_WORKER_UNBOUND');
+add('transcribe.why.unbound', 'the assistant can\'t be reached from your team\'s Civicsmith just now', false, 'DEC-191', 'AGENT_WORKER_UNBOUND');
 add('transcribe.why.evidenceabsent', 'the document\'s stored copy can\'t be read just now', false, 'DEC-191', 'EVIDENCE_ABSENT');
 add('transcribe.why.norender', 'none of these pages could be turned into an image the assistant can read', false, 'DEC-191', 'NO_PAGE_RENDERED');
 add('transcribe.refused', 'The assistant didn\'t read these pages. {reason}', false, 'DEC-192', 'a refusal came back; {reason} the refusal\'s own sentence as relayed, a sentence of its own, its own placeholders filled by the screen from the fields beside it');
 add('transcribe.failed', 'The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.', false, 'DEC-192', 'after the post: the worker silent or the provider ending; {why} from transcribe.why.silent or .ended');
 add('transcribe.why.silent', 'it didn\'t answer in time', false, 'DEC-192', 'AGENT_WORKER_SILENT');
 add('transcribe.why.ended', 'the AI service stopped before it finished', false, 'DEC-192', 'a provider ending');
-add('transcribe.reason.requestfault', 'Your group\'s Civicsmith sent the assistant a request it couldn\'t use. That is a fault in your group\'s Civicsmith, not anything you did: try again, and if it happens again, tell an administrator.', false, 'DEC-193', '{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)');
-add('transcribe.reason.noaccount', 'No AI account pays for this here. Connect your own in Settings › The assistant, or ask an administrator about the group\'s key.', false, 'DEC-193', '{reason} for NO_ACCOUNT');
+add('transcribe.reason.requestfault', 'Your team\'s Civicsmith sent the assistant a request it couldn\'t use. That is a fault in your team\'s Civicsmith, not anything you did: try again, and if it happens again, tell an administrator.', false, 'DEC-193', '{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)');
+add('transcribe.reason.noaccount', 'No AI account pays for this here. Connect your own in Settings › The assistant, or ask an administrator about the team\'s key.', false, 'DEC-193', '{reason} for NO_ACCOUNT');
 add('transcribe.reason.badaccount', 'The AI account that pays for this here can\'t be used as it is set up. Its owners can check it in its settings.', false, 'DEC-193', '{reason} for BAD_ACCOUNT');
 add('transcribe.reason.needsapikey', 'Reading page pictures needs an Anthropic API key, and the account that pays here is a Claude sign-in. Its owners can add an API key; meanwhile you can type a page\'s words yourself.', false, 'DEC-193', '{reason} for TRANSCRIBE_NEEDS_API_KEY');
 add('transcribe.picture.unprepared', 'This photo can\'t be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.', false, 'DEC-191', '{why} from transcribe.picture.why.*');
@@ -244,13 +250,13 @@ add('transcribe.done', 'The assistant read pages {pages}. Their words can now be
 add('document.unread.pages', must(scr, 'mock-screens.js', 'are pictures of text that Civicsmith\\\'s own reading couldn\\\'t make out, so their words can\\\'t be found or cited yet. The page images are kept as they are.').replace(/\\'/g, "'").replace(/^/, 'Pages {pages} '), false, 'DEC-190', 'the Document screen\'s section, shown only when such pages exist');
 
 // 4d. Supplied documents in a published case (BOB's drafts from T39, adopted as written; DEC-188)
-add('document.cleaned.label', 'Details of who made this file, and of its pictures, removed for publication; the group holds the original', true, 'DEC-188', 'COPY_CLEANED_LABEL');
+add('document.cleaned.label', 'Details of who made this file, and of its pictures, removed for publication; the team holds the original', true, 'DEC-188', 'COPY_CLEANED_LABEL');
 add('document.refused.changed', 'A document a member supplied now needs a different publication copy from the one this case was prepared with. Prepare the case again. Nothing was published.', true, 'DEC-188', 'DOCUMENT_COPY_CHANGED_SINCE');
 add('document.refused.clean', 'A document a member supplied can\'t be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.', true, 'DEC-188', 'DOCUMENT_NOT_CLEANABLE');
 add('document.refused.pending', 'The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.', false, 'DEC-188', 'DOCUMENT_COPY_PENDING');
 
 // 4e. A question a project draws on (DEC-188; Bob's ruling that setting aside is each project's own)
-add('question.refused.drawnon', 'This question can\'t be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.', false, 'DEC-188', 'DRAWN_ON_BY_A_PROJECT; names no project');
+add('question.refused.drawnon', 'This question can\'t be set aside for the whole team, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.', false, 'DEC-188', 'DRAWN_ON_BY_A_PROJECT; names no project');
 
 // 4i. Use over time and the connection graph (DEC-215): the kinds of connection and what each means (protected: they say what is
 //     evidence and what is a lead, K1487), the graph's own words, and the usage bars' and meter's words (protected where they say

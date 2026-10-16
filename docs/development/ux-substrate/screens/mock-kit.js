@@ -60,7 +60,7 @@ const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder=
 // DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
 // never in a field stating a member's reason for an act (`reason`, K1841), never on an act the assistant is refused
 // (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
-// never where a labeled draft already fills the field, and not on the group's own description, which has its own guided
+// never where a labeled draft already fills the field, and not on the team's own description, which has its own guided
 // draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
 const WRITE_ACT = 'writinghelp';
 const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',
@@ -75,7 +75,7 @@ function field(id, label, value = '', o = {}) {
   return writeHelp(o) ? fieldHtml(id, label, value, o, tag, cls, v) + writeHelp(o) : fieldHtml(id, label, value, o, tag, cls, v);
 }
 function fieldHtml(id, label, value, o, tag, cls, v) {
-  return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area && o.rows ? ` rows="${o.rows}"` : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your group\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
+  return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area && o.rows ? ` rows="${o.rows}"` : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your team\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
 }
 const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map((x, i) => `<option${o.data === true || i >= o.data ? ' class="mk-data"' : ''}${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
 const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}${o.onchange ? ` onchange="${o.onchange}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(o.group || name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;

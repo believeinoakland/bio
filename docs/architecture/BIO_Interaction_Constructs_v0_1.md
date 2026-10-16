@@ -820,6 +820,11 @@ screen's data is keyed when that screen is built, under the same protected rule.
 **Ruled 2026-10-06 by Bob (DEC-149, "S4: B"):** what the code calls an instance is, for members and founders, "your group's
 Civicsmith"; "installation" only where the hosting is the subject; never "copy" (which keeps only its meanings of a review copy
 and a copy of a document). Where this document says "the group's copy", members read "your group's Civicsmith".
+**RULED 2026-10-15 by Bob (K3472; the design's pass, DEC-281): "team", not "group".** In every text a member, administrator or
+visitor reads, the people of one Civicsmith are a team: "your team's Civicsmith" (DEC-149's phrase, reworded), "Set up your team's
+Civicsmith", "another team's case", "team-wide". "team" means only that: a project's people are "the project". "group" stays only
+for a grouping (the reasons a question is grouped into), a kind of organization in the world ("a community group") and a name;
+identifiers, codes, ops, tables and requirement ids keep "group". Where this document says "group", members read "team".
 
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 

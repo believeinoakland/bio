@@ -260,9 +260,9 @@
   },
   {
    "key": "screen.dash-action.clock.sent",
-   "en": "Sent {date}; the group gave until {due}.",
+   "en": "Sent {date}; the team gave until {due}.",
    "protected": false,
-   "note": "DEC-259: an action's clock where the group set the date"
+   "note": "DEC-259: an action's clock where the team set the date"
   },
   {
    "key": "screen.dash-action.clock.approve",
@@ -362,7 +362,7 @@
   },
   {
    "key": "screen.document.links.one",
-   "en": "{n} links on this page; 1 points at a document the group holds.",
+   "en": "{n} links on this page; 1 points at a document the team holds.",
    "protected": false,
    "note": "DEC-259: document.links.says, where one link is held"
   },
@@ -388,7 +388,7 @@
    "key": "screen.due-date.step.rolled",
    "en": "{date} is {why} and {date2} {why2}, both from your profile: rolled to {due}, close of business.",
    "protected": false,
-   "note": "DEC-259: two days skipped in a row, each from the group profile"
+   "note": "DEC-259: two days skipped in a row, each from the team profile"
   },
   {
    "key": "screen.explore.sub",
@@ -434,7 +434,7 @@
   },
   {
    "key": "screen.forgot.noadmin.what",
-   "en": "Whoever holds your group's Cloudflare account can set a new one-time password and an administrator can claim again from it. That is the way back in when every administrator has lost both their password and their codes.",
+   "en": "Whoever holds your team's Cloudflare account can set a new one-time password and an administrator can claim again from it. That is the way back in when every administrator has lost both their password and their codes.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -464,7 +464,7 @@
   },
   {
    "key": "screen.group.domain.help",
-   "en": "Verified on {date}: readers can confirm a published case comes from your group. Remove it if your group would rather stay unnamed.",
+   "en": "Verified on {date}: readers can confirm a published case comes from your team. Remove it if your team would rather stay unnamed.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -488,7 +488,7 @@
   },
   {
    "key": "screen.group-identity.ask.what",
-   "en": "It asks you a few questions about your group, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your group's.",
+   "en": "It asks you a few questions about your team, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your team's.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -530,7 +530,7 @@
   },
   {
    "key": "screen.imported.band",
-   "en": "Another group's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated",
+   "en": "Another team's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated",
    "protected": false,
    "note": "DEC-259: the band across an imported case"
   },
@@ -542,13 +542,13 @@
   },
   {
    "key": "screen.install.sub",
-   "en": "Two choices here, then Cloudflare. What your group needs first is on civicsmith.org.",
+   "en": "Two choices here, then Cloudflare. What your team needs first is on civicsmith.org.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.need.cloudflare",
-   "en": "A Cloudflare account on the Workers Paid plan ($5 a month), with a payment method, belonging to your group rather than to one person.",
+   "en": "A Cloudflare account on the Workers Paid plan ($5 a month), with a payment method, belonging to your team rather than to one person.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -566,19 +566,19 @@
   },
   {
    "key": "screen.install.short.heading",
-   "en": "Your group's short name",
+   "en": "Your team's short name",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.names",
-   "en": "Your group has two names. Its name, such as “{example}”, is what people read; you choose it in setup and can change it whenever you like. Its short name, chosen here, is the fixed label in its web addresses and beside every signature, and can never change.",
+   "en": "Your team has two names. Its name, such as “{example}”, is what people read; you choose it in setup and can change it whenever you like. Its short name, chosen here, is the fixed label in its web addresses and beside every signature, and can never change.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.permanent",
-   "en": "Your short name is in every address of your group's Civicsmith and beside every signature your members make. It can never be changed, by you or anyone, without setting up your group's Civicsmith again.",
+   "en": "Your short name is in every address of your team's Civicsmith and beside every signature your members make. It can never be changed, by you or anyone, without setting up your team's Civicsmith again.",
    "protected": true,
    "note": "DEC-259: the warning before an irreversible choice"
   },
@@ -602,7 +602,7 @@
   },
   {
    "key": "screen.install.cf.sub",
-   "en": "Next you go to Cloudflare's own page, sign in there, and allow this installer to set up your group's Civicsmith in your account. Civicsmith never sees your Cloudflare password.",
+   "en": "Next you go to Cloudflare's own page, sign in there, and allow this installer to set up your team's Civicsmith in your account. Civicsmith never sees your Cloudflare password.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -614,7 +614,7 @@
   },
   {
    "key": "screen.install.cf.programs",
-   "en": "Putting your group's Civicsmith's programs in your account, and its storage for documents and evidence.",
+   "en": "Putting your team's Civicsmith's programs in your account, and its storage for documents and evidence.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -638,19 +638,19 @@
   },
   {
    "key": "screen.install.hold.head",
-   "en": "Whoever can sign in to this Cloudflare account controls your group's Civicsmith",
+   "en": "Whoever can sign in to this Cloudflare account controls your team's Civicsmith",
    "protected": true,
    "note": "DEC-259: says who can see and control everything"
   },
   {
    "key": "screen.install.hold.what",
-   "en": "They can read everything and lock everyone out, and no vote of administrators can stop them. Use a group account, and add at least one other trusted person to it. It is also the way back in if every administrator is locked out.",
+   "en": "They can read everything and lock everyone out, and no vote of administrators can stop them. Use a team account, and add at least one other trusted person to it. It is also the way back in if every administrator is locked out.",
    "protected": true,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.progress.title",
-   "en": "Setting up your group's Civicsmith",
+   "en": "Setting up your team's Civicsmith",
    "protected": false,
    "note": "DEC-259"
   },
@@ -686,7 +686,7 @@
   },
   {
    "key": "screen.install.progress.placing",
-   "en": "Putting your group's Civicsmith in place…",
+   "en": "Putting your team's Civicsmith in place…",
    "protected": false,
    "note": "DEC-259"
   },
@@ -710,7 +710,7 @@
   },
   {
    "key": "screen.install.stopped.exists",
-   "en": "Stopped: this account already holds a Civicsmith. One group's Civicsmith per account is supported for now. Nothing was created. Use another account for this group, or open the one already here.",
+   "en": "Stopped: this account already holds a Civicsmith. One team's Civicsmith per account is supported for now. Nothing was created. Use another account for this team, or open the one already here.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -746,7 +746,7 @@
   },
   {
    "key": "screen.install.ready.note",
-   "en": "These checks ran as part of the installation; the installer keeps nothing of your group's Civicsmith once it hands over.",
+   "en": "These checks ran as part of the installation; the installer keeps nothing of your team's Civicsmith once it hands over.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -758,7 +758,7 @@
   },
   {
    "key": "screen.install.otp.what",
-   "en": "This makes you your group's first administrator, in the next step. It is shown once, here. Save it somewhere safe, such as a password manager, until you have claimed. Continuing below fills it in for you.",
+   "en": "This makes you your team's first administrator, in the next step. It is shown once, here. Save it somewhere safe, such as a password manager, until you have claimed. Continuing below fills it in for you.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -770,19 +770,19 @@
   },
   {
    "key": "screen.install.address.help",
-   "en": "Where you, and later your members, open your group's Civicsmith. Bookmark it.",
+   "en": "Where you, and later your members, open your team's Civicsmith. Bookmark it.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.probe.summary",
-   "en": "A probe key, for a monitoring service (most groups never need it)",
+   "en": "A probe key, for a monitoring service (most teams never need it)",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.install.probe.help",
-   "en": "Lets a monitoring service check that your group's Civicsmith is running. It reaches only a separate test store, never your group's records. Shown once.",
+   "en": "Lets a monitoring service check that your team's Civicsmith is running. It reaches only a separate test store, never your team's records. Shown once.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -794,7 +794,7 @@
   },
   {
    "key": "screen.install.continue",
-   "en": "Continue to your group's Civicsmith: become its first administrator",
+   "en": "Continue to your team's Civicsmith: become its first administrator",
    "protected": false,
    "note": "DEC-259"
   },
@@ -814,7 +814,7 @@
    "key": "screen.notes.protects.link",
    "en": "What this protects, and from whom",
    "protected": true,
-   "note": "DEC-259: a link beside \"Only you can see these in your group\" (protected: who can see)"
+   "note": "DEC-259: a link beside \"Only you can see these in your team\" (protected: who can see)"
   },
   {
    "key": "screen.money.sub.flow",
@@ -884,13 +884,13 @@
   },
   {
    "key": "screen.open-file.risk.low.short",
-   "en": "Fetched by your group's Civicsmith; nothing in it acts on its own.",
+   "en": "Fetched by your team's Civicsmith; nothing in it acts on its own.",
    "protected": false,
    "note": "DEC-259: beside the Low risk mark"
   },
   {
    "key": "screen.open-file.risk.high.short",
-   "en": "Handed in, not fetched by your group's Civicsmith; {why}.",
+   "en": "Handed in, not fetched by your team's Civicsmith; {why}.",
    "protected": false,
    "note": "DEC-259: beside the High risk mark; {why} such as \"it contains a macro\""
   },
@@ -908,7 +908,7 @@
   },
   {
    "key": "screen.open-file.warn.why",
-   "en": "Why it is high risk: it was handed in, not fetched by your group's Civicsmith, and {why}. No scanner has found anything in it; the built-in scanner checked it on {date}.",
+   "en": "Why it is high risk: it was handed in, not fetched by your team's Civicsmith, and {why}. No scanner has found anything in it; the built-in scanner checked it on {date}.",
    "protected": true,
    "note": "DEC-259: the warning before opening a high-risk original"
   },
@@ -1016,19 +1016,19 @@
   },
   {
    "key": "screen.places.sub",
-   "en": "Administrators only. The places whose rules your group's Civicsmith follows, and the offices your group deals with.",
+   "en": "Administrators only. The places whose rules your team's Civicsmith follows, and the offices your team deals with.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.places.profiles.help",
-   "en": "Each place brings its deadlines, holidays, offices and records laws, each with its source. Changing places changes how dates and offices read from then on; what your group already recorded stays as it was.",
+   "en": "Each place brings its deadlines, holidays, offices and records laws, each with its source. Changing places changes how dates and offices read from then on; what your team already recorded stays as it was.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.places.offices.note",
-   "en": "Offices come from your places' rules, each marked with where it came from. After you change places, fill them in again; offices your group added itself stay.",
+   "en": "Offices come from your places' rules, each marked with where it came from. After you change places, fill them in again; offices your team added itself stay.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1112,13 +1112,13 @@
   },
   {
    "key": "screen.projectai.paidby.none",
-   "en": "No project account: members' own accounts, then the group's key, serve",
+   "en": "No project account: members' own accounts, then the team's key, serve",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.projectai.key.help",
-   "en": "Made at console.anthropic.com by whoever pays for the project. Sealed in your group's Civicsmith, never shown again or exported, and used only for acts in this project. It starts switched off. Each member is told once, before the first act it pays for, that their questions go to Anthropic under the project's account.",
+   "en": "Made at console.anthropic.com by whoever pays for the project. Sealed in your team's Civicsmith, never shown again or exported, and used only for acts in this project. It starts switched off. Each member is told once, before the first act it pays for, that their questions go to Anthropic under the project's account.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -1226,7 +1226,7 @@
   },
   {
    "key": "screen.review-copy.band",
-   "en": "{n} people outside the group can read this until {date}",
+   "en": "{n} people outside the team can read this until {date}",
    "protected": true,
    "note": "DEC-259: the band across a draft shared for review (protected: who can see)"
   },
@@ -1244,7 +1244,7 @@
   },
   {
    "key": "screen.review-outside.sub",
-   "en": "Before publishing, the group asks you to read this draft of its case and comment. It is not public: only people with this link can read it, until {date}.",
+   "en": "Before publishing, the team asks you to read this draft of its case and comment. It is not public: only people with this link can read it, until {date}.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -1256,13 +1256,13 @@
   },
   {
    "key": "screen.request.law.help",
-   "en": "From your group's places. The faster request suits a small, clearly described set of records.",
+   "en": "From your team's places. The faster request suits a small, clearly described set of records.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.security.sub",
-   "en": "How hard your group's Civicsmith is being tried, against its usual. Only administrators see this.",
+   "en": "How hard your team's Civicsmith is being tried, against its usual. Only administrators see this.",
    "protected": true,
    "note": "DEC-259: says who can see it"
   },
@@ -1298,7 +1298,7 @@
   },
   {
    "key": "screen.security.heat.note",
-   "en": "Each square is one hour. Hover, focus or tap one for its count and the usual. “Usual” is your group's own median for the same hour over the four weeks before.",
+   "en": "Each square is one hour. Hover, focus or tap one for its count and the usual. “Usual” is your team's own median for the same hour over the four weeks before.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1310,7 +1310,7 @@
   },
   {
    "key": "screen.security.totals.note",
-   "en": "Counts only. Nothing here says who tried, and nothing your group holds is shown.",
+   "en": "Counts only. Nothing here says who tried, and nothing your team holds is shown.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1358,7 +1358,7 @@
   },
   {
    "key": "screen.security.runs.own",
-   "en": "runs in your group's own account",
+   "en": "runs in your team's own account",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1372,7 +1372,7 @@
    "key": "screen.security.tool.sendsbytes",
    "en": "sends the file's bytes, never its name",
    "protected": true,
-   "note": "DEC-259: a tool's handling: what leaves the group"
+   "note": "DEC-259: a tool's handling: what leaves the team"
   },
   {
    "key": "screen.security.tool.deletes",
@@ -1406,7 +1406,7 @@
   },
   {
    "key": "screen.security.adding.sends",
-   "en": "The file's bytes. Never its name, who captured it or your group's address.",
+   "en": "The file's bytes. Never its name, who captured it or your team's address.",
    "protected": true,
    "note": "DEC-259"
   },
@@ -1472,13 +1472,13 @@
   },
   {
    "key": "screen.security.cando",
-   "en": "A member who fears their password is weak can change it in Your account. An administrator can turn off the reusable join link or the group's key in Members. Whoever holds the hosting account can tighten Cloudflare's own settings there.",
+   "en": "A member who fears their password is weak can change it in Your account. An administrator can turn off the reusable join link or the team's key in Members. Whoever holds the hosting account can tighten Cloudflare's own settings there.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.settings.sub",
-   "en": "Your own settings first; then the group's, which only administrators change.",
+   "en": "Your own settings first; then the team's, which only administrators change.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1486,7 +1486,7 @@
    "key": "screen.start-send.clock.law",
    "en": "{days} days, from the law your profile names",
    "protected": false,
-   "note": "DEC-259: an action's clock, from the group profile"
+   "note": "DEC-259: an action's clock, from the team profile"
   },
   {
    "key": "screen.start-send.secondapproval",
@@ -1508,7 +1508,7 @@
   },
   {
    "key": "screen.ties.sub",
-   "en": "Your work and family connections that could matter to a case, so your group can be open about them.",
+   "en": "Your work and family connections that could matter to a case, so your team can be open about them.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1556,7 +1556,7 @@
   },
   {
    "key": "screen.timeline.progression.sub",
-   "en": "How the group expects {what} to go. Version {n}, declared by {name}, {date}.",
+   "en": "How the team expects {what} to go. Version {n}, declared by {name}, {date}.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1652,19 +1652,19 @@
   },
   {
    "key": "screen.unavailable.unreachable.note",
-   "en": "It tries again by itself every 30 seconds. If it stays out of reach for long, tell whoever holds your group's Cloudflare account.",
+   "en": "It tries again by itself every 30 seconds. If it stays out of reach for long, tell whoever holds your team's Cloudflare account.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.update.sub",
-   "en": "For whoever holds your group's Cloudflare account. An update keeps every record, member and setting; it changes only Civicsmith's own programs.",
+   "en": "For whoever holds your team's Cloudflare account. An update keeps every record, member and setting; it changes only Civicsmith's own programs.",
    "protected": false,
    "note": "DEC-259"
   },
   {
    "key": "screen.update.note",
-   "en": "You go to Cloudflare's page to allow it, as when it was set up. If a step stops, your group's Civicsmith keeps running as it was.",
+   "en": "You go to Cloudflare's page to allow it, as when it was set up. If a step stops, your team's Civicsmith keeps running as it was.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -1678,7 +1678,7 @@
    "key": "screen.tour.what.says",
    "en": "{group} looks into {focus}. We check what the city says against its own records, and publish what the records show.",
    "protected": false,
-   "note": "DEC-259: the walk-through's first step; {focus} the group's own words"
+   "note": "DEC-259: the walk-through's first step; {focus} the team's own words"
   },
   {
    "key": "screen.timeline.threaded.owndate",
@@ -1700,9 +1700,9 @@
   },
   {
    "key": "shell.group.open",
-   "en": "Click to see who your group is.",
+   "en": "Click to see who your team is.",
    "protected": false,
-   "note": "DEC-273: the group's card in the masthead, its second line; the group's description and purpose are its own words (data)"
+   "note": "DEC-273: the team's card in the masthead, its second line; the team's description and purpose are its own words (data)"
   },
   {
    "key": "shell.icon.capture",
@@ -1712,7 +1712,7 @@
   },
   {
    "key": "shell.icon.group",
-   "en": "An office, a member or a group",
+   "en": "An office, a member or a team",
    "protected": false,
    "note": "DEC-275: a row's icon, its explanation"
   },
@@ -1784,7 +1784,7 @@
   },
   {
    "key": "screen.action.tip.title",
-   "en": "{action}: your group's request to {office}, sent by {name} on {date}.",
+   "en": "{action}: your team's request to {office}, sent by {name} on {date}.",
    "protected": false,
    "note": "DEC-275: the action's title, its explanation"
   },
@@ -1796,13 +1796,13 @@
   },
   {
    "key": "screen.action.tip.office_record",
-   "en": "{n} requests from your group, {m} answered on time",
+   "en": "{n} requests from your team, {m} answered on time",
    "protected": false,
-   "note": "DEC-275: an office's card: its record of answering the group"
+   "note": "DEC-275: an office's card: its record of answering the team"
   },
   {
    "key": "screen.action.tip.office_why",
-   "en": "The office that must reply; its record with your group so far is {m} of {n} on time.",
+   "en": "The office that must reply; its record with your team so far is {m} of {n} on time.",
    "protected": false,
    "note": "DEC-275: an office's card"
   },
@@ -1892,7 +1892,7 @@
   },
   {
    "key": "ai.serves.other_says",
-   "en": "Where the group's key or a project's account serves you instead, this says so.",
+   "en": "Where the team's key or a project's account serves you instead, this says so.",
    "protected": false,
    "note": "DEC-275: the account that serves you, its explanation (corrected: it showed a placeholder)"
   },
@@ -1910,7 +1910,7 @@
   },
   {
    "key": "screen.calculation.tip.title",
-   "en": "{title}: a fact your group worked out from {source}: {result}.",
+   "en": "{title}: a fact your team worked out from {source}: {result}.",
    "protected": false,
    "note": "DEC-275: the calculation's title, its explanation; {title} and {result} the calculation's own words"
   },
@@ -1934,7 +1934,7 @@
   },
   {
    "key": "screen.calculation.tip.expertise_confirmed",
-   "en": "confirmed in the group",
+   "en": "confirmed in the team",
    "protected": false,
    "note": "DEC-275: a member's expertise, its card"
   },
@@ -1958,7 +1958,7 @@
   },
   {
    "key": "screen.question.tip.concluded",
-   "en": "The group's answer to this question, recorded with who concluded it, when, and what would change it.",
+   "en": "The team's answer to this question, recorded with who concluded it, when, and what would change it.",
    "protected": false,
    "note": "DEC-275: the concluded section, its explanation"
   },
@@ -1982,13 +1982,13 @@
   },
   {
    "key": "screen.capture.tip.archive_who",
-   "en": "not run by {government} or by your group",
+   "en": "not run by {government} or by your team",
    "protected": false,
    "note": "DEC-275: a public archive, its card"
   },
   {
    "key": "screen.capture.tip.archive_why",
-   "en": "It can rescue a page {government} has removed, but it learns which address your group asked for.",
+   "en": "It can rescue a page {government} has removed, but it learns which address your team asked for.",
    "protected": false,
    "note": "DEC-275: a public archive, its card"
   },
@@ -2018,7 +2018,7 @@
   },
   {
    "key": "screen.case-editor.tip.title",
-   "en": "{edition}: {name}'s draft of the next edition of your group's published case.",
+   "en": "{edition}: {name}'s draft of the next edition of your team's published case.",
    "protected": false,
    "note": "DEC-275: the case's title, its explanation"
   },
@@ -2072,7 +2072,7 @@
   },
   {
    "key": "screen.ceremony.tip.bias",
-   "en": "the group's own statement of any stake it has in what it examines, in its own words",
+   "en": "the team's own statement of any stake it has in what it examines, in its own words",
    "protected": false,
    "note": "DEC-275: declared bias, its card"
   },
@@ -2084,7 +2084,7 @@
   },
   {
    "key": "screen.ceremony.tip.bias_why",
-   "en": "Readers judge the case knowing what the group may favor.",
+   "en": "Readers judge the case knowing what the team may favor.",
    "protected": false,
    "note": "DEC-275: declared bias, its card"
   },
@@ -2114,7 +2114,7 @@
   },
   {
    "key": "screen.ceremony.tip.bar_why",
-   "en": "Every finding meets it, so none is published as weaker than the group claims.",
+   "en": "Every finding meets it, so none is published as weaker than the team claims.",
    "protected": false,
    "note": "DEC-275: the project's bar, its card"
   },
@@ -2140,19 +2140,19 @@
    "key": "screen.connect.tip.groupkey_on",
    "en": "switched on by {name}, {date}",
    "protected": false,
-   "note": "DEC-275: the group's key, its card"
+   "note": "DEC-275: the team's key, its card"
   },
   {
    "key": "screen.connect.tip.groupkey_pays",
-   "en": "the group pays Anthropic for each use",
+   "en": "the team pays Anthropic for each use",
    "protected": false,
-   "note": "DEC-275: the group's key, its card"
+   "note": "DEC-275: the team's key, its card"
   },
   {
    "key": "screen.connect.tip.groupkey_why",
    "en": "It serves you now; your own account, if you connect one, replaces it for you alone.",
    "protected": false,
-   "note": "DEC-275: the group's key, its card"
+   "note": "DEC-275: the team's key, its card"
   },
   {
    "key": "screen.connect.tip.anthropic",
@@ -2174,7 +2174,7 @@
   },
   {
    "key": "screen.connect.tip.limit",
-   "en": "set by your administrators for every member on the group's key",
+   "en": "set by your administrators for every member on the team's key",
    "protected": false,
    "note": "DEC-275: the daily limit, its card"
   },
@@ -2186,13 +2186,13 @@
   },
   {
    "key": "screen.connect.tip.workers",
-   "en": "the Cloudflare plan your group's Civicsmith can run on",
+   "en": "the Cloudflare plan your team's Civicsmith can run on",
    "protected": false,
    "note": "DEC-275: Workers Paid, its card"
   },
   {
    "key": "screen.connect.tip.workers_cost",
-   "en": "{amount} a month, paid by the group",
+   "en": "{amount} a month, paid by the team",
    "protected": false,
    "note": "DEC-275: Workers Paid, its card"
   },
@@ -2210,7 +2210,7 @@
   },
   {
    "key": "screen.connect.tip.plans_billed",
-   "en": "billed to you by Anthropic, not to your group",
+   "en": "billed to you by Anthropic, not to your team",
    "protected": false,
    "note": "DEC-275: Pro or Max, its card"
   },
@@ -2246,7 +2246,7 @@
   },
   {
    "key": "screen.dash-action.tip.every",
-   "en": "Every action your group has open, with whose move it is and its clock as a sentence with its rule and date, never a countdown.",
+   "en": "Every action your team has open, with whose move it is and its clock as a sentence with its rule and date, never a countdown.",
    "protected": false,
    "note": "DEC-275: the section of every action, its explanation"
   },
@@ -2264,7 +2264,7 @@
   },
   {
    "key": "screen.docket.tip.withdrawal",
-   "en": "the group withdraws a finding or a whole case, publicly",
+   "en": "the team withdraws a finding or a whole case, publicly",
    "protected": false,
    "note": "DEC-275: a withdrawal, its card"
   },
@@ -2378,7 +2378,7 @@
   },
   {
    "key": "screen.due-date.tip.title",
-   "en": "Due {date}: the day {office} must reply to your group's records request.",
+   "en": "Due {date}: the day {office} must reply to your team's records request.",
    "protected": false,
    "note": "DEC-275: the due date's title, its explanation"
   },
@@ -2402,7 +2402,7 @@
   },
   {
    "key": "screen.doorbell.tip.title",
-   "en": "Hand material to {group}: the page where anyone can give the group documents or information, without an account.",
+   "en": "Hand material to {group}: the page where anyone can give the team documents or information, without an account.",
    "protected": false,
    "note": "DEC-275: the doorbell's title, its explanation"
   },
@@ -2414,31 +2414,31 @@
   },
   {
    "key": "screen.doorbell.tip.civicsmith",
-   "en": "The group's own Civicsmith",
+   "en": "The team's own Civicsmith",
    "protected": false,
-   "note": "DEC-275: the group's own Civicsmith, its card"
+   "note": "DEC-275: the team's own Civicsmith, its card"
   },
   {
    "key": "screen.doorbell.tip.civicsmith_runs",
-   "en": "runs on the group's own hosting account",
+   "en": "runs on the team's own hosting account",
    "protected": false,
-   "note": "DEC-275: the group's own Civicsmith, its card"
+   "note": "DEC-275: the team's own Civicsmith, its card"
   },
   {
    "key": "screen.doorbell.tip.civicsmith_sees",
-   "en": "no other group sees it",
+   "en": "no other team sees it",
    "protected": false,
-   "note": "DEC-275: the group's own Civicsmith, its card"
+   "note": "DEC-275: the team's own Civicsmith, its card"
   },
   {
    "key": "screen.doorbell.tip.civicsmith_why",
-   "en": "Only this group's members can open what you send.",
+   "en": "Only this team's members can open what you send.",
    "protected": false,
-   "note": "DEC-275: the group's own Civicsmith, its card"
+   "note": "DEC-275: the team's own Civicsmith, its card"
   },
   {
    "key": "screen.doorbell.tip.member",
-   "en": "may use your material, or set it aside with a reason kept on the group's record",
+   "en": "may use your material, or set it aside with a reason kept on the team's record",
    "protected": false,
    "note": "DEC-275: a member, its card"
   },
@@ -2468,13 +2468,13 @@
   },
   {
    "key": "screen.doorbell.tip.phrase_why",
-   "en": "Worth adding if you may send more: the group can weigh new material by how your earlier material held up.",
+   "en": "Worth adding if you may send more: the team can weigh new material by how your earlier material held up.",
    "protected": false,
    "note": "DEC-275: a secret phrase, its card"
   },
   {
    "key": "screen.doorbell.tip.court",
-   "en": "a court can order the group to hand over what it holds, including what you send and when it arrived",
+   "en": "a court can order the team to hand over what it holds, including what you send and when it arrived",
    "protected": false,
    "note": "DEC-275: a court's reach, its card"
   },
@@ -2486,7 +2486,7 @@
   },
   {
    "key": "screen.find-in.tip.notfollowed",
-   "en": "a person your group does not follow yet",
+   "en": "a person your team does not follow yet",
    "protected": false,
    "note": "DEC-275: a name search does not know, its card"
   },
@@ -2630,15 +2630,15 @@
   },
   {
    "key": "screen.home.tip.title",
-   "en": "{group}: your group, {description}, {n} members.",
+   "en": "{group}: your team, {description}, {n} members.",
    "protected": false,
-   "note": "DEC-275: the group's name on its home, its explanation; {description} the group's own words"
+   "note": "DEC-275: the team's name on its home, its explanation; {description} the team's own words"
   },
   {
    "key": "screen.home.tip.focus",
    "en": "Its focus: {focus}.",
    "protected": false,
-   "note": "DEC-275: the group's name on its home, its explanation; {focus} the group's own words"
+   "note": "DEC-275: the team's name on its home, its explanation; {focus} the team's own words"
   },
   {
    "key": "screen.home.tip.fulldialog",
@@ -2660,13 +2660,13 @@
   },
   {
    "key": "act.promote.here.home",
-   "en": "Starts a project: one problem the group wants to get to the bottom of, with you as its owner. Questions, documents and plans gather under it.",
+   "en": "Starts a project: one problem the team wants to get to the bottom of, with you as its owner. Questions, documents and plans gather under it.",
    "protected": false,
    "note": "DEC-275: Start a project on Home, which starts a project rather than opening a question"
   },
   {
    "key": "ai.usage.meter.month_group",
-   "en": "This month on the group's key",
+   "en": "This month on the team's key",
    "protected": false,
    "note": "DEC-275: a use meter's name, its explanation's first line"
   },
@@ -2684,7 +2684,7 @@
   },
   {
    "key": "screen.group-identity.tip.draft_why",
-   "en": "Nothing here is saved as the group's own until a member keeps it.",
+   "en": "Nothing here is saved as the team's own until a member keeps it.",
    "protected": false,
    "note": "DEC-275: the assistant's draft label, its card"
   },
@@ -2744,7 +2744,7 @@
   },
   {
    "key": "screen.imported.tip.title_counts",
-   "en": "Nothing in it counts for your group until a member accepts it.",
+   "en": "Nothing in it counts for your team until a member accepts it.",
    "protected": false,
    "note": "DEC-275: the imported case's title, its explanation"
   },
@@ -2752,13 +2752,13 @@
    "key": "screen.imported.tip.publisher",
    "en": "its work counts here only as far as a member accepts it",
    "protected": false,
-   "note": "DEC-275: the publishing group, its card"
+   "note": "DEC-275: the publishing team, its card"
   },
   {
    "key": "screen.imported.tip.publisher_why",
    "en": "The publisher: if it corrects the case, a new edition appears on its docket.",
    "protected": false,
-   "note": "DEC-275: the publishing group, its card"
+   "note": "DEC-275: the publishing team, its card"
   },
   {
    "key": "screen.imported.tip.edition_of",
@@ -2786,7 +2786,7 @@
   },
   {
    "key": "screen.imported.tip.recreated_why",
-   "en": "It still counts for your group only once a member accepts it, with a reason.",
+   "en": "It still counts for your team only once a member accepts it, with a reason.",
    "protected": false,
    "note": "DEC-275: Recreated, its card"
   },
@@ -2876,13 +2876,13 @@
   },
   {
    "key": "shell.civicsmith.what",
-   "en": "free software for groups that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.",
+   "en": "free software for teams that check whether a government keeps its own word: the laws it must obey, the court decisions that bind it, its own rules and its promises.",
    "protected": false,
    "note": "DEC-275: Civicsmith's name or credit, its explanation"
   },
   {
    "key": "screen.install.tip.account",
-   "en": "your group's Civicsmith and all its records live in it",
+   "en": "your team's Civicsmith and all its records live in it",
    "protected": false,
    "note": "DEC-275: the Cloudflare account, its card"
   },
@@ -2894,7 +2894,7 @@
   },
   {
    "key": "screen.install.tip.account_why",
-   "en": "Whoever can sign in to it controls everything, so use a group account rather than a personal login.",
+   "en": "Whoever can sign in to it controls everything, so use a team account rather than a personal login.",
    "protected": false,
    "note": "DEC-275: the Cloudflare account, its card"
   },
@@ -2918,7 +2918,7 @@
   },
   {
    "key": "screen.install.tip.shortname",
-   "en": "your group's fixed label",
+   "en": "your team's fixed label",
    "protected": false,
    "note": "DEC-275: the short name, its card"
   },
@@ -2930,7 +2930,7 @@
   },
   {
    "key": "screen.install.tip.shortname_why",
-   "en": "Chosen once, here: it can never change without installing again, so an unnamed group picks one that reveals nothing.",
+   "en": "Chosen once, here: it can never change without installing again, so an unnamed team picks one that reveals nothing.",
    "protected": false,
    "note": "DEC-275: the short name, its card"
   },
@@ -2948,7 +2948,7 @@
   },
   {
    "key": "screen.install.tip.typed_why",
-   "en": "This exact label is what every case your group signs will carry.",
+   "en": "This exact label is what every case your team signs will carry.",
    "protected": false,
    "note": "DEC-275: the typed short name, its card"
   },
@@ -2960,7 +2960,7 @@
   },
   {
    "key": "screen.install.tip.otp_spent",
-   "en": "spent when you claim the group in the next part",
+   "en": "spent when you claim the team in the next part",
    "protected": false,
    "note": "DEC-275: the one-time password, its card"
   },
@@ -2972,7 +2972,7 @@
   },
   {
    "key": "screen.join.tip.title",
-   "en": "You're invited to {group}: {name}'s invitation for you to contribute to the group.",
+   "en": "You're invited to {group}: {name}'s invitation for you to contribute to the team.",
    "protected": false,
    "note": "DEC-275: the invitation's title, its explanation"
   },
@@ -3074,7 +3074,7 @@
   },
   {
    "key": "screen.matter.tip.title",
-   "en": "what your group is pursuing about this one problem, judged {determination} with {rule} and {status}, from the first letter to the outcome.",
+   "en": "what your team is pursuing about this one problem, judged {determination} with {rule} and {status}, from the first letter to the outcome.",
    "protected": false,
    "note": "DEC-275: the matter's title, its explanation, after the matter's own name"
   },
@@ -3092,7 +3092,7 @@
   },
   {
    "key": "screen.matter.tip.noncompliant_why",
-   "en": "What the group has determined from its evidence, not what a court has decided.",
+   "en": "What the team has determined from its evidence, not what a court has decided.",
    "protected": false,
    "note": "DEC-275: Noncompliant, its card"
   },
@@ -3128,7 +3128,7 @@
   },
   {
    "key": "screen.members.tip.hosting",
-   "en": "the Cloudflare account the group's Civicsmith runs in",
+   "en": "the Cloudflare account the team's Civicsmith runs in",
    "protected": false,
    "note": "DEC-275: the hosting account, its card"
   },
@@ -3140,7 +3140,7 @@
   },
   {
    "key": "screen.members.tip.hosting_why",
-   "en": "Whoever signs in to it controls everything; with one administrator, the group depends on {name} and on whoever holds it.",
+   "en": "Whoever signs in to it controls everything; with one administrator, the team depends on {name} and on whoever holds it.",
    "protected": false,
    "note": "DEC-275: the hosting account, its card"
   },
@@ -3152,13 +3152,13 @@
   },
   {
    "key": "screen.members.tip.onlyadmin",
-   "en": "The group's only administrator: the group depends on her and the hosting account.",
+   "en": "The team's only administrator: the team depends on her and the hosting account.",
    "protected": false,
    "note": "DEC-275: the only administrator's card"
   },
   {
    "key": "screen.members.tip.cover",
-   "en": "how the group knows a member, beside their handle",
+   "en": "how the team knows a member, beside their handle",
    "protected": false,
    "note": "DEC-275: a cover, its card"
   },
@@ -3188,13 +3188,13 @@
   },
   {
    "key": "screen.members.tip.administer",
-   "en": "invite and remove members, hold the group's key, change the group's settings",
+   "en": "invite and remove members, hold the team's key, change the team's settings",
    "protected": false,
    "note": "DEC-275: Administer, a capability, its card"
   },
   {
    "key": "screen.members.tip.administer_why",
-   "en": "Only {name} holds it, so the group depends on {name_2} alone.",
+   "en": "Only {name} holds it, so the team depends on {name_2} alone.",
    "protected": false,
    "note": "DEC-275: Administer, a capability, its card"
   },
@@ -3206,7 +3206,7 @@
   },
   {
    "key": "screen.members.tip.owner_why",
-   "en": "Signs the group's cases for that project.",
+   "en": "Signs the team's cases for that project.",
    "protected": false,
    "note": "DEC-275: a project owner's card"
   },
@@ -3272,7 +3272,7 @@
   },
   {
    "key": "act.acquire.here.money",
-   "en": "Has your group's Civicsmith fetch {document} from {government}'s website itself and keep exactly what it sent. If it matches the uploaded copy, the figure's source can be graded A.",
+   "en": "Has your team's Civicsmith fetch {document} from {government}'s website itself and keep exactly what it sent. If it matches the uploaded copy, the figure's source can be graded A.",
    "protected": false,
    "note": "DEC-276: Get the city's own copy, on a figure read from an uploaded copy"
   },
@@ -3398,7 +3398,7 @@
   },
   {
    "key": "screen.security.tip.raised",
-   "en": "Raised: well above your group's usual at some point in the period, and nothing got through.",
+   "en": "Raised: well above your team's usual at some point in the period, and nothing got through.",
    "protected": false,
    "note": "DEC-276: the level's explanation"
   },
@@ -3434,7 +3434,7 @@
   },
   {
    "key": "screen.security.tip.hour_blocked",
-   "en": "Blocked by Cloudflare, {from}–{to} {day}: {n} requests Cloudflare blocked before they reached your group's Civicsmith (where your plan reports it).",
+   "en": "Blocked by Cloudflare, {from}–{to} {day}: {n} requests Cloudflare blocked before they reached your team's Civicsmith (where your plan reports it).",
    "protected": false,
    "note": "DEC-276: an hour's square, its explanation"
   },
@@ -3458,19 +3458,19 @@
   },
   {
    "key": "shell.card.cited",
-   "en": "Cited in {n} documents your group holds.",
+   "en": "Cited in {n} documents your team holds.",
    "protected": false,
    "note": "DEC-276: a person's card"
   },
   {
    "key": "screen.setup.tip.signed",
-   "en": "Signed {n} documents your group holds; named in {questions}.",
+   "en": "Signed {n} documents your team holds; named in {questions}.",
    "protected": false,
    "note": "DEC-276: an office holder's card"
   },
   {
    "key": "screen.setup.tip.account",
-   "en": "the hosting account your group's Civicsmith runs in",
+   "en": "the hosting account your team's Civicsmith runs in",
    "protected": false,
    "note": "DEC-276: the Cloudflare account, its card"
   },
@@ -3488,13 +3488,13 @@
   },
   {
    "key": "screen.setup.tip.shortname",
-   "en": "your group's short name",
+   "en": "your team's short name",
    "protected": false,
    "note": "DEC-276: the short name, its card"
   },
   {
    "key": "screen.setup.tip.shortname_why",
-   "en": "Changing the group name here leaves it as it is.",
+   "en": "Changing the team name here leaves it as it is.",
    "protected": false,
    "note": "DEC-276: the short name, its card"
   },
@@ -3512,7 +3512,7 @@
   },
   {
    "key": "screen.setup.tip.claude",
-   "en": "runs the assistant only if your group chooses one of the options below",
+   "en": "runs the assistant only if your team chooses one of the options below",
    "protected": false,
    "note": "DEC-276: Claude, its card"
   },
@@ -3524,19 +3524,19 @@
   },
   {
    "key": "screen.setup.tip.workers_why",
-   "en": "Members can sign in with their own Claude subscription only if your group's Civicsmith is on it.",
+   "en": "Members can sign in with their own Claude subscription only if your team's Civicsmith is on it.",
    "protected": false,
    "note": "DEC-276: Workers Paid, its card"
   },
   {
    "key": "screen.setup.tip.limit",
-   "en": "the most the assistant may spend per member each day on the group's key",
+   "en": "the most the assistant may spend per member each day on the team's key",
    "protected": false,
    "note": "DEC-276: the daily limit, its card"
   },
   {
    "key": "screen.setup.tip.limit_why",
-   "en": "Caps what the group pays Anthropic; it binds only members served by the group's key.",
+   "en": "Caps what the team pays Anthropic; it binds only members served by the team's key.",
    "protected": false,
    "note": "DEC-276: the daily limit, its card"
   },
@@ -3548,7 +3548,7 @@
   },
   {
    "key": "screen.setup.tip.shield_why",
-   "en": "A member such as a reporter may have protections the rest of the group does not.",
+   "en": "A member such as a reporter may have protections the rest of the team does not.",
    "protected": false,
    "note": "DEC-276: shield laws, their card"
   },
@@ -3560,21 +3560,21 @@
   },
   {
    "key": "screen.site.tip.front",
-   "en": "the front page of civicsmith.org: what Civicsmith is and how a group uses it",
+   "en": "the front page of civicsmith.org: what Civicsmith is and how a team uses it",
    "protected": false,
    "note": "DEC-276: What Civicsmith is, in the menu"
   },
   {
    "key": "screen.site.tip.start",
-   "en": "for a group that has decided to create its own copy: what it needs, who holds what, what happens step by step, and what it costs",
+   "en": "for a team that has decided to create its own copy: what it needs, who holds what, what happens step by step, and what it costs",
    "protected": false,
-   "note": "DEC-276: Start a group, in the menu"
+   "note": "DEC-276: Start a team, in the menu"
   },
   {
    "key": "screen.site.tip.groups",
-   "en": "the groups that chose to be listed, with what each has published",
+   "en": "the teams that chose to be listed, with what each has published",
    "protected": false,
-   "note": "DEC-276: Groups at work, in the menu"
+   "note": "DEC-276: Teams at work, in the menu"
   },
   {
    "key": "screen.start-send.tip.title",
@@ -3628,19 +3628,19 @@
    "key": "screen.start-send.tip.law",
    "en": "The public records law",
    "protected": false,
-   "note": "DEC-276: the law the group's profile names, its card"
+   "note": "DEC-276: the law the team's profile names, its card"
   },
   {
    "key": "screen.start-send.tip.law_answer",
    "en": "an office must answer a records request within {days}",
    "protected": false,
-   "note": "DEC-276: the law the group's profile names, its card"
+   "note": "DEC-276: the law the team's profile names, its card"
   },
   {
    "key": "screen.start-send.tip.law_why",
    "en": "The request is made under it, so the office's duty to reply comes from it, not from Civicsmith.",
    "protected": false,
-   "note": "DEC-276: the law the group's profile names, its card"
+   "note": "DEC-276: the law the team's profile names, its card"
   },
   {
    "key": "screen.start-send.tip.breach",
@@ -3710,7 +3710,7 @@
   },
   {
    "key": "screen.ties.tip.employer_why",
-   "en": "If a case the group publishes concerns it, the case says a member of the group works there.",
+   "en": "If a case the team publishes concerns it, the case says a member of the team works there.",
    "protected": false,
    "note": "DEC-276: your employer, a declared tie, its card"
   },
@@ -3740,13 +3740,13 @@
   },
   {
    "key": "screen.translations.tip.release_not",
-   "en": "not your group's own wording",
+   "en": "not your team's own wording",
    "protected": false,
    "note": "DEC-276: From the release, its card"
   },
   {
    "key": "screen.translations.tip.release_why",
-   "en": "Your group can still change it; the change is recorded with what it replaced.",
+   "en": "Your team can still change it; the change is recorded with what it replaced.",
    "protected": false,
    "note": "DEC-276: From the release, its card"
   },
@@ -3818,13 +3818,13 @@
   },
   {
    "key": "screen.updates.tip.running",
-   "en": "The release your group's Civicsmith runs, and when it last asked civicsmith.org for the list of releases. The check sends no group name, member, cookie or credential, and only a release signed by Civicsmith and newer than the one running is ever shown here.",
+   "en": "The release your team's Civicsmith runs, and when it last asked civicsmith.org for the list of releases. The check sends no team name, member, cookie or credential, and only a release signed by Civicsmith and newer than the one running is ever shown here.",
    "protected": false,
    "note": "DEC-276: the section of the running release, its explanation"
   },
   {
    "key": "screen.updates.tip.history",
-   "en": "Every release offered to your group and what was done with it: installed, with the date and who allowed it in Cloudflare, or skipped, with the reason given. Every administrator sees this list.",
+   "en": "Every release offered to your team and what was done with it: installed, with the date and who allowed it in Cloudflare, or skipped, with the reason given. Every administrator sees this list.",
    "protected": false,
    "note": "DEC-276: the section of past releases, its explanation"
   },
@@ -3868,11 +3868,11 @@
    "key": "shell.group.signed",
    "en": "its published cases are signed by its project owners",
    "protected": false,
-   "note": "DEC-276: the group's card on its public pages"
+   "note": "DEC-276: the team's card on its public pages"
   },
   {
    "key": "shell.pubfoot.signature",
-   "en": "an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group's help.",
+   "en": "an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the team's help.",
    "protected": false,
    "note": "DEC-276: the signature at the foot of a public case, its explanation"
   },
@@ -3884,7 +3884,7 @@
   },
   {
    "key": "screen.project.tip.title",
-   "en": "your group's project asking {description}. Its questions, how strong each is against the project's bar, its members and its plan are here.",
+   "en": "your team's project asking {description}. Its questions, how strong each is against the project's bar, its members and its plan are here.",
    "protected": false,
    "note": "DEC-276: the project's title, its explanation; {description} the project's own words"
   },
@@ -3938,9 +3938,9 @@
   },
   {
    "key": "act.search.here.people",
-   "en": "Searches the people and organizations your group's record follows, by name, a name they are also known by, or office. To search inside documents, use Find.",
+   "en": "Searches the people and organizations your team's record follows, by name, a name they are also known by, or office. To search inside documents, use Find.",
    "protected": false,
-   "note": "DEC-276: Search, on People (act.search.does speaks of everything the group holds)"
+   "note": "DEC-276: Search, on People (act.search.does speaks of everything the team holds)"
   },
   {
    "key": "screen.people.tip.yours",
@@ -3956,13 +3956,13 @@
   },
   {
    "key": "act.entitycreate.here.people",
-   "en": "Adds a person or organization your group's record should follow: the name, whether a person or an organization, and your note on who they are and why the group follows them. Facts about them are then added from documents, each cited.",
+   "en": "Adds a person or organization your team's record should follow: the name, whether a person or an organization, and your note on who they are and why the team follows them. Facts about them are then added from documents, each cited.",
    "protected": false,
    "note": "DEC-276: Add someone the record follows, on People"
   },
   {
    "key": "screen.person.tip.title",
-   "en": "{name}: {post} since {date}, named in {n} documents your group holds. Every fact about them here cites the document it comes from.",
+   "en": "{name}: {post} since {date}, named in {n} documents your team holds. Every fact about them here cites the document it comes from.",
    "protected": false,
    "note": "DEC-276: the person's title, its explanation"
   },
@@ -4058,7 +4058,7 @@
   },
   {
    "key": "screen.timeline.tip.title",
-   "en": "what happened in {subject}, in order, {government}'s acts and your group's in two lanes.",
+   "en": "what happened in {subject}, in order, {government}'s acts and your team's in two lanes.",
    "protected": false,
    "note": "DEC-276: the timeline's title, its explanation"
   },
@@ -4112,7 +4112,7 @@
   },
   {
    "key": "screen.timeline.tip.progressions",
-   "en": "Each matter in this project the group follows through a progression: a declared run of steps, with the documents threaded to them.",
+   "en": "Each matter in this project the team follows through a progression: a declared run of steps, with the documents threaded to them.",
    "protected": false,
    "note": "DEC-276: the section of matters followed through a progression, its explanation"
   },
@@ -4142,7 +4142,7 @@
   },
   {
    "key": "screen.timeline.tip.basis",
-   "en": "Where the steps come from. A step that is not in the basis is the group's own expectation, and says so.",
+   "en": "Where the steps come from. A step that is not in the basis is the team's own expectation, and says so.",
    "protected": false,
    "note": "DEC-276: the section of a progression's basis, its explanation"
   },
@@ -4184,13 +4184,13 @@
   },
   {
    "key": "screen.proceeding.tip.petitioner",
-   "en": "the name your group, {group}, is a party under",
+   "en": "the name your team, {group}, is a party under",
    "protected": false,
    "note": "DEC-276: the petitioner, its card"
   },
   {
    "key": "screen.proceeding.tip.petitioner_why",
-   "en": "Your group is a party, so its own filings belong on this register.",
+   "en": "Your team is a party, so its own filings belong on this register.",
    "protected": false,
    "note": "DEC-276: the petitioner, its card"
   },
@@ -4232,7 +4232,7 @@
   },
   {
    "key": "screen.standard.tip.title",
-   "en": "{standard}: a requirement {government} set itself, in {source}, a {department} policy in force since {year}. Your group's questions test {government} against it.",
+   "en": "{standard}: a requirement {government} set itself, in {source}, a {department} policy in force since {year}. Your team's questions test {government} against it.",
    "protected": false,
    "note": "DEC-276: the standard's title, its explanation; {standard} the standard's own words"
   },
@@ -4346,7 +4346,7 @@
   },
   {
    "key": "screen.plan.tip.enddate_why",
-   "en": "Sorting by it puts first the options that lapse if the group waits.",
+   "en": "Sorting by it puts first the options that lapse if the team waits.",
    "protected": false,
    "note": "DEC-276: a regulated end date, its card"
   },
@@ -4400,7 +4400,7 @@
   },
   {
    "key": "screen.review-copy.tip.reader_why",
-   "en": "An outside reader, not a member: the comment advises, and the group decides.",
+   "en": "An outside reader, not a member: the comment advises, and the team decides.",
    "protected": false,
    "note": "DEC-276: an outside reader, their card"
   },
@@ -4424,15 +4424,15 @@
   },
   {
    "key": "screen.published.tip.group",
-   "en": "the group that made this case",
+   "en": "the team that made this case",
    "protected": false,
-   "note": "DEC-276: the group, its card"
+   "note": "DEC-276: the team, its card"
   },
   {
    "key": "screen.published.tip.group_why",
    "en": "The authors; the case is signed by one of them and can be checked without them.",
    "protected": false,
-   "note": "DEC-276: the group, its card"
+   "note": "DEC-276: the team, its card"
   },
   {
    "key": "screen.published.tip.bar",
@@ -4442,7 +4442,7 @@
   },
   {
    "key": "screen.published.tip.bar_why",
-   "en": "This finding meets it; the bar is the group's own, set before publishing.",
+   "en": "This finding meets it; the bar is the team's own, set before publishing.",
    "protected": false,
    "note": "DEC-276: the project's bar, its card"
   },
@@ -4472,15 +4472,15 @@
   },
   {
    "key": "screen.published.tip.lane",
-   "en": "what the group itself did, kept apart from what the government did",
+   "en": "what the team itself did, kept apart from what the government did",
    "protected": false,
-   "note": "DEC-276: the group's lane, its card"
+   "note": "DEC-276: the team's lane, its card"
   },
   {
    "key": "screen.published.tip.lane_why",
-   "en": "The group's own acts are never mixed in with {government}'s.",
+   "en": "The team's own acts are never mixed in with {government}'s.",
    "protected": false,
-   "note": "DEC-276: the group's lane, its card"
+   "note": "DEC-276: the team's lane, its card"
   },
   {
    "key": "screen.published.tip.approved",
@@ -4610,7 +4610,7 @@
   },
   {
    "key": "screen.setup.part.group",
-   "en": "Your group",
+   "en": "Your team",
    "protected": false,
    "note": "DEC-279: the name and website's part"
   },
@@ -4628,7 +4628,7 @@
   },
   {
    "key": "screen.setup.part.offices.why",
-   "en": "The public offices your group watches, and who holds each one.",
+   "en": "The public offices your team watches, and who holds each one.",
    "protected": false,
    "note": "DEC-279"
   },
@@ -4652,25 +4652,25 @@
   },
   {
    "key": "screen.setup.part.admins.why",
-   "en": "So your group never depends on one person.",
+   "en": "So your team never depends on one person.",
    "protected": false,
    "note": "DEC-279"
   },
   {
    "key": "screen.setup.claim.intro",
-   "en": "The installer gave you a one-time password. Whoever holds it could take charge of your group's Civicsmith, so trade it now for a handle and a password of your own. You become your group's first administrator.",
+   "en": "The installer gave you a one-time password. Whoever holds it could take charge of your team's Civicsmith, so trade it now for a handle and a password of your own. You become your team's first administrator.",
    "protected": false,
    "note": "DEC-279"
   },
   {
    "key": "screen.setup.otp.tip",
-   "en": "It was shown once, on the installer's last page. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to your group's Cloudflare account can set a new one.",
+   "en": "It was shown once, on the installer's last page. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to your team's Cloudflare account can set a new one.",
    "protected": false,
    "note": "DEC-279: explains 'Already filled in'"
   },
   {
    "key": "screen.setup.handle.tip",
-   "en": "Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your group can ever take it.",
+   "en": "Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. It needn't be your legal name, and no one else in your team can ever take it.",
    "protected": false,
    "note": "DEC-279: explains 'Choose it with care'"
   },
@@ -4682,13 +4682,13 @@
   },
   {
    "key": "screen.setup.name.tip",
-   "en": "Only the name people read changes. Your group's short name, chosen when you installed, stays the same in its web address and signatures.",
+   "en": "Only the name people read changes. Your team's short name, chosen when you installed, stays the same in its web address and signatures.",
    "protected": false,
    "note": "DEC-279: explains 'You can change it any time'"
   },
   {
    "key": "screen.setup.site.q",
-   "en": "Does your group have a website of its own?",
+   "en": "Does your team have a website of its own?",
    "protected": false,
    "note": "DEC-279"
   },
@@ -4706,7 +4706,7 @@
   },
   {
    "key": "screen.setup.site.tip",
-   "en": "Your public page will then name your website, so a group that wants to stay anonymous should choose “No”. You can add a website later in Settings.",
+   "en": "Your public page will then name your website, so a team that wants to stay anonymous should choose “No”. You can add a website later in Settings.",
    "protected": false,
    "note": "DEC-279: explains 'Yes'"
   },
@@ -4724,7 +4724,7 @@
   },
   {
    "key": "screen.setup.ai.q",
-   "en": "Should your group use the assistant?",
+   "en": "Should your team use the assistant?",
    "protected": false,
    "note": "DEC-279"
   },
@@ -4742,7 +4742,7 @@
   },
   {
    "key": "screen.setup.ai.no.help",
-   "en": "No assistant may be used in your group: not the group's, and not a member's own. Searching, counting and your group's own templates take its place.",
+   "en": "No assistant may be used in your team: not the team's, and not a member's own. Searching, counting and your team's own templates take its place.",
    "protected": false,
    "note": "DEC-279"
   },
@@ -4766,19 +4766,19 @@
   },
   {
    "key": "screen.setup.pay.group",
-   "en": "Your group, with one API key for members who have none",
+   "en": "Your team, with one API key for members who have none",
    "protected": false,
    "note": "DEC-279"
   },
   {
    "key": "screen.setup.key.tip",
-   "en": "An administrator creates the key at console.anthropic.com, under an account that belongs to your group and has a payment method. Setting a monthly spending limit there too is wise.",
+   "en": "An administrator creates the key at console.anthropic.com, under an account that belongs to your team and has a payment method. Setting a monthly spending limit there too is wise.",
    "protected": false,
    "note": "DEC-279: explains 'Made in Anthropic's Console'"
   },
   {
    "key": "screen.setup.hosting.help",
-   "en": "The account your group's Civicsmith runs on. Whoever holds it can reach everything, so write down who that is.",
+   "en": "The account your team's Civicsmith runs on. Whoever holds it can reach everything, so write down who that is.",
    "protected": false,
    "note": "DEC-279"
   },
@@ -4823,16 +4823,16 @@
   "screen.calculation.notsays": "It does not recount the {size} ({whose} check did that), says nothing certain about any one {item} no one visited, and nothing about the {outside} {items} not {what}.",
   "screen.case-editor.changed": "What changed since Edition {n}",
   "screen.ceremony.photo.facts": "taken by {by} · relied on by {findings}",
-  "screen.ceremony.photos.copy": "Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured, labeled “Faces, plates and camera details removed for publication; the group holds the original”, and the original stays inside the group. Every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), labeled “Camera details removed for publication; the group holds the original”. City staff at work are part of what the case is about; obscure one only with a reason.",
+  "screen.ceremony.photos.copy": "Mark anyone in a photo who is not part of a finding, and any number plate. The public copy shows those areas obscured, labeled “Faces, plates and camera details removed for publication; the team holds the original”, and the original stays inside the team. Every photo a published case carries goes out without its camera details (where and when it was taken, and on which device), labeled “Camera details removed for publication; the team holds the original”. City staff at work are part of what the case is about; obscure one only with a reason.",
   "screen.ceremony.signs.count": "One confirmation signs all {n}: the edition, its {findings} findings, and the {evidence} pieces of evidence they rest on. Each signature can be checked on its own, so a reader can trust one finding without trusting the rest.",
   "screen.ceremony.signs.case": "Edition {edition} of {case}",
   "screen.docket.sub": "The case's public record of corrections, withdrawals and orders.",
   "screen.due-date.of": "{who}'s reply",
   "screen.due-date.step.counted": "Counted {amount} {units}.",
   "screen.group.court.field": "Tell members what a court can reach",
-  "screen.group-identity.other.field": "Describe your kind of group, in a few words",
+  "screen.group-identity.other.field": "Describe your kind of team, in a few words",
   "screen.group-identity.focus.field": "What you focus on",
-  "screen.group-identity.purpose.field": "Why the group exists, in your own words",
+  "screen.group-identity.purpose.field": "Why the team exists, in your own words",
   "screen.group-identity.visibility.choice.public": "Also our public page and the network directory",
   "screen.held.archive.filed": "{count} files held beside it",
   "screen.held.ineligible": "Not eligible for a batch: {reason}",
@@ -4850,25 +4850,25 @@
   "screen.join.invited": "You're invited to {group}",
   "screen.join.language.help": "Chosen from your device's setting. You can change it any time.",
   "screen.join.handle.help": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
-  "screen.join.codes.after": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your group's home opens, with a short guided start you can take or leave.",
+  "screen.join.codes.after": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your team's home opens, with a short guided start you can take or leave.",
   "screen.money.didnotmove": "did not move: a {phase} figure",
   "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure.",
-  "screen.people.notmembers": "The people and organizations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under Settings › Members.",
-  "screen.people.today.seeded": "added at setup from your group's place",
+  "screen.people.notmembers": "The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under Settings › Members.",
+  "screen.people.today.seeded": "added at setup from your team's place",
   "screen.person.facts": "Career, credentials, memberships, interests",
   "screen.person.expunge.statement": "This removes the recorded value for good. It cannot be undone, by you or anyone: the value is gone from this page, from every question that cited it, and from every export. A marker stays where it was: \"Removed where the law requires, {date}, by {member}\". Published cases are not changed; a court order for those is complied with on the docket.",
   "screen.places.wanted.field": "A place you want that isn't listed (optional)",
-  "screen.places.wanted.help": "Kept in your group's Civicsmith and never sent anywhere. When an update brings its rules and offices, administrators are told once in their queue and can choose it above.",
+  "screen.places.wanted.help": "Kept in your team's Civicsmith and never sent anywhere. When an update brings its rules and offices, administrators are told once in their queue and can choose it above.",
   "screen.plan.opened": "opened {date} by {name}",
   "screen.proceeding.login.note": "The court's register needs a login, so new filings come only by a member's own capture.",
   "screen.published.meets": "meets this project's bar (capture {capture}, connection {connection})",
-  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the group's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the team's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
   "screen.projectai.notice.head": "Before your first question here",
   "screen.projectai.key.field": "The project's API key",
   "screen.recovery.held": "You hold recovery codes: {remaining} of {total} unused, issued {date}.",
   "screen.recovery.shown": "Save these now: they are shown only this once. Keep them somewhere only you can reach, apart from your password. Civicsmith keeps only a fingerprint of each, so it can never show them again.",
   "screen.reset.keeps": "Your handle and everything you did stay as they are, and every other sign-in of yours ends. {name} can't see the password you choose. Your recovery codes still work; if you have lost them too, get ten new ones in Settings › Recovery codes once you are in.",
-  "screen.reset.dead.what": "It was used already, it expired, or an administrator withdrew it. Ask an administrator for a new one, in person or however your group talks. Nothing was changed.",
+  "screen.reset.dead.what": "It was used already, it expired, or an administrator withdrew it. Ask an administrator for a new one, in person or however your team talks. Nothing was changed.",
   "screen.review-copy.heading": "Share Edition {edition} for review",
   "screen.review-copy.reads.until": "can read until {until}",
   "screen.review-outside.heading": "A review copy from {group}",
@@ -4876,70 +4876,70 @@
   "screen.request.describe": "Describe the records, not why you want them. The law doesn't let the office limit access because of why you ask ({cite}), and the city's portal shows this text to anyone.",
   "screen.request.howsend.1": "Open the city's public records portal ({portal}) and choose “{button}”.",
   "screen.request.howsend.2": "Paste the approved text as the request description, and choose the department: {department}.",
-  "screen.request.howsend.3": "Contact details are optional. Without them the request still goes in, but the city can't send you updates or ask you to clarify, and you can't sign in to collect the records. Give the address your group uses for its requests; staff see what you give.",
+  "screen.request.howsend.3": "Contact details are optional. Without them the request still goes in, but the city can't send you updates or ask you to clarify, and you can't sign in to collect the records. Give the address your team uses for its requests; staff see what you give.",
   "screen.security.kind.signin": "Refused sign-ins",
   "screen.security.kind.credential": "Refused keys and links",
   "screen.security.kind.rate": "Requests over the limit",
   "screen.security.kind.handover": "Refused hand-overs",
   "screen.standard.notyet": "Not a standard until a member adopts it.",
   "screen.ties.says.name.choice": "Naming me by my handle: “{handle}, who worked on this case, is {tie}.”",
-  "screen.ties.says.group.choice": "Without naming me: “A member of the group who worked on this case is {tie}.”",
+  "screen.ties.says.group.choice": "Without naming me: “A member of the team who worked on this case is {tie}.”",
   "screen.timeline.order.evidence": "More evidence could order them: a passage that gives either one its day (a ledger entry, a meeting's agenda, a letter's date), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.",
-  "shell.unavailable.nothing.says": "This address doesn't lead to anything in your group's Civicsmith. It may have been typed wrong, or the link is old.",
+  "shell.unavailable.nothing.says": "This address doesn't lead to anything in your team's Civicsmith. It may have been typed wrong, or the link is old.",
   "shell.unavailable.notyours.says": "It exists, or it may not: either way it isn't something you can see. A hidden project shows only to its own members; ask its owner if you think you should be in it.",
-  "shell.unavailable.unreachable.title": "Your group's Civicsmith can't be reached",
-  "shell.unavailable.unreachable.says": "Your device is offline, or your group's Civicsmith isn't answering. Nothing you did is lost: what you saved is kept there, and what you were typing is still on this page.",
+  "shell.unavailable.unreachable.title": "Your team's Civicsmith can't be reached",
+  "shell.unavailable.unreachable.says": "Your device is offline, or your team's Civicsmith isn't answering. Nothing you did is lost: what you saved is kept there, and what you were typing is still on this page.",
   "screen.wizards.basedon": "based on Civicsmith's “{name}”",
-  "screen.wizards.copy.note": "A copy becomes your group's own wizard: a draft until approved, like any wizard your group writes. The original stays as it is and is still offered; a required wizard stays required. The copy shows what it is based on, and when Civicsmith's original changes, your wizard editors are told and can bring the change across.",
-  "screen.setup.lede": "Welcome. Civicsmith is installed and waiting for you. First, claim it, so that only you can run it; it takes about two minutes. Then tell it a little about your group. Only the claim is needed today: every other part starts with a safe choice, and you can change any of it later in Settings.",
+  "screen.wizards.copy.note": "A copy becomes your team's own wizard: a draft until approved, like any wizard your team writes. The original stays as it is and is still offered; a required wizard stays required. The copy shows what it is based on, and when Civicsmith's original changes, your wizard editors are told and can bring the change across.",
+  "screen.setup.lede": "Welcome. Civicsmith is installed and waiting for you. First, claim it, so that only you can run it; it takes about two minutes. Then tell it a little about your team. Only the claim is needed today: every other part starts with a safe choice, and you can change any of it later in Settings.",
   "screen.setup.claim": "Make it yours",
   "screen.setup.otp.help": "Already filled in if you came straight from the installer.",
   "screen.setup.handle": "Your handle",
   "screen.setup.handle.help": "The name you sign in with, shown on your work and on every case you sign. Choose it with care: it can't be changed later.",
   "screen.setup.own": "Your password",
   "screen.setup.own.help": "At least 12 characters. From now on you sign in with your handle and this password.",
-  "screen.setup.name.field": "Your group's name",
-  "screen.setup.name.help": "Shown at the top of every page, on invitations and on everything your group publishes. You can change it any time.",
-  "screen.setup.name.now": "Saved. Your group is now called {name}.",
+  "screen.setup.name.field": "Your team's name",
+  "screen.setup.name.help": "Shown at the top of every page, on invitations and on everything your team publishes. You can change it any time.",
+  "screen.setup.name.now": "Saved. Your team is now called {name}.",
   "screen.setup.domain": "Its address",
-  "screen.setup.domain.help": "Civicsmith gives you one small file to put on your website. Once it's there, anyone reading what your group publishes can check that it really comes from you. Whoever looks after your website can do this in a few minutes.",
-  "screen.setup.places": "Where your group works",
+  "screen.setup.domain.help": "Civicsmith gives you one small file to put on your website. Once it's there, anyone reading what your team publishes can check that it really comes from you. Whoever looks after your website can do this in a few minutes.",
+  "screen.setup.places": "Where your team works",
   "screen.setup.places.choose": "Your place",
   "screen.setup.places.now": "Your place",
   "screen.setup.places.help": "Not listed? Choose “Somewhere else”. Everything still works; you enter deadlines and offices yourself.",
   "screen.setup.places.chosen": "You chose {place} when you installed. Change it if you need to.",
-  "screen.setup.place.wanted": "Where is your group?",
-  "screen.setup.place.wanted.help": "When an update brings its rules, Civicsmith tells you, and you can switch to it here. What you type stays in your group's Civicsmith and is never sent anywhere.",
+  "screen.setup.place.wanted": "Where is your team?",
+  "screen.setup.place.wanted.help": "When an update brings its rules, Civicsmith tells you, and you can switch to it here. What you type stays in your team's Civicsmith and is never sent anywhere.",
   "screen.setup.languages": "Languages your members read",
   "screen.setup.offices": "The officials you deal with",
   "screen.setup.offices.what": "Civicsmith can fill in the public offices of {place}, and who holds each one today, from the place's own records. Check the list, then confirm it. You can add others at any time.",
-  "screen.setup.offices.none": "Civicsmith doesn't know the offices of {place} yet, so this list starts empty. Add the offices your group deals with, now or whenever they come up. When an update brings their rules, you'll be told, and the offices you added stay.",
-  "screen.setup.office.note": "Anything your group should know about it (optional)",
+  "screen.setup.offices.none": "Civicsmith doesn't know the offices of {place} yet, so this list starts empty. Add the offices your team deals with, now or whenever they come up. When an update brings their rules, you'll be told, and the offices you added stay.",
+  "screen.setup.office.note": "Anything your team should know about it (optional)",
   "screen.setup.assistant": "The AI assistant",
-  "screen.setup.assistant.what": "Civicsmith can include an AI assistant, built on Anthropic's Claude. Members ask it, in everyday words, to find, read and check things in your group's material. It works only from what your group holds, gives legal information but never legal advice, and never decides, signs or sends anything. Everything in Civicsmith also works without it.",
+  "screen.setup.assistant.what": "Civicsmith can include an AI assistant, built on Anthropic's Claude. Members ask it, in everyday words, to find, read and check things in your team's material. It works only from what your team holds, gives legal information but never legal advice, and never decides, signs or sends anything. Everything in Civicsmith also works without it.",
   "screen.setup.keepaway": "No, keep our material away from AI",
   "screen.setup.keepaway.why": "Tell your members why",
   "screen.setup.keepaway.help": "Required. Every member will see it.",
-  "screen.setup.assistant.own": "A member who wants the assistant connects their own Claude subscription or API key. It serves only them, at their own cost, and costs your group nothing.",
-  "screen.setup.assistant.paid": "One Anthropic API key, paid for by your group, serves every member who has no account of their own. A member's own account still comes first.",
-  "screen.setup.key": "Your group's Anthropic API key",
-  "screen.setup.key.help": "Made in Anthropic's Console, under an account your group pays for. Civicsmith locks it away and never shows it again.",
+  "screen.setup.assistant.own": "A member who wants the assistant connects their own Claude subscription or API key. It serves only them, at their own cost, and costs your team nothing.",
+  "screen.setup.assistant.paid": "One Anthropic API key, paid for by your team, serves every member who has no account of their own. A member's own account still comes first.",
+  "screen.setup.key": "Your team's Anthropic API key",
+  "screen.setup.key.help": "Made in Anthropic's Console, under an account your team pays for. Civicsmith locks it away and never shows it again.",
   "screen.setup.limit": "The most each member may use per day",
-  "screen.setup.limit.help": "Applies only to your group's key, never to a member's own account. More limits are in Settings › Members.",
-  "screen.setup.people.what": "Facts about a person that come from public documents are as visible as those documents are. Your group's own notes about a person stay inside the project where they were written.",
+  "screen.setup.limit.help": "Applies only to your team's key, never to a member's own account. More limits are in Settings › Members.",
+  "screen.setup.people.what": "Facts about a person that come from public documents are as visible as those documents are. Your team's own notes about a person stay inside the project where they were written.",
   "screen.setup.court": "Privacy and the law",
-  "screen.setup.court.what": "Civicsmith keeps your group's unpublished work private, from the public and from the people you look into. But a court order your group can't defeat can still require anything not public to be shown, such as members' notes, sources and hidden projects. Much work never draws such an order, and journalists, lawyers and auditors may have protections others lack.",
+  "screen.setup.court.what": "Civicsmith keeps your team's unpublished work private, from the public and from the people you look into. But a court order your team can't defeat can still require anything not public to be shown, such as members' notes, sources and hidden projects. Much work never draws such an order, and journalists, lawyers and auditors may have protections others lack.",
   "screen.setup.court.legend": "Should members be told about this?",
   "screen.setup.court.tell": "Yes, when they join, and the first time they save something not public",
   "screen.setup.court.dont": "No, just keep the explanation one tap away",
-  "screen.setup.admins.what": "Right now you're the only administrator. If you're away or lose access, no one else can run your group's Civicsmith. Invite someone you trust as a second administrator, now or later.",
+  "screen.setup.admins.what": "Right now you're the only administrator. If you're away or lose access, no one else can run your team's Civicsmith. Invite someone you trust as a second administrator, now or later.",
   "screen.setup.security": "Security",
-  "screen.setup.security.scanner": "Civicsmith's own file scanner checks every file your group brings in, and risky ones open in a safe view. You don't need to do anything.",
+  "screen.setup.security.scanner": "Civicsmith's own file scanner checks every file your team brings in, and risky ones open in a safe view. You don't need to do anything.",
   "screen.setup.security.what": "If your organization already uses its own file scanner, a tool that makes safe copies of files, or a log service, you can connect it here or later in Settings › Security.",
   "screen.setup.security.add": "Connect a tool",
   "screen.setup.finished": "You're ready",
   "screen.setup.finished.what": "Anything you left is waiting in Settings. Next, invite your first members.",
   "act.queuemute.does": "Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",
-  "act.promote.does": "Turns what you are looking at into something the group will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it."
+  "act.promote.does": "Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it."
  }
 }
