@@ -336,6 +336,10 @@ const modelState = async (mf) => (await (await (await mf.getWorker("model-mock")
 const base = { run_id: "run-1", store: "scratch", credential: AIK };
 /* The supplied mode's judgements for one pass: plan, collect, compose, dedup (adjust only when a refusal comes). */
 const J = (reports = [], candidates = []) => [{ targets: [] }, { reports }, { candidates }, {}];
+/* agent-harness R15: a pass that adds nothing new closes the run, so a run meant to go on for its pass limit
+   submits a new candidate in every pass: `JN(n)` is n such passes' judgements, each with a candidate of its own name. */
+const JN = (n) => Array.from({ length: n }, (_, i) =>
+  J([], [{ kind: "basis-version", name: `pass-${i + 1}`, description: `the reading of pass ${i + 1}, in full` }])).flat();
 const OPS_SEEN = new Set();
 const seen = async (mf) => { for (const l of (await planeState(mf)).log) OPS_SEEN.add(l.op); };
 
@@ -534,7 +538,7 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
     [fresh.out.trace.length, false, true]);
   t("R11: the published state carries the table's fields and never the run's mode, target, pass limit or budget",
     Object.keys(freshTicks[1].body.state).sort(),
-    ["adjusted", "candidates", "holdings", "pass", "queue", "refusal", "refusedSubmission", "reportsRefused",
+    ["adjusted", "candidates", "holdings", "pass", "passAdded", "queue", "refusal", "refusedSubmission", "reportsRefused",
      "reports", "rereads", "step", "submission", "targets"].sort());
 
   /* Two segments of one run: the first stops at its step bound mid-pass, the second continues where it stopped. */
@@ -673,11 +677,11 @@ section("agent-harness R3 · stopBecause: fetches, subsessions, wallclock, then 
   t("agent-harness R3: then pass count >= the pass limit closes `completed`",
     [stopBecause({ pass: 3, maxPasses: 3 }), stopBecause({ pass: 2, maxPasses: 3 })], ["completed", null]);
   await reset(mf, { maxPasses: 2 });
-  const two = await runOp(mf, { ...base, judgements: [...J(), ...J()] });
+  const two = await runOp(mf, { ...base, judgements: JN(2) });
   t("agent-harness R3: the limit is the run's max_passes when positive (2 -> two passes, each counted at next-pass)",
     [two.out.passes, two.out.trace?.filter((x) => x.step === "next-pass").length, two.out.ended?.bound], [2, 2, "completed"]);
   await reset(mf, { maxPasses: null });
-  const dflt = await runOp(mf, { ...base, judgements: [] });
+  const dflt = await runOp(mf, { ...base, judgements: JN(3) });
   t("agent-harness R3: and 3 when the run names none", dflt.out.passes, 3);
 }
 
@@ -861,9 +865,9 @@ section("R22 · compose: one meaning read; its note never a false zero; level-em
   t("R22: one level-empty candidate per LOOKED_ABSENT level: level in the suggestion spelling, its name, observed_at, the run's target",
     [st.suggested.filter((s) => s.kind === "level-empty").map((s) => s.name), le.level, le.observed_at, le.target],
     [["level-empty-documents"], "documents", "log:3", "INQ-R22"]);
-  t("R22: its description is composed from those facts, with the report's summary appended",
+  t("R22: its description is composed from those facts alone; the report's summary is not appended (agent-harness R14)",
     [/documents level of this question/.test(le.description ?? "") && !/INQ-R22/.test(le.description ?? ""), /at log:3/.test(le.description ?? ""),
-     /The sub-session reported: nothing in the packets$/.test(le.description ?? "")], [true, true, true]);
+     /The sub-session reported/.test(le.description ?? "") || /nothing in the packets/.test(le.description ?? "")], [true, true, false]);
   await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2" } } } } });
   const refused = await runOp(mf, { ...base, judgements: J() });
   t("R22: a refused read -> the note says the meaning layer was NOT READ, never zero",
@@ -1051,7 +1055,7 @@ section("R27 · close: op=airunclose names the bound; ended only when the plane 
   t("R27: max_steps bounds one invocation and is never reported as a run's bound",
     [(short.out.trace || []).length, short.out.ended, (await planeState(mf)).log.some((l) => l.op === "airunclose")], [3, null, false]);
   await reset(mf, { maxPasses: 200, budget: [{ bound: "subsessions", allowed: 100000 }, { bound: "runtime", allowed: 100000 }] });
-  const capped = await runOp(mf, { ...base, judgements: [], max_steps: 5000 });
+  const capped = await runOp(mf, { ...base, judgements: JN(150), max_steps: 5000 });
   t("R27: max_steps is at most 400", (capped.out.trace || []).length, 400);
 }
 
