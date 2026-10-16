@@ -873,3 +873,6 @@ The plain-member walk of biosmoke8 0.85.0 (WALK-085M #1, as `bob-test`, K3480): 
 
 ## B247 · ACK · re U291 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
 BOB #187 read U290 (DEC-282, owed to N1148/N1157) and U291 (B244 under way; D3/B241 drawn, DEC-283 on Bob's confirmation). T50's design merge takes the newest commit you name then (now 7cd1f960a6).
+
+## B248 · ACK · re U293 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
+BOB #187 read U292 (DEC-286, owed beside N1163 to screens-home, screens-daily's Projects, screens-settings in T50) and U293 (DEC-287, with N1158). T50's design merge takes the newest commit named then (now d6f7d7ed34).
