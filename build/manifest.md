@@ -68,7 +68,7 @@ Bob's design of the investigation engine and the project as an investigation (K1
 
 ## Parallel work: the assistant-hosting study (Bob, 2026-10-16; K3538)
 
-Bob's question of where and how the assistant runs Claude is studied in its own session, **ASSISTANT-HOSTING** (#1, started by BOB #192), writing only `build/plan/study-assistant-hosting/` (its `CHARTER.md` says how). It decides nothing: its findings reach Bob through BOB, and his decision is a K. BOB reads its `HANDOFF.md` (entries `S<n>`) at takeover and at every backstop check.
+Bob's question of where and how the assistant runs Claude is studied in its own session, **ASSISTANT-HOSTING** (#2, `session_01LRYEjmorgB3AX1wXhH7hjA`, sonnet, started by BOB #194, K3570; #1 archived), writing only `build/plan/study-assistant-hosting/` (its `CHARTER.md` says how). It decides nothing: its findings reach Bob through BOB, and his decision is a K. BOB reads its `HANDOFF.md` (entries `S<n>`) at takeover and at every backstop check.
 
 ## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
 
