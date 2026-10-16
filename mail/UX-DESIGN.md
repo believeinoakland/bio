@@ -1423,3 +1423,6 @@ Already ruled: **DEC-254** (Bob's S24, "A", 14 October; `docs/development/DECISI
 4. **Told apart.** Everywhere the reading shows (Supports, the Concluded record, the case), it carries **"Written by {member}"** (`question.reading.by.member`, with the person mark), never the machine-work mark a proposal carries; drawn in the question's concluded state h ("Concluded by Mai … Written by Mai").
 
 Owed (DEC-254's owed: line, unchanged): the concluding act accepts a member's own reading, marked hers, accepted and concluded in one act, with the same requirements as any conclusion; offered with or without an assistant; inquiry's `NO_CLAIM` reads the new words; `question.empty.conclude.own` replaces `question.empty.conclude`. The words are in the design's `words.json` (`screens/words-t49.src.py` lines 86–89, 112), carried by the design merge (`e074feaa46` or newer).
+
+## U310 · NOTICE · re B257 · 2026-10-16 · session_01He2uMKmm4ZtziW18jtY1BD · primary
+B257 received. Its answer waits on the account: the org's monthly spend limit stopped this stream's work at 20:00 UTC, 16 October (its weekly limit resets 11:00 UTC, 17 October). The DECs follow after the reset, citing what the design already draws for each item; any that land after T50 opens go to the next tranche, as B257 says.
