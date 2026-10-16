@@ -5,6 +5,7 @@ import { CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../wizard-scripts/index.mjs
 import { MACHINE_REFUSALS, RUNGS } from "../op-grades/index.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 import { SCREENS } from "./screens.mjs";
+import { ADMIN_ACTS, ADMIN_SCREENS } from "../interface-shell/index.mjs";
 
 /* R19 (N528; K1396): the labelled machine drafts the canon allows on a member's act, `case-authoring` R39's
    `whatchangedpropose` and `escalationreasondraft` (DEC-101's "what changed"), and (T34; DEC-152, DEC-153; K1818)
@@ -26,10 +27,12 @@ export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op
  *  library the bundle carries,
  *  the member op table (`op-declarations`), the acts a machine is refused (`op-grades`' `MACHINE_REFUSALS`, its R5), the
  *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set); with `door`, the front door's
- *  finder (its R23). */
+ *  finder (its R23).
+ *  R57 (R085-34; K3531; wizard-scripts R40): and the administrator's acts and screens (`interface-shell`'s `ADMIN_ACTS` and
+ *  `ADMIN_SCREENS`), so `startFrom` withholds the group-setup scripts from a viewer without `administer`. */
 export const wizardRegistration = ({ door = null } = {}) => ({ screens: SCREEN_REGISTRY, ops: OPS,
   machineRefused: Object.keys(MACHINE_REFUSALS), machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),
-  library: CIVICSMITH_LIBRARY,
+  library: CIVICSMITH_LIBRARY, adminActs: [...ADMIN_ACTS], adminScreens: [...ADMIN_SCREENS],
   /* (K2586; wizard-scripts R23) the front door's in-process finder (and pointer, once one is given), the plane's
      composition (`wiring.mjs`' `frontDoorFinder`); absent, `matches` is [] and the pointer null. */
   ...(door ? { door } : {}) });
