@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R15 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R16 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -719,4 +719,52 @@ test("R15: control: passAdded survives a segment break and a restart under the s
   const big = { ...s, queue: ["x".repeat(500)] };
   const pub = HARNESS.publishableState(big, 100);
   assert.deepEqual([pub.restarted.at, pub.state.passAdded], ["next-pass", true]);
+});
+
+/* ============================================================ R16: a run that wrote nothing never closes completed */
+test("R16: composed 1, written 0, at the last pass: the close is not completed and names the reason", () => {
+  /* the pass limit closes (pass 1 of 1) with one candidate composed and sent to be written, none written */
+  const s = { step: "next-pass", pass: 1, maxPasses: 1, mode: "check", composed: 1, kept: 1, wrote: 0, passAdded: true };
+  const d = nextStep(s);
+  assert.equal(d.step, "close");
+  assert.notEqual(d.bound, "completed");
+  assert.equal(d.bound, "nothing-written");
+  assert.match(d.reason, /^nothing written: 1 candidate\(s\) composed/);
+  assert.ok(d.why.includes(d.reason), "the close's why carries the reason");
+  /* the same, driven as the shell drives it: compose one, keep it, the plane refuses it, the adjust drops it */
+  let w = { step: "compose", pass: 0, maxPasses: 1, mode: "check", candidates: [{ name: "c" }] };
+  w = advance(w, nextStep(w));
+  w = advance({ ...w, queue: [{ name: "c" }] }, nextStep({ ...w, queue: [{ name: "c" }] }));
+  w = advance({ ...w, queue: [], refusal: { code: "X" }, submission: { name: "c" } }, { step: "adjust" });
+  w = advance({ ...w, adjusted: false }, nextStep({ ...w, adjusted: false, queue: [] }));
+  const last = nextStep(w);
+  assert.deepEqual([w.step, last.step, last.bound, w.composed, w.kept, w.wrote ?? 0], ["next-pass", "close", "nothing-written", 1, 1, 0]);
+  /* the shell's own list of what it wrote, empty, says the same */
+  assert.equal(nextStep({ ...s, wrote: undefined, written: [] }).bound, "nothing-written");
+});
+
+test("R16: control: a run that wrote something, or whose candidates were all held already, still closes completed", () => {
+  const base = { step: "next-pass", pass: 1, maxPasses: 1, mode: "check", passAdded: true };
+  /* one written */
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, wrote: 1 }).bound, "completed");
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, written: [{ name: "c" }] }).bound, "completed");
+  /* composed and every one dropped by dedup as already held: nothing was lost */
+  assert.equal(nextStep({ ...base, composed: 2, kept: 0, wrote: 0 }).bound, "completed");
+  /* composed none */
+  assert.equal(nextStep({ ...base, composed: 0 }).bound, "completed");
+  /* a budget bound is not rewritten */
+  assert.equal(nextStep({ ...base, composed: 1, kept: 1, budget: spent("fetches") }).bound, "fetches");
+});
+
+test("R16: control: advance counts composed, kept and written, and the counts survive a segment break", () => {
+  let s = { step: "compose", pass: 0, candidates: [{ name: "a" }, { name: "b" }] };
+  s = advance(s, nextStep(s));
+  s = { ...s, queue: [{ name: "a" }] };
+  s = advance(s, { step: "submit" });
+  assert.deepEqual([s.composed, s.kept, s.wrote ?? 0], [2, 1, 0]);
+  s = { ...s, step: "submit", queue: [], submission: { name: "a" }, refusal: null };
+  s = advance(s, { step: "next-pass" });
+  assert.equal(s.wrote, 1);
+  const back = HARNESS.resumeFrom(HARNESS.resumableState({ ...s, step: "next-pass" })).state;
+  assert.deepEqual([back.composed, back.kept, back.wrote], [2, 1, 1]);
 });

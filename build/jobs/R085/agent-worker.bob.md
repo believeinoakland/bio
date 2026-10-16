@@ -1,6 +1,6 @@
 # BOB to agent-worker (R085)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -99,3 +99,7 @@ Depth 2. Tranche R085: fix round 7 on the 0.85.0 cut (K3557). The assistant lane
 Workers you spawn: haiku at low for mechanical work, sonnet at medium for reading, never above your own model.
 
 Model: claude-sonnet-5-5. Entry R085-39: agent-worker R107, R108. skills (R50) and agent-harness (R16) change at the same time; when BOB tells you they are merged (CHANGE), merge tranche/R085 and rebuild your bundle last (`agent-worker/`: `npm run build`), then re-run your tests. Known base red, not yours: fleetbundles "agent-worker's 28 inputs" (K3543).
+
+## B20 · CHANGE
+
+agent-harness R16 is merged into tranche/R085 (K3561): a `completed` close with a kept candidate and no write becomes bound `nothing-written` with its reason; `resumableState` gains `composed`, `kept`, `wrote`. Merge tranche/R085 into your branch. AGENT-HARNESS #9 reports your `requirements.test.mjs` "R11: the published state carries the table's fields" lists exact keys: bring it in line (your test, your call). run-rules R34 (RUN_ENDINGS gains `nothing-written`) is running as RUN-RULES #1; skills R50 as SKILLS #1. Your R107 close for a refused segment may use `nothing-written` (or the refusal's own ending) once R34 merges. Rebuild your bundle last, after I send the CHANGE that skills and run-rules are merged.
