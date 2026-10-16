@@ -1,6 +1,6 @@
 # retrieval (R085)
 
-**Status** · session_016iwYPX2R9kqxoX6SNy7Nsc · depth 2 · WORKING · handled B0
+**Status** · session_016iwYPX2R9kqxoX6SNy7Nsc · depth 2 · COMPLETE · handled B0
 
 ## Completion (R085-26)
 
