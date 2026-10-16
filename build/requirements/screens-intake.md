@@ -77,7 +77,7 @@ Bringing material in and deciding what enters the record: capturing from an addr
 #### T49: words by key (K3366, K3368; DEC-257, DEC-258)
 
 - **R26** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 255 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English.
-- **R27** *(not yet met: R085)* (R085-5; K3477; WALK-085 F1; `control-plane` R100) The upload sends the file's declared media type (the browser's `file.type`) as `type` beside `statement` and `name`; a file whose declared type is empty sends no `type`. Test: a `text/plain` file's upload sends `type: "text/plain"`. Control: a file with an empty type sends none.
+- **R27** (R085-5; K3477; WALK-085 F1; `control-plane` R100) The upload sends the file's declared media type (the browser's `file.type`) as `type` beside `statement` and `name`; a file whose declared type is empty sends no `type`. Test: a `text/plain` file's upload sends `type: "text/plain"`. Control: a file with an empty type sends none.
 
 ## Private
 
