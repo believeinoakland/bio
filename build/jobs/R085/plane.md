@@ -18,3 +18,14 @@
 - **Found in other modules.** `plane`'s store-door order test (above) is a plane-owned test that is red on the base; the wizard-scripts record's three screens failures are unchanged. The `wizard-scripts` record already REPORTed the wiring; it is now done here.
 
 Size (session_012UeeSfNFsJWJBvbPHcGVSs): test runs 13, module lines 2285
+
+## J1 · COMPLETE
+
+COMPLETE, R085-34 (plane R57), pushed at 3b7618a561 on job/R085/plane.
+
+- Applied: `wizardRegistration` passes interface-shell's `ADMIN_ACTS` and `ADMIN_SCREENS`. Live startFrom withholds the three setup scripts from a non-administrator (R57 test names R57; R19 registration test updated).
+- Tests: plane `test/m/plane/` 250 of 251 pass. The one failure (`R2, R10`, store.test.mjs:105, store-door's order before the first layer-11 module) fails identically on the base: it expects setup-words first in layer 11, but wizard-scripts is first. Not edited; your decision.
+- wizard-scripts `test/m/wizard-scripts/`: 97 pass. The three screens-daily/screens-wizards failures are unchanged, not edited.
+- migrate-released system test: NOT verified. It did not finish in 580 s in this container (promise still pending under miniflare). Open.
+- Checks: format 0 failures; architecture 0 failures; coverage 57 of 57; ownership 0 failures.
+- Detail and size line in build/jobs/R085/plane.md.
