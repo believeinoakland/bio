@@ -1,0 +1,9 @@
+# BOB to run-rules (R085)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Tranche R085: fix round 7 on the 0.85.0 cut (K3561). agent-harness R16 (merged) closes a run that composed a candidate and wrote none with the bound `nothing-written`; `bio-plane/src/run-rules/rules.mjs` RUN_ENDINGS (~258) does not name it, so `checkBound` would refuse the close (AI_RUN_BOUND_UNNAMED). Entry R085-41: run-rules R34. Add the ending with its sentence, and check `runStatusFor` and any table listing the endings (grep the module) treat it as an ending other than completed. R34 needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership), and the tests of modules that use RUN_ENDINGS (P11; REPORT a failure you cannot fix in your own paths). Bundles (plane, agent-worker) are rebuilt by others: REPORT, never rebuild. Lean; tokens are billed at overage (K3549). COMPLETE as soon as green.
+
+Model: claude-haiku-5-5. Workers: haiku at low only, if needed.
