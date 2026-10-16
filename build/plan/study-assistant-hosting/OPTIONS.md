@@ -32,11 +32,24 @@ H and K decide the hosting question proper. L and S are mostly design choices *w
 | i | **GitHub-hosted runs** (Claude Code GitHub Action on the held token) | GitHub runner / held token / per run / tool loop | charter; [study] remote §1b |
 | j | **Bring-your-own runner**: a small Civicsmith runner the member or team runs on their own computer or server, connecting *outbound* to the team's copy and running the Agent SDK on that machine's own Claude sign-in | member/team machine / own sign-in, nothing held / any / tool loop or served loop | new |
 | k | **Single-shot judge calls** (`claude -p` / `query()` with no tools, structured output, one turn per judged row; the product does every read) | any host / held token / per call / judge | new (a call shape, scored on host a/b) |
-| l | **Cowork remote sessions** | cloud / full-scope / per session / member-driven | new; pending research |
+| g″ | **Civicsmith as a Desktop Extension (MCPB)**, a local relay in the member's Claude Desktop | member's machine / own sign-in / the app's / member-driven | research (NOTES §2.2) |
+| j′ | **Member-side runner on background sessions** (`claude --bg`, `claude agents --json`, `claude logs`) instead of the SDK | member/team machine / own sign-in / per run / served loop | research (NOTES §2.3) |
+| j″ | **Channels bridge**: the product pushes a run into a member's always-open local Claude Code session through a channel plugin | member's machine / own sign-in / long-lived / served loop | research (NOTES §2.2) |
+| l | **Cowork remote sessions** with the product as a connector | Anthropic cloud / own sign-in / per session / member-driven | research (NOTES §2.4) |
+| o | **Claude Tag** (Slack) with the product as a connector or plugin, for Team/Enterprise customer organizations | Anthropic sandbox / the org's usage balance / per message / member-driven | research (NOTES §2.4) |
+| p | **Desktop scheduled tasks or `/loop`** on the member's machine running a product-defined prompt | member's machine / own sign-in / per schedule / served loop | research |
+| q | **Anthropic approval** ("Unless previously approved", AT-19): not a host but a route that would change K for every option; reached only through sales (AT-25) | — | research (NOTES §2.4) |
 | m | **Cloud-provider inference** (Bedrock, Vertex, Foundry credentials) | any / provider credential / any / any | new; screened below |
 | n | **Claude in Chrome** operating Civicsmith's own pages for the member | member's browser / own sign-in / — / model-driven UI | new; screened below |
 
-Research for further options is in `NOTES.md` §2; additions it finds are appended here with their source.
+Research for further options is in `NOTES.md` §2 (first pass 2026-10-16); its additions are the rows marked "research".
+
+**Families.** After the screen, the viable options fall into five families, which are what the comparison will really choose between:
+1. **Product-hosted, held token** — a, b, b′, k (Cloudflare) and h (another host). The product runs Claude Code; the team pays the box.
+2. **Anthropic-hosted session, product-served loop** — c (routine fire), d (session driven by `--cloud`). Anthropic runs Claude Code; the product serves rows to it over the network.
+3. **Member- or team-hosted runner** — j, j′, j″, p, and e for Team/Enterprise. A machine the member or team owns runs Claude Code on its own sign-in; the product holds nothing.
+4. **The member's own Claude, the product as a tool** — g, g′, g″ (and l, o as surfaces of g). Strong for chat and member-led work; control for checks to be tested.
+5. **GitHub-hosted** — i, for scheduled checks only.
 
 ## 3. Screen (provisional)
 
@@ -53,6 +66,12 @@ Research for further options is in `NOTES.md` §2; additions it finds are append
 | i | **Screen out for interactive use; keep for scheduled checks** | a GitHub runner starts per workflow (tens of seconds), needs a repository per team, and GitHub as one more place record text passes through [inf]; usable only where a check is scheduled, not asked |
 | j | **Viable** | the product holds no credential (removes U-2/U-7 entirely; AT-18 covers a person signing in to the unmodified binary on their own machine); the runner dials out, so no inbound network to the member [inf]. Needs the member's machine on while it runs |
 | k | **Viable as a call shape** | standard `claude -p` / `query()` use [study link D1]; scored as a modifier on a and b |
-| l | **Pending** | research |
+| g″ | **Viable for member-led use, Desktop only** | as g, but local; private distribution only (MCPB directory listings deprecated) [doc NOTES §2.2] |
+| j′ | **Viable, research preview** | documented CLI surface for starting and polling local sessions [doc NOTES §2.3]; preview status counts against C10 |
+| j″ | **Viable on paper, weak** | research preview; custom channels need an allowlist or a development flag; Team/Enterprise admins must enable [doc NOTES §2.2] |
+| l | **Screen out for runs (G2)** | member-started, no developer API [doc NOTES §2.4]; reachable only as g (the product as a connector), so it is scored under g |
+| o | **Screen out for runs (G2); note for X1 on Team/Enterprise** | no third-party API to invoke Tag; member-driven in Slack [doc NOTES §2.4]; as a front end it is g |
+| p | **Viable on paper, weak** | a timer on the member's machine; the product still only serves tools (as g); scored as a variant of j |
+| q | **Not an option to score; a question** | Anthropic's approval would open login-based routes AT-19 now closes; whether to ask is Bob's (AT-25). Listed so it is weighed, not proposed |
 | m | **Screen out (G1, by its spirit), flagged** | a cloud provider's credential is billed API access, the thing K3347 ruled out; the register lists it beside API keys (AT-15). Recorded so it is not rediscovered; not proposed |
 | n | **Screen out (G2)** | the model would drive the product's screens; the product cannot decide its steps |
