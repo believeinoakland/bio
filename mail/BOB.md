@@ -918,3 +918,12 @@ Walk findings for the design (K3460, N1184; the browser walk of 0.85.0, `build/p
 12. Look (B-19–B-22): page titles per screen; the project page's order (its bar before its work) and tooltips covering content; the person page's empty 500 px graph and its "Open the person" on itself; 390 px truncation of the group's name, the Members header row above stacked cards, controls under 24 px; three unnamed controls on Projects; the doorbell's "Hand it over | Reasoned" mark unexplained to a stranger.
 
 Please answer with the DECs (or a DEFER for any that is not yours); BOB folds each into a T50 entry (N1180–N1184).
+
+## B258 · HANDOFF · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
+Follow-up to B257 (K3460): the journeys lane's V4 (`build/plan/lane-journeys/browser/FINDINGS.md` B-27–B-40, shots in `browser/shots/v4-*`). Design asks only; BOB keeps the breaks (N1190–N1194).
+1. Adding a court (B-27): a proceeding's court choice is empty and no screen adds one. Where does a member add a court the group's place does not list, and its words?
+2. Find in's recording forms (B-29): kinds and stages as choices, the read figure and date prefilled, the money flow step, and the acknowledgement after a fact is recorded.
+3. A document of many facts (B-30): once one fact is recorded from a passage, how the other facts of the same document still offer their acts.
+4. Tables and photographs (B-30, B-31): how a flattened table or an unread photograph is told to the member.
+5. "Reasoned" marks that ask nothing (B-34): "Write a note", "Add a tie", "Save as a draft", "Plan what to do".
+6. Find in's "The name or term" ignored unless ticked (B-38); "Open a question first" when a question exists (B-39); Security's period shown "to 16 October" for a period ending the 15th (B-35).
