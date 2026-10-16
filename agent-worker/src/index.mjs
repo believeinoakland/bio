@@ -158,7 +158,7 @@ import {
 } from "../../agent-harness/src/harness.mjs";
 
 /* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
-import { NAMESPACES, MEANING_ARM, RESPONSE_ID } from "./ops.mjs";
+import { NAMESPACES, MEANING_ARM, RESPONSE_ID, SEGMENT_END_BY } from "./ops.mjs";
 /* R63 — what a read hands the model of a file: the readers' text and its `active` list, never its bytes. */
 import { toolContent, droppedNote } from "./reads.mjs";
 /* R54–R56 — `POST /ask`, in its own file. */
@@ -166,13 +166,13 @@ import { handleAsk } from "./ask.mjs";
 /* R59 — `POST /draft`, in its own file. */
 import { handleDraft } from "./draft.mjs";
 /* R66, R67 — `POST /signin`, the relay of a member's own sign-in to their own runner instance, in its own file. */
-import { handleSignin, doorTrace } from "./signin.mjs";
+import { handleSignin, doorTrace, TRACE_HEADER, MEMBER_REF_HEADER } from "./signin.mjs";
 /* R72–R75 — `POST /transcribe`, the AI's reading of a page's picture the plane rendered, in its own file. */
 import { handleTranscribe } from "./transcribe.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
-import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs";
+import { AI_RUN_STATE_MAX_BYTES, checkCondition, DEFINITIVE_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
@@ -362,7 +362,8 @@ const MAX_STEPS = 400;
  *  answers F10's precondition. Every one of those is in `agent-harness`, is pure,
  *  and is driven directly by the suite as well as through this function — so a
  *  decision made here instead would be a decision nothing exhaustive covers. */
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null,
+                                    deadline = null, progress = null, preflight = false }) {
   /* EVERY PLANE CALL IS COUNTED, AND THE COUNT IS WHAT SPENDS `runtime`.
      §14b.6 named `runtime-ceiling-reached` as a word the record had with no
      writer, and IS-9(d) as the item that builds the producer. This counter IS
@@ -528,9 +529,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      simply carries the state forward — an absent judgement is not an error, it
      is a run whose model had nothing to add. */
   let jx = 0;
-  let ended = null, steps = 0, segmentStopped = null;
+  let ended = null, steps = 0, segmentStopped = null, closeRefused = false;
+  /* R91: the run's facts are read and held to the account and the pack: everything a refusal "before the segment
+     starts" answers. `preflight` stops here, for `/run` to answer those refusals before it hands the segment over. */
+  if (preflight) return { ready: true };
+  if (progress) progress.started = true;
 
   while (steps < maxSteps) {
+    /* R91: the segment's wall bound, met between steps (a durable segment runs inside an alarm, which has a wall limit
+       of its own); the segment stops and the run does not, as at its turn or byte bound. */
+    if (deadline != null && Date.now() >= deadline) { segmentStopped = "wall"; break; }
     steps += 1;
     const callsAtStepStart = calls;
     const row = FLOW[state.step];
@@ -629,7 +637,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const consume = { ...(work.consume || {}), runtime: spentThisStep };
     /* R26, K148: the entry only when the step's judgement states a look; a step that looked at nothing still
        ticks, for its spend and its lease, and sends no entry. */
-    const entry = stepLog(state, decision);
+    /* R92: in the record's own words — a condition outside its vocabulary, or a governed definitive look, was refused
+       per entry, so the log stayed empty (`loggable`). */
+    const entry = loggable(stepLog(state, decision)).entry;
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
        tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
@@ -659,7 +669,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R26: a tick the plane answered `found: false` (no such run, `ai-runs`) appended nothing: it is a refusal of the
        tick in the plane's words, never an entry that landed (T41 B6: a run the plane never opened counted `logged`). */
     const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
-    if (noRun) {
+    /* R92: a tick refused whole answers `ticked: false` with its code and no `ok` (ai-runs' gates, figures, state and
+       usage), so it appended nothing: a refusal of the tick, never an entry that landed. */
+    const tickRefused = !tickAnswer.refused && !noRun && tickAnswer.result?.ticked === false
+      && tickAnswer.result?.code != null;
+    if (noRun || tickRefused) {
       refusals.push({ at: "airuntick", code: tickAnswer.result.code ?? null, check: tickAnswer.result.check ?? null,
                       plane: tick.body ?? null });
     } else if (tickAnswer.refused) {
@@ -708,7 +722,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
          stopped" and "the plane stopped it" are different facts. */
       if (t && t.ended) {
         ended = { bound: t.ended.bound ?? null, condition: t.ended.condition ?? null,
-                  by: "the plane's own exit" };
+                  by: SEGMENT_END_BY.plane };
         break;
       }
     }
@@ -732,8 +746,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
          claiming more than it can support. The refusal is named and `ended`
          stays null, which is the honest "this segment did not end it". */
       /* The pass a close completes is counted (R50's one pass; `advance` leaves R15's count as it was). */
-      if (closed.refused) { refusals.push(closed.refused); state = { ...state, step: "close", pass: after.pass }; break; }
-      ended = { bound: decision.bound || "completed", by: "the table" };
+      if (closed.refused) { refusals.push(closed.refused); closeRefused = true; state = { ...state, step: "close", pass: after.pass }; break; }
+      ended = { bound: decision.bound || "completed", by: SEGMENT_END_BY.table };
       state = { ...state, step: "close", pass: after.pass };
       break;
     }
@@ -780,7 +794,50 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
     segmentStopped,
+    /* R91: how this segment ended, for its `segment_end`: the run ended (by the table or the plane's exit), the plane
+       refused its close, or (`by` null) the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
+    segmentEnd: ended ? { by: ended.by, done: true }
+      : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false }
+      : { by: null, done: false },
   };
+}
+
+/* R92 (R085-8; K3477; WALK-085 F2, cause B) — AN ENTRY THIS MEMBER SENDS IS IN THE RECORD'S OWN WORDS.
+ *
+ * The cause, measured on biosmoke8 and reproduced over the plane's real append path: `agent-model`'s judging and
+ * `report` tools offer `condition` as a free string, so a model writes prose there ("the source was slow", "none found"),
+ * and this member copied it into the log entry. The observation log takes a `condition` only from its vocabulary
+ * (observation-log's `CONDITION_KINDS`, C-22.4 `AI_RUN_CONDITION_UNKNOWN`), and a look `governed` by our own pacing only
+ * as LOOKED_INDETERMINATE (D-104, C-22.2 `AI_LOG_GOVERNED_ABSENCE`). Every such entry was refused, so a check run's log
+ * stayed empty and every sub-session's report went out with no `observed_at` (REPORT_UNLOCATED).
+ *
+ * The plane is still the judge: the test is the plane's own `checkCondition` and `DEFINITIVE_STATES`, read through
+ * run-rules (its re-export of observation-log's, the one function reached through a second door, never a copy). What
+ * the model said is kept, as stated text in `detail`, never dropped. Pure. */
+
+const LOG_DETAIL_MAX = 500;
+
+/** The entry as the record takes it: `{entry, governedDowngrade}`. A `condition` outside the vocabulary leaves the
+ *  field and is stated in `detail`; a `governed` look stating a definitive state is recorded LOOKED_INDETERMINATE,
+ *  with the stated state in `detail` (`governedDowngrade` is then the state it replaced). Anything else is unchanged. */
+function loggable(entry) {
+  if (!entry || typeof entry !== "object") return { entry, governedDowngrade: null };
+  const out = { ...entry };
+  const said = [];
+  if (out.condition != null && out.condition !== "" && checkCondition(out.condition) !== null) {
+    said.push(`condition stated as ${JSON.stringify(String(out.condition).slice(0, 160))}, `
+              + "which is not a word of the record's condition vocabulary, so none is recorded");
+    out.condition = null;
+  }
+  let governedDowngrade = null;
+  if (out.governed === true && DEFINITIVE_STATES.has(String(out.state))) {
+    governedDowngrade = String(out.state);
+    said.push(`stated ${governedDowngrade} while our own pacing governed the look, which supports only `
+              + "LOOKED_INDETERMINATE (D-104)");
+    out.state = "LOOKED_INDETERMINATE";
+  }
+  if (said.length) out.detail = [...said, String(out.detail ?? "")].filter(Boolean).join("; ").slice(0, LOG_DETAIL_MAX);
+  return { entry: out, governedDowngrade };
 }
 
 /* -------------------------------------------------- D-276: THE ANSWER, NOT THE WIRE
@@ -1414,20 +1471,25 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     const report = { ...said, level: contract.level };
     if (LOOKED_STATES.has(String(report.state))) {
       const seq = logSeq ? logSeq.next() : null;
-      const entry = {
+      /* R92: in the record's own words (`loggable`); a governed definitive look is LOOKED_INDETERMINATE, and the report
+         located at it says the same, so no absence is written off a look our own pacing held. */
+      const { entry, governedDowngrade } = loggable({
         level: contract.level, subject: `sub-session ${contract.level} -> report`,
         state: report.state === "PRESENT" ? "LOOKED_INDETERMINATE" : report.state,
         governed: report.governed === true, condition: typeof report.condition === "string" ? report.condition : null,
         terminal: false, bound: null,
         detail: String(typeof report.summary === "string" ? report.summary : "").slice(0, 500),
-      };
+      });
+      if (governedDowngrade && report.state === governedDowngrade) report.state = "LOOKED_INDETERMINATE";
       const tick = planeAnswer(await call("airuntick", null, { run: runId, log: [entry] }), "airuntick");
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed. */
-      if (tick.refused || bad.length || t.found === false) {
-        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
+      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed; (R92) so is
+         a tick refused whole (`ticked: false` with its code). */
+      const whole = t.found === false || (t.ticked === false && t.code != null);
+      if (tick.refused || bad.length || whole) {
+        for (const r of tick.refused ? [tick.refused] : whole ? [t] : bad)
           logSeq?.refused({ at: "airuntick.log", step: "fanout", to: "collect", level: contract.level,
                             code: r?.code ?? r?.reason ?? null, check: r?.check ?? null, plane: r?.plane ?? r ?? null });
       } else {
@@ -1572,63 +1634,9 @@ async function handleRun(req, env) {
   if (body == null)
     return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
 
-  const runId = typeof body.run_id === "string" ? body.run_id : "";
-  const store = typeof body.store === "string" ? body.store : "";
-  const credential = typeof body.credential === "string" ? body.credential : "";
-
-  /* The run's identity is the PLANE's. This member mints none — a component that
-     invents an identifier the record will later cite is a component inventing a
-     hop (D-112), and the run log is the plane's own object. */
-  if (!runId || runId.length > 200)
-    return refusal("BAD_RUN_ID",
-      "a run is identified by the plane and this member mints no identity of its own; the caller must say "
-      + "which run this segment belongs to.", 400);
-
-  if (typeof body.store !== "string")
-    return refusal("BAD_STORE",
-      "a run happens inside one namespace and this member guesses none: the caller must say which. "
-      + "A default namespace here would let a run touch the real record while its caller believed it "
-      + "was working in a scratch one.", 400);
-  /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
-     refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
-  if (!NAMESPACES.includes(store))
-    return refusal("NAMESPACE_UNKNOWN",
-      "a run names the namespace it works in, and no namespace by that name exists on any instance this member "
-      + "can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept "
-      + "apart for testing, and the name must match one of them exactly; they are listed beside this message.", 400,
-      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] });
-
-  /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
-  if (!credential)
-    return refusal("NO_CREDENTIAL",
-      "this member holds no credential of its own and cannot act except under one it is handed. There is "
-      + "no fallback identity here by design: a worker that could act unattended would be acting as "
-      + "nobody, and nothing it did could be attributed.", 401);
-  if (!AI_TOKEN_SHAPE.test(credential))
-    return refusal("BAD_CREDENTIAL_SHAPE",
-      "the credential handed to this member is not shaped like one this plane issues. Whether a "
-      + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
-      + "is never made here.", 400);
-
-  /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
-  const acct = await accountOf(body);
-  if (acct.refusal) return acct.refusal;
-  const { account, cascade } = acct;
-
-  /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
-  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
-  const requested = body.turns == null ? bound : Number(body.turns);
-  if (!Number.isFinite(requested) || requested < 1)
-    return refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400);
-  /* REFUSED rather than silently clamped. A caller that asked for 400 turns and
-     got 120 without being told believes it saw a whole run; the same reasoning
-     that makes the plane's read bounds refuse rather than truncate. */
-  if (requested > bound)
-    return refusal("SEGMENT_OVER_BOUND",
-      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
-      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
-      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
-      400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE });
+  const checked = await checkRun(body, env);
+  if (checked.refusal) return checked.refusal;
+  const { runId, store, credential } = checked;
 
   /* THE ROUND TRIP. One op, non-mutating, under the credential we were handed.
      Whatever this member reports about the credential is the PLANE's statement,
@@ -1652,6 +1660,137 @@ async function handleRun(req, env) {
                         + "refusal is passed through exactly as the plane worded it.",
                   plane_status: asked.status, plane: asked.body }, 403);
 
+  /* R91 — THE SEGMENT OUTLIVES ITS CALLER. With the segment driver bound, the segment is handed to the run's own
+     Durable Object, which runs it from an alarm whether or not the plane is still connected, and this answers 202 at
+     once (ai-runs R82 waits only for this). With none bound (an instance not yet installed with it), the segment runs
+     on this request and answers R28, as it always did; both paths end with the `segment_end` tick. */
+  if (segmentsBound(env)) {
+    let before;
+    try {
+      before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    } catch (e) {
+      /* Before any step: no segment started, so nothing is written for it (R10, R57). */
+      return refusal("SEGMENT_THREW", "the segment could not be started for an error of this member's own; the run "
+        + "stays as it was and is resumable.", 500,
+        { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) });
+    }
+    if (!before.ready) return before.response;
+    let res;
+    try {
+      const stub = env.SEGMENTS.get(env.SEGMENTS.idFromName(runId));
+      const traced = doorTrace(req);
+      res = await stub.fetch("http://segment/start", { method: "POST", headers: {
+        "content-type": "application/json",
+        ...(traced.trace ? { [TRACE_HEADER]: traced.trace } : {}),
+        ...(traced.memberRef ? { [MEMBER_REF_HEADER]: traced.memberRef } : {}) },
+        body: JSON.stringify({ body, whoami: asked.body }) });
+    } catch (e) {
+      return refusal("SEGMENT_NOT_ACCEPTED",
+        "the segment driver could not be reached, so no segment was started and the run stays as it was; it is "
+        + "resumable.", 502, { run_id: runId, detail_from_binding: String((e && e.message) || e).slice(0, 200) });
+    }
+    if (res.status === 202) return json({ accepted: true, run_id: runId }, 202);
+    return res;
+  }
+  return runSegment(env, checked, body, asked.body, doorTrace(req));
+}
+
+/** R2–R7 — the body's own checks, before any plane call: `{refusal}` or the segment's inputs. Pure but for the
+ *  account's judgement (R32). */
+async function checkRun(body, env) {
+  const runId = typeof body.run_id === "string" ? body.run_id : "";
+  const store = typeof body.store === "string" ? body.store : "";
+  const credential = typeof body.credential === "string" ? body.credential : "";
+
+  /* The run's identity is the PLANE's. This member mints none — a component that
+     invents an identifier the record will later cite is a component inventing a
+     hop (D-112), and the run log is the plane's own object. */
+  if (!runId || runId.length > 200)
+    return { refusal: refusal("BAD_RUN_ID",
+      "a run is identified by the plane and this member mints no identity of its own; the caller must say "
+      + "which run this segment belongs to.", 400) };
+
+  if (typeof body.store !== "string")
+    return { refusal: refusal("BAD_STORE",
+      "a run happens inside one namespace and this member guesses none: the caller must say which. "
+      + "A default namespace here would let a run touch the real record while its caller believed it "
+      + "was working in a scratch one.", 400) };
+  /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
+     refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
+  if (!NAMESPACES.includes(store))
+    return { refusal: refusal("NAMESPACE_UNKNOWN",
+      "a run names the namespace it works in, and no namespace by that name exists on any instance this member "
+      + "can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept "
+      + "apart for testing, and the name must match one of them exactly; they are listed beside this message.", 400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }) };
+
+  /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
+  if (!credential)
+    return { refusal: refusal("NO_CREDENTIAL",
+      "this member holds no credential of its own and cannot act except under one it is handed. There is "
+      + "no fallback identity here by design: a worker that could act unattended would be acting as "
+      + "nobody, and nothing it did could be attributed.", 401) };
+  if (!AI_TOKEN_SHAPE.test(credential))
+    return { refusal: refusal("BAD_CREDENTIAL_SHAPE",
+      "the credential handed to this member is not shaped like one this plane issues. Whether a "
+      + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
+      + "is never made here.", 400) };
+
+  /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
+  const acct = await accountOf(body);
+  if (acct.refusal) return { refusal: acct.refusal };
+  const { account, cascade } = acct;
+
+  /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
+  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
+  const requested = body.turns == null ? bound : Number(body.turns);
+  if (!Number.isFinite(requested) || requested < 1)
+    return { refusal: refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400) };
+  /* REFUSED rather than silently clamped. A caller that asked for 400 turns and
+     got 120 without being told believes it saw a whole run; the same reasoning
+     that makes the plane's read bounds refuse rather than truncate. */
+  if (requested > bound)
+    return { refusal: refusal("SEGMENT_OVER_BOUND",
+      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
+      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
+      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
+      400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE }) };
+
+  return { runId, store, credential, account, cascade, bound, requested };
+}
+
+/** R91 — ONE SEGMENT, run to its end: on the request when no driver is bound, or from the run's Durable Object's alarm
+ *  (`SegmentDriver`). It answers R28 or the refusal that ended it, and, whatever ended it, first sends the plane one
+ *  `op=airuntick` carrying `segment_end: {by, done, refusals, error?}` (`SEGMENT_END_BY`), so the plane learns every segment's
+ *  end even when nobody is left to read the answer. `deadline` is the segment's wall bound, when it has one. */
+async function runSegment(env, checked, body, whoami, traced, deadline = null) {
+  const { runId, store, credential } = checked;
+  let answer;
+  try {
+    answer = await segmentAnswer(env, checked, body, whoami, traced, deadline);
+  } catch (e) {
+    /* An error is a segment's end whenever it came, the run having been handed to this segment. */
+    answer = { response: refusal("SEGMENT_THREW",
+      "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and "
+      + "wrote stays, and the plane is told the segment ended.", 500,
+      { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) }),
+      end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" } };
+  }
+  /* The plane's answer to this tick changes nothing here: the segment has already ended. */
+  if (answer.end)
+    await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end })
+      .catch(() => null);
+  return answer.response;
+}
+
+/** R91: the codes of R28's `refusals`, each named once, in order. */
+const refusalCodes = (list) => [...new Set((list || []).map((r) => r && (r.code ?? r.reason))
+  .filter((c) => typeof c === "string" && c))];
+
+async function segmentAnswer(env, checked, body, whoami, traced, deadline, preflight = false) {
+  const { runId, store, credential, account, cascade, bound, requested } = checked;
+  const progress = { started: false };
+
   /* ------------------------------------------------------- FL-3: DRIVE THE TABLE
    *
    * Everything below is `agent-harness`' decision and this function's plumbing.
@@ -1668,17 +1807,26 @@ async function handleRun(req, env) {
   const modelMode = !Array.isArray(body.judgements);
   const model = modelMode
     ? modelHalf({ reference: (await cascadeToken(account)).reference, runner: env.RUNNER ?? null, meter,
-                  suggestions: account.suggestions, traced: doorTrace(req) })
+                  suggestions: account.suggestions, traced })
     : null;
 
   const drive = await driveHarness(env, {
-    runId, store, credential, account, model,
+    runId, store, credential, account, model, preflight,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
+    deadline, progress,
   });
-  if (drive.refusal) return drive.refusal;
+  if (drive.ready) return { ready: true };
+  /* R91: a refusal that ended the segment is answered as it always was, and its code ends the segment's `segment_end`.
+     One before the first step (R8–R11, R48: the run, its payer, its pack, its log) is a segment that never started, and
+     nothing is written for it (R10, R57: the run stays as it was). */
+  if (drive.refusal) {
+    const said = await drive.refusal.clone().json().catch(() => ({}));
+    return { response: drive.refusal, end: progress.started
+      ? { by: SEGMENT_END_BY.refusal, done: false, refusals: refusalCodes([said]) } : null };
+  }
 
-  return json({
+  return { end: { ...drive.segmentEnd, refusals: refusalCodes(drive.refusals) }, response: json({
     ok: true,
     run_id: runId,
     store,
@@ -1749,9 +1897,9 @@ async function handleRun(req, env) {
        and the namespace it confined the call to. Both are facts the plane
        decided; this member re-derives neither. */
     plane_says: {
-      token_class: asked.body.result?.tokenClass ?? asked.body.tokenClass ?? null,
-      store: asked.body.store ?? null,
-      session: asked.body.result?.session ?? null,
+      token_class: whoami?.result?.tokenClass ?? whoami?.tokenClass ?? null,
+      store: whoami?.store ?? null,
+      session: whoami?.result?.session ?? null,
     },
 
     /* AND THE PART THAT IS UNDETERMINED, STATED RATHER THAN GUESSED OR OMITTED.
@@ -1767,9 +1915,9 @@ async function handleRun(req, env) {
     principal: null,
     principal_source: "UNPUBLISHED — no read op an ai credential may call states its own principal (D-199 (4))",
 
-    plane: { version: asked.body.version ?? null, op: "whoami" },
+    plane: { version: whoami?.version ?? null, op: "whoami" },
     worker: { name: "agent-worker", version: env.VERSION || "0.0.0" },
-  });
+  }) };
 }
 
 /* Fleet rule 4: each member versions and rolls out on its own, so "a deploy
@@ -1786,6 +1934,50 @@ function handleVersion(env) {
    (it names instances and reaches them, as `/signin` and a sign-in's turns use it), so `instance-setup` (its R17) can tell
    a copy that runs a member's own sign-in from one that does not. A boolean only: nothing else of the binding is named. */
 const runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
+
+/* R91 (R085-8; K3477; WALK-085 F2) — THE SEGMENT DRIVER: one Durable Object per run (`SEGMENTS`, named by the run id), so
+   a segment outlives the request that started it. Live, the plane dropped `/run` after 30 s and the segment, living
+   only on that connection, died with it, its answer never read; `waitUntil` would hold it 30 s more and no longer.
+
+   It holds the segment's inputs IN MEMORY ONLY, from the `/start` that hands them over to the alarm that runs them:
+   the credential and the account are never written to storage (R36), only the alarm's time is. An object evicted in
+   between runs nothing, and the plane's lease ends the run (ai-runs R83). The alarm runs the segment under a wall
+   bound (`MAX_SEGMENT_MS`, else 10 minutes) clear of an alarm's own 15-minute limit, so a long segment ends as a
+   segment bound and the plane dispatches the next (ai-runs R84), never as a killed handler. A second segment of a run
+   whose segment is still held or running is refused `SEGMENT_RUNNING`: two would race the run's published state. */
+const DEFAULT_SEGMENT_WALL_MS = 10 * 60 * 1000;
+const segmentsBound = (env) => typeof env.SEGMENTS?.idFromName === "function" && typeof env.SEGMENTS?.get === "function";
+const segmentWallMs = (env) => (Number(env.MAX_SEGMENT_MS) > 0 ? Number(env.MAX_SEGMENT_MS) : DEFAULT_SEGMENT_WALL_MS);
+
+export class SegmentDriver {
+  constructor(state, env) { this.state = state; this.env = env; this.pending = null; this.running = false; }
+
+  async fetch(req) {
+    if (this.pending || this.running)
+      return refusal("SEGMENT_RUNNING",
+        "a segment of this run is still running, so no second one was started; the plane is told when it ends.", 409);
+    const got = await req.json().catch(() => null);
+    if (!got || typeof got.body !== "object" || got.body === null)
+      return refusal("BAD_BODY", "the request body could not be read as JSON.", 400);
+    const checked = await checkRun(got.body, this.env);
+    if (checked.refusal) return checked.refusal;
+    this.pending = { checked, body: got.body, whoami: got.whoami ?? null, traced: doorTrace(req) };
+    await this.state.storage.setAlarm(Date.now());
+    return json({ accepted: true, run_id: checked.runId }, 202);
+  }
+
+  async alarm() {
+    const p = this.pending;
+    this.pending = null;
+    if (!p) return;
+    this.running = true;
+    try {
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env));
+    } finally {
+      this.running = false;
+    }
+  }
+}
 
 /* R54, R59 — what `/ask` (ask.mjs) and `/draft` (draft.mjs) use of this shell: one route to the plane, one refusal
    helper, one account judgement. */
