@@ -135,7 +135,9 @@ test("R13 a reloaded dock continues her running run by the same act: airundispat
   /* controls: another member's running run, or one of hers that ended, is not continued: a new run is opened */
   for (const run of [{ ...mine, principal: { plane: "member:dev" } }, { ...mine, status: "completed" }]) {
     const q = await dock(Q, stub({ runs: [run] }));
-    assert.ok(says(panel(q), "screen.assistant.run.none"));
+    /* R48: another member's run leaves "No run yet"; one of hers that ended is drawn ended, never "No run yet" */
+    assert.ok(run.status === "completed" ? says(panel(q), "screen.assistant.run.ended", { why: "completed" }) && !says(panel(q), "screen.assistant.run.none")
+      : says(panel(q), "screen.assistant.run.none"));
     await workOn(q);
     assert.equal(q.byOp("airunopen").length, 1);
     assert.notEqual(q.byOp("airundispatch")[0].body.run, OLD);

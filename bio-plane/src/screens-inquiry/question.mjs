@@ -1,4 +1,4 @@
-/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44: the question screen (Projects › <project> ›
+/* screens-inquiry R2, R12, R23–R27, R31, R34–R36, R38, R39, R41, R44, R45, R47: the question screen (Projects › <project> ›
  * Question; registry screen `question`).
  *
  * Self-contained functions (interface-shell R21 (1)): each refers only to its parameters, `cs` and the language's own
@@ -148,9 +148,10 @@ function render(cs, view) {
     : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
   const isMine = (s) => !!(s && member && s.principal && typeof s.principal.plane === "string"
     && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/")));
-  /* a run of hers at work on it: running, and dispatched (by this page, or ticked since by the worker): a run opened and
-     withheld is never drawn at work (R33's rule; D29) */
-  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && (ui.dispatched === s.id || Number(s.ticks) > 1)) || null;
+  /* a run of hers at work on it (R47): any running run of hers `airuns` shows, whether this page started it, the dock did,
+     or it is found on a fresh load; except a run this page saw opened and then withheld, never drawn at work (R33's rule;
+     D29) */
+  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && ui.withheld !== s.id) || null;
   /* R45: from her press until the plane has answered, and until that run is read ended, the run is at work */
   const asked = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
   const asking = !!ui.asking && !(asked && asked.status !== "running");
@@ -173,7 +174,7 @@ function render(cs, view) {
         cs.act("search", { label: "act.search.label.question", data: { q: heading } }))];
     if (askAct) rows.push(cs.row("", `<b>${W("question.empty.ask")}</b><br><span class="mk-sub">${W("question.empty.ask.line")}</span>`, askAct));
     /* R45: a run of hers that ended with no proposal is said, above the three ways in (which offer the ask again) */
-    out.push(cs.sec("question.empty.heading", (proposals.length ? "" : endedPart(false)) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
+    out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
@@ -190,7 +191,7 @@ function render(cs, view) {
       ui.polling = true;
       cs.later(10000, (k, v) => { v.ui.polling = false; k.set("seq", (v.ui.seq || 0) + 1); });
     }
-  } else if (!proposals.length && !concluded) out.push(endedPart(true));
+  } else if (!concluded) out.push(endedPart(true)); /* R47: above the proposals, whether or not any wait */
   /* state e: a reading the assistant proposed, not yet weighed, only while the assistant is reachable */
   for (const v of proposals) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l) => String(l.target_title || l.target_id || "")).filter(Boolean);
@@ -665,6 +666,7 @@ const acts = [
           if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
             const c = String(xr.code || xr.reason || xr.withheld || "");
             cs.set("asking", null);
+            cs.set("withheld", run);
             const key = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
             cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key ? cs.w(key) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
             return;

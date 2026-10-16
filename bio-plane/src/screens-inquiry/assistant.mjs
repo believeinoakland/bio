@@ -1,4 +1,4 @@
-/* screens-inquiry R4, R6, R7, R8, R13, R33, R42: the assistant dock (registry screen `assistant`, frame `dock`; its 3
+/* screens-inquiry R4, R6, R7, R8, R13, R33, R42, R48: the assistant dock (registry screen `assistant`, frame `dock`; its 3
  * acts), drawn beside the screen it serves while the assistant is reachable (interface-shell R20). `view.subject` is the
  * served screen's subject: a question (`INQ-`) or a project (`PROJ-`) is the run's context; a document's is the project
  * it states.
@@ -135,6 +135,7 @@ function render(cs, view) {
      `member:<id>/<tokenId>` for one opened before T47); continued by "Work on this" */
   const member = view.me && view.me.member;
   let found = null;
+  let endedMine = null;
   if (!ui.run && context && member) {
     const runs = later("runs", "airuns", { contextType: context.type, contextId: context.id, limit: "50" }, String(ui.seq || 0));
     const list = runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : [];
@@ -142,6 +143,10 @@ function render(cs, view) {
       && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/"));
     const r = list.find((s) => s && s.status === "running" && mine(s));
     if (r && r.id) found = { id: String(r.id), status: "running", untested: r.untested || null, dispatched: false, found: true };
+    /* R48: none running, her latest run there (newest first) that has ended; "no run yet" only when she has none */
+    else if (runs.state === "ok") {
+      endedMine = list.find(mine) || null;
+    }
   }
 
   /* the run */
@@ -150,7 +155,10 @@ function render(cs, view) {
   let runPart = "";
   let status = null;
   if (!run) {
-    runPart = `<p>${cs.w("screen.assistant.run.none")}</p>`;
+    const why = (c) => (c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || ""));
+    runPart = endedMine
+      ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: why(endedMine.condition) || String(endedMine.status || "") })}</p>`
+      : `<p>${cs.w("screen.assistant.run.none")}</p>`;
   } else if (run.found && !ui.run) {
     status = "running";
   } else {
