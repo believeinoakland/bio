@@ -34,6 +34,28 @@ test('R1 one query per request, Claude Code with nothing of its own on, captured
   } finally { await r.stop(); }
 });
 
+test('R32 a request\'s effort reaches the SDK\'s options as effort; a request without it leaves the option unset; any other value is refused before the query', async () => {
+  const { calls, sdk } = stubSdk(async () => success());
+  const r = await startRunner(sdk);
+  try {
+    for (const effort of ['low', 'medium', 'high', 'xhigh', 'max']) {
+      const { final } = await conversation(r.base, request({ effort }));
+      assert.equal(final.ok, true, effort);
+    }
+    assert.deepEqual(calls.map((c) => c.options.effort), ['low', 'medium', 'high', 'xhigh', 'max']);
+    const { final: plain } = await conversation(r.base, request());
+    assert.equal(plain.ok, true);
+    assert.equal(calls.length, 6);
+    assert.ok(!('effort' in calls[5].options), 'a request without effort leaves the option unset');
+    for (const bad of ['extreme', '', 'LOW', 1, null]) {
+      const { final } = await conversation(r.base, request({ effort: bad }));
+      assert.equal(final.ok, false, JSON.stringify(bad));
+      assert.equal(final.code, 'BAD_REQUEST', JSON.stringify(bad));
+    }
+    assert.equal(calls.length, 6, 'nothing started for a refused effort');
+  } finally { await r.stop(); }
+});
+
 test('R2 R28 a conversation runs on the held token, in an environment that replaces the process environment whole, with no API key and a fresh config directory', async () => {
   const { calls, sdk } = stubSdk(async () => success());
   const r = await startRunner(sdk);

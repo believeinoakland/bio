@@ -10,6 +10,8 @@ export const RELAY_SERVER = 'relay';
 export { DETAIL_MAX, scrub };
 export const MAX_TURNS_BOUND = 100;
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/;
+// The reasoning effort levels the pinned SDK takes as `Options.effort` (R32).
+const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 // The SDK's own sign of Anthropic refusing the token (sdk.d.ts `SDKAssistantMessageError`, 0.3.289; START, K3068):
 // an assistant or `api_retry` message carrying this error, then a query that does not succeed (R28).
 export const AUTH_FAILED = 'authentication_failed';
@@ -36,6 +38,7 @@ export function shapeFault(r) {
   if (!str(r.prompt) || !r.prompt) return 'prompt must be a non-empty string';
   if (!Number.isInteger(r.max_turns) || r.max_turns < 1 || r.max_turns > MAX_TURNS_BOUND)
     return `max_turns must be an integer from 1 to ${MAX_TURNS_BOUND}`;
+  if (r.effort !== undefined && !EFFORTS.includes(r.effort)) return `effort must be one of ${EFFORTS.join(', ')}`;
   if (!Array.isArray(r.tools)) return 'tools must be an array';
   const seen = new Set();
   for (const t of r.tools) {
@@ -168,6 +171,8 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
         skills: [],
         plugins: [],
         maxTurns: request.max_turns,
+        // the effort level the request names (R32); left unset when it names none
+        ...(request.effort !== undefined ? { effort: request.effort } : {}),
         mcpServers: { [RELAY_SERVER]: relayServer(kit, request.tools, relay) },
         allowedTools: request.tools.map((t) => `mcp__${RELAY_SERVER}__${t.name}`),
         permissionMode: 'dontAsk',
