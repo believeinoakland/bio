@@ -31,3 +31,7 @@ Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order 
 Workers you spawn name model and effort: haiku at low for mechanical work, sonnet at medium for reading and diagnosis, never above your own model.
 
 Model: claude-haiku-5-5. Entry R085-29: agent-harness R14. Read diag-085-r6.md item (e). In `emptyLevelCandidates` (agent-harness/src/harness.mjs ~495-498) stop appending `The sub-session reported: ${r.summary.trim()}` to the description; the report and its words stay in the run log. No raw record id may remain in the candidate's description. Users to run (P11): agent-worker's tests that read a level-empty candidate (REPORT any that fail). agent-worker bundles you: REPORT that, no rebuild.
+
+## B6 · CHANGE
+
+Before you start (K3529): your entry R085-29 also carries R15, a check run closes after a pass that added no new candidate (requirements on tranche/R085, merged into your branch). Your model is claude-sonnet-5-5. Each new id its own explicit test (K874).
