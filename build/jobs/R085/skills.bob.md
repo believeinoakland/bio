@@ -9,3 +9,7 @@ Depth 2. Tranche R085: fix round 7 on the 0.85.0 cut (K3557). The assistant lane
 Workers you spawn: haiku at low for mechanical work, sonnet at medium for reading, never above your own model.
 
 Model: claude-sonnet-5-5. Entry R085-37: skills R50. agent-worker bundles skills? If your change stales a bundle, REPORT it; do not rebuild another module's artifact.
+
+## B2 · RESUME
+
+Your session has been idle since 17:59 with R50 pushed (46173a0ff0) and no COMPLETE. Run mail inbox (START is B1, still unhandled), finish the tests of the modules that use the pack (agent-worker's pack tests at most; do not stop agent-worker's run midway, K1994), run the checks, record completion with your Size line, set COMPLETE and post COMPLETE. If a test run is still going, set RUNNING with its time instead.
