@@ -122,3 +122,13 @@ export function factsOf(messages) {
   }
   return { content: "no facts were given for this work", error: true };
 }
+
+/** R18 — what `checkFinal` says of a final call's input, as the error text handed back to the model, or null to accept it.
+ *  A `checkFinal` that throws, or answers anything but `{code, detail}`, accepts. */
+export async function finalRefusal(checkFinal, input) {
+  if (typeof checkFinal !== "function") return null;
+  try {
+    const r = await checkFinal(input && typeof input === "object" ? input : {});
+    return r && typeof r === "object" && r.code != null ? `${String(r.code)}: ${String(r.detail ?? "")}` : null;
+  } catch { return null; }
+}

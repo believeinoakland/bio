@@ -43,7 +43,7 @@
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
 import { RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, READ_RESULT, TRACE_HEADER, MEMBER_REF_HEADER, TRACE_HEADER_MAX,
          signinTurn, signinConverse, renderTranscript, traceHeaders } from "./signin.mjs";
-import { USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
+import { USAGE_FIGURES, ESTIMATE, finalRefusal, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
 
 export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, TRACE_HEADER, MEMBER_REF_HEADER,
          TRACE_HEADER_MAX, USAGE_FIGURES, ESTIMATE,
@@ -51,19 +51,25 @@ export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAG
 
 /* R1 — the model per mode. Every mode the harness's tables hold has an entry. */
 export const MODEL_FOR_MODE = Object.freeze({
-  check: "claude-opus-5",
-  investigate: "claude-opus-5",
-  extract: "claude-opus-5",
-  plan: "claude-opus-5",
-  ask: "claude-opus-5",
+  check: "claude-opus-5-5",
+  investigate: "claude-opus-5-5",
+  extract: "claude-opus-5-5",
+  plan: "claude-opus-5-5",
+  ask: "claude-opus-5-5",
   /* K1983: `agent-worker` R59's `POST /draft`; provisional like the rest until M-Q9. */
-  draft: "claude-opus-5",
+  draft: "claude-opus-5-5",
   /* N832, K2611: `agent-worker` R72's `POST /transcribe`, a model that reads images (R14); provisional like the rest
      until M-Q9. */
-  transcribe: "claude-opus-5",
+  transcribe: "claude-opus-5-5",
 });
 export const MODEL_FOR_MODE_SOURCE = "provisional: today's default for every mode, until M-Q9 measures the cheapest "
   + "model passing K1504's bar (assistant-substrate §7) per mode";
+/* R19 (K3490) — a check's sub-sessions run on this model, every other conversation on `MODEL_FOR_MODE`'s; and the effort
+ * each carries, "only as high as necessary for the work to be done right". */
+export const SUBSESSION_MODEL = "claude-sonnet-5-5";
+export const SUBSESSION_ROLE = "subsession";
+export const EFFORT_SUBSESSION = "low";
+export const EFFORT_DEFAULT = "medium";
 export const MODEL_MAX_TOKENS = 16000;
 
 /* R13 — USD per million tokens for each model, a reviewed edit beside `MODEL_FOR_MODE`: every model that table names
@@ -71,11 +77,12 @@ export const MODEL_MAX_TOKENS = 16000;
  * `ephemeral`, the default lifetime). The copy's estimate of an API key's spend, never what the payer is billed. */
 const rates = (input, output, cache_read, cache_write) => Object.freeze({ input, output, cache_read, cache_write });
 export const MODEL_PRICES = Object.freeze({
-  "claude-opus-5": rates(5, 25, 0.5, 6.25),
+  "claude-opus-5-5": rates(4, 20, 0.4, 5),
+  "claude-sonnet-5-5": rates(2, 10, 0.2, 2.5),
 });
-export const MODEL_PRICES_SOURCE = "Anthropic's first-party API rates per million tokens as published on 2026-10-06 "
-  + "(about-claude/pricing): input and output as listed, a cache read 0.1x the input rate, a five-minute cache write "
-  + "1.25x";
+export const MODEL_PRICES_SOURCE = "Anthropic's first-party API rates per million tokens as R19 states them (K3490), "
+  + "read 2026-10-16: Opus 5.5 $4 input, $20 output; Sonnet 5.5 $2, $10; a cache read 0.1x the input rate, a "
+  + "five-minute cache write 1.25x";
 /* Which rate each usage figure is priced at. */
 const RATE_OF = Object.freeze({ input_tokens: "input", output_tokens: "output", cache_read_input_tokens: "cache_read",
                                 cache_creation_input_tokens: "cache_write" });
@@ -182,12 +189,16 @@ export async function modelCall(reference, request, { runner, trace, memberRef }
  *  or `refused`; every ending past the meter's first check carries the conversation's summed `usage` and `calls`, the
  *  number of model calls that sum covers (N588), so a caller counts calls, not conversations. Any other tool call
  *  is performed by `onTool` and its result returned to the model. */
-export async function converse({ reference, runner, mode, meter, system, messages, tools, finalTool, onTool,
-                                 maxTurns = CONVERSATION_MAX_TURNS, trace, memberRef }) {
+export async function converse({ reference, runner, mode, role, meter, system, messages, tools, finalTool, onTool,
+                                 checkFinal, maxTurns = CONVERSATION_MAX_TURNS, trace, memberRef }) {
   const { ref, refusal } = precheck(reference, runner);
   if (refusal) return refusal;
-  const model = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode) ? MODEL_FOR_MODE[mode] : null;
-  if (!model) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
+  const known = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode);
+  if (!known) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
+  /* R19: a sub-session's model and effort, every other conversation's. */
+  const sub = role === SUBSESSION_ROLE;
+  const model = sub ? SUBSESSION_MODEL : MODEL_FOR_MODE[mode];
+  const effort = sub ? EFFORT_SUBSESSION : EFFORT_DEFAULT;
   /* The meter: a request is counted before it is sent, and one that would pass a bound is not sent. */
   const charge = (serialized) => {
     if (meter.turns >= meter.turnsBound) { meter.stopped = "turns"; return { stopped: "turns" }; }
@@ -197,16 +208,17 @@ export async function converse({ reference, runner, mode, meter, system, message
     return null;
   };
   if (ref.kind === "signin")
-    return signinConverse({ account: signinAccount(ref, { trace, memberRef }), runner, model, system, messages, tools, finalTool, onTool,
-                            maxTurns, charge });
+    return signinConverse({ account: signinAccount(ref, { trace, memberRef }), runner, model, effort, system, messages, tools,
+                            finalTool, onTool, checkFinal, maxTurns, charge });
 
   let usage = null;
   /* A request counts when its outcome reached the provider (it carries `usage`); one the meter stopped, or one that
      failed before an answer came, counts none. */
   let calls = 0;
+  let handedBack = false;
   for (let k = 0; k < maxTurns; k += 1) {
     const serialized = JSON.stringify(withCache({ model, max_tokens: MODEL_MAX_TOKENS, system, messages, tools,
-                                                  tool_choice: { type: "auto" } }));
+                                                  tool_choice: { type: "auto" }, output_config: { effort } }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     const got = priced(await apikeyTurn(ref.secret, serialized), { model, serialized, maxTokens: MODEL_MAX_TOKENS });
@@ -216,6 +228,14 @@ export async function converse({ reference, runner, mode, meter, system, message
     messages.push({ role: "assistant", content });
     const uses = content.filter((b) => b && b.type === "tool_use");
     const final = uses.find((u) => u.name === finalTool);
+    /* R18: a refused final call is handed back once, as an error result; the next one ends the conversation. */
+    const refusedFinal = final && !handedBack ? await finalRefusal(checkFinal, final.input) : null;
+    if (refusedFinal) {
+      handedBack = true;
+      messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id,
+        content: u === final ? refusedFinal : "not performed: the answer was handed back", is_error: true })) });
+      continue;
+    }
     if (final) {
       /* Every tool call gets its result, so the transcript stays one the API accepts when the next row is asked. */
       messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id,
@@ -397,6 +417,13 @@ export function subsessionOpening(contract) {
 
 export function subsessionTools(contract) {
   const r = contract.returns || {};
+  const conditions = Array.isArray(r.conditions) && r.conditions.length ? r.conditions : null;
+  const summaryMax = r.summary_max || 500;
+  const citationsMax = r.citations_max || 20;
+  const addressMax = r.address_max || 200;
+  /* R17 — the bounds where the model reads them, not only as schema limits. */
+  const bounds = ` The summary is at most ${summaryMax} characters; give at most ${citationsMax} citations, each address at most `
+    + `${addressMax} characters.` + (conditions ? ` condition is one of: ${conditions.join(", ")}.` : "");
   return [
     { name: "meaningrows",
       description: "query the record at meaning grain through the plane (op=meaningrows)",
@@ -404,14 +431,14 @@ export function subsessionTools(contract) {
         q: { type: "string" }, rows: { type: "string", description: "the meaning arm, e.g. leg" },
         limit: { type: "integer", minimum: 1, maximum: 50 } }, required: ["rows"], additionalProperties: false } },
     { name: "report",
-      description: String(r.rule || "return a REPORT with a citation, never documents"),
+      description: String(r.rule || "return a REPORT with a citation, never documents") + bounds,
       input_schema: { type: "object", properties: {
         state: { type: "string", enum: r.states || [] },
-        summary: { type: "string", maxLength: r.summary_max || 500 },
-        citations: { type: "array", maxItems: r.citations_max || 20, items: { type: "object", properties: {
-          address: { type: "string", maxLength: r.address_max || 200 } }, required: ["address"],
+        summary: { type: "string", maxLength: summaryMax },
+        citations: { type: "array", maxItems: citationsMax, items: { type: "object", properties: {
+          address: { type: "string", maxLength: addressMax } }, required: ["address"],
           additionalProperties: false } },
-        governed: { type: "boolean" }, condition: { type: "string" } },
+        governed: { type: "boolean" }, condition: conditions ? { type: "string", enum: conditions } : { type: "string" } },
         required: ["state"], additionalProperties: false } },
     READ_FACTS,
   ];
