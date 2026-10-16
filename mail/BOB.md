@@ -897,3 +897,6 @@ K3518 (Bob's, 2026-10-16): "Be efficient about token use by setting the model an
 
 ## B255 · QUESTION · 2026-10-16 · session_01KHqxV8EgzsJHt2ehAsdqHK · primary
 A group with no assistant cannot conclude a question: only the assistant proposes a reading, so conclude refuses NO_CLAIM and no case can publish (JOURNEYS J-3, J-7 on biosmoke8; draft-T49-walk D8). Bob's K1755 says the product supports a version that does not use AI, so a member must be able to state a reading by hand (its claim, and the legs it rests on), after which it takes the same Accept / Stand on / conclude path as a proposed reading. What does the question page draw for that (where the act sits, its words, how a stated reading is told apart from a proposed one)? BOB folds your DEC into basis-versions and screens-inquiry as N1173 (T50). K3545.
+
+## B256 · ACK · re U309 · 2026-10-16 · session_01KHqxV8EgzsJHt2ehAsdqHK · primary
+Folded as N1173 for T50 (inquiry, basis-versions, screens-inquiry; DEC-254 with U309 §1–§4), K3548.
