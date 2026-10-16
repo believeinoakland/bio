@@ -439,20 +439,32 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   if (model) {
     const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
-    if (pub.refused)
-      return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
+    if (pub.refused) {
+      const refused = planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null });
+      await settleAtDispatch({ call, runId, session, code: pub.refused.code ?? "PLANE_REFUSED",
+                               why: "the plane refused the read of the skill pack" });
+      return { refusal: refused };
+    }
     const pack = publishedPack(pub.result);
     const recordedSkill = session.principal?.skill ?? null;
-    if (!pack.ok || recordedSkill !== pack.pack.version)
+    if (!pack.ok || recordedSkill !== pack.pack.version) {
+      /* R107: the run cannot continue under another pack, and the plane's lease would lapse with its composed work unwritten. */
+      const lapse = await settleAtDispatch({ call, runId, session, code: "SKILL_VERSION_MISMATCH",
+        why: pack.ok ? `the run recorded ${recordedSkill} and the plane publishes ${pack.pack.version}`
+          : `the plane published no skill pack this member can use (${pack.why})` });
       return { refusal: refusal("SKILL_VERSION_MISMATCH",
         (pack.ok
           ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its "
             + "model would be instructed by words the record does not name."
           : "the plane published no skill pack this member can instruct a model with, so the pack's version is "
             + `UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`)
-        + " No turn was taken; the run is resumable once the two agree.", 409,
+        + " No turn was taken."
+        + (lapse ? " The run cannot be continued under another pack, so what it composed was written where the plane "
+                   + "accepted it and the run was closed (R107)." : " The run is resumable once the two agree."), 409,
         { run_id: runId, recorded: recordedSkill, rendered: pack.ok ? pack.pack.version : null,
-          ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }) }) };
+          ...(pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }),
+          ...(lapse ? { lapse } : {}) }) };
+    }
     const { pack: held } = pack;
     model.pack = held;
     model.messages = [];
@@ -820,6 +832,46 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false }
       : { by: null, done: false },
   };
+}
+
+/** R107 (R085; S4 N1, N4; K3557) — A RUN REFUSED AT DISPATCH DOES NOT LAPSE SILENTLY. The pack a run recorded at its open
+ *  never comes back once the plane publishes another, so a segment refused for it (or for the read of it) can never be
+ *  continued, and the plane's lease would end the run with what it composed unwritten and no word of why. After the payer
+ *  check (a run that is not this account's is touched by nothing, R10), for a run that has done work: the candidates its
+ *  published state holds and has not written are written through `op=suggest` where the plane accepts them (a refusal is
+ *  named, not retried or adjusted), one tick logs the refusal by name, and the run is closed on `lease`, which stops it
+ *  (status `stopped`, never `completed`). A run that has done nothing, a plan-mode run's proposals (not `suggest`'s) and a
+ *  plane that does not answer are left as they were. Returns `{written, not_accepted, closed}` or null; it never throws. */
+async function settleAtDispatch({ call, runId, session, code, why }) {
+  try {
+    const flow = flowFor(session.mode);
+    const resumed = resumeFrom(session.state ?? null, flow);
+    const st = resumed.at ? resumed.state : null;
+    if (!st) return null;
+    const seeded = runContextTarget(session);
+    /* what the state holds and has not written: before `dedup` has queued them, the composed list; after, the queue */
+    const unwritten = flow === PLAN_FLOW ? []
+      : (resumed.at === "dedup" ? st.candidates : st.queue).filter((c) => c && typeof c === "object");
+    const written = [], notAccepted = [];
+    for (const c of unwritten) {
+      const res = await call("suggest", null, { ...c, target: c.target ?? seeded.target ?? null, run: runId });
+      if (!res.reached) break;
+      const a = res.body?.result ?? res.body ?? {};
+      if (res.status === 200 && res.body?.ok === true && a.ok !== false && a.wrote !== false) written.push(String(c.name ?? ""));
+      else notAccepted.push({ name: String(c.name ?? ""), code: a.code ?? a.reason ?? null });
+    }
+    const said = `dispatch refused ${code} (${why}); the run cannot be continued, so ${written.length} composed candidate(s) `
+      + `were written${written.length ? ` (${written.map((n) => `'${n}'`).join(", ")})` : ""}`
+      + (notAccepted.length ? `, ${notAccepted.length} not accepted by the plane (${notAccepted.map((n) => n.code ?? "?").join(", ")})` : "")
+      + " and the run was closed";
+    const { entry } = loggable({ level: "meaning", subject: "dispatch -> refused", state: "LOOKED_INDETERMINATE", governed: false,
+                                 condition: null, terminal: false, bound: null, detail: said.slice(0, LOG_DETAIL_MAX) });
+    await call("airuntick", null, { run: runId, log: [entry], consume: { runtime: 1 } });
+    const closed = planeAnswer(await call("airunclose", null, { run: runId, bound: "lease" }), "airunclose");
+    return { written, not_accepted: notAccepted, closed: !closed.silent && !closed.refused };
+  } catch {
+    return null;
+  }
 }
 
 /* R92 (R085-8; K3477; WALK-085 F2, cause B) — AN ENTRY THIS MEMBER SENDS IS IN THE RECORD'S OWN WORDS.
@@ -1248,8 +1300,8 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         return out;
       }
       const body = held.result ?? {};
-      const names = new Set((Array.isArray(body.versions) ? body.versions : [])
-        .map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
+      const versions = Array.isArray(body.versions) ? body.versions : [];
+      const names = new Set(versions.map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       /* FL-11: the read above is of the RUN's target, so it can only rule on candidates aimed THERE. A
          candidate naming another question was compared against nothing and says so — it survives to the
          plane, which bounds it — rather than being filtered against another question's versions. */
@@ -1263,12 +1315,14 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       /* R105: a held version this run wrote itself says so, with the pass that wrote it, rather than reading as someone else's. */
       const mine = (n) => (state.written || []).find((w) => w.name === n) ?? null;
       const ofRun = (n) => (mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "");
+      /* R108: a candidate whose level is none of the four is dropped and logged too, at the `meaning` level (the look
+         dedup itself makes is of the question), its detail saying it states no level. */
       const byLevel = new Map();
       for (const c of droppedHere) {
-        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
-        if (!level) continue;
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level) ?? "meaning";
         const n = String(c.name ?? "");
-        byLevel.set(level, [...(byLevel.get(level) || []), `'${n}'${ofRun(n)}`]);
+        byLevel.set(level, [...(byLevel.get(level) || []),
+          `'${n}'${LEVELS.some((l) => REPORTING_LEVEL[l] === c.level) ? "" : " (stating no level)"}${ofRun(n)}, matching the held version of that name`]);
       }
       if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
         level, subject: "dedup -> candidate dropped", state: "LOOKED_INDETERMINATE", governed: false, condition: null,

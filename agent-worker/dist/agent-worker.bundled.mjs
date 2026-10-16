@@ -278,6 +278,23 @@ function gateStep(state) {
   return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
 }
 function nextStep(state) {
+  return nothingWrittenGuard(state || {}, tableStep(state));
+}
+var NOTHING_WRITTEN = "nothing-written";
+var countOf = (v) => Array.isArray(v) ? v.length : Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : 0;
+function nothingWrittenReason(state) {
+  const s = state || {};
+  const composed = countOf(s.composed);
+  const kept2 = s.kept === void 0 || s.kept === null ? composed : countOf(s.kept);
+  if (kept2 <= 0 || Math.max(countOf(s.wrote), countOf(s.written)) > 0) return null;
+  return `nothing written: ${composed} candidate(s) composed, ${kept2} sent to be written, none written${s.refusal ? ` (the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}')` : ""}`;
+}
+function nothingWrittenGuard(s, decision) {
+  if (decision.step !== "close" || decision.bound !== "completed") return decision;
+  const reason = nothingWrittenReason(s);
+  return reason ? { ...decision, bound: NOTHING_WRITTEN, reason, why: `${decision.why}; ${reason}` } : decision;
+}
+function tableStep(state) {
   const s = state || {};
   const at7 = String(s.step || FIRST_STEP);
   const row3 = CONTROL_FLOW[at7];
@@ -363,6 +380,9 @@ function advance(state, decision) {
     next.resumeBasis = null;
   }
   if (s.step === "dedup" && to === "submit") next.passAdded = true;
+  if (s.step === "compose") next.composed = countOf(s.composed) + (s.candidates || []).length;
+  if (s.step === "dedup") next.kept = countOf(s.kept) + (s.queue || []).length;
+  if (s.step === "submit" && to !== "adjust" && s.submission && !s.refusal) next.wrote = countOf(s.wrote) + 1;
   if (s.step === "next-pass" && to === "plan") next.passAdded = false;
   return to === "next-pass" ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
 }
@@ -380,7 +400,10 @@ var RESUMABLE = [
   "refusal",
   "refusedSubmission",
   "adjusted",
-  "passAdded"
+  "passAdded",
+  "composed",
+  "kept",
+  "wrote"
 ];
 function resumableState(state) {
   const s = state || {};
@@ -398,7 +421,15 @@ function publishableState(state, limit, flow = CONTROL_FLOW) {
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
   const at7 = flow === PLAN_FLOW ? full.step === "close" ? "close" : "read" : STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
-  const restart = resumableState({ step: at7, pass: full.pass, adjusted: false, passAdded: full.passAdded });
+  const restart = resumableState({
+    step: at7,
+    pass: full.pass,
+    adjusted: false,
+    passAdded: full.passAdded,
+    composed: full.composed,
+    kept: full.kept,
+    wrote: full.wrote
+  });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at7 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
@@ -433,7 +464,10 @@ function resumeFrom(published, flow = CONTROL_FLOW) {
     refusal: record(p.refusal),
     refusedSubmission: record(p.refusedSubmission),
     adjusted: p.adjusted === true,
-    passAdded: p.passAdded === true
+    passAdded: p.passAdded === true,
+    composed: countOf(p.composed),
+    kept: countOf(p.kept),
+    wrote: countOf(p.wrote)
   } };
 }
 var PRESENT_UNBACKED_NOTE = "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) \u2014 so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
@@ -36080,22 +36114,40 @@ async function driveHarness(env, {
   if (model) {
     const pub = planeAnswer(await call("agentpack"), "agentpack");
     if (pub.silent) return { refusal: planeSilent(pub.silent) };
-    if (pub.refused)
-      return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
+    if (pub.refused) {
+      const refused2 = planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null });
+      await settleAtDispatch({
+        call,
+        runId,
+        session,
+        code: pub.refused.code ?? "PLANE_REFUSED",
+        why: "the plane refused the read of the skill pack"
+      });
+      return { refusal: refused2 };
+    }
     const pack = publishedPack(pub.result);
     const recordedSkill = session.principal?.skill ?? null;
-    if (!pack.ok || recordedSkill !== pack.pack.version)
+    if (!pack.ok || recordedSkill !== pack.pack.version) {
+      const lapse = await settleAtDispatch({
+        call,
+        runId,
+        session,
+        code: "SKILL_VERSION_MISMATCH",
+        why: pack.ok ? `the run recorded ${recordedSkill} and the plane publishes ${pack.pack.version}` : `the plane published no skill pack this member can use (${pack.why})`
+      });
       return { refusal: refusal7(
         "SKILL_VERSION_MISMATCH",
-        (pack.ok ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its model would be instructed by words the record does not name." : `the plane published no skill pack this member can instruct a model with, so the pack's version is UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`) + " No turn was taken; the run is resumable once the two agree.",
+        (pack.ok ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its model would be instructed by words the record does not name." : `the plane published no skill pack this member can instruct a model with, so the pack's version is UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`) + " No turn was taken." + (lapse ? " The run cannot be continued under another pack, so what it composed was written where the plane accepted it and the run was closed (R107)." : " The run is resumable once the two agree."),
         409,
         {
           run_id: runId,
           recorded: recordedSkill,
           rendered: pack.ok ? pack.pack.version : null,
-          ...pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }
+          ...pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why },
+          ...lapse ? { lapse } : {}
         }
       ) };
+    }
     const { pack: held2 } = pack;
     model.pack = held2;
     model.messages = [];
@@ -36418,6 +36470,40 @@ async function driveHarness(env, {
     segmentEnd: ended ? { by: ended.by, done: true } : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false } : { by: null, done: false }
   };
 }
+async function settleAtDispatch({ call, runId, session, code, why }) {
+  try {
+    const flow = flowFor(session.mode);
+    const resumed = resumeFrom(session.state ?? null, flow);
+    const st = resumed.at ? resumed.state : null;
+    if (!st) return null;
+    const seeded = runContextTarget(session);
+    const unwritten = flow === PLAN_FLOW ? [] : (resumed.at === "dedup" ? st.candidates : st.queue).filter((c) => c && typeof c === "object");
+    const written = [], notAccepted = [];
+    for (const c of unwritten) {
+      const res = await call("suggest", null, { ...c, target: c.target ?? seeded.target ?? null, run: runId });
+      if (!res.reached) break;
+      const a = res.body?.result ?? res.body ?? {};
+      if (res.status === 200 && res.body?.ok === true && a.ok !== false && a.wrote !== false) written.push(String(c.name ?? ""));
+      else notAccepted.push({ name: String(c.name ?? ""), code: a.code ?? a.reason ?? null });
+    }
+    const said = `dispatch refused ${code} (${why}); the run cannot be continued, so ${written.length} composed candidate(s) were written${written.length ? ` (${written.map((n) => `'${n}'`).join(", ")})` : ""}` + (notAccepted.length ? `, ${notAccepted.length} not accepted by the plane (${notAccepted.map((n) => n.code ?? "?").join(", ")})` : "") + " and the run was closed";
+    const { entry } = loggable({
+      level: "meaning",
+      subject: "dispatch -> refused",
+      state: "LOOKED_INDETERMINATE",
+      governed: false,
+      condition: null,
+      terminal: false,
+      bound: null,
+      detail: said.slice(0, LOG_DETAIL_MAX)
+    });
+    await call("airuntick", null, { run: runId, log: [entry], consume: { runtime: 1 } });
+    const closed = planeAnswer(await call("airunclose", null, { run: runId, bound: "lease" }), "airunclose");
+    return { written, not_accepted: notAccepted, closed: !closed.silent && !closed.refused };
+  } catch {
+    return null;
+  }
+}
 var LOG_DETAIL_MAX = 500;
 function loggable(entry) {
   if (!entry || typeof entry !== "object") return { entry, governedDowngrade: null };
@@ -36616,7 +36702,8 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         return out;
       }
       const body = held2.result ?? {};
-      const names = new Set((Array.isArray(body.versions) ? body.versions : []).map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
+      const versions = Array.isArray(body.versions) ? body.versions : [];
+      const names = new Set(versions.map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
       const droppedHere = (state.candidates || []).filter((c) => c && aimedHere(c) && names.has(String(c.name ?? "")));
@@ -36625,10 +36712,12 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       const ofRun = (n) => mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "";
       const byLevel = /* @__PURE__ */ new Map();
       for (const c of droppedHere) {
-        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
-        if (!level) continue;
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level) ?? "meaning";
         const n = String(c.name ?? "");
-        byLevel.set(level, [...byLevel.get(level) || [], `'${n}'${ofRun(n)}`]);
+        byLevel.set(level, [
+          ...byLevel.get(level) || [],
+          `'${n}'${LEVELS.some((l) => REPORTING_LEVEL[l] === c.level) ? "" : " (stating no level)"}${ofRun(n)}, matching the held version of that name`
+        ]);
       }
       if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
         level,
