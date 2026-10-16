@@ -275428,9 +275428,16 @@ var finder = Object.freeze({
     const q10 = typeof ui.q === "string" ? ui.q : view.subject ? String(view.subject) : "";
     const out = {};
     if (q10.trim()) {
+      const w = q10.trim().split(/\s+/);
+      const plain20 = w.every(function(x) {
+        return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+      });
+      const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        return "passage:" + x;
+      }).join(" ") + ")" : q10;
       out.search = {
         op: "search",
-        query: { q: q10, limit: "50", snippet: "160" },
+        query: { q: asked, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -275507,7 +275514,14 @@ var finder = Object.freeze({
         const q10 = String(cs.value("finder-q") || "").trim();
         if (!q10) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q10);
-        return { query: { q: q10, limit: "50", snippet: "160" } };
+        const w = q10.split(/\s+/);
+        const plain20 = w.every(function(x) {
+          return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+        });
+        const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+          return "passage:" + x;
+        }).join(" ") + ")" : q10;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       }
     },
     // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
@@ -275946,9 +275960,16 @@ var answers = Object.freeze({
     const ui = view.ui || {};
     const out = {};
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
+      const w = ui.q.trim().split(/\s+/);
+      const plain20 = w.every(function(x) {
+        return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+      });
+      const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        return "passage:" + x;
+      }).join(" ") + ")" : ui.q;
       out.search = {
         op: "search",
-        query: { q: ui.q, limit: "50", snippet: "160" },
+        query: { q: asked, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -276077,7 +276098,14 @@ var answers = Object.freeze({
           cs.go("finder", q10);
           return null;
         }
-        return { query: { q: q10, limit: "50", snippet: "160" } };
+        const w = q10.split(/\s+/);
+        const plain20 = w.every(function(x) {
+          return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+        });
+        const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+          return "passage:" + x;
+        }).join(" ") + ")" : q10;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       }
     },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
