@@ -85017,7 +85017,7 @@ function parseTokens(tokens3, implicitOp, ctx) {
     }
     if (t2.k === "term") {
       eat();
-      return textAtom(null, t2.value, t2.quoted, ctx);
+      return bareAtom(textAtom(null, t2.value, t2.quoted, ctx));
     }
     if (t2.k === "sel") {
       eat();
@@ -85028,10 +85028,10 @@ function parseTokens(tokens3, implicitOp, ctx) {
       if (t2.field && t2.field.toLowerCase() === "passage") return meaningAtom("passage", t2, ctx);
       return nearAtom(
         t2.near,
-        (term) => textAtom(null, term.value, term.quoted, ctx),
+        (term) => bareAtom(textAtom(null, term.value, term.quoted, ctx)),
         (atom) => {
           ctx.textAtoms.push(atom);
-          return atom;
+          return bareAtom(atom);
         },
         ctx
       );
@@ -85077,6 +85077,10 @@ function parseTokens(tokens3, implicitOp, ctx) {
   };
   const ast = orExpr();
   return ast;
+}
+function bareAtom(atom) {
+  if (atom) atom.bare = true;
+  return atom;
 }
 function textAtom(column, value, quoted5, ctx) {
   let v = value;
@@ -85601,7 +85605,34 @@ function compile4({
   const frs = fieldRelationsOf(relation2, ctx.warnings);
   ctx.frs = frs;
   const fieldRef = (col) => frs.has(col) ? fieldValue2(frs.get(col)) : ref(col);
-  const ast = parseTokens(tokenize(q10), implicitOp === "or" ? "or" : "and", ctx);
+  let ast = parseTokens(tokenize(q10), implicitOp === "or" ? "or" : "and", ctx);
+  const rowArm = typeof rows4 === "string" && rows4.toLowerCase() in MEANING ? rows4.toLowerCase() : null;
+  if (rowArm === "passage") {
+    const hasPassage = (n2) => !!n2 && typeof n2 === "object" && (n2.op === "meaning" && n2.arm === "passage" && n2.field || hasPassage(n2.kid) || Array.isArray(n2.kids) && n2.kids.some(hasPassage));
+    if (!hasPassage(ast)) {
+      const sub = MEANING.passage.sub.text;
+      const moved = /* @__PURE__ */ new Set();
+      const toPassage = (n2, negated) => {
+        if (!n2 || typeof n2 !== "object") return n2;
+        if (n2.op === "not") {
+          const k = toPassage(n2.kid, !negated);
+          return k === n2.kid ? n2 : { ...n2, kid: k };
+        }
+        if (Array.isArray(n2.kids)) return { ...n2, kids: n2.kids.map((k) => toPassage(k, negated)) };
+        if (n2.op !== "text" || !n2.bare || negated) return n2;
+        moved.add(n2);
+        ctx.meaningArms.push({ arm: "passage", field: "text", column: sub.col });
+        const expr = ftsAtom(n2);
+        ctx.passageTerms.push(expr);
+        return { op: "meaning", arm: "passage", field: "text", col: sub.col, cmp: "match", value: n2.value, fts: expr };
+      };
+      ast = toPassage(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("words read as passage words (rows=passage); use text: for the record's own text");
+      }
+    }
+  }
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
   const positive = { text: [], passage: [] };
@@ -85641,7 +85672,6 @@ function compile4({
   const snipN = Number(snippetChars);
   const snip = Math.max(4, Math.min(64, Math.floor(Number.isFinite(snipN) ? snipN : 12)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
-  const rowArm = typeof rows4 === "string" && rows4.toLowerCase() in MEANING ? rows4.toLowerCase() : null;
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX2, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT2)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
   const cte = (withRanked, overrideSet = null) => {
@@ -277341,7 +277371,7 @@ function render3(cs, view) {
   if (runs && runs.state === "ok" && Array.isArray(runs.value.runs)) ui.lastRuns = runs.value.runs;
   const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
   const isMine = (s) => !!(s && member2 && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")));
-  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && (ui.dispatched === s.id || Number(s.ticks) > 1)) || null;
+  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && ui.withheld !== s.id) || null;
   const asked = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
   const asking = !!ui.asking && !(asked && asked.status !== "running");
   const lastMine = runList.find(isMine) || null;
@@ -277365,7 +277395,7 @@ function render3(cs, view) {
       )
     ];
     if (askAct) rows4.push(cs.row("", `<b>${W2("question.empty.ask")}</b><br><span class="mk-sub">${W2("question.empty.ask.line")}</span>`, askAct));
-    out.push(cs.sec("question.empty.heading", (proposals.length ? "" : endedPart(false)) + `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
+    out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
@@ -277379,7 +277409,7 @@ function render3(cs, view) {
         k.set("seq", (v.ui.seq || 0) + 1);
       });
     }
-  } else if (!proposals.length && !concluded) out.push(endedPart(true));
+  } else if (!concluded) out.push(endedPart(true));
   for (const v of proposals) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l2) => String(l2.target_title || l2.target_id || "")).filter(Boolean);
     out.push(cs.sec("question.proposal.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}` + (v.untested || b && b.untested ? `<span class="cs-draftlabel" data-label="untested">${W2("ai.label.untested")}</span>` : "") + `<p class="rec">${cs.esc(String(v.claim && v.claim.text ? v.claim.text : v.description || v.name))}</p>` + (rests.length ? `<p class="mk-small rec">${cs.esc(rests.join(" \xB7 "))}</p>` : "") + "</div>" + cs.act("versionaccept", { label: "act.versionaccept.label.question", data: { version: v.name, grounds: (v.grounds || []).join(",") }, tone: "primary" }) + cs.act("versionreject", { label: "act.versionreject.label.question", data: { version: v.name } }), { id: "state-e" }));
@@ -277852,6 +277882,7 @@ var acts3 = [
           if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
             const c = String(xr.code || xr.reason || xr.withheld || "");
             cs.set("asking", null);
+            cs.set("withheld", run2);
             const key2 = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
             cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key2 ? cs.w(key2) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
             return;
@@ -278682,19 +278713,24 @@ function render5(cs, view) {
   }
   const member2 = view.me && view.me.member;
   let found3 = null;
+  let endedMine = null;
   if (!ui.run && context2 && member2) {
     const runs = later3("runs", "airuns", { contextType: context2.type, contextId: context2.id, limit: "50" }, String(ui.seq || 0));
     const list6 = runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : [];
     const mine = (s) => s && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/"));
     const r = list6.find((s) => s && s.status === "running" && mine(s));
     if (r && r.id) found3 = { id: String(r.id), status: "running", untested: r.untested || null, dispatched: false, found: true };
+    else if (runs.state === "ok") {
+      endedMine = list6.find(mine) || null;
+    }
   }
   const run2 = ui.run || found3;
   const said11 = ui.said ? `<p class="mk-msg" role="alert" data-refusal="${cs.esc(ui.said.op || "")}">${ui.said.html}</p>` : "";
   let runPart = "";
   let status = null;
   if (!run2) {
-    runPart = `<p>${cs.w("screen.assistant.run.none")}</p>`;
+    const why2 = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
+    runPart = endedMine ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: why2(endedMine.condition) || String(endedMine.status || "") })}</p>` : `<p>${cs.w("screen.assistant.run.none")}</p>`;
   } else if (run2.found && !ui.run) {
     status = "running";
   } else {
@@ -287976,6 +288012,8 @@ function makeFetch(hooks = {}) {
           "access-control-allow-origin": "*"
         } }
       );
+    if (req.method === "GET" && url.pathname === "/favicon.ico")
+      return new Response(null, { status: 204 });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
