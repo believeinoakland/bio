@@ -144,3 +144,7 @@ My readings, answer only where you differ:
 2. **The close word.** `run-rules` has no ending for "refused at dispatch": `failed` is neither a bound nor an ending (checkBound would refuse it). I close on `lease`, the one stopping bound that says the run could not go on ("it died rather than finished"; status `stopped`, never `completed`). If you want an exact word, run-rules needs a new ending; that is another module.
 3. **R48's wording** ("the run is resumable once the two agree") now holds only for a run that has done nothing; the answer's `detail` says which. R48 may want that sentence amended.
 4. **R108.** Dedup's drop entry is logged at `meaning` when the candidate states no level (its detail says "stating no level"), and every entry says "matching the held version of that name"; `basisversions` states no version id beyond the name.
+
+## J13 · REPORT
+
+B20 handled: tranche/R085 merged; requirements.test.mjs R11 state keys now include composed, kept, wrote (only R45's stale bundle is red there). R107 keeps closing on 'lease' until run-rules R34 merges; I will move it to 'nothing-written' only if you tell me to. Waiting for your CHANGE that skills and run-rules are merged, then I rebuild the bundle last and COMPLETE.
