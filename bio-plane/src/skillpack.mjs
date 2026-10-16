@@ -564,7 +564,7 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,
-      body: wizardScripts,
+      body: wizardScripts.map(offerableScript),
     } : {
       load_when: "never, in this edition",
       sourcing: SOURCING.wizard_scripts,
@@ -595,6 +595,16 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
  *  screen lists; anything else throws, naming the script, the step and the
  *  unknown name, and nothing renders. The names are read from what was
  *  published (`published.screens[].acts`), so this file holds none of them. */
+/** R50: what a run needs to offer a script, never the instance's running counts or approvals. `finished`, `approver`
+ *  and `approved` (and any other count of use) change while a run is open, and the pack's version digests the body, so
+ *  carrying them made a later segment refuse SKILL_VERSION_MISMATCH. A script's own `version` stays: it moves only
+ *  when the script does. */
+const USE_FIELD = /^(finished|approver|approved|started|abandoned|stopped|uses?|used|runs?|count|.*_(count|uses|runs))$/;
+export function offerableScript(w) {
+  if (!w || typeof w !== "object" || Array.isArray(w)) return w;
+  return Object.fromEntries(Object.entries(w).filter(([k]) => !USE_FIELD.test(k)));
+}
+
 function validateWizardScripts(scripts, screens) {
   const opsByScreen = new Map();
   for (const sc of Array.isArray(screens) ? screens : []) {
