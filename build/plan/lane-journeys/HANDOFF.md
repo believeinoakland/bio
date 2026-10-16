@@ -39,3 +39,20 @@ Walked by HTTP (W2 explains why) as administrator and member, the screens' own s
 6. **J-5, J-6** cosmetic or to confirm in the browser.
 
 **Not walked, waiting for the browser:** everything about what screens draw, 1280 and 390, dark mode, role hiding, console errors (the JOURNEYS #2 pass once Bob saves the setup script). One question for BOB: the plain member can read the inbox; is that meant?
+
+## W4 · 2026-10-16 · Second HTTP round: settings, join, recovery, sessions, people, money, plans
+
+Details: `FINDINGS.md` J-8 to J-11 and the "second HTTP round" lists. Still by HTTP only (W2), so nothing about what a screen draws.
+
+**Works:** join end to end (invitation, handle check, password rule, spent invitation, first sign-in with the right role); forgot-password by recovery code and by an administrator's reset link (both single-use, both end old sessions, refusals one plain sentence); sign-out, sign-out everywhere, own-device (30 days) and shared-device (12 hours) sessions; the member's own settings (expertise, language, ties, notes) and the refusal of administrator settings; a person, a dated fact, "same person?", explore, addresseesuggest, a plan.
+
+**Defects**
+1. **J-8 BLOCKS (an act).** Find in's "record a fact about a person" never sends the validity the act requires, so it is always refused `BAD_VALIDITY`. Fix in screens-daily; with a validity the same call succeeds.
+2. **J-9 BLOCKS (an act, for text files).** "Hold this as a standard" sends no passage id for a text file's passage, so it is refused `STANDARD_NO_TEXT`. Screens-daily with content-search; PDFs and pages to confirm in the browser pass.
+3. **J-10, J-11 COSMETIC.** An unknown action says "no inquiry"; a member asking for an administrator's act is asked to retype the password before being told no.
+
+**Not reachable by HTTP:** money fact end to end (stage not found), standard, proceeding, records request, action, matter, docket and import (no published case: J-3/J-7), the review copy from outside, and every screen's drawing.
+
+**Left on the trial instance:** my project "JOURNEYS potholes…" (question, a vouched text file, a draft case `DRAFT-2026-3588`, a plan), the person `ENT-2026-0004`, a dated fact and a person fact, a knock pulled into the record, and the active member `jrn-newcomer` (its password is in my scratch only). My test tie and note are withdrawn and deleted. BOB: tell me if `jrn-newcomer` should go and how.
+
+Ending my turn here, as BOB asked. The browser pass waits for JOURNEYS #2.
