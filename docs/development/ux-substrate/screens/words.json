@@ -275,9 +275,9 @@
   },
   {
    "key": "weight.dots.means",
-   "en": "The dots show how much the act weighs, from one to five.",
+   "en": "The dots show how much an act weighs, from two to five. A button without dots does something you can undo.",
    "protected": true,
-   "source": "page.src.html marks"
+   "source": "page.src.html marks; S26 (DEC-295): said once, the first time a member opens a marked button's explanation"
   },
   {
    "key": "mark.scale.capture.name",

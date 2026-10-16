@@ -33,13 +33,14 @@ const WEIGHT = {
 };
 const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
-/* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help} */
+/* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help}. S26, Bob's A (DEC-295): only an act heavier than
+   Reversible shows its mark; a button without one does something you can undo. */
 function btn(op, label, o = {}) {
   const w = o.w || WEIGHT[key(op)] || 2;
   const out = o.out ?? OUTWARD.has(key(op));
   const help = typeof ACT_HELP !== 'undefined' && ACT_HELP[key(op)];
   const say = o.help || help;  // o.help: what this button does here, when the act's general explanation would be vague in context
-  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}<span class="w">${pips(w)}${WNAME[w]}</span></button>`;
+  return `<button type="button" class="cs-btn"${o.tone ? ` data-tone="${o.tone}"` : ''} data-act="${esc(op)}"${say ? ` data-level="2" data-tip="<b>${esc(label)}</b>: ${esc(say)}"` : ''}>${o.icon ? I(o.icon) : ''}${out ? I('outward') : ''}${esc(label)}${w >= 2 ? `<span class="w">${pips(w)}${WNAME[w]}</span>` : ''}</button>`;  // S26 (DEC-295): no mark on a reversible act
 }
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;

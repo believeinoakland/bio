@@ -63,7 +63,7 @@ const weightOf = op => W.WEIGHT[opkey(op)] || 2;
 // 1. Weights: the five names and what each means (protected: the weights, DEC-157 (4))
 W.WNAME.forEach((n, i) => { if (!i) return; add(`weight.${n.toLowerCase()}.name`, n, true, 'mock-kit.js WNAME'); });
 for (const [n, t] of Object.entries(G.weight)) add(`weight.${n.toLowerCase()}.means`, t, true, 'page.src.html marks');
-add('weight.dots.means', must(page, 'page.src.html', 'The dots show how much the act weighs, from one to five.'), true, 'page.src.html marks');
+add('weight.dots.means', must(page, 'page.src.html', 'The dots show how much an act weighs, from two to five. A button without dots does something you can undo.'), true, 'page.src.html marks; S26 (DEC-295): said once, the first time a member opens a marked button\'s explanation');
 
 // 2. The marks: fixed terms (protected)
 for (const [k, [name, means]] of Object.entries(G.scale)) {
