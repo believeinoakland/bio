@@ -109,3 +109,38 @@ The same shape on the second conversation of ask 1 (start 18:49:38.9, first outb
 
 ### The tradeoff it shows, for `OPTIONS.md` and `COMPARISON.md`
 In today's shape (a fresh Claude Code process per conversation, in a container with an allow-listed egress), the dominant time of a short conversation is not the model (3–9 s) nor the CPU, but a ~40 s wait of unknown cause before the CLI speaks; a run of ~35 ticks multiplies it. A warm process kept for several conversations (H1 V1/V2) would pay it once per process, if the wait belongs to the process's start and not to each conversation; whether it does is exactly what is not known. So the value of a warm process, and of a different host with an open egress, can be priced only after the 41 s is explained.
+
+## The tool-call layer (step 3 of the ladder), read as an investigation (K3574, K3577)
+
+Written ~19:30Z. Workers Logs on the plane since K3577, so one new ask was sent (the earlier two predate the logs): ask 3, 19:21:49.3 → 19:22:57.9Z (68.6 s), the same question as ask 2 ("What time does the library now open?"), as the administrator. All lines: `ladder-r7-ask3-plane.txt` (plane front door, plane Store object under the ask's grant, model-call body sizes). The plane also logged other traffic in the window (a browser session on `/app`, other lanes); only the lines carrying the ask's grant, or the agent-worker's bare `authorization`, are the ask's.
+
+### The players and what each did for one tool call (the first one)
+| Time (UTC) | Player | Observed |
+|---|---|---|
+| 19:21:51.51–.54 | agent-worker → plane | `askceiling` 200 (46 ms), `agentpack` 200 (127 ms; the pack is read once, at the start) |
+| 19:21:51.72 | Durable Object → container | websocket accepted; conversation starts |
+| 19:21:51.7 → 19:22:33.0 | container, CLI start | no line; **41.3 s** before the first outbound call (the fourth repetition: 41.6, 40.5, 40.4, 41.3 s) |
+| 19:22:32.98–.30 | CLI → Anthropic | `HEAD /api/hello`, `GET settings` 404, `GET policy_limits` |
+| 19:22:36.53, 19:22:39.25 | Anthropic Messages API | 2 × `POST /v1/messages` 200, 2,208 and 1,436 ms; bodies 51,428 and 59,653 B |
+| 19:22:40.475 | agent-worker → plane (front door) | `GET /?op=search&q=library+opening+hours` → 200, wall 49 ms, cpu 2 ms |
+| 19:22:40.526 | plane Store object | `GET /search?q=…&viewer=member:admin` → 200, wall 80 ms, cpu 26 ms (the grant is the member's own, read-only) |
+| 19:22:42.26 | CLI → Anthropic | next `POST /v1/messages` 200 (1,602 ms), body 63,266 B |
+
+So one tool call's answer was ready in under 0.1 s on the plane; **the time from the plane's request to the model's next call was 1.8 s** (plane 0.08 s; the rest is the answer's way back through agent-worker, the websocket, the container and the CLI, and the CLI's own turn work; not separable from these lines). The model call itself took 1.4–2.2 s. After the first tool call the cadence was one model call about every 3 s (19:22:42.3, 45.2, 48.5, 51.6, 55.96, 23:00.3 starts): about 1.6 s of model plus about 1.4 s of relay and CLI per turn.
+
+### What the plane's lines show for the whole ask
+- **9 plane reads under the grant**, each 200: `search` ×4 (80, 159, 385, 291 ms wall at the Store), `entitybyalias` (**2,831 ms** wall at the Store object, against 23 ms at the front door; the one slow read), `linesof` (95), `explore` (150), `searchfields` (52), `timeline` (120), plus `askceiling` (18) and the final `askusage` POST (139 ms, 19:22:57.87, written as the ask closed). CPU per read 1–32 ms.
+- The ask's stream carried **10** `read` frames; the plane logged **one** `explore`, the stream two. Whether the second `explore` frame was answered without reaching the plane (a repeat, held by agent-worker or the harness) or its line is missing is not known from the lines.
+- Order and time are as the model asked: parallel reads (19:22:43.4–43.9, three at once), then one at a time.
+- The plane was never the slow part: the nine reads together took under 0.4 s of wall time at the front door against 66 s of conversation.
+- **Sizes [test, inferred from the model calls' request bodies, since the plane writes no response size]:** 51,428 → 59,653 → 63,266 → 73,578 → 75,904 → 77,287 → 81,296 → 83,608 B across eight calls: the context grows by 1.4–10.3 KB a turn, 32 KB over the ask; the first two bodies are **byte-identical to ask 2's** (51,428 and 59,653 B): the CLI's first requests are deterministic for the same prompt and pack. The largest single tool answer is therefore at most about 10 KB. Limits seen: the ask's turn bound (`ASK_BOUND_REACHED`, bound `turns`) stopped the ask for the second time on this question after 8 model calls and ten reads, with no answer; the grant is short-lived and read-only (`x-bio-grant`).
+
+### Repetition (ask 2 → ask 3, same question and pack)
+Same outcome (`ASK_BOUND_REACHED` on turns, no answer); 62.0 s then 68.6 s; 9–10 reads each with partly different queries (search "library opening hours", "library", "hours", "opens", `linesof`, `explore`, `searchfields`, `timeline` in both); conversation 60.1 s then 66.1 s with the ~40 s start in both. The model's route is not the same twice (ask 2: `entity`; ask 3: `explore` ×2), though its first two requests are byte-identical.
+
+### Not known
+- Why the question the record answers (9:30 am, one held document) is not answered inside the ask's turn bound in either ask; that is the model's route through the plane's reads (ten reads, none yielding the passage) and belongs to the ask's layer above this one.
+- The size of each plane answer (not logged); the second `explore`; the 1.4 s of relay-and-CLI per turn, not separable here; the 41 s (F1, S8).
+
+### The tradeoff it shows
+The plane (Cloudflare Durable Objects, ~20–400 ms per read, 2.8 s once) is not where the time goes in an ask. Per turn the cost is about 1.6 s of model plus 1.4 s of relay/CLI; per conversation, 41 s of start-up; the turn bound, not the wall clock, ended the ask. A host that removes the websocket hop would shorten only the 1.4 s part; the 41 s part awaits its explanation.

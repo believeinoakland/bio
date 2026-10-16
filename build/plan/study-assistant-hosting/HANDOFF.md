@@ -97,3 +97,11 @@ Wording note (K3574): S5–S7's headlines read "passes / not proven"; in observa
 - **Left standing:** a connection to a host outside the two allowed ones, waiting for a timer (not logged: `runner.egress` writes allowed hosts only). Unknown: which host, which timer. Nothing in the container writes a line during the 41 s.
 - **No new ask sent:** it would give a fourth repetition of the same lines. To see inside the interval the runner would have to log its stages and the CLI's stderr with debug on for one conversation: a product change (BOB's). Until then the value of a warm process or an open-egress host (OPTIONS) cannot be priced.
 - Step 3 (tool call and answer) waits for Workers Logs on the plane (K3575). Nothing sent to the instance this time except reads; no tails; no secret printed.
+
+## S9 · 2026-10-16 · the tool-call layer from the plane's own lines (K3577)
+
+`ladder-r7.md` ("The tool-call layer"), `ladder-r7-ask3-plane.txt`. One new ask (ask 3, 68.6 s, same question as ask 2), plane Workers Logs on.
+- **Observed:** nine plane reads under the ask's grant, all 200, 18–385 ms at the Store (one `entitybyalias` took 2,831 ms); the pack read once at the start. From a plane request to the model's next call: 1.8 s (plane 0.08 s); per turn about 1.6 s model plus 1.4 s relay and CLI. Request bodies grow 51,428 → 83,608 B over eight model calls, 1.4–10.3 KB a turn (no plane response size is logged, so tool-answer size is inferred from this).
+- **Repeated:** the CLI's first two requests are byte-identical to ask 2's (51,428 and 59,653 B); the ~40 s start again (41.3 s, the fourth time: 41.6, 40.5, 40.4, 41.3); the same ending (`ASK_BOUND_REACHED` on turns, no answer, 62.0 then 68.6 s). The model's route through the reads differs between the two.
+- **Not known:** why the answer in the record is not reached inside the turn bound (the ask's layer); the second `explore` frame has no plane line; the size of each answer; the F1 interval.
+- **Tradeoff for OPTIONS/COMPARISON:** the plane is not where the time goes; per-conversation start (F1) and per-turn relay (1.4 s) are what a host can change. Next on the ladder (segments, K3558 step 4) needs a run; BOB names when.
