@@ -12,3 +12,7 @@
 - **Checks.** format 0 failures; architecture 0 failures; coverage 40 of 40 ids named; ownership 0 failures.
 
 Size (session_01Hmwn13nBZEaJhdPFdzbyVK): test runs 6, module lines 27
+
+## J1 · COMPLETE
+
+R40 applied and green: wizard-scripts 100 pass, checks clean (format, architecture, coverage 40/40, ownership). startFrom withholds the three setup scripts from a non-administrator. WIRING OWED to plane (not mine): plane/wizards.mjs wizardRegistration must pass adminActs and adminScreens from interface-shell's ADMIN_ACTS and ADMIN_SCREENS, or the live registration withholds nothing. Three screens-daily/screens-wizards tests fail identically before and after my change (listed in my record). Record on job/R085/wizard-scripts.
