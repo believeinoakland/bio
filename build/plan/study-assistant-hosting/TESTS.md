@@ -99,3 +99,29 @@ What it shows [test]:
 ### Remote series, part 4: concurrency repeated after the limit was lifted (20:48Z)
 
 BOB #195 reported the spend limit lifted; sessions served again (`isUsingOverage: true` again in every session). **Concurrency C: 7 sessions created within 5 s** (haiku, "Reply with the single word OK."): all answered, **7.1–9.9 s** from creation (9.88, 8.64, 7.97, 7.10, 9.80, 9.70, 8.54 s); no refusal, no queueing [test]. With A (6 sessions, 7.5–8.8 s) that is two repetitions at 6–7 concurrent on one subscription. **Not run:** the 10-at-once repeat (3 of 10 creates) and the long run over 10 minutes (the create): this session's permission check refused them ("Real-World Transactions", "Interfere With Workloads"), after the earlier spend-limit event; not worked around.
+
+### Container size cells (K3582, K3595): standard-4, 2026-10-16 20:57–21:00Z
+
+Application `agent-runner-agentrunner` read back at version 5: 4 vCPU, 12 GiB (BOB's act, rollout 20:51Z). Two asks as the administrator, same question as asks 2–4 ("What time does the library now open?"), read from Observability as before (`ev5.json` method: needle `conversation.runner`, service `agent-runner`). [test]
+
+| | ask 5 ("cold") | ask 6 (warm, the next) |
+|---|---|---|
+| ask, curl | 20:57:20.7 → 20:58:29.6, 68.8 s | 20:58:29.6 → 20:59:29.6, 60.0 s |
+| `conversation.runner` | `failed` / `CLOSED`, 67,151 ms (the ask layer closing at its turns bound, as every time) | `failed` / `CLOSED`, 59,231 ms |
+| conversation starts (end − ms) | 20:57:22.4 | 20:58:30.3 |
+| first logged outbound call | 20:58:03.8 (`GET settings`; its `HEAD /api/hello` line is not in the window's list) | 20:59:10.7 (`HEAD /api/hello` 200) |
+| **gap, start → first call** | **41.4 s** | **40.4 s** |
+| model calls | 12 `POST /v1/messages` 200, 1.5–6.4 s | 7, 200, 0.8–1.7 s |
+
+What it shows:
+1. **The wait before the CLI's first call does not change with the container's size:** 41.4 and 40.4 s on 4 vCPU / 12 GiB, against 41.6, 40.5, 40.4, 41.3, 40.9 s on standard-1 (0.5 vCPU / 4 GiB). Seven repetitions across two sizes lie within 40.4–41.6 s. That agrees with the CPU reading of S8 (a wait, not computing) and puts it outside what size can change.
+2. **"Cold" was not demonstrated:** no `runner.lifecycle` `start`/`started` line appears in 20:50–21:02Z (only the old instance's `activity_expired` lines up to 20:55:59, instance ref `564876135686`), so whether the ask started a new container or reused one cannot be seen; the first ask's 41.4 s is the same as the warm one's, so any container start it paid is hidden inside that second at most. The instance list read `inactive` afterwards.
+3. **The model's calls were slower on the first ask** (1.5–6.4 s against 0.8–1.7 s on the second, same container size): not explained by size; possibly the model side.
+4. **Finding (N7): the CLI keeps calling the model after the conversation is closed.** The first conversation was closed (`CLOSED`) at 20:58:29.5, yet five more `POST /v1/messages` appear from the same container at 20:58:32.8, 35.7, 42.6, 49.8 and 53.7 (24 s after the close; they cannot belong to the second conversation, whose first call is its `HEAD /api/hello` at 20:59:10.7). The same occurred with one extra call after the close in ask 2 (18:51:56.6, 2 s after 18:51:54.3) and ask 3 (19:23:00.3, 2 s after 19:22:57.9). So a closed or aborted conversation can leave the CLI spending on the model for up to about 24 s [test]; the `abort` in `runner.mjs` `closed()` does not stop an in-flight turn at once.
+
+### Remote cell: a cloud session that holds a credential and calls credentialed ops (K3593 (1), K3599 (a)), 21:02Z
+
+One haiku cloud session (`create_session`, default environment), told to sign in to biosmoke8 **itself** from the `JOURNEY_MEMBER_HANDLE` / `JOURNEY_MEMBER_PASSWORD` variables that the environment already carries, keep the token in a mode-600 file, never print it, and run `whoami` once-twice and `search` twice, timed. No token or password was written in any prompt. [test]
+- The session reported: `login=200; whoami_member=walker; whoami_times=1.53,0.73; search_codes=200,200; search_times=1.02,2.61; search_bytes=1559`. Created 21:02:38.6, answered 21:03:09.4: **30.8 s** end to end (7 turns, $0.0064).
+- The plane's own log (`ladder-r7-remote-auth-probe-plane.txt`, `curl/8.5.0`): `POST /api/?op=login` 200 at 21:02:51.2 (13 s after creation: session start and first model turns), `GET …op=search&q=library` 200 at 21:02:58.5 and 21:03:04.6 (265 and 274 ms at the plane), `GET …op=whoami` 200 at 21:03:01.96 (564 ms). The log holds **one** `whoami` where the session reported two (the same missing-line pattern as in the length cell: 6 of 60 there).
+- So a cloud session **can hold a member's credential supplied by its environment, sign in, and call credentialed ops** of the instance as that member (`walker`, class member, `contribute`); a call and its answer take 0.7–2.6 s measured at the session, 0.3–0.6 s at the plane. Not shown: the same under a *member's own* environment variables (they would have to be set per member), and renewal of the sign-in.
