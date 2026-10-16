@@ -1,6 +1,6 @@
 # Notes: findings with evidence (ASSISTANT-HOSTING)
 
-Marks: **[doc]** official documentation (URL, read 2026-10-16), **[rep]** reported by others, **[test]** tested here, **[inf]** inferred. §1 points to what earlier studies established; §2 is the fresh research pass of 2026-10-16 (a worker, sonnet at medium, read-only; a few pages were summarised by a small model, so wording must be re-checked against the page before it is quoted in a ruling or the terms register). Statements about Anthropic's terms are made only in `build/terms/anthropic.md`'s words (K1762); where a page below is not in the register, that is said.
+Marks: **[doc]** official documentation (URL, read 2026-10-16), **[rep]** reported by others, **[test]** tested here, **[inf]** inferred. §1 points to what earlier studies established; §2 is the fresh research pass of 2026-10-16 (a worker, sonnet at medium, read-only; a few pages were summarised by a small model, so wording must be re-checked against the page before it is quoted in a ruling or the terms register). No statement here is a point about Anthropic's terms (K3540): a terms point is made only after reading Anthropic's latest text live and quoting it.
 
 ## 1. Established before this lane
 
@@ -13,7 +13,7 @@ Marks: **[doc]** official documentation (URL, read 2026-10-16), **[rep]** report
 
 ### 2.1 Civicsmith as a remote MCP connector (option g)
 - **Plans.** Custom connectors on Free (one), Pro, Max, Team, Enterprise. Pro/Max add their own; on Team only Owners/Primary Owners add them; Enterprise Owners and roles with Libraries access. The server must be public; Anthropic connects from `160.79.104.0/21`. [doc] https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp
-- **Surfaces.** Same connector infrastructure on claude.ai, Desktop, mobile, Cowork, Claude Code. [doc] https://claude.com/docs/connectors/building/index.md. Projects support not confirmed. In Claude Code, claude.ai connectors load only under a claude.ai sign-in, not under `setup-token`. [doc] https://code.claude.com/docs/en/mcp ; https://code.claude.com/docs/en/authentication (AT-22 agrees)
+- **Surfaces.** Same connector infrastructure on claude.ai, Desktop, mobile, Cowork, Claude Code. [doc] https://claude.com/docs/connectors/building/index.md. Projects support not confirmed. In Claude Code, claude.ai connectors load only under a claude.ai sign-in, not under `setup-token`. [doc] https://code.claude.com/docs/en/mcp ; https://code.claude.com/docs/en/authentication
 - **Auth.** Per-user OAuth 2.0 (MCP auth specs 2025-03-26 / 06-18 / 11-25), DCR or CIMD, PKCE S256, callback `https://claude.ai/api/mcp/auth_callback`; no `client_credentials`. Static org-wide headers in beta for some orgs only. [doc] https://claude.com/docs/connectors/building/authentication.md. Fits K1874 (no credential in a URL) [inf].
 - **Limits.** Tool result ≈150,000 characters on claude.ai/Desktop; Claude Code 25,000 tokens default (`MAX_MCP_OUTPUT_TOKENS`), files over 50,000 characters unless `_meta["anthropic/maxResultSizeChars"]` (ceiling 500,000), HTTP response 16 MiB; tool call timeout 240 s on claude.ai/Desktop. [doc] connectors building index; Claude Code mcp page
 - **Can the server drive the steps?** Sampling: "Claude doesn't yet support … Sampling" [doc, building index]. Elicitation (form and URL) supported in Claude Code [doc, mcp page]; on claude.ai not documented. So the product cannot call the model from its side; it can only serve tools that refuse anything out of order (the served loop of `design-remote-routine.md` Option A). G2 would then hold for *what is recorded*, not for *whether the member's Claude keeps going* [inf]. To test.
@@ -26,12 +26,12 @@ Marks: **[doc]** official documentation (URL, read 2026-10-16), **[rep]** report
 - **Channels** (research preview): an MCP server that pushes events into a running local Claude Code session; needs claude.ai or Console sign-in; Team/Enterprise admins enable it; custom channels need an allowlist or a development flag. [doc] https://code.claude.com/docs/en/channels
 
 ### 2.3 Member-side runner (option j)
-- The SDK and `claude -p` use whatever sign-in `claude` holds on that machine; unattended sessions stop when the login expires (AT-29). [doc] https://code.claude.com/docs/en/authentication
+- The SDK and `claude -p` use whatever sign-in `claude` holds on that machine; unattended sessions stop when the login expires. [doc] https://code.claude.com/docs/en/authentication
 - **Agent view / background sessions** (research preview): `claude --bg "<prompt>"`, `claude agents --json --all`, `claude logs <id>`, `attach`, `respawn`, `stop`; a `Notification` hook fires on `agent_completed`; idle sessions stop after about an hour unless pinned; `--bg` cannot combine with `-p`. [doc] https://code.claude.com/docs/en/agent-view. A documented local surface a runner could use instead of the SDK [inf].
 - No Anthropic guidance for a product's runner on a member's machine; the hosting page covers operator-run hosting only. [doc, absence]
 
 ### 2.4 Other offerings
-- **No** sessions API, "Sign in with Claude", or third-party OAuth found; the Agent SDK overview's "Unless previously approved" (AT-19) has no documented application path; the legal page points to sales (AT-25). [doc, absence]
+- **No** sessions API, "Sign in with Claude", or third-party OAuth found. [doc, absence]
 - **Cloud sessions** reported out of preview on 2026-09-23 [rep, search snippet, https://www.agent37.com/blog/claude-code-cloud]; unconfirmed. Plans: Pro, Max, Team, some Enterprise; org policy `allow_remote_sessions`. [doc] https://code.claude.com/docs/en/claude-code-on-the-web
 - **Claude Tag** (Slack only; Team and Enterprise; public beta): channel work bills to an org usage balance; DMs run on the sender's own account; admins add connectors and plugins; no API for a third party to invoke it. [doc] https://claude.com/docs/claude-tag
 - **Cowork** remote execution: member-started sessions on Anthropic's servers, connectors work, no developer API. [doc] https://support.claude.com/en/articles/15811196-what-to-expect-with-remote-execution-in-claude-cowork
@@ -49,6 +49,5 @@ Marks: **[doc]** official documentation (URL, read 2026-10-16), **[rep]** report
 - Sandbox vendors (E2B, Daytona, Vercel Sandbox, Modal): sub-second create/resume, ≈$0.05–0.14 per vCPU-hour [rep, secondary benchmarks, unverified]. Against Cloudflare: no advantage in start-up once the CLI's own 1.2 CPU-s dominates; a second vendor for record text to pass through [inf].
 
 ### 2.7 Subscription limits
-- Pro/Max: five-hour and weekly limits, shared across Claude and Claude Code; Max has a model-specific weekly limit. No published concurrency figure; no statement on automated use beyond "ordinary, individual usage" (AT-4). [doc] https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan
+- Pro/Max: five-hour and weekly limits, shared across Claude and Claude Code; Max has a model-specific weekly limit. No published concurrency figure found. [doc] https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan
 - Cloud sessions share the account's limits; ten parallel agents use quota about ten times as fast. [doc] agent-view; claude-code-on-the-web
-- The pages named in §2.1–2.6 are **not in the terms register**; before any is relied on for a terms statement, it is added there as an AT entry.

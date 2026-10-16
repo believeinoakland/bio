@@ -1,5 +1,7 @@
 # Options: inventory and screen (ASSISTANT-HOSTING)
 
+**Terms (K3540).** No terms point is made in this file. A point about Anthropic's terms is stated only after reading Anthropic's latest text live and quoting it; an unconfirmed or ambiguous point is not raised and restricts nothing. Option q (asking Anthropic for approval) is withdrawn.
+
 **Status** · S1 inventory, 2026-10-16. Step 1 (inventory) done to a first cut; step 2 (screen) provisional, from documentation already read in the earlier studies and a fresh research pass (`NOTES.md` §2). Nothing here is decided. Marks: **[doc]** documented, **[rep]** reported, **[test]** tested, **[inf]** inferred; **[study]** = taken from `study-assistant-link.md`, `study-remote-sessions.md` or `design-remote-routine.md`, each of which carries its own sources.
 
 ## 1. The shape of the question: four independent choices
@@ -38,8 +40,7 @@ H and K decide the hosting question proper. L and S are mostly design choices *w
 | l | **Cowork remote sessions** with the product as a connector | Anthropic cloud / own sign-in / per session / member-driven | research (NOTES §2.4) |
 | o | **Claude Tag** (Slack) with the product as a connector or plugin, for Team/Enterprise customer organizations | Anthropic sandbox / the org's usage balance / per message / member-driven | research (NOTES §2.4) |
 | p | **Desktop scheduled tasks or `/loop`** on the member's machine running a product-defined prompt | member's machine / own sign-in / per schedule / served loop | research |
-| q | **Anthropic approval** ("Unless previously approved", AT-19): not a host but a route that would change K for every option; reached only through sales (AT-25) | — | research (NOTES §2.4) |
-| m | **Cloud-provider inference** (Bedrock, Vertex, Foundry credentials) | any / provider credential / any / any | new; screened below |
+| m | **Screen out (G1), flagged** | a cloud provider's credential is pay-per-token API access, which K3347 rules out. Recorded so it is not rediscovered; not proposed |
 | n | **Claude in Chrome** operating Civicsmith's own pages for the member | member's browser / own sign-in / — / model-driven UI | new; screened below |
 
 Research for further options is in `NOTES.md` §2 (first pass 2026-10-16); its additions are the rows marked "research".
@@ -55,16 +56,16 @@ Research for further options is in `NOTES.md` §2 (first pass 2026-10-16); its a
 
 | Id | Verdict | Why, with evidence |
 |---|---|---|
-| a | **Viable** | runs today (R085); measured [study link T1–T2]; terms covered by AT-14, AT-15, AT-18, with U-2/U-7 settled by Bob (K3061) |
+| a | **Viable** | runs today (R085); measured [study link T1–T2] |
 | b, b′ | **Viable** | documented SDK features (streaming input, `startup()`) [study remote L1–L3]; untested here |
-| c | **Viable, conditionally** | passes G1–G4 on paper [study design-remote-routine §2]: the product serves every row, so G2 holds by construction of the served loop. Conditions: experimental API, hand-built routine and token per member, Pro/Max/Team/Enterprise with cloud sessions; terms not covered by the register |
-| d | **Viable, conditionally** | needs the member's full-scope claude.ai login held by the product, renewed every 30 days [study remote R8]; that is the subject of AT-16/AT-17; Bob's K3061 settles holding a "subscription token", and whether that ruling reaches a full-scope login is a question for Bob, not BOB. Creation is interactive-only for hosted sessions; non-interactive creation needs a self-hosted environment [study remote R6–R7] — K3537's composite (routine fire to create, `--cloud` to drive) is the form to test |
+| c | **Viable, conditionally** | passes G1–G4 on paper [study design-remote-routine §2]: the product serves every row, so G2 holds by construction of the served loop. Conditions: experimental API, hand-built routine and token per member, Pro/Max/Team/Enterprise with cloud sessions |
+| d | **Viable, conditionally** | needs the member's full-scope claude.ai login held by the product, renewed every 30 days [study remote R8]. Creation is interactive-only for hosted sessions; non-interactive creation needs a self-hosted environment [study remote R6–R7]; K3537's composite (routine fire to create, `--cloud` to drive) is the form to test |
 | e | **Viable, Team/Enterprise only** | self-hosted environments are Team and Enterprise, public beta, off by default; the runner is the team's own machine [study remote R6]. For X2 on Pro/Max: screened out |
 | f | **Screen out for runs; keep as a member convenience** | Remote Control is steered from claude.ai by a person; there is no documented way for the product to drive it [study remote §1b]; G2 cannot hold. A member may still use it to reach option j's runner |
 | g, g′ | **Viable for chat and member-led work; doubtful for checks** | the member's own Claude decides when to call the product's tools, so G2 holds only if the product's tools refuse anything out of order (a served loop, as in c). Whether that is enough control for a check is a design question to test, not a screen-out. Strong on data and terms: nothing held, member's own sign-in. Facts pending research (plans, connector auth, sampling) |
 | h | **Viable** | the same SDK pattern as a, on another host [study remote §1b, Agent SDK hosting]; differs on cost, start-up, where data travels |
 | i | **Screen out for interactive use; keep for scheduled checks** | a GitHub runner starts per workflow (tens of seconds), needs a repository per team, and GitHub as one more place record text passes through [inf]; usable only where a check is scheduled, not asked |
-| j | **Viable** | the product holds no credential (removes U-2/U-7 entirely; AT-18 covers a person signing in to the unmodified binary on their own machine); the runner dials out, so no inbound network to the member [inf]. Needs the member's machine on while it runs |
+| j | **Viable** | the product holds no credential; the runner dials out, so no inbound network to the member [inf]. Needs the member's machine on while it runs |
 | k | **Viable as a call shape** | standard `claude -p` / `query()` use [study link D1]; scored as a modifier on a and b |
 | g″ | **Viable for member-led use, Desktop only** | as g, but local; private distribution only (MCPB directory listings deprecated) [doc NOTES §2.2] |
 | j′ | **Viable, research preview** | documented CLI surface for starting and polling local sessions [doc NOTES §2.3]; preview status counts against C10 |
@@ -72,6 +73,5 @@ Research for further options is in `NOTES.md` §2 (first pass 2026-10-16); its a
 | l | **Screen out for runs (G2)** | member-started, no developer API [doc NOTES §2.4]; reachable only as g (the product as a connector), so it is scored under g |
 | o | **Screen out for runs (G2); note for X1 on Team/Enterprise** | no third-party API to invoke Tag; member-driven in Slack [doc NOTES §2.4]; as a front end it is g |
 | p | **Viable on paper, weak** | a timer on the member's machine; the product still only serves tools (as g); scored as a variant of j |
-| q | **Not an option to score; a question** | Anthropic's approval would open login-based routes AT-19 now closes; whether to ask is Bob's (AT-25). Listed so it is weighed, not proposed |
-| m | **Screen out (G1, by its spirit), flagged** | a cloud provider's credential is billed API access, the thing K3347 ruled out; the register lists it beside API keys (AT-15). Recorded so it is not rediscovered; not proposed |
+| m | **Screen out (G1), flagged** | a cloud provider's credential is pay-per-token API access, which K3347 rules out. Recorded so it is not rediscovered; not proposed |
 | n | **Screen out (G2)** | the model would drive the product's screens; the product cannot decide its steps |

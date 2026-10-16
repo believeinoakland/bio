@@ -1,6 +1,6 @@
 # Comparison: criteria and scoring (ASSISTANT-HOSTING)
 
-**Status** · S1 draft, 2026-10-16. Criteria and method are a **draft for Bob** (charter step 4: "agree the criteria with Bob first"). No option is scored yet; scores come only from evidence in `NOTES.md` and `TESTS.md`.
+**Status** · Agreed with Bob, 2026-10-16 (K3540): method A, "let's not worry too much about assigning weights unless it's clear what the weight should be"; the 14 criteria and four contexts are the working set. No option is scored yet; scores come only from evidence in `NOTES.md` and `TESTS.md`.
 
 ## 1. Contexts (scored separately)
 
@@ -26,7 +26,7 @@ An option that fails a gate is screened out in `OPTIONS.md` with the reason and 
 | G3 No credential travels in a URL | K1874 |
 | G4 Runs Claude for a Civicsmith member on that member's or team's own subscription (or is a pure host for one that does) | charter, the question |
 
-Terms are **not** a gate: where the register does not cover an option, that is scored (C12) and, if Bob wants the option, becomes a question for Anthropic (AT-25).
+Terms are **not** a gate. Under K3540 a terms point enters the comparison only when confirmed against Anthropic's latest published text, read live and quoted; an unconfirmed or ambiguous point is not raised and places no restriction.
 
 ## 3. Draft criteria
 
@@ -45,7 +45,7 @@ Each criterion has a plain definition, what is measured, and a 0–3 scale. **Bo
 | C9 | **Security** | attack surface given to untrusted record text (shell, network, connectors); credential held, its scope and lifetime | no tools but the product's, no shell, narrow credential | full shell and network with a broad credential |
 | C10 | **Reliability and documented status** | GA, beta, experimental or undocumented; number of outside dependencies; known failure modes and recovery | GA, one dependency, clean recovery | undocumented internal API |
 | C11 | Accounting | whether usage figures come back to the product (ai-runs R48) | exact per conversation | none |
-| C12 | **Terms** | register coverage: cited permitting entries (AT-n), open questions (U-n), or not covered | covered by AT entries | needs a new question to Anthropic, or conflicts with an entry |
+| C12 | **Terms** | confirmed points only (K3540): Anthropic's latest text, read live and quoted, that bears on the option | a confirmed text permits it | a confirmed text forbids it (then it is a gate failure, not a score) |
 | C13 | **Build effort** | size and modules touched; what stays as it is | none or S | L across many modules |
 | C14 | Scale and concurrency | runs at once per member and per team; documented caps | no practical cap at X4 | hard caps a large team hits |
 
@@ -55,7 +55,7 @@ Each criterion has a plain definition, what is measured, and a 0–3 scale. **Bo
 
 **Recommendation: method A.**
 
-- **A. Gates, then weighted scores per context (recommended).** Gates screen; each surviving option gets a 0–3 score per criterion from evidence, each score tagged with its evidence grade (tested, documented, reported, inferred). Bob sets a weight per criterion *per context* (e.g. setup burden matters more for X4, data location more for X2). The table shows the weighted totals and how they move if a weight changes (sensitivity), so a close call is visible as close. Why: objective where evidence exists, honest about where it does not, and the weights are where Bob's values enter, explicitly.
+- **A. Gates, then scores per context — chosen (K3540); weights only where a weight is clear.** Gates screen; each surviving option gets a 0–3 score per criterion from evidence, each score tagged with its evidence grade (tested, documented, reported, inferred). Bob sets a weight per criterion *per context* (e.g. setup burden matters more for X4, data location more for X2). The table shows the weighted totals and how they move if a weight changes (sensitivity), so a close call is visible as close. Why: objective where evidence exists, honest about where it does not, and the weights are where Bob's values enter, explicitly.
 - **B. Gates, then must-have / nice-to-have, no numbers.** Simpler to read; ties are frequent and the reasoning stays verbal.
 - **C. Pairwise ranking** (each option against each, per criterion). Good for 3–4 finalists, unwieldy for 10+.
 

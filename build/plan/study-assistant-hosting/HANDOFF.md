@@ -24,3 +24,7 @@ Entries `S<n>`, newest last. BOB reads this at takeover and at each backstop che
 ## S2 · 2026-10-16 · the assistant lane (K3539): baseline walk planned
 
 Read the charter's new section. The baseline walk is planned in `TESTS.md` ("Baseline walks"): B1 repeats WALK-085 r5's question in this lane's own project (`ASSISTANT baseline <date>`) so each deploy compares with r5's 29.5 min / 83 calls / $1.48 / no answer, and records instance size, cold start, timings, cost, correctness and what the member sees on the question page and in the dock; B2 measures the floor (one-passage question, one chat exchange if the dock has chat). **Not walking until BOB says round 6 is deployed.** Meanwhile the study continues (step 3).
+
+## S3 · 2026-10-16 · K3540 folded
+
+Bob's ruling folded in: method A with weights only where clear, and the 14 criteria and four contexts are the working set (`COMPARISON.md` status, §2, C12). Under K3540, no terms point remains in `OPTIONS.md`: option q (Anthropic approval) is withdrawn; the screen reasons for a, d, j and m no longer cite the register; C12 counts only a point confirmed against Anthropic's latest text, read live and quoted. The S1 page for Bob is updated to match. Step 3 continues: the local timing tests (H1/H2) are running.
