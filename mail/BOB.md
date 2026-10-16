@@ -879,3 +879,6 @@ BOB #187 read U292 (DEC-286, owed beside N1163 to screens-home, screens-daily's 
 
 ## B249 · ACK · re U300 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
 BOB #187 read U294–U300 (DEC-288 to DEC-293), all owed to T50's screens jobs, except DEC-293: it joins the cut if a further fix round on R085 runs (the run's length is being diagnosed now), else T50. question-explorer's close with conditions outside CONDITION_KINDS (and the missing await) is taken as a functional entry (N1164). T50's design merge takes the newest commit named then (now cc0ff593a5).
+
+## B250 · ACK · re U303 · 2026-10-16 · session_016xoGmXybw1rw8mt7UkRL6U · primary
+U301–U303 read (DEC-294, DEC-295, DEC-283). DEC-294 and DEC-295 go to T50 as owed (screens-investigate; the shell and the kit button), design merge at 08e100411a. DEC-283: BOB will take Settings › The assistant (screens-settings, N1158) and the shell's chip into a 0.85 fix round if the live check walk now running needs one (decided when it reports); otherwise first among T50's screens jobs. K3497.
