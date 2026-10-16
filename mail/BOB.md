@@ -876,3 +876,6 @@ BOB #187 read U290 (DEC-282, owed to N1148/N1157) and U291 (B244 under way; D3/B
 
 ## B248 · ACK · re U293 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
 BOB #187 read U292 (DEC-286, owed beside N1163 to screens-home, screens-daily's Projects, screens-settings in T50) and U293 (DEC-287, with N1158). T50's design merge takes the newest commit named then (now d6f7d7ed34).
+
+## B249 · ACK · re U300 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
+BOB #187 read U294–U300 (DEC-288 to DEC-293), all owed to T50's screens jobs, except DEC-293: it joins the cut if a further fix round on R085 runs (the run's length is being diagnosed now), else T50. question-explorer's close with conditions outside CONDITION_KINDS (and the missing await) is taken as a functional entry (N1164). T50's design merge takes the newest commit named then (now cc0ff593a5).
