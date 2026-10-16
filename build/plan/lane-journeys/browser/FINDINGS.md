@@ -73,6 +73,12 @@ Timeline ("The document: the document's fingerprint, as its page shows it"), Mon
 ### B-18 · A member is offered a form they cannot use · MISLEADS · NEW (D32 closed, a sibling open)
 Member, `/app/timeline/<project>` of a project they have not joined: the full "Add to the timeline" form is drawn under the sentence "you are not one of its participants, so you cannot do that in it or see what is inside it". The project page itself is right ("Join"). Hidden, not refused, is the design (PLAN §2.6). `mem-m-timeline-1280`.
 
+### B-25 · "Find in this" from a document fails with the wrong words · MISLEADS · NEW (D14–D16 family)
+Admin, Document page › "Find in this" (address `/app/find-in/<document>`): every search answers "This could not be read. Try again in a moment." The call behind it answers `CAPTURE_NOT_HELD` ("this record holds no capture with that fingerprint that you may see"): the screen sends the document's record id where the call wants its fingerprint. Trying again never helps. The same search from the project (`/app/find-in/<project>/<question>`) works. Owner: screens-daily (find-in, document).
+
+### B-26 · Find in's results offer no act, and the question choice is lost · MISLEADS · NEW (J-2, J-8, J-9 unreachable here)
+Admin, `/app/find-in/<project>/<question>`, all kinds ticked, "pothole" and "420": each hit reads "Found by search" with the passage, "Accepted by our group" and "Recorded by admin" (the founder is `sparky`), but no "Cite a passage", "Record a fact about a person" or "Hold as a standard" control is drawn, and the "For which question" box returns to "None yet" after the search. So J-2 (`against`), J-8 (validity) and J-9 (standard needs a passage id) cannot be seen in the browser with this data; they stay as J-FINDINGS recorded them. "One document could not be read for this" is said of a plain text note for money, dates and requirements. Shot: `journey6-findin-result-1280`.
+
 ## Cosmetic and accessibility
 
 ### B-19 · The page title never changes · COSMETIC · NEW
