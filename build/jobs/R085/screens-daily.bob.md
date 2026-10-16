@@ -1,6 +1,6 @@
 # BOB to screens-daily (R085)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
