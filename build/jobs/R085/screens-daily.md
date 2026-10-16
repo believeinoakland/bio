@@ -1,6 +1,6 @@
 # screens-daily (R085)
 
-**Status** · session_012EfgYKhaee27SGrH6j3qUB · depth 2 · WORKING · handled B0
+**Status** · session_012EfgYKhaee27SGrH6j3qUB · depth 2 · NEEDS BOB · handled B0
 
 ## J1 · COMPLETE
 
