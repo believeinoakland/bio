@@ -4,8 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V } from "./fixture.mjs";
 import { SCREEN_REGISTRY, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
 
+/* a local op table: every act and owed op the carried registry names, so the carried library is registered whole */
+const OPS = [...new Set(SCREEN_REGISTRY.flatMap((s) => [...s.acts, ...(s.owed || []).map((o) => o.op)]))];
 const ADMIN_ACTS = ["groupdescriptionset", "memberadd", "membercaps", "websitekeycreate"];
 const ADMIN_SCREENS = ["updates"];
 const SETUP = ["Say who your group is", "Invite a member", "Update your group's Civicsmith"];
