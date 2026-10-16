@@ -112,7 +112,7 @@ In today's shape (a fresh Claude Code process per conversation, in a container w
 
 ## The tool-call layer (step 3 of the ladder), read as an investigation (K3574, K3577)
 
-Written ~19:30Z. Workers Logs on the plane since K3577, so one new ask was sent (the earlier two predate the logs): ask 3, 19:21:49.3 → 19:22:57.9Z (68.6 s), the same question as ask 2 ("What time does the library now open?"), as the administrator. All lines: `ladder-r7-ask3-plane.txt` (plane front door, plane Store object under the ask's grant, model-call body sizes). The plane also logged other traffic in the window (a browser session on `/app`, other lanes); only the lines carrying the ask's grant, or the agent-worker's bare `authorization`, are the ask's.
+Written ~19:24Z. Workers Logs on the plane since K3577, so one new ask was sent (the earlier two predate the logs): ask 3, 19:21:49.3 → 19:22:57.9Z (68.6 s), the same question as ask 2 ("What time does the library now open?"), as the administrator. All lines: `ladder-r7-ask3-plane.txt` (plane front door, plane Store object under the ask's grant, model-call body sizes). The plane also logged other traffic in the window (a browser session on `/app`, other lanes); only the lines carrying the ask's grant, or the agent-worker's bare `authorization`, are the ask's.
 
 ### The players and what each did for one tool call (the first one)
 | Time (UTC) | Player | Observed |
