@@ -1,6 +1,6 @@
 # ai-runs (R085)
 
-**Status** · session_01RDWpf3BhWXAiW97xm3Ppkk · depth 2 · COMPLETE · handled B2
+**Status** · session_014E6HztL3Ehb1nLBpG9td7t · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -28,3 +28,20 @@ COMPLETE. R82, R83, R84 applied as reworded by B2 (merged tranche/R085 @ bd77c1d
 **Note for agent-worker (R91)**: the plane's dispatch takes `accepted: true` as the acceptance; `ok: true` alone still counts but reads as a finished segment.
 
 Size (session_01RDWpf3BhWXAiW97xm3Ppkk): test runs 9, module lines 3760
+
+## J3 · COMPLETE
+
+COMPLETE. R85 and R86 applied (entry R085-15).
+
+**Entries applied** (`bio-plane/src/ai-runs/index.mjs`)
+- R85: `spawnPayload`'s payload (both halves) now carries `subjects: {items, truncated}`, `items` of `{id, extent, kind}`. For an inquiry run: each leg's target (`kind: "leg"`, `extent` the leg's content row `ref`, null for a leg naming none or only the whole document), then each record the inquiry cites (`kind: "cited"`). For a project run: the same for each question R19's `questions` lists. Only what the viewer sees (`inSight`); deduplicated by id and extent; at most 50, `truncated` past that. Still no lens field. agent-worker R97 reads `payload.subjects.items`.
+- R86: `#standardForRun` takes the viewer; an inquiry that sits in a project the viewer sees (the confirmed-cites set `#runContextProjects` already gives) answers `none-recorded` (or `recorded` with its pair when one was handed); `context-has-no-project` only for an inquiry in no project the viewer sees.
+
+**Tests**: new `bio-plane/test/m/ai-runs/r085-15.test.mjs` (R85 x2, R86, each with its control). Two older tests updated to the amended meaning: reads R23 (payload keys gain `subjects`), reads R21 (its `context-has-no-project` case now uses a question in no project; the question in PROJ reads `none-recorded`). `world.mjs` stands up `inquiry_basis` and `content` with the columns read (as `register`).
+- `node --test bio-plane/test/m/ai-runs/`: 117 pass, 0 fail. Users: run-productions 59, question-explorer 34, agent-worker 21, all 0 fail.
+- Checks: format 0 failures; architecture 0 failures; coverage 55 of 55 live ids named, 0 failures; ownership 0 failures.
+
+**Deferred**: none. **Other modules**: none. No generated artifact staled (agent-worker's bundle does not take ai-runs; the plane reads it through the op map, keys unchanged).
+**Notes**: the requirements file still marks R85 and R86 "not yet met"; that edit is BOB's. `extent` is the content row's human `ref` (e.g. "¶1", "page 14"), which is what a citation address needs.
+
+Size (session_014E6HztL3Ehb1nLBpG9td7t): test runs 8, module lines 3804

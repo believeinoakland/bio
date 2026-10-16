@@ -48,6 +48,8 @@ export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 /** R72: a provider's refusal for a spent limit (Anthropic's 429 `enforced_spend_limit_reached`), recognised in the reason
  *  or type the agent-worker relays to the wake's dispatch. */
 const PROVIDER_LIMIT = /enforced_spend_limit_reached/;
+/** R85: the most subjects a search half names. */
+const SUBJECTS_MAX = 50;
 
 /** A member's id from any of the forms a stamp takes (`member:<id>`, `member:<id>/<tokenId>`, `<id>`); null for a
  *  machine identity, an absent value, or a deploy class. */
@@ -782,6 +784,46 @@ export class AiRuns {
       out.push(q);
     }
     return out.sort();
+  }
+
+  /** R86 (R085-15; K3501; DEC-17): AN INQUIRY THAT SITS IN A PROJECT TAKES THAT PROJECT'S BAR, so with none handed its
+   *  basis is `none-recorded`, a fact about the formation, and `context-has-no-project` is left to an inquiry in no project.
+   *  "In a project" is `#runContextProjects`' set (the confirmed citations, the one live-cites predicate), kept to the
+   *  projects this viewer sees, so the answer never says that a project the viewer cannot see exists. */
+  #inProject(row, viewer) {
+    return this.#runContextProjects(row.context_type, row.context_id)
+      .some((p) => this.#membership().inSight(p, viewer));
+  }
+
+  /** R85 (R085-15; K3501 (C3); amends R23): WHAT A RUN'S SEARCH SHOULD LOOK AT, `{items, truncated}`. For a run over an
+   *  inquiry, each of its legs' targets (`{id, extent, kind: "leg"}`, the extent the leg's content row names in its human
+   *  form, null for a leg that names none or the whole document) and each record it cites (`kind: "cited"`); for a run
+   *  over a project, the same for each question R19's `questions` lists. Only what the viewer sees (`inSight`, the one
+   *  predicate), deduplicated by id and extent, at most `SUBJECTS_MAX`, `truncated` past that. The reads are SQL over
+   *  `inquiry_basis`, `content` and `refs`, as this module reads `bundles` and `refs` elsewhere. No lens is read. */
+  #runSubjects(row, viewer) {
+    const questions = row.context_type === "project" ? this.#runContextQuestions(row.context_id, viewer)
+      : row.context_type === "inquiry" ? [String(row.context_id)] : [];
+    const seen = new Set(), items = [];
+    let over = false;
+    const add = (id, extent, kind) => {
+      const key = `${id}\u0000${extent ?? ""}`;
+      if (seen.has(key) || !this.#membership().inSight(id, viewer)) return;
+      seen.add(key);
+      if (items.length >= SUBJECTS_MAX) { over = true; return; }
+      items.push({ id, extent, kind });
+    };
+    for (const q of questions) {
+      for (const l of this.#rows(
+        `SELECT b.target_id AS id, c.extent_kind AS extent_kind, c.ref AS ref FROM inquiry_basis b
+           LEFT JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id = ? ORDER BY b.ord`, q)) {
+        const named = l.ref != null && String(l.ref).trim() !== "" && l.extent_kind !== "document";
+        add(String(l.id), named ? String(l.ref) : null, "leg");
+      }
+      for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id = ? AND kind = 'cites' ORDER BY target_id`, q))
+        add(String(r.target_id), null, "cited");
+    }
+    return { items, truncated: over };
   }
 
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
@@ -2455,7 +2497,7 @@ export class AiRuns {
          `standard.in_force: false` with its `basis` and its `stated` sentence
          means we looked and there was no bar. A consumer can tell those apart;
          a null could not, which is why no null is published here. */
-      standard: this.#standardForRun(row),
+      standard: this.#standardForRun(row, viewer),
       /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
@@ -2502,7 +2544,7 @@ export class AiRuns {
    *
    *  Synchronous, deliberately: unlike the manifest there is no hash and no
    *  second read, so making this async would buy a promise nobody awaits for. */
-  #standardForRun(row) {
+  #standardForRun(row, viewer = null) {
     const raw = row.standard_pair;
     let parsed = null, unreadable = false;
     if (raw != null && String(raw).trim() !== "") {
@@ -2531,7 +2573,7 @@ export class AiRuns {
          somewhere else would invent one."* So the projectless run's absence is
          STRUCTURAL and the projected run's is a fact about its formation, and
          the two are different answers rather than one null. */
-      : row.context_type === "project" ? "none-recorded"
+      : row.context_type === "project" || this.#inProject(row, viewer) ? "none-recorded"
       : "context-has-no-project";
     return {
       in_force: basis === "recorded",
@@ -2893,9 +2935,11 @@ export class AiRuns {
          Two readers of one row must not disagree about which of its facts
          exist, so both now answer from `#standardForRun` and neither computes
          its own. */
-      standard: this.#standardForRun(row),
+      standard: this.#standardForRun(row, viewer),
       budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
                                    consumed: b.consumed, unit: b.unit })),
+      /* R85: the records and extents the search should look at, `{items, truncated}`; still no lens field. */
+      subjects: this.#runSubjects(row, viewer),
     };
 
     return {

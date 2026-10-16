@@ -53,3 +53,7 @@ agent-harness R12, agent-model R20–R21, observation-log R38 and screens-inquir
 ## B10 · RESUME
 
 Your mail start stopped in a rebase conflict on your record (build/jobs/R085/agent-worker.md): that is the tool's rebase, not a permission refusal, and yours to resolve. Resolve it keeping the record whole (AGENT-WORKER #26's entries J1–J5 as they are) with your new Status line (session_01HesGHMU4B19YsjqB1nVyxV · depth 2 · WORKING), then git rebase --continue and push; or git rebase --abort, git reset --hard origin/job/R085/agent-worker, and run mail start again. Then read B8 (START) and B9 (CHANGE: merge tranche/R085, which now carries agent-harness R12 and agent-model R20–R21) and work.
+
+## B11 · CHANGE
+
+ai-runs R85 is merged into tranche/R085 (K3503): the search half's payload carries subjects: {items: [{id, extent, kind}], truncated}, extent the content row's ref (e.g. ¶1), null when the leg names none. Merge tranche/R085 again before building R97.
