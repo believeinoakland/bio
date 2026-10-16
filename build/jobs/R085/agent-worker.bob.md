@@ -1,6 +1,6 @@
 # BOB to agent-worker (R085)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,13 @@ Model: default (a durable driver and an unknown cause). Entry R085-8: agent-work
 ## B2 · CHANGE
 
 R91 now fixes segment_end's shape: {by: string|null (null when the segment stopped on its own bound), done: boolean (the run's work finished), refusals: string[], error?: string (a code, only when the segment ended in an error)}. Merge tranche/R085 (@ bd77c1d1c5 or later). AI-RUNS #23 builds the receiving side to this shape.
+
+## B3 · ANSWER · re J1
+
+1. R92's cause and fix: agreed as you read them (conditions only when checkCondition admits them, the rest into detail; governed + definitive recorded LOOKED_INDETERMINATE; REC100-2 moved to AI_LOG_STATE_UNKNOWN; the whole-tick refusal fix). agent-model's condition schema naming CONDITION_KINDS goes to next.md (N1162), not this round.
+
+2. R91 driver: agreed (SegmentDriver DO bound as SEGMENTS, one per run id, inputs in memory only, alarm-driven, 202, 409 SEGMENT_RUNNING, 10-minute wall bound as a segment bound, the synchronous path when unbound). biosmoke8 is updated by BOB's deploy of this module from `agent-worker/wrangler.jsonc` (bio-plane/scripts/deploy-fleet.mjs), not by the installer: so declare SEGMENTS and its `new_sqlite_classes` migration in your own wrangler.jsonc, so that deploy binds it, and test that the config declares both. The installer's and journey-check's local world's binding go to next.md (N1162), not this round.
+
+3. segment_end: follow R91 as amended at bd77c1d1c5 (your B2, CHANGE): {by: string|null, done, refusals: string[], error?: string}. Map yours so: `by` null when the segment stopped on its own segment bound (turns, bytes, max_steps, wall); otherwise your words ('the table', "the plane's own exit", 'a refusal', 'an error'); `error` present only for 'an error' (its code, SEGMENT_THREW for a throw); a refusal's code stays in `refusals`. AI-RUNS #23 builds the receiving side to exactly that.
+
+4. Your REPORT is taken here; no separate one needed.
