@@ -72254,6 +72254,7 @@ var UPLOAD_PART = 8 * 1024 * 1024;
 var UPLOAD_STATEMENT_MAX = 2e3;
 var UPLOAD_NAME_MAX = 300;
 var UPLOAD_TYPE_MAX = 255;
+var UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
 var UPLOAD_WITHIN_FAILED_DETAIL = "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
 var uploadReader = (bytes2) => {
   const asBytes3 = (b) => b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : ArrayBuffer.isView(b) ? new Uint8Array(b.buffer, b.byteOffset, b.byteLength) : null;
@@ -72888,14 +72889,16 @@ var Capture = class _Capture {
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha2, bytes: total2 }, receipt: receiptOf(r) } : notWritten;
     }
+    const named2 = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name3 === "string" ? name3 : "") : null;
+    const readAs2 = named2 ? UPLOAD_NAME_TYPES[named2[1].toLowerCase()] : type;
     let ct = null;
-    if (typeof type === "string" && type !== "" && profilesAsText(type, total2, multipart)) {
+    if (typeof readAs2 === "string" && readAs2 !== "" && profilesAsText(readAs2, total2, multipart)) {
       try {
         const obj = await ev.get(sha2);
         const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
         if (raw && raw.length === total2 && !raw.includes(0)) {
           new TextDecoder("utf-8", { fatal: true }).decode(raw);
-          ct = type;
+          ct = readAs2;
         }
       } catch {
         ct = null;
@@ -72917,7 +72920,7 @@ var Capture = class _Capture {
     if (typeof type === "string" && type !== "") {
       profile.source_content_type = type;
       profile.declared_by = "uploader";
-    }
+    } else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha: sha2, total: total2, parts, by, at: when, statement, name: name3, profile });
     let done;
     try {
@@ -85630,6 +85633,31 @@ function compile4({
       if (moved.size) {
         ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
         ctx.warnings.push("words read as passage words (rows=passage); use text: for the record's own text");
+      }
+    }
+  }
+  if (rowArm === "leg") {
+    const hasText = (n2) => !!n2 && typeof n2 === "object" && (n2.op === "text" && !n2.bare || hasText(n2.kid) || Array.isArray(n2.kids) && n2.kids.some(hasText));
+    if (!hasText(ast)) {
+      const moved = /* @__PURE__ */ new Set();
+      const drop2 = (n2, negated) => {
+        if (!n2 || typeof n2 !== "object") return n2;
+        if (n2.op === "not") {
+          const k = drop2(n2.kid, !negated);
+          return k === n2.kid ? n2 : k ? { ...n2, kid: k } : null;
+        }
+        if (Array.isArray(n2.kids)) {
+          const kids = n2.kids.map((k) => drop2(k, negated)).filter(Boolean);
+          return !kids.length ? null : kids.length === 1 ? kids[0] : { ...n2, kids };
+        }
+        if (n2.op !== "text" || !n2.bare || negated) return n2;
+        moved.add(n2);
+        return null;
+      };
+      ast = drop2(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("bare words ignored (rows=leg); use text: for the record's own text");
       }
     }
   }
@@ -110437,7 +110465,9 @@ var Retrieval = class _Retrieval {
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked,
       rowLimit: input.limit,
-      rowOffset: input.offset
+      rowOffset: input.offset,
+      /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
+      snippetChars: Number(input.snippetChars) || void 0
     });
     const tally = { applied: 0 };
     const total2 = this.runQuery(plan2.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -111490,6 +111520,7 @@ function retrievalRoutes(r, url, body) {
       viewer: q10.get("viewer"),
       limit: q10.get("limit"),
       offset: q10.get("offset"),
+      snippetChars: Number(q10.get("snippet")) || void 0,
       ids: Array.isArray(body?.ids) ? body.ids : null
     }),
     searchfields: () => r.searchFields(),
@@ -228634,7 +228665,9 @@ function normaliseRegistration({
   machineRefused = [],
   machineDrafts = [],
   irreversible = [],
-  library: library2 = []
+  library: library2 = [],
+  adminActs = [],
+  adminScreens = []
 } = {}) {
   const opSet = ops === null || ops === void 0 ? null : nameSet2(ops);
   const sc = /* @__PURE__ */ new Map();
@@ -228652,7 +228685,9 @@ function normaliseRegistration({
     machineRefused: nameSet2(machineRefused),
     machineDrafts: opSet ? new Set([...drafts].filter((o) => opSet.has(o))) : drafts,
     irreversible: nameSet2(irreversible),
-    library: lib
+    library: lib,
+    adminActs: nameSet2(adminActs),
+    adminScreens: nameSet2(adminScreens)
   };
   reg.helpRefused = helpRefusedActs(reg);
   reg.withheld = withheldLibrary(reg);
@@ -229271,10 +229306,12 @@ var WizardScripts = class _WizardScripts {
     machineDrafts = [],
     irreversible = [],
     library: library2 = CIVICSMITH_LIBRARY,
-    door = null
+    door = null,
+    adminActs = [],
+    adminScreens = []
   } = {}) {
     if (this.reg) return refuse24("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
-    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library: library2 });
+    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library: library2, adminActs, adminScreens });
     const fn = (f17) => typeof f17 === "function" ? f17 : null;
     this.door = isObj55(door) ? { findExisting: fn(door.findExisting), pointer: fn(door.pointer) } : { findExisting: null, pointer: null };
     const broken = [], returned = [];
@@ -229995,7 +230032,14 @@ var WizardScripts = class _WizardScripts {
    *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
    *  credential and no key; starts nothing, records no use, writes nothing. */
   startFrom({ viewer = null, message: message2 = null, parts = void 0 } = {}) {
-    const offered = this.#offeredScripts(viewer);
+    const reg = this.#registration();
+    const administers = this.#call(() => this.membership.sessionRights(viewer))?.administer === true;
+    const adminFirst = (x) => {
+      if (x.s.origin !== "civicsmith") return false;
+      const t2 = isObj55(x.steps[0]) ? x.steps[0] : {};
+      return typeof t2.act === "string" && t2.act ? reg.adminActs.has(t2.act) : reg.adminScreens.has(t2.screen);
+    };
+    const offered = this.#offeredScripts(viewer).filter((x) => administers || !adminFirst(x));
     const scripts = offered.filter((x) => !(x.s.origin === "civicsmith" && x.s.required)).map((x) => ({ id: x.s.id, version: versionId2(x.s.id, x.n), name: x.s.name, start: startOf2(x.steps) }));
     const ids = new Set(offered.map((x) => x.s.id));
     const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) })).filter((d) => d.scripts.length);
@@ -273265,7 +273309,7 @@ async function promoteDocument(cs, o) {
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const mid = minted && (minted.result || minted);
   if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why2(mid) };
-  const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
   const id = slug3 ? `${mid.id}-${slug3}` : mid.id;
   const sha2 = doc.capture && doc.capture.sha256;
   const len = (s) => {
@@ -310431,6 +310475,8 @@ var wizardRegistration = ({ door = null } = {}) => ({
   machineDrafts: MACHINE_DRAFTS,
   irreversible: irreversibleActs(),
   library: CIVICSMITH_LIBRARY,
+  adminActs: [...ADMIN_ACTS],
+  adminScreens: [...ADMIN_SCREENS],
   /* (K2586; wizard-scripts R23) the front door's in-process finder (and pointer, once one is given), the plane's
      composition (`wiring.mjs`' `frontDoorFinder`); absent, `matches` is [] and the pointer null. */
   ...door ? { door } : {}
