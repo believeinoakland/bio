@@ -148,3 +148,16 @@ My readings, answer only where you differ:
 ## J13 · REPORT
 
 B20 handled: tranche/R085 merged; requirements.test.mjs R11 state keys now include composed, kept, wrote (only R45's stale bundle is red there). R107 keeps closing on 'lease' until run-rules R34 merges; I will move it to 'nothing-written' only if you tell me to. Waiting for your CHANGE that skills and run-rules are merged, then I rebuild the bundle last and COMPLETE.
+
+## J14 · COMPLETE
+
+## Round 7 completion (R107, R108)
+
+B21 handled: tranche/R085 merged; bundle rebuilt last (`node bio-plane/scripts/bundles.mjs`, only agent-worker's dist committed: 1,797,027 B, 153 inputs, sha256 97f7b254ea…); the plane bundle left to BOB.
+
+**Entries applied** (R085-39): R107 and R108, each named by `test/r107.test.mjs` (23 arms, controls beside them; 12 fail with the fix removed). R107 closes on `lease` (B21 confirms).
+**Tests changed, none weakened:** `requirements.test.mjs` R11: the state keys gain `composed`, `kept`, `wrote` (agent-harness R16).
+**Deferred:** none. **Found in other modules:** none beyond J12's note that R48's "resumable once the two agree" holds only for a run that did nothing.
+**Ran:** `npm test` in `agent-worker/`: 25 files, 25 pass, 0 fail; format 0 failures; architecture 0 failures; coverage 98 of 98; ownership 6 files, 0 failures. The plane tests that drove this member (`d260-resume`, `fence-e2e`) no longer exist at their old paths; nothing else uses what I changed.
+
+Size (session_01J4yAYV8SoXMA6MqDDAMcYQ): test runs 4, module lines 4170
