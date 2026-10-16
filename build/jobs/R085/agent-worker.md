@@ -122,3 +122,7 @@ Merged `tranche/R085`; bundle rebuilt last (1,789,446 B, 153 inputs, sha256 a471
 **Ran:** `npm test` in `agent-worker/`: 23 files, 23 pass, 0 fail; format 0 failures; architecture 0 failures; coverage 93 of 93; ownership 7 files, 0 failures.
 
 Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 8, module lines 4004
+
+## J9 · COMPLETE
+
+B14 handled: merged tranche/R085, bundle rebuilt last. agent-harness R13's description wording changed two of my tests' pins (requirements R22, wire-vocabulary), now asserting 'this question' and no raw id. npm test 23 of 23 pass; format, architecture, coverage (93 of 93), ownership 0 failures. R101, R102 stand met. Pushed.
