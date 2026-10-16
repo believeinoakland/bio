@@ -165901,6 +165901,7 @@ var RUN_BOUNDS = {
 var RUN_ENDINGS = {
   completed: "the run finished its work",
   cancelled: "a member stopped it",
+  "nothing-written": "the run composed a candidate and wrote none, so it closed with nothing to show for its work; no member stopped it and no budget ran out",
   "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
 };
 var RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
@@ -275759,6 +275760,7 @@ var findIn = Object.freeze({
       }
     };
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
+    if (s && s.indexOf("PROJ-") !== 0 && s.indexOf("sel-") !== 0 && !/^[0-9a-f]{64}$/.test(s)) out.capture = { op: "image", query: { id: s } };
     return out;
   },
   // The path's project step (interface-shell R8) when the scope is a project: by its title, never its address (R26).
@@ -275823,10 +275825,13 @@ var findIn = Object.freeze({
     }).join("") + "</fieldset>";
     const term = cs.field("findin-term", "screen.find-in.term", { value: ui.term || "", help: "screen.find-in.term.help" });
     const qs = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits) ? view.data.questions.value.hits : [];
+    const routedQ = ui.question && !qs.some(function(h) {
+      return String(h.bundle_id) === String(ui.question);
+    }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
     const question = cs.choice(
       "findin-question",
       "screen.find-in.question",
-      [["", "screen.find-in.question.none"]].concat(qs.map(function(h) {
+      [["", "screen.find-in.question.none"]].concat(routedQ, qs.map(function(h) {
         return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) };
       })),
       { value: ui.question || "" }
@@ -275846,7 +275851,7 @@ var findIn = Object.freeze({
         const where = (dt2 && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt2, []) + " " : "") + (p3 !== void 0 ? "<span>" + cs.w("screen.find-in.passage", { n: String(p3) }) + "</span>" : "");
         const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
         const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
-        const right = rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : op ? recordAct(op, ki, ii) : "";
+        const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "") + (rec && op !== "cite" ? "" : op ? recordAct(op, ki, ii) : "");
         return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + '</span><span class="meta">' + where + "</span>", right, "");
       }).join("")) + notRead2;
       const more = k.kind === "term" && k.truncated ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found3.term || "") } }) + "</div>" : "";
@@ -275881,7 +275886,16 @@ var findIn = Object.freeze({
         cs.set("kinds", ticked);
         cs.set("term", term);
         cs.set("question", String(cs.value("findin-question") || ""));
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try {
+          pj = JSON.parse(String(pv && pv["data/provenance.json"] || ""));
+        } catch {
+          pj = null;
+        }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const body = { scope, kinds: kinds3 };
         if (kinds3.indexOf("term") >= 0) body.term = term;
         return { body };
@@ -275915,7 +275929,16 @@ var findIn = Object.freeze({
         const chosen = qs.filter(function(h) {
           return String(h.bundle_id) === qid;
         })[0];
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try {
+          pj = JSON.parse(String(pv && pv["data/provenance.json"] || ""));
+        } catch {
+          pj = null;
+        }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const find2 = { scope, kinds: kinds3 };
         if (kinds3.indexOf("term") >= 0) find2.term = term;
         const ends = new Date(cs.now() + 365 * 864e5).toISOString().slice(0, 10);
@@ -276051,7 +276074,7 @@ var findIn = Object.freeze({
         if (!it) return null;
         if (!ui.question) return { refuse: "screen.find-in.questionfirst" };
         const chosen = cs.value(el.dataset.f + "-role");
-        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] : "";
+        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] === "against" ? "cuts_against" : "supports" : "";
         if (!role) return { refuse: "screen.findin.cite.norole" };
         return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it), role }, body: {} };
       }
@@ -278250,10 +278273,17 @@ function render4(cs, view) {
   if (sha2) out.push(testimony ? `<p><a class="cs-btn" data-tone="quiet" href="/app/find-in/${cs.esc(sha2)}" data-nav data-findin="link">${cs.w("act.findin.label.document")}</a></p>` : cs.act("findin", { label: "act.findin.label.document", data: { capture: sha2 } }));
   const reading3 = sha2 ? later3("reading", "reading", { sha256: sha2 }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
+  const pq = project ? later3("projectq:" + project, "projectquestions", { project, limit: "100" }) : { state: "empty" };
+  const ownQ = new Set(pq.state === "ok" && Array.isArray(pq.value.items) ? pq.value.items.filter((x) => x && x.inquiry).map((x) => String(x.inquiry)) : []);
+  const heldFor = row12 && row12.captured_for && Array.isArray(row12.captured_for.questions) ? row12.captured_for.questions.filter((x) => x && x.question) : [];
+  const askable = qs.map((q10) => ({ value: String(q10.bundle_id), text: String(q10.title || q10.bundle_id) }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
+  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
+  const preset = heldFor.length ? String(heldFor[0].question) : "";
   out.push(secOf("screen.document.passages.head", reading3, (r) => {
     const list6 = (Array.isArray(r.text_units) ? r.text_units : []).filter((p3) => p3 && String(p3.text || "").trim());
     if (!list6.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    const pick4 = qs.length ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q10) => ({ value: String(q10.bundle_id), text: String(q10.title || q10.bundle_id) })), {}) + cs.choice(
+    const pick4 = cites.length ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset }) + cs.choice(
       "document-cite-role",
       "screen.document.cite.role",
       [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]],
@@ -278262,7 +278292,7 @@ function render4(cs, view) {
     return list6.map((p3, i) => {
       const extent = p3.extent && typeof p3.extent === "object" ? p3.extent : null;
       const page2 = extent && Number.isInteger(extent.page) ? extent.page : null;
-      return `<blockquote class="mk-passage rec" data-passage="${i}">\u201C${cs.esc(String(p3.text).trim())}\u201D` + (page2 !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page: page2 })}</span>` : "") + "</blockquote>" + (extent && qs.length ? cs.act("cite", {
+      return `<blockquote class="mk-passage rec" data-passage="${i}">\u201C${cs.esc(String(p3.text).trim())}\u201D` + (page2 !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page: page2 })}</span>` : "") + "</blockquote>" + (extent && cites.length ? cs.act("cite", {
         label: "act.cite.label.document",
         data: { found: JSON.stringify({ capture_sha: sha2, extent, kind: "passage" }) }
       }) : "");
@@ -287386,7 +287416,7 @@ function disclosedLayers({
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,
-      body: wizardScripts
+      body: wizardScripts.map(offerableScript)
     } : {
       load_when: "never, in this edition",
       sourcing: SOURCING.wizard_scripts,
@@ -287407,6 +287437,11 @@ function disclosedLayers({
     case_account: caseAccountLayer(),
     account_check: accountCheckLayer()
   };
+}
+var USE_FIELD = /^(finished|approver|approved|started|abandoned|stopped|uses?|used|runs?|count|.*_(count|uses|runs))$/;
+function offerableScript(w) {
+  if (!w || typeof w !== "object" || Array.isArray(w)) return w;
+  return Object.fromEntries(Object.entries(w).filter(([k]) => !USE_FIELD.test(k)));
 }
 function validateWizardScripts(scripts, screens) {
   const opsByScreen = /* @__PURE__ */ new Map();

@@ -67,7 +67,7 @@ The AI run's rules without a store: the bounds, endings and statuses a run can h
   - Its reach (`DRAFT_REACH`) is `none`: only the passage the door hands in. So `draftMayRead` is `false` for it, whatever the rest.
   - Pure; never throws.
   - Test: `DRAFT_KINDS` ends `statusreport`, `reading`; `draftKindDeployed({kind: "reading"})` follows `draft`'s flag alone; `draft:reading` is in `TEST_BAR_PARTS`. Control: `draftMayRead({kind: "reading", suggestions: true})` is `false`.
-- **R34** (R085; ASSISTANT-HOSTING S4 N4; agent-harness R16; K3561) `RUN_ENDINGS` gains `nothing-written`: "the run composed a candidate and wrote none", so `checkBound` accepts a close the harness names so (agent-harness R16) and the run's status reads it as ended, not completed. Test: `checkBound` accepts `nothing-written`; `runStatusFor` of such a close is not `completed`. *(not yet met: R085)*
+- **R34** (R085; ASSISTANT-HOSTING S4 N4; agent-harness R16; K3561) `RUN_ENDINGS` gains `nothing-written`: "the run composed a candidate and wrote none", so `checkBound` accepts a close the harness names so (agent-harness R16) and the run's status reads it as ended, not completed. Test: `checkBound` accepts `nothing-written`; `runStatusFor` of such a close is not `completed`.
 
 ## Private
 

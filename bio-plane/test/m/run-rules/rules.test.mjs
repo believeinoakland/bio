@@ -9,7 +9,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, S
 import { refusal } from "./helpers.mjs";
 
 const BOUNDS = ["fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease"];
-const ENDINGS = ["completed", "cancelled", "mode-not-deployed"];
+const ENDINGS = ["completed", "cancelled", "nothing-written", "mode-not-deployed"];
 
 test("R1: the bounds and endings are exactly the named ones; runStatusFor answers never-started for mode-not-deployed, stopped for every bound, finished otherwise", () => {
   assert.deepEqual(Object.keys(RUN_BOUNDS), BOUNDS);
@@ -208,4 +208,17 @@ test("R8: checkSkillVersion — a blank version, or one not <pack>@<edition>, is
   assert.deepEqual(parseSkillVersion(" bio@3 "), { pack: "bio", edition: "3", digest: null });
   for (const v of ["3", "", null]) assert.equal(parseSkillVersion(v), null);
   assert.equal(translationOf("AI_RUN_SKILL_VERSION_UNNAMED"), AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.translation);
+});
+
+test("R34: RUN_ENDINGS names nothing-written, the run that composed a candidate and wrote none; checkBound accepts it as an ending, and its status reads finished, never completed", () => {
+  assert.equal(Object.prototype.hasOwnProperty.call(RUN_ENDINGS, "nothing-written"), true);
+  assert.ok(RUN_ENDINGS["nothing-written"].length >= 10);
+  assert.match(RUN_ENDINGS["nothing-written"], /composed a candidate and wrote none/);
+  assert.equal(checkBound("nothing-written"), null);
+  assert.equal(runStatusFor("nothing-written"), "finished");
+  assert.notEqual(runStatusFor("nothing-written"), "completed");
+  /* control: it is an ending, not a bound, and never a never-started run */
+  assert.equal(Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "nothing-written"), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(RUN_NEVER_STARTED, "nothing-written"), false);
+  refusal(checkBound("nothing_written"), "AI_RUN_BOUND_UNNAMED");
 });

@@ -1,6 +1,6 @@
 # BOB to agent-worker (R085)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -103,3 +103,7 @@ Model: claude-sonnet-5-5. Entry R085-39: agent-worker R107, R108. skills (R50) a
 ## B20 · CHANGE
 
 agent-harness R16 is merged into tranche/R085 (K3561): a `completed` close with a kept candidate and no write becomes bound `nothing-written` with its reason; `resumableState` gains `composed`, `kept`, `wrote`. Merge tranche/R085 into your branch. AGENT-HARNESS #9 reports your `requirements.test.mjs` "R11: the published state carries the table's fields" lists exact keys: bring it in line (your test, your call). run-rules R34 (RUN_ENDINGS gains `nothing-written`) is running as RUN-RULES #1; skills R50 as SKILLS #1. Your R107 close for a refused segment may use `nothing-written` (or the refusal's own ending) once R34 merges. Rebuild your bundle last, after I send the CHANGE that skills and run-rules are merged.
+
+## B21 · CHANGE
+
+skills R50 and run-rules R34 are merged into tranche/R085 (K3567). Merge tranche/R085 into your branch, run your tests (whole run, never stopped midway, K1994), rebuild your bundle last (node bio-plane/scripts/bundles.mjs rebuilds only what is stale; commit only agent-worker's dist), then COMPLETE with your Size line. On J13: R107 keeps closing on 'lease' (BOB's: a refused segment that sent its candidates by suggest wrote something, so 'nothing-written' would be untrue; status 'stopped' with the refusal logged is the visible close). Leave the plane bundle to BOB.
