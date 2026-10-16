@@ -54,3 +54,22 @@ All five run at once (out of layer on the cut, K1548 read as covered by Bob's K3
 - **R085-23 · agent-harness** · R13 (an empty-level description names "this question") · claude-haiku-5-5.
 - **R085-24 · screens-inquiry** · R47 (the question page draws its run beside waiting proposals), R48 (the dock draws the latest ended run) · claude-sonnet-5-5.
 - **R085-25 · control-plane** · R101 (`/favicon.ico` answers 204) · claude-haiku-5-5.
+
+## Fix round 6 (K3528; walk-085-r5 D1–D7, D9, (e); diag-085-r6, diag-085-slow), out of layer on the cut
+
+All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2–5). The diagnoses are `build/plan/diag-085-r6.md` and `build/plan/diag-085-slow.md` (both on `tranche/T49`). Merge order: retrieval, query-language, agent-model and agent-harness before agent-worker (its bundle takes them); capture, screens-intake and wizard-scripts any time. Not in the round, each with its hard reason:
+
+- A whole-unit "read passage" tool for sub-sessions: measured first, i.e. whether 64-token snippets suffice at the next walk; if they do not, it goes to `next.md` as T50.
+- Stopping a run when a pass adds nothing new: it is Bob's call (it changes what a check promises), and is open with him.
+- D8 (held text needs a vouch before reading): no cause found in code; it needs a screen walk.
+- A larger container: measured as idle on the model (diag-085-slow, Measurement); not worth it.
+- Workers Observability read for the Cloudflare credential: not needed now.
+
+- **R085-26 · retrieval** · R79 (`op=meaningrows` passes `snippet` through; D3) · claude-sonnet-5-5.
+- **R085-27 · query-language** · R32 (bare words under `rows=leg` read as R31 reads them; D4) · claude-sonnet-5-5.
+- **R085-28 · agent-model** · R22 (the sub-session passage tool asks for 64-token snippets and says so; D3; `model.mjs` is agent-model's, `modules.json`) · claude-sonnet-5-5.
+- **R085-29 · agent-harness** · R14 (no free-text summary or raw record id in member-facing proposal text; item (e)) · claude-haiku-5-5.
+- **R085-30 · agent-worker** · R103 (`meaningRead` passes the snippet; D3), R104 (an empty-level candidate kept only when the compose-time read confirms it; D5), R105 (a run's write is logged, so a later drop names it; D6), R106 (the four level sub-sessions of a pass run concurrently; diag-085-slow option 3) · claude-sonnet-5-5.
+- **R085-31 · capture** · R93 (an untyped upload with a text extension is read as text; D2) · claude-haiku-5-5.
+- **R085-32 · screens-intake** · R28 (the id slug is cut, then trimmed of a trailing hyphen; D1) · claude-haiku-5-5.
+- **R085-33 · wizard-scripts** · R40 (group-setup scripts offered only to an administrator; D9) · claude-sonnet-5-5.
