@@ -19,3 +19,12 @@ R100 is built and pushed: the door passes the address's type to uploadCapture an
 ## J2 · QUESTION · re B2
 
 With capture R92 merged, R100's real-plane test passes every reading assertion (upload answer carries reading and text_units; op=reading by digest found:true with both lines). It fails only on its last clause, op=capture not refused SAFE_VIEW_ONLY. Cause is in file-safety, not control-plane: R6 grades a non-archive file low only if provenance.fetchedByThisCopy is true; an upload is received, never fetched, so it is always high (source_not_fetched; also format_unchecked until formats has a text entry), and R8 then refuses its original SAFE_VIEW_ONLY unless a deeper check passes or the warned path (openwithwarning) is used. Nothing in the door can change that. Options: (a) BOB amends R100 so the clause reads: the original opens by the warned path (op=openwithwarning) or after a deeper check, and I change the test accordingly; (b) file-safety changes R6 so a member's own upload is not graded high on source alone (a file-safety job; a doctrine call for Bob, since it relaxes the safety rule). My best reading: (a), since R6 is deliberate doctrine and the walk's blocker was the missing reading. I have not weakened the test; it stays red until you choose. Everything else is done and green (format, architecture, coverage 68/68, ownership).
+
+## Completion
+
+- **Entries applied:** R085-4 (R100): `type` passed to `uploadCapture`; a new upload read as an acquire is (`readUploaded`, extraction's `acquireReadingOp`). Per BOB's B3 (a), the real-plane test's last clause is the warned path (`op=openwithwarning`), file-safety R6/R8 unchanged; the Miniflare plane binds a stand-in `FILE_SCANNER` (clean) because the warned path scans first.
+- **Deferred:** none. **Found in other modules:** none beyond the file-safety point settled in B3.
+- **Tests:** `node --test test/m/control-plane/*.test.mjs`: 291 tests, 291 pass, 0 fail (capture R92 merged, tranche/R085 @ 97f683add5).
+- **Checks:** format 170 modules, 169 requirements files; 0 failures. architecture 59 product files, 288 relative imports; 0 failures. coverage 68 of 68 live requirement ids named by a test; 0 failures. ownership 4 files changed by control-plane; 0 failures.
+
+Size (session_013MCbxDMa9jH48CQ4Ks4wqm): test runs 9, module lines 3781
