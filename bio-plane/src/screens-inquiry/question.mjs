@@ -69,12 +69,16 @@ function render(cs, view) {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
     /* K3402: who opened it, the author of its first promotion as the record keeps it (the image's `_history`), by
        handle (the founder unnamed by key, R40); undetermined when the record names none */
+    /* R46: the founder's handle, from the participants this screen reads (project-roster R29); none while they name none */
+    const parts = project ? later("participants", "projectparticipants", { projectId: project }) : null;
+    const founder = parts && parts.state === "ok" && Array.isArray(parts.value.participants) ? parts.value.participants.find((x) => x && x.founder === true) : null;
+    const founderHandle = founder && founder.handle ? String(founder.handle) : null;
     const opener = (() => {
       const img = d.inquiry.value || {};
       const first = Object.keys(img).filter((k) => /^_history\/promotion_.*\.json$/.test(k)).map((k) => {
         try { return JSON.parse(String(img[k])); } catch { return null; }
       }).filter((h) => h && h.author).sort((a, b) => String(a.created || "").localeCompare(String(b.created || "")))[0];
-      return first ? P.who(cs, first.author) : "";
+      return first ? P.who(cs, first.author, founderHandle) : "";
     })();
     const name = opener || T("state.undetermined", { reason: "" });
     if (project) out.push(`<p class="mk-sub">${W("screen.question.opened", { name, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
