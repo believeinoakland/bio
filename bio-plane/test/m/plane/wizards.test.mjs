@@ -16,6 +16,7 @@ import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
+import { ADMIN_ACTS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 
 const WZ = [...WIZARD_SCRIPTS_TABLES];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -69,7 +70,8 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   const drafts = ["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp", "infractiondraft"];
   const graded = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible");
   assert.deepEqual(wizardRegistration(), { screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
-                                           machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
+                                           machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY,
+                                           adminActs: [...ADMIN_ACTS], adminScreens: [...ADMIN_SCREENS] });
   assert.deepEqual(MACHINE_DRAFTS, drafts);
   /* the irreversible acts are op-grades' grading, read whole, never a copy of it: (T47; op-grades R37, K3147) `publish`
      prepares and is re-graded, so the irreversible acts are the scheduled edition's two */
@@ -133,4 +135,27 @@ test("R19, R5, R39: every op of wizard-scripts' map is in the route map, after r
   /* negative control: a machine's draft is wizard-scripts' own refusal, inside the door's envelope */
   const machine = await (await x.fetch("/wizarddraft?viewer=class:ai&author=class:ai", { method: "POST", body: "{}" })).json();
   assert.deepEqual([machine.ok, machine.result.ok, machine.result.reason], [true, false, "MACHINE_CANNOT_DRAFT_WIZARD"]);
+});
+
+test("R57 (R085-34; K874; wizard-scripts R40): the registration the plane builds carries the administrator's acts and screens; through the live store, a plain member's startFrom omits the three group-setup scripts and an administrator's lists them", async () => {
+  const SETUP = ["Say who your group is", "Invite a member", "Update your group's Civicsmith"];
+  const named = (r) => r.scripts.map((s) => s.name);
+  const reg = wizardRegistration();
+  assert.deepEqual(reg.adminActs, [...ADMIN_ACTS], "the administrator's acts, from interface-shell");
+  assert.deepEqual(reg.adminScreens, [...ADMIN_SCREENS], "the administrator's screens, from interface-shell");
+  const x = await store();
+  const sql = x.ctx.storage.sql;
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  const w = wizardScriptsOf(x.ctx);
+  const member = named(w.startFrom({ viewer: "member:ann" }));
+  const admin = named(w.startFrom({ viewer: "member:ada" }));
+  for (const n of SETUP) {
+    assert.ok(!member.includes(n), `${n} is withheld from a plain member`);
+    assert.ok(admin.includes(n), `${n} is offered to an administrator`);
+  }
+  /* negative control (K874): the plain member is offered the scripts she may take, so the withholding is the setup scripts' alone */
+  assert.ok(member.includes("Connect your Claude account") && member.includes("Your ties") && member.length < admin.length, "a plain member keeps the scripts she may take");
 });
