@@ -11,20 +11,20 @@
   "handle": 7,
   "ai": 171,
   "date": 14,
-  "queue": 80,
+  "queue": 81,
   "transcribe": 19,
   "capture": 62,
-  "document": 56,
+  "document": 61,
   "question": 79,
   "connection": 34,
   "guide": 7,
   "prepared": 2,
   "label": 192,
-  "project": 48,
+  "project": 50,
   "grouprule": 1,
   "refusal": 1933,
   "signing": 17,
-  "case": 15,
+  "case": 18,
   "docket": 7,
   "advocacy": 3,
   "conformance": 62,
@@ -44,16 +44,16 @@
   "door": 27,
   "instance": 10,
   "statusreport": 1,
-  "members": 6,
+  "members": 7,
   "ref": 26,
   "session": 11,
   "updates": 34,
   "home": 18,
   "installer": 19,
-  "wizard": 318,
+  "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3790,
+  "screen": 3799,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,8 +63,8 @@
   "proceeding": 6,
   "duty": 6,
   "published": 9,
-  "shell": 146,
-  "settings": 2,
+  "shell": 150,
+  "settings": 4,
   "entity": 33,
   "find": 26,
   "risk": 12,
@@ -85,7 +85,7 @@
   "monitor": 6,
   "testimony": 2,
   "level": 6,
-  "court": 1,
+  "court": 5,
   "join": 1,
   "inbox": 1,
   "request-unsent": 5,
@@ -99,6 +99,18 @@
   "act": 828,
   "prompt": 3,
   "term": 3,
+  "ceremony": 3,
+  "time": 1,
+  "size": 1,
+  "reference": 1,
+  "form": 3,
+  "unavailable": 2,
+  "page": 2,
+  "person": 1,
+  "findin": 4,
+  "money": 33,
+  "passage": 2,
+  "period": 1,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -163,7 +175,6 @@
   "case-import": 32,
   "ai-runs": 37,
   "inquiry": 20,
-  "money": 32,
   "textchain": 27,
   "ai-accounts": 2,
   "plan-work": 27,
@@ -209,7 +220,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12612,
+  "total": 12669,
   "protected": 890
  },
  "words": [
@@ -5822,10 +5833,10 @@
   },
   {
    "key": "stake.none",
-   "en": "None stated beyond the team's",
+   "en": "No stake of its own beyond the team's",
    "protected": false,
    "source": "DEC-231",
-   "note": "DEC-231"
+   "note": "DEC-231; DEC-259: reworded"
   },
   {
    "key": "stake.unreadable",
@@ -6508,10 +6519,10 @@
   },
   {
    "key": "screen.review-copy.until.nozone",
-   "en": "Set your team's time zone first: a review link's end date is counted in it. Then share.",
+   "en": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
    "protected": false,
    "source": "DEC-234",
-   "note": "DEC-234: B200 (2), B201; screens-publish R18"
+   "note": "DEC-234: B200 (2), B201; screens-publish R18; DEC-259: reworded"
   },
   {
    "key": "shell.card.plan",
@@ -38283,6 +38294,405 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-298: the explanation on the panel's checked line"
+  },
+  {
+   "key": "shell.card.request",
+   "en": "What the team asked an office for, under which law, and when the answer is due.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the project page's link to request"
+  },
+  {
+   "key": "shell.card.matter",
+   "en": "The formal proceedings and files the team follows, each with its own record.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the project page's link to matter"
+  },
+  {
+   "key": "shell.card.action",
+   "en": "Letters, demands and appearances, each with its clock and whose move it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the project page's link to action"
+  },
+  {
+   "key": "shell.card.dash-project",
+   "en": "The investigation dashboard: every project's stage, open questions and what waits on whom.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: Home's Investigation block opens it"
+  },
+  {
+   "key": "screen.project.work.request",
+   "en": "Records requests",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "screen.project.work.matter",
+   "en": "Matters",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "screen.project.work.action",
+   "en": "Actions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "wizard.subject.project",
+   "en": "This step works in a project. Which one?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a wizard step opened with no project: a choice of the projects the member is in, never \"Nothing is here\""
+  },
+  {
+   "key": "wizard.subject.question",
+   "en": "This step works on a question. Which one?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a choice of the project's questions, and \"Open a new question\""
+  },
+  {
+   "key": "wizard.subject.document",
+   "en": "This step works on a document. Which one?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a choice of the project's documents, and \"Add a document\""
+  },
+  {
+   "key": "wizard.subject.none.project",
+   "en": "This step works in a project, and you aren't in one yet. Start one, or ask to join one, then come back to this step.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: no project to choose"
+  },
+  {
+   "key": "screen.group.timezone",
+   "en": "Time zone",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: Settings, Your team; preset from the team's place"
+  },
+  {
+   "key": "screen.group.timezone.help",
+   "en": "Dates and deadlines are counted in it, such as the day a review link ends. Your team's place sets it; change it here if the place has none or is wrong.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "screen.review-copy.until.nozone.member",
+   "en": "Your team's time zone isn't set, and a review link's end date is counted in it. Ask an administrator to set it under Settings, Your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: to a member who is not an administrator"
+  },
+  {
+   "key": "case.draft.untitled",
+   "en": "{project}: draft case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the title of a draft that names no case, in its list, its page and the ceremony; never the derivation prose"
+  },
+  {
+   "key": "case.prepared.by",
+   "en": "Draft · prepared by {member}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: {member} the member's name or handle, never the account's sign-in name such as admin"
+  },
+  {
+   "key": "screen.case-editor.tip.distributed",
+   "en": "Distributed: published, and each copy handed to the readers the case names, such as the office it is sent to.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the card the ladder lacked"
+  },
+  {
+   "key": "case.ladder.notyet",
+   "en": "not yet checked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: replaces \"not yet evaluated\" on the ladder"
+  },
+  {
+   "key": "ceremony.gate.heading",
+   "en": "Put these right before you sign",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the ceremony's list of what stops the signing"
+  },
+  {
+   "key": "ceremony.gate.notargets",
+   "en": "This draft names no finding to publish. Add at least one finding to the case, then check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the publication with no targets; replaces the developer text"
+  },
+  {
+   "key": "ceremony.gate.other",
+   "en": "Something in the draft stops the signing: {what}. Put it right in the case, then check again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: any other gate, {what} its own plain sentence"
+  },
+  {
+   "key": "document.vouched",
+   "en": "Vouched for by {member}, {date}. Your team can use this copy.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: replaces the held-copy box at once after \"Vouch for this copy\"; stays on the page"
+  },
+  {
+   "key": "queue.done",
+   "en": "Done: {what}. It has left your queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: after any queue item's own act; every item's button names its act, never \"Act on an item\""
+  },
+  {
+   "key": "screen.group.name.saved",
+   "en": "Saved. Your team is now called {name}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "screen.group.name.same",
+   "en": "That's already your team's name, so nothing changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "settings.set.line.setup",
+   "en": "Set when your team's Civicsmith was set up",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a whole line; never \"by set at setup\""
+  },
+  {
+   "key": "settings.set.line.system",
+   "en": "Set by Civicsmith itself",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a whole line"
+  },
+  {
+   "key": "project.visibility.setting.hidden",
+   "en": "hidden",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: {setting} in project.visibility.started"
+  },
+  {
+   "key": "project.visibility.setting.findable",
+   "en": "findable",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: {setting} in project.visibility.started"
+  },
+  {
+   "key": "document.image.unread",
+   "en": "This is a picture, and Civicsmith's own reading couldn't make out text in it. Read it yourself, or transcribe it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: an image file; never \"Pages 0 are pictures\""
+  },
+  {
+   "key": "members.nohandle",
+   "en": "{name} · no handle chosen yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a member, the founder included, who hasn't chosen a handle"
+  },
+  {
+   "key": "document.untitled.web",
+   "en": "A page from {site}, captured {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the heading when the page has no title of its own; never \"Undetermined\""
+  },
+  {
+   "key": "time.at",
+   "en": "{date}, {time}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a moment, in the team's time zone, such as \"16 October, 14:05\"; never an ISO time"
+  },
+  {
+   "key": "document.uploaded.by",
+   "en": "uploaded by {member}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: replaces upload:<hash> in a subtitle"
+  },
+  {
+   "key": "size.small",
+   "en": "less than 1 KB",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: never a byte count such as \"237 B\""
+  },
+  {
+   "key": "reference.label",
+   "en": "Reference",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a folded line holding an id such as a delivery's, for support only; never in a heading"
+  },
+  {
+   "key": "form.choose.document",
+   "en": "Which document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: Timeline, Money, Person and Standard forms: a choice of the project's documents by title"
+  },
+  {
+   "key": "form.choose.document.help",
+   "en": "Choose the document the fact comes from. You never type its fingerprint: Civicsmith keeps it for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "form.choose.passage",
+   "en": "Choose the passage on the document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: opens the document; selecting its words fills the passage"
+  },
+  {
+   "key": "unavailable.public",
+   "en": "Nothing is here. This address doesn't lead to any page of this Civicsmith.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the public frame; with \"Go to the front page\""
+  },
+  {
+   "key": "unavailable.public.go",
+   "en": "Go to the front page",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299"
+  },
+  {
+   "key": "page.title",
+   "en": "{screen} · {team} · Civicsmith",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: the browser tab's title on every signed-in page"
+  },
+  {
+   "key": "page.title.public",
+   "en": "{page} · {team}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: a public page's tab"
+  },
+  {
+   "key": "person.graph.none",
+   "en": "No connections recorded yet. They appear as documents name this person beside others.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-299: in place of an empty graph"
+  },
+  {
+   "key": "court.none",
+   "en": "No court is known for your team's place yet. Add the one this proceeding is in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: a proceeding's empty court choice, with \"Add a court\" beside it"
+  },
+  {
+   "key": "court.add",
+   "en": "Add a court",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: on the proceeding and in Settings, Places and offices, beside \"Add an office yourself\""
+  },
+  {
+   "key": "court.add.name",
+   "en": "The court's name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300"
+  },
+  {
+   "key": "court.add.help",
+   "en": "Its full name, as its own papers give it, such as \"Superior Court of California, County of Alameda\". Your team can use it in every proceeding.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300"
+  },
+  {
+   "key": "findin.recorded",
+   "en": "Recorded: {fact}. It is on {screen}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: after Find in's recording forms; {screen} a link"
+  },
+  {
+   "key": "findin.prefilled",
+   "en": "Filled in from the passage. Check it before you record it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: beside a figure and date read from the passage"
+  },
+  {
+   "key": "money.flow.step",
+   "en": "Who paid whom",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: the money flow step: from, to, amount, date, each a choice or read from the passage"
+  },
+  {
+   "key": "passage.facts.count",
+   "en": "{count} facts recorded from this passage",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: the passage keeps its acts; record the next one"
+  },
+  {
+   "key": "passage.facts.count.one",
+   "en": "1 fact recorded from this passage",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300"
+  },
+  {
+   "key": "document.table.flattened",
+   "en": "This table was read as plain text, so its rows and columns may be out of order. Check each figure against the original before you rely on it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: a flattened table"
+  },
+  {
+   "key": "findin.term.help",
+   "en": "Only passages with this name or term are shown, when you fill it in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: no tick box: the field applies when filled"
+  },
+  {
+   "key": "findin.question.choose",
+   "en": "For which question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: a choice of the project's questions; \"Open a question first\" only when it has none"
+  },
+  {
+   "key": "period.days",
+   "en": "{first} to {last}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-300: a period named by its first and last day, both included, such as \"1 to 15 October\""
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

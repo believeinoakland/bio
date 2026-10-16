@@ -1299,6 +1299,10 @@ w294('screen.people.add.submit', 'Follow them', False, "the add form's button")
 REWRITE.update({
   'screen.people.add.kind': 'A person or an organization?',
 })
+REWRITE.update({  # DEC-299 (6), (2)
+  'stake.none': 'No stake of its own beyond the team\'s',
+  'screen.review-copy.until.nozone': "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
+})
 # --- end DEC-294
 # --- DEC-296 (BOB's B251, N1167; ai-runs R76): a run's cost on the question page and the assistant panel, to the paying
 #     account's owners only: {cost} from ai.run.cost.<form>, {account} from ai.run.cost.on.<kind>
@@ -1340,6 +1344,82 @@ w298('ai.progress.hold', 'Its proposal shows here once Civicsmith has checked it
 w298('ai.progress.hold.answer', 'Its answer shows here once Civicsmith has checked it.', False, 'in the panel while it works')
 w298('ai.progress.checked.all.means', 'Every passage this answer cites was found, word for word, in the document it names, by Civicsmith itself and not by the assistant.', False, "the explanation on the panel's checked line")
 # --- end DEC-298
+# --- DEC-299 (BOB's B257, K3460, N1180-N1184: the browser walk of 0.85.0, B-1 to B-23): doors, words and states the walk found
+def w299(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-299' + (': ' + note if note else '')))
+# (1) doors: the project page's "This project's work" lists every screen that works within a project
+w299('shell.card.request', 'What the team asked an office for, under which law, and when the answer is due.', False, "the project page's link to request")
+w299('shell.card.matter', "The formal proceedings and files the team follows, each with its own record.", False, "the project page's link to matter")
+w299('shell.card.action', "Letters, demands and appearances, each with its clock and whose move it is.", False, "the project page's link to action")
+w299('shell.card.dash-project', "The investigation dashboard: every project's stage, open questions and what waits on whom.", False, "Home's Investigation block opens it")
+w299('screen.project.work.request', 'Records requests')
+w299('screen.project.work.matter', 'Matters')
+w299('screen.project.work.action', 'Actions')
+w299('wizard.subject.project', 'This step works in a project. Which one?', False, 'a wizard step opened with no project: a choice of the projects the member is in, never "Nothing is here"')
+w299('wizard.subject.question', 'This step works on a question. Which one?', False, 'a choice of the project\'s questions, and "Open a new question"')
+w299('wizard.subject.document', 'This step works on a document. Which one?', False, "a choice of the project's documents, and \"Add a document\"")
+w299('wizard.subject.none.project', "This step works in a project, and you aren't in one yet. Start one, or ask to join one, then come back to this step.", False, 'no project to choose')
+# (2) the team's time zone: from its place; set under Settings, Your team, when no place gives one
+w299('screen.group.timezone', 'Time zone', False, 'Settings, Your team; preset from the team\'s place')
+w299('screen.group.timezone.help', "Dates and deadlines are counted in it, such as the day a review link ends. Your team's place sets it; change it here if the place has none or is wrong.")
+w299('screen.review-copy.until.nozone.member', "Your team's time zone isn't set, and a review link's end date is counted in it. Ask an administrator to set it under Settings, Your team.", False, 'to a member who is not an administrator')
+# (3) the case draft and the ceremony
+w299('case.draft.untitled', '{project}: draft case', False, 'the title of a draft that names no case, in its list, its page and the ceremony; never the derivation prose')
+w299('case.prepared.by', 'Draft · prepared by {member}', False, "{member} the member's name or handle, never the account's sign-in name such as admin")
+w299('screen.case-editor.tip.distributed', 'Distributed: published, and each copy handed to the readers the case names, such as the office it is sent to.', False, 'the card the ladder lacked')
+w299('case.ladder.notyet', 'not yet checked', False, 'replaces "not yet evaluated" on the ladder')
+w299('ceremony.gate.heading', 'Put these right before you sign', False, "the ceremony's list of what stops the signing")
+w299('ceremony.gate.notargets', 'This draft names no finding to publish. Add at least one finding to the case, then check again.', False, 'the publication with no targets; replaces the developer text')
+w299('ceremony.gate.other', "Something in the draft stops the signing: {what}. Put it right in the case, then check again.", False, 'any other gate, {what} its own plain sentence')
+# (4) acknowledgements
+w299('document.vouched', 'Vouched for by {member}, {date}. Your team can use this copy.', False, 'replaces the held-copy box at once after "Vouch for this copy"; stays on the page')
+w299('queue.done', 'Done: {what}. It has left your queue.', False, "after any queue item's own act; every item's button names its act, never \"Act on an item\"")
+w299('screen.group.name.saved', 'Saved. Your team is now called {name}.')
+w299('screen.group.name.same', "That's already your team's name, so nothing changed.")
+# (6) garbled sentences
+w299('settings.set.line.setup', 'Set when your team\'s Civicsmith was set up', False, 'a whole line; never "by set at setup"')
+w299('settings.set.line.system', 'Set by Civicsmith itself', False, 'a whole line')
+w299('project.visibility.setting.hidden', 'hidden', False, "{setting} in project.visibility.started")
+w299('project.visibility.setting.findable', 'findable', False, "{setting} in project.visibility.started")
+w299('document.image.unread', "This is a picture, and Civicsmith's own reading couldn't make out text in it. Read it yourself, or transcribe it.", False, 'an image file; never "Pages 0 are pictures"')
+w299('members.nohandle', '{name} · no handle chosen yet', False, "a member, the founder included, who hasn't chosen a handle")
+# (7) a web capture with no title
+w299('document.untitled.web', 'A page from {site}, captured {date}', False, "the heading when the page has no title of its own; never \"Undetermined\"")
+# (8) raw ids and times: none in a member's words
+w299('time.at', '{date}, {time}', False, "a moment, in the team's time zone, such as \"16 October, 14:05\"; never an ISO time")
+w299('document.uploaded.by', 'uploaded by {member}, {date}', False, 'replaces upload:<hash> in a subtitle')
+w299('size.small', 'less than 1 KB', False, 'never a byte count such as "237 B"')
+w299('reference.label', 'Reference', False, 'a folded line holding an id such as a delivery\'s, for support only; never in a heading')
+# (9) choosing a document and a passage
+w299('form.choose.document', 'Which document', False, "Timeline, Money, Person and Standard forms: a choice of the project's documents by title")
+w299('form.choose.document.help', "Choose the document the fact comes from. You never type its fingerprint: Civicsmith keeps it for you.")
+w299('form.choose.passage', 'Choose the passage on the document', False, 'opens the document; selecting its words fills the passage')
+# (10) a project you are not in: hidden, never a form you cannot use
+# (11) addresses outside the team's pages
+w299('unavailable.public', "Nothing is here. This address doesn't lead to any page of this Civicsmith.", False, 'the public frame; with "Go to the front page"')
+w299('unavailable.public.go', 'Go to the front page')
+# (12) look
+w299('page.title', '{screen} · {team} · Civicsmith', False, "the browser tab's title on every signed-in page")
+w299('page.title.public', '{page} · {team}', False, "a public page's tab")
+w299('person.graph.none', 'No connections recorded yet. They appear as documents name this person beside others.', False, 'in place of an empty graph')
+# --- end DEC-299
+# --- DEC-300 (BOB's B258, N1190-N1194: the walk's V4, B-27 to B-40)
+def w300(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-300' + (': ' + note if note else '')))
+w300('court.none', "No court is known for your team's place yet. Add the one this proceeding is in.", False, "a proceeding's empty court choice, with \"Add a court\" beside it")
+w300('court.add', 'Add a court', False, 'on the proceeding and in Settings, Places and offices, beside "Add an office yourself"')
+w300('court.add.name', 'The court\'s name')
+w300('court.add.help', 'Its full name, as its own papers give it, such as "Superior Court of California, County of Alameda". Your team can use it in every proceeding.')
+w300('findin.recorded', 'Recorded: {fact}. It is on {screen}.', False, "after Find in's recording forms; {screen} a link")
+w300('findin.prefilled', 'Filled in from the passage. Check it before you record it.', False, 'beside a figure and date read from the passage')
+w300('money.flow.step', 'Who paid whom', False, "the money flow step: from, to, amount, date, each a choice or read from the passage")
+w300('passage.facts.count', '{count} facts recorded from this passage', False, 'the passage keeps its acts; record the next one')
+w300('passage.facts.count.one', '1 fact recorded from this passage')
+w300('document.table.flattened', "This table was read as plain text, so its rows and columns may be out of order. Check each figure against the original before you rely on it.", False, 'a flattened table')
+w300('findin.term.help', 'Only passages with this name or term are shown, when you fill it in.', False, 'no tick box: the field applies when filled')
+w300('findin.question.choose', 'For which question', False, "a choice of the project's questions; \"Open a question first\" only when it has none")
+w300('period.days', '{first} to {last}', False, 'a period named by its first and last day, both included, such as "1 to 15 October"')
+# --- end DEC-300
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
