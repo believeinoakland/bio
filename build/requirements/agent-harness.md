@@ -36,7 +36,7 @@ The report contract (`checkReport`, pure):
 
 Mode `plan`'s table (K660; `BIO_Action_v0_1.md` §4):
 - **R6** (was `agent-worker` R50; §4 rules 1, 3, 8; K660 (1), (3)) Mode `plan` walks its own control-flow table, `PLAN_FLOW`, pure and held beside `CONTROL_FLOW`: rows `gate-mode`, `resume`, `read`, `compose`, `dedup`, `submit`, `adjust`, `close`; one pass (R3's pass limit is 1 for this table); `stopBecause` asks `proposals` then `wallclock`. It has no `fanout`: it calls no `airunspawn`, `capturerequest` or `suggest`, makes no fetch and drafts no communication.
-- **R11** (R085-11; K3486 (B); R5) The spawn contract's `returns` carries `conditions`: the condition kinds `run-rules` admits (the vocabulary `checkCondition` checks), in a fixed order, so the sub-session's tool can offer them (`agent-model` R17). Test: a contract's `returns.conditions` is non-empty and each kind passes `checkCondition`; control: a kind not in it is refused by `checkCondition`. *(not yet met: R085)*
+- **R11** (R085-11; K3486 (B); R5) The spawn contract's `returns` carries `conditions`: the condition kinds `run-rules` admits (the vocabulary `checkCondition` checks), in a fixed order, so the sub-session's tool can offer them (`agent-model` R17). Test: a contract's `returns.conditions` is non-empty and each kind passes `checkCondition`; control: a kind not in it is refused by `checkCondition`.
 
 ## Private
 
