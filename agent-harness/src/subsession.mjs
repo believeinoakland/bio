@@ -94,6 +94,10 @@
  * ========================================================================= */
 
 import { LEVELS } from "./harness.mjs";
+/* R11 (R085-11): the record's condition vocabulary, which `checkCondition` checks a report's `condition` against. Read
+   from observation-log, its owner (modules.json `uses`, K3491), so the kinds offered to a sub-session are the kinds the
+   plane admits. */
+import { CONDITION_KINDS } from "../../bio-plane/src/observation-log/vocabulary.mjs";
 
 /* D-129's five, and this is a COPY of the plane's `OBSERVATION_STATES`, pinned
    to run-rules' export in `test/fanout.test.mjs` and the requirements suite (R44) — the same
@@ -286,6 +290,8 @@ export function spawnContract({ level, payload } = {}) {
       citation_keys: Object.keys(CITATION_KEYS),
       states: Object.keys(REPORT_STATES),
       summary_max: SUMMARY_MAX,
+      /* R11: the condition kinds the plane admits, in the vocabulary's fixed order. */
+      conditions: Object.keys(CONDITION_KINDS),
       citations_max: CITATIONS_MAX,
       address_max: ADDRESS_MAX,
       rule: "return a REPORT with a citation, never documents. The parent re-reads by address.",
