@@ -23,3 +23,7 @@ Size (session_01DiiUVwjsM1J2yZP34YaftH): test runs 4, module lines 2975
 ## J1 · COMPLETE
 
 R085-21 done: R31 applied in compile (bare words under rows=passage read as passage: words, warning as R31 names; scope no longer keeps a bare-word text arm). query-language 46 pass; retrieval (users) 175 pass; format, architecture, coverage (31/31), ownership all 0 failures. REPORT: agent-worker's bundle takes query.mjs and is now stale; BOB regenerates it (merge order: query-language before agent-worker). Details in my record.
+
+## J2 · COMPLETE
+
+R085-27 done: R32 applied in compile (rows=leg drops positive bare words, warning as R32 names; scope no longer narrowed). query-language 47 pass; retrieval (users) 175 pass; format, architecture, coverage (32/32), ownership all 0 failures. REPORT: agent-worker's bundle takes query.mjs and is stale; BOB regenerates it (query-language before agent-worker). Details in my record.
