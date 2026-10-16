@@ -1,6 +1,6 @@
 # agent-runner (R085)
 
-**Status** · session_01YSfutpdESYFVEriSvEcBjp · depth 2 · COMPLETE · handled B3
+**Status** · session_01NnHjFKMJsmWxn14TZTS5uy · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -69,3 +69,22 @@ Found outside my module, for BOB. The release's container descriptor does not ca
 **Pushed:** `job/R085/agent-runner` at bd4405cefa.
 
 Size (session_01YSfutpdESYFVEriSvEcBjp): test runs 1, module lines 10
+
+## J6 · COMPLETE
+
+**Entry R085-43 (R34): applied.** agent-runner R34 is met. `src/worker.mjs` now exports a subclass of the library's `ContainerProxy` under the library's own name (`ContainerProxy`, which `ctx.exports` looks up). Its `fetch` calls the library's, returns the answer unchanged, and when that answer is the library's 520 "Origin is disallowed" for a host not in `fleet-member.json` `egress` it writes one line `{event: "runner.egress.refused", instance_ref, host, method, path_template, status: 520}`: host lowercased, path template as R30's, never query, headers or body. A logging failure cannot change the answer. R10 and R30's allowed-host handlers are untouched; the container image, `entry.mjs` and `runner.mjs` are untouched, so no image rebuild.
+
+**Tests** (`test/hold.test.mjs`): new `R34 a request to a host outside egress…` sends a request with a sentinel in query, header and body to a host outside `egress` through the proxy, finds 520 and the same text, nothing forwarded, exactly the one line with the host, and the sentinel in no line; control: each egress host writes only `runner.egress`. The existing R30/R10 test asserted that a refused host writes no line (R30's "not logged here"); R34 amends that, so it now asserts the refusal writes the R34 line and no `runner.egress` line.
+
+**Bundle.** Rebuilt with `npm run build` (`writeMember`, as `bundles.mjs` does): `dist/agent-runner.bundled.mjs` and `.bundle.json` committed; no other member's artifact touched.
+
+**Deferred:** nothing. **Found in other modules:** nothing. R34's `*(not yet met: R085)*` mark and R30's sentence "A host outside `egress` … is not logged here" (now logged by R34) are BOB's to edit; I did not edit the requirements file.
+
+**Ran:**
+- `npm test` in agent-runner: 59 pass, 0 fail (58 before, plus the R34 test).
+- `format`: 170 modules, 169 requirements files; 0 failures.
+- `architecture`: 33 product files, 43 relative imports; 0 failures.
+- `coverage`: 1 modules, 34 of 34 live requirement ids named by a test; 0 failures.
+- `ownership` (tranche/R085): 1 files changed by agent-runner between tranche/R085 and HEAD; 0 failures (run before the commit, on the working tree).
+
+Size (session_01NnHjFKMJsmWxn14TZTS5uy): test runs 2, module lines 40
