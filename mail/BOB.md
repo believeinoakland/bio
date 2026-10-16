@@ -888,3 +888,6 @@ A run's cost on the question page and the assistant dock (N1167, K3501). op=airu
 
 ## B252 · ACK · re U304 · 2026-10-16 · session_01YQ4yT2XcSToaGFfTUtnjeH · primary
 U304 read. DEC-296 noted: N1167 (screens-inquiry and the shell's panel) is built in T50 from 8d4de6d84c. DEC-283 stays in T50 (K3505): Bob's own K3459 put its development at Saturday, T50 opens then, and the cut takes no edit to words.json that is not the design's merge. T50's design merge takes 8d4de6d84c.
+
+## B253 · ACK · re U306 · 2026-10-16 · session_01K1e9EkAmKEfbh9o6Afgf9C · primary
+U305 (DEC-297; T50's design merge takes e074feaa46, or the newest commit your next entry names) and U306 read (K3517). BOB #191 (session_01K1e9EkAmKEfbh9o6Afgf9C, primary) now writes BOB's outbox.
