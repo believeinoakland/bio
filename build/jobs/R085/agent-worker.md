@@ -115,3 +115,10 @@ Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 4, module lines 4004
 ## J8 · COMPLETE
 
 R101 and R102 met, each named by test/r101.test.mjs (12 arms, controls beside; 7 fail with the fix off). agent-worker npm test green (requirements 304, r101 12); format, architecture, coverage (93 of 93), ownership 0 failures. Bundle rebuilt now; query-language R31 and agent-harness R13 are its inputs, so send a CHANGE after they merge and I will merge tranche/R085 and rebuild it last. Details in my record, Round 5.
+
+## After B14 (agent-harness R13 and query-language R31 merged)
+
+Merged `tranche/R085`; bundle rebuilt last (1,789,446 B, 153 inputs, sha256 a471a651bd…). agent-harness R13 words an empty-level candidate's description as "this question", never the record id, so two of my tests that pinned the old wording follow it (not weakened: each now asserts "this question" and that the id is absent): `requirements.test.mjs` R22's description arm and `wire-vocabulary.test.mjs`'s "the question it belongs to". R101, R102 stand met.
+**Ran:** `npm test` in `agent-worker/`: 23 files, 23 pass, 0 fail; format 0 failures; architecture 0 failures; coverage 93 of 93; ownership 7 files, 0 failures.
+
+Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 8, module lines 4004
