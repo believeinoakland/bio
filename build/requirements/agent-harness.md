@@ -42,6 +42,7 @@ Mode `plan`'s table (K660; `BIO_Action_v0_1.md` §4):
 
 ### Uses
 
+- `observation-log`: its condition vocabulary `CONDITION_KINDS` (R11; K3491).
 - `runtime-limits`, as Rule 3's table names it. Neither `harness.mjs` nor `subsession.mjs` imports anything outside the two files today (checked on `tranche/T32`); see Suggestions.
 
 ### Invariants

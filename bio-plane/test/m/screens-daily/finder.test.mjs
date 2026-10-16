@@ -24,12 +24,26 @@ test("R4: search with the member's words: read from the route's words or the las
   const blank = await open("/app/finder", PLANE);
   assert.equal(blank.byOp("search").length, 0, "nothing searched before the member writes words");
   const routed = await open("/app/finder/pothole", PLANE);
-  assert.equal(last(routed, "search").query.q, "pothole");
+  assert.equal(last(routed, "search").query.q, "(pothole) OR (passage:pothole)", "R35: the words, and the passages holding them");
   await press(routed, "search", { values: { "finder-q": "  work orders " }, reason: R });
   const reads = routed.byOp("search").map((r) => r.query.q);
-  assert.deepEqual(reads.slice(-2), ["work orders", "work orders"], "the act's search, then the screen's re-read of it");
+  assert.deepEqual(reads.slice(-2), ["(work orders) OR (passage:work passage:orders)", "(work orders) OR (passage:work passage:orders)"], "the act's search, then the screen's re-read of it");
   const empty = await press(blank, "search", { values: { "finder-q": " " }, reason: R });
   assert.equal(beside(blank, empty), word("screen.finder.wordsfirst"));
+});
+
+test("R35: Find's search also matches the words of held documents' passages: the words as words and as passages, for one word and for several, in a form the query language parses; control: an empty search sends nothing", async () => {
+  const one = await open("/app/finder/pothole", PLANE);
+  const two = await open("/app/finder/work orders", PLANE);
+  // The form the query language parses (query-language R1): a parenthesised AND of the words, OR a parenthesised AND of `passage:` terms.
+  assert.equal(last(one, "search").query.q, "(pothole) OR (passage:pothole)");
+  assert.equal(last(two, "search").query.q, "(work orders) OR (passage:work passage:orders)");
+  // The member's own syntax is sent as written: a field is not split into passage terms.
+  const typed = await open("/app/finder/capture:b", PLANE);
+  assert.equal(last(typed, "search").query.q, "capture:b");
+  const blank = await open("/app/finder", PLANE);
+  await press(blank, "search", { values: { "finder-q": "   " }, reason: R });
+  assert.equal(blank.byOp("search").length, 0, "control: an empty search sends nothing");
 });
 
 test("R4: each result with its grade and where it matched (Found by search), a reference to its document and a box to pick it", async () => {
