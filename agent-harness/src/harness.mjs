@@ -490,7 +490,9 @@ export function emptyLevelCandidates(state, target) {
          carried. The model's own `summary` is APPENDED when it has one and is
          never substituted for the composed sentence: a model that writes "n/a"
          must not be able to turn the instrument's own object back into filler. */
-      description: `this run searched the ${reported} level of ${String(target ?? "this question")} `
+      /* R13 (R085-23; K3510): the description names the question as "this question", never its record id. The id
+         is the plane's to show with the question, and a raw id here reached the reader verbatim (`question.mjs`). */
+      description: `this run searched the ${reported} level of this question `
         + `and found nothing supportable there; the search that establishes it is written in the `
         + `run's observation log at ${String(r.observed_at ?? "(no address)")}.`
         + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : ""),

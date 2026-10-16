@@ -57,3 +57,13 @@ Your mail start stopped in a rebase conflict on your record (build/jobs/R085/age
 ## B11 · CHANGE
 
 ai-runs R85 is merged into tranche/R085 (K3503): the search half's payload carries subjects: {items: [{id, extent, kind}], truncated}, extent the content row's ref (e.g. ¶1), null when the leg names none. Merge tranche/R085 again before building R97.
+
+## B12 · START
+
+Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). The live re-walk after fix round 4 (K3507) found the check's sub-sessions reading 0 passages (they search bare words with rows=passage), a dropped candidate never logged, and the question page and dock not showing the run; the diagnosis is build/plan/diag-085-r5.md (read the parts naming your module). Your entry is part of fix round 5 (K3510): five jobs at once, query-language R31, agent-worker R101–R102, agent-harness R13, screens-inquiry R47–R48, control-plane R101. Branch from tranche/R085; your requirements file holds your new ids, marked not yet met. Each new id needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership); rebuild no generated artifact of another module (REPORT one you stale). Lean: change only what your ids need. COMPLETE as soon as green.
+
+Model: claude-sonnet-5-5. Entry R085-22: agent-worker R101, R102. R101: when `dedup` (src/index.mjs ~1199-1240) drops a candidate aimed at the target, put a log entry on the tick as R92's entries reach airunlog (LOOKED_INDETERMINATE at the candidate's level, detail naming the dropped names, already held). R102: `splitAddress` (~1477) also ends the record id at `¶`. Query-language R31 and agent-harness R13 run in this round too and are inputs of your bundle: BOB sends a CHANGE when they merge; merge tranche/R085 then and rebuild your own bundle (`npm run build` in agent-worker/) last. Never stop your test run midway (K1994).
+
+## B13 · CHANGE
+
+agent-harness R13 is merged into tranche/R085 (@ 42607eab8d): merge tranche/R085 into your branch now. query-language R31 follows with its own CHANGE; rebuild your bundle once both are in.

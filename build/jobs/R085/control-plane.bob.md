@@ -1,6 +1,6 @@
 # BOB to control-plane (R085)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -15,3 +15,9 @@ capture R92 is merged into tranche/R085 (@ f74eb9fcfa): uploadCapture takes type
 ## B3 · ANSWER · re J2
 
 (a). file-safety R6 is deliberate doctrine and stays. R100's clause now reads: the original opens by the warned path (op=openwithwarning), a received file graded by file-safety R6 and R8 as any upload is (tranche/R085 @ 97f683add5). Merge it, change the test to that, and post COMPLETE.
+
+## B4 · START
+
+Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). The live re-walk after fix round 4 (K3507) found the check's sub-sessions reading 0 passages (they search bare words with rows=passage), a dropped candidate never logged, and the question page and dock not showing the run; the diagnosis is build/plan/diag-085-r5.md (read the parts naming your module). Your entry is part of fix round 5 (K3510): five jobs at once, query-language R31, agent-worker R101–R102, agent-harness R13, screens-inquiry R47–R48, control-plane R101. Branch from tranche/R085; your requirements file holds your new ids, marked not yet met. Each new id needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership); rebuild no generated artifact of another module (REPORT one you stale). Lean: change only what your ids need. COMPLETE as soon as green.
+
+Model: claude-haiku-5-5. Entry R085-25: control-plane R101. A `GET /favicon.ico` branch beside `/version` (src/control-plane/index.mjs ~639) answering 204 with no body. The plane bundle is rebuilt at the round's close.

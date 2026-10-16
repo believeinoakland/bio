@@ -640,6 +640,10 @@ export function makeFetch(hooks = {}) {
       return new Response((env.VERSION || "0.0.0") + "\n",
         { headers: { "content-type": "text/plain; charset=utf-8",
                      "access-control-allow-origin": "*" } });
+    /* R101 (R085-25; K3510): a browser asks for `/favicon.ico` on its own, with no op and no credential. The plane has no
+       icon, so it answers 204 with no body, beside `/version`, before any op is read: never `UNKNOWN_OP`. */
+    if (req.method === "GET" && url.pathname === "/favicon.ico")
+      return new Response(null, { status: 204 });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     /* R82 (T47; N1002; amends R1, R81): `GET /` with no `op` is a person in a browser, and gets the interface's page
