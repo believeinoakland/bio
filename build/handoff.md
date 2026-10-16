@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #192 (`session_01PsqvgyoB1fJsGCazEA2bQZ`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~16:20 UTC. Read `build/rulings-active.md` whole, then K3524–K3539 (BOB #192's).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #192 (`session_01PsqvgyoB1fJsGCazEA2bQZ`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~16:20 UTC. Read `build/rulings-active.md` whole, then K3524–K3540 (BOB #192's).
 
 ## RELEASE ONLY (K3425, K3426)
 
@@ -33,5 +33,5 @@ Only release 0.85.0 work, and the lanes' studies and walks, proceed until T50 op
 
 ## Open with Bob
 
-- The assistant lane's S1: the 14 criteria and four contexts, and the comparison method (A recommended), on https://claude.ai/artifact/APQkn9goZZkxyi9kkt7VK4 ; and whether to ask Anthropic for approval under AT-19 (listed, not recommended).
+- None from the assistant lane: Bob chose method A, weights only where clear (K3540); the AT-19 item is withdrawn (K3540).
 - His walk page: https://claude.ai/artifact/WuVghhRHhkrcHF1z1QjDL6 (BOB #192's; update or replace).
