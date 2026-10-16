@@ -72,7 +72,7 @@ Bob's question of where and how the assistant runs Claude is studied in its own 
 
 ## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
 
-Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#1, started by BOB #192), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
+Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#3, `session_01RhkG3SUxrZ9ENpSuRHnBQt`, sonnet, started by BOB #194, K3576; #1, #2 archived), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
 
 ## Starting a session
 
