@@ -126,3 +126,7 @@ Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 8, module lines 4004
 ## J9 · COMPLETE
 
 B14 handled: merged tranche/R085, bundle rebuilt last. agent-harness R13's description wording changed two of my tests' pins (requirements R22, wire-vocabulary), now asserting 'this question' and no raw id. npm test 23 of 23 pass; format, architecture, coverage (93 of 93), ownership 0 failures. R101, R102 stand met. Pushed.
+
+## J10 · REPORT
+
+R103, R104, R105 applied and pushed (f035659052), R106 left retired (B16). Reading for R104: only the meaning level has a compose-time read, so only a meaning-level absence is checked (a row whose bundle_id is the run's target contradicts it; a refused read or one with no rows cannot confirm it, so it is dropped too); the other levels' absences are kept as before. R105 keeps this run's writes in its own state (not in agent-harness's RESUMABLE list), so a drop names 'written by this run in pass N' within a segment and reads as 'already held on the question' after a resume. One test pin moved: fanout.test.mjs B7 'no step that looked at nothing sent an entry' now expects exactly the one R105 write entry (R26's wording 'an entry only when the step's judgement states a look' now has R105 beside it; BOB may want R26 to say so). New test file r103.test.mjs, 14 pass. Bundle not yet rebuilt: waiting for agent-harness R14 to merge (your CHANGE), then merge tranche/R085, rebuild last, run all checks and COMPLETE.
