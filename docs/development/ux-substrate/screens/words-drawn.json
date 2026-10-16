@@ -5597,6 +5597,18 @@
    "en": "Civicsmith could not tell why",
    "protected": false,
    "note": "DEC-293: any other value, including a bare status"
+  },
+  {
+   "key": "screen.people.counts.none",
+   "en": "not named in any document yet",
+   "protected": false,
+   "note": "DEC-294: a row no document names; such a row offers no \"Explore connections\""
+  },
+  {
+   "key": "screen.people.add.submit",
+   "en": "Follow them",
+   "protected": false,
+   "note": "DEC-294: the add form's button"
   }
  ],
  "rewrite": {
@@ -5640,7 +5652,7 @@
   "screen.money.didnotmove": "did not move: a {phase} figure",
   "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure.",
   "screen.people.notmembers": "The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under Settings › Members.",
-  "screen.people.today.seeded": "added at setup from your team's place",
+  "screen.people.today.seeded": "added at setup, from the public offices of your team's place",
   "screen.person.facts": "Career, credentials, memberships, interests",
   "screen.person.expunge.statement": "This removes the recorded value for good. It cannot be undone, by you or anyone: the value is gone from this page, from every question that cited it, and from every export. A marker stays where it was: \"Removed where the law requires, {date}, by {member}\". Published cases are not changed; a court order for those is complied with on the docket.",
   "screen.places.wanted.field": "A place you want that isn't listed (optional)",
@@ -5741,6 +5753,7 @@
   "question.empty.find.line": "Search the team's documents, open one, and mark the part that answers.",
   "question.empty.ask.line": "It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it.",
   "wizard.marks.chip": "Show me how ({n})",
-  "wizard.marks.chip.one": "Show me how"
+  "wizard.marks.chip.one": "Show me how",
+  "screen.people.add.kind": "A person or an organization?"
  }
 }

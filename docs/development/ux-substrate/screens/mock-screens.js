@@ -1163,7 +1163,15 @@ SCR.assistant = c => ({ rail: 'projects', title: 'The assistant', crumbs: ['Poth
    within each part, the newest added first. Each row: who they are today, how many documents, questions and projects
    name them among those the member may see, and when the newest was added; the name opens their page, and "Explore
    connections" starts from them. Counts are worked out from the mockup's own record (L. Chen's 14 documents as on `person`). */
-const PEOPLE_ST = { empty: 'b', nomatch: 'c' };
+/* DEC-294 (the walk's D18, DEC-292): a body added at setup says what it is (its kind) and, in a line of its own, that it
+   came at setup from the public offices of the team's place; "Explore connections" only on a row whose name is in a
+   document; the add form asks "A person or an organization?" as a choice. States d (a new team's directory) and e (adding
+   someone) are walked by journey 31. */
+const PEOPLE_ST = { empty: 'b', nomatch: 'c', newteam: 'd', add: 'e' };
+const PEOPLE_SEEDED = [
+  ['Oakland City Council', 'A public body'],
+  ['Office of the City Clerk', 'An office'],
+  ['Public Works Department', 'A public body']];
 const PEOPLE_YOURS = [
   ['L. Chen', 'subject', 'Director of Public Works since March 2022', 14, 2, 1, '2 October'],
   ['Public Works Department', 'group', 'A city department · repairs streets and sewers', 11, 2, 1, '2 October'],
@@ -1179,10 +1187,12 @@ const PEOPLE_OTHERS = [
 const nOf = (k, one, many) => `${k} ${k === 1 ? one : many}`;
 const personRow = ([name, ic, who, d, q, p, last]) => row(I(ic),
   `<b>${ref(name, 'person', `<b>${name}</b> · ${ic === 'subject' ? 'a person' : 'an organization'} the record follows · ${who}<span class=more>Click to open ${ic === 'subject' ? 'their page: positions, career and interests' : 'its page: what the record holds on it and who holds its offices'}, each dated and cited.</span>`)}</b> · <span class="mk-data">${who}</span><span class="meta">${q || p ? `named in ${nOf(d, 'document', 'documents')}, ${nOf(q, 'question', 'questions')} and ${nOf(p, 'project', 'projects')}` : `named in ${nOf(d, 'document', 'documents')}, in no question or project yet`} · newest added ${last}</span>`,
-  btn('explore', 'Explore connections', { help: `Looks for chains of links from ${name} to another person, organization, payment or project you choose, each step cited and graded.` }));
+  d ? btn('explore', 'Explore connections', { help: `Looks for chains of links from ${name} to another person, organization, payment or project you choose, each step cited and graded.` }) : '');
+const seededRow = ([name, kind]) => row(I('group'),
+  `<b>${ref(name, 'person', `<b>${name}</b> · an organization the record follows · ${kind}<span class=more>Click to open its page: what the record holds on it and who holds its offices, each dated and cited.</span>`)}</b> · <span class="mk-data">${kind}</span><span class="meta">not named in any document yet</span><div class="meta">added at setup, from the public offices of your team's place</div>`, '');
 const ADD_SUBJECT = 'Adds a person or organization your team\'s record should follow: the name, whether a person or an organization, and your note on who they are and why the team follows them. Facts about them are then added from documents, each cited.';
 SCR.people = c => { const st = PEOPLE_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { st, rail: 'people', title: 'People', crumbs: ['People'], main: `
-  <div class="mk-mockctl"><label for="mk-epeople">In this mockup, show</label> <select id="mk-epeople" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>the directory in use</option><option value="b"${sel('b')}>a team whose record follows no one yet</option><option value="c"${sel('c')}>a search that finds no one</option></select></div>
+  <div class="mk-mockctl"><label for="mk-epeople">In this mockup, show</label> <select id="mk-epeople" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>the directory in use</option><option value="b"${sel('b')}>a team whose record follows no one yet</option><option value="c"${sel('c')}>a search that finds no one</option><option value="d"${sel('d')}>a new team, just after setup</option><option value="e"${sel('e')}>adding someone</option></select></div>
   ${h1('People', `The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under ${ref('Settings › Members', 'members', '<b>Members</b> · your team\'s own members, their invitations and what each may do')}.`)}
   <div class="st st-a">
   <div class="mk-search" data-act="search"><input class="cs-input" id="mk-pq" placeholder="Name or office" aria-label="Search people and organizations"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search', help: 'Searches the people and organizations your team\'s record follows, by name, a name they are also known by, or office. To search inside documents, use Find.' })}</span></div>
@@ -1199,7 +1209,13 @@ SCR.people = c => { const st = PEOPLE_ST[c.v] || 'a'; const sel = v => v === st 
    ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('add') + 'Capture a document', 'capture', '<b>Add</b> · capture a document from its address, a file or photo; the people it names can then be tied to it'))}</div>
   <div class="st st-c"><div class="mk-search" data-act="search"><input class="cs-input" id="mk-pq0" value="Alvarez" aria-label="Search people and organizations"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search', help: 'Searches the people and organizations your team\'s record follows, by name, a name they are also known by, or office. To search inside documents, use Find.' })}</span></div>
    ${row(I('nobody'), '<b>No one the record follows matches “Alvarez”.</b> Someone appears here only once your team follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here.', '')}
-   ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('search') + 'Look for “Alvarez” in documents', 'finder', '<b>Find</b> · searches the documents your team holds, where a name can appear before anyone ties it to a person'))}</div>`}; };
+   ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('search') + 'Look for “Alvarez” in documents', 'finder', '<b>Find</b> · searches the documents your team holds, where a name can appear before anyone ties it to a person'))}</div>
+  <div class="st st-d">${sheet(PEOPLE_SEEDED.map(seededRow).join(''))}
+   ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }))}</div>
+  <div class="st st-e">${sec('Add someone the record follows', `${field('mk-pa-name', 'Their name', 'Dana Whitfield')}
+   ${pick('mk-pa-kind', 'A person or an organization?', [['A person', '', true], ['An organization', '']])}
+   ${field('mk-pa-note', 'Your note: who they are, and why the team follows them', 'Runs the city\'s pothole contractor; named in the 2026 repair contract.', { area: true, help: 'Facts about them are then added from documents, each cited.' })}
+   ${acts(btn('entitycreate', 'Follow them', { tone: 'primary' }))}`)}</div>`}; };
 
 /* DEC-215 (Bob's direction, 13 October, evening): a connection graph a member reads and clicks. The center in the middle,
    what it is joined to around it and one ring further out; every line in its kind's color and line style, with the step's
@@ -1342,7 +1358,7 @@ SCR.person = c => { const st = c.v === 'org' ? 'b' : 'a'; const sel = v => v ===
   ${h1('Public Works', '<span class="mk-data">A department of the City of Oakland · repairs streets and fills potholes</span> · named in 31 documents')}
   ${acts(btn('explore', 'Explore connections'))}
   ${sec('Offices in it', sheet(row(I('group'), 'Director of Public Works · held by L. Chen since March 2022', '', 'city roster · capture B')))}
-  ${sec('What the team says about it', `<h3 class="mk-h3">Other names</h3>${sheet(row(I('subject'), 'Public Works', '', 'the name on the city roster') + row(I('subject'), 'Oakland Public Works', '', 'added at setup from your team\'s place') + row(I('subject'), 'OPW', '', 'added by Dev on 3 October'))}${field('mk-oalias', 'Another name it goes by', '', { act: 'entityalias' })}${acts(btn('entityalias', 'Add the name'))}<h3 class="mk-h3">Ties a member declared</h3>${note('None yet. A tie such as “member of” a larger body goes here, with why and where it is said.')}${acts(btn('relationdeclare', 'Declare a tie…'))}<h3 class="mk-h3">Documents that may name it</h3>${sheet(row(I('capture'), '<b>Street maintenance performance, 2026</b> · “OPW crews closed 812 reports”', btn('resolve', 'Match it') + btn('resolvetestify', 'I know this is it…'), 'page 2 · by the name OPW'))}${acts(btn('connect', 'Connect the documents that name it'))}`, { help: 'What members have said about this organization that no single document states: other names it goes by, ties a member declared, and which documents name it. Each line shows who said it and when.' })}
+  ${sec('What the team says about it', `<h3 class="mk-h3">Other names</h3>${sheet(row(I('subject'), 'Public Works', '', 'the name on the city roster') + row(I('subject'), 'Oakland Public Works', '', 'added at setup, from the public offices of your team\'s place') + row(I('subject'), 'OPW', '', 'added by Dev on 3 October'))}${field('mk-oalias', 'Another name it goes by', '', { act: 'entityalias' })}${acts(btn('entityalias', 'Add the name'))}<h3 class="mk-h3">Ties a member declared</h3>${note('None yet. A tie such as “member of” a larger body goes here, with why and where it is said.')}${acts(btn('relationdeclare', 'Declare a tie…'))}<h3 class="mk-h3">Documents that may name it</h3>${sheet(row(I('capture'), '<b>Street maintenance performance, 2026</b> · “OPW crews closed 812 reports”', btn('resolve', 'Match it') + btn('resolvetestify', 'I know this is it…'), 'page 2 · by the name OPW'))}${acts(btn('connect', 'Connect the documents that name it'))}`, { help: 'What members have said about this organization that no single document states: other names it goes by, ties a member declared, and which documents name it. Each line shows who said it and when.' })}
   </div>` }; };
 
 /* DEC-209 (Bob's D13, K3060: research the CPRA's requirements and NextRequest together for the records-request template). A help

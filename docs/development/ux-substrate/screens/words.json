@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3786,
+  "screen": 3788,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -209,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12579,
+  "total": 12581,
   "protected": 890
  },
  "words": [
@@ -17904,7 +17904,7 @@
   },
   {
    "key": "screen.people.today.seeded",
-   "en": "added at setup from your team's place",
+   "en": "added at setup, from the public offices of your team's place",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -18072,10 +18072,10 @@
   },
   {
    "key": "screen.people.add.kind",
-   "en": "A person or an organization",
+   "en": "A person or an organization?",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.people.add.kind.person",
@@ -38052,6 +38052,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-293: any other value, including a bare status"
+  },
+  {
+   "key": "screen.people.counts.none",
+   "en": "not named in any document yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-294: a row no document names; such a row offers no \"Explore connections\""
+  },
+  {
+   "key": "screen.people.add.submit",
+   "en": "Follow them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-294: the add form's button"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

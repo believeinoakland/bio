@@ -265,7 +265,7 @@ w('screen.people.counts.three', 'named in {documents}, {questions} and {projects
 w('screen.people.counts.docsonly', 'named in {documents}, in no question or project yet')
 REWRITE.update({
   'screen.people.notmembers': "The people and organizations your team's record follows: officials, staff, companies and public bodies. Your own team's members are not listed here; they are under Settings › Members.",
-  'screen.people.today.seeded': "added at setup from your team's place",
+  'screen.people.today.seeded': "added at setup, from the public offices of your team's place",  # DEC-294: on People a line of its own, the row's kind beside the name; also an alias's source
 })
 # person
 w('screen.person.testify.basis', 'How you know (for “I know this is them”)')
@@ -1290,6 +1290,15 @@ w293(E + 'pages', 'it reached its limit on pages of documents it may read', Fals
 w293(E + 'lease', 'it stopped answering partway, so Civicsmith ended it', False, 'RUN_BOUNDS lease: the reaper ended a run that stopped checking in')
 w293(E + 'unknown', 'Civicsmith could not tell why', False, 'any other value, including a bare status')
 # --- end DEC-293
+# --- DEC-294 (the walk's D18, DEC-292): the People page for a new team and its add form
+def w294(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-294' + (': ' + note if note else '')))
+w294('screen.people.counts.none', 'not named in any document yet', False, 'a row no document names; such a row offers no "Explore connections"')
+w294('screen.people.add.submit', 'Follow them', False, "the add form's button")
+REWRITE.update({
+  'screen.people.add.kind': 'A person or an organization?',
+})
+# --- end DEC-294
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

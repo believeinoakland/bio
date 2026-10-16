@@ -161,6 +161,10 @@ const J = [
    { s: 'projects', v: 'nocreate', act: 'projectrequestwithdraw', say: 'Withdrawn, it leaves the owners\' queue. Projects shows no “Start a project” for her, and names Rosa, who can let her start her own.' },
    { s: 'members', v: 'member', act: null, say: 'On Members she sees who is in the team, what each may do in plain words, and what each knows. Rosa is the administrator.' },
    { s: 'home', v: 'noproject', act: null, say: 'Had no project been open to her, Home would have said so and named Rosa.' } ] },
+ { n: 31, t: 'Following someone new', who: 'An administrator of a team just set up (DEC-294; the walk\'s D18)', steps: [
+   { s: 'people', v: 'newteam', act: null, say: 'Rosa opens People the day her team is set up. Three bodies are there already, each saying what it is, and that it came at setup from the public offices of the team\'s place. No document names them yet, so none offers “Explore connections”.' },
+   { s: 'people', v: 'newteam', act: 'entitycreate', say: 'She adds someone the team means to follow.' },
+   { s: 'people', v: 'add', act: 'entitycreate', say: 'The form asks her name, whether a person or an organization, as a choice, and her note on who they are and why the team follows them. She follows Dana Whitfield.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */
 function journeySteps(j, ai) {
@@ -205,4 +209,5 @@ const JBRIEF = {
  28: ["From civicsmith.org to the team's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "civicsmith.org; then the invitation link the founder sends."],
  29: ["From installing the team's Civicsmith to a first conclusion on a real question: the release Bob must be able to use (K3320).", "civicsmith.org; then the team's own Civicsmith."],
  30: ["A member who may not start projects gets into one: by joining one they were invited to, or by asking to join one the team can find; its owners decide.", "Home's “Getting into a project”, and Projects."],
+ 31: ["A team follows a person or an organization the record does not hold yet; bodies added at setup say what they are.", "People."],
 };
