@@ -710,13 +710,25 @@
   },
   {
    "key": "screen.install.stopped.exists",
-   "en": "Stopped: this account already holds a Civicsmith. One team's Civicsmith per account is supported for now. Nothing was created. Use another account for this team, or open the one already here.",
+   "en": "This account already holds a Civicsmith, so nothing was created or changed.",
    "protected": false,
-   "note": "DEC-259"
+   "note": "DEC-259: DEC-282: reworded (K3471); the page that follows is screen.install.exists.*"
+  },
+  {
+   "key": "screen.install.stopped.plan",
+   "en": "Stopped: this account is on Cloudflare's free plan.",
+   "protected": false,
+   "note": "DEC-259: DEC-282"
+  },
+  {
+   "key": "screen.install.stopped.plan.do",
+   "en": "Nothing was created. Switch it to Workers Paid in Cloudflare's dashboard, then start again.",
+   "protected": false,
+   "note": "DEC-259: DEC-282"
   },
   {
    "key": "screen.install.stopped.others",
-   "en": "Other steps stop the same way and say what to do: the account is on the free plan (switch to Workers Paid in Cloudflare's dashboard, then start again); no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
+   "en": "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
    "protected": false,
    "note": "DEC-259"
   },
@@ -758,9 +770,9 @@
   },
   {
    "key": "screen.install.otp.what",
-   "en": "This makes you your team's first administrator, in the next step. It is shown once, here. Save it somewhere safe, such as a password manager, until you have claimed. Continuing below fills it in for you.",
+   "en": "This makes you your team's first administrator, in the next step. It is shown once, here, and is spent when you claim. Keep it to yourself: don't share, print or send it, because whoever has it before you claim can claim in your place. Save it somewhere safe, such as a password manager. Continuing below fills it in for you.",
    "protected": true,
-   "note": "DEC-259"
+   "note": "DEC-259: DEC-282: reworded (install situation S10)"
   },
   {
    "key": "screen.install.otp.help",
@@ -4811,6 +4823,150 @@
    "en": "On: a soft click when you press a button, and a low tone when something is refused. New members start with it off.",
    "protected": false,
    "note": "DEC-280"
+  },
+  {
+   "key": "screen.install.exists.title",
+   "en": "This account already holds a Civicsmith",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.sub",
+   "en": "Nothing was created or changed. Here is what is in it, and the ways to go on.",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.here.heading",
+   "en": "What is already here",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.whose",
+   "en": "{team}'s Civicsmith, at {address}",
+   "protected": false,
+   "note": "DEC-282: {team}: its name as its members read it; {address}: its web address"
+  },
+  {
+   "key": "screen.install.exists.release",
+   "en": "Release {release}, installed {date}; last used {used}",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.holds",
+   "en": "What it holds: {holdings}",
+   "protected": false,
+   "note": "DEC-282: {holdings}: its counts, such as \"3 projects, 412 documents, 1 published case, 6 members\""
+  },
+  {
+   "key": "screen.install.exists.ask",
+   "en": "If it is your team's, ask its administrators before you choose: they may be using it today.",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.choose.heading",
+   "en": "What would you like to do?",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.update.name",
+   "en": "Update it",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.update.what",
+   "en": "If it is your team's: bring it up to date. Its records, members and settings are kept.",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.alongside.name",
+   "en": "Install alongside it",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.alongside.what",
+   "en": "For a different team, in this same account. Each has its own short name, address, members and records; neither can read the other's.",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.remove.name",
+   "en": "Remove it, then install",
+   "protected": false,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.remove.what",
+   "en": "Only if nobody needs what it holds. The next page lists exactly what would be deleted, and nothing is deleted before you confirm there.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.title",
+   "en": "Remove the Civicsmith already here?",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.sub",
+   "en": "Read what would be deleted. Nothing has been deleted yet.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.heading",
+   "en": "What would be deleted, for good",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.records",
+   "en": "Everything {team}'s Civicsmith holds: {holdings}, with every note, question and finding in them.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.members",
+   "en": "Every member's account and sign-in, the administrators' too.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.published",
+   "en": "Its own copies of what it published. Copies other teams imported, and pages anyone saved elsewhere, are not touched.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.address",
+   "en": "Its address, which stops answering.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.keep",
+   "en": "Nothing is kept by surprise: the installer keeps no copy. If anything should be kept, its administrators export it first, in their Civicsmith's Settings, before you come back here.",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.type.label",
+   "en": "To confirm, type its short name",
+   "protected": true,
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.type.help",
+   "en": "Its short name is {slug}. Typing it makes sure the right Civicsmith is removed.",
+   "protected": true,
+   "note": "DEC-282"
   }
  ],
  "rewrite": {

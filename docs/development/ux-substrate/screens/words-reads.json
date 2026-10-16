@@ -5073,6 +5073,10 @@
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
     "act.owed_founderhandleset.does",
+    "act.owed_installalongside.does",
+    "act.owed_installremove.does",
+    "act.owed_installremoveconfirm.does",
+    "act.owed_installupdate.does",
     "act.owed_passwordresetlink.does",
     "act.owed_projectstakeset.does",
     "act.owed_secondlook.does",
@@ -5387,14 +5391,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 523,
+    "reads": 527,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 33,
     "inline": 66,
     "inlineKeyed": 65,
     "inlineUnkeyed": 1,
-    "computedKeys": 306,
+    "computedKeys": 310,
     "actHelp": 337,
     "vocabulary": 120
    },
@@ -6183,6 +6187,10 @@
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
     "act.owed_founderhandleset.does",
+    "act.owed_installalongside.does",
+    "act.owed_installremove.does",
+    "act.owed_installremoveconfirm.does",
+    "act.owed_installupdate.does",
     "act.owed_passwordresetlink.does",
     "act.owed_projectstakeset.does",
     "act.owed_secondlook.does",
@@ -6809,14 +6817,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 801,
+    "reads": 805,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 325,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 476
+    "computedKeys": 480
    },
    "unkeyed": []
   },
@@ -7009,6 +7017,10 @@
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
     "act.owed_founderhandleset.does",
+    "act.owed_installalongside.does",
+    "act.owed_installremove.does",
+    "act.owed_installremoveconfirm.does",
+    "act.owed_installupdate.does",
     "act.owed_passwordresetlink.does",
     "act.owed_projectstakeset.does",
     "act.owed_secondlook.does",
@@ -7546,14 +7558,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 722,
+    "reads": 726,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 296,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 426
+    "computedKeys": 430
    },
    "unkeyed": [
     {
@@ -7747,6 +7759,10 @@
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
     "act.owed_founderhandleset.does",
+    "act.owed_installalongside.does",
+    "act.owed_installremove.does",
+    "act.owed_installremoveconfirm.does",
+    "act.owed_installupdate.does",
     "act.owed_passwordresetlink.does",
     "act.owed_projectstakeset.does",
     "act.owed_secondlook.does",
@@ -8169,14 +8185,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 595,
+    "reads": 599,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 107,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 488
+    "computedKeys": 492
    },
    "unkeyed": [],
    "retired": [
@@ -10310,6 +10326,10 @@
     "act.owed_actioninquiry.does",
     "act.owed_actionstake.does",
     "act.owed_founderhandleset.does",
+    "act.owed_installalongside.does",
+    "act.owed_installremove.does",
+    "act.owed_installremoveconfirm.does",
+    "act.owed_installupdate.does",
     "act.owed_passwordresetlink.does",
     "act.owed_passwordresetlink.label.members",
     "act.owed_projectstakeset.does",
@@ -11199,14 +11219,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1063,
+    "reads": 1067,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 599,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 464
+    "computedKeys": 468
    },
    "unkeyed": []
   },

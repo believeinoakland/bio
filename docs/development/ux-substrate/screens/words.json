@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3690,
+  "screen": 3716,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 812,
+  "act": 820,
   "prompt": 3,
   "duties": 79,
   "strength": 77,
@@ -208,8 +208,8 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 12424,
-  "protected": 865
+  "total": 12458,
+  "protected": 881
  },
  "words": [
   {
@@ -32455,13 +32455,28 @@
   },
   {
    "key": "screen.install.stopped.exists",
-   "en": "Stopped: this account already holds a Civicsmith. One team's Civicsmith per account is supported for now. Nothing was created. Use another account for this team, or open the one already here.",
+   "en": "This account already holds a Civicsmith, so nothing was created or changed.",
    "protected": false,
-   "source": "DEC-259"
+   "source": "DEC-259",
+   "note": "DEC-282: reworded (K3471); the page that follows is screen.install.exists.*"
+  },
+  {
+   "key": "screen.install.stopped.plan",
+   "en": "Stopped: this account is on Cloudflare's free plan.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.stopped.plan.do",
+   "en": "Nothing was created. Switch it to Workers Paid in Cloudflare's dashboard, then start again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
   },
   {
    "key": "screen.install.stopped.others",
-   "en": "Other steps stop the same way and say what to do: the account is on the free plan (switch to Workers Paid in Cloudflare's dashboard, then start again); no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
+   "en": "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
    "protected": false,
    "source": "DEC-259"
   },
@@ -32503,9 +32518,10 @@
   },
   {
    "key": "screen.install.otp.what",
-   "en": "This makes you your team's first administrator, in the next step. It is shown once, here. Save it somewhere safe, such as a password manager, until you have claimed. Continuing below fills it in for you.",
+   "en": "This makes you your team's first administrator, in the next step. It is shown once, here, and is spent when you claim. Keep it to yourself: don't share, print or send it, because whoever has it before you claim can claim in your place. Save it somewhere safe, such as a password manager. Continuing below fills it in for you.",
    "protected": true,
-   "source": "DEC-259"
+   "source": "DEC-259",
+   "note": "DEC-282: reworded (install situation S10)"
   },
   {
    "key": "screen.install.otp.help",
@@ -37132,6 +37148,174 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-280"
+  },
+  {
+   "key": "screen.install.exists.title",
+   "en": "This account already holds a Civicsmith",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.sub",
+   "en": "Nothing was created or changed. Here is what is in it, and the ways to go on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.here.heading",
+   "en": "What is already here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.whose",
+   "en": "{team}'s Civicsmith, at {address}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282: {team}: its name as its members read it; {address}: its web address"
+  },
+  {
+   "key": "screen.install.exists.release",
+   "en": "Release {release}, installed {date}; last used {used}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.holds",
+   "en": "What it holds: {holdings}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282: {holdings}: its counts, such as \"3 projects, 412 documents, 1 published case, 6 members\""
+  },
+  {
+   "key": "screen.install.exists.ask",
+   "en": "If it is your team's, ask its administrators before you choose: they may be using it today.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.choose.heading",
+   "en": "What would you like to do?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.update.name",
+   "en": "Update it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.update.what",
+   "en": "If it is your team's: bring it up to date. Its records, members and settings are kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.alongside.name",
+   "en": "Install alongside it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.alongside.what",
+   "en": "For a different team, in this same account. Each has its own short name, address, members and records; neither can read the other's.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.remove.name",
+   "en": "Remove it, then install",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.exists.remove.what",
+   "en": "Only if nobody needs what it holds. The next page lists exactly what would be deleted, and nothing is deleted before you confirm there.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.title",
+   "en": "Remove the Civicsmith already here?",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.sub",
+   "en": "Read what would be deleted. Nothing has been deleted yet.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.heading",
+   "en": "What would be deleted, for good",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.records",
+   "en": "Everything {team}'s Civicsmith holds: {holdings}, with every note, question and finding in them.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.members",
+   "en": "Every member's account and sign-in, the administrators' too.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.published",
+   "en": "Its own copies of what it published. Copies other teams imported, and pages anyone saved elsewhere, are not touched.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.lost.address",
+   "en": "Its address, which stops answering.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.keep",
+   "en": "Nothing is kept by surprise: the installer keeps no copy. If anything should be kept, its administrators export it first, in their Civicsmith's Settings, before you come back here.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.type.label",
+   "en": "To confirm, type its short name",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
+  },
+  {
+   "key": "screen.install.remove.type.help",
+   "en": "Its short name is {slug}. Typing it makes sure the right Civicsmith is removed.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-282"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -76690,6 +76874,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_installupdate.label.install",
+   "en": "Update it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_installalongside.label.install",
+   "en": "Install alongside it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_installremove.label.install",
+   "en": "See what removing it would delete",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_installremoveconfirm.label.install",
+   "en": "Delete it for good, then install",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.bootstrap.label.update",
    "en": "Continue to Cloudflare to update",
    "protected": true,
@@ -79195,6 +79403,30 @@
    "key": "act.hostingaccessset.does",
    "en": "Records who holds the Cloudflare account. Whoever holds it can reach everything, so the team should know who that is.",
    "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installupdate.does",
+   "en": "Takes you to the update page for the Civicsmith already in this account, set to the newest release. Its records, members and settings are kept, and nothing changes until you allow it on Cloudflare's page.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installalongside.does",
+   "en": "Installs a second Civicsmith in this same account, for another team, under its own short name and address. The one already here is not touched, and neither can read the other's records.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installremove.does",
+   "en": "Opens a page that lists everything the Civicsmith already here holds, all of which removing it would delete. Nothing is deleted on that page until you confirm there.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installremoveconfirm.does",
+   "en": "Deletes the Civicsmith already in this account, with every record, document and member account it holds, then goes on with your new installation. It cannot be undone, by you or by anyone.",
+   "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
   {

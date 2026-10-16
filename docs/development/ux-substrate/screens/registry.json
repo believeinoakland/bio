@@ -17,7 +17,7 @@
    "id": "install",
    "name": "Create your Civicsmith team",
    "frame": "setup",
-   "purpose": "The founder's link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare's permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).",
+   "purpose": "The founder's link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare's permission, the progress and any stop, an account that already holds a Civicsmith and its three ways forward (DEC-282, K3471), the checks and the one-time password, the hand-over to setup (DEC-201).",
    "acts": [
     {
      "op": "bootstrap",
@@ -28,6 +28,26 @@
       "instance-setup",
       "membership"
      ]
+    },
+    {
+     "op": "owed:installupdate K3471",
+     "label": "Update it",
+     "status": "owed"
+    },
+    {
+     "op": "owed:installalongside K3471",
+     "label": "Install alongside it",
+     "status": "owed"
+    },
+    {
+     "op": "owed:installremove K3471",
+     "label": "See what removing it would delete",
+     "status": "owed"
+    },
+    {
+     "op": "owed:installremoveconfirm K3471",
+     "label": "Delete it for good, then install",
+     "status": "owed"
     }
    ],
    "journeys": [
