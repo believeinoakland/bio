@@ -189,8 +189,18 @@ export async function modelCall(reference, request, { runner, trace, memberRef }
  *  or `refused`; every ending past the meter's first check carries the conversation's summed `usage` and `calls`, the
  *  number of model calls that sum covers (N588), so a caller counts calls, not conversations. Any other tool call
  *  is performed by `onTool` and its result returned to the model. */
-export async function converse({ reference, runner, mode, role, meter, system, messages, tools, finalTool, onTool,
-                                 checkFinal, maxTurns = CONVERSATION_MAX_TURNS, trace, memberRef }) {
+export async function converse(args) {
+  const out = await converseRun(args);
+  /* R21: an ending that carries `usage` also states the model and effort its requests named (R19's choice). */
+  if (out && typeof out === "object" && "usage" in out) {
+    const sub = args.role === SUBSESSION_ROLE;
+    return { ...out, model: sub ? SUBSESSION_MODEL : MODEL_FOR_MODE[args.mode], effort: sub ? EFFORT_SUBSESSION : EFFORT_DEFAULT };
+  }
+  return out;
+}
+
+async function converseRun({ reference, runner, mode, role, meter, system, messages, tools, finalTool, onTool,
+                             checkFinal, maxTurns = CONVERSATION_MAX_TURNS, trace, memberRef }) {
   const { ref, refusal } = precheck(reference, runner);
   if (refusal) return refusal;
   const known = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode);
@@ -424,11 +434,17 @@ export function subsessionTools(contract) {
   /* R17 — the bounds where the model reads them, not only as schema limits. */
   const bounds = ` The summary is at most ${summaryMax} characters; give at most ${citationsMax} citations, each address at most `
     + `${addressMax} characters.` + (conditions ? ` condition is one of: ${conditions.join(", ")}.` : "");
+  const arms = Array.isArray(contract.arms) && contract.arms.length ? contract.arms : null;
   return [
     { name: "meaningrows",
-      description: "query the record at meaning grain through the plane (op=meaningrows)",
+      description: "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the "
+        + "records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. "
+        + "`ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that "
+        + "document's passages. Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
       input_schema: { type: "object", properties: {
-        q: { type: "string" }, rows: { type: "string", description: "the meaning arm, e.g. leg" },
+        q: { type: "string" },
+        rows: { type: "string", ...(arms ? { enum: arms } : {}), description: "the meaning arm, e.g. leg" },
+        ids: { type: "array", maxItems: 20, items: { type: "string" }, description: "record ids that limit the read" },
         limit: { type: "integer", minimum: 1, maximum: 50 } }, required: ["rows"], additionalProperties: false } },
     { name: "report",
       description: String(r.rule || "return a REPORT with a citation, never documents") + bounds,

@@ -194,7 +194,10 @@ export const SUBSESSION_OPS = ["meaningrows"];
    manifest to arrive in, under ANY spelling, because the object's keys are these
    and are written out one by one. */
 export const SPAWN_KEYS = ["level", "run", "context", "mode", "skill",
-                           "standard_pair", "standard", "scope", "returns"];
+                           "standard_pair", "standard", "scope", "subjects", "arms", "returns"];
+
+/* R12: the most subjects one contract carries, the payload's and the level's targets together. */
+export const SUBJECTS_MAX = 50;
 
 function refusal(code, detail, extra) {
   return { ok: false, code, reason: code, detail, ...(extra || {}) };
@@ -211,10 +214,30 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
+/** R12: the subjects a level's sub-session is briefed with — the payload's `subjects.items` (each read key by key,
+ *  `{id, extent, kind}`), then the level's `targets` (each `{id, extent}` as given, `kind: "target"`). Deduplicated
+ *  by `id` and `extent` (the first occurrence stays), at most SUBJECTS_MAX. An absent list gives none. */
+function subjectsFor(payload, targets) {
+  const items = Array.isArray(payload.subjects?.items) ? payload.subjects.items : [];
+  const listed = Array.isArray(targets) ? targets : [];
+  const seen = new Set();
+  const out = [];
+  const add = (id, extent, kind) => {
+    const key = JSON.stringify([id, extent]);
+    if (seen.has(key) || out.length >= SUBJECTS_MAX) return;
+    seen.add(key);
+    out.push({ id, extent, kind });
+  };
+  for (const item of items) add(item?.id ?? null, item?.extent ?? null, item?.kind ?? null);
+  for (const target of listed) add(target?.id ?? null, target?.extent ?? null, "target");
+  return out;
+}
+
 /** THE SPAWN CONTRACT for ONE level's sub-session.
  *
  *  `payload` is the PLANE's search-half payload (`op=airunspawn`, PL-12). It is
- *  read key by key and never spread.
+ *  read key by key and never spread. `targets` is the level's targets the plan
+ *  judgement named, and `arms` the meaning arms the caller passes (R12).
  *
  *  AND THE SECOND WITNESS. A search payload that arrives CARRYING a manifest is
  *  refused here rather than merely ignored, and that is the difference between a
@@ -224,7 +247,7 @@ function deepFreeze(value) {
  *  because a search half that has been handed the lens has already been handed
  *  it, and continuing would mean the run searched under a bias nobody can now
  *  prove it did not use. */
-export function spawnContract({ level, payload } = {}) {
+export function spawnContract({ level, payload, arms, targets } = {}) {
   if (!LEVELS.includes(String(level)))
     return refusal("SPAWN_LEVEL_UNKNOWN",
       `'${String(level)}' is not one of the four levels a run searches: ${LEVELS.join(", ")}. `
@@ -279,6 +302,9 @@ export function spawnContract({ level, payload } = {}) {
     },
     /* NO WRITE. See SUBSESSION_OPS. */
     scope: [...SUBSESSION_OPS],
+    /* R12: what the sub-session looks at, built fresh from the payload and the targets (never aliased). */
+    subjects: subjectsFor(payload, targets),
+    arms: (Array.isArray(arms) ? arms : []).map((arm) => String(arm)),
     /* THE RETURN CONTRACT TRAVELS WITH THE BRIEF. A sub-session that is told what
        it may return is a sub-session whose violation is a defect rather than a
        misunderstanding — and the parent validates it on the way back regardless,

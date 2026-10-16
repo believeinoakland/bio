@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R11 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R12 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -474,6 +474,9 @@ test("R7: sub-sessions run one per level, all four in LEVELS order, each under i
     assert.deepEqual(Object.keys(c), SPAWN_KEYS);
     assert.deepEqual(c.scope, SUBSESSION_OPS);
     assert.deepEqual(c.scope, ["meaningrows"]);
+    /* R12: no subjects and no arms unless the payload or the caller gives them */
+    assert.deepEqual(c.subjects, []);
+    assert.deepEqual(c.arms, []);
     assert.deepEqual(c.standard, { in_force: true, basis: "b", stated: "st", pair: "p" });
     assert.ok(Object.isFrozen(c) && Object.isFrozen(c.context) && Object.isFrozen(c.returns));
   }
@@ -523,7 +526,8 @@ const ARGS = {
   documentHoldings: [[{ citation: "c", bundle: "b1", chain: { address_norm: "a", total: 2, versions: [{ bundle_id: "b1" }] } },
                       { citation: "d", refused: { code: "X" } }]],
   holdingsNote: [{ documents: 1, citations: 2, versions_cited: 1, versions_held: 2, unchained: 0, undetermined: 1 }],
-  spawnContract: [{ level: "meaning", payload }], spawnContracts: [payload], takeReports: [[good, { bytes: 1 }]],
+  spawnContract: [{ level: "meaning", payload: { ...payload, subjects: { items: [{ id: "R-1", extent: "¶2", kind: "leg" }] } },
+                    arms: ["leg"], targets: [{ id: "R-2", extent: null }] }], spawnContracts: [payload], takeReports: [[good, { bytes: 1 }]],
 };
 
 test("R8: every export is pure: equal arguments give equal answers, with no network, clock or randomness reached", () => {
@@ -596,4 +600,45 @@ test("R11: control: a kind outside the vocabulary is not offered in returns.cond
     const refused = checkCondition(word);
     assert.deepEqual([refused.ok, refused.code], [false, "AI_RUN_CONDITION_UNKNOWN"], word);
   }
+});
+
+/* ============================================================ R12: the contract's subjects and arms */
+const twoSubjects = { ...payload, subjects: { items: [{ id: "REC-1", extent: "¶3", kind: "leg" }, { id: "REC-2", extent: null, kind: "cited" }] } };
+
+test("R12: spawnContract carries subjects (the payload's items, then the level's targets) and arms, after scope: two subjects and one target give three, in that order, frozen", () => {
+  const made = spawnContract({ level: "content", payload: twoSubjects, arms: ["leg", "passage"],
+                               targets: [{ id: "INFO-3", extent: "¶1" }] });
+  assert.equal(made.ok, true);
+  const c = made.contract;
+  assert.deepEqual(Object.keys(c).slice(Object.keys(c).indexOf("scope"), Object.keys(c).indexOf("scope") + 3),
+    ["scope", "subjects", "arms"]);
+  assert.deepEqual(c.subjects, [
+    { id: "REC-1", extent: "¶3", kind: "leg" },
+    { id: "REC-2", extent: null, kind: "cited" },
+    { id: "INFO-3", extent: "¶1", kind: "target" },
+  ]);
+  assert.deepEqual(c.arms, ["leg", "passage"]);
+  assert.ok(Object.isFrozen(c.subjects) && Object.isFrozen(c.subjects[0]) && Object.isFrozen(c.arms));
+});
+
+test("R12: control: a duplicate of a subject among the targets appears once, and absent subjects, targets or arms give an empty list", () => {
+  const dup = spawnContract({ level: "meaning", payload: twoSubjects, arms: ["leg"],
+                              targets: [{ id: "REC-1", extent: "¶3" }, { id: "REC-1", extent: "¶4" }] });
+  assert.deepEqual(dup.contract.subjects.map((s) => [s.id, s.extent, s.kind]),
+    [["REC-1", "¶3", "leg"], ["REC-2", null, "cited"], ["REC-1", "¶4", "target"]]);
+  const bare = spawnContract({ level: "meaning", payload });
+  assert.deepEqual([bare.contract.subjects, bare.contract.arms], [[], []]);
+  const absent = spawnContract({ level: "meaning", payload, arms: null, targets: "not a list" });
+  assert.deepEqual([absent.contract.subjects, absent.contract.arms], [[], []]);
+  /* the payload is read key by key: a stray key on an item does not ride into the brief */
+  const stray = spawnContract({ level: "meaning", payload: { ...payload, subjects: { items: [{ id: "X", extent: null, kind: "leg", secret: "s" }] } } });
+  assert.deepEqual(stray.contract.subjects, [{ id: "X", extent: null, kind: "leg" }]);
+});
+
+test("R12: at most 50 subjects, the first 50 in order, and the list is held by value per contract", () => {
+  const items = Array.from({ length: 60 }, (_, i) => ({ id: `S-${i}`, extent: null, kind: "leg" }));
+  const made = spawnContracts({ ...payload, subjects: { items } });
+  assert.equal(made.contracts[0].subjects.length, 50);
+  assert.equal(made.contracts[0].subjects[49].id, "S-49");
+  assert.notEqual(made.contracts[0].subjects, made.contracts[1].subjects);
 });

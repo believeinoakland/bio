@@ -53,8 +53,12 @@ export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } fr
  * `slides[]` -- for `odt` and `odp`, and the xlsx, ods and csv entries return
  * `sheets[]`, whose unit extraction writes as a `sheet-range` at the sheet's used
  * range (its R16, N108, K179). So a workbook's `indexed` row reads indexed, not
- * "no unit arm" (N134). */
-export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
+ * "no unit arm" (N134).
+ *
+ * A plain `text` capture, read through no format entry, has its paragraphs drawn
+ * as `doc-para` units (`reading-pipeline` R32), so its container is armed too
+ * (R38). `html` stays unarmed: it has no `dom` producer. */
+export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv", "text"]));
 
 /* R7 (N294, K343): the containers extraction's INDEX NOTICE (its R62) can name with a unit arm. A member's authored
  * observation is indexed as ONE unit at extent `{kind: "document"}` (its R61), so `document` is its arm; any other

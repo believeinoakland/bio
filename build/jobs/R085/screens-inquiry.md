@@ -1,6 +1,6 @@
 # screens-inquiry (R085)
 
-**Status** · session_01C32QGvXWpSbZKJMKWKdBMX · depth 2 · COMPLETE · handled B1
+**Status** · session_01L2wDs5DhuwdscrBezRCF3P · depth 2 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -24,3 +24,24 @@ Size (session_01C32QGvXWpSbZKJMKWKdBMX): test runs 7, module lines 2277
 ## J2 · REPORT
 
 Correction to J1's last line: I wrote that the bundles are rebuilt by BOB at the cut; I did not check that. The fact: bio-plane/dist/bio-plane.bundled.mjs and release/bio-plane.bundled.mjs (and newgroup's bundle) embed screens-inquiry's code, so they are stale against question.mjs until rebuilt. I rebuilt none (not mine to write, mechanics 14).
+
+## J3 · COMPLETE
+
+**Entry R085-20 (screens-inquiry R46; K3501 (F6c)): applied.** `admin` as an opener is drawn by the founder's handle when the participants the screen reads name one; `member.founder.unnamed` only when none does.
+
+**What changed** (`bio-plane/src/screens-inquiry/`, commit d646ab4abd)
+1. `common.mjs`: `who(cs, x, founder)` takes an optional founder handle; the string `admin` is drawn by it when given, else by the unnamed word as before (R40 unchanged for every other caller).
+2. `question.mjs`: the opener reads `projectparticipants` for the project (the read the joined check already makes, cached by `later`), takes the row with `founder: true` and its handle, and passes it to `who`. No project, or no handle named: unnamed.
+
+**Tests** (`test/m/screens-inquiry/r46.test.mjs`, new, one test naming R46): the opener `admin` with the founder's row handle `sparky` draws `sparky` and never `admin`; control: the founder's row with no handle draws the unnamed founder.
+
+**Deferred:** nothing. **Found in another module:** nothing new. The stale-artifact note from J2 still stands for this change: `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs` and newgroup's bundle embed `question.mjs`, so they are stale against R46 until BOB rebuilds them (I rebuilt none, mechanics §14). The R46 line in `build/requirements/screens-inquiry.md` still reads "not yet met: R085": requirements are not in this job's write paths, so BOB marks it met.
+
+**Run**
+- `node --test test/m/screens-inquiry/` (bio-plane): tests 125, pass 125, fail 0 (R46 among them).
+- `node checks/format.mjs bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs bio screens-inquiry`: 17 product files, 38 relative imports; 0 failures.
+- `node checks/coverage.mjs bio screens-inquiry`: 46 of 46 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs bio screens-inquiry tranche/R085`: 1 file changed by screens-inquiry between tranche/R085 and HEAD (before the record commit); 0 failures.
+
+Size (session_01L2wDs5DhuwdscrBezRCF3P): test runs 1, module lines 2283
