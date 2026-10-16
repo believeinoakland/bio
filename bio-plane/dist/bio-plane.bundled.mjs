@@ -72253,6 +72253,7 @@ var RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 var UPLOAD_PART = 8 * 1024 * 1024;
 var UPLOAD_STATEMENT_MAX = 2e3;
 var UPLOAD_NAME_MAX = 300;
+var UPLOAD_TYPE_MAX = 255;
 var UPLOAD_WITHIN_FAILED_DETAIL = "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
 var uploadReader = (bytes2) => {
   const asBytes3 = (b) => b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : ArrayBuffer.isView(b) ? new Uint8Array(b.buffer, b.byteOffset, b.byteLength) : null;
@@ -72752,7 +72753,7 @@ var Capture = class _Capture {
    *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes: bytes2, statement, name: name3 = null, by, at: at49 = null, within: within3 = null } = {}) {
+  async uploadCapture({ bytes: bytes2, statement, name: name3 = null, type = null, by, at: at49 = null, within: within3 = null } = {}) {
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return {
         ok: false,
@@ -72774,6 +72775,8 @@ var Capture = class _Capture {
     }
     if (name3 != null && (typeof name3 !== "string" || [...name3].length > UPLOAD_NAME_MAX))
       return _Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name3);
+    if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
+      return _Capture.#missingArgument("captureupload", "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) {
       const row12 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
@@ -72885,10 +72888,23 @@ var Capture = class _Capture {
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha2, bytes: total2 }, receipt: receiptOf(r) } : notWritten;
     }
+    let ct = null;
+    if (typeof type === "string" && type !== "" && profilesAsText(type, total2, multipart)) {
+      try {
+        const obj = await ev.get(sha2);
+        const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+        if (raw && raw.length === total2 && !raw.includes(0)) {
+          new TextDecoder("utf-8", { fatal: true }).decode(raw);
+          ct = type;
+        }
+      } catch {
+        ct = null;
+      }
+    }
     const profile = await profileOf({
       ev,
       sha: sha2,
-      ct: null,
+      ct,
       total: total2,
       multipart,
       headers: {},
@@ -72898,6 +72914,10 @@ var Capture = class _Capture {
       origin: "member",
       parts: multipart ? parts : null
     });
+    if (typeof type === "string" && type !== "") {
+      profile.source_content_type = type;
+      profile.declared_by = "uploader";
+    }
     const document = this.#uploadedDocument({ sha: sha2, total: total2, parts, by, at: when, statement, name: name3, profile });
     let done;
     try {
@@ -170235,10 +170255,15 @@ var AiRuns = class _AiRuns {
     const w = this.#wait();
     return w ? Number(w.tickMs()) || 0 : 0;
   }
-  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
-     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
-     that stops heartbeating is dead within the lease and is reaped. */
-  static AI_RUN_LEASE_MS = 36e5;
+  /* R83 (R085-7; WALK-085 F2): TEN MINUTES, and it is a LEASE rather than a lifetime: every tick, and every dispatch the
+     segment accepts, pushes it out. A run that heartbeats lives; a run whose segment died is dead within the lease and is
+     reaped (bound `lease`), so it reads ended within minutes, never "working" for an hour. `AI_RUN_LEASE_MS` in the
+     environment overrides it. */
+  static AI_RUN_LEASE_MS = 6e5;
+  #leaseMs() {
+    const v = Number(this.env && this.env.AI_RUN_LEASE_MS);
+    return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_LEASE_MS;
+  }
   /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
        is deliberately not copied whole from either sibling, because this log has
        TWO READERS WITH OPPOSITE NEEDS and no single existing pair serves both.
@@ -170956,7 +170981,7 @@ var AiRuns = class _AiRuns {
           note: "Nothing was written"
         });
     }
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
     let systemStep = null;
     const STEP_REFUSED = Symbol("step refused");
     try {
@@ -171208,6 +171233,8 @@ var AiRuns = class _AiRuns {
     log = null,
     leaseMs = null,
     at: at49 = null,
+    /* R84 (R085-7; agent-worker R91): how a segment ended, `{by, done, refusals, error?}`. */
+    segment_end = null,
     /* R72 (N588): one entry per conversation that reached the provider since the last tick,
        `{mode, model, usage, calls}`. */
     usage = null,
@@ -171321,7 +171348,8 @@ var AiRuns = class _AiRuns {
         };
       return { run: run2, ticked: false, found: true, status: row12.status, ..._AiRuns.#shed(overLimit), counted };
     }
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
+    const seg = _AiRuns.#segmentEnd(segment_end);
     const refused5 = [];
     let appended2 = 0;
     const USAGE_REFUSED = Symbol("usage refused");
@@ -171337,6 +171365,17 @@ var AiRuns = class _AiRuns {
         }
         for (const e2 of Array.isArray(log) ? log : []) {
           const bad2 = this.#aiRunAppend(run2, e2, now, 0, row12.principal_claude || null, row12.step || null);
+          if (bad2) refused5.push(bad2);
+          else appended2 += 1;
+        }
+        if (seg) {
+          const bad2 = this.#aiRunAppend(run2, {
+            level: "meaning",
+            subject: "segment -> end",
+            ...this.#aiRunRestatedState(run2),
+            governed: false,
+            detail: `the segment ended (by: ${seg.by ?? "its own segment bound"}; ${seg.done ? "the run's work is done" : "the run's work is not done"}${seg.error ? `; in error ${seg.error}` : ""}). Refusals it met: ${seg.refusals.length ? seg.refusals.join(", ") : "none"}`
+          }, now, 0, row12.principal_claude || null, row12.step || null);
           if (bad2) refused5.push(bad2);
           else appended2 += 1;
         }
@@ -171376,6 +171415,11 @@ var AiRuns = class _AiRuns {
       condition: hit === "runtime" ? "runtime-ceiling-reached" : null,
       at: now
     }) : null;
+    let next = null;
+    if (seg && !ended) {
+      const live7 = this.#one(`SELECT status FROM ai_runs WHERE run = ?`, run2);
+      next = !live7 || live7.status !== "running" ? "ended" : seg.error ? "error" : seg.done ? "done" : "continue";
+    }
     const after2 = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run2);
     return {
       run: run2,
@@ -171388,8 +171432,75 @@ var AiRuns = class _AiRuns {
       refused: refused5,
       ...calls.length ? { counted: calls.length } : {},
       ..._AiRuns.#aiRunGateStated(gate),
+      ...seg ? { segment_end: { logged: appended2 > 0, next: next || "ended" } } : {},
       ...ended ? { ended } : {}
     };
+  }
+  /** R84's normal form of a tick's `segment_end`: null when none was sent (or it is no object), else `{by, done, refusals,
+   *  error}` with each field bounded and of its own type; a stray field is dropped. */
+  static #segmentEnd(x) {
+    if (!x || typeof x !== "object" || Array.isArray(x)) return null;
+    const text7 = (v, n2) => typeof v === "string" && v.trim() ? v.trim().slice(0, n2) : null;
+    return {
+      by: text7(x.by, 80),
+      done: x.done === true,
+      refusals: (Array.isArray(x.refusals) ? x.refusals : []).map((c) => text7(c, 80)).filter(Boolean).slice(0, 20),
+      error: text7(x.error, 80)
+    };
+  }
+  /** R84: the tick of `op=airuntick`, and what follows it. The tick commits first (`tick`); then a segment that stopped on
+   *  its own bound with the run not done is dispatched again by the plane, with no member's act, on R18's principal rules:
+   *  a member's run on her own sign-in as `dispatchMemberRun` does it (a fresh segment credential), a run of the group's
+   *  organisation credential as the wake does it. A continuation that is not dispatched appends one entry saying so, and
+   *  the run waits for its principal. */
+  async tickAndContinue(args = {}) {
+    const out = this.tick(args);
+    if (!out || out.ticked !== true || !out.segment_end || out.segment_end.next !== "continue") return out;
+    const row12 = this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
+                                  principal_claude_ref, step FROM ai_runs WHERE run = ?`, out.run);
+    if (!row12 || row12.status !== "running") return out;
+    const iso8 = _AiRuns.#aiIso(args.at ? Date.parse(args.at) : Date.now());
+    let dispatch2;
+    try {
+      const principal = String(row12.principal_plane ?? "");
+      if (principal.startsWith("member:")) {
+        const r = await this.dispatchMemberRun({ run: row12.run, by: principal, at: args.at || null });
+        dispatch2 = {
+          dispatched: r.dispatched === true,
+          ...r.dispatch ? { state: r.dispatch.state } : { state: "WITHHELD", reason: String(r.withheld || r.code || "NOT_DISPATCHED").slice(0, 80) }
+        };
+      } else {
+        const resumer = await this.#aiRunResumer();
+        const decision = this.#aiRunResumeDecision(row12, resumer);
+        if (decision.dispatch) {
+          const o = await this.#aiRunDispatch(
+            {
+              run: row12.run,
+              context_id: row12.context_id,
+              payer: _AiRuns.#memberOfRun(row12),
+              step: row12.step || null,
+              project: row12.context_type === "project" ? row12.context_id : null,
+              owner: row12.principal_claude
+            },
+            resumer,
+            iso8
+          );
+          dispatch2 = { dispatched: o.state === "DISPATCHED" || o.state === "RUNNING", state: o.state };
+        } else dispatch2 = { dispatched: false, state: "WITHHELD", reason: decision.withheld, says: decision.says };
+      }
+    } catch {
+      dispatch2 = { dispatched: false, state: "WITHHELD", reason: "DISPATCH_FAILED" };
+    }
+    if (dispatch2.state === "WITHHELD") {
+      this.#transact(() => this.#aiRunAppend(row12.run, {
+        level: "meaning",
+        subject: "segment -> end",
+        ...this.#aiRunRestatedState(row12.run),
+        governed: false,
+        detail: `the next segment was not dispatched (${dispatch2.reason}). The run is still resumable by its own principal; nothing it established is lost`
+      }, iso8, 0, row12.principal_claude || null, row12.step || null));
+    }
+    return { ...out, segment_end: { ...out.segment_end, dispatch: dispatch2 } };
   }
   /** op=airunclose. The ordinary exit — the run is done, or a member stopped
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
@@ -171530,7 +171641,7 @@ var AiRuns = class _AiRuns {
   #aiRunWakeTickMs() {
     return Math.max(1e3, Math.min(
       this.#captureRequestTickMs(),
-      Math.floor(_AiRuns.AI_RUN_LEASE_MS / 4)
+      Math.floor(this.#leaseMs() / 4)
     ));
   }
   /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
@@ -171610,7 +171721,7 @@ var AiRuns = class _AiRuns {
    *  nothing renews it once the request is answered. */
   async wake(now) {
     const iso8 = _AiRuns.#aiIso(now);
-    const until = _AiRuns.#aiIso(now + _AiRuns.AI_RUN_LEASE_MS);
+    const until = _AiRuns.#aiIso(now + this.#leaseMs());
     const holds2 = [], wakes = [], dispatches = [];
     const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso8)) {
@@ -171708,7 +171819,9 @@ var AiRuns = class _AiRuns {
     for (const name3 of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name3))) return name3;
     return null;
   }
-  static AI_RUN_DISPATCH_WAIT_MS = 3e4;
+  /* R82 (R085-7; WALK-085 F2): the dispatch waits only for `agent-worker` to ACCEPT the segment (its R91 answers 202 at
+     once), so ten seconds; the segment then runs on whether or not this call is still connected. */
+  static AI_RUN_DISPATCH_WAIT_MS = 1e4;
   #aiRunDispatchWaitMs() {
     const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
     return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_DISPATCH_WAIT_MS;
@@ -171832,14 +171945,29 @@ var AiRuns = class _AiRuns {
       ]);
       const out = await res.json().catch(() => null);
       const said11 = String(out && (out.reason || out.code || out.type) || `http ${res.status}`);
-      outcome = res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : PROVIDER_LIMIT.test(said11) ? { state: "LIMIT", status: res.status, ...this.#providerLimit() } : { state: "REFUSED", status: res.status, reason: said11.slice(0, 80) };
+      outcome = res.ok && out && out.accepted === true ? { state: "RUNNING", status: res.status } : res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : PROVIDER_LIMIT.test(said11) ? { state: "LIMIT", status: res.status, ...this.#providerLimit() } : { state: "REFUSED", status: res.status, reason: said11.slice(0, 80) };
     } catch (e2) {
       const elapsed = String(e2 && e2.message) === "dispatch-wait-elapsed";
-      outcome = elapsed ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" } : { state: "SILENT", status: null, reason: "the call did not complete" };
+      outcome = {
+        state: "SILENT",
+        status: null,
+        reason: elapsed ? "no acceptance within the bound" : "the call did not complete"
+      };
     } finally {
       clearTimeout(timer);
     }
-    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
+    if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
+      try {
+        this.#transact(() => {
+          this.sql.exec(
+            `UPDATE ai_runs SET expires = ? WHERE run = ? AND status = 'running'`,
+            _AiRuns.#aiIso(Date.parse(iso8) + this.#leaseMs()),
+            d.run
+          );
+        });
+      } catch {
+      }
+    } else {
       const refusal39 = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet",
         subject: d.context_id,
@@ -171871,8 +171999,8 @@ var AiRuns = class _AiRuns {
    *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`); an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`.
    *  Then `credentials.aiRunCredentialMint({member, run, writes})` with the mode's own writes (`AI_RUN_MODE_WRITES`): a
    *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
-   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 30 s wait,
-   *  `RUNNING` past it, and one log entry for a refused or incomplete call. The token is used for that one call and is
+   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 10 s wait for
+   *  acceptance (R82: accepted is `RUNNING`), and one log entry for a refused or unaccepted call. The token is used for that one call and is
    *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
   async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, at: at49 = null } = {}) {
     const iso8 = _AiRuns.#aiIso(at49 ? Date.parse(at49) : Date.now());
@@ -173207,7 +173335,7 @@ function aiRunsOps(runs, url, body) {
   const q10 = (k) => url.searchParams.get(k);
   return {
     airunopen: () => runs.open({ ...body || {}, principalPlane: q10("principal"), actor: q10("actor"), viewer: q10("viewer") }),
-    airuntick: () => runs.tick({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
+    airuntick: () => runs.tickAndContinue({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
     airunclose: () => runs.close({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
     airun: () => runs.read({ run: q10("run"), viewer: q10("viewer") }),
     airunlog: () => runs.log({ run: q10("run"), viewer: q10("viewer"), limit: q10("limit") }),
@@ -265307,6 +265435,135 @@ async function promoteArchive({ stub, doAnswer: doAnswer2, docs, project = null,
   return { promoted, not_promoted };
 }
 
+// src/extraction/ops.mjs
+var CORRELATION2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function readAnswer(res) {
+  let r = null, out = null;
+  try {
+    r = await res;
+    out = await r.json();
+  } catch {
+    out = null;
+  }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION2.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
+}
+async function ask(store, path, init, doAnswer2) {
+  const res = (async () => store.fetch(path, init))();
+  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
+}
+var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (r && r.refused && r.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json24(r.reply.body, r.reply.status);
+  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
+  return null;
+}
+async function pdfStructureOp(url, env, store, {
+  json: json24,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls: cls3,
+  session,
+  caps: caps3,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pdfstructure";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha2))
+    return json24({ ok: false, ...requiredArgument2(
+      "pdfstructure",
+      "sha256",
+      "<64 lowercase hex>",
+      "pdfstructure requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q10 = new URLSearchParams({
+    sha256: sha2,
+    cls: cls3 || "",
+    session: session ? "1" : "0",
+    caps: [...caps3 || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  if (url.searchParams.has("ocr")) q10.set("ocr", url.searchParams.get("ocr") ?? "");
+  const r = await ask(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
+}
+async function pageTranscribeOp(url, env, store, {
+  json: json24,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls: cls3,
+  session,
+  caps: caps3,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pagetranscribe";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha2))
+    return json24({ ok: false, ...requiredArgument2(
+      op,
+      "sha256",
+      "<64 lowercase hex>",
+      "pagetranscribe requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q10 = new URLSearchParams({
+    sha256: sha2,
+    cls: cls3 || "",
+    session: session ? "1" : "0",
+    caps: [...caps3 || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  const project = url.searchParams.get("project");
+  if (project) q10.set("project", project);
+  const r = await ask(store, `http://x/pagetranscribe?${q10}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
+}
+var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
+async function extractionOp(op, url, env, getStore, stamps) {
+  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
+  return null;
+}
+async function acquireReadingOp(answer2, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
+  const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ document: answer2.document })
+  }, doAnswer2);
+  const relayed = unanswered2(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (relayed) return { response: relayed };
+  const out = r.result;
+  const body = withReading(answer2, {
+    reading: out.reading,
+    textUnits: out.text_units || null,
+    textUnitsOverBound: out.text_units_over_bound || 0
+  });
+  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
+  return { body };
+}
+
 // src/control-plane/app.mjs
 var APP = "/app";
 var ASSETS = "/app/assets/";
@@ -273157,7 +273414,9 @@ function sendUpload(view, el, cs) {
     `${cs.w("screen.capture.file.what")}: ${what}`
   ].join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2e3) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
-  return { query: { statement, name: file.name }, raw: file };
+  const query = { statement, name: file.name };
+  if (typeof file.type === "string" && file.type) query.type = file.type;
+  return { query, raw: file };
 }
 async function doneUpload(view, answer2, cs) {
   const a = answer2 || {}, file = cs.file("ci-file");
@@ -277003,11 +277262,20 @@ function render3(cs, view) {
   const concluded = !!(b && b.conclusion && b.conclusion_stance !== "withdrawn");
   const member2 = view.me && view.me.member;
   const runs = view.reachable && member2 ? later3("runs", "airuns", { contextType: "inquiry", contextId: id, limit: "50" }, String(ui.seq || 0)) : null;
-  const myRun = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs.find((s) => s && s.status === "running" && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")) && (ui.dispatched === s.id || Number(s.ticks) > 1)) : null;
+  if (runs && runs.state === "ok" && Array.isArray(runs.value.runs)) ui.lastRuns = runs.value.runs;
+  const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
+  const isMine = (s) => !!(s && member2 && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")));
+  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && (ui.dispatched === s.id || Number(s.ticks) > 1)) || null;
+  const asked = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
+  const asking = !!ui.asking && !(asked && asked.status !== "running");
+  const lastMine = runList.find(isMine) || null;
+  const ending = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
+  const endedPart = (withAsk) => lastMine && lastMine.status !== "running" && !myRun && !asking ? `<div data-run="ended"><p class="mk-note">${W2("screen.assistant.run.ended", { why: ending(lastMine.condition) || String(lastMine.status || "") })}</p>${withAsk ? askAct : ""}</div>` : "";
   const pack = view.reachable ? later3("pack", "agentpack", {}) : null;
   const packName = pack && pack.state === "ok" && pack.value && (pack.value.pack && (pack.value.pack.version || pack.value.pack.skillVersion) || pack.value.version);
   const askAct = view.reachable && packName && member2 ? cs.act("airunopen", { label: "act.airunopen.label.question", data: { pack: String(packName) } }) : "";
-  if (!citedLegs.length && !myRun && !concluded) {
+  const proposals = view.reachable ? vs.filter((v) => machine3(v) && v.state === "suggested" && !v.hidden) : [];
+  if (!citedLegs.length && !myRun && !asking && !concluded) {
     const rows4 = [
       cs.row(
         "",
@@ -277021,13 +277289,21 @@ function render3(cs, view) {
       )
     ];
     if (askAct) rows4.push(cs.row("", `<b>${W2("question.empty.ask")}</b><br><span class="mk-sub">${W2("question.empty.ask.line")}</span>`, askAct));
-    out.push(cs.sec("question.empty.heading", `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
+    out.push(cs.sec("question.empty.heading", (proposals.length ? "" : endedPart(false)) + `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
   }
-  if (myRun) out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div><p class="mk-note">${W2("question.run.leave")}</p>` + cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } }), { id: "state-d" }));
-  const proposals = view.reachable ? vs.filter((v) => machine3(v) && v.state === "suggested" && !v.hidden) : [];
+  if (myRun || asking) {
+    out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div>` + (myRun ? `<p data-run="running">${W2("screen.assistant.run.running", { ticks: String(myRun.ticks || 1) })}</p>` : "") + `<p class="mk-note">${W2("question.run.leave")}</p>` + (myRun ? cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } }) : `<button class="cs-btn" data-tone="quiet" disabled data-pending="airunclose">${W2("act.airunclose.label.question")}</button>`), { id: "state-d" }));
+    if (myRun && runs && runs.state === "ok" && !ui.polling) {
+      ui.polling = true;
+      cs.later(1e4, (k, v) => {
+        v.ui.polling = false;
+        k.set("seq", (v.ui.seq || 0) + 1);
+      });
+    }
+  } else if (!proposals.length && !concluded) out.push(endedPart(true));
   for (const v of proposals) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l2) => String(l2.target_title || l2.target_id || "")).filter(Boolean);
     out.push(cs.sec("question.proposal.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}` + (v.untested || b && b.untested ? `<span class="cs-draftlabel" data-label="untested">${W2("ai.label.untested")}</span>` : "") + `<p class="rec">${cs.esc(String(v.claim && v.claim.text ? v.claim.text : v.description || v.name))}</p>` + (rests.length ? `<p class="mk-small rec">${cs.esc(rests.join(" \xB7 "))}</p>` : "") + "</div>" + cs.act("versionaccept", { label: "act.versionaccept.label.question", data: { version: v.name, grounds: (v.grounds || []).join(",") }, tone: "primary" }) + cs.act("versionreject", { label: "act.versionreject.label.question", data: { version: v.name } }), { id: "state-e" }));
@@ -277474,18 +277750,23 @@ var acts3 = [
       const res = (a) => a && a.result !== void 0 ? a.result : a;
       const run2 = "RUN-" + hex11(16);
       const bounds2 = (view.parts.bounds || {}).check || [];
+      const pack = el.dataset.pack;
+      cs.set("said", null);
+      cs.set("limit", null);
+      cs.set("asking", run2);
       cs.call("airunopen", { body: {
         run: run2,
         contextType: "inquiry",
         contextId: String(view.subject || ""),
         mode: "check",
         principalClaude: "member:" + member2,
-        skillVersion: el.dataset.pack,
+        skillVersion: pack,
         bounds: bounds2
       } }).then((o) => {
         const r = res(o) || {};
         if (!o || o.ok === false || r.ok === false || r.started === false) {
           const code = String(r.code || r.reason || "");
+          cs.set("asking", null);
           if (code === "AI_LIMIT_REACHED") cs.set("limit", { whose: r.whose || "", period: r.period || "", when: r.when || "", reasons: [] });
           else cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airunopen">${r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: code })}</p>` });
           return;
@@ -277494,6 +277775,7 @@ var acts3 = [
           const xr = res(x) || {};
           if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
             const c = String(xr.code || xr.reason || xr.withheld || "");
+            cs.set("asking", null);
             const key2 = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
             cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key2 ? cs.w(key2) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
             return;
@@ -277501,7 +277783,10 @@ var acts3 = [
           cs.set("dispatched", run2);
           cs.set("seq", (view.ui.seq || 0) + 1);
         });
-      }, () => cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` }));
+      }, () => {
+        cs.set("asking", null);
+        cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` });
+      });
       return null;
     }
   },
@@ -277669,6 +277954,8 @@ var words9 = Object.freeze([
   "question.adddoc",
   "question.run.heading",
   "question.run.leave",
+  "screen.assistant.run.running",
+  "screen.assistant.run.ended",
   "question.proposal.heading",
   "ai.refused.limit.overall",
   "question.limit.note",
@@ -286451,7 +286738,7 @@ async function unreadAnswer(op, out, trace) {
   }
   return { status: 502, body: { ...body, trace } };
 }
-async function ask(store, path, init = { method: "POST", body: "{}" }) {
+async function ask2(store, path, init = { method: "POST", body: "{}" }) {
   try {
     return await store(path, init) || { answered: false };
   } catch {
@@ -286499,7 +286786,7 @@ async function writeLine({ env, store, log, line: line2 }) {
   } catch {
   }
   if (testInstanceOf2(env))
-    await ask(store, STORE_ROUTES.traceKeep, {
+    await ask2(store, STORE_ROUTES.traceKeep, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ line: kept })
@@ -286531,20 +286818,20 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     return { status: answer2.status, body };
   };
   if (KEPT_AWAY_STEPS.includes(step)) {
-    const kept = await ask(store, STORE_ROUTES.keptAway);
+    const kept = await ask2(store, STORE_ROUTES.keptAway);
     if (kept.refused || !kept.answered) return done(await unreadAnswer("subscriptionsignin", kept, trace), "refused_local");
     const k = kept.result;
     if (!isObject(k) || k.ok !== true) return done({ status: 403, body: { ok: false, ...isObject(k) ? k : {} } }, "refused_local");
   }
   if (DISCLOSURE_STEPS.includes(step)) {
-    const due2 = await ask(store, `${STORE_ROUTES.disclosureDue}?by=${encodeURIComponent(member2)}`);
+    const due2 = await ask2(store, `${STORE_ROUTES.disclosureDue}?by=${encodeURIComponent(member2)}`);
     if (due2.refused || !due2.answered) return done(await unreadAnswer("subscriptionsignin", due2, trace), "refused_local");
     const d = due2.result;
     if (!isObject(d) || d.ok !== true) return done({ status: 409, body: { ok: false, ...isObject(d) ? d : {} } }, "refused_local");
   }
   if (step === "state") {
     const q10 = encodeURIComponent(member2);
-    const st = await ask(store, `${STORE_ROUTES.state}?member=${q10}&viewer=${q10}`, { method: "GET" });
+    const st = await ask2(store, `${STORE_ROUTES.state}?member=${q10}&viewer=${q10}`, { method: "GET" });
     if (st.refused || !st.answered) return done(await unreadAnswer("subscriptionsignin", st, trace), "refused_local");
     const r = st.result;
     if (!isObject(r) || r.ok !== true) return done({ status: 403, body: { ok: false, ...isObject(r) ? r : {} } }, "refused_local");
@@ -286568,7 +286855,7 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     let held3 = false, fact;
     if (!own11) fact = { code: "NOT_THIS_MEMBER" };
     else {
-      const h = await ask(store, `${STORE_ROUTES.hold}?by=${encodeURIComponent(member2)}`, {
+      const h = await ask2(store, `${STORE_ROUTES.hold}?by=${encodeURIComponent(member2)}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token, validFor: validFor ?? null })
@@ -286581,7 +286868,7 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     return done({ status: out.status, body: { ...rest, held: held3, ...held3 ? {} : { fact } } }, "relayed", { held: held3 });
   }
   if (step === "code" && b.ok === true && b.connected === true && own11) {
-    await ask(store, `${STORE_ROUTES.connected}?by=${encodeURIComponent(member2)}`);
+    await ask2(store, `${STORE_ROUTES.connected}?by=${encodeURIComponent(member2)}`);
   }
   return done(out, out.body.reason === "AGENT_WORKER_UNBOUND" || out.body.reason === "AGENT_WORKER_SILENT" ? "refused_local" : "relayed");
 }
@@ -286603,7 +286890,7 @@ async function signoutLeaver(env, member2) {
   }
 }
 async function subscriptionDisconnect({ env, member: member2, store }) {
-  const out = await ask(store, `${STORE_ROUTES.disconnect}?by=${encodeURIComponent(member2)}`);
+  const out = await ask2(store, `${STORE_ROUTES.disconnect}?by=${encodeURIComponent(member2)}`);
   if (out.answered && leaverOf("subscriptiondisconnect", {}, out.result, member2)) await signoutLeaver(env, member2);
   return out;
 }
@@ -286611,13 +286898,13 @@ async function tokenRefusedSeen({ member: member2, answer: answer2, store }) {
   const b = isObject(answer2) ? answer2 : null;
   const refusedHere = (x) => isObject(x) && x.ok === false && codeOf2(x) === TOKEN_REFUSED;
   if (!member2 || !b || !(refusedHere(b) || refusedHere(b.result))) return false;
-  await ask(store, `${STORE_ROUTES.refused}?by=${encodeURIComponent(member2)}`);
+  await ask2(store, `${STORE_ROUTES.refused}?by=${encodeURIComponent(member2)}`);
   return true;
 }
 async function signintrace({ env, store }) {
   if (!testInstanceOf2(env))
     return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only on a test instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read." } };
-  const out = await ask(store, STORE_ROUTES.traceRead, { method: "GET" });
+  const out = await ask2(store, STORE_ROUTES.traceRead, { method: "GET" });
   if (out.refused || !out.answered) return unreadAnswer("signintrace", out, void 0);
   return { status: 200, body: isObject(out.result) ? out.result : { ok: true, lines: [] } };
 }
@@ -288343,6 +288630,20 @@ function makeFetch(hooks = {}) {
       if (!out2.answered) return { early: storeSilent(op, out2.correlation) };
       return { body: out2.reply.body, status: out2.reply.status };
     }
+    async function readUploaded(got) {
+      if (got.early) return got;
+      const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
+      if (!r || r.ok !== true || r.existed === true || !r.document || typeof r.document !== "object") return got;
+      const read3 = await acquireReadingOp({ ok: true, document: r.document }, stub, {
+        json: json19,
+        storeSilent,
+        doAnswer,
+        storeName,
+        storeRefusal: (out2) => storeRefusal(out2, { store: storeName, tokenClass: cls3 })
+      });
+      if (read3.response) return { early: read3.response };
+      return { body: { ...got.body, result: { ...r, document: read3.body.document } }, status: got.status };
+    }
     async function tieToStep(got, step) {
       if (got.early) return got.early;
       const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
@@ -288439,7 +288740,7 @@ function makeFetch(hooks = {}) {
         },
         ...req.body ? { duplex: "half" } : {}
       })));
-      return tieToStep(await forwarded(uploaded), url.searchParams.get("step"));
+      return tieToStep(await readUploaded(await forwarded(uploaded)), url.searchParams.get("step"));
     }
     let passBody = req.method === "POST" ? await req.text() : void 0;
     if (passBody) {
@@ -306239,135 +306540,6 @@ async function registerAuditOp(env, store, { json: json24, doAnswer: doAnswer2, 
   return json24({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha2) => env.CAPTURES.head(captureKey2(storeName, sha2)), get: (sha2) => env.CAPTURES.get(captureKey2(storeName, sha2)) } : null), store: storeName, tokenClass: cls3 }, 200);
 }
 
-// src/extraction/ops.mjs
-var CORRELATION2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-async function readAnswer(res) {
-  let r = null, out = null;
-  try {
-    r = await res;
-    out = await r.json();
-  } catch {
-    out = null;
-  }
-  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
-  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
-  if (out.ok === true) return { answered: true, result: out.result, reply };
-  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
-  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION2.test(out.correlation) ? out.correlation : void 0;
-  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
-}
-async function ask2(store, path, init, doAnswer2) {
-  const res = (async () => store.fetch(path, init))();
-  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
-}
-var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
-  status,
-  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-});
-function unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
-  if (r && r.refused && r.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json24(r.reply.body, r.reply.status);
-  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
-  return null;
-}
-async function pdfStructureOp(url, env, store, {
-  json: json24,
-  storeSilent: storeSilent2,
-  storeRefusal: storeRefusal2,
-  doAnswer: doAnswer2,
-  storageAbsent: storageAbsent2,
-  requiredArgument: requiredArgument2,
-  cls: cls3,
-  session,
-  caps: caps3,
-  viewer,
-  author,
-  storeName
-}) {
-  const op = "pdfstructure";
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
-  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json24({ ok: false, ...requiredArgument2(
-      "pdfstructure",
-      "sha256",
-      "<64 lowercase hex>",
-      "pdfstructure requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const q10 = new URLSearchParams({
-    sha256: sha2,
-    cls: cls3 || "",
-    session: session ? "1" : "0",
-    caps: [...caps3 || []].join(","),
-    viewer: viewer || "",
-    author: author || "",
-    store: storeName || "bio"
-  });
-  if (url.searchParams.has("ocr")) q10.set("ocr", url.searchParams.get("ocr") ?? "");
-  const r = await ask2(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
-}
-async function pageTranscribeOp(url, env, store, {
-  json: json24,
-  storeSilent: storeSilent2,
-  storeRefusal: storeRefusal2,
-  doAnswer: doAnswer2,
-  storageAbsent: storageAbsent2,
-  requiredArgument: requiredArgument2,
-  cls: cls3,
-  session,
-  caps: caps3,
-  viewer,
-  author,
-  storeName
-}) {
-  const op = "pagetranscribe";
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
-  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json24({ ok: false, ...requiredArgument2(
-      op,
-      "sha256",
-      "<64 lowercase hex>",
-      "pagetranscribe requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const q10 = new URLSearchParams({
-    sha256: sha2,
-    cls: cls3 || "",
-    session: session ? "1" : "0",
-    caps: [...caps3 || []].join(","),
-    viewer: viewer || "",
-    author: author || "",
-    store: storeName || "bio"
-  });
-  const project = url.searchParams.get("project");
-  if (project) q10.set("project", project);
-  const r = await ask2(store, `http://x/pagetranscribe?${q10}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
-}
-var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
-async function extractionOp(op, url, env, getStore, stamps) {
-  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
-  return null;
-}
-async function acquireReadingOp(answer2, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
-  const r = await ask2(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ document: answer2.document })
-  }, doAnswer2);
-  const relayed = unanswered2(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (relayed) return { response: relayed };
-  const out = r.result;
-  const body = withReading(answer2, {
-    reading: out.reading,
-    textUnits: out.text_units || null,
-    textUnitsOverBound: out.text_units_over_bound || 0
-  });
-  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
-  return { body };
-}
-
 // src/connections/ops.mjs
 var CONNECTIONS_OPS = Object.freeze(["linkproject"]);
 async function linkProjectOp(url, store, { json: json24, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2, viewer, identity: identity2 }) {
@@ -309185,9 +309357,16 @@ function controlPlaneOwnerOps(of, url, body) {
     projectsshownon: () => of.legEarning().projectsShownOn({ id: f17("id"), viewer: q10("viewer") }),
     /* capture R86 (R72; K2458): a member's upload, the request's raw body handed on as `bytes` (a stream, never read
        here), its words from the address, `by` the door's. Capture's own map holds no arm for it, so this one calls its
-       service by name, as R71's do. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
+       service by name, as R71's do. R100 (R085-4): the media type the browser declared, `type`, travels from the address
+       as capture R92 takes it, and only when the request names one. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
        caller hands, never a request's field, so one in the address reaches nothing. */
-    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q10("statement"), name: q10("name"), by: q10("by") }),
+    captureupload: () => of.capture().uploadCapture({
+      bytes: body,
+      statement: q10("statement"),
+      name: q10("name"),
+      by: q10("by"),
+      ...q10("type") !== null ? { type: q10("type") } : {}
+    }),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */
