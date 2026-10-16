@@ -27,6 +27,8 @@
     {
       "class_name": "AgentRunner",
       "image": "ghcr.io/believeinoakland/agent-runner@sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8",
+      // R33: 1/2 vCPU, 4 GiB. At the default size (1/16 vCPU, 256 MiB) one conversation's start-up took 27 s (study-assistant-link T1-T2).
+      "instance_type": "standard-1",
       "max_instances": 10
     }
   ],
