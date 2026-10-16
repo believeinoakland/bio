@@ -1,0 +1,71 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+B
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Your account
+Your account
+YOUR HANDLE
+
+bob-test
+
+Your handle can't be changed: it names your work for good, and no one else can ever take it.
+
+LANGUAGE AND APPEARANCE
+
+Your screens follow your device's setting.
+
+Your language
+Your screens follow your device's setting.
+American English
+
+The languages your group offers. Choose none to follow your device's setting.
+
+Choose your language
+Reversible
+Follow my device
+Light
+Dark
+Explanations
+Explain promptly
+On a longer pause
+Choose how much is explained
+Reasoned
+WHAT YOU KNOW
+Your expertise (optional)
+The group can ask you to check work in your field. An administrator may confirm it; it gates nothing.
+Declare your expertise
+Reversible
+YOUR PASSWORD
+Your current password
+A new password
+At least 12 characters. A short sentence you can remember works well.
+Type it again
+Change your password
+Reasoned
+YOUR SIGNING KEY
+
+Your signing key is made in your browser and never sent to Civicsmith; only its public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.
+
+Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.
+Register your signing key
+Signed
+SIGNING OUT
+Sign out on this device
+Reversible
+Sign out everywhere
+Reasoned
+ELSEWHERE IN YOUR SETTINGS
+
+The assistant
+
+Your notes

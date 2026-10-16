@@ -1,0 +1,45 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+B
+Working · not public · seen by your group's members
+Settings › Your ties
+Your ties
+1 wizard starts here
+WHY YOU ARE ASKED
+A published case is trusted only if readers know of anything that could pull the people behind it one way. Saying so openly protects you and the group.
+When a case your group publishes concerns one of your ties, the case says so, in the way you choose below.
+Before the group publishes, each member who signs confirms they have no tie they have not listed here.
+Only what could matter: an employer, a relative in a public body, a business you have an interest in. Not your opinions, politics or private life.
+WHO SEES IT
+Inside the group: only you and the group's administrators. Other members never see this list.
+Outside the group: no one, unless a published case concerns the tie. Then its readers see the tie, with or without your handle, as you chose.
+It is kept with your group's records, so a court order could reach it like the rest of them.
+
+Nothing is listed yet. Start with “Add this tie”: say who it is with, and how you want a case to name it.
+
+ADD A TIE
+Kind
+Employer
+Relative
+A business I have an interest in
+Other
+Who
+Finance Department
+Oakland City Council
+Office Of The City Auditor
+The tie, in your words
+For example "member-owner", or "my cousin works on its staff".
+If a case the group publishes concerns them, the case discloses this tie
+ Naming me by my handle: “{handle}, who worked on this case, is {tie}.”
+ Without naming me: “A member of the group who worked on this case is {tie}.”
+
+Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.
+
+Add a tie
+Reasoned
+Home
+Queue
+Add
+Find
+More

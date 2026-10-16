@@ -1,0 +1,54 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+B
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Projects › Opening a file
+Opening a file
+HIGH RISK
+High risk: it opens in the safe view, a picture of each page, until a deeper check passes. Its grade and its place in the record are unchanged.
+
+Why: Handed in, not fetched by your group's Civicsmith from where it is published.
+
+THE SAFE VIEW
+
+A copy made by your group's Civicsmith: each page as a picture, nothing in it can run. 
+Machine work Derived · a safe copy of the original. Cite the original, never the safe copy; a citation always points at the original.
+
+Read the safe view
+Reversible
+ASK FOR A DEEPER CHECK
+
+A deeper check reads the file whole and runs the built-in scanner again and every outside tool your group added; a clean result from a scanner other than the built-in one opens the original to every member for 24 hours. The safe view needs no check.
+
+Ask for a deeper check
+Reversible
+CHECKS
+clamav · clamav not reported: not_scanned
+checked on 16 October 2026
+OR OPEN IT NOW, WITHOUT A DEEPER CHECK
+Open the original on your own device
+
+Opening it puts the file on your device. If it hides something no scanner knows yet, your device's own protections are all that stand between it and your device, and through your device, your sign-in to the group.
+
+Before you open it
+I will open it on my own device, not a shared one
+I will not enable macros or editing
+Open the original after the warning, without a deeper check
+Reasoned
+
+Your group's Civicsmith makes safe views of documents, presentations and spreadsheets, and this file is none of them, so it has no safe view.
+
+Not offered for a file a scanner has flagged, or one the built-in scanner has not checked this week. Who opens which file is never recorded.
+
+Read the safe view: Shows a safe copy: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.
+Reversible: you can undo this.

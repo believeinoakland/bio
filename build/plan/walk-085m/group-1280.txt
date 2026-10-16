@@ -1,0 +1,38 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+B
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Settings › Your group
+Your group
+
+These are your group's settings. Administrators change them; you can read them here.
+
+NAME AND LOGO
+
+Your group is called Believe In Oakland.
+
+LANGUAGES
+
+Your members use: American English.
+
+THE COURT NOTICE
+
+Members are told what a court order could reach.
+
+THE HOSTING ACCOUNT
+
+Recorded by set at setup on 15 October 2026: Bob Krause
+
+WHAT THE GROUP HAS AT STAKE
+
+None stated beyond the group's

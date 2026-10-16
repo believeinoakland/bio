@@ -1,0 +1,41 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+B
+Working · not public · seen by your group's members
+Settings › The assistant
+The assistant
+1 wizard starts here
+
+Optional. Everything in your group's Civicsmith works without the assistant.
+
+For a member's act in a project that has its own AI account, that project's account pays. Otherwise the member's own account, if they connected one; otherwise the group's key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.
+
+The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.
+
+CONNECT YOUR OWN ACCOUNT (OPTIONAL)
+How do you want to connect the assistant?
+My Claude subscription (Pro or Max)
+My own Claude API key
+Not now
+With your Claude subscription (Pro or Max)
+Open Anthropic's sign-in page. It opens in a new tab: Anthropic's own page, not your group's Civicsmith.
+Sign in to your Claude account there and approve.
+Anthropic's page shows you a code. Copy it.
+Paste it below and connect.
+Open Anthropic's sign-in page
+Reasoned
+The code from Anthropic's page
+Copy the whole code Anthropic's page shows, including any part after a # sign.
+
+Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.
+
+Connect
+Reasoned
+If you signed in a while ago, it asks for your password first
+If it doesn't connect, you see one of these, beside the code
+Home
+Queue
+Add
+Find
+More
