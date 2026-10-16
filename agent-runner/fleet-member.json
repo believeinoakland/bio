@@ -14,7 +14,7 @@
   },
   "image": {
     "repository": "ghcr.io/believeinoakland/agent-runner",
-    "digest": "sha256:e7050ca4f9a32e42ac7ac0e0d629511c1f449ad4e4c323d9844d56aa59282fc0",
+    "digest": "sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8",
     "platform": "linux/amd64",
     "port": 8080,
     "schedulingPolicy": "default"
