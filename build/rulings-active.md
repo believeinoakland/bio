@@ -40,6 +40,8 @@
 
 - The system is tested in substance wherever it can be (Bob, K3578): "we should be testing actually finding, harvesting, and capturing documents, extracting meaningful content, populating constructs (like money, ties, etc.). We need to test the system. If we can't yet, then we can't. But if we can. then we should be." The journeys lane works a real investigation by hand through every stage it can reach, recording what works, what does not and what cannot yet be reached.
 
+- The assistant study's priority (Bob, K3585): "Definitely check all viable options from the bottom up. But ... the research priority should revolve around CC remote over CC local." Remote Claude Code options are studied first, each bottom up; the local runner's cells fill the gaps.
+
 ## 2. Standing approvals and recorded refusals (check before acting, §16)
 
 - Standing list (both repositories' `.claude/settings.json`, Bob's): `mcp__github__merge_pull_request` (development and design-stream PRs into `main` at a tranche boundary, CLAUDE.md, K1177), `archive_session` under both tool names (one name failed to match at K526), `delete_trigger`, `mail.mjs xcheck`, `git rm -q --` under the four test directories, removing `.git/hooks`. These cleared the refusals of K1014, K1177, K929, K1113, K526, K1067, K1095. Deleting a predecessor's routines and archiving it are BOB's own acts, never asked as Bob's. (K1261, K618, K511, K112, K687)
