@@ -20,3 +20,7 @@
 **Deferred:** nothing. **Found in another module:** nothing; no generated artifact of another module made stale (`bio-plane/dist/bio-plane.bundled.mjs` and `release/` carry this module's code and are rebuilt by BOB at the cut, K1548: REPORTing it as stale).
 
 Size (session_01C32QGvXWpSbZKJMKWKdBMX): test runs 7, module lines 2277
+
+## J2 · REPORT
+
+Correction to J1's last line: I wrote that the bundles are rebuilt by BOB at the cut; I did not check that. The fact: bio-plane/dist/bio-plane.bundled.mjs and release/bio-plane.bundled.mjs (and newgroup's bundle) embed screens-inquiry's code, so they are stale against question.mjs until rebuilt. I rebuilt none (not mine to write, mechanics 14).
