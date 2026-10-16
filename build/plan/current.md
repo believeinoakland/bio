@@ -62,7 +62,6 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - A whole-unit "read passage" tool for sub-sessions: measured first, i.e. whether 64-token snippets suffice at the next walk; if they do not, it goes to `next.md` as T50.
 - R106, the four level sub-sessions run concurrently: held for the study of the assistant's connection (K3529), since one subscription's limits on concurrent conversations are not yet known.
 - D8 (held text needs a vouch before reading): no cause found in code; it needs a screen walk.
-- A larger container: measured as idle on the model (diag-085-slow, Measurement); not worth it.
 - Workers Observability read for the Cloudflare credential: not needed now.
 
 - **R085-26 · retrieval** · R79 (`op=meaningrows` passes `snippet` through; D3) · claude-sonnet-5-5.
@@ -73,3 +72,5 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-31 · capture** · R93 (an untyped upload with a text extension is read as text; D2) · claude-haiku-5-5.
 - **R085-32 · screens-intake** · R28 (the id slug is cut, then trimmed of a trailing hyphen; D1) · claude-haiku-5-5.
 - **R085-33 · wizard-scripts** · R40 (group-setup scripts offered only to an administrator; D9) · claude-sonnet-5-5.
+- **R085-34 · plane** · R57 (the registration hands `wizard-scripts` the administrator's acts and screens, so R40 holds live; found by WIZARD-SCRIPTS #11 J1; new `uses` edge `interface-shell`, earlier in the order) · claude-haiku-5-5.
+- **R085-35 · agent-runner** · R33 (the container at instance type `standard-1`; study-assistant-link T1–T2) · claude-haiku-5-5.

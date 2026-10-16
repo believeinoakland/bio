@@ -190,7 +190,7 @@ The answer:
 - **R103** *(not yet met: R085)* (R085-30 (a); K3528; `walk-085-r5` D3; amends R96; `retrieval` R79) `meaningRead` passes `snippet: 64` to `op=meaningrows`. Test: over the fake plane, a `rows=passage` read reaches `op=meaningrows` with `snippet=64`; control: no other parameter of the call changes.
 - **R104** *(not yet met: R085)* (R085-30 (b); K3528; `walk-085-r5` D5; `agent-harness` R13) A `LOOKED_ABSENT` (empty-level) candidate is kept only when the compose-time read of that level (`meaningRead`) confirms the absence for the target, i.e. holds no row for it; otherwise it is dropped, and the tick carries a log entry saying the report was contradicted by the read, naming the level. Test: an absent report for a level whose compose-time read holds a row for the target composes no candidate and logs the reason; control: a confirmed absence is kept.
 - **R105** *(not yet met: R085)* (R085-30 (c); K3528; `walk-085-r5` D6; amends R101) A candidate a run writes is logged with its name, its level and the pass that wrote it, so a later pass's `dedup` drop (R101) names that earlier write. Test: pass 1 writes `level-empty-<level>` and its tick logs the write; pass 2's drop entry names pass 1. Control: a held version this run did not write is worded as held on the question.
-- **R106** retired (K3529: held for the study of the assistant's connection; it returns under a new id if the study shows one subscription runs four conversations at once without limit or wait).
+- **R106** *(retired: K3529, held for the study of the assistant's connection; it returns under a new id if the study shows one subscription runs four conversations at once without limit or wait)*
 
 ## Private
 
