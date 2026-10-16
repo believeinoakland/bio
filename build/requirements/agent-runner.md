@@ -151,7 +151,7 @@ Terms. The **caller** is `agent-model`'s `signin` path (its R2), through the Con
 
 R23 and R17's sentences that U-7 is open ("No text of this module says Anthropic's terms allow the sign-in"; "whether starting it … stays open (U-7 (b))") are re-worded to cite K3061: Bob settled U-2 and U-7 as allowed. Wording only.
 - **R32** (R085-13; Bob's K3490; `agent-model` R19) A conversation request may carry `effort` (`low`, `medium`, `high`, `xhigh` or `max`); the query's options then carry it as the Agent SDK's `effort`, and a request without it leaves the option unset; any other value is refused before the query, `400 BAD_REQUEST`. Test: captured options at the SDK boundary carry `effort: "low"` for such a request and none without it; control: `effort: "extreme"` is refused.
-- **R33** *(not yet met: R085)* (R085-35; K3531; `study-assistant-link` tests T1–T2: one conversation's start-up took 27 s at 1/16 vCPU, 2.7 s at 1/2; memory samples up to 427 MB against 256 MiB) The container runs at Cloudflare's instance type `standard-1` (1/2 vCPU, 4 GiB), declared in its deploy configuration. Test: the configuration's container block names `instance_type` `standard-1`; control: its `max_instances` and image are unchanged.
+- **R33** (R085-35; K3531; `study-assistant-link` tests T1–T2: one conversation's start-up took 27 s at 1/16 vCPU, 2.7 s at 1/2; memory samples up to 427 MB against 256 MiB) The container runs at Cloudflare's instance type `standard-1` (1/2 vCPU, 4 GiB), declared in its deploy configuration. Test: the configuration's container block names `instance_type` `standard-1`; control: its `max_instances` and image are unchanged.
 
 ## Private
 
