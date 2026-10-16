@@ -54,7 +54,8 @@ async function promoteDocument(cs, o) {
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const mid = minted && (minted.result || minted);
   if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why(mid) };
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  /* R28: the cut comes first, then a trailing hyphen the cut left is trimmed, so the slug begins and ends with a letter or digit */
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
   const id = slug ? `${mid.id}-${slug}` : mid.id;
   const sha = doc.capture && doc.capture.sha256;
   /* UTF-8 length, computed from the code points (REC-178: a file's bytes is its UTF-8 length, never text.length). */
