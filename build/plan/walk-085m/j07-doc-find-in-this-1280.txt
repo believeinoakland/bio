@@ -1,0 +1,46 @@
+Test Civicsmith
+This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.
+Believe In Oakland
+Search
+Explain promptly
+B
+Working · not public · seen by your group's members
+Home
+Queue
+Find
+Add
+Projects
+People
+Settings
+Projects › Find in this
+Find in this
+
+Pick what to look for. Every result shows where it was found. Nothing is recorded until you record it.
+
+Look in This document
+
+Set by where you opened it: a document, the documents you are holding together, or a whole project.
+
+What to find
+People and offices your group follows
+Money figures
+Dates and deadlines
+Requirements: what someone shall or must do
+Events in minutes and agendas
+A name or term
+The name or term
+Matched as Find matches words: as written, in every passage.
+For which question (optional)
+None yet
+
+Kept with anything you record from here, so others can see why it was looked for.
+
+Find in this
+Reversible
+Keep finding this as documents arrive
+Reversible
+
+Search finds words as written, figures, dates and the names of people and offices your group already follows. A name it doesn't follow yet is found only as a word: open the passage and add the person yourself.
+
+Keep finding this as documents arrive: Keeps asking this as new documents arrive; new matches reach your queue once, as a list.
+Reversible: you can undo this.
