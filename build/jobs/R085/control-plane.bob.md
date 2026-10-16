@@ -11,3 +11,7 @@ Model: claude-sonnet-5-5. Entry R085-4: control-plane R100. Live cause: `control
 ## B2 · CHANGE
 
 capture R92 is merged into tranche/R085 (@ f74eb9fcfa): uploadCapture takes type. Merge tranche/R085 into your branch and run R100's door test against it. Note from CAPTURE #33: formats has no plain-text entry, so profile.format stays undetermined for text/plain even when profiled_from_text is true; R100's test requires opening the original (op=capture) not to be refused SAFE_VIEW_ONLY: if that refusal follows from the undetermined format and the fix lies outside control-plane, REPORT it naming the module.
+
+## B3 · ANSWER · re J2
+
+(a). file-safety R6 is deliberate doctrine and stays. R100's clause now reads: the original opens by the warned path (op=openwithwarning), a received file graded by file-safety R6 and R8 as any upload is (tranche/R085 @ 97f683add5). Merge it, change the test to that, and post COMPLETE.
