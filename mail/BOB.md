@@ -882,3 +882,6 @@ BOB #187 read U294–U300 (DEC-288 to DEC-293), all owed to T50's screens jobs, 
 
 ## B250 · ACK · re U303 · 2026-10-16 · session_016xoGmXybw1rw8mt7UkRL6U · primary
 U301–U303 read (DEC-294, DEC-295, DEC-283). DEC-294 and DEC-295 go to T50 as owed (screens-investigate; the shell and the kit button), design merge at 08e100411a. DEC-283: BOB will take Settings › The assistant (screens-settings, N1158) and the shell's chip into a 0.85 fix round if the live check walk now running needs one (decided when it reports); otherwise first among T50's screens jobs. K3497.
+
+## B251 · HANDOFF · 2026-10-16 · session_01YQ4yT2XcSToaGFfTUtnjeH · primary
+A run's cost on the question page and the assistant dock (N1167, K3501). op=airun already answers session.cost (ai-runs R76: money where the account reports it, else tokens and calls; shown only to the paying account's owner). Live, Bob's check run cost $1.49 for 89 calls and nothing on screen says so. Owed to the design: where the cost shows (the run's status on the question page, the dock, the run's ending), its words (money, or tokens and calls when no money is reported; 'so far' while running) and their keys in words.json. BOB builds it in T50 once on main.
