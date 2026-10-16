@@ -53,6 +53,8 @@ Terms. An **account reference** is `{kind: "apikey", key}` or (T38; K2200) `{kin
     - no `secret` gives `SIGNIN_NOT_HELD` with no runner call;
     - control: an `apikey` reference is unchanged.
   -
+- **R17** (R085-10; K3486 (B)) The sub-session `report` tool states its bounds where the model reads them, not only as schema limits: its description names the summary's limit in characters (the contract's `summary_max`), the citations' count and each address's length, and its `condition` is an `enum` of the contract's `returns.conditions` (`agent-harness` R11) when the contract gives them. Test: `subsessionTools` over a contract with `summary_max` 500 and conditions `[a, b]` describes "500 characters" and enumerates `condition` as `[a, b]`; control: a contract with no conditions leaves `condition` a free string. *(not yet met: R085)*
+- **R18** (R085-10; K3486 (B)) `converse` takes an optional `checkFinal(input)`: when the model calls `finalTool` and `checkFinal` returns a refusal `{code, detail}`, that call is answered as an error tool result carrying the code and detail and the conversation continues, once; the next `finalTool` call ends the conversation with its input whatever `checkFinal` says. Without `checkFinal`, behaviour is today's. Both the `apikey` and `signin` paths. Test: over a fake model on each path, a first refused and a second accepted final call return the second's input after one hand-back; control: two refused calls return the second's input, and no third turn is taken. *(not yet met: R085)*
 
 ## Private
 

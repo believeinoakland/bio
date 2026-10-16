@@ -22,3 +22,12 @@ All six run at once (out-of-layer on the cut, K1548; Bob's standing permission K
 - **R085-6 · screens-inquiry** · R45 (the question's run: drawn at once, seen to move, its end stated) · claude-sonnet-5-5.
 - **R085-7 · ai-runs** · R82 (dispatch waits only for acceptance), R83 (10-minute lease), R84 (segment ends logged; a stopped segment continued; an error ends the run) · claude-sonnet-5-5.
 - **R085-8 · agent-worker** · R91 (a segment outlives its caller and reports its end), R92 (tick entries and reports reach the log; the `REPORT_UNLOCATED` cause) · default model (a durable segment driver and an unknown cause).
+
+## Fix round 3 (K3486, K3489; the run's length and Find), out of layer on the cut
+
+All four run at once (out of layer on the cut, K1548; Bob's standing permission K3466, as round 2). Merge order: agent-harness and agent-model before agent-worker (R94 uses agent-model R18 and agent-harness R11); screens-daily any time.
+
+- **R085-9 · agent-worker** · R93 (`segment_end` sent after the segment is marked not running), R94 (a refused report handed back once through `checkFinal`) · claude-sonnet-5-5.
+- **R085-10 · agent-model** · R17 (the `report` tool states its bounds; `condition` an enum of the contract's conditions), R18 (`converse`'s `checkFinal`: one hand-back) · claude-sonnet-5-5.
+- **R085-11 · agent-harness** · R11 (the contract's `returns.conditions`) · claude-haiku-5-5.
+- **R085-12 · screens-daily** · R35 (Find's words also match held documents' passages) · claude-haiku-5-5.
