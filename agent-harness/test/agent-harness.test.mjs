@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R13 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R15 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -27,7 +27,7 @@ const {
 
 /* A run driven as the shell drives it: from the gate, each step's decision applied by `advance`; at a judged row the
    next judgement (if any is left) is applied first. Returns the trace, the close and the judgements consumed. */
-function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200 } = {}) {
+function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200, newEachPass = false } = {}) {
   const next = flow === PLAN_FLOW ? nextPlanStep : nextStep;
   const move = flow === PLAN_FLOW ? planAdvance : advance;
   const queue = [...judgements];
@@ -46,6 +46,8 @@ function walk(start, judgements = [], { flow = CONTROL_FLOW, limit = 200 } = {})
     trace.push(`${state.step}>${d.step}`);
     if (d.step === "close") return { trace, bound: d.bound, why: d.why, used, state: move(state, d) };
     state = move(state, d);
+    /* newEachPass: stands for a pass that submitted a candidate (R15), so only the pass limit ends the run */
+    if (newEachPass && state.step === "plan") state = { ...state, passAdded: true };
   }
   throw new Error("walk did not close");
 }
@@ -215,7 +217,7 @@ test("R3: then pass count >= the pass limit closes `completed`; the limit is max
 
 test("R3: a pass counts when it is done (next-pass): a driven run makes exactly the limit's passes", () => {
   for (const [maxPasses, passes] of [[1, 1], [2, 2], [undefined, 3], [0, 3]]) {
-    const r = walk({ mode: "check", maxPasses });
+    const r = walk({ mode: "check", maxPasses, passAdded: true }, [], { newEachPass: true });
     assert.equal(r.bound, "completed");
     assert.equal(r.state.pass, passes);
     assert.equal(r.trace.filter((x) => x.startsWith("next-pass>")).length, passes);
@@ -248,7 +250,7 @@ test("R4: a judged row with no judgement carries the state on", () => {
     assert.equal(a.ok, true);
     assert.deepEqual(a.state, before);
   }
-  const r = walk({ mode: "check", maxPasses: 2 });
+  const r = walk({ mode: "check", maxPasses: 2, passAdded: true }, [], { newEachPass: true });
   assert.deepEqual([r.used, r.bound, r.state.pass], [0, "completed", 2]);
 });
 
@@ -658,4 +660,63 @@ test("R13: control: the name stays level-empty-<level> for every empty level, an
   const made = HARNESS.emptyLevelCandidates({ reports }, "INQ-2026-0042");
   assert.deepEqual(made.map((c) => c.name), ["level-empty-meaning", "level-empty-content", "level-empty-documents", "level-empty-internet"]);
   made.forEach((c, i) => assert.ok(c.description.includes(reports[i].observed_at), c.name));
+});
+
+test("R14: an empty-level candidate's description holds neither a record id nor the sub-session's summary", () => {
+  const summary = "nothing in INQ-2026-0002 or INFO-2026-0006-council-minutes";
+  const state = { reports: LEVELS.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary })) };
+  const made = HARNESS.emptyLevelCandidates(state, "INQ-2026-0002");
+  assert.equal(made.length, LEVELS.length);
+  for (const c of made) {
+    assert.equal(/INQ-\d|INFO-\d/.test(c.description), false, c.name);
+    assert.equal(c.description.includes("The sub-session reported"), false, c.name);
+    assert.equal(c.description.includes("council-minutes"), false, c.name);
+  }
+});
+
+test("R14: control: the name stays level-empty-<level> and the report's summary is left untouched in the state", () => {
+  const reports = [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:9", summary: "see INQ-2026-0002" }];
+  const [made] = HARNESS.emptyLevelCandidates({ reports }, "INQ-2026-0002");
+  assert.equal(made.name, "level-empty-internet");
+  assert.equal(reports[0].summary, "see INQ-2026-0002");
+});
+
+/* ============================================================ R15: a pass that adds nothing closes the run */
+test("R15: a pass whose candidates are all dropped as held closes before the next pass, and the close says why", () => {
+  /* composed candidates, every one dropped by dedup: the queue is empty, so dedup goes to next-pass and no submit ran */
+  const r = walk({ mode: "check", maxPasses: 3 }, [{ targets: ["t"] }, { reports: [] }, { candidates: [{ name: "held" }] }, { queue: [] }]);
+  assert.equal(r.bound, "completed");
+  assert.equal(r.state.pass, 1);
+  assert.deepEqual(r.trace.filter((x) => x.startsWith("next-pass>")), ["next-pass>close"]);
+  assert.match(r.why, /added no new candidate/);
+  /* a pass that composed none closes the same way */
+  const none = walk({ mode: "check", maxPasses: 3 });
+  assert.deepEqual([none.bound, none.state.pass], ["completed", 1]);
+  assert.match(none.why, /added no new candidate/);
+});
+
+test("R15: control: a pass that submits a new candidate goes on to the next pass, below maxPasses", () => {
+  /* the walk never writes, so drive dedup > submit > next-pass by hand */
+  let s = { step: "dedup", pass: 0, maxPasses: 3, mode: "check", queue: [{ name: "new" }] };
+  let d = nextStep(s);
+  assert.equal(d.step, "submit");
+  s = advance(s, d);
+  assert.equal(s.passAdded, true);
+  s = { ...s, queue: [] };
+  d = nextStep(s);
+  assert.equal(d.step, "next-pass");
+  s = advance(s, d);
+  d = nextStep(s);
+  assert.deepEqual([d.step, s.pass], ["plan", 1]);
+  s = advance(s, d);
+  assert.equal(s.passAdded, false, "the next pass starts with none added");
+});
+
+test("R15: control: passAdded survives a segment break and a restart under the state ceiling", () => {
+  const s = { step: "next-pass", pass: 1, passAdded: true };
+  assert.equal(HARNESS.resumableState(s).passAdded, true);
+  assert.equal(HARNESS.resumeFrom(HARNESS.resumableState(s)).state.passAdded, true);
+  const big = { ...s, queue: ["x".repeat(500)] };
+  const pub = HARNESS.publishableState(big, 100);
+  assert.deepEqual([pub.restarted.at, pub.state.passAdded], ["next-pass", true]);
 });
