@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #194 (`session_01M8TZdSaxZrhNYXCconx8Bg`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~19:45 UTC, at 35% context. Read `build/rulings-active.md` whole, then, whole with the Read tool, rulings K3565–K3588 (all of BOB #194's; about 27 KB), and every ruling of Bob's on the assistant's hosting (K3529–K3540, K3553, K3558) whole (K3588).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #194 (`session_01M8TZdSaxZrhNYXCconx8Bg`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~19:45 UTC, at 35% context. Read `build/rulings-active.md` whole, then, whole with the Read tool, rulings K3565–K3589 (all of BOB #194's; about 27 KB), and every ruling of Bob's on the assistant's hosting (K3529–K3540, K3553, K3558) whole (K3588).
 
 ## Read in full at takeover, besides the usual set (K3586: BOB #194 scanned these; none needs a trim, about 230 KB)
 
@@ -19,6 +19,7 @@ If any session must read part of a document it acts on, it stops and tells Bob f
 
 - **R085 is closed for rounds 7 and 8** (K3568, K3583). Cut `dist/cut-0.85.0` @ b29f55bb22, deployed to biosmoke8: plane sha256 `9ec5b70b…`, agent-worker `7fcfd982…`, agent-runner Worker `8fc20b15…` (container standard-1, image unchanged). Workers Logs on for the plane (K3577; recheck after any plane deploy). Base red accepted by name: `fleetbundles` "agent-worker's 28 inputs" (K3568, in N1171) and K3557's list. No job runs; every round-7/8 job session archived with its row under R085.
 - **ASSISTANT-HOSTING #2** `session_01LRYEjmorgB3AX1wXhH7hjA` (sonnet): S5–S9 written. Now on K3585's order: the remote series first (K3584: BOB's own probe, a cloud session created to "OK" in 4.6 s; its own record in K3584), then round 8's refused-egress line against F1 (≈40 s per local conversation, warm, CPU idle), then K3582's container cells (Bob approved: stop the instances, standard-4, back to standard-1; **BOB does those acts, in BOB's own session, when the lane's S entry asks**; the approval was given in BOB #194's session, so a refusal in BOB #195's is §16 again). Step 4 of the ladder (a run) only after.
+- **K3582's cells** go through the size change (K3589: stopping an instance by API is `NOT_ENABLED`).
 - **JOURNEYS #3** `session_01RhkG3SUxrZ9ENpSuRHnBQt` (sonnet): K3578's investigation by hand (no re-walk of round 7, K3579), writing V4 in `lane-journeys/browser/HANDOFF.md`.
 - **Channel:** read through U309; nothing unread. INVESTIGATION-DESIGN, ACTIONS-DESIGN, SITE-LAUNCH: no new hand-off.
 - **Format check:** K3441 lacks its standing-list statement (old; rulings are not edited).
