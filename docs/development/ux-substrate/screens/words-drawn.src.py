@@ -1156,6 +1156,13 @@ w284(T + 'key', 'The key itself')
 w284(T + 'key.why', 'Replace it, switch it off or remove it.')
 w284(T + 'changes.why', 'Every change, with who made it and when.')
 # --- end DEC-284
+# --- DEC-285 (the walk's D7, B244): Home's first visit for a new team: the next steps numbered, in order; the doors start directly
+def w285(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-285' + (': ' + note if note else '')))
+w285('screen.home.first.invite', 'Make an invitation link for each person and send it yourself: Civicsmith sends no email.')
+w285('screen.home.first.identity', 'Its kind, focus and purpose, in a few words: it shapes how each new member is welcomed.')
+w285('screen.home.first.project', 'Open your first project: choose below what happened.')
+# --- end DEC-285
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

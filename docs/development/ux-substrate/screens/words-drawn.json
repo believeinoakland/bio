@@ -5195,6 +5195,24 @@
    "en": "Every change, with who made it and when.",
    "protected": false,
    "note": "DEC-284"
+  },
+  {
+   "key": "screen.home.first.invite",
+   "en": "Make an invitation link for each person and send it yourself: Civicsmith sends no email.",
+   "protected": false,
+   "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.first.identity",
+   "en": "Its kind, focus and purpose, in a few words: it shapes how each new member is welcomed.",
+   "protected": false,
+   "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.first.project",
+   "en": "Open your first project: choose below what happened.",
+   "protected": false,
+   "note": "DEC-285"
   }
  ],
  "rewrite": {

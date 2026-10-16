@@ -4420,3 +4420,18 @@ decided: 2026-10-16 · the design session (P17)
 the design: Members holds the roster only: members, invitations, joining through the website, administrators. A new page, Settings › The team's assistant (`teamai`, administrators only, listed under "The team's" beside Members), holds the team's key, drawn like the assistant's page: a card ("The team's API key is held and on. Rosa set it on 6 October." with this month's meter), then parts that open and close: what the team's key pays for (the uses by their new plain names, and exploring), limits (overall and for each member), use of the team's key (summed over members, naming none), keeping our material away from AI, the key itself (replace, switch off, remove), changes to the team's AI settings; who pays, folded at the end. The six acts move from Members' registry entry to the new page's.
 reasoning recorded in: this entry; `screens/registry.src.py` (`teamai`; Members' acts); `screens/mock-screens.js` (`SCR.teamai`, `SCR.members`, the settings list); `screens/mock-refs.js`, `screens/mock-shell.js`; words-drawn's DEC-284 block (`screen.teamai.*`).
 owed: (BOB, N1158 in T50, screens-settings) a `teamai` page at Settings › The team's assistant for administrators, holding `groupkeyset`, `groupkeyswitch`, `accountusesset` and `ailimitset` for the team's key, `groupkeyremove`, `aikeepaway` and the changes, in parts (`.cs-part`), its summaries from `screen.teamai.*`; Members without those sections; the settings list's entry; the same switch style and plain use names as the assistant's page (B241); a member never sees the page.
+
+### DEC-285 · answered
+raised: 2026-10-16 · the UX design session with Bob on his primary account (session_012b3TWmhax3EAyCzRxqQC7x; the development process also runs on his primary account since K1428) (BOB's B244: the walk's D7)
+for: design
+question: A new team's first Home explained nothing about what comes next: two plain links with no order, and a "Start from…" button beside an unlabeled box under the "What happened?" doors.
+why it is Bob's: it is not: the order and drawing of Home's first visit are the design's detail beneath DEC-218 (one home for everyone) (P17).
+provisional: none.
+alternative: keep the links and add a sentence above them.
+recommendation: as below.
+reversal cost: low: one state of `SCR.home`.
+response: none needed (the design's detail; the walk's D7).
+decided: 2026-10-16 · the design session (P17)
+the design: under "Your team's Civicsmith is ready", the next steps are numbered and in order, each a button with one sentence of what it is: 1 "Invite your first members" (primary) · "Make an invitation link for each person and send it yourself: Civicsmith sends no email."; 2 "Say who your team is" · "Its kind, focus and purpose, in a few words: it shapes how each new member is welcomed."; 3 "Open your first project: choose below what happened." Each "What happened?" door starts directly (`startfrom` on the door itself); the separate "Start from…" button and its box are gone; "Start a project" stays beside the doors. The buttons carry no hover text that repeats the sentence beside them (the walk's D17).
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.home` state c, the doors); words-drawn's DEC-285 block (`screen.home.first.*`).
+owed: (BOB, screens-home in T50) the three numbered steps by these keys for a new team's administrators; each door a button that starts from it (`startfrom` with the door), the sixth ("Help for my own situation") a door like the others, not an underlined paragraph; no free-text box beside the doors.

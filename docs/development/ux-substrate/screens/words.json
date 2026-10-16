@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3756,
+  "screen": 3759,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 12498,
+  "total": 12501,
   "protected": 881
  },
  "words": [
@@ -37582,6 +37582,27 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-284"
+  },
+  {
+   "key": "screen.home.first.invite",
+   "en": "Make an invitation link for each person and send it yourself: Civicsmith sends no email.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.first.identity",
+   "en": "Its kind, focus and purpose, in a few words: it shapes how each new member is welcomed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.first.project",
+   "en": "Open your first project: choose below what happened.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-285"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
