@@ -256,6 +256,8 @@ Read whole with `next.md` (N1148–N1189). Folded into the draft above at the op
 - L11 **installer** · N1148 (an account holding a Civicsmith is a supported situation, K3458, K3471: told and offered a way on), N1150, N1157 (the install situations), N1162's `SEGMENTS` binding, N1170, the base red "realsize"; N1151 only once Bob has registered the scope (his act, named at the opening) · sonnet. **admission** · N1179, N1146 (R28) · sonnet. **screens-action** · N1182, N1121's drawing, N1178's words if theirs · sonnet. **stewards** and N923 · only once N1159's route is proven (BOB's acts first, at the opening) · haiku.
 - `not_product` · N1153 (`deploy.mjs`' skip compares bindings; keeps undeclared `plain_text` bindings) · sonnet.
 
+**JOURNEYS V4 (K3598).** N1190–N1194 join T50: N1191 an extraction job (L4; extraction, with ocr-worker for photographs and retrieval for the passage marks), N1192 to T50-31 and T50-27 (the refusal mapping) and T50-32 (R49's preselection), N1193 to T50-10 and T50-33 with the timeline's provider, N1194's parts to their owners at the fold, N1190 a job for its owner once UX-DESIGN answers B258 on adding a court; N1177 gains the Standard screen's passage choice (B-28).
+
 **Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347). The assistant's hosting: Bob's decision (K3538), studied by ASSISTANT-HOSTING; no T50 entry rebuilds the runner before it.
 
 **For Bob at the opening (his acts).** The meter reading (§5.2 (3)); N1151's OAuth scope registration; K3591's size-change approval if the cells are still owed.
