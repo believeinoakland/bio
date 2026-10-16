@@ -70,6 +70,10 @@ Bob's design of the investigation engine and the project as an investigation (K1
 
 Bob's question of where and how the assistant runs Claude is studied in its own session, **ASSISTANT-HOSTING** (#1, started by BOB #192), writing only `build/plan/study-assistant-hosting/` (its `CHARTER.md` says how). It decides nothing: its findings reach Bob through BOB, and his decision is a K. BOB reads its `HANDOFF.md` (entries `S<n>`) at takeover and at every backstop check.
 
+## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
+
+Every feature and journey that does not need the assistant is walked in its own session, **JOURNEYS** (#1, started by BOB #192), writing only `build/plan/lane-journeys/` (its `CHARTER.md`). The assistant's own testing is the assistant-hosting lane's. BOB reads its `HANDOFF.md` (entries `W<n>`) at takeover and at every backstop check, and turns each defect into a plan entry.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #5**, `session_0187SrKsqhqzSTqwDk2hzcXy` (started by Bob 2026-10-05, resumed by him for the account switch 2026-10-10; K2511); its context is about 250k tokens at resumption, replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). On the secondary account: ROOT #6, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022), unreachable from the primary. Earlier ROOTs are archived (rulings K693–K2022).

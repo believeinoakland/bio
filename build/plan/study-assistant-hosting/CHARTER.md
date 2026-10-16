@@ -1,6 +1,6 @@
 # Study: where and how the assistant runs (ASSISTANT-HOSTING)
 
-**Status** · Open. Chartered by BOB #192, 2026-10-16, on Bob's direction (K3538): "this is a serious decision that needs to be seriously considered, decided, designed, and developed." The decision is Bob's (high-level architecture, P17). This lane studies, tests and compares; it decides nothing and changes no product code.
+**Status** · Open. The assistant lane (K3539): this study, and the live testing of the assistant as it runs today. Chartered by BOB #192, 2026-10-16, on Bob's direction (K3538): "this is a serious decision that needs to be seriously considered, decided, designed, and developed." The decision is Bob's (high-level architecture, P17). This lane studies, tests and compares; it decides nothing and changes no product code.
 
 ## The question
 How should Civicsmith's assistant run Claude for a team and for a member, so that a check is fast, keeps its context, stays under the product's deterministic control, is affordable, keeps members' records where they should be, and works within Anthropic's terms? The answer may differ by context: a team's shared work, a member on their own subscription, small and large teams.
@@ -27,6 +27,9 @@ How should Civicsmith's assistant run Claude for a team and for a member, so tha
 3. **Understand and test** each viable option: documentation first (official, with URL and date read), then what others report, then small, cheap tests that confirm each claim (mark each documented, reported, tested or inferred). Any test needing an act only Bob can take is listed, with plain steps, for BOB to bring to him.
 4. **Criteria and comparison.** Agree the criteria with Bob first (draft: functionality and control, speed, context, cost to the team on Cloudflare and on the subscription, setup burden for a team and a member, where members' data goes, security, reliability and documented status, terms, build effort, fit by context). Then build an objective comparison, scored from evidence.
 5. **Recommendation** per context, brought to Bob through BOB with options; Bob decides; BOB records the K and plans the design and build.
+
+## The assistant as it runs today (K3539)
+After each deploy BOB names, walk the assistant on the trial instance (a fresh upload, a question, a check run, in the lane's own project, `ASSISTANT …`) and measure it: total and per-step times, conversations, tokens and cost, whether it answers correctly, and what the member sees on the question page and in the dock. These are the baseline every hosting option is compared with, and each defect goes to BOB as for any finding.
 
 ## How the lane works
 - Its record is this folder on `tranche/T49` (and the open tranche branch after): `NOTES.md` (findings, each with its evidence), `OPTIONS.md` (the inventory and screen), `TESTS.md` (each test, steps, results), `COMPARISON.md`. Commits only here. Never `main`, never product code, never another lane's files.
