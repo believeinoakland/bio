@@ -163,7 +163,7 @@ test("R24: \"Cite in the question\" asks whether the passage supports the questi
   assert.deepEqual(JSON.parse(ct.query.found), KINDS[5].items[0]);
   const against = await shown();
   await press(against, "cite", { values: { [button(against, "cite").dataset.f + "-role-against"]: true } });
-  assert.equal(last(against, "cite").query.role, "against");
+  assert.equal(last(against, "cite").query.role, "cuts_against", "\"against\" is the question's role cuts_against (citation R1)");
   // The question is still required first.
   const noQ = await open("/app/find-in/PROJ-1", PLANE);
   await press(noQ, "findin", { values: { "findin-kind-term": true, "findin-term": "closed" }, reason: R });
