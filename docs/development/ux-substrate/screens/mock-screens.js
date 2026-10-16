@@ -530,18 +530,26 @@ const aiChanges = items => `<ul class="mk-list">${items.map(t => `<li>${t}</li>`
 const explored = (owner, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · found while exploring${owner ? ' · enabled by ' + esc(owner) : ''}</span></div>`;
 const AI_WHO_PAYS = 'For a member\'s act in a project that has its own AI account, that project\'s account pays. Otherwise the member\'s own account, if they connected one; otherwise the team\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.';
 
-SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', 'Members'], main: `
+/* DEC-287 (the member walk's M-D4, B246): a member reads the roster only: who is in the team, what each may do in plain
+   words, and what each knows; each column says what it shows. An administrator's view keeps the invitations, joining and
+   the administrators' acts; the team's key and keeping material away from AI are on The team's assistant (DEC-284). */
+const MEMBER_ROWS = [['Rosa', 'administrator', 'all of it, as every administrator may', ''], ['Dev', 'member', 'add and revise work', ''], ['Ana', 'member', 'add and revise work · start projects', 'CPA'], ['Teo', 'member', 'add and revise work · sign and publish cases', 'reporter']];
+SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', 'Members'], st: c.v === 'member' ? 'b' : 'a', main: `
+  <div class="mk-mockctl"><label for="mk-mbst">In this mockup, show Members</label> <select id="mk-mbst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a">as an administrator sees it</option><option value="b"${c.v === 'member' ? ' selected' : ''}>as a member sees it</option></select></div>
   ${h1('Members', 'Active members: 4 · Administrators: 1')}
+  <div class="st st-b"><div class="tw"><table class="mk-table"><thead><tr><th>Member</th><th>May do</th><th>Expertise</th></tr></thead><tbody>${MEMBER_ROWS.map(([n, r, may, ex]) => `<tr><td><b>${n}</b> · ${r}</td><td>${may}</td><td${ex ? '' : ' class="muted"'}>${ex ? `declared: ${ex}` : 'No expertise declared.'}</td></tr>`).join('')}</tbody></table></div>
+  ${note('Administrators add members and change what each may do.')}</div>
+  <div class="st st-a">
   ${note('With one administrator, the team depends on that one person and the hosting account. <a href="#" onclick="return false">Add a second administrator</a>.')}
-  ${sheet(row(I('subject'), '<b>Rosa</b> · administrator · <span class="muted">cover: R. Medina</span>', '<span class="muted">contribute, administer</span>') +
-    row(I('subject'), '<b>Dev</b> · member', '<span class="muted">contribute</span>') +
+  ${sheet(row(I('subject'), '<b>Rosa</b> · administrator · <span class="muted">cover: R. Medina</span>', '<span class="muted">all of it, as every administrator may</span>') +
+    row(I('subject'), '<b>Dev</b> · member', '<span class="muted">add and revise work</span>') +
     row(I('subject'), '<b>Ana</b> · member · declared: CPA', `<span>${btn('expertiseconfirm', 'Confirm expertise')}</span>`) +
     row(I('subject'), '<b>Teo</b> · member · declared: reporter', `<span>${btn('owed:passwordresetlink DEC-201', 'Make a reset link')}${btn('signerset', 'Withdraw Teo\'s signing key')}</span>`) +
     row(I('clock'), '<i>Invited</i> · cover: Mai K.', '<span>' + btn('invitewithdraw', 'Withdraw') + '</span>'))}
   ${sec('Invite a member', `${field('mk-ih', 'A short id for this invitation', 'mai-k', { help: 'Lower-case letters, digits and hyphens. They choose the handle the record shows when they join.' })}${field('mk-ic', 'The cover the team knows them by, not a legal name', 'Mai K., from the Seminary Ave block')}${checks('What they may do', [['Contribute', true], ['Administer', false]], { act: 'membercaps' })}${acts(btn('memberadd', 'Create the invitation link', { tone: 'primary' }), btn('membercaps', 'Change what a member may do'))}${note('Your team\'s Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.')}`)}
   ${sec('Joining through your website', `${note('Let your website invite people: an open form, or an application someone approves. Anyone let through can see the team\'s shared work.')}${acts(btn('websitekeycreate', 'Create a website key'), btn('joinlinkenable', 'Turn on the reusable join link'))}`)}
   ${sec('More for administrators', `<div class="mk-links">${ref(I('group') + 'Places and offices', 'places', '<b>Places and offices</b> · the places whose rules apply, and the offices your team deals with')}${ref(I('status') + 'Security', 'security', '<b>Security</b> · how hard your team\'s Civicsmith is being tried, and your security tools')}</div>`)}
-  ${sec('Administrators', acts(btn('memberset', 'Change a member\'s status'), btn('adminendorse', 'Endorse an administrator'), btn('adminremove', 'Remove an administrator')))}` });
+  ${sec('Administrators', acts(btn('memberset', 'Change a member\'s status'), btn('adminendorse', 'Endorse an administrator'), btn('adminremove', 'Remove an administrator')))}</div>` });
 
 /* K1875 (Bob) and K1874 (Q5), drawn by DEC-165: an administrator's view of how hard the team's Civicsmith is being
    tried, over a period they choose. Counts only, by kind and by hour, against the team's usual; nothing names a source.

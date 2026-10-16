@@ -495,11 +495,14 @@ const RAIL_HELP = {
   add: 'Add: capture a document, a file, or what you saw yourself.',
   projects: 'Projects: your team\'s investigations, their questions, plans and cases.',
   people: 'People: the people and organizations the record follows. Your own team\'s members are under Settings.',
-  settings: 'Settings: your account, your team\'s members, the assistant, translations, wizards and updates.',
+  settings: 'Settings: your own account, assistant, ties, notes and recovery codes; for administrators, the team\'s settings as well.',
 };
 
 // What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).
 const COL_HELP = {
+  'members|Member': 'Each member by the handle the record shows, and whether they are an administrator.',
+  'members|May do': 'What each member may do here, as the administrators set it: add and revise work, start projects, sign and publish cases. An administrator may do all of it, and also looks after the team\'s Civicsmith.',
+  'members|Expertise': 'What a member says they know, such as accounting or engineering, so others can ask them to check work in that field. Each member declares it in their account; an administrator can confirm it.',
   'money|Figure': 'What the amount is, in the words of its source: a transfer, a charge, a payment, a grant.',
   'money|From': 'Who or which fund paid, as the source writes it. The payer is part of the figure itself, never guessed from somewhere else.',
   'money|To, where it went': 'Who or which fund received the money, as the source writes it. "Not stated in this source" means this source does not say; record it from another source that does, citing the passage.',

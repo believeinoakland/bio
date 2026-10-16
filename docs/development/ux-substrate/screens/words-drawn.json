@@ -5297,6 +5297,18 @@
    "en": "Decline",
    "protected": true,
    "note": "DEC-286: declines a request to join (projectrequestanswer)"
+  },
+  {
+   "key": "screen.members.cap.all",
+   "en": "all of it, as every administrator may",
+   "protected": false,
+   "note": "DEC-287: an administrator's row: every administrator holds every working capability (Membership §5)"
+  },
+  {
+   "key": "screen.members.member.note",
+   "en": "Administrators add members and change what each may do.",
+   "protected": false,
+   "note": "DEC-287: under the roster, for a member who is not an administrator"
   }
  ],
  "rewrite": {
@@ -5429,6 +5441,9 @@
   "act.promote.does": "Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.",
   "project.visibility.start.later": "Choose one: neither is chosen for you. You can change it later, with a reason.",
   "screen.updates.admins": "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
-  "screen.security.admins": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here."
+  "screen.security.admins": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
+  "screen.members.cap.contribute": "add and revise work",
+  "screen.members.cap.publish": "sign and publish cases",
+  "screen.members.cap.administer": "look after the team's Civicsmith"
  }
 }

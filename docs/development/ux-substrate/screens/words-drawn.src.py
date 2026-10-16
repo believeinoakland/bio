@@ -1189,6 +1189,18 @@ REWRITE.update({
   'screen.security.admins': "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
 })
 # --- end DEC-286
+# --- DEC-287 (the member walk's M-D4, B246): a member's Members page is the roster, its columns explained; what each may do in
+#     plain words; Settings' rail line true for a member
+def w287(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-287' + (': ' + note if note else '')))
+w287('screen.members.cap.all', 'all of it, as every administrator may', False, "an administrator's row: every administrator holds every working capability (Membership §5)")
+w287('screen.members.member.note', 'Administrators add members and change what each may do.', False, "under the roster, for a member who is not an administrator")
+REWRITE.update({
+  'screen.members.cap.contribute': 'add and revise work',
+  'screen.members.cap.publish': 'sign and publish cases',
+  'screen.members.cap.administer': "look after the team's Civicsmith",
+})
+# --- end DEC-287
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
