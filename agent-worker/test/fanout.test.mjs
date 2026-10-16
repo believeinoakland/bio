@@ -825,7 +825,9 @@ console.log("\n--- B7 · LOG-ALWAYS holds across FL-5's row, and the observation
      entries said NEVER_LOOKED, which the record refuses from a member (observation-log R3). Log-always now means
      every step TICKS (its spend and lease), and an entry is sent only by a step whose judgement stated a look —
      none here, so the run's log holds none, and not one NEVER_LOOKED. */
-  t("every step still ticked", (out.trace || []).length, st.log.filter((l) => l.op === "airuntick").length);
+  /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+  t("every step still ticked", (out.trace || []).length,
+    st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length);
   t("and no step that looked at nothing sent an entry", st.runlog.length, 0);
   t("and the run actually took some steps", (out.trace || []).length > 5, true);
   const collect = (out.trace || []).find((x) => x.step === "collect");

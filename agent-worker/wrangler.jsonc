@@ -96,9 +96,16 @@
   // from the instance by the installer.
   "durable_objects": {
     "bindings": [
-      { "name": "RUNNER", "class_name": "AgentRunner", "script_name": "agent-runner" }
+      { "name": "RUNNER", "class_name": "AgentRunner", "script_name": "agent-runner" },
+      // R91 (R085-8; K3477): this member's OWN Durable Object, one per run, so a segment outlives the request that
+      // started it. It holds the segment's inputs in memory only (R36) and runs it from an alarm; it is not a store
+      // and writes nothing of the record.
+      { "name": "SEGMENTS", "class_name": "SegmentDriver" }
     ]
   },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SegmentDriver"] }
+  ],
 
   "observability": { "enabled": true }
 }

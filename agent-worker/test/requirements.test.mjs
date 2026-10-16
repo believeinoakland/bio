@@ -520,7 +520,8 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
 
   /* N153: the state op=airun publishes (ai-runs R19) is where a resumed run continues. */
   const hop = (out) => (out.trace || []).map((x) => `${x.step}>${x.to}`);
-  const ticks = (st) => st.log.filter((l) => l.op === "airuntick");
+  /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+  const ticks = (st) => st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {})));
   await reset(mf);
   const fresh = await runOp(mf, { ...base, judgements: J() });
   const freshTicks = ticks(await planeState(mf));
@@ -641,7 +642,8 @@ section("agent-harness R2 · gate-mode is first; an undeployed mode closes mode-
     const st = await planeState(mf);
     t(`agent-harness R2: mode '${mode}' -> closed at its first step, bound mode-not-deployed, after only the run and log reads`,
       [r.out.trace?.map((x) => x.step), r.out.ended?.bound, st.log.map((l) => l.op), st.spawns, st.suggested.length],
-      [["gate-mode"], "mode-not-deployed", ["whoami", "airun", "airunlog", "airuntick", "airunclose"], 0, 0]);
+      /* R91 (R085): the last call is the segment's own `segment_end` tick, after the close. */
+      [["gate-mode"], "mode-not-deployed", ["whoami", "airun", "airunlog", "airuntick", "airunclose", "airuntick"], 0, 0]);
     const why = r.out.trace?.[0]?.why ?? "";
     t(`agent-harness R2: its why ${MODES[mode] ? "says the table holds it and has not deployed it" : "says the table does not hold the word"}, and names the deployed modes`,
       [MODES[mode] ? /not deployed yet/.test(why) : /no mode this table knows/.test(why), /deployed now: check/.test(why)],
@@ -940,7 +942,8 @@ section("R26 · after every step one tick: the spend, and an entry only when the
   const r = await runOp(mf, { ...base, judgements: [{ targets: [], level: "document", observed: "PRESENT" },
     { reports: [] }, { candidates: [], level: "meaning", observed: "LOOKED_ABSENT", governed: false }, {}] });
   const st = await planeState(mf);
-  const ticks = st.log.filter((l) => l.op === "airuntick");
+  /* R91 (R085): beside the segment's one closing `segment_end` tick, which is no step's. */
+  const ticks = st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {})));
   t("R26: one op=airuntick per step", ticks.length, (r.out.trace || []).length);
   t("R26: only the two steps whose judgement stated a look sent an entry; no entry carries NEVER_LOOKED",
     [ticks.filter((l) => (l.body.log || []).length).map((l) => l.body.log[0].subject), ticks.flatMap((l) => l.body.log || []).filter((e) => e.state === "NEVER_LOOKED").length],
@@ -1331,12 +1334,14 @@ section("agent-harness R7 · sub-sessions run, one per level, each under its con
 /* ============================================================ the invariants */
 section("R35 · its only binding is PLANE; the plane is reached by no other route");
 {
-  t("R35: wrangler declares exactly one service binding, PLANE, the runner's Container DO binding cross-script, and no other "
-    + "Durable Object, R2, KV, D1, queue or secret binding",
+  /* R91 (R085): and this member's own segment driver, one object per run, holding nothing of the record. */
+  t("R35, R91: wrangler declares exactly one service binding, PLANE, the runner's Container DO binding cross-script, the "
+    + "segment driver SEGMENTS (its own SegmentDriver), and no other Durable Object, R2, KV, D1, queue or secret binding",
     [WRANGLER_CFG.services, WRANGLER_CFG.durable_objects, ["r2_buckets", "kv_namespaces", "d1_databases", "queues",
       "secrets_store_secrets", "secrets", "containers"].filter((k) => k in WRANGLER_CFG)],
     [[{ binding: "PLANE", service: "bio-plane" }],
-     { bindings: [{ name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner" }] }, []]);
+     { bindings: [{ name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner" },
+                  { name: "SEGMENTS", class_name: "SegmentDriver" }] }, []]);
   t("R35: its vars hold no token and no plane URL", Object.keys(WRANGLER_CFG.vars), ["VERSION"]);
   await reset(mf, {});
   await runOp(mf, { ...base, account: ACCOUNTS });

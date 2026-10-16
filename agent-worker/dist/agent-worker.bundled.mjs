@@ -737,6 +737,13 @@ var ASK_PLANE_OPS = Object.freeze({
 var TRANSCRIBE_PAGES_MAX = 8;
 var TRANSCRIBE_TURNS = 2;
 var TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+var SEGMENT_END_BY = Object.freeze({
+  table: "the table",
+  plane: "the plane's own exit",
+  bound: "the segment bound",
+  refusal: "a refusal",
+  error: "an error"
+});
 
 // src/reads.mjs
 var DATA_URL = /^\s*data:[^,]{0,200};base64,/i;
@@ -1082,6 +1089,7 @@ var AI_RUN_CHECKS = {
   }
 };
 var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
+var OBSERVATION_CHECKS = AI_RUN_CHECKS;
 var LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+$`);
 
 // ../bio-plane/src/run-rules/checks.mjs
@@ -1668,6 +1676,7 @@ var OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
 ));
 var LEAD_LOOK_OUTCOMES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
 var LEAD_VOCABULARY = Object.freeze({ states: OBSERVATION_STATE_WORDS, outcomes: LEAD_LOOK_OUTCOMES });
+var DEFINITIVE_STATES = /* @__PURE__ */ new Set(["LOOKED_ABSENT", "PRESENT"]);
 var WATERMARK_BAND_CAUSE = "watermark_band";
 var MISSING_ROW_CAUSES = {
   pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
@@ -1743,6 +1752,26 @@ var CONDITION_KINDS = Object.freeze({
   "notice-lapse-near": "a project's working-on notice will lapse within 7 days (network-notices R12; queue-producers R27)",
   "notice-project-closed": "the project closed while its working-on notice was open (queue-producers R27)"
 });
+function refusal(key, detail, extra = null) {
+  const row3 = OBSERVATION_CHECKS[key];
+  return {
+    ok: false,
+    code: key,
+    check: row3.check,
+    translation: row3.translation,
+    detail,
+    ...extra && typeof extra === "object" ? extra : {}
+  };
+}
+function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
+  if (condition == null || condition === "") return null;
+  if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
+    return refusal(
+      "AI_RUN_CONDITION_UNKNOWN",
+      `'${String(condition)}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)`
+    );
+  return null;
+}
 
 // ../bio-plane/src/run-rules/rules.mjs
 var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUNS_CHECKS });
@@ -2300,7 +2329,7 @@ var WORDS = {
   RUNNER_SILENT: "Your group's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference."
 };
 async function handleSignin(req, env, deps) {
-  const { refusal: refusal5, json: json2, now = () => Date.now(), log = (line2) => console.log(line2), mint = () => crypto.randomUUID() } = deps;
+  const { refusal: refusal6, json: json2, now = () => Date.now(), log = (line2) => console.log(line2), mint = () => crypto.randomUUID() } = deps;
   const sent = doorTrace(req);
   const trace = sent.trace ?? mint();
   const memberRef = sent.memberRef ?? null;
@@ -2319,7 +2348,7 @@ async function handleSignin(req, env, deps) {
     log(JSON.stringify({ ...line, ...fields }));
     return response;
   };
-  const own2 = (code2, status, extra = {}, outcome = "refused") => written(refusal5(code2, WORDS[code2], status, { trace, ...extra }), { outcome, code: code2, ...lineOf(extra) });
+  const own2 = (code2, status, extra = {}, outcome = "refused") => written(refusal6(code2, WORDS[code2], status, { trace, ...extra }), { outcome, code: code2, ...lineOf(extra) });
   const lineOf = (extra) => "runner_text_head" in extra ? { runner_text_head: extra.runner_text_head } : {};
   const runner = env.RUNNER;
   if (!runner || typeof runner.idFromName !== "function" || typeof runner.get !== "function")
@@ -2478,7 +2507,7 @@ function conversationOf(c) {
 }
 async function handleAsk(req, env, deps) {
   const {
-    refusal: refusal5,
+    refusal: refusal6,
     json: json2,
     askPlane: askPlane2,
     planeAnswer: planeAnswer2,
@@ -2495,24 +2524,24 @@ async function handleAsk(req, env, deps) {
     now = () => Date.now()
   } = deps;
   if (typeof env.PLANE?.fetch !== "function")
-    return refusal5(
+    return refusal6(
       "PLANE_NOT_CONFIGURED",
       "this member reaches the record only through the plane service binding, and the binding is absent, so no question can be answered and none was sent anywhere.",
       503
     );
   const body = await req.json().catch(() => null);
   if (body == null || typeof body !== "object" || Array.isArray(body))
-    return refusal5("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+    return refusal6("BAD_BODY", "the request body could not be read as a JSON object.", 400);
   const untested = untestedOf(body);
-  if (untested.bad) return refusal5("BAD_BODY", UNTESTED_BAD, 400);
+  if (untested.bad) return refusal6("BAD_BODY", UNTESTED_BAD, 400);
   if (typeof body.question !== "string" || !body.question.trim() || body.question.length > QUESTION_MAX)
-    return refusal5("BAD_QUESTION", `an ask carries one question in words, of at most ${QUESTION_MAX} characters.`, 400);
+    return refusal6("BAD_QUESTION", `an ask carries one question in words, of at most ${QUESTION_MAX} characters.`, 400);
   let store = null;
   if (body.store !== void 0) {
     if (typeof body.store !== "string")
-      return refusal5("BAD_STORE", "store, when an ask names one, is the namespace's name.", 400);
+      return refusal6("BAD_STORE", "store, when an ask names one, is the namespace's name.", 400);
     if (!NAMESPACES2.includes(body.store))
-      return refusal5(
+      return refusal6(
         "NAMESPACE_UNKNOWN",
         "an ask names the namespace it reads, and no namespace by that name exists on any instance this member can be bound to, so nothing was read; they are listed beside this message.",
         400,
@@ -2522,7 +2551,7 @@ async function handleAsk(req, env, deps) {
   }
   const grant = typeof body.grant === "string" ? body.grant : "";
   if (!grant)
-    return refusal5(
+    return refusal6(
       "NO_GRANT",
       "an ask is read only under the asking member's own short-lived, read-only grant, and none arrived. This member holds no credential of its own, so nothing was read and no model was called.",
       401
@@ -2532,7 +2561,7 @@ async function handleAsk(req, env, deps) {
   const { account } = acct;
   const conv = conversationOf(body.conversation);
   if (conv.bad)
-    return refusal5(
+    return refusal6(
       "BAD_CONVERSATION",
       `conversation, when present, is this ask's earlier turns: at most ${CONVERSATION_MAX}, each {role: user or assistant, content: words}.`,
       400
@@ -2548,7 +2577,7 @@ async function handleAsk(req, env, deps) {
     plane_status: asked.status ?? null,
     plane: asked.body ?? null
   }, 403);
-  const silentNow = (asked) => refusal5(
+  const silentNow = (asked) => refusal6(
     "PLANE_SILENT",
     "the record could not be reached, so nothing was read and no model was called. A failure to answer is not an answer.",
     502,
@@ -2563,7 +2592,7 @@ async function handleAsk(req, env, deps) {
   if (pubAnswer.refused) return relayed(pub, "agentpack");
   const pack = publishedPack2(pubAnswer.result);
   if (!pack.ok)
-    return refusal5(
+    return refusal6(
       "PACK_UNDETERMINED",
       `no skill pack this ask can be instructed by was published, so no model was called: an ask answered without the pack's closed-book rule would answer from the model's own knowledge (${pack.why}).`,
       502
@@ -3248,8 +3277,8 @@ async function converse({
   trace,
   memberRef
 }) {
-  const { ref, refusal: refusal5 } = precheck(reference, runner);
-  if (refusal5) return refusal5;
+  const { ref, refusal: refusal6 } = precheck(reference, runner);
+  if (refusal6) return refusal6;
   const model = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode) ? MODEL_FOR_MODE[mode] : null;
   if (!model) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
   const charge = (serialized) => {
@@ -3681,7 +3710,7 @@ var TASK_WORDS = {
   statusreportdraft: "Draft the plan's status report from the items handed to you (the result of read_facts): where the plan stands, each sentence coming from one of those items and saying no more than it does, and name in sources the items the report rests on, each by its place in the list, 0 the first. Read nothing of the record (you have no read tool), take no position, state no breach, and never say what to file or that anyone has a claim."
 };
 async function actionDraft(body, task, env, deps, shared) {
-  const { refusal: refusal5, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
+  const { refusal: refusal6, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
   const { packFor: packFor2, grantReader: grantReader2, readTool: readTool2, draftEnding: draftEnding2, ASK_DECLARED: ASK_DECLARED2, labelled = {}, traced = {} } = shared;
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
@@ -3689,22 +3718,22 @@ async function actionDraft(body, task, env, deps, shared) {
   const grantSent = body.grant !== void 0 && body.grant !== null;
   const firsthand = body.firsthand === void 0 ? null : body.firsthand;
   if (grantSent && !draftMayRead({ kind: KIND_OF[task.op], firsthand, suggestions: account.suggestions === true }))
-    return refusal5("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : task.op === "statusreportdraft" ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
+    return refusal6("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : task.op === "statusreportdraft" ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
   if (!grantSent && readsRecord(task.op))
-    return refusal5(
+    return refusal6(
       "DRAFT_NEEDS_GRANT",
       "this draft is made from the record the member asked about, read only under the member's own grant, and none was sent, so nothing was read and no model was called.",
       400
     );
   if (grantSent && !(typeof body.grant === "string" && body.grant))
-    return refusal5("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
+    return refusal6("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
   const got = await packFor2(grant, body, env, deps);
   if (got.refusal) return got.refusal;
   const pub = got.pub;
   const layer = pub.ok ? pub.pack.disclosed?.[ACTION_DRAFTING_LAYER] : null;
   if (!pub.ok || !isObject3(layer) || layer.sourcing === "absent")
-    return refusal5(
+    return refusal6(
       "PACK_UNDETERMINED",
       `no skill pack with its action-drafting layer was published for this draft, so no model was called: a draft made without that layer would not be held to the rules on what the assistant may say about an action (${pub.ok ? "the pack carries that layer as a stated absence, or none" : pub.why}).`,
       502
@@ -3754,14 +3783,14 @@ ${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation o
   if (conv.answer !== void 0) {
     const draft = actionDraftOf(task, conv.answer);
     if (draft) return json2({ ok: true, task: taskNamed(task), draft, ...labelled, label: { kind: "machine" }, ...spent });
-    return refusal5(
+    return refusal6(
       "DRAFT_UNFORMED",
       "the model answered without a draft of the task's shape, so nothing is returned.",
       502,
       { ending: "unformed", ...spent }
     );
   }
-  return draftEnding2(refusal5, conv, spent);
+  return draftEnding2(refusal6, conv, spent);
 }
 
 // src/draft.mjs
@@ -3856,21 +3885,21 @@ function draftOf(op, answer) {
   return typeof answer.focus === "string" && typeof answer.purpose === "string" && (answer.focus.trim() || answer.purpose.trim()) ? { focus: answer.focus, purpose: answer.purpose } : null;
 }
 async function handleDraft(req, env, deps) {
-  const { refusal: refusal5, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
+  const { refusal: refusal6, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
   if (typeof env.PLANE?.fetch !== "function")
-    return refusal5(
+    return refusal6(
       "PLANE_NOT_CONFIGURED",
       "this member reaches the record only through the plane service binding, and the binding is absent, so no draft was made and no model was called.",
       503
     );
   const body = await req.json().catch(() => null);
-  if (!isObject4(body)) return refusal5("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject4(body)) return refusal6("BAD_BODY", "the request body could not be read as a JSON object.", 400);
   const untested = untestedOf(body);
-  if (untested.bad) return refusal5("BAD_BODY", UNTESTED_BAD, 400);
+  if (untested.bad) return refusal6("BAD_BODY", UNTESTED_BAD, 400);
   const labelled = untested.label ? { untested: untested.label } : {};
   const task = taskOf(body.task);
   if (!task)
-    return refusal5(
+    return refusal6(
       "BAD_TASK",
       `a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a plan's status report from the items handed in ({op: statusreportdraft, plan, items}) or a passage of the group's writing translated into a member's language ({op: readtranslate, language, text, from_language?}: text of 1 to ${READ_TEXT_MAX} characters). What arrived is none of these.`,
       400
@@ -3888,26 +3917,26 @@ async function handleDraft(req, env, deps) {
     );
   const told = toldOf(task.op, body.told);
   if (told == null)
-    return refusal5("BAD_TOLD", task.op === "writinghelp" ? `a draft works from what the member typed: words of 1 to ${TOLD_MAX} characters.` : `a draft of the group's description works from the administrator's answers: a list of {question, text}, each text at most ${ANSWER_TEXT_MAX} characters, not all of them empty.`, 400);
+    return refusal6("BAD_TOLD", task.op === "writinghelp" ? `a draft works from what the member typed: words of 1 to ${TOLD_MAX} characters.` : `a draft of the group's description works from the administrator's answers: a list of {question, text}, each text at most ${ANSWER_TEXT_MAX} characters, not all of them empty.`, 400);
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
   const grantSent = body.grant !== void 0 && body.grant !== null;
   if (grantSent && (account.suggestions !== true || body.firsthand === true))
-    return refusal5(
+    return refusal6(
       "DRAFT_READ_NOT_ALLOWED",
       body.firsthand === true ? "this field records what the member saw, so its draft only words what they told and reads nothing; a grant to read was sent with it, so nothing was done." : "a draft reads what the group holds only when the member's own suggestions switch is on, and it is off; a grant to read was sent with it, so nothing was done.",
       400
     );
   if (grantSent && !(typeof body.grant === "string" && body.grant))
-    return refusal5("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
+    return refusal6("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
   const gotPack = await packFor(grant, body, env, deps);
   if (gotPack.refusal) return gotPack.refusal;
   const pub = gotPack.pub;
   const layer = pub.ok ? pub.pack.disclosed?.[WRITING_HELP_LAYER] : null;
   if (!pub.ok || !isObject4(layer) || layer.sourcing === "absent")
-    return refusal5(
+    return refusal6(
       "PACK_UNDETERMINED",
       `no skill pack with its writing-help layer was published for this draft, so no model was called: a draft made without that layer would not be held to the member's own words (${pub.ok ? "the pack carries no writing_help layer" : pub.why}).`,
       502
@@ -3956,21 +3985,21 @@ A: ${a.text}`).join("\n\n")}`;
   if (got.answer !== void 0) {
     const draft = draftOf(task.op, got.answer);
     if (draft) return json2({ ok: true, task, draft, ...labelled, label: { kind: "machine" }, ...spent });
-    return refusal5(
+    return refusal6(
       "DRAFT_UNFORMED",
       "the model answered without a draft of the task's shape, so nothing is returned.",
       502,
       { ending: "unformed", ...spent }
     );
   }
-  return draftEnding(refusal5, got, spent);
+  return draftEnding(refusal6, got, spent);
 }
 async function packFor(grant, body, env, deps) {
-  const { refusal: refusal5, json: json2, askPlane: askPlane2, planeAnswer: planeAnswer2, publishedPack: publishedPack2 } = deps;
+  const { refusal: refusal6, json: json2, askPlane: askPlane2, planeAnswer: planeAnswer2, publishedPack: publishedPack2 } = deps;
   if (!grant) return { pub: publishedPack2({ pack: body.pack ?? null }) };
   const asked = await askPlane2(env, "agentpack", grant, null);
   if (!asked.reached)
-    return { refusal: refusal5("PLANE_SILENT", "the record could not be reached, so nothing was read and no model was called.", 502, { detail_from_binding: asked.detail ?? null }) };
+    return { refusal: refusal6("PLANE_SILENT", "the record could not be reached, so nothing was read and no model was called.", 502, { detail_from_binding: asked.detail ?? null }) };
   const a = planeAnswer2(asked, "agentpack");
   if (a.refused)
     return { refusal: json2({
@@ -4014,22 +4043,22 @@ function grantReader({ env, grant, meter, deps }) {
     return a.refused ? { content, error: true } : { content };
   };
 }
-function draftEnding(refusal5, got, spent) {
+function draftEnding(refusal6, got, spent) {
   if (got.stopped || got.exhausted)
-    return refusal5(
+    return refusal6(
       "DRAFT_BOUND_REACHED",
       `the draft reached its ${got.stopped ?? "turns"} bound before it was made, so nothing is returned.`,
       409,
       { ending: got.stopped ? "stopped" : "exhausted", bound: got.stopped ?? "turns", ...spent }
     );
   if (got.silent)
-    return refusal5(
+    return refusal6(
       "MODEL_SILENT",
       "the model could not be reached, so nothing is returned.",
       502,
       { ending: "silent", detail_from_model: got.silent.detail ?? null, ...spent }
     );
-  return refusal5(
+  return refusal6(
     "MODEL_REFUSED",
     "the model's provider refused the call, or the model declined, so nothing is returned. Its own error type and status are beside this, unchanged.",
     502,
@@ -4076,7 +4105,7 @@ function translationOf(task, answer) {
 }
 async function translationDraft(body, task, env, deps, labelled = {}, traced = {}) {
   const {
-    refusal: refusal5,
+    refusal: refusal6,
     json: json2,
     publishedPack: publishedPack2,
     accountOf: accountOf2,
@@ -4089,7 +4118,7 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
   if (body.grant !== void 0 && body.grant !== null && !draftMayRead({ kind: "translation", firsthand: false, suggestions: account.suggestions === true }))
-    return refusal5(
+    return refusal6(
       "DRAFT_READ_NOT_ALLOWED",
       "a translation draft reads nothing of what the group holds; a grant to read was sent with it, so nothing was done.",
       400
@@ -4097,7 +4126,7 @@ async function translationDraft(body, task, env, deps, labelled = {}, traced = {
   const pub = publishedPack2({ pack: body.pack ?? null });
   const layer = pub.ok ? pub.pack.disclosed?.[TRANSLATION_LAYER] : null;
   if (!pub.ok || !isObject4(layer) || layer.sourcing === "absent")
-    return refusal5(
+    return refusal6(
       "PACK_UNDETERMINED",
       `no skill pack with its interface-translation layer was published for this draft, so no model was called: a draft made without that layer would not keep each word's meaning and placeholders as the word list holds them (${pub.ok ? "the pack carries that layer as a stated absence, or none" : pub.why}).`,
       502
@@ -4150,14 +4179,14 @@ ${JSON.stringify(task.words[0])}`;
       label: { kind: "machine" },
       ...spent
     });
-    return refusal5(
+    return refusal6(
       "DRAFT_UNFORMED",
       "the model answered without a draft of the task's shape, so nothing is returned.",
       502,
       { ending: "unformed", ...spent }
     );
   }
-  return draftEnding(refusal5, got, spent);
+  return draftEnding(refusal6, got, spent);
 }
 function readingTool() {
   return {
@@ -4176,7 +4205,7 @@ function readingOf(task, answer) {
 }
 async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   const {
-    refusal: refusal5,
+    refusal: refusal6,
     json: json2,
     publishedPack: publishedPack2,
     accountOf: accountOf2,
@@ -4189,7 +4218,7 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
   if (body.grant !== void 0 && body.grant !== null && !draftMayRead({ kind: "reading", firsthand: false, suggestions: account.suggestions === true }))
-    return refusal5(
+    return refusal6(
       "DRAFT_READ_NOT_ALLOWED",
       "a translation of the group's writing reads nothing of what the group holds, only the passage it is given; a grant to read was sent with it, so nothing was done.",
       400
@@ -4197,7 +4226,7 @@ async function readingDraft(body, task, env, deps, labelled = {}, traced = {}) {
   const pub = publishedPack2({ pack: body.pack ?? null });
   const layer = pub.ok ? pub.pack.disclosed?.[READING_LAYER] : null;
   if (!pub.ok || !isObject4(layer) || layer.sourcing === "absent")
-    return refusal5(
+    return refusal6(
       "PACK_UNDETERMINED",
       `no skill pack with its reading-translation layer was published for this translation, so no model was called: a translation made without that layer would not be held to the passage's own words (${pub.ok ? "the pack carries that layer as a stated absence, or none" : pub.why}).`,
       502
@@ -4234,14 +4263,14 @@ You have no read tool and read nothing: translate only the passage you are given
   if (got.answer !== void 0) {
     const draft = readingOf(task, got.answer);
     if (draft) return json2({ ok: true, task, draft, ...labelled, label: { kind: "machine" }, ...spent });
-    return refusal5(
+    return refusal6(
       "DRAFT_UNFORMED",
       "the model answered without a translation, so nothing is returned.",
       502,
       { ending: "unformed", ...spent }
     );
   }
-  return draftEnding(refusal5, got, spent);
+  return draftEnding(refusal6, got, spent);
 }
 
 // src/transcribe.mjs
@@ -4323,14 +4352,14 @@ function pageOutcome(got) {
   return { ending: "refused" };
 }
 async function handleTranscribe(req, env, deps) {
-  const { refusal: refusal5, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
+  const { refusal: refusal6, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
   const body = await req.json().catch(() => null);
-  if (!isObject5(body)) return refusal5("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject5(body)) return refusal6("BAD_BODY", "the request body could not be read as a JSON object.", 400);
   if (!(typeof body.capture_sha === "string" && SHA.test(body.capture_sha)))
-    return refusal5("BAD_SHA", "capture_sha names the capture the pages are of: 64 lowercase hexadecimal characters. Nothing was transcribed.", 400);
+    return refusal6("BAD_SHA", "capture_sha names the capture the pages are of: 64 lowercase hexadecimal characters. Nothing was transcribed.", 400);
   const read = pagesOf(body.pages);
   if (read.fault)
-    return refusal5("BAD_PAGES", `pages is 1 to ${TRANSCRIBE_PAGES_MAX} pictures {page, media_type, data}, each page a distinct non-negative whole number, media_type ${TRANSCRIBE_MEDIA_TYPE} and data the PNG as base64 of at most ${TRANSCRIBE_IMAGE_MAX_BYTES} bytes; ${read.fault}. Nothing was transcribed.`, 400);
+    return refusal6("BAD_PAGES", `pages is 1 to ${TRANSCRIBE_PAGES_MAX} pictures {page, media_type, data}, each page a distinct non-negative whole number, media_type ${TRANSCRIBE_MEDIA_TYPE} and data the PNG as base64 of at most ${TRANSCRIBE_IMAGE_MAX_BYTES} bytes; ${read.fault}. Nothing was transcribed.`, 400);
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
@@ -4371,12 +4400,12 @@ async function handleTranscribe(req, env, deps) {
   }
   const spent = { usage: usageKnown ? usage : null, calls: reached ? calls : null };
   if (!done.length && notDone.every((p) => p.ending === "silent" || p.ending === "refused"))
-    return firstFailed.silent ? refusal5(
+    return firstFailed.silent ? refusal6(
       "MODEL_SILENT",
       "the model could not be reached, so nothing was transcribed.",
       502,
       { ending: "silent", detail_from_model: firstFailed.silent.detail ?? null, ...spent }
-    ) : refusal5(
+    ) : refusal6(
       "MODEL_REFUSED",
       "the model's provider refused the call, or the model declined, so nothing was transcribed. Its own error type and status are beside this, unchanged.",
       502,
@@ -4432,7 +4461,7 @@ var REPORT_KEYS = {
 };
 var CITATION_KEYS = { address: true };
 var SUBSESSION_OPS = ["meaningrows"];
-function refusal3(code, detail, extra) {
+function refusal4(code, detail, extra) {
   return { ok: false, code, reason: code, detail, ...extra || {} };
 }
 function deepFreeze(value) {
@@ -4442,17 +4471,17 @@ function deepFreeze(value) {
 }
 function spawnContract({ level, payload } = {}) {
   if (!LEVELS.includes(String(level)))
-    return refusal3(
+    return refusal4(
       "SPAWN_LEVEL_UNKNOWN",
       `'${String(level)}' is not one of the four levels a run searches: ${LEVELS.join(", ")}. A fan-out that spawned a level nobody declared would be searching somewhere the observation log has no word for.`
     );
   if (payload == null || typeof payload !== "object")
-    return refusal3(
+    return refusal4(
       "SPAWN_PAYLOAD_MISSING",
       "the plane returned no search-half payload for this run, and this member composes none of its own: a run's conditions are the record's. There is nothing to brief a sub-session with."
     );
   if (Object.prototype.hasOwnProperty.call(payload, "bias"))
-    return refusal3(
+    return refusal4(
       "SPAWN_PAYLOAD_CARRIES_LENS",
       "the search-half payload arrived carrying the run's bias manifest. \xA714: the search half never receives the lens \u2014 bias never shapes what is captured or searched, only how conclusions are weighed \u2014 and the spawn contract omits it BY CONSTRUCTION, so there should be no field here to read. This member refuses rather than ignoring it: a search half that has been handed the lens has been handed it, and a run that continued could not later prove it did not use it."
     );
@@ -4509,94 +4538,94 @@ function spawnContract({ level, payload } = {}) {
 var size = (v) => JSON.stringify(v ?? null).length;
 function checkReport(report) {
   if (report == null || typeof report !== "object" || Array.isArray(report))
-    return refusal3(
+    return refusal4(
       "REPORT_NOT_AN_OBJECT",
       "a sub-session returns a REPORT object. What arrived is not one."
     );
   const unknown = Object.keys(report).filter((k) => !(k in REPORT_KEYS));
   if (unknown.length)
-    return refusal3(
+    return refusal4(
       "REPORT_UNKNOWN_FIELD",
       `a REPORT carries exactly ${Object.keys(REPORT_KEYS).join(", ")} \u2014 ${unknown.join(", ")} ${unknown.length === 1 ? "is not one of them" : "are not among them"}. \xA714b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.`,
       { fields: unknown }
     );
   const missing = Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k] && (report[k] == null || report[k] === ""));
   if (missing.length)
-    return refusal3(
+    return refusal4(
       "REPORT_INCOMPLETE",
       `a REPORT must name ${missing.join(" and ")}: which level was searched and what the search ESTABLISHED are the two things a parent cannot derive for itself.`,
       { fields: missing }
     );
   if (!LEVELS.includes(String(report.level)))
-    return refusal3(
+    return refusal4(
       "REPORT_LEVEL_UNKNOWN",
       `'${String(report.level)}' is not one of ${LEVELS.join(", ")}. Absence at one level is not evidence of absence at the next, so a report that cannot say which level it is about establishes nothing at any of them.`
     );
   if (!Object.prototype.hasOwnProperty.call(REPORT_STATES, String(report.state)))
-    return refusal3(
+    return refusal4(
       "REPORT_STATE_UNKNOWN",
       `'${String(report.state)}' is not one of ${Object.keys(REPORT_STATES).join(", ")} (D-129). A report that cannot say what it ESTABLISHED is a report a later reader cannot check.`
     );
   if (LOOKED_STATES2.has(String(report.state)) && !(typeof report.observed_at === "string" && report.observed_at.trim() !== ""))
-    return refusal3(
+    return refusal4(
       "REPORT_UNLOCATED",
       `a '${String(report.state)}' report claims something about the world and must say WHERE the search that establishes it was written in the run's observation log. A claim nobody can locate is a claim nobody can check, which is the whole reason the log exists (\xA711).`
     );
   const cites = report.citations == null ? [] : report.citations;
   if (!Array.isArray(cites))
-    return refusal3(
+    return refusal4(
       "REPORT_CITATIONS_NOT_A_LIST",
       "`citations` is a list of addresses the parent can re-read. What arrived is not a list."
     );
   if (FOUND_STATES.has(String(report.state)) && cites.length === 0)
-    return refusal3(
+    return refusal4(
       "REPORT_NO_CITATION",
       `a '${String(report.state)}' report says something IS there and must cite where, by address. \xA714b.1: the contract is a REPORT with a citation and the parent re-reads by address. An absence cites nothing and is not held to this, because there would be nothing to cite.`
     );
   if (cites.length > CITATIONS_MAX)
-    return refusal3(
+    return refusal4(
       "REPORT_OVER_BOUND",
       `${cites.length} citations exceed the ${CITATIONS_MAX} a single report may carry. A report is a conclusion with addresses, and a list long enough to be the reading itself is the reading.`,
       { bound: "citations", limit: CITATIONS_MAX, got: cites.length }
     );
   for (const c of cites) {
     if (c == null || typeof c !== "object" || Array.isArray(c))
-      return refusal3(
+      return refusal4(
         "REPORT_CITATION_NOT_AN_ADDRESS",
         "a citation is an object carrying the address the parent re-reads by. What arrived is not one."
       );
     const extra = Object.keys(c).filter((k) => !(k in CITATION_KEYS));
     if (extra.length)
-      return refusal3(
+      return refusal4(
         "REPORT_CITATION_NOT_AN_ADDRESS",
         `a citation carries exactly ${Object.keys(CITATION_KEYS).join(", ")} \u2014 ${extra.join(", ")} is not part of it. The parent re-reads BY ADDRESS; a citation that carried the content would be the document arriving inside the thing that exists to replace it.`,
         { fields: extra }
       );
     if (!(typeof c.address === "string" && c.address.trim() !== ""))
-      return refusal3(
+      return refusal4(
         "REPORT_CITATION_NOT_AN_ADDRESS",
         "a citation must carry a non-empty address. An address the parent cannot re-read by is not a citation, it is a claim."
       );
     if (c.address.length > ADDRESS_MAX)
-      return refusal3(
+      return refusal4(
         "REPORT_OVER_BOUND",
         `an address of ${c.address.length} characters exceeds ${ADDRESS_MAX}. An address is how the parent re-reads; something this long is content wearing an address's field.`,
         { bound: "address", limit: ADDRESS_MAX, got: c.address.length }
       );
   }
   if (report.summary != null && typeof report.summary !== "string")
-    return refusal3(
+    return refusal4(
       "REPORT_SUMMARY_NOT_PROSE",
       "`summary` is what the sub-session concluded, in prose. A structure here is the reading itself arriving under the field that exists to replace it."
     );
   if (typeof report.summary === "string" && report.summary.length > SUMMARY_MAX)
-    return refusal3(
+    return refusal4(
       "REPORT_OVER_BOUND",
       `a summary of ${report.summary.length} characters exceeds ${SUMMARY_MAX}. \xA714b.1: a sub-session hands back what it FOUND, never the documents \u2014 and a prose field with no ceiling is where a document arrives when every other door is shut.`,
       { bound: "summary", limit: SUMMARY_MAX, got: report.summary.length }
     );
   if (size(report) > REPORT_MAX_BYTES)
-    return refusal3(
+    return refusal4(
       "REPORT_OVER_BOUND",
       `this report serialises to ${size(report)} bytes against a ${REPORT_MAX_BYTES}-byte ceiling computed from the contract's own fields. Whatever it is carrying, it is not a conclusion.`,
       { bound: "report", limit: REPORT_MAX_BYTES, got: size(report) }
@@ -4809,7 +4838,7 @@ var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
      a header inviting a browser origin was an invitation to a caller it must never have. */
   headers: { "content-type": "application/json" }
 });
-var refusal4 = (code, detail, status, extra) => json({ ok: false, reason: code, code, detail, worker: "agent-worker", ...extra || {} }, status);
+var refusal5 = (code, detail, status, extra) => json({ ok: false, reason: code, code, detail, worker: "agent-worker", ...extra || {} }, status);
 var SURFACE = {
   run: { method: "POST", mutating: false },
   ask: { method: "POST", mutating: false },
@@ -4844,7 +4873,18 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
   return { reached: true, status: res.status, body: parsed };
 }
 var MAX_STEPS = 400;
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null }) {
+async function driveHarness(env, {
+  runId,
+  store,
+  credential,
+  judgements,
+  maxSteps,
+  account = null,
+  model = null,
+  deadline = null,
+  progress = null,
+  preflight = false
+}) {
   let calls = 0;
   const call = (op, query, body) => {
     calls += 1;
@@ -4866,7 +4906,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     ) };
   const session = runRead.result?.session ?? null;
   if (!session)
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "NO_SUCH_RUN",
       "the plane holds no run under that id in this namespace, so there is nothing to continue. This member opens no run: a run's identity and its conditions are the plane's, and a member that could open one would be a machine deciding what it was formed under.",
       404,
@@ -4874,7 +4914,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     ) };
   const recordedPayer = session.principal?.ref ?? null;
   if (account && recordedPayer !== account.member)
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "RUN_NAMES_A_DIFFERENT_PAYER",
       `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group" ? "the group's API key, serving that member" : account.level === "project" ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.`,
       409,
@@ -4888,7 +4928,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const pack = publishedPack(pub.result);
     const recordedSkill = session.principal?.skill ?? null;
     if (!pack.ok || recordedSkill !== pack.pack.version)
-      return { refusal: refusal4(
+      return { refusal: refusal5(
         "SKILL_VERSION_MISMATCH",
         (pack.ok ? "the run's record says it runs under one skill pack and the pack the plane publishes is another, so its model would be instructed by words the record does not name." : `the plane published no skill pack this member can instruct a model with, so the pack's version is UNDETERMINED and cannot be held to the one the run recorded (${pack.why}).`) + " No turn was taken; the run is resumable once the two agree.",
         409,
@@ -4966,8 +5006,14 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   const resumed = resumeFrom(session.state ?? null, FLOW);
   state = resumed.at ? { ...state, ...resumed.state, resumeAt: resumed.at, resumeBasis: null } : { ...state, resumeAt: null, resumeBasis: resumed.basis };
   let jx = 0;
-  let ended = null, steps = 0, segmentStopped = null;
+  let ended = null, steps = 0, segmentStopped = null, closeRefused = false;
+  if (preflight) return { ready: true };
+  if (progress) progress.started = true;
   while (steps < maxSteps) {
+    if (deadline != null && Date.now() >= deadline) {
+      segmentStopped = "wall";
+      break;
+    }
     steps += 1;
     const callsAtStepStart = calls;
     const row3 = FLOW[state.step];
@@ -5007,7 +5053,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (judgement !== void 0) {
       const applied = planMode ? applyPlanJudgement(state, judgement) : applyJudgement(state, judgement);
       if (!applied.ok)
-        return { refusal: refusal4(
+        return { refusal: refusal5(
           "JUDGEMENT_OVERREACH",
           applied.detail,
           400,
@@ -5024,7 +5070,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       break;
     }
     if (work.contract)
-      return { refusal: refusal4(
+      return { refusal: refusal5(
         work.contract.code,
         work.contract.detail,
         502,
@@ -5057,7 +5103,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     });
     const spentThisStep = calls - callsAtStepStart + 1;
     const consume = { ...work.consume || {}, runtime: spentThisStep };
-    const entry = stepLog(state, decision);
+    const entry = loggable(stepLog(state, decision)).entry;
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     const after = planMode ? planAdvance(state, decision) : advance(state, decision);
     let published = null;
@@ -5083,7 +5129,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");
     const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
-    if (noRun) {
+    const tickRefused = !tickAnswer.refused && !noRun && tickAnswer.result?.ticked === false && tickAnswer.result?.code != null;
+    if (noRun || tickRefused) {
       refusals.push({
         at: "airuntick",
         code: tickAnswer.result.code ?? null,
@@ -5122,7 +5169,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         ended = {
           bound: t.ended.bound ?? null,
           condition: t.ended.condition ?? null,
-          by: "the plane's own exit"
+          by: SEGMENT_END_BY.plane
         };
         break;
       }
@@ -5137,10 +5184,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       if (closed.silent) return { refusal: planeSilent(closed.silent) };
       if (closed.refused) {
         refusals.push(closed.refused);
+        closeRefused = true;
         state = { ...state, step: "close", pass: after.pass };
         break;
       }
-      ended = { bound: decision.bound || "completed", by: "the table" };
+      ended = { bound: decision.bound || "completed", by: SEGMENT_END_BY.table };
       state = { ...state, step: "close", pass: after.pass };
       break;
     }
@@ -5184,8 +5232,29 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        which is "nothing was counted", not "nothing is held". */
     holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...state.budget[b] || { allowed: 0, consumed: 0 } })),
-    segmentStopped
+    segmentStopped,
+    /* R91: how this segment ended, for its `segment_end`: the run ended (by the table or the plane's exit), the plane
+       refused its close, or the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
+    segmentEnd: ended ? { by: ended.by, done: true } : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false } : { by: SEGMENT_END_BY.bound, done: false }
   };
+}
+var LOG_DETAIL_MAX = 500;
+function loggable(entry) {
+  if (!entry || typeof entry !== "object") return { entry, governedDowngrade: null };
+  const out = { ...entry };
+  const said = [];
+  if (out.condition != null && out.condition !== "" && checkCondition(out.condition) !== null) {
+    said.push(`condition stated as ${JSON.stringify(String(out.condition).slice(0, 160))}, which is not a word of the record's condition vocabulary, so none is recorded`);
+    out.condition = null;
+  }
+  let governedDowngrade = null;
+  if (out.governed === true && DEFINITIVE_STATES.has(String(out.state))) {
+    governedDowngrade = String(out.state);
+    said.push(`stated ${governedDowngrade} while our own pacing governed the look, which supports only LOOKED_INDETERMINATE (D-104)`);
+    out.state = "LOOKED_INDETERMINATE";
+  }
+  if (said.length) out.detail = [...said, String(out.detail ?? "")].filter(Boolean).join("; ").slice(0, LOG_DETAIL_MAX);
+  return { entry: out, governedDowngrade };
 }
 function planeAnswer(asked, at2) {
   if (!asked.reached) return { at: at2, silent: asked };
@@ -5582,7 +5651,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     const report = { ...said, level: contract.level };
     if (LOOKED_STATES2.has(String(report.state))) {
       const seq = logSeq ? logSeq.next() : null;
-      const entry = {
+      const { entry, governedDowngrade } = loggable({
         level: contract.level,
         subject: `sub-session ${contract.level} -> report`,
         state: report.state === "PRESENT" ? "LOOKED_INDETERMINATE" : report.state,
@@ -5591,13 +5660,15 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         terminal: false,
         bound: null,
         detail: String(typeof report.summary === "string" ? report.summary : "").slice(0, 500)
-      };
+      });
+      if (governedDowngrade && report.state === governedDowngrade) report.state = "LOOKED_INDETERMINATE";
       const tick = planeAnswer(await call("airuntick", null, { run: runId, log: [entry] }), "airuntick");
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      if (tick.refused || bad.length || t.found === false) {
-        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
+      const whole = t.found === false || t.ticked === false && t.code != null;
+      if (tick.refused || bad.length || whole) {
+        for (const r of tick.refused ? [tick.refused] : whole ? [t] : bad)
           logSeq?.refused({
             at: "airuntick.log",
             step: "fanout",
@@ -5654,13 +5725,13 @@ function modelHalf({ reference, runner, meter, suggestions, traced = {} }) {
     }
   };
 }
-var modelSilent = (silent2, runId) => refusal4(
+var modelSilent = (silent2, runId) => refusal5(
   "MODEL_SILENT",
   "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is resumable; nothing the table did before this step is lost.",
   502,
   { run_id: runId, detail_from_model: silent2?.detail ?? null }
 );
-var modelRefused = (refused2, runId) => refusal4(
+var modelRefused = (refused2, runId) => refusal5(
   "MODEL_REFUSED",
   "the model API refused the call, or the model declined, so no judgement was made at this step and the segment stopped. The API's own error type and status are beside this, unchanged.",
   502,
@@ -5671,7 +5742,7 @@ var modelRefused = (refused2, runId) => refusal4(
     model_message: refused2?.message ?? null
   }
 );
-var planeSilent = (asked) => refusal4(
+var planeSilent = (asked) => refusal5(
   "PLANE_SILENT",
   "the plane could not be reached, so this member knows nothing about the record and says so. A failure to answer is not an answer, and reporting one as the other would make this member's own fault read as a fact about the record.",
   502,
@@ -5690,7 +5761,7 @@ var planeRefused = (runId, store, asked) => json({
 var PROJECT_ID_MAX = 200;
 async function accountOf(body) {
   if (body.claude_accounts !== void 0)
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "BAD_ACCOUNT",
       "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call carries the one account that serves the member's act, as account.",
       400,
@@ -5698,21 +5769,21 @@ async function accountOf(body) {
     ) };
   const a = body.account;
   if (a === void 0 || a === null)
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "NO_ACCOUNT",
       "this call carries no Claude account for the act of the member who started it: neither the member's own reference nor the group's API key serves that act (K1502, K1755), so the capability is UNAVAILABLE and nothing was done.",
       409,
       { capability: "unavailable" }
     ) };
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 && a.secret !== null && typeof a.secret !== "string" || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own, its secret the token held for that member, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
   if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       "SIGNIN_NOT_HELD",
       "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account again in your settings, then try again.",
       409,
@@ -5720,7 +5791,7 @@ async function accountOf(body) {
     ) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
-    return { refusal: refusal4(
+    return { refusal: refusal5(
       CASCADE_NO_ACCOUNT,
       cascade.detail,
       409,
@@ -5730,65 +5801,20 @@ async function accountOf(body) {
 }
 async function handleRun(req, env) {
   if (typeof env.PLANE?.fetch !== "function")
-    return refusal4(
+    return refusal5(
       "PLANE_NOT_CONFIGURED",
       "this member reaches the record only through the plane service binding, and the binding is absent. It holds no store binding and no credential of its own, so with no plane there is nothing it can do and nothing it could pretend to have done.",
       503
     );
   const body = await req.json().catch(() => null);
   if (body == null)
-    return refusal4("BAD_BODY", "the request body could not be read as JSON.", 400);
-  const runId = typeof body.run_id === "string" ? body.run_id : "";
-  const store = typeof body.store === "string" ? body.store : "";
-  const credential = typeof body.credential === "string" ? body.credential : "";
-  if (!runId || runId.length > 200)
-    return refusal4(
-      "BAD_RUN_ID",
-      "a run is identified by the plane and this member mints no identity of its own; the caller must say which run this segment belongs to.",
-      400
-    );
-  if (typeof body.store !== "string")
-    return refusal4(
-      "BAD_STORE",
-      "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
-      400
-    );
-  if (!NAMESPACES.includes(store))
-    return refusal4(
-      "NAMESPACE_UNKNOWN",
-      "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
-      400,
-      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
-    );
-  if (!credential)
-    return refusal4(
-      "NO_CREDENTIAL",
-      "this member holds no credential of its own and cannot act except under one it is handed. There is no fallback identity here by design: a worker that could act unattended would be acting as nobody, and nothing it did could be attributed.",
-      401
-    );
-  if (!AI_TOKEN_SHAPE.test(credential))
-    return refusal4(
-      "BAD_CREDENTIAL_SHAPE",
-      "the credential handed to this member is not shaped like one this plane issues. Whether a well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and is never made here.",
-      400
-    );
-  const acct = await accountOf(body);
-  if (acct.refusal) return acct.refusal;
-  const { account, cascade } = acct;
-  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
-  const requested = body.turns == null ? bound : Number(body.turns);
-  if (!Number.isFinite(requested) || requested < 1)
-    return refusal4("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400);
-  if (requested > bound)
-    return refusal4(
-      "SEGMENT_OVER_BOUND",
-      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a longer segment would meet. Split the run across segments \u2014 resuming is what segments are for.`,
-      400,
-      { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE }
-    );
+    return refusal5("BAD_BODY", "the request body could not be read as JSON.", 400);
+  const checked = await checkRun(body, env);
+  if (checked.refusal) return checked.refusal;
+  const { runId, store, credential } = checked;
   const asked = await askPlane(env, "whoami", credential, store);
   if (!asked.reached)
-    return refusal4(
+    return refusal5(
       "PLANE_SILENT",
       "the plane could not be reached, so this member knows nothing about the credential it was handed and says so. A failure to answer is not an answer, and reporting one as the other would make this member's own fault read as a fact about the record.",
       502,
@@ -5805,6 +5831,110 @@ async function handleRun(req, env) {
       plane_status: asked.status,
       plane: asked.body
     }, 403);
+  if (segmentsBound(env)) {
+    const before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    if (!before.ready) return before.response;
+    let res;
+    try {
+      const stub = env.SEGMENTS.get(env.SEGMENTS.idFromName(runId));
+      const traced = doorTrace(req);
+      res = await stub.fetch("http://segment/start", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...traced.trace ? { [TRACE_HEADER]: traced.trace } : {},
+          ...traced.memberRef ? { [MEMBER_REF_HEADER]: traced.memberRef } : {}
+        },
+        body: JSON.stringify({ body, whoami: asked.body })
+      });
+    } catch (e) {
+      return refusal5(
+        "SEGMENT_NOT_ACCEPTED",
+        "the segment driver could not be reached, so no segment was started and the run stays as it was; it is resumable.",
+        502,
+        { run_id: runId, detail_from_binding: String(e && e.message || e).slice(0, 200) }
+      );
+    }
+    if (res.status === 202) return json({ accepted: true, run_id: runId }, 202);
+    return res;
+  }
+  return runSegment(env, checked, body, asked.body, doorTrace(req));
+}
+async function checkRun(body, env) {
+  const runId = typeof body.run_id === "string" ? body.run_id : "";
+  const store = typeof body.store === "string" ? body.store : "";
+  const credential = typeof body.credential === "string" ? body.credential : "";
+  if (!runId || runId.length > 200)
+    return { refusal: refusal5(
+      "BAD_RUN_ID",
+      "a run is identified by the plane and this member mints no identity of its own; the caller must say which run this segment belongs to.",
+      400
+    ) };
+  if (typeof body.store !== "string")
+    return { refusal: refusal5(
+      "BAD_STORE",
+      "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
+      400
+    ) };
+  if (!NAMESPACES.includes(store))
+    return { refusal: refusal5(
+      "NAMESPACE_UNKNOWN",
+      "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
+      400,
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
+    ) };
+  if (!credential)
+    return { refusal: refusal5(
+      "NO_CREDENTIAL",
+      "this member holds no credential of its own and cannot act except under one it is handed. There is no fallback identity here by design: a worker that could act unattended would be acting as nobody, and nothing it did could be attributed.",
+      401
+    ) };
+  if (!AI_TOKEN_SHAPE.test(credential))
+    return { refusal: refusal5(
+      "BAD_CREDENTIAL_SHAPE",
+      "the credential handed to this member is not shaped like one this plane issues. Whether a well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and is never made here.",
+      400
+    ) };
+  const acct = await accountOf(body);
+  if (acct.refusal) return { refusal: acct.refusal };
+  const { account, cascade } = acct;
+  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
+  const requested = body.turns == null ? bound : Number(body.turns);
+  if (!Number.isFinite(requested) || requested < 1)
+    return { refusal: refusal5("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400) };
+  if (requested > bound)
+    return { refusal: refusal5(
+      "SEGMENT_OVER_BOUND",
+      `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a longer segment would meet. Split the run across segments \u2014 resuming is what segments are for.`,
+      400,
+      { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE }
+    ) };
+  return { runId, store, credential, account, cascade, bound, requested };
+}
+async function runSegment(env, checked, body, whoami, traced, deadline = null) {
+  const { runId, store, credential } = checked;
+  let answer;
+  try {
+    answer = await segmentAnswer(env, checked, body, whoami, traced, deadline);
+  } catch (e) {
+    answer = {
+      response: refusal5(
+        "SEGMENT_THREW",
+        "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and wrote stays, and the plane is told the segment ended.",
+        500,
+        { run_id: runId, detail_from_worker: String(e && e.message || e).slice(0, 200) }
+      ),
+      end: { by: SEGMENT_END_BY.error, done: false, refusals: ["SEGMENT_THREW"] }
+    };
+  }
+  if (answer.end)
+    await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end }).catch(() => null);
+  return answer.response;
+}
+var refusalCodes = (list2) => [...new Set((list2 || []).map((r) => r && (r.code ?? r.reason)).filter((c) => typeof c === "string" && c))];
+async function segmentAnswer(env, checked, body, whoami, traced, deadline, preflight = false) {
+  const { runId, store, credential, account, cascade, bound, requested } = checked;
+  const progress = { started: false };
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
   const meter = segmentMeter({ turnsBound: requested, bytesBound });
   const modelMode = !Array.isArray(body.judgements);
@@ -5813,7 +5943,7 @@ async function handleRun(req, env) {
     runner: env.RUNNER ?? null,
     meter,
     suggestions: account.suggestions,
-    traced: doorTrace(req)
+    traced
   }) : null;
   const drive = await driveHarness(env, {
     runId,
@@ -5821,11 +5951,18 @@ async function handleRun(req, env) {
     credential,
     account,
     model,
+    preflight,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
-    maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS
+    maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
+    deadline,
+    progress
   });
-  if (drive.refusal) return drive.refusal;
-  return json({
+  if (drive.ready) return { ready: true };
+  if (drive.refusal) {
+    const said = await drive.refusal.clone().json().catch(() => ({}));
+    return { response: drive.refusal, end: progress.started ? { by: SEGMENT_END_BY.refusal, done: false, refusals: refusalCodes([said]) } : null };
+  }
+  return { end: { ...drive.segmentEnd, refusals: refusalCodes(drive.refusals) }, response: json({
     ok: true,
     run_id: runId,
     store,
@@ -5899,9 +6036,9 @@ async function handleRun(req, env) {
        and the namespace it confined the call to. Both are facts the plane
        decided; this member re-derives neither. */
     plane_says: {
-      token_class: asked.body.result?.tokenClass ?? asked.body.tokenClass ?? null,
-      store: asked.body.store ?? null,
-      session: asked.body.result?.session ?? null
+      token_class: whoami?.result?.tokenClass ?? whoami?.tokenClass ?? null,
+      store: whoami?.store ?? null,
+      session: whoami?.result?.session ?? null
     },
     /* AND THE PART THAT IS UNDETERMINED, STATED RATHER THAN GUESSED OR OMITTED.
        D-199 (4) makes the PRINCIPAL the credential's operative identity — the
@@ -5915,9 +6052,9 @@ async function handleRun(req, env) {
        cannot be told from one acting for nobody. */
     principal: null,
     principal_source: "UNPUBLISHED \u2014 no read op an ai credential may call states its own principal (D-199 (4))",
-    plane: { version: asked.body.version ?? null, op: "whoami" },
+    plane: { version: whoami?.version ?? null, op: "whoami" },
     worker: { name: "agent-worker", version: env.VERSION || "0.0.0" }
-  });
+  }) };
 }
 function handleVersion(env) {
   return json({
@@ -5929,8 +6066,46 @@ function handleVersion(env) {
   });
 }
 var runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
+var DEFAULT_SEGMENT_WALL_MS = 10 * 60 * 1e3;
+var segmentsBound = (env) => typeof env.SEGMENTS?.idFromName === "function" && typeof env.SEGMENTS?.get === "function";
+var segmentWallMs = (env) => Number(env.MAX_SEGMENT_MS) > 0 ? Number(env.MAX_SEGMENT_MS) : DEFAULT_SEGMENT_WALL_MS;
+var SegmentDriver = class {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.pending = null;
+    this.running = false;
+  }
+  async fetch(req) {
+    if (this.pending || this.running)
+      return refusal5(
+        "SEGMENT_RUNNING",
+        "a segment of this run is still running, so no second one was started; the plane is told when it ends.",
+        409
+      );
+    const got = await req.json().catch(() => null);
+    if (!got || typeof got.body !== "object" || got.body === null)
+      return refusal5("BAD_BODY", "the request body could not be read as JSON.", 400);
+    const checked = await checkRun(got.body, this.env);
+    if (checked.refusal) return checked.refusal;
+    this.pending = { checked, body: got.body, whoami: got.whoami ?? null, traced: doorTrace(req) };
+    await this.state.storage.setAlarm(Date.now());
+    return json({ accepted: true, run_id: checked.runId }, 202);
+  }
+  async alarm() {
+    const p = this.pending;
+    this.pending = null;
+    if (!p) return;
+    this.running = true;
+    try {
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env));
+    } finally {
+      this.running = false;
+    }
+  }
+};
 var ASK_DEPS = {
-  refusal: refusal4,
+  refusal: refusal5,
   json,
   askPlane,
   planeAnswer,
@@ -5956,7 +6131,7 @@ var index_default = {
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "signin") return handleSignin(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "transcribe") return handleTranscribe(req, env, ASK_DEPS);
-    return refusal4(
+    return refusal5(
       "UNKNOWN",
       "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.",
       404
@@ -5965,5 +6140,6 @@ var index_default = {
 };
 export {
   SURFACE,
+  SegmentDriver,
   index_default as default
 };
