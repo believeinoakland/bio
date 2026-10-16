@@ -1,6 +1,6 @@
 # agent-worker (R085)
 
-**Status** · session_018F9Doyf71vyGxPLnaNguLq · depth 2 · COMPLETE · handled B7
+**Status** · session_01HesGHMU4B19YsjqB1nVyxV · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -72,3 +72,22 @@ Size (session_018F9Doyf71vyGxPLnaNguLq): test runs 6, module lines 2025
 ## J5 · COMPLETE
 
 Merged tranche/R085 after B7 (agent-harness R11): the contract's key tree gained 'conditions', so fanout.test.mjs's pinned key list now names it; bundle rebuilt. Module tests 21/21; format, architecture, coverage, ownership 0 failures. R93, R94, R95 stand met.
+
+## J6 · COMPLETE
+
+**Entries applied** (R085-18): R96–R100, each met and each named by `test/r096.test.mjs` (the new file, 22 arms, controls beside them).
+- R96: the sub-session's `meaningrows` call forwards `ids` (at most 20, non-empty strings; others dropped), as the body of `op=meaningrows`; a call without `ids` sends none.
+- R97: each contract is `spawnContract({level, payload, arms: Object.keys(MEANING), targets})`, `MEANING` imported from query-language (`bio-plane/src/query.mjs`), `targets` the plan judgement's targets for that level (`target` text split at its first space or `#` into `{id, extent}`; a target with no text is none).
+- R98: each `usage` entry's `model` is the model `converse` answers (agent-model R21); the mode's coordinating model only when `converse` states none.
+- R99: each `op=airuntick` this member sends with a step or a sub-session's look carries `consume.wallclock`, the ms since the segment's previous tick (the segment's start for the first), never negative; the table's copy of the budget adds it. The clock is `env.CLOCK` when a function (the test's), else `Date.now`. The `segment_end` tick carries none (it is sent after the segment's last measured tick; the few ms between are unmetered).
+- R100: `collect` takes the record id as the part of a cited address before its first space or `#`; the re-read and the lookup use it, then the address as written when no held record has that id; the held-documents count reads the same chains.
+
+**Tests changed, none weakened:** `fanout.test.mjs`'s pinned key tree gains `subjects` and `arms` (B9). `agent-worker.test.mjs`: the env keys it reads admit `CLOCK`. `requirements.test.mjs` R28: the wallclock consumption is now a measured non-negative integer, the rest of the budget compared as before. `t48.test.mjs` R87 controls compare two runs' answers without that one measured figure.
+
+**Bundle rebuilt** (`agent-worker/dist`, R45). It grew from 331,204 B / 36 inputs to 1,788,100 B / 153 inputs: importing `MEANING` pulls `bio-plane/src/query.mjs` and its whole import tree into this member (K3268 forbids a hand-listed copy). BOB: if that size matters, query-language could export the arm names from a small file of their own; `build/manifest.md`'s line for this bundle's inputs now also names query-language.
+
+**Deferred:** none. **Found in other modules:** none.
+
+**Ran:** `npm test` in `agent-worker/` (22 files, 0 fail); `format` 0 failures; `architecture` 0 failures; `coverage` 91 of 91 live ids named; `ownership` 0 failures (9 files).
+
+Size (session_01HesGHMU4B19YsjqB1nVyxV): test runs 8, module lines 3971
