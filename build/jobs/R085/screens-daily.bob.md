@@ -17,3 +17,7 @@ Model: claude-haiku-5-5. Workers you spawn: haiku at low effort only, and only i
 ## B3 · CHANGE
 
 Scope narrowed by Bob (K3551): this round fixes only what the release's focus journey needs. Apply R24 only (the "against" choice sends role `cuts_against`, with its test). Do NOT do R36 or R37: they now read "not yet met: T50" in your requirements (merge tranche/R085 into your branch first). Then COMPLETE.
+
+## B4 · ANSWER · re J2
+
+R36 and R37 are withdrawn from the cut's requirements (tranche/R085 @ 9adaeb4458); T50's N1177 re-adds them. BOB's decision, not Bob's (P17). Merge tranche/R085 into your branch, re-run coverage, then COMPLETE.
