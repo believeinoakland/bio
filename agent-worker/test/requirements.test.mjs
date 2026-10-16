@@ -862,7 +862,7 @@ section("R22 · compose: one meaning read; its note never a false zero; level-em
     [st.suggested.filter((s) => s.kind === "level-empty").map((s) => s.name), le.level, le.observed_at, le.target],
     [["level-empty-documents"], "documents", "log:3", "INQ-R22"]);
   t("R22: its description is composed from those facts, with the report's summary appended",
-    [/documents level of INQ-R22/.test(le.description ?? ""), /at log:3/.test(le.description ?? ""),
+    [/documents level of this question/.test(le.description ?? "") && !/INQ-R22/.test(le.description ?? ""), /at log:3/.test(le.description ?? ""),
      /The sub-session reported: nothing in the packets$/.test(le.description ?? "")], [true, true, true]);
   await reset(mf, { refuse_op: { meaningrows: { body: { ok: true, result: { ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2" } } } } });
   const refused = await runOp(mf, { ...base, judgements: J() });

@@ -224,7 +224,9 @@ function emptyLevelCandidates(state, target) {
          carried. The model's own `summary` is APPENDED when it has one and is
          never substituted for the composed sentence: a model that writes "n/a"
          must not be able to turn the instrument's own object back into filler. */
-      description: `this run searched the ${reported} level of ${String(target ?? "this question")} and found nothing supportable there; the search that establishes it is written in the run's observation log at ${String(r.observed_at ?? "(no address)")}.` + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : "")
+      /* R13 (R085-23; K3510): the description names the question as "this question", never its record id. The id
+         is the plane's to show with the question, and a raw id here reached the reader verbatim (`question.mjs`). */
+      description: `this run searched the ${reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at ${String(r.observed_at ?? "(no address)")}.` + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : "")
     });
   }
   return out;
@@ -36264,6 +36266,8 @@ async function driveHarness(env, {
     const spentThisStep = calls - callsAtStepStart + 1;
     const consume = { ...work.consume || {}, runtime: spentThisStep, wallclock: wall.take() };
     const entry = loggable(stepLog(state, decision)).entry;
+    const stated = (Array.isArray(work.logEntries) ? work.logEntries : []).map((e) => loggable(e).entry);
+    const sentEntries = [...entry ? [entry] : [], ...stated];
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     const after = planMode ? planAdvance(state, decision) : advance(state, decision);
     let published = null;
@@ -36280,7 +36284,7 @@ async function driveHarness(env, {
       null,
       {
         run: runId,
-        log: entry ? [entry] : [],
+        log: sentEntries,
         consume,
         ...published ? { state: published.state } : {},
         ...usage.length ? { usage } : {}
@@ -36307,7 +36311,7 @@ async function driveHarness(env, {
     } else {
       const t = tick.body.result ?? tick.body;
       const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
-      const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended)) ? Number(t.appended) : t?.ticked === false ? 0 : Math.max(0, (entry ? 1 : 0) - refusedEntries.length);
+      const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended)) ? Number(t.appended) : t?.ticked === false ? 0 : Math.max(0, sentEntries.length - refusedEntries.length);
       logged += appendedNow;
       for (const r of refusedEntries) {
         const named = {
@@ -36587,8 +36591,25 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       const names = new Set((Array.isArray(body.versions) ? body.versions : []).map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const droppedHere = (state.candidates || []).filter((c) => c && aimedHere(c) && names.has(String(c.name ?? "")));
       const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
-      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
+      const byLevel = /* @__PURE__ */ new Map();
+      for (const c of droppedHere) {
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
+        if (!level) continue;
+        byLevel.set(level, [...byLevel.get(level) || [], String(c.name ?? "")]);
+      }
+      if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
+        level,
+        subject: "dedup -> candidate dropped",
+        state: "LOOKED_INDETERMINATE",
+        governed: false,
+        condition: null,
+        terminal: false,
+        bound: null,
+        detail: `dropped before any write: ${named.map((n) => `'${n}'`).join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX)
+      }));
+      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'`).join(", ")})` : "") + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
     }
@@ -36789,7 +36810,7 @@ function levelTargets(state, level) {
   return out;
 }
 function splitAddress(address) {
-  const at7 = address.search(/[\s#]/);
+  const at7 = address.search(/[\s#¶]/);
   if (at7 <= 0) return { id: address, extent: null };
   return { id: address.slice(0, at7), extent: address.slice(at7).trim() || null };
 }

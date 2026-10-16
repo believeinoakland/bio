@@ -1,6 +1,6 @@
 # agent-worker (R085)
 
-**Status** · session_01HesGHMU4B19YsjqB1nVyxV · depth 2 · COMPLETE · handled B10
+**Status** · session_01UDzBRUVhc41T5zHi38Bjvf · depth 2 · COMPLETE · handled B14
 
 ## J1 · QUESTION
 
@@ -91,3 +91,38 @@ Merged tranche/R085 after B7 (agent-harness R11): the contract's key tree gained
 **Ran:** `npm test` in `agent-worker/` (22 files, 0 fail); `format` 0 failures; `architecture` 0 failures; `coverage` 91 of 91 live ids named; `ownership` 0 failures (9 files).
 
 Size (session_01HesGHMU4B19YsjqB1nVyxV): test runs 8, module lines 3971
+
+## J7 · COMPLETE
+
+B11 handled: merged tranche/R085 (ai-runs R85) again; the payload's subjects.items shape is the one R97's test already drives. Bundle rebuilt byte-identical; npm test 22 files, 0 fail; format, architecture, coverage (91 of 91), ownership 0 failures. Pushed. Nothing else changed since J6.
+
+## Round 5 completion (R101, R102)
+
+**Entries applied** (R085-22): R101 and R102, each named by `test/r101.test.mjs` (new, 12 arms, controls beside them).
+- R101: `dedup` (src/index.mjs) collects the candidates it drops (aimed at the target, name held by `basisversions`) and returns one `LOOKED_INDETERMINATE` entry per level, at the dropped candidate's level (the observation log's spelling of the candidate's, via `REPORTING_LEVEL`), its `detail` naming each dropped name and saying it is already held on the question. The tick carries it beside the step's own entry, through `loggable` like R92's; `logged` counts every entry sent. A dropped candidate that states no level has none to be logged at and stays in the step's note alone (the note now names the drops). Control: no drop, no entry; a held name no candidate bears logs nothing.
+- R102: `splitAddress` ends the record id at the first space, `#` or `¶`, keeping the `¶` in the extent. `<id>¶1`, `<id> ¶1` and `<id>#p1` all resolve to the record; control: an address naming no held record is read as the address it is.
+
+**Tests changed:** none. With the fix disabled, 7 of r101's arms fail.
+
+**Deferred:** none. **Found in other modules:** none.
+
+**Ran:** `npm test` in `agent-worker/` (23 files; the one failure was R45's stale bundle, cleared by `npm run build`; requirements 304 passed, r101 12 passed); format 0 failures; architecture 0 failures; coverage 93 of 93 live ids named; ownership 5 files, 0 failures.
+
+**Bundle:** rebuilt now (1,789,237 B, 153 inputs) so the module is green; query-language R31 and agent-harness R13 are inputs of it, so it must be rebuilt again, last, on BOB's CHANGE after they merge.
+
+Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 4, module lines 4004
+
+## J8 · COMPLETE
+
+R101 and R102 met, each named by test/r101.test.mjs (12 arms, controls beside; 7 fail with the fix off). agent-worker npm test green (requirements 304, r101 12); format, architecture, coverage (93 of 93), ownership 0 failures. Bundle rebuilt now; query-language R31 and agent-harness R13 are its inputs, so send a CHANGE after they merge and I will merge tranche/R085 and rebuild it last. Details in my record, Round 5.
+
+## After B14 (agent-harness R13 and query-language R31 merged)
+
+Merged `tranche/R085`; bundle rebuilt last (1,789,446 B, 153 inputs, sha256 a471a651bd…). agent-harness R13 words an empty-level candidate's description as "this question", never the record id, so two of my tests that pinned the old wording follow it (not weakened: each now asserts "this question" and that the id is absent): `requirements.test.mjs` R22's description arm and `wire-vocabulary.test.mjs`'s "the question it belongs to". R101, R102 stand met.
+**Ran:** `npm test` in `agent-worker/`: 23 files, 23 pass, 0 fail; format 0 failures; architecture 0 failures; coverage 93 of 93; ownership 7 files, 0 failures.
+
+Size (session_01UDzBRUVhc41T5zHi38Bjvf): test runs 8, module lines 4004
+
+## J9 · COMPLETE
+
+B14 handled: merged tranche/R085, bundle rebuilt last. agent-harness R13's description wording changed two of my tests' pins (requirements R22, wire-vocabulary), now asserting 'this question' and no raw id. npm test 23 of 23 pass; format, architecture, coverage (93 of 93), ownership 0 failures. R101, R102 stand met. Pushed.
