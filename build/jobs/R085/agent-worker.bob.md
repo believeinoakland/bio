@@ -35,3 +35,7 @@ CHANGE (Bob's K3490): merge tranche/R085 into your branch. Your entry gains R95:
 ## B6 · CHANGE
 
 CHANGE: agent-model R17–R19 merged into tranche/R085 (`converse` takes `checkFinal` and `role`; SUBSESSION_MODEL). Merge tranche/R085 into your branch, build R94/R95 against it, and rebuild your bundle (`npm run build` in agent-worker/): AGENT-MODEL #9 reports it stale (your requirements.test R45 static and fresh checks). agent-harness R11 merges separately; a second CHANGE follows.
+
+## B7 · CHANGE
+
+CHANGE: agent-harness R11 merged into tranche/R085 (the contract's `returns.conditions`). Merge tranche/R085 into your branch before your last test run and bundle rebuild.
