@@ -83,3 +83,7 @@ Model: claude-sonnet-5-5. Entry R085-30: agent-worker R103, R104, R105, R106. Re
 ## B16 · CHANGE
 
 Before you start (K3529): R106 (concurrent level sub-sessions) is retired from this round, held for a study of the assistant's connection. Apply R103, R104 and R105 only; the requirements on tranche/R085 are merged into your branch.
+
+## B17 · CHANGE
+
+J10 read: your reading of R104 (only the meaning level has a compose-time read; a refused or empty read drops the absence) and R105's own-state keeping are accepted. R26 now names R105's write entry (tranche/R085 @ HEAD), so B7's pin matches it; merge the tranche branch when you next do. Carry on as you said: after agent-harness merges, merge tranche/R085, rebuild your bundle last, run the checks, COMPLETE.
