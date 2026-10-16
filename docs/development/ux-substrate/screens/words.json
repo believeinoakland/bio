@@ -9,7 +9,7 @@
   "draft": 5,
   "photo": 13,
   "handle": 7,
-  "ai": 152,
+  "ai": 153,
   "date": 14,
   "queue": 80,
   "transcribe": 19,
@@ -209,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12593,
+  "total": 12594,
   "protected": 890
  },
  "words": [
@@ -37964,10 +37964,17 @@
   },
   {
    "key": "ai.run.ending.completed",
+   "en": "it went through everything it could",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-293: RUN_ENDINGS completed, the run left proposals (DEC-297: reworded in place; drawn above them, screens-inquiry R47)"
+  },
+  {
+   "key": "ai.run.ending.completed.none",
    "en": "it went through everything it could and has nothing to propose",
    "protected": false,
    "source": "DEC-259",
-   "note": "DEC-293: RUN_ENDINGS completed, with no proposal"
+   "note": "DEC-293: DEC-297: RUN_ENDINGS completed, the run left no proposal"
   },
   {
    "key": "ai.run.ending.cancelled",

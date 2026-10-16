@@ -4567,6 +4567,7 @@ alternative: one sentence for every ending ("The assistant stopped before propos
 recommendation: as below.
 reversal cost: low: thirteen keys and one state.
 response: none needed (the design's detail).
+amended: 2026-10-16 · DEC-297: `ai.run.ending.completed` now reads "it went through everything it could" (drawn above the run's waiting proposals, R47); "…and has nothing to propose" moves to `ai.run.ending.completed.none`, for a run that left no proposal
 decided: 2026-10-16 · the design session (P17)
 the design: each of the twelve endings (run-rules' `RUN_BOUNDS` and `RUN_ENDINGS`) has plain words, keyed `ai.run.ending.<bound>`, read as {why}: completed, "it went through everything it could and has nothing to propose"; cancelled, "you stopped it"; mode-not-deployed, "this kind of work isn't switched on in your team's Civicsmith yet, so nothing was spent"; fetches, "it reached its limit on pages it may fetch from the web"; subsessions, "…on separate searches it may start"; wallclock, "it reached its time limit"; runtime, "it reached the most computing your team's hosting account allows in one go"; mints, "…on passages it may mark for citing"; surfaces, "…on questions it may open"; proposals, "…on options it may propose"; pages, "…on pages of documents it may read"; lease, "it stopped answering partway, so Civicsmith ended it"; any other value, "Civicsmith could not tell why". On the question page (state i, `ended`), the sentence sits above the first step's three ways, the assistant among them (R45: never the empty text alone). Journey 29's assistant path shows it.
 reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.question` state i), `page.src.html` (a ninth state), `mock-journeys.js` (journey 29), words-drawn's DEC-293 block.
@@ -4616,3 +4617,18 @@ decided: 2026-10-16 · the design session (P17)
 the design: To the paying account's owners only (a member on the team's key sees no cost line; the team account's owners do), the run's cost follows its status line: while it works, "So far: {cost}, on {account}." (`screen.assistant.run.cost.sofar`), on the question page after "Working on this: step {ticks}." and in the assistant panel after "A run of yours is working on this."; once `session.cost` is final, "It used {cost}, on {account}." (`screen.assistant.run.cost.final`) after "The run ended: {why}." on the question page and in the panel. {cost} is money where the account reports it, "{amount} in {calls} calls" (`ai.run.cost.money`, `.one` for one call), else "{tokens} tokens in {calls} calls" (`ai.run.cost.tokens`, `.one`); {account} is "your Claude subscription", "your API key", "the team's key" or "{project}'s own account" (`ai.run.cost.on.*`). The line carries its explanation (`ai.run.cost.means`), with `ai.run.cost.tokens.means` added when the cost is in tokens. No cost line when `session.cost` is absent (not the owner, or nothing reported yet); never a zero shown for a figure the account did not report.
 reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.question` state i), `mock-shell.js` (`dockMore`), words-drawn's DEC-296 block.
 owed: (BOB, screens-inquiry and the shell's assistant panel in T50, N1167) the two lines from `session.cost` as above, owners only.
+
+### DEC-297 · answered
+raised: 2026-10-16 · the UX design session with Bob on his primary account (session_01Lp2GDaCwrxidvmsD7PAcpt; the development process also runs on his primary account since K1428) (screens-inquiry R47, R48 on `tranche/R085`, K3510, K3513: the ended run's ending drawn above waiting proposals and in the dock)
+for: design
+question: DEC-293 worded the `completed` ending "it went through everything it could and has nothing to propose", but run-rules' `completed` also ends a run that left proposals, and R47 now draws the ending above them: the page would say "nothing to propose" over its proposals.
+why it is Bob's: it is not: a rewording beneath DEC-293 (P17).
+provisional: none.
+alternative: draw no ending above proposals (rejected: R47 rules it, and the member should see how the run ended).
+recommendation: as below.
+reversal cost: low: one key reworded, one added.
+response: none needed (the design's detail).
+decided: 2026-10-16 · the design session (P17)
+the design: `ai.run.ending.completed` reads "it went through everything it could", for a completed run that left proposals ("The run ended: it went through everything it could." above "What the assistant proposes"); `ai.run.ending.completed.none` reads "it went through everything it could and has nothing to propose", for a completed run that left none (its `proposals` consumed 0, or none of its proposals waits). Every other ending is unchanged. The dock (R48) uses the same choice.
+reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.question` state e), words-drawn's DEC-293 block (reworded in place, with its note).
+owed: (BOB, screens-inquiry in T50, with DEC-293) `completed.none` when the run left no proposal, `completed` otherwise, on the question page and in the dock.

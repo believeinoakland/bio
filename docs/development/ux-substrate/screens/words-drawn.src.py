@@ -1276,7 +1276,8 @@ w292('shell.level.button.pause', 'Explanations: on a pause', False, "the header'
 def w293(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-293' + (': ' + note if note else '')))
 E = 'ai.run.ending.'
-w293(E + 'completed', 'it went through everything it could and has nothing to propose', False, 'RUN_ENDINGS completed, with no proposal')
+w293(E + 'completed', 'it went through everything it could', False, 'RUN_ENDINGS completed, the run left proposals (DEC-297: reworded in place; drawn above them, screens-inquiry R47)')
+w293(E + 'completed.none', 'it went through everything it could and has nothing to propose', False, 'DEC-297: RUN_ENDINGS completed, the run left no proposal')
 w293(E + 'cancelled', 'you stopped it', False, 'RUN_ENDINGS cancelled: the member pressed Stop')
 w293(E + 'mode-not-deployed', "this kind of work isn't switched on in your team's Civicsmith yet, so nothing was spent", False, 'RUN_ENDINGS mode-not-deployed')
 w293(E + 'fetches', 'it reached its limit on pages it may fetch from the web', False, 'RUN_BOUNDS fetches')
