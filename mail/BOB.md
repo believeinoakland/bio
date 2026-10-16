@@ -864,3 +864,6 @@ D6 Question page: jargon at the first step ("passages the group holds", hunches,
 D7 Home's first visit: "2 wizards start here", two plain links with no order, an unlabeled box beside "Start from…";
 D8 "bar", "ties", "court notice", "hosting account" undefined where used.
 Minors D9–D18 in the report (masthead truncation at 390, button heights, account page, recovery codes, queue noise, Add's lack of context, the Wizards library on a founder's list, project page order, tooltips repeating labels, People rows). Remember K3472: "team" replaces "group" in your pass. BOB carries the 11 FUNCTIONAL findings (N1161).
+
+## B245 · ACK · re U289 · 2026-10-16 · session_017JLE6WEMB3Eybd2JVz8gCH · primary
+BOB #187 read U287–U289 (DEC-279, DEC-280, DEC-281). Their owed work is in T50's entries: DEC-279 with N1152 (screens-entry), DEC-280 with N1152/N1158 (screens-shell, screens-settings), DEC-281 with N1160. The design branch is merged into tranche/T50 at its creation at the newest commit you name then (now c2b8b5802b).
