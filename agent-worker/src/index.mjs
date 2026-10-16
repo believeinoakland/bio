@@ -181,7 +181,7 @@ import { AI_RUN_STATE_MAX_BYTES, checkCondition, DEFINITIVE_STATES } from "../..
  * driver's job is reduced to asking and obeying. Read `agent-harness`' `subsession.mjs` header
  * for why the rule is an exact key set rather than a list of banned fields. */
 import {
-  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
+  SUBSESSION_OPS, spawnContract, checkReport, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
 /* R90 (T49; N1137): the record id a leg names, added beside each held document's address. */
 import { withRecordIds } from "./holdings.mjs";
@@ -1446,6 +1446,16 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       messages: subsessionOpening(contract),
       tools: subsessionTools(contract),
       finalTool: "report",
+      /* R95 (agent-model R19): a check's sub-sessions, and no other conversation, run as sub-sessions. */
+      role: "subsession",
+      /* R94 (agent-model R18): the report is checked as `checkReport` will check it, less its location (the log gives
+         that after, so its absence is never handed back), and a refusal goes back once with its detail to be rewritten. */
+      checkFinal: (input) => {
+        const notObject = input == null || typeof input !== "object" || Array.isArray(input);
+        const { observed_at: _located, ...said } = notObject ? {} : input;
+        const bad = checkReport(notObject ? input : { ...said, level: contract.level, observed_at: "log:0" });
+        return bad ? { code: bad.code, detail: bad.detail } : null;
+      },
       onTool: async (name, input) => {
         if (!contract.scope.includes(name))
           return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
@@ -1762,8 +1772,10 @@ async function checkRun(body, env) {
 /** R91 — ONE SEGMENT, run to its end: on the request when no driver is bound, or from the run's Durable Object's alarm
  *  (`SegmentDriver`). It answers R28 or the refusal that ended it, and, whatever ended it, first sends the plane one
  *  `op=airuntick` carrying `segment_end: {by, done, refusals, error?}` (`SEGMENT_END_BY`), so the plane learns every segment's
- *  end even when nobody is left to read the answer. `deadline` is the segment's wall bound, when it has one. */
-async function runSegment(env, checked, body, whoami, traced, deadline = null) {
+ *  end even when nobody is left to read the answer. `deadline` is the segment's wall bound, when it has one. `beforeEnd` (R93)
+ *  is called once the segment's end is known and before that tick is sent: the driver marks the segment not running there,
+ *  so the next segment the plane dispatches from inside the tick (ai-runs R84) is accepted. */
+async function runSegment(env, checked, body, whoami, traced, deadline = null, beforeEnd = null) {
   const { runId, store, credential } = checked;
   let answer;
   try {
@@ -1776,6 +1788,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null) {
       { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) }),
       end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" } };
   }
+  if (beforeEnd) await beforeEnd();
   /* The plane's answer to this tick changes nothing here: the segment has already ended. */
   if (answer.end)
     await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end })
@@ -1971,10 +1984,14 @@ export class SegmentDriver {
     this.pending = null;
     if (!p) return;
     this.running = true;
+    let released = false;
+    /* R93: the segment is over before the plane hears it: its `segment_end` tick may dispatch the run's next segment
+       within that very call, and that `/run` must find this object free, not `SEGMENT_RUNNING`. */
+    const release = () => { released = true; this.running = false; };
     try {
-      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env));
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env), release);
     } finally {
-      this.running = false;
+      if (!released) this.running = false;
     }
   }
 }

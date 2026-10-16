@@ -5623,6 +5623,16 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       messages: subsessionOpening(contract),
       tools: subsessionTools(contract),
       finalTool: "report",
+      /* R95 (agent-model R19): a check's sub-sessions, and no other conversation, run as sub-sessions. */
+      role: "subsession",
+      /* R94 (agent-model R18): the report is checked as `checkReport` will check it, less its location (the log gives
+         that after, so its absence is never handed back), and a refusal goes back once with its detail to be rewritten. */
+      checkFinal: (input) => {
+        const notObject = input == null || typeof input !== "object" || Array.isArray(input);
+        const { observed_at: _located, ...said2 } = notObject ? {} : input;
+        const bad = checkReport(notObject ? input : { ...said2, level: contract.level, observed_at: "log:0" });
+        return bad ? { code: bad.code, detail: bad.detail } : null;
+      },
       onTool: async (name, input) => {
         if (!contract.scope.includes(name))
           return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
@@ -5920,7 +5930,7 @@ async function checkRun(body, env) {
     ) };
   return { runId, store, credential, account, cascade, bound, requested };
 }
-async function runSegment(env, checked, body, whoami, traced, deadline = null) {
+async function runSegment(env, checked, body, whoami, traced, deadline = null, beforeEnd = null) {
   const { runId, store, credential } = checked;
   let answer;
   try {
@@ -5936,6 +5946,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null) {
       end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" }
     };
   }
+  if (beforeEnd) await beforeEnd();
   if (answer.end)
     await askPlane(env, "airuntick", credential, store, null, { run: runId, segment_end: answer.end }).catch(() => null);
   return answer.response;
@@ -6106,10 +6117,15 @@ var SegmentDriver = class {
     this.pending = null;
     if (!p) return;
     this.running = true;
-    try {
-      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env));
-    } finally {
+    let released = false;
+    const release = () => {
+      released = true;
       this.running = false;
+    };
+    try {
+      await runSegment(this.env, p.checked, p.body, p.whoami, p.traced, Date.now() + segmentWallMs(this.env), release);
+    } finally {
+      if (!released) this.running = false;
     }
   }
 };
