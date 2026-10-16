@@ -32,3 +32,15 @@ All four run at once (out of layer on the cut, K1548; Bob's standing permission 
 - **R085-11 · agent-harness** · R11 (the contract's `returns.conditions`) · claude-haiku-5-5.
 - **R085-12 · screens-daily** · R35 (Find's words also match held documents' passages) · claude-haiku-5-5.
 - **R085-13 · agent-runner** · R32 (a request's `effort` reaches the SDK's options; K3490) · claude-haiku-5-5. Its image is rebuilt by `agent-runner-image.yml` and reaches biosmoke8 at the round's deploy.
+
+## Fix round 4 (K3501; the check's sub-sessions blind to the question's document), out of layer on the cut
+
+All seven run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2 and 3). The diagnosis is `build/plan/diag-085-r4.md`. Merge order: observation-log, ai-runs, agent-harness and agent-model before agent-worker (R97 uses agent-harness R12 and ai-runs R85's payload, R98 uses agent-model R21); machinery-producers and screens-inquiry any time. DEC-283 (Settings › The assistant) is not in this round: its words exist only in the design's `words.json`, whose merge onto the cut would also bring T50's rewording (K3472); it stays first among T50's screens jobs (N1158).
+
+- **R085-14 · observation-log** · R38 (a `text` capture has a unit arm; C5) · claude-haiku-5-5.
+- **R085-15 · ai-runs** · R85 (the search half carries the context's subjects; C3), R86 (an inquiry in a project takes the project's bar; DEC-17) · claude-sonnet-5-5.
+- **R085-16 · agent-harness** · R12 (the contract's `subjects` and `arms`) · claude-haiku-5-5.
+- **R085-17 · agent-model** · R20 (the `meaningrows` tool: arms, `passage:`, `id:`, `ids`), R21 (`converse` answers its model and effort) · claude-sonnet-5-5.
+- **R085-18 · agent-worker** · R96 (forward `ids`), R97 (contracts carry subjects, targets and arms), R98 (each usage entry's real model), R99 (wallclock measured), R100 (a cited address with an extent resolves to its record) · claude-sonnet-5-5.
+- **R085-19 · machinery-producers** · R14 (no "capture finished" item for a record holding no capture) · claude-haiku-5-5.
+- **R085-20 · screens-inquiry** · R46 (the founder drawn by handle) · claude-haiku-5-5.
