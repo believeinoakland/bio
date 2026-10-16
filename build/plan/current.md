@@ -78,3 +78,4 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-37 · skills** · R50 (wizard scripts in the pack carry no use counts or approvals, so the version holds through a run; S4 N1; K3557) · claude-sonnet-5-5.
 - **R085-38 · agent-harness** · R16 (no `completed` close when a composed candidate was never written; S4 N4; K3557) · claude-sonnet-5-5.
 - **R085-39 · agent-worker** · R107 (a refused segment writes what it composed or closes visibly), R108 (every dedup drop logged); S4 N1, N4; K3557; rebuilds its own bundle last · claude-sonnet-5-5.
+- **R085-40 · screens-inquiry** · R49 (citing from a document preselects the document's own question, never the group's first; JOURNEYS #2 B-7; K3560) · claude-haiku-5-5.
