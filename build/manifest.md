@@ -66,6 +66,10 @@ Bob's UX design work runs under his **primary account**, outside this process an
 
 Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#2: `session_01WzvEVTg39Jijv4CesGz4Dc`, started by BOB #145, K2398; #1 `session_01MoJa8LUVd6PRJDtgoSdRvj` archived), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
 
+## Parallel work: the assistant-hosting study (Bob, 2026-10-16; K3538)
+
+Bob's question of where and how the assistant runs Claude is studied in its own session, **ASSISTANT-HOSTING** (#1, started by BOB #192), writing only `build/plan/study-assistant-hosting/` (its `CHARTER.md` says how). It decides nothing: its findings reach Bob through BOB, and his decision is a K. BOB reads its `HANDOFF.md` (entries `S<n>`) at takeover and at every backstop check.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #5**, `session_0187SrKsqhqzSTqwDk2hzcXy` (started by Bob 2026-10-05, resumed by him for the account switch 2026-10-10; K2511); its context is about 250k tokens at resumption, replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). On the secondary account: ROOT #6, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022), unreachable from the primary. Earlier ROOTs are archived (rulings K693–K2022).
