@@ -141,7 +141,7 @@ console.log("\n--- A1 · THE SPAWN CONTRACT: four levels, no write scope, NO FIE
      GAINED here is as visible as one lost. */
   const tree = [...keyTree(cs[0] ?? {})].sort();
   t("the contract's complete key tree is pinned, at every depth", tree,
-    ["address_max", "basis", "citation_keys", "citations_max", "context", "id", "in_force", "keys",
+    ["address_max", "basis", "citation_keys", "citations_max", "conditions", "context", "id", "in_force", "keys",
      "level", "mode", "pair", "required", "returns", "rule", "run", "scope", "skill", "stated",
      "standard", "standard_pair", "states", "summary_max", "type"].sort());
   t("the tree is non-empty (a walk over nothing reports its verdict triumphantly)", tree.length > 10, true);

@@ -63,3 +63,8 @@ Size (session_018F9Doyf71vyGxPLnaNguLq): test runs 4, module lines 2025
 ## J4 · COMPLETE
 
 R93, R94, R95 met and green against agent-model R17-R19 (merged tranche/R085; bundle rebuilt). Module tests 21/21; format, architecture, coverage, ownership 0 failures. Record updated. Ready for the agent-harness R11 CHANGE if it affects me.
+
+## After B7 (agent-harness R11 merged)
+
+Merged `tranche/R085`; the contract gained `conditions` (agent-harness R11), so `fanout.test.mjs`'s pinned key tree now lists it (my test, no behaviour change); bundle rebuilt. `npm test` 21 of 21 pass; format, architecture, coverage, ownership 0 failures.
+Size (session_018F9Doyf71vyGxPLnaNguLq): test runs 6, module lines 2025

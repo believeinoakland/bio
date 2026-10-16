@@ -4575,6 +4575,8 @@ function spawnContract({ level, payload } = {}) {
       citation_keys: Object.keys(CITATION_KEYS),
       states: Object.keys(REPORT_STATES),
       summary_max: SUMMARY_MAX,
+      /* R11: the condition kinds the plane admits, in the vocabulary's fixed order. */
+      conditions: Object.keys(CONDITION_KINDS),
       citations_max: CITATIONS_MAX,
       address_max: ADDRESS_MAX,
       rule: "return a REPORT with a citation, never documents. The parent re-reads by address."
