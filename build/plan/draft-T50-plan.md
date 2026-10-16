@@ -258,6 +258,8 @@ Read whole with `next.md` (N1148–N1189). Folded into the draft above at the op
 
 **JOURNEYS V4 (K3598).** N1190–N1194 join T50: N1191 an extraction job (L4; extraction, with ocr-worker for photographs and retrieval for the passage marks), N1192 to T50-31 and T50-27 (the refusal mapping) and T50-32 (R49's preselection), N1193 to T50-10 and T50-33 with the timeline's provider, N1194's parts to their owners at the fold, N1190 a job for its owner once UX-DESIGN answers B258 on adding a court; N1177 gains the Standard screen's passage choice (B-28).
 
+**Bob's K3602 (live progress, answer after its check).** N1195 joins T50: agent-worker's share in its L6 job, the plane's door in T50-36 (or T50-35 if the buffering is control-plane's), the drawing in T50-32 and T50-27; the dock's words asked of UX-DESIGN (B260).
+
 **Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347). The assistant's hosting: Bob's decision (K3538), studied by ASSISTANT-HOSTING; no T50 entry rebuilds the runner before it.
 
 **For Bob at the opening (his acts).** The meter reading (§5.2 (3)); N1151's OAuth scope registration; K3591's size-change approval if the cells are still owed.
