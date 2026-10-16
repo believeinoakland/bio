@@ -70,3 +70,35 @@ Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2514
 ## J5 · REPORT
 
 Correction to J4's last line: I wrote module lines 2514 without counting. The count of bio-plane/src/screens-inquiry/*.mjs is 2293. Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2293
+
+## J6 · COMPLETE
+
+**Entry R085-40 (screens-inquiry R49; K3560; JOURNEYS #2 B-7): applied.** Commit 2738ea3124 on `job/R085/screens-inquiry`.
+
+**What changed** (`bio-plane/src/screens-inquiry/document.mjs`)
+1. "In which question" preselects the question the capture was held for: the held row's `captured_for.questions` (R77, read by the page's existing `heldcaptures` read) gives its first question, which is the choice's value. None held for: the choice's value is blank.
+2. The choice lists the document's own project's questions first (`projectquestions` for the document's project, read once through `later`), then the other questions the list (`list type=inquiry`) gives. A captured question the list does not give is still offered.
+3. No captured question: the list opens on a blank choice, so the group's first question is never preselected. "Cite a passage" with none chosen is refused in place (its existing `refuse`, `screen.document.cite.noquestion`) and sends nothing.
+4. The passage cite buttons and the picker show whenever there is any question to cite into (own or other), in place of the list alone.
+
+**Choices I made (for BOB to see)**
+- The blank choice's text is empty. No existing word says "none chosen" in this context, and a new key would be a `setup-words` row (another module's). A word for it, if BOB wants one, is a REPORT-level request.
+- Project-first is read from `projectquestions`, one page of 100 (the project screen's page size). A project with more questions keeps the others after the first page, so the order degrades but nothing is hidden.
+- The requirements file still reads R49 "not yet met"; requirements are outside this job's write paths, so BOB marks it met.
+
+**Tests**
+- `test/m/screens-inquiry/r49.test.mjs` (new, three, each naming R49): a document captured for Q in P draws Q preselected, P's questions first (the other project's question is listed first in the fixture, so a first-choice default would fail), and a cite sends Q; a captured question the list does not give is still offered and preselected; a document held for no question preselects none, and a cite sends nothing and draws `screen.document.cite.noquestion` in place.
+- `test/m/screens-inquiry/document.test.mjs`: the R8 test's expected options now include the blank choice first (its `heldcaptures` fixture names no captured question). Its other assertions are unchanged.
+
+**Deferred:** nothing. **Found in another module:** nothing. **Note for BOB (stale artifacts, not mine to write, mechanics §14):** `bio-plane/dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` embed this module's code (as J2 found), so they are stale against R49 until BOB rebuilds them at the round's close.
+
+**Run**
+- `node --test test/m/screens-inquiry/` (bio-plane): tests 133, pass 133, fail 0 (R49's three among them).
+- `node checks/format.mjs /home/user/bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio screens-inquiry`: 19 product files, 42 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio screens-inquiry`: 49 of 49 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio screens-inquiry tranche/R085`: 1 file changed by screens-inquiry between tranche/R085 and HEAD (the commit's three files are all this module's: `document.mjs`, `document.test.mjs`, `r49.test.mjs`); 0 failures.
+
+**Mailbox note:** B3 (R47, R48) was already applied in J4; B3 and B4 are both read through this entry.
+
+Size (session_01ExZBMDC8vZvzf4gpdgPENS): test runs 1, module lines 2305
