@@ -313,6 +313,26 @@ test("R27 control: a file whose declared type is empty sends no type", async () 
   assert.equal(r.query.name, "scan.bin");
 });
 
+test("R28 a name whose 40-character cut ends at a hyphen promotes under an id with no trailing hyphen, its slug beginning and ending with a letter or digit", async () => {
+  const NAMED = new File(["plain words"], `${"a".repeat(39)}-b.pdf`, { type: "application/pdf" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": NAMED });
+  await press(p, "captureupload");
+  await p.settle();
+  const id = p.byOp("promote")[0].body.bundleId;
+  assert.equal(id, `INFO-2026-0011-${"a".repeat(39)}`, "R28: the cut is trimmed of its trailing hyphen");
+  assert.match(id, /^INFO-2026-0011-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/, "R28: a canonical id that cite accepts");
+});
+
+test("R28 control: a name of 41 plain characters is cut to 40 characters of slug", async () => {
+  const LONG = new File(["plain words"], `${"c".repeat(41)}.pdf`, { type: "application/pdf" });
+  const p = await open("/app/capture/file", { plane: UPLOAD_PLANE });
+  fill(p, { ...filled, "ci-file": LONG });
+  await press(p, "captureupload");
+  await p.settle();
+  assert.equal(p.byOp("promote")[0].body.bundleId, `INFO-2026-0011-${"c".repeat(40)}`, "R28 control: cut to 40");
+});
+
 test("R2 nothing is sent while a file or any answer is missing, saying which, or over 2,000 characters", async () => {
   const labels = (...ks) => ks.map((k) => word(k)).join(", ");
   const cases = [[{ ...filled, "ci-file": null }, "screen.capture.file.nofile", {}],
