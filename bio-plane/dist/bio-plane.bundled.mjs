@@ -82759,7 +82759,7 @@ function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
 }
 
 // src/observation-log/index.mjs
-var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
+var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv", "text"]));
 var INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["document"]));
 var LEAD_READ_LIMIT_DEFAULT = 200;
 var LEAD_READ_LIMIT_MAX = 2e3;
@@ -169940,6 +169940,7 @@ CREATE TABLE IF NOT EXISTS ai_mode_verifications (
 
 // src/ai-runs/index.mjs
 var PROVIDER_LIMIT = /enforced_spend_limit_reached/;
+var SUBJECTS_MAX = 50;
 function memberIdOf3(x) {
   if (typeof x !== "string") return null;
   const t2 = x.trim();
@@ -170659,6 +170660,47 @@ var AiRuns = class _AiRuns {
       out.push(q10);
     }
     return out.sort();
+  }
+  /** R86 (R085-15; K3501; DEC-17): AN INQUIRY THAT SITS IN A PROJECT TAKES THAT PROJECT'S BAR, so with none handed its
+   *  basis is `none-recorded`, a fact about the formation, and `context-has-no-project` is left to an inquiry in no project.
+   *  "In a project" is `#runContextProjects`' set (the confirmed citations, the one live-cites predicate), kept to the
+   *  projects this viewer sees, so the answer never says that a project the viewer cannot see exists. */
+  #inProject(row12, viewer) {
+    return this.#runContextProjects(row12.context_type, row12.context_id).some((p3) => this.#membership().inSight(p3, viewer));
+  }
+  /** R85 (R085-15; K3501 (C3); amends R23): WHAT A RUN'S SEARCH SHOULD LOOK AT, `{items, truncated}`. For a run over an
+   *  inquiry, each of its legs' targets (`{id, extent, kind: "leg"}`, the extent the leg's content row names in its human
+   *  form, null for a leg that names none or the whole document) and each record it cites (`kind: "cited"`); for a run
+   *  over a project, the same for each question R19's `questions` lists. Only what the viewer sees (`inSight`, the one
+   *  predicate), deduplicated by id and extent, at most `SUBJECTS_MAX`, `truncated` past that. The reads are SQL over
+   *  `inquiry_basis`, `content` and `refs`, as this module reads `bundles` and `refs` elsewhere. No lens is read. */
+  #runSubjects(row12, viewer) {
+    const questions = row12.context_type === "project" ? this.#runContextQuestions(row12.context_id, viewer) : row12.context_type === "inquiry" ? [String(row12.context_id)] : [];
+    const seen = /* @__PURE__ */ new Set(), items = [];
+    let over = false;
+    const add2 = (id, extent, kind2) => {
+      const key2 = `${id}\0${extent ?? ""}`;
+      if (seen.has(key2) || !this.#membership().inSight(id, viewer)) return;
+      seen.add(key2);
+      if (items.length >= SUBJECTS_MAX) {
+        over = true;
+        return;
+      }
+      items.push({ id, extent, kind: kind2 });
+    };
+    for (const q10 of questions) {
+      for (const l2 of this.#rows(
+        `SELECT b.target_id AS id, c.extent_kind AS extent_kind, c.ref AS ref FROM inquiry_basis b
+           LEFT JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id = ? ORDER BY b.ord`,
+        q10
+      )) {
+        const named2 = l2.ref != null && String(l2.ref).trim() !== "" && l2.extent_kind !== "document";
+        add2(String(l2.id), named2 ? String(l2.ref) : null, "leg");
+      }
+      for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id = ? AND kind = 'cites' ORDER BY target_id`, q10))
+        add2(String(r.target_id), null, "cited");
+    }
+    return { items, truncated: over };
   }
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
@@ -172235,7 +172277,7 @@ var AiRuns = class _AiRuns {
                `standard.in_force: false` with its `basis` and its `stated` sentence
                means we looked and there was no bar. A consumer can tell those apart;
                a null could not, which is why no null is published here. */
-      standard: this.#standardForRun(row12),
+      standard: this.#standardForRun(row12, viewer),
       /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
@@ -172280,7 +172322,7 @@ var AiRuns = class _AiRuns {
    *
    *  Synchronous, deliberately: unlike the manifest there is no hash and no
    *  second read, so making this async would buy a promise nobody awaits for. */
-  #standardForRun(row12) {
+  #standardForRun(row12, viewer = null) {
     const raw = row12.standard_pair;
     let parsed = null, unreadable2 = false;
     if (raw != null && String(raw).trim() !== "") {
@@ -172297,7 +172339,7 @@ var AiRuns = class _AiRuns {
     const axis = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
     const capture2 = parsed ? axis(parsed.capture) : null;
     const connection = parsed ? axis(parsed.connection) : null;
-    const basis = unreadable2 ? "unreadable" : parsed !== null ? capture2 === null && connection === null ? "names-no-axis" : "recorded" : row12.context_type === "project" ? "none-recorded" : "context-has-no-project";
+    const basis = unreadable2 ? "unreadable" : parsed !== null ? capture2 === null && connection === null ? "names-no-axis" : "recorded" : row12.context_type === "project" || this.#inProject(row12, viewer) ? "none-recorded" : "context-has-no-project";
     return {
       in_force: basis === "recorded",
       basis,
@@ -172605,13 +172647,15 @@ var AiRuns = class _AiRuns {
          Two readers of one row must not disagree about which of its facts
          exist, so both now answer from `#standardForRun` and neither computes
          its own. */
-      standard: this.#standardForRun(row12),
+      standard: this.#standardForRun(row12, viewer),
       budget: bounds2.map((b) => ({
         bound: b.bound,
         allowed: b.allowed,
         consumed: b.consumed,
         unit: b.unit
-      }))
+      })),
+      /* R85: the records and extents the search should look at, `{items, truncated}`; still no lens field. */
+      subjects: this.#runSubjects(row12, viewer)
     };
     return {
       run: run2,
@@ -217038,7 +217082,7 @@ var SUMMARY_MAX2 = 200;
 var DETAIL_MAX2 = 5e3;
 var WHY_MAX4 = 500;
 var NOTE_MAX7 = 500;
-var SUBJECTS_MAX = 50;
+var SUBJECTS_MAX2 = 50;
 var PHASES_MAX = 50;
 var DATES_MAX = 20;
 var CHECKPOINT_DAYS_MAX = 3650;
@@ -217066,7 +217110,7 @@ function normSubject(s) {
       out.act = s.act;
     }
     if (s.standards !== void 0 && s.standards !== null) {
-      if (!Array.isArray(s.standards) || s.standards.length > SUBJECTS_MAX || !s.standards.every(isToken)) return null;
+      if (!Array.isArray(s.standards) || s.standards.length > SUBJECTS_MAX2 || !s.standards.every(isToken)) return null;
       out.standards = [...new Set(s.standards)];
     }
     return out;
@@ -217583,9 +217627,9 @@ var ActionPlans = class {
   /** R1, R3, R4: the subjects named, judged stage by stage across the list (malformed, unseen, of the project, live,
    *  free), so two faults at once answer the earlier code. `{items: [{subject, key}]}` or a refusal. */
   #subjects(project, list6, viewer, { plan: plan2 = null } = {}) {
-    if (!Array.isArray(list6) || !list6.length || list6.length > SUBJECTS_MAX)
+    if (!Array.isArray(list6) || !list6.length || list6.length > SUBJECTS_MAX2)
       return refuseNoSubject(
-        `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
+        `a plan is about 1 to ${SUBJECTS_MAX2} matters. Nothing was written.`,
         Array.isArray(list6) ? list6.length : null
       );
     const items = [];
@@ -219812,8 +219856,8 @@ function refuseNoSuchInquiry(inquiry, extra = null) {
 function refuseNoSubject(detail, count2) {
   return refusal32(
     "PLAN_NO_SUBJECT",
-    detail || `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
-    { count: count2 ?? null, max: SUBJECTS_MAX }
+    detail || `a plan is about 1 to ${SUBJECTS_MAX2} matters. Nothing was written.`,
+    { count: count2 ?? null, max: SUBJECTS_MAX2 }
   );
 }
 function refuseMalformed(detail, index2) {
@@ -276564,13 +276608,14 @@ function later2(cs, ui, key2, op, query, token) {
 function plain19(cs, key2, fills) {
   return String(cs.w(key2, fills)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]);
 }
-function who3(cs, x) {
+function who3(cs, x, founder) {
   if (x && typeof x === "object") {
     if (x.handle) return String(x.handle);
     if (x.founder === true) return String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]);
     return "";
   }
   const s = String(x == null ? "" : x).replace(/^(member:|token:)/, "");
+  if (s === "admin" && founder) return String(founder);
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]) : s;
 }
 var COMMON = Object.freeze({ front: front2, later: later2, plain: plain19, who: who3 });
@@ -277223,6 +277268,9 @@ function render3(cs, view) {
   })();
   {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
+    const parts2 = project ? later3("participants", "projectparticipants", { projectId: project }) : null;
+    const founder = parts2 && parts2.state === "ok" && Array.isArray(parts2.value.participants) ? parts2.value.participants.find((x) => x && x.founder === true) : null;
+    const founderHandle = founder && founder.handle ? String(founder.handle) : null;
     const opener = (() => {
       const img = d.inquiry.value || {};
       const first = Object.keys(img).filter((k) => /^_history\/promotion_.*\.json$/.test(k)).map((k) => {
@@ -277232,7 +277280,7 @@ function render3(cs, view) {
           return null;
         }
       }).filter((h) => h && h.author).sort((a, b3) => String(a.created || "").localeCompare(String(b3.created || "")))[0];
-      return first ? P.who(cs, first.author) : "";
+      return first ? P.who(cs, first.author, founderHandle) : "";
     })();
     const name3 = opener || T("state.undetermined", { reason: "" });
     if (project) out.push(`<p class="mk-sub">${W2("screen.question.opened", { name: name3, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
@@ -291230,6 +291278,7 @@ var MachineryProducers = class _MachineryProducers {
         continue;
       const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
       if (!started) continue;
+      if (!this.#one(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT 1`, b.bundle_id)) continue;
       const createdMs = Date.parse(latest3.created);
       const title = this.#record.bundleInfo(b.bundle_id);
       const notes2 = this.#gradeNotes({ bundle: b.bundle_id }, visible);
