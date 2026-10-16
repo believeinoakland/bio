@@ -43,3 +43,23 @@ Found in another module, caused by this change (agent-harness R12 adds `subjects
 2. agent-worker's `fanout.test.mjs`, "the contract's complete key tree is pinned, at every depth", pins the old key set (it lists no `subjects` or `arms`). This test is agent-worker's; it needs the R97 change to pin `subjects` and `arms`. Until then that one arm fails; everything else in fanout passes (184 of 185).
 
 My side is green: `node --test agent-harness/test/` 38 pass, 0 fail; the four checks pass. The new keys are optional in `spawnContract({level, payload, arms, targets})`, so agent-worker's current call (`spawnContract({ level, payload })`) still works.
+
+## J4 · COMPLETE
+
+R085-16 (agent-harness R12, `spawnContract({level, payload, arms, targets})`) applied. Commit e9b5d2910d on job/R085/agent-harness, pushed.
+
+- `src/subsession.mjs`: `subjects` (the payload's `subjects.items` read key by key as `{id, extent, kind}`, then the level's `targets` as `{id, extent, kind: "target"}`, deduplicated by id and extent, at most 50, frozen) and `arms` (the caller's arm names, in order, frozen) are added after `scope`. Absent inputs give empty lists. `SPAWN_KEYS` gains `subjects` and `arms` in that position. The new arguments are optional, so agent-worker's current call still works.
+- `test/agent-harness.test.mjs`: R7 asserts the empty `subjects` and `arms`; R8's argument row for `spawnContract` carries subjects, targets and arms; three new tests named R12 (the two-subjects-and-one-target case, the duplicate and absent-input controls, the 50 cap).
+
+Deferred: none. Found in another module: see the REPORT J3 (agent-worker's R45 bundle is stale; its fanout test pins the old key tree).
+
+Tests: `node --test agent-harness/test/`: 38 pass, 0 fail.
+Checks:
+- format: 170 modules, 169 requirements files; 0 failures
+- architecture (agent-harness): 3 product files, 6 relative imports; 0 failures
+- coverage (agent-harness): 1 modules, 12 of 12 live requirement ids named by a test; 0 failures
+- ownership (agent-harness, tranche/R085): 1 files changed by agent-harness between tranche/R085 and HEAD; 0 failures
+
+R12 in build/requirements/agent-harness.md still reads "not yet met: R085"; that line is BOB's to clear.
+
+Size (session_01P5ZBwkcJzw7ejUkCfh91qF): test runs 4, module lines 1806
