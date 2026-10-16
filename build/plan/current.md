@@ -1,6 +1,6 @@
 # Plan R085
 
-**Status** · OPEN · BOB #189 · session_01YQ4yT2XcSToaGFfTUtnjeH · depth 1
+**Status** · OPEN · BOB #190 · session_01HqQ2d1HjF7g1iniy8y5mNx · depth 1
 
 **Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; control-plane: CONTROL-PLANE #35 session_013MCbxDMa9jH48CQ4Ks4wqm; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-daily: SCREENS-DAILY #5 session_01KMKGKQB8H39uXLhH43ccYQ; agent-runner: AGENT-RUNNER #8 session_01CnAYmpK7zwcNdBC9r85K5y; observation-log: OBSERVATION-LOG #13 session_01SJrWSUDWk4ygPEnF4edtGH; ai-runs: AI-RUNS #24 session_014E6HztL3Ehb1nLBpG9td7t; agent-harness: AGENT-HARNESS #6 session_01P5ZBwkcJzw7ejUkCfh91qF; agent-model: AGENT-MODEL #10 session_01QxtF2G4H6Q337jE4Ti6TBN; agent-worker: AGENT-WORKER #27 session_01HesGHMU4B19YsjqB1nVyxV; machinery-producers: MACHINERY-PRODUCERS #4 session_01WdZWF2N7iamL2RKVC1vFPM; screens-inquiry: SCREENS-INQUIRY #7 session_01L2wDs5DhuwdscrBezRCF3P
 
