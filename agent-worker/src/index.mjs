@@ -150,7 +150,7 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
  * through `POST /run` inside workerd, and the two must agree. A table exercised
  * only through the op is a table nobody can exhaust. */
 import {
-  FIRST_STEP, LEVELS, BUDGET_BOUNDS, passLimit,
+  FIRST_STEP, LEVELS, REPORTING_LEVEL, BUDGET_BOUNDS, passLimit,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
   advance, publishableState, resumeFrom,
   PLAN_FLOW, PLAN_MAX_PASSES, OPTION_KEYS, flowFor, nextPlanStep, planAdvance, applyPlanJudgement, planDedup,
@@ -654,6 +654,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R92: in the record's own words — a condition outside its vocabulary, or a governed definitive look, was refused
        per entry, so the log stayed empty (`loggable`). */
     const entry = loggable(stepLog(state, decision)).entry;
+    /* R101: entries the step itself states beside its look (`dedup`'s drops), in the record's own words like the rest. */
+    const stated = (Array.isArray(work.logEntries) ? work.logEntries : []).map((e) => loggable(e).entry);
+    const sentEntries = [...(entry ? [entry] : []), ...stated];
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
        tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
@@ -674,7 +677,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* ai-runs R48: the usage of every model call since the last tick, counted for the member whose account carried it. */
     const usage = model ? model.drain() : [];
     const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume, ...(published ? { state: published.state } : {}),
+      { run: runId, log: sentEntries, consume, ...(published ? { state: published.state } : {}),
         ...(usage.length ? { usage } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
@@ -713,7 +716,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
       const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended))
         ? Number(t.appended)
-        : (t?.ticked === false ? 0 : Math.max(0, (entry ? 1 : 0) - refusedEntries.length));
+        : (t?.ticked === false ? 0 : Math.max(0, sentEntries.length - refusedEntries.length));
       logged += appendedNow;
       for (const r of refusedEntries) {
         const named = { at: "airuntick.log", step: state.step, to: decision.step,
@@ -1233,9 +1236,25 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          plane, which bounds it — rather than being filtered against another question's versions. */
       const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
+      const droppedHere = (state.candidates || []).filter((c) => c && aimedHere(c) && names.has(String(c.name ?? "")));
       const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
+      /* R101: a drop is a look the log must hold, not only the trace: one LOOKED_INDETERMINATE entry per level, at the
+         dropped candidate's level (the observation log's spelling of the candidate's), naming each dropped name. A
+         candidate that states no level has none to be logged at and stays in the note alone. */
+      const byLevel = new Map();
+      for (const c of droppedHere) {
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
+        if (!level) continue;
+        byLevel.set(level, [...(byLevel.get(level) || []), String(c.name ?? "")]);
+      }
+      if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
+        level, subject: "dedup -> candidate dropped", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
+        terminal: false, bound: null,
+        detail: `dropped before any write: ${named.map((n) => `'${n}'`).join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX),
+      }));
       out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
                + `${queue.length} survived`
+               + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'`).join(", ")})` : "")
                + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
@@ -1472,10 +1491,10 @@ function levelTargets(state, level) {
   return out;
 }
 
-/** R100 — a cited address as a record id and the extent after it: the id is the part before the first space or `#`,
- *  the extent what follows (` ¶1`, `#p1`), or null. */
+/** R100, R102 — a cited address as a record id and the extent after it: the id is the part before the first space,
+ *  `#` or `¶`, the extent what follows (` ¶1`, `¶1`, `#p1`, the `¶` kept), or null. */
 function splitAddress(address) {
-  const at = address.search(/[\s#]/);
+  const at = address.search(/[\s#¶]/);
   if (at <= 0) return { id: address, extent: null };
   return { id: address.slice(0, at), extent: address.slice(at).trim() || null };
 }
