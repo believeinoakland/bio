@@ -80,3 +80,18 @@ What it shows:
 2. **A repository is the dominant start cost** (clone 34 s plus the repository's own start hook: 228–249 s in total here); a session without a repository starts in seconds.
 3. **State survives sandbox loss:** an archived session came back in 15 s with its history.
 4. **Not yet known:** limits on concurrent sessions and on a long single run (over 125 s); a session with a credential; the composite route; (e).
+
+### Remote series, part 3: concurrency, a long run, and the account's spend limit (19:54–19:59Z)
+
+| Cell | n | Observed |
+|---|---|---|
+| **Concurrency A: 6 sessions created within 4 s** (one subscription, haiku, "Reply with the single word OK.", with one long run already in flight: 7 live) | 6 | all six answered, **7.5–8.8 s each** from creation (8.69, 7.49, 8.83, 7.95, 8.26, 7.85 s); no refusal, no queueing visible; cost $0.0025 each |
+| **Long run (40 × `sleep 15; curl bootstrap`, about 12 minutes planned)** | 1 | ran 19:54:38 → 19:59:27Z (4 min 49 s) and **ended by the account's spend limit**, not by a session limit: the plane logged 13 requests 19:55:03–19:59:27, a steady **18.6 s a call** (15 s sleep + 3.6 s of turn), two gaps of 37–38 s (a call whose log line is missing, or a skipped one); cost to that point $0.0134 (955 k cache-read tokens, context 66 k) |
+| **Concurrency B: 10 sessions created within 7 s (repeat, 11 live with the long run)** | 10 | **all ten failed within 5–12 s of creation**: `status_category: failed`, "You've hit your monthly spend limit · raise it at https://claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 11am (UTC)"; `rate_limit_info`: `isUsingOverage` **false** (it was `true` in every earlier session), `rateLimitType: seven_day`, `status: rejected` |
+| **Credential held by a probe session (K3593 (1))** | 0 run | the two creating calls (prompt carrying the test member `walker`'s session token) were **refused by this session's permission check** ("Credential Leakage"); not worked around. The token had been issued and checked (`op=whoami` → member `walker`, class member). |
+
+What it shows [test]:
+1. **Several cloud sessions at once on one subscription start together** (6 at once, 7.5–8.8 s each, no queue) while the account is within its limits.
+2. **The binding limit on this account is a spend limit, not a concurrency or a session limit**: at about 19:59:19Z, after roughly 85 sessions' worth of haiku use on top of the day's other use (this lane's and BOB's sessions bill the same account), every session, new or running, was refused with the monthly spend message. The account had shown "overage, weekly limit rejected, served" until then; at the moment of the refusal `isUsingOverage` read `false`. What the cloud sessions cost is small (a one-word answer $0.0026–0.003; 40 curl calls $0.033); the account's cap is not.
+3. **A running session is cut, not finished, when the limit trips**: the long run ended with its state intact (idle, context 66 k tokens) and "failed" status; its earlier work is in the plane's log.
+4. **Not obtained:** a run longer than 10 minutes (the cap above); concurrency B at ten; a session using a held credential.
