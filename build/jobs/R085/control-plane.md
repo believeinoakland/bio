@@ -28,3 +28,7 @@ With capture R92 merged, R100's real-plane test passes every reading assertion (
 - **Checks:** format 170 modules, 169 requirements files; 0 failures. architecture 59 product files, 288 relative imports; 0 failures. coverage 68 of 68 live requirement ids named by a test; 0 failures. ownership 4 files changed by control-plane; 0 failures.
 
 Size (session_013MCbxDMa9jH48CQ4Ks4wqm): test runs 9, module lines 3781
+
+## J3 · COMPLETE · re B3
+
+R100 done on job/R085/control-plane (tranche/R085 @ 97f683add5 merged in). Door passes type and reads a new upload as acquire does; the real-plane test now ends on the warned path per B3. Control-plane suite 291/291; format, architecture, coverage 68/68 and ownership all 0 failures. Record has the details.
