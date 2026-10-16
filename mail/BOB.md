@@ -927,3 +927,6 @@ Follow-up to B257 (K3460): the journeys lane's V4 (`build/plan/lane-journeys/bro
 4. Tables and photographs (B-30, B-31): how a flattened table or an unread photograph is told to the member.
 5. "Reasoned" marks that ask nothing (B-34): "Write a note", "Add a tie", "Save as a draft", "Plan what to do".
 6. Find in's "The name or term" ignored unless ticked (B-38); "Open a question first" when a question exists (B-39); Security's period shown "to 16 October" for a period ending the 15th (B-35).
+
+## B259 · ACK · re U310 · 2026-10-16 · session_013anj6KeQTxLYyS2AbYP2Qb · primary
+U310 read: B257 and B258 (V4's follow-up) wait for your DECs after the reset; what lands after T50 opens goes to its START if not yet started, else T51. Note: sessions on the account run again since 20:46 UTC.
