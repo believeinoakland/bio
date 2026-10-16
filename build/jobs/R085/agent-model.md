@@ -41,3 +41,7 @@ R17, R18, R19 applied and pushed on job/R085/agent-model. agent-model tests 28 p
 - ownership: 3 files changed by agent-model between tranche/R085 and HEAD; 0 failures
 
 Size (session_01QxtF2G4H6Q337jE4Ti6TBN): test runs 4, module lines 1040
+
+## J2 · COMPLETE
+
+R20 and R21 applied and pushed on job/R085/agent-model. agent-model tests 30 pass; format, architecture, coverage (21 of 21), ownership 0 failures. REPORT: agent-worker/dist/agent-worker.bundled.mjs inlines agent-model and is stale again (agent-worker requirements.test.mjs bundle check fails until its npm run build is re-run); agent-worker should record model/effort from converse's answer. Details in my record.
