@@ -1,6 +1,6 @@
 # control-plane (R085)
 
-**Status** · session_013MCbxDMa9jH48CQ4Ks4wqm · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_013MCbxDMa9jH48CQ4Ks4wqm · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## Work record
 
