@@ -116,3 +116,20 @@ Tests: `node --test agent-harness/test/`: 45 tests, 45 pass, 0 fail.
 Checks: format 170 modules, 169 requirements files; 0 failures. architecture: 3 product files, 6 relative imports; 0 failures. coverage: 15 of 15 live requirement ids named by a test; 0 failures. ownership: 1 files changed by agent-harness between tranche/R085 and HEAD; 0 failures.
 
 Size (session_01Mr967LwxSZH1sPQMA8xnn2): test runs 6, module lines 1827
+
+## J8 · COMPLETE
+
+R085-38 (agent-harness R16; S4 N4; K3557) applied. Commit pushed on job/R085/agent-harness.
+
+- `harness.mjs`: `nextStep` now passes every `completed` close through a guard. The table keeps three counts in `advance`: `composed` (compose -> dedup), `kept` (survived dedup, so sent to be written; candidates dropped as already held are not lost and do not count), `wrote` (a submit that left without a refusal). A `completed` close with kept > 0 and no write (also the shell's `written` list honoured) becomes `bound: "nothing-written"`, with `reason` ("nothing written: N candidate(s) composed, K sent to be written, none written", naming the plane's refusal if one is pending) appended to `why`. Budget bounds are not rewritten. The three counts are in `RESUMABLE`, `resumeFrom` and the restart state, so they survive a segment break. Scope: CONTROL_FLOW (check); PLAN_FLOW unchanged.
+- Tests: three named R16 (composed 1/written 0 at the last pass is not completed and names the reason; controls: written, all-held, none composed, budget bound unchanged; the counts survive a segment break).
+
+REPORT, needs you (not mine, no change made):
+1. **The plane will refuse the new bound.** `nothing-written` is in neither `RUN_BOUNDS` nor `RUN_ENDINGS` (`bio-plane/src/run-rules/rules.mjs`), so `checkBound` refuses the close (`AI_RUN_BOUND_UNNAMED`) until run-rules gains an ending of that name. Alternative if you would rather not touch run-rules: agent-worker closes with the plane-valid word it chooses and states `decision.reason` in its result; the harness then only needs its `bound` changed. Your ruling decides.
+2. agent-worker tests, caused by my change: `requirements.test.mjs` "R11: the published state carries the table's fields ..." lists exact keys, and `composed`, `kept`, `wrote` are new keys of `resumableState`; R45 x2 (static check and byte-identical bundle: stale against harness.mjs, rebuild last by the agent-worker job). Before my change that file passed; the other agent-worker test files pass (23 of 24 files).
+
+Tests: `node --test agent-harness/test/`: 48 tests, 48 pass, 0 fail.
+Checks: format 170 modules, 169 requirements files; 0 failures. architecture: 3 product files, 6 relative imports; 0 failures. coverage: 16 of 16 live requirement ids named by a test; 0 failures. ownership: 3 files changed by agent-harness between tranche/R085 and HEAD; 0 failures.
+Deferred: none. R16 in build/requirements/agent-harness.md still reads "not yet met"; BOB's to clear.
+
+Size (session_01WowT7fuUBypvb1g4kD9noF): test runs 8, module lines 1884
