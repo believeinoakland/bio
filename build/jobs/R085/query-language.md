@@ -1,6 +1,6 @@
 # query-language (R085)
 
-**Status** · session_01CA3rwpqVLSJhjtGHPcvhZb · depth 2 · WORKING · handled B2
+**Status** · session_01CA3rwpqVLSJhjtGHPcvhZb · depth 2 · COMPLETE · handled B2
 
 ## Completion (R085-27)
 
