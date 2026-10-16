@@ -19,3 +19,7 @@
 - ownership: 0 failures (re-run after commit below)
 
 Size (session_01Y4GLtKssDutAsJcKsAGcWf): test runs 6, module lines 1000
+
+## J1 · COMPLETE
+
+R17, R18, R19 applied and pushed on job/R085/agent-model. agent-model tests 28 pass; format, architecture, coverage, ownership all 0 failures. REPORT: agent-worker/dist/agent-worker.bundled.mjs inlines agent-model and is now stale (agent-worker requirements.test.mjs R45 static and fresh-build checks fail until agent-worker's npm run build is re-run; I rebuilt nothing). Callers must pass role: "subsession" for check sub-sessions; signin effort needs agent-runner R32. Details in my record.
