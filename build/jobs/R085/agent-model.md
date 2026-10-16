@@ -63,3 +63,7 @@ R20 and R21 applied and pushed on job/R085/agent-model. agent-model tests 30 pas
 - ownership: 0 failures
 
 Size (session_01GcrjrR5bc9rU73FFW7djXc): test runs 5, module lines 1020
+
+## J3 · COMPLETE
+
+R22 applied on job/R085/agent-model: meaningrows tool takes snippet (4-64) and says a passage is a snippet of about a sentence; a rows=passage call with no snippet reaches onTool with snippet 64, both paths. agent-model tests 31 pass; format, architecture, coverage (22/22), ownership 0 failures. REPORT: agent-worker bundle is stale (requirements.test.mjs R45 only; not rebuilt); agent-worker meaningRead (index.mjs:948) drops input.snippet, so it must forward it and retrieval R79 pass it through. Details in my record.
