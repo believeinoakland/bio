@@ -138,35 +138,56 @@ function render(cs, view) {
   const concluded = !!(b && b.conclusion && b.conclusion_stance !== "withdrawn");
   const member = view.me && view.me.member;
   const runs = view.reachable && member ? later("runs", "airuns", { contextType: "inquiry", contextId: id, limit: "50" }, String(ui.seq || 0)) : null;
+  /* R45: the answer stands while the runs are read again (a read in flight is not the run's state) */
+  if (runs && runs.state === "ok" && Array.isArray(runs.value.runs)) ui.lastRuns = runs.value.runs;
+  const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs
+    : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
+  const isMine = (s) => !!(s && member && s.principal && typeof s.principal.plane === "string"
+    && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/")));
   /* a run of hers at work on it: running, and dispatched (by this page, or ticked since by the worker): a run opened and
      withheld is never drawn at work (R33's rule; D29) */
-  const myRun = runs && runs.state === "ok" && Array.isArray(runs.value.runs)
-    ? runs.value.runs.find((s) => s && s.status === "running" && s.principal && typeof s.principal.plane === "string"
-      && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/"))
-      && (ui.dispatched === s.id || Number(s.ticks) > 1)) : null;
+  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && (ui.dispatched === s.id || Number(s.ticks) > 1)) || null;
+  /* R45: from her press until the plane has answered, and until that run is read ended, the run is at work */
+  const asked = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
+  const asking = !!ui.asking && !(asked && asked.status !== "running");
+  /* her latest run on it (newest first), and R45's ending: drawn when it has ended and nothing else is drawn from it */
+  const lastMine = runList.find(isMine) || null;
+  const ending = (c) => (c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || ""));
+  const endedPart = (withAsk) => lastMine && lastMine.status !== "running" && !myRun && !asking
+    ? `<div data-run="ended"><p class="mk-note">${W("screen.assistant.run.ended", { why: ending(lastMine.condition) || String(lastMine.status || "") })}</p>${withAsk ? askAct : ""}</div>` : "";
   const pack = view.reachable ? later("pack", "agentpack", {}) : null;
   const packName = pack && pack.state === "ok" && pack.value && ((pack.value.pack && (pack.value.pack.version || pack.value.pack.skillVersion)) || pack.value.version);
   const askAct = view.reachable && packName && member
     ? cs.act("airunopen", { label: "act.airunopen.label.question", data: { pack: String(packName) } }) : "";
 
-  if (!citedLegs.length && !myRun && !concluded) {
+  const proposals = view.reachable ? vs.filter((v) => machine(v) && v.state === "suggested" && !v.hidden) : [];
+  if (!citedLegs.length && !myRun && !asking && !concluded) {
     /* state c: new and empty, the three ways in (R38: "Capture a document for it" opens `capture` with this question) */
     const rows = [cs.row("", `<b>${W("question.empty.capture")}</b><br><span class="mk-sub">${W("question.empty.capture.line")}</span>`,
         `<a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="question">${W("question.adddoc")}</a>`),
       cs.row("", `<b>${W("question.empty.find")}</b><br><span class="mk-sub">${W("question.empty.find.line")}</span>`,
         cs.act("search", { label: "act.search.label.question", data: { q: heading } }))];
     if (askAct) rows.push(cs.row("", `<b>${W("question.empty.ask")}</b><br><span class="mk-sub">${W("question.empty.ask.line")}</span>`, askAct));
-    out.push(cs.sec("question.empty.heading", `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
+    /* R45: a run of hers that ended with no proposal is said, above the three ways in (which offer the ask again) */
+    out.push(cs.sec("question.empty.heading", (proposals.length ? "" : endedPart(false)) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
   }
-  /* state d: a run of hers at work on it */
-  if (myRun) out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div>`
-    + `<p class="mk-note">${W("question.run.leave")}</p>`
-    + cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } }), { id: "state-d" }));
+  /* state d: a run of hers at work on it, from her press (R45): its ticks once it is read, read again every 10 seconds on
+     the page clock (as the dock does, R8), Stop the run once the plane has answered */
+  if (myRun || asking) {
+    out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div>`
+      + (myRun ? `<p data-run="running">${W("screen.assistant.run.running", { ticks: String(myRun.ticks || 1) })}</p>` : "")
+      + `<p class="mk-note">${W("question.run.leave")}</p>`
+      + (myRun ? cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } })
+        : `<button class="cs-btn" data-tone="quiet" disabled data-pending="airunclose">${W("act.airunclose.label.question")}</button>`), { id: "state-d" }));
+    if (myRun && runs && runs.state === "ok" && !ui.polling) {
+      ui.polling = true;
+      cs.later(10000, (k, v) => { v.ui.polling = false; k.set("seq", (v.ui.seq || 0) + 1); });
+    }
+  } else if (!proposals.length && !concluded) out.push(endedPart(true));
   /* state e: a reading the assistant proposed, not yet weighed, only while the assistant is reachable */
-  const proposals = view.reachable ? vs.filter((v) => machine(v) && v.state === "suggested" && !v.hidden) : [];
   for (const v of proposals) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l) => String(l.target_title || l.target_id || "")).filter(Boolean);
     out.push(cs.sec("question.proposal.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}`
@@ -619,11 +640,17 @@ const acts = [
       const res = (a) => (a && a.result !== undefined ? a.result : a);
       const run = "RUN-" + hex(16);
       const bounds = (view.parts.bounds || {}).check || [];
+      const pack = el.dataset.pack;
+      /* R45: state d is drawn at her press, before the plane answers; a refusal or a withholding replaces it */
+      cs.set("said", null);
+      cs.set("limit", null);
+      cs.set("asking", run);
       cs.call("airunopen", { body: { run, contextType: "inquiry", contextId: String(view.subject || ""), mode: "check",
-        principalClaude: "member:" + member, skillVersion: el.dataset.pack, bounds } }).then((o) => {
+        principalClaude: "member:" + member, skillVersion: pack, bounds } }).then((o) => {
         const r = res(o) || {};
         if (!o || o.ok === false || r.ok === false || r.started === false) {
           const code = String(r.code || r.reason || "");
+          cs.set("asking", null);
           if (code === "AI_LIMIT_REACHED") cs.set("limit", { whose: r.whose || "", period: r.period || "", when: r.when || "", reasons: [] });
           else cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airunopen">${r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: code })}</p>` });
           return;
@@ -633,6 +660,7 @@ const acts = [
           const xr = res(x) || {};
           if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
             const c = String(xr.code || xr.reason || xr.withheld || "");
+            cs.set("asking", null);
             const key = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
             cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key ? cs.w(key) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
             return;
@@ -640,7 +668,7 @@ const acts = [
           cs.set("dispatched", run);
           cs.set("seq", (view.ui.seq || 0) + 1);
         });
-      }, () => cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` }));
+      }, () => { cs.set("asking", null); cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` }); });
       return null;
     } },
   { op: "airunclose", label: "act.airunclose.label.question",
@@ -682,7 +710,7 @@ const words = Object.freeze([
   "translate.read", "translate.label", "translate.label.help", "translate.original", "translate.back",
   "question.empty.conclude.own", "question.empty.capture", "question.empty.capture.line", "question.empty.heading", "question.empty.note",
   "question.empty.find", "question.empty.find.line", "question.empty.ask", "question.empty.ask.line", "question.adddoc",
-  "question.run.heading", "question.run.leave", "question.proposal.heading", "ai.refused.limit.overall", "question.limit.note",
+  "question.run.heading", "question.run.leave", "screen.assistant.run.running", "screen.assistant.run.ended", "question.proposal.heading", "ai.refused.limit.overall", "question.limit.note",
   "question.ai.other", "question.ai.whose", "question.concluded.heading", "question.concluded.by", "question.concluded.falsifier",
   "question.conclude.reading", "question.conclude.falsifier", "question.conclude.falsifier.help", "question.conclude.nofalsifier",
   "question.conclude.commentary", "question.conclude.commentary.help", "question.plan.link", "question.plan.link.tip",
