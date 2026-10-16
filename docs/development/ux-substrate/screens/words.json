@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 129,
   "date": 14,
-  "queue": 78,
+  "queue": 80,
   "transcribe": 19,
   "capture": 62,
   "document": 49,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3759,
+  "screen": 3767,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -74,7 +74,7 @@
   "theme": 32,
   "connect": 8,
   "setup": 77,
-  "projects": 5,
+  "projects": 9,
   "progression": 26,
   "dock": 8,
   "count": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 820,
+  "act": 828,
   "prompt": 3,
   "duties": 79,
   "strength": 77,
@@ -208,8 +208,8 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 12501,
-  "protected": 881
+  "total": 12523,
+  "protected": 888
  },
  "words": [
   {
@@ -6927,10 +6927,10 @@
   },
   {
    "key": "screen.updates.admins",
-   "en": "Only your team's administrators install updates. If something needs updating, ask one of them.",
+   "en": "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
    "protected": false,
    "source": "DEC-236",
-   "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees"
+   "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees; DEC-259: reworded"
   },
   {
    "key": "shell.unread",
@@ -7060,10 +7060,10 @@
   },
   {
    "key": "project.visibility.start.later",
-   "en": "You can change this later, with a reason.",
+   "en": "Choose one: neither is chosen for you. You can change it later, with a reason.",
    "protected": false,
    "source": "DEC-237",
-   "note": "DEC-237"
+   "note": "DEC-237; DEC-259: reworded"
   },
   {
    "key": "project.visibility.history",
@@ -26198,10 +26198,10 @@
   },
   {
    "key": "screen.security.admins",
-   "en": "The security screen is for administrators.",
+   "en": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.security.level.heading",
@@ -37603,6 +37603,104 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.join.heading",
+   "en": "Getting into a project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: Home's section for a member who may not start projects"
+  },
+  {
+   "key": "screen.home.join.says",
+   "en": "Every project you can get into: the ones you were invited to, and the findable ones, whose owners let every member see their names. A project's owners decide who joins it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.join.lead",
+   "en": "Your team's work happens in projects, and you're not in one yet. Join one you were invited to, or ask to join one the team can find.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.join.nocreate",
+   "en": "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "screen.home.join.none",
+   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: when no project is invited or findable; {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "projects.findable.head",
+   "en": "Findable",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.findable.says",
+   "en": "Projects you are not in whose owners let every member see their names. Nothing else about them shows until you are in. Ask to join, with a word on why if you like; its owners grant or decline it, and you can withdraw your request while it waits.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.findable.meta",
+   "en": "Findable: only its name shows until its owners let you in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.request.asked",
+   "en": "You asked to join on {date}. Its owners decide.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: a findable project the member asked to join; the request is open"
+  },
+  {
+   "key": "screen.projects.nocreate",
+   "en": "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: in place of “Start a project” for a member who may not start one; {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "queue.project-request.summary",
+   "en": "{who} asks to join {project}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286: in the owners' queue; the member's word follows as their own words"
+  },
+  {
+   "key": "queue.project-request.detail",
+   "en": "Grant it to invite them, or decline it. They see your answer and any word you add.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.request.grant",
+   "en": "Grant",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-286: grants a request to join (projectrequestanswer)"
+  },
+  {
+   "key": "screen.home.request.decline",
+   "en": "Decline",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-286: declines a request to join (projectrequestanswer)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -77419,6 +77517,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectrequest.label.home",
+   "en": "Ask to join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectrequestwithdraw.label.home",
+   "en": "Withdraw your request",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectrequestanswer.label.home",
+   "en": "Grant or decline a request to join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.memberadd.label.members",
    "en": "Invite a member",
    "protected": true,
@@ -77871,6 +77987,18 @@
   {
    "key": "act.projectjoin.label.projects",
    "en": "Join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectrequest.label.projects",
+   "en": "Ask to join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectrequestwithdraw.label.projects",
+   "en": "Withdraw your request",
    "protected": true,
    "source": "registry.json"
   },
@@ -80969,6 +81097,24 @@
   {
    "key": "act.projectjoin.does",
    "en": "Joins this project to see and work on it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectrequest.does",
+   "en": "Asks this project's owners to let you in, with a word on why if you like. They grant or decline it; you see their answer, and you can withdraw your request while it waits.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectrequestwithdraw.does",
+   "en": "Withdraws your request to join this project. Its owners no longer see it, and you can ask again later.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectrequestanswer.does",
+   "en": "Grants or declines a member's request to join your project, with a word if you like. Granting invites them; they join when they choose. Administrators see requests and answer none.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

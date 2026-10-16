@@ -1163,6 +1163,32 @@ w285('screen.home.first.invite', 'Make an invitation link for each person and se
 w285('screen.home.first.identity', 'Its kind, focus and purpose, in a few words: it shapes how each new member is welcomed.')
 w285('screen.home.first.project', 'Open your first project: choose below what happened.')
 # --- end DEC-285
+# --- DEC-286 (the member walk's M-D5 and M-D6, B246): a member who may not start projects is shown how to get into one, and
+#     who can let them start their own, named; asking to join a findable project (Membership §7.14) drawn; the visibility
+#     choice preselects neither (DEC-24)
+def w286(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-286' + (': ' + note if note else '')))
+ADM = "{admins}: the handles of the team's active administrators, joined with commas and “and”"
+w286('screen.home.join.heading', 'Getting into a project', False, "Home's section for a member who may not start projects")
+w286('screen.home.join.says', "Every project you can get into: the ones you were invited to, and the findable ones, whose owners let every member see their names. A project's owners decide who joins it.")
+w286('screen.home.join.lead', "Your team's work happens in projects, and you're not in one yet. Join one you were invited to, or ask to join one the team can find.")
+w286('screen.home.join.nocreate', "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.", False, ADM)
+w286('screen.home.join.none', "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.", False, 'when no project is invited or findable; ' + ADM)
+w286('projects.findable.head', 'Findable')
+w286('projects.findable.says', 'Projects you are not in whose owners let every member see their names. Nothing else about them shows until you are in. Ask to join, with a word on why if you like; its owners grant or decline it, and you can withdraw your request while it waits.')
+w286('projects.findable.meta', 'Findable: only its name shows until its owners let you in.')
+w286('projects.request.asked', 'You asked to join on {date}. Its owners decide.', False, 'a findable project the member asked to join; the request is open')
+w286('screen.projects.nocreate', "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.", False, "in place of “Start a project” for a member who may not start one; " + ADM)
+w286('queue.project-request.summary', '{who} asks to join {project}', False, "in the owners' queue; the member's word follows as their own words")
+w286('queue.project-request.detail', 'Grant it to invite them, or decline it. They see your answer and any word you add.')
+w286('screen.home.request.grant', 'Grant', True, 'grants a request to join (projectrequestanswer)')
+w286('screen.home.request.decline', 'Decline', True, 'declines a request to join (projectrequestanswer)')
+REWRITE.update({
+  'project.visibility.start.later': 'Choose one: neither is chosen for you. You can change it later, with a reason.',
+  'screen.updates.admins': "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
+  'screen.security.admins': "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here.",
+})
+# --- end DEC-286
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

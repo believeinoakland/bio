@@ -126,7 +126,7 @@ const J = [
    { s: 'setup', act: 'recoverycodesissue', say: 'She saves her ten recovery codes, shown once: her way back in if she ever loses her password.' },
    { s: 'setup', act: 'groupnameset', say: 'She opens “Your team”, names it and sees it saved, leaves the other parts at their safe choices, and finishes. “Open your team\'s Civicsmith” takes her in.' },
    { s: 'home', v: 'newgroup', act: null, say: 'Her team\'s home says nothing is here yet, and offers inviting members and saying who the team is.' },
-   { s: 'members', act: 'memberadd', say: 'She makes an invitation link for Mai, with the cover the team knows her by, and sends it herself: Civicsmith sends no email.' },
+   { s: 'members', act: 'memberadd', say: 'She makes an invitation link for Mai, with the cover the team knows her by, lets her start projects as well as contribute, and sends it herself: Civicsmith sends no email.' },
    { s: 'join', v: 'free', act: 'enroll', say: 'Mai opens the link. She chooses her language, a handle (mai-k is free) and a password, and joins. She is signed in.' },
    { s: 'home', v: 'firstvisit', act: null, say: 'Her home offers the guided welcome she began when she joined. She continues it.' },
    { s: 'account', act: 'expertisedeclare', say: 'In her account she checks her language and declares that she interprets Spanish and English, so members can ask her to check work in that field.' },
@@ -151,6 +151,12 @@ const J = [
    { s: 'question', v: 'proposal', act: 'versionaccept', only: 'ai', say: 'The assistant proposes a reading resting on two passages, marked as its work. He reads both and accepts it.' },
    { s: 'question', act: 'conclude', say: 'He concludes on the reading, saying what would change it.' },
    { s: 'question', v: 'concluded', act: null, say: 'The question shows the team\'s answer: who concluded it, when, and what would change it.' } ] },
+ { n: 30, t: 'Getting into a project', who: 'A member who may not start projects, then a project\'s owner (DEC-286; the member walk, B246)', steps: [
+   { s: 'home', v: 'nocreate', act: 'projectrequest', say: 'Mai joined with what a member gets unless an administrator chooses otherwise: she may contribute, not start projects, so her Home has no “What happened?”. “Getting into a project” lists Dev\'s invitation and the projects the team can find. She asks to join “Street trees on 66th Avenue”, with a word on why.' },
+   { s: 'home', act: 'projectrequestanswer', say: 'The project\'s owner finds her request in Needs you, with her word, and grants it. That invites her.' },
+   { s: 'projects', v: 'nocreate', act: 'projectjoin', say: 'Mai joins from Projects. Her request to join “Bus stop shelters” still waits; she withdraws it.' },
+   { s: 'projects', v: 'nocreate', act: 'projectrequestwithdraw', say: 'Withdrawn, it leaves the owners\' queue. Projects shows no “Start a project” for her, and names Rosa, who can let her start her own.' },
+   { s: 'home', v: 'noproject', act: null, say: 'Had no project been open to her, Home would have said so and named Rosa.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */
 function journeySteps(j, ai) {
@@ -194,4 +200,5 @@ const JBRIEF = {
  27: ["Adding a third administrator, or removing one.", "Administrators only."],
  28: ["From civicsmith.org to the team's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "civicsmith.org; then the invitation link the founder sends."],
  29: ["From installing the team's Civicsmith to a first conclusion on a real question: the release Bob must be able to use (K3320).", "civicsmith.org; then the team's own Civicsmith."],
+ 30: ["A member who may not start projects gets into one: by joining one they were invited to, or by asking to join one the team can find; its owners decide.", "Home's “Getting into a project”, and Projects."],
 };

@@ -450,6 +450,30 @@
      "modules": [
       "membership"
      ]
+    },
+    {
+     "op": "projectrequest",
+     "label": "Ask to join",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectrequestwithdraw",
+     "label": "Withdraw your request",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectrequestanswer",
+     "label": "Grant or decline a request to join",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
     }
    ],
    "journeys": [
@@ -1225,6 +1249,22 @@
      "status": "function",
      "modules": [
       "membership"
+     ]
+    },
+    {
+     "op": "projectrequest",
+     "label": "Ask to join",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectrequestwithdraw",
+     "label": "Withdraw your request",
+     "status": "function",
+     "modules": [
+      "project-roster"
      ]
     }
    ],

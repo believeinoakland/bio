@@ -5213,6 +5213,90 @@
    "en": "Open your first project: choose below what happened.",
    "protected": false,
    "note": "DEC-285"
+  },
+  {
+   "key": "screen.home.join.heading",
+   "en": "Getting into a project",
+   "protected": false,
+   "note": "DEC-286: Home's section for a member who may not start projects"
+  },
+  {
+   "key": "screen.home.join.says",
+   "en": "Every project you can get into: the ones you were invited to, and the findable ones, whose owners let every member see their names. A project's owners decide who joins it.",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.join.lead",
+   "en": "Your team's work happens in projects, and you're not in one yet. Join one you were invited to, or ask to join one the team can find.",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.join.nocreate",
+   "en": "Starting a project of your own is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "protected": false,
+   "note": "DEC-286: {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "screen.home.join.none",
+   "en": "No project is open to you yet. A project's owners can invite you, and your team's administrators can let you start your own. Yours: {admins}.",
+   "protected": false,
+   "note": "DEC-286: when no project is invited or findable; {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "projects.findable.head",
+   "en": "Findable",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.findable.says",
+   "en": "Projects you are not in whose owners let every member see their names. Nothing else about them shows until you are in. Ask to join, with a word on why if you like; its owners grant or decline it, and you can withdraw your request while it waits.",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.findable.meta",
+   "en": "Findable: only its name shows until its owners let you in.",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "projects.request.asked",
+   "en": "You asked to join on {date}. Its owners decide.",
+   "protected": false,
+   "note": "DEC-286: a findable project the member asked to join; the request is open"
+  },
+  {
+   "key": "screen.projects.nocreate",
+   "en": "Starting a project is for members your team's administrators allow. Yours: {admins}. Ask if you have a problem to bring.",
+   "protected": false,
+   "note": "DEC-286: in place of “Start a project” for a member who may not start one; {admins}: the handles of the team's active administrators, joined with commas and “and”"
+  },
+  {
+   "key": "queue.project-request.summary",
+   "en": "{who} asks to join {project}",
+   "protected": false,
+   "note": "DEC-286: in the owners' queue; the member's word follows as their own words"
+  },
+  {
+   "key": "queue.project-request.detail",
+   "en": "Grant it to invite them, or decline it. They see your answer and any word you add.",
+   "protected": false,
+   "note": "DEC-286"
+  },
+  {
+   "key": "screen.home.request.grant",
+   "en": "Grant",
+   "protected": true,
+   "note": "DEC-286: grants a request to join (projectrequestanswer)"
+  },
+  {
+   "key": "screen.home.request.decline",
+   "en": "Decline",
+   "protected": true,
+   "note": "DEC-286: declines a request to join (projectrequestanswer)"
   }
  ],
  "rewrite": {
@@ -5342,6 +5426,9 @@
   "screen.setup.finished": "You're ready",
   "screen.setup.finished.what": "Anything you left is waiting in Settings. Next, invite your first members.",
   "act.queuemute.does": "Stops this kind of item, or a project's items, reaching your queue, or lets muted ones reach it again. What you muted is listed under Muted at the foot of your queue.",
-  "act.promote.does": "Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it."
+  "act.promote.does": "Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.",
+  "project.visibility.start.later": "Choose one: neither is chosen for you. You can change it later, with a reason.",
+  "screen.updates.admins": "Only your team's administrators install updates. Yours: {admins}. If something needs updating, ask one of them.",
+  "screen.security.admins": "Security is set by your team's administrators. Yours: {admins}. Ask one of them about anything here."
  }
 }
