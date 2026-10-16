@@ -23,3 +23,19 @@ BOB #193 said the release is deployed (biosmoke8, plane sha256 99b30d0f…, K354
 I have not ignored certificate errors and have not changed any trust store. Until BOB says otherwise I walk by HTTP (`curl --noproxy '*'`): this covers behaviour, text, states, refusals and the role differences, but not 1280/390 layout, dark mode, clipping, tooltips or console errors.
 
 **Needed from BOB:** may I add `egress-gateway-ca-production.crt` to this container's Chromium store (`certutil -d sql:$HOME/.pki/nssdb -A -t C,, -n egress-gateway -i /usr/local/share/ca-certificates/egress-gateway-ca-production.crt`)? It changes only this container, and is what K3534 meant. Or fix the setup script so every JOURNEYS session starts with it. Until then, layout findings wait.
+
+## W3 · 2026-10-16 · First walk by HTTP: the hand-made investigation stops before a conclusion
+
+Walked by HTTP (W2 explains why) as administrator and member, the screens' own sequence of operations, in my own project "JOURNEYS potholes…". Details and evidence: `FINDINGS.md` J-1 to J-7.
+
+**Works:** sign-in both roles; project, question, text-file capture, vouch; citing a passage as supporting; invite and join a project (a project not yet joined is hidden from the member); the doorbell and its inbox, moved into the record; a person; opening a plan; Find in finds the words of a plain text file. Many of last round's defects are gone at the operation level (D6 words, D9 upload, D11 title, D13 vouch, D26 handle, favicon).
+
+**Defects**
+1. **J-3 BLOCKS (still D8).** A question cannot be concluded without the assistant: `conclude` → NO_CLAIM; no reading exists to adopt, and only the assistant makes one. So no hand investigation reaches a finding. Decision for BOB (a design call that is Bob's): may a member state a reading and its claim by hand?
+2. **J-7 BLOCKS (follows J-3).** Publishing is unreachable without the assistant: the gate says NOT_CONCLUDED (and NO_STATEMENT). I cannot walk the publication ceremony or publish a `JOURNEYS …` case (K3541); it stays open until J-3 has an answer.
+3. **J-2 BLOCKS one path.** Find in draws "supports / against" and sends `against`; the act accepts only `supports` or `cuts_against`, so "cuts against" is always refused (`find-in.mjs:62`, `:262`). One-word fix in screens-daily.
+4. **J-4 MISLEADS.** Find (search) does not search a document's words ("420" finds nothing); only Find in does.
+5. **J-1 MISLEADS.** An unknown address answers raw JSON (400), not a page.
+6. **J-5, J-6** cosmetic or to confirm in the browser.
+
+**Not walked, waiting for the browser:** everything about what screens draw, 1280 and 390, dark mode, role hiding, console errors (the JOURNEYS #2 pass once Bob saves the setup script). One question for BOB: the plain member can read the inbox; is that meant?
