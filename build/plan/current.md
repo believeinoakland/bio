@@ -44,3 +44,13 @@ All seven run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-18 · agent-worker** · R96 (forward `ids`), R97 (contracts carry subjects, targets and arms), R98 (each usage entry's real model), R99 (wallclock measured), R100 (a cited address with an extent resolves to its record) · claude-sonnet-5-5.
 - **R085-19 · machinery-producers** · R14 (no "capture finished" item for a record holding no capture) · claude-haiku-5-5.
 - **R085-20 · screens-inquiry** · R46 (the founder drawn by handle) · claude-haiku-5-5.
+
+## Fix round 5 (K3510; passage reads with bare words, and the run shown on the question), out of layer on the cut
+
+All five run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2–4). The diagnosis is `build/plan/diag-085-r5.md`. Merge order: query-language and agent-harness before agent-worker (its bundle takes both); screens-inquiry and control-plane any time. Not in the round, each with its hard reason: the dock's pass, level and cost (words missing, K3366; the cost is DEC-296's, T50, N1167); a `level-empty` proposal drawn by key (its sentence is missing from `words.json`); a backfill of pre-R38 captures' index state (only biosmoke8's trial capture is affected; the walk uses a fresh capture); `airunopen`'s project-gate wording (a permitting ground, not a bug); `/app/ai-session/<run>` (a legacy-interface registry entry, no requirement asks for it).
+
+- **R085-21 · query-language** · R31 (bare words under `rows=passage` read as passage words) · claude-sonnet-5-5.
+- **R085-22 · agent-worker** · R101 (a dedup drop is logged), R102 (`¶` ends a cited record id) · claude-sonnet-5-5.
+- **R085-23 · agent-harness** · R13 (an empty-level description names "this question") · claude-haiku-5-5.
+- **R085-24 · screens-inquiry** · R47 (the question page draws its run beside waiting proposals), R48 (the dock draws the latest ended run) · claude-sonnet-5-5.
+- **R085-25 · control-plane** · R101 (`/favicon.ico` answers 204) · claude-haiku-5-5.
