@@ -1271,6 +1271,25 @@ w292('project.settings.fold', "This project's settings", False, "folds the bar, 
 w292('shell.level.button.prompt', 'Explanations: prompt', False, "the header's explanations button while explanations open promptly (level.prompt.name names the choice itself)")
 w292('shell.level.button.pause', 'Explanations: on a pause', False, "the header's explanations button while they open on a longer pause")
 # --- end DEC-292
+# --- DEC-293 (screens-inquiry R45, R085): each way an assistant's run can end, in plain words, as {why} in
+#     screen.assistant.run.ended ("The run ended: {why}."); keyed by the run's stopped bound (run-rules RUN_BOUNDS, RUN_ENDINGS)
+def w293(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-293' + (': ' + note if note else '')))
+E = 'ai.run.ending.'
+w293(E + 'completed', 'it went through everything it could and has nothing to propose', False, 'RUN_ENDINGS completed, with no proposal')
+w293(E + 'cancelled', 'you stopped it', False, 'RUN_ENDINGS cancelled: the member pressed Stop')
+w293(E + 'mode-not-deployed', "this kind of work isn't switched on in your team's Civicsmith yet, so nothing was spent", False, 'RUN_ENDINGS mode-not-deployed')
+w293(E + 'fetches', 'it reached its limit on pages it may fetch from the web', False, 'RUN_BOUNDS fetches')
+w293(E + 'subsessions', 'it reached its limit on separate searches it may start', False, 'RUN_BOUNDS subsessions')
+w293(E + 'wallclock', 'it reached its time limit', False, 'RUN_BOUNDS wallclock')
+w293(E + 'runtime', "it reached the most computing your team's hosting account allows in one go", False, 'RUN_BOUNDS runtime')
+w293(E + 'mints', 'it reached its limit on passages it may mark for citing', False, 'RUN_BOUNDS mints')
+w293(E + 'surfaces', 'it reached its limit on questions it may open', False, 'RUN_BOUNDS surfaces')
+w293(E + 'proposals', 'it reached its limit on options it may propose', False, 'RUN_BOUNDS proposals')
+w293(E + 'pages', 'it reached its limit on pages of documents it may read', False, 'RUN_BOUNDS pages')
+w293(E + 'lease', 'it stopped answering partway, so Civicsmith ended it', False, 'RUN_BOUNDS lease: the reaper ended a run that stopped checking in')
+w293(E + 'unknown', 'Civicsmith could not tell why', False, 'any other value, including a bare status')
+# --- end DEC-293
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

@@ -5519,6 +5519,84 @@
    "en": "Explanations: on a pause",
    "protected": false,
    "note": "DEC-292: the header's explanations button while they open on a longer pause"
+  },
+  {
+   "key": "ai.run.ending.completed",
+   "en": "it went through everything it could and has nothing to propose",
+   "protected": false,
+   "note": "DEC-293: RUN_ENDINGS completed, with no proposal"
+  },
+  {
+   "key": "ai.run.ending.cancelled",
+   "en": "you stopped it",
+   "protected": false,
+   "note": "DEC-293: RUN_ENDINGS cancelled: the member pressed Stop"
+  },
+  {
+   "key": "ai.run.ending.mode-not-deployed",
+   "en": "this kind of work isn't switched on in your team's Civicsmith yet, so nothing was spent",
+   "protected": false,
+   "note": "DEC-293: RUN_ENDINGS mode-not-deployed"
+  },
+  {
+   "key": "ai.run.ending.fetches",
+   "en": "it reached its limit on pages it may fetch from the web",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS fetches"
+  },
+  {
+   "key": "ai.run.ending.subsessions",
+   "en": "it reached its limit on separate searches it may start",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS subsessions"
+  },
+  {
+   "key": "ai.run.ending.wallclock",
+   "en": "it reached its time limit",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS wallclock"
+  },
+  {
+   "key": "ai.run.ending.runtime",
+   "en": "it reached the most computing your team's hosting account allows in one go",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS runtime"
+  },
+  {
+   "key": "ai.run.ending.mints",
+   "en": "it reached its limit on passages it may mark for citing",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS mints"
+  },
+  {
+   "key": "ai.run.ending.surfaces",
+   "en": "it reached its limit on questions it may open",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS surfaces"
+  },
+  {
+   "key": "ai.run.ending.proposals",
+   "en": "it reached its limit on options it may propose",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS proposals"
+  },
+  {
+   "key": "ai.run.ending.pages",
+   "en": "it reached its limit on pages of documents it may read",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS pages"
+  },
+  {
+   "key": "ai.run.ending.lease",
+   "en": "it stopped answering partway, so Civicsmith ended it",
+   "protected": false,
+   "note": "DEC-293: RUN_BOUNDS lease: the reaper ended a run that stopped checking in"
+  },
+  {
+   "key": "ai.run.ending.unknown",
+   "en": "Civicsmith could not tell why",
+   "protected": false,
+   "note": "DEC-293: any other value, including a bare status"
   }
  ],
  "rewrite": {

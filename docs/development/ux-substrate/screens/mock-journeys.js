@@ -146,6 +146,7 @@ const J = [
    { s: 'project', v: 'empty', act: 'promote', say: 'On the new project he writes his first question, “How many pothole reports did the city close late in 2025?”, and opens it.' },
    { s: 'question', v: 'new', act: 'airunopen', only: 'ai', say: 'The question has nothing cited yet. He asks the assistant to look through what the team holds.' },
    { s: 'question', v: 'running', act: null, only: 'ai', say: 'The assistant is at work; he can leave, and what it proposes will wait for him.' },
+   { s: 'question', v: 'ended', act: 'airunopen', only: 'ai', say: 'Had the run ended with nothing to propose, the question would say why in plain words, such as its time limit, and offer the three ways again, the assistant among them.' },
    { s: 'question', v: 'new', act: 'search', only: 'noai', say: 'The question has nothing cited yet. He looks for a source the team already holds; there is none, so he captures one.' },
    { s: 'capture', v: 'question', act: 'acquire', say: 'Add says where what he adds is filed: under the project, for this question. He captures the city\'s 2026 performance report from its address.' },
    { s: 'document', v: 'held', act: 'release', say: 'The copy opens on its page, held: only he can see it until he vouches for it. He reads it, and vouches for it there, under his name.' },
