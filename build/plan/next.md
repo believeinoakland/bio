@@ -11,6 +11,9 @@
 - N1174 · admission or control-plane (JOURNEYS J-1; walk-085 F8) · an unknown address outside `/api/` and `/app/` draws the design's `unavailable` page, not the raw `UNKNOWN_OP` JSON; the owner confirmed by the job's reading · K3545 · req: as they stand
 - N1175 · content-search, extraction (JOURNEYS J-4; walk-085 F1) · Find searches the words of a captured, vouched document (screen `finder`, CONTENT-SEARCH-DESIGN), as `findin` already does · K3545 · req: as they stand
 - N1176 · doorbell, membership (JOURNEYS W3) · a plain member reads the inbox (`inbox` returns a knock): checked against the inbox's requirements and DEC; refused or hidden if they reserve it to administrators · K3545 · req: as they stand
+- N1177 · screens-daily, content-search (JOURNEYS J-8, J-9; K3547) · Find in's "Record a fact about a person" sends the `valid` {from, to, precision, zone} `recordpersonfact` requires, and "Hold this as a standard" names the passage of a text file (a passage id content-search returns, or the capture and extent `standarddeclare` accepts); each with a test of the body sent · K3547 · req: as they stand · fix round 7 with N1172
+- N1178 · actions or screens-action (JOURNEYS J-10) · an unknown action id is refused in words naming an action, not an inquiry (C-134.1) · K3547 · req: as they stand
+- N1179 · admission (JOURNEYS J-11) · an administrator's act asked by a member is refused NOT_AN_ADMIN before any password check (REAUTH_DUE) · K3547 · req: as they stand
 
 - N1156 · bundler (test only; K3454) · `fleetbundles.test.mjs`'s "agent-worker's 28 inputs are all recorded" hand-lists the inputs and lags the bundle (36 recorded: answers, calc-grammar, record-grammar json, holdings); assert the recorded inputs against what the build reaches, never a hand list (K3268). · K3454
 
