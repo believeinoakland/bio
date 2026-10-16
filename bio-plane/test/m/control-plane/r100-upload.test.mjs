@@ -74,6 +74,11 @@ const mf = new Miniflare({
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
+  /* the scanner is a separate service the instance binds; a stand-in that finds every file clean, so file-safety R8's warned path
+     (which scans first) can open the original: the door's part is only to relay that answer */
+  serviceBindings: { FILE_SCANNER: async () => new Response(JSON.stringify({ ok: true, verdicts: [{ tool: "clamav", engine: "clamav",
+    engine_version: "stand-in", signatures: "stand-in", scanned_at: new Date().toISOString(), result: "clean", findings: [] }] }),
+    { headers: { "content-type": "application/json" } }) },
   bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: "mem-r100-0123456789abcdef", PROBE_TOKEN: "prb-r100-0123456789abcdef",
               VERSION: "4.6.0", INSTANCE_NAME: "r100-town" },
 });
@@ -81,7 +86,7 @@ after(() => mf.dispose());
 const ORIGIN = "https://group.example";
 const plane = (url, init = {}) => mf.dispatchFetch(new URL(url, ORIGIN).href, init);
 
-test("R100 (through the door, the real plane): a member uploads a two-line text file with `type` `text/plain`, then promotes it as the capture screen does; `op=reading` by its digest answers `found: true` with both lines' text in its units, and opening the original (`op=capture`) is not refused `SAFE_VIEW_ONLY` (controls: the same upload with no `type` stands, its reading failed or undetermined; the same bytes again are `existed: true` and are not read again)", async () => {
+test("R100 (through the door, the real plane): a member uploads a two-line text file with `type` `text/plain`, then promotes it as the capture screen does; `op=reading` by its digest answers `found: true` with both lines' text in its units, and the original opens by the warned path (`op=openwithwarning`) (controls: the same upload with no `type` stands, its reading failed or undetermined; the same bytes again are `existed: true` and are not read again)", async () => {
   const claimed = await plane("/api/?op=claim", { method: "POST", body: JSON.stringify({ bootstrapToken: ADM, password: PASSWORD }) });
   assert.equal(claimed.status, 200, await claimed.clone().text());
   await claimed.arrayBuffer();
@@ -112,10 +117,15 @@ test("R100 (through the door, the real plane): a member uploads a two-line text 
   assert.equal(read.result.found, true, JSON.stringify(read).slice(0, 400));
   const said = JSON.stringify(read.result.text_units);
   assert.ok(said.includes("line one") && said.includes("line two of the file"), said);
-  const original = await plane(`/api/?op=capture&sha256=${sha}`, { headers: auth });
-  const originalText = await original.text();
-  assert.equal(originalText.includes("SAFE_VIEW_ONLY"), false, originalText.slice(0, 200));
-  assert.equal(original.status, 200);
+  /* the original opens by the warned path, a received file being graded by file-safety R6 and R8 as any upload is */
+  const warned = encodeURIComponent(JSON.stringify({ own_device: true, no_macros: true }));
+  const opened = await plane(`/api/?op=openwithwarning&capture=${sha}&warned=${warned}`, { headers: auth });
+  const openedBytes = Buffer.from(await opened.arrayBuffer());
+  assert.equal(opened.status, 200, openedBytes.toString().slice(0, 300));
+  assert.equal(openedBytes.toString("utf8"), bytes.toString("utf8"), "the original's own bytes; headers " + JSON.stringify([...opened.headers]));
+  /* control: without the warning it is the safe view only, as for any upload (file-safety R6, R8) */
+  const plainOpen = await plane(`/api/?op=capture&sha256=${sha}`, { headers: auth });
+  assert.match(await plainOpen.text(), /SAFE_VIEW_ONLY/);
   /* control: the same bytes again are held already, answered `existed` and not read again */
   const twice = await (await plane("/api/?op=captureupload&statement=again&name=notes.txt&type=text%2Fplain", { method: "POST", headers: auth, body: bytes })).json();
   assert.deepEqual([twice.result.ok, twice.result.existed, twice.result.document], [true, true, undefined]);
