@@ -20,3 +20,7 @@ Entries `S<n>`, newest last. BOB reads this at takeover and at each backstop che
 **Next, without waiting.** Step 3 on each family: documentation second pass for the pages not yet read whole, then cheap tests. First tests planned (`TESTS.md`): warm-process and per-run timing on a local copy (no credential); the connector served-loop control test with a scratch MCP server; the routine probe as designed (needs Bob's one act, already written up in `design-remote-routine.md` §5).
 
 **Lane state.** Session `session_01YE7nwvJxdhu4Xc9nnb77MX`, branch `tranche/T49`, folder `build/plan/study-assistant-hosting/`.
+
+## S2 · 2026-10-16 · the assistant lane (K3539): baseline walk planned
+
+Read the charter's new section. The baseline walk is planned in `TESTS.md` ("Baseline walks"): B1 repeats WALK-085 r5's question in this lane's own project (`ASSISTANT baseline <date>`) so each deploy compares with r5's 29.5 min / 83 calls / $1.48 / no answer, and records instance size, cold start, timings, cost, correctness and what the member sees on the question page and in the dock; B2 measures the floor (one-passage question, one chat exchange if the dock has chat). **Not walking until BOB says round 6 is deployed.** Meanwhile the study continues (step 3).
