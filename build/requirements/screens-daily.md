@@ -91,7 +91,7 @@ Where a member starts and works each day: the group's home, their queue, (T48) w
 
 #### T49 (T49-24)
 
-- **R24** (T49; D7 **B**; `citation` R14's `found` form; amends R5) On `find-in`, "Cite in the question" draws the choice "supports" or "against" (`role`, none preselected) beside each result. It sends `cite` with the role `citation` takes for that choice (`supports`; "against" sends `cuts_against`; K3550), and with the question and that question's project as `citation` takes them. It is refused in place until a role is chosen. Test: a cite sends `role: "supports"`; "against" sends `role: "cuts_against"` *(not yet met: R085)*. Control: with no role chosen, nothing is sent (`find-in.mjs`:223–231).
+- **R24** (T49; D7 **B**; `citation` R14's `found` form; amends R5) On `find-in`, "Cite in the question" draws the choice "supports" or "against" (`role`, none preselected) beside each result. It sends `cite` with the role `citation` takes for that choice (`supports`; "against" sends `cuts_against`; K3550), and with the question and that question's project as `citation` takes them. It is refused in place until a role is chosen. Test: a cite sends `role: "supports"`; "against" sends `role: "cuts_against"`. Control: with no role chosen, nothing is sent (`find-in.mjs`:223–231).
 - **R25** (T49; D11 **M**, D30 **m**, D31 **m**; amends R1, R9, R10, R23) Four rules:
   - **The title.** Home's blank start and "Start a project" write the project's `title` (`home.mjs`:318 writes `objective` only), so every screen reads it as the project's title.
   - **Door cards.** Each card draws its title and its description as separate elements.
