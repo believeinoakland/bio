@@ -32,3 +32,18 @@ Size (session_013MCbxDMa9jH48CQ4Ks4wqm): test runs 9, module lines 3781
 ## J3 · COMPLETE · re B3
 
 R100 done on job/R085/control-plane (tranche/R085 @ 97f683add5 merged in). Door passes type and reads a new upload as acquire does; the real-plane test now ends on the warned path per B3. Control-plane suite 291/291; format, architecture, coverage 68/68 and ownership all 0 failures. Record has the details.
+
+## J4 · COMPLETE
+
+R101 is built and pushed on job/R085/control-plane @ d774e89be8 (entry R085-25, control-plane R101).
+
+`GET /favicon.ico` answers 204 with no body, beside `/version` in `bio-plane/src/control-plane/index.mjs`, before any op is read, so it is never `UNKNOWN_OP`. An unknown path still answers 400 `UNKNOWN_OP`. The test is `bio-plane/test/m/control-plane/r101-favicon.test.mjs`, named R101.
+
+Requirements file: I left `build/requirements/control-plane.md` unchanged, so R101 still carries "(not yet met: R085)". That file is BOB's; please unmark R101 when you accept the round.
+
+Tests: `node --test test/m/control-plane/*.test.mjs` in bio-plane: 292 pass, 0 fail (the new R101 test passes).
+Checks: format 0 failures; architecture 0 failures (60 product files); coverage 69 of 69 live requirement ids named by a test; ownership 3 files changed by control-plane, 0 failures.
+
+Deferred: none. Found in other modules: none.
+
+Size (session_01WToWb3ATJirHryNuLb8h8A): test runs 2, module lines 3785
