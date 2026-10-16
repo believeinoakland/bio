@@ -126,6 +126,10 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   /* provenance's `register` (its read contract), which a promotion's steps read: empty here, as a record with no
      registered capture holds it. provenance is not among this module's uses, so the table stands alone. */
   sql.exec(`CREATE TABLE IF NOT EXISTS register (bundle_id TEXT, capture_sha TEXT, registered TEXT, authored INTEGER NOT NULL DEFAULT 0)`);
+  /* leg-earning's `inquiry_basis` and content's `content`, which R85 reads for a run's subjects: neither is among this module's
+     uses, so the tables stand alone with the columns read (as `register` above). */
+  sql.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL, content_id TEXT, PRIMARY KEY (bundle_id, ord))`);
+  sql.exec(`CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, extent_kind TEXT NOT NULL, ref TEXT NOT NULL)`);
   observationLogOf(ctx, { extraction: null, provenance: null }).migrate();
   connectionsOf(ctx, { env }).migrate();
   const bias = biasOf(ctx, { env });
