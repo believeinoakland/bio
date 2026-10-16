@@ -5,7 +5,7 @@
 // but its own class's. Its exceptions: R15's default export (wrangler builds a module without one as a service worker
 // and refuses its Durable Object), which answers R6's 404 to anything reaching it other than through the class; R26's
 // JSON answer when the library cannot start the container or reach its port; R25's hold, which keeps the container
-// awake through a member's sign-in; and R30's lines, one per lifecycle event and per egress call.
+// awake through a member's sign-in; and R30's lines, one per lifecycle event and per egress call, with R34's per refused call.
 //
 // R10's egress is applied here from the member's own configuration (`fleet-member.json` `egress`): the container has
 // no internet but the listed hosts, and its HTTPS goes through Cloudflare's outbound interception, whose CA the image
@@ -56,8 +56,26 @@ function egressHandler(host) {
   };
 }
 
-// The library's outbound proxy, reachable only through `ctx.exports` (it is what applies `allowedHosts`).
-export { ContainerProxy };
+// The library's outbound proxy, reachable only through `ctx.exports` (it is what applies `allowedHosts`), under the
+// library's own export name. R34: its refusal of a host outside `egress` (520 "Origin is disallowed", before any
+// handler) is returned unchanged, with one line saying which host, method and path template; never query, headers or body.
+const REFUSED_WORDS = 'Origin is disallowed';
+const hostOf = (url) => { try { return new URL(url).hostname.toLowerCase().replace(/\.$/, ''); } catch { return null; } };
+class RefusalLoggingProxy extends ContainerProxy {
+  async fetch(request) {
+    const res = await super.fetch(request);
+    try {
+      const host = hostOf(request.url);
+      if (res.status === 520 && host !== null && !member.egress.includes(host) && (await res.clone().text()) === REFUSED_WORDS) {
+        const props = (this.ctx && this.ctx.props) || {};
+        log({ event: 'runner.egress.refused', instance_ref: instanceRef(props.containerId), host, method: request.method,
+          path_template: pathTemplate(request.url), status: 520 });
+      }
+    } catch { /* a log line never changes the answer */ }
+    return res;
+  }
+}
+export { RefusalLoggingProxy as ContainerProxy };
 
 export class AgentRunner extends Container {
   defaultPort = member.image.port;

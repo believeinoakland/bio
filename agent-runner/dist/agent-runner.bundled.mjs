@@ -1596,6 +1596,35 @@ function egressHandler(host) {
     }
   };
 }
+var REFUSED_WORDS = "Origin is disallowed";
+var hostOf = (url) => {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/\.$/, "");
+  } catch {
+    return null;
+  }
+};
+var RefusalLoggingProxy = class extends ContainerProxy {
+  async fetch(request) {
+    const res = await super.fetch(request);
+    try {
+      const host = hostOf(request.url);
+      if (res.status === 520 && host !== null && !fleet_member_default.egress.includes(host) && await res.clone().text() === REFUSED_WORDS) {
+        const props = this.ctx && this.ctx.props || {};
+        log({
+          event: "runner.egress.refused",
+          instance_ref: instanceRef(props.containerId),
+          host,
+          method: request.method,
+          path_template: pathTemplate(request.url),
+          status: 520
+        });
+      }
+    } catch {
+    }
+    return res;
+  }
+};
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
   // A conversation's instance sleeps soon after its connection ends (R9); a sign-in holds it awake to its outcome (R25).
@@ -1695,6 +1724,6 @@ var worker_default = {
 };
 export {
   AgentRunner,
-  ContainerProxy,
+  RefusalLoggingProxy as ContainerProxy,
   worker_default as default
 };
