@@ -1219,6 +1219,23 @@ REWRITE.update({
   'question.empty.ask.line': 'It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it.',
 })
 # --- end DEC-288
+# --- DEC-289 (the walk's D5, the member walk's M-D3): a held copy says what to do next and what vouching is; attest and retire
+#     in plain words, retire apart; a file a member added says why it is high risk and what to do next
+def w289(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-289' + (': ' + note if note else '')))
+w289('document.held.says', 'Held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.', False, 'a copy the viewer captured, not yet vouched for (release)')
+w289('document.attest.when', 'Useful when someone may later claim the document was changed after it was captured.', False, 'beside the timestamp button; what it does is its own explanation')
+w289('document.attest.label', 'Get an independent timestamp', True, 'the act attest')
+w289('document.retire.fold', 'Stop using this copy', False, 'folds the act retire, apart from the copy\'s other acts')
+w289('document.retire.when', 'For a copy that should no longer be relied on, such as one captured from the wrong page. It stays in the record with your reason.')
+w289('document.retire.label', 'Stop using this copy…', True, 'the act retire')
+w289('document.thiscopy.says', 'What you can do with this copy itself, apart from reading and citing it.')
+w289('screen.open-file.byyou', 'Added by you, {date} · {project}', False, "a file the viewer added: when, and the project it was added in")
+w289('screen.open-file.high.yours', "Added by you, not fetched by your team's Civicsmith: every such file is high risk, yours included.", False, 'file-safety R6, R8: a received file is graded high on its source')
+w289('screen.open-file.next.head', 'What to do next')
+w289('screen.open-file.next.yours', 'Read it in the safe view below. To open the original itself, ask for a deeper check first.')
+w289('screen.open-file.check.notyet', 'Not checked yet: its first check is waiting. The original never opens before a check.', False, "in place of a scanner's raw state (not_scanned)")
+# --- end DEC-289
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

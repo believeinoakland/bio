@@ -132,6 +132,7 @@ const J = [
    { s: 'account', act: 'expertisedeclare', say: 'In her account she checks her language and declares that she interprets Spanish and English, so members can ask her to check work in that field.' },
    { s: 'home', act: 'startfrom', say: 'Back on Home she answers “What happened?” with “A problem I live with”.' },
    { s: 'capture', act: 'testify', say: 'Her first piece of work: she records what she saw on Seminary Avenue, where and when, with a photo. It is her testimony, labeled as hers.' },
+   { s: 'open-file', v: 'yours', act: 'safeview', say: 'Opening her notes, she reads why a file she added herself is high risk, and what to do next. She reads them in the safe view.' },
    { s: 'account', act: 'signout', say: 'At the end of the day she signs out on the library computer she used.' },
    { s: 'front', v: 'signedout', act: 'login', say: 'Next morning, on her own phone, she opens the team\'s address, signs in, and keeps herself signed in on that phone.' } ] },
  { n: 29, t: 'From installing to a first conclusion', who: 'The founder, as administrator and as member (DEC-245; Bob\'s K3320)', steps: [
@@ -146,7 +147,7 @@ const J = [
    { s: 'question', v: 'running', act: null, only: 'ai', say: 'The assistant is at work; he can leave, and what it proposes will wait for him.' },
    { s: 'question', v: 'new', act: 'search', only: 'noai', say: 'The question has nothing cited yet. He looks for a source the team already holds; there is none, so he captures one.' },
    { s: 'capture', act: 'acquire', say: 'He captures the city\'s 2026 performance report from its address, for this question.' },
-   { s: 'held', act: 'release', say: 'He vouches for the capture, standing behind the copy.' },
+   { s: 'document', v: 'held', act: 'release', say: 'The copy opens on its page, held: only he can see it until he vouches for it. He reads it, and vouches for it there, under his name.' },
    { s: 'document', act: 'cite', say: 'He selects the passage that answers and cites it on the question.' },
    { s: 'question', v: 'proposal', act: 'versionaccept', only: 'ai', say: 'The assistant proposes a reading resting on two passages, marked as its work. He reads both and accepts it.' },
    { s: 'question', act: 'conclude', say: 'He concludes on the reading, saying what would change it.' },

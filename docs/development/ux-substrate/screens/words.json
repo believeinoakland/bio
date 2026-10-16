@@ -14,7 +14,7 @@
   "queue": 80,
   "transcribe": 19,
   "capture": 62,
-  "document": 49,
+  "document": 56,
   "question": 79,
   "connection": 34,
   "guide": 7,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3769,
+  "screen": 3774,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -208,8 +208,8 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12536,
-  "protected": 888
+  "total": 12548,
+  "protected": 890
  },
  "words": [
   {
@@ -37750,6 +37750,90 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-288: folds the themes the question's passages are in and the projects that rely on it"
+  },
+  {
+   "key": "document.held.says",
+   "en": "Held until you vouch for it. Only you can see this copy. Read it below; if it is exactly what its source gave, vouch for it under your name, and your team can use it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: a copy the viewer captured, not yet vouched for (release)"
+  },
+  {
+   "key": "document.attest.when",
+   "en": "Useful when someone may later claim the document was changed after it was captured.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: beside the timestamp button; what it does is its own explanation"
+  },
+  {
+   "key": "document.attest.label",
+   "en": "Get an independent timestamp",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-289: the act attest"
+  },
+  {
+   "key": "document.retire.fold",
+   "en": "Stop using this copy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: folds the act retire, apart from the copy's other acts"
+  },
+  {
+   "key": "document.retire.when",
+   "en": "For a copy that should no longer be relied on, such as one captured from the wrong page. It stays in the record with your reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289"
+  },
+  {
+   "key": "document.retire.label",
+   "en": "Stop using this copy…",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "DEC-289: the act retire"
+  },
+  {
+   "key": "document.thiscopy.says",
+   "en": "What you can do with this copy itself, apart from reading and citing it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289"
+  },
+  {
+   "key": "screen.open-file.byyou",
+   "en": "Added by you, {date} · {project}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: a file the viewer added: when, and the project it was added in"
+  },
+  {
+   "key": "screen.open-file.high.yours",
+   "en": "Added by you, not fetched by your team's Civicsmith: every such file is high risk, yours included.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: file-safety R6, R8: a received file is graded high on its source"
+  },
+  {
+   "key": "screen.open-file.next.head",
+   "en": "What to do next",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289"
+  },
+  {
+   "key": "screen.open-file.next.yours",
+   "en": "Read it in the safe view below. To open the original itself, ask for a deeper check first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289"
+  },
+  {
+   "key": "screen.open-file.check.notyet",
+   "en": "Not checked yet: its first check is waiting. The original never opens before a check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-289: in place of a scanner's raw state (not_scanned)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
