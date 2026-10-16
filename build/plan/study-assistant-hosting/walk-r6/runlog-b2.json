@@ -1,0 +1,125 @@
+{
+ "run": "RUN-057d97eb40cae620",
+ "found": true,
+ "status": "finished",
+ "entries": [
+  {
+   "seq": 1,
+   "at": "2026-10-16T17:28:11Z",
+   "level": "meaning",
+   "subject": "sub-session meaning -> report",
+   "state": "partial",
+   "governed": false,
+   "condition": null,
+   "bound": null,
+   "terminal": false,
+   "detail": "Meaning level: INQ-2026-0006 has one leg (ord 0, supports) on INFO-2026-0013-library-hours-txt ¶1. No grade, note or date on it. No other inquiry's legs concern library hours (5 others are potholes/Marlowe minutes). Branch and change date not stated at this level; passage text not shown (snippet null).",
+   "result_kind": null,
+   "result_ref": null,
+   "coverage": "none_owed"
+  },
+  {
+   "seq": 2,
+   "at": "2026-10-16T17:29:04Z",
+   "level": "content",
+   "subject": "sub-session content -> report",
+   "state": "partial",
+   "governed": false,
+   "condition": null,
+   "bound": null,
+   "terminal": false,
+   "detail": "One fully indexed document in scope. Its ¶1 says \"Notice from the Eastlake branch library. The library's new opening hour is 9:30 am.\" It gives no effective date and no earlier hours, so the change can't be dated or compared. A search for \"hours\" found nothing.",
+   "result_kind": null,
+   "result_ref": null,
+   "coverage": "none_owed"
+  },
+  {
+   "seq": 3,
+   "at": "2026-10-16T17:29:57Z",
+   "level": "document",
+   "subject": "sub-session document -> report",
+   "state": "partial",
+   "governed": false,
+   "condition": "text-undetermined",
+   "bound": null,
+   "terminal": false,
+   "detail": "Document level: 24 docs in scope, 13 captures. Only INFO-2026-0013-library-hours-txt (¶1, already cited by the leg) surfaced for library hours. No notices, minutes, budget papers or signage found. Passage search matched 0; 3 captures unread (1 never extracted, 2 undetermined), 4 hold no indexable text. Absence is not established.",
+   "result_kind": null,
+   "result_ref": null,
+   "coverage": "none_owed"
+  },
+  {
+   "seq": 4,
+   "at": "2026-10-16T17:32:06Z",
+   "level": "document",
+   "subject": "compose -> dedup",
+   "state": "partial",
+   "governed": false,
+   "condition": null,
+   "bound": null,
+   "terminal": false,
+   "detail": "condition stated as \"Pass 1 of the check on INQ-2026-0006. What each level reported: MEANING is partial. The inquiry has one leg (leg 0, supports) on INFO-2026-0013-library-hours-tx\", which is not a word of the record's condition vocabulary, so none is recorded; 1 candidate(s) composed; nothing may be written before dedup",
+   "result_kind": null,
+   "result_ref": null,
+   "coverage": "none_owed"
+  },
+  {
+   "seq": 5,
+   "at": "2026-10-16T17:33:00Z",
+   "level": "document",
+   "subject": "INQ-2026-0006-what-time-does-the-library-now-open",
+   "state": "partial",
+   "governed": false,
+   "condition": null,
+   "bound": "completed",
+   "terminal": true,
+   "detail": "the run ended: the run finished its work",
+   "result_kind": null,
+   "result_ref": null,
+   "coverage": "none_owed"
+  }
+ ],
+ "limit": 500,
+ "truncated": false,
+ "stopped": {
+  "bound": "completed",
+  "condition": null,
+  "at": "2026-10-16T17:33:00Z"
+ },
+ "vocabulary": {
+  "states": {
+   "NEVER_LOOKED": "nobody looked at this level for this subject",
+   "LOOKED_ABSENT": "we looked and it is positively not there",
+   "LOOKED_INDETERMINATE": "we looked and could not tell",
+   "PRESENT": "we looked and it is there",
+   "partial": "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
+  },
+  "levels": {
+   "meaning": "the framework layer: findings, legs, connections",
+   "content": "extracted content within documents (DEC-23: content is the unit)",
+   "document": "documents the store holds",
+   "internet": "the open internet, through the capture path"
+  },
+  "bounds": {
+   "fetches": "fetches requested of the capture path",
+   "subsessions": "evidence sub-sessions spawned",
+   "wallclock": "wall time across resumptions, in milliseconds",
+   "runtime": "CPU or subrequest ceiling (D-54, D-56) — IS-9(d) builds its producer",
+   "mints": "passages a machine credential marked citable (§7.3 (5)) — the EXTRACT role's budget",
+   "surfaces": "questions an assistant opened inside this run (§11 item 5, rule 2) — the run's bound on what it may surface",
+   "proposals": "options a planning run proposed for an action plan — the planning run's bound on what it may propose",
+   "pages": "pages of documents the group holds that the run may read inside — the run's reading bound",
+   "lease": "the run stopped heartbeating and its lease lapsed: it died rather than finished"
+  },
+  "endings": {
+   "completed": "the run finished its work",
+   "cancelled": "a member stopped it",
+   "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
+  },
+  "coverage": {
+   "backed": "the row names what the look produced: `result_ref` points at it, and the claim can be checked against the thing itself",
+   "none_owed": "the row's state does not assert the record obtained anything, so C-22.10 requires no referent and its absence is a fact about the look rather than an unknown"
+  },
+  "coverage_undetermined": "undetermined"
+ }
+}

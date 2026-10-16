@@ -28,3 +28,37 @@ Read the charter's new section. The baseline walk is planned in `TESTS.md` ("Bas
 ## S3 · 2026-10-16 · K3540 folded
 
 Bob's ruling folded in: method A with weights only where clear, and the 14 criteria and four contexts are the working set (`COMPARISON.md` status, §2, C12). Under K3540, no terms point remains in `OPTIONS.md`: option q (Anthropic approval) is withdrawn; the screen reasons for a, d, j and m no longer cite the register; C12 counts only a point confirmed against Anthropic's latest text, read live and quoted. The S1 page for Bob is updated to match. Step 3 continues: the local timing tests (H1/H2) are running.
+
+## S4 · 2026-10-16 · baseline walk r6 (B1, B2) after fix round 6; H1/H2 results
+
+Full report `walk-r6.md`, raw material `walk-r6/`; local timings `TESTS.md` "H1 and H2: results". Walk worker sonnet at medium; own project "ASSISTANT baseline 2026-10-16"; administrator only.
+
+**standard-1 confirmed for the fresh run**: single-app GET version 4, vcpu 0.5, 4 GiB, rollout completed 16:42Z, 7 minutes before B1 opened; the run's container reached 491 MiB. B1 was a cold start (no instance running). Caveat: the applications *list* endpoint still showed v3/lite at 16:47Z (it lags).
+
+| B1 | r5 | r6 |
+|---|---|---|
+| open → first model call | 2:35 | 1:56 |
+| open → end | 29:33, finished | 32:19, **stopped at lease** (last model call 21:40) |
+| ticks / calls | 37 / 83 | 35 / 88 |
+| tokens / cost | 1,698,344 / $1.48 | 1,965,222 / **$2.50** |
+| per call (total ÷ calls) [inf] | 19.2 s | 13.5 s |
+| answer | none, false "nothing found" | **correct (18 days) composed, never written**; nothing reached the question |
+
+B2 (one-passage question, warm): 6:58 open→end, 12 ticks, 35 calls, 701,476 tokens, $0.70, "completed", **nothing written** (9:30 am only in the run log). CPU over B1 ≈ 2% of a core: the time is model calls and passes, not the box. The dock has no chat (screens-inquiry: `airunopen`, `suggest`, `airunclose`), so no chat timing.
+
+**Defects for BOB** (evidence in `walk-r6.md`):
+- **N1 (high)** a skill-pack version published mid-run kills the run: resume refused `SKILL_VERSION_MISMATCH` (pack `…7b404bd9e7316499` at open, `…33edb5b26bf81250` later, no worker deploy between), lease lapsed, answer lost.
+- **N4 (high)** a run can end "completed" with nothing for the member (B2).
+- **N2 (medium-high)** the assistant read and cited records of another project (WALK-085's INFO-0005/0006, INQ-0002) as legs; B2 saw "24 docs / 13 captures in scope". Walked as administrator; whether a plain member's run does the same is not checked.
+- **N3 (medium)** levels contradict each other on the same documents; pass 2 spent about 6 minutes on it.
+- **N5 (medium)** model prose put into the `condition` field, cut at about 200 characters, turning a PRESENT finding into LOOKED_INDETERMINATE.
+- **N6 (low)** the runner container stays running (≈372 MiB) after the run.
+- r5: D1 fixed in code (not re-walked with a long name), D3 fixed (full ¶2 reached the model), D4/D5 not seen, D6 still present, D7 changed (cost higher, ends at lease); D2, D8, D9 not checked.
+
+**Not possible.** (1) No screenshots: Chromium still fails `ERR_CERT_AUTHORITY_INVALID` on the direct path, which carries the "Egress Gateway SDS Issuing CA" chain; K3530's setup-script import put only the agent-proxy CA in `~/.pki/nssdb`. The fix is the environment's: import that egress-gateway CA too (Bob's act, as K3530). Not worked around. (2) Observability refused again (code 10000). (3) `$BIO_INSTANCE` reads `biosmoke7`, not a URL.
+
+**Incidents (the walk worker's own, reported in full).** (a) Its first four node scripts (three sign-ins and reads, no writes) went through the agent proxy because `NODE_USE_ENV_PROXY=1` is set in this session; the rest went direct. (b) **One debug script printed the administrator's (`sparky`) sign-in answer, with its session token, into the worker's tool output** (this session's transcript only; no file, no commit; the token expires 2026-11-15). Its sign-out was refused by the permission check and not retried. **Action needed: end `sparky`'s sessions on biosmoke8** (Bob's or BOB's act).
+
+**H1/H2 (local, fake model).** On standard-1 the Claude Code start is about 1–2 s a conversation (21.6 s on lite); pre-warm and one-process-per-run save about a second each; the call shape saves more: ending at the final tool removes one model turn (3.1 s at 3 s a turn; needs `interrupt()` then `close()`), a single-shot judge is one request. One process per run accumulates context (≈830 bytes and 9 messages per earlier conversation).
+
+**Reading for the study.** With the box fixed, the run's time and cost now sit in the number of model calls and passes, and its failures in run control (N1, N4), none of which a different host changes. The baseline for the comparison is r6 B1/B2.
