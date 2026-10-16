@@ -9,7 +9,7 @@
   "draft": 5,
   "photo": 13,
   "handle": 7,
-  "ai": 153,
+  "ai": 171,
   "date": 14,
   "queue": 80,
   "transcribe": 19,
@@ -209,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12594,
+  "total": 12612,
   "protected": 890
  },
  "words": [
@@ -38157,6 +38157,132 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-296: added to the explanation when the cost is in tokens"
+  },
+  {
+   "key": "ai.progress.means",
+   "en": "Each step shows as the assistant takes it. What it writes is held until Civicsmith has checked every passage it cites against the document itself; only then is it shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the explanation on the progress list"
+  },
+  {
+   "key": "ai.progress.reading",
+   "en": "Reading {document} · {n} of {total}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the current step while it reads; {document} its title"
+  },
+  {
+   "key": "ai.progress.read",
+   "en": "Read {total} documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: a finished reading step"
+  },
+  {
+   "key": "ai.progress.read.one",
+   "en": "Read 1 document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298"
+  },
+  {
+   "key": "ai.progress.found",
+   "en": "Found {count} passages that bear on this question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298"
+  },
+  {
+   "key": "ai.progress.found.one",
+   "en": "Found 1 passage that bears on this question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298"
+  },
+  {
+   "key": "ai.progress.found.none",
+   "en": "Found no passage that bears on this question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298"
+  },
+  {
+   "key": "ai.progress.composing",
+   "en": "Writing its proposal…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: on the question page, a run composing"
+  },
+  {
+   "key": "ai.progress.composing.answer",
+   "en": "Writing its answer…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: in the panel, an ask composing"
+  },
+  {
+   "key": "ai.progress.checking",
+   "en": "Civicsmith checks it before you see it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the check step, waiting or under way"
+  },
+  {
+   "key": "ai.progress.check.ok",
+   "en": "{passage}: found in the document, word for word",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: one tick of the check, as it arrives"
+  },
+  {
+   "key": "ai.progress.check.fail",
+   "en": "{passage}: not found in the document as quoted, so it is left out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: one failed tick; the rest is still shown"
+  },
+  {
+   "key": "ai.progress.checked",
+   "en": "Checked by Civicsmith: {ok} of {total} passages it cites found as quoted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the finished check, when some failed"
+  },
+  {
+   "key": "ai.progress.checked.all",
+   "en": "Checked by Civicsmith before it was shown",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the finished check, all passages found; under each answer in the panel"
+  },
+  {
+   "key": "ai.progress.check.failed",
+   "en": "Civicsmith's check failed, so nothing it wrote is shown: none of the passages it cites was found as quoted.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the check failed whole"
+  },
+  {
+   "key": "ai.progress.hold",
+   "en": "Its proposal shows here once Civicsmith has checked it. You never see unchecked words.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: below the steps on the question page"
+  },
+  {
+   "key": "ai.progress.hold.answer",
+   "en": "Its answer shows here once Civicsmith has checked it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: in the panel while it works"
+  },
+  {
+   "key": "ai.progress.checked.all.means",
+   "en": "Every passage this answer cites was found, word for word, in the document it names, by Civicsmith itself and not by the assistant.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-298: the explanation on the panel's checked line"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

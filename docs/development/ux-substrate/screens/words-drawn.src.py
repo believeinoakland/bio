@@ -1317,6 +1317,29 @@ w296('ai.run.cost.on.project', "{project}'s own account", False, "to the project
 w296('ai.run.cost.means', "What this run has cost the account that pays for it. Only that account\'s owners see it, never another member.", False, 'the explanation on the cost line')
 w296('ai.run.cost.tokens.means', "Your subscription reports tokens and calls, not money. They count against your plan's own allowance.", False, 'added to the explanation when the cost is in tokens')
 # --- end DEC-296
+# --- DEC-298 (Bob's K3602 "Choice A", BOB's B260, N1195): the assistant's progress drawn live, step by step as it arrives,
+#     on the question page and in the assistant panel; its answer drawn only after Civicsmith's check, never unchecked words
+def w298(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-298' + (': ' + note if note else '')))
+w298('ai.progress.means', "Each step shows as the assistant takes it. What it writes is held until Civicsmith has checked every passage it cites against the document itself; only then is it shown.", False, 'the explanation on the progress list')
+w298('ai.progress.reading', 'Reading {document} · {n} of {total}', False, 'the current step while it reads; {document} its title')
+w298('ai.progress.read', 'Read {total} documents', False, 'a finished reading step')
+w298('ai.progress.read.one', 'Read 1 document')
+w298('ai.progress.found', 'Found {count} passages that bear on this question')
+w298('ai.progress.found.one', 'Found 1 passage that bears on this question')
+w298('ai.progress.found.none', 'Found no passage that bears on this question')
+w298('ai.progress.composing', 'Writing its proposal…', False, 'on the question page, a run composing')
+w298('ai.progress.composing.answer', 'Writing its answer…', False, 'in the panel, an ask composing')
+w298('ai.progress.checking', 'Civicsmith checks it before you see it', False, 'the check step, waiting or under way')
+w298('ai.progress.check.ok', '{passage}: found in the document, word for word', False, "one tick of the check, as it arrives")
+w298('ai.progress.check.fail', '{passage}: not found in the document as quoted, so it is left out', False, 'one failed tick; the rest is still shown')
+w298('ai.progress.checked', 'Checked by Civicsmith: {ok} of {total} passages it cites found as quoted', False, 'the finished check, when some failed')
+w298('ai.progress.checked.all', 'Checked by Civicsmith before it was shown', False, 'the finished check, all passages found; under each answer in the panel')
+w298('ai.progress.check.failed', "Civicsmith's check failed, so nothing it wrote is shown: none of the passages it cites was found as quoted.", False, 'the check failed whole')
+w298('ai.progress.hold', 'Its proposal shows here once Civicsmith has checked it. You never see unchecked words.', False, 'below the steps on the question page')
+w298('ai.progress.hold.answer', 'Its answer shows here once Civicsmith has checked it.', False, 'in the panel while it works')
+w298('ai.progress.checked.all.means', 'Every passage this answer cites was found, word for word, in the document it names, by Civicsmith itself and not by the assistant.', False, "the explanation on the panel's checked line")
+# --- end DEC-298
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
