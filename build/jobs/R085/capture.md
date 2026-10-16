@@ -13,3 +13,7 @@
 - **Checks:** format 170 modules, 0 failures; architecture 0 failures; coverage 45 of 45 live ids named, 0 failures; ownership 3 files changed by capture, 0 failures.
 
 Size (session_01FvYpkWVNKobnL3zvXh2oyY): test runs 3, module lines 3353
+
+## J1 · COMPLETE
+
+R092 applied (R085-3): uploadCapture takes type; a text type over UTF-8 no-NUL bytes profiles from text (profiled_from_text true), every given type recorded as declared_by uploader. Tests 154 pass 0 fail (3 new R92 tests); format, architecture, coverage, ownership all 0 failures. One reading to confirm: formats.mjs has no plain-text entry, so profile.format stays undetermined for text/plain, as for a fetched .txt; my test asserts profiled_from_text, source_content_type, declared_by, not a determined format. See the record.
