@@ -78,7 +78,7 @@ Diagnosis for BOB (no product code touched): step 3 needs a record of one tool c
 
 ## The runner layer, read as an investigation (K3574, K3575): where the ~40 s of F1 sits
 
-Written 2026-10-16 ~19:30Z. Observations, not passes. The earlier headings above ("PASS", "NOT PROVEN") are replaced by the wording of the S8 entry in `HANDOFF.md`. Logs read: Workers Observability for `agent-runner` and the container application `a0341573…` (`ladder-r7-runner-telemetry.txt`), Containers metrics by GraphQL (`ladder-r7-runner-cpu.txt`), the code of `agent-runner/src/{runner,entry,worker,env}.mjs`, `fleet-member.json`, `Dockerfile`, and the H1 harness (`h1/scripts/bench.mjs`). No new ask was sent: the lines that would be written by one more ask are the same lines (see "What would separate them").
+Written 2026-10-16 ~19:21Z. Observations, not passes. The earlier headings above ("PASS", "NOT PROVEN") are replaced by the wording of the S8 entry in `HANDOFF.md`. Logs read: Workers Observability for `agent-runner` and the container application `a0341573…` (`ladder-r7-runner-telemetry.txt`), Containers metrics by GraphQL (`ladder-r7-runner-cpu.txt`), the code of `agent-runner/src/{runner,entry,worker,env}.mjs`, `fleet-member.json`, `Dockerfile`, and the H1 harness (`h1/scripts/bench.mjs`). No new ask was sent: the lines that would be written by one more ask are the same lines (see "What would separate them").
 
 ### The players and what each did, for one conversation (ask 1, first conversation, 2026-10-16)
 | Time (UTC) | Player | Observed |
