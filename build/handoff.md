@@ -1,34 +1,37 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #191 (`session_01K1e9EkAmKEfbh9o6Afgf9C`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~13:45 UTC. Read `build/rulings-active.md` whole, then K3517–K3523 (BOB #191's).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #192 (`session_01PsqvgyoB1fJsGCazEA2bQZ`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-16 ~16:20 UTC. Read `build/rulings-active.md` whole, then K3524–K3539 (BOB #192's).
 
 ## RELEASE ONLY (K3425, K3426)
 
-Only release 0.85.0 work proceeds until T50 opens (Bob's K3425: Saturday 2026-10-17). Bob wants no babysitting (K3450) and no technical steps handed to him (K3466).
+Only release 0.85.0 work, and the lanes' studies and walks, proceed until T50 opens (Bob's K3425: Saturday 2026-10-17).
 
 ## Where things stand
 
-- Fix round 5 is merged and deployed on biosmoke8 (K3510–K3515): `tranche/R085` = `dist/cut-0.85.0` @ 862df779a5; no job running. biosmoke8 serves 0.85.0; `/favicon.ico` 204 (notes `build/plan/walk-085-r5.md`, a blocked note to be replaced).
-- **The re-walk is not done.** It was blocked by the environment's admin handle (misspelled; Bob fixed it, K3523). Bob wants the walk run by a worker, never in BOB's own context.
-- Models and effort (Bob, K3518; rulings-active §5): every worker spawn names model and effort; the walk worker is sonnet at medium.
-- Channel: read through U306 (UX design #24 `session_01He2uMKmm4ZtziW18jtY1BD` writes UX-DESIGN's outbox); BOB posted B253 (ACK) and B254 (K3518 NOTICE). T50's design merge takes `e074feaa46` (U305) or the newest commit the stream names. INVESTIGATION-DESIGN: nothing past H43.
+- **Fix round 6 is merged** on `tranche/R085` @ be46ca9d2e (R085-26–R085-35: retrieval R79, query-language R32, agent-model R22, agent-harness R14–R15, agent-worker R103–R105 (R106 retired), capture R93, screens-intake R28, wizard-scripts R40, plane R57, agent-runner R33 `standard-1`); every mark struck; `checks/run.mjs` 0 failures; the plane bundle rebuilt (be46ca9d2e); fleetbundles 148 pass, 1 fail ("agent-worker's 28 inputs", N1156's known hand list). Job sessions of round 6 still live: RETRIEVAL #18, QUERY-LANGUAGE #9, AGENT-MODEL #11, AGENT-HARNESS #8, AGENT-WORKER #29, CAPTURE #34, SCREENS-INTAKE #6, WIZARD-SCRIPTS #11, AGENT-RUNNER #10, PLANE #39 (ids in `build/plan/current.md`'s Jobs line on `tranche/R085`); archive each and write its row under R085's metrics (or T49's, as earlier R085 rows) at the close.
+- **Round 6's close is not done.** `module-tests.mjs` stalled after 50 modules. Reds seen on the new head: plane `store.test.mjs` "R2, R10", screens-daily "R1–R13", screens-wizards "R1 every refusal…" and "R8 the path Settings › Wizards" (all red on `dist/cut-0.85.0` too); not yet compared with the base: bundler 1, membership 6, ai-accounts 1, promotion 2, row-census (R39/R45/R46 MODULE_ORDER), R83/R140/R145 MODULE_ORDER, R79 listeners order, refusal keys R10/R14/R11/R22/R12. Suspect: BOB #192 rewrote `build/modules.json` with `json.dumps` when adding the edge plane → interface-shell (K3531), reformatting the whole file; check whether a test reads it textually.
+- **The setup script** is Bob's guarded block (K3534); new sessions start. Whether Chromium now trusts the egress CA is unknown until a walk tries.
+- **Lanes (manifest):** ASSISTANT-HOSTING #1 `session_01YE7nwvJxdhu4Xc9nnb77MX` (the assistant lane, K3538, K3539; its S1, S2 read; S1's two questions put to Bob, open), JOURNEYS #1 `session_01FL4s5VPpJ8jsCWyMjj1Rih` (K3539; writing its walk plan). Both wait for BOB's word that round 6 is deployed. Read both `HANDOFF.md`s at takeover and each backstop check.
+- `member-sign-in.txt` sits in BOB #192's container only; Bob has set `JOURNEY_MEMBER_*` (K3526), which new sessions read.
+- Channel: read through U308; nothing owed. INVESTIGATION-DESIGN: nothing past H43.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1) with `mail bob --tranche R085` (run from a checkout of `tranche/R085`). Archive BOB #191 once idle and write its BOB-final row under T49. Delete its WATCH `trig_01F3YbHdELXDiFFZegzpfbre` and its backstop (any routine into BOB #191). Arm your own WATCH into ROOT #5.
-2. **Confirm** without printing it that `JOURNEY_ADMIN_HANDLE` reads `sparky` (`node -e` comparing it). If not, tell Bob in one line and stop.
-3. **Start the walk worker** (Agent tool, `general-purpose`, model sonnet, effort medium, in the background). Its prompt: sign in only with `JOURNEY_ADMIN_HANDLE` and `JOURNEY_ADMIN_PASSWORD` exactly as the environment holds them, by variable, never printed; ignore `BIO_INSTANCE`, `BIO_ADMIN_TOKEN` and `BIO_MEMBER_TOKEN` (biosmoke7's); the instance is `https://biosmoke8.believeinoakland.workers.dev`, reached with `--noproxy '*'` / Chromium `--no-proxy-server`; read `build/plan/walk-085-r4.md` and `build/plan/diag-085-r5.md` (on `tranche/R085`) first. **A**: as administrator in "WALK-085 project", upload a fresh `.txt` (new bytes), open a question on it, ask the assistant (check run), wait for its end (poll cheaply), and record PASS/FAIL with evidence: (a) sub-sessions' passage reads return rows; (b) a candidate answer composed, or its drop logged LOOKED_INDETERMINATE naming the names; (c) the question page shows the run running and its ending (1280 screenshot); (d) the dock shows the last ended run on a fresh load; (e) no raw record id in the new proposals' member-facing text; (f) `/favicon.ico` 204; the run's cost. **B**: create member `walker` (or `walker2`) through the product's own invite and join flow (Bob's permission, K3520), a strong random password made locally, written only to `member-sign-in.txt` in the session's primary working folder (add the name to `.git/info/exclude` first; chmod 600; never printed or committed); sign in as it and look at `/` and Home at 1280 and 390. Notes replace `build/plan/walk-085-r5.md`, screenshots under `build/plan/walk-085-r5/`, committed and pushed on `tranche/T49` (never force). Reply under 300 words.
-4. Tell Bob, rendered (an Artifact), whether his journey works end to end (K3320's bar), and give him the path of `member-sign-in.txt` so he sets `JOURNEY_MEMBER_HANDLE` and `JOURNEY_MEMBER_PASSWORD`.
-5. A defect the walk finds is fix round 6 on the cut (as K3510), or an entry for T50 when it can wait.
-6. **T50 opens Saturday** (K3425): the cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273), with the design stream's branch.
+1. **Take over** (§5.1) with `mail bob --tranche R085` (from a checkout of `tranche/R085`). Archive BOB #192 once idle and write its BOB-final row under T49. Delete its routines: backstop `trig_01MZrmWnjgcmWiPitLNToXxR`, WATCH `trig_01MVW4iYXCRcpPNwJvAGMqcn`, and any other into it. Arm your own WATCH into ROOT #5 and a backstop.
+2. **Triage the reds** with one worker (sonnet, medium, K3518): run each red test file listed above on `dist/cut-0.85.0` (with `npm ci` where needed) and on `tranche/R085`; any red only on R085 is this round's, fixed by its module's job (restart it, one model up if it blocks) or by BOB if it is `modules.json` formatting (restore the file's original layout with only the one `uses` edge added); then let `module-tests.mjs` finish (run it in the background, never stopped midway, K1994). Record the outcome; accept a base red only by name (§5.5).
+3. **Merge `tranche/R085` into `dist/cut-0.85.0` and deploy to biosmoke8** (fleet, plane, installer as the round needs): Bob's standing permission K3466, but auto mode refuses each in session (K3481, K3495, K3504, K3514); ask Bob for his one-line approval in your session, naming the act, then act. Confirm biosmoke8 serves the round (`/favicon.ico` 204; a fresh `op=airunopen` uses `standard-1`).
+4. **Tell both lanes it is deployed** (`send_message` to each). JOURNEYS walks; the assistant lane runs its baseline walk. Funnel their findings: each defect an entry (a fix round on the cut when it blocks the release, else `next.md` for T50).
+5. Tell Bob, rendered, whether his journey works end to end (K3320's bar), with the lanes' first findings.
+6. **T50 opens Saturday** (K3425): the cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273), with the design stream's branch (`e074feaa46` or newer, U305). `next.md` gained N1170 (the release descriptor's instance type, K3535).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- Deploys to biosmoke8 and pushes to `dist/cut-0.85.0`: Bob's standing permission K3466, but auto mode refuses them in session (K3481, K3495, K3504, K3514); each needs his one-line approval in the refusing session (§16); K3482, K3496, K3506 and K3515 were one-off.
+- Deploys to biosmoke8 and pushes to `dist/cut-0.85.0`: Bob's standing permission K3466, but auto mode refuses them in session (K3481, K3495, K3504, K3514); each needs his one-line approval in the refusing session (§16).
 - A sign-in by a handle other than the environment's was refused even with Bob's approval (K3523): sign in only by the variables.
+- Deleting branch `draft/r085-r6` was refused (HTTP 403 at the proxy, K3528): leave it.
 - The cut reaches `main` only by its merge into `tranche/T50` at T50's opening (K2273).
 
 ## Open with Bob
 
-- None.
-- Left on biosmoke8: "WALK-085 project", INQ-2026-0001 citing INFO-2026-0003, held INFO-2026-0001/0002, runs RUN-56442ec609fca066 and RUN-55795a8154fd58b6, two unaccepted level-empty proposals.
+- The assistant lane's S1: the 14 criteria and four contexts, and the comparison method (A recommended), on https://claude.ai/artifact/APQkn9goZZkxyi9kkt7VK4 ; and whether to ask Anthropic for approval under AT-19 (listed, not recommended).
+- His walk page: https://claude.ai/artifact/WuVghhRHhkrcHF1z1QjDL6 (BOB #192's; update or replace).
