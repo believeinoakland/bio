@@ -58,3 +58,17 @@ Size (session_01KMKGKQB8H39uXLhH43ccYQ): test runs 5, module lines 1802
 Option 1 is the simpler fix; I recommend it. Once that is decided I will re-run coverage and post COMPLETE.
 
 Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 2, module lines 1803
+
+## J3 · COMPLETE
+
+**COMPLETE (after B4).** B4 (ANSWER to J2): R36 and R37 are withdrawn from tranche/R085; merged `tranche/R085` (`c716ef3cc5`) into the branch and re-ran the checks. Applied entries: R24 (commit `697b93a482`, earlier). Deferred: R36 and R37, withdrawn by BOB (B4); nothing else.
+
+**Tests** (bio-plane, `node --test test/m/screens-daily/`): 109 tests, 108 pass, 1 fail: `contract.test.mjs` "R1–R13", the known base red (K3543), unchanged.
+
+**Checks** (from `/home/user/civicos-process`):
+- format: 170 modules, 169 requirements files; 0 failures.
+- architecture: 24 product files, 47 relative imports; 0 failures.
+- coverage: 35 of 35 live requirement ids named by a test; 0 failures.
+- ownership (`tranche/R085`): 3 files changed by screens-daily; 0 failures.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 3, module lines 1803
