@@ -82,6 +82,8 @@ const UPLOAD_PART = 8 * 1024 * 1024;
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
 export const UPLOAD_TYPE_MAX = 255;
+/* R93: the text type a text extension in an upload's name stands for, when the member declared no type. */
+const UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
@@ -695,17 +697,22 @@ export class Capture {
     /* R92: a text type over bytes that are text (valid UTF-8, no NUL) is the profile's declared content type, so the bytes
        are read as text; any other type, or a text type over bytes that are not text, profiles the bytes as R86 does without
        it. Either way the type is recorded as the uploader's declaration, never a measured header. */
+    /* R93: with no `type`, a text extension in the name (.txt, .md, .csv) reads the bytes as that text type, under the
+       same test; the name is not a declaration, so no source_content_type or declared_by is recorded for it. */
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const readAs = named ? UPLOAD_NAME_TYPES[named[1].toLowerCase()] : type;
     let ct = null;
-    if (typeof type === "string" && type !== "" && profilesAsText(type, total, multipart)) {
+    if (typeof readAs === "string" && readAs !== "" && profilesAsText(readAs, total, multipart)) {
       try {
         const obj = await ev.get(sha);
         const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
-        if (raw && raw.length === total && !raw.includes(0)) { new TextDecoder("utf-8", { fatal: true }).decode(raw); ct = type; }
+        if (raw && raw.length === total && !raw.includes(0)) { new TextDecoder("utf-8", { fatal: true }).decode(raw); ct = readAs; }
       } catch { ct = null; }
     }
     const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
                                       retrieved: when, origin: "member", parts: multipart ? parts : null });
     if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
+    else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
     let done;
     try {

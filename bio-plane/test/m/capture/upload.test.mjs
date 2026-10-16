@@ -329,3 +329,27 @@ test("R92: a type that is not a string or is over 255 characters is the required
   assert.deepEqual(state(), before, "nothing written");
   assert.equal((await c.uploadCapture({ ...ok, type: "t".repeat(255) })).ok, true);
 });
+
+/* R93 (R085-31; K3528; walk-085-r5 D2; amends R92): with no declared type, a text extension in the name reads the bytes as text. */
+test("R93: a two-line notes.md uploaded with no type is profiled from text, with no declaration recorded (the name is not the uploader's word)", async () => {
+  const { c } = setup();
+  const r = await c.uploadCapture({ ...ok, name: "notes.md", bytes: te.encode("first line\nsecond line\n") });
+  assert.equal(r.ok, true);
+  const p = r.document.profile;
+  assert.equal(p.profiled_from_text, true);
+  assert.equal(p.source_content_type, null, "the name stands for the read, not a declared type");
+  assert.equal("declared_by" in p, false, "no uploader declaration");
+});
+
+test("R93 (controls): the same bytes named notes.bin are profiled as R86 does; notes.md holding a NUL is not profiled from text; a declared type still wins over the name", async () => {
+  const text = te.encode("first line\nsecond line\n");
+  const bin = (await setup().c.uploadCapture({ ...ok, name: "notes.bin", bytes: text })).document.profile;
+  assert.equal(bin.profiled_from_text, false, "no text extension, no text read");
+  assert.equal(bin.source_content_type, null);
+  assert.equal("declared_by" in bin, false);
+  const nul = (await setup().c.uploadCapture({ ...ok, name: "notes.md", bytes: new Uint8Array([97, 0, 98, 10]) })).document.profile;
+  assert.equal(nul.profiled_from_text, false, "bytes holding a NUL are not text");
+  const declared = (await setup().c.uploadCapture({ ...ok, name: "notes.md", bytes: text, type: "application/octet-stream" })).document.profile;
+  assert.equal(declared.profiled_from_text, false, "a declared non-text type is not overridden by the name");
+  assert.deepEqual([declared.source_content_type, declared.declared_by], ["application/octet-stream", "uploader"]);
+});
