@@ -79,3 +79,7 @@ Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order 
 Workers you spawn name model and effort: haiku at low for mechanical work, sonnet at medium for reading and diagnosis, never above your own model.
 
 Model: claude-sonnet-5-5. Entry R085-30: agent-worker R103, R104, R105, R106. Read diag-085-r6.md sections D3, D5, D6 and diag-085-slow.md section 4 and option 3. R103: `meaningRead` (agent-worker/src/index.mjs ~948) sends `snippet: 64`. R104: in `compose` (~1160-1196) keep a `LOOKED_ABSENT` candidate only when the compose-time read confirms it, else drop it and log the reason. R105: `submit` (~1263-1281) logs the write with name, level and pass, and `dedup` (~1253) names it. R106: the serial loop over the four levels (~1508) runs them concurrently, waits for all four, reports a failure of one without losing the others; log addresses (`logSeq.next`, ~1555) stay unique and in order of arrival; the meter and the tick order must hold. Retrieval R79, query-language R32, agent-model R22 and agent-harness R14 run in this round and are inputs of your bundle: BOB sends a CHANGE when they merge; merge tranche/R085 then and rebuild your own bundle (`npm run build` in agent-worker/) last. Never stop your test run midway (K1994).
+
+## B16 · CHANGE
+
+Before you start (K3529): R106 (concurrent level sub-sessions) is retired from this round, held for a study of the assistant's connection. Apply R103, R104 and R105 only; the requirements on tranche/R085 are merged into your branch.
