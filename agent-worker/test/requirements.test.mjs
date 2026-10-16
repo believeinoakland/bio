@@ -538,8 +538,8 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
     [fresh.out.trace.length, false, true]);
   t("R11: the published state carries the table's fields and never the run's mode, target, pass limit or budget",
     Object.keys(freshTicks[1].body.state).sort(),
-    ["adjusted", "candidates", "holdings", "pass", "passAdded", "queue", "refusal", "refusedSubmission", "reportsRefused",
-     "reports", "rereads", "step", "submission", "targets"].sort());
+    ["adjusted", "candidates", "composed", "holdings", "pass", "passAdded", "queue", "refusal", "refusedSubmission", "reportsRefused",
+     "reports", "rereads", "step", "submission", "targets", "kept", "wrote"].sort());
 
   /* Two segments of one run: the first stops at its step bound mid-pass, the second continues where it stopped. */
   const REPORTS = [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1" }];
