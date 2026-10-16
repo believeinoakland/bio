@@ -1,6 +1,6 @@
 # Plan R085
 
-**Status** · OPEN · BOB #188 · session_016xoGmXybw1rw8mt7UkRL6U · depth 1
+**Status** · OPEN · BOB #189 · session_01YQ4yT2XcSToaGFfTUtnjeH · depth 1
 
 **Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; control-plane: CONTROL-PLANE #35 session_013MCbxDMa9jH48CQ4Ks4wqm; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-inquiry: SCREENS-INQUIRY #6 session_01C32QGvXWpSbZKJMKWKdBMX; ai-runs: AI-RUNS #23 session_01RDWpf3BhWXAiW97xm3Ppkk; agent-worker: AGENT-WORKER #26 session_018F9Doyf71vyGxPLnaNguLq; agent-model: AGENT-MODEL #9 session_01Y4GLtKssDutAsJcKsAGcWf; agent-harness: AGENT-HARNESS #5 session_015S5X9Fu4rHLX6djxYMEojD; screens-daily: SCREENS-DAILY #5 session_01KMKGKQB8H39uXLhH43ccYQ; agent-runner: AGENT-RUNNER #8 session_01CnAYmpK7zwcNdBC9r85K5y
 
