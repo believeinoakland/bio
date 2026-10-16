@@ -72,3 +72,21 @@ Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 2, module lines 1803
 - ownership (`tranche/R085`): 3 files changed by screens-daily; 0 failures.
 
 Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 3, module lines 1803
+
+## J4 · COMPLETE
+
+**COMPLETE (after B5, K3562).** Merged `tranche/R085` (no screens-daily conflicts), applied R38 and R39, pushed `job/R085/screens-daily`.
+
+**R38 (B-25; the document's search sent its record id).** Cause: `find-in` scoped `findin` by the route's subject as given. `capture.mjs` (screens-intake, not this module) opens `/app/find-in/<bundleId>/<INQ>` for "Cite a passage", so a record id arrives as the scope; the server answers `CAPTURE_NOT_HELD`. Fix (in find-in only): for a subject that is neither a project, a held set nor a 64-hex fingerprint, `find-in` reads the document's provenance (`image`, key `data/provenance.json`, as the Document page does) and sends `documents[0].capture.sha256`. `findin` and the standing question use it; with no provenance the subject is sent as it was. Test: "R38 …": a record id sends its fingerprint and never the id; control: a fingerprint subject is sent as it is.
+
+**R39 (B-26; cite not drawn; question lost).** Two causes in `find-in`: (a) a recorded result drew no act at all; a passage now keeps "Cite in the question" beside who recorded it (other kinds unchanged); (b) the question chosen from the route was not in the choice when the questions list lacked it, so the choice fell back to "None yet". The choice now always includes the routed question. Test: "R39 …": a recorded passage draws the cite act, which sends the chosen question; control: a question the list does not name is still drawn chosen.
+
+**Not verified in a browser.** The harness cannot show a select's displayed value, and I did not run the live walk. The B-25 and B-26 fixes are shown by the tests above, not by a browser screenshot. Please re-walk `journey6-findin-result-1280` and the document's "Find in this" on biosmoke8 to confirm.
+
+**Found in another module (REPORT, not changed):** `screens-intake/capture.mjs:117` builds the "Cite a passage" link from the document's record id (`g.bundleId`); find-in now copes with it, but the link's own argument is the record id, which the registry describes as a document's address. For BOB's view only.
+
+**Tests** (bio-plane, `node --test test/m/screens-daily/`): 111 tests, 110 pass, 1 fail: `contract.test.mjs` "R1–R13", the known base red (K3543), unchanged. `find-in.test.mjs`: 11 of 11 pass.
+
+**Checks** (from `/home/user/civicos-process`): format 170 modules, 0 failures; architecture 24 files, 47 imports, 0 failures; coverage 37 of 37 live ids named, 0 failures; ownership (`tranche/R085`) 2 files changed by screens-daily, 0 failures.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 4, module lines 1819
