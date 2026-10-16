@@ -1508,3 +1508,38 @@ test("R19 a sub-session runs on claude-sonnet-5-5 at low effort and every other 
   assert.deepEqual({ ...MODEL_PRICES["claude-opus-5-5"] }, { input: 4, output: 20, cache_read: 0.4, cache_write: 5 });
   assert.match(MODEL_PRICES_SOURCE, /2026-10-16/);
 });
+
+/* ------------------------------------------------------------------ R20, R21 (R085-17) */
+
+test("R20 the meaningrows tool enumerates the contract's arms, takes ids, and says how to reach a document; no subject id is in any description", () => {
+  const contract = { level: "x", scope: "s", returns: { states: ["PRESENT"] }, arms: ["leg", "passage"],
+                     subjects: { items: [{ id: "SUBJECT-ID-7" }] } };
+  const tools = subsessionTools(contract);
+  const rows = tools.find((t) => t.name === "meaningrows");
+  assert.deepEqual(rows.input_schema.properties.rows.enum, ["leg", "passage"]);
+  assert.equal(rows.input_schema.properties.ids.type, "array");
+  assert.equal(rows.input_schema.properties.ids.maxItems, 20);
+  assert.equal(rows.input_schema.additionalProperties, false);
+  assert.match(rows.description, /passage:/);
+  assert.match(rows.description, /id:/);
+  assert.match(rows.description, /\bids\b/);
+  assert.match(rows.description, /subjects/);
+  assert.ok(!JSON.stringify(tools).includes("SUBJECT-ID-7"), "a subject id is record text, never in a description");
+  /* Control: no arms leaves rows a free string. */
+  const free = subsessionTools({ level: "x", scope: "s", returns: {} }).find((t) => t.name === "meaningrows");
+  assert.equal(free.input_schema.properties.rows.enum, undefined);
+});
+
+test("R21 converse answers the model and effort its requests named, on each path", async () => {
+  for (const [role, model, effort] of [["subsession", "claude-sonnet-5-5", "low"], [undefined, "claude-opus-5-5", "medium"]]) {
+    replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+    const a = await converse(conv({ role, mode: "check" }));
+    assert.equal(a.model, model);
+    assert.equal(a.effort, effort);
+    assert.deepEqual(a.answer, { v: 1 });
+    const s = fakeRunner([() => [{ tool_use: { id: "u", name: "answer", input: { v: 1 } } }], () => [end()]]);
+    const b = await converse(conv({ reference: SUB, runner: s.ns, role, mode: "check" }));
+    assert.equal(b.model, model);
+    assert.equal(b.effort, effort);
+  }
+});
