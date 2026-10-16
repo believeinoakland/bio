@@ -48,3 +48,24 @@ Size (session_01CnAYmpK7zwcNdBC9r85K5y): test runs 3, module lines 218
 ## J4 · REPORT
 
 Found outside my module, for BOB. The release's container descriptor does not carry `instance_type`. `bio-plane/scripts/fleet-bundle.mjs` (`containerDescriptor` / `classDescriptor`) writes only class_name, image, scheduling_policy, max_instances, bind and packages into `container.json`, and reads no `instance_type` from the marker. So `standard-1` reaches the container only through `agent-runner/wrangler.jsonc`, which `bio-plane/scripts/deploy-fleet.mjs` reads for the deploy. `fleet-member.json` states no instance type; `file-scanner/fleet-member.json` does, and the bundler ignores that too. I did not add `instance_type` to `agent-runner/fleet-member.json`: nothing would read it. Whether the release descriptor should carry `instance_type` is for BOB (bio-plane, not my module).
+
+## J5 · COMPLETE
+
+**Entry R085-35 (R33): applied.** agent-runner R33 is met. `agent-runner/wrangler.jsonc` names `"instance_type": "standard-1"` in its container block, beside `max_instances` 10 and the unchanged image. Test `R33 the container runs at Cloudflare's instance type standard-1…` in `test/container.test.mjs` reads the block and checks `instance_type`, plus the control: `max_instances` 10 and the image digest as before. I checked the test fails on the old configuration by reading it, not by running it against the old file.
+
+**Where else the deployment is declared.** `fleet-member.json` has no instance-type field and I did not add one (see REPORT). `deploy-fleet.mjs` deploys from `wrangler.jsonc`, so that file is the one that matters for this member.
+
+**Bundle and manifest.** Not stale: no Worker source changed and `wrangler.jsonc` is not in the bundle, so I did not rebuild `dist/`.
+
+**Deferred:** nothing. **Found in other modules:** the release descriptor gap (REPORT). R33's `*(not yet met: R085)*` mark is BOB's to strike; I did not edit the requirements file.
+
+**Ran:**
+- `npm test` in agent-runner: 58 pass, 0 fail (57 before, plus the R33 test).
+- `format`: 170 modules, 169 requirements files; 0 failures.
+- `architecture`: 33 product files, 43 relative imports; 0 failures.
+- `coverage`: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures.
+- `ownership` (tranche/R085): 3 files changed by agent-runner between tranche/R085 and HEAD; 0 failures.
+
+**Pushed:** `job/R085/agent-runner` at bd4405cefa.
+
+Size (session_01YSfutpdESYFVEriSvEcBjp): test runs 1, module lines 10
