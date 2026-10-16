@@ -44,3 +44,7 @@ Judgement call: `effort: null` is refused as "any other value" (only an absent `
 - `ownership` (tranche/R085): 3 files changed by agent-runner between tranche/R085 and HEAD; 0 failures.
 
 Size (session_01CnAYmpK7zwcNdBC9r85K5y): test runs 3, module lines 218
+
+## J4 · REPORT
+
+Found outside my module, for BOB. The release's container descriptor does not carry `instance_type`. `bio-plane/scripts/fleet-bundle.mjs` (`containerDescriptor` / `classDescriptor`) writes only class_name, image, scheduling_policy, max_instances, bind and packages into `container.json`, and reads no `instance_type` from the marker. So `standard-1` reaches the container only through `agent-runner/wrangler.jsonc`, which `bio-plane/scripts/deploy-fleet.mjs` reads for the deploy. `fleet-member.json` states no instance type; `file-scanner/fleet-member.json` does, and the bundler ignores that too. I did not add `instance_type` to `agent-runner/fleet-member.json`: nothing would read it. Whether the release descriptor should carry `instance_type` is for BOB (bio-plane, not my module).
