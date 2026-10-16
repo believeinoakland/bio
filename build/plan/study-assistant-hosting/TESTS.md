@@ -135,3 +135,28 @@ K3595 asks whether a prompt of Civicsmith's real size (the 212 KB agentpack plus
 Also seen: **the spend-limit message came back for three calls (21:01:33–37Z)** inside the first dialogue session, then service resumed (`isUsingOverage` true again at 21:04): the account's limit is not a single clean event.
 
 What the evidence does prove about size: a cloud session's context holds at least the CLI's own 62–83 k tokens of system prompt plus what is sent (67 k tokens used after the five small parts), and the 40-call session carried 70 k tokens of context across 42 turns with 2.7 M cache-read tokens; **no run has put 212 KB into a remote session's prompt yet.** What it does not prove: the transport limit of a prompt on `create_session`, `claude -p --cloud` or a routine; that a 31 KB answer returns whole (the answer-back, like the 212 KB, is untested).
+
+### Container size cells, standard-1 again (K3582), 21:09–21:13Z: the cold start is visible
+
+Application v6 (standard-1: 0.5 vCPU, 4096 MiB) read back by BOB at 21:07Z; every instance restarted. Ask 7 (cold) and ask 8 (warm, the next), same question, as the administrator. [test]
+
+| | ask 7 (cold) | ask 8 (warm) |
+|---|---|---|
+| ask, curl | 21:09:55.8 → 21:11:42.4, 106.6 s | 21:11:42.4 → 21:12:46.9, 64.5 s |
+| `runner.lifecycle` | `start` 21:09:58.7, `started` 21:10:00.1 (**1,458 ms** for the container) | none (same container) |
+| conversation start (DO fetch) | 21:09:59.7 (`conversation.runner` ms 102,162, ended 21:11:42.4 → start 21:10:00.3) | ≈ 21:11:42.9 |
+| first outbound call (`HEAD /api/hello`) | 21:11:23.8 | 21:12:23.6 |
+| **gap, start → first call** | **83.5 s** | **≈ 40.7 s** |
+| model calls | 12, 0.9–1.4 s each | 5+, 1.4–2.5 s |
+
+What it shows:
+1. **The container itself starts in 1.46 s**; the cold ask nevertheless waits **83.5 s** for the CLI's first call, **about 43 s more than the warm ask's ≈ 40.7 s**. So the ≈ 40 s F1 wait is paid on every conversation, and a freshly started container pays about 43 s more on its first one: the extra is not the container (1.5 s) but the first run of the CLI in it (cold files of the image, first execution); the warm 40 s remains unexplained.
+2. Together with S15 (standard-4: 41.4 s and 40.4 s, not shown cold) the picture over nine conversations: **warm 40.4–41.6 s on both sizes; one demonstrated cold start 83.5 s on standard-1.**
+3. A cold ask is 106.6 s against 64.5 s warm (ask layer included); size makes no difference to the warm figure.
+
+### Remote cell: a 212 KB text through a cloud session's context and a 25 KB answer back (synthetic, no credential), 21:10Z
+
+One haiku session (no repository, no credentials), told to generate a known 211,700-byte text itself, print it into its own context in eight chunks, then generate and print a 24,960-byte answer file and return it with hashes and canaries. [test]
+- Created 21:10:03.0; answered 21:11:14.98: **72.0 s**, 17 turns, $0.147; its context reached **169,088 tokens**.
+- **Both ends agree:** `big_bytes=211700; big_sha256=aa63de22…facdbc` equals my local file's; `canary1`, `canary5` (character 112,000) and `canary8` (last 40 characters) equal the expected strings; `ans_bytes=24960; ans_sha256=4d7f13eb…f79483` equals my expected. The returned answer text ran continuously A00001–A00480 (480 lines) with no gap or duplicate in what the event returned; I could not machine-hash the returned text (the tool printed it inline, not to a file).
+- What this proves: a remote session **takes in 212 KB through tool results (about 170 k tokens of context) and returns a 25 KB final message whole**. What it does not: that 212 KB passes as the **prompt** (the transport of the first message); that is the repository route below.
