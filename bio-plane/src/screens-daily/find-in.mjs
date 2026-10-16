@@ -260,9 +260,10 @@ export const findIn = Object.freeze({
         if (!it) return null;
         if (!ui.question) return { refuse: "screen.find-in.questionfirst" };
         // R24: refused in place until a role is chosen; the question is the citing object (`citation` R1: a role is a question's),
-        // and the one the passage was looked for.
+        // and the one the passage was looked for. "against" is sent as the question's role `cuts_against` (K3550).
         const chosen = cs.value(el.dataset.f + "-role");
-        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] : "";
+        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against")
+          ? (chosen[0] === "against" ? "cuts_against" : "supports") : "";
         if (!role) return { refuse: "screen.findin.cite.norole" };
         return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it), role: role }, body: {} };
       } },

@@ -1,6 +1,6 @@
 # screens-daily (R085)
 
-**Status** · session_01KMKGKQB8H39uXLhH43ccYQ · depth 2 · COMPLETE · handled B0
+**Status** · session_012EfgYKhaee27SGrH6j3qUB · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -35,3 +35,40 @@
 **No generated artifact of another module is stale** from this change (screens-daily's bundles are not in the manifest's list).
 
 Size (session_01KMKGKQB8H39uXLhH43ccYQ): test runs 5, module lines 1802
+
+## J2 · BLOCKED
+
+**Applied: B2 and B3 (R24 only; R36 and R37 not done, per B3/K3551).** Commit `697b93a482` on `job/R085/screens-daily` (pushed), after merging `tranche/R085` (`a875ccc1cd`).
+
+**What changed.** On `find-in`, "against" is sent as the question's role `cuts_against` (the citation/inquiry vocabulary, `citation` R1), where it sent `against` (refused by the server). "supports" is unchanged. The radio's own words and the no-role refusal (`screen.findin.cite.norole`) are unchanged. `find-in.test.mjs` R24 test: its "against" assertion now expects `cuts_against` (it had pinned the bug).
+
+**Tests** (`node --test test/m/screens-daily/` in bio-plane): 109 tests, 108 pass, 1 fail: `contract.test.mjs` "R1–R13" (the known base red, K3543; unchanged from J1). `find-in.test.mjs` alone: 9 of 9 pass.
+
+**Checks** (from `/home/user/civicos-process`):
+- `node checks/format.mjs /home/user/bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio screens-daily`: 24 product files, 47 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio screens-daily`: **FAIL**: 1 of 37 live ids named by no test: **R36**. 36 of 37 covered.
+- `node checks/ownership.mjs /home/user/bio screens-daily tranche/R085`: 3 files changed by screens-daily; 0 failures.
+
+**Deferred:** R36 and R37 (moved to T50 by K3551). I did not write a test for either: R36's test would have to fail, and a skipped one is not allowed.
+
+**Found, needs Bob (not changed by me):** R36 and R37 are still live in `build/requirements/screens-daily.md` ("not yet met: T50"). Coverage counts every live id, so R36 fails it. R37 passes only because other tests' titles cite "wizard-scripts R37" (the check counts any string). So this is a requirements/process question, not a code one. Bob's options, one of which unblocks the coverage check:
+1. Mark R36 and R37 out of this tranche in the requirements (for example, moved to T50 as "not in this tranche"), so the check does not count them live; or
+2. Keep them live and say how coverage should treat ids marked "not yet met: T50".
+Option 1 is the simpler fix; I recommend it. Once that is decided I will re-run coverage and post COMPLETE.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 2, module lines 1803
+
+## J3 · COMPLETE
+
+**COMPLETE (after B4).** B4 (ANSWER to J2): R36 and R37 are withdrawn from tranche/R085; merged `tranche/R085` (`c716ef3cc5`) into the branch and re-ran the checks. Applied entries: R24 (commit `697b93a482`, earlier). Deferred: R36 and R37, withdrawn by BOB (B4); nothing else.
+
+**Tests** (bio-plane, `node --test test/m/screens-daily/`): 109 tests, 108 pass, 1 fail: `contract.test.mjs` "R1–R13", the known base red (K3543), unchanged.
+
+**Checks** (from `/home/user/civicos-process`):
+- format: 170 modules, 169 requirements files; 0 failures.
+- architecture: 24 product files, 47 relative imports; 0 failures.
+- coverage: 35 of 35 live requirement ids named by a test; 0 failures.
+- ownership (`tranche/R085`): 3 files changed by screens-daily; 0 failures.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 3, module lines 1803
