@@ -4,6 +4,8 @@
 
 ## Entries
 
+- N1170 · bundler (release descriptor; K3535) · `bio-plane/scripts/fleet-bundle.mjs`' container descriptor (`containerDescriptor`, `classDescriptor`) carries the member's `instance_type` from its `wrangler.jsonc` (agent-runner R33: `standard-1`; file-scanner's too), so a group installed from the release, not only a fleet deployed by `deploy-fleet.mjs`, runs the assistant's container at its size; check the installer's container create passes it (AGENT-RUNNER #10 J4) · K3535 · req: bundler, installer as amended
+
 - N1156 · bundler (test only; K3454) · `fleetbundles.test.mjs`'s "agent-worker's 28 inputs are all recorded" hand-lists the inputs and lags the bundle (36 recorded: answers, calc-grammar, record-grammar json, holdings); assert the recorded inputs against what the build reaches, never a hand list (K3268). · K3454
 
 - N751 · doctypes (measurement) · R35's out-of-sample measure again for the three header fields below target (coordinator, review_due, revision_cycle; R26's `measured: "below_target"`, K2079) once the issuers publish policies not among the 74 already read (the 50 and T36's 24); the mark comes off a field read at 90% or more · K2079 · req: R26 (the mark struck per field) · hard reason: a measurement: no fresh policies exist (DOCTYPES #3 J1)
