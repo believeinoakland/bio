@@ -302,7 +302,7 @@ test("R10 published wizard scripts are carried unchanged, driven, each step a pu
   ];
   const pub = published({ screens: SCREENS, wizard_scripts: scripts });
   const { disclosed: { wizard_scripts: layer }, resident } = renderPack(pub);
-  assert.equal(layer.body, scripts, "the published scripts, unchanged");
+  assert.deepEqual(layer.body, scripts, "the published scripts, unchanged (none carries a use count or approval, R50)");
   assert.equal(layer.sourcing, "driven");
   assert.equal(SOURCING.wizard_scripts_published, "driven");
   assert.ok(layer.load_when.trim() && layer.load_when !== "never, in this edition");
@@ -314,7 +314,7 @@ test("R10 published wizard scripts are carried unchanged, driven, each step a pu
      not is carried. */
   const viaScreen = [{ id: "WIZ-3", steps: [step("s-queue", "op-only-on-screen")] }];
   const screens2 = [...SCREENS, { id: "s-q2" }].map((s) => (s.id === "s-queue" ? { ...s, acts: ["op-only-on-screen"] } : s));
-  assert.equal(renderPack(published({ screens: screens2, wizard_scripts: viaScreen })).disclosed.wizard_scripts.body, viaScreen);
+  assert.deepEqual(renderPack(published({ screens: screens2, wizard_scripts: viaScreen })).disclosed.wizard_scripts.body, viaScreen);
   const bad = [
     [[{ id: "WIZ-4", steps: [] }], /wizard script WIZ-4 has no steps/],
     [[{ id: "WIZ-5" }], /wizard script WIZ-5 has no steps/],
@@ -389,4 +389,25 @@ test("R26 no place is named in the rendered pack", () => {
   const text = JSON.stringify(renderPack(published()));
   for (const place of ["Oakland", "Alameda", "California", "Berkeley", "San Francisco"])
     assert.ok(!text.includes(place), `the pack names ${place}`);
+});
+
+test("R50 two packs differing only in a script's finished, approver, approved or other count of use have equal version, and no such field reaches the body", () => {
+  const base = { id: "WIZ-1", version: "WIZ-1@v2", name: "Set up", origin: "civicsmith", required: true, start: "s-home",
+                 steps: [step("s-home", "act-b"), step("s-queue", null)] };
+  const render = (extra) => renderPack(published({ screens: SCREENS, wizard_scripts: [{ ...base, ...extra }] }));
+  const a = render({ finished: 0, approver: null });
+  for (const extra of [{ finished: 7, approver: "BOB" }, { finished: 1, approver: { by: "Bob", at: "2026-10-16" } },
+                       { approved: { by: "BOB", at: "2026-10-14" }, started: 3, abandoned: 2, uses: 9, run_count: 4 }]) {
+    const b = render(extra);
+    assert.equal(b.version, a.version, JSON.stringify(extra));
+    assert.deepEqual(b.disclosed.wizard_scripts.body, a.disclosed.wizard_scripts.body);
+  }
+  const [w] = a.disclosed.wizard_scripts.body;
+  for (const k of ["finished", "approver", "approved"]) assert.equal(k in w, false, k);
+  for (const k of ["id", "version", "name", "origin", "required", "start", "steps"]) assert.deepEqual(w[k], base[k], k);
+  /* the script itself moving still moves the pack's version (R11) */
+  assert.notEqual(render({ version: "WIZ-1@v3" }).version, a.version);
+  assert.notEqual(render({ name: "Other" }).version, a.version);
+  /* validation still reads the full script: a bad step fails with finished present */
+  assert.throws(() => render({ finished: 2, steps: [step("s-nowhere", "act-b")] }), /WIZ-1 step 1 names the screen/);
 });
