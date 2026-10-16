@@ -5441,6 +5441,42 @@
    "en": "The notice tells each member plainly that a court order could reach what the team keeps that is not public.",
    "protected": false,
    "note": "DEC-290: Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records"
+  },
+  {
+   "key": "screen.security.ordinary.head",
+   "en": "Nothing unusual. There is nothing for you to do.",
+   "protected": false,
+   "note": "DEC-291: the lead in an ordinary period"
+  },
+  {
+   "key": "screen.security.ordinary.line",
+   "en": "In the last {period} every kind of attempt stayed near your team's usual, and no new key, credential or administrator was made.",
+   "protected": false,
+   "note": "DEC-291: {period}: the period chosen, such as \"7 days\""
+  },
+  {
+   "key": "screen.security.files.on",
+   "en": "Files are checked. The built-in scanner checks every file when it arrives and again each week. A file your team's Civicsmith did not fetch itself opens in the safe view until a deeper check passes.",
+   "protected": false,
+   "note": "DEC-291"
+  },
+  {
+   "key": "screen.security.counts.fold",
+   "en": "The counts, by kind, hour and place",
+   "protected": false,
+   "note": "DEC-291"
+  },
+  {
+   "key": "screen.security.add.fold",
+   "en": "Add another checker (advanced)",
+   "protected": false,
+   "note": "DEC-291: folds adding an outside tool and the catalog of kinds"
+  },
+  {
+   "key": "screen.security.risk.means.ordinary",
+   "en": "Ordinary: around your team's usual. Raised: well above the usual at some point, and nothing got through. High: well above the usual and still going on, or something unusual got through; only then are administrators told, in their queue.",
+   "protected": false,
+   "note": "DEC-291: the risk mark in an ordinary period: its own state first"
   }
  ],
  "rewrite": {

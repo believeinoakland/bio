@@ -141,6 +141,7 @@ const J = [
    { s: 'setup', act: 'claim', say: 'He claims the team as its founder: his handle, his own password, the one-time password already filled in.' },
    { s: 'setup', act: 'groupkeyset', only: 'ai', say: 'He gives the team\'s Claude key, so members can ask the assistant without an account of their own.' },
    { s: 'home', v: 'newgroup', act: null, say: 'Home says nothing is here yet, and where to begin.' },
+   { s: 'security', v: 'ordinary', act: null, say: 'He looks at Security once. In one sentence it says nothing is unusual and there is nothing for him to do, and that files are checked.' },
    { s: 'projects', v: 'empty', act: 'promote', say: 'Projects has none yet. He starts one, “Pothole repairs”, and becomes its owner.' },
    { s: 'project', v: 'empty', act: 'promote', say: 'On the new project he writes his first question, “How many pothole reports did the city close late in 2025?”, and opens it.' },
    { s: 'question', v: 'new', act: 'airunopen', only: 'ai', say: 'The question has nothing cited yet. He asks the assistant to look through what the team holds.' },
@@ -157,6 +158,7 @@ const J = [
    { s: 'home', act: 'projectrequestanswer', say: 'The project\'s owner finds her request in Needs you, with her word, and grants it. That invites her.' },
    { s: 'projects', v: 'nocreate', act: 'projectjoin', say: 'Mai joins from Projects. Her request to join “Bus stop shelters” still waits; she withdraws it.' },
    { s: 'projects', v: 'nocreate', act: 'projectrequestwithdraw', say: 'Withdrawn, it leaves the owners\' queue. Projects shows no “Start a project” for her, and names Rosa, who can let her start her own.' },
+   { s: 'members', v: 'member', act: null, say: 'On Members she sees who is in the team, what each may do in plain words, and what each knows. Rosa is the administrator.' },
    { s: 'home', v: 'noproject', act: null, say: 'Had no project been open to her, Home would have said so and named Rosa.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */

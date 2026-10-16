@@ -1249,6 +1249,17 @@ REWRITE.update({
   'wizard.marks.chip.one': 'Show me how',
 })
 # --- end DEC-290
+# --- DEC-291 (the walk's D4, B244): Security leads with how things stand in one plain sentence; file checking said once; the
+#     counts and the adding of outside checkers folded
+def w291(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-291' + (': ' + note if note else '')))
+w291('screen.security.ordinary.head', 'Nothing unusual. There is nothing for you to do.', False, 'the lead in an ordinary period')
+w291('screen.security.ordinary.line', "In the last {period} every kind of attempt stayed near your team's usual, and no new key, credential or administrator was made.", False, '{period}: the period chosen, such as "7 days"')
+w291('screen.security.files.on', "Files are checked. The built-in scanner checks every file when it arrives and again each week. A file your team's Civicsmith did not fetch itself opens in the safe view until a deeper check passes.")
+w291('screen.security.counts.fold', 'The counts, by kind, hour and place')
+w291('screen.security.add.fold', 'Add another checker (advanced)', False, 'folds adding an outside tool and the catalog of kinds')
+w291('screen.security.risk.means.ordinary', "Ordinary: around your team's usual. Raised: well above the usual at some point, and nothing got through. High: well above the usual and still going on, or something unusual got through; only then are administrators told, in their queue.", False, 'the risk mark in an ordinary period: its own state first')
+# --- end DEC-291
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
