@@ -21,3 +21,7 @@ Scope narrowed by Bob (K3551): this round fixes only what the release's focus jo
 ## B4 · ANSWER · re J2
 
 R36 and R37 are withdrawn from the cut's requirements (tranche/R085 @ 9adaeb4458); T50's N1177 re-adds them. BOB's decision, not Bob's (P17). Merge tranche/R085 into your branch, re-run coverage, then COMPLETE.
+
+## B5 · CHANGE
+
+Re-opened (K3562): R085-42, screens-daily R38 and R39, from the browser walk (build/plan/lane-journeys/browser/FINDINGS.md B-25, B-26 on origin/tranche/T49). B-25: Find in opened from a document (`/app/find-in/<document>`) sends the document's record id where `findin` wants its capture fingerprint, so every search answers CAPTURE_NOT_HELD ("This could not be read"). B-26: on `/app/find-in/<project>/<question>`, results draw no recording act (no "Cite in the question") and "For which question" resets to "None yet" after a search, so your R24 fix cannot be reached in the browser. Merge tranche/R085 first (your requirements file now has R38, R39, not yet met). Each needs its own explicit test (K874). Lean, overage (K3549). Then COMPLETE.
