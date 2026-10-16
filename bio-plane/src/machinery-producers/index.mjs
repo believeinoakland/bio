@@ -531,6 +531,9 @@ export class MachineryProducers {
         continue;                       // a person wrote last: the member came back
       const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
       if (!started) continue;           // never a person's document: nobody walked away
+      /* R14 (R085-19; K3501 (b)): only a bundle holding a capture (its register row, provenance R48) is a document a daemon
+         finished. A machine's entry on a record holding none, an AI run's proposal on a question, walks away from nothing. */
+      if (!this.#one(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT 1`, b.bundle_id)) continue;
       const createdMs = Date.parse(latest.created);
       const title = this.#record.bundleInfo(b.bundle_id);
       const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
