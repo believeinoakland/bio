@@ -66,3 +66,7 @@ Size (session_01L2wDs5DhuwdscrBezRCF3P): test runs 1, module lines 2283
 - `node checks/ownership.mjs /home/user/bio screens-inquiry tranche/R085`: 5 files changed by screens-inquiry; 0 failures.
 
 Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2514
+
+## J5 · REPORT
+
+Correction to J4's last line: I wrote module lines 2514 without counting. The count of bio-plane/src/screens-inquiry/*.mjs is 2293. Size (session_01XMC7d8bfcv7DEh1in4Bov7): test runs 4, module lines 2293
