@@ -5411,6 +5411,36 @@
    "en": "Not checked yet: its first check is waiting. The original never opens before a check.",
    "protected": false,
    "note": "DEC-289: in place of a scanner's raw state (not_scanned)"
+  },
+  {
+   "key": "term.bar.team.means",
+   "en": "The bar is how strong an answer must be before the team relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. A project can set its own.",
+   "protected": false,
+   "note": "DEC-290: on the word Bar on Your team's page (a card)"
+  },
+  {
+   "key": "term.bar.project.means",
+   "en": "How strong each answer in this project must be before the project relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. With no bar of its own, the team's applies.",
+   "protected": false,
+   "note": "DEC-290: on the word Bar on a project's page (a card)"
+  },
+  {
+   "key": "term.hostingaccount.means",
+   "en": "The Cloudflare account your team's Civicsmith runs in. Whoever holds it can reach everything the team keeps.",
+   "protected": false,
+   "note": "DEC-290: on the words \"the hosting account\" (a card)"
+  },
+  {
+   "key": "screen.group.hosting.says",
+   "en": "The hosting account is the Cloudflare account your team's Civicsmith runs in.",
+   "protected": false,
+   "note": "DEC-290"
+  },
+  {
+   "key": "screen.group.court.says",
+   "en": "The notice tells each member plainly that a court order could reach what the team keeps that is not public.",
+   "protected": false,
+   "note": "DEC-290: Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records"
   }
  ],
  "rewrite": {
@@ -5553,6 +5583,8 @@
   "question.empty.capture.line": "Its web address, a file, or what you saw yourself. Civicsmith keeps the copy for you to confirm, then you mark the part that answers.",
   "question.empty.find": "Find one the team has",
   "question.empty.find.line": "Search the team's documents, open one, and mark the part that answers.",
-  "question.empty.ask.line": "It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it."
+  "question.empty.ask.line": "It reads what the team holds and suggests the parts that answer, and an answer. Nothing counts until a member accepts it.",
+  "wizard.marks.chip": "Show me how ({n})",
+  "wizard.marks.chip.one": "Show me how"
  }
 }

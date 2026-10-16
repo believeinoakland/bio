@@ -427,7 +427,7 @@ const SCREEN_HELP = {
   tour: 'How your team works, in six short steps, for anyone: no account needed, nothing recorded.',
   reset: 'Choose a new password from the one-time reset link an administrator made for you.',
   forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
-  group: 'Administrators only: your team\'s name, website, languages, court notice, hosting account and bar.',
+  group: 'Administrators only: your team\'s name, website, languages, what a court can reach, who holds the hosting account, and its bar.',
   settings: 'Every setting in one list: yours first, then the team\'s.',
   more: 'The places the tabs below do not hold: projects, people and settings.',
   theme: 'The team\'s themes: lenses that gather documents and passages, never evidence.',

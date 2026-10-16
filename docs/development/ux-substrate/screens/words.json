@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3774,
+  "screen": 3776,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -98,6 +98,7 @@
   "file": 16,
   "act": 828,
   "prompt": 3,
+  "term": 3,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -208,7 +209,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12548,
+  "total": 12553,
   "protected": 890
  },
  "words": [
@@ -6192,17 +6193,17 @@
   },
   {
    "key": "wizard.marks.chip",
-   "en": "{n} wizards start here",
+   "en": "Show me how ({n})",
    "protected": false,
    "source": "DEC-232",
-   "note": "DEC-232: B194; one chip beside the title, none at zero"
+   "note": "DEC-232: B194; one chip beside the title, none at zero; DEC-259: reworded"
   },
   {
    "key": "wizard.marks.chip.one",
-   "en": "1 wizard starts here",
+   "en": "Show me how",
    "protected": false,
    "source": "DEC-232",
-   "note": "DEC-232"
+   "note": "DEC-232; DEC-259: reworded"
   },
   {
    "key": "wizard.mark.recommended",
@@ -37834,6 +37835,41 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-289: in place of a scanner's raw state (not_scanned)"
+  },
+  {
+   "key": "term.bar.team.means",
+   "en": "The bar is how strong an answer must be before the team relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. A project can set its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-290: on the word Bar on Your team's page (a card)"
+  },
+  {
+   "key": "term.bar.project.means",
+   "en": "How strong each answer in this project must be before the project relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. With no bar of its own, the team's applies.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-290: on the word Bar on a project's page (a card)"
+  },
+  {
+   "key": "term.hostingaccount.means",
+   "en": "The Cloudflare account your team's Civicsmith runs in. Whoever holds it can reach everything the team keeps.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-290: on the words \"the hosting account\" (a card)"
+  },
+  {
+   "key": "screen.group.hosting.says",
+   "en": "The hosting account is the Cloudflare account your team's Civicsmith runs in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-290"
+  },
+  {
+   "key": "screen.group.court.says",
+   "en": "The notice tells each member plainly that a court order could reach what the team keeps that is not public.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-290: Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -76787,7 +76823,7 @@
   },
   {
    "key": "screen.group.purpose",
-   "en": "Administrators only: your team's name, website, languages, court notice, hosting account and bar.",
+   "en": "Administrators only: your team's name, website, languages, what a court can reach, who holds the hosting account, and its bar.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },

@@ -1236,6 +1236,19 @@ w289('screen.open-file.next.head', 'What to do next')
 w289('screen.open-file.next.yours', 'Read it in the safe view below. To open the original itself, ask for a deeper check first.')
 w289('screen.open-file.check.notyet', 'Not checked yet: its first check is waiting. The original never opens before a check.', False, "in place of a scanner's raw state (not_scanned)")
 # --- end DEC-289
+# --- DEC-290 (the walk's D8, the member walk's M-D3 in part): team-wide terms defined where used; the wizard mark says what it does
+def w290(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-290' + (': ' + note if note else '')))
+w290('term.bar.team.means', "The bar is how strong an answer must be before the team relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. A project can set its own.", False, "on the word Bar on Your team's page (a card)")
+w290('term.bar.project.means', "How strong each answer in this project must be before the project relies on it: one letter for how well its documents were obtained, one for how firmly they connect to the answer. With no bar of its own, the team\'s applies.", False, "on the word Bar on a project's page (a card)")
+w290('term.hostingaccount.means', "The Cloudflare account your team\'s Civicsmith runs in. Whoever holds it can reach everything the team keeps.", False, 'on the words "the hosting account" (a card)')
+w290('screen.group.hosting.says', "The hosting account is the Cloudflare account your team's Civicsmith runs in.")
+w290('screen.group.court.says', 'The notice tells each member plainly that a court order could reach what the team keeps that is not public.', False, "Bob's ruling of 5 October (DEC-136): members understand a court order can expose non-public records")
+REWRITE.update({
+  'wizard.marks.chip': 'Show me how ({n})',
+  'wizard.marks.chip.one': 'Show me how',
+})
+# --- end DEC-290
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
