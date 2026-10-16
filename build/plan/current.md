@@ -1,6 +1,6 @@
 # Plan R085
 
-**Status** · OPEN · BOB #191 · session_01K1e9EkAmKEfbh9o6Afgf9C · depth 1
+**Status** · OPEN · BOB #192 · session_01PsqvgyoB1fJsGCazEA2bQZ · depth 1
 
 **Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; capture: CAPTURE #33 session_01FvYpkWVNKobnL3zvXh2oyY; screens-intake: SCREENS-INTAKE #5 session_01LTHS3Rs6T9eRCKe5iQiDrX; screens-daily: SCREENS-DAILY #5 session_01KMKGKQB8H39uXLhH43ccYQ; agent-runner: AGENT-RUNNER #8 session_01CnAYmpK7zwcNdBC9r85K5y; observation-log: OBSERVATION-LOG #13 session_01SJrWSUDWk4ygPEnF4edtGH; ai-runs: AI-RUNS #24 session_014E6HztL3Ehb1nLBpG9td7t; agent-model: AGENT-MODEL #10 session_01QxtF2G4H6Q337jE4Ti6TBN; machinery-producers: MACHINERY-PRODUCERS #4 session_01WdZWF2N7iamL2RKVC1vFPM; query-language: QUERY-LANGUAGE #8 session_01DiiUVwjsM1J2yZP34YaftH; agent-worker: AGENT-WORKER #28 session_01UDzBRUVhc41T5zHi38Bjvf; agent-harness: AGENT-HARNESS #7 session_013YmnX8vmq9VJkF9WjDtBtS; screens-inquiry: SCREENS-INQUIRY #8 session_01XMC7d8bfcv7DEh1in4Bov7; control-plane: CONTROL-PLANE #36 session_01WToWb3ATJirHryNuLb8h8A
 
