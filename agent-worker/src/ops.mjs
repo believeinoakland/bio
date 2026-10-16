@@ -99,14 +99,14 @@ export const TRANSCRIBE_TURNS = 2;
  *  vision documentation states it at T42-20's START (2026-10-11). */
 export const TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
-/* R91 (R085-8; K3477; `ai-runs` R84) — HOW A SEGMENT ENDED, as its last `op=airuntick` states it in `segment_end: {by,
- * done, refusals}`: the run ended by the table's close or the plane's own exit (`done: true`, R28's `ended.by`); the
- * segment met one of its own bounds (turns, bytes, its wall time or `max_steps`) while the run goes on; or a refusal
- * (the plane's or the model's, its code in `refusals`) or an error (`SEGMENT_THREW`) ended it. */
+/* R91 (R085-8; K3477; `ai-runs` R84; BOB's B2, B3) — HOW A SEGMENT ENDED, as its last `op=airuntick` states it in
+ * `segment_end: {by, done, refusals, error?}`: `by` the run's end by the table's close or the plane's own exit (`done:
+ * true`, R28's `ended.by`), a refusal (the plane's or the model's, its code in `refusals`) or an error (its code in
+ * `error`, `SEGMENT_THREW` for a throw); `by` is null when the segment met one of its own bounds (turns, bytes, its wall
+ * time or `max_steps`) while the run goes on. */
 export const SEGMENT_END_BY = Object.freeze({
   table: "the table",
   plane: "the plane's own exit",
-  bound: "the segment bound",
   refusal: "a refusal",
   error: "an error",
 });

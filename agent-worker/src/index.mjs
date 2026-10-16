@@ -795,10 +795,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
     segmentStopped,
     /* R91: how this segment ended, for its `segment_end`: the run ended (by the table or the plane's exit), the plane
-       refused its close, or the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
+       refused its close, or (`by` null) the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
     segmentEnd: ended ? { by: ended.by, done: true }
       : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false }
-      : { by: SEGMENT_END_BY.bound, done: false },
+      : { by: null, done: false },
   };
 }
 
@@ -1665,7 +1665,15 @@ async function handleRun(req, env) {
      once (ai-runs R82 waits only for this). With none bound (an instance not yet installed with it), the segment runs
      on this request and answers R28, as it always did; both paths end with the `segment_end` tick. */
   if (segmentsBound(env)) {
-    const before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    let before;
+    try {
+      before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    } catch (e) {
+      /* Before any step: no segment started, so nothing is written for it (R10, R57). */
+      return refusal("SEGMENT_THREW", "the segment could not be started for an error of this member's own; the run "
+        + "stays as it was and is resumable.", 500,
+        { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) });
+    }
     if (!before.ready) return before.response;
     let res;
     try {
@@ -1753,7 +1761,7 @@ async function checkRun(body, env) {
 
 /** R91 — ONE SEGMENT, run to its end: on the request when no driver is bound, or from the run's Durable Object's alarm
  *  (`SegmentDriver`). It answers R28 or the refusal that ended it, and, whatever ended it, first sends the plane one
- *  `op=airuntick` carrying `segment_end: {by, done, refusals}` (`SEGMENT_END_BY`), so the plane learns every segment's
+ *  `op=airuntick` carrying `segment_end: {by, done, refusals, error?}` (`SEGMENT_END_BY`), so the plane learns every segment's
  *  end even when nobody is left to read the answer. `deadline` is the segment's wall bound, when it has one. */
 async function runSegment(env, checked, body, whoami, traced, deadline = null) {
   const { runId, store, credential } = checked;
@@ -1766,7 +1774,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null) {
       "the segment stopped on an error of this member's own, so it ended where it stood; what it already logged and "
       + "wrote stays, and the plane is told the segment ended.", 500,
       { run_id: runId, detail_from_worker: String((e && e.message) || e).slice(0, 200) }),
-      end: { by: SEGMENT_END_BY.error, done: false, refusals: ["SEGMENT_THREW"] } };
+      end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" } };
   }
   /* The plane's answer to this tick changes nothing here: the segment has already ended. */
   if (answer.end)

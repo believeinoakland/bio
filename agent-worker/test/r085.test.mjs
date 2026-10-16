@@ -38,13 +38,15 @@ const FREE = "nothing was found and the source answered slowly";
 /** The plane stub. `tick` decides how `op=airuntick` answers: `"real"` judges each entry with the plane's own
  *  `checkObservation` (authority `run`, as `#aiRunAppend` passes it); `"refuseEntries"` refuses every entry per entry;
  *  `"refuseWhole"` refuses the whole tick as ai-runs' gates do (`ticked: false` with its code, no `ok`). */
-function planeStub(rec, { tick = "real", payer = MEMBER } = {}) {
+function planeStub(rec, { tick = "real", payer = MEMBER, throwAt = null } = {}) {
   const ok = (result) => Response.json({ ok: true, result, store: "scratch", tokenClass: "ai", version: "r085" });
   return { fetch: async (url, init) => {
     const u = new URL(url);
     const op = u.searchParams.get("op") || "";
     const body = init && typeof init.body === "string" ? JSON.parse(init.body) : null;
     rec.calls.push({ op, body });
+    /* R91: an answer this member cannot read without throwing, once the segment has started (its first spawn). */
+    if (op === throwAt) return { status: 200, json: async () => ({ ok: true, get result() { throw new Error("boom"); } }) };
     switch (op) {
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
       case "airun": return ok({ run: u.searchParams.get("run"), found: true, session: {
@@ -152,6 +154,17 @@ console.log("\n--- R92 · a check run's tick entries and its sub-agents' reports
     [levelsLooked, 0, true]);
 }
 
+console.log("\n--- R91 · an error ends the segment, and the plane is told ---");
+{
+  const { status, out, rec } = await modelRun({ throwAt: "airunspawn" });
+  const ends = rec.calls.filter((c) => c.op === "airuntick" && c.body && "segment_end" in c.body);
+  t("R91: a segment that throws after it started answers SEGMENT_THREW, its own refusal", [status, out.code],
+    [500, "SEGMENT_THREW"]);
+  t("R91: …and its last call is the one segment_end, `by` an error, not done, the error's code in `error`",
+    [ends.length, rec.calls[rec.calls.length - 1] === ends[0], ends[0]?.body.segment_end],
+    [1, true, { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" }]);
+}
+
 /* ============================================================== R91, in workerd */
 
 console.log("\n--- R91 · a segment outlives its caller and reports its end ---");
@@ -221,9 +234,22 @@ try {
   t("R91: and, last, one airuntick carrying segment_end {by, done, refusals}: the table's close, done",
     [ticks.filter((c) => c.body?.segment_end).length, ticks[ticks.length - 1]?.body?.segment_end ? true : false, end],
     [1, true, { by: SEGMENT_END_BY.table, done: true, refusals: [] }]);
+  t("R91: a segment ending done carries no `error`", "error" in (end || {}), false);
   t("R91: the segment_end tick carries no entry, no spend and no secret",
     [Object.keys(ticks[ticks.length - 1]?.body || {}).sort(), JSON.stringify(ticks).includes(ACCOUNT.secret)],
     [["run", "segment_end"], false]);
+
+  /* A segment that stops on its own bound (here `max_steps`) while the run goes on: `by` null, not done. */
+  const n0 = (await calls()).length;
+  const short = await runOp({ run_id: "RUN-r085-short", store: "scratch", credential: AIK, max_steps: 2 });
+  let mine = [];
+  for (let i = 0; i < 100 && !mine.some((c) => c.body?.segment_end); i += 1) {
+    await new Promise((r) => setTimeout(r, 100));
+    mine = (await calls()).slice(n0).filter((c) => c.op === "airuntick");
+  }
+  t("R91: a segment stopped on its own bound (max_steps) is accepted and ends `by` null, not done, with no error",
+    [short.status, mine.find((c) => c.body?.segment_end)?.body.segment_end],
+    [202, { by: null, done: false, refusals: [] }]);
 
   /* Control: refused before the segment starts — answered as today, never 202, and no segment_end is sent. */
   const before = (await calls()).length;

@@ -740,7 +740,6 @@ var TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 var SEGMENT_END_BY = Object.freeze({
   table: "the table",
   plane: "the plane's own exit",
-  bound: "the segment bound",
   refusal: "a refusal",
   error: "an error"
 });
@@ -5234,8 +5233,8 @@ async function driveHarness(env, {
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...state.budget[b] || { allowed: 0, consumed: 0 } })),
     segmentStopped,
     /* R91: how this segment ended, for its `segment_end`: the run ended (by the table or the plane's exit), the plane
-       refused its close, or the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
-    segmentEnd: ended ? { by: ended.by, done: true } : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false } : { by: SEGMENT_END_BY.bound, done: false }
+       refused its close, or (`by` null) the segment met one of its own bounds (turns, bytes, wall, or `max_steps`). */
+    segmentEnd: ended ? { by: ended.by, done: true } : closeRefused ? { by: SEGMENT_END_BY.refusal, done: false } : { by: null, done: false }
   };
 }
 var LOG_DETAIL_MAX = 500;
@@ -5832,7 +5831,17 @@ async function handleRun(req, env) {
       plane: asked.body
     }, 403);
   if (segmentsBound(env)) {
-    const before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    let before;
+    try {
+      before = await segmentAnswer(env, checked, body, asked.body, doorTrace(req), null, true);
+    } catch (e) {
+      return refusal5(
+        "SEGMENT_THREW",
+        "the segment could not be started for an error of this member's own; the run stays as it was and is resumable.",
+        500,
+        { run_id: runId, detail_from_worker: String(e && e.message || e).slice(0, 200) }
+      );
+    }
     if (!before.ready) return before.response;
     let res;
     try {
@@ -5924,7 +5933,7 @@ async function runSegment(env, checked, body, whoami, traced, deadline = null) {
         500,
         { run_id: runId, detail_from_worker: String(e && e.message || e).slice(0, 200) }
       ),
-      end: { by: SEGMENT_END_BY.error, done: false, refusals: ["SEGMENT_THREW"] }
+      end: { by: SEGMENT_END_BY.error, done: false, refusals: [], error: "SEGMENT_THREW" }
     };
   }
   if (answer.end)
