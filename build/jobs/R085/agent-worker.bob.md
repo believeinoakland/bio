@@ -67,3 +67,7 @@ Model: claude-sonnet-5-5. Entry R085-22: agent-worker R101, R102. R101: when `de
 ## B13 · CHANGE
 
 agent-harness R13 is merged into tranche/R085 (@ 42607eab8d): merge tranche/R085 into your branch now. query-language R31 follows with its own CHANGE; rebuild your bundle once both are in.
+
+## B14 · CHANGE
+
+Both inputs are now merged into tranche/R085 (@ 6b49f098a8): agent-harness R13 and query-language R31 (also control-plane R101 and screens-inquiry R47–R48, not your inputs). Merge tranche/R085 into your branch, rebuild your bundle last, re-run your tests, and COMPLETE.
