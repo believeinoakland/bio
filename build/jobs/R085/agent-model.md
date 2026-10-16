@@ -45,3 +45,21 @@ Size (session_01QxtF2G4H6Q337jE4Ti6TBN): test runs 4, module lines 1040
 ## J2 · COMPLETE
 
 R20 and R21 applied and pushed on job/R085/agent-model. agent-model tests 30 pass; format, architecture, coverage (21 of 21), ownership 0 failures. REPORT: agent-worker/dist/agent-worker.bundled.mjs inlines agent-model and is stale again (agent-worker requirements.test.mjs bundle check fails until its npm run build is re-run); agent-worker should record model/effort from converse's answer. Details in my record.
+
+## Completion (R085-28)
+
+**Entries applied** · R085-28: R22 (`meaningrows` gains a `snippet` property, 4–64 tokens, and its description says a passage comes back as a snippet of about a sentence, up to 64 tokens; `toolInput` in outcome.mjs sets `snippet: 64` on a `rows=passage` call that names none, applied before `onTool` on both the apikey path (model.mjs) and the signin path (signin.mjs); other arms and a snippet the call names are unchanged).
+
+**Deferred** · none.
+
+**Found in another module** · `agent-worker/dist/agent-worker.bundled.mjs` inlines agent-model and is stale again (`agent-worker/test/requirements.test.mjs` fails only R45 "static check" and "fresh build byte-identical"; every other agent-worker test file passes). agent-worker's `meaningRead` (index.mjs:948) sends `{q, rows, limit}` and drops `snippet`: it must forward `input.snippet` for the 64 to reach the plane (agent-worker R103–R106 area), and retrieval R79 must pass it through `op=meaningrows`.
+
+**Tests and checks** ·
+- `node --test agent-model/test/agent-model.test.mjs`: pass 31, fail 0 (new: R22, both paths, with controls)
+- `node --test agent-worker/test/`: 22 pass, 1 fail (requirements.test.mjs, the stale bundle above)
+- format: 170 modules, 169 requirements files; 0 failures
+- architecture: 5 product files, 6 relative imports; 0 failures
+- coverage: 22 of 22 live requirement ids named by a test; 0 failures
+- ownership: 0 failures
+
+Size (session_01GcrjrR5bc9rU73FFW7djXc): test runs 5, module lines 1020

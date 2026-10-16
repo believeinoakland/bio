@@ -1543,3 +1543,31 @@ test("R21 converse answers the model and effort its requests named, on each path
     assert.equal(b.effort, effort);
   }
 });
+
+/* ------------------------------------------------------------------ R22 (R085-28) */
+
+test("R22 the meaningrows tool describes a 64-token snippet and a passage call sends snippet 64, on each path; another arm sends none", async () => {
+  const tools = subsessionTools({ level: "x", scope: "s", returns: { states: ["PRESENT"] }, arms: ["leg", "passage"] });
+  const rows = tools.find((t) => t.name === "meaningrows");
+  assert.match(rows.description, /snippet of about a sentence/);
+  assert.match(rows.description, /64 tokens/);
+  assert.equal(rows.input_schema.properties.snippet.maximum, 64);
+  const FINAL = { name: "answer", description: "answer", input_schema: { type: "object", properties: { v: { type: "number" } } } };
+  for (const path of ["apikey", "signin"]) {
+    const performed = [];
+    const onTool = async (name, input) => { performed.push(input); return { content: "ok" }; };
+    const calls = [{ rows: "passage", q: "passage:days" }, { rows: "leg", q: "x" }, { rows: "passage", q: "y", snippet: 20 }];
+    if (path === "apikey") {
+      replies.push(json(200, message(calls.map((c, i) => toolUse("t" + i, "meaningrows", c)))));
+      replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+      await converse(conv({ tools: [rows, FINAL], onTool }));
+    } else {
+      const s = fakeRunner([() => calls.map((c, i) => ({ tool_use: { id: "t" + i, name: "meaningrows", input: c } })),
+                            () => [{ tool_use: { id: "a", name: "answer", input: { v: 1 } } }], () => [end()]]);
+      await converse(conv({ reference: SUB, runner: s.ns, tools: [rows, FINAL], onTool }));
+    }
+    assert.equal(performed[0].snippet, 64, path);
+    assert.equal("snippet" in performed[1], false, path + " control: another arm sends none");
+    assert.equal(performed[2].snippet, 20, path + " a snippet the call names is kept");
+  }
+});

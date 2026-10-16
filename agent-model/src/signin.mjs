@@ -50,7 +50,7 @@
  * THE METER (D-611). Every message this side sends is a request: the conversation request and each `tool_result`
  * are counted, turn and bytes, before they are sent, and one that would pass a bound is not sent. */
 import { usageOf, sumUsage, finalRefusal, callsOf, sumCalls, silent, refused, READ_FACTS, toolResultContent, relayText, factsOf,
-         scrub, scrubDeep } from "./outcome.mjs";
+         scrub, scrubDeep, toolInput } from "./outcome.mjs";
 
 export const RUNNER_URL = "https://agent-runner/conversation";
 const ANSWERED = "received";
@@ -306,7 +306,7 @@ async function conversation({ account, runner, model, effort, system, messages, 
         else if (here) { content = here.content; isError = !!here.error; }
         else if (!offered.has(u.name)) { content = `'${String(u.name)}' is not a tool of this conversation`; isError = true; }
         else {
-          const r = await onTool(u.name, input);
+          const r = await onTool(u.name, toolInput(u.name, input));
           if (r && r.halt) { conn.close(); return r.halt; }
           blocks = toolResultContent(r);
           if (holdsImage(blocks) && !(await imagesRelayed())) {

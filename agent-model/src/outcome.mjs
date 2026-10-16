@@ -132,3 +132,10 @@ export async function finalRefusal(checkFinal, input) {
     return r && typeof r === "object" && r.code != null ? `${String(r.code)}: ${String(r.detail ?? "")}` : null;
   } catch { return null; }
 }
+
+/** R22 — A PASSAGE READ ASKS FOR THE LONGEST SNIPPET. A `meaningrows` call with `rows=passage` and no `snippet` of its own
+ *  goes to the caller's `onTool` with `snippet: 64`; any other call goes unchanged. */
+export const PASSAGE_SNIPPET = 64;
+export const toolInput = (name, input) =>
+  name === "meaningrows" && input && input.rows === "passage" && input.snippet === undefined
+    ? { ...input, snippet: PASSAGE_SNIPPET } : input;
