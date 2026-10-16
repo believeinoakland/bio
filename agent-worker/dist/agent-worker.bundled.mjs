@@ -221,12 +221,12 @@ function emptyLevelCandidates(state, target) {
          level, and where the search that establishes it is written. That is an
          honest account of what changed and why — §6 rule 1's standard — and it
          overclaims nothing, because every word of it is a fact the report
-         carried. The model's own `summary` is APPENDED when it has one and is
-         never substituted for the composed sentence: a model that writes "n/a"
-         must not be able to turn the instrument's own object back into filler. */
+         carried. R14 (R085-29; K3528): the model's own `summary` is NOT appended. It is free prose written from
+         `read_facts`, which holds raw record ids, and it reached the member verbatim; the report and its words stay
+         in the run's log, which this description points to. */
       /* R13 (R085-23; K3510): the description names the question as "this question", never its record id. The id
          is the plane's to show with the question, and a raw id here reached the reader verbatim (`question.mjs`). */
-      description: `this run searched the ${reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at ${String(r.observed_at ?? "(no address)")}.` + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : "")
+      description: `this run searched the ${reported} level of this question and found nothing supportable there; the search that establishes it is written in the run's observation log at ${String(r.observed_at ?? "(no address)")}.`
     });
   }
   return out;
@@ -341,6 +341,12 @@ function nextStep(state) {
       return { step: "submit", why: "the submission was ADJUSTED and differs from the one that was refused" };
     }
     case "next-pass":
+      if (s.passAdded !== true)
+        return {
+          step: "close",
+          bound: "completed",
+          why: `pass ${s.pass} added no new candidate (each one composed was already held, or none was composed); a further pass would find nothing the record does not hold, so the run closes`
+        };
       return { step: "plan", why: `pass ${s.pass} done; the table decides there is another` };
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
@@ -356,6 +362,8 @@ function advance(state, decision) {
     next.resumeAt = null;
     next.resumeBasis = null;
   }
+  if (s.step === "dedup" && to === "submit") next.passAdded = true;
+  if (s.step === "next-pass" && to === "plan") next.passAdded = false;
   return to === "next-pass" ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
 }
 var RESUMABLE = [
@@ -371,7 +379,8 @@ var RESUMABLE = [
   "submission",
   "refusal",
   "refusedSubmission",
-  "adjusted"
+  "adjusted",
+  "passAdded"
 ];
 function resumableState(state) {
   const s = state || {};
@@ -389,7 +398,7 @@ function publishableState(state, limit, flow = CONTROL_FLOW) {
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
   const at7 = flow === PLAN_FLOW ? full.step === "close" ? "close" : "read" : STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
-  const restart = resumableState({ step: at7, pass: full.pass, adjusted: false });
+  const restart = resumableState({ step: at7, pass: full.pass, adjusted: false, passAdded: full.passAdded });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at7 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
@@ -423,7 +432,8 @@ function resumeFrom(published, flow = CONTROL_FLOW) {
     submission: record(p.submission),
     refusal: record(p.refusal),
     refusedSubmission: record(p.refusedSubmission),
-    adjusted: p.adjusted === true
+    adjusted: p.adjusted === true,
+    passAdded: p.passAdded === true
   } };
 }
 var PRESENT_UNBACKED_NOTE = "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) \u2014 so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
@@ -2908,6 +2918,8 @@ async function finalRefusal(checkFinal, input) {
     return null;
   }
 }
+var PASSAGE_SNIPPET = 64;
+var toolInput = (name, input) => name === "meaningrows" && input && input.rows === "passage" && input.snippet === void 0 ? { ...input, snippet: PASSAGE_SNIPPET } : input;
 
 // ../agent-model/src/apikey.mjs
 var MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
@@ -3197,7 +3209,7 @@ async function conversation({ account, runner, model, effort, system, messages, 
           content = `'${String(u.name)}' is not a tool of this conversation`;
           isError = true;
         } else {
-          const r = await onTool(u.name, input);
+          const r = await onTool(u.name, toolInput(u.name, input));
           if (r && r.halt) {
             conn.close();
             return r.halt;
@@ -3437,7 +3449,7 @@ async function converseRun({
     }
     const results = [];
     for (const u of uses) {
-      const r = u.name === READ_FACTS.name ? factsOf(messages) : await onTool(u.name, u.input || {});
+      const r = u.name === READ_FACTS.name ? factsOf(messages) : await onTool(u.name, toolInput(u.name, u.input || {}));
       if (r && r.halt) return r.halt;
       results.push({
         type: "tool_result",
@@ -3635,12 +3647,13 @@ function subsessionTools(contract) {
   return [
     {
       name: "meaningrows",
-      description: "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. `ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that document's passages. Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
+      description: "query the record at meaning grain through the plane (op=meaningrows). Bare words in q match only the records' own text. A document's words are searched with `passage:<word>`; `id:<record id>` names one record. `ids` (at most 20 record ids) limits the read to those records, so rows=passage with a subject's id reads that document's passages; a passage comes back as a snippet of about a sentence (up to " + PASSAGE_SNIPPET + " tokens). Read the contract's subjects (the result of " + READ_FACTS.name + ") first.",
       input_schema: { type: "object", properties: {
         q: { type: "string" },
         rows: { type: "string", ...arms ? { enum: arms } : {}, description: "the meaning arm, e.g. leg" },
         ids: { type: "array", maxItems: 20, items: { type: "string" }, description: "record ids that limit the read" },
-        limit: { type: "integer", minimum: 1, maximum: 50 }
+        limit: { type: "integer", minimum: 1, maximum: 50 },
+        snippet: { type: "integer", minimum: 4, maximum: PASSAGE_SNIPPET, description: "tokens of each passage snippet; passage reads send 64" }
       }, required: ["rows"], additionalProperties: false }
     },
     {
@@ -36446,7 +36459,8 @@ function publishedPack(answer) {
   return { ok: false, why: p == null ? "the answer carries no pack" : "the answer's pack has no version, resident layer or disclosed layers" };
 }
 var MEANING_OP = "meaningrows";
-var meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) => planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
+var SNIPPET_TOKENS = 64;
+var meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) => planeAnswer(await call(MEANING_OP, { q, rows, limit, snippet: SNIPPET_TOKENS }, ids ? { ids } : null), MEANING_OP);
 async function performStep(call, state, runId, model = null, logSeq = null) {
   const out = { state, consume: {}, note: null };
   switch (state.step) {
@@ -36559,8 +36573,22 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
     case "compose": {
       const read2 = await meaningRead(call, { q: state.q || "", rows: MEANING_ARM, limit: 50 });
       if (read2.silent) return { silent: read2.silent };
-      const empties = emptyLevelCandidates(state, state.target ?? null);
+      const reported = emptyLevelCandidates(state, state.target ?? null);
+      const rowsForTarget = Array.isArray(read2.result?.rows) ? read2.result.rows.filter((r) => r && r.bundle_id === (state.target ?? null)).length : null;
+      const unconfirmed = rowsForTarget === 0 ? null : rowsForTarget === null ? "unread" : "contradicted";
+      const empties = unconfirmed ? reported.filter((c) => c.level !== REPORTING_LEVEL.meaning) : reported;
       const candidates = [...state.candidates || [], ...empties];
+      const wronged = reported.length - empties.length;
+      if (wronged) out.logEntries = [{
+        level: "meaning",
+        subject: "compose -> level-empty candidate dropped",
+        state: "LOOKED_INDETERMINATE",
+        governed: false,
+        condition: null,
+        terminal: false,
+        bound: null,
+        detail: (unconfirmed === "contradicted" ? `the sub-session reported the meaning level empty, but this step's read of it holds ${rowsForTarget} row(s) for the question: the report is contradicted by the read, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed` : `the sub-session reported the meaning level empty, but this step's read of it gave no rows to confirm that, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`).slice(0, LOG_DETAIL_MAX)
+      }];
       let said;
       if (read2.refused) {
         out.refused = read2.refused;
@@ -36570,7 +36598,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       } else {
         said = `${read2.result.rows.length} meaning-grain row(s) queried at the '${MEANING_ARM}' grain`;
       }
-      out.note = `${said}; no document was loaded. ${empties.length} level(s) observed EMPTY and written down as \xA79's kind`;
+      out.note = `${said}; no document was loaded. ${empties.length} level(s) observed EMPTY and written down as \xA79's kind` + (wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "");
       out.state = { ...state, candidates };
       return out;
     }
@@ -36593,11 +36621,14 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
       const droppedHere = (state.candidates || []).filter((c) => c && aimedHere(c) && names.has(String(c.name ?? "")));
       const queue = (state.candidates || []).filter((c) => c && (!aimedHere(c) || !names.has(String(c.name ?? ""))));
+      const mine = (n) => (state.written || []).find((w) => w.name === n) ?? null;
+      const ofRun = (n) => mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "";
       const byLevel = /* @__PURE__ */ new Map();
       for (const c of droppedHere) {
         const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
         if (!level) continue;
-        byLevel.set(level, [...byLevel.get(level) || [], String(c.name ?? "")]);
+        const n = String(c.name ?? "");
+        byLevel.set(level, [...byLevel.get(level) || [], `'${n}'${ofRun(n)}`]);
       }
       if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
         level,
@@ -36607,9 +36638,9 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         condition: null,
         terminal: false,
         bound: null,
-        detail: `dropped before any write: ${named.map((n) => `'${n}'`).join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX)
+        detail: `dropped before any write: ${named.join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX)
       }));
-      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'`).join(", ")})` : "") + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
+      out.note = `${proposed} candidate(s) compared against ${names.size} on the record; ${queue.length} survived` + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : "") + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
     }
@@ -36627,7 +36658,26 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       if (res.status === 200 && res.body?.ok === true && answer.ok !== false && answer.wrote !== false) {
         out.submitted = true;
         out.note = `wrote '${String(candidate.name ?? "")}'`;
-        out.state = { ...state, queue, refusal: null, submission: candidate };
+        const name = String(candidate.name ?? "");
+        const pass = Number(state.pass) + 1;
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === candidate.level);
+        if (level) out.logEntries = [{
+          level,
+          subject: "submit -> candidate written",
+          state: "LOOKED_INDETERMINATE",
+          governed: false,
+          condition: null,
+          terminal: false,
+          bound: null,
+          detail: `wrote '${name}' at level ${level} in pass ${pass}`.slice(0, LOG_DETAIL_MAX)
+        }];
+        out.state = {
+          ...state,
+          queue,
+          refusal: null,
+          submission: candidate,
+          written: [...state.written || [], { name, level: level ?? null, pass }]
+        };
         return out;
       }
       if (answer.repeated === true) out.verbatim = true;

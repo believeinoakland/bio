@@ -828,7 +828,12 @@ console.log("\n--- B7 · LOG-ALWAYS holds across FL-5's row, and the observation
   /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
   t("every step still ticked", (out.trace || []).length,
     st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length);
-  t("and no step that looked at nothing sent an entry", st.runlog.length, 0);
+  /* R105 (R085) adds the one entry a step may send beside its look: the write of a candidate, logged with its name,
+     level and pass. So the log holds exactly that entry for the one candidate written (`level-empty-content`), and
+     every other step, having looked at nothing, still sent none. */
+  t("and no step that looked at nothing sent an entry; the one candidate written is logged as written (R105)",
+    st.runlog.map((e) => [e.subject, e.state, /^wrote 'level-empty-content' at level content in pass 1$/.test(e.detail)]),
+    [["submit -> candidate written", "LOOKED_INDETERMINATE", true]]);
   t("and the run actually took some steps", (out.trace || []).length > 5, true);
   const collect = (out.trace || []).find((x) => x.step === "collect");
   t("the collect step's note names both numbers", /3 REPORT\(s\) taken, 1 REFUSED/.test(collect?.note ?? ""), true);

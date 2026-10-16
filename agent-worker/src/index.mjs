@@ -945,8 +945,11 @@ function publishedPack(answer) {
  *  without having decided what to do about a refusal. The op's NAME is a
  *  constant because `planeAnswer` also wants it, so the code says the name once. */
 const MEANING_OP = "meaningrows";
+/* R103: a passage row's `snippet` is read at the longest length query-language R12 allows (64 tokens); its default is
+   one clause, which is all a sub-session would otherwise see of a cited passage. */
+const SNIPPET_TOKENS = 64;
 const meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) =>
-  planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
+  planeAnswer(await call(MEANING_OP, { q, rows, limit, snippet: SNIPPET_TOKENS }, ids ? { ids } : null), MEANING_OP);
 
 /** WHAT EACH ROW ACTUALLY DOES AGAINST THE PLANE. One `case` per row that has
  *  work, and rows that have none say so by falling through — the table already
@@ -1165,8 +1168,23 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          absence is written down, and it is deterministic for the reason its own
          header gives — if emitting it were judged, the one run the instrument
          exists to catch is the run that would not emit it. */
-      const empties = emptyLevelCandidates(state, state.target ?? null);
+      const reported = emptyLevelCandidates(state, state.target ?? null);
+      /* R104: the meaning level is the one level this step reads, so a report of it EMPTY stands only when that read
+         holds no row for the run's target. A row for it contradicts the report, and a read that gave no rows cannot
+         confirm it; either way no candidate is composed, and the tick's log says which. */
+      const rowsForTarget = Array.isArray(read.result?.rows)
+        ? read.result.rows.filter((r) => r && r.bundle_id === (state.target ?? null)).length : null;
+      const unconfirmed = rowsForTarget === 0 ? null : (rowsForTarget === null ? "unread" : "contradicted");
+      const empties = unconfirmed ? reported.filter((c) => c.level !== REPORTING_LEVEL.meaning) : reported;
       const candidates = [...(state.candidates || []), ...empties];
+      const wronged = reported.length - empties.length;
+      if (wronged) out.logEntries = [{
+        level: "meaning", subject: "compose -> level-empty candidate dropped", state: "LOOKED_INDETERMINATE",
+        governed: false, condition: null, terminal: false, bound: null,
+        detail: (unconfirmed === "contradicted"
+          ? `the sub-session reported the meaning level empty, but this step's read of it holds ${rowsForTarget} row(s) for the question: the report is contradicted by the read, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`
+          : `the sub-session reported the meaning level empty, but this step's read of it gave no rows to confirm that, so 'level-empty-${REPORTING_LEVEL.meaning}' is not composed`).slice(0, LOG_DETAIL_MAX),
+      }];
 
       /* D-276 — THREE OUTCOMES, THREE SENTENCES, AND THE RUN NOTE IS RECORD.
          "the record was not asked", "the record answered and said nothing about
@@ -1194,7 +1212,8 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         said = `${read.result.rows.length} meaning-grain row(s) queried at the '${MEANING_ARM}' grain`;
       }
       out.note = `${said}; no document `
-               + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`;
+               + `was loaded. ${empties.length} level(s) observed EMPTY and written down as §9's kind`
+               + (wronged ? `; ${wronged} reported empty and ${unconfirmed === "contradicted" ? "contradicted by the read" : "not confirmed by the read"}, so not written down` : "");
       out.state = { ...state, candidates };
       return out;
     }
@@ -1241,20 +1260,24 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       /* R101: a drop is a look the log must hold, not only the trace: one LOOKED_INDETERMINATE entry per level, at the
          dropped candidate's level (the observation log's spelling of the candidate's), naming each dropped name. A
          candidate that states no level has none to be logged at and stays in the note alone. */
+      /* R105: a held version this run wrote itself says so, with the pass that wrote it, rather than reading as someone else's. */
+      const mine = (n) => (state.written || []).find((w) => w.name === n) ?? null;
+      const ofRun = (n) => (mine(n) ? ` (written by this run in pass ${mine(n).pass})` : "");
       const byLevel = new Map();
       for (const c of droppedHere) {
         const level = LEVELS.find((l) => REPORTING_LEVEL[l] === c.level);
         if (!level) continue;
-        byLevel.set(level, [...(byLevel.get(level) || []), String(c.name ?? "")]);
+        const n = String(c.name ?? "");
+        byLevel.set(level, [...(byLevel.get(level) || []), `'${n}'${ofRun(n)}`]);
       }
       if (byLevel.size) out.logEntries = [...byLevel].map(([level, named]) => ({
         level, subject: "dedup -> candidate dropped", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
         terminal: false, bound: null,
-        detail: `dropped before any write: ${named.map((n) => `'${n}'`).join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX),
+        detail: `dropped before any write: ${named.join(", ")} already held on the question`.slice(0, LOG_DETAIL_MAX),
       }));
       out.note = `${proposed} candidate(s) compared against ${names.size} on the record; `
                + `${queue.length} survived`
-               + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'`).join(", ")})` : "")
+               + (droppedHere.length ? `; ${droppedHere.length} already held, dropped (${droppedHere.map((c) => `'${String(c.name ?? "")}'${ofRun(String(c.name ?? ""))}`).join(", ")})` : "")
                + (elsewhere ? `; ${elsewhere} named a question other than the run's target and were NOT compared` : "");
       out.state = { ...state, queue };
       return out;
@@ -1279,7 +1302,17 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       if (res.status === 200 && res.body?.ok === true && answer.ok !== false && answer.wrote !== false) {
         out.submitted = true;
         out.note = `wrote '${String(candidate.name ?? "")}'`;
-        out.state = { ...state, queue, refusal: null, submission: candidate };
+        /* R105: the write is a look the log holds: its name, its level and the pass that wrote it; the state keeps it
+           (this run's, not the record's) so a later pass's dedup drop can name it. */
+        const name = String(candidate.name ?? "");
+        const pass = Number(state.pass) + 1;
+        const level = LEVELS.find((l) => REPORTING_LEVEL[l] === candidate.level);
+        if (level) out.logEntries = [{
+          level, subject: "submit -> candidate written", state: "LOOKED_INDETERMINATE", governed: false, condition: null,
+          terminal: false, bound: null, detail: `wrote '${name}' at level ${level} in pass ${pass}`.slice(0, LOG_DETAIL_MAX),
+        }];
+        out.state = { ...state, queue, refusal: null, submission: candidate,
+                      written: [...(state.written || []), { name, level: level ?? null, pass }] };
         return out;
       }
       /* F10's OTHER HALF, OBSERVED RATHER THAN ASSUMED. PL-3 answers a verbatim
