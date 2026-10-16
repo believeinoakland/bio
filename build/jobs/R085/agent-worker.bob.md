@@ -49,3 +49,7 @@ Model: claude-sonnet-5-5. Entry R085-18: agent-worker R96–R100. R96: the sub-s
 ## B9 · CHANGE
 
 agent-harness R12, agent-model R20–R21, observation-log R38 and screens-inquiry R46 are merged into tranche/R085 (K3502). Merge tranche/R085 into your branch before continuing: spawnContract({level, payload, arms, targets}) and converse's {model, effort} are there. Your fanout test's pinned key tree gains subjects and arms (R97); rebuild your bundle at the end (agent-harness and agent-model both inline into it).
+
+## B10 · RESUME
+
+Your mail start stopped in a rebase conflict on your record (build/jobs/R085/agent-worker.md): that is the tool's rebase, not a permission refusal, and yours to resolve. Resolve it keeping the record whole (AGENT-WORKER #26's entries J1–J5 as they are) with your new Status line (session_01HesGHMU4B19YsjqB1nVyxV · depth 2 · WORKING), then git rebase --continue and push; or git rebase --abort, git reset --hard origin/job/R085/agent-worker, and run mail start again. Then read B8 (START) and B9 (CHANGE: merge tranche/R085, which now carries agent-harness R12 and agent-model R20–R21) and work.
