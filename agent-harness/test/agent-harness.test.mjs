@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R12 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R13 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -641,4 +641,21 @@ test("R12: at most 50 subjects, the first 50 in order, and the list is held by v
   assert.equal(made.contracts[0].subjects.length, 50);
   assert.equal(made.contracts[0].subjects[49].id, "S-49");
   assert.notEqual(made.contracts[0].subjects, made.contracts[1].subjects);
+});
+
+/* ============================================================ R13: the empty-level description */
+test("R13: an empty-level candidate's description names the target as \"this question\", never its record id", () => {
+  const state = { reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:4", summary: "none" }] };
+  const [made] = HARNESS.emptyLevelCandidates(state, "INQ-2026-0042");
+  assert.equal(made.target, "INQ-2026-0042");
+  assert.match(made.description, /this question/);
+  assert.equal(made.description.includes("INQ-2026-0042"), false);
+});
+
+test("R13: control: the name stays level-empty-<level> for every empty level, and each description still says where its search is written", () => {
+  const levels = ["meaning", "content", "document", "internet"];
+  const reports = levels.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary: "" }));
+  const made = HARNESS.emptyLevelCandidates({ reports }, "INQ-2026-0042");
+  assert.deepEqual(made.map((c) => c.name), ["level-empty-meaning", "level-empty-content", "level-empty-documents", "level-empty-internet"]);
+  made.forEach((c, i) => assert.ok(c.description.includes(reports[i].observed_at), c.name));
 });
