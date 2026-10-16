@@ -44,3 +44,6 @@ What step 2 asks: a container on standard-1, the CLI signed in by subscription, 
 
 ## Files
 Raw responses and the sign-in script are in the session's scratchpad only (the pack is 212 KB; its hash and version are above). Nothing secret is in this file.
+
+## Step 2, second attempt (K3571), 19:00Z: blocked at the permission check
+Tails opened on `agent-runner` (id `3e552a84…`) and `agent-worker` (id `87bf6902…`) by `POST …/workers/scripts/<name>/tails`: both `success: true`, `wss://tail.developers.workers.dev/<id>`, expiring 2026-10-17T01:00Z. The step that reads them (a Node websocket client, subprotocol `trace-v1`) was **denied by the session's permission check** (reason given: "Credential Exploration"). Not worked around; no ask was sent. Both tails were then deleted (`DELETE …/tails/<id>`, `success: true`). Step 2 is still not proven; steps 3–9 not started.
