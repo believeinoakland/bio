@@ -165,7 +165,7 @@ const ACT_HELP = {
   recordpersonfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   recorddatedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
   clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
-  accountusesset: 'Switches one use on or off for this account: asking, drafting, runs, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.',
+  accountusesset: 'Switches one use on or off for this account: asking, drafting, working through checks and plans, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.',
   ailimitset: 'Sets or removes one limit on this account: overall, for one use, or for each member\'s use, in dollars (estimated, API keys only), tokens or calls, a day or a month. It binds this account only.',
   projectkeyset: 'Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members\' acts in the project, before their own accounts or the team\'s key.',
   projectsigninset: 'Makes your own Claude sign-in the project\'s account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.',

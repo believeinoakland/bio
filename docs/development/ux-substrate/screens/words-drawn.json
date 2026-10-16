@@ -4967,6 +4967,168 @@
    "en": "Its short name is {slug}. Typing it makes sure the right Civicsmith is removed.",
    "protected": true,
    "note": "DEC-282"
+  },
+  {
+   "key": "screen.connect.connected",
+   "en": "Connected",
+   "protected": false,
+   "note": "DEC-283: beside the card that says which account serves you"
+  },
+  {
+   "key": "screen.connect.own.until.again",
+   "en": "Then you sign in again here.",
+   "protected": false,
+   "note": "DEC-283: after screen.connect.own.until"
+  },
+  {
+   "key": "screen.connect.part.notice.why",
+   "en": "Read once: what happens to what you ask.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.allowance",
+   "en": "Your daily allowance",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.allowance.why",
+   "en": "Set by your administrators.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.use",
+   "en": "Your use",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.use.why",
+   "en": "Only you see this.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.before",
+   "en": "Before you connect",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.before.why",
+   "en": "Read once: what connecting means.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.way.subscription.help",
+   "en": "Billed to you by Anthropic, not your team.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.way.apikey.help",
+   "en": "Anthropic bills you for each use.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.uses",
+   "en": "What the assistant may do for you",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.uses.why",
+   "en": "Everyday help is on. Switch off anything you'd rather do yourself.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.everyday",
+   "en": "Everyday help",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.unasked",
+   "en": "Without being asked",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.unasked.help",
+   "en": "Off to start. Each of these uses your account without a question from you.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit",
+   "en": "A limit, if you want one",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit.why.subscription",
+   "en": "None set: only your plan's own allowance applies.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit.why.apikey",
+   "en": "None set: only Anthropic's own spending limit on your key applies.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.per",
+   "en": "Per",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.day",
+   "en": "day",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.month",
+   "en": "month",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.more",
+   "en": "More choices",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.binds",
+   "en": "Your limits bind only your own account; the team's and a project's limits never bind it. The first time a limit is reached in a period, you are told once in your queue.",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.use.last30",
+   "en": "Last 30 days",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.use.subscription",
+   "en": "On your subscription",
+   "protected": false,
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.whopays.summary",
+   "en": "Which account pays, and when",
+   "protected": false,
+   "note": "DEC-283"
   }
  ],
  "rewrite": {

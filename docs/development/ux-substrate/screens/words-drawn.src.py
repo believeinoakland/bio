@@ -1108,6 +1108,38 @@ w282(R + 'keep', "Nothing is kept by surprise: the installer keeps no copy. If a
 w282(R + 'type.label', 'To confirm, type its short name', True)
 w282(R + 'type.help', 'Its short name is {slug}. Typing it makes sure the right Civicsmith is removed.', True)
 # --- end DEC-282
+# --- DEC-283 (B241, K3459, K3468; the walk's D3, B244): the assistant's page: what serves you first, then parts that open and close
+def w283(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-283' + (': ' + note if note else '')))
+C = 'screen.connect.'
+w283(C + 'connected', 'Connected', False, 'beside the card that says which account serves you')
+w283(C + 'own.until.again', 'Then you sign in again here.', False, 'after screen.connect.own.until')
+w283(C + 'part.notice.why', 'Read once: what happens to what you ask.')
+w283(C + 'part.allowance', 'Your daily allowance')
+w283(C + 'part.allowance.why', 'Set by your administrators.')
+w283(C + 'part.use', 'Your use')
+w283(C + 'part.use.why', 'Only you see this.')
+w283(C + 'part.before', 'Before you connect')
+w283(C + 'part.before.why', 'Read once: what connecting means.')
+w283(C + 'way.subscription.help', 'Billed to you by Anthropic, not your team.')
+w283(C + 'way.apikey.help', 'Anthropic bills you for each use.')
+w283(C + 'part.uses', 'What the assistant may do for you')
+w283(C + 'part.uses.why', "Everyday help is on. Switch off anything you'd rather do yourself.")
+w283(C + 'uses.everyday', 'Everyday help')
+w283(C + 'uses.unasked', 'Without being asked')
+w283(C + 'uses.unasked.help', 'Off to start. Each of these uses your account without a question from you.')
+w283(C + 'part.limit', 'A limit, if you want one')
+w283(C + 'part.limit.why.subscription', "None set: only your plan's own allowance applies.")
+w283(C + 'part.limit.why.apikey', "None set: only Anthropic's own spending limit on your key applies.")
+w283(C + 'limit.per', 'Per')
+w283(C + 'limit.day', 'day')
+w283(C + 'limit.month', 'month')
+w283(C + 'limit.more', 'More choices')
+w283(C + 'limit.binds', "Your limits bind only your own account; the team's and a project's limits never bind it. The first time a limit is reached in a period, you are told once in your queue.")
+w283(C + 'use.last30', 'Last 30 days')
+w283(C + 'use.subscription', 'On your subscription')
+w283(C + 'whopays.summary', 'Which account pays, and when')
+# --- end DEC-283
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

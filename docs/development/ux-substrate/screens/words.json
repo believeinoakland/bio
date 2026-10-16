@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3716,
+  "screen": 3743,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -208,7 +208,7 @@
   "rail": 17,
   "tab": 2,
   "column": 33,
-  "total": 12458,
+  "total": 12485,
   "protected": 881
  },
  "words": [
@@ -809,7 +809,7 @@
   },
   {
    "key": "ai.use.run.name",
-   "en": "Runs",
+   "en": "Working through checks and plans",
    "protected": false,
    "source": "mock-screens.js AI_USES"
   },
@@ -833,13 +833,13 @@
   },
   {
    "key": "ai.use.transcribe.name",
-   "en": "Reading page pictures",
+   "en": "Reading unclear pages",
    "protected": false,
    "source": "mock-screens.js AI_USES"
   },
   {
    "key": "ai.use.account.name",
-   "en": "A case's account",
+   "en": "Drafting a case's account",
    "protected": false,
    "source": "mock-screens.js AI_USES"
   },
@@ -1232,7 +1232,7 @@
   },
   {
    "key": "ai.use.run.inline",
-   "en": "runs",
+   "en": "working through checks and plans",
    "protected": false,
    "source": "DEC-189",
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
@@ -1260,14 +1260,14 @@
   },
   {
    "key": "ai.use.transcribe.inline",
-   "en": "reading page pictures",
+   "en": "reading unclear pages",
    "protected": false,
    "source": "DEC-189",
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
   },
   {
    "key": "ai.use.account.inline",
-   "en": "a case's account",
+   "en": "drafting a case's account",
    "protected": false,
    "source": "DEC-189",
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
@@ -29739,63 +29739,63 @@
   },
   {
    "key": "ai.use.ask.means",
-   "en": "questions a member asks the assistant",
+   "en": "questions a member asks it, in everyday words",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.ask.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.draft.means",
-   "en": "texts the assistant drafts when a member asks, such as a wizard's step",
+   "en": "a letter, a summary or a wizard's step a member asks for, kept as a labeled draft until they keep it",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.draft.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.run.means",
-   "en": "checks, investigations, extractions and plans the assistant works through",
+   "en": "longer work a member starts, such as a check, an extraction or a plan, done step by step",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.run.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.standing.means",
-   "en": "questions a member leaves for the assistant to answer again as new material arrives",
+   "en": "questions a member leaves for it to answer again whenever new material arrives; each new answer is a use",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.standing.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.enquire.means",
-   "en": "the assistant's questions to a member who starts a project, and the plans it proposes when asked",
+   "en": "its questions to a member starting a project, and the plan it proposes when asked",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.enquire.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.read.means",
-   "en": "the assistant reading documents a member points it to, such as Find in this",
+   "en": "a document a member points it to, such as with Find in this",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.read.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.transcribe.means",
-   "en": "pages of a document that Civicsmith's own reading couldn't make out, read by the assistant when a member asks",
+   "en": "a scanned or photographed page that Civicsmith's own reading couldn't make out, when a member asks",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.transcribe.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.account.means",
-   "en": "the assistant drafting and checking the account a case gives of what was found",
+   "en": "the account a case gives of what was found, drafted and checked",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.account.name, in the list of uses an account pays for"
   },
   {
    "key": "ai.use.suggestions.means",
-   "en": "beside its answers, the assistant suggesting questions and checks nobody asked for",
+   "en": "questions and checks it suggests beside its answers, labeled as suggestions, that nobody asked for",
    "protected": false,
    "source": "DEC-257",
    "note": "after ai.use.suggestions.name, in the list of uses an account pays for"
@@ -37316,6 +37316,195 @@
    "protected": true,
    "source": "DEC-259",
    "note": "DEC-282"
+  },
+  {
+   "key": "screen.connect.connected",
+   "en": "Connected",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283: beside the card that says which account serves you"
+  },
+  {
+   "key": "screen.connect.own.until.again",
+   "en": "Then you sign in again here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283: after screen.connect.own.until"
+  },
+  {
+   "key": "screen.connect.part.notice.why",
+   "en": "Read once: what happens to what you ask.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.allowance",
+   "en": "Your daily allowance",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.allowance.why",
+   "en": "Set by your administrators.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.use",
+   "en": "Your use",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.use.why",
+   "en": "Only you see this.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.before",
+   "en": "Before you connect",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.before.why",
+   "en": "Read once: what connecting means.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.way.subscription.help",
+   "en": "Billed to you by Anthropic, not your team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.way.apikey.help",
+   "en": "Anthropic bills you for each use.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.uses",
+   "en": "What the assistant may do for you",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.uses.why",
+   "en": "Everyday help is on. Switch off anything you'd rather do yourself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.everyday",
+   "en": "Everyday help",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.unasked",
+   "en": "Without being asked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.uses.unasked.help",
+   "en": "Off to start. Each of these uses your account without a question from you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit",
+   "en": "A limit, if you want one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit.why.subscription",
+   "en": "None set: only your plan's own allowance applies.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.part.limit.why.apikey",
+   "en": "None set: only Anthropic's own spending limit on your key applies.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.per",
+   "en": "Per",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.day",
+   "en": "day",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.month",
+   "en": "month",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.more",
+   "en": "More choices",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.limit.binds",
+   "en": "Your limits bind only your own account; the team's and a project's limits never bind it. The first time a limit is reached in a period, you are told once in your queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.use.last30",
+   "en": "Last 30 days",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.use.subscription",
+   "en": "On your subscription",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
+  },
+  {
+   "key": "screen.connect.whopays.summary",
+   "en": "Which account pays, and when",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-283"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -80243,7 +80432,7 @@
   },
   {
    "key": "act.accountusesset.does",
-   "en": "Switches one use on or off for this account: asking, drafting, runs, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.",
+   "en": "Switches one use on or off for this account: asking, drafting, working through checks and plans, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
