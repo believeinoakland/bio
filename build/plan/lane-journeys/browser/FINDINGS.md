@@ -125,3 +125,85 @@ During two overlapping walks (my crawl as member while another script read the I
 | F8 unknown address | STILL in part | B-14 |
 | J-4 Find searches words | FIXED | finds note.txt for "420" |
 | J-6 text file as "high risk" | FIXED | no such words |
+
+---
+
+# V4 (JOURNEYS #3, 2026-10-16): round 7 re-checked in passing, then one real investigation worked by hand (K3578)
+
+Walk of biosmoke8 after fix round 7, as administrator (`sparky`) and member (`walker`), 1280 wide (390 not walked in V4; no time). My project: "JOURNEYS V4: are bus shelters repaired within 30 days?" with one question, ten documents (text files, a real web-served PDF, a CSV, a photo, an image-only PDF, an xlsx, a doorbell knock), a person, a money trail, a plan, a draft wizard. Shots: `shots/v4-*.png`. Findings continue from B-27.
+
+## Blockers
+
+### B-27 · A proceeding cannot be registered: the court list is empty · BLOCKS journey 14 · NEW
+Admin, `/app/proceeding/<project>`. "The court or tribunal" is a choice with no options at all; with the other fields filled, "Register the proceeding" answers "Give the court, the number, the kind and where the caption comes from." No screen adds a court (Places and offices adds places and offices, not courts). Owner: screens-action / places. Shot: `v4-proceeding-empty-1280`.
+
+### B-28 · A standard cannot be held from any screen with real words · BLOCKS journey 14 (standards) · STILL (J-9, B-16)
+Admin. Find in's "Hold this as a standard" on a requirement hit of a text file sends `text: []` and is refused in words (`STANDARD_NO_TEXT`: "name at least one passage of a captured document"), though the passage is on screen. The Standard screen asks for "the passage's content ids, separated by commas", which no screen shows; typing anything is refused ("A passage named as this standard's text is not held in the record. Capture the document and cite the passage first"). Passages of a web page or PDF were not tried (no such document with a "shall" was reachable). The form's "What kind of fact" label on the standard's kind (Find in) is also wrong. Shots: `v4-findin-standard-after-1280`, `v4-standard-typed-1280`.
+
+## Misleads
+
+### B-29 · Find in's recording acts: free-text fields, unprefilled, and a wrong refusal word · MISLEADS · NEW
+Admin, Find in, fresh passages (acts DO draw on a passage not yet recorded; V3's "no act drawn" was because its passage was already cited: so B-26's first half is explained, see status).
+- Money: the amount is not prefilled though the figure was read ("$15,000"); empty fields answer "This could not be read. Try again in a moment." (the call said `NO_AMOUNT`). Kind and stage are free text with no list; an "actual" payment needs a flow step (encumbered, incurred, paid) that this form has no field for, so it is always refused ("This request does not say which step of the flow it is about"); only "adopted" went through. The Money trail's own form has the stage field.
+- Dated fact: "What kind of fact" is free text (11 kinds exist, not listed); empty or unknown kind answers "This could not be read. Try again in a moment."; the date read ("20 May 2025") is not prefilled. Typing `received` and `2025-05-20` worked.
+- Success shows nothing: the form simply closes; the hit stays until the search is run again.
+Same wrong refusal word elsewhere: the project page's invite of an already-invited handle, and Timeline's "Record an event". Owner: screens-daily (find-in) and the shell's refusal wording. Shots: `v4-findin-money-empty-1280`, `v4-findin-money-filled-1280`, `v4-findin-dated-after-1280`.
+
+### B-30 · A document is one passage; a recorded fact hides every other act on it; tables and sheets are flattened · MISLEADS · STILL (J-5)
+- A plain text file is a single passage. Recording one fact from it marks the whole document "Recorded by admin", so the date, the requirement and the money in the same file lose their acts (seen: after one money fact, all 10 hits of that file read "Recorded"). A person who captures a one-page order can record one thing from it.
+- The CSV (`airtravel.csv`) is one run of words ("Month 1958 1959 1960 JAN 340 360 417 …"): rows and columns are gone. The xlsx loses its sheet name, and formula cells (no cached value) are empty ("Total" with nothing). Nothing says a table was flattened.
+- The text PDF (Federal Reserve H.15, 3 pages) is read fully, one passage per page, pages numbered from 0 ("Page 0"); Find in splits it into sentences. This is the best case and works.
+Owner: extraction / content-search. Shots: `v4-doc-h15-pdf`, `v4-doc-airtravel-csv`, `v4-doc-shelter-repairs-xlsx`.
+
+### B-31 · A photograph's words are not read; an image-only PDF's are · MISLEADS · NEW (D14–D16 family)
+Admin. `notice-photo.jpg` (a clear 1000-px notice, text 34 px): the Document page says "Passages: Nothing here" and "Pages 0 are pictures of text that Civicsmith's own reading couldn't make out"; it offers "Have the assistant read pages" or typing them. The same notice as an image-only PDF (`notice-scan.pdf`) was read correctly (one passage, a single letter wrong: "inspected" for "Inspected"). So OCR works for a scanned PDF and not for a photograph, with no explanation. "Pages 0" and a page picker "0" for a one-image file remain (B-11). Owner: extraction. Shots: `v4-doc-notice-photo-jpg`, `v4-doc-0677...`.
+
+### B-32 · A person the group follows is not found, and the person page shows nothing recorded · MISLEADS · NEW
+Admin. "Maria Alvarez" was added (People) and is named in four passages; Find in's "People and offices your group follows" answers "Nothing here" every time, so Find in's person-fact act (J-8) cannot be reached. The Person page's own form works (a fact with a typed full fingerprint was recorded: `PFA-…`), but the page lists no fact afterwards and still draws an empty graph and "Open the person" on itself (B-21 STILL). The Timeline form, People list and Explore (From `PROJ-…`, B-17) were reached; Explore not run.
+
+### B-33 · The Timeline holds nothing though dates were recorded · MISLEADS · NEW
+Admin. Five dated facts (from text files and the OCR'd PDF) were recorded; the project's Timeline still says "This project's document names no person, organization or event yet, so its timeline holds nothing." "Record an event" (kind, full fingerprint, page 0) answered "This could not be read. Try again in a moment." (B-29). "Look for dates in this project" opens Find in, which is a door, not an act.
+
+### B-34 · Acts are silent, and "Reasoned" does not always ask for a reason · MISLEADS · STILL (B-8)
+Vouch: still no acknowledgement (the item leaves Held; the page says nothing). Cite from Find in an already-cited passage: nothing at all (the act said `alreadyCited`). A cite from Find in with "cuts against" lands (J-2 FIXED) and shows only on the question page. "Write a note", "Add a tie", "Save as a draft" (wizard) and "Plan what to do" are marked Reasoned and ask nothing; "Remove a tie" and the Standard act do ask. Typed text stays in the box after a note is written.
+
+### B-35 · Security refuses a period that ends today, including its own default · MISLEADS · NEW
+Admin, `/app/security`. The screen opens on "From 9 October to 16 October". Asking for 9 to 16 October, 10 to 17, or 14 to 16 October is refused: "The security map shows a period of up to 90 days within the last 90, from an earlier time to a later one. The period asked was not one of those." 20 September to 15 October works (and is shown as "to 16 October"). Backwards dates get a plain sentence. Owner: screens-settings / security. Shot: `v4-security-period-1280`.
+
+### B-36 · A recorded wizard draft is saved but not listed · MISLEADS · NEW
+Admin, Wizards. "Record a new wizard" starts a recording dock; pressing an act adds a step ("1. 1. Question: Read in my language", double numbering); "Save as a draft" answered ok (`WIZ-2026-5115`, "only its author runs it") but the dock says nothing visible to me, and the library's Drafts view (needs "See the whole library" pressed, the select alone does nothing) shows "No wizards to show here". Shot: `v4-wizard-recording-step-1280`, `v4-wizard-drafts-1280`.
+
+### B-37 · The second file captured in a session loses its name · MISLEADS · NEW
+Admin, Add › file. Seen twice (`second.txt`, `notice-scan.pdf`): when a second file is captured after the first by opening the capture page again, the result says "Captured: ." and the document is titled `upload:<64 hex>` (B-12 family). A file captured first, or after moving between captures by the page's own links, is named. The long address capture of `https://www.oaklandca.gov/` (420 kB page) ended with no result sentence and no document in 25 s; a PDF, a CSV and `rfc2119` by address worked (the last answered "already held" naming `rfc2119`).
+
+### B-38 · A typed name or term is ignored unless "A name or term" is ticked · COSMETIC · NEW
+Admin, Find in. Typing "30 days" in "The name or term" with the box unticked searches nothing and says nothing; ticking it everything else off gives "Tick at least one thing to find" only when none is ticked.
+
+### B-39 · Citing from a document: the own question is listed first but not preselected; nothing chosen reads "Open a question first" · MISLEADS · PARTIAL (B-7)
+Admin and member. The document's cite list now puts its own question first and, for a member, lists only the questions they may see, but opens on an empty choice. "Cite a passage" with it empty answers "Open a question first: a passage is cited in a question." (a question exists; the sentence is wrong). Choosing the question cites correctly.
+
+### B-40 · The inbox: a knock with already-held bytes cannot be moved; raw ids remain · MISLEADS · NEW
+Admin. "Move into the record" exists on each knock's own page (`/app/inbox/<knock>`; the list has no control). A fresh knock moves with "Moved into the record. It waits in Held captures until a member vouches for it." Two of my V3 knocks answer a long sentence about "another record" (`CAPTURE_HELD_BY_ANOTHER_BUNDLE`) with no way on. The page shows `SRC-…` ids and "who handed in KNOCK-…" (B-17). The Updates screen offers no act (nothing to install: reads plainly).
+
+## Worked, in this walk (no defect)
+Capture from an address (PDF, CSV) and of files (text, jpg, scanned pdf, xlsx) land under the question with a link and a "Cite a passage"; vouch removes from Held; cite from the document, from Find in (supports and cuts against), by member and administrator; question page shows SUPPORTS and CUTS AGAINST; Find in from a document (B-25) and from the project keep the chosen question (B-26); a person is added; a person fact with a full fingerprint; a dated fact and a money fact from Find in with correct values; a money trail starts and reads a figure with stage and period; a plan opens; the doorbell receipt ("Received, 16 October 2026. A member of the group will read it."); a fresh knock moves into the record; the member joins an invited project, cites, adds a tie, declares expertise, writes and deletes a note; Security's 25-day period; wizard recording adds steps.
+
+## Status of earlier findings re-checked in V4
+| Finding | Status | Note |
+| --- | --- | --- |
+| B-7 cite defaults to another project's question | PARTIAL | no longer; own question not preselected, B-39 |
+| B-8 vouch silent | STILL | B-34 |
+| B-9 Find raw records | NOT RECHECKED | Find in's results read in words |
+| B-10 `{handle}` `{tie}` | STILL | Your ties page |
+| B-11 garbles | STILL | project "started Hidden…", "shelter-log.txtRead it back", "Pages 0", "Recorded by admin" (founder is `sparky`), plan "by admin" |
+| B-17 raw ids | STILL | knock source ids, "Reference: b24083b9", `PROJ-…` in Explore/Standard |
+| B-20 tooltips cover content | STILL | seen on the question page |
+| B-21 person graph | STILL | B-32 |
+| B-24 503 | SEEN ONCE | `/app/notes` first load drew blank with a 503; fine on reload |
+| B-25 Find in from a document | FIXED | search runs |
+| B-26 Find in no acts, question lost | FIXED / EXPLAINED | question stays chosen; acts draw on unrecorded passages (B-30) |
+| J-2 cuts against from Find in | FIXED | recorded as `cuts_against` |
+| J-8 person fact from Find in | STILL (unreachable) | no people hit, B-32; the Person page's act works |
+| J-9 standard from a text passage | STILL | B-28 |
+| J-5 passages joined | STILL | B-30 |
+| B-1, B-2, B-3, B-4 | NOT WALKED | by instruction; the plan page opens from the question (`/app/plan/<id>`) and draws |

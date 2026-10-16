@@ -25,3 +25,20 @@ Unwalked so far: Find in's three acts in the browser (J-2, J-8, J-9), Proceeding
 **Stays unwalked, and why.** Calculation, Plan, Matter, Action, the two dashboards, Docket, Published case, Imported case, Archive, Theme: no door to them and no address I tried draws them (B-1), or they need a published case (B-4 stops that). Find in's three acts (J-2, J-8, J-9) are not drawn on any hit (B-26). Proceeding registration and Standard holding: forms drawn, not submitted (Proceeding refuses an empty form in words). Review copy's outside view, comment and revoke: B-2. Hand-moving a knock into the record by button (no such control found; Inbox shows knocks only), the member's own acts (ties, expertise, notes), the Security period change, Updates' acts and wizard recording: not walked. The assistant's runs: not this lane's.
 
 **Left on biosmoke8:** project "JOURNEYS browser: do pothole repairs finish on time?" with a question, three documents, one citation and vouch, a person (`ENT-2026-0005`), a timeline event, a money trail, a case draft, and two doorbell knocks ("JOURNEYS browser knock …"). Nothing else was changed (the group's name, themes: the theme is set back to follow my device).
+
+## V4 — one real investigation by hand (JOURNEYS #3, 2026-10-16; K3578, K3579)
+
+Findings: `FINDINGS.md` B-27 to B-40 and the V4 status table at its foot. 1280 wide only; 390 not walked in V4. Round 7 was not re-walked on purpose, but what the investigation touched is recorded: B-25, B-26 and J-2 FIXED, B-7 PARTIAL, J-9 STILL.
+
+**Per stage (interface throughout; no plane ops needed)**
+1. **Find sources.** Find (search) finds the group's own records only; no web search is offered anywhere. Real sources were found outside and captured by address. Worked.
+2. **Capture each kind.** Worked: PDF with text (Federal Reserve H.15, by address), CSV (by address), text files, xlsx, an image-only PDF, a photograph, a web-served page (`rfc2119`: already held). Not worked: a 420 kB web page (`oaklandca.gov`) gave no result and no document in 25 s (B-37); the second file captured in a session loses its name (B-37).
+3. **Check each extraction.** Text PDF: good (one passage per page, 3 pages). Scanned PDF: OCR good. Photograph: not read at all (B-31). CSV and xlsx: one flat run, rows, columns, sheet name and formula values lost (B-30). Text file: one passage (B-30).
+4. **Populate constructs.** Worked: citations and vouches (admin and member), dated fact, money fact (adopted only from Find in, B-29; an actual payment through the Money trail's own form), money trail, person and a person fact (typed fingerprint), plan, ties, expertise, notes (member), wizard recording. Did not work or unread: proceeding (B-27), standard (B-28), Timeline (B-33), a person's recorded facts do not show (B-32), Find in cannot find a followed person (B-32). Calculation, matter, action, dashboards, docket, published, imported, archive, theme: no door, not retried (B-1).
+5. **Read back.** Question page (supports, cuts against) and money table read back; Timeline, Person and the proceeding do not (above). Security's period change fails on its own default (B-35). The doorbell and Inbox move work for a fresh knock (B-40). Updates has no act to walk.
+
+**Not walked, and why:** 390 wide; Explore not run; web-page or PDF "hold as a standard" (no source with a "shall" reachable); review copy, request, case concluding by hand (B-2, B-3, B-4, by instruction); the assistant's reading of a photograph; everything behind B-1.
+
+**For T50, in order of what blocks real work:** B-27 (courts), B-28 (standards), B-30/B-31 (one-passage documents, flat tables, photographs), B-29/B-33 (Find in's recording forms, Timeline), B-32 (people), B-34/B-35/B-36/B-37, then the words.
+
+**Left on biosmoke8:** project "JOURNEYS V4: are bus shelters repaired within 30 days?" (member `walker` joined it), its ten documents, a plan (`PLN-2026-0002-plan`), person `ENT-2026-0006`, money trail `MSR-2026-0003`, a draft wizard `WIZ-2026-5115`, the knock `KNOCK-2026-10-16-58e7dd9e`. The member's tie and note are removed; its expertise "bus shelter maintenance" remains declared.
