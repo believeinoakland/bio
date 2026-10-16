@@ -74,3 +74,4 @@ All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K
 - **R085-33 · wizard-scripts** · R40 (group-setup scripts offered only to an administrator; D9) · claude-sonnet-5-5.
 - **R085-34 · plane** · R57 (the registration hands `wizard-scripts` the administrator's acts and screens, so R40 holds live; found by WIZARD-SCRIPTS #11 J1; new `uses` edge `interface-shell`, earlier in the order) · claude-haiku-5-5.
 - **R085-35 · agent-runner** · R33 (the container at instance type `standard-1`; study-assistant-link T1–T2) · claude-haiku-5-5.
+- **R085-36 · screens-daily** · R24 (the "against" choice sends `cuts_against`), R36 (a person's fact sends `valid`), R37 (a text file's passage held as a standard); JOURNEYS J-2, J-8, J-9 (K3550) · claude-haiku-5-5.
