@@ -260,6 +260,8 @@ Read whole with `next.md` (N1148–N1189). Folded into the draft above at the op
 
 **Bob's K3602 (live progress, answer after its check).** N1195 joins T50: agent-worker's share in its L6 job, the plane's door in T50-36 (or T50-35 if the buffering is control-plane's), the drawing in T50-32 and T50-27; the dock's words answered by UX-DESIGN's DEC-298 (U311, K3605; `ai.progress.*`), whose owed line also names `inquiry`.
 
-**Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347). The assistant's hosting: Bob's decision (K3538), studied by ASSISTANT-HOSTING; no T50 entry rebuilds the runner before it.
+**Bob's K3607 (the assistant on Claude Code remote).** N1196 joins T50: ASSISTANT-HOSTING #3 proves, from T50's opening, that Civicsmith itself can create and drive a cloud session on a held sign-in (bottom up, K3558); BOB writes the requirements from the proof; agent-runner, agent-worker and agent-harness carry it in their L6 jobs, ai-accounts in T50-4 if the proof lands before L2 closes (else T51), screens-settings' Connect in T50-29 and installer in its L11 job. Not proven before L6 starts: the jobs go to T51 and Bob is told what blocked it. The local runner stays until the remote path runs a whole check live.
+
+**Still left out, each with its hard reason.** N1152, N1160, N1184's look rows: the design's DECs first. N1186's fix: a measurement first (one run as a member). N1105: Bob's, closed (K3347).
 
 **For Bob at the opening (his acts).** The meter reading (§5.2 (3)); N1151's OAuth scope registration; K3591's size-change approval if the cells are still owed.
