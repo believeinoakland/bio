@@ -1258,6 +1258,40 @@ export class PublicRead {
                          + "rather than dropped; it should be empty." };
   }
 
+  /** R37 (T50; DEC-310 (6); K3683, K3725): the `publishedcase` op's answer, `publishedCase`'s with `corrections` beside it,
+   *  read from `docket`'s public answer (captures omitted) at the read. The synchronous `publishedCase` method does not
+   *  carry it, so its other callers are unchanged. A refusal, and an answer that is no case, are `publishedCase`'s own.
+   *  `{count, last}`: the public entries of the case dated after the answered edition's `published_at` (by day) whose
+   *  kind is `edition`, `withdrawal` or `court-order`, and the newest of them by (date, seq) as `{seq, kind, date}`;
+   *  `{count: null, last: null, undetermined: true}` when the docket cannot be read, never `count: 0`. Never throws, writes
+   *  nothing, and is the same bytes for every caller. */
+  async publishedCaseWithCorrections(query = {}) {
+    const a = this.publishedCase(query);
+    if (!a || a.ok !== true) return a;
+    /* a ratified bundle in no case has no docket: it states null, so both branches answer one key set */
+    if (!a.caseId) return { ...a, corrections: null };
+    return { ...a, corrections: await this.#corrections(a.caseId, a.published_at) };
+  }
+
+  async #corrections(caseId, publishedAt) {
+    const unread = { count: null, last: null, undetermined: true };
+    try {
+      const day = /^\d{4}-\d{2}-\d{2}/.exec(typeof publishedAt === "string" ? publishedAt : "");
+      if (!day) return unread;
+      const d = await this.docket.docketPublic({ case: caseId, captures: "omit" });
+      if (!d || d.ok !== true || !Array.isArray(d.entries)) return unread;
+      const later = [];
+      for (const e of d.entries) {
+        const f = (e && e.fields && typeof e.fields === "object" ? e.fields : safeJson(e && e.json)) || {};
+        if (!["edition", "withdrawal", "court-order"].includes(f.kind)) continue;
+        if (typeof f.date !== "string" || !(f.date.slice(0, 10) > day[0])) continue;
+        later.push({ seq: Number(e.seq), kind: f.kind, date: f.date });
+      }
+      later.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : x.seq - y.seq));
+      return { count: later.length, last: later.length ? later[later.length - 1] : null };
+    } catch { return unread; }
+  }
+
   /** R23 (DEC-112 (3); K1315, K1316): WHAT A CASE EDITION'S CASE FILE CARRIES, read from the published projection only,
    *  for the Worker's assembly (`../publication/worker.mjs`, R6). Answers, for a complete edition with a signed `/6`
    *  document, `{ok: true, case, edition, format, document, findings, grading, passages, materials, obscured,
@@ -1841,7 +1875,7 @@ export function publicReadOps(r, url) {
   return {
     publishededitions: () => r.publishedEditions(q("id")),
     /* REC-22: the public read path's store side. */
-    publishedcase: () => r.publishedCase({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
+    publishedcase: () => r.publishedCaseWithCorrections({ id: q("id"), edition: q("edition"), caseId: q("caseId") || null,
                                            sha256: (q("sha256") || "").toLowerCase() || null }),
     publishedmanifest: () => r.publishedManifest(),
     verify: () => r.verifySha((q("sha256") || "").toLowerCase()),

@@ -164,6 +164,17 @@ function withRead(w, opts = {}) {
   w.read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
+    /* R37 (K3725): the `publishedcase` op is asynchronous (it awaits the docket's public answer); `read` answers its
+       synchronous part, `publishedCase`, as every earlier arm reads it, and `readOp` is the op itself. */
+    if (name === "publishedcase")
+      return w.pr.publishedCase({ id: url.searchParams.get("id"), edition: url.searchParams.get("edition"),
+                                  caseId: url.searchParams.get("caseId") || null,
+                                  sha256: (url.searchParams.get("sha256") || "").toLowerCase() || null });
+    return publicReadOps(w.pr, url)[name]();
+  };
+  w.readOp = async (name, query = {}) => {
+    const url = new URL(`http://do/${name}`);
+    for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
     return publicReadOps(w.pr, url)[name]();
   };
   return w;
