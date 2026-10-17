@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12722 words, 892 protected; SHA-256
-   b4b6e7732880aae5019ba9e75b3d2d0c85b5f0183fd403989909917dd60e1d3e), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12752 words, 892 protected; SHA-256
+   8dac4daa0f8ca3ae626b1614372cd48be47be9d9efbd5a47a335847c054e75ea), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "b4b6e77328";
+export const WORDS_COMMIT = "8dac4daa0f";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5657,6 +5657,36 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.BAD_READING","Your reading must say something, in at most 500 characters, and it takes the place of a named reading rather than going beside one. Nothing was written.","DEC-304: basis-versions R51",null,false],
   ["ai.progress.reading.ask","Reading {document}","DEC-304: agent-worker R113: the assistant's reads while answering, with no total (DEC-298)","Each step shows as the assistant takes it. What it writes is held until Civicsmith has checked every passage it cites against the document itself; only then is it shown.",false],
   ["ai.reading.levels.disagree","Two levels of the assistant's reading disagree about {record}: {first} and {second} give different results. Check the record yourself before you rely on either.","DEC-304: agent-worker R116: on the question page and in the run's result",null,false],
+  ["acquisition.asked_note.after.before","before","DEC-305: the {after} of acquisition.asked_note.memento_seconds_instant",null,false],
+  ["acquisition.asked_note.after.after","after","DEC-305: the {after} of acquisition.asked_note.memento_seconds_instant",null,false],
+  ["acquisition.authority_basis.caller.member","member","DEC-305: the {caller} of acquisition.authority_basis.asserted_capturing_intake",null,false],
+  ["acquisition.authority_basis.caller.caller","assistant or automated process","DEC-305: the {caller} of acquisition.authority_basis.asserted_capturing_intake, a caller that is not a member",null,false],
+  ["acquisition.basis.multipart","held in parts","DEC-305: the {large} of acquisition.basis.document_read_text",null,false],
+  ["acquisition.basis.combined_view_none","no place is chosen, so no place's rules were combined","DEC-305: read in place of acquisition.basis.combined_view when no profile is chosen",null,false],
+  ["acquisition.text.continue_session","continue: a saved session","DEC-305: beside acquisition.text.capture_already_filed, as via_archive_org names its parameter",null,false],
+  ["acquisition.act.set_archive_copy","setting whether your team's captures ask a public archive for a copy","DEC-305: the act membership's notAnAdmin names (acquisition, coArchiveSet)",null,false],
+  ["file-safety.kind.downloader","A downloader fetches other harmful programs from the internet once it runs.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.dropper","A dropper carries another harmful program inside it and puts it on the computer when it runs.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.trojan","A trojan pretends to be something harmless while doing something harmful, such as giving someone else control of the computer.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.macro","A harmful macro is a small program inside a document that runs when editing or macros are enabled.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.exploit","An exploit uses a flaw in the program that opens the file to run code it should not.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.phishing","Phishing imitates a trusted page or message to trick a reader into giving away a password or payment details.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.potentially_unwanted","A potentially unwanted program is not always harmful, but does things a reader may not want, such as showing ads or collecting information.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.heuristic","A heuristic finding means the file behaves or is built like harmful files, without matching a known one.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.worm","A worm copies itself to other computers on its own.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.ransomware","Ransomware locks a computer's files and demands payment to unlock them.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.backdoor","A backdoor lets someone else reach the computer without permission.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.virus","A virus attaches itself to other files so that it spreads when they are opened.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.spyware","Spyware watches what is done on a computer, such as the passwords typed, and sends it elsewhere.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["file-safety.kind.test","This is a harmless test file that scanners are built to recognize, used to check that scanning works.","DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it",null,false],
+  ["capture.upload.asserts","these bytes were uploaded to your team's Civicsmith by {by} and hashed as they arrived, at {at}; they were received from the member, not fetched from any address","DEC-305: capture: an upload's provenance chain, what it asserts",null,false],
+  ["capture.upload.evidence","the upload's receipt: its digest, taken as the bytes arrived, and the time they arrived","DEC-305: capture: an upload's provenance chain, its evidence",null,false],
+  ["capture.reuse.posthoc_changed","a later direct capture of this site fetched different bytes for this address; this earlier capture reused the old ones, which can no longer be checked against the source","DEC-305: capture: a posthoc reuse verdict, its basis",null,false],
+  ["capture.render.defer.no_reservation","no time was reserved for this render, and a render admitted without one could run past the day's allowance","DEC-305: capture R39: the render allowance's defer, why",null,false],
+  ["capture.chrome.basis.recurred","in a chrome region and on {n} different pages of {host}","DEC-305: capture R28: a link classified as the site chrome, its basis",null,false],
+  ["capture.chrome.basis.one_page","in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is not known until another page of the site carries it","DEC-305: capture R28: a link not yet classified, its basis",null,false],
+  ["capture.chrome.ref.containment","in a chrome region: {regions}","DEC-305: capture R29: one page's chrome observation, its basis",null,false],
+  ["capture.chrome.ref.unrecorded","the chrome region was not recorded","DEC-305: capture R29: one page's chrome observation with no region named",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],

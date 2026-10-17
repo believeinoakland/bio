@@ -13,7 +13,7 @@
   "date": 14,
   "queue": 83,
   "transcribe": 19,
-  "capture": 62,
+  "capture": 70,
   "document": 61,
   "question": 79,
   "connection": 34,
@@ -113,11 +113,12 @@
   "period": 1,
   "timeline": 2,
   "caseimport": 1,
+  "acquisition": 45,
+  "file-safety": 47,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
   "events": 52,
-  "acquisition": 37,
   "filing-templates": 29,
   "ratification": 31,
   "record-grammar": 55,
@@ -138,7 +139,6 @@
   "sign-release": 97,
   "case-disclosures": 99,
   "action-grammar": 13,
-  "file-safety": 33,
   "intent": 49,
   "run-productions": 21,
   "action-clocks": 58,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12722,
+  "total": 12752,
   "protected": 892
  },
  "words": [
@@ -39066,6 +39066,216 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-304: agent-worker R116: on the question page and in the run's result"
+  },
+  {
+   "key": "acquisition.asked_note.after.before",
+   "en": "before",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the {after} of acquisition.asked_note.memento_seconds_instant"
+  },
+  {
+   "key": "acquisition.asked_note.after.after",
+   "en": "after",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the {after} of acquisition.asked_note.memento_seconds_instant"
+  },
+  {
+   "key": "acquisition.authority_basis.caller.member",
+   "en": "member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the {caller} of acquisition.authority_basis.asserted_capturing_intake"
+  },
+  {
+   "key": "acquisition.authority_basis.caller.caller",
+   "en": "assistant or automated process",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the {caller} of acquisition.authority_basis.asserted_capturing_intake, a caller that is not a member"
+  },
+  {
+   "key": "acquisition.basis.multipart",
+   "en": "held in parts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the {large} of acquisition.basis.document_read_text"
+  },
+  {
+   "key": "acquisition.basis.combined_view_none",
+   "en": "no place is chosen, so no place's rules were combined",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: read in place of acquisition.basis.combined_view when no profile is chosen"
+  },
+  {
+   "key": "acquisition.text.continue_session",
+   "en": "continue: a saved session",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: beside acquisition.text.capture_already_filed, as via_archive_org names its parameter"
+  },
+  {
+   "key": "acquisition.act.set_archive_copy",
+   "en": "setting whether your team's captures ask a public archive for a copy",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: the act membership's notAnAdmin names (acquisition, coArchiveSet)"
+  },
+  {
+   "key": "file-safety.kind.downloader",
+   "en": "A downloader fetches other harmful programs from the internet once it runs.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.dropper",
+   "en": "A dropper carries another harmful program inside it and puts it on the computer when it runs.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.trojan",
+   "en": "A trojan pretends to be something harmless while doing something harmful, such as giving someone else control of the computer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.macro",
+   "en": "A harmful macro is a small program inside a document that runs when editing or macros are enabled.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.exploit",
+   "en": "An exploit uses a flaw in the program that opens the file to run code it should not.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.phishing",
+   "en": "Phishing imitates a trusted page or message to trick a reader into giving away a password or payment details.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.potentially_unwanted",
+   "en": "A potentially unwanted program is not always harmful, but does things a reader may not want, such as showing ads or collecting information.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.heuristic",
+   "en": "A heuristic finding means the file behaves or is built like harmful files, without matching a known one.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.worm",
+   "en": "A worm copies itself to other computers on its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.ransomware",
+   "en": "Ransomware locks a computer's files and demands payment to unlock them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.backdoor",
+   "en": "A backdoor lets someone else reach the computer without permission.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.virus",
+   "en": "A virus attaches itself to other files so that it spreads when they are opened.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.spyware",
+   "en": "Spyware watches what is done on a computer, such as the passwords typed, and sends it elsewhere.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "file-safety.kind.test",
+   "en": "This is a harmless test file that scanners are built to recognize, used to check that scanning works.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: file-safety R38, DEC-169: the finding kind's own sentence; file-safety.scanners_report_file follows it"
+  },
+  {
+   "key": "capture.upload.asserts",
+   "en": "these bytes were uploaded to your team's Civicsmith by {by} and hashed as they arrived, at {at}; they were received from the member, not fetched from any address",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture: an upload's provenance chain, what it asserts"
+  },
+  {
+   "key": "capture.upload.evidence",
+   "en": "the upload's receipt: its digest, taken as the bytes arrived, and the time they arrived",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture: an upload's provenance chain, its evidence"
+  },
+  {
+   "key": "capture.reuse.posthoc_changed",
+   "en": "a later direct capture of this site fetched different bytes for this address; this earlier capture reused the old ones, which can no longer be checked against the source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture: a posthoc reuse verdict, its basis"
+  },
+  {
+   "key": "capture.render.defer.no_reservation",
+   "en": "no time was reserved for this render, and a render admitted without one could run past the day's allowance",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture R39: the render allowance's defer, why"
+  },
+  {
+   "key": "capture.chrome.basis.recurred",
+   "en": "in a chrome region and on {n} different pages of {host}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture R28: a link classified as the site chrome, its basis"
+  },
+  {
+   "key": "capture.chrome.basis.one_page",
+   "en": "in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is not known until another page of the site carries it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture R28: a link not yet classified, its basis"
+  },
+  {
+   "key": "capture.chrome.ref.containment",
+   "en": "in a chrome region: {regions}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture R29: one page's chrome observation, its basis"
+  },
+  {
+   "key": "capture.chrome.ref.unrecorded",
+   "en": "the chrome region was not recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-305: capture R29: one page's chrome observation with no region named"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
