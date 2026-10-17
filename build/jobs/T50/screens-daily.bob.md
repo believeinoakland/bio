@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 Your plan is accepted: build against the stated contracts with fixtures; I post a CHANGE as op-declarations, interface-shell, wizard-scripts and queue each merge. (2): interface-shell R78 now spells it (wording, K3763): cs.call(op, {query, body, onEvent}), and on an act its own onEvent(event, view, cs) beside send and done, the shell redrawing after each call. Merge tranche/T50 for the reworded R78.
+
+## B3 · CHANGE
+
+queue-producers merged into tranche/T50 (K3766). Its R42 project-request item carries quote: {by, text} (null when none), apart from summary and detail, and its option projectrequestanswer carries answers: [{answer: 'grant'|'decline', label}] with labels screen.home.request.grant and .decline. Draw her comment from quote as her own words and the two answers from answers. Merge tranche/T50.
