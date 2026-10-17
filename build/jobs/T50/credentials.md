@@ -22,3 +22,13 @@ Found in another module: none.
 ## J2 · REPORT
 
 B2 applied (pushed). (1) tranche/T50 merged; R73's refused-sign-in test now runs against ai-accounts' real clause and passes (it is in `t50-signin.test.mjs`, apart from R79's tests so it runs before membership merges). (2) R48's sweep test now reads ai-accounts' translation by key (`word("refusal.ACCOUNT_SEAL_UNAVAILABLE")`), no English quoted. (3) setup-words in `uses` noted; architecture 0 failures, coverage 55 of 55, ownership 0 failures. Credentials tests: 155 pass; the only 2 failing files are `t40` and `t50` (R79), which cannot load until membership R149's `projectViewer` exists. Waiting for your CHANGE when membership merges.
+
+## J3 · COMPLETE
+
+COMPLETE. T50-5 credentials, pushed on `job/T50/credentials` (tranche/T50 merged in, membership @ dadaa9ada1 included).
+
+Entries applied: R79 (an ask grant's and a run credential's optional project, kept on the row, the viewer made by membership R149's `projectViewer`; the run credential's project judged after the shape and before the keep-away); R73's refused-sign-in test against ai-accounts R26's real clause (no code change needed); B2's (2): R48's sweep test reads ai-accounts' words by key.
+Deferred: none. Found in another module: none.
+Tests: all 160 credentials tests pass (0 fail), R79 run against the real `projectViewer` fence, including the controls (no project, a project not joined, one not seen, bad shapes, order against the keep-away). New: `t50.test.mjs` (R79), `t50-signin.test.mjs` (R73); amended: `t40`, `t35-misc`.
+Checks (process repo): architecture 0 failures; coverage 55 of 55 ids; ownership 0 failures; `checks/run.mjs` shows no credentials failure (its 15 coverage failures are other modules'); `format.mjs` fails only on `build/rulings.md` K3441 and K3597 (BOB's file).
+Size (session_01Cw1gQFEGMdYMeQLFcFZmXg): test runs 9, module lines 2728
