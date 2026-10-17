@@ -36,9 +36,9 @@ test("R16: on a test instance with no record and investigate's chain held, the g
     w.testInstance = false;
     assert.deepEqual(w.p.gate(), { open: false, why: w.p.gate().why, false_alarm_rate: null, gold_set: null, untested: null });
     assert.deepEqual(w.p.findsFor({ viewer: "member:alice" }), { ok: true, finds: [], truncated: false }, "nothing, no count");
-    assert.equal(w.p.exploreDue(w.clock.now), 0);
-    assert.equal(w.p.exploreWake(w.clock.now), null);
-    assert.equal(w.p.exploreTick(w.clock.now).gate, "closed");
+    assert.equal(await w.p.exploreDue(w.clock.now), 0);
+    assert.equal(await w.p.exploreWake(w.clock.now), null);
+    assert.equal((await w.p.exploreTick(w.clock.now)).gate, "closed");
     for (const v of ["yes", 1, null, undefined]) {
       w.testInstance = v;
       assert.equal(w.p.gate().open, false, `testInstance ${String(v)}: only exactly true`);
@@ -52,7 +52,7 @@ test("R16: the exception lifts only the bar: with investigate's verification cha
   w.testInstance = true;
   w.verifications = [];
   assert.equal(w.p.gate().open, false, "the chain stands");
-  assert.equal(w.p.exploreTick(w.clock.now).gate, "closed");
+  assert.equal((await w.p.exploreTick(w.clock.now)).gate, "closed");
   /* Negative control: the chain held, the gate opens on the exception. */
   w.verifications = [VERIFIED_CHECK];
   assert.equal(w.p.gate().open, true);

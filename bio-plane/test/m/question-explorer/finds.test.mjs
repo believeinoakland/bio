@@ -159,9 +159,9 @@ test("R7: finds are offered only while the gate is open: the explorer passed its
     shut();
     assert.equal(w.p.gate().open, false, name);
     assert.deepEqual(w.p.findsFor({ viewer: "member:alice" }), { ok: true, finds: [], truncated: false }, `${name}: nothing, no count`);
-    assert.equal(w.p.exploreDue(w.clock.now), 0, name);
-    assert.equal(w.p.exploreWake(w.clock.now), null, name);
-    assert.equal(w.p.exploreTick(w.clock.now).gate, "closed", name);
+    assert.equal(await w.p.exploreDue(w.clock.now), 0, name);
+    assert.equal(await w.p.exploreWake(w.clock.now), null, name);
+    assert.equal((await w.p.exploreTick(w.clock.now)).gate, "closed", name);
     w.testBars = [bar("investigate"), bar("explore")]; w.verifications = [VERIFIED_CHECK];
   }
   /* Negative control: at exactly 20% the gate is open. */

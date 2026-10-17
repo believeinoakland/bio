@@ -21,7 +21,7 @@ test("R9, R10, R13: each refusal this module mints is its own row, frozen, with 
   /* Negative control: a minted refusal carries its row's translation. */
   const w = await world().standard();
   const o = await w.openRun("group");
-  const r = w.p.look({ run: o.run, entity: "ENT-2026-19999", caller: CALLER });
+  const r = await w.p.look({ run: o.run, entity: "ENT-2026-19999", caller: CALLER });
   assert.deepEqual([r.check, r.translation], [QE.EXPLORE_CHECKS.EXPLORE_PERSON_NOT_TIED.check, QE.EXPLORE_CHECKS.EXPLORE_PERSON_NOT_TIED.translation]);
 });
 
@@ -29,7 +29,7 @@ test("the module's tables are declared to record-core's purge by the question th
   const w = await world().standard();
   w.question(Q2, { recipients: ["alice"] });
   await w.setExplore("group", "yes");
-  const t = w.p.exploreTick(w.clock.now);
+  const t = await w.p.exploreTick(w.clock.now);
   const [o1, o2] = [t.opened.find((x) => x.question === Q), t.opened.find((x) => x.question === Q2)];
   w.p.find({ run: o1.run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER });
   w.p.find({ run: o2.run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER });
@@ -62,9 +62,9 @@ test("R15: questionExplorerOf answers its instance with its tables already creat
                    tables, "every table it declares to purge, created by the factory alone");
   /* Reads, ticks and purges with no `no such table`. */
   await w.setExplore("group", "yes");
-  assert.equal(w.p.exploreDue(NOW), 1);
-  assert.equal(w.p.exploreWake(NOW), NOW);
-  const t = w.p.exploreTick(NOW);
+  assert.equal(await w.p.exploreDue(NOW), 1);
+  assert.equal(await w.p.exploreWake(NOW), NOW);
+  const t = await w.p.exploreTick(NOW);
   assert.equal(t.opened.length, 1);
   assert.equal(w.p.find({ run: t.opened[0].run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER }).ok, true);
   assert.deepEqual(w.p.findsFor({ viewer: "member:alice" }).finds.length, 1);
@@ -76,7 +76,7 @@ test("R15: questionExplorerOf answers its instance with its tables already creat
   /* migrate() stays callable and idempotent: twice more over held rows changes nothing. */
   w.question(Q2, { recipients: ["alice"] });
   w.clock.now = "2026-10-11T09:00:00Z";
-  assert.equal(w.p.exploreTick(w.clock.now).opened.length, 1);
+  assert.equal((await w.p.exploreTick(w.clock.now)).opened.length, 1);
   const before = w.snapshot();
   w.p.migrate();
   w.p.migrate();
