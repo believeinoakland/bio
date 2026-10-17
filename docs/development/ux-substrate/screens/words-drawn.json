@@ -8519,6 +8519,54 @@
    "en": "can't be counted",
    "protected": false,
    "note": "DEC-322: R34: undetermined draws only the docket sentence"
+  },
+  {
+   "key": "caseimport.notrecorded.summary",
+   "en": "If they were not recorded",
+   "protected": false,
+   "note": "DEC-323: screens-publish R26: case-import.group_fields_none in a fold"
+  },
+  {
+   "key": "caseimport.unreadable.summary",
+   "en": "If its stake can't be read",
+   "protected": false,
+   "note": "DEC-323: R26: caseimport.stake.unreadable in a fold"
+  },
+  {
+   "key": "caseimport.stake.heading",
+   "en": "Whose stake this states",
+   "protected": false,
+   "note": "DEC-323: R26: the section over case-import.group_fields_label"
+  },
+  {
+   "key": "screen.review-copy.until.nozone.summary",
+   "en": "When your team's time zone isn't set",
+   "protected": false,
+   "note": "DEC-323: R27"
+  },
+  {
+   "key": "screen.security.period.bad.summary",
+   "en": "Dates in the wrong order",
+   "protected": false,
+   "note": "DEC-323: screens-settings R43"
+  },
+  {
+   "key": "screen.group.name.same.summary",
+   "en": "Saving the same name",
+   "protected": false,
+   "note": "DEC-323: screens-settings R52"
+  },
+  {
+   "key": "project.bar.others.summary",
+   "en": "Other bars",
+   "protected": false,
+   "note": "DEC-323: screens-inquiry R52: the bar read in words in each case"
+  },
+  {
+   "key": "home.strip.ours_passed.opens",
+   "en": "Opens your queue at it.",
+   "protected": false,
+   "note": "DEC-323: screens-daily R50: the strip item"
   }
  ],
  "rewrite": {

@@ -1850,6 +1850,18 @@ w322('screen.published.corrections.state.one', 'one', False, 'R34')
 w322('screen.published.corrections.state.some', 'several', False, 'R34')
 w322('screen.published.corrections.state.undetermined', "can't be counted", False, 'R34: undetermined draws only the docket sentence')
 # --- end DEC-322
+# --- DEC-323 (T50's gaps, batch 6: states whose words were held but undrawn; the gaps list's lower-priority section, the assistant's left per K3717)
+def w323(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-323' + (': ' + note if note else '')))
+w323('caseimport.notrecorded.summary', 'If they were not recorded', False, 'screens-publish R26: case-import.group_fields_none in a fold')
+w323('caseimport.unreadable.summary', "If its stake can't be read", False, 'R26: caseimport.stake.unreadable in a fold')
+w323('caseimport.stake.heading', 'Whose stake this states', False, 'R26: the section over case-import.group_fields_label')
+w323('screen.review-copy.until.nozone.summary', "When your team's time zone isn't set", False, 'R27')
+w323('screen.security.period.bad.summary', 'Dates in the wrong order', False, 'screens-settings R43')
+w323('screen.group.name.same.summary', 'Saving the same name', False, 'screens-settings R52')
+w323('project.bar.others.summary', 'Other bars', False, 'screens-inquiry R52: the bar read in words in each case')
+w323('home.strip.ours_passed.opens', 'Opens your queue at it.', False, 'screens-daily R50: the strip item')
+# --- end DEC-323
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

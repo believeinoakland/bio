@@ -20,7 +20,7 @@
   "guide": 7,
   "prepared": 2,
   "label": 211,
-  "project": 52,
+  "project": 53,
   "grouprule": 1,
   "refusal": 1964,
   "signing": 17,
@@ -48,12 +48,12 @@
   "ref": 26,
   "session": 11,
   "updates": 34,
-  "home": 18,
+  "home": 19,
   "installer": 19,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3919,
+  "screen": 3922,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -112,7 +112,7 @@
   "passage": 2,
   "period": 1,
   "timeline": 2,
-  "caseimport": 1,
+  "caseimport": 4,
   "acquisition": 45,
   "file-safety": 47,
   "extraction": 25,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13082,
+  "total": 13090,
   "protected": 901
  },
  "words": [
@@ -41472,6 +41472,62 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-322: R34: undetermined draws only the docket sentence"
+  },
+  {
+   "key": "caseimport.notrecorded.summary",
+   "en": "If they were not recorded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-publish R26: case-import.group_fields_none in a fold"
+  },
+  {
+   "key": "caseimport.unreadable.summary",
+   "en": "If its stake can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: R26: caseimport.stake.unreadable in a fold"
+  },
+  {
+   "key": "caseimport.stake.heading",
+   "en": "Whose stake this states",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: R26: the section over case-import.group_fields_label"
+  },
+  {
+   "key": "screen.review-copy.until.nozone.summary",
+   "en": "When your team's time zone isn't set",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: R27"
+  },
+  {
+   "key": "screen.security.period.bad.summary",
+   "en": "Dates in the wrong order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-settings R43"
+  },
+  {
+   "key": "screen.group.name.same.summary",
+   "en": "Saving the same name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-settings R52"
+  },
+  {
+   "key": "project.bar.others.summary",
+   "en": "Other bars",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-inquiry R52: the bar read in words in each case"
+  },
+  {
+   "key": "home.strip.ours_passed.opens",
+   "en": "Opens your queue at it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-daily R50: the strip item"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

@@ -5008,3 +5008,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) R45: "Time zone" is a choice by name, `label.timezones.<IANA id>` (Pacific Time (Los Angeles) and six more US zones keyed; any other zone is worded "<Region> Time (<exemplar city>)" the same way, never as a code), still sent as `factconfirm` with how and where it was checked; two places with different zones draw each zone by its place and `screen.group.timezone.two` (none named as the team's; each corrected on its own); no zone held draws `screen.group.timezone.none` and no UTC. (2) R34: the corrections line has four mockup states: none, one (`screen.published.corrections.some.one`), several (`.some`), and can't be counted (only the docket sentence). (3) R44: the browse ends with "Your team holds more than is shown here." and "Show more" (`find.browse.more`, `.showmore`, paged by `next`); before a first visit to Home, `find.browse.nosince` says why "New since you last looked" is not offered.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-322's block).
 owed: (BOB, T50) those requirements read the drawings; `label.timezones.*` names the zones R45's choice offers.
+
+### DEC-323 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (T50's requirement gaps, batch 6: the lower-priority section, states whose words were held but undrawn)
+for: design
+question: About twenty-five keyed states that T50's requirements name were drawn nowhere (a reading worker confirmed each, and none was MISSING).
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: drawn where each state occurs, with a fold only for a refusal or an alternative: the queue's untitled subject (`queue.source.untitled`), the team's own passed date (`due.ours.passed`, `_says`), "Done: {what}. It has left your queue." and Home's strip item `home.strip.ours_passed.one` (screens-daily R49, R50); the question's `question.empty.conclude.own`, the project's bar in words in all four cases (`project.bar.*`), the stake's history and unreadable state, the document's `document.vouched` and `document.table.flattened` (screens-inquiry R50, R52, R53, R55); a held upload's "uploaded by {member}, {date}" and "less than 1 KB", the open-file safe text view with its cut line (screens-intake R35, R36); a theme's "Taken out by …" (screens-investigate R31); the imported case's stake section with its not-recorded and unreadable states, the review link's no-zone refusal, the ceremony's "Put these right before you sign" with both gates, the ladder's "not yet checked", the fingerprint check's "elsewhere" (screens-publish R26 to R29); the security map's period refusal, the time zone's "Set when your team's Civicsmith was set up", the same-name answer (screens-settings R43, R52). Left for a later batch: `document.untitled.web`, `document.image.unread`, `case.draft.untitled`, `screen.case-editor.tip.distributed`, `member.founder.unnamed`, `settings.set.system`; the assistant's states (screens-inquiry R57, R58) are left as K3717 directs.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-323's block).
+owed: (BOB, T50) none beyond the requirements reading the drawings.
