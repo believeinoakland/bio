@@ -1,6 +1,6 @@
 # membership (T50)
 
-**Status** · session_012b5v7Ekpv3CAbBibj4BTrH · depth 2 · COMPLETE · handled B1
+**Status** · session_012b5v7Ekpv3CAbBibj4BTrH · depth 2 · COMPLETE · handled B2
 
 ## Completion record
 
