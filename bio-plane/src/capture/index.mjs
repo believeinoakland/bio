@@ -20,7 +20,12 @@
  * the knocker secret, the source fingerprint and its key; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72,
  * R80, R85) is `doorbell`'s; this module's copy of it was deleted in T43 (N849), its rows (R37) and tables with it, and
  * the last held piece, `sourceFingerprint`, in T44 (N870, K2708). This module answers no source fingerprint and creates,
- * declares and reads no table of `doorbell`'s, `knock_key` included (R87). */
+ * declares and reads no table of `doorbell`'s, `knock_key` included (R87).
+ *
+ * T50 (T50-8). R94 `recordCapturedFor` records the asks `acquire`'s `for` makes (table `captured_for`); R83's reader is
+ * handed them as `asks`, so R77 and R79 name the questions through it and this module names none itself. R95
+ * `captureGradeOf` reads one capture's grade (`op=capturegrade`). R73 passes `openCaptures` through with this store. Plan
+ * rule 6 (N1116): the member-facing sentences are read by key through `words.mjs`; this file holds keys, not English. */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { say } from "./words.mjs";
@@ -35,10 +40,7 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import { unpack, archiveList, memberOf, acquisitionOf } from "../acquisition/index.mjs";
-/* R73 (T50; `acquisition` R46): `openCaptures` is reached through the module's namespace, so this module loads before
-   T50-7's service is merged; the passthrough below calls it when it is there. */
-import * as acquisitionApi from "../acquisition/index.mjs";
+import { unpack, archiveList, memberOf, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
@@ -521,8 +523,8 @@ export class Capture {
   memberOf(captureSha) { return memberOf(this, captureSha); }
 
   /** R73 (T50; N1094; `acquisition` R46): `acquisition`'s `openCaptures` (a member's open captures, `{by, now}`), likewise,
-   *  over this module's `liveCaptureSessions` (R46). */
-  openCaptures(args) { return acquisitionApi.openCaptures(this, args); }
+   *  over this module's `liveCaptureSessions` (R46); an `args` with no `now` is read at this module's clock (R90). */
+  openCaptures(args) { return openCaptures(this, { ...(args ?? {}), now: args?.now ?? this.#instant() }); }
 
   #emitSync(event, payload) {
     const out = [];

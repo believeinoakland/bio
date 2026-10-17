@@ -4,7 +4,7 @@
    answers `recordCapturedFor`, `liveCaptureSessions` and `openCaptures`). Sentences are asserted as `word(key)`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, provenance, receipt, register, H } from "./fixture.mjs";
+import { fresh, bucket, network, provenance, register, sha, H } from "./fixture.mjs";
 import { captureOps, Capture, WITHHELD_QUESTION, CAPTURED_FOR_QUESTION_MAX } from "../../../src/capture/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
@@ -260,7 +260,7 @@ test("R95 op=capturegrade is the read: it answers by the stamped viewer, from th
   assert.equal((await route(c, "capturegrade", "capture=zz&viewer=member:m1")).reason, "REQUIRED_ARGUMENT_MISSING");
 });
 
-/* ---- R73's additions ---- */
+/* ---- R73's additions, and R94 against the real caller (acquisition R47) ---- */
 
 test("R73 the store handed in answers recordCapturedFor (R94), liveCaptureSessions (R46) and openCaptures (acquisition R46): the services acquisition R46 and R47 call", () => {
   const { c } = world();
@@ -270,6 +270,91 @@ test("R73 the store handed in answers recordCapturedFor (R94), liveCaptureSessio
   c.saveCaptureSession({ session: "s2", locator: "https://a.example/2", primarySha: H("2"), primaryFile: "f", base: "b", state: { by: "m1" }, at: "2026-03-10T00:00:00Z" });
   c.saveCaptureSession({ session: "s1", locator: "https://a.example/1", primarySha: H("1"), primaryFile: "f", base: "b", state: { by: "m2" }, at: "2026-03-10T00:00:00Z" });
   const live = c.liveCaptureSessions("2026-03-10T00:30:00Z");
-  assert.deepEqual(live.map((s) => s.session), ["s1", "s2"]);
+  assert.deepEqual(live.map((x) => x.session), ["s1", "s2"]);
   assert.deepEqual(c.liveCaptureSessions("2026-03-10T02:00:00Z"), [], "expired");
+});
+
+test("R73 R46 openCaptures is acquisition's, answered over this module's store: a session its walk parked for a member (state.opened_by) lists for that member and no other, until it expires; the instant is this module's clock when none is given; op=opencaptures reads the stamped member", () => {
+  const { c } = world();
+  const park = (session, opened_by, at, queue = [1, 2]) => c.saveCaptureSession({ session, locator: `https://a.example/${session}`, primarySha: H("1"), primaryFile: "f",
+    base: "b", state: { ...(opened_by ? { opened_by } : {}), queue }, at });
+  park("s-old", "member:m1", "2026-03-10T00:00:00Z");
+  park("s-new", "member:m1", "2026-03-10T00:10:00Z", [1]);
+  park("s-other", "member:m2", "2026-03-10T00:05:00Z");
+  park("s-daemon", null, "2026-03-10T00:06:00Z");
+  const now = "2026-03-10T00:30:00Z";
+  const mine = c.openCaptures({ by: "member:m1", now });
+  assert.deepEqual([mine.ok, mine.truncated], [true, false]);
+  assert.deepEqual(mine.captures.map((x) => [x.session, x.outstanding]), [["s-new", 1], ["s-old", 2]], "newest started first, with what is left to fetch");
+  assert.deepEqual(c.openCaptures({ by: "member:m2", now }).captures.map((x) => x.session), ["s-other"], "no other member's");
+  for (const by of [undefined, "", "  ", "class:admin", 5]) assert.deepEqual(c.openCaptures({ by, now }).captures, [], String(by));
+  assert.deepEqual(c.openCaptures({ by: "member:m1", now: "2026-03-10T02:00:00Z" }).captures, [], "after expiry");
+  /* with no instant given, this module's clock decides (R90's seam) */
+  c.clock = () => Date.parse(now);
+  assert.equal(c.openCaptures({ by: "member:m1" }).captures.length, 2);
+  c.clock = () => Date.parse("2026-03-10T05:00:00Z");
+  assert.equal(c.openCaptures({ by: "member:m1" }).captures.length, 0);
+  assert.equal(c.openCaptures().captures.length, 0, "no argument at all lists nothing, throws nothing");
+  /* the route takes the member from the control plane's stamp and the instant from this module's clock, never the query's */
+  c.clock = () => Date.parse(now);
+  assert.deepEqual(route(c, "opencaptures", "by=member:m1").captures.map((x) => x.session), ["s-new", "s-old"]);
+  assert.deepEqual(route(c, "opencaptures", "by=member:m1&now=2030-01-01T00:00:00Z").captures.length, 2, "a now in the query is not read");
+  assert.deepEqual(route(c, "opencaptures", "").captures, [], "unstamped: nothing");
+});
+
+const PAGE = "https://a.example/doc";
+async function acquireFor(f, body, who = { cls: "member", member: true, sessMember: "m1", storeName: "bio" }) {
+  const net = network({ [PAGE]: () => new Response("for a question", { headers: { "content-type": "text/plain" } }) });
+  try { return await f.c.acquire({ locator: PAGE, ...body }, who); } finally { net.restore(); }
+}
+
+test("R94 R77 acquisition R47: a member's acquire with for calls recordCapturedFor once with the digest, question, member and instant, also when the bytes were already held; heldCaptures then answers the document with the question for a viewer who may see it and the withheld sentence for one who may not", async () => {
+  const f = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
+  for (const m of ["m1", "m2"]) f.s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', 'member', 'active', '2026-01-01', '2026-01-01')`, m);
+  const d = sha("for a question");
+  const calls = [];
+  const real = f.c.recordCapturedFor.bind(f.c);
+  f.c.recordCapturedFor = (a) => { calls.push(a); return real(a); };
+  const first = await acquireFor(f, { for: "Q-HID" });
+  assert.equal(first.body.ok, true);
+  assert.deepEqual(first.body.for, { question: "Q-HID", recorded: true });
+  assert.equal(calls.length, 1);
+  assert.deepEqual([calls[0].captureSha, calls[0].question, calls[0].by, calls[0].at], [d, "Q-HID", "m1", first.body.document.retrieved]);
+  assert.deepEqual(f.rows(`SELECT capture_sha, question, asker, at FROM captured_for`).map((r) => ({ ...r })),
+                   [{ capture_sha: d, question: "Q-HID", asker: "m1", at: first.body.document.retrieved }]);
+  /* the same bytes again, as a member asking for another question and then the same one: held, still recorded once each */
+  const again = await acquireFor(f, { for: "Q-HID" });
+  assert.equal(again.body.existed, true);
+  assert.deepEqual(again.body.for, { question: "Q-HID", recorded: true });
+  await acquireFor(f, { for: "Q-OPEN" });
+  assert.deepEqual(f.rows(`SELECT question FROM captured_for ORDER BY question`).map((r) => r.question), ["Q-HID", "Q-OPEN"], "one row for each question");
+  /* the promoted document: the register files the capture under it */
+  register(f.s, d, "INFO-9");
+  reader(f.c);
+  const m1 = (await rowsOf(f.c, "member:m1"))["INFO-9"].captured_for;
+  assert.deepEqual(m1.questions.map((q) => q.question), ["Q-HID", "Q-OPEN"]);
+  assert.equal(m1.withheld, null);
+  const m2 = (await rowsOf(f.c, "member:m2"))["INFO-9"].captured_for;
+  assert.deepEqual(m2.questions.map((q) => q.question), ["Q-OPEN"]);
+  assert.equal(m2.withheld, WITHHELD_QUESTION);
+  assert.ok(!JSON.stringify(m2).includes("Q-HID") && !JSON.stringify(m2).includes("Secret"), "nothing of the question it may not see");
+});
+
+test("R94 controls with acquisition R47: a call with no for, a daemon call carrying for, and a for that is refused record nothing", async () => {
+  const f = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
+  const calls = [];
+  f.c.recordCapturedFor = (a) => { calls.push(a); return { recorded: true }; };
+  const plain = await acquireFor(f, {});
+  assert.equal(plain.body.ok, true);
+  assert.equal(plain.body.for, undefined, "no for: the answer carries none");
+  const daemon = await acquireFor(f, { for: "Q-OPEN" }, { cls: "admin", member: false, sessMember: null, storeName: "bio" });
+  assert.equal(daemon.body.ok, true);
+  assert.equal(daemon.body.for, undefined, "a daemon call's for is ignored");
+  const bad = await acquireFor(f, { for: 5 });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.reason, "BAD_FOR");
+  assert.deepEqual(calls, [], "recordCapturedFor was never called");
+  assert.deepEqual(f.rows(`SELECT * FROM captured_for`), []);
+  /* a blank question reaches recordCapturedFor only if acquisition let it through; it records nothing either way */
+  assert.deepEqual(new Capture(f.s, { record: f.core }).recordCapturedFor({ captureSha: sha("for a question"), question: " ", by: "m1" }), { recorded: false });
 });
