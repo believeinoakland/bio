@@ -11,3 +11,7 @@
 - **Tests:** `test/m/doorbell/held.test.mjs` (4 tests naming R13, with controls); `node --test test/m/doorbell/`: pass 73, fail 0. `store-door` and `sources` (users of the pull): pass 85, fail 1 (the inherited `reauthdue` above, same before my change). No layer tests named for L3 in the manifest.
 - **Checks:** format: 0 failures; architecture doorbell: 14 product files, 0 failures; coverage doorbell: 25 of 25 live ids named, 0 failures; ownership doorbell vs tranche/T50: 0 failures. `checks/run.mjs` over the product: 25 coverage failures in other modules, none doorbell's (inherited).
 - Size (session_01XWMEFuyrSGAdEFQKYTTBGH): test runs 5, module lines 1165
+
+## J1 · COMPLETE
+
+T50-56 R13 applied and pushed on job/T50/doorbell. pullKnock/inboxResolve/routes take the stamped viewer; held bytes answer existed with holder (null unless the viewer may see it), row marked pulled, nothing else written. New held.test.mjs; doorbell tests 73/0; coverage 25/25; format, architecture, ownership 0 failures. Inherited: store-door routes.test.mjs:342 (reauthdue) fails with and without my change. Details in my record.
