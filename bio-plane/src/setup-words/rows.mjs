@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
    docs/development/ux-substrate/screens/words.json (13008 words, 902 protected; SHA-256
-   92a77bab01baa9d087af2e264cb9df4360dc4108ca435d3f78afaebfb34dd7ca), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   0f87be00149763cca38ecfacd081f40301eb4367d9b2b84c7698e8b7f0cdc95e), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "92a77bab01";
+export const WORDS_COMMIT = "0f87be0014";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5863,7 +5863,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.published.corrections.none","None since it was published.","DEC-310: the public page's corrections and orders",null,false],
   ["screen.published.corrections","Every correction, withdrawal and court order on this case is listed on its docket.","DEC-310: the public page's corrections and orders; 'its docket' links to the docket",null,false],
   ["screen.connect.check.ifstops","If the check stops","DEC-310: screens-settings R41: the failed check, opened",null,false],
-  ["refusal.NO_SET","Nothing was named for this to work on, so nothing was done. This is a fault in Civicsmith, not in what you did; report it if it happens again.","DEC-312: one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set",null,false],
+  ["refusal.NO_SET","Nothing was named for this to work on. This is a fault in Civicsmith, not in what you did; report it if it happens again. Nothing was changed.","DEC-312: one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set",null,false],
   ["refusal.SET_TOO_LARGE.read","That asks for more than Civicsmith reads at once ({max} at most; this named {given}), so nothing was read. Ask for fewer.","DEC-312: progressions C-100.27: a read, so not record-core's SET_TOO_LARGE, which acts on a selection",null,false],
   ["entities.considered.name","the name","DEC-312: entities: the recogniser's considered list, after the composite key and the source key",null,false],
   ["entities.relation.proxy_for","stands in for","DEC-312: entities R47: \"A stands in for B\"",null,false],
@@ -5911,7 +5911,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.question.stopped.kept","What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.","DEC-314: screens-inquiry R57: after ai.run.ending.cancelled",null,false],
   ["screen.question.reject.reason","Why you reject it","DEC-314: basis-versions R4: the reason field",null,false],
   ["screen.question.reject.reason.help","Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.","DEC-314: basis-versions R4",null,false],
-  ["screen.question.reject.summary","Reject this reading","DEC-314: basis-versions R4: the fold",null,false],
+  ["screen.question.reject.summary","Reject this reading, with a reason","DEC-314: basis-versions R4: the fold",null,false],
   ["screen.question.reject.go","Reject it","DEC-314: basis-versions R4: the button in the fold",null,false],
   ["screen.case-editor.account","The account","DEC-315: the case's account: section and field",null,false],
   ["screen.case-editor.account.help","The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.","DEC-315: the section",null,false],
@@ -5920,12 +5920,12 @@ export const WORD_ROWS = Object.freeze([
   ["case-account.framing.by_question","Question by question","DEC-315: case-account R1",null,false],
   ["case-account.framing.by_rule","Rule by rule","DEC-315: case-account R1",null,false],
   ["screen.case-editor.account.flagged","Not supported by what it cites: “{sentence}”","DEC-315: case-account R2: an account_check's flag; the sentence follows",null,false],
-  ["screen.case-editor.account.use","Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.","DEC-315: case-account R4, R6: began_as machine_draft",null,false],
+  ["screen.case-editor.account.use","Use what you agree with in the account below, in your own words; Civicsmith records that it began as the assistant's draft.","DEC-315: case-account R4, R6: began_as machine_draft",null,false],
   ["screen.case-editor.account.notasis","Taking the draft as it stands is not offered: you vouch only for words you wrote.","DEC-315: case-account R4: ACCEPT_MUST_REAUTHOR, never offered",null,false],
-  ["refusal.BAD_ACCOUNT_DRAFT","The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.","DEC-315: case-account R1",null,false],
-  ["refusal.BAD_ACCOUNT_FRAMING","An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.","DEC-315: case-account R1",null,false],
-  ["refusal.NO_SUCH_ACCOUNT_DRAFT","No draft of this case's account that you can see has that name, so nothing was recorded.","DEC-315: case-account R4",null,false],
-  ["refusal.BAD_ACCOUNT","The account is missing or can't be read, so nothing was recorded. Write it, then save again.","DEC-315: case-account R4",null,false],
+  ["refusal.BAD_ACCOUNT_DRAFT","The assistant's draft of the account was empty or longer than 8,000 characters. Nothing was kept. Ask for it again.","DEC-315: case-account R1",null,false],
+  ["refusal.BAD_ACCOUNT_FRAMING","Choose how to order the account: in time order, question by question, or rule by rule. Nothing was kept.","DEC-315: case-account R1",null,false],
+  ["refusal.NO_SUCH_ACCOUNT_DRAFT","No draft of this case's account that you can see has that name. Choose one of the drafts listed, or ask for a new one. Nothing was recorded.","DEC-315: case-account R4",null,false],
+  ["refusal.BAD_ACCOUNT","The account is missing or can't be read. Write it, then save again. Nothing was recorded.","DEC-315: case-account R4",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
