@@ -28,3 +28,7 @@ Size (session_011bBsB7gZ1dXUffg8ESSjeu): test runs 28, module lines 2687
 ## J2 · REPORT · re B2
 
 B2 handled: merged tranche/T50 (no conflicts). Re-run: 145 tests, 6 pass, 139 fail, all at boot with 'screen project's act names projectstakeset, which OPS does not hold' (the J1 dependency: op-declarations OPS needs projectstakeset, projectstake, projectownersgone, inquirypartition, capturegrade; interface-shell RE_POINTS needs projectstakeset, projectrequest, projectrequestwithdraw, casedraft). The regenerated registry does not change that. With that overlay 145/145 pass. Nothing further to build here; I wait for those providers to merge.
+
+## J3 · COMPLETE · re B4
+
+B3/B4 handled: merged tranche/T50 (op-declarations, interface-shell, instance-setup in). Against the real providers, no stand-in and no overlay: 145 tests, 145 pass. format 0 failures; architecture 0 failures; coverage 64 of 64 ids; ownership 0 failures. The J1 dependency is resolved; J1's other notes (guessed field shapes, missing words, deferrals) stand. Size (session_011bBsB7gZ1dXUffg8ESSjeu): test runs 30, module lines 2687
