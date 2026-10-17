@@ -75,3 +75,7 @@ Merged tranche/T50 (op-declarations, interface-shell, instance-setup) and re-ran
 ## B7 (K3778): the real screens
 
 After merging tranche/T50 with every screen job: `node --test test/m/control-plane/`: 302 tests, all pass (R103 ×2 and R53 pass under the merged declarations; the page tests under the merged shell and screens). Of the two `t47-e2e` R81 failures BOB named: (1) Home's busy-project row read, at the merged base, 'Last change … The dark streets'; it passes at my merge of the tranche and I changed nothing for it; (2) the door's script: screens-daily R9/R40 draw a door as a button that starts directly and its scripts only in the opened offer, so the screen is right and the test now presses the door first, then the script, and checks that the script press sends no `startfrom` POST of its own. No requirement of screens-daily is failed.
+
+## J6 · COMPLETE
+
+COMPLETE after B7. Merged tranche/T50: module 302 tests, all pass. Row (1) passes at the merged base with no change of mine; (2) screens-daily is right (R9, R40: a door starts directly, its scripts in the opened offer), so t47-e2e now presses the door first and checks the script press sends no startfrom POST. Record updated.
