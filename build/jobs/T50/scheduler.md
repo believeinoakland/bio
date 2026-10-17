@@ -11,3 +11,7 @@
 - **Checks:** format 0 failures; architecture 0 failures; coverage 27 of 27 ids named, 0 failures.
 
 Size (session_011e6LGoZKTChEgaMdrAaQUm): test runs 6, module lines 795
+
+## J1 · COMPLETE
+
+T50-16 scheduler complete: R27 met (registered consumer whose wake does not advance is held; released on own wake change, arm outside a firing, start); due/wake/tick awaited incl. question-explore. Scheduler tests 135 pass (6 new, held.test.mjs); user suites 75 pass; format, architecture, coverage, ownership 0 failures. No other-module findings. Record: build/jobs/T50/scheduler.md.
