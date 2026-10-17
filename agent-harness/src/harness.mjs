@@ -133,6 +133,8 @@
  * (three items shipped exactly that on 2026-08-10).
  * ========================================================================= */
 
+import { levelEmptyHolds } from "../../bio-plane/src/run-rules/index.mjs";
+
 /* THE FOUR LEVELS, IN FAN-OUT ORDER.
  *
  * CLAUDE.md's standing section: when anything goes looking it "may need to
@@ -430,10 +432,11 @@ export function runContextTarget(session) {
  *  per empty level and never one for the run. */
 export function emptyLevelCandidates(state, target) {
   const reports = Array.isArray(state?.reports) ? state.reports : [];
+  const unscoped = new Set(levelsWithoutScope(state).map((x) => x.level));
   const out = [];
   for (const level of LEVELS) {
     const r = reports.find((x) => x && x.level === level);
-    if (!r || r.state !== "LOOKED_ABSENT") continue;
+    if (!r || r.state !== "LOOKED_ABSENT" || unscoped.has(level)) continue;
     const reported = REPORTING_LEVEL[level];
     out.push({
       kind: "level-empty",
@@ -496,6 +499,25 @@ export function emptyLevelCandidates(state, target) {
         + `and found nothing supportable there; the search that establishes it is written in the `
         + `run's observation log at ${String(r.observed_at ?? "(no address)")}.`,
     });
+  }
+  return out;
+}
+
+/** R18 (T50; N1169; `run-rules` R35): the levels that reported `LOOKED_ABSENT` over a scope with no document in it, each
+ *  as `{level, holds: false, code, check, translation}`, `run-rules`' answer. `state.scope` is `{<level>: {reads,
+ *  documents}}`, set by the shell from the plane's four-level statement of each read (`retrieval` R13) and never from
+ *  a report's words or a judgement: a level with no read, or whose `documents` is below 1, was not looked at, so no
+ *  absence is written for it (`emptyLevelCandidates` composes none). A level absent from `scope` has no read. Pure. */
+export function levelsWithoutScope(state) {
+  const reports = list(state?.reports);
+  const scope = record(state?.scope) || {};
+  const out = [];
+  for (const level of LEVELS) {
+    const r = reports.find((x) => x && x.level === level);
+    if (!r || r.state !== "LOOKED_ABSENT") continue;
+    const read = record(scope[level]);
+    const answer = levelEmptyHolds({ scope: read && Number(read.reads) >= 1 ? read : {} });
+    if (answer !== true) out.push({ level, ...answer });
   }
   return out;
 }
@@ -756,10 +778,14 @@ function tableStep(state) {
 export function advance(state, decision) {
   const s = state || {};
   const to = String((decision && decision.step) || "close");
-  if (to === "close") return { ...s, step: "close" };
+  /* R19: the pairs the step just stated are settled once leaving `compose`, the named list spent with them. */
+  const settled = s.step === "compose"
+    ? { disagreed: [...list(s.disagreed), ...disagreementsToSettle(s).map(disagreementKey)], disagreements: [] } : {};
+  if (to === "close") return { ...s, ...settled, step: "close" };
   const next = to === "adjust"
     ? { ...s, step: "adjust", refusedSubmission: s.submission ?? null, adjusted: false }
     : { ...s, step: to, refusal: null, adjusted: false, refusedSubmission: null };
+  Object.assign(next, settled);
   /* The resume point is spent once `resume` has moved on from it. */
   if (s.step === "resume") { next.resumeAt = null; next.resumeBasis = null; }
   /* R15: a candidate surviving dedup goes to `submit`, so this pass adds one; the next pass starts with none. */
@@ -784,7 +810,7 @@ export function advance(state, decision) {
  * which each `fanout` composes afresh from the plane's payload. */
 export const RESUMABLE = ["step", "pass", "targets", "reports", "reportsRefused", "rereads", "holdings",
                           "candidates", "queue", "submission", "refusal", "refusedSubmission", "adjusted", "passAdded",
-                          "composed", "kept", "wrote"];
+                          "composed", "kept", "wrote", "scope", "disagreed"];
 
 /** The scratch a tick publishes: the table's own fields, nothing else. */
 export function resumableState(state) {
@@ -825,7 +851,8 @@ export function publishableState(state, limit, flow = CONTROL_FLOW) {
   const at = flow === PLAN_FLOW ? (full.step === "close" ? "close" : "read")
     : (STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan");
   const restart = resumableState({ step: at, pass: full.pass, adjusted: false, passAdded: full.passAdded,
-    composed: full.composed, kept: full.kept, wrote: full.wrote });
+    composed: full.composed, kept: full.kept, wrote: full.wrote, scope: full.scope,
+    disagreed: full.disagreed });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at } };
 }
 
@@ -861,6 +888,7 @@ export function resumeFrom(published, flow = CONTROL_FLOW) {
     candidates: list(p.candidates), queue: list(p.queue), submission: record(p.submission),
     refusal: record(p.refusal), refusedSubmission: record(p.refusedSubmission), adjusted: p.adjusted === true,
     passAdded: p.passAdded === true, composed: countOf(p.composed), kept: countOf(p.kept), wrote: countOf(p.wrote),
+    scope: record(p.scope), disagreed: list(p.disagreed),
   } };
 }
 
@@ -944,11 +972,58 @@ export function stepLog(state, decision) {
  * a review habit: it is this refusal, and the suite drives it by handing a
  * judgement that tries to set `maxPasses`. */
 export const JUDGEABLE = ["targets", "reports", "candidates", "queue", "adjusted", "submission",
-                          "level", "observed", "governed", "condition"];
+                          "level", "observed", "governed", "condition", "disagreements"];
 /* FL-11: `target` joins them. The question a run's readings land on is the run's CONTEXT (`runContextTarget`),
    the record's and never the model's; a judgement naming it was silently dropped before, which told the caller
    nothing. A candidate still names its own target — that is the candidate's field, and the plane bounds it. */
 export const NOT_JUDGEABLE = ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"];
+
+/* R19 (T50; N1187; K3557; amends R4): THE DISAGREEMENTS A JUDGEMENT NAMES. A list of at most `DISAGREEMENTS_MAX`
+   `{record, levels}`, `record` a non-empty id and `levels` two different members of `LEVELS`, nothing else on a pair
+   (a free-text key would reach the member's statement). Applied at `compose` only. */
+export const DISAGREEMENTS_MAX = 10;
+
+const isPair = (p) => {
+  const x = record(p);
+  return !!x && Object.keys(x).every((k) => k === "record" || k === "levels")
+    && typeof x.record === "string" && x.record.trim() !== ""
+    && Array.isArray(x.levels) && x.levels.length === 2 && x.levels.every((l) => LEVELS.includes(l)) && x.levels[0] !== x.levels[1];
+};
+
+/** The keys of a malformed `disagreements` value, as `applyJudgement` names them. */
+function badDisagreements(v) {
+  if (!Array.isArray(v)) return ["disagreements"];
+  const bad = v.slice(DISAGREEMENTS_MAX).map((_, i) => `disagreements[${DISAGREEMENTS_MAX + i}]`);
+  v.slice(0, DISAGREEMENTS_MAX).forEach((p, i) => {
+    if (isPair(p)) return;
+    const x = record(p);
+    if (!x) { bad.push(`disagreements[${i}]`); return; }
+    for (const k of Object.keys(x)) if (k !== "record" && k !== "levels") bad.push(`disagreements[${i}].${k}`);
+    if (!(typeof x.record === "string" && x.record.trim() !== "")) bad.push(`disagreements[${i}].record`);
+    if (!(Array.isArray(x.levels) && x.levels.length === 2 && x.levels.every((l) => LEVELS.includes(l)) && x.levels[0] !== x.levels[1]))
+      bad.push(`disagreements[${i}].levels`);
+  });
+  return bad;
+}
+
+/** A pair's identity: its record and its two levels, whichever order they were named in. */
+export const disagreementKey = (p) => canonical([p.record, ...[...p.levels].sort()]);
+
+/** R19: the named pairs not yet settled: those of `state.disagreements` whose key is not in `state.disagreed`, each
+ *  once, in order, while the run's settled pairs stay at most `DISAGREEMENTS_MAX`. `advance` adds them to `disagreed`
+ *  when the step leaves `compose`. A pair adds no candidate, changes no `passAdded` and opens no pass. Pure. */
+export function disagreementsToSettle(state) {
+  const held = new Set(list(state?.disagreed));
+  const out = [];
+  for (const p of list(state?.disagreements)) {
+    if (held.size + out.length >= DISAGREEMENTS_MAX) break;
+    if (!isPair(p)) continue;
+    const key = disagreementKey(p);
+    if (held.has(key) || out.some((q) => disagreementKey(q) === key)) continue;
+    out.push({ record: p.record, levels: [...p.levels] });
+  }
+  return out;
+}
 
 export function applyJudgement(state, judgement) {
   const j = judgement && typeof judgement === "object" ? judgement : {};
@@ -959,8 +1034,22 @@ export function applyJudgement(state, judgement) {
                    + `budget, the mode and the step are the TABLE's and never the model's (§14b.4). The `
                    + `evidential case is measured: TREC 2011 found searchers erring by up to +95/-87 points `
                    + `on their own recall and stopping early on a false belief of high coverage.` };
+  /* R19: a malformed list is refused by key, at any step; a well-formed one is applied at `compose` only. */
+  if (Object.prototype.hasOwnProperty.call(j, "disagreements")) {
+    const bad = badDisagreements(j.disagreements);
+    if (bad.length)
+      return { ok: false, overreach: bad,
+               detail: `a judgement's disagreements are at most ${DISAGREEMENTS_MAX} pairs, each a record id and two `
+                     + `different levels of ${LEVELS.join(", ")} and nothing else; ${bad.join(", ")} breaks that.` };
+  }
   const next = { ...state };
-  for (const k of JUDGEABLE) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
+  for (const k of JUDGEABLE) {
+    if (!Object.prototype.hasOwnProperty.call(j, k)) continue;
+    if (k === "disagreements") {
+      if (String((state || {}).step || "") === "compose")
+        next.disagreements = j.disagreements.map((p) => ({ record: p.record, levels: [...p.levels] }));
+    } else next[k] = j[k];
+  }
   return { ok: true, state: next };
 }
 
