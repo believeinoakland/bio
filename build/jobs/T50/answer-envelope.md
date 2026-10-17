@@ -1,6 +1,6 @@
 # answer-envelope (T50)
 
-**Status** · session_01JzujgzuDHRDzLuCvJTsAv4 · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01JzujgzuDHRDzLuCvJTsAv4 · depth 2 · COMPLETE · handled B3
 
 ## J1 · BLOCKED
 
