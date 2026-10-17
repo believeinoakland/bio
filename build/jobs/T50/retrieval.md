@@ -51,3 +51,10 @@ REPORT J2: T50-10 retrieval, for the design lane and the requirement text (detai
 4. op=browse is in retrievalRoutes. The ops-map / op-declarations tests: no new red beyond the base (op-declarations 9 failures with and without my change, test for test; plane 3, answer-envelope 7, action-plans 2 likewise). Spec and grade are L11's.
 5. t50.test.mjs stands entities.aliasesOf in over the real alias table until entities merges (R55 answer {ok, aliases, limit, truncated, next}, as B3 said; fallbacks dropped).
 6. The module is 4001 lines (3,513 at START): one past ~4,000, so its split is T51's first entry (P6).
+
+## J3 · COMPLETE
+
+COMPLETE J3: T50-10 retrieval done on job/T50/retrieval (record: build/jobs/T50/retrieval.md).
+R73 amended (a fact marks only its own passage; wider no longer marks); R80 titles (match and scope); R81 content_id/content_held; R82 line breaks kept; R83 sheet, row range, cells, not_calculated, cells_truncated; R84 held aliases (entities.aliasesOf), name_in_passage; R85 browse (browse.mjs, op=browse) and R86 registerBrowseMarks. Plan rule 6: words.mjs (64 keys), the keyed sentences read by say(); the keyless ones are in the REPORT above.
+Tests: retrieval 194/194. format, architecture retrieval (with the setup-words edge, B2), coverage retrieval (86/86), ownership: 0 failures; the users' tests (answers, action-plans, skills, monitoring, investigation, question-explorer, op-declarations, plane, control-plane, answer-envelope) fail test for test as at the base.
+Size (session_012ENiSBrCB2vHnYDrzpCCfT): test runs 19, module lines 4001
