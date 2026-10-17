@@ -1825,6 +1825,31 @@ w320('screen.request.state.nooffice', 'no office is known yet', False, 'R20: the
 w320('stake.unreadable.summary', "When the stake can't be read", False, 'screens-action R21')
 w320('stake.undetermined.summary', "When the tier can't be told", False, 'R21: stake.ask.undetermined in a fold')
 # --- end DEC-320
+# --- DEC-321 (T50's gaps, batch 4: seven disagreements; screens-intake R29, R32; screens-daily R40, R43, R45, R50 (2), R51)
+def w321(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-321' + (': ' + note if note else '')))
+w321('capture.forquestion.refused.summary', "A question that isn't the project's", False, 'screens-intake R29: refusal.BAD_FOR in a fold')
+w321('find.row.unwatch', 'Take off my watch list', False, 'screens-daily R45: watchitem with on: false')
+w321('find.secondlook.note', 'Why look again', False, "R45: secondlook's required note")
+w321('find.secondlook.note.help', 'Your note is required: it says what the second look should check.', False, 'R45')
+# --- end DEC-321
+# --- DEC-322 (T50's gaps, batch 5: the time zone by name, the corrections line's states, Find's paging; screens-settings R45, screens-publish R34, screens-daily R44)
+def w322(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-322' + (': ' + note if note else '')))
+for z, en in [('America/Los_Angeles', 'Pacific Time (Los Angeles)'), ('America/Denver', 'Mountain Time (Denver)'), ('America/Phoenix', 'Arizona Time (Phoenix)'), ('America/Chicago', 'Central Time (Chicago)'), ('America/New_York', 'Eastern Time (New York)'), ('America/Anchorage', 'Alaska Time (Anchorage)'), ('Pacific/Honolulu', 'Hawaii Time (Honolulu)')]:
+    w322('label.timezones.' + z, en, False, 'screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form')
+w322('screen.group.timezone.two.summary', 'When two places give different zones', False, 'R45: two active profiles')
+w322('screen.group.timezone.two', "Your places give different time zones, so none is named as your team's. Correct each place's zone on its own.", False, 'R45: each profile asked once')
+w322('screen.group.timezone.none.summary', 'When no time zone is held', False, 'R45: no zone, and no UTC drawn')
+w322('find.browse.more', 'Your team holds more than is shown here.', False, "screens-daily R44: truncated, paged by next")
+w322('find.browse.showmore', 'Show more', False, 'R44: the next page')
+w322('find.browse.nosince.summary', 'Before your first visit to Home', False, 'R44: since null')
+w322('find.browse.nosince', '“New since you last looked” is offered once you have visited Home: it counts from that visit.', False, 'R44: since null draws no new choice')
+w322('screen.published.corrections.state.none', 'none', False, 'screens-publish R34: the mockup states')
+w322('screen.published.corrections.state.one', 'one', False, 'R34')
+w322('screen.published.corrections.state.some', 'several', False, 'R34')
+w322('screen.published.corrections.state.undetermined', "can't be counted", False, 'R34: undetermined draws only the docket sentence')
+# --- end DEC-322
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
