@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12938 words, 900 protected; SHA-256
-   039cb02bbc39f8de2b5041122577c35ced032b5943789d3282f0285686d05b17), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12939 words, 900 protected; SHA-256
+   9717645cc4f66c7803a8366ecf8a51c635407ce943259d2799692a82c54f5bbc), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "039cb02bbc";
+export const WORDS_COMMIT = "9717645cc4";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5862,6 +5862,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.ceremony.nothing","Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.","DEC-310: Publish with no prepared case",null,false],
   ["screen.published.corrections.none","None since it was published.","DEC-310: the public page's corrections and orders",null,false],
   ["screen.published.corrections","Every correction, withdrawal and court order on this case is listed on its docket.","DEC-310: the public page's corrections and orders; 'its docket' links to the docket",null,false],
+  ["screen.connect.check.ifstops","If the check stops","DEC-310: screens-settings R41: the failed check, opened",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
