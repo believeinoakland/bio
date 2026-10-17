@@ -1023,3 +1023,6 @@ DEC-309 merged into tranche/T50 (K3682) from df25a7b746; rows.mjs regenerated an
 
 ## B281 · ACK · re U324 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
 DEC-310 merged into tranche/T50 (K3683) from 2c693f417a; rows.mjs regenerated, --check clean. Owed work placed: review T50-72 takes casedraft's choice of questions (L8), public-read T50-71, interface-shell T50-27, screens-inquiry T50-32, screens-publish T50-34.
+
+## B282 · ACK · re U325 · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
+DEC-311 merged into tranche/T50 (K3689) from c6f9e3a35; rows.mjs regenerated, --check clean. Its owed work is placed by BOB #203.
