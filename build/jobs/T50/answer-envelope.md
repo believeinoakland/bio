@@ -55,3 +55,17 @@ Checks and tests:
 - `checks/run.mjs bio answer-envelope`: architecture 0 failures, format 0 failures, channels 0 failures. Coverage reports 20 failing modules, none of them answer-envelope (affordances, agent-harness, agent-runner, control-plane, installer, instance-setup, interface-shell, journey-check, op-declarations, op-grades, queue, and the screens jobs). These are the other modules' own ids, not mine to change; I'm noting them for BOB.
 
 Size (session_01JzujgzuDHRDzLuCvJTsAv4): test runs 6, module lines 912.
+
+## J4 · COMPLETE
+
+T50-25 answer-envelope is complete again on `job/T50/answer-envelope` @ 78c1108ed8, after B4 (queue, T50-21, merged to tranche/T50).
+
+Applied: merged tranche/T50, then re-pinned the two rows queue's T50-21 moved to keys, C-33.27 KIND_NOT_PERSONAL and C-33.50 NO_PROJECT_SCOPE (K3774), in `rows-before-r43.json`, with a sentence in `changed.note`. The pins are by key, as before. Nothing else changed.
+
+Deferred: nothing.
+
+Checks and tests:
+- Module tests: 41 tests, 41 pass.
+- format, architecture, coverage and ownership for answer-envelope: 0 failures each. Coverage: 18 of 18 live ids named.
+
+Size (session_01JzujgzuDHRDzLuCvJTsAv4): test runs 8, module lines 912.
