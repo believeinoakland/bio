@@ -79,3 +79,7 @@ Remaining failures by owner (J4's list, updated):
 - file-scanner catalogue data on `/app/security` ("the group's own account", "chosen by the group"): N1241, T51, accepted red for R17's scan.
 - screens-settings / plane `connect` and the assistant (steps 4, 9–11; pairs 9, 10, 11, 16): accepted red (R19, K3783 (3)).
 - Not yet seen walked, since the install stops first: screens-action's `request` fix and the installer's now-"team" pages.
+
+## J8 · COMPLETE
+
+Re B5: COMPLETE. Local world as in my REPORT (J7): served release members, capability-member stand-ins, remote-version stub, the installer's list and secret calls. Module tests: 72 run (one added), 62 pass, the same 10 local-arm tests fail (R1 (a), R7, R9, R10, R11, R11 control, R13, R15, R16/R18, R17), now at the install's verification, whose cause is the release's container members (J7); they pass as that is resolved and the T51 reds clear. Checks as in J2/J5: format, architecture, ownership 0 failures; coverage R19 only (accepted red). Accepted reds by name in this completion: instance-setup HOSTING_CONTROL (N1238, T51-95) and file-scanner's `/app/security` catalogue data (N1241, T51) for R17's scan; the assistant's steps (K3783 (3), R19). Size (session_014iUBe8NbAGbHPhNo4NvYuv): test runs 17, module lines 2606
