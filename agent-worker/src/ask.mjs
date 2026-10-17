@@ -189,9 +189,7 @@ export async function handleAsk(req, env, deps) {
     if (typeof body.store !== "string")
       return refusal("BAD_STORE", "store, when an ask names one, is the namespace's name.", 400);
     if (!NAMESPACES.includes(body.store))
-      return refusal("NAMESPACE_UNKNOWN",
-        "an ask names the namespace it reads, and no namespace by that name exists on any instance this member can be "
-        + "bound to, so nothing was read; they are listed beside this message.", 400,
+      return refusal("NAMESPACE_UNKNOWN", word("refusal.NAMESPACE_UNKNOWN"), 400,
         { asked: body.store.slice(0, 80), namespaces: [...NAMESPACES] });
     store = body.store;
   }

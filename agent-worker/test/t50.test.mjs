@@ -6,10 +6,11 @@
  *
  * Every arm that admits has its refusing counterpart beside it (K874). Nothing here reads the member's source text; the
  * one question about the bundle is asked of a fresh build of it (R109). */
-import worker from "../src/index.mjs";
-import { gated, REMOTE_VERSION } from "./remote.mjs";
+import worker, { CheckRecord } from "../src/index.mjs";
+import { remoteBindings, REMOTE_VERSION } from "./remote.mjs";
 import { MEMBER } from "./account.mjs";
 import { word } from "../../bio-plane/src/setup-words/index.mjs";
+import { REPORTING_LEVEL, LEVELS } from "../../agent-harness/src/harness.mjs";
 import { MODEL_FOR_MODE, EFFORT_DEFAULT, EFFORT_SUBSESSION, SUBSESSION_MODEL } from "../../agent-model/src/model.mjs";
 import { discoverMembers, buildMember } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
@@ -65,8 +66,8 @@ function plane(cfg = {}) {
       }
       case "askusage": return ok({ ok: true });
       case "airun": return ok({ found: true, session: {
-        id: u.searchParams.get("run"), mode: "check", status: "running", max_passes: 1, context: { type: "inquiry", id: "INQ-1" },
-        principal: { plane: `${MEMBER}/TOK-1`, claude: MEMBER, ref: MEMBER, skill: PACK.version }, state: null,
+        id: u.searchParams.get("run"), mode: "check", status: "running", max_passes: cfg.maxPasses ?? 1, context: { type: "inquiry", id: "INQ-1" },
+        principal: { plane: `${MEMBER}/TOK-1`, claude: MEMBER, ref: MEMBER, skill: PACK.version }, state: cfg.state ?? null,
         budget: [{ bound: "fetches", allowed: 9 }, { bound: "subsessions", allowed: 9 }, { bound: "wallclock", allowed: 9e5 },
                  { bound: "runtime", allowed: 5000 }].map((b) => ({ ...b, consumed: 0 })) } });
       case "airunlog": return ok({ found: true, entries: [], truncated: false });
@@ -78,9 +79,9 @@ function plane(cfg = {}) {
       case "suggest": return ok({ wrote: true });
       case "meaningrows": {
         const id = body?.ids?.[0];
-        if (id && (cfg.refuseIds ?? []).includes(id))
+        if ((id && (cfg.refuseIds ?? []).includes(id)) || (!id && cfg.refuseReads))
           return Response.json({ ok: false, reason: "MEANING_ROWS_REFUSED", check: "C-23.9" }, { status: 403 });
-        return ok({ ok: true, arm: "leg", rows: [], count: 0 });
+        return ok({ ok: true, arm: "leg", rows: [], scope: { documents: cfg.scopeDocuments ?? 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       }
       case "search": {
         const id = /id:"([^"]+)"/.exec(query.q ?? "")?.[1];
@@ -192,7 +193,7 @@ async function drive(path, body, { planeCfg = {}, modelCfg = {}, remoteCfg = {},
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`,
       method === "GET" ? { method } : { method, body: typeof body === "string" ? body : JSON.stringify(body) }),
-      { VERSION: "t50", PLANE: p.binding, RUNNER: h, ...(noRemote ? {} : { REMOTE: gated(r, remoteGate) }), ...env });
+      { VERSION: "t50", PLANE: p.binding, RUNNER: h, ...(noRemote ? {} : { ...remoteBindings(r, remoteGate) }), ...env });
     const text = await res.text();
     const lines = res.headers.get("content-type") === "application/x-ndjson" ? text.trim().split("\n").map((l) => JSON.parse(l)) : null;
     let out = null; if (!lines) try { out = JSON.parse(text); } catch { out = null; }
@@ -243,6 +244,7 @@ section("R110 · until a check has passed at the remote class's version, the fou
     ["REMOTE throwing on its version", { env: { REMOTE: { idFromName: (n) => n, get: () => ({ fetch: async () => { throw new Error("down"); } }) } } }, "silent"],
     ["REMOTE answering its version with a refusal", { env: { REMOTE: { idFromName: (n) => n,
       get: () => ({ fetch: async () => Response.json({ ok: false }, { status: 410 }) }) } } }, "silent"],
+    ["no CHECKS binding (no record can exist)", { env: { CHECKS: undefined } }, "unchecked"],
     ["no passed check", { remoteGate: { passed: false } }, "unchecked"],
     ["a check from another version", { remoteGate: { checkedVersion: "an-older-version" } }, "unchecked"],
   ];
@@ -261,7 +263,7 @@ section("R110 · until a check has passed at the remote class's version, the fou
   const ready = await drive("ask", ASK);
   t("R110 (control): after a passed check at the version the remote class answers, the same ask proceeds",
     [ready.status, last(ready)?.event], [200, "answer"]);
-  const wrongShape = await drive("ask", ASK, { env: { REMOTE: gated(remote(), { version: "" }) } });
+  const wrongShape = await drive("ask", ASK, { env: { ...remoteBindings(remote(), { version: "" }) } });
   t("R110 (control): a remote class that answers its version with none is not ready", [wrongShape.status, wrongShape.out?.why], [503, "silent"]);
   const stubbed = await drive("run", { ...RUN, judgements: [] }, { noRemote: true });
   t("R110 (control): a segment whose caller supplies the judgements takes no turn and reaches no runner, so it is not held back",
@@ -279,6 +281,24 @@ section("R110 · until a check has passed at the remote class's version, the fou
   }
   const asked = await drive("version", null, { method: "GET" });
   t("R110: GET /remote/version is asked of one instance named for the question, and the member is not asked", asked.remote.named, []);
+}
+
+section("R110, R111 · the member's check record is kept in this member's own storage, a version and a time");
+{
+  const storage = new Map();
+  const rec = new CheckRecord({ storage: { get: async (k) => storage.get(k), put: async (k, v) => { storage.set(k, v); } } });
+  const call = async (method, body, path = "/check") => {
+    const res = await rec.fetch(new Request(`http://check${path}`, { method, ...(body === undefined ? {} : { body: JSON.stringify(body) }) }));
+    return { status: res.status, out: await res.json() };
+  };
+  t("R110: a member with no passed check is stated unchecked, with no version", await call("GET"), { status: 200, out: { ok: true, checked: false, version: null } });
+  t("R111: a pass is recorded with the version it passed at", (await call("POST", { version: "v-7" })).status, 200);
+  t("R110: and then stated back, that version", await call("GET"), { status: 200, out: { ok: true, checked: true, version: "v-7" } });
+  t("R110: what is kept is the version and a time and nothing else (R36)", Object.keys(storage.get("check")).sort(), ["at", "version"]);
+  t("R111 (control): a pass with no version, or a version that is not a string, is refused and records nothing",
+    [(await call("POST", {})).status, (await call("POST", { version: 7 })).status, (await call("POST", { version: "" })).status, storage.get("check").version],
+    [400, 400, 400, "v-7"]);
+  t("R110 (control): any other path or method is 404 UNKNOWN", [(await call("GET", undefined, "/other")).out.code, (await call("DELETE")).out.code], ["UNKNOWN", "UNKNOWN"]);
 }
 
 /* ================================================================================================ R112 */
@@ -318,7 +338,7 @@ section("R113 · an ask's progress reaches the caller as it is written");
     globalThis.fetch = m.fn;
     try {
       const res = await worker.fetch(new Request("http://agent-worker/ask", { method: "POST", body: JSON.stringify({ ...ASK, account: APIKEY }) }),
-        { VERSION: "t50", PLANE: p.binding, RUNNER: h, REMOTE: gated(r) });
+        { VERSION: "t50", PLANE: p.binding, RUNNER: h, ...remoteBindings(r) });
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       const got = [];
@@ -426,6 +446,75 @@ section("R115 · a run does not go around the fence of its credential");
   const bare = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, modelCfg: { cites: ["https://elsewhere.example/page"] }, planeCfg: { hitIds: [] } });
   t("R115 (control, R100): a citation that is an address and not a record id is still read as the address it is",
     [bare.out?.holdings?.documents, bare.out?.holdings?.undetermined], [1, 0]);
+}
+
+/* ================================================================================================ agent-harness R18 */
+
+section("agent-harness R18 · the shell sets a level's scope from the reads its sub-session made; no absence is written for a level that was not read over a document");
+{
+  const written = (r) => r.plane.filter((c) => c.op === "suggest").map((c) => c.body?.name).sort();
+  const allFour = LEVELS.map((l) => `level-empty-${REPORTING_LEVEL[l]}`).sort();
+  const absent = { reportFor: () => ({ state: "LOOKED_ABSENT", summary: "nothing" }), cites: [] };
+  const base = { ...RUN, account: APIKEY };
+  const read = await drive("run", base, { noRemote: true, modelCfg: absent });
+  t("R18: four sub-sessions each read once over three documents and report absent: a level-empty candidate is written for each, one per level",
+    [written(read), read.out?.submitted], [allFour, 4]);
+  const empty = await drive("run", base, { noRemote: true, modelCfg: absent, planeCfg: { scopeDocuments: 0 } });
+  t("R18: the same absences over a scope of no document: none is written, the plane's statement being the shell's only source",
+    [written(empty), empty.out?.submitted], [[], 0]);
+  const refused = await drive("run", base, { noRemote: true, modelCfg: absent, planeCfg: { refuseReads: true } });
+  t("R18: reads the plane refused show no document in scope: none is written", written(refused), []);
+  const skipped = await drive("run", base, { noRemote: true, modelCfg: { ...absent, custom: (names, body) => (names.includes("report")
+    && /Search the document level/.test(JSON.stringify(body.messages)) ? ["report", { state: "LOOKED_ABSENT", summary: "nothing" }] : null) } });
+  t("R18: a sub-session that made no read leaves its level out: the other three are written, the document level (the plane's `documents`) is not",
+    written(skipped), allFour.filter((n) => n !== `level-empty-${REPORTING_LEVEL.document}`));
+  const mixed = await drive("run", base, { noRemote: true, modelCfg: absent, planeCfg: { scopeDocuments: 1 } });
+  t("R18 (control): one document in scope is enough", written(mixed), allFour);
+  const reports = LEVELS.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` }));
+  const stubbed = await drive("run", { ...base, judgements: [{ targets: [] }, { reports }, { candidates: [] }, {}] }, { noRemote: true });
+  t("R18: reports a caller supplies are no read by a sub-session: with nothing published about scope, no absence is written",
+    [stubbed.status, written(stubbed)], [200, []]);
+  const seeded = await drive("run", { ...base, judgements: [{ targets: [] }, { reports }, { candidates: [] }, {}] }, { noRemote: true,
+    planeCfg: { state: { step: "plan", pass: 0, scope: Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 2 }])) } } });
+  t("R18 (control): the same reports under a scope the run published are written, one per level", [seeded.status, written(seeded)], [200, allFour]);
+}
+
+/* ================================================================================================ R116 */
+
+section("R116 · a disagreement between levels is stated and read once, never looped");
+{
+  const row = (body) => [...JSON.stringify(body.messages).matchAll(/calling (judge_\w+)/g)].pop()?.[1];
+  const composeNaming = (pairs, { candidates = false } = {}) => (names, body, used) => (names.includes("judge_compose") && row(body) === "judge_compose"
+    ? ["judge_compose", { ...(candidates ? { candidates: [{ name: `c${used("judge_compose")}`, level: "documents", description: "d" }] } : {}),
+                          disagreements: pairs }] : null);
+  const passages = (r) => r.plane.filter((c) => c.op === "meaningrows" && c.query.rows === "passage");
+  const stated = (r) => r.plane.filter((c) => c.op === "airuntick").flatMap((c) => c.body?.log || []).filter((e) => e.disagree);
+  const PAIR = { record: A, levels: ["meaning", "content"] };
+
+  const one = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, modelCfg: { custom: composeNaming([PAIR]) } });
+  t("R116: a judgement naming one pair gives one passage read of that record, through the one reader (op=meaningrows, rows=passage, ids=[record])",
+    [passages(one).length, passages(one)[0]?.body, passages(one)[0]?.query.snippet], [1, { ids: [A] }, "64"]);
+  t("R116: and one entry, at the first level named, LOOKED_INDETERMINATE, saying which levels disagree about which record and that it was read, with the disagreement as data",
+    stated(one).map((e) => [e.level, e.state, e.disagree, /meaning and content disagree about INFO-2026-0001-a/.test(e.detail), /read at passage grain/.test(e.detail)]),
+    [["meaning", "LOOKED_INDETERMINATE", { record: A, levels: ["meaning", "content"] }, true, true]]);
+  t("R116: it opens no pass and adds no candidate: the run still closed after one pass, nothing submitted",
+    [one.out?.passes, one.out?.submitted], [1, 0]);
+  t("R116: the entry's levels are exactly the levels the judgement named, in its order", stated(one)[0]?.disagree.levels, ["meaning", "content"]);
+
+  const again = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, modelCfg: { custom: composeNaming([PAIR, { record: A, levels: ["content", "meaning"] }, PAIR]) } });
+  t("R116: the same pair named again, in either order, is read once", [passages(again).length, stated(again).length], [1, 1]);
+  const two = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, modelCfg: { custom: composeNaming([PAIR, { record: B, levels: ["document", "internet"] }]) } });
+  t("R116: two different pairs are two reads and two entries, in the judgement's order",
+    [passages(two).map((c) => c.body.ids[0]), stated(two).map((e) => e.disagree.record)], [[A, B], [A, B]]);
+  const pass2 = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, planeCfg: { maxPasses: 2 }, modelCfg: { custom: composeNaming([PAIR], { candidates: true }) } });
+  t("R116: the same pair named in pass 2 gives no second read and no second entry, and a second pass did run",
+    [pass2.out?.passes, passages(pass2).length, stated(pass2).length], [2, 1, 1]);
+  const refused = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true, planeCfg: { refuseIds: [A] }, modelCfg: { custom: composeNaming([PAIR]) } });
+  t("R116: a refused read is stated unread, the pair still carried as data, and the refusal named in the run's refusals",
+    [stated(refused)[0]?.disagree, /unread/.test(stated(refused)[0]?.detail ?? ""), (refused.out?.refusals || []).some((x) => x.code === "MEANING_ROWS_REFUSED")],
+    [{ record: A, levels: ["meaning", "content"] }, true, true]);
+  const none = await drive("run", { ...RUN, account: APIKEY }, { noRemote: true });
+  t("R116 (control): no disagreements, no passage read and no entry", [passages(none).length, stated(none).length], [0, 0]);
 }
 
 /* ================================================================================================ R117 */

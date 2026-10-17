@@ -8,7 +8,7 @@ import worker from "../src/index.mjs";
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
 import { TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
-import { gated } from "./remote.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -68,7 +68,7 @@ async function watched(fn, modelFetch = null) {
 async function signin(body, { env = {}, answer = honest, noRunner = false, method = "POST", path = "signin" } = {}) {
   const r = runner(answer), p = planeStub();
   const keys = new Set();
-  const base = { VERSION: "t37", PLANE: p.binding, ...(noRunner ? {} : { REMOTE: gated(r.binding) }), ...env };
+  const base = { VERSION: "t37", PLANE: p.binding, ...(noRunner ? {} : { ...remoteBindings(r.binding) }), ...env };
   const envProxy = new Proxy(base, { get: (o, k) => { keys.add(String(k)); return o[k]; } });
   const w = await watched(async () => {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method,
@@ -284,7 +284,7 @@ async function draft(body, { model = {}, noPlane = false, env = {} } = {}) {
   const w = await watched(async () => {
     const res = await worker.fetch(new Request("http://agent-worker/draft", { method: "POST",
       body: typeof body === "string" ? body : JSON.stringify(body) }),
-      { VERSION: "t37", ...(noPlane ? {} : { PLANE: p.binding }), REMOTE: gated(r.binding), ...env });
+      { VERSION: "t37", ...(noPlane ? {} : { PLANE: p.binding }), ...remoteBindings(r.binding), ...env });
     const text = await res.text();
     let out = null; try { out = JSON.parse(text); } catch { out = null; }
     return { status: res.status, text, out };

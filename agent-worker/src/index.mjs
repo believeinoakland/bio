@@ -156,6 +156,8 @@ import {
   advance, publishableState, resumeFrom,
   PLAN_FLOW, PLAN_MAX_PASSES, OPTION_KEYS, flowFor, nextPlanStep, planAdvance, applyPlanJudgement, planDedup,
   PLAN_READS, PROFILE_FACTS, planSubjectReads, earlierPlans, whyWithUndetermined, resumeTargets,
+  /* R116 (agent-harness R19): the (record, levels) pairs a judgement named that the table has not yet settled. */
+  disagreementsToSettle,
 } from "../../agent-harness/src/harness.mjs";
 
 /* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
@@ -191,9 +193,6 @@ import {
 /* R115 — a record id's shape (record-grammar R1): a citation of this form that the plane does not answer to the run's
    credential is absent as `membership` R44 answers it, and holds no document. */
 import { BUNDLE_ID_RE } from "../../bio-plane/src/record-grammar/ids.mjs";
-/* R116 — agent-harness R19's `disagreementsToSettle`, read off the namespace until that module's merge reaches this
-   branch (a named import of a name not yet exported cannot link). */
-import * as HARNESS from "../../agent-harness/src/harness.mjs";
 /* R97 (R085-18; K3268): the meaning arms a sub-session may be told of, read from query-language's own registry, never listed. */
 import { MEANING } from "../../bio-plane/src/query.mjs";
 /* R90 (T49; N1137): the record id a leg names, added beside each held document's address. */
@@ -487,7 +486,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R56 (K1479, K1502, K1755): the `suggestions` layer is loadable only when the switch that governs the act is on. */
     model.layers = loadableLayers(held, model.suggestions);
     model.tools = [LOAD_LAYER(model.layers),
-                   ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS))];
+                   /* R117 (agent-model R23): the record's conditions, so the judging tools offer them and a model names one. */
+                   ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS, CONDITIONS))];
   }
 
   /* §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINUES.
@@ -1135,7 +1135,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
         const ran = await runSubsessions(call, out.state, runId, model, logSeq, contracts);
         if (ran.silent || ran.model || ran.stopped) return ran;
         if (ran.dropped.length) out.dropped = ran.dropped;
-        out.state = { ...out.state, reports: ran.reports,
+        out.state = { ...out.state, reports: ran.reports, scope: ran.scope,
                       reportsRefused: [...(out.state.reportsRefused || []), ...ran.refused] };
         out.note += `; ${ran.reports.length} sub-session(s) reported, ${ran.refused.length} returned no report`;
       }
@@ -1371,7 +1371,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
          (R19) and one entry says which levels disagree about which record and whether the read answered (with the
          number of passages) or was refused (`unread`); the pair rides in the entry as data (`disagree`), so a screen
          parses no English. No candidate, pass or bound is touched by it, and the model is asked nothing more. */
-      const pairs = typeof HARNESS.disagreementsToSettle === "function" ? HARNESS.disagreementsToSettle(state) : [];
+      const pairs = disagreementsToSettle(state);
       const statements = [];
       for (const pair of pairs) {
         const got = await meaningRead(call, { rows: "passage", limit: 50, ids: [pair.record] });
@@ -1719,6 +1719,11 @@ function splitAddress(address) {
  *  named, never read as an absence. */
 async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [], dropped = [];
+  /* agent-harness R18 (T50; N1169): WHAT EACH LEVEL'S SUB-SESSION READ, set here and nowhere else, from the plane's own
+     four-level statement of each read it made (`retrieval` R13: `scope.documents`), never from a report's words and never
+     by a judgement. `reads` counts the reads that answered; `documents` is the least the statements gave, and is left out
+     when any answered without a whole number, so the table (which fails closed) writes no absence for that level. */
+  const scope = {};
   for (const contract of contracts) {
     const got = await converse({
       reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, ...model.traced,
@@ -1749,6 +1754,13 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim,
                                             ids: ids.length ? ids : null });
         if (r.silent) return { halt: { planeSilent: r.silent } };
+        if (!r.refused) {
+          const seen = (scope[contract.level] ??= { reads: 0, documents: null, whole: true });
+          const documents = r.result?.scope?.documents;
+          seen.reads += 1;
+          if (Number.isInteger(documents) && documents >= 0) seen.documents = seen.documents === null ? documents : Math.min(seen.documents, documents);
+          else seen.whole = false;
+        }
         /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
         const told = toolContent(r.refused ? (r.refused.plane ?? { code: r.refused.code }) : r.result);
         dropped.push(...told.dropped.map((d) => ({ ...d, path: `${contract.level}: ${d.path}` })));
@@ -1800,7 +1812,9 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     }
     reports.push(report);
   }
-  return { reports, refused, dropped };
+  return { reports, refused, dropped,
+           scope: Object.fromEntries(Object.entries(scope).map(([level, v]) =>
+             [level, { reads: v.reads, ...(v.whole && v.documents !== null ? { documents: v.documents } : {}) }])) };
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
@@ -1894,11 +1908,7 @@ async function accountOf(body) {
       + "carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
   const a = body.account;
   if (a === undefined || a === null)
-    return { refusal: refusal("NO_ACCOUNT",
-      "this call carries no Claude account for the act of the member who started it: neither the member's own "
-      + "reference nor the group's API key serves that act (K1502, K1755), so the capability is UNAVAILABLE and "
-      + "nothing was done.",
-      409, { capability: "unavailable" }) };
+    return { refusal: refusal("NO_ACCOUNT", word("refusal.NO_ACCOUNT"), 409, { capability: "unavailable" }) };
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
       || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind)
       || typeof a.member !== "string" || !a.member
@@ -1917,9 +1927,7 @@ async function accountOf(body) {
   /* R82 (T47; K3060 D10): a sign-in serves an act only on the token `credentials` holds for the member; with none held
      (every connection made before T47 among them) the member connects again, and nothing was done. */
   if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
-    return { refusal: refusal("SIGNIN_NOT_HELD",
-      "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account "
-      + "again in your settings, then try again.", 409, { capability: "unavailable" }) };
+    return { refusal: refusal("SIGNIN_NOT_HELD", word("refusal.SIGNIN_NOT_HELD"), 409, { capability: "unavailable" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
     return { refusal: refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
@@ -2028,10 +2036,7 @@ async function checkRun(body, env) {
   /* D-462: a NAMED namespace that is not exactly one of NAMESPACES — `biosmoke`, `Scratch`, an empty string — is
      refused by the plane's own code, with the plane's `asked`/`namespaces` beside it, and nothing was called. */
   if (!NAMESPACES.includes(store))
-    return { refusal: refusal("NAMESPACE_UNKNOWN",
-      "a run names the namespace it works in, and no namespace by that name exists on any instance this member "
-      + "can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept "
-      + "apart for testing, and the name must match one of them exactly; they are listed beside this message.", 400,
+    return { refusal: refusal("NAMESPACE_UNKNOWN", word("refusal.NAMESPACE_UNKNOWN"), 400,
       { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }) };
 
   /* A SHAPE test, never an authorisation test — see AI_TOKEN_SHAPE above. */
@@ -2302,6 +2307,30 @@ export class SegmentDriver {
     } finally {
       if (!released) this.running = false;
     }
+  }
+}
+
+/* R110, R111 (BOB's K3693) — THE MEMBER'S CHECK RECORD, in this member's own storage: one instance per member (`CHECKS`),
+   holding the version at which that member's last `check` passed and the time, and nothing else (R36). `GET /check`
+   answers `{ok: true, checked, version}`; `POST /check` with `{version}` records a pass (R111's `check` step makes it).
+   Only the gate reads it (`remoteReady`); it is not a store of the record and writes nothing of it. */
+export class CheckRecord {
+  constructor(state) { this.state = state; }
+
+  async fetch(req) {
+    if (new URL(req.url).pathname !== "/check") return refusal("UNKNOWN", "GET or POST /check only.", 404);
+    if (req.method === "GET") {
+      const held = await this.state.storage.get("check");
+      return json({ ok: true, checked: !!held, version: held?.version ?? null });
+    }
+    if (req.method === "POST") {
+      const got = await req.json().catch(() => null);
+      if (!(got && typeof got.version === "string" && got.version && got.version.length <= 200))
+        return refusal("BAD_BODY", "a check is recorded with the version it passed at: a non-empty string.", 400);
+      await this.state.storage.put("check", { version: got.version, at: Date.now() });
+      return json({ ok: true });
+    }
+    return refusal("UNKNOWN", "GET or POST /check only.", 404);
   }
 }
 

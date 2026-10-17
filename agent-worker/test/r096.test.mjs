@@ -45,7 +45,7 @@ function planeStub(rec) {
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
         context: { type: "inquiry", id: "INQ-096" }, mode: "check", skill: PACK_VERSION, standard_pair: null,
         subjects: { items: [{ id: "INQ-LEG-1", extent: "¶1", kind: "leg" }] } } });
-      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], count: 0 });
+      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       case "basisversions": return ok({ id: u.searchParams.get("id"), versions: [], limit: 50, truncated: false });
       case "search": {
         const held = /^id:"INFO-1"$/.test(u.searchParams.get("q") || "");

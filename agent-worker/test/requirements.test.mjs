@@ -1350,7 +1350,7 @@ section("R35 · its only binding is PLANE; the plane is reached by no other rout
       "secrets_store_secrets", "secrets", "containers"].filter((k) => k in WRANGLER_CFG)],
     [[{ binding: "PLANE", service: "bio-plane" }],
      { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" },
-                  { name: "SEGMENTS", class_name: "SegmentDriver" }] }, []]);
+                  { name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }] }, []]);
   t("R35: its vars hold no token and no plane URL", Object.keys(WRANGLER_CFG.vars), ["VERSION"]);
   await reset(mf, {});
   await runOp(mf, { ...base, account: ACCOUNTS });

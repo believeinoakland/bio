@@ -11,7 +11,7 @@ import worker from "../src/index.mjs";
 import { MODES } from "../../agent-harness/src/harness.mjs";
 import { MEMBER } from "./account.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
-import { gated } from "./remote.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -173,7 +173,7 @@ async function drive(path, body, { planeCfg = {}, method = "POST", noRunner = fa
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`,
       method === "GET" ? { method } : { method, body: typeof body === "string" ? body : JSON.stringify(body) }),
-      { VERSION: "t46", PLANE: p.binding, ...(noRunner ? {} : { REMOTE: gated(r) }) });
+      { VERSION: "t46", PLANE: p.binding, ...(noRunner ? {} : { ...remoteBindings(r) }) });
     const text = await res.text();
     const lines = res.headers.get("content-type") === "application/x-ndjson"
       ? text.trim().split("\n").map((l) => JSON.parse(l)) : null;
@@ -379,7 +379,7 @@ async function transcribeOn(runner, account) {
   try {
     const res = await worker.fetch(new Request("http://agent-worker/transcribe", { method: "POST",
       body: JSON.stringify({ capture_sha: "c".repeat(64), pages: [{ page: 0, media_type: "image/png", data: PNG }], account }) }),
-      { PLANE: p.binding, REMOTE: gated(runner) });
+      { PLANE: p.binding, ...remoteBindings(runner) });
     const text = await res.text();
     return { status: res.status, text, out: JSON.parse(text), plane: p.calls, modelCalls };
   } finally { globalThis.fetch = saved; }

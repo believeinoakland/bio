@@ -14,7 +14,7 @@ import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
 import { ESTIMATE } from "../../agent-model/src/outcome.mjs";
 import { MEMBER } from "./account.mjs";
-import { gated } from "./remote.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -338,7 +338,7 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
   const subRun = async (numTurns) => {
     const runner = fakeRunner(numTurns);
     const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK, account: SIGNIN },
-                          { env: { REMOTE: gated(runner) } });
+                          { env: { ...remoteBindings(runner) } });
     TRANSCRIPTS.push(d);
     return { d, runner, entries: d.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []) };
   };

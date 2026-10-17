@@ -54,6 +54,9 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { LEVELS, emptyLevelCandidates } from "../../agent-harness/src/harness.mjs";
+/* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
+   direct calls state it the way the shell does: one read of each level, three documents in scope. */
+const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
 import { PLANE_OPS } from "../src/ops.mjs";
 import {
   REPORT_STATES, REPORT_KEYS, CITATION_KEYS, SPAWN_KEYS, SUBSESSION_OPS,
@@ -393,11 +396,11 @@ console.log("\n--- A4 · THE FAN-IN: a refused return is NAMED, and never become
      contract violation could fall through to the working set, that word would
      become §9's empty-level kind — a defect MANUFACTURING an absence claim about
      the world, written off a report the parent never accepted. */
-  const kinds = emptyLevelCandidates({ reports: taken }, "INQ-1");
+  const kinds = emptyLevelCandidates({ reports: taken, scope: SCOPE }, "INQ-1");
   t("the refused level produces NO empty-level claim", kinds.map((k) => k.level).includes("content"), false);
   t("while the levels that honoured the contract still do", kinds.map((k) => k.level), ["meaning", "internet"]);
   t("so a broken contract cannot manufacture an absence",
-    emptyLevelCandidates({ reports: returns }, "INQ-1").map((k) => k.level).includes("content"), true);
+    emptyLevelCandidates({ reports: returns, scope: SCOPE }, "INQ-1").map((k) => k.level).includes("content"), true);
 
   console.log("\n  -- the addresses the parent will re-read --");
   t("they come off the reports, in order", citedAddresses(taken), ["bundle:b1"]);
@@ -498,6 +501,12 @@ export default {
         id: url.searchParams.get("run"), mode: "check", status: "running",
         principal: { plane: "member:ruth", claude: "member:ruth", ref: "member:ruth" },
         context: { type: "inquiry", id: "INQ-1" }, max_passes: 1,
+        /* agent-harness R18 (T50): the shell sets a level's \`scope\` from the reads its sub-session made, and this suite
+           drives the table with the judgements it is handed, no sub-session reading: so the scope the table needs before it
+           writes an absence arrives as the run's published state, a place to resume at \`plan\` with every level read over
+           three documents (\`noScope\` leaves it out, as a run that had read nothing). */
+        state: CFG.noScope ? null : { step: "plan", pass: 0, scope: Object.fromEntries(
+          ["meaning", "content", "document", "internet"].map((l) => [l, { reads: 1, documents: 3 }])) },
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
                  { bound: "wallclock", allowed: 500000, consumed: 0 },

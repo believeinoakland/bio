@@ -11,15 +11,14 @@
  * WHETHER IT MAY BE TAKEN (R110; K3610: until the remote path works on a copy, that copy's assistant does not run).
  * `remoteVersion` asks the remote class its `GET /remote/version` (`agent-runner` R40) on an instance named
  * `VERSION_INSTANCE`, there being no member in that question. `remoteReady` is true exactly when that answered and the
- * member's own instance states a passed check recorded at that very version (`GET /remote/check` on the member's
- * instance: `{ok: true, checked, version}`; R111's `check` step writes it with `POST /remote/check` `{version}`). A
- * check from another version is no check. Nothing here throws, and nothing here keeps anything: each answer is asked
- * of the instances and used once (R36). */
+ * member's check record, kept in this member's own storage (`CheckRecord`, bound `CHECKS`, one instance per member; BOB's
+ * K3693), states a passed check at that very version (R111's `check` step writes it with `recordCheck`). A check from
+ * another version is no check, and a copy with no `CHECKS` binding has none. Nothing here throws, and nothing here keeps
+ * anything but that one record, a version and a time (R36): each answer is asked of the instances and used once. */
 
 /* A binding ignores the host; this names the request, it does not route it (as `agent-model`'s `RUNNER_URL`). */
 const REMOTE_ORIGIN = "https://agent-runner";
 export const REMOTE_VERSION_URL = `${REMOTE_ORIGIN}/remote/version`;
-export const REMOTE_CHECK_URL = `${REMOTE_ORIGIN}/remote/check`;
 /** R110: the instance `GET /remote/version` is asked of, there being no member in `GET /version`'s question. */
 export const VERSION_INSTANCE = "version";
 
@@ -44,19 +43,45 @@ export async function remoteVersion(env) {
   }
 }
 
-/** R110 — `{ready: true}` exactly when the remote class answers its version and the member's instance states a passed
- *  check at that version; else `{ready: false, why}`, `why` one of `absent`, `silent`, `unchecked`. Never throws. */
+/* The check record's address: a binding ignores the host, this names the request. */
+const CHECK_URL = "http://check/check";
+/** One instance per member, named for the member (the record is the member's own act). */
+const checkInstance = (member) => `member:${member}`;
+
+/** R110 — the member's check record: `{checked, version}` as `CheckRecord` states it, or null when `CHECKS` is not bound
+ *  or does not answer. Never throws. */
+async function checkRecord(env, member) {
+  const ns = namespaceOf(env?.CHECKS);
+  if (!ns) return null;
+  try {
+    const res = await ns.get(ns.idFromName(checkInstance(member))).fetch(CHECK_URL);
+    if (!res || res.status !== 200) return null;
+    const body = await res.json();
+    return body && body.ok === true ? { checked: body.checked === true, version: typeof body.version === "string" ? body.version : null } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** R111 — records that the member's check passed at `version`; true when `CheckRecord` took it. Never throws. */
+export async function recordCheck(env, member, version) {
+  const ns = namespaceOf(env?.CHECKS);
+  if (!ns || typeof version !== "string" || !version) return false;
+  try {
+    const res = await ns.get(ns.idFromName(checkInstance(member))).fetch(CHECK_URL, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ version }) });
+    return !!res && res.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+/** R110 — `{ready: true}` exactly when the remote class answers its version and the member's check record states a
+ *  passed check at that version; else `{ready: false, why}`, `why` one of `absent`, `silent`, `unchecked`. Never throws. */
 export async function remoteReady(env, member) {
   const v = await remoteVersion(env);
   if (!v.answered) return { ready: false, why: v.why };
-  const ns = remoteOf(env);
-  try {
-    const res = await ns.get(ns.idFromName(member)).fetch(REMOTE_CHECK_URL);
-    if (!res || res.status !== 200) return { ready: false, why: "unchecked" };
-    const body = await res.json();
-    return body && body.ok === true && body.checked === true && body.version === v.version
-      ? { ready: true, version: v.version } : { ready: false, why: "unchecked" };
-  } catch {
-    return { ready: false, why: "unchecked" };
-  }
+  const record = await checkRecord(env, member);
+  return record && record.checked && record.version === v.version
+    ? { ready: true, version: v.version } : { ready: false, why: "unchecked" };
 }

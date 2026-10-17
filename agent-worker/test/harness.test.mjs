@@ -94,6 +94,9 @@ import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
 import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
+/* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
+   direct calls state it the way the shell does: one read of each level, three documents in scope. */
+const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
 import { MEANING_ARM } from "../src/ops.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
@@ -176,7 +179,7 @@ async function harnessPurity() {
     stepLog: () => states.map((x) => H.stepLog(x, H.nextStep(x))),
     applyJudgement: () => states.map((x) => H.applyJudgement(x, { candidates: [], pass: x.pass ? 1 : undefined })),
     applyPlanJudgement: () => states.map((x) => H.applyPlanJudgement(x, { candidates: [{ summary: "s", score: 1 }] })),
-    emptyLevelCandidates: () => states.map((x) => H.emptyLevelCandidates(x, "INQ-1")),
+    emptyLevelCandidates: () => states.map((x) => H.emptyLevelCandidates({ ...x, scope: SCOPE }, "INQ-1")),
     runContextTarget: () => [{ context: { type: "inquiry", id: "I" } }, { context: { type: "project", id: "P", questions: ["A"] } },
                              { context: null }].map((x) => H.runContextTarget(x)),
     resumableState: () => states.map((x) => H.resumableState(x)),
@@ -193,6 +196,11 @@ async function harnessPurity() {
     earlierPlans: () => [H.earlierPlans({ plans: [{ id: "A", project: "P" }, { id: "B", project: "Q" }] }, "P", "B")],
     whyWithUndetermined: () => [H.whyWithUndetermined("why", [{ op: "plan", id: "X", code: "C" }]),
                                 H.whyWithUndetermined("w".repeat(900), [])],
+    /* agent-harness R18, R19 (T50) */
+    levelsWithoutScope: () => states.map((x) => H.levelsWithoutScope(x)),
+    disagreementKey: () => [{ record: "R", levels: ["meaning", "content"] }, { record: "R", levels: ["content", "meaning"] }]
+      .map((p) => H.disagreementKey(p)),
+    disagreementsToSettle: () => states.map((x) => H.disagreementsToSettle({ ...x, disagreements: [{ record: "R", levels: ["meaning", "content"] }] })),
   };
   const exported = Object.entries(H).filter(([, v]) => typeof v === "function").map(([k]) => k);
   const uncalled = exported.filter((k) => !corpus[k]);
@@ -488,7 +496,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
     { level: "document", state: "LOOKED_INDETERMINATE", observed_at: "log:13" },
     { level: "internet", state: "partial", observed_at: "log:14" },
   ];
-  const out = emptyLevelCandidates({ reports }, "INQ-1");
+  const out = emptyLevelCandidates({ reports, scope: SCOPE }, "INQ-1");
   t("exactly one candidate, for the one level that was LOOKED_ABSENT", out.map((c) => c.level), ["meaning"]);
   t("it is §9's kind", out[0]?.kind ?? null, "level-empty");
   t("it names the inquiry and the observation-log address that establishes it",
@@ -496,7 +504,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
   /* D-129's four are DIFFERENT CLAIMS and only one of them is an absence. */
   for (const st of ["NEVER_LOOKED", "LOOKED_INDETERMINATE", "PRESENT", "partial"])
     t(`'${st}' does NOT produce an empty-level claim`,
-      emptyLevelCandidates({ reports: [{ level: "meaning", state: st, observed_at: "x" }] }, "I"), []);
+      emptyLevelCandidates({ reports: [{ level: "meaning", state: st, observed_at: "x" }], scope: SCOPE }, "I"), []);
   /* CORRECTED 2026-09-13 (D-323): the candidate's `level` is the spelling a
      SUGGESTION is written in (`SUGGEST_LEVELS`), not the spelling the run's
      observation log uses (`OBSERVATION_LEVELS`), and the two disagree on one
@@ -506,7 +514,7 @@ console.log("\n--- A7 · §9's empty-level kind is DERIVED BY THE TABLE (VF-1's 
      one-per-level claim the arm is actually about is unchanged and is now
      asserted over the wire's four. */
   t("all four empty produce four candidates, one per level — absence at one level is not absence at the next",
-    emptyLevelCandidates({ reports: LEVELS.map((l) => ({ level: l, state: "LOOKED_ABSENT", observed_at: "x" })) }, "I")
+    emptyLevelCandidates({ reports: LEVELS.map((l) => ({ level: l, state: "LOOKED_ABSENT", observed_at: "x" })), scope: SCOPE }, "I")
       .map((c) => c.level), LEVELS.map((l) => REPORTING_LEVEL[l]));
   t("no reports at all produce nothing (an unrun search is not an absence)",
     emptyLevelCandidates({ reports: [] }, "I"), []);
@@ -699,6 +707,12 @@ export default {
         principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth", ref: CFG.payer ?? "member:ruth" },
         context: runCtx(CFG),
         max_passes: CFG.maxPasses || 1,
+        /* agent-harness R18 (T50): a level is written absent only when the shell shows it was read over a document. This
+           suite drives the table with the judgements it is handed, no sub-session reading, so the scope arrives as the run's
+           published state, a place to resume at \`plan\` with every level read over three documents (\`noScope\` leaves it
+           out, as a run that had read nothing). */
+        state: CFG.noScope ? null : { step: "plan", pass: 0, scope: Object.fromEntries(
+          ["meaning", "content", "document", "internet"].map((l) => [l, { reads: 1, documents: 3 }])) },
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } }, store });
 
@@ -923,7 +937,7 @@ console.log("\n--- B2 · §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINU
   /* THE ARM THAT MAKES IT A RESUMPTION AND NOT A COINCIDENCE: a run with an
      EMPTY log says the opposite thing, so the sentence tracks the log rather
      than being printed either way. */
-  const mf2 = newMf({ mode: "check", maxPasses: 1, budget: wide });
+  const mf2 = newMf({ mode: "check", maxPasses: 1, budget: wide, noScope: true });
   const out2 = await (await runOp(mf2, base)).json();
   t("a run with no prior log says its log is EMPTY, not that it resumed", out2.resumed_from, 0);
   t("and says so in words", /log is empty/.test(out2.trace?.find((x) => x.step === "resume")?.why ?? ""), true);

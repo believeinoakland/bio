@@ -101,11 +101,15 @@
       // R91 (R085-8; K3477): this member's OWN Durable Object, one per run, so a segment outlives the request that
       // started it. It holds the segment's inputs in memory only (R36) and runs it from an alarm; it is not a store
       // and writes nothing of the record.
-      { "name": "SEGMENTS", "class_name": "SegmentDriver" }
+      { "name": "SEGMENTS", "class_name": "SegmentDriver" },
+      // R110, R111 (K3693): this member's OWN Durable Object holding each member's last passed `check` and the version it
+      // passed at, one object per member. It holds a version and a time, nothing of the record and no secret (R36).
+      { "name": "CHECKS", "class_name": "CheckRecord" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["SegmentDriver"] }
+    { "tag": "v1", "new_sqlite_classes": ["SegmentDriver"] },
+    { "tag": "v2", "new_sqlite_classes": ["CheckRecord"] }
   ],
 
   "observability": { "enabled": true }

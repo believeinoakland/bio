@@ -75,7 +75,7 @@ function planeStub(cfg = {}) {
     /* mode check's reads, for the control arm: the plane's search half, and empty answers. */
     airunspawn: () => ok({ found: true, half: "search", payload: { run: "RUN-P", context: { type: "inquiry", id: "INQ-9" },
                                                                    mode: "check", skill: null, standard_pair: null } }),
-    meaningrows: () => ok({ ok: true, rows: [], count: 0 }),
+    meaningrows: () => ok({ ok: true, rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 }),
     basisversions: () => ok({ versions: [], truncated: false }),
     airunclose: (q, body) => { S.status = "finished"; S.ended = { bound: body?.bound ?? null }; return ok({ ended: true }); },
   };

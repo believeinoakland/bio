@@ -13,7 +13,8 @@
 import worker from "../src/index.mjs";
 import { SIGNIN_CODES } from "../src/signin.mjs";
 import { MEMBER } from "./account.mjs";
-import { gated } from "./remote.mjs";
+import { remoteBindings } from "./remote.mjs";
+import { word } from "../../bio-plane/src/setup-words/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -65,7 +66,7 @@ async function signin(body, { answer = honest, headers = {}, noRunner = false } 
   const r = signinRunner(answer);
   const plane = [];
   const env = { VERSION: "t47", PLANE: { fetch: async (u) => { plane.push(String(u)); return Response.json({ ok: false }, { status: 500 }); } },
-                ...(noRunner ? {} : { REMOTE: gated(r.binding) }) };
+                ...(noRunner ? {} : { ...remoteBindings(r.binding) }) };
   const w = await captured(async () => {
     const res = await worker.fetch(new Request("http://agent-worker/signin", { method: "POST", headers,
       body: typeof body === "string" ? body : JSON.stringify(body) }), env);
@@ -326,7 +327,7 @@ async function drive(path, body) {
   try {
     const w = await captured(async () => {
       const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method: "POST", body: JSON.stringify(body) }),
-        { VERSION: "t47", PLANE: p.binding, REMOTE: gated(r) });
+        { VERSION: "t47", PLANE: p.binding, ...remoteBindings(r) });
       return { status: res.status, text: await res.text() };
     });
     const lines = w.result.text.trim().split("\n").map((l) => { try { return JSON.parse(l); } catch { return null; } });
@@ -359,8 +360,8 @@ section("R82 · a signin account carries its held token as secret: to the member
       const out = JSON.parse(r.text);
       t(`R82 (/${path}): a signin account with ${label} is 409 SIGNIN_NOT_HELD, no plane call, no runner named, no model call`,
         [r.status, out.code, out.reason, r.plane.length, r.runner.named.length, r.api.length], [409, "SIGNIN_NOT_HELD", "SIGNIN_NOT_HELD", 0, 0, 0]);
-      t(`R82 (/${path}): its detail tells the member to connect their Claude account again, in DEC-149's words`,
-        [/connect your Claude account again/i.test(out.detail ?? ""), /\b(plane|instance|copy|server)\b/i.test(out.detail ?? "")], [true, false]);
+      t(`R82 (/${path}): its detail is the record's word for it (refusal.SIGNIN_NOT_HELD: the sign-in is signed in again by the member it belongs to), with no place word`,
+        [out.detail === word("refusal.SIGNIN_NOT_HELD"), /\b(plane|instance|copy|server)\b/i.test(out.detail ?? "")], [true, false]);
     }
     const bad = await drive(path, body(SIGNIN(false, { secret: { token: TOKEN } })));
     t(`R82 (/${path}, control): a secret that is not a string is 400 BAD_ACCOUNT and is not echoed`,
