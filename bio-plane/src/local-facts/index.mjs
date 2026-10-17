@@ -47,7 +47,7 @@ import { GroupRules } from "./rules.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
 import { factPath, parseFactPath, officesToken } from "./paths.mjs";
 
-export { LOCAL_FACTS_CHECKS, RULE_WORDS } from "./checks.mjs";
+export { LOCAL_FACTS_CHECKS, LOCAL_FACTS_WORDS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
 export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
 export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE } from "./rules.mjs";

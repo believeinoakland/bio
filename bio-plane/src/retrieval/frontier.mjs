@@ -11,6 +11,7 @@
  * log exists to prevent. */
 import { viewerPredicate } from "../membership/index.mjs";
 import { SELECTION_ID_CHUNK } from "./schema.mjs";
+import { say } from "./words.mjs";
 
 /* R35: the bound, published on every answer including the empty one (REC-70, REC-30). */
 export const FRONTIER_LIMIT_DEFAULT = 200;
@@ -89,8 +90,7 @@ export class Frontier {
       /* R35: never throws. A read that failed says so, and says it is not an empty frontier. */
       return { level, found: true, built: true, limit: cap, truncated: true, looked: [], never_looked: [],
                never_looked_count: 0, tally: {}, failed: true,
-               note: `this read of the ${level} level failed (${e && e.message ? e.message : String(e)}), so it `
-                   + `answers nothing about this level — which is NOT an empty frontier` };
+               note: say("retrieval.note.read_level_failed", { level, e: e && e.message ? e.message : String(e) }) };
     }
     return { level, found: false, built: false, limit: cap, truncated: false,
              looked: [], never_looked: [], tally: {},
@@ -443,7 +443,7 @@ export class Frontier {
           + "the pre-log evidence is ONE-SIDED (`evidence_one_sided`), because a look that found "
           + "nothing left no artifact, so a pre-log empty look reads UNDETERMINED and is named in "
           + "`missing_unexplained` rather than counted as nobody-looked. The withholding fence "
-          + "applies to capture and reference subjects, which name a document this group holds; "
+          + "applies to capture and reference subjects, which name a document this team holds; "
           + "an ENTITY subject is not withheld from a recognised viewer, because the subject registry is "
           + "instance-wide and op=concerns already serves it; a viewer the plane does not recognise sees nothing",
     };

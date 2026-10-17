@@ -11,12 +11,13 @@ import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { canonicalExtent } from "../content/index.mjs";
 import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const USE_KINDS = Object.freeze(["discretion", "waiver", "assessment"]);
 export const OUTCOMES = Object.freeze(["granted", "denied", "partly_granted", "other"]);
 export const PROVISION_MAX = 200;
 export const WORDS_MAX = 300;
-export const POPULATION = "these are the held uses you may see, never every use made: a population, not a census";
+export const POPULATION = word("events.population");
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const said = (v) => typeof v === "string" && v.trim() !== "";
@@ -177,34 +178,34 @@ export function facetOf(k, eventId, viewer, view) {
     const text = c.content_id ? k.passageText(c.content_id) : null;
     return { capture_sha: c.capture_sha, extent: json(c.extent), words: typeof text === "string" && text.trim() ? cut(text.trim()) : null };
   };
-  const quoted = (c) => (c.withheld ? "in a document you cannot see" : c.words ? `“${c.words}”` : "in the cited passage, its words not read");
+  const quoted = (c) => (c.withheld ? word("events.text.document_see") : c.words ? `“${c.words}”` : word("events.text.cited_passage_words"));
   const parts = ((view && view.participants) || []).filter((p) => !p.superseded);
   const who = (role) => { const p = parts.find((x) => x.role === role); return p ? k.entityLabel(p.entity_id, viewer) : null; };
   const decider = who("decider"), subject = who("subject");
   const w = view && isObj(view.when) ? view.when : null;
-  const date = w && w.value ? w.value : "date not recorded";
-  const by = decider || "decider not recorded";
+  const date = w && w.value ? w.value : word("events.text.date_recorded");
+  const by = decider || word("duties.why.decider_recorded");
   const provision = u.provision_standard ? { standard: u.provision_standard, ...(u.provision_portion ? { portion: u.provision_portion } : {}) } : null;
-  const provWords = provision ? `${provision.standard}${provision.portion ? ` ${provision.portion}` : ""}` : "provision not recorded";
-  const facet = { kind: u.kind, provision, ...(provision ? {} : { provision_says: "provision not recorded" }) };
+  const provWords = provision ? `${provision.standard}${provision.portion ? ` ${provision.portion}` : ""}` : word("events.text.provision_recorded");
+  const facet = { kind: u.kind, provision, ...(provision ? {} : { provision_says: word("events.text.provision_recorded") }) };
   if (u.kind === "assessment") {
     const unmet = k.rows(`SELECT * FROM event_unmet WHERE event_id=? ORDER BY unmet_id`, eventId).map((r) => ({
       provision: { standard: r.provision_standard, ...(r.provision_portion ? { portion: r.provision_portion } : {}) }, extent: cite(r.cite) }));
     const list = unmet.map((x) => `${x.provision.standard}${x.provision.portion ? ` ${x.provision.portion}` : ""}`);
-    Object.assign(facet, { unmet, says: `Assessment of ${subject || "subject not recorded"} by ${by}, ${date}, against ${provWords}: `
-      + (unmet.length ? `found unmet: ${list.join("; ")}` : "no standard found unmet") });
+    Object.assign(facet, { unmet, says: word("events.says.assessment_against", { subject: subject || word("events.says.subject_recorded"), by, date,
+      standard: provWords, result: unmet.length ? `found unmet: ${list.join("; ")}` : word("events.says.standard_found_unmet") }) });
   } else {
     const reason = u.reason_stated ? cite(u.reason) : "none";
     const outcome = { value: u.outcome, extent: cite(u.outcome_cite) };
-    const why = reason === "none" ? "no reason stated" : `stated reason: ${quoted(reason)}`;
+    const why = reason === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted(reason)}`;
     Object.assign(facet, { stated_reason: reason, outcome });
-    if (u.kind === "discretion") facet.says = `Discretion used by ${by}, ${date}, ${why}`;
+    if (u.kind === "discretion") facet.says = word("events.says.discretion_used", { by, date, why });
     else {
       const scope = cite(u.scope), conditions = (json(u.conditions) || []).map(cite), expiry = json(u.expiry);
       Object.assign(facet, { scope, conditions, expiry });
-      facet.says = `Waiver ${OUTCOME_WORDS[u.outcome] || "decided"} by ${by}, ${date}, ${why}; waived: ${quoted(scope)}; `
-        + (conditions.length ? `conditions: ${conditions.map(quoted).join("; ")}` : "no conditions stated") + "; "
-        + (expiry ? `expires ${expiry.value}` : "no expiry stated");
+      facet.says = word("events.says.waiver_waived", { outcome: OUTCOME_WORDS[u.outcome] || "decided", by, date, why, scope: quoted(scope),
+        conditions: conditions.length ? `conditions: ${conditions.map(quoted).join("; ")}` : word("events.text.conditions_stated"),
+        expiry: expiry ? `expires ${expiry.value}` : word("events.text.expiry_stated") });
     }
   }
   facet.withdrawn = u.withdrawn ? { by: u.withdrawn_actor, at: u.withdrawn_at, reason: u.withdrawn_why } : null;

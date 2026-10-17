@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, testView, MEMBER, OUTSIDER } from "./fixture.mjs";
 import { LIMIT_MAX, eventsOps } from "../../../src/events/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -64,9 +65,9 @@ test("R28 R30 timeline: an explicit set (NO_SET when empty), the world's events 
   assert.equal(w.ev.registerEventSource("actions", () => []).reason, "LISTENER_DECLARED");
   assert.equal(w.ev.registerEventSource("docket", "x").reason, "LISTENER_MALFORMED");
   const t = w.ev.timeline({ set: [p], viewer: MEMBER });
-  assert.equal(t.world.label, "what they did");
+  assert.equal(t.world.label, word("screen.timeline.lane.world"));
   assert.equal(t.world.items.length, 1);
-  assert.equal(t.ours.label, "what we did");
+  assert.equal(t.ours.label, word("screen.timeline.lane.ours"));
   assert.deepEqual(t.ours.sources.map((s) => s.source), ["actions", "escalation"], "MODULE_ORDER");
   assert.deepEqual(t.ours.sources[0].items.map(({ order, ...x }) => x), [{ at: "2026-05-06T10:00:00Z", label: "we wrote", ref: "ACTN-2026-0001-x", kind: "letter" }]);
   assert.match(t.ours.sources[1].error, /down/);

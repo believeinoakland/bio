@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 83,
+  "queue": 159,
   "transcribe": 19,
   "capture": 70,
   "document": 61,
@@ -20,7 +20,7 @@
   "guide": 7,
   "prepared": 2,
   "label": 192,
-  "project": 50,
+  "project": 52,
   "grouprule": 1,
   "refusal": 1955,
   "signing": 17,
@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3808,
+  "screen": 3844,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 150,
+  "shell": 151,
   "settings": 4,
   "entity": 33,
   "find": 26,
@@ -85,7 +85,7 @@
   "monitor": 6,
   "testimony": 2,
   "level": 6,
-  "court": 5,
+  "court": 6,
   "join": 1,
   "inbox": 1,
   "request-unsent": 5,
@@ -96,29 +96,30 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 828,
+  "act": 847,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
   "time": 1,
-  "size": 1,
+  "size": 4,
   "reference": 1,
   "form": 3,
   "unavailable": 2,
   "page": 2,
   "person": 1,
   "findin": 7,
-  "money": 33,
+  "money": 35,
   "passage": 2,
   "period": 1,
   "timeline": 2,
   "caseimport": 1,
   "acquisition": 45,
   "file-safety": 47,
+  "extraction": 25,
+  "events": 85,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
-  "events": 52,
   "filing-templates": 29,
   "ratification": 31,
   "record-grammar": 55,
@@ -126,7 +127,6 @@
   "case-inputs": 33,
   "entities": 15,
   "record-core": 3,
-  "extraction": 16,
   "explore": 31,
   "capture-sources": 7,
   "lines": 9,
@@ -222,8 +222,8 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12756,
-  "protected": 892
+  "total": 12938,
+  "protected": 900
  },
  "words": [
   {
@@ -39302,6 +39302,1203 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered"
+  },
+  {
+   "key": "screen.explore.unnamed.why",
+   "en": "named in {n} documents only by an account number",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-308: explore R25: why a node is not yet named, beside connection.node.unnamed"
+  },
+  {
+   "key": "extraction.why.reextraction_candidates",
+   "en": "your team's Civicsmith can now read this capture better than when it was first read, so it is being read again now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction structure.reextraction.candidates"
+  },
+  {
+   "key": "extraction.why.no_evidence_store",
+   "en": "your team's Civicsmith has no evidence store set up, so the stored file can't be read again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction: a migration skipped"
+  },
+  {
+   "key": "extraction.why.no_text_provenance",
+   "en": "this reading doesn't record how its text was produced; that is not the same as its text never having been transcribed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction readingFor, text_provenance.why"
+  },
+  {
+   "key": "extraction.why.no_reading_provenance",
+   "en": "this reading was recorded before readings kept how they were made, or by a process that didn't say, so the level, the member and the text it classified are not known, and are not guessed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction readingFor, reading_history provenance.why"
+  },
+  {
+   "key": "extraction.why.transcriptions_graded_weaker",
+   "en": "Transcriptions graded under a measurement that a later check found weaker: {count}. Nothing has been regraded, and nothing will be automatically; a member regrades each one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction calibrationDrift.why"
+  },
+  {
+   "key": "extraction.why.graded_under_weaker",
+   "en": "this text was graded under {engine} {version}'s measurement {calibration} (accuracy {fidelity}, measured {measured}). A check on {probeAt} measured that engine at {nowFidelity}, which is weaker, so this transcription may support less than the record says. Nothing has been regraded: a grade changes only when a member changes it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction drift.mjs, an obligation why"
+  },
+  {
+   "key": "extraction.why.fidelity_unknown",
+   "en": "not known",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {fidelity} or {nowFidelity} of extraction.why.graded_under_weaker when none was measured"
+  },
+  {
+   "key": "extraction.why.migrated_n26",
+   "en": "this reading was made before a correction to how Word documents with alternative content are read, which had counted some paragraphs, runs and tables twice; it was read again from the stored file, and every reference it holds was renumbered to match",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction migrated.n26.why"
+  },
+  {
+   "key": "extraction.why.migrated_n439",
+   "en": "this reading was made before a correction to how slides with alternative content are read, which had doubled some slide text and counted some shapes twice; it was read again from the stored file, and every shape reference it holds was renumbered to match",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: extraction migrated.n439.why"
+  },
+  {
+   "key": "events.text.reason_given",
+   "en": "stated reason: {reason}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {why} of events.says.discretion_used and .waiver_waived"
+  },
+  {
+   "key": "events.text.found_unmet",
+   "en": "found unmet: {standards}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {result} of events.says.assessment_against"
+  },
+  {
+   "key": "events.text.conditions_listed",
+   "en": "conditions: {conditions}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {conditions} of events.says.waiver_waived"
+  },
+  {
+   "key": "events.text.expires_on",
+   "en": "expires {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {expiry} of events.says.waiver_waived"
+  },
+  {
+   "key": "events.outcome.granted",
+   "en": "granted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {outcome} of events.says.waiver_waived"
+  },
+  {
+   "key": "events.outcome.denied",
+   "en": "denied",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {outcome} of events.says.waiver_waived"
+  },
+  {
+   "key": "events.outcome.partly_granted",
+   "en": "partly granted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {outcome} of events.says.waiver_waived"
+  },
+  {
+   "key": "events.outcome.other",
+   "en": "decided",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {outcome} of events.says.waiver_waived, any other outcome"
+  },
+  {
+   "key": "events.sent.by",
+   "en": "sent by",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events whoWasSent"
+  },
+  {
+   "key": "events.sent.to",
+   "en": "sent to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events whoWasSent"
+  },
+  {
+   "key": "events.sent.copied",
+   "en": "copied",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events whoWasSent"
+  },
+  {
+   "key": "events.sent.present",
+   "en": "present",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events whoWasSent"
+  },
+  {
+   "key": "events.sent.detail",
+   "en": "This says whom the record states it was sent to, who was copied and who was present. It never says who knew or saw anything.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events whoWasSent detail"
+  },
+  {
+   "key": "events.actor",
+   "en": "acted in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.organizer",
+   "en": "organized",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.mover",
+   "en": "moved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.seconder",
+   "en": "seconded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.voted",
+   "en": "voted in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.speaker",
+   "en": "spoke at",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.sender",
+   "en": "sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.recipient",
+   "en": "was sent",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.signatory",
+   "en": "signed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.decider",
+   "en": "decided",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.author",
+   "en": "wrote",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.implementer",
+   "en": "carried out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.authorises",
+   "en": "authorizes",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.answers",
+   "en": "answers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.amends",
+   "en": "amends",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.reverses",
+   "en": "reverses",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.concerns",
+   "en": "concerns",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events owner: a role's or link's words, as events.present"
+  },
+  {
+   "key": "events.why.grade_time_unread",
+   "en": "its time couldn't be read just now, so no attestation is named as governing it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events grade_why (cache stale)"
+  },
+  {
+   "key": "events.why.grade_placed_nowhere",
+   "en": "placed nowhere: no attestation you can see dates this event, so none governs its time",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: events grade_why"
+  },
+  {
+   "key": "events.text.document_sha",
+   "en": "the document {sha}…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: the {source} of events.says.states_caused"
+  },
+  {
+   "key": "shell.icon.plan",
+   "en": "An action plan",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: interface-shell R82, a row icon explained"
+  },
+  {
+   "key": "screen.group.timezone.how",
+   "en": "How you checked it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45, local-facts R1 how"
+  },
+  {
+   "key": "screen.group.timezone.how.help",
+   "en": "Required. For example: read it on the city's own website, or asked the clerk's office.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45"
+  },
+  {
+   "key": "screen.group.timezone.source",
+   "en": "Where you checked it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45, local-facts R1 source"
+  },
+  {
+   "key": "screen.group.timezone.source.help",
+   "en": "Required. The page, document or office that gives this time zone.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45"
+  },
+  {
+   "key": "screen.group.timezone.governs.local",
+   "en": "{zone}, corrected by your team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45, the governing zone"
+  },
+  {
+   "key": "screen.group.timezone.governs.profile",
+   "en": "{zone}, from {profile}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45, the governing zone"
+  },
+  {
+   "key": "screen.group.timezone.none",
+   "en": "No time zone is held yet. Choose one below.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45: draws no UTC"
+  },
+  {
+   "key": "screen.group.timezone.saved",
+   "en": "Your team's time zone is now {zone}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R45"
+  },
+  {
+   "key": "court.add.done",
+   "en": "{name} was added. Your team can now choose it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-settings R46"
+  },
+  {
+   "key": "act.secondlook.note",
+   "en": "Why it needs a second look",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R45, the note field"
+  },
+  {
+   "key": "act.secondlook.note.help",
+   "en": "Required. Your team reads this note beside the item.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R45"
+  },
+  {
+   "key": "act.watchitem.off.label.finder",
+   "en": "Take off my watch list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R45"
+  },
+  {
+   "key": "act.watchitem.off.does",
+   "en": "Stops watching it: you won't be told when it changes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R45"
+  },
+  {
+   "key": "screen.person.fact.to",
+   "en": "True until (optional)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R47, valid.to"
+  },
+  {
+   "key": "screen.person.fact.valid.help",
+   "en": "Leave a day out when the passage doesn't state it; it then shows as not stated.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R47"
+  },
+  {
+   "key": "screen.person.fact.notstated",
+   "en": "not stated",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R47/R48, a bound not stated"
+  },
+  {
+   "key": "money.flow.from",
+   "en": "Who paid",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R48 (3), the money form"
+  },
+  {
+   "key": "money.flow.to",
+   "en": "Who was paid",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R48 (3), the money form"
+  },
+  {
+   "key": "screen.find-in.field.standardkind",
+   "en": "What kind of standard",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-daily R48 (1): the standard kinds are screen.standard.kind.*"
+  },
+  {
+   "key": "size.kb",
+   "en": "{n} KB",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-intake R35, DEC-299 (8)"
+  },
+  {
+   "key": "size.mb",
+   "en": "{n} MB",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-intake R35, DEC-299 (8)"
+  },
+  {
+   "key": "size.gb",
+   "en": "{n} GB",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-intake R35: a file over 1 GB"
+  },
+  {
+   "key": "project.rescue.title.nodate",
+   "en": "Every owner of this project is gone",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-inquiry R54: owner_since not held"
+  },
+  {
+   "key": "screen.request.nooffice.admin",
+   "en": "An administrator can add the office under Settings, Places and offices.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-action R20"
+  },
+  {
+   "key": "screen.help-records.notheld",
+   "en": "Your team's Civicsmith doesn't hold records help for this place yet, so none is shown here. The law's own text is the place to look.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: screens-action R22"
+  },
+  {
+   "key": "project.notmember",
+   "en": "You aren't in this project. Ask to join, and its owners decide.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: interface-shell R85: projectrequest on project"
+  },
+  {
+   "key": "act.retire.name",
+   "en": "Retire this copy from new work, with a reason",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: affordances R64"
+  },
+  {
+   "key": "act.conclude.name",
+   "en": "Conclude the question with the team's answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: affordances R64"
+  },
+  {
+   "key": "act.reopen.name",
+   "en": "Pick the question back up",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: affordances R64"
+  },
+  {
+   "key": "act.projectleave.name",
+   "en": "Ask to leave this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: affordances R64"
+  },
+  {
+   "key": "queue.project-invitation.summary.unnamed",
+   "en": "You're invited to join {project}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue-producers R41: the inviter not named"
+  },
+  {
+   "key": "queue.kind.monitoring-recheck-due",
+   "en": "Watched pages due for another check",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.archive-fallback-eligible",
+   "en": "Pages a public archive could capture instead",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.capture-session-ttl-expiring",
+   "en": "Saved capture sessions about to expire",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.source-unreachable-governed",
+   "en": "Sources that can't be reached",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.capture-completed-unattended",
+   "en": "Captures that finished after their member left",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.partial-capture-outstanding",
+   "en": "Captures still missing parts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.text-undetermined",
+   "en": "Documents whose text couldn't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.client-rendered-shell",
+   "en": "Pages that show their content only in a browser",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.invitation-spent-or-expired",
+   "en": "Invitations used up or expired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.governor-holding-host",
+   "en": "Sites Civicsmith is pausing its requests to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.runtime-ceiling-reached",
+   "en": "Work stopped at its time limit",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.render-deferred",
+   "en": "Page renderings put off to another day",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.sweep-held-backlog",
+   "en": "Site sweeps with work held back",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.sweep-yield-anomaly",
+   "en": "Site sweeps finding far more or less than usual",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.sweep-seed-unreachable",
+   "en": "Site sweeps whose starting page can't be reached",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.sweep-redirect-out-of-scope",
+   "en": "Site sweeps sent outside their site",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.sweep-silent",
+   "en": "Site sweeps that found nothing new",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.notice-attestation-missed",
+   "en": "Public notices not confirmed in time",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.notice-lapse-near",
+   "en": "Public notices about to lapse",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.notice-project-closed",
+   "en": "Notices for closed projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.action-clock-overdue",
+   "en": "Actions past their deadline",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.cited-docket-unreadable",
+   "en": "Cited dockets that can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.missing_predecessor",
+   "en": "Steps missing the step that comes before",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.overdue_successor",
+   "en": "Steps whose next step is overdue",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.cardinality_exceeded",
+   "en": "Things recorded more often than expected",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.temporal-expectation-due",
+   "en": "Things expected by now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.source-modified",
+   "en": "Sources that changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.source-removed",
+   "en": "Sources that were taken down",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.duplicate-document",
+   "en": "Documents held twice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.link-verdict-changed",
+   "en": "Links whose target changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.reused-asset-changed",
+   "en": "Reused page parts that changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.assistant-surfaced-focus",
+   "en": "Things the assistant points out",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.grade-improvable",
+   "en": "Evidence that could be graded higher",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.objective-gap",
+   "en": "Gaps in what a project set out to show",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.measure-decay",
+   "en": "Measures losing their support",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.export-performed",
+   "en": "Exports of the record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.audit-finding",
+   "en": "Audit findings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.register-unbacked",
+   "en": "Register entries with no evidence behind them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.out-of-inquiry-lead",
+   "en": "Leads outside the question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.stance-changed-here-not-elsewhere",
+   "en": "Positions changed here but not elsewhere",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.new-version-arrived-from-another-team",
+   "en": "New versions from another team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.newer-capture-affects-reference",
+   "en": "Newer captures that affect a citation",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.shared-inquiry-concluded-by-another-project",
+   "en": "Shared questions another project concluded",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.contradiction-lead",
+   "en": "Possible contradictions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.contradiction-plurality",
+   "en": "Contradictions with more than two sides",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.contradiction-plurality-unseen",
+   "en": "Contradictions with sides you can't see",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.side-corrected",
+   "en": "Corrected sides of a contradiction",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.tension-after-publication",
+   "en": "Contradictions found after publishing",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.edition-withdrawn",
+   "en": "Withdrawn editions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.edition-contested",
+   "en": "Contested editions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.litigation-hold-released",
+   "en": "Released litigation holds",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.wizard-withdrawn",
+   "en": "Withdrawn step-by-step guides",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.wizard-restored",
+   "en": "Restored step-by-step guides",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.cited-newer-edition",
+   "en": "Cited cases with a newer edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.cited-edition-withdrawn",
+   "en": "Cited editions that were withdrawn",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.followed-case-entry",
+   "en": "New entries in cases you follow",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.cited-docket-entry-refused",
+   "en": "Cited docket entries that couldn't be fetched",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.interest-check-noticed",
+   "en": "Possible conflicts of interest",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.money-detector-noticed",
+   "en": "Payments worth a look",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.standing-answer",
+   "en": "Answers to standing questions",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.security-level-high",
+   "en": "High security alerts",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.policy-changed-noticed",
+   "en": "Policies changed without notice",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.scan-found",
+   "en": "Scan findings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.security-tool-off",
+   "en": "Security tools switched off",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.explore-ask",
+   "en": "Questions from exploring connections",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.ai-limit-reached",
+   "en": "The assistant's limits reached",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.project-account-suspended",
+   "en": "Projects whose assistant account is suspended",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.question-find",
+   "en": "Finds while looking into a question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.step-later-found",
+   "en": "Things found later",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.milestone-overdue",
+   "en": "Milestones past their date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.project-quiet",
+   "en": "Projects gone quiet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.step-cost-shared",
+   "en": "Shared work costs",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.step-cost-message",
+   "en": "Messages about a step's cost",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.review-comment-left-out",
+   "en": "Review comments not included",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "queue.kind.member-left-items",
+   "en": "Dated items a departed member left",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: queue R55: the {kind} of queue.muted.kind"
+  },
+  {
+   "key": "screen.site.steps.name.noplace",
+   "en": "You choose a short name and your places. The short name is a fixed label in your team's addresses and beside every signature; it never changes. The places are the city, county and state whose rules apply to you. No place is ready yet: Civicsmith holds no place's local facts (its offices, where its records are published, its deadlines and its holidays), so your team records them itself.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: site R14: no place ready"
+  },
+  {
+   "key": "screen.install.resumed",
+   "en": "Continuing where it stopped. Nothing already done is done again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R69, F1"
+  },
+  {
+   "key": "screen.install.stopped.containers",
+   "en": "Stopped: this Cloudflare account doesn't allow containers yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F2"
+  },
+  {
+   "key": "screen.install.stopped.containers.do",
+   "en": "Nothing was created. In Cloudflare's dashboard, open Compute (Workers), then Containers, and turn containers on. Then choose \"It's on now\", and setup begins again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F2"
+  },
+  {
+   "key": "screen.install.stopped.containers.done",
+   "en": "It's on now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F2: the button"
+  },
+  {
+   "key": "screen.install.stopped.limit",
+   "en": "Stopped: this Cloudflare account has reached its limit of {limit}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F3"
+  },
+  {
+   "key": "screen.install.stopped.limit.do",
+   "en": "Nothing was created. Remove one you no longer use in Cloudflare's dashboard, or ask Cloudflare to raise the limit, then start again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F3"
+  },
+  {
+   "key": "screen.install.progress.retrying",
+   "en": "Cloudflare didn't answer just now. Trying again, for up to {minutes} minutes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R66, F4"
+  },
+  {
+   "key": "screen.install.stopped.lasting",
+   "en": "Stopped: Cloudflare kept failing to answer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R66, F4: a lasting failure"
+  },
+  {
+   "key": "screen.install.stopped.lasting.do",
+   "en": "Nothing is left half-installed. Start again in a few minutes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R66, F4"
+  },
+  {
+   "key": "screen.install.stopped.source",
+   "en": "Stopped: Civicsmith's software source isn't available right now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R71, F5"
+  },
+  {
+   "key": "screen.install.stopped.source.do",
+   "en": "Nothing is left half-installed. Try again later.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R71, F5"
+  },
+  {
+   "key": "screen.install.approveagain",
+   "en": "Cloudflare needs you to approve again. Approve on Cloudflare's page, and setup continues where it stopped.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R71, F6"
+  },
+  {
+   "key": "screen.install.stopped.nametaken",
+   "en": "The short name {name} is already taken, so nothing was created.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F7"
+  },
+  {
+   "key": "screen.install.stopped.nametaken.do",
+   "en": "{free} is free: use it, or type another.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R70, F7"
+  },
+  {
+   "key": "screen.install.stopped.running",
+   "en": "Another install or update is already running in this account. This one waits until it finishes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-309: installer R69, F9"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin",
+   "en": "Concluded questions, each with its findings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: a project's first case: what goes in"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin.note",
+   "en": "Only a concluded question can go in a case. Each brings its findings and the evidence they rest on; you choose what it leaves out next.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: a project's first case"
+  },
+  {
+   "key": "screen.ceremony.nothing",
+   "en": "Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: Publish with no prepared case"
+  },
+  {
+   "key": "screen.published.corrections.none",
+   "en": "None since it was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: the public page's corrections and orders"
+  },
+  {
+   "key": "screen.published.corrections",
+   "en": "Every correction, withdrawal and court order on this case is listed on its docket.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: the public page's corrections and orders; 'its docket' links to the docket"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -79442,6 +80639,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.factconfirm.label.group",
+   "en": "Correct the time zone",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.writinghelp.label.group",
    "en": "Help me write this",
    "protected": true,
@@ -79754,6 +80957,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectrequestanswer.label.queue",
+   "en": "Grant or decline",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.release.label.queue",
    "en": "Vouch for a capture",
    "protected": true,
@@ -79810,6 +81019,12 @@
   {
    "key": "act.owed_secondlook.label.finder",
    "en": "Flag for a second look",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.secondlookclear.label.finder",
+   "en": "Clear",
    "protected": true,
    "source": "registry.json"
   },
@@ -80174,6 +81389,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectrequest.label.project",
+   "en": "Ask to join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectrequestwithdraw.label.project",
+   "en": "Withdraw your request",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.projectfork.label.project",
    "en": "Start a project from this one",
    "protected": true,
@@ -80290,6 +81517,12 @@
   {
    "key": "act.conclude.label.question",
    "en": "Conclude",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.casedraft.label.question",
+   "en": "Prepare a case from this",
    "protected": true,
    "source": "registry.json"
   },
@@ -80432,6 +81665,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.ask.label.assistant",
+   "en": "Ask",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.suggest.label.assistant",
    "en": "Suggest",
    "protected": true,
@@ -80506,6 +81745,12 @@
   {
    "key": "act.entityalias.label.person",
    "en": "Add another name",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_aliaswithdraw.label.person",
+   "en": "Withdraw a name",
    "protected": true,
    "source": "registry.json"
   },
@@ -82158,6 +83403,24 @@
   {
    "key": "act.owed_secondlook.does",
    "en": "Asks the team to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.secondlookclear.does",
+   "en": "Takes the flag off. No reason is asked; any member who can see the item may clear it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.factconfirm.does",
+   "en": "Corrects your team's time zone: choose it by name and say how and where you checked it. Dates and deadlines are counted in it from then on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_aliaswithdraw.does",
+   "en": "Takes off a name you added for them, with your reason. Documents that use only that name are no longer matched to them by it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

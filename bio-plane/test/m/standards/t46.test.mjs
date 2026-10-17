@@ -1,6 +1,6 @@
 /* standards: T46's refusal words by key (R55; T46-10, N913; DEC-194). The rows C-112.63 and C-112.64 take their
    translations from `words.json`'s `refusal.<CODE>`, read by key (`./words.mjs`; a key the list lacks fails the test);
-   codes, numbers, `where`s and behaviour are unmoved, and every other row keeps its own translation. Driven at the
+   codes, numbers, `where`s and behaviour are unmoved, and every other row keeps its own translation. N1132: read through `setup-words`, never from a copy of `words.json`. Driven at the
    module's interface over the test profile (`test-port-ellery`: `MCBC <n>` is a budget commitment). */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -36,15 +36,14 @@ test("R55 C-112.63 COMMITMENT_AS_HEARD and C-112.64 COMMITMENT_OWN_LETTER transl
   assert.ok(Object.isFrozen(REFUSAL_WORDS));
 });
 
-test("R55 the control: every other row of the module is one words.json does not hold as refusal.<CODE>, and keeps its own translation, none of them the two words", () => {
+test("R55 the control: every other row of the module keeps its own translation (the rest of the refusals' words are the generic fold's, N1116), none of them the two words", () => {
   const others = Object.keys(STANDARDS_CHECKS).filter((c) => !RE_WORDED.includes(c));
   assert.ok(others.length > 50, "the family's other rows");
   for (const code of others) {
-    assert.equal(HAS(`refusal.${code}`), false, `${code}: the list holds no refusal word for it, so its own translation stands`);
     assert.ok(!Object.values(REFUSAL_WORDS).includes(STANDARDS_CHECKS[code].translation), code);
     assert.match(STANDARDS_CHECKS[code].translation, /\S/, code);
   }
-  assert.throws(() => WORD("refusal.NO_SUCH_STANDARD"), /holds no word/);
+  assert.throws(() => WORD("refusal.NO_SUCH_STANDARD_ROW_NOBODY_REGISTERED"), /UNKNOWN_WORD/);
 });
 
 test("R55 R52 R53 the refusals answered at the interface carry the list's words: a commitment resting on a member's account is refused COMMITMENT_AS_HEARD, one resting on the group's own letter COMMITMENT_OWN_LETTER, each with its check and the word, nothing written; the body's letter lands (behaviour unmoved)", () => {

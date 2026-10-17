@@ -25,6 +25,7 @@ import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } f
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
 import { recordedBy } from "./recorded.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
@@ -79,6 +80,8 @@ export const LIMIT_MAX = 500;
 export const REASON_MAX = 2000;
 /* R50 (T48): at most this many participants are answered on one timeline item, with their total. */
 export const ITEM_PARTICIPANTS_MAX = 50;
+/* R53 (T50): at most this many captures' dated facts are read by one timeline. */
+export const CAPTURES_MAX = 200;
 /* R35 (T37-11): at most this many owner answers and waiting batch entries are kept between reads (a hub's votes, their pages and the batches waiting, with room). */
 const KEPT_MAX = 20000;
 const clamp = (limit) => Math.max(1, Math.min(Math.trunc(Number(limit)) || LIMIT_DEFAULT, LIMIT_MAX));
@@ -337,7 +340,7 @@ export class Events {
     const q = r.question == null ? { question: null } : this.#questionSeen(r.question, viewer) ? { question: r.question } : {};
     return { dated_fact_id: r.dated_fact_id, capture_sha: r.capture_sha, extent: json(r.extent), source_row: r.source_row ?? null,
              kind: r.kind, value: r.value, precision: r.precision, zone: r.zone, method: r.method, grade: r.grade,
-             ...(r.upper_bound ? { upper_bound: true, label: "on or before" } : {}), by: r.by_actor, at: r.at, ...q };
+             ...(r.upper_bound ? { upper_bound: true, label: word("events.label.text") } : {}), by: r.by_actor, at: r.at, ...q };
   }
   /* R1, R48: whether `viewer` may see the inquiry bundle a question names (record-core R37's object_type). */
   #questionSeen(id, viewer) {
@@ -370,9 +373,9 @@ export class Events {
    *  reader states, with the reader's method, as the machine's dated facts; any other class gets nothing (R3). */
   afterRead({ captureSha, captureClass, reading } = {}) {
     const set = this.readOptIn().captureClasses;
-    if (!set.includes(captureClass)) return { ok: true, held: 0, why: "this capture class is not in the opt-in set" };
+    if (!set.includes(captureClass)) return { ok: true, held: 0, why: word("events.why.capture_class_opt") };
     const held = this.#heldCapture(captureSha, null);
-    if (!held) return { ok: true, held: 0, why: "the record holds no such capture" };
+    if (!held) return { ok: true, held: 0, why: word("events.why.record_holds_capture") };
     const out = [];
     this.#record.transact(() => {
       for (const d of datesOfReading(reading, this.zone())) {
@@ -402,7 +405,8 @@ export class Events {
         const d = readDate(v, zone);
         if (d.bad) { skipped.push({ field, value: v, why: d.bad }); continue; }
         const method = `office metadata: the file's ${field} value`
-          + (said(who) ? `; ${field === "created" ? "author" : "last modified by"} as the file writes it: ${String(who).slice(0, 200)}` : "")
+          + (said(who) ? word("events.transact.file_writes", { by: field === "created" ? "author" : word("events.transact.last_modified"),
+                                                               who: String(who).slice(0, 200) }) : "")
           + "; what the file states about itself, never a finding";
         out.push(this.#holdFact({ sha: held.sha, bundleId: held.bundleId,
           extent: { kind: "envelope", item: "core-property", name: field }, kind, date: d, method, by }).dated_fact);
@@ -972,11 +976,11 @@ export class Events {
   #relationView(r, viewer) {
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, r.attestation_id);
     const end = (id) => { const g = this.#governing(id); return g ? g.grade : null; };
-    const source = a && a.capture_sha ? `the document ${a.capture_sha.slice(0, 12)}…` : "a member's testimony";
+    const source = a && a.capture_sha ? `the document ${a.capture_sha.slice(0, 12)}…` : word("events.text.member_testimony");
     return { relation_id: Number(r.relation_id), from: r.from_event, to: r.to_event, kind: r.kind,
              attestation: a ? this.#attestationView(a, viewer) : null,
              grade: { assertion: a ? a.grade : null, ends: [end(r.from_event), end(r.to_event)] },
-             ...(r.kind === "stated_cause" ? { says: `${source} states that one caused the other`, asserted_by_record: false } : {}),
+             ...(r.kind === "stated_cause" ? { says: word("events.says.states_caused", { source }), asserted_by_record: false } : {}),
              by: r.by_actor, at: r.at,
              withdrawn: r.withdrawn_at ? { by: r.withdrawn_actor, at: r.withdrawn_at, reason: r.withdrawn_why } : null };
   }
@@ -1043,7 +1047,7 @@ export class Events {
     const checked = p.role === "voted" && this.#voteValues() !== null;
     return { participant_id: Number(p.participant_id), entity_id: p.entity_id, role: p.role,
              ...(p.role === "voted" ? { vote_value: p.vote_value, vote_value_checked: checked,
-                 ...(checked ? {} : { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" }) } : {}),
+                 ...(checked ? {} : { vote_value_why: word("events.vote_value_why") }) } : {}),
              attestation_id: Number(p.attestation_id),
              grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p.entity_id, a, memo) },
              by: p.by_actor, at: p.at,
@@ -1061,9 +1065,9 @@ export class Events {
     const w = this.#whenRead(id);
     let when = w.when, why = w.why ?? null;
     if (when !== "undetermined" && w.governing != null && !attById.has(Number(w.governing))) {
-      when = null; why = "no dated attestation you can see governs this event";
+      when = null; why = word("events.why.dated_attestation_see");
     }
-    if (when === null && !why) why = "placed nowhere: no attestation of this event is dated";
+    if (when === null && !why) why = word("events.why.placed_nowhere_attestation");
     const parts = this.#rows(`SELECT * FROM event_participants WHERE event_id=? ORDER BY participant_id`, id)
       .filter((p) => attById.has(Number(p.attestation_id))).map((p) => this.#participantView(p, viewer, attById));
     const sees = this.#seer(viewer);
@@ -1155,17 +1159,24 @@ export class Events {
     return { ok: true, entity, count: b.items.length + b.placed_nowhere.length, events: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
 
-  /** R28–R30: the world's events concerning or involving an explicit set, and, apart, what the group's own modules did.
-   *  `audience` (T45) is `"public"` or absent; this module filters nothing for it and passes it to every source unchanged. */
-  timeline({ set, from = null, to = null, lanes = null, limit = null, viewer = null, audience } = {}) {
+  /** R28–R30, R53: the world's events concerning or involving an explicit set, apart, what the group's own modules did,
+   *  and, apart, the dated facts of a set of captures. `audience` (T45) is `"public"` or absent; this module filters
+   *  nothing for it in the first two lanes and passes it to every source unchanged; under `"public"` the dated list is
+   *  not answered (R53). */
+  timeline({ set, captures = null, from = null, to = null, lanes = null, limit = null, viewer = null, audience } = {}) {
     const ids = Array.isArray(set) ? set.filter(said).map((s) => s.trim()) : typeof set === "string" ? set.split(",").filter(said) : [];
-    if (!ids.length) return refuse("NO_SET", "a timeline is of an explicit set of entity or event ids; a project's or inquiry's scope is resolved by its caller");
+    const shas = [...new Set((Array.isArray(captures) ? captures : typeof captures === "string" ? captures.split(",") : [])
+      .filter(said).map((s) => s.trim().toLowerCase()))];
+    if (!ids.length && !shas.length)
+      return refuse("NO_SET", "a timeline is of an explicit set of entity or event ids, or of captures; a project's or inquiry's scope is resolved by its caller");
     /* R28: any audience but "public" or none is refused before anything is read */
     if (audience !== undefined && audience !== null && audience !== "public")
       return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the group's own reading`, { audiences: ["public"] });
+    if (shas.length > CAPTURES_MAX)
+      return refuse("TOO_MANY_CAPTURES", `a timeline reads the dated facts of at most ${CAPTURES_MAX} captures`, { bound: CAPTURES_MAX });
     const told = audience === "public" ? { audience } : {};
-    const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours"];
-    const answer = { ok: true, set: ids };
+    const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours", ...(shas.length ? ["dated"] : [])];
+    const answer = { ok: true, set: ids, ...(shas.length ? { captures: shas } : {}) };
     if (want.includes("world")) {
       const items = new Map();
       for (const id of ids) {
@@ -1183,11 +1194,13 @@ export class Events {
       const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
       const drawn = this.#drawn([...b.items, ...b.placed_nowhere].map((i) => i.event_id), viewer);
       const draw = (i) => ({ ...i, ...drawn.get(i.event_id)(i) });
-      answer.world = { label: "what they did", items: b.items.map(draw), placed_nowhere: b.placed_nowhere.map(draw), limit: b.limit, truncated: b.truncated };
+      answer.world = { label: word("screen.timeline.lane.world"), items: b.items.map(draw), placed_nowhere: b.placed_nowhere.map(draw), limit: b.limit, truncated: b.truncated };
     }
     if (want.includes("ours")) {
       const cap = clamp(limit);
-      answer.ours = { label: "what we did", sources: this.#sources.map((s) => {
+      answer.ours = { label: word("screen.timeline.lane.ours"), sources: this.#sources.map((s) => {
+        /* R53: a set of no entity or event asks no source (a source reading an empty set might read it as everything) */
+        if (!ids.length) return { source: s.module, items: [], truncated: false };
         try {
           /* R30: the source is asked with the timeline's own viewer, unchanged, so one that fails closed answers what
              the reader may see; its lane is truncated when it says so or when the limit cuts its items. Every source is
@@ -1206,7 +1219,30 @@ export class Events {
         } catch (e) { return { source: s.module, error: String(e && e.message || e).slice(0, 200) }; }
       }) };
     }
+    if (want.includes("dated") && audience !== "public") {
+      const d = this.#datedLane(shas, from, to, limit, viewer);
+      if (d.bad) return refuse("BAD_DATE", d.bad);
+      answer.dated = d;
+    }
     return answer;
+  }
+  /* R53: the dated facts of `shas` as `datedFactsFor` answers each, in R31's order of their stated dates (R29: an order
+     the dates do not settle shown so, a fact whose date cannot be placed listed apart), answered and counted only to a
+     viewer who may see the fact's capture (R40); a capture not held and one hidden contribute nothing, answered alike. */
+  #datedLane(shas, from, to, limit, viewer) {
+    const sees = this.#seer(viewer), items = [];
+    for (let i = 0; i < shas.length; i += 400) {
+      const part = shas.slice(i, i + 400);
+      for (const r of this.#rows(`SELECT * FROM dated_facts WHERE capture_sha IN (${part.map(() => "?").join(",")}) ORDER BY extent, source_row, kind, value`, ...part)) {
+        if (!sees(r.bundle_id)) continue;
+        let w = null;
+        try { w = whenOf({ value: r.value, precision: r.precision, zone: r.zone, upper_bound: r.upper_bound }); } catch { w = null; }
+        items.push({ ...this.#factView(r, viewer), when: w && (w.start || w.end) ? w : null });
+      }
+    }
+    const r = this.#range(items.filter((i) => i.when), from, to);
+    if (r.bad) return { bad: r.bad };
+    return this.#bounded([...r.items, ...items.filter((i) => !i.when)], limit, (i) => i.dated_fact_id);
   }
   /* R50: what the timeline screen draws for each world item without reading each event: its participants as R26
      answers them (superseded rows left out, at most ITEM_PARTICIPANTS_MAX, with the total), and the grade of its
@@ -1279,10 +1315,10 @@ export class Events {
     if (!cited.length) return { ...base, answer: "undetermined", why: d.why };
     const ids = cited.map((c) => c.relation_id);
     if (new Set(cited.map((c) => c.answer)).size > 1)
-      return { ...base, answer: "undetermined", why: "the cited orders disagree", relation_ids: ids, dates_why: d.why };
+      return { ...base, answer: "undetermined", why: word("events.why.cited_orders_disagree"), relation_ids: ids, dates_why: d.why };
     const c = cited[0];
     return { ...base, answer: c.answer, basis: "cited", relation_id: c.relation_id, grade: c.grade, relation_ids: ids,
-             dates_why: d.why, says: "the cited relation states which came first; the dates held do not settle it" };
+             dates_why: d.why, says: word("events.says.cited_relation_states") };
   }
 
   /** R32: who a communication, issuance or meeting was sent to, copied to, or who was present: never who knew or saw. */
@@ -1320,10 +1356,10 @@ export class Events {
     const und = (why, extra = {}) => ({ ok: true, proceeding, at: at ?? null, stage: "undetermined", why, ...extra });
     const facet = typeof ents.proceedingOf === "function" ? ents.proceedingOf(proceeding) : (e.entity.proceeding || null);
     const kind = facet && facet.kind;
-    if (!kind) return und("the proceeding's kind is not held, so no flow can be read for it");
+    if (!kind) return und(word("events.und.proceeding_kind_held"));
     const flows = this.view().proceeding_flows;
     const flow = Array.isArray(flows) ? flows.find((f) => f && f.kind === kind) : isObj(flows) ? flows[kind] : null;
-    if (!flow || !Array.isArray(flow.stages)) return und(`no active profile holds a flow for proceedings of kind ${kind}`);
+    if (!flow || !Array.isArray(flow.stages)) return und(word("events.und.active_profile_holds", { kind }));
     const point = spanOfBound(at, this.zone());
     if (!point || point.bad) return refuse("BAD_DATE", point && point.bad ? point.bad : "a status is read as of a date");
     const events = this.#eventsOfEntity(proceeding, viewer);
@@ -1336,9 +1372,9 @@ export class Events {
         else if (place === "open" || place === "nowhere") open.push({ event_id: ev.event_id, stage: st.stage, when: ev.when, i });
       }
     });
-    if (!reached && !open.length) return und("no held event bears on this proceeding's flow on that date");
+    if (!reached && !open.length) return und(word("events.und.held_event_bears"));
     const later = open.filter((o) => !reached || o.i > reached.i);
-    if (later.length) return und("the order of the deciding events against that date is undetermined at the precision held", { events: later.map(({ i, ...x }) => x) });
+    if (later.length) return und(word("events.und.order_deciding_events"), { events: later.map(({ i, ...x }) => x) });
     return { ok: true, proceeding, at, kind, stage: reached.stage.stage, label: reached.stage.label,
              rests_on: rests.filter((x) => x.stage === reached.stage.stage), citation: flow.citation ?? null };
   }
@@ -1444,7 +1480,7 @@ export function eventsOps(ev, url, body) {
     eventforact: () => ev.eventForAct(q("act")),
     datedfacts: () => ev.datedFactsFor({ captureSha: q("sha256"), viewer: q("viewer") }),
     eventsfor: () => ev.eventsFor({ entity: q("entity"), kinds: q("kinds"), from: q("from"), to: q("to"), limit: q("limit"), viewer: q("viewer") }),
-    timeline: () => ev.timeline({ set: q("set"), from: q("from"), to: q("to"), lanes: q("lanes") ? q("lanes").split(",") : null,
+    timeline: () => ev.timeline({ set: q("set"), captures: q("captures") ?? (body && body.captures) ?? null, from: q("from"), to: q("to"), lanes: q("lanes") ? q("lanes").split(",") : null,
                                   limit: q("limit"), viewer: q("viewer"), audience: q("audience") ?? undefined }),
     sequence: () => ev.sequence({ a: q("a"), b: q("b"), viewer: q("viewer") }),
     whowassent: () => ev.whoWasSent({ eventId: q("id"), viewer: q("viewer") }),

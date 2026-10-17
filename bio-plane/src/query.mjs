@@ -2475,22 +2475,51 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
 
   const cols = PROVENANCE_COLS.map(ref).join(", ");
   const joinRanked = rank ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
+  /* R33 (T50; N1166): the page's `snippet` and `snippet_from`, both always columns, never missing keys. A text snippet
+     is cut from the record's `body`, else its `title`, and from no other column (R19): `meta` (the bundle id and the
+     flattened frontmatter) and the locator and authority are not words a member wrote to be read. FTS5's
+     `snippet(table, -1, …)` chose the best column, `meta` included, so the column is named, and a column holds a match
+     only when `highlight()` changed its text (a marker character the text may itself hold changes nothing there). With
+     no text snippet and a `passage:` term, the snippet is the first matching unit of the hit's captures, by capture
+     sha and then reading order (`seq`), cut as the text one is: the same brackets, ellipsis and clamp (R12). Both are
+     cut for the page's rows only, after the order and the limit. */
+  const BODY = FTS_COLUMNS.indexOf("body"), TITLE = FTS_COLUMNS.indexOf("title");
+  const pm = MEANING.passage;
   const page = () => {
     const c = cte(true);
-    if (!rank)
-      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet FROM scope s ${rowJoin}${joinRanked}\n`
+    if (!rank && !passageMatch)
+      return { sql: `${c.sql}\nSELECT ${cols}, NULL AS snippet, NULL AS snippet_from FROM scope s ${rowJoin}${joinRanked}\n`
                   + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
     /* D-447: the snippet and NOT the score — the answer publishes the ORDER relevance produced, never its number.
        The snippet is cut for the PAGE's rows only, after the order and the LIMIT: `snippet()` re-reads a row's text,
        and cutting one for every match measured ~65 ms of a 2,000-match search (MEASUREMENTS M-122). It needs no
        statistics, so where it is cut changes nothing a viewer can compare. */
     const pcols = PROVENANCE_COLS.map((c2) => `p.${c2}`).join(", ");
-    return { sql: `${c.sql}\nSELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts `
-                + `WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet\n`
+    const qcols = PROVENANCE_COLS.map((c2) => `q.${c2}`).join(", ");
+    const mark = `char(1)`;
+    const ts = rank
+      ? `(SELECT CASE`
+        + ` WHEN highlight(bundles_fts, ${BODY}, ${mark}, ${mark}) <> bundles_fts.body`
+        + ` THEN snippet(bundles_fts, ${BODY}, '[', ']', '\u2026', ?)`
+        + ` WHEN highlight(bundles_fts, ${TITLE}, ${mark}, ${mark}) <> bundles_fts.title`
+        + ` THEN snippet(bundles_fts, ${TITLE}, '[', ']', '\u2026', ?) END`
+        + ` FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid)`
+      : `NULL`;
+    const tsArgs = rank ? [snip, snip, rank] : [];
+    const ps = passageMatch
+      ? `(SELECT snippet(${pm.ftsTable}, ${pm.ftsColumn}, '[', ']', '\u2026', ?) FROM ${pm.table} ct`
+        + ` JOIN ${pm.ftsTable} ON ${pm.ftsTable}.rowid = ct.rowid`
+        + ` WHERE ct.${pm.key} = p.bundle_id AND ${pm.ftsTable} MATCH ?`
+        + ` ORDER BY ct.capture_sha ASC, ct.seq ASC, ct.extent_kind ASC, ct.extent ASC LIMIT 1)`
+      : `NULL`;
+    const psArgs = passageMatch ? [snip, passageMatch] : [];
+    return { sql: `${c.sql}\nSELECT ${qcols}, COALESCE(q.ts, q.ps) AS snippet,`
+                + ` CASE WHEN q.ts IS NOT NULL THEN 'text' WHEN q.ps IS NOT NULL THEN 'passage' END AS snippet_from\n`
+                + `FROM (SELECT ${pcols}, p._pos AS _pos, ${ts} AS ts, ${ps} AS ps\n`
                 + `FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos `
                 + `FROM scope s ${rowJoin}${joinRanked}\n`
-                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p\nORDER BY p._pos`,
-             args: [...c.args, snip, rank, ...gate.args, lim, off] };
+                + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ? OFFSET ?) p) q\nORDER BY q._pos`,
+             args: [...c.args, ...tsArgs, ...psArgs, ...gate.args, lim, off] };
   };
   const count = () => {
     const c = cte(false);

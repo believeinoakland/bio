@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, REASON, sha } from "./fixture.mjs";
+import { WORD } from "./words.mjs";
 import { STANDARDS_CHECKS, STANDARDS_TABLES, standardsOps } from "../../../src/standards/index.mjs";
 import { EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
@@ -171,7 +172,8 @@ test("R51 R7 R43 a version with no stated end, known in force through a date, an
   assert.equal(rec.ok, true, JSON.stringify(rec).slice(0, 300));
   const on = at("2026-09-01");
   assert.equal(on.state, "in_force");
-  assert.equal(on.why, `known in force through 2026-09-01, from capture ${src.capSha.slice(0, 12)}, page 1, recorded by ${V("bob")}`);
+  assert.equal(on.why, WORD("standard.inforce.known", { through: "2026-09-01", author: V("bob"),
+    source: WORD("standard.source.capture", { capture: src.capSha.slice(0, 12), extent: "page 1" }) }));
   assert.equal(on.in_force_through.record, rec.record.id);
   assert.equal(at("2026-08-01").why, on.why, "the latest through among the standing records names the record");
   assert.equal(at("2020-01-01").state, "in_force");

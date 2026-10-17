@@ -8,20 +8,16 @@
  * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). Since T46 (R55), a row whose code
  * `words.json` holds as `refusal.<CODE>` reads its translation from there by key (`REFUSAL_WORDS`). */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region, file = "index.mjs") => `src/standards/${file} ${fn} > ${region}`;
 
-/* R55 (T46; DEC-194, N913): the refusal words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this
-   module answers, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS`
-   are; a row's `translation` is the word itself. Only the codes the list holds as `refusal.<CODE>` are here: every other
-   row keeps its own translation. */
-export const REFUSAL_WORDS = Object.freeze({
-  'refusal.COMMITMENT_AS_HEARD': 'A spoken commitment becomes a standard only once the body confirms it in writing or '
-    + 'states it publicly. Every passage named here is a member\'s account of what was heard, which stays that member\'s '
-    + 'own. Name the body\'s writing or public statement. Nothing was written.',
-  'refusal.COMMITMENT_OWN_LETTER': 'A commitment becomes a standard only once the body confirms it in writing or states '
-    + 'it publicly. Every passage named here is from your group\'s own letters or members\' accounts. Name the body\'s '
-    + 'own confirmation. Nothing was written.',
-});
+/* R55 (T46; DEC-194, N913), N1132 (T50): the refusal words this module answers, read by key through `setup-words`' `word`
+   (`words.json`'s `refusal.<CODE>`, as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are); a row's
+   `translation` is the word itself, never a copy of the sentence. Only the codes the list holds as `refusal.<CODE>` are
+   here: every other row keeps its own translation. */
+export const REFUSAL_WORDS = Object.freeze(Object.fromEntries(
+  ["refusal.COMMITMENT_AS_HEARD", "refusal.COMMITMENT_OWN_LETTER"].map((key) => [key, word(key)])));
 
 export const STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {

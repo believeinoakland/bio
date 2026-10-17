@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { Entities, ENTITY_CHECKS, ENTITY_COLLECTION_LIMIT, ENTITY_RELATIONS_LIMIT, noEntity } from "../../../src/entities/index.mjs";
 import { noSha } from "../../../src/extraction/index.mjs";
 
@@ -47,8 +48,7 @@ test("R38 reportResolutionDefect refuses, in order, NO_SHA (extraction's noSha),
 test("R29 C-91.7 NO_SUCH_RESOLUTION is this module's row, with its required translation, naming no place (R31)", () => {
   const row = ENTITY_CHECKS.NO_SUCH_RESOLUTION;
   assert.deepEqual([row.check, row.where], ["C-91.7", "src/entities/index.mjs reportResolutionDefect > is-resolution-held"]);
-  assert.equal(row.translation, "The record holds no resolution of that reference to that subject, so there is nothing to report "
-    + "as wrong. Read the capture's resolutions and name one of them. Nothing was written.");
+  assert.equal(row.translation, word("refusal.NO_SUCH_RESOLUTION"));
   assert.ok(!/oakland|alameda|legistar/i.test(row.translation));
   assert.ok(Object.isFrozen(row));
   const checks = Object.values(ENTITY_CHECKS).map((r) => r.check);
