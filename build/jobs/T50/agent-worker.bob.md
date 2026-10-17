@@ -24,3 +24,7 @@ L6 merge order: agent-runner first (N1197, K3611), then `modules.json`'s (inquir
 DEC-307 (U321, K3659): `refusal.SIGNIN_EXPIRED` now has its word; your R84 reads it by key (`word("refusal.SIGNIN_EXPIRED")`), never inline English.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+K3693. (1) Keep the check record in agent-worker's own storage, no new agent-runner route: the remote route itself is with Bob (agent-runner's proof blocked at step 0, K3692), so today no pass can exist and every gated call answers 503 ASSISTANT_REMOTE_NOT_READY; R111 stays unbuilt (conditional) and will write that record when it is built. (2) Yes. (3) Yes, signin accounts only; apikey unchanged. (4) Yes. (5) Yes; a CHANGE follows as agent-harness and agent-model merge.
