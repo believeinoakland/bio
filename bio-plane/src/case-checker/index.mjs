@@ -13,7 +13,8 @@
  *                        file anyone runs offline with nothing to install; R25: held as data, read on first use;
  *   the specification    R14 (`./spec.mjs`): the readable text of each case-file format version;
  *   standards' use       R21 (`./standards.mjs`): `checkStandardsUse`, a pure check of how a case quotes the standards it
- *                        measures against and what it calls a benchmark; its caller with the record refuses (N717);
+ *                        measures against and what it calls a benchmark; its caller with the record refuses (N717); each
+ *                        departure carries `says: {key, vars}`, the members' words by key (R26);
  *   the public reads     R15: `casechecker` (the program) and `casefilespec` (a specification), registered once with
  *                        `public-read` (its R18) and served with no credential.
  *
@@ -29,7 +30,7 @@ export { checkCaseFile, RESULTS, RESULT_WORDS, CHECKER_VERSIONS, RECREATION_STAT
 export { runProgram } from "./main.mjs";
 export { checkAccount, ACCOUNT_CODES, DETERMINATION_WORDS, SUPPORT_WORDS, CONTRARY_WORDS } from "./account.mjs";
 export { LENS_LIMIT_STATEMENT, LENS_NAMES } from "./lens.mjs";
-export { checkStandardsUse, STANDARDS_USE_CODES, NONCONFORMING_WORDS } from "./standards.mjs";
+export { checkStandardsUse, STANDARDS_USE_CODES, STANDARDS_USE_KEYS, NONCONFORMING_WORDS } from "./standards.mjs";
 export { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 
 let held = null;
