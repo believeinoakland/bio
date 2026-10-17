@@ -44,3 +44,7 @@ Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 22, module lines 1077
 ## J3 · COMPLETE
 
 T50-28 complete on `job/T50/screens-entry` (tranche/T50 merged @ d1e6a4e9ca): R22 (setup as the design draws it), R23 (Skip for now; the second administrator; join state e), R24 (declared keys against hasWord, every drawn key declared). screens-entry 84 pass, 0 fail; format, architecture, coverage (24/24), ownership 0 failures. Found elsewhere (record, "Found in other modules"): screens-settings' `members` act `groupkeyset` is not the registry's for it, so `interfacePage` refuses the composed page after the merge (plane t47 R48, control-plane t46-app R75/R81 red); interface-shell R28, R7 red on the base too. Details and Size line in my record.
+
+**B3 (CHANGE, K3771) re-run.** `tranche/T50` merged @ 9a6c50dfc5 (wizard-scripts' SCREEN_REGISTRY from design 7be06eb4cb): screens-entry tests 84 pass, 0 fail; format, architecture, coverage (24 of 24), ownership (8 files) 0 failures. No code change needed.
+
+Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 23, module lines 1077
