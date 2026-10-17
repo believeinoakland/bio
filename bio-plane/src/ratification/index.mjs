@@ -667,17 +667,22 @@ export class Ratification {
     }
   }
 
-  /* R44 (DEC-147): whether the ceremony's last step offers "Publish at…", and in which zone: the group's time zone as
-     `publish-schedule` R1 reads it (the active profiles' `time_zone`, `jurisdictions.combine` over record-core's
-     `jurisdiction_profiles`). No zone held offers only "Publish now"; the time is never read as UTC. */
+  /* R44 (DEC-147; T50, N1203): whether the ceremony's last step offers "Publish at…", and in which zone: the group's
+     governing zone as `publish-schedule` R1 reads it, which is `retrieval` R69's (`local-facts`' governing value of
+     `time_zone` first, else the active profiles' through `jurisdictions.combine`). Should retrieval be unreadable, the
+     profiles alone answer, as before. No zone held offers only "Publish now"; the time is never read as UTC. */
   #publishAtOffer() {
     let zone = null;
     try {
-      const list = this.record.getSetting("jurisdiction_profiles");
-      const c = combineProfiles(Array.isArray(list) ? list : []);
-      const v = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
-      zone = typeof v === "string" && v ? v : null;
-    } catch { zone = null; }
+      zone = this.retrieval.zone();
+    } catch {
+      try {
+        const list = this.record.getSetting("jurisdiction_profiles");
+        const c = combineProfiles(Array.isArray(list) ? list : []);
+        zone = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+      } catch { zone = null; }
+    }
+    zone = typeof zone === "string" && zone ? zone : null;
     return zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" };
   }
 
