@@ -1,6 +1,6 @@
 # BOB to conformance (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
