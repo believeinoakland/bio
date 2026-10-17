@@ -2278,6 +2278,8 @@ const SESSION_OPS = Object.freeze({
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* T50 (B3; screens-investigate R31): the theme read, a member session's, so the theme screen draws its Search act. */
+                   "themeread",
                    /* T5-11 (connections R43): withdrawing from a theme, `themeplace`'s route and reason. */
                    "themewithdraw",
                    /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
@@ -2385,6 +2387,8 @@ const SESSION_OPS = Object.freeze({
                       op for `lead`'s reason (a person's act in their own name); the
                       store refuses a machine declarer or placer by name. */
                    "themedeclare", "themeplace", "themepropose",
+                   /* T50 (B3; screens-investigate R31): the theme read, a member session's, so the theme screen draws its Search act. */
+                   "themeread",
                    "themewithdraw",
                    /* REC-195: the governing-law PROPOSAL, a session op for `themepropose`'s reason — the
                       proposer is stamped from the credential that asked, and the session route is the one

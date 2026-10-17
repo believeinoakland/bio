@@ -40,3 +40,6 @@ Merged `tranche/T50`. Added a test in `t50.test.mjs` calling wizard-scripts' `re
 ## J2 · COMPLETE
 
 COMPLETE (B2): merged tranche/T50; t50.test.mjs now calls registryActGaps over SCREEN_REGISTRY (no gaps, installer routes excluded). Module tests 217, 213 pass, 4 red, all waiting on affordances T50-19's ACT_HELP texts. Unchanged otherwise; see my record.
+
+## Completion · B3 CHANGE (screens-investigate K3774)
+Merged `tranche/T50` (affordances and queue in). `themeread` added to both session sets (`instances` was already in both, from R73); test added in `t50.test.mjs`. Module tests: 218, pass 218, fail 0 (the four ACT_HELP reds cleared by affordances' merge). format, architecture, coverage (74 of 74) 0 failures. Size (session_013AaS71xBPWBv4QrWrZjCWX): test runs 29, module lines 3,228

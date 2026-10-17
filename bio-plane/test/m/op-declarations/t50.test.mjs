@@ -394,3 +394,13 @@ test("R73, R21 (T50; wizard-scripts R41, B2 CHANGE): every act of the registry h
   const without = new Set([...declared].filter((op) => op !== "secondlookclear"));
   assert.deepEqual(registryActGaps({ screens: SCREEN_REGISTRY, declared: without }).map((g) => g.act), ["secondlookclear"]);
 });
+
+test("R73, R3 (T50; B3, screens-investigate R31): themeread and instances are in both session sets, so the act gate answers session for a member and the theme screen draws its Search act; their specs are unchanged and no NEEDS row gates them (negative control: an op in neither set answers machine)", () => {
+  for (const op of ["themeread", "instances"]) {
+    assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), `${op}: not in both session sets`);
+    assert.equal(ACT_GATE.mode(op), "session", op);
+    assert.deepEqual(plain(OPS[op]), { classes: MP, mutating: false }, op);
+    assert.equal(ACT_GATE.needs(op), null, op);
+  }
+  assert.equal(ACT_GATE.mode("purge"), "machine");
+});
