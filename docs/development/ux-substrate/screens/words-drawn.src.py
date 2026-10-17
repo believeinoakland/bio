@@ -1727,6 +1727,20 @@ w313('screen.docket-public.sub', 'Everything that happened to this case after it
 w313('screen.docket-public.back', 'Back to the case', False, 'the public docket')
 REWRITE.update({'screen.held.archivefiles': 'Open its files'})  # DEC-313 (5): a door names what it does
 # --- end DEC-313
+# --- DEC-314 (K3666, the assisted walk: the Ask page's states, a stopped run, Reject with a reason, an expired sign-in)
+def w314(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-314' + (': ' + note if note else '')))
+w314('screen.answers.failed.next', 'Ask again, perhaps more narrowly, or search instead.', False, 'screens-daily R52: after ai.progress.check.failed')
+w314('screen.connect.expired', 'Your Claude sign-in has expired, on {date}.', False, 'screens-settings R41: a member\'s own subscription, expired')
+w314('screen.connect.expired.means', "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.", False, 'screens-settings R41')
+w314('screen.connect.expired.state', 'Expired', False, 'screens-settings R41: the state beside it')
+w314('screen.connect.expired.next', 'Once you are signed in again, Civicsmith checks the connection before the assistant works for you.', False, 'screens-settings R41, R53')
+w314('screen.question.stopped.kept', 'What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.', False, 'screens-inquiry R57: after ai.run.ending.cancelled')
+w314('screen.question.reject.reason', 'Why you reject it', False, 'basis-versions R4: the reason field')
+w314('screen.question.reject.reason.help', 'Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.', False, 'basis-versions R4')
+w314('screen.question.reject.summary', 'Reject this reading', False, 'basis-versions R4: the fold')
+w314('screen.question.reject.go', 'Reject it', False, 'basis-versions R4: the button in the fold')
+# --- end DEC-314
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
