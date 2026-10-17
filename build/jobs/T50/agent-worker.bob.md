@@ -36,3 +36,7 @@ agent-runner (R35: AgentRunner.fetch answers 410 LOCAL_RUNNER_DISABLED to everyt
 ## B4 · CHANGE
 
 inquiry, basis-versions, run-rules (R35 levelEmptyHolds) and ai-use are merged into tranche/T50 (K3699). Merge tranche/T50 into your branch, re-run your tests against the real modules, and post COMPLETE again (or your next entry).
+
+## B5 · CHANGE
+
+agent-harness is merged (K3700): R18 means emptyLevelCandidates composes nothing without state.scope, and R19's disagreementsToSettle. Merge tranche/T50: 8 of your test files (fanout, harness, r085, r101, r103, r107, requirements, wire-vocabulary) go red until you set scope per level from the plane's four-level statement (retrieval R13's documents, the greatest over a level's reads), state each disagreementsToSettle pair, and give the fixtures a scope. That is your T50-65 work; fix them in your module and report any that need another module.
