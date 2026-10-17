@@ -6275,6 +6275,48 @@
    "en": "The file is longer than this view shows; the rest is in the original file.",
    "protected": false,
    "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_STAKE",
+   "en": "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.",
+   "protected": true,
+   "note": "DEC-303: project-roster R31, C-147.9"
+  },
+  {
+   "key": "refusal.STAKE_MALFORMED.project",
+   "en": "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-303: project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's"
+  },
+  {
+   "key": "timeline.dated.title",
+   "en": "Dated in the documents",
+   "protected": false,
+   "note": "DEC-303: events R53: the Timeline's third list"
+  },
+  {
+   "key": "timeline.dated.tip",
+   "en": "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.",
+   "protected": false,
+   "note": "DEC-303: the list's explanation"
+  },
+  {
+   "key": "findin.cell.uncalculated",
+   "en": "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.",
+   "protected": false,
+   "note": "DEC-303: retrieval R83"
+  },
+  {
+   "key": "findin.match.nameinpassage",
+   "en": "Named in this passage",
+   "protected": false,
+   "note": "DEC-303: retrieval R84: correspondence name_in_passage"
+  },
+  {
+   "key": "findin.match.sheet",
+   "en": "Sheet {sheet}, row {row}",
+   "protected": false,
+   "note": "DEC-303: retrieval R83: a sheet match's place"
   }
  ],
  "rewrite": {
