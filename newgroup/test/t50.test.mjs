@@ -15,7 +15,7 @@ import { RELEASE_VERSION, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { FLEET_BINDINGS, HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 import { WORD_ROWS } from "../../bio-plane/src/setup-words/rows.mjs";
 import { req, run, begin, cookieValue, release, armWith, restoreSigners, SIGNER, bump, heldCopy, heldCopies, DESCRIPTOR, DEFAULT_VERSION,
-  CAPABLE_SRC, RUNNER, SCANNER, bindingOf, jres } from "./fixture.mjs";
+  CAPABLE_SRC, RUNNER, SCANNER, SCANNER_CLASSES, bindingOf, jres } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -584,4 +584,31 @@ test("R73 the one-time password is introduced as one-time: the finished panel ho
     const word_ = word("screen.install.otp." + k);
     assert.ok(!upd.page.done.includes(word_) && !upd.page.done.includes(word_.replace(/'/g, "&#39;")), `the update draws no ${k}`);
   }
+});
+
+/* ------------------------------------------------------------------------------------------------ R15, R38 (K3793) */
+
+test("R15 R38 (K3793) a container member R38 leaves out (images on ghcr.io, which an account cannot pull) is named once at the fleet step with why and what the copy lacks, and is no lag: the install and the update confirm when every other member serves; control: a member whose upload fails still holds the verdict, and the verdict names it", async () => {
+  armWith(SIGNER.line);
+  const ghcr = (n, c) => `ghcr.io/believeinoakland/${n}@sha256:${c.repeat(64)}`;
+  const why = "this release's image is not yet published where your Cloudflare account can pull it";
+  const rel = await release({ version: NEXT, container: true, descriptor: { ...DESCRIPTOR, image: ghcr("agent-runner", "a") }, scanner: true,
+    scannerParts: { "container/FileScanner.json": { ...SCANNER_CLASSES[0], image: ghcr("file-scanner-scanner", "d") },
+      "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: ghcr("file-scanner-renderer", "e") } } });
+  for (const [mode, pre] of [["install", {}], ["update", { "r15-ghcr": planeBase("r15-ghcr") }]]) {
+    const w = await run({ slug: "r15-ghcr", mode, rel, pre });
+    const said = w.page.label("fleet");
+    for (const m of [RUNNER, SCANNER]) assert.ok(said.includes(`${m} (${why}`), `${mode}: ${m} named once at the fleet step with R38's reason`);
+    assert.equal(said.split(`${SCANNER} (`).length - 1, 1, `${mode}: file-scanner named once`);
+    assert.match(said, /no file scanner and no safe view/, `${mode}: what the copy lacks`);
+    assert.equal(w.page.status("verify"), "ok", `${mode}: the verdict confirms (${w.page.words})`);
+    assert.ok(w.page.done, `${mode}: finished`);
+    assert.ok(!/could not be installed/.test(w.page.done), `${mode}: neither member is a lag`);
+    for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(`${m}-r15-ghcr`), `${mode}: ${m} serves`);
+  }
+  /* Control: a member whose upload is attempted and fails stays a lag, and the verdict holds. */
+  const failed = await run({ slug: "r15-failed", rel: await release({ version: NEXT, missing: "ocr-worker" }) });
+  assert.equal(failed.page.status("verify"), "no");
+  assert.ok(failed.page.done.includes("ocr-worker could not be installed"));
+  restoreSigners();
 });

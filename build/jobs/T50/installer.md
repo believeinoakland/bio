@@ -54,3 +54,15 @@ For BOB: (1) setup-words keys installer.fact.unknown.silent/.older (DEC-328) say
 ## J3 · REPORT · re B3
 
 REPORT re B3: already met by J2's work (pushed at 0a6e2d9c9e). The pages / and /callback say 'team' ('Create your Civicsmith team', 'Your team's short name', 'Neighborhood and issue groups' from the public-read key); R72's test asserts no served page says 'group' for a team. The only 'group' left in served text is R18's 'which group produces your record' (the recorded-group sense instance-setup keeps). No code change; tests unchanged and green.
+
+## Completion record (INSTALLER #16, B4 · CHANGE, K3793)
+
+**Entry applied:** a container member R38 leaves out is not a failed upload for R15. `installFleet` marks a container member's `left` entry `out` when its upload was never attempted (image unpullable or unpinned, no Containers scope, not Workers Paid, a missing or unreadable part); it is named once at the fleet step with `withLacks` (why, and `lacksOf`), and `failedLags` skips an `out` entry, so `servingVerdict` and `verifyServing` no longer hold for it. A member whose upload was attempted and failed (`attempted` set before its upload) stays a lag (DIST-6); a non-container member that fails before upload stays a lag. A plane reading of a left-out member as UNBOUND was already no lag (`servingVerdict` names UNBOUND only for a member this act installed).
+
+**Tests:** `t50.test.mjs` "R15 R38 (K3793)": a release with both container members on `ghcr.io/…@sha256:<hex>`, install and update, confirms (verify ok), names `agent-runner` and `file-scanner` once each with R38's reason and what the copy lacks, every other member serving; control: a member whose upload fails holds the verdict and is named. It fails (0 pass, 1 fail) on the code before this change. `realsize.test.mjs`'s `finished` encoded the old behaviour (verify "no" with both members as lags on the real fleet): it now expects verify ok, the success panel, and both members named at the fleet step.
+
+**Ran:** `npm run build` (bundle rebuilt, 130 words); `npm test` in `newgroup/`: `embed: 23 passed, 0 failed`; `wizard: 209 passed, 0 failed`; node test runner `tests 95, pass 90, fail 0, todo 5`; `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: `pass 1, fail 0`; `fleetbundles: 140 pass, 0 fail`. Checks: `format: 171 modules, 170 requirements files; 0 failures`; `architecture: 28 product files, 84 relative imports (1 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 73 of 73 live requirement ids named by a test; 0 failures`; `ownership: 0 failures` (run on the committed branch below).
+
+**Deferred / found elsewhere:** nothing new; the deferrals and REPORTs of #15's record above stand.
+
+Size (session_01GuAEfsVbFhknN2F67nxATG): test runs 6, module lines 3756
