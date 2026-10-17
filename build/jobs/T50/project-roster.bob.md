@@ -29,3 +29,7 @@ K3624: your recommendation taken. membership R152 `memberStatusSince(memberId)` 
 ## B3 · CHANGE · re J2
 
 Re J2 (1): K3629 adds project-roster R34 on tranche/T50 @ 4bc2207af1: projectlist's rows carry participation, the viewer's own state (joined, leaving, invited; null for a non-participant). Merge tranche/T50 into your branch, build R34 with its test and control, run your tests and users' (screens-daily reads it later), and record COMPLETE again. (2) words: the two keys go to the design lane (HANDOFF B267); keep C-147.9 translation null until then. (3) the plane roster ops-map and op-declarations t45 reds are accepted by name until L11 declares the three ops (K3629). (4) bundle and program.mjs: regenerated at layer close. Membership R152 is not merged yet; I will CHANGE you when it is.
+
+## B4 · CHANGE
+
+membership is merged into tranche/T50 @ dadaa9ada1 (K3633), with R152 memberStatusSince. Merge tranche/T50 into your branch, drop the stand-in so R33 reads the real service, run your tests and record COMPLETE again. Note from membership: memberList now answers a founder row with no members-table row; tolerate it where you join member_id to members.
