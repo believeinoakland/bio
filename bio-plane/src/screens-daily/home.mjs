@@ -217,7 +217,7 @@ export const home = Object.freeze({
     const pv0 = ok(data.projects);
     const place = view.parts.participation(cs, view, pv0 && Array.isArray(pv0.projects) ? pv0.projects : []);
     // R42: a member who may not start projects and is in none reads the ways into one.
-    const inNone = pv0 && Array.isArray(pv0.projects) && !pv0.projects.some(function (p) { return p && (place[String(p.id)] === "joined" || place[String(p.id)] === "leaving"); });
+    const inNone = (data.projects && data.projects.state === "empty") || (pv0 && Array.isArray(pv0.projects) && !pv0.projects.some(function (p) { return p && (place[String(p.id)] === "joined" || place[String(p.id)] === "leaving"); }));
     const invited = !firstVisit && pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
     const mineCount = forMe.length + invited.length;
     const readings = [];
