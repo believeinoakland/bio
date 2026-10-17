@@ -4,11 +4,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
-import { readFileSync, readdirSync } from "node:fs";
 import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ARCHIVE_CHECKS, CIVICSMITH_CONTACT_URL,
          civicsmithUserAgent, firstHopWho, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 import * as acquisition from "../../../src/acquisition/index.mjs";
 import * as checksTable from "../../../src/acquisition/checks.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const EXPECTED = {
   CAPTURE_NOT_DRAINING: "C-28.13",
@@ -25,10 +25,10 @@ const EXPECTED = {
   MEMBER_MAX: "C-139.9", ARCHIVE_RATIO_MAX: "C-139.10", ARCHIVE_ENTRIES_MAX: "C-139.11", ARCHIVE_TOTAL_MAX: "C-139.12",
   ARCHIVE_DEPTH_MAX: "C-139.13", ARCHIVE_TREE_TOTAL_MAX: "C-139.14", ARCHIVE_TREE_ENTRIES_MAX: "C-139.15",
   UNPACK_DAILY_BYTES: "C-139.16", UNPACK_DAILY_ENTRIES: "C-139.17", OWN_HOST_REFUSED: "C-139.18", CO_ARCHIVE_SETTING_INVALID: "C-139.19",
-  NOT_AN_ARCHIVE: "C-139.20",
+  NOT_AN_ARCHIVE: "C-139.20", BAD_FOR: "C-139.21",
 };
 
-test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.20 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
+test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and the archive family C-139.1–C-139.21 (C-137.1–C-137.19 renumbered in order, N738), each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
@@ -38,9 +38,12 @@ test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.
   assert.deepEqual(Object.keys(ARCHIVE_CHECKS), Object.keys(EXPECTED).filter((k) => EXPECTED[k].startsWith("C-139.")), "C-139, in order");
   /* N738 (K2027): C-137 is following's alone; no row of this module carries a C-137 id, and the renumbering kept each row's order */
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).filter((r) => /^C-137\b/.test(r.check)), []);
-  assert.deepEqual(Object.values(ARCHIVE_CHECKS).map((r) => r.check), Array.from({ length: 20 }, (_, i) => `C-139.${i + 1}`));
+  assert.deepEqual(Object.values(ARCHIVE_CHECKS).map((r) => r.check), Array.from({ length: 21 }, (_, i) => `C-139.${i + 1}`));
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
+    /* plan rule 6 (N1116, R13): the member's words are the design's sentence for this refusal, read by key, never typed here */
+    assert.ok(hasWord(`refusal.${code}`), `${code}: the list holds refusal.${code}`);
+    assert.equal(row.translation, word(`refusal.${code}`), `${code}: read through word()`);
     assert.match(row.where, /^src\/acquisition\/(index|unpack)\.mjs (acquire|evidenceStorageAbsent|unpack|archiveList|coArchiveSet) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
@@ -54,10 +57,7 @@ test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.
   /* K794, K850: C-68.1 is the catalogue's row with its number and translation unchanged, its where the one raiser's region */
   assert.deepEqual({ ...INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED }, {
     check: "C-68.1", where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
-    translation: "Your group's Civicsmith was installed without the storage it keeps captured documents in, so it cannot "
-      + "keep or read the bytes of a captured document. That is a fact about how your group's Civicsmith was set up, not "
-      + "about this request: whoever installed it can connect that storage in the hosting account. Nothing "
-      + "was changed." });
+    translation: word("refusal.EVIDENCE_STORAGE_NOT_CONFIGURED") });
 });
 
 test("R29 R31: every refusal carrying a row answers that row's check and translation, and each has a negative control", async () => {
@@ -211,21 +211,5 @@ test("R29 (C-68.1, K850): acquire without evidence storage answers as before, by
   assert.deepEqual({ status: r.status, body: r.body }, evidenceStorageAbsent("acquire", error, { code: false }), "raised through the export");
 });
 
-test("R29 (C-68.1, K850): the module's source holds exactly one is-storage-absent region, inside evidenceStorageAbsent, and the row's where names it", () => {
-  const dir = new URL("../../../src/acquisition/", import.meta.url);
-  const files = readdirSync(dir).filter((f) => f.endsWith(".mjs"));
-  const opens = [], closes = [];
-  for (const f of files) {
-    const src = readFileSync(new URL(f, dir), "utf8");
-    for (const m of src.matchAll(/DEC-49 REGION is-storage-absent\b/g)) opens.push([f, m.index, src]);
-    for (const m of src.matchAll(/END DEC-49 REGION is-storage-absent\b/g)) closes.push([f, m.index]);
-  }
-  /* each END line also matches the opening pattern; one region is one opening and one END */
-  assert.deepEqual([opens.length - closes.length, closes.length], [1, 1], "exactly one is-storage-absent region");
-  const [file, at, src] = opens.find(([f, i]) => !closes.some(([g, j]) => g === f && j + 4 === i));
-  assert.equal(file, "index.mjs");
-  const fn = src.lastIndexOf("export function evidenceStorageAbsent(", at);
-  assert.ok(fn >= 0 && !/\nexport (async )?function /.test(src.slice(fn + 1, at)), "the region is inside evidenceStorageAbsent");
-  assert.ok(closes[0][1] > at && !/\nexport (async )?function /.test(src.slice(at, closes[0][1])), "and closes inside it");
-  assert.equal(C681.where, "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent");
-});
+/* The source-text check that no second site mints C-68.1 is retired (P7, K3627): t50.test.mjs proves at the interface that every path
+   answering it answers what the one raiser answers. */

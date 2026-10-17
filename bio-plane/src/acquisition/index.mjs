@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R44, its archives R38–R41 and R45 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -13,9 +13,12 @@
  * T35 (N688, F16, K1888): an archive this act captures is opened in the same call (R40; `unpack.mjs`, R38–R41), no fetch
  * goes to one of the group's own hosts (R42), and the co-archive is asked as the group or the member chooses (R20, R43).
  *
+ * T50 (N1117, N1094): a member's `for` is recorded with the capture (R47), the member who parks a session is recorded with it
+ * and listed by `openCaptures` (R19, R46), and every member-facing sentence is read by key from setup-words (plan rule 6).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
@@ -35,6 +38,7 @@ import { attest } from "../attestation/index.mjs";
 import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
+import { word } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
@@ -47,7 +51,8 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
 export { unpack, archiveList, memberOf, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
-         UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS } from "./unpack.mjs";
+         UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
+         ARCHIVE_CHECK_READS } from "./unpack.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -87,9 +92,7 @@ export const acquireGradeNote = (ceiling, unreachable) => {
   if (!ceiling || !unreachable)
     throw new Error("op=acquire's note states what this surface earns AND the grade above it; "
                   + "with no grade above the ceiling the sentence cannot be composed truthfully");
-  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a `
-       + "chain-of-custody web archive, which this surface cannot produce. Co-attestation raises "
-       + `${ceiling} toward evidentiary weight.`;
+  return word("acquisition.text.grade_bytes_fetched", { ceiling, unreachable });
 };
 export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
@@ -123,11 +126,11 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
     let od;
     try { od = await odfEvidentiaryDigest(containerBytes, sha256Hex); }
     catch (e) { od = { determined: false, flavour: "unread",
-      basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed` }; }
+      basis: word("acquisition.basis.container_digest_taken", { e: String(e && e.message || e).slice(0, 90) }) }; }
     if (od.determined) {
       if (await sha256Hex(containerBytes) !== sha)
         return { determined: false, rendition: null, evidentiary: null,
-          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted" };
+          basis: word("acquisition.basis.container_bytes_read") };
       return { determined: true, rendition: null, evidentiary: od.evidentiary, over: od.over, container: od.flavour,
                boundary_missed: false, basis: od.basis };
     }
@@ -136,14 +139,14 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
   if (!digestCertain)
     return { determined: false, rendition: null, evidentiary: null,
       basis: profileBytes
-        ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined`
-        : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined` };
+        ? word("acquisition.basis.stack_identified_certainty", { key: stackId.handler.key, confidence: stackId.confidence })
+        : word("acquisition.basis.document_read_text", { large: multipart ? "multipart" : word("acquisition.basis.non_textual_too") }) };
   const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex });
   if (dg.identity !== sha)
     return { determined: false, rendition: null, evidentiary: null,
-      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted" };
+      basis: word("acquisition.basis.primary_bytes_read") };
   return { determined: true, rendition: dg.rendition, evidentiary: dg.evidentiary, boundary_missed: !!dg.boundary_missed,
-           basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha` };
+           basis: word("acquisition.basis.normalized_under_certain", { key: stackId.handler.key, version: stackId.handler.version }) };
 }
 
 /** R17: the combined view of the instance's active jurisdiction profiles (record-core's `jurisdiction_profiles`,
@@ -152,10 +155,10 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
  *  combine passes no view either, and says so in `basis`. */
 export function profileView(core) {
   const ids = core && typeof core.getSetting === "function" ? core.getSetting("jurisdiction_profiles") : null;
-  if (!Array.isArray(ids)) return { view: undefined, ids: null, basis: "no active jurisdiction profiles are set" };
+  if (!Array.isArray(ids)) return { view: undefined, ids: null, basis: word("acquisition.basis.active_jurisdiction_profiles") };
   const c = combine(ids);
-  return c.ok ? { view: c.view, ids, basis: `the combined view of ${ids.length ? ids.join(", ") : "no profile"}` }
-              : { view: undefined, ids, basis: `the active profiles did not combine (${(c.errors || []).map((e) => e.code).join(", ")})` };
+  return c.ok ? { view: c.view, ids, basis: word("acquisition.basis.combined_view", { profile: ids.length ? ids.join(", ") : "no profile" }) }
+              : { view: undefined, ids, basis: word("acquisition.basis.active_profiles_did", { code: (c.errors || []).map((e) => e.code).join(", ") }) };
 }
 
 /* The locale a render asks for (R7): capture-sources' `renderLocaleFor` over R17's view (K119), the default only as
@@ -212,6 +215,9 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
     }
   };
 }
+
+/* R47: the longest `for` (a question's id) a member may name. */
+export const FOR_MAX = 200;
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
@@ -270,9 +276,9 @@ function askedReading(asked, chosen) {
   if (!asked || !asked.at) return null;
   const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked.ms) / 1000);
   return { asked_at: asked.at, memento_datetime: chosen.archived_at, apart_seconds: apart,
-           asked_note: apart === 0 ? `the memento is of ${chosen.archived_at}, the instant asked about`
-             : `the memento is of ${chosen.archived_at}, ${apart} seconds ${Date.parse(chosen.archived_at) < asked.ms ? "before" : "after"} `
-               + `the instant asked about (${asked.at}); it is not the page at ${asked.at}` };
+           asked_note: apart === 0 ? word("acquisition.asked_note.memento_instant_asked", { archived_at: chosen.archived_at })
+             : word("acquisition.asked_note.memento_seconds_instant", { archived_at: chosen.archived_at, apart,
+                 after: Date.parse(chosen.archived_at) < asked.ms ? "before" : "after", at: asked.at }) };
 }
 
 /* A body not read is released, never awaited: a cancellation the source does not acknowledge must not hold the act. */
@@ -360,7 +366,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     if (tried.has(url)) return { next: true };
     tried.add(url);
     for (let hop = 0; ; hop++) {
-      if (!isPublicHttpsLocator(url)) { considered.push({ uri: url, refused: "not a public https address", reason: "BAD_LOCATOR" }); return { next: true }; }
+      if (!isPublicHttpsLocator(url)) { considered.push({ uri: url, refused: word("acquisition.refused.public_https_address"), reason: "BAD_LOCATOR" }); return { next: true }; }
       const c = await call(url, fetchPurpose);
       if (c.fail) return c;
       const res = c.res;
@@ -371,7 +377,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
       if (!ans.ok || ans.kind !== "memento") {
         cancelBody(res);
         considered.push({ uri: url, reason: ans.ok ? "MEMENTO_NOT_NEGOTIATED" : ans.reason,
-                          refused: ans.ok ? `the archive was still redirecting after ${MEMENTO_HOPS} hops` : ans.detail });
+                          refused: ans.ok ? word("acquisition.refused.archive_redirecting_hops", { memento_hops: MEMENTO_HOPS }) : ans.detail });
         return { next: true };
       }
       if (ans.status === 200) {
@@ -399,7 +405,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (ga.ok) {
     const m = await tryMemento(ga.kind === "redirect" ? ga.location : ga.memento_uri);
     if (!m.next) return m.fail || m;
-  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: "the TimeGate holds no memento of this address (404)" });
+  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: word("acquisition.refused.timegate_holds_memento") });
   else considered.push({ uri: ends.timegate, reason: ga.reason, refused: ga.detail });
   /* The TimeMap. */
   const tm = await call(ends.timemap, indexPurpose);
@@ -511,15 +517,15 @@ async function coAttest(cap, { sha, locator, via, ev, coArchive = { on: true, by
   /* R20, R43: the C-18.1 shape (`service`, `attempted`, `ok`) with `attempted: false`, so it reads as no attempt */
   const coNotAsked = via !== "archive.org" && !coArchive.on
     ? [{ service: "co_archive", kind: "co_archive", attempted: false, ok: false, asked: false, by: coArchive.by,
-         note: coArchive.by === "member" ? "the capturing member chose no co-archive for this capture"
-                                         : "your group's setting asks no co-archive at capture" }] : [];
+         note: coArchive.by === "member" ? word("acquisition.note.capturing_member_chose")
+                                         : word("acquisition.note.group_setting_asks") }] : [];
   try {
     const out = await attest({ sha256: sha, archive: via !== "archive.org" && coArchive.on, locator },
       { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
         holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
     return [...(attempts.length ? attempts.map(recorded)
-      : notAsked(String((out && (out.reason || out.note || out.detail)) || "no attempt was reported"))), ...coNotAsked];
+      : notAsked(String((out && (out.reason || out.note || out.detail)) || word("acquisition.string.attempt_reported")))), ...coNotAsked];
   } catch (e) {
     return [...notAsked(String(e && e.message || e).slice(0, 200)), ...coNotAsked];
   }
@@ -588,6 +594,22 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
             + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
             + "Direct acquisition is a member's or an operator's act, and the "
             + "unattended credential is scoped to the verbs the unattended paths need." });
+  /* R47 (N1117; T50): `for`, read only from a member session (as R43's `coArchive` is), names the question the member is
+     capturing for. Absent or null records nothing; anything but a non-blank string of at most 200 characters is refused
+     before any fetch, nothing written or filed. From any other caller the key is ignored, so the answer is the one
+     without it. */
+  const askingMember = member && typeof sessMember === "string" && sessMember ? sessMember : null;
+  let askedFor = null;
+  if (askingMember && body.for !== undefined && body.for !== null) {
+    /* DEC-49 REGION is-for */
+    if (typeof body.for !== "string" || !body.for.trim() || body.for.length > FOR_MAX) {
+      const row = ARCHIVE_CHECKS.BAD_FOR;
+      return answer(400, { ok: false, reason: "BAD_FOR", code: "BAD_FOR", check: row.check, translation: row.translation, op,
+        detail: "`for` names the question this capture is for by its id: a string of 1 to 200 characters; nothing was fetched or filed" });
+    }
+    /* END DEC-49 REGION is-for */
+    askedFor = body.for;
+  }
   /* R3, R32, D-112: the archive arm names the DOCUMENT and lets the plane find the memento, inside the same call that
      files the bytes, so the eligibility fence cannot be walked around and the hop is built from what the archive
      answered this call. A monitoring path: admin, probe and daemon only. */
@@ -715,9 +737,9 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       return answer(400, { ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
         op, detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. `
                   + `Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.` });
-    const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)"
-                   : driveCapture ? "a Google Drive export (a document, not a page)"
-                   : body.continue ? "continue: <session> (a capture already filed)" : null;
+    const conflict = body.via === "archive.org" ? word("acquisition.text.via_archive_org")
+                   : driveCapture ? word("acquisition.text.google_drive_export")
+                   : body.continue ? `continue: <session> ${word("acquisition.text.capture_already_filed")}` : null;
     if (conflict)
       return answer(400, { ok: false, reason: "RENDER_ARM_CONFLICT", ...renderRow("RENDER_ARM_CONFLICT"),
         op, conflict, detail: `render: true cannot be combined with ${conflict}.` });
@@ -862,9 +884,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     await noteOutcome("success", 304);
     try { await res.body?.cancel?.(); } catch { /* nothing to read */ }
     return answer(200, { ok: true, existed: true, unchanged: true, capture: { sha256: crHeldSha },
-      basis: `the source answered 304 Not Modified to a request conditional on the validators its fetch of the held `
-           + `capture ${crHeldSha.slice(0, 12)} was served with (${Object.keys(conditional).join(", ")}), so no new capture `
-           + "was made and no receipt written: the source asserted these bytes, it did not serve them",
+      basis: word("acquisition.basis.source_answered_modified", { cr_held_sha: crHeldSha.slice(0, 12), conditional: Object.keys(conditional).join(", ") }),
       store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
   }
   /* DEC-49 REGION is-drive-export — there is NO FALLBACK: a 403, a 404 or an HTML answer ends the capture with the
@@ -1018,20 +1038,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (reg && reg.registered === true) existed = true;
     else {
       existed = null;
-      existedUndetermined = reg
-        ? `this document was captured in ${parts.length} parts, so the store holds no object under its `
-          + `whole hash for the question a single-part capture asks, and the record's register - which `
-          + `does answer by the whole hash - holds no row for these bytes under a record that still `
-          + `exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never `
-          + `promoted leaves its parts in the store and no register row, and part boundaries follow the `
-          + `stream's chunking, so this fetch's parts need not be the parts an earlier one made. `
-          + `Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were `
-          + `already held before it wrote them.`
-        : `this document was captured in ${parts.length} parts, so the store holds no object under its `
-          + `whole hash for the question a single-part capture asks, and the record's register could not `
-          + `be consulted. Nothing here is a statement about the record, and in particular it is not a `
-          + `claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's `
-          + `${parts.length} parts were already held before it wrote them.`;
+      existedUndetermined = word(reg ? "acquisition.text.document_captured_parts" : "acquisition.text.document_captured_parts_store",
+        { parts: parts.length, held_parts: heldParts });
     }
   }
 
@@ -1108,6 +1116,17 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     try { cap.recordCaptureActor({ captureSha: sha, actor, at: retrieved }); }
     catch { /* an unrecorded actor costs that member their account (capture R69), never this capture */ }
   }
+  /* R47 (N1117; capture R94): a member's `for`, recorded once the capture is filed or found already held, through the store
+     handed in: the digest, the question, the member, the instant. A failed or absent record never fails the capture. */
+  let forRecorded = null;
+  if (askedFor !== null) {
+    let rec = false;
+    try {
+      const r = typeof cap.recordCapturedFor === "function" ? await cap.recordCapturedFor({ captureSha: sha, question: askedFor, by: askingMember, at: retrieved }) : null;
+      rec = !!(r && r.recorded === true);
+    } catch { rec = false; }
+    forRecorded = { question: askedFor, recorded: rec };
+  }
   /* R22: what the source said about these bytes, kept for a later conditional fetch of the same document. */
   if (via === "direct" && !renderRecorded) {
     try { cap.recordValidators({ addressNorm: addrNorm, captureSha: sha, etag: res.headers.get("etag"),
@@ -1135,7 +1154,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
   if (body.subresources === true && !subsSkipped) {
     const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null, own });
+                                             retrieved, resume: null, sessionId: null, own, openedBy: actor });
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
@@ -1178,8 +1197,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       ...(authorityAsserted ? { authority: authorityAsserted } : {}),
       authority_state: authorityAsserted ? "determined" : "undetermined",
       authority_basis: authorityAsserted
-        ? `asserted by the capturing ${member ? "member" : "caller"} at intake, ${retrieved}`
-        : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+        ? word("acquisition.authority_basis.asserted_capturing_intake", { caller: member ? "member" : "caller", retrieved })
+        : word("acquisition.authority_basis.assertion_supplied_mechanical", { retrieved }),
     }),
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
@@ -1201,7 +1220,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         : "bio-plane acquire, https fetch, hashed at receipt",
       /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
-      ...(via === "archive.org" ? { authority: "Internet Archive" } : {}),
+      ...(via === "archive.org" ? { authority: word("acquisition.authority.internet_archive") } : {}),
       actor_class: member ? "member" : (cls === "probe" ? "session" : "daemon"),
       /* R16 (N364): which member captured it, the member stamp of a member session, else null (capture R69 reads it). */
       actor,
@@ -1249,6 +1268,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* R22: the bytes are the capture the record already holds. */
     ...(crHeldSha && sha === crHeldSha ? { held: true } : {}),
     document,
+    ...(forRecorded ? { for: forRecorded } : {}),
     ...(multipart ? { parts: parts.length } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
@@ -1412,7 +1432,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
 /** R19: the walk of a page's supporting files, over the primary READ BACK from the store (the parser sees the bytes
  *  the record holds, never a copy in flight beside them). Every bookkeeping write after it is stated or ignored,
  *  never a failed capture. */
-async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null }) {
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -1483,7 +1503,10 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
   let sid = sessionId;
   if (subs.resumeState) {
     sid = sid || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
-    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state: subs.resumeState }); }
+    /* R19, R46 (T50): the member whose member session's `acquire` parked this session is recorded with it, in its state
+       under `opened_by`; a session parked by any other caller records none. */
+    const state = typeof openedBy === "string" && openedBy ? { ...subs.resumeState, opened_by: openedBy } : subs.resumeState;
+    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state }); }
     catch { /* the caller starts over; the capture did not fail */ }
   } else if (sid) {
     try { cap.dropCaptureSession({ session: sid }); } catch { /* harmless */ }
@@ -1521,12 +1544,46 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
   const w = await walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
-    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own });
+    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
+    /* R19: a session parked again keeps the member who began it, whoever continues it */
+    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null });
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
-                 note: "a continuation files no new document: the primary was captured by the session's first tick and is never re-fetched" },
+                 note: word("acquisition.note.continuation_files_new") },
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+}
+
+/* R46 (T50; N1094; DEC-240 (D3); K3317): A MEMBER'S OPEN CAPTURES, for Add's "Unfinished". */
+export const OPEN_CAPTURES_MAX = 50;
+
+/** R46: `openCaptures(store, {by, now}) → {ok: true, captures, truncated}` lists, newest started first, at most
+ *  `OPEN_CAPTURES_MAX`, each capture session (capture R22) that has not expired at `now` and was begun by `by`:
+ *  `{session, locator, primary_sha, started, updated, expires, outstanding}`. A session is begun by the member whose member
+ *  session called `acquire` when R19 parked it (`state.opened_by`); one parked by any other caller, or before this
+ *  requirement, has no member and is listed for no one, and one whose state cannot be read is not listed. A `by` that is
+ *  absent, not a string, blank or a machine identity answers `captures: []`. It lists nothing of another member's, writes
+ *  nothing and never throws; a store that cannot answer gives `captures: []`. */
+export function openCaptures(store, { by = null, now = undefined } = {}) {
+  const none = { ok: true, captures: [], truncated: false };
+  try {
+    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by) || !store || typeof store.liveCaptureSessions !== "function") return none;
+    const nowMs = typeof now === "string" && ISO_TS_RE.test(now) ? Date.parse(now) : Number.isFinite(Number(now)) && now !== null && now !== undefined ? Number(now) : Date.now();
+    const live = store.liveCaptureSessions(stampSecond(nowMs));
+    if (!Array.isArray(live)) return none;
+    const mine = [];
+    for (const s of live) {
+      const st = s && s.state;
+      if (!st || typeof st !== "object" || st.opened_by !== by) continue;
+      const outstanding = Array.isArray(st.queue) ? st.queue.length : 0;
+      const expires = Date.parse(s.expires);
+      if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
+      mine.push({ session: s.session, locator: s.locator ?? null, primary_sha: s.primarySha ?? null, started: s.created ?? null,
+                  updated: s.updated ?? null, expires: s.expires, outstanding });
+    }
+    mine.sort((a, b) => (Date.parse(b.started) || 0) - (Date.parse(a.started) || 0) || (a.session < b.session ? -1 : a.session > b.session ? 1 : 0));
+    return { ok: true, captures: mine.slice(0, OPEN_CAPTURES_MAX), truncated: mine.length > OPEN_CAPTURES_MAX };
+  } catch { return none; }
 }

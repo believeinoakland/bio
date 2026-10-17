@@ -3,6 +3,7 @@
    tests of the moved Rs (capture R1–R7, R9–R14, R16–R20, R33–R36, R41, R42, R60–R62), each renamed to this module's id.
    Each test names the requirement ids it checks in its title. */
 import { test, mock } from "node:test";
+import { inspect } from "node:util";
 import assert from "node:assert/strict";
 import { world, run, lookup, network, sha, HTML, page, text, wayback, WB, eligible, rendererEnv } from "./fixture.mjs";
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
@@ -844,6 +845,17 @@ test("R23: a supplied credential rides the fetch to its own host only, as its ki
   assert.equal(r.body.document.capture.reproducible_by_public, false);
   const everything = JSON.stringify([r.body, w.prov.receipts, w.store.state.outcomes, w.store.state.events]);
   assert.ok(!everything.includes(SECRET) && !everything.includes(Buffer.from(SECRET).toString("base64")), "the secret is nowhere");
+  /* T50 (N1064): and in no table of the store, the tables read from the store's own list (never a hand list), nor in the store
+     handed in (every outcome, event, session, validator and record it kept), nor in any object held in the evidence bucket */
+  const b64 = Buffer.from(SECRET).toString("base64");
+  const clean = (what, v) => { const d = inspect(v, { depth: null, maxArrayLength: null, maxStringLength: null, breakLength: Infinity });
+                               assert.ok(!d.includes(SECRET) && !d.includes(b64), `${what} holds the secret`); };
+  const tables = w.rows("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name").map((r) => r.name);
+  assert.ok(tables.includes("bundles") && tables.includes("archive_entries") && tables.includes("captured_locators"), "the list is the store's own, and holds this module's tables");
+  for (const t of tables) clean(`table ${t}`, w.rows(`SELECT * FROM "${t}"`));
+  clean("the store handed in", w.store.state);
+  for (const [k, v] of w.b.held) clean(`object ${k}`, Buffer.from(v).toString("latin1"));
+  clean("the receipts", w.prov.receipts);
   const plainRoutes = { "https://a.example/doc": () => text("d") };
   const ua = await arm(w, plainRoutes, { credential: cred("user-agent", "Mozilla/5.0 (member's own)") });
   assert.equal(ua.net.seen[0].init.headers["user-agent"], "Mozilla/5.0 (member's own)");
