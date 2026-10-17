@@ -22,3 +22,7 @@ L2 merge order: membership, project-roster, ai-accounts, credentials, promotion 
 ## B2 · ANSWER · re J1
 
 K3624: your reading is right; carry on (refusal rows and the two `says` by key, unkeyed builder strings left, census moves stamped in your one stamp). `modules.json` now gives promotion `setup-words` in `uses` (merge the tranche branch). List in your record each other module's test that quotes your old English. ai-accounts is merged (K3625): its 21 C-29 translation moves are in your stamp. You still wait for my CHANGE before stamping the L2 rows.
+
+## B3 · CHANGE
+
+Every other L2 job is merged into tranche/T50 @ 2afc5d2b5a: ai-accounts (K3625), membership (K3633), credentials (K3636), project-roster (K3638). Merge tranche/T50 into your branch and stamp (T50-6): every row T49's, R085's and T50's L2 jobs added, moved or changed (project-roster's C-147.9, C-147.10 among them; ai-accounts' 21 C-29 moves), and R39, R45, R46 from modules.json (membership's order.mjs is now the generated MODULE_ORDER source). Run your tests and the L2 users', then record COMPLETE.
