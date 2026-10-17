@@ -6,6 +6,24 @@
    not answer, so the installer installs its built-in release and says why. Every call it does not answer is recorded as
    `unanswered` and refused, so the walk fails on it rather than passing over it. */
 
+import { readFileSync, existsSync, statSync } from "node:fs";
+import { join, dirname, normalize, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/* The release a person's install fetches its members from: the repository's own committed `release/` (whose bytes the
+   installer's built-in manifest signs, and the installer verifies), answered at the address the installer asks, and nothing
+   else: `RELEASE.json` stays unanswered so the installer takes its built-in release, and the plane's own asset is the
+   built-in's. */
+const RELEASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "release");
+function released(url) {
+  const m = /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/release\/(.+)$/.exec(url.replace(/[?#].*$/, ""));
+  const rel = m && decodeURIComponent(m[1]);
+  const file = rel && normalize(join(RELEASE_DIR, rel));
+  if (!file || !file.startsWith(RELEASE_DIR + sep) || rel === "RELEASE.json" || rel === "bio-plane.bundled.mjs" || !existsSync(file) || !statSync(file).isFile())
+    return new Response("not found", { status: 404 });
+  return new Response(readFileSync(file), { status: 200, headers: { "content-type": "application/octet-stream" } });
+}
+
 const enc = new TextEncoder();
 const b64url = (buf) => Buffer.from(buf).toString("base64url");
 const s256 = async (s) => b64url(await crypto.subtle.digest("SHA-256", enc.encode(s)));
@@ -86,11 +104,30 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     if (m === "GET" && path === "/accounts") return ok([{ id: ACCT, name }]);
     if (!path.startsWith(`/accounts/${ACCT}/`)) return null;
     const rest = path.slice(`/accounts/${ACCT}`.length);
+    /* the lists the installer reads to know the copies and parts the account holds (installer R62, R69) */
+    if (rest === "/workers/scripts" && m === "GET")
+      return ok([...scripts].filter(([, v]) => !v.probe).map(([id, v]) => ({ id, ...(v.meta?.migrations?.new_tag ? { migration_tag: v.meta.migrations.new_tag } : {}) })));
+    if (rest === "/containers/applications" && m === "GET") return ok([]);
+    if (rest === "/r2/buckets" && m === "GET") return ok({ buckets: [...buckets].map((n) => ({ name: n })) });
     if ((x = /^\/workers\/scripts\/([^/]+)$/.exec(rest))) {
       if (m === "PUT") return putScript(x[1], req);
       if (m === "DELETE") { scripts.delete(x[1]); return ok({}); }
       if (m === "GET") return scripts.has(x[1]) ? new Response(scripts.get(x[1]).source,
         { headers: { "content-type": "application/javascript+module" } }) : no("not found", 404, 10007);
+    }
+    /* a secret set on its own, without an upload (installer R69): the script now holds it, and the copy restarts with it */
+    if ((x = /^\/workers\/scripts\/([^/]+)\/secrets$/.exec(rest)) && m === "PUT") {
+      const sc = scripts.get(x[1]);
+      if (!sc) return no("not found", 404, 10007);
+      const b = await req.json();
+      sc.bindings = [...sc.bindings.filter((k) => k.name !== b.name), { type: "secret_text", name: b.name, text: b.text }];
+      await onScript(x[1], { bindings: sc.bindings, source: sc.source, meta: sc.meta });
+      return ok({ name: b.name, type: "secret_text" });
+    }
+    if ((x = /^\/workers\/scripts\/([^/]+)\/secrets\/([^/]+)$/.exec(rest)) && m === "DELETE") {
+      const sc = scripts.get(x[1]);
+      if (sc) sc.bindings = sc.bindings.filter((k) => k.name !== x[2]);
+      return ok({});
     }
     if ((x = /^\/workers\/scripts\/([^/]+)\/settings$/.exec(rest)) && m === "GET")
       return scripts.has(x[1]) ? ok({ bindings: scripts.get(x[1]).bindings.map(({ text, ...b }) => b) }) : no("not found", 404, 10007);
@@ -120,7 +157,7 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     calls.push(`${req.method} ${url.replace(/[?#].*$/, "")}`);
     if (url.startsWith(AUTHORIZE)) return consent(url);
     if (url === TOKEN && req.method === "POST") return token(req);
-    if (url.startsWith(RELEASES)) return new Response("not found", { status: 404 });
+    if (url.startsWith(RELEASES)) return released(url);
     if (url.startsWith(API + "/")) {
       const auth = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
       if (!tokens.has(auth)) return no("Authentication error", 403, 10000);

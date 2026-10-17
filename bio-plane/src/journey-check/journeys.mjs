@@ -119,7 +119,7 @@ export async function walkSite(walk, page, siteOrigin, installerOrigin) {
     await settle(p);
     await shownWord(p, "screen.site.start");
   });
-  await walk.step(page, "civicsmith.org: start a group, and create it", async (p) => {
+  await walk.step(page, "civicsmith.org: start a team, and create it", async (p) => {
     await byWord(p, "screen.site.start").click();
     await p.waitForURL((u) => u.pathname === "/start", { timeout: 15000 });
     await settle(p);
@@ -184,7 +184,7 @@ export async function walkInstaller(walk, page, installerOrigin) {
    she has no handle yet (R7's sweep with none, K3380), before she chooses one. Answers the invitation link and whether
    the claim itself took her handle. */
 export async function walkFounder(walk, page, { base, founder, whileHandleless = null }) {
-  await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
+  await walk.step(page, "hand-over: to the team's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
     await p.waitForURL((u) => u.origin === base && u.pathname === "/app/setup", { timeout: 20000 });
     await settle(p);
@@ -192,8 +192,8 @@ export async function walkFounder(walk, page, { base, founder, whileHandleless =
     if (!(await p.locator("#su-otp").inputValue())) throw new Error("the one-time password is not filled in");
   });
   let byHandle = false;
-  await walk.step(page, founder.handle ? "1 · setup: claim with her own handle; she is the group's first administrator"
-    : "setup: claim; she is the group's first administrator", async (p) => {
+  await walk.step(page, founder.handle ? "1 · setup: claim with her own handle; she is the team's first administrator"
+    : "setup: claim; she is the team's first administrator", async (p) => {
     const fields = { "su-pw": founder.password, "su-pw2": founder.password };
     /* the claim's form drawn first: whether it asks a handle is read from the form, never before it is there */
     try { await p.locator("#su-pw").waitFor({ state: "attached", timeout: 15000 }); } catch { throw new Error("the claim's form is not drawn"); }
@@ -231,17 +231,22 @@ export async function walkFounder(walk, page, { base, founder, whileHandleless =
     });
     await signInBy(walk, page, base, founder, "1 · sign in by her handle");
   }
-  await walk.step(page, "setup: the group's name", async (p) => {
+  await walk.step(page, "setup: the team's name", async (p) => {
     if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await act(p, "groupnameset", { fields: { "su-name": GROUP_NAME } });
     await p.locator("a[href='/app'][data-nav]").last().click();
     await settle(p);
   });
-  await walk.step(page, "home: a new group's home, inviting members and saying who it is", async (p) => {
+  await walk.step(page, "home: a new team's home, inviting members and saying who it is", async (p) => {
     await requireDrawn(walk, p, "home");
     await shown(p, "a[href='/app/members']", "the invitation to invite members");
   });
-  const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
+  /* journey 29's Security step (DEC-245): looked at once, and it says nothing is unusual */
+  await walk.step(page, "security: a first look at Security", async (p) => {
+    await open(walk, p, base, "/app/security", "security");
+    await requireWord(p, "screen.security.level.ordinary", { within: "#cs-main" });
+  });
+  const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4", startProjects: true });
   return { invite, byHandle };
 }
 
@@ -259,11 +264,18 @@ export async function signInBy(walk, page, base, who, label) {
 }
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
-   (`memberadd`); the link is shown once. */
-export async function inviteMember(walk, page, base, { id, cover }) {
+   (`memberadd`), and `startProjects` ticks that she may start projects; the link is shown once. */
+export async function inviteMember(walk, page, base, { id, cover, startProjects = false }) {
   let link = null;
   await walk.step(page, `members: an invitation link for ${id}`, async (p) => {
     await open(walk, p, base, "/app/members", "members");
+    /* journey 28: she lets Mai start projects as well as contribute (DEC-286: a member may not by default), so Home offers her "What happened?" */
+    if (startProjects) {
+      const box = p.locator("#mi-cap-create_projects");
+      if (!(await box.count())) throw new Error(`the invitation form has no choice to let her start projects on ${where(p)}`);
+      await reveal(box);
+      await box.check();
+    }
     await act(p, "memberadd", { fields: { "mi-id": id, "mi-cover": cover } });
     await shown(p, '[data-shown="invite"] code', "the invitation link");
     link = walk.keepSecret((await p.locator('[data-shown="invite"] code').first().textContent()).trim());
@@ -319,10 +331,13 @@ export async function walkMember(walk, page, { base, invite, member, phone }) {
       "ci-where": "Flat 4, second floor", "ci-when": yesterday } });
     await shown(p, '[data-tab="saw"] [role="status"]', "the testimony recorded");
   });
-  await walk.step(page, "account: sign out on this device", async (p) => {
+  /* R16 (DEC-251 (1)): Sign out is in the shell's menu, by its word (`shell.menu.signout`) */
+  await walk.step(page, "shell menu: sign out on this device", async (p) => {
     await open(walk, p, base, "/app/account", "account");
-    await act(p, "signout");
-    await shown(p, '[data-state="signedout"]', "the signed-out state");
+    await p.locator('[data-shell="menu"]:visible').first().click();
+    await requireWord(p, "shell.menu.signout", { within: "#cs-menu" });
+    await p.locator('#cs-menu [data-shell="signout"]').click();
+    await shown(p, '[data-state="signedout"], [data-overlay="signedout"]', "the signed-out state");
   });
   /* Next morning, on her own phone (another device): the group's address, signed in and kept signed in there. */
   await walk.step(phone, "front: on her phone, sign in, kept signed in", async (p) => {
@@ -362,7 +377,7 @@ export async function walkWelcome(walk, page, { base, link, member }) {
     await p.locator("a[href='/app'][data-nav]").last().click();
     await settle(p);
   });
-  await walk.step(page, "welcome 3: this is your group's home", async (p) => {
+  await walk.step(page, "welcome 3: this is your team's home", async (p) => {
     await requireDrawn(walk, p, "home");
     if (!(await p.locator('[data-guide-state="running"]').count())) await p.locator('[data-guide="start"]').first().click();
     await shown(p, '[data-guide-state="running"]', "the welcome running");

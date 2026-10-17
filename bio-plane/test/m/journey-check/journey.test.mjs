@@ -12,6 +12,10 @@ import { join } from "node:path";
 import { fakeAccount, AUTHORIZE, TOKEN, API } from "../../../src/journey-check/account.mjs";
 import { runLocal, runLive } from "../../../src/journey-check/run.mjs";
 import { FAIL } from "../../../src/journey-check/walker.mjs";
+import { JOURNEY_29_ORDER } from "../../../src/journey-check/design.mjs";
+import { RELEASE_MANIFEST } from "../../../../newgroup/src/release.mjs";
+import { createHash } from "node:crypto";
+import { planeOptions } from "../../../src/journey-check/local.mjs";
 
 const DIR = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 
@@ -46,9 +50,40 @@ test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verif
   assert.equal((await put({ bindings: [{ type: "secret_text", name: "ADMIN_TOKEN", text: "x" }, { type: "plain_text", name: "VERSION", text: "1" }] })).status, 200);
   assert.equal((await put({ bindings: [{ type: "plain_text", name: "VERSION", text: "2" }], keep_bindings: ["secret_text"] })).status, 200);
   assert.deepEqual(uploads.at(-1), ["grp", ["ADMIN_TOKEN", "VERSION"]], "the secret kept, the plain value restated");
+  /* the lists the installer reads to know the account's copies and parts (installer R62, R69) are answered, not left unanswered */
+  const get = async (path) => (await acct.handle(new Request(`${API}/accounts/${acct.account}${path}`, { headers: auth }))).json();
+  assert.deepEqual((await get("/workers/scripts")).result.map((x) => x.id), ["grp"]);
+  assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/r2/buckets`, { method: "POST", headers: auth, body: JSON.stringify({ name: "bio-captures-grp" }) }))).status, 200);
+  assert.deepEqual((await get("/r2/buckets")).result.buckets, [{ name: "bio-captures-grp" }]);
+  assert.deepEqual((await get("/containers/applications")).result, [], "the account runs no container application");
+  /* a secret set on its own (installer R69): the script then holds it, restarted with it; one deleted is gone */
+  const call = async (path, method, body) => acct.handle(new Request(`${API}/accounts/${acct.account}${path}`, { method, headers: auth, body: body && JSON.stringify(body) }));
+  assert.equal((await call("/workers/scripts/grp/secrets", "PUT", { name: "ADMIN_TOKEN", text: "second", type: "secret_text" })).status, 200);
+  assert.deepEqual(uploads.at(-1), ["grp", ["ADMIN_TOKEN", "VERSION"]]);
+  assert.equal((await call("/workers/scripts/nobody/secrets", "PUT", { name: "X", text: "y" })).status, 404);
+  assert.equal((await call("/workers/scripts/grp/secrets/ADMIN_TOKEN", "DELETE")).status, 200);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/workers/scripts/grp`, { headers: { authorization: "Bearer nope" } }))).status, 403);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/queues`, { headers: auth }))).status, 599);
   assert.deepEqual(acct.unanswered, [`GET ${API}/accounts/${acct.account}/queues`]);
+});
+
+test("R1 (a): the fake account answers the release's member addresses from the repository's committed release, whose bytes the installer's manifest signs; RELEASE.json and the plane's own asset stay unanswered; control: an address outside it is 404", async () => {
+  const acct = fakeAccount();
+  const at = (p) => acct.handle(new Request(`https://raw.githubusercontent.com/believeinoakland/bio/v${RELEASE_MANIFEST.version}/release/${p}`));
+  for (const m of RELEASE_MANIFEST.fleet) {
+    const r = await at(m.asset);
+    assert.equal(r.status, 200, m.asset);
+    assert.equal(createHash("sha256").update(Buffer.from(await r.arrayBuffer())).digest("hex"), m.sha256, `${m.member} as the installer verifies it`);
+  }
+  assert.equal((await at("RELEASE.json")).status, 404);
+  assert.equal((await at("bio-plane.bundled.mjs")).status, 404);
+  assert.equal((await at("../package.json")).status, 404);
+  assert.equal((await at("no-such-member.bundled.mjs")).status, 404);
+  /* the copy binds each capability member the upload gave it, to a worker that answers its version */
+  const { opts } = planeOptions([{ type: "service", name: "PDF_WORKER", service: "pdf-worker-grp" }, { type: "plain_text", name: "VERSION", text: "9.9.9" }],
+    { dir: "/tmp/x", name: "grp", outbound: () => new Response("") });
+  assert.equal(opts.workers[0].serviceBindings.PDF_WORKER, "pdf-worker-grp");
+  assert.ok(opts.workers.some((w) => w.name === "pdf-worker-grp" && /"pdf-worker"/.test(w.script) && /9\.9\.9/.test(w.script)));
 });
 
 /* The local arm walked once, end to end, shared by the tests that name what it walks (R1 (a), R7, R9–R11, R13, R14). It is
@@ -68,7 +103,7 @@ test("R1 (a): the local arm, with no account: the installer over its fake accoun
   assert.equal(r.ok, true, r.report);
   assert.equal(shots.length, r.walk.steps.length);
   assert.deepEqual(stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label), ["civicsmith.org: what Civicsmith is",
-    "civicsmith.org: start a group, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
+    "civicsmith.org: start a team, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
@@ -117,8 +152,41 @@ test("R7: the walk as stated: signed in as the founder, no screen draws admin as
 
 test("R13: the local arm pairs each step of design journey 29 with the mock's drawing of it", { timeout: 2400000 }, async () => {
   const { r } = await local();
-  assert.ok(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length >= 14, r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, 18, r.report);
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.DESIGN).map((f) => f.detail), []);
+});
+
+test("R15: the local arm finds agent-worker's SEGMENTS binding present and walks R9's run step", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(!r.walk.failures.some((f) => /SEGMENTS/.test(f.detail)), r.report);
+  assert.ok(r.walk.steps.some((s) => s.label.startsWith("9 · run the assistant")), r.report);
+});
+
+test("R15 control: with the binding removed, step 9 fails by name, not with a silent stop", { timeout: 2400000 }, async () => {
+  const out = mkdtempSync(join(tmpdir(), "jc-nosegments-"));
+  try {
+    const r = await runLocal({ out, segments: false, parts: [] });
+    const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
+    /* the steps before it hold only where the assistant's own sign-in is drawn; where they stop, the walk says so by name */
+    if (nine) {
+      assert.equal(nine.ok, false, r.report);
+      assert.ok(r.walk.failures.some((f) => f.step === nine.label && /no SEGMENTS binding \(R15\)/.test(f.detail)), r.report);
+    } else assert.ok(r.walk.failures.length > 0, "a walk that stopped before step 9 says why: " + r.report);
+  } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test("R16, R18: the local arm walks journey 29's search path with no assistant, to a conclusion on her own reading, and visits each of the 18 steps", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  const steps = r.walk.steps.filter((s) => s.journey.startsWith("R16 without the assistant"));
+  assert.ok(steps.some((s) => /conclude on her own reading/.test(s.label) && s.ok), r.report);
+  assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+  assert.ok(r.walk.steps.some((s) => /sign out on this device/.test(s.label) && s.ok), r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, JOURNEY_29_ORDER.length, r.report);
+});
+
+test("R17: no page the walk serves says \"group\" for a team", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.GROUP).map((f) => f.detail), []);
 });
 
 test("R1 (b): the live arm reads the administrator's and a member's credentials from the environment and never prints them; control: without them it refuses before any request", async () => {

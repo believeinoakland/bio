@@ -16,7 +16,8 @@ const ASSERTED = ["screen.connect.own.subscription", "question.empty.heading", "
   "screen.capture.file.done", "screen.held.released", "ref.here.cited.support", "question.run.heading", "question.proposal.heading",
   "screen.assistant.notevidence", "question.concluded.by", "screen.plan.ask.running", "screen.plan.ask.ended", "founder.handle.done",
   "founder.handle.says", "founder.handle.later.help", "screen.document.passages.head", "state.empty", "dock.run.yours", "screen.answers.machine",
-  "screen.site.start", "screen.site.create", "screen.assistant.run.ended"];
+  "screen.site.start", "screen.site.create", "screen.assistant.run.ended", "question.conclude.own.choice", "question.conclude.own.field",
+  "question.conclude.own.help", "question.reading.by.member", "question.empty.conclude.own", "shell.menu.signout", "screen.security.level.ordinary"];
 
 test("R14: every key a step asserts is a word the list holds, read through setup-words' word", () => {
   for (const k of ASSERTED) assert.ok(hasWord(k), k);

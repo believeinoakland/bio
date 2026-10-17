@@ -133,47 +133,68 @@ export async function designMock(b, { dir, commit = assetsCommit(), root = ROOT 
       kept.set(key, png);
       return png;
     },
-    /* R13: a design journey's steps as the mock walks them (`stepsNow`), with the assistant or without */
-    async steps(journey, { ai = true } = {}) {
-      return page.evaluate(([n, ai]) => {
-        const W = window.CS_WALK; Object.assign(W.st, { mode: "journey", id: n, ai, step: 0 });
-        return W.stepsNow().map((x) => ({ s: x.s, v: x.v ?? null, act: x.act ?? null }));
-      }, [journey, ai]);
+    /* R18: every step of design journey `journey` as the design's file holds it, in its order, the assistant's and the
+       no-assistant's alike: `{s, v, act, only}` (`only` is "ai", "noai" or null) */
+    async allSteps(journey) {
+      return page.evaluate((n) => {
+        const j = J.find((x) => x.n === n);
+        return j ? j.steps.map((x) => ({ s: x.s, v: x.v ?? null, act: x.act ?? null, only: x.only ?? null })) : [];
+      }, journey);
     },
-    /* R13: the mock's drawing of step `i` (from 0) of design journey `journey`, at `width`; `null` when it has no such step */
-    async drawStep(journey, i, width, { ai = true } = {}) {
-      const ok = await page.evaluate(([n, i, ai, dev]) => {
-        const W = window.CS_WALK; Object.assign(W.st, { mode: "journey", id: n, ai, dev, step: 0 });
-        if (!(i >= 0 && i < W.stepsNow().length)) return false;
-        W.st.step = i; W.draw();
+    /* R18: the mock's drawing of step `k` (from 0) of the design file's own list of journey `journey`, at `width`, as the
+       design draws it: with the assistant for a step marked "ai" or for none, without it for one marked "noai"; `null`
+       when the file has no such step */
+    async drawStepAt(journey, k, width) {
+      const ok = await page.evaluate(([n, k, dev]) => {
+        const j = J.find((x) => x.n === n), x = j && j.steps[k];
+        if (!x) return false;
+        const ai = x.only ? x.only === "ai" : true;
+        const i = journeySteps(j, ai).indexOf(x);
+        if (i < 0) return false;
+        const W = window.CS_WALK; Object.assign(W.st, { mode: "journey", id: n, ai, dev, step: i }); W.draw();
         const sc = document.getElementById("vscale"), box = document.getElementById("vdev");
         sc.style.transform = "none";
         Object.assign(box.style, { width: "max-content", height: "auto", overflow: "visible" });
         return true;
-      }, [journey, i, ai, width <= PHONE ? "phone" : "desktop"]);
+      }, [journey, k, width <= PHONE ? "phone" : "desktop"]);
       return ok ? page.locator("#vscale").screenshot() : null;
     },
     close: () => ctx.close().catch(() => {}),
   };
 }
 
-/* R13: design journey 29 ("From installing to a first conclusion", DEC-245), each step paired: the LIVE screenshot of the
-   walk's step that walks it (`liveOf(step, i)` answers its file, or null when the walk did not reach it) beside the
-   mock's drawing of the step, at 1280 px, into `out/pairs/`. A step with no LIVE screenshot, or one the mock does not
-   draw, fails the walk by name: a missing pair is a failure, never a gap in the comparison. Answers the pairs written. */
+/* R13, R18: design journey 29 ("From installing to a first conclusion", DEC-245; DEC-292 D14, DEC-293), each of its 18
+   steps in the design file's order, the LIVE screenshot of the walk's step that walks it (`liveOf(step, k)` answers its
+   file, or null when the walk did not reach it) beside the mock's drawing of the step, at 1280 px, into `out/pairs/`.
+   `JOURNEY_29_ORDER` is R18's list (screen, state, act); the design's file is checked against it, and a step the file does
+   not hold there fails by its number. A step with no LIVE screenshot, or one the mock does not draw, fails by name: a missing
+   pair is a failure, never a gap in the comparison, except that where the assistant does not work (`notWalked`, the live arm,
+   K3747) a step the design marks for the assistant is reported in `walk.notes` as not walked, never failed. Answers the pairs
+   written. */
 export const JOURNEY_29 = 29;
-export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURNEY_29, width = 1280 }) {
+export const JOURNEY_29_ORDER = Object.freeze([
+  ["install", "start", "bootstrap"], ["install", "done", null], ["setup", null, "claim"], ["setup", null, "groupkeyset"],
+  ["home", "newgroup", null], ["security", "ordinary", null], ["projects", "empty", "promote"], ["project", "empty", "promote"],
+  ["question", "new", "airunopen"], ["question", "running", null], ["question", "ended", "airunopen"], ["question", "new", "search"],
+  ["capture", "question", "acquire"], ["document", "held", "release"], ["document", null, "cite"],
+  ["question", "proposal", "versionaccept"], ["question", null, "conclude"], ["question", "concluded", null]].map(([s, v, act]) => Object.freeze({ s, v, act })));
+export const stepName = (journey, k, st) => `journey ${journey} step ${k + 1} (${st.s}${st.v ? ", " + st.v : ""}${st.act ? ", " + st.act : ""})`;
+export async function journeyPairs(walk, b, mock, { out, liveOf, journey = JOURNEY_29, width = 1280, notWalked = false, order = JOURNEY_29_ORDER }) {
   const written = [];
-  const steps = await mock.steps(journey, { ai: true });
-  for (const [i, st] of steps.entries()) {
-    const name = `journey ${journey} step ${i + 1} (${st.s}${st.v ? ", " + st.v : ""})`;
-    const live = liveOf(st, i);
-    const design = await mock.drawStep(journey, i, width, { ai: true });
+  const steps = await mock.allSteps(journey);
+  if (journey === JOURNEY_29) for (const [k, want] of order.entries()) {
+    const got = steps[k];
+    if (!got || got.s !== want.s || got.v !== want.v || got.act !== want.act)
+      walk.fail(FAIL.DESIGN, `${stepName(journey, k, want)}: the design's file holds no such step there`);
+  }
+  for (const [k, st] of steps.entries()) {
+    const name = stepName(journey, k, st);
+    const live = liveOf(st, k);
+    if (!live && notWalked && st.only === "ai") { walk.notes.push(`${name}: not walked, the assistant does not work (K3717)`); continue; }
+    const design = await mock.drawStepAt(journey, k, width);
     if (!live) { walk.fail(FAIL.DESIGN, `${name}: no LIVE screenshot of it, so no pair`); continue; }
     if (!design) { walk.fail(FAIL.DESIGN, `${name}: the design mock at ${mock.commit} draws no such step`); continue; }
-    const file = await pair(b, readFileSync(live), design, join(out, "pairs", `journey-${journey}-step-${String(i + 1).padStart(2, "0")}-${st.s}.png`),
-      { title: name });
-    written.push(file);
+    written.push(await pair(b, readFileSync(live), design, join(out, "pairs", `journey-${journey}-step-${String(k + 1).padStart(2, "0")}-${st.s}.png`), { title: name }));
   }
   return written;
 }
