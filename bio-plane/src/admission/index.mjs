@@ -45,13 +45,20 @@
    T49 (T49-18; D24, K1881, K3333, K3366, K3368): a public read presenting a live session is counted in that session's own
    window, `SESSION_WINDOW` (R27), and every other request to a public op stays in its source's (R21); the sentence of
    every refusal is the word `refusal.<CODE>` read through setup-words' `word`, the rows (checks.mjs) holding only
-   their check id and site (R28). */
+   their check id and site (R28).
+
+   T50 (T50-79; N1179, N1186, N1146; K3747, K3557; DEC-278): an administrator's own act that `REAUTH_ACTS` names, asked
+   by a session whose member is not an administrator, is refused membership's `NOT_AN_ADMIN` before the password is
+   asked (R29); the viewer of an `ai` credential minted in a project carries that project (R30); the key list R28 reads
+   is the design's regenerated one (R31). */
 import { liveToken, sha256hex } from "../tokens.mjs";
 import { word } from "../setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
-import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../op-declarations/index.mjs";
+import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS,
+         OP_FAMILIES } from "../op-declarations/index.mjs";
 import * as OP_DECLARATIONS from "../op-declarations/index.mjs";
 import { Credentials } from "../credentials/index.mjs";
+import { notAnAdmin, projectViewer } from "../membership/index.mjs";
 import { ADMISSION_CHECKS, NAMESPACE_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS, GROUP_IDENTITY_FENCE_CHECKS } from "./checks.mjs";
 
 export const SCRATCH = "scratch";
@@ -426,7 +433,19 @@ export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai", run: boundRun(cred) } } };
   /* END DEC-49 REGION is-ai-task-scope */
 
-  return { ok: true, viewer: cred.principal };
+  return { ok: true, viewer: aiViewerOf(cred) };
+}
+
+/* R30 (T50; N1186, K3557; credentials R79, membership R149) — THE VIEWER AN `ai` CREDENTIAL IS SEEN WITH. A credential
+   minted in a project makes the viewer `credentials.aiCredentialLook` answers: `membership.projectViewer` of the
+   principal's own viewer, so what the caller reads is what membership R149 admits within that project. The look already
+   answers it as the principal; this spells it once more from the `project` beside it, which changes nothing a look has
+   already carried (R149: a viewer that carries a project is never re-scoped) and keeps a credential row whose principal
+   came without it from being read wider than its project. No project, or a principal R149 leaves alone (an
+   organisation key's `class:ai`): the principal as it is. */
+export function aiViewerOf(cred) {
+  const principal = cred.principal;
+  return typeof cred.project === "string" && cred.project !== "" ? projectViewer(principal, cred.project) : principal;
 }
 
 /* R23: the run a credential's row is bound to, or null for a credential bound to none. */
@@ -702,6 +721,10 @@ export async function admit({ url, env, op, spec, method, presented, doAnswer, t
         + `administrator, so ask one to grant it rather than looking for another route.`) };
     /* R25 (K3084; credentials R66, R71 (2); op-declarations R58): the password asked again */
     if (reauthAsked(reauthActs, op, { url, body })) {
+      /* R29 (T50; N1179; membership R84): an administrator's own act is asked of the roster first, so a member who may not
+         take it is never asked to sign in again for it. Membership's one answer, `NOT_AN_ADMIN`; nothing is asked of the store. */
+      if (sess.administer !== true && administratorsOwnActs().has(op))
+        return { refusal: { status: 403, body: notAnAdmin(halves.member, op) } };
       const due = await reauthDuePresented(t, env, doAnswer);
       if (due.silent) return { silent: due.silent };
       if (due.refusal) return { refusal: { status: 403, body: due.refusal } };
@@ -749,6 +772,15 @@ export function reauthAsked(acts, op, { url = null, body = null } = {}) {
     }
   } catch { return true; }
   return true;
+}
+/* R29 (T50; N1179; op-declarations R58, R62) — THE ADMINISTRATOR'S OWN ACTS, read from op-declarations and held nowhere
+   here: `GOVERNANCE_ACTIONS` and `CUSTODIAL_ACTIONS`, and every op its families declare of kind `admin` or `roster` (an act
+   its owner asks of the roster, `NOT_AN_ADMIN`). An op added to any of them is covered with no change here. */
+function administratorsOwnActs() {
+  const own = new Set([...GOVERNANCE_ACTIONS, ...CUSTODIAL_ACTIONS]);
+  for (const f of Object.values(OP_FAMILIES))
+    for (const [op, kind] of Object.entries(f.kinds)) if (kind === "admin" || kind === "roster") own.add(op);
+  return own;
 }
 /* R25: credentials' `reauthDue({token})` (its R71 (2)), asked of `bio`'s store by the internal route `reauthdue`, the
    session's token in the `x-bio-session` header and nothing in the address (R20). `{ refusal }` (credentials' row as
@@ -807,7 +839,7 @@ export function bearerFence(op, caller) {
    parameter is a string). */
 export function callerViewer(caller, { carry = true } = {}) {
   if (caller.viaSession) return caller.viewer;
-  if (caller.cls === "ai") return carry ? { stamp: caller.aiCred.principal, aiCred: caller.aiCred } : caller.aiCred.principal;
+  if (caller.cls === "ai") return carry ? { stamp: aiViewerOf(caller.aiCred), aiCred: caller.aiCred } : aiViewerOf(caller.aiCred);
   return `${MACHINE_CLASS_PREFIX}${caller.cls}`;
 }
 
