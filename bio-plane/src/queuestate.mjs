@@ -67,7 +67,7 @@
 import { CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
 export const QUEUE_CONDITION_KINDS = Object.freeze({
   ...CONDITION_KINDS,
-  "action-clock-overdue":       "a deadline on one of the group's actions passed while its entry is still pending "
+  "action-clock-overdue":       "a deadline on one of the team's actions passed while its entry is still pending "
                               + "(DEC-94) — LIVE: action-producers R1, from action-clocks' overdueClocks",
   /* R1, R5 (DEC-101 (3), DEC-116 item 8; T31): a docket a member follows could not be read on this copy's latest read.
      A fact about our own reading, never about the publisher, so a CONDITION a member quiets for themselves; queue's to add
@@ -115,19 +115,19 @@ export const QUEUE_OBLIGATION_KINDS = {
   /* The Action layer (R1; K608, K613, K614; BIO_Action_v0_1.md §4 rule 5): three OBLIGATIONs, each a judgement or an
      answer a named member owes, each leaving by its own act (R12's doors) and never by a mute. Their producers are
      `action-producers`' (its R2, R3, R4; `queue-producers` R16–R18 until T45, K2781 (1)). */
-  "plan-checkpoint-due":         "a checkpoint your group set in an action plan has come; a member judges whether its "
+  "plan-checkpoint-due":         "a checkpoint your team set in an action plan has come; a member judges whether its "
                               + "condition was met (op=checkpointrecord) — LIVE: action-producers R2",
   "escalation-stage-proposed":   "an escalation's next stage is proposed because its trigger was met; a member advances "
                               + "it or declines with a reason (op=escalationadvance, op=escalationdecline) "
                               + "— LIVE: action-producers R3",
-  "action-reminder":             "a reminder you asked for on one of the group's action deadlines; answer it with "
+  "action-reminder":             "a reminder you asked for on one of the team's action deadlines; answer it with "
                               + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: action-producers R4",
   /* K899 (7), DEC-61, DEC-113 (R1; action-holds R2, R5, were actions R52, R56): a reply the group marked as legal
      pressure asks the group whether to place a litigation hold; a member answers by placing the hold (op=actionhold) or
      releasing it (op=actionholdrelease, its own act since DEC-113), each with a reason, and those acts are the item's
      doors (R12). (T45; Actions D10, v0.2 rule 12) A `legal` mark on a docket entry and a `legal` pressure record raise
      it too. An OBLIGATION, never muted. Its producer is `action-producers`' (its R5, was `queue-producers` R19). */
-  "litigation-hold":             "a reply the group marked as legal pressure: consider whether to place a litigation "
+  "litigation-hold":             "a reply the team marked as legal pressure: consider whether to place a litigation "
                               + "hold, and record it in place or released with a reason (op=actionhold to place it, "
                               + "op=actionholdrelease to release it; DEC-61, DEC-113); a legal mark on a docket entry, "
                               + "or a legal pressure record, asks the same — LIVE: action-producers R5",
@@ -136,7 +136,7 @@ export const QUEUE_OBLIGATION_KINDS = {
      until T45). */
   "template-review-requested":   "a member asked you to review a filing template's version (op=templatereview) "
                               + "— LIVE: action-producers R6",
-  "local-fact-due":              "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed "
+  "local-fact-due":              "a holiday calendar or office hours one of the team's deadlines reads is unconfirmed "
                               + "or due for confirmation (op=factconfirm) — LIVE: action-producers R7",
   /* DEC-102 item 3, K1019 (R1; publication R17): a case edition being prepared reaches an observation the member authored
      and they have chosen no credit level for it. Theirs alone to answer, by choosing one (R12's door, op=attribute), and
@@ -180,15 +180,22 @@ export const QUEUE_OBLIGATION_KINDS = {
      `action-producers`' (its R10, R12). */
   "watch-keep-or-stop":          "a plan that set a watch running has closed, or every promise it watched is met: keep "
                               + "the watch until a date, or stop it (op=watchanswer) — LIVE: action-producers R10",
-  "plan-review-due":             "a review day your group set for a plan has come; record a review "
+  "plan-review-due":             "a review day your team set for a plan has come; record a review "
                               + "(op=planreviewrecord) — LIVE: action-producers R12",
   "plan-look-again":             "a paused plan's look-again date has come; look again, resume it (op=planresume) or "
                               + "close it — LIVE: action-producers R12",
   /* T48 (R1, R12, R54; N1047, K3189; DEC-226 (1); machinery-producers R11): a release of the group's Civicsmith is ready to
      install. Every active administrator is asked, and it leaves every one's list when one of them acts on it, so it is an
-     OBLIGATION, never muted; its door is `updatelater` (R12) and its section is "Your group's Civicsmith" (R54). */
-  "update-ready":                "a release of your group's Civicsmith is ready to install; read what changes, then update, "
+     OBLIGATION, never muted; its door is `updatelater` (R12) and its section is "Your team's Civicsmith" (R54). */
+  "update-ready":                "a release of your team's Civicsmith is ready to install; read what changes, then update, "
                               + "put it aside, or skip it with a reason — LIVE: machinery-producers R11",
+  /* T50 (R1, R12, R57; N1091, N1204; DEC-248, DEC-286): a member is invited to a project, and a member asks to join one.
+     Each is a to-do a named member owes and leaves by its own act (R12's doors), never by a mute. Their producers are
+     `queue-producers`' (its R41, R42). */
+  "project-invitation":          "you are invited to a project; join it or leave it (op=projectjoin) "
+                              + "— LIVE: queue-producers R41",
+  "project-request":             "a member asks to join a project you own; grant or decline (op=projectrequestanswer) "
+                              + "— LIVE: queue-producers R42",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -299,9 +306,9 @@ export const QUEUE_FINDING_KINDS = {
   /* DEC-116 items 3, 7 (R1, R50; reevaluation R30, docket R12): what a case edition's docket did to something a
      finding rests on. Each leaves as `side-corrected` does, by a recorded re-evaluation (R50). Their producer is
      `queue-producers`' (its R31). */
-  "edition-withdrawn":          "something a finding rests on is in a case edition its group has withdrawn (DEC-116) "
+  "edition-withdrawn":          "something a finding rests on is in a case edition its team has withdrawn (DEC-116) "
                               + "— LIVE: queue-producers R31",
-  "edition-contested":          "a response the group filed contests a case edition this finding is part of (DEC-116) "
+  "edition-contested":          "a response the team filed contests a case edition this finding is part of (DEC-116) "
                               + "— LIVE: queue-producers R31",
   /* DEC-113 (R1; action-holds R5, R8, were actions R56, R59): the administrators and whoever placed the hold are told
      once that it was released. Something the record noticed, which the recipient disposes of (R12's FINDING
@@ -317,8 +324,8 @@ export const QUEUE_FINDING_KINDS = {
   /* DEC-101 (3) (R1; reevaluation R33): a case another group published, which your group cites, moved on its publisher's
      docket. Each leaves as `edition-withdrawn` does, by a recorded re-evaluation. Their producer is `queue-producers`'
      (its R34). */
-  "cited-newer-edition":        "a case your group cites has a newer edition (DEC-101) — LIVE: queue-producers R34",
-  "cited-edition-withdrawn":    "a case edition your group cites has been withdrawn (DEC-101) — LIVE: queue-producers R34",
+  "cited-newer-edition":        "a case your team cites has a newer edition (DEC-101) — LIVE: queue-producers R34",
+  "cited-edition-withdrawn":    "a case edition your team cites has been withdrawn (DEC-101) — LIVE: queue-producers R34",
   /* DEC-101 (3), DEC-116 item 8 (R1; case-import R20): what a followed docket gained or refused, told once to who set the
      watch. Their producer is `queue-producers`' (its R35). */
   "followed-case-entry":        "a docket you follow gained an entry (DEC-101, DEC-116) — LIVE: queue-producers R35",
@@ -329,21 +336,21 @@ export const QUEUE_FINDING_KINDS = {
      hypothesis (R12). Shown only once each check's or detector's gate is open (plan Rule 7), which is its owner's to
      judge. Their producer is `notice-producers`' (its R2, R3, R4). */
   "interest-check-noticed":     "the machine noticed a pattern among people's facts that a check you may see describes; "
-                              + "labelled as the machine's, not a judgment of anyone (K1491) — LIVE: notice-producers R2",
-  "money-detector-noticed":     "the machine noticed a pattern in the money facts that a detector describes; labelled as "
+                              + "labeled as the machine's, not a judgment of anyone (K1491) — LIVE: notice-producers R2",
+  "money-detector-noticed":     "the machine noticed a pattern in the money facts that a detector describes; labeled as "
                               + "the machine's (K1491) — LIVE: notice-producers R3",
-  "standing-answer":            "your standing question found something new; labelled as the assistant's (K1481) "
+  "standing-answer":            "your standing question found something new; labeled as the assistant's (K1481) "
                               + "— LIVE: notice-producers R4",
   /* T36-46 (R1; N742, K2038, K2130): what the group's own defences and the policies it follows did, each told once to
      whom it concerns and disposed of by its recipient (R12's default FINDING disposition; with no project home it is
      quieted by the item mute). None names a member. Their producer is `notice-producers`' (its R12–R15). */
-  "security-level-high":        "the group's security level became High: an unusual run of refused attempts, or something "
+  "security-level-high":        "the team's security level became High: an unusual run of refused attempts, or something "
                               + "got through; counts only, naming no one (DEC-165) — LIVE: notice-producers R12",
-  "policy-changed-noticed":     "a policy the group follows changed at its address without an announced amendment; "
+  "policy-changed-noticed":     "a policy the team follows changed at its address without an announced amendment; "
                               + "review it (DEC-145) — LIVE: notice-producers R13",
   "scan-found":                 "a file you can see was held after a scanner found something in it; its safe view stays "
                               + "open (DEC-169) — LIVE: notice-producers R14",
-  "security-tool-off":          "one of the group's security tools was switched off because it did not confirm its private "
+  "security-tool-off":          "one of the team's security tools was switched off because it did not confirm its private "
                               + "mode (K1929) — LIVE: notice-producers R15",
   /* T40 (R1; N812, K2376 (2), K2394; notice-producers R16): what the AI accounts did, each told to whom it concerns.
      The words members see are the design stream's (`words.json`, read by key by notice-producers); these sentences are
@@ -355,7 +362,7 @@ export const QUEUE_FINDING_KINDS = {
                               + "— LIVE: notice-producers R16",
   /* T41 (R1; N820, K2418, K2484; notice-producers R17): what the investigation's work noticed, each told once and each
      disposed of by a project (R52), or quieted by its recipient where no project holds it. */
-  "question-find":              "the machine found something that may bear on a question you follow; labelled as the "
+  "question-find":              "the machine found something that may bear on a question you follow; labeled as the "
                               + "machine's work — accept it, hold it as a hypothesis, or plan a step "
                               + "— LIVE: notice-producers R17",
   "step-later-found":           "something a step looked for and did not find has since arrived; the step's look stays "
@@ -376,6 +383,10 @@ export const QUEUE_FINDING_KINDS = {
      recipient quiets it for themselves (R12). Its producer is `action-producers`' (its R9). */
   "member-left-items":          "a member who left had items of this project routed to them; take up the ones you "
                               + "choose — LIVE: action-producers R9",
+  /* T50 (R1, R12, R57; N1204; DEC-304; notice-producers R24): something a member watches changed, told to the watcher alone
+     (as `standing-answer` is), so no project decides it and its recipient quiets it for themselves. */
+  "watched-changed":            "something you watch changed; open it to see what changed (DEC-304) "
+                              + "— LIVE: notice-producers R24",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
@@ -481,6 +492,23 @@ export function serializeMutedKinds(kinds) {
 export function parseMutedKinds(text) {
   if (typeof text !== "string" || !text) return [];
   return [...new Set(text.split(",").map((k) => k.trim()).filter(Boolean))].sort();
+}
+
+/* R55 (T50; N1094): the instants a case's kinds were muted, stored beside `muted_kinds` as one JSON object, kind to
+ * instant. A kind muted before they were kept has no entry, and answers no instant: it is never back-filled. Never
+ * throws: text that is no such object reads as none held. */
+export function parseMutedAt(text) {
+  if (typeof text !== "string" || !text) return {};
+  try {
+    const o = JSON.parse(text);
+    if (!o || typeof o !== "object" || Array.isArray(o)) return {};
+    return Object.fromEntries(Object.entries(o).filter(([k, v]) => k && typeof v === "string" && v));
+  } catch { return {}; }
+}
+/* Sorted by kind, so one set of instants has one representation; null (not "{}") when none is held. */
+export function serializeMutedAt(at) {
+  const keys = Object.keys(at || {}).filter((k) => typeof at[k] === "string" && at[k]).sort();
+  return keys.length ? JSON.stringify(Object.fromEntries(keys.map((k) => [k, at[k]]))) : null;
 }
 
 /* THE ADMISSION DECISION, and the ONLY one. Given a queue item (its kind and

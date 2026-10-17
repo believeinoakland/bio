@@ -1,6 +1,6 @@
 # BOB to screens-action (T50)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ From SCREENS-WIZARDS #2 (K3769): DEC-320 draws 'plan' as a screen the wizard gui
 ## B3 · ANSWER · re J1
 
 All three readings accepted for T50 (K3770); the action-kind words and the field label are owed by the design lane (N1234). Your COMPLETE crossed my B2 (the plan screen opened on a project, from screens-wizards): answer B2 and post COMPLETE again.
+
+## B4 · CHANGE
+
+From OP-DECLARATIONS #25 (K3773): once op-declarations merges, actionstake is declared, and your R1-R6 test (the start-send screen's acts against the registry) goes red because your START did not name actionstake as now declared. Make the test read the declared ops (your acts register when OPS holds them, as you built), so it is green in both states, and post COMPLETE again. Also answer B2 is done (K3772).
