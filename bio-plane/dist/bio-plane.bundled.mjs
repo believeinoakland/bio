@@ -1865,7 +1865,7 @@ __export(checks_exports, {
 });
 
 // src/setup-words/rows.mjs
-var WORDS_COMMIT = "039cb02bbc";
+var WORDS_COMMIT = "0f87be0014";
 var WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
   ["weight.reasoned.name", "Reasoned", null, "Reasoned: asks for your reason, which becomes part of the record.", true],
@@ -4290,7 +4290,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.held.archive", "An archive: {parts}", "adopted from screens-intake's own rows", null, false],
   ["screen.held.archive.filed", "{count} files held beside it", "adopted from screens-intake's own rows; DEC-259: reworded", null, false],
   ["screen.held.archive.notfiled", "{count} not filed", "adopted from screens-intake's own rows", null, false],
-  ["screen.held.archivefiles", "Its files", "adopted from screens-intake's own rows", null, false],
+  ["screen.held.archivefiles", "Open its files", "adopted from screens-intake's own rows; DEC-259: reworded", null, false],
   ["screen.held.archivemore", "{shown} of {total} files shown.", "adopted from screens-intake's own rows", null, false],
   ["screen.held.more", "More captures are waiting than are shown here: {count} shown.", "adopted from screens-intake's own rows", null, false],
   ["screen.held.ack", "What you vouch for", "adopted from screens-intake's own rows", null, false],
@@ -7722,6 +7722,70 @@ var WORD_ROWS = Object.freeze([
   ["screen.ceremony.nothing", "Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.", "DEC-310: Publish with no prepared case", null, false],
   ["screen.published.corrections.none", "None since it was published.", "DEC-310: the public page's corrections and orders", null, false],
   ["screen.published.corrections", "Every correction, withdrawal and court order on this case is listed on its docket.", "DEC-310: the public page's corrections and orders; 'its docket' links to the docket", null, false],
+  ["screen.connect.check.ifstops", "If the check stops", "DEC-310: screens-settings R41: the failed check, opened", null, false],
+  ["refusal.NO_SET", "Nothing was named for this to work on. This is a fault in Civicsmith, not in what you did; report it if it happens again. Nothing was changed.", "DEC-312: one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set", null, false],
+  ["refusal.SET_TOO_LARGE.read", "That asks for more than Civicsmith reads at once ({max} at most; this named {given}), so nothing was read. Ask for fewer.", "DEC-312: progressions C-100.27: a read, so not record-core's SET_TOO_LARGE, which acts on a selection", null, false],
+  ["entities.considered.name", "the name", "DEC-312: entities: the recogniser's considered list, after the composite key and the source key", null, false],
+  ["entities.relation.proxy_for", "stands in for", 'DEC-312: entities R47: "A stands in for B"', null, false],
+  ["entities.relation.member_of", "is a member of", "DEC-312: entities R47", null, false],
+  ["entities.relation.overlaps", "overlaps with", "DEC-312: entities R47", null, false],
+  ["entities.relation.proxy_for.name", "Stands in for", "DEC-312: entities R47: the kind named alone", null, false],
+  ["entities.relation.member_of.name", "Member of", "DEC-312: entities R47", null, false],
+  ["entities.relation.overlaps.name", "Overlaps", "DEC-312: entities R47", null, false],
+  ["refusal.UNKNOWN_FORUM_KIND", "That isn't a kind of forum Civicsmith knows. Choose one of these: {forum_kinds}. Nothing was written.", "DEC-312: entities: createEntity, readEntity, entitiesOfKind", null, false],
+  ["refusal.FORUM_KIND_NOT_FOR_KIND", "Only a public body or an institution has a kind of forum; a {kind} has none. Nothing was written.", "DEC-312: entities: a forum kind given for another kind of entity", null, false],
+  ["events.grade_why.unplaced", "Placed nowhere: no record you can see gives this event a date, so nothing sets its time.", "DEC-312: events: grade_why when nothing dates the event", null, false],
+  ["retrieval.syntax.compare_range", "field:>value and field:<value compare; field:a..b asks for a range.", "DEC-312: retrieval searchFields().syntax (1)", null, false],
+  ["retrieval.syntax.content_layer", "content: searches the passages someone has cited or marked citable: content:pdf-page by the kind of extent, content:stale for citations made on a reading since replaced, content:machine by who made them, content:ocr by the reading's last step, content:cap<C by the strength cap, content:uncited for passages marked citable and not yet used.", "DEC-312: retrieval R16 (2)", null, false],
+  ["retrieval.syntax.content_not_text", "content: does not search what the documents say. It searches what has been cited or marked citable in them, so finding nothing tells you about citations, never about what a document says.", "DEC-312: retrieval R16 (3)", null, false],
+  ["retrieval.syntax.meaning_arm", "A meaning takes a bare word (leg:cuts_against), a part of it (leg:ground=*) or a comparison (resolves:>=B on the bare field; leg:grade>=B or content:cap<C on a named one).", "DEC-312: retrieval (4): the whole sentence; retrieval.syntax.bare_field_leg, a fragment, is no longer read", null, false],
+  ["retrieval.notread.not_extracted", "Not read yet: Civicsmith holds no reading of this capture.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.no_text", "No text: this capture's reading holds no text to search.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.cells_only", "No text: this capture's reading holds table cells but no text to read sentences from.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.no_text_name", "No text: this capture's reading holds no text to find a name in.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.no_matcher", "Civicsmith can't read {language} for this yet.", "DEC-312: retrieval findin not_read: a language with no matcher", null, false],
+  ["retrieval.notread.no_language", "Civicsmith can't read this capture's language for this yet: neither its reading nor the team's profiles say what language it is.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.not_minutes", "Not minutes or an agenda.", "DEC-312: retrieval findin not_read", null, false],
+  ["retrieval.notread.wrong_shape", "The record answered in a form Civicsmith did not expect, so this was not read.", "DEC-312: retrieval findin and browse: any read answering another shape than its contract's", null, false],
+  ["retrieval.notread.cells_why", "No row of cells is named: the reading holds no table cells for this sheet, or the words found run across cells.", "DEC-312: retrieval R83", null, false],
+  ["shell.card.published", "A case your team published, as anyone reads it: its findings, their strength, the evidence, and how to check it without the team.", "DEC-313: interface-shell R81", null, false],
+  ["shell.card.archive", "One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.", "DEC-313: interface-shell R81", null, false],
+  ["screen.published.corrections.heading", "Corrections and orders", "DEC-313: screens-publish R33", null, false],
+  ["screen.published.corrections.some", "{count} since it was published. The latest: {kind}, {date}.", "DEC-313: screens-publish R33: count above 1; the docket sentence follows", null, false],
+  ["screen.published.corrections.some.one", "One since it was published: {kind}, {date}.", "DEC-313: screens-publish R33: count 1", null, false],
+  ["screen.published.corrections.kind.edition", "a new edition", "DEC-313: screens-publish R33: {kind}", null, false],
+  ["screen.published.corrections.kind.withdrawal", "a withdrawal", "DEC-313: screens-publish R33: {kind}", null, false],
+  ["screen.published.corrections.kind.court-order", "a court order", "DEC-313: screens-publish R33: {kind}", null, false],
+  ["screen.case-editor.noconcluded", "No question in this project is concluded yet, and a case is made from concluded questions. Conclude one on its question page, then come back.", "DEC-313: screens-publish R31: none to tick", null, false],
+  ["screen.person.basis.row.identifier", "the same identifier appears on the dates cited", "DEC-313: screens-investigate R38: {basis} in screen.person.same.because", null, false],
+  ["screen.person.basis.row.corroborated_name", "the name and the same post appear on the dates cited", "DEC-313: screens-investigate R38", null, false],
+  ["screen.person.basis.row.name", "both records carry the name", "DEC-313: screens-investigate R38", null, false],
+  ["screen.person.basis.row.testimony", "a member knows it to be so", "DEC-313: screens-investigate R38", null, false],
+  ["screen.docket-public.sub", "Everything that happened to this case after it was published: each new edition, correction, withdrawal and court order, dated and signed.", "DEC-313: the docket as a reader without an account sees it", null, false],
+  ["screen.docket-public.back", "Back to the case", "DEC-313: the public docket", null, false],
+  ["screen.answers.failed.next", "Ask again, perhaps more narrowly, or search instead.", "DEC-314: screens-daily R52: after ai.progress.check.failed", null, false],
+  ["screen.connect.expired", "Your Claude sign-in has expired, on {date}.", "DEC-314: screens-settings R41: a member's own subscription, expired", null, false],
+  ["screen.connect.expired.means", "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.", "DEC-314: screens-settings R41", null, false],
+  ["screen.connect.expired.state", "Expired", "DEC-314: screens-settings R41: the state beside it", "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.", false],
+  ["screen.connect.expired.next", "Once you are signed in again, Civicsmith checks the connection before the assistant works for you.", "DEC-314: screens-settings R41, R53", "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.", false],
+  ["screen.question.stopped.kept", "What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.", "DEC-314: screens-inquiry R57: after ai.run.ending.cancelled", null, false],
+  ["screen.question.reject.reason", "Why you reject it", "DEC-314: basis-versions R4: the reason field", null, false],
+  ["screen.question.reject.reason.help", "Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.", "DEC-314: basis-versions R4", null, false],
+  ["screen.question.reject.summary", "Reject this reading, with a reason", "DEC-314: basis-versions R4: the fold", null, false],
+  ["screen.question.reject.go", "Reject it", "DEC-314: basis-versions R4: the button in the fold", null, false],
+  ["screen.case-editor.account", "The account", "DEC-315: the case's account: section and field", null, false],
+  ["screen.case-editor.account.help", "The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.", "DEC-315: the section", null, false],
+  ["screen.case-editor.account.order", "Order it", "DEC-315: case-account R1: the framing", null, false],
+  ["case-account.framing.time_order", "In time order", "DEC-315: case-account R1 ACCOUNT_FRAMINGS", null, false],
+  ["case-account.framing.by_question", "Question by question", "DEC-315: case-account R1", null, false],
+  ["case-account.framing.by_rule", "Rule by rule", "DEC-315: case-account R1", null, false],
+  ["screen.case-editor.account.flagged", "Not supported by what it cites: \u201C{sentence}\u201D", "DEC-315: case-account R2: an account_check's flag; the sentence follows", null, false],
+  ["screen.case-editor.account.use", "Use what you agree with in the account below, in your own words; Civicsmith records that it began as the assistant's draft.", "DEC-315: case-account R4, R6: began_as machine_draft", null, false],
+  ["screen.case-editor.account.notasis", "Taking the draft as it stands is not offered: you vouch only for words you wrote.", "DEC-315: case-account R4: ACCEPT_MUST_REAUTHOR, never offered", null, false],
+  ["refusal.BAD_ACCOUNT_DRAFT", "The assistant's draft of the account was empty or longer than 8,000 characters. Nothing was kept. Ask for it again.", "DEC-315: case-account R1", null, false],
+  ["refusal.BAD_ACCOUNT_FRAMING", "Choose how to order the account: in time order, question by question, or rule by rule. Nothing was kept.", "DEC-315: case-account R1", null, false],
+  ["refusal.NO_SUCH_ACCOUNT_DRAFT", "No draft of this case's account that you can see has that name. Choose one of the drafts listed, or ask for a new one. Nothing was recorded.", "DEC-315: case-account R4", null, false],
+  ["refusal.BAD_ACCOUNT", "The account is missing or can't be read. Write it, then save again. Nothing was recorded.", "DEC-315: case-account R4", null, false],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false],
@@ -13689,6 +13753,8 @@ var WORD_ROWS = Object.freeze([
   ["screen.imported.purpose", "Another team's published case, recreated here. Nothing in it counts for your team until a member accepts it with a reason.", null, null, false],
   ["screen.docket.name", "Docket", null, null, false],
   ["screen.docket.purpose", "The public record of every edition, correction and withdrawal of your team's cases.", null, null, false],
+  ["screen.docket-public.name", "A case's docket, from outside", null, null, false],
+  ["screen.docket-public.purpose", "A published case's docket as anyone reads it, with no account: each new edition, correction, withdrawal and court order after publishing, dated and signed.", null, null, false],
   ["screen.inbox.name", "Inbox", null, null, false],
   ["screen.inbox.purpose", "Material handed to your team through its doorbell. Move it into the record, or discard it with a reason.", null, null, false],
   ["screen.doorbell.name", "Hand material to the team", null, null, false],
@@ -14077,6 +14143,8 @@ var WORD_ROWS = Object.freeze([
   ["act.statementack.label.case-editor", "Acknowledge what it leaves out", null, "Acknowledges what the case does not cover, so readers are told.", true],
   ["act.attribute.label.case-editor", "Name a person with the reason", null, "Names a person in the case with the reason it must, under the team's rules for naming people.", true],
   ["act.writinghelp.label.case-editor", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", true],
+  ["act.accountpropose.label.case-editor", "Draft the account with the assistant", null, "Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.", true],
+  ["act.accountdrafts.label.case-editor", "See its earlier drafts", null, "Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.", true],
   ["act.reviewgrant.label.review-copy", "Share for review", null, "Shares the draft with named people outside the team until a date. You can stop sharing at any time.", true],
   ["act.reviewrevoke.label.review-copy", "Stop sharing", null, "Stops sharing the review copy at once.", true],
   ["act.reviewcomment.label.review-copy", "Comment", null, "Comments on the draft, for the case's owner to read.", true],
@@ -14175,6 +14243,8 @@ var WORD_ROWS = Object.freeze([
   ["act.noteturn.does", "Turns your note into something the team shares: an observation, a hunch or a question. The note itself stays private.", null, null, false],
   ["act.noterevise.does", "Changes your note. Notes are yours alone, so nothing else changes.", null, null, false],
   ["act.notedelete.does", "Deletes your note. If you turned it into something shared, that stays.", null, null, false],
+  ["act.accountpropose.does", "Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.", null, null, false],
+  ["act.accountdrafts.does", "Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.", null, null, false],
   ["act.writinghelp.does", "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", null, null, false],
   ["act.translationdraft.does", "Asks the assistant to draft translations of Civicsmith's words, labeled as drafts for a speaker to check.", null, null, false],
   ["act.translationadopt.does", "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.", null, null, false],
@@ -32175,13 +32245,13 @@ function cdpConnection(ws) {
 }
 var resourceType = (t2) => typeof t2 === "string" && t2 ? t2.toLowerCase() : "other";
 async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) {
-  const asked4 = req || {};
-  const timeoutMs = Math.max(1e3, Number(asked4.wait?.timeout_ms) || 15e3);
-  const navMs = Math.max(1e3, Number(asked4.navigation_timeout_ms) || 3e4);
-  const until = typeof asked4.wait?.until === "string" ? asked4.wait.until : "networkidle";
-  const ownHosts = Array.isArray(asked4.own_hosts) ? asked4.own_hosts : [];
-  const refusedAddress = requestRefusal(String(asked4.url || ""), ownHosts);
-  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked4.url || "")}: ${refusedSentence(String(asked4.url || ""), refusedAddress)}` };
+  const asked5 = req || {};
+  const timeoutMs = Math.max(1e3, Number(asked5.wait?.timeout_ms) || 15e3);
+  const navMs = Math.max(1e3, Number(asked5.navigation_timeout_ms) || 3e4);
+  const until = typeof asked5.wait?.until === "string" ? asked5.wait.until : "networkidle";
+  const ownHosts = Array.isArray(asked5.own_hosts) ? asked5.own_hosts : [];
+  const refusedAddress = requestRefusal(String(asked5.url || ""), ownHosts);
+  if (refusedAddress) return { ok: false, error: `the browser could not navigate to ${String(asked5.url || "")}: ${refusedSentence(String(asked5.url || ""), refusedAddress)}` };
   let sess = null, conn = null, targetId = null;
   const started = now();
   const navDeadline = started + navMs;
@@ -32221,28 +32291,28 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     if (!targetId) throw new Error("the browser gave this render no page target");
     const { sessionId } = await conn.send("Target.attachToTarget", { targetId, flatten: true }, void 0, navLeft());
     if (!sessionId) throw new Error(`the browser did not attach a session to target ${targetId}`);
-    const vp = asked4.viewport || {};
+    const vp = asked5.viewport || {};
     const envOk = { viewport: false, dpr: false, locale: false, timezone: false };
     try {
       await conn.send("Emulation.setDeviceMetricsOverride", {
         width: Math.round(Number(vp.width) || 1280),
         height: Math.round(Number(vp.height) || 800),
-        deviceScaleFactor: Number(asked4.dpr) || 1,
+        deviceScaleFactor: Number(asked5.dpr) || 1,
         mobile: false
       }, sessionId, navLeft());
       envOk.viewport = true;
       envOk.dpr = true;
     } catch {
     }
-    if (typeof asked4.locale === "string" && asked4.locale)
+    if (typeof asked5.locale === "string" && asked5.locale)
       try {
-        await conn.send("Emulation.setLocaleOverride", { locale: asked4.locale }, sessionId, navLeft());
+        await conn.send("Emulation.setLocaleOverride", { locale: asked5.locale }, sessionId, navLeft());
         envOk.locale = true;
       } catch {
       }
-    if (typeof asked4.timezone === "string" && asked4.timezone)
+    if (typeof asked5.timezone === "string" && asked5.timezone)
       try {
-        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked4.timezone }, sessionId, navLeft());
+        await conn.send("Emulation.setTimezoneOverride", { timezoneId: asked5.timezone }, sessionId, navLeft());
         envOk.timezone = true;
       } catch {
       }
@@ -32397,10 +32467,10 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
     } catch (e2) {
       throw new Error(`the browser would not hold this render's requests (request interception could not be enabled: ${String(e2 && e2.message || e2).slice(0, 200)}), so nothing was rendered`);
     }
-    const nav = await conn.send("Page.navigate", { url: String(asked4.url || "") }, sessionId, navLeft());
+    const nav = await conn.send("Page.navigate", { url: String(asked5.url || "") }, sessionId, navLeft());
     if (nav.errorText) {
       const doc = refusedDocuments.find((d) => d.frameId && d.frameId === nav.frameId) || refusedDocuments[0];
-      throw new Error(`the browser could not navigate to ${asked4.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
+      throw new Error(`the browser could not navigate to ${asked5.url}: ${nav.errorText}${doc ? `; ${refusedSentence(doc.url, doc.reason)}` : ""}`);
     }
     mainFrameId = nav.frameId || null;
     const overall = started + navMs + timeoutMs;
@@ -32459,10 +32529,10 @@ async function renderWithBinding(binding, req, { now = () => Date.now() } = {}) 
          "not reported by the renderer" — the honest reading, since the browser
          then rendered at whatever IT had and we do not know what that was. */
       viewport: envOk.viewport ? { width: Math.round(Number(vp.width) || 1280), height: Math.round(Number(vp.height) || 800) } : null,
-      dpr: envOk.dpr ? Number(asked4.dpr) || 1 : null,
-      locale: envOk.locale ? asked4.locale : null,
-      timezone: envOk.timezone ? asked4.timezone : null,
-      wait: { condition: asked4.wait || null, fired, ...longLivedReport ? { long_lived: longLivedReport } : {} },
+      dpr: envOk.dpr ? Number(asked5.dpr) || 1 : null,
+      locale: envOk.locale ? asked5.locale : null,
+      timezone: envOk.timezone ? asked5.timezone : null,
+      wait: { condition: asked5.wait || null, fired, ...longLivedReport ? { long_lived: longLivedReport } : {} },
       elapsed_ms: elapsed,
       navigated_to: navigatedTo,
       status: mainStatus,
@@ -32588,13 +32658,13 @@ function renderConcurrencyCap(env) {
   const n2 = figure(env && env.RENDER_CONCURRENCY_CAP);
   return Number.isInteger(n2) && n2 > 0 ? n2 : RENDER_CONCURRENCY_CAP_DEFAULT;
 }
-function renderReserveMs(asked4 = RENDER_DEFAULTS) {
+function renderReserveMs(asked5 = RENDER_DEFAULTS) {
   const pos = (v, fallback) => {
     const n2 = figure(v);
     return Number.isFinite(n2) && n2 >= 0 ? n2 : fallback;
   };
-  const wait = pos(asked4 && asked4.wait && asked4.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
-  const nav = pos(asked4 && asked4.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
+  const wait = pos(asked5 && asked5.wait && asked5.wait.timeout_ms, RENDER_DEFAULTS.wait.timeout_ms);
+  const nav = pos(asked5 && asked5.navigation_timeout_ms, RENDER_DEFAULTS.navigation_timeout_ms);
   return Math.ceil(wait + nav);
 }
 var NON_DATA_TYPES = Object.freeze({
@@ -32676,7 +32746,7 @@ function originKey(u) {
     return null;
   }
 }
-function renderBlock(answer2, { pageUrl, shellSha, asked: asked4 = RENDER_DEFAULTS, at: at49, digests: digests2 = null }) {
+function renderBlock(answer2, { pageUrl, shellSha, asked: asked5 = RENDER_DEFAULTS, at: at49, digests: digests2 = null }) {
   if (!answer2 || typeof answer2 !== "object" || answer2.ok !== true)
     return { ok: false, problem: `the renderer did not answer ok (${answer2 && answer2.error ? String(answer2.error).slice(0, 200) : "no answer"})` };
   if (typeof answer2.html !== "string" || answer2.html.length === 0)
@@ -32769,7 +32839,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked4 = RENDER_DEFAUL
     return v ?? null;
   };
   const waitFired = pick4("wait.fired", answer2.wait && isStr2(answer2.wait.fired) ? answer2.wait.fired : null);
-  const firedClass = waitFiredClass(waitFired, asked4.wait);
+  const firedClass = waitFiredClass(waitFired, asked5.wait);
   const completeness = firedClass === "condition" ? "condition_met" : firedClass === "settled" ? "settled_with_open_requests" : "undetermined";
   const ll = answer2.wait && answer2.wait.long_lived && typeof answer2.wait.long_lived === "object" ? answer2.wait.long_lived : null;
   const longLived = ll ? {
@@ -32780,9 +32850,9 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked4 = RENDER_DEFAUL
   if (firedClass === "settled")
     undetermined3.push(`completeness: ${settledReading(longLived ? longLived.count : null)}${longLived && longLived.older_than_s !== null ? ` (requests open longer than ${longLived.older_than_s} s)` : ""} \u2014 the renderer's wait ended on its quiet window, which does not wait for them, so what they would have brought is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (D-570, BOB #34, 2026-09-25).`);
   else if (firedClass === "timeout")
-    undetermined3.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked4.wait && asked4.wait.timeout_ms) !== null ? ` (${asked4.wait.timeout_ms} ms asked)` : ""}${isStr2(asked4.wait && asked4.wait.until) ? ` rather than on the \`${asked4.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
+    undetermined3.push(`completeness: ${RENDER_INCOMPLETE_READING} \u2014 the renderer's wait ended on its timeout${num(asked5.wait && asked5.wait.timeout_ms) !== null ? ` (${asked5.wait.timeout_ms} ms asked)` : ""}${isStr2(asked5.wait && asked5.wait.until) ? ` rather than on the \`${asked5.wait.until}\` condition` : ""}, so what the page would have shown had the condition been met is undetermined. The capture keeps its grade and its method; these bytes are not presented as the whole page (BOB #32, 2026-09-24).`);
   else if (firedClass === "undetermined")
-    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked4.wait && asked4.wait.until || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
+    undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked5.wait && asked5.wait.until || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render17 = {
     of: shellSha,
     engine: pick4("engine", isStr2(answer2.engine) ? answer2.engine : null),
@@ -32792,7 +32862,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked4 = RENDER_DEFAUL
     locale: pick4("locale", isStr2(answer2.locale) ? answer2.locale : null),
     timezone: pick4("timezone", isStr2(answer2.timezone) ? answer2.timezone : null),
     /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
-    wait: { asked: asked4.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
+    wait: { asked: asked5.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
     /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
        not that the page was finished, which no renderer reports. `undetermined`
        carries its reason in `undetermined[]` above. The GRADE is untouched either
@@ -32806,7 +32876,7 @@ function renderBlock(answer2, { pageUrl, shellSha, asked: asked4 = RENDER_DEFAUL
     data,
     scripts_executed: scriptsExecuted,
     third_party_executed: thirdParty,
-    asked: { viewport: asked4.viewport, dpr: asked4.dpr, locale: asked4.locale, timezone: asked4.timezone },
+    asked: { viewport: asked5.viewport, dpr: asked5.dpr, locale: asked5.locale, timezone: asked5.timezone },
     at: at49 || null,
     undetermined: undetermined3
   };
@@ -33272,8 +33342,8 @@ function inlineBytesOf(f17) {
   return f17 && typeof f17.text === "string" ? te.encode(f17.text).length : null;
 }
 function censusCap(limit) {
-  const asked4 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-  return Math.max(0, Math.min(Number.isInteger(asked4) ? asked4 : 50, 500));
+  const asked5 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+  return Math.max(0, Math.min(Number.isInteger(asked5) ? asked5 : 50, 500));
 }
 function manifestFiles(filesJson) {
   let arr2;
@@ -33310,8 +33380,8 @@ var OPAQUE_PREFIXES = new Set(ID_TABLE.filter((e2) => e2.form === "opaque").map(
 var TAIL_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 var TAIL_LENGTH = 16;
 function mintExhausted(prefix, extra) {
-  const asked4 = typeof prefix === "string" ? prefix : "";
-  const what = Object.hasOwn(MINTED_ID_FOR, asked4) ? `id for ${MINTED_ID_FOR[asked4]}` : Object.hasOwn(MINTED_OBJECT, asked4) ? `${MINTED_OBJECT[asked4]} id` : "id";
+  const asked5 = typeof prefix === "string" ? prefix : "";
+  const what = Object.hasOwn(MINTED_ID_FOR, asked5) ? `id for ${MINTED_ID_FOR[asked5]}` : Object.hasOwn(MINTED_OBJECT, asked5) ? `${MINTED_OBJECT[asked5]} id` : "id";
   let own11 = {};
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra)) own11 = { ...extra };
@@ -33326,7 +33396,7 @@ function mintExhausted(prefix, extra) {
     code: "MINT_EXHAUSTED",
     check: row12.check,
     translation: row12.translation,
-    prefix: asked4,
+    prefix: asked5,
     detail: `your group's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.`
   };
 }
@@ -37198,8 +37268,8 @@ var Membership = class _Membership {
    *  EVERY positional question a viewer-carrying read asks in this file goes through
    *  here, and a visibility question never does. */
   positionalMember(viewer, identity2 = null) {
-    const asked4 = typeof identity2 === "string" && identity2 !== "" ? identity2 : viewer;
-    const g = viewerPredicate(asked4);
+    const asked5 = typeof identity2 === "string" && identity2 !== "" ? identity2 : viewer;
+    const g = viewerPredicate(asked5);
     return g.scope === "DENY" ? null : g.member;
   }
   static #enc = new TextEncoder();
@@ -41011,8 +41081,8 @@ var ProjectRoster = class _ProjectRoster {
    *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
-  projectList(asked4 = {}) {
-    const { viewer = null, limit = null } = asked4 && typeof asked4 === "object" ? asked4 : {};
+  projectList(asked5 = {}) {
+    const { viewer = null, limit = null } = asked5 && typeof asked5 === "object" ? asked5 : {};
     const gate = viewerPredicate(viewer);
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_LIST_LIMIT);
     const rows4 = this.#rows(
@@ -43727,20 +43797,20 @@ var Promotion = class {
           }
         }
         if (stateContradiction) {
-          const [field3, said12, asked4] = stateContradiction;
+          const [field3, said12, asked5] = stateContradiction;
           return refusal2(
             "ENVELOPE_STATE_DISAGREES",
-            `the document being promoted says ${field3} '${said12 === null ? "null" : cut2(said12, 40)}' and this request's meta says '${asked4 === null ? "null" : cut2(asked4, 40)}'. The record goes by the document. Nothing was written.`,
-            { field: field3, document_value: said12 === null ? null : cut2(said12, 80), envelope_value: asked4 === null ? null : cut2(asked4, 80) }
+            `the document being promoted says ${field3} '${said12 === null ? "null" : cut2(said12, 40)}' and this request's meta says '${asked5 === null ? "null" : cut2(asked5, 40)}'. The record goes by the document. Nothing was written.`,
+            { field: field3, document_value: said12 === null ? null : cut2(said12, 80), envelope_value: asked5 === null ? null : cut2(asked5, 80) }
           );
         }
         const dateContradiction = envelopeCreated !== null && documentCreated !== null && !sameInstant(envelopeCreated, documentCreated) ? ["created", documentCreated, envelopeCreated] : envelopeLastUpdated !== null && documentLastUpdated !== null && !sameInstant(envelopeLastUpdated, documentLastUpdated) ? ["last_updated", documentLastUpdated, envelopeLastUpdated] : null;
         if (dateContradiction) {
-          const [field3, said12, asked4] = dateContradiction;
+          const [field3, said12, asked5] = dateContradiction;
           return refusal2(
             "ENVELOPE_DATES_DISAGREE",
-            `the document being promoted says ${field3} '${cut2(said12, 40)}' and this request's meta says '${cut2(asked4, 40)}'. The record goes by the document. Nothing was written.`,
-            { field: field3, document_value: cut2(said12, 80), envelope_value: cut2(asked4, 80) }
+            `the document being promoted says ${field3} '${cut2(said12, 40)}' and this request's meta says '${cut2(asked5, 40)}'. The record goes by the document. Nothing was written.`,
+            { field: field3, document_value: cut2(said12, 80), envelope_value: cut2(asked5, 80) }
           );
         }
       }
@@ -45580,8 +45650,8 @@ var Provenance = class {
      both sides, so a spelling difference is not a second identity. Bounded by `limit` shas listed (the counts are
      always whole). */
   homeCensus({ limit } = {}) {
-    const asked4 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
-    const cap = Math.max(0, Math.min(Number.isInteger(asked4) ? asked4 : 50, 500));
+    const asked5 = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
+    const cap = Math.max(0, Math.min(Number.isInteger(asked5) ? asked5 : 50, 500));
     const homes = /* @__PURE__ */ new Map();
     const reg = { rows: 0, home_absent: 0 };
     for (const r of this.#sql.exec(`SELECT r.capture_sha, r.bundle_id, r.path, b.bundle_id AS present
@@ -45800,9 +45870,9 @@ var Provenance = class {
     const rep = isObj4(reputation) ? reputation : null;
     const upload = v === UPLOAD_VIA;
     const sighting = upload ? { by: typeof by === "string" ? by : null, statement: typeof statement === "string" ? statement : null } : { by: null, statement: null };
-    const asked4 = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
+    const asked5 = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
     const clock2 = Date.parse(this.#now());
-    const when = stampInstant("second", Number.isFinite(asked4) ? asked4 : Number.isFinite(clock2) ? clock2 : Date.now());
+    const when = stampInstant("second", Number.isFinite(asked5) ? asked5 : Number.isFinite(clock2) ? clock2 : Date.now());
     return this.#record.transact(() => {
       const seen = this.#one(
         `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
@@ -46307,14 +46377,14 @@ var Provenance = class {
     }
     const shaOf10 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
     const regs = Array.isArray(register3) ? register3.filter((c) => c && typeof c.sha256 === "string") : [];
-    const asked4 = [.../* @__PURE__ */ new Set([...docs.map(shaOf10).filter(Boolean), ...regs.map((c) => c.sha256)])];
+    const asked5 = [.../* @__PURE__ */ new Set([...docs.map(shaOf10).filter(Boolean), ...regs.map((c) => c.sha256)])];
     const held3 = this.#rows(
       `SELECT capture_sha, bundle_id FROM register
         WHERE authored = 1 AND (bundle_id = ? OR capture_sha IN (SELECT value FROM json_each(?)))
         LIMIT ?`,
       bundleId,
-      JSON.stringify(asked4),
-      asked4.length + 1
+      JSON.stringify(asked5),
+      asked5.length + 1
     );
     const here = new Set(held3.filter((r) => r.bundle_id === bundleId).map((r) => r.capture_sha));
     const elsewhere2 = new Set(held3.filter((r) => r.bundle_id !== bundleId).map((r) => r.capture_sha));
@@ -48627,18 +48697,18 @@ function askedInstant(at49) {
     } };
   return { ok: true, at: at49, ms: ms6, timestamp: at49.replace(/[-:TZ]/g, "") };
 }
-function askedReading(asked4, chosen) {
-  if (!asked4 || !asked4.at) return null;
-  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked4.ms) / 1e3);
+function askedReading(asked5, chosen) {
+  if (!asked5 || !asked5.at) return null;
+  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked5.ms) / 1e3);
   return {
-    asked_at: asked4.at,
+    asked_at: asked5.at,
     memento_datetime: chosen.archived_at,
     apart_seconds: apart,
     asked_note: apart === 0 ? word("acquisition.asked_note.memento_instant_asked", { archived_at: chosen.archived_at }) : word("acquisition.asked_note.memento_seconds_instant", {
       archived_at: chosen.archived_at,
       apart,
-      after: Date.parse(chosen.archived_at) < asked4.ms ? "before" : "after",
-      at: asked4.at
+      after: Date.parse(chosen.archived_at) < asked5.ms ? "before" : "after",
+      at: asked5.at
     })
   };
 }
@@ -48713,7 +48783,7 @@ function replayed(res, ahead, reader) {
   };
   return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read: read3, cancel }), cancel } };
 }
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked: asked4 = null, take } = {}) {
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked: asked5 = null, take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows4 = [], tried = /* @__PURE__ */ new Set();
@@ -48784,7 +48854,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
       return { next: true };
     }
   };
-  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked4 && asked4.at ? asked4.ms : Date.now()) });
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked5 && asked5.at ? asked5.ms : Date.now()) });
   if (tg.fail) return tg.fail;
   if (tg.res.status === 429 || tg.res.status >= 500) {
     cancelBody(tg.res);
@@ -48808,8 +48878,8 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
   const cands = timeMapCandidates(map);
   considered.push(...cands.considered);
-  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked4.ms);
-  const ordered2 = !cands.ok ? [] : asked4 && asked4.at ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)) : cands.candidates;
+  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked5.ms);
+  const ordered2 = !cands.ok ? [] : asked5 && asked5.at ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)) : cands.candidates;
   for (const cand of ordered2.slice(0, MEMENTO_TRIES)) {
     const m = await tryMemento(cand.uri);
     if (!m.next) return m.fail || m;
@@ -48826,10 +48896,10 @@ function nothingUsable(sel, considered, address) {
     address
   } };
 }
-function chooseMemento(m, sha2, bytes2, address, asked4 = null) {
+function chooseMemento(m, sha2, bytes2, address, asked5 = null) {
   const sel = selectCapture([mementoRow(m.answer, { sha256: sha2, bytes: bytes2 }), ...m.rows]);
   if (!sel.ok) return nothingUsable(sel, m.considered, address);
-  const reading3 = askedReading(asked4, sel.chosen);
+  const reading3 = askedReading(asked5, sel.chosen);
   return {
     ok: true,
     chosen: sel.chosen,
@@ -48842,11 +48912,11 @@ function chooseMemento(m, sha2, bytes2, address, asked4 = null) {
 async function archiveLookup(cap, { address, at: at49 } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
-  const asked4 = askedInstant(at49);
-  if (!asked4.ok) return { status: asked4.status, body: asked4.payload };
+  const asked5 = askedInstant(at49);
+  if (!asked5.ok) return { status: asked5.status, body: asked5.payload };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address, { asked: asked4, take: async ({ res, answer: answer2, locator }) => {
+  const m = await mementoLookup(cap, address, { asked: asked5, take: async ({ res, answer: answer2, locator }) => {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
@@ -48862,7 +48932,7 @@ async function archiveLookup(cap, { address, at: at49 } = {}) {
     return selectCapture([row12]).ok ? { sha: h.sha, bytes: h.bytes } : { row: row12 };
   } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const c = chooseMemento(m, m.sha, m.bytes, address, asked4);
+  const c = chooseMemento(m, m.sha, m.bytes, address, asked5);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true,
@@ -48875,7 +48945,7 @@ async function archiveLookup(cap, { address, at: at49 } = {}) {
     usable_count: c.usable_count,
     retrieval_locator: m.locator,
     provenance_hop: c.hop,
-    capture_with: { op: "acquire", via: "archive.org", address, ...asked4.at ? { at: asked4.at } : {} },
+    capture_with: { op: "acquire", via: "archive.org", address, ...asked5.at ? { at: asked5.at } : {} },
     note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the memento"
   } };
 }
@@ -49586,8 +49656,8 @@ async function acquire(cap, body0, {
       cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved });
     } catch {
     }
-    const asked4 = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked4, at: retrieved });
+    const asked5 = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked5, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
       return answer2(502, {
@@ -49605,7 +49675,7 @@ async function acquire(cap, body0, {
         if (!await ev.head(s)) await ev.put(s, b);
       }
     });
-    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked4, at: retrieved, digests: renderDigests });
+    rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked: asked5, at: retrieved, digests: renderDigests });
     const rsha = await sha256Hex6(rbytes);
     const renderedExisted = !!await ev.head(rsha);
     if (!renderedExisted) await ev.put(rsha, rbytes);
@@ -52679,12 +52749,12 @@ function mergeTier2Text(base2, t2) {
 function tier2Note(m) {
   if (!m || !m.ok) return m && m.why ? m.why : null;
   if (m.wholesale) return null;
-  const say5 = [];
+  const say6 = [];
   if (m.replaced.length)
-    say5.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
+    say6.push(`${m.replaced.length} page(s) were re-read by the tier-2 decoder, which recovered text tier 1 could not map and more of it; the other ${m.kept.length} page(s) kept tier 1's reading`);
   if (m.replaced.length && m.kept.length)
-    say5.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
-  return say5.length ? say5.join("; ") : null;
+    say6.push(`this document's text layer is a merge of two decodes and its chain names the tier per page`);
+  return say6.length ? say6.join("; ") : null;
 }
 
 // src/content/checks.mjs
@@ -55375,7 +55445,7 @@ async function checkInquiryEntry(bundleMd, opts = {}) {
     const all = r && Array.isArray(r.findings) ? r.findings : [];
     return all.filter((x) => x && x.severity === "error");
   } catch (e2) {
-    return [{ check: "C-2.8", severity: "error", message: `the entry requirements could not be judged: ${e2 && e2.message}` }];
+    return [{ check: "C-2.8", severity: "error", message: word("inquiry.message.entry_requirements_judged", { message: String(e2 && e2.message) }) }];
   }
 }
 
@@ -62212,19 +62282,19 @@ var REFUSAL_SAYS = {
   carries_glyphs: "it already carries text of its own, which a transcription may not replace"
 };
 function tier3Note(m, memberNote, layerPages) {
-  const say5 = [];
+  const say6 = [];
   const kept = Array.isArray(layerPages) ? layerPages.length : 0;
   if (!m.wholesale && m.filled.length)
-    say5.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text` + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
+    say6.push(`${m.filled.length} scanned page(s) were transcribed by the OCR member and merged into this document's own text` + (kept ? `; the ${kept === 1 ? "page" : "pages"} that already had text kept it` : ""));
   if (!m.wholesale && Array.isArray(m.appended) && m.appended.length)
-    say5.push(`${m.appended.length} of those page(s) already held a little text of their own (an image fills the page and its text is a folio), and kept it: the transcription was appended after it, so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text layer and the OCR member`);
+    say6.push(`${m.appended.length} of those page(s) already held a little text of their own (an image fills the page and its text is a folio), and kept it: the transcription was appended after it, so ${m.appended.length === 1 ? "that page is" : "those pages are"} credited to both the text layer and the OCR member`);
   if (m.unanswered.length)
-    say5.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
+    say6.push(`${m.unanswered.length} page(s) with no text layer were not transcribed and stay honestly unread`);
   const why2 = Array.isArray(m.refusedWhy) ? m.refusedWhy : [];
   if (why2.length)
-    say5.push(`${why2.length} page(s) the OCR member returned were not merged: ` + why2.map((r) => `${describePages([r.page])} (${REFUSAL_SAYS[r.reason] || r.reason})`).join(", "));
-  if (memberNote) say5.push(memberNote);
-  return say5.length ? say5.join("; ") : null;
+    say6.push(`${why2.length} page(s) the OCR member returned were not merged: ` + why2.map((r) => `${describePages([r.page])} (${REFUSAL_SAYS[r.reason] || r.reason})`).join(", "));
+  if (memberNote) say6.push(memberNote);
+  return say6.length ? say6.join("; ") : null;
 }
 var OCR_INVOCATIONS_PER_REQUEST = 24;
 var OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
@@ -62284,19 +62354,19 @@ async function askMemberPerPage(env, { sha: sha2, storeName, wantPages }) {
 }
 function tier3LoopNote(loop) {
   if (!loop) return null;
-  const say5 = [];
+  const say6 = [];
   const named3 = (ps) => describePages(ps.filter(Number.isInteger));
   if (loop.notAsked.length)
-    say5.push(`${loop.notAsked.length} of them (${named3(loop.notAsked)}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
+    say6.push(`${loop.notAsked.length} of them (${named3(loop.notAsked)}) were not asked for in this request: the OCR member reads one page per call and one request may make at most ${OCR_INVOCATIONS_PER_REQUEST} such calls here (Cloudflare states a limit of 32 Worker invocations per request \u2014 their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next`);
   if (loop.threw)
-    say5.push(`the call for ${named3([loop.threw.at])} failed, so ${loop.threw.rest.length} page(s) from it on (${named3(loop.threw.rest)}) were not transcribed in this request`);
+    say6.push(`the call for ${named3([loop.threw.at])} failed, so ${loop.threw.rest.length} page(s) from it on (${named3(loop.threw.rest)}) were not transcribed in this request`);
   if (loop.refused.length)
-    say5.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time (${named3(loop.refused)})`);
+    say6.push(`the OCR member declined ${loop.refused.length} page(s) it was asked for one at a time (${named3(loop.refused)})`);
   if (loop.mismatched.length)
-    say5.push(`${loop.mismatched.length} page(s) (${named3(loop.mismatched)}) were answered under a different engine build than the first and were not merged, so no page is filed under another build's provenance`);
+    say6.push(`${loop.mismatched.length} page(s) (${named3(loop.mismatched)}) were answered under a different engine build than the first and were not merged, so no page is filed under another build's provenance`);
   if (loop.strays.length)
-    say5.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked for, and were dropped`);
-  return say5.length ? say5.join("; ") : null;
+    say6.push(`${loop.strays.length} page(s) the OCR member returned were not the page that call asked for, and were dropped`);
+  return say6.length ? say6.join("; ") : null;
 }
 var withLoopNote = (note, loop) => {
   const extra = tier3LoopNote(loop);
@@ -62484,12 +62554,12 @@ async function tier3Extend(env, {
     } else if (env && env.OCR_WORKER) {
       let failure2 = null;
       try {
-        const asked4 = await askMemberPerPage(env, { sha: sha2, storeName, wantPages: askPages });
-        loop = asked4.loop || null;
-        if (!(asked4.status >= 200 && asked4.status < 300)) {
-          failure2 = `the OCR member answered ${asked4.status}, so this document stays unread`;
+        const asked5 = await askMemberPerPage(env, { sha: sha2, storeName, wantPages: askPages });
+        loop = asked5.loop || null;
+        if (!(asked5.status >= 200 && asked5.status < 300)) {
+          failure2 = `the OCR member answered ${asked5.status}, so this document stays unread`;
         } else {
-          const ocrAnswer = asked4.answer;
+          const ocrAnswer = asked5.answer;
           let calRef = null;
           try {
             const live7 = typeof liveCalibration === "function" ? await liveCalibration({
@@ -62647,13 +62717,13 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
   out.wiredTier = 4;
   out.filled = m.filled;
   out.engine = { engine, version };
-  const say5 = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1 ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured or a member checks a passage against the page`];
+  const say6 = [`${describePages(m.filled)} that Civicsmith's own text recognition could not read ${m.filled.length === 1 ? "was" : "were"} transcribed by the AI (${engine}${version ? ` ${version}` : ""}) at a member's request, on the account that pays for it: this text is ${AI_READING_LABEL}, not yet determined until its accuracy is measured or a member checks a passage against the page`];
   if (m.appended.length)
-    say5.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the AI's reading was appended after it`);
-  if (m.unanswered.length) say5.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length === 1 ? "it stays" : "they stay"} unread`);
+    say6.push(`${describePages(m.appended)} already held a little text of its own (a folio), which was kept, and the AI's reading was appended after it`);
+  if (m.unanswered.length) say6.push(`${describePages(m.unanswered)} the AI did not transcribe, and ${m.unanswered.length === 1 ? "it stays" : "they stay"} unread`);
   if (m.refusedWhy.length)
-    say5.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: ` + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
-  out.aiNote = say5.join("; ");
+    say6.push(`${m.refusedWhy.length} page(s) the AI returned were not merged: ` + m.refusedWhy.map((x) => `${describePages([x.page])} (${AI_REFUSAL_SAYS[x.reason] || x.reason})`).join(", "));
+  out.aiNote = say6.join("; ");
   return out;
 }
 var sheetRangeOf = (u) => {
@@ -65235,20 +65305,20 @@ var Extraction = class _Extraction {
     } catch {
       tx = null;
     }
-    const asked4 = { pages: null, answer: null };
+    const asked5 = { pages: null, answer: null };
     const handed = tx && typeof tx === "object" && typeof tx.transcribe === "function" ? { ...tx, transcribe: async (q10) => {
-      asked4.pages = Array.isArray(q10 && q10.pages) ? [...q10.pages] : [];
-      asked4.answer = await tx.transcribe(q10);
-      return asked4.answer;
+      asked5.pages = Array.isArray(q10 && q10.pages) ? [...q10.pages] : [];
+      asked5.answer = await tx.transcribe(q10);
+      return asked5.answer;
     } } : tx;
     const t4 = await tier4Extend(handed, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
     const refusal39 = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
     if (refusal39 && !t4.filled.length) return { status: refusalStatus(refusal39), body: withRefusedSays(refusal39) };
     if (!t4.filled.length) {
       const why2 = t4.aiNote || say("extraction.text.ai_asked_transcribe");
-      const outcome = asked4.pages === null ? null : unfilledOutcome(asked4.answer, fmt);
+      const outcome = asked5.pages === null ? null : unfilledOutcome(asked5.answer, fmt);
       if (outcome && outcome.refusal) return { status: refusalStatus(outcome.refusal), body: withRefusedSays(outcome.refusal) };
-      const says = !outcome ? null : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked4.pages), why: why2 }) : fillWords(outcome.key, { why: fillWords(outcome.why) });
+      const says = !outcome ? null : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked5.pages), why: why2 }) : fillWords(outcome.key, { why: fillWords(outcome.why) });
       return { status: 200, body: {
         ok: true,
         op,
@@ -65344,7 +65414,7 @@ var Extraction = class _Extraction {
         compared: w.compared ?? null,
         after_read: w.afterRead ?? null
       },
-      ...w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked4.pages ?? t4.filled) }) } : {}
+      ...w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked5.pages ?? t4.filled) }) } : {}
     } };
   }
   /* ---- drift obligations (R38–R40) ---- */
@@ -69312,8 +69382,8 @@ var AiAccounts = class _AiAccounts {
     try {
       const bar = this.#ownerBar(owner, viewer);
       if (bar) return bar;
-      const asked4 = Number(limit);
-      const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(500, Math.floor(asked4)) : 200;
+      const asked5 = Number(limit);
+      const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(500, Math.floor(asked5)) : 200;
       const found3 = this.#rows(
         `SELECT at, by, change, detail FROM account_changes WHERE owner=? ORDER BY seq LIMIT ?`,
         owner,
@@ -72115,8 +72185,8 @@ var Credentials = class _Credentials {
      (REC-57 / D-225): `limit` is the cap applied (default 200, at most 500), and `truncated` is measured by reading
      one row past it. */
   aiCredentials({ limit = null } = {}) {
-    const asked4 = Number(limit);
-    const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(500, Math.floor(asked4)) : 200;
+    const asked5 = Number(limit);
+    const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(500, Math.floor(asked5)) : 200;
     const found3 = this.#rows(
       `SELECT * FROM ai_credentials ORDER BY minted_at, token_id LIMIT ?`,
       cap + 1
@@ -72757,8 +72827,8 @@ var Credentials = class _Credentials {
   /* R47: reached without a credential. (T47; R67; T49 R75) `handle` names the role as `login`'s does, and `role` is no
      longer read; (R68) any active member's role recovers. */
   async recover({ handle = null, code = null, password = null, source: source2 = null, country = null } = {}) {
-    const asked4 = this.#roleByHandle(handle);
-    const gate = await this.#gate({ role: asked4, source: source2, country, password });
+    const asked5 = this.#roleByHandle(handle);
+    const gate = await this.#gate({ role: asked5, source: source2, country, password });
     if (gate.paused) return gate.paused;
     if (typeof password !== "string" || password.length < 12) {
       this.#refusedAttempt(gate, country);
@@ -72768,10 +72838,10 @@ var Credentials = class _Credentials {
     const unspent = (r) => this.#rows(`SELECT code_sha FROM recovery_codes WHERE role=? AND spent_at IS NULL`, r);
     const matches2 = () => {
       let hit = null;
-      for (const r of unspent(asked4)) if (_Credentials.#same(presented, r.code_sha, { digests: true })) hit = r.code_sha;
+      for (const r of unspent(asked5)) if (_Credentials.#same(presented, r.code_sha, { digests: true })) hit = r.code_sha;
       return hit;
     };
-    const admin = this.#roleIsActive(asked4);
+    const admin = this.#roleIsActive(asked5);
     const given6 = typeof code === "string" && code.trim() !== "";
     const refuse31 = () => {
       this.#refusedAttempt(gate, country);
@@ -72784,13 +72854,13 @@ var Credentials = class _Credentials {
     const hashed = await _Credentials.#hashFor(password);
     const done = this.#tx(() => {
       const hit = matches2();
-      if (hit === null || !this.#roleIsActive(asked4)) return null;
+      if (hit === null || !this.#roleIsActive(asked5)) return null;
       const at49 = stampSecond4();
-      this.#storePassword(asked4, hashed);
+      this.#storePassword(asked5, hashed);
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE code_sha=?`, at49, hit);
-      this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked4).map((r) => r.token_sha));
-      this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked4, at49);
-      return { ok: true, role: asked4, remaining: unspent(asked4).length };
+      this.#endSessions(this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, asked5).map((r) => r.token_sha));
+      this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked5, at49);
+      return { ok: true, role: asked5, remaining: unspent(asked5).length };
     });
     if (!done) return refuse31();
     this.#succeeded(gate);
@@ -73694,9 +73764,9 @@ var REACHABILITY_SETTINGS = Object.freeze({
 var SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
 var PROBE_EVERY = 25;
 var READ_LIMIT = Object.freeze({ default: 200, max: 1e3 });
-var limitOf = (asked4) => {
-  const n2 = Math.floor(Number(asked4));
-  return asked4 != null && asked4 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT.max, n2) : READ_LIMIT.default;
+var limitOf = (asked5) => {
+  const n2 = Math.floor(Number(asked5));
+  return asked5 != null && asked5 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT.max, n2) : READ_LIMIT.default;
 };
 var cursorOf = (parts) => btoa(String.fromCharCode(...te5.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 var keyOf = (cursor, n2) => {
@@ -74825,7 +74895,7 @@ var Capture = class _Capture {
     const rows4 = [];
     for (const r of page2) {
       const since = Date.parse(r.since);
-      const asked4 = this.#questionsOf(r.bundle_id, viewer);
+      const asked5 = this.#questionsOf(r.bundle_id, viewer);
       const { eligibility, grouped } = answers2.get(r.bundle_id);
       rows4.push({
         bundle_id: r.bundle_id,
@@ -74835,7 +74905,7 @@ var Capture = class _Capture {
         collected_since: r.since,
         age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at49 - since) / 864e5)) : null,
         ...eligibility,
-        ...asked4.questions ? { captured_for: _Capture.#shown(asked4.questions) } : { captured_for: null, captured_for_basis: asked4.basis },
+        ...asked5.questions ? { captured_for: _Capture.#shown(asked5.questions) } : { captured_for: null, captured_for_basis: asked5.basis },
         ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {}),
         capture: this.#captureOfDocument(r.bundle_id),
         ...aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {}
@@ -75072,13 +75142,13 @@ var Capture = class _Capture {
     if (wait.over()) return tooLate();
     let v;
     try {
-      const asked4 = reader.fn(bundleId);
-      if (asked4 && typeof asked4.then === "function") {
-        Promise.resolve(asked4).catch(() => {
+      const asked5 = reader.fn(bundleId);
+      if (asked5 && typeof asked5.then === "function") {
+        Promise.resolve(asked5).catch(() => {
         });
-        v = await wait.within(asked4);
+        v = await wait.within(asked5);
         if (v === TOO_LATE) return tooLate();
-      } else v = asked4;
+      } else v = asked5;
     } catch {
       v = null;
     }
@@ -75237,15 +75307,15 @@ var Capture = class _Capture {
     };
     const no9 = named3("NO_SUCH_DOCUMENT", (r) => !r, "no document you may see answers to these ids; nothing was written") || named3("NOT_INFORMATION", (r) => r.object_type !== "information", "only Information documents are held; nothing was written") || named3("NOT_COLLECTED", (r) => r.current_state !== "collected", "only documents at collected are held; nothing was written") || named3("ALREADY_SET_ASIDE", (r) => !r.standing, "these documents are already set aside; nothing was written");
     if (no9) return no9;
-    const asked4 = new Map([...standing.keys()].map((id) => [id, this.#questionsOf(id, viewer)]));
+    const asked5 = new Map([...standing.keys()].map((id) => [id, this.#questionsOf(id, viewer)]));
     const at49 = this.#appendHeld(
       [...standing.keys()],
       "set_aside",
       reason2,
       author,
-      (id) => (asked4.get(id).questions || []).filter((q10) => q10.waiting).map((q10) => q10.question)
+      (id) => (asked5.get(id).questions || []).filter((q10) => q10.waiting).map((q10) => q10.question)
     );
-    const documents = [...asked4].map(([document, a]) => a.questions ? { document, captured_for: _Capture.#shown(a.questions), waiting: _Capture.#shown(a.questions.filter((q10) => q10.waiting)) } : {
+    const documents = [...asked5].map(([document, a]) => a.questions ? { document, captured_for: _Capture.#shown(a.questions), waiting: _Capture.#shown(a.questions.filter((q10) => q10.waiting)) } : {
       document,
       captured_for: null,
       captured_for_basis: a.basis,
@@ -75874,8 +75944,8 @@ var Capture = class _Capture {
   deriveSiteChrome({ host, limit = null, after: after2 = null } = {}) {
     return this.#tx(() => {
       const h = String(host || "").trim().toLowerCase();
-      const asked4 = Number(limit);
-      const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(2e3, Math.floor(asked4)) : 500;
+      const asked5 = Number(limit);
+      const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(2e3, Math.floor(asked5)) : 500;
       if (!h) return { host: null, captures: 0, derived: [], limit: cap, truncated: false, next: null };
       const from = String(after2 || "");
       if (!from) for (const t2 of ["site_chrome_refs", "site_chrome", "link_chrome"]) this.#sql.exec(`DELETE FROM ${t2} WHERE host = ?`, h);
@@ -75912,8 +75982,8 @@ var Capture = class _Capture {
    *  on one page only is `undetermined`, with its reason, never lost. */
   navChanges({ host, limit = null, viewer = void 0 } = {}) {
     const h = String(host || "").trim().toLowerCase();
-    const asked4 = Number(limit);
-    const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(500, Math.floor(asked4)) : 200;
+    const asked5 = Number(limit);
+    const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(500, Math.floor(asked5)) : 200;
     const seen = this.#captureGate("s.source_capture", viewer);
     const found3 = this.#rows(
       `SELECT s.source_capture, s.page, s.first_observed, s.last_observed, s.fingerprint, s.basis
@@ -77571,10 +77641,10 @@ function answerFailures(answer2, ctx) {
     }
   }
   if (items.length > BOUNDS.fanout) fail2("fanout", `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
-  const asked4 = Array.isArray(ctx.kinds) ? ctx.kinds : null;
+  const asked5 = Array.isArray(ctx.kinds) ? ctx.kinds : null;
   if (answer2.hub !== void 0) {
     const h = answer2.hub;
-    const mine = ctx.ownKinds.filter((k) => !asked4 || asked4.includes(k));
+    const mine = ctx.ownKinds.filter((k) => !asked5 || asked5.includes(k));
     const pool = mine.length ? mine : ctx.ownKinds;
     const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
     if (!isObj11(h) || !Number.isInteger(h.set_size) || !filled2(h.why)) fail2("hub", "a hub is answered {set_size, why}");
@@ -77593,7 +77663,7 @@ function answerFailures(answer2, ctx) {
     if (seen.has(item3.id)) fail2("paging", `${name3} is answered twice on one page`);
     seen.add(item3.id);
     if (item3.owner !== ctx.owner || !ctx.ownKinds.includes(item3.kind)) fail2("kinds", `${name3} is not of ${ctx.owner}'s own kinds`);
-    else if (asked4 && !asked4.includes(item3.kind)) fail2("kinds", `${name3} is of kind ${item3.kind}, which was not asked`);
+    else if (asked5 && !asked5.includes(item3.kind)) fail2("kinds", `${name3} is of kind ${item3.kind}, which was not asked`);
     if (item3.from !== ctx.node && item3.to !== ctx.node) fail2("node", `${name3} does not have the node at either end`);
     if (errors.some((e2) => e2.field === "valid")) continue;
     let v;
@@ -78920,10 +78990,10 @@ var Entities = class _Entities {
           max: LABELS_IDS_MAX,
           detail: `labels are read for at most ${LABELS_IDS_MAX} entity ids at once; ${ids.length} were named. Nothing was read.`
         };
-      const asked4 = ids.filter((id) => typeof id === "string" && id);
+      const asked5 = ids.filter((id) => typeof id === "string" && id);
       const found3 = /* @__PURE__ */ new Map();
-      if (asked4.length && viewerPredicate(viewer).scope !== "DENY") {
-        const uniq = [...new Set(asked4)];
+      if (asked5.length && viewerPredicate(viewer).scope !== "DENY") {
+        const uniq = [...new Set(asked5)];
         for (const r of this.#rows(`SELECT entity_id, kind, label FROM entities WHERE entity_id IN (${uniq.map(() => "?").join(",")})`, ...uniq))
           found3.set(r.entity_id, { label: r.label, kind: r.kind });
       }
@@ -88397,19 +88467,19 @@ function neighboursOf(k, args) {
   const ctx = { kinds: kinds3, at: a.at, viewer: a.viewer, view: k.view(), zone: k.zone() };
   const kept = typeof k.kept === "function" ? k.kept() : null;
   if (!kept) return answersFor(k, [node], ctx, start, null).get(node);
-  const asked4 = JSON.stringify([kinds3, a.at ?? null, a.viewer, ctx.zone]);
-  const key2 = (n2, p3) => `${asked4}\0${n2}\0${p3}`;
+  const asked5 = JSON.stringify([kinds3, a.at ?? null, a.viewer, ctx.zone]);
+  const key2 = (n2, p3) => `${asked5}\0${n2}\0${p3}`;
   if (!kept.answers.has(key2(node, start))) {
     const batch = start === 0 && kept.pending.get(node);
-    const nodes = batch && batch.asked === asked4 ? batch.nodes.filter((n2) => !kept.answers.has(key2(n2, 0))) : [node];
+    const nodes = batch && batch.asked === asked5 ? batch.nodes.filter((n2) => !kept.answers.has(key2(n2, 0))) : [node];
     for (const n2 of nodes) kept.pending.delete(n2);
     if (!nodes.includes(node)) nodes.push(node);
-    const got = answersFor(k, nodes, ctx, start, { sets: kept.sets, asked: asked4 });
+    const got = answersFor(k, nodes, ctx, start, { sets: kept.sets, asked: asked5 });
     for (const [n2, ans] of got) {
       kept.answers.set(key2(n2, start), ans);
       const ends = [...new Set((ans.items || []).flatMap((i) => [i.from, i.to]).filter((e2) => e2 !== n2 && isEvt(e2) && !kept.answers.has(key2(e2, 0))))];
       if (ends.length > 1) {
-        const b = { asked: asked4, nodes: ends };
+        const b = { asked: asked5, nodes: ends };
         for (const e2 of ends) if (!kept.pending.has(e2)) kept.pending.set(e2, b);
       }
     }
@@ -88934,11 +89004,11 @@ function recordedBy(k, args) {
     if (a.viewer === void 0 || a.viewer === null || a.viewer === "")
       return refused2("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
     if (!said5(a.captureSha)) return noSha("who recorded something is read for one captured document, named by its capture sha256");
-    let asked4 = null;
+    let asked5 = null;
     if (a.extent !== void 0 && a.extent !== null) {
       if (!known(a.extent))
         return refused2("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS2).join(", ")}`);
-      asked4 = JSON.parse(canonicalExtent2(a.extent));
+      asked5 = JSON.parse(canonicalExtent2(a.extent));
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp2(a.limit);
@@ -89009,8 +89079,8 @@ function recordedBy(k, args) {
       for (const c of cites(n2.cite)) useItem(n2, "unmet", c);
     const kept = [], once = /* @__PURE__ */ new Set();
     for (const r of rows4) {
-      const relation2 = asked4 ? extentRelation2(asked4, r.extent) : null;
-      if (asked4 && !RELATIONS.includes(relation2)) continue;
+      const relation2 = asked5 ? extentRelation2(asked5, r.extent) : null;
+      if (asked5 && !RELATIONS.includes(relation2)) continue;
       const item3 = {
         module: "events",
         record: r.record,
@@ -92000,8 +92070,8 @@ var Lines = class _Lines {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     if (!filled4(node)) return { items: [] };
-    const asked4 = Array.isArray(ks) ? ks : CONNECTION_KINDS3.map((k) => k.kind);
-    const pairs = asked4.map(lineKindOf).filter(Boolean);
+    const asked5 = Array.isArray(ks) ? ks : CONNECTION_KINDS3.map((k) => k.kind);
+    const pairs = asked5.map(lineKindOf).filter(Boolean);
     if (!pairs.length) return { items: [] };
     const g = this.#gate(viewer);
     const kindSql = pairs.map((p3) => p3.capacity ? "(l.kind = ? AND l.capacity = ?)" : "l.kind = ?").join(" OR ");
@@ -93265,9 +93335,9 @@ var LocalFacts = class _LocalFacts {
       const due3 = blind ? [] : this.#all(active).filter(pick4).map(shape);
       return { ok: true, due: due3, unknown: [], absent: [] };
     }
-    const asked4 = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
+    const asked5 = [...new Set(Array.isArray(b.paths) ? b.paths : [b.paths])];
     const due2 = [], unknown = [], absent = [];
-    for (const path of asked4) {
+    for (const path of asked5) {
       const r = !blind && typeof path === "string" ? this.#resolve(path, active) : { named: false };
       if (!r.named) {
         unknown.push(typeof path === "string" ? path.slice(0, 1e3) : null);
@@ -94219,7 +94289,7 @@ var ProvenanceRoutes = class {
    * restates it. */
   provenanceRoutesMarked({ after: after2 = "", limit = null, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
-    const asked4 = ROUTE_MARKED_FINDING;
+    const asked5 = ROUTE_MARKED_FINDING;
     const after0 = String(after2 ?? "");
     const want = Number(limit);
     const n2 = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), ROUTE_MARKED_LIMIT_MAX) : ROUTE_MARKED_LIMIT_DEFAULT;
@@ -94230,7 +94300,7 @@ var ProvenanceRoutes = class {
           AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
         ORDER BY m.bundle_id
         LIMIT ?`,
-      asked4,
+      asked5,
       after0,
       n2 + 1
     );
@@ -94273,7 +94343,7 @@ var ProvenanceRoutes = class {
       ...gate.args
     ).n;
     const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
-    const marked = standing[asked4] || 0;
+    const marked = standing[asked5] || 0;
     const neverAssessed = Math.max(0, documentsVisible - assessed);
     let cause = null;
     if (!documents.length) {
@@ -94281,8 +94351,8 @@ var ProvenanceRoutes = class {
     }
     return {
       ok: true,
-      finding: asked4,
-      means: FINDING_MEANS[asked4],
+      finding: asked5,
+      means: FINDING_MEANS[asked5],
       documents,
       returned: documents.length,
       limit: n2,
@@ -98414,9 +98484,9 @@ var LawRecords = class {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     const own11 = CONNECTION_KINDS4.map((k) => k.kind);
-    const asked4 = Array.isArray(kinds3) ? kinds3.filter((k) => own11.includes(k)) : own11;
+    const asked5 = Array.isArray(kinds3) ? kinds3.filter((k) => own11.includes(k)) : own11;
     const id = typeof node === "string" ? node : "";
-    const all = /^EVT-/.test(id) ? this.#eventItems(id, asked4, viewer) : this.#standardItems(id, asked4, viewer);
+    const all = /^EVT-/.test(id) ? this.#eventItems(id, asked5, viewer) : this.#standardItems(id, asked5, viewer);
     const live7 = [];
     for (const item3 of all) {
       let v;
@@ -98437,13 +98507,13 @@ var LawRecords = class {
     return rest.length > BOUNDS.fanout ? { items, next: { after: items[items.length - 1].id }, truncated: true } : { items };
   }
   /* The relations and links with `id` at one end, not withdrawn, whose passage and ends the viewer may read. */
-  #standardItems(id, asked4, viewer) {
+  #standardItems(id, asked5, viewer) {
     if (!this.k.row(id)) return [];
     const out = [];
     const rels = this.k.rows(`SELECT r.* FROM law_relations r WHERE (r.from_standard=? OR r.to_standard=?) AND NOT EXISTS
                                 (SELECT 1 FROM law_withdrawals w WHERE w.item_id=r.relation_id)`, id, id);
     for (const r of rels) {
-      if (!asked4.includes(`law_${r.type}`) || !this.#sees(r.citation, viewer) || !this.#endsSeen(r.from_standard, r.to_standard, viewer)) continue;
+      if (!asked5.includes(`law_${r.type}`) || !this.#sees(r.citation, viewer) || !this.#endsSeen(r.from_standard, r.to_standard, viewer)) continue;
       out.push(this.#item({
         id: r.relation_id,
         kind: `law_${r.type}`,
@@ -98458,7 +98528,7 @@ var LawRecords = class {
     const links = this.k.rows(`SELECT l.* FROM court_links l WHERE (l.from_standard=? OR l.to_standard=?) AND NOT EXISTS
                                  (SELECT 1 FROM law_withdrawals w WHERE w.item_id=l.link_id)`, id, id);
     for (const l2 of links) {
-      if (!asked4.includes(`court_${l2.type}`) || !this.#sees(l2.citation, viewer) || !this.#endsSeen(l2.from_standard, l2.to_standard, viewer)) continue;
+      if (!asked5.includes(`court_${l2.type}`) || !this.#sees(l2.citation, viewer) || !this.#endsSeen(l2.from_standard, l2.to_standard, viewer)) continue;
       out.push(this.#item({
         id: l2.link_id,
         kind: `court_${l2.type}`,
@@ -98494,8 +98564,8 @@ var LawRecords = class {
   }
   /* The held standards in force at the event's `when` (`standards` R20, the host's), each a derived item; nothing for
      an event the viewer may not read or with no `when` (each said in the item's absence, never a guess). */
-  #eventItems(eventId3, asked4, viewer) {
-    if (!asked4.includes("in_force_at_event")) return [];
+  #eventItems(eventId3, asked5, viewer) {
+    if (!asked5.includes("in_force_at_event")) return [];
     const ev = this.k.eventWhen(eventId3, viewer);
     if (!ev || !ev.day) return [];
     const ids = [...this.k.idsCovering(ev.day)];
@@ -101032,11 +101102,11 @@ var Standards = class {
         return readRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
       if (typeof captureSha !== "string" || !captureSha.trim())
         return noSha("who recorded something from a passage is read for a captured document, by its capture sha256");
-      let asked4 = null;
+      let asked5 = null;
       if (extent !== null && extent !== void 0) {
         if (!isObj26(extent) || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, extent.kind))
           return readRefusal("EXTENT_MALFORMED", "the extent named is not one the record can read");
-        asked4 = extent;
+        asked5 = extent;
       }
       const n2 = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(FOR_LIMIT_MAX, Math.max(1, Number(limit))) : FOR_LIMIT_DEFAULT;
       const sha2 = captureSha.trim().replace(/^sha256:/i, "").toLowerCase();
@@ -101054,8 +101124,8 @@ var Standards = class {
         const canon6 = typeof ext2 === "string" ? ext2 : canonicalExtent2(ext2);
         const object = safeJson12(canon6);
         let relation2 = null;
-        if (asked4) {
-          relation2 = extentRelation2(asked4, object);
+        if (asked5) {
+          relation2 = extentRelation2(asked5, object);
           if (!["same", "narrower", "wider"].includes(relation2)) return;
         }
         const key2 = JSON.stringify([canon6, record, field3]);
@@ -102659,8 +102729,8 @@ var Money = class _Money {
       if (viewer === void 0 || viewer === null || viewer === "")
         return shapeRefusal("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
       if (!filled5(captureSha)) return refusal13("NO_SHA", "who recorded from a passage is read for one capture, by its sha256");
-      const asked4 = extent === void 0 || extent === null ? null : extent;
-      if (asked4 !== null && !(isObj27(asked4) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, asked4.kind)))
+      const asked5 = extent === void 0 || extent === null ? null : extent;
+      if (asked5 !== null && !(isObj27(asked5) && Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS2, asked5.kind)))
         return shapeRefusal("EXTENT_MALFORMED", `an extent is one of content's kinds (${list2(Object.keys(CONTENT_EXTENT_KINDS2))})`);
       const n2 = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
       const lim = Number.isFinite(n2) ? Math.min(Math.max(n2, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
@@ -102670,8 +102740,8 @@ var Money = class _Money {
       for (const r of this.#rows(`SELECT f.fact_id, f.source_extent, f.by, f.at, f.withdrawn_at FROM money_facts f
            WHERE f.source_capture_sha=? AND f.source_fact IS NULL AND (${g.sql})`, capture2, ...g.args)) {
         const own11 = r.source_extent ? JSON.parse(r.source_extent) : { kind: "document" };
-        const relation2 = asked4 === null ? null : extentRelation2(asked4, own11);
-        if (asked4 !== null && !["same", "narrower", "wider"].includes(relation2)) continue;
+        const relation2 = asked5 === null ? null : extentRelation2(asked5, own11);
+        if (asked5 !== null && !["same", "narrower", "wider"].includes(relation2)) continue;
         items.push({
           module: "money",
           record: r.fact_id,
@@ -103700,9 +103770,9 @@ var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(dige
 var WITHIN_FAULT2 = Symbol("within's fault");
 var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 var READ_LIMIT2 = Object.freeze({ default: 200, max: 1e3 });
-var limitOf2 = (asked4) => {
-  const n2 = Math.floor(Number(asked4));
-  return asked4 != null && asked4 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT2.max, n2) : READ_LIMIT2.default;
+var limitOf2 = (asked5) => {
+  const n2 = Math.floor(Number(asked5));
+  return asked5 != null && asked5 !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT2.max, n2) : READ_LIMIT2.default;
 };
 var cursorOf2 = (parts) => btoa(String.fromCharCode(...te7.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 var keyOf3 = (cursor, n2) => {
@@ -109454,9 +109524,9 @@ var People = class _People {
     if (cite) return refuse12(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = _People.#validity(valid);
     if (vv.refused) return refuse12("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
-    const asked4 = question === null || question === void 0 || question === "" ? null : question;
-    if (asked4 !== null && !this.#questionSeen(asked4, _People.#actorViewer(by)))
-      return refuse12("QUESTION_NOT_HELD", "the question names no inquiry the record holds that you may see; the fact can be recorded without one", { question: typeof asked4 === "string" ? asked4 : null });
+    const asked5 = question === null || question === void 0 || question === "" ? null : question;
+    if (asked5 !== null && !this.#questionSeen(asked5, _People.#actorViewer(by)))
+      return refuse12("QUESTION_NOT_HELD", "the question names no inquiry the record holds that you may see; the fact can be recorded without one", { question: typeof asked5 === "string" ? asked5 : null });
     if (!filled7(by)) return noBy("a person fact");
     const at49 = this.#now(), stamp4 = String(by);
     const table5 = contact ? "person_contacts" : "person_facts";
@@ -109475,9 +109545,9 @@ var People = class _People {
         JSON.stringify(citation2.extent),
         stamp4,
         at49,
-        asked4
+        asked5
       );
-      return { ok: true, fact_id: r.id, person: person2, kind: kind2, value: v, valid: vv.valid, question: asked4, at: at49, ...contact ? { publishable: false } : {} };
+      return { ok: true, fact_id: r.id, person: person2, kind: kind2, value: v, valid: vv.valid, question: asked5, at: at49, ...contact ? { publishable: false } : {} };
     });
   }
   /** R11 (DEC-19): a wrong fact corrected forward: kept, marked withdrawn with who, when and why. */
@@ -110806,8 +110876,8 @@ var Browser = class {
   read({ kinds: kinds3 = null, only = null, since = null, after: after2 = null, limit = null, viewer = null } = {}) {
     if (typeof viewer !== "string" || !viewer)
       return refuse13("VIEWER_MISSING", "a browse answers only to a stamped viewer, and this request carries none");
-    const asked4 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
-    const named3 = [...new Set(asked4.map((k) => String(k).trim()).filter(Boolean))];
+    const asked5 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
+    const named3 = [...new Set(asked5.map((k) => String(k).trim()).filter(Boolean))];
     const unknown = named3.filter((k) => k !== "all" && !BROWSE_KINDS.includes(k));
     if (unknown.length)
       return refuse13(
@@ -112642,8 +112712,8 @@ var Retrieval = class _Retrieval {
       const merge2 = (vals) => vals.reduce((acc, v) => v && typeof v === "object" ? { ...acc, ...v } : acc, { ...row12 });
       return parts.some((v) => v && typeof v.then === "function") ? Promise.all(parts.map((v) => Promise.resolve(v).catch(() => null))).then(merge2) : merge2(parts);
     }
-    const asked4 = Number(limit);
-    const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked4)) : PROJECTION_LIMIT_DEFAULT;
+    const asked5 = Number(limit);
+    const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked5)) : PROJECTION_LIMIT_DEFAULT;
     const filtered = jsonPath !== null && jsonEquals !== null;
     const base2 = [`(${gate.sql})`], baseArgs = [...gate.args];
     if (filtered) {
@@ -112764,22 +112834,22 @@ var Retrieval = class _Retrieval {
       const row12 = MEANING_READ_CHECKS[key2];
       return { ok: false, reason: key2, check: row12.check, translation: row12.translation, detail };
     };
-    const asked4 = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
-    if (!asked4)
+    const asked5 = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
+    if (!asked5)
       return refuse31(
         "MEANING_ROWS_NO_ARM",
         `op=meaningrows answers at MEANING grain and must be told which: rows=${known3.join("|")}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.`
       );
-    if (!known3.includes(asked4))
+    if (!known3.includes(asked5))
       return refuse31(
         "MEANING_ROWS_UNKNOWN_ARM",
-        `no meaning of the kind ${JSON.stringify(asked4)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
+        `no meaning of the kind ${JSON.stringify(asked5)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
       );
     const plan2 = this.#compile({
       q: String(input.q ?? ""),
       viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
-      rows: asked4,
+      rows: asked5,
       rowLimit: input.limit,
       rowOffset: input.offset,
       /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
@@ -113086,10 +113156,10 @@ var Retrieval = class _Retrieval {
       a.push(after2);
     }
     q10 += ` WHERE ${w.join(" AND ")} ORDER BY b.bundle_id`;
-    const asked4 = Number(limit);
-    if (!Number.isFinite(asked4) || asked4 <= 0)
+    const asked5 = Number(limit);
+    if (!Number.isFinite(asked5) || asked5 <= 0)
       return this.#rows(q10, ...a).map(_Retrieval.#withRoute);
-    const cap = Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked4));
+    const cap = Math.min(PROJECTION_LIMIT_MAX, Math.floor(asked5));
     const rows4 = this.#rows(`${q10} LIMIT ?`, ...a, cap).map(_Retrieval.#withRoute);
     return {
       bundles: rows4,
@@ -113419,8 +113489,8 @@ var Retrieval = class _Retrieval {
     const zone = this.zone(), relations2 = this.relations();
     const saved = typeof savedForm === "function" ? savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir, zone }, relations2) : { ok: true };
     if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
-    const asked4 = Number(limit);
-    const cap = limit == null || !Number.isFinite(asked4) || asked4 < 1 ? SAVED_LIMIT_DEFAULT : Math.min(IDS_MAX, Math.floor(asked4));
+    const asked5 = Number(limit);
+    const cap = limit == null || !Number.isFinite(asked5) || asked5 < 1 ? SAVED_LIMIT_DEFAULT : Math.min(IDS_MAX, Math.floor(asked5));
     const plan2 = this.#compile({
       q: form.q,
       implicitOp: form.implicitOp === "or" ? "or" : void 0,
@@ -113578,8 +113648,8 @@ var Retrieval = class _Retrieval {
     const form = keys[0], value = scope[form];
     const resolved = this.#findScope(form, value, viewer, typeof owner === "string" && owner ? owner : viewer);
     if (resolved.ok === false) return resolved;
-    const asked4 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
-    const wanted = [...new Set(asked4.map((k) => String(k).trim()).filter(Boolean))];
+    const asked5 = Array.isArray(kinds3) ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : [];
+    const wanted = [...new Set(asked5.map((k) => String(k).trim()).filter(Boolean))];
     if (!wanted.length) return no9("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
     const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
     if (unknown.length)
@@ -114550,10 +114620,10 @@ var LegEarning = class {
    *  disagree, which is the same reason this is ONE function with three
    *  consumers in the first place. */
   earned(subjectEntity, targetIds = [], contentIds = []) {
-    const asked4 = [...new Set((Array.isArray(targetIds) ? targetIds : []).filter((t2) => typeof t2 === "string" && t2))];
-    const standardIds = asked4.filter(isStandardId);
-    const occurrenceIds = asked4.filter((t2) => !isStandardId(t2) && parseOccurrenceRef(t2) !== null);
-    const ids = asked4.filter((t2) => !standardIds.includes(t2) && !occurrenceIds.includes(t2));
+    const asked5 = [...new Set((Array.isArray(targetIds) ? targetIds : []).filter((t2) => typeof t2 === "string" && t2))];
+    const standardIds = asked5.filter(isStandardId);
+    const occurrenceIds = asked5.filter((t2) => !isStandardId(t2) && parseOccurrenceRef(t2) !== null);
+    const ids = asked5.filter((t2) => !standardIds.includes(t2) && !occurrenceIds.includes(t2));
     const ent = subjectEntity ? (() => {
       const r = this.entities.readEntity({ entityId: subjectEntity });
       return r && r.found && r.entity ? r.entity : null;
@@ -115123,10 +115193,10 @@ var LegEarning = class {
         target: id,
         detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about an INQUIRY's legs \u2014 what each candidate target earns against the question's subject \u2014 and only an inquiry has a basis.`
       };
-    const asked4 = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, EARNED_TARGETS_MAX) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
+    const asked5 = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, EARNED_TARGETS_MAX) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
     const sees = (t2) => isImportedRef(t2) || this.membership.inSight(t2, viewer);
-    const visible = asked4.filter(sees);
-    const withheld = visible.length !== asked4.length;
+    const visible = asked5.filter(sees);
+    const withheld = visible.length !== asked5.length;
     const legRows = this.#rows(
       `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
         WHERE bundle_id=? ORDER BY ord`,
@@ -117476,14 +117546,14 @@ var Calculations = class {
       const draws = described.filter((d) => d.kind === "draw");
       if (!draws.length)
         return no4("ESTIMATE_WITHOUT_DRAW", "a population estimate is answered only over a recorded draw (a seeded draw over a frozen set), with its exact interval (K1448). Nothing was written.");
-      const asked4 = draws.find((d) => d.draw.question !== null);
-      if (asked4) {
+      const asked5 = draws.find((d) => d.draw.question !== null);
+      if (asked5) {
         if (described.length !== 1)
           return no4("ESTIMATE_INPUTS", "an estimate over visits takes one input: the draw, carrying its question, whose items members visited. Nothing was written.");
-        const composed = visitRecipe(asked4.name);
+        const composed = visitRecipe(asked5.name);
         if (recipe2 !== null && recipe2 !== void 0 && canonicalJson(recipe2) !== canonicalJson(composed))
           return no4("RECIPE_NOT_TEMPLATE", "an estimate over visits runs the recipe composed over its draw's standings (the share of judged items found yes, and those not judged counted by their reason); the recipe given is not it. Nothing was written.");
-        return { ok: true, recipe: composed, visits: { input: asked4.name, draw: asked4.draw } };
+        return { ok: true, recipe: composed, visits: { input: asked5.name, draw: asked5.draw } };
       }
     }
     if (kind2 === "unit_cost") {
@@ -118587,12 +118657,12 @@ var Calculations = class {
     if (!Number.isSafeInteger(n2)) return no4("BAD_N", "a draw names how many to draw, a whole number. Nothing was written.");
     const usedSeed = seed === null || seed === void 0 ? randomSeed() : seed;
     if (typeof usedSeed !== "string") return no4("BAD_SEED", "a seed is text. Nothing was written.");
-    const asked4 = question === null || question === void 0 ? null : typeof question === "string" ? question.trim() : "";
-    if (asked4 !== null && !(asked4.length && [...asked4].length <= QUESTION_MAX))
+    const asked5 = question === null || question === void 0 ? null : typeof question === "string" ? question.trim() : "";
+    if (asked5 !== null && !(asked5.length && [...asked5].length <= QUESTION_MAX))
       return no4("BAD_QUESTION", `a draw's question is the words each drawn item is judged by: text of 1 to ${QUESTION_MAX} characters. Nothing was written.`);
     const d = draw({ frame, n: n2, seed: usedSeed });
     if (d.refused) return no4(d.refused, `${d.why}. Nothing was written.`);
-    const key2 = sha({ set: ref, kind: kind2, seed: usedSeed, n: n2, method: d.method, ...asked4 !== null ? { question: asked4 } : {} });
+    const key2 = sha({ set: ref, kind: kind2, seed: usedSeed, n: n2, method: d.method, ...asked5 !== null ? { question: asked5 } : {} });
     const held3 = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key2);
     const answer2 = (r) => ({
       ok: true,
@@ -118628,7 +118698,7 @@ var Calculations = class {
         json7(d.sample),
         by,
         at49,
-        asked4
+        asked5
       );
       return { ok: true };
     });
@@ -122063,6 +122133,26 @@ CREATE TABLE IF NOT EXISTS inquiry_person_warnings (
   choice       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS inquiry_person_warnings_bundle ON inquiry_person_warnings(bundle_id, choice);
+
+-- R65 (T50; N1124; DEC-32 clause 6): the ground acts recorded for a question, one row per act, oldest first (change_id).
+-- The document's Session Log keeps the act's reason and the strength pair BEFORE it, but cannot hold the pair AFTER (the
+-- log is part of the bytes the act promotes, and the pair after is read once they have landed), so the act records both
+-- pairs here in its own transaction, with the groups as it left them. strength_before and strength_after are the pairs as
+-- JSON, NULL where no module answered strength (the act's answer said so). A question grouped before this table has no
+-- row: partitionOf reads such an act from the Session Log, with only the pair before. Keyed by bundle_id and cleared
+-- with its inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_ground_changes (
+  change_id        INTEGER PRIMARY KEY,
+  bundle_id        TEXT NOT NULL,
+  at               TEXT NOT NULL,
+  by               TEXT NOT NULL,
+  act              TEXT NOT NULL,
+  reason           TEXT,
+  groups           TEXT NOT NULL,
+  strength_before  TEXT,
+  strength_after   TEXT
+);
+CREATE INDEX IF NOT EXISTS inquiry_ground_changes_bundle ON inquiry_ground_changes(bundle_id, change_id);
 `;
 var INQUIRY_TABLES = [
   "inquiry_exclusions",
@@ -122072,7 +122162,8 @@ var INQUIRY_TABLES = [
   "inquiry_bundle_facts",
   "inquiry_findings",
   "inquiry_dated_waits",
-  "inquiry_person_warnings"
+  "inquiry_person_warnings",
+  "inquiry_ground_changes"
 ];
 var CLASSES8 = Object.freeze({
   purge: "clear",
@@ -122135,73 +122226,73 @@ var INQUIRY_CONTRADICTION_CHECKS = {
   CONTRADICTION_LINK_MALFORMED: {
     check: "C-2.11",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-link",
-    translation: "A contradiction inquiry names the candidate it was taken up from by that candidate's id, and this document's link is not one. Take the candidate up again from where it is shown. Nothing was written."
+    translation: word("refusal.CONTRADICTION_LINK_MALFORMED")
   },
   RESOLUTION_WITHOUT_CONTRADICTION: {
     check: "C-2.12",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-placed",
-    translation: "Only an inquiry taken up from a contradiction records what kind of contradiction it turned out to be, and this one was not taken up from one. Remove the resolution, or take the contradiction up first. Nothing was written."
+    translation: word("refusal.RESOLUTION_WITHOUT_CONTRADICTION")
   },
   RESOLUTION_MISSING: {
     check: "C-2.13",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-present",
-    translation: "A contradiction inquiry is concluded by saying what the conflict turned out to be: how the two sides differ, which one is wrong, or that the conflict is real. This conclusion does not say. Name its kind. Nothing was written."
+    translation: word("refusal.RESOLUTION_MISSING")
   },
   RESOLUTION_KIND_UNKNOWN: {
     check: "C-2.14",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-kind",
-    translation: "That is not one of the kinds a contradiction can be resolved as. The kinds are listed with the question. Nothing was written."
+    translation: word("refusal.RESOLUTION_KIND_UNKNOWN")
   },
   RESOLUTION_INCOMPLETE: {
     check: "C-2.15",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-resolution-complete",
-    translation: "This resolution is not complete. A resolution gives its kind together with what that kind needs: the respect in which the sides differ, which side is wrong and why, or the rule that reconciles them. The part that is missing or not in that form is named. Nothing was written."
+    translation: word("refusal.RESOLUTION_INCOMPLETE")
   },
   EXPLORES_MALFORMED: {
     check: "C-2.16",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-explores-shape",
-    translation: "A question that explores a contradiction names one thing it explores: one respect in which the sides may differ, one rule that may reconcile them, or one hypothesis. This one names none, several, or one the record does not know. Nothing was written."
+    translation: word("refusal.EXPLORES_MALFORMED")
   },
   CANDIDATE_ALREADY_TAKEN_UP: {
     check: "C-2.17",
     where: "src/inquiry/index.mjs check > is-candidate-taken-up",
-    translation: "That contradiction has already been taken up as another question, which is named. Work on it there, so that one conflict has one place where it is resolved. Nothing was written."
+    translation: word("refusal.CANDIDATE_ALREADY_TAKEN_UP")
   },
   /* N369 (proposed in INQUIRY #5 J1; stamped 1.47.0, T17): the arm's own failure, which C-2.11's words are not true of. */
   CONTRADICTION_ARM_FAILED: {
     check: "C-2.18",
     where: "src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-arm-judged",
-    translation: "The check of this question's contradiction fields (its link, its resolution, what it explores) stopped with an error instead of answering, so the question is refused rather than let through. The error is in the check and says nothing yet about the document. Nothing was written."
+    translation: word("refusal.CONTRADICTION_ARM_FAILED")
   }
 };
 var INQUIRY_SURFACE_CHECKS = {
   SURFACED_BY_REWRITTEN: {
     check: "C-66.5",
     where: "src/inquiry/index.mjs check > is-promote-surfaced-by, reached from op=promote through the step inquiry registers with promotion (K31)",
-    translation: "This revision changes who surfaced the question, a member or an assistant. That is recorded once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the value the current version carries and save the revision again."
+    translation: word("refusal.SURFACED_BY_REWRITTEN")
   }
 };
 var INQUIRY_BIAS_CHECKS = {
   BIAS_APPLICATION_NOT_IN_FORCE: {
     check: "C-2.19",
     where: "src/inquiry/index.mjs biasNotInForce > is-bias-application-in-force, reached from check > is-bias-applied",
-    translation: "A leg says a statement of the lens shaped how it was weighed, and that statement is not in the lens in force for this question's project now, or whether it is could not be read. Name a statement of the lens in force, or take the application off the leg. Nothing was written."
+    translation: word("refusal.BIAS_APPLICATION_NOT_IN_FORCE")
   }
 };
 var INQUIRY_PASSAGE_CHECKS = {
   MACHINE_PASSAGE_UNCHECKED: {
     check: "C-2.20",
     where: "src/inquiry/index.mjs machinePassageUnchecked > is-machine-passage-checked, reached from check > is-machine-passage-taken-up",
-    translation: "Whether a passage this question now rests on was proposed by an assistant and taken up by you could not be read, so the question is refused rather than let through. Nothing was written. Try again."
+    translation: word("refusal.MACHINE_PASSAGE_UNCHECKED")
   }
 };
 var QUESTION_WORDS = Object.freeze({
-  "question.refused.drawnon": "This question can't be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else."
+  "question.refused.drawnon": word("question.refused.drawnon")
 });
 var INQUIRY_WARNINGS = Object.freeze({
   PERSON_IN_NO_PUBLIC_ROLE: Object.freeze({
     key: "question.warning.person",
-    translation: "Investigations look at people through their part in a public matter, never at a private life. This question names {persons}, whom the record holds in no public role. You decide whether to go on."
+    translation: word("refusal.PERSON_IN_NO_PUBLIC_ROLE", { persons: "{persons}" })
   })
 });
 
@@ -122539,6 +122630,73 @@ function contradictionFindings(fm) {
   return out;
 }
 
+// src/inquiry/partition.mjs
+var isMap2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+function partitionOfDoc(fm) {
+  const legs = isMap2(fm) && Array.isArray(fm.basis) ? fm.basis.filter(isMap2) : [];
+  const label = legs.map((l2) => typeof l2.ground === "string" && l2.ground.trim() ? l2.ground.trim() : null);
+  const rows4 = isMap2(fm) && Array.isArray(fm.grounds) ? fm.grounds.filter((r) => isMap2(r) && typeof r.ground === "string") : [];
+  const groups = rows4.map((r) => ({
+    ground: r.ground.trim(),
+    statement: typeof r.statement === "string" ? r.statement : null,
+    asserted_by: typeof r.asserted_by === "string" ? r.asserted_by : null,
+    at: typeof r.at === "string" ? r.at : null,
+    legs: label.flatMap((g, i) => g === r.ground.trim() ? [i] : [])
+  }));
+  return {
+    grouped: label.some((g) => g !== null),
+    groups,
+    ungrouped: label.flatMap((g, i) => g === null ? [i] : [])
+  };
+}
+function pairOf(text8) {
+  const out = {};
+  for (const part of String(text8 ?? "").replace(/\.\s*$/, "").split(", ")) {
+    const m = /^(capture|connection|testimony) (\S+)$/.exec(part.trim());
+    if (!m) return null;
+    out[m[1]] = /^[A-D]$/.test(m[2]) ? { state: "graded", grade: m[2] } : { state: m[2], grade: null };
+  }
+  return out.capture && out.connection ? out : null;
+}
+function changedGroups(line2) {
+  const at49 = line2.indexOf(" \u2014 ");
+  if (at49 < 0) return [];
+  return line2.slice(at49 + 3).replace(/\.\s*$/, "").split("; ").flatMap((g) => {
+    const m = /^(.+?): (\d+(?:, \d+)*)$/.exec(g);
+    return m ? [{ ground: m[1], legs: m[2].split(", ").map(Number) }] : [];
+  });
+}
+function loggedChanges(markdown, skip = () => false) {
+  const text8 = String(markdown ?? "");
+  const start = text8.indexOf("## Session Log");
+  if (start < 0) return [];
+  const next = text8.indexOf("\n## ", start + 1);
+  const entries = text8.slice(start, next === -1 ? text8.length : next).split(/^### Session /m).slice(1);
+  const out = [];
+  for (const e2 of entries) {
+    const lines2 = e2.split("\n");
+    const head = /^(\S+) \| (Grouped|Restructured) \| (.+)$/.exec(lines2[0].trim());
+    if (!head || !lines2.some((l2) => l2.startsWith("Trigger: op=inquiryground"))) continue;
+    const [, at49, title, by] = head;
+    if (skip(at49, by)) continue;
+    const field3 = (name3) => {
+      const l2 = lines2.find((x) => x.startsWith(`${name3}: `));
+      return l2 ? l2.slice(name3.length + 2).trim() : null;
+    };
+    out.push({
+      at: at49,
+      by,
+      act: title === "Grouped" ? "authored" : "restructured",
+      reason: title === "Grouped" ? null : field3("Reason"),
+      groups: changedGroups(field3("Changes") ?? "").map((g) => ({ ground: g.ground, statement: null, asserted_by: null, at: null, legs: g.legs })),
+      strength_before: pairOf(field3("Strength before")),
+      strength_after: null,
+      strength_after_recorded: false
+    });
+  }
+  return out;
+}
+
 // src/inquiry/index.mjs
 var EDGE_REASON_MAX2 = 160;
 var RELEASE_ACK_MAX = 500;
@@ -122616,7 +122774,7 @@ function biasNotInForce(args = {}) {
   const row12 = INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE;
   const id = typeof statement === "string" ? statement : null;
   const at49 = typeof where === "string" && where ? where : null;
-  const lens = scope && typeof scope === "object" && scope.type === "project" && typeof scope.id === "string" && scope.id ? `the lens in force for ${scope.id}` : "the group's lens in force";
+  const lens = scope && typeof scope === "object" && scope.type === "project" && typeof scope.id === "string" && scope.id ? word("inquiry.text.lens_force", { id: scope.id }) : word("inquiry.text.group_lens_force");
   return {
     check: row12.check,
     code: "BIAS_APPLICATION_NOT_IN_FORCE",
@@ -122936,26 +123094,26 @@ var Inquiry = class _Inquiry {
         const k = passageKey(passageOf2(l2, i));
         held3.set(k, (held3.get(k) || 0) + 1);
       }
-    const asked4 = [];
+    const asked5 = [];
     legs.forEach((l2, i) => {
       const p3 = passageOf2(l2, i), k = passageKey(p3);
       if (held3.get(k)) held3.set(k, held3.get(k) - 1);
-      else asked4.push(p3);
+      else asked5.push(p3);
     });
-    if (!asked4.length) return null;
+    if (!asked5.length) return null;
     const who4 = typeof author === "string" ? author : null;
     let r;
     try {
-      r = this.#onMachinePassage.fn({ legs: asked4, author: who4, viewer: who4 });
+      r = this.#onMachinePassage.fn({ legs: asked5, author: who4, viewer: who4 });
     } catch (e2) {
       return machinePassageUnchecked(
         `the read of whether these passages were taken up (${this.#onMachinePassage.module}) failed: ${fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200)}. Nothing was written.`,
-        { legs: asked4.map((p3) => p3.ord) }
+        { legs: asked5.map((p3) => p3.ord) }
       );
     }
     if (r === null) return null;
     if (r && typeof r === "object" && !Array.isArray(r) && typeof r.then !== "function" && r.ok === false && typeof r.reason === "string" && r.reason) return r;
-    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) answered neither null nor a refusal. Nothing was written.`, { legs: asked4.map((p3) => p3.ord) });
+    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) answered neither null nor a refusal. Nothing was written.`, { legs: asked5.map((p3) => p3.ord) });
   }
   /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
      listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
@@ -122979,7 +123137,7 @@ var Inquiry = class _Inquiry {
      object names then, each module once; absent while none has failed. */
   static #reevaluation(cause, since, raises) {
     if (raises === null)
-      return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
+      return { reevaluation_absent: word("inquiry.reevaluation_absent") };
     return { reevaluation: liveFailures({ source: cause, since, raised: raises.flatMap((r) => r.raised) }, () => {
       const failed3 = [];
       for (const r of raises)
@@ -123537,15 +123695,15 @@ var Inquiry = class _Inquiry {
       const next = Array.isArray(c.files) ? c.files.find((f17) => f17 && f17.path === "bundle.md") : null;
       const nextQ = questionOf3(next && next.text);
       const subject = typeof fm.subject_entity === "string" && fm.subject_entity.trim() ? fm.subject_entity.trim() : null;
-      let asked4 = !cur;
+      let asked5 = !cur;
       if (cur) {
         const held3 = c.state && c.state.inquiry ? c.state.inquiry.priorText : void 0;
         const was = typeof held3 === "string" ? held3 : null;
         const wasFm = was ? parseFrontmatter(was).data || {} : {};
         const wasSubject = typeof wasFm.subject_entity === "string" && wasFm.subject_entity.trim() ? wasFm.subject_entity.trim() : null;
-        asked4 = questionOf3(was) !== nextQ || wasSubject !== subject;
+        asked5 = questionOf3(was) !== nextQ || wasSubject !== subject;
       }
-      let warning = asked4 ? personWarning({
+      let warning = asked5 ? personWarning({
         text: nextQ,
         entities: this.personFacts({ text: nextQ, subject, viewer: author }),
         viewer: machine3 ? null : author
@@ -123843,7 +124001,7 @@ var Inquiry = class _Inquiry {
       const mig = this.#one(`SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, id);
       return mig ? {
         recorded: false,
-        stated: "not recorded (migrated from the Drive era)",
+        stated: word("inquiry.stated.recorded_migrated_drive"),
         run: null,
         lens: null,
         migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
@@ -123990,7 +124148,7 @@ var Inquiry = class _Inquiry {
           state,
           ...state === "looked" ? { looked_at: w.looked_at, ...w.look_note ? { note: w.look_note } : {} } : {},
           ...state === "ended" ? { inquiry_state: w.current_state } : {},
-          ...state === "undetermined" ? { why: "no time zone is held for your group's Civicsmith, so the local day the wait falls due on cannot be read (it is never read as the UTC day)" } : {}
+          ...state === "undetermined" ? { why: word("inquiry.why.time_zone_held") } : {}
         });
       }
       return { ok: true, member: m, as_of: at49, zone, waits };
@@ -124062,7 +124220,7 @@ var Inquiry = class _Inquiry {
   #projectsField(question, viewer) {
     const r = this.#projectsShown(question, viewer);
     if (r === null)
-      return { projects: null, projects_undetermined: "which projects draw on this question could not be read" };
+      return { projects: null, projects_undetermined: word("inquiry.projects_undetermined") };
     return { projects: r.projects, ...r.truncated ? { projects_truncated: true } : {} };
   }
   /** R56: the wait's setter records that they looked, with the instant; it reads `looked` until a later revision sets a
@@ -124203,7 +124361,7 @@ var Inquiry = class _Inquiry {
       capture2 = null;
     }
     if (!capture2 || typeof capture2.heldActsOf !== "function")
-      return undetermined3("the documents set aside for this question could not be read: no capture module answers here");
+      return undetermined3(word("inquiry.undetermined.documents_set_aside"));
     const acts18 = [], setAside = /* @__PURE__ */ new Map();
     for (let after2 = null, pages = 0; ; pages++) {
       let r;
@@ -124213,13 +124371,16 @@ var Inquiry = class _Inquiry {
         r = null;
       }
       if (!r || r.ok !== true || !Array.isArray(r.acts))
-        return undetermined3(`the documents set aside for this question could not be read${r && typeof r.reason === "string" ? ` (${r.reason})` : ""}, so whether it waits on one is not known`);
+        return undetermined3(word(
+          "inquiry.undetermined.documents_set_aside_question",
+          { r: r && typeof r.reason === "string" ? ` (${r.reason})` : "" }
+        ));
       acts18.push(...r.acts.filter((a) => a && typeof a === "object"));
       for (const d of Array.isArray(r.documents) ? r.documents : [])
         if (d && typeof d.document === "string") setAside.set(d.document, d.set_aside === true);
       if (!r.truncated || typeof r.next !== "string" || !r.next) break;
       if (pages >= HELD_ACTS_PAGES_MAX)
-        return undetermined3("this question's history of set-asides is longer than can be read at once, so whether it waits on a document is not known");
+        return undetermined3(word("inquiry.undetermined.question_history_set"));
       after2 = r.next;
     }
     const history = acts18.map((a) => ({
@@ -124284,7 +124445,10 @@ var Inquiry = class _Inquiry {
           found3.push({
             check: g.module,
             severity: "error",
-            message: `${g.module}'s grammar threw, so it judged nothing and the document is not passed: ${fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200)}`
+            message: word(
+              "inquiry.message.grammar_threw_judged",
+              { module: g.module, e: fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200) }
+            )
           });
         }
       } }));
@@ -124292,7 +124456,10 @@ var Inquiry = class _Inquiry {
       return [{
         check: "C-2.8",
         severity: "error",
-        message: `the registered grammars could not be read, so the entry requirements were not judged: ${fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200)}`
+        message: word(
+          "inquiry.message.registered_grammars_read",
+          { e: fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200) }
+        )
       }];
     }
     const claimed = new Set(grammars.flatMap((g) => Array.isArray(g.ids) ? g.ids : []));
@@ -124941,11 +125108,11 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
       text9 = removeBlock(text9, "resolution");
       text9 = setSection(text9, "## Question", [q10]);
       text9 = setSection(text9, "## What It Rests On", [
-        `Divided out of ${target} on ${when} by ${who4}.`,
+        word("inquiry.set_section.divided_out", { target, when, who: who4 }),
         "",
         why2,
         "",
-        `The other half of that question stays on the record: ${sibs.join(", ")}. ${target} is the divided parent and records where every leg went, including any leg that cuts against this question.`
+        word("inquiry.set_section.half_question_stays", { sibs: sibs.join(", "), target })
       ]);
       text9 = setSection(text9, "## Conclusion", []);
       text9 = setSection(text9, "## What Would Falsify This", []);
@@ -125026,9 +125193,9 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why2}.
     text8 = setScalar3(text8, "last_updated", `"${when}"`);
     text8 = setSection(text8, "## Conclusion", [
       ...typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : [],
-      `Divided on ${when} by ${who4} into ${ids.join(", ")}: ${why2}`,
+      word("inquiry.set_section.divided", { when, who: who4, ids: ids.join(", "), why: why2 }),
       "",
-      "Where every leg went:",
+      word("inquiry.set_section.where_leg_went"),
       "",
       ...legs.map((l2, i) => `- ${l2.target}${l2.role === "cuts_against" ? " (cuts against)" : ""} -> ${homes.get(i).join(", ")}`)
     ]);
@@ -125124,7 +125291,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
          query, derived from the supersedes edge the children just made,
          and their strengths are untouched. */
       ...this.#reevaluationField(target, "supersession", when, viewer),
-      next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id and every sibling's. This question is terminal: it is answered by its children now."
+      next: word("inquiry.next.child_open_carries")
     };
   }
   /* ================================================================   * REC-45 / DEC-32: `op=inquiryground` — THE ACT THAT AUTHORS THE STRUCTURE.
@@ -125324,7 +125491,7 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
       };
     const nextLabel = new Array(legs.length).fill(null);
     const claimed = /* @__PURE__ */ new Map();
-    const asked4 = [];
+    const asked5 = [];
     for (let i = 0; i < grounds.length; i++) {
       const row12 = grounds[i];
       if (!row12 || typeof row12 !== "object" || Array.isArray(row12))
@@ -125377,12 +125544,12 @@ Apportioned: ${legs.length} leg(s), ${rows4.length} placement(s), ${legs.filter(
         claimed.set(raw, label);
         nextLabel[raw] = label;
       }
-      asked4.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
+      asked5.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
     }
     const when = this.#when();
     const ordsOf = (label) => standingLabel.reduce((a, g, i) => g === label ? [...a, i] : a, []);
     const same3 = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
-    const rowsOut = asked4.map((a) => {
+    const rowsOut = asked5.map((a) => {
       const prior = typeof a.label === "string" ? standingByLabel.get(a.label) : void 0;
       const priorStmt = prior && typeof prior.statement === "string" ? prior.statement : null;
       const carry = !!prior && same3(a.ords, ordsOf(a.label)) && priorStmt === a.statement && typeof prior.asserted_by === "string" && prior.asserted_by.trim() !== "" && typeof prior.at === "string" && prior.at.trim() !== "";
@@ -125472,27 +125639,51 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
 ` : "First grouping: no earlier structure to revise.\n") + (before3 ? `Strength before: ${w(before3)}.
 ` : "Strength before: not stated (no module answers it here).\n")
     );
-    const promoted = this.#promote({
-      bundleId: target,
-      base: b.bundle_sha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand6(4)}`,
-      author: who4,
-      files: [mdFile(text8), ...carriedFiles(this.sql, target)],
-      /* NO STATE MOVES. The meta carries the document's own state forward
-         unchanged — this act authors what a question rests on, not where it
-         stands — which is why it is not in op-declarations' STATE_ACTIONS (`op-declarations/index.mjs`). */
-      meta: {
-        object_type: fm.object_type ?? b.object_type,
-        title: fm.title,
-        current_state: b.current_state,
-        prior_state: fm.prior_state ?? null,
-        created: fm.created,
-        last_updated: when,
-        criticality: fm.criticality ?? null
-      }
+    let promoted = null, after2 = null;
+    const refused5 = this.record.transact(() => {
+      promoted = this.#promote({
+        bundleId: target,
+        base: b.bundle_sha,
+        snapKey: `${when.replace(/[-:]/g, "")}_${rand6(4)}`,
+        author: who4,
+        files: [mdFile(text8), ...carriedFiles(this.sql, target)],
+        /* NO STATE MOVES. The meta carries the document's own state forward
+           unchanged — this act authors what a question rests on, not where it
+           stands — which is why it is not in op-declarations' STATE_ACTIONS (`op-declarations/index.mjs`). */
+        meta: {
+          object_type: fm.object_type ?? b.object_type,
+          title: fm.title,
+          current_state: b.current_state,
+          prior_state: fm.prior_state ?? null,
+          created: fm.created,
+          last_updated: when,
+          criticality: fm.criticality ?? null
+        }
+      });
+      if (!promoted.ok) return { ...promoted, target };
+      after2 = this.#strength(target);
+      const json24 = (v) => v ? JSON.stringify(v) : null;
+      this.sql.exec(
+        `INSERT INTO inquiry_ground_changes (bundle_id, at, by, act, reason, groups, strength_before, strength_after)
+                     VALUES (?,?,?,?,?,?,?,?)`,
+        target,
+        when,
+        who4,
+        restructure ? "restructured" : "authored",
+        restructure ? why2 : null,
+        JSON.stringify(rowsOut.map((r) => ({
+          ground: r.ground,
+          statement: r.statement,
+          asserted_by: r.asserted_by,
+          at: r.at,
+          legs: r.legs
+        }))),
+        json24(before3),
+        json24(before3 && after2 ? after2 : null)
+      );
+      return null;
     });
-    if (!promoted.ok) return { ...promoted, target };
-    const after2 = this.#strength(target);
+    if (refused5) return refused5;
     return {
       ok: true,
       target,
@@ -125510,9 +125701,57 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
          what it is, and says nothing about why the member moved. */
       /* MK-2: every axis, from the one list — a third axis moved by a
          restructure is the same noticing material as the other two. */
-      ...before3 && after2 ? { strength: { before: before3, after: after2 } } : { strength_absent: "no module is registered to answer this question's strength, so the pair before and after is not stated here" },
-      next: grouped ? "each group's strength is its weakest leg, and this question's is its strongest group. Every group carries the name and the date of the member who asserted it was enough on its own, and a published case carries the per-group breakdown inside the signed bytes." : "this question reads as its weakest leg again, which is the conservative reading and the one an ungrouped basis always takes."
+      ...before3 && after2 ? { strength: { before: before3, after: after2 } } : { strength_absent: word("inquiry.strength_absent") },
+      next: grouped ? word("inquiry.next.group_strength_weakest") : word("inquiry.next.question_reads_weakest")
     };
+  }
+  /** R65 (T50; N1124; DEC-32 clauses 3, 5, 6): a question's partition with the history of its changes, for the question
+   *  page: `{ok: true, id, grouped, groups, ungrouped, changes, strength_now}` and R60's `projects`. `groups` and
+   *  `ungrouped` are the document's (R27's ordinals); `changes` the `ground` acts recorded for it, oldest first, each
+   *  `{at, by, act, reason, groups, strength_before, strength_after, strength_after_recorded}`: an act made since the
+   *  table records them keeps both pairs as they stood at the act; one made before is read from the Session Log with
+   *  its pair before and `strength_after: null` (`strength_after_recorded: false`), never computed. `strength_now` is the
+   *  pair now; where no module answers strength, the pairs are null and `strength_absent` says so (R28). A question the
+   *  viewer may not see, or that is no question, is answered as an absent one (R33). A divided or published question is
+   *  read. Writes nothing; never throws. */
+  partitionOf({ id = null, viewer = null } = {}) {
+    try {
+      if (!id || typeof id !== "string" || this.membership.inSight(id, viewer) !== true)
+        return { ok: false, reason: "NO_SUCH_BUNDLE", target: id ?? null };
+      const info = this.record.bundleInfo(id);
+      if (!info) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+      if (normalizeType(info.type) !== "inquiry") return { ok: false, reason: "NOT_AN_INQUIRY", target: id };
+      const md = this.record.readFile(id, "bundle.md");
+      const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+      if (!fm || typeof fm !== "object") return { ok: false, reason: "NO_DOCUMENT", target: id };
+      const rows4 = this.#rows(`SELECT * FROM inquiry_ground_changes WHERE bundle_id=? ORDER BY change_id`, id);
+      const held3 = new Set(rows4.map((r) => `${r.at}\0${r.by}`));
+      const changes = [
+        ...loggedChanges(md.text, (at49, by) => held3.has(`${at49}\0${by}`)),
+        ...rows4.map((r) => ({
+          at: r.at,
+          by: r.by,
+          act: r.act,
+          reason: r.reason ?? null,
+          groups: safeJson19(r.groups) ?? [],
+          strength_before: safeJson19(r.strength_before),
+          strength_after: safeJson19(r.strength_after),
+          strength_after_recorded: true
+        }))
+      ];
+      const now = this.#strength(id);
+      return {
+        ok: true,
+        id,
+        ...partitionOfDoc(fm),
+        changes,
+        strength_now: now,
+        ...now === null ? { strength_absent: word("inquiry.strength_absent") } : {},
+        ...this.#projectsField(id, viewer)
+      };
+    } catch {
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target: typeof id === "string" ? id : null };
+    }
   }
   /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
      null; never throws. The bytes stay the authority: the write path and the gate read the document's own
@@ -125594,6 +125833,8 @@ function inquiryOps(k, url, body) {
     }),
     inquirydivide: () => k.divide({ ...b, target: q10("target") || b.target, viewer: q10("viewer"), author: q10("author") }),
     inquiryground: () => k.ground({ ...b, target: q10("target") || b.target, viewer: q10("viewer"), author: q10("author") }),
+    /* R65 (T50; N1124): a question's partition with the history of its changes */
+    inquirypartition: () => k.partitionOf({ id: q10("id") || b.id, viewer: q10("viewer") }),
     /* R55 (T41; D17): every wait on a question, to a viewer who may see it */
     questionwaits: () => k.questionWaits({
       question: q10("question") || b.question,
@@ -127647,15 +127888,15 @@ var AcceptedWork = class {
     try {
       const { legs, viewer } = argsOf(args);
       const list6 = Array.isArray(legs) ? legs : [];
-      const asked4 = /* @__PURE__ */ new Map();
+      const asked5 = /* @__PURE__ */ new Map();
       list6.forEach((leg2, i) => {
         const ref = isObj33(leg2) ? refOf(leg2.target) : null;
         if (!ref) return;
         const ord = Number.isInteger(leg2.ord) ? leg2.ord : i;
         const edition = leg2.target_edition;
         const key2 = `${ref}\0${typeof edition}\0${String(edition)}`;
-        if (!asked4.has(key2)) asked4.set(key2, this.#judge(ref, edition, viewer));
-        const verdict = asked4.get(key2);
+        if (!asked5.has(key2)) asked5.set(key2, this.#judge(ref, edition, viewer));
+        const verdict = asked5.get(key2);
         if (verdict) out.push(legFinding(verdict, ord, ref, edition));
       });
     } catch {
@@ -127680,15 +127921,15 @@ var AcceptedWork = class {
     if (!isObj33(c) || c.replay || c.promotedType !== "inquiry") return null;
     const legs = basisOf(isObj33(c.docFm) ? c.docFm : fmOfFiles(c.files)).filter(isObj33);
     const held3 = c.head ? this.#heldPairs(c.bundleId) : /* @__PURE__ */ new Set();
-    const asked4 = [];
+    const asked5 = [];
     legs.forEach((leg2, ord) => {
       if (!refOf(leg2.target)) return;
       if (held3.has(pairKey(leg2))) return;
-      asked4.push({ ...leg2, ord });
+      asked5.push({ ...leg2, ord });
     });
-    if (!asked4.length) return null;
+    if (!asked5.length) return null;
     const viewer = typeof c.author === "string" && c.author ? c.author : c.writer ?? null;
-    const findings = this.acceptedLegRefusals({ legs: asked4, viewer });
+    const findings = this.acceptedLegRefusals({ legs: asked5, viewer });
     if (!findings.length) return null;
     return {
       ok: false,
@@ -127953,6 +128194,14 @@ var BASIS_VERSION_CHECKS = {
     check: "C-25.2",
     where: GRAMMAR_WHERE,
     translation: "Two versions of this inquiry have the same name. Names are how versions are compared and how one records what it was derived from, so within one inquiry a name means exactly one version."
+  },
+  /* R54 (T50; N1136; K3402): a name outside the form (1 to 64 permitted characters, `VERSION_NAME_RE`) is not a
+     duplicate, and a member told "two versions share a name" for a name that fits nowhere is told the wrong fact. Its
+     words are the list's, read by key. */
+  VERSION_NAME_MALFORMED: {
+    check: "C-25.36",
+    where: GRAMMAR_WHERE,
+    translation: word("refusal.VERSION_NAME_MALFORMED")
   },
   /* §3 / SWEEP C5. See the block comment above for why this is a field. */
   VERSION_NO_RELATIONSHIP: {
@@ -128370,7 +128619,8 @@ var CONCLUDE_ACT_CHECKS = {
   NO_CLAIM: {
     check: "C-33.34",
     where: "src/basis-versions/index.mjs conclude > is-conclude-claim",
-    translation: "Concluding adopts the claim of an accepted reading, and that claim is what the group concluded. There is no claim to adopt here. For a project, the reading is the one the project stands on; with no project, name the reading. State the claim on a reading first \u2014 a claim nothing supports yet is allowed \u2014 and conclude again."
+    /* R51 (DEC-254): its words are the list's, which names the member's own reading since the decision */
+    translation: word("refusal.NO_CLAIM")
   },
   /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
      what no claim said; the member is told the door rather than having their
@@ -128507,7 +128757,7 @@ function basisVersionFindings(fm, findings) {
     }
     const name3 = typeof v.name === "string" ? v.name.trim() : "";
     if (!name3 || !VERSION_NAME_RE.test(name3)) {
-      push("VERSION_NAME_NOT_UNIQUE", `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
+      push("VERSION_NAME_MALFORMED", `basis_versions[${i}].name '${String(v.name).slice(0, 60)}' is not a version name: 1 to 64 characters of letters, digits, spaces, '-', '_' and '.', naming this account of the evidence so a member can ask for it by name`);
       continue;
     }
     if (byName.has(name3)) {
@@ -129041,6 +129291,34 @@ var VERSION_ACT_TO = Object.freeze({
   current: null,
   hide: null
 });
+var READING_MIN = 12;
+var EXTENT_FIELDS = {
+  extent_kind: "text",
+  extent_ref: "text",
+  extent_page: "int",
+  extent_rect: "nums",
+  extent_sheet: "text",
+  extent_cell: "text",
+  extent_slide: "int",
+  extent_shape: "int",
+  extent_para: "int",
+  extent_run: "int",
+  content_id: "text"
+};
+var LEG_COPY_KEYS = [
+  "target",
+  "target_edition",
+  "role",
+  "ground",
+  "grade",
+  "grade_axis",
+  "grade_source",
+  "note",
+  "date",
+  "extent_capture",
+  ...Object.keys(EXTENT_FIELDS)
+];
+var NO_BASIS_DETAIL = "a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.";
 function posFields(pos) {
   const { kind: kind2, ref, ...rest } = pos;
   return rest;
@@ -129171,6 +129449,20 @@ var BasisVersions = class _BasisVersions {
     const b = id ? this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id) : null;
     const h = b ? this.record.head(id) : null;
     return h ? { ...b, bundle_sha: h.bundleSha } : null;
+  }
+  /* R52 (T50; N1070; `inquiry` R64): a divided question's document is closed, so an act that would revise it answers
+     inquiry's one refusal, `dividedCannotRestructure`, with the text and children inquiry's check gives the same
+     revision, and nothing is written. Null for a question in any other state. `extra` adds the act's own fields. */
+  #dividedRefusal(b, extra = {}) {
+    if (!b || b.current_state !== "divided") return null;
+    let into = [];
+    try {
+      const fm = parseFrontmatter(this.#doc(b.bundle_id) ?? "").data;
+      into = fm && fm.division && Array.isArray(fm.division.into) ? fm.division.into.filter((x) => typeof x === "string") : [];
+    } catch {
+      into = [];
+    }
+    return dividedCannotRestructure(`${b.bundle_id} was divided${into.length ? ` into ${into.join(", ")}` : ""}, and its children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. Nothing was written.`, { ...extra, target: b.bundle_id, ...into.length ? { children: into } : {} });
   }
   #seen(id, viewer) {
     const gate = this.#gate("bx.bundle_id", viewer);
@@ -129322,15 +129614,15 @@ var BasisVersions = class _BasisVersions {
     }
     const author = typeof c.author === "string" ? c.author.trim() : "";
     if (this.#machinePassage && !(author && isMachineIdentity(author))) {
-      const asked4 = [];
+      const asked5 = [];
       for (const v of offered) {
         const held3 = this.#one(`SELECT state FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
         const accepting = !!held3 && held3.state !== "accepted" && v.state === "accepted" && typeof v.author === "string" && isMachineIdentity(v.author.trim());
         if (held3 && !accepting) continue;
-        for (const l2 of v.legs) asked4.push(passageLeg(v.name, l2.src_ord, docLegs[l2.src_ord]));
+        for (const l2 of v.legs) asked5.push(passageLeg(v.name, l2.src_ord, docLegs[l2.src_ord]));
       }
-      if (asked4.length) {
-        const refused5 = this.#machinePassageRefusal(asked4, author);
+      if (asked5.length) {
+        const refused5 = this.#machinePassageRefusal(asked5, author);
         if (refused5) return refused5;
       }
     }
@@ -129477,9 +129769,16 @@ var BasisVersions = class _BasisVersions {
       BASIS_VERSION_LEGS_MAX
     ));
     const grounds = [...new Set(legs.map((l2) => String(l2.ground ?? "").trim()).filter(Boolean))].sort();
+    const parts = this.#rows(
+      `SELECT ground FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? AND ground IS NOT NULL AND ground <> ''
+        GROUP BY ground ORDER BY MIN(ord)`,
+      bundleId,
+      row12.name
+    ).map((r) => r.ground);
     return {
       legs,
       grounds,
+      parts,
       leg_count: row12.leg_count,
       legs_complete: legs.length === row12.leg_count,
       composition_grades: "authored"
@@ -129536,6 +129835,7 @@ var BasisVersions = class _BasisVersions {
         description: r.description,
         relationship: r.relationship,
         grounds: rec.grounds,
+        parts: rec.parts,
         state: r.state,
         derived_from: r.derived_from,
         hidden: r.hidden === 1,
@@ -129996,6 +130296,10 @@ var BasisVersions = class _BasisVersions {
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
       );
+    if (act2 !== "current") {
+      const divided = this.#dividedRefusal(b, { act: act2, version: vname });
+      if (divided) return divided;
+    }
     if (to !== null) {
       const member2 = this.promotion.fact("caseMember", target);
       if (!member2.ok)
@@ -130043,19 +130347,14 @@ var BasisVersions = class _BasisVersions {
     if (to === "accepted") {
       const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
       const declared2 = [...new Set(vlegs.filter((l2) => l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname).map((l2) => String(l2.ground ?? "").trim()).filter(Boolean))];
-      if (declared2.length > 1) {
-        const raw = a.affirmed == null || a.affirmed === "" ? [] : Array.isArray(a.affirmed) ? a.affirmed : String(a.affirmed).split(",");
-        const said12 = [...new Set(raw.map((s) => String(s).trim()).filter(Boolean))];
-        const missing2 = declared2.filter((d) => !said12.includes(d));
-        const unknown = said12.filter((s) => !declared2.includes(s));
-        if (missing2.length || unknown.length)
-          return refuse31(
-            "VERSION_AFFIRMATION_INCOMPLETE",
-            `'${vname.slice(0, 60)}' rests on ${declared2.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing2.length ? `Not affirmed: ${missing2.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`,
-            { target, version: vname, declared: declared2, affirmed: said12, missing: missing2, unknown }
-          );
-        affirmedParts = declared2.join("	");
-      }
+      const aff = _BasisVersions.#affirmation(declared2, a.affirmed);
+      if (aff.incomplete)
+        return refuse31(
+          "VERSION_AFFIRMATION_INCOMPLETE",
+          _BasisVersions.#affirmationDetail(vname, aff.incomplete),
+          _BasisVersions.#affirmationExtra(target, vname, aff.incomplete)
+        );
+      affirmedParts = aff.parts;
     }
     let projectId = null, projectRow = null;
     if (act2 === "current") {
@@ -130120,11 +130419,11 @@ var BasisVersions = class _BasisVersions {
     if (preview) {
       if (to === "accepted" && from !== "accepted" && typeof row12.author === "string" && isMachineIdentity(row12.author.trim())) {
         const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
-        const asked4 = [];
+        const asked5 = [];
         vlegs.forEach((l2, i) => {
-          if (l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname) asked4.push(passageLeg(vname, i, l2));
+          if (l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname) asked5.push(passageLeg(vname, i, l2));
         });
-        const refused5 = this.#machinePassageRefusal(asked4, who4);
+        const refused5 = this.#machinePassageRefusal(asked5, who4);
         if (refused5) return { ...refused5, act: act2, target, version: vname, preview: true, wrote: false };
       }
       return { ...receipt, preview: true, would: act2, wrote: false };
@@ -130175,6 +130474,37 @@ Changes: reading '${vname}' ${to === null ? `${hidden ? "hidden from" : "returne
     });
     if (!promoted.ok) return { ...promoted, ok: false, reason: promoted.reason, act: act2, target, version: vname };
     return receipt;
+  }
+  /* D-271 / DEC-32 clause 4, R12, R53: accepting a reading of several separately sufficient parts affirms each by
+     name. `declared` is the reading's distinct ground labels in its own order; `raw` is what the caller sent (a list, or
+     a comma-separated string). One part or none asks nothing. `incomplete` names what is missing, what is unknown and
+     `part`, the first part (in the reading's order) the answer does not name, or null when only unknown ones were sent. */
+  static #affirmation(declared2, raw) {
+    if (declared2.length <= 1) return { parts: null, incomplete: null };
+    const list6 = raw == null || raw === "" ? [] : Array.isArray(raw) ? raw : String(raw).split(",");
+    const said12 = [...new Set(list6.map((x) => String(x).trim()).filter(Boolean))];
+    const missing2 = declared2.filter((d) => !said12.includes(d));
+    const unknown = said12.filter((x) => !declared2.includes(x));
+    if (missing2.length || unknown.length)
+      return { parts: null, incomplete: { declared: declared2, said: said12, missing: missing2, unknown, part: missing2[0] ?? null } };
+    return { parts: declared2.join("	"), incomplete: null };
+  }
+  static #affirmationDetail(vname, { declared: declared2, missing: missing2, unknown }) {
+    return `'${vname.slice(0, 60)}' rests on ${declared2.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing2.length ? `Not affirmed: ${missing2.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`;
+  }
+  /* R53: the refusal also carries `part`, and its translation is the list's, filled with it (the row's own sentence
+     when only unknown parts were named, so no part is missing to name). */
+  static #affirmationExtra(target, vname, { declared: declared2, said: said12, missing: missing2, unknown, part }) {
+    return {
+      target,
+      version: vname,
+      declared: declared2,
+      affirmed: said12,
+      missing: missing2,
+      unknown,
+      part,
+      ...part === null ? {} : { translation: word("refusal.VERSION_AFFIRMATION_INCOMPLETE", { part }) }
+    };
   }
   /* The make-current pointer's ONE writer (R15): the pointer, `last_updated` and a Session Log entry with the reason,
      in one promotion of the PROJECT. */
@@ -130233,6 +130563,9 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     falsifier = "",
     noFalsifier = false,
     version = "",
+    reading: reading3 = null,
+    affirmed = null,
+    preview = false,
     project = null,
     commentary = "",
     reason: reason2 = "",
@@ -130256,8 +130589,11 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const pid = String(project ?? "").trim();
     const comm = String(commentary ?? "").trim();
     const vname = String(version ?? "").trim();
+    const hasReading = reading3 !== void 0 && reading3 !== null;
+    const ownText = hasReading ? fmSafe2(reading3) : "";
+    const wantPreview = preview === true || preview === "1" || preview === "true";
     const noFals = noFalsifier === true || noFalsifier === 1 || noFalsifier === "1" || noFalsifier === "true";
-    if (!concl && !pid)
+    if (!concl && !pid && !hasReading)
       return {
         ok: false,
         reason: "NO_CONCLUSION",
@@ -130284,6 +130620,14 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         reason: "FALSIFIER_AND_NONE_STATED",
         ...concludeRow("FALSIFIER_AND_NONE_STATED"),
         detail: "you have both stated a falsifier and asked to record that none was stated. Those are two different claims about this finding and your group's Civicsmith will not choose between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty."
+      };
+    if (hasReading && (ownText.length < READING_MIN || ownText.length > VERSION_REASON_MAX || vname || comm && !pid))
+      return {
+        ok: false,
+        reason: "BAD_READING",
+        code: "BAD_READING",
+        translation: word("refusal.BAD_READING"),
+        detail: `reading is ${READING_MIN} to ${VERSION_REASON_MAX} characters${vname ? ", and it takes the place of version, which was also named" : ""}${comm && !pid ? "; commentary beside it needs a project" : ""}`
       };
     for (const [name3, v2] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v2.length > VERSION_REASON_MAX || /["\\\r\n]/.test(v2))
@@ -130322,6 +130666,10 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         detail: "this inquiry has no readable bundle.md, so its state cannot be moved"
       };
     const fm = parseFrontmatter(text8).data || {};
+    if (!pid) {
+      const divided = this.#dividedRefusal(b);
+      if (divided) return divided;
+    }
     const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
     const legalFrom = spec?.edges?.[b.current_state] || [];
     if (!legalFrom.includes("concluded") && !(pid && b.current_state === "concluded"))
@@ -130362,6 +130710,26 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
         };
       pfm = parseFrontmatter(pmd).data || {};
     }
+    if (hasReading)
+      return this.#concludeOwnReading({
+        target,
+        b,
+        text: text8,
+        fm,
+        pid,
+        projRow,
+        pfm,
+        reading: ownText,
+        concl,
+        fals,
+        noFals,
+        comm,
+        bias,
+        who: who4,
+        viewer,
+        affirmed,
+        preview: wantPreview
+      });
     if (!pid && comm)
       return {
         ok: false,
@@ -130431,35 +130799,11 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
     const adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
     if (adopted.leg_count < 1 || !pid && legs.length < 1)
-      return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at all \u2014 a standing objective the group means to pursue \u2014 but concluding one that rests on nothing would put the record's name to an assertion nothing supports. Add a basis[] leg (and the same target in references[]) first.", { target });
+      return actNoBasis(NO_BASIS_DETAIL, { target });
     if (pid) {
-      let lensSha = null;
-      for (const e2 of bias.entries) {
-        const ans = this.#statementInForce({ statement: e2.statement, scope: { type: "project", id: pid }, viewer });
-        if (!ans || ans.in_force !== true) {
-          const inForce = ans && ans.in_force === false ? false : null;
-          const row12 = biasNotInForce({
-            statement: e2.statement,
-            where: `the conclusion of ${pid} on ${target}`,
-            inForce,
-            scope: { type: "project", id: pid }
-          });
-          return {
-            ok: false,
-            reason: "BIAS_APPLICATION_NOT_IN_FORCE",
-            code: row12.code,
-            check: row12.check,
-            translation: row12.translation,
-            detail: row12.detail,
-            findings: [row12],
-            target,
-            project: pid,
-            statement: e2.statement,
-            in_force: inForce
-          };
-        }
-        lensSha ??= typeof ans.statements_sha === "string" ? ans.statements_sha : null;
-      }
+      const forced = this.#biasInForce(bias.entries, pid, target, viewer);
+      if (forced.refused) return forced.refused;
+      const lensSha = forced.lensSha;
       const when2 = this.now();
       const priorRec = this.conclusionRecordOf(pid, target, viewer);
       const prior = priorRec.history.length ? priorRec.history[priorRec.history.length - 1] : null;
@@ -130500,46 +130844,9 @@ Changes: this project now stands on reading '${vname}' of ${inquiryId}.
       };
     }
     const when = this.now();
-    const withHistory = appendStateHistory(text8, {
-      timestamp: when,
-      from_state: b.current_state,
-      to_state: "concluded",
-      blurb: concl,
-      author: who4
-    });
-    if (!withHistory)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_STATE_HISTORY",
-        target,
-        detail: "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
-      };
-    text8 = withHistory;
-    text8 = setScalar(text8, "prior_state", b.current_state);
-    text8 = setScalar(text8, "current_state", "concluded");
-    text8 = setOrAddScalar(text8, "conclusion", `"${concl}"`);
-    text8 = setOrAddScalar(text8, "conclusion_version", quoted(adopted.version));
-    text8 = setOrAddScalar(text8, "conclusion_claim", quoted(adopted.claim));
-    text8 = setOrAddScalar(text8, "falsifier", `"${fals}"`);
-    if (noFals) {
-      text8 = setOrAddScalar(text8, "falsifier_override_by", quoted(who4));
-      text8 = setOrAddScalar(text8, "falsifier_override_at", `"${when}"`);
-    } else {
-      text8 = setScalar(text8, "falsifier_override_by", `""`);
-      text8 = setScalar(text8, "falsifier_override_at", `""`);
-    }
-    text8 = setScalar(text8, "last_updated", `"${when}"`);
-    text8 = appendSessionLog(
-      text8,
-      `### Session ${when} | Concluded | ${who4}
-Trigger: op=conclude on ${target}
-Changes: state ${b.current_state} to concluded.
-Conclusion: ${concl}
-Adopted: reading '${adopted.version}', claim: ${adopted.claim}
-` + (noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${who4} at ${when}
-` : `Falsifier: ${fals}
-`)
-    );
+    const concluded = _BasisVersions.#concludedText(text8, b, { concl, adopted, fals, noFals, who: who4, when });
+    if (concluded.refused) return concluded.refused;
+    text8 = concluded.text;
     const promoted = this.#repromote({
       bundleId: target,
       base: b.bundle_sha,
@@ -130575,6 +130882,307 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
       weight: "single"
     };
   }
+  /* R48: each statement asked of bias R49 at the project's scope, the acting member as viewer; the first not in force
+     (false or undetermined) refused through inquiry R61's one spelling, and nothing written. */
+  #biasInForce(entries, pid, target, viewer) {
+    let lensSha = null;
+    for (const e2 of entries) {
+      const ans = this.#statementInForce({ statement: e2.statement, scope: { type: "project", id: pid }, viewer });
+      if (!ans || ans.in_force !== true) {
+        const inForce = ans && ans.in_force === false ? false : null;
+        const row12 = biasNotInForce({
+          statement: e2.statement,
+          where: `the conclusion of ${pid} on ${target}`,
+          inForce,
+          scope: { type: "project", id: pid }
+        });
+        return { refused: {
+          ok: false,
+          reason: "BIAS_APPLICATION_NOT_IN_FORCE",
+          code: row12.code,
+          check: row12.check,
+          translation: row12.translation,
+          detail: row12.detail,
+          findings: [row12],
+          target,
+          project: pid,
+          statement: e2.statement,
+          in_force: inForce
+        } };
+      }
+      lensSha ??= typeof ans.statements_sha === "string" ? ans.statements_sha : null;
+    }
+    return { lensSha };
+  }
+  /* R19: the question's document moved to `concluded` (a state-history entry, the conclusion, the adopted reading and
+     its claim, the falsifier or the override pair, a Session Log entry). `refused` when its state history cannot be
+     extended in place. */
+  static #concludedText(text8, b, { concl, adopted, fals, noFals, who: who4, when }) {
+    const withHistory = appendStateHistory(text8, {
+      timestamp: when,
+      from_state: b.current_state,
+      to_state: "concluded",
+      blurb: concl,
+      author: who4
+    });
+    if (!withHistory)
+      return { refused: {
+        ok: false,
+        reason: "UNSPLICEABLE_STATE_HISTORY",
+        target: b.bundle_id,
+        detail: "this document's state_history block cannot be extended in place, and a conclusion recording no transition would leave prior_state pointing at a history the document does not carry (C-4.2)"
+      } };
+    text8 = withHistory;
+    text8 = setScalar(text8, "prior_state", b.current_state);
+    text8 = setScalar(text8, "current_state", "concluded");
+    text8 = setOrAddScalar(text8, "conclusion", `"${concl}"`);
+    text8 = setOrAddScalar(text8, "conclusion_version", quoted(adopted.version));
+    text8 = setOrAddScalar(text8, "conclusion_claim", quoted(adopted.claim));
+    text8 = setOrAddScalar(text8, "falsifier", `"${fals}"`);
+    if (noFals) {
+      text8 = setOrAddScalar(text8, "falsifier_override_by", quoted(who4));
+      text8 = setOrAddScalar(text8, "falsifier_override_at", `"${when}"`);
+    } else {
+      text8 = setScalar(text8, "falsifier_override_by", `""`);
+      text8 = setScalar(text8, "falsifier_override_at", `""`);
+    }
+    text8 = setScalar(text8, "last_updated", `"${when}"`);
+    text8 = appendSessionLog(
+      text8,
+      `### Session ${when} | Concluded | ${who4}
+Trigger: op=conclude on ${b.bundle_id}
+Changes: state ${b.current_state} to concluded.
+Conclusion: ${concl}
+Adopted: reading '${adopted.version}', claim: ${adopted.claim}
+` + (noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${who4} at ${when}
+` : `Falsifier: ${fals}
+`)
+    );
+    return { text: text8 };
+  }
+  /* R51 (T50; N1109, N1173; DEC-254): a member's own reading, accepted and concluded on in one act. The question's
+     live legs and grounds are copied as the document holds them into a new version carrying her words as claim and
+     description, written already accepted by her; with a project the version is also the project's CURRENT and the
+     conclusion row is appended (one promotion of the question, one of the project); without one the question moves
+     to `concluded`. Every refusal of a conclusion stands (the caller has applied R16's in order); one refusal refuses
+     all and writes nothing, so every text is built and every check run before the first promotion. */
+  #concludeOwnReading({
+    target,
+    b,
+    text: text8,
+    fm,
+    pid,
+    projRow,
+    pfm,
+    reading: reading3,
+    concl,
+    fals,
+    noFals,
+    comm,
+    bias,
+    who: who4,
+    viewer,
+    affirmed,
+    preview
+  }) {
+    if (pid && !drawsOn(pfm, target))
+      return {
+        ok: false,
+        reason: "NO_CLAIM",
+        ...concludeRow("NO_CLAIM"),
+        target,
+        project: pid,
+        detail: `${pid} does not draw on ${target}, so it has no stance on it to conclude. Cite the question into the project first.`
+      };
+    const refs = Array.isArray(fm.references) ? fm.references : [];
+    const live7 = (Array.isArray(fm.basis) ? fm.basis : []).filter((l2) => {
+      if (!l2 || typeof l2 !== "object" || typeof l2.target !== "string") return false;
+      const t2 = l2.target.trim();
+      const cites = refs.filter((x) => x && typeof x === "object" && x.rel === "cites" && String(x.target ?? "").trim() === t2);
+      return !(cites.length && cites.every((x) => x.status === "severed"));
+    });
+    if (!live7.length) return actNoBasis(NO_BASIS_DETAIL, { target });
+    const taken = new Set((Array.isArray(fm.basis_versions) ? fm.basis_versions : []).map((r) => fmSafe2(r?.name ?? "")));
+    let n2 = 1;
+    while (taken.has(`reading-${n2}`)) n2++;
+    const name3 = `reading-${n2}`;
+    const labelled = live7.some((l2) => typeof l2.ground === "string" && l2.ground.trim() !== "");
+    const used = new Set(live7.map((l2) => String(l2.ground ?? "").trim()).filter(Boolean));
+    const when = this.now();
+    const grounds = labelled ? (Array.isArray(fm.grounds) ? fm.grounds : []).filter((g) => g && typeof g === "object" && used.has(String(g.ground ?? "").trim())).map((g) => ({ ground: g.ground, asserted_by: g.asserted_by, at: g.at, statement: g.statement })) : [{ ground: "g1", asserted_by: SUFFICIENCY_UNCLAIMED, at: when }];
+    const legs = live7.map((l2) => {
+      const o = {};
+      for (const k of LEG_COPY_KEYS) o[k] = k === "ground" && !labelled ? "g1" : l2[k];
+      return o;
+    });
+    const parts = [...new Set(legs.map((l2) => String(l2.ground ?? "").trim()).filter(Boolean))];
+    const aff = _BasisVersions.#affirmation(parts, affirmed);
+    if (aff.incomplete) {
+      const row12 = VERSION_ACT_CHECKS.VERSION_AFFIRMATION_INCOMPLETE;
+      return {
+        ok: false,
+        reason: "VERSION_AFFIRMATION_INCOMPLETE",
+        check: row12.check,
+        code: "VERSION_AFFIRMATION_INCOMPLETE",
+        translation: row12.translation,
+        detail: _BasisVersions.#affirmationDetail(name3, aff.incomplete),
+        ..._BasisVersions.#affirmationExtra(target, name3, aff.incomplete)
+      };
+    }
+    const forced = pid ? this.#biasInForce(bias.entries, pid, target, viewer) : { lensSha: null };
+    if (forced.refused) return forced.refused;
+    const adopted = { version: name3, claim: reading3, leg_count: legs.length };
+    const v = {
+      name: name3,
+      description: reading3,
+      claim: reading3,
+      relationship: parts.length > 1 ? "or" : "and",
+      derived_from: null,
+      author: who4,
+      at: when
+    };
+    let qtext = _BasisVersions.#withVersion(text8, v, grounds, legs, { state: "accepted", by: who4, at: when, affirmed: aff.parts });
+    if (qtext !== null) qtext = setScalar(qtext, "last_updated", `"${when}"`);
+    if (qtext === null)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_BASIS",
+        target,
+        detail: "this question's version block is in a shape the restricted frontmatter grammar cannot extend in place, so nothing was written."
+      };
+    const facts = {
+      act: "concluded",
+      version: name3,
+      claim: reading3,
+      falsifier: fals,
+      noFals,
+      commentary: comm,
+      bias: bias.entries,
+      biasSha: pid && bias.entries.length ? forced.lensSha : null,
+      who: who4,
+      when
+    };
+    const base2 = {
+      ok: true,
+      target,
+      own_reading: true,
+      version: name3,
+      author: who4,
+      at: when,
+      weight: "single",
+      claim: { state: "adopted", text: reading3, version: name3 },
+      basis_legs: legs.length,
+      affirmed: aff.parts === null ? null : aff.parts.split("	"),
+      falsifier: fals,
+      falsifier_override: noFals ? { by: who4, at: when } : null
+    };
+    let finish, receipt;
+    if (pid) {
+      const md = this.#doc(pid);
+      if (md === null)
+        return {
+          ok: false,
+          reason: "NO_DOCUMENT",
+          target,
+          project: pid,
+          detail: "this project has no readable bundle.md, so its conclusion cannot be recorded"
+        };
+      const withCurrent = setCurrentVersionRow(md, target, name3, who4, when);
+      if (withCurrent === null) {
+        const row12 = VERSION_ACT_CHECKS.VERSION_ACT_UNWRITABLE;
+        return {
+          ok: false,
+          reason: "VERSION_ACT_UNWRITABLE",
+          check: row12.check,
+          code: "VERSION_ACT_UNWRITABLE",
+          translation: row12.translation,
+          target,
+          version: name3,
+          project: pid,
+          detail: `${pid}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`
+        };
+      }
+      if (appendConclusionEntry(withCurrent, target, facts) === null)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_CONCLUSIONS",
+          ...concludeRow("UNSPLICEABLE_CONCLUSIONS"),
+          target,
+          project: pid,
+          detail: `${pid}'s conclusions block could not be extended in place`
+        };
+      const priorRec = this.conclusionRecordOf(pid, target, viewer);
+      const prior = priorRec.history.length ? priorRec.history[priorRec.history.length - 1] : null;
+      qtext = appendSessionLog(
+        qtext,
+        `### Session ${when} | Own reading accepted | ${who4}
+Trigger: op=conclude on ${target} for ${pid}
+Changes: reading '${name3}' written by ${who4} from the question's own legs, in state accepted.
+`
+      );
+      receipt = {
+        ...base2,
+        project: pid,
+        relationship: "project",
+        to: "concluded",
+        inquiry_state: b.current_state,
+        inquiry_moved: false,
+        current: { project: pid, version: name3 },
+        commentary: comm ? { text: comm, by: who4, at: when, evidence: false } : null,
+        bias_applied: bias.entries,
+        bias_lens_sha: bias.entries.length ? forced.lensSha : null,
+        prior: prior ? { act: prior.act, version: prior.version, claim: prior.claim, at: prior.at, by: prior.by } : null,
+        history_length: priorRec.history.length + 1
+      };
+      finish = () => {
+        const w = this.#setProjectConclusion(projRow, target, { ...facts, alsoCurrent: true });
+        return w.ok ? receipt : { ...w, target, project: pid };
+      };
+    } else {
+      qtext = appendSessionLog(
+        qtext,
+        `### Session ${when} | Own reading accepted | ${who4}
+Trigger: op=conclude on ${target}
+Changes: reading '${name3}' written by ${who4} from the question's own legs, in state accepted.
+`
+      );
+      const concluded = _BasisVersions.#concludedText(qtext, b, { concl: concl || reading3, adopted, fals, noFals, who: who4, when });
+      if (concluded.refused) return concluded.refused;
+      qtext = concluded.text;
+      receipt = {
+        ...base2,
+        from: b.current_state,
+        to: "concluded",
+        conclusion: concl || reading3,
+        relationship: "no_project",
+        project: null
+      };
+      finish = () => receipt;
+    }
+    const meta = {
+      object_type: fm.object_type ?? b.object_type,
+      title: fm.title,
+      current_state: pid ? b.current_state : "concluded",
+      prior_state: pid ? fm.prior_state ?? null : b.current_state,
+      created: fm.created,
+      last_updated: when,
+      criticality: fm.criticality ?? null
+    };
+    if (preview) {
+      const refused5 = this.check({
+        pkg: {},
+        bundleId: target,
+        promotedType: "inquiry",
+        docFm: parseFrontmatter(qtext).data || {},
+        author: who4
+      });
+      if (refused5) return { ...refused5, target, preview: true, wrote: false };
+      return { ...receipt, preview: true, would: "conclude", wrote: false };
+    }
+    const promoted = this.#repromote({ bundleId: target, base: b.bundle_sha, text: qtext, when, author: who4, meta });
+    if (!promoted.ok) return { ...promoted, target };
+    return finish();
+  }
   /* R48: bias R49's answer, through the instance or function the factory handed; a source that throws or is absent
      answers undetermined (null), which refuses as not in force. */
   #statementInForce(args) {
@@ -130594,7 +131202,8 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
     if (md === null)
       return { ok: false, reason: "NO_DOCUMENT", detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
     const pfm = parseFrontmatter(md).data || {};
-    let text8 = appendConclusionEntry(md, inquiryId, f17);
+    let text8 = f17.alsoCurrent ? setCurrentVersionRow(md, inquiryId, f17.version, f17.who, f17.when) : md;
+    if (text8 !== null) text8 = appendConclusionEntry(text8, inquiryId, f17);
     if (text8 === null)
       return {
         ok: false,
@@ -130607,7 +131216,10 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
 Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}
 Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f17.version}', concluded ${f17.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
 Reason: ${f17.reason}
-` : `### Session ${f17.when} | Concluded | ${f17.who}
+` : (f17.alsoCurrent ? `### Session ${f17.when} | Stands on | ${f17.who}
+Trigger: op=conclude on ${inquiryId}
+Changes: this project now stands on reading '${f17.version}' of ${inquiryId}, written by ${f17.who}.
+` : ``) + `### Session ${f17.when} | Concluded | ${f17.who}
 Trigger: op=conclude on ${inquiryId} for ${pid}
 Changes: this project concluded ${inquiryId} on reading '${f17.version}', adopting its claim.
 Claim: ${f17.claim}
@@ -130719,6 +131331,46 @@ Claim: ${f17.claim}
     };
   }
   /* ================================================================ appendVersion (R28) */
+  /* R28, R51: `src` with one version, its grounds and its legs appended. The version row is written in the caller's
+     field order with `state` and `hidden` after `relationship` (undefined skipped, null written as `null`): `state`
+     is `suggested` unless `moved` says the version was written already moved ({state, by, at, affirmed}, R51), in which
+     case `state_by`, `state_at`, an empty `state_reason` and `affirmed_parts` follow `hidden`, as a move writes them.
+     Each ground and leg row is written in its own order (undefined, null and empty skipped), numbers bare, lists of
+     numbers inline, text quoted. Null when a block cannot be extended in place. */
+  static #withVersion(src, v, grounds, legs, moved = null) {
+    const name3 = String(v.name ?? "");
+    const vLines = [];
+    const state = [
+      `    state: "${moved ? moved.state : "suggested"}"`,
+      `    hidden: false`,
+      ...moved ? [
+        `    state_by: ${quoted(moved.by)}`,
+        `    state_at: ${quoted(moved.at)}`,
+        `    state_reason: ""`,
+        `    affirmed_parts: ${quoted(moved.affirmed ?? "")}`
+      ] : []
+    ];
+    for (const [k, val5] of Object.entries(v)) {
+      if (k === "state" || k === "hidden" || val5 === void 0) continue;
+      vLines.push(`${vLines.length ? "    " : "  - "}${k}: ${val5 === null ? "null" : typedValue(val5)}`);
+      if (k === "relationship") vLines.push(...state);
+    }
+    if (!("relationship" in v)) vLines.push(...state);
+    const rowOf19 = (o) => {
+      const lines2 = [`  - version: ${quoted(name3)}`];
+      for (const [k, val5] of Object.entries(o || {})) {
+        if (k === "version" || val5 === void 0 || val5 === null || val5 === "") continue;
+        lines2.push(`    ${k}: ${typedValue(val5)}`);
+      }
+      return lines2.join("\n");
+    };
+    let text8 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
+    const gRows = (Array.isArray(grounds) ? grounds : []).map(rowOf19);
+    const lRows = (Array.isArray(legs) ? legs : []).map(rowOf19);
+    if (text8 !== null && gRows.length) text8 = appendFmRows(text8, "basis_version_grounds", gRows);
+    if (text8 !== null && lRows.length) text8 = appendFmRows(text8, "basis_version_legs", lRows);
+    return text8;
+  }
   /** R28: appends ONE version, its grounds and its legs to the question's document, in `suggested` state and not
    *  hidden (a caller's `state` or `hidden` is never read), and promotes it, so R6 judges it. The version row is written
    *  in the caller's field order with `state` and `hidden` after `relationship` (undefined skipped, null written as
@@ -130736,6 +131388,8 @@ Claim: ${f17.claim}
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: tgt || null };
     if (normalizeType(b.object_type) !== "inquiry")
       return { ok: false, reason: "NOT_AN_INQUIRY", target: tgt, object_type: b.object_type };
+    const divided = this.#dividedRefusal(b);
+    if (divided) return divided;
     const src = this.#doc(tgt);
     if (src === null) return { ok: false, reason: "NO_DOCUMENT", target: tgt };
     const fm0 = parseFrontmatter(src).data || {};
@@ -130744,26 +131398,7 @@ Claim: ${f17.claim}
     if (run2 !== void 0 && v.run === void 0) v.run = run2;
     const when = at49 || this.now();
     const name3 = String(v.name ?? "");
-    const vLines = [];
-    for (const [k, val5] of Object.entries(v)) {
-      if (k === "state" || k === "hidden" || val5 === void 0) continue;
-      vLines.push(`${vLines.length ? "    " : "  - "}${k}: ${val5 === null ? "null" : typedValue(val5)}`);
-      if (k === "relationship") vLines.push(`    state: "suggested"`, `    hidden: false`);
-    }
-    if (!("relationship" in v)) vLines.push(`    state: "suggested"`, `    hidden: false`);
-    const rowOf19 = (o) => {
-      const lines2 = [`  - version: ${quoted(name3)}`];
-      for (const [k, val5] of Object.entries(o || {})) {
-        if (k === "version" || val5 === void 0 || val5 === null || val5 === "") continue;
-        lines2.push(`    ${k}: ${typedValue(val5)}`);
-      }
-      return lines2.join("\n");
-    };
-    let text8 = appendFmRows(src, "basis_versions", [vLines.join("\n")]);
-    const gRows = (Array.isArray(grounds) ? grounds : []).map(rowOf19);
-    const lRows = (Array.isArray(legs) ? legs : []).map(rowOf19);
-    if (text8 !== null && gRows.length) text8 = appendFmRows(text8, "basis_version_grounds", gRows);
-    if (text8 !== null && lRows.length) text8 = appendFmRows(text8, "basis_version_legs", lRows);
+    let text8 = _BasisVersions.#withVersion(src, v, grounds, legs);
     if (text8 === null)
       return {
         ok: false,
@@ -131004,23 +131639,12 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
     };
     const src = this.#narrowSource(args);
     if (!src.ok) return src;
+    const divided = this.#dividedRefusal(src.b);
+    if (divided) return divided;
     const who4 = String(args.author ?? "").trim();
     const name3 = String(args.name ?? "").trim();
     const nameWritten = fmSafe2(name3);
     const description = String(args.description ?? "").trim();
-    const EXTENT_FIELDS = {
-      extent_kind: "text",
-      extent_ref: "text",
-      extent_page: "int",
-      extent_rect: "nums",
-      extent_sheet: "text",
-      extent_cell: "text",
-      extent_slide: "int",
-      extent_shape: "int",
-      extent_para: "int",
-      extent_run: "int",
-      content_id: "text"
-    };
     const bag = args.extent && typeof args.extent === "object" ? args.extent : {};
     const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
     const legFields = {};
@@ -131132,19 +131756,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
       at: nowIso
     };
     const grounds = (Array.isArray(src.fm.basis_version_grounds) ? src.fm.basis_version_grounds : []).filter((g) => g && typeof g === "object" && String(g.version ?? "").trim() === src.vname).map((g) => ({ ground: String(g.ground ?? ""), asserted_by: who4, at: nowIso, statement: g.statement }));
-    const LEG_KEYS = [
-      "target",
-      "target_edition",
-      "role",
-      "ground",
-      "grade",
-      "grade_axis",
-      "grade_source",
-      "note",
-      "date",
-      "extent_capture",
-      ...Object.keys(EXTENT_FIELDS)
-    ];
+    const LEG_KEYS = LEG_COPY_KEYS;
     const EXTENT_KEYS = /* @__PURE__ */ new Set([...Object.keys(EXTENT_FIELDS), "extent_capture"]);
     const GRADE_KEYS = /* @__PURE__ */ new Set(["grade", "grade_axis", "grade_source"]);
     const dropped = {};
@@ -131331,6 +131943,9 @@ function basisVersionsOps(bv, url, body) {
       project: q10("project"),
       commentary: q10("commentary"),
       version: q10("version"),
+      reading: q10("reading"),
+      preview: q10("preview"),
+      affirmed: b && b.affirmed !== void 0 ? b.affirmed : q10("affirmed"),
       /* R48: the list from the body, else its JSON from the query */
       biasApplied: b && b.bias_applied !== void 0 ? b.bias_applied : q10("bias_applied"),
       viewer: q10("viewer"),
@@ -135323,21 +135938,21 @@ var Strength = class _Strength {
         { inquiry: inq }
       );
     const rawStates = args.states == null || args.states === "" ? null : Array.isArray(args.states) ? args.states : String(args.states).split(",");
-    const asked4 = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
-    if (asked4 && asked4.length > VERSION_STRENGTH_STATES_MAX)
+    const asked5 = rawStates ? rawStates.map((s) => String(s).trim()).filter(Boolean) : null;
+    if (asked5 && asked5.length > VERSION_STRENGTH_STATES_MAX)
       return refusal39(
         "VERSION_STRENGTH_TOO_MANY_STATES",
-        `${asked4.length} kinds of reading were named and this record has ${VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
+        `${asked5.length} kinds of reading were named and this record has ${VERSION_STRENGTH_STATES_MAX}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.`,
         { inquiry: inq, limit: VERSION_STRENGTH_STATES_MAX }
       );
-    const unknown = asked4 ? asked4.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
+    const unknown = asked5 ? asked5.filter((s) => !VERSION_MACHINE.legal.includes(s)) : [];
     if (unknown.length)
       return refusal39(
         "VERSION_STRENGTH_UNKNOWN_STATE",
         `'${unknown[0].slice(0, 40)}' is not one of the states a reading can be in: ${VERSION_MACHINE.legal.join(", ")}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.`,
         { inquiry: inq, unknown, legal: VERSION_MACHINE.legal }
       );
-    const stateSet = asked4 ? VERSION_MACHINE.legal.filter((s) => asked4.includes(s)) : [...VERSION_STRENGTH_DEFAULT_STATES];
+    const stateSet = asked5 ? VERSION_MACHINE.legal.filter((s) => asked5.includes(s)) : [...VERSION_STRENGTH_DEFAULT_STATES];
     if (!this.#visible(inq, args.viewer ?? null))
       return refusal39(
         "VERSION_STRENGTH_NOT_AN_INQUIRY",
@@ -135962,8 +136577,8 @@ var Strength = class _Strength {
     const pid = String(project ?? "").trim();
     const unseen = this.#projectUnseen(pid, viewer);
     if (unseen) return unseen;
-    const asked4 = str14(identity2) ?? `member:${who4}`;
-    const fence4 = this.membership.projectAuthority(pid, asked4, "joined", "projectBarSet");
+    const asked5 = str14(identity2) ?? `member:${who4}`;
+    const fence4 = this.membership.projectAuthority(pid, asked5, "joined", "projectBarSet");
     if (fence4) return fence4;
     const bad2 = badGrade(capture2, connection);
     if (bad2) return bad2;
@@ -136018,9 +136633,9 @@ Reason: ${why2.replace(/\s+/g, " ")}
         created: fm.created,
         last_updated: at49
       },
-      actorIdentity: asked4,
+      actorIdentity: asked5,
       actorViewer: viewer,
-      actorMemberId: this.membership.positionalMember(viewer, asked4)
+      actorMemberId: this.membership.positionalMember(viewer, asked5)
     });
     if (!r || r.ok !== true) return r;
     return {
@@ -137741,8 +138356,8 @@ var Contradiction = class _Contradiction {
    *  of one key over a store written between them would publish a `formed` figure that does not match the pairs. */
   pairs({ key: key2 = null, limit = null, viewer = null } = {}) {
     const names2 = Object.keys(CONTRADICTION_KEYS);
-    const asked4 = key2 == null || String(key2).trim() === "" ? null : String(key2).trim().toUpperCase();
-    if (asked4 !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked4)) {
+    const asked5 = key2 == null || String(key2).trim() === "" ? null : String(key2).trim().toUpperCase();
+    if (asked5 !== null && !Object.prototype.hasOwnProperty.call(CONTRADICTION_KEYS, asked5)) {
       const row12 = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
       return {
         ok: false,
@@ -137759,7 +138374,7 @@ var Contradiction = class _Contradiction {
     const cap = Number.isFinite(n2) && n2 >= 1 ? Math.min(Math.floor(n2), max) : max;
     const scope = viewerPredicate(viewer).scope;
     const denied = scope === "DENY";
-    const run2 = new Set(asked4 ? [asked4] : names2);
+    const run2 = new Set(asked5 ? [asked5] : names2);
     const pairs = [];
     const keys = names2.map((name3) => {
       const spec = CONTRADICTION_KEYS[name3];
@@ -137774,7 +138389,7 @@ var Contradiction = class _Contradiction {
           notes: [],
           absence: {
             level: "not_run",
-            says: `this key was not run: the request named ${asked4}. Nothing here is a statement about what ${name3} would have found`
+            says: `this key was not run: the request named ${asked5}. Nothing here is a statement about what ${name3} would have found`
           }
         };
       const out = denied ? { pairs: [], truncated: false, notes: [] } : name3 === "K1" ? this.#k1(viewer, cap) : name3 === "K2" ? this.#k2(viewer, cap) : name3 === "K3" ? this.#k3(viewer, cap) : name3 === "K4" ? this.#k4(viewer, cap) : name3 === "K6" ? this.#k6(viewer, cap) : this.#k5(viewer, cap);
@@ -138971,8 +139586,8 @@ var Contradiction = class _Contradiction {
           truncated6 = true;
           break;
         }
-        const asked4 = viewer !== void 0 && viewer !== null;
-        const seenA = !asked4 || this.#sideSeen(row12.a, viewer), seenB = !asked4 || this.#sideSeen(row12.b, viewer);
+        const asked5 = viewer !== void 0 && viewer !== null;
+        const seenA = !asked5 || this.#sideSeen(row12.a, viewer), seenB = !asked5 || this.#sideSeen(row12.b, viewer);
         const explanation = view.state === "explained_not_shown" ? view.act?.explanation ?? null : null;
         if (seenA && seenB)
           out.push({
@@ -141670,8 +142285,8 @@ var Reevaluation = class {
       const pk = `${l2.bundle_id}\0${l2.target_id}`;
       if (!byPair.has(pk)) byPair.set(pk, []);
       if (byPair.get(pk).some((c) => c.ord === l2.ord && c.move === m.move)) continue;
-      const say5 = named3(l2.target_id);
-      const group2 = say5 ? m.group : null, kase = say5 ? m.case : null;
+      const say6 = named3(l2.target_id);
+      const group2 = say6 ? m.group : null, kase = say6 ? m.case : null;
       byPair.get(pk).push({
         source: CITED_CASE_MOVED,
         since: m.at,
@@ -141796,12 +142411,12 @@ var Reevaluation = class {
       claims.get(v.bundle_id).push({ name: v.name, ref: `${v.bundle_id}|${v.name}`, version: sha256HexSync(String(v.claim)) });
     }
     const key2 = (ref, version) => `${ref}\0${version}`;
-    const asked4 = /* @__PURE__ */ new Map();
-    for (const [cid, cap] of caps3) asked4.set(key2(cid, cap), { ref: cid, version: cap });
-    for (const list6 of claims.values()) for (const c of list6) asked4.set(key2(c.ref, c.version), { ref: c.ref, version: c.version });
+    const asked5 = /* @__PURE__ */ new Map();
+    for (const [cid, cap] of caps3) asked5.set(key2(cid, cap), { ref: cid, version: cap });
+    for (const list6 of claims.values()) for (const c of list6) asked5.set(key2(c.ref, c.version), { ref: c.ref, version: c.version });
     const stale = /* @__PURE__ */ new Map();
     let read3 = true;
-    const all = [...asked4.entries()];
+    const all = [...asked5.entries()];
     for (let i = 0; i < all.length; i += TENSIONS_REFERENTS_MAX) {
       const chunk2 = all.slice(i, i + TENSIONS_REFERENTS_MAX);
       let t2 = null;
@@ -144542,7 +145157,7 @@ __export(case_grammar_exports, {
   outcomesOf: () => outcomesOf2,
   outcomesSectionLines: () => outcomesSectionLines,
   pairLine: () => pairLine,
-  pairOf: () => pairOf,
+  pairOf: () => pairOf2,
   passagesLines: () => passagesLines,
   passagesOf: () => passagesOf,
   peopleLines: () => peopleLines,
@@ -145211,7 +145826,7 @@ function pairLine(pair2) {
   const p3 = pair2 && typeof pair2 === "object" ? pair2 : {};
   return `[${PAIR_AXES2.filter((x) => x !== "testimony" || x in p3).map((x) => `${x}:${axisWord(p3[x])}`).join(", ")}]`;
 }
-function pairOf(value) {
+function pairOf2(value) {
   if (!Array.isArray(value)) return null;
   const out = {};
   for (const item3 of value) {
@@ -145244,7 +145859,7 @@ function acceptedWorkOf2(fm) {
       rows: objects2(d.accepted_work).map((r) => ({
         ...read2(r, ACCEPTED_WORK_FIELDS),
         edition: count(r.edition),
-        pair: pairOf(r.pair)
+        pair: pairOf2(r.pair)
       })),
       flags: objects2(d.accepted_work_flags).map((r) => ({ ...read2(r, ACCEPTED_WORK_FLAG_FIELDS), edition: count(r.edition) }))
     };
@@ -151447,13 +152062,13 @@ var CaseCarriage = class _CaseCarriage {
       }
     };
     const withdrawn = [], undisclosed = [];
-    const asked4 = /* @__PURE__ */ new Set();
+    const asked5 = /* @__PURE__ */ new Set();
     for (const r of rows4) {
       if (!r || typeof r !== "object") continue;
       const ref = str23(r.ref), edition = Number(r.edition);
       const key2 = `${ref}\0${edition}`;
-      if (asked4.has(key2)) continue;
-      asked4.add(key2);
+      if (asked5.has(key2)) continue;
+      asked5.add(key2);
       const named3 = { ref: ref || null, edition: Number.isInteger(edition) ? edition : null };
       const f17 = ask3("acceptedFinding", { ref, edition, viewer });
       const inForce = !!f17 && typeof f17 === "object" && !f17.absent && !f17.unreadable && !!f17.acceptance && typeof f17.acceptance === "object" && (f17.edition === void 0 || Number(f17.edition) === edition);
@@ -151495,9 +152110,9 @@ var CaseCarriage = class _CaseCarriage {
      source behind it (its pulled knocks, first received first), or null when no knock stands behind it or a source
      cannot be read (fail closed). Each capture is asked once per function made. */
   #publishable(at49) {
-    const asked4 = /* @__PURE__ */ new Map();
+    const asked5 = /* @__PURE__ */ new Map();
     return (capture2) => {
-      if (asked4.has(capture2)) return asked4.get(capture2);
+      if (asked5.has(capture2)) return asked5.get(capture2);
       let knocks = [];
       try {
         knocks = this.#rows(`SELECT source_id, received FROM source_knocks WHERE capture_sha=?
@@ -151523,7 +152138,7 @@ var CaseCarriage = class _CaseCarriage {
           entries.push(...r.entries);
         }
       }
-      asked4.set(capture2, answer2);
+      asked5.set(capture2, answer2);
       return answer2;
     };
   }
@@ -154557,11 +155172,11 @@ var Publication = class {
      read), it answers so. Null when neither. Another project is never named: a member's project may be one the signer
      cannot see. Each project is asked once; a scope that cannot be read is R23's (`none`). */
   #counselMatterIn(owning, members3) {
-    const asked4 = /* @__PURE__ */ new Map();
+    const asked5 = /* @__PURE__ */ new Map();
     const counsel = (p3) => {
       const id = str25(p3);
       if (!id) return false;
-      if (!asked4.has(id)) {
+      if (!asked5.has(id)) {
         let scope = null;
         try {
           const a = this.roster.projectScope(id);
@@ -154569,9 +155184,9 @@ var Publication = class {
         } catch {
           scope = null;
         }
-        asked4.set(id, scope === "counsel_matter");
+        asked5.set(id, scope === "counsel_matter");
       }
-      return asked4.get(id);
+      return asked5.get(id);
     };
     const project = counsel(owning) ? str25(owning) : null;
     const findings = [];
@@ -159923,7 +160538,7 @@ var PublicRead = class {
        answer is asserted by `published.test.mjs`' R3 and R11 arms rather than
        left to review. */
   publishedCase({ id = null, edition = null, sha256: sha2562 = null, caseId = null } = {}) {
-    let theCase = caseId ? String(caseId).trim() : null, ed = null, asked4 = null;
+    let theCase = caseId ? String(caseId).trim() : null, ed = null, asked5 = null;
     let askedEdition = null;
     sha2562 = lowerSha(sha2562);
     if (sha2562) {
@@ -159932,7 +160547,7 @@ var PublicRead = class {
         sha2562
       );
       if (r) {
-        asked4 = r.bundle_id;
+        asked5 = r.bundle_id;
         askedEdition = Number(r.edition);
         const cms = this.#casesOfSha(r.bundle_id, sha2562, askedEdition);
         const got = this.#resolveOneCase(r.bundle_id, cms, caseId);
@@ -159954,7 +160569,7 @@ var PublicRead = class {
         if (!got.ok) return got;
         if (got.pick) {
           theCase = got.pick.case_id;
-          asked4 = id;
+          asked5 = id;
         }
       }
       if (want != null) ed = want;
@@ -159964,8 +160579,8 @@ var PublicRead = class {
       ed = top2 && top2.m != null ? Number(top2.m) : null;
     }
     let state = theCase && ed != null ? this.publication.caseEditionState(theCase, ed) : null;
-    if (!state && (asked4 || sha2562 || id)) {
-      const who4 = asked4 || id;
+    if (!state && (asked5 || sha2562 || id)) {
+      const who4 = asked5 || id;
       const want = askedEdition != null ? askedEdition : sha2562 == null && id != null && edition != null && Number.isInteger(Number(edition)) ? Number(edition) : null;
       const r = sha2562 ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`, sha2562) : want != null ? this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? AND edition=?`, who4, want) : this.#one(`SELECT bundle_id, edition, bundle_sha FROM published_bundles WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, who4);
       if (r && this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition).length === 0) {
@@ -160220,7 +160835,7 @@ var PublicRead = class {
       published_at: cRow ? cRow.published_at ?? null : null,
       complete: state.complete,
       awaiting: state.awaiting,
-      ...asked4 ? { asked: asked4 } : {},
+      ...asked5 ? { asked: asked5 } : {},
       findings,
       tensions: disclosed.tensions,
       highlighted: disclosed.highlighted,
@@ -164925,8 +165540,8 @@ async function publishedRoutes({ op, url, env, stub }) {
     }
     let source2 = manifest, read3 = pubBytes, part = null;
     if (isCaseFileManifest(manifest)) {
-      const asked4 = url.searchParams.get("part");
-      part = asked4 == null || asked4 === "" ? 1 : /^[1-9][0-9]{0,5}$/.test(asked4) ? Number(asked4) : NaN;
+      const asked5 = url.searchParams.get("part");
+      part = asked5 == null || asked5 === "" ? 1 : /^[1-9][0-9]{0,5}$/.test(asked5) ? Number(asked5) : NaN;
       source2 = Number.isInteger(part) ? caseFilePartLayout(manifest, part) : null;
       if (!source2)
         return P.json({ ok: false, ...P.requiredArgument(
@@ -167727,11 +168342,12 @@ __export(checks_exports43, {
   RUN_RULES_WORDS: () => RUN_RULES_WORDS,
   SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
 });
-var RUN_RULES_WORDS = Object.freeze({
-  "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
-  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.",
-  "refusal.MEMBER_RUN_MODE_NOT_ADMITTED": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you."
-});
+var RUN_RULES_WORDS = Object.freeze(Object.fromEntries([
+  "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE",
+  "refusal.AI_RUN_REEXAM_OPEN",
+  "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+  "refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE"
+].map((key2) => [key2, word(key2)])));
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -168010,6 +168626,16 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.30",
     where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
     translation: RUN_RULES_WORDS["refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]
+  },
+  /* R35 (T50; N1169; K3501 (C2); `agent-harness` R18): A `level-empty` FINDING OVER A SCOPE WITH NO DOCUMENT IN IT. A level that
+     had no document in scope was not looked at, so no absence is written for it: `levelEmptyHolds` is the rule's one
+     statement, `agent-harness` asks it before it composes a candidate, and the row is what it answers when the finding does
+     not hold. C-22.31, the next free number after R32's C-22.30. Its translation is `words.json`'s
+     `refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE`, read by key (RUN_RULES_WORDS above). */
+  LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE: {
+    check: "C-22.31",
+    where: "src/run-rules/rules.mjs levelEmptyHolds, called from agent-harness before it composes a level-empty candidate",
+    translation: RUN_RULES_WORDS["refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE"]
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -168491,8 +169117,8 @@ var ASK_BOUNDS = Object.freeze({
   wall_ms: Object.freeze({ default: 18e4, means: "milliseconds from the ask's start to its answer" }),
   reads: Object.freeze({ default: 40, means: "reads of the record one ask may make" })
 });
-function startAllowed(asked4) {
-  const { startedBy = null, mode = null, standing = null } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function startAllowed(asked5) {
+  const { startedBy = null, mode = null, standing = null } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const memberOf9 = (who4) => {
     const p3 = runPrincipalOf(who4);
     return /^member:\S/.test(p3) ? p3 : "";
@@ -168508,8 +169134,8 @@ function startAllowed(asked4) {
 }
 var RUN_ORIGINS = Object.freeze(["member", "explore"]);
 var PLAN_ORIGINS = Object.freeze(["member", "reexamination"]);
-function originAllowed(asked4) {
-  const { origin = null, mode = null, investigateDeployable = false } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function originAllowed(asked5) {
+  const { origin = null, mode = null, investigateDeployable = false } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const o = typeof origin === "string" ? origin : "";
   if (mode === "plan")
     return PLAN_ORIGINS.includes(o) ? { ok: true } : refusal20(
@@ -168530,8 +169156,8 @@ function originAllowed(asked4) {
     { origin: o || null }
   );
 }
-function checkPagesRead(asked4) {
-  const { limits = null } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function checkPagesRead(asked5) {
+  const { limits = null } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const keeps = (l2) => l2 != null && typeof l2 === "object" && !Array.isArray(l2) && l2.on !== false && (l2.uses == null || Array.isArray(l2.uses) && l2.uses.includes("read"));
   if (!(Array.isArray(limits) && limits.some(keeps))) return null;
   return refusal20(
@@ -168567,8 +169193,8 @@ var PROJECT_GATE_GROUNDS = {
 function runConsultsProjects(contextType) {
   return String(contextType ?? "") === "project";
 }
-function projectGate2(asked4) {
-  const { actor = null, contextType = null, contextId = null, projects: projects2 = [], projectsJoined = [] } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function projectGate2(asked5) {
+  const { actor = null, contextType = null, contextId = null, projects: projects2 = [], projectsJoined = [] } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const who4 = actor == null ? "" : String(actor).trim();
   const all = Array.isArray(projects2) ? projects2.map(String) : [];
   const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
@@ -168602,8 +169228,8 @@ function projectGate2(asked4) {
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
 }
-function checkRunContextKind(asked4) {
-  const { contextType = null, contextId = null, found: found3 = null } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function checkRunContextKind(asked5) {
+  const { contextType = null, contextId = null, found: found3 = null } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const said12 = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
   if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said12))
@@ -168623,8 +169249,8 @@ function runPrincipalOf(principal) {
   const i = s.indexOf("/");
   return i < 0 ? s : s.slice(0, i);
 }
-function runPrincipalGate(asked4) {
-  const { caller = null, principal = null, act: act2 = null } = asked4 && typeof asked4 === "object" ? asked4 : {};
+function runPrincipalGate(asked5) {
+  const { caller = null, principal = null, act: act2 = null } = asked5 && typeof asked5 === "object" ? asked5 : {};
   const who4 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who4 && owner && who4 === owner) return null;
   const doing = typeof act2 === "string" && act2.trim() ? act2.trim() : "ticking or closing a run";
@@ -168808,16 +169434,16 @@ var ENQUIRE_MODE = Object.freeze({
   when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run modes' state and whatever ask's or draft's flag",
   bounds: "ASK_BOUNDS (R17), declared when the interview starts"
 });
-function draftMayRead(asked4) {
-  const at49 = (k) => own7(asked4, k) ? asked4[k] : null;
+function draftMayRead(asked5) {
+  const at49 = (k) => own7(asked5, k) ? asked5[k] : null;
   const firsthand = at49("firsthand");
   if (!(firsthand == null || firsthand === false)) return false;
   const kind2 = at49("kind");
   return kind2 === "own_words" && at49("suggestions") === true || kind2 === "infractiondraft" || kind2 === "bearingdraft";
 }
-function draftKindDeployed(asked4) {
-  const kind2 = own7(asked4, "kind") ? asked4.kind : null;
-  const f17 = own7(asked4, "flags") && asked4.flags != null && typeof asked4.flags === "object" ? asked4.flags : {};
+function draftKindDeployed(asked5) {
+  const kind2 = own7(asked5, "kind") ? asked5.kind : null;
+  const f17 = own7(asked5, "flags") && asked5.flags != null && typeof asked5.flags === "object" ? asked5.flags : {};
   const on = (name3, held3) => (own7(f17, name3) ? f17[name3] : held3) === true;
   if (typeof kind2 !== "string" || !DRAFT_KINDS.includes(kind2)) return false;
   const draft = on(DRAFT_MODE.mode, DRAFT_MODE.deployed);
@@ -169023,7 +169649,8 @@ CREATE TABLE IF NOT EXISTS ai_usage (
 CREATE INDEX IF NOT EXISTS ai_usage_owner_day ON ai_usage(owner, day);
 
 -- R10, R11 (D12): ONE ROW PER MEASURED ACT (a run, or an ask's or a draft's own act id), its sums as the counter's,
--- so a range can be estimated from an account's measured acts and an act's actual cost answered after. Numbers only.
+-- so a range can be estimated from an account's measured acts and an act's actual cost answered after. Numbers only;
+-- its models and efforts are in ai_use_act_models (R15).
 CREATE TABLE IF NOT EXISTS ai_use_acts (
   owner                        TEXT NOT NULL,
   act                          TEXT NOT NULL,
@@ -169039,6 +169666,18 @@ CREATE TABLE IF NOT EXISTS ai_use_acts (
   PRIMARY KEY (owner, act)
 );
 CREATE INDEX IF NOT EXISTS ai_use_acts_measure ON ai_use_acts(owner, use, mode, last_at);
+
+-- R15 (T50; N1168): THE MODELS AND EFFORTS OF EACH MEASURED ACT, one row per model and effort its conversations ran at
+-- ('' where none was stated, read back as null), with their calls. 'seq' gives first-seen order. Names only, no content.
+CREATE TABLE IF NOT EXISTS ai_use_act_models (
+  seq      INTEGER PRIMARY KEY AUTOINCREMENT,
+  owner    TEXT NOT NULL,
+  act      TEXT NOT NULL,
+  model    TEXT NOT NULL,
+  effort   TEXT NOT NULL,
+  calls    INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (owner, act, model, effort)
+);
 
 -- R2 (D39; B4): THE LIMITS, at most one per owner, scope, unit and period. 'amount' is whole cents for 'usd', whole
 -- tokens or calls otherwise. 'inclusive' is 1 or 0 for a use scope, NULL for 'overall' and 'per_member'. 'project_id'
@@ -169114,6 +169753,7 @@ var CLASSES12 = Object.freeze({
 var AI_USE_TABLES = Object.freeze([
   { name: "ai_usage", keys: [] },
   { name: "ai_use_acts", keys: [] },
+  { name: "ai_use_act_models", keys: [] },
   { name: "ai_use_migrations", keys: [] },
   { name: "ai_limits", keys: ["project_id"] },
   { name: "ai_limit_history", keys: ["project_id"] },
@@ -169141,23 +169781,23 @@ var at20 = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 var AI_USE_WORDS = Object.freeze({
   "ai.use.ask.name": "Asking",
   "ai.use.draft.name": "Drafting",
-  "ai.use.run.name": "Runs",
+  "ai.use.run.name": "Working through checks and plans",
   "ai.use.standing.name": "Standing questions",
   "ai.use.explore.name": "Exploring",
   "ai.use.enquire.name": "Interviews and planning",
   "ai.use.read.name": "Reading inside documents",
-  "ai.use.transcribe.name": "Reading page pictures",
-  "ai.use.account.name": "A case's account",
+  "ai.use.transcribe.name": "Reading unclear pages",
+  "ai.use.account.name": "Drafting a case's account",
   "ai.use.ask.inline": "asking",
   "ai.use.draft.inline": "drafting",
-  "ai.use.run.inline": "runs",
+  "ai.use.run.inline": "working through checks and plans",
   "ai.use.standing.inline": "standing questions",
   "ai.use.explore.inline": "exploring",
   "ai.use.enquire.inline": "interviews and planning",
   "ai.use.read.inline": "reading inside documents",
-  "ai.use.transcribe.inline": "reading page pictures",
-  "ai.use.account.inline": "a case's account",
-  "ai.whose.group": "your group's",
+  "ai.use.transcribe.inline": "reading unclear pages",
+  "ai.use.account.inline": "drafting a case's account",
+  "ai.whose.group": "your team's",
   "ai.whose.project": "this project's",
   "ai.whose.own": "your own",
   "ai.period.day": "daily",
@@ -169179,7 +169819,7 @@ var AI_USE_WORDS = Object.freeze({
   "ai.refused.limit": "The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.overall": "The assistant stopped here: {whose} {period} limit is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.member": "The assistant stopped here: you have used the {period} amount each member may use of {whose} account. It works again {when}. Everything else works as usual.",
-  "ai.refused.limit.unjudged": "The assistant stopped here: your group's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
+  "ai.refused.limit.unjudged": "The assistant stopped here: your team's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
   "ai.refused.limitinvalid": "That limit can't be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.",
   "ai.limitfield.owner": "it doesn't say which account it is for",
   "ai.limitfield.scope": "that isn't something a limit can cover",
@@ -169290,6 +169930,7 @@ var LIMIT_PERIODS = Object.freeze(["day", "month"]);
 var NOT_RECORDED2 = "not recorded";
 var ESTIMATE_SAMPLE = Object.freeze({ min: 5, of: 20 });
 var EXPLORE_WHAT_MAX = 2e3;
+var EFFORT_WORD = /^[a-z]{1,16}$/;
 function memberIdOf2(x) {
   if (typeof x !== "string") return null;
   const t2 = x.trim();
@@ -169535,6 +170176,8 @@ var AiUse = class _AiUse {
     if (!e2 || typeof e2 !== "object" || Array.isArray(e2)) return bad2("the use is not an object {mode, usage, calls}.");
     if (typeof e2.mode !== "string" || !e2.mode.trim() || e2.mode.length > 40) return bad2("the use names no mode.");
     if (e2.model != null && (typeof e2.model !== "string" || e2.model.length > 120)) return bad2("its model is not a model's name.");
+    if (e2.effort != null && !(typeof e2.effort === "string" && EFFORT_WORD.test(e2.effort)))
+      return bad2("its effort is not a lowercase word of at most 16 letters, or null where none was stated.");
     const u = e2.usage;
     if (!u || typeof u !== "object" || Array.isArray(u)) return bad2("its usage is not an object of the call's figures.");
     for (const f17 of [...USAGE_TOKEN_FIGURES, ...USAGE_COST_FIGURES]) {
@@ -169565,16 +170208,18 @@ var AiUse = class _AiUse {
     if (typeof u.total_cost_usd === "number") return u.total_cost_usd;
     return null;
   }
-  /** R1 `countUsage({owner, member, use, mode, model, usage, calls, at, act?})`, in the caller's transaction: adds to
-   *  the counter for that owner, member, local day, use and mode; with `act` (a run's id, or an act's own) also to that
-   *  act's measure (R10, R11; K2480); then notes any limit of the owner this reached (R5). A malformed entry is refused
-   *  `AI_RUN_CONSUME_INVALID`, counting nothing. Never throws. */
+  /** R1 `countUsage({owner, member, use, mode, model, effort?, usage, calls, at, act?})`, in the caller's transaction:
+   *  adds to the counter for that owner, member, local day, use and mode; with `act` (a run's id, or an act's own) also
+   *  to that act's measure (R10, R11; K2480) and to the model and effort its conversation ran at (R15); then notes any
+   *  limit of the owner this reached (R5). A malformed entry is refused `AI_RUN_CONSUME_INVALID`, counting nothing.
+   *  Never throws. */
   countUsage({
     owner = null,
     member: member2 = null,
     use = null,
     mode = null,
     model = null,
+    effort = null,
     usage = null,
     calls = void 0,
     at: at49 = null,
@@ -169589,7 +170234,7 @@ var AiUse = class _AiUse {
       if (!USE_KINDS2.includes(use)) return bad2(`the use '${String(use).slice(0, 40)}' is not a kind of use (${USE_KINDS2.join(", ")}).`);
       if (act2 !== null && act2 !== void 0 && (typeof act2 !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(act2)))
         return bad2("its act is not a run's or an act's id.");
-      const e2 = { mode, model, usage, calls };
+      const e2 = { mode, model, effort, usage, calls };
       const fault = this.#entryRefusal(e2);
       if (fault) return fault;
       const ms6 = _AiUse.#ms(at49);
@@ -169647,6 +170292,15 @@ var AiUse = class _AiUse {
           now,
           now
         );
+        this.sql.exec(
+          `INSERT INTO ai_use_act_models (owner, act, model, effort, calls) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(owner, act, model, effort) DO UPDATE SET calls = calls + excluded.calls`,
+          p3.owner,
+          act2,
+          model == null ? "" : String(model),
+          effort == null ? "" : effort,
+          callCount
+        );
       }
       if (p3.kind !== "none") this.#noteReached(p3, ms6);
       return { ok: true, counted: 1, owner: p3.owner, member: id, use, day: day2, calls: callCount, act: act2 || null };
@@ -169658,14 +170312,35 @@ var AiUse = class _AiUse {
    *  (no run), counted as `countUsage` counts, its use its mode, in its own transaction. `owner` is the account the
    *  caller's `accountFor` answered; without one the use is kept as "not recorded" and counts toward no limit (K2480).
    *  Any mode but `ask` or `draft` is refused `AI_RUN_CONSUME_INVALID`. */
-  countAskUsage({ member: member2 = null, mode = null, usage = null, calls = null, at: at49 = null, owner = null, act: act2 = null } = {}) {
+  countAskUsage({
+    member: member2 = null,
+    mode = null,
+    model = null,
+    effort = null,
+    usage = null,
+    calls = null,
+    at: at49 = null,
+    owner = null,
+    act: act2 = null
+  } = {}) {
     if (!ASK_USAGE_MODES.includes(typeof mode === "string" ? mode.trim() : mode))
       return this.#refuse("AI_RUN_CONSUME_INVALID", `the mode '${String(mode).slice(0, 40)}' is not one an ask's use is counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks. Nothing was counted.`);
     const m = mode.trim();
     let out = null;
     try {
       this.#transact(() => {
-        out = this.countUsage({ owner: owner ?? NOT_RECORDED2, member: member2, use: m, mode: m, usage, calls, at: at49, act: act2 });
+        out = this.countUsage({
+          owner: owner ?? NOT_RECORDED2,
+          member: member2,
+          use: m,
+          mode: m,
+          model,
+          effort,
+          usage,
+          calls,
+          at: at49,
+          act: act2
+        });
         return out;
       });
     } catch {
@@ -170241,8 +170916,8 @@ var AiUse = class _AiUse {
     return { ok: true, owner: p3.owner, use, mode: m, count: n2, estimate: this.#estimate(p3, use, m, n2) };
   }
   /** R11 `actualOf({run | act, viewer})`: the actual cost of one run or act after, in R10's units, only to the paying
-   *  account's owners. An act not measured, or not on an account the viewer owns, answers `found: false`. Writes
-   *  nothing. */
+   *  account's owners, with its `by_model` (R15). An act not measured, or not on an account the viewer owns, answers
+   *  `found: false`. Writes nothing. */
   actualOf({ run: run2 = null, act: act2 = null, viewer = null } = {}) {
     const id = typeof run2 === "string" && run2 ? run2 : typeof act2 === "string" && act2 ? act2 : null;
     if (!id || !memberIdOf2(viewer)) return { ok: true, found: false };
@@ -170252,6 +170927,11 @@ var AiUse = class _AiUse {
     });
     if (!rows4.length) return { ok: true, found: false };
     const r = rows4[0];
+    const by_model = this.#rows(
+      `SELECT model, effort, calls FROM ai_use_act_models WHERE owner = ? AND act = ? ORDER BY seq`,
+      r.owner,
+      id
+    ).map((m) => ({ model: m.model === "" ? null : m.model, effort: m.effort === "" ? null : m.effort, calls: Number(m.calls) }));
     return {
       ok: true,
       found: true,
@@ -170265,7 +170945,8 @@ var AiUse = class _AiUse {
       cost: Number(r.cost_unstated) === 0 ? { usd: Number(r.cost_micro_usd) / 1e6 } : null,
       unit: Number(r.cost_unstated) === 0 ? "usd" : "tokens",
       first_at: r.first_at,
-      last_at: r.last_at
+      last_at: r.last_at,
+      by_model
     };
   }
   /* ===== THE PANEL'S READ (R12; DEC-188) ===== */
@@ -172309,7 +172990,9 @@ var AI_RUNS_ADDED_COLUMNS = Object.freeze([
   /* R77 (T45): a re-examination run's response, stored verbatim; NULL for every other run */
   "response",
   /* R78 (T46): the test-instance exception's label a run was admitted under, JSON; NULL for a run the bar admitted */
-  "untested"
+  "untested",
+  /* R89 (T50): the project a run was opened in, recorded at the open and never changed; NULL for a run opened with none */
+  "project"
 ]);
 var AI_RUNS_SCHEMA = `
 
@@ -172375,7 +173058,10 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   response              TEXT,
   -- R78 (T46): the 'untested' label (run-rules R29's untestedLabel) a run admitted on the test-instance exception
   -- carries, recorded at the open and never derived later (R32); NULL for a run the bar admitted.
-  untested              TEXT
+  untested              TEXT,
+  -- R89 (T50; N1186): the project the run was opened in (for a project context, that project), fixed at the open and
+  -- never changed; the segment credential of a member's dispatch carries it (credentials R79). NULL when none.
+  project               TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -172457,6 +173143,9 @@ CREATE TABLE IF NOT EXISTS ai_mode_verifications (
 // src/ai-runs/index.mjs
 var PROVIDER_LIMIT = /enforced_spend_limit_reached/;
 var SUBJECTS_MAX = 50;
+var TRACE_HEADER = "x-civicsmith-trace";
+var MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+var HEADER_VALUE = /^[\x21-\x7e]{1,200}$/;
 function memberIdOf3(x) {
   if (typeof x !== "string") return null;
   const t2 = x.trim();
@@ -172973,7 +173662,7 @@ var AiRuns = class _AiRuns {
     if (!row12) return {
       run: run2,
       found: false,
-      note: "no such run: it either never existed or was purged"
+      note: word("ai-runs.note.run_either_existed")
     };
     if (row12.status !== "running")
       return {
@@ -172983,7 +173672,7 @@ var AiRuns = class _AiRuns {
         status: row12.status,
         bound: row12.stopped_bound,
         condition: row12.stopped_condition,
-        note: "this run already ended; a second ending would overwrite the first, and the log is append-only for the same reason state history is"
+        note: word("ai-runs.note.run_already_ended")
       };
     const bounds2 = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run2);
     const bound = derive ? finishedBound(bounds2, { expired, offered }) : offered == null ? "" : String(offered);
@@ -173056,7 +173745,7 @@ var AiRuns = class _AiRuns {
    *  steps said, never throws. */
   #endStep(row12, bound) {
     const st = this.#steps();
-    if (!st || typeof st.stepEnd !== "function") return { told: false, reason: "steps is not reachable" };
+    if (!st || typeof st.stepEnd !== "function") return { told: false, reason: word("ai-runs.reason.steps_reachable") };
     const by = _AiRuns.systemOf(row12.run);
     try {
       const products = this.#rows(
@@ -173080,7 +173769,7 @@ var AiRuns = class _AiRuns {
         ...said12 && said12.ok !== true ? { refusal: said12.code || said12.reason || null } : {}
       };
     } catch {
-      return { told: false, reason: "steps did not answer" };
+      return { told: false, reason: word("ai-runs.reason.steps_did_answer") };
     }
   }
   /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
@@ -173234,6 +173923,29 @@ var AiRuns = class _AiRuns {
     if (!this.#membership().inSight(id, viewer)) return null;
     return normalizeType(b.object_type);
   }
+  /** R89 (T50; N1186): THE PROJECT A RUN IS OPENED IN, `{project, refusal}`. A run over a project is in that project,
+   *  whatever `project` carries. A run over a question is in the project it names, or in none when it names none; the
+   *  project must be one that draws on the question (`#runContextProjects`, the one live-cites predicate) and that the
+   *  opening member has joined (membership's `participation`, as R6 reads it), the member being the one whose act it is
+   *  (R52's `#accountMember`). The refusal is `run-rules` R6's `projectGate`, relayed over that project, so a project that
+   *  is absent, hidden, not drawn on or not joined is refused alike; with no member behind the caller it is refused too
+   *  (a project is a member's to name). Reads only; writes nothing. */
+  #runProjectGate({ actor, principalPlane, principalClaude, contextType, contextId, project }) {
+    if (String(contextType) === "project") return { project: String(contextId), refusal: null };
+    const named3 = typeof project === "string" ? project.trim() : project == null ? "" : String(project).trim();
+    if (!named3) return { project: null, refusal: null };
+    const member2 = _AiRuns.#accountMember({ actor, principalPlane, principalClaude });
+    const drawn = this.#runContextProjects(contextType, contextId).includes(named3);
+    const part = member2 && drawn ? this.#membership().participation(named3, member2) : null;
+    const said12 = projectGate2({
+      actor: member2 || "no-member",
+      contextType: "project",
+      contextId: named3,
+      projects: [named3],
+      projectsJoined: part && part.state === "joined" ? [named3] : []
+    });
+    return said12.permitted ? { project: named3, refusal: null } : { project: null, refusal: said12 };
+  }
   /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
    *  object — `refusal` null or built, and a `ground` that is stated either way.
    *
@@ -173244,9 +173956,9 @@ var AiRuns = class _AiRuns {
   #aiRunProjectGate({ actor, contextType, contextId, viewer = null }) {
     const projects2 = this.#runContextProjects(contextType, contextId);
     const who4 = actor == null ? "" : String(actor).trim();
-    const asked4 = memberIdOf3(who4) ?? who4;
+    const asked5 = memberIdOf3(who4) ?? who4;
     const joined2 = who4 && runConsultsProjects(contextType) ? projects2.filter((p3) => {
-      const part = this.#membership().participation(p3, asked4);
+      const part = this.#membership().participation(p3, asked5);
       return !!part && part.state === "joined";
     }) : [];
     const g = projectGate2({ actor: who4, contextType, contextId, projects: projects2, projectsJoined: joined2 });
@@ -173320,6 +174032,9 @@ var AiRuns = class _AiRuns {
     /* R77 (T45): the recorded response a re-examination run (`origin: "reexamination"`, mode `plan`) re-examines
        its plan after, an opaque id stored verbatim; read only on such a run. */
     response = null,
+    /* R89 (T50; N1186): the project a run over a question is opened in, explicit at the open; a run over a project
+       is in that project whatever is sent. */
+    project = null,
     /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
        `control-plane` and empty for a machine credential. Never a
        caller's word — a principal a caller can name is not one, which
@@ -173337,7 +174052,7 @@ var AiRuns = class _AiRuns {
     };
     if (!run2 || !contextType || !contextId)
       return refusal39("AI_RUN_NO_CONTEXT", {
-        note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
+        note: word("ai-runs.note.run_needs_id")
       });
     if (Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, String(contextType ?? ""))) {
       const existence = this.#membership().existenceAct(String(contextId ?? ""), viewer ?? "");
@@ -173362,7 +174077,7 @@ var AiRuns = class _AiRuns {
         check: kind2.check,
         translation: kind2.translation,
         detail: kind2.detail,
-        note: "a run's context kind is checked against the thing it names, and a thing the caller cannot see answers as one that does not exist (Membership Architecture v2 \xA77, BOB #16, 2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word"
+        note: word("ai-runs.note.run_context_kind")
       };
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
@@ -173374,6 +174089,17 @@ var AiRuns = class _AiRuns {
         translation: gate.translation,
         detail: gate.detail,
         note: "starting an investigation OVER A PROJECT is licensed by PARTICIPATION IN THAT PROJECT (DEC-63, Bob 2026-08-09; a run over a question consults no project, as amended 2026-09-18), and the contribute capability is only the floor beneath that. These are two different facts about an account and they are refused separately so each names its own remedy"
+      };
+    const inProject = this.#runProjectGate({ actor, principalPlane, principalClaude, contextType, contextId, project });
+    if (inProject.refusal)
+      return {
+        run: run2,
+        started: false,
+        code: inProject.refusal.code,
+        check: inProject.refusal.check,
+        translation: inProject.refusal.translation,
+        detail: inProject.refusal.detail,
+        note: word("consequences.nothing")
       };
     if (!principalPlane || !principalClaude)
       return refusal39("AI_RUN_CAPABILITY_UNAVAILABLE", {
@@ -173396,10 +174122,14 @@ var AiRuns = class _AiRuns {
       return refusal39("AI_RUN_MODE_NOT_DEPLOYED", {
         mode: String(mode).slice(0, 60),
         deployed: [...deployed],
-        note: `the mode '${String(mode).slice(0, 60)}' is not deployed in your group's Civicsmith: the modes deploy in one order, each only after the one before it is verified live, and today ${deployed.join(", ")} ${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written`
+        note: word("ai-runs.note.mode_deployed_group", {
+          mode: String(mode).slice(0, 60),
+          deployed: deployed.join(", "),
+          are: deployed.length === 1 ? "is" : "are"
+        })
       });
     const untested = admissions.get(runMode).untested ?? null;
-    const planRefusal = (code, detail, extra = {}) => refusal39(code, { detail, ...extra, note: "Nothing was written" });
+    const planRefusal = (code, detail, extra = {}) => refusal39(code, { detail, ...extra, note: word("consequences.nothing") });
     const planNamed = typeof plan2 === "string" && plan2.trim() !== "";
     const who4 = actor == null ? "" : String(actor).trim();
     const search = (Array.isArray(bounds2) ? bounds2 : []).find((b) => b && typeof b === "object" && (b.bound === "fetches" || b.bound === "subsessions") && typeof b.allowed === "number" && b.allowed > 0);
@@ -173427,7 +174157,7 @@ var AiRuns = class _AiRuns {
         check: originSaid.check,
         translation: originSaid.translation,
         detail: originSaid.detail,
-        note: "Nothing was written"
+        note: word("consequences.nothing")
       };
     const reexam = runMode === "plan" && runOrigin === "reexamination";
     const responseId = reexam && typeof response === "string" && response.trim() !== "" ? response.trim() : null;
@@ -173439,12 +174169,12 @@ var AiRuns = class _AiRuns {
     const stepId = step == null || String(step).trim() === "" ? null : String(step).trim();
     const ownStep = place9 != null || work != null;
     if (runOrigin === "explore" && (!ownStep || stepId))
-      return refusal39("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the step's place and work, and no step", note: "Nothing was written" });
+      return refusal39("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the step's place and work, and no step", note: word("consequences.nothing") });
     if (stepId && (ownStep || !this.#stepSeen(stepId, viewer)))
       return refusal39("AI_RUN_STEP_UNKNOWN", {
         detail: ownStep ? "a run works one step: an existing one, or a step of its own by its place and work, not both" : `no step '${stepId.slice(0, 60)}' is open to this caller`,
         step: stepId.slice(0, 60),
-        note: "Nothing was written"
+        note: word("consequences.nothing")
       });
     const badSeed = checkConsume(bounds2, { list: true });
     if (badSeed)
@@ -173489,23 +174219,23 @@ var AiRuns = class _AiRuns {
       String(contextType) === "project" ? String(contextId) : null
     ) : null;
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run2))
-      return refusal39("AI_RUN_ALREADY_OPEN", { note: "a run with this id already exists" });
+      return refusal39("AI_RUN_ALREADY_OPEN", { note: word("ai-runs.note.run_id_already") });
     const runningNow = reexamOpen();
     if (runningNow) return runningNow;
     const reRuns = String(rerunOf ?? "").trim();
     if (reRuns) {
       if (reRuns === String(run2))
         return refusal39("AI_RUN_RERUN_SELF", {
-          note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's work this one repeats, and a self-reference would let one run discharge its own bias debt"
+          note: word("ai-runs.note.run_re_run")
         });
       const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
       if (!target || !this.#aiRunInSight(reRuns, viewer))
         return refusal39("AI_RUN_RERUN_UNKNOWN", {
-          note: "no such run: it either never existed, was purged, or is not one this caller can open"
+          note: word("ai-runs.note.run_either_existed_purged")
         });
       if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
         return refusal39("AI_RUN_RERUN_OTHER_CONTEXT", {
-          note: "a re-run runs the same question or project again. The lens a bias debt is owed against is the one in force for the INDEBTED run's context, so a re-run somewhere else would be measured against a different lens entirely"
+          note: word("ai-runs.note.re_run_runs")
         });
     }
     const start = startAllowed({ startedBy: accountMember ? `member:${accountMember}` : actor || principalPlane, mode: runMode });
@@ -173516,7 +174246,7 @@ var AiRuns = class _AiRuns {
     const overLimit = this.#useCheck(account2.owner, accountMember, nowMs);
     if (overLimit) return { run: run2, started: false, ..._AiRuns.#shed(overLimit) };
     if (ownStep && !this.#steps())
-      return refusal39("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: "Nothing was written" });
+      return refusal39("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: word("consequences.nothing") });
     const held3 = this.#openChecks.find((c) => c.mode === runMode);
     if (held3 || runMode === "plan") {
       let said12;
@@ -173536,7 +174266,7 @@ var AiRuns = class _AiRuns {
       if (said12 !== null)
         return said12 && typeof said12 === "object" && typeof said12.code === "string" ? { run: run2, started: false, ...said12 } : refusal39("AI_RUN_MODE_UNCHECKED", {
           detail: held3 ? `the check ${held3.module} registered for mode '${runMode}' gave no answer` : `nothing is registered to check a run in mode '${runMode}'`,
-          note: "Nothing was written"
+          note: word("consequences.nothing")
         });
     }
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
@@ -173548,8 +174278,8 @@ var AiRuns = class _AiRuns {
           `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of, plan, step, origin, response, untested)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           rerun_of, plan, step, origin, response, untested, project)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           run2,
           label,
           runMode,
@@ -173583,7 +174313,9 @@ var AiRuns = class _AiRuns {
           runOrigin,
           responseId,
           /* R78: the exception's label, as admitted above */
-          untested ? JSON.stringify(untested) : null
+          untested ? JSON.stringify(untested) : null,
+          /* R89: the project the run is opened in, judged above; recorded here and never changed */
+          inProject.project
         );
         for (const b of Array.isArray(bounds2) ? bounds2 : []) {
           if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
@@ -173620,7 +174352,7 @@ var AiRuns = class _AiRuns {
         translation: said12.translation ?? null,
         detail: said12.detail ?? null,
         ...said12.step ? { step: said12.step } : {},
-        note: "the run's own step was refused, so the run was not opened. Nothing was written"
+        note: word("ai-runs.note.run_step_refused")
       };
     }
     const expires = _AiRuns.#aiIso(nowMs + lease);
@@ -173647,6 +174379,8 @@ var AiRuns = class _AiRuns {
       ...responseId ? { response: responseId } : {},
       /* R78: the label, null for a run the bar admitted */
       untested,
+      /* R89: the project the run was opened in; null for a run in none */
+      project: inProject.project,
       ..._AiRuns.#aiRunGateStated(gate)
     };
   }
@@ -173793,8 +174527,8 @@ var AiRuns = class _AiRuns {
     at: at49 = null,
     /* R84 (R085-7; agent-worker R91): how a segment ended, `{by, done, refusals, error?}`. */
     segment_end = null,
-    /* R72 (N588): one entry per conversation that reached the provider since the last tick,
-       `{mode, model, usage, calls}`. */
+    /* R72 (N588), R88: one entry per conversation that reached the provider since the last tick,
+       `{mode, model, effort, usage, calls}`. */
     usage = null,
     actor = null,
     viewer = null,
@@ -173808,12 +174542,12 @@ var AiRuns = class _AiRuns {
     if (!row12) return {
       run: run2 || null,
       found: false,
-      note: "no such run: it either never existed or was purged"
+      note: word("ai-runs.note.run_either_existed")
     };
     if (!this.#aiRunInSight(run2, viewer)) return {
       run: run2 || null,
       found: false,
-      note: "no such run: it either never existed or was purged"
+      note: word("ai-runs.note.run_either_existed")
     };
     const notPrincipal = runPrincipalGate({ caller, principal: row12.principal_plane });
     if (notPrincipal)
@@ -173826,7 +174560,7 @@ var AiRuns = class _AiRuns {
         check: notPrincipal.check,
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
-        note: "a run is driven by its principal alone. Nothing was appended and no budget was spent"
+        note: word("ai-runs.note.run_driven_principal")
       };
     const gate = this.#aiRunProjectGate({ actor, contextType: row12.context_type, contextId: row12.context_id, viewer });
     if (!gate.permitted)
@@ -173848,7 +174582,7 @@ var AiRuns = class _AiRuns {
         ticked: false,
         status: row12.status,
         bound: row12.stopped_bound,
-        note: "this run has ended; its log is closed and a later tick does not reopen it"
+        note: word("ai-runs.note.run_ended_log")
       };
     const badConsume = checkConsume(consume, { map: true });
     if (badConsume)
@@ -173862,7 +174596,7 @@ var AiRuns = class _AiRuns {
         translation: badConsume.translation,
         detail: badConsume.detail,
         bound: badConsume.bound,
-        note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
+        note: word("ai-runs.note.run_budget_moves")
       };
     const badState = checkRunState(state);
     if (badState)
@@ -173877,7 +174611,7 @@ var AiRuns = class _AiRuns {
         detail: badState.detail,
         bytes: badState.bytes,
         limit: badState.limit,
-        note: "a run's state is its resumable work list, and it is bounded. Nothing was appended and no budget was spent"
+        note: word("ai-runs.note.run_state_resumable")
       };
     const calls = usage == null ? [] : Array.isArray(usage) ? usage : null;
     if (!calls)
@@ -173887,7 +174621,7 @@ var AiRuns = class _AiRuns {
         found: true,
         status: row12.status,
         ..._AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", "`usage` is a list with one entry per conversation that reached the model since the last tick, each {mode, model, usage, calls}.")),
-        note: "Nothing was appended and no budget was spent"
+        note: word("ai-runs.note.appended_budget_spent")
       };
     const payer = _AiRuns.#memberOfRun(row12);
     if (calls.length && !payer)
@@ -173902,7 +174636,7 @@ var AiRuns = class _AiRuns {
           found: true,
           status: row12.status,
           ..._AiRuns.#shed(counted),
-          note: "Nothing was appended and no budget was spent"
+          note: word("ai-runs.note.appended_budget_spent")
         };
       return { run: run2, ticked: false, found: true, status: row12.status, ..._AiRuns.#shed(overLimit), counted };
     }
@@ -173962,7 +174696,7 @@ var AiRuns = class _AiRuns {
         found: true,
         status: row12.status,
         ..._AiRuns.#shed(usageRefusal),
-        note: "each conversation's figures and calls are as the model service states them. Nothing was appended and no budget was spent"
+        note: word("ai-runs.note.conversation_figures_calls")
       };
     }
     const bounds2 = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run2);
@@ -174086,7 +174820,7 @@ var AiRuns = class _AiRuns {
       if (!this.#aiRunInSight(run2, viewer)) return {
         run: run2,
         found: false,
-        note: "no such run: it either never existed or was purged"
+        note: word("ai-runs.note.run_either_existed")
       };
       const notPrincipal = runPrincipalGate({ caller, principal: row12.principal_plane });
       if (notPrincipal)
@@ -174099,7 +174833,7 @@ var AiRuns = class _AiRuns {
           check: notPrincipal.check,
           translation: notPrincipal.translation,
           detail: notPrincipal.detail,
-          note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched and is still running"
+          note: word("ai-runs.note.run_ended_principal")
         };
       const gate = this.#aiRunProjectGate({ actor, contextType: row12.context_type, contextId: row12.context_id, viewer });
       if (!gate.permitted)
@@ -174443,12 +175177,12 @@ var AiRuns = class _AiRuns {
       return {
         dispatch: true,
         withheld: null,
-        says: `Resumption: handed to agent-worker under the organisation credential '${resumer.tokenId}' of your group's Civicsmith, which opened this run.`
+        says: word("ai-runs.says.resumption_handed_agent", { token_id: resumer.tokenId })
       };
     const member2 = principal.startsWith("member:");
     const withheld = member2 ? "MEMBER_PRINCIPAL_RUN" : resumer && !resumer.ready ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
-    const why2 = member2 ? "a member's credential opened it, and your group's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? "another principal opened it, and the organisation credential of your group's Civicsmith resumes only the runs it opened" : `your group's Civicsmith cannot resume anything here (${withheld})`;
-    return { dispatch: false, withheld, says: `Resumption: NOT dispatched \u2014 ${why2}.` };
+    const why2 = member2 ? "a member's credential opened it, and your group's Civicsmith resumes only runs its own organisation credential opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). It waits for its own principal" : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN" ? word("ai-runs.text.principal_opened_organization") : word("ai-runs.text.group_civicsmith_resume", { withheld });
+    return { dispatch: false, withheld, says: word("ai-runs.says.resumption_dispatched", { why: why2 }) };
   }
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
@@ -174494,7 +175228,7 @@ var AiRuns = class _AiRuns {
       const res = await Promise.race([
         this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", ...d.headers || {} },
           body: JSON.stringify(body)
         }),
         new Promise((_, no9) => {
@@ -174509,7 +175243,7 @@ var AiRuns = class _AiRuns {
       outcome = {
         state: "SILENT",
         status: null,
-        reason: elapsed ? "no acceptance within the bound" : "the call did not complete"
+        reason: elapsed ? "no acceptance within the bound" : word("ai-runs.reason.call_did_complete")
       };
     } finally {
       clearTimeout(timer);
@@ -174537,6 +175271,14 @@ var AiRuns = class _AiRuns {
     }
     return outcome;
   }
+  /** R87: the headers a member's dispatch adds, `trace` and `memberRef` each only when a non-empty printable string of at
+   *  most 200 characters; none handed (or one of another shape) adds none. */
+  static #doorHeaders(trace, memberRef) {
+    const h = {};
+    if (typeof trace === "string" && HEADER_VALUE.test(trace)) h[TRACE_HEADER] = trace;
+    if (typeof memberRef === "string" && HEADER_VALUE.test(memberRef)) h[MEMBER_REF_HEADER] = memberRef;
+    return h;
+  }
   /** R52 (T41): the account that serves the run's member now, `ai-accounts.accountFor`'s answer as `#accountFor` reads
    *  it; it must be the one the run recorded as paying (a run never moves to another), else `NO_ACCOUNT`. */
   async #dispatchAccount(d) {
@@ -174559,18 +175301,20 @@ var AiRuns = class _AiRuns {
    *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
    *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 10 s wait for
    *  acceptance (R82: accepted is `RUNNING`), and one log entry for a refused or unaccepted call. The token is used for that one call and is
-   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
-  async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, at: at49 = null } = {}) {
+   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all.
+   *  (T50; R87, R89) `trace` and `memberRef`, the door's strings, ride the call as `x-civicsmith-trace` and
+   *  `x-civicsmith-member-ref` and nowhere else; the mint carries the run's `project` when it has one. */
+  async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, at: at49 = null, trace = null, memberRef = null } = {}) {
     const iso8 = _AiRuns.#aiIso(at49 ? Date.parse(at49) : Date.now());
     const id = run2 == null ? "" : String(run2).trim();
     const sight = viewer == null || viewer === "" ? by : viewer;
     const row12 = id ? this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
-                                       principal_claude_ref, step FROM ai_runs WHERE run = ?`, id) : null;
+                                       principal_claude_ref, step, project FROM ai_runs WHERE run = ?`, id) : null;
     if (!row12 || !this.#aiRunInSight(id, sight))
-      return { run: run2 || null, found: false, note: "no such run: it either never existed or was purged" };
+      return { run: run2 || null, found: false, note: word("ai-runs.note.run_either_existed") };
     const owner = String(row12.principal_plane ?? "");
     const member2 = memberIdOf3(by);
-    const act2 = "continuing a run";
+    const act2 = word("ai-runs.act.continuing_run");
     const notPrincipal = owner.startsWith("member:") && member2 ? runPrincipalGate({ caller: `member:${member2}`, principal: owner, act: act2 }) : runPrincipalGate({ caller: "", principal: owner, act: act2 });
     if (notPrincipal)
       return {
@@ -174582,7 +175326,7 @@ var AiRuns = class _AiRuns {
         check: notPrincipal.check,
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
-        note: "a run is continued by its principal alone. Nothing was sent"
+        note: word("ai-runs.note.run_continued_principal")
       };
     if (row12.status !== "running")
       return {
@@ -174590,7 +175334,7 @@ var AiRuns = class _AiRuns {
         found: true,
         dispatched: false,
         status: row12.status,
-        note: "this run has ended; a later dispatch does not reopen it. Nothing was sent"
+        note: word("ai-runs.note.run_ended_later")
       };
     if (row12.mode !== "check" && row12.mode !== "plan")
       return {
@@ -174608,7 +175352,7 @@ var AiRuns = class _AiRuns {
       status: row12.status,
       withheld: w,
       ...extra,
-      note: "Nothing was sent"
+      note: word("ai-runs.note.sent")
     });
     const env = this.env || {};
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
@@ -174620,13 +175364,15 @@ var AiRuns = class _AiRuns {
       payer: _AiRuns.#memberOfRun(row12),
       step: row12.step || null,
       project: row12.context_type === "project" ? row12.context_id : null,
-      owner: row12.principal_claude
+      owner: row12.principal_claude,
+      /* R87: the door's trace and member ref, for the one call's headers; kept nowhere (no row, log or answer) */
+      headers: _AiRuns.#doorHeaders(trace, memberRef)
     };
     d.ref = await this.#dispatchAccount(d);
     if (d.ref && d.ref.refusal && d.ref.refusal.code === "AI_KEPT_AWAY") {
       const { ok: _ok, ...kept } = d.ref.refusal;
       d.ref = null;
-      return { run: run2, found: true, dispatched: false, status: row12.status, ...kept, note: "Nothing was sent" };
+      return { run: run2, found: true, dispatched: false, status: row12.status, ...kept, note: word("ai-runs.note.sent") };
     }
     if (!(d.ref && !d.ref.refusal && d.ref.kind === "signin" && d.ref.level === "member")) {
       d.ref = null;
@@ -174637,7 +175383,8 @@ var AiRuns = class _AiRuns {
       minted = credentialsOf(this.ctx).aiRunCredentialMint({
         member: `member:${member2}`,
         run: row12.run,
-        writes: [...AI_RUN_MODE_WRITES[row12.mode]]
+        writes: [...AI_RUN_MODE_WRITES[row12.mode]],
+        ...row12.project ? { project: row12.project } : {}
       });
     } catch {
       minted = null;
@@ -174650,7 +175397,7 @@ var AiRuns = class _AiRuns {
       d.ref = null;
       if (typeof minted.code !== "string") return withheld("CREDENTIAL_RECORD_SILENT");
       const { ok: _ok, token: _t, ...refusal39 } = minted;
-      return { run: run2, found: true, dispatched: false, status: row12.status, ...refusal39, note: "Nothing was sent" };
+      return { run: run2, found: true, dispatched: false, status: row12.status, ...refusal39, note: word("ai-runs.note.sent") };
     }
     const outcome = await this.#aiRunDispatch(d, { store, token: minted.token, tokenId: minted.tokenId }, iso8);
     minted = null;
@@ -174804,6 +175551,8 @@ var AiRuns = class _AiRuns {
       rerun_of: row12.rerun_of != null && String(row12.rerun_of).trim() !== "" && this.#aiRunInSight(String(row12.rerun_of), viewer) ? String(row12.rerun_of) : null,
       /* R78: the label recorded at the open (null for a run the bar admitted, and for one opened before T46) */
       untested: _AiRuns.#untestedOf(row12),
+      /* R89: the project the run was opened in, as recorded at the open; null for a run opened in none */
+      project: row12.project ?? null,
       /* R73: the step a step-run works on, and its origin; the keys exist only on a run that names a step or explores. */
       ...row12.step ? { step: row12.step } : {},
       ...row12.origin && row12.origin !== "member" ? { origin: row12.origin } : {},
@@ -175046,7 +175795,7 @@ var AiRuns = class _AiRuns {
     } : atOpenUnreadable ? {
       recorded: true,
       unreadable: true,
-      stated: "the lens in force at this run's open was recorded and cannot be read back"
+      stated: word("ai-runs.stated.lens_force_run")
     } : { recorded: false, stated: "not recorded" };
     const handOf = (handedSha) => !atOpen ? null : handedSha === openSha ? "in_force" : "stale";
     const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
@@ -175054,7 +175803,7 @@ var AiRuns = class _AiRuns {
       const staleEmpty = !!atOpen && atOpen.in_force === true;
       return {
         in_force: false,
-        stated: staleEmpty ? "no manifest was handed to this run, and one was in force when it opened" : "no manifest was in force",
+        stated: staleEmpty ? word("ai-runs.stated.manifest_handed_run") : word("bias.manifest_force"),
         manifest: null,
         now: atOpen ? nowBlock : null,
         moved: atOpen ? openSha !== nowSha : null,
@@ -175066,7 +175815,7 @@ var AiRuns = class _AiRuns {
     if (unreadable2)
       return {
         in_force: false,
-        stated: "a manifest was recorded for this run and cannot be read back",
+        stated: word("ai-runs.stated.manifest_recorded_run"),
         manifest: null,
         now: atOpen ? nowBlock : null,
         moved: atOpen ? openSha !== nowSha : null,
@@ -175189,7 +175938,7 @@ var AiRuns = class _AiRuns {
       ...composing ? { bias: await this.#biasForRun(row12, viewer) } : {},
       /* Stated, because a caller holding the search payload should be able to
          read WHY it is thinner rather than conclude something failed. */
-      fence: composing ? "the composing half carries the lens, for disclosure and for the weighing it discloses" : "the search half never receives the lens: bias never shapes what is captured or searched, only how conclusions are weighed. There is no field here to read."
+      fence: composing ? word("ai-runs.fence.composing_half_carries") : word("ai-runs.fence.search_half_receives")
     };
   }
   /** op=airunlog — THE OBSERVATION LOG. A different read from the one above and
@@ -175326,7 +176075,7 @@ var AiRuns = class _AiRuns {
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
-                                  r.plan, r.origin, r.response, r.untested FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+                                  r.plan, r.origin, r.response, r.untested, r.project FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? {
         run: r.run,
         status: r.status,
@@ -175337,6 +176086,8 @@ var AiRuns = class _AiRuns {
         principal_claude: r.principal_claude,
         /* R78: the label recorded at the open */
         untested: _AiRuns.#untestedOf(r),
+        /* R89: the project the run was opened in */
+        project: r.project ?? null,
         ...r.mode === "plan" ? { plan: r.plan ?? null } : {},
         /* R77: a re-examination run's response, as `read` answers it */
         ...r.origin === "reexamination" ? { response: r.response ?? null } : {}
@@ -175441,6 +176192,8 @@ var AiRuns = class _AiRuns {
         use: "run",
         mode: e2.mode,
         model: e2.model ?? null,
+        /* R88: the conversation's effort beside its model, ai-use R15's to judge; null where none is stated */
+        effort: e2.effort ?? null,
         usage: e2.usage,
         calls: e2.calls,
         at: _AiRuns.#aiIso(ms6),
@@ -175760,7 +176513,7 @@ var AiRuns = class _AiRuns {
     const notPrincipal = runPrincipalGate({
       caller,
       principal: runRow.principal_plane,
-      act: "opening a question under a run"
+      act: word("ai-runs.act.opening_question_under")
     });
     if (notPrincipal)
       return {
@@ -175771,7 +176524,7 @@ var AiRuns = class _AiRuns {
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
         run: run2,
-        note: "an assistant opens a question only inside a run it holds. Nothing was created"
+        note: word("ai-runs.note.assistant_opens_question")
       };
     if (runRow.status !== "running")
       return refusal39(
@@ -175846,7 +176599,7 @@ var AiRuns = class _AiRuns {
         by: null,
         at: link.at,
         lens: null,
-        stated: "this question was opened inside a run this reader cannot read"
+        stated: word("ai-runs.stated.question_opened_inside")
       };
     return {
       recorded: true,
@@ -177499,7 +178252,7 @@ function legOf(cite, cited, concl) {
 var unnegated = (s) => lower2(s).replace(/n['’]t\b/g, "").replace(/\b(?:not|never|no)\b/g, " ").replace(/\s+/g, " ").trim();
 function judgeSentence(row12, cited, printed2, concl) {
   const out = [];
-  const say5 = (code, detail) => out.push({ ord: row12.ord, code, detail });
+  const say6 = (code, detail) => out.push({ ord: row12.ord, code, detail });
   const w = (k) => row12.words[k] ?? k;
   const read3 = row12.cites.filter((x) => cited.has(x));
   const texts = read3.map((x) => cited.get(x).text);
@@ -177514,9 +178267,9 @@ function judgeSentence(row12, cited, printed2, concl) {
     const code = j && j.ok ? j.withheld[0]?.code ?? null : null;
     const unread = row12.cites.filter((x) => !cited.has(x));
     if (!row12.cites.length) {
-      if (row12.account) say5("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row12.ord} cites nothing, and is not marked as following a printed bias statement`);
+      if (row12.account) say6("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row12.ord} cites nothing, and is not marked as following a printed bias statement`);
     } else if (code === "ANSWER_CITES_UNREAD" || j && !j.ok)
-      say5("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row12.ord} cites ${(unread.length ? unread : row12.cites).map(w).join(", ")}, which is not among what it may cite`);
+      say6("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row12.ord} cites ${(unread.length ? unread : row12.cites).map(w).join(", ")}, which is not among what it may cite`);
     else {
       const missing2 = [];
       if (code === "ANSWER_FIGURE_UNSOURCED") {
@@ -177528,25 +178281,25 @@ function judgeSentence(row12, cited, printed2, concl) {
       for (const n2 of facts.names) if (!texts.some((x) => lower2(x).includes(lower2(n2)))) missing2.push({ kind: "name", said: n2 });
       for (const q10 of facts.quotations) if (!texts.some((x) => squash(x).includes(squash(q10)))) missing2.push({ kind: "quotation", said: q10 });
       if (missing2.length)
-        say5("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row12.ord} states ${missing2.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing2.length === 1 ? "is" : "are"} not in what it cites`);
+        say6("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row12.ord} states ${missing2.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing2.length === 1 ? "is" : "are"} not in what it cites`);
     }
   }
   for (const cite of row12.cites) {
     const k = concl.get(cite);
     if (k && !k.adopted && DETERMINATION_RE.test(unquoted(row12.text)))
-      say5("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`);
+      say6("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`);
     else if (k && k.adopted && k.claim) {
       const s = lower2(unquoted(row12.text)), claim = lower2(k.claim);
       if (!s.includes(claim) && unnegated(s).includes(unnegated(claim)) && unnegated(claim))
-        say5("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`);
+        say6("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`);
     }
     const leg2 = legOf(cite, cited, concl);
     if (leg2 && leg2.role === "cuts_against" && SUPPORT_RE.test(unquoted(row12.text)) && !CONTRARY_RE.test(unquoted(row12.text)))
-      say5("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} reads ${w(cite)} as supporting finding ${leg2.finding}, where it cuts against it`);
+      say6("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row12.ord} reads ${w(cite)} as supporting finding ${leg2.finding}, where it cuts against it`);
   }
   if (row12.bias) {
     if (!printed2.has(row12.bias))
-      say5("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row12.ord} is marked as following bias statement ${row12.bias}, which this case does not print in its lens`);
+      say6("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row12.ord} is marked as following bias statement ${row12.bias}, which this case does not print in its lens`);
     const stated3 = [
       ...facts.figures.map((f17) => `the figure ${f17}`),
       ...facts.dates.map((d) => `the date ${d}`),
@@ -177559,7 +178312,7 @@ function judgeSentence(row12, cited, printed2, concl) {
       break;
     }
     if (stated3.length)
-      say5("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row12.ord} is marked as bias and states ${stated3.join(", ")}: a fact is never bias`);
+      say6("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row12.ord} is marked as bias and states ${stated3.join(", ")}: a fact is never bias`);
   }
   return out;
 }
@@ -177599,7 +178352,7 @@ function pairsUnderLens({ lens, facts, published, recompute }) {
   const not_applied = lens.name === "reader" ? lens.applications.filter((a) => !lens.statements.includes(a.statement)).map((a) => ({ ...a, why: "its statement is not among the lens's statements" })) : [];
   const used = /* @__PURE__ */ new Set();
   const pairs = /* @__PURE__ */ new Map(), changes = /* @__PURE__ */ new Map(), busy = /* @__PURE__ */ new Set();
-  function pairOf2(id) {
+  function pairOf3(id) {
     if (pairs.has(id)) return pairs.get(id);
     const fx = facts.get(id);
     if (!fx || busy.has(id)) return null;
@@ -177633,7 +178386,7 @@ function pairsUnderLens({ lens, facts, published, recompute }) {
       }
       if (out) return;
       if (leg2.kind === "inquiry" && filled11(leg2.target)) {
-        const p3 = pairOf2(leg2.target);
+        const p3 = pairOf3(leg2.target);
         if (p3) leg2 = { ...leg2, answer: p3 };
         for (const ch of changes.get(leg2.target) || []) changed.push({ ...ch, through: leg2.target });
       }
@@ -177646,7 +178399,7 @@ function pairsUnderLens({ lens, facts, published, recompute }) {
     changes.set(id, changed);
     return pair2;
   }
-  for (const id of facts.keys()) pairOf2(id);
+  for (const id of facts.keys()) pairOf3(id);
   for (const a of [...published.filter((x) => !keep3(x)), ...own11]) if (!used.has(a))
     not_applied.push({ ...a, why: a.target === "conclusion" || a.effect === "scrutiny_raised" ? "it is recorded at a conclusion's claim and moves no grade" : "it names no leg this case file carries, so it moves no grade here" });
   return { pairs, changes, not_applied };
@@ -179779,20 +180532,20 @@ var CaseImport = class _CaseImport {
       if (!isObj40(fm) || typeof readApps !== "function") return none(LENS_NOT_REWEIGHED);
       const read3 = this.#call(() => readApps(fm), null);
       const apps = (Array.isArray(read3) ? read3 : []).filter((a) => isObj40(a) && str35(a.finding) && str35(a.statement));
-      const asked4 = /* @__PURE__ */ new Map();
+      const asked5 = /* @__PURE__ */ new Map();
       for (const id of [...new Set(apps.map((a) => str35(a.statement)))].sort())
-        asked4.set(id, this.#call(
+        asked5.set(id, this.#call(
           () => this.bias.statementInForce({ statement: id, scope: "instance", viewer }),
           { ok: true, statement: id, in_force: null, stated: "undetermined: the lens in force could not be read" }
         ));
       const stateOf2 = (a) => {
-        const v = asked4.get(str35(a.statement));
+        const v = asked5.get(str35(a.statement));
         return v && (v.in_force === true || v.in_force === false) ? v.in_force : null;
       };
-      const inForce = [...asked4.values()].filter((v) => v && v.in_force === true);
+      const inForce = [...asked5.values()].filter((v) => v && v.in_force === true);
       const reader = { statements: inForce.map((v) => v.statement), applications: [] };
-      const sha2 = [...asked4.values()].map((v) => v && isSha2(v.statements_sha) ? v.statements_sha : null).find(Boolean) ?? null;
-      const undeterminedIds = [...asked4.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
+      const sha2 = [...asked5.values()].map((v) => v && isSha2(v.statements_sha) ? v.statements_sha : null).find(Boolean) ?? null;
+      const undeterminedIds = [...asked5.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
       const undetermined3 = new Set(undeterminedIds);
       const fn = this.#reweigh;
       let out = null, failed3 = null;
@@ -179823,7 +180576,7 @@ var CaseImport = class _CaseImport {
           label: OWN_LENS,
           determined: !failed3 && !undeterminedIds.length,
           ...failed3 ? { stated: failed3 } : undeterminedIds.length ? { stated: LENS_UNDETERMINED } : {},
-          statements: [...asked4.values()].map((v) => ({
+          statements: [...asked5.values()].map((v) => ({
             statement: v?.statement ?? null,
             in_force: v ? v.in_force ?? null : null,
             kind: v?.kind ?? null,
@@ -180005,8 +180758,8 @@ var CaseImport = class _CaseImport {
           { import: e2.import_id, edition: ed, findings: notAccepted.map((x) => x.finding), not_accepted: notAccepted }
         );
     } else {
-      const asked4 = typeof findings === "string" ? findings.trim().startsWith("[") ? parse7(findings, null) : [findings] : findings;
-      named3 = Array.isArray(asked4) ? [...new Set(asked4.map((f17) => typeof f17 === "string" ? f17.trim() : f17))] : [];
+      const asked5 = typeof findings === "string" ? findings.trim().startsWith("[") ? parse7(findings, null) : [findings] : findings;
+      named3 = Array.isArray(asked5) ? [...new Set(asked5.map((f17) => typeof f17 === "string" ? f17.trim() : f17))] : [];
       const unknown = named3.filter((f17) => typeof f17 !== "string" || !results.has(f17));
       if (!named3.length || unknown.length)
         return refuse17(
@@ -182967,32 +183720,32 @@ var CaseDisclosures = class {
         }));
     } else {
       const named3 = (code) => marked([...new Set(departures.filter((d) => d.code === code).map((d) => d.ord))].map((o) => byOrd2.get(o)));
-      const say5 = (list6) => list6.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
+      const say6 = (list6) => list6.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
       let n2;
       if ((n2 = named3("ACCOUNT_SENTENCE_UNSUPPORTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_SENTENCE_UNSUPPORTED", {
           sentences: n2,
-          detail: `${say5(n2)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.`
+          detail: `${say6(n2)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_FACT_NOT_IN_CITED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_FACT_NOT_IN_CITED", {
           sentences: n2,
-          detail: `${say5(n2)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.`
+          detail: `${say6(n2)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_CONTRADICTED_BY_RECORD")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CONTRADICTED_BY_RECORD", {
           sentences: n2,
-          detail: `${say5(n2)} says other than the record holds, and cannot be tied to evidence. Nothing was written.`
+          detail: `${say6(n2)} says other than the record holds, and cannot be tied to evidence. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_BIAS_NOT_PRINTED")).length)
         refusals.push(disclosureRefusal("ACCOUNT_BIAS_NOT_PRINTED", {
           sentences: n2,
-          detail: `${say5(n2)} is framed by a bias statement this case's lens does not print. Nothing was written.`
+          detail: `${say6(n2)} is framed by a bias statement this case's lens does not print. Nothing was written.`
         }));
       if ((n2 = named3("ACCOUNT_CLAIM_NOT_BIAS")).length)
         refusals.push(disclosureRefusal("ACCOUNT_CLAIM_NOT_BIAS", {
           sentences: n2,
-          detail: `${say5(n2)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.`
+          detail: `${say6(n2)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.`
         }));
     }
     if (flags2 != null) {
@@ -184563,8 +185316,8 @@ var isCount = (n2) => Number.isInteger(n2) && n2 >= 0;
 function openRequestRow(r) {
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const whom = typeof r.whom === "string" ? r.whom.trim() : "";
-  const asked4 = typeof r.asked_at === "string" ? r.asked_at.trim() : "";
-  if (!whom || !asked4) return null;
+  const asked5 = typeof r.asked_at === "string" ? r.asked_at.trim() : "";
+  if (!whom || !asked5) return null;
   if (r.window_closes !== null && (typeof r.window_closes !== "string" || !r.window_closes.trim())) return null;
   const a = r.answers;
   if (a !== null && !(a && typeof a === "object" && !Array.isArray(a) && isCount(a.answered) && isCount(a.claims) && a.answered <= a.claims)) return null;
@@ -184574,7 +185327,7 @@ function openRequestRow(r) {
   if (r.quotable !== void 0 && typeof r.quotable !== "boolean") return null;
   return {
     whom,
-    asked_at: asked4,
+    asked_at: asked5,
     window_closes: r.window_closes === null ? null : r.window_closes.trim(),
     answers: a === null ? null : { answered: a.answered, claims: a.claims },
     /* stated only where the source states it, so a row of a source that does not reads as before */
@@ -189815,8 +190568,8 @@ var CaseAuthoring = class {
       all.push(...Array.isArray(page2.statements) ? page2.statements : []);
     }
     const cited = (s) => (Array.isArray(s.citations) ? s.citations : []).map((c) => c == null ? "" : String(c).trim()).filter(Boolean);
-    const asked4 = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
-    const hashes = asked4.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
+    const asked5 = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
+    const hashes = asked5.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
     const published = /* @__PURE__ */ new Set();
     const half = Math.floor(SEARCHED_CHUNK2 / 2);
     for (let i = 0; i < hashes.length; i += half) {
@@ -189828,7 +190581,7 @@ var CaseAuthoring = class {
         ...part
       )) published.add(String(r.h).toLowerCase());
     }
-    const ids = asked4.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
+    const ids = asked5.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
     for (let i = 0; i < ids.length; i += PUBLISHED_TARGETS_CHUNK) {
       const t2 = this.publication.publishedTargets(ids.slice(i, i + PUBLISHED_TARGETS_CHUNK));
       for (const [id, e2] of Object.entries(t2 && t2.registry || {}))
@@ -198514,11 +199267,14 @@ var CaptureRequests = class _CaptureRequests {
    *  principal), `visible` by R23's sight, `title` the target's title when visible, `title` and `asker` null when not,
    *  and `waiting` whether the target inquiry is open (`open`, or its alias `surfaced`: inquiry R1), whatever the viewer
    *  sees, because capture records every waiting question with a set-aside (its R79). A document no request was filed
-   *  into answers `questions: []`; `lead_inquiry` is not a question the document was captured for. It writes nothing,
-   *  and a failure inside it answers nothing (null), never a partial list. */
+   *  into answers `questions: []`; `lead_inquiry` is not a question the document was captured for. (T50; N1117, K3627;
+   *  capture R83, R94) `asks`, `[{question, asker}]` (the asks `acquire`'s `for` recorded for those captures), adds one
+   *  entry for each of its pairs, by the same sight, title, `asker` and `waiting` rules; a pair that is both a request's
+   *  and an ask's is answered once, and an ask that names no question is skipped. It writes nothing, and a failure inside
+   *  it answers nothing (null), never a partial list. */
   capturedFor(a = {}) {
     try {
-      const { captures = [], viewer = null } = a && typeof a === "object" ? a : {};
+      const { captures = [], viewer = null, asks: asks2 = [] } = a && typeof a === "object" ? a : {};
       const shas = [...new Set((Array.isArray(captures) ? captures : []).filter((x) => typeof x === "string" && x))];
       const pairs = /* @__PURE__ */ new Map();
       for (let i = 0; i < shas.length; i += CAPTURED_FOR_CHUNK) {
@@ -198531,6 +199287,12 @@ var CaptureRequests = class _CaptureRequests {
           const key2 = JSON.stringify([r.target, r.principal_plane]);
           if (!pairs.has(key2)) pairs.set(key2, r);
         }
+      }
+      for (const k of Array.isArray(asks2) ? asks2 : []) {
+        if (!k || typeof k !== "object" || typeof k.question !== "string" || !k.question) continue;
+        const asker = typeof k.asker === "string" && k.asker ? k.asker : null;
+        const key2 = JSON.stringify([k.question, asker]);
+        if (!pairs.has(key2)) pairs.set(key2, { target: k.question, principal_plane: asker });
       }
       const seen = _CaptureRequests.#gate("q.bundle_id", viewer);
       const questions = [];
@@ -202360,8 +203122,8 @@ var ActionRecords = class {
     const who4 = String(proposer ?? "").trim();
     if (!who4) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const asked4 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    if (asked4 !== 1 && asked4 !== 2 && asked4 !== 3) return this.badRiskTier(target, tier, "a proposal");
+    const asked5 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    if (asked5 !== 1 && asked5 !== 2 && asked5 !== 3) return this.badRiskTier(target, tier, "a proposal");
     const why2 = typeof basis === "string" ? basis.trim() : "";
     if (!why2 || why2.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why2))
       return refuse19("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
@@ -202375,7 +203137,7 @@ var ActionRecords = class {
       ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
       target,
       who4,
-      asked4,
+      asked5,
       why2,
       at49
     );
@@ -202385,10 +203147,10 @@ var ActionRecords = class {
       target,
       weight: "single",
       evidence: false,
-      proposal: { ...proposalLabelFor(who4, "risk_tier"), tier: asked4, tier_words: RISK_TIERS[asked4], basis: why2, at: at49 },
+      proposal: { ...proposalLabelFor(who4, "risk_tier"), tier: asked5, tier_words: RISK_TIERS[asked5], basis: why2, at: at49 },
       risk_tier: held3,
       risk_tier_words: RISK_TIERS[held3] ?? null,
-      says: `a tier of ${asked4} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held3 === "undetermined" ? "undetermined" : held3}, and only a member's own act sets it.`
+      says: `a tier of ${asked5} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held3 === "undetermined" ? "undetermined" : held3}, and only a member's own act sets it.`
     };
   }
   /** R3 (was `actions` R73; K2561; R10): a proposal of what a records request seeks, as R1 is to `actions.actionLaws`:
@@ -202411,10 +203173,10 @@ var ActionRecords = class {
       } catch {
       }
     }
-    const asked4 = { action_kind: held3.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
-    const r = this.seeksRefusal(asked4);
+    const asked5 = { action_kind: held3.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
+    const r = this.seeksRefusal(asked5);
     if (r) return { ...r, target };
-    const items = seeksOf(asked4);
+    const items = seeksOf(asked5);
     const at49 = stampInstant("second", this.#nowMs(null));
     this.record.transact(() => {
       this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who4);
@@ -202517,12 +203279,12 @@ var ActionRecords = class {
     author = null
   } = {}) {
     const who4 = String(author ?? "").trim();
-    const asked4 = { target: target ?? null, detail: RECEIPT_DETAIL };
-    const fenced = correspondFence(who4, asked4);
+    const asked5 = { target: target ?? null, detail: RECEIPT_DETAIL };
+    const fenced = correspondFence(who4, asked5);
     if (fenced) return fenced;
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const when = String(at49 ?? "").trim();
-    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account: account2, dateTime: true }, asked4);
+    const entryRefused = correspondEntryRefusal({ at: when, artifactSha, account: account2, dateTime: true }, asked5);
     if (entryRefused) return entryRefused;
     const sha2 = shaOf8(artifactSha);
     const acct = String(account2 ?? "").trim();
@@ -205156,8 +205918,8 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
     const fm = parseFrontmatter(liveMd.content).data || {};
     const held3 = riskTierState(fm.risk_tier);
     const before3 = riskTierHistoryOf(fm);
-    const asked4 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    const next = riskTierState(asked4);
+    const asked5 = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    const next = riskTierState(asked5);
     const why2 = typeof reason2 === "string" ? reason2.trim() : "";
     const text0 = _Actions.#appendRiskTierHistory(liveMd.content, null);
     if (next !== 1 && next !== 2 && next !== 3) return this.records.badRiskTier(target, tier, "the act");
@@ -206307,8 +207069,8 @@ Changes: responds_to edge added to ${actionId}.
   /** R97 (T45; consequences R19): of `ids`, those that are an action bundle of this instance or the capture of one of its
    *  `sent` entries, whatever the viewer; it names nothing back but what it was given, and throws only when it cannot read. */
   ownActIds({ ids = [] } = {}) {
-    const asked4 = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))];
-    return asked4.filter((x) => this.#one(`SELECT 1 AS y FROM bundles WHERE bundle_id=? AND object_type='action'`, x) || this.#one(
+    const asked5 = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))];
+    return asked5.filter((x) => this.#one(`SELECT 1 AS y FROM bundles WHERE bundle_id=? AND object_type='action'`, x) || this.#one(
       `SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`,
       x.replace(/^sha256:/, "").toLowerCase()
     ));
@@ -207653,9 +208415,9 @@ var ActionClocks = class {
    *  entry standing for the step, where every viewer of the step's place sees the action: an action in no project
    *  (every member sees it), or a step placed in the action's own project; else `{entry: "clock"}`, held and unnamed.
    *  Null for none or several. Never throws. */
-  stepDueHolder(asked4) {
+  stepDueHolder(asked5) {
     try {
-      const { step, byWhen, waits } = asked4 && typeof asked4 === "object" ? asked4 : {};
+      const { step, byWhen, waits } = asked5 && typeof asked5 === "object" ? asked5 : {};
       const day2 = byWhen && typeof byWhen === "object" ? byWhen.date : null;
       const found3 = this.#entriesFor(step, day2, waits, IN_PROCESS);
       if (found3.length !== 1) return null;
@@ -209496,11 +210258,11 @@ var FilingTemplates = class _FilingTemplates {
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */
-  #noTemplate(asked4) {
+  #noTemplate(asked5) {
     return refuse22(
       "NO_SUCH_TEMPLATE",
       "no template by that id is readable here; one you may not see answers the same",
-      { template: str45(typeof asked4 === "string" ? asked4 : null) }
+      { template: str45(typeof asked5 === "string" ? asked5 : null) }
     );
   }
   #scope(t2, detail) {
@@ -209682,18 +210444,18 @@ var FilingTemplates = class _FilingTemplates {
     return this.#one(`SELECT * FROM tpl_revisions WHERE template_id=? AND version=? ORDER BY rid DESC LIMIT 1`, tid, n2);
   }
   /* The version of `t` named by a version id or a number (a profile template's own number), or null. */
-  #versionOf(t2, asked4) {
-    const p3 = parseVersionId(asked4);
-    const n2 = p3 ? p3.template === t2.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked4 ?? "").trim()) ? Number(String(asked4).trim()) : null;
+  #versionOf(t2, asked5) {
+    const p3 = parseVersionId(asked5);
+    const n2 = p3 ? p3.template === t2.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked5 ?? "").trim()) ? Number(String(asked5).trim()) : null;
     if (n2 === null) return null;
     if (t2.origin === "profile") return n2 === Number(t2.profileTemplate.version) ? n2 : null;
     return this.#one(`SELECT 1 AS x FROM tpl_versions WHERE template_id=? AND version=?`, t2.id, n2) ? n2 : null;
   }
   /* A version id the viewer may see: its template and number, or null. */
-  #resolve(asked4, viewer) {
-    const p3 = parseVersionId(asked4);
+  #resolve(asked5, viewer) {
+    const p3 = parseVersionId(asked5);
     const t2 = p3 ? this.#template(p3.template, viewer) : null;
-    const n2 = t2 ? this.#versionOf(t2, asked4) : null;
+    const n2 = t2 ? this.#versionOf(t2, asked5) : null;
     return t2 && n2 !== null ? { t: t2, n: n2 } : null;
   }
   /* The latest approved version (R14's default), or null. */
@@ -210216,9 +210978,9 @@ var FilingTemplates = class _FilingTemplates {
     const events = this.#events(t2.id);
     const state = this.#stateOf(events, n2);
     if (state !== "draft") return this.#notADraft(t2, n2, state);
-    const asked4 = [...new Set(listOf6(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
+    const asked5 = [...new Set(listOf6(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
     const ids = [];
-    for (const a of asked4) {
+    for (const a of asked5) {
       const id = this.#member(a);
       const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
       const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
@@ -210337,10 +211099,10 @@ var FilingTemplates = class _FilingTemplates {
     return { grant: g, t: t2, n: g.version };
   }
   /* Through a door, a version asked must be the grant's own; absent, it is. */
-  static #doorAdmits(d, asked4) {
-    if (asked4 === null || asked4 === void 0 || asked4 === "") return true;
-    const p3 = parseVersionId(asked4);
-    return p3 ? p3.template === d.t.id && p3.version === d.n : String(asked4).trim() === String(d.n);
+  static #doorAdmits(d, asked5) {
+    if (asked5 === null || asked5 === void 0 || asked5 === "") return true;
+    const p3 = parseVersionId(asked5);
+    return p3 ? p3.template === d.t.id && p3.version === d.n : String(asked5).trim() === String(d.n);
   }
   static #hasSecret(s) {
     return s !== null && s !== void 0 && s !== "";
@@ -211770,8 +212532,8 @@ var ActionHolds = class _ActionHolds {
    *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R2). A read
    *  it cannot complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
   projectHolds({ projects: projects2 = null, viewer = null } = {}) {
-    const asked4 = this.#holdProjects(projects2, true);
-    if (!asked4.ok) return asked4;
+    const asked5 = this.#holdProjects(projects2, true);
+    if (!asked5.ok) return asked5;
     let rows4;
     try {
       rows4 = this.#standing();
@@ -211780,7 +212542,7 @@ var ActionHolds = class _ActionHolds {
     }
     const earliest2 = /* @__PURE__ */ new Map();
     for (const r of rows4) if (r.project && !earliest2.has(r.project)) earliest2.set(r.project, r);
-    return { ok: true, projects: asked4.projects.map((p3) => {
+    return { ok: true, projects: asked5.projects.map((p3) => {
       if (!this.#mayName(p3, viewer)) return { project: p3, held: null };
       const e2 = earliest2.get(p3);
       return e2 ? { project: p3, held: true, since: e2.at, recorded_by: e2.stated_by } : { project: p3, held: false };
@@ -213572,10 +214334,10 @@ var Filings = class _Filings {
   }
   /* R28, R31: the version of a named template a filing or briefing may use (`filing-templates.offeredVersion`, its R25),
      its refusals passed through as that module's; `asked` is `{id, version?}` or a bare id. */
-  #offered(asked4, viewer) {
+  #offered(asked5, viewer) {
     const t2 = this.filingTemplates;
-    const id = isObj46(asked4) ? str47(asked4.id) : str47(asked4);
-    const version = isObj46(asked4) && asked4.version != null && asked4.version !== "" ? asked4.version : null;
+    const id = isObj46(asked5) ? str47(asked5.id) : str47(asked5);
+    const version = isObj46(asked5) && asked5.version != null && asked5.version !== "" ? asked5.version : null;
     if (!t2 || typeof t2.offeredVersion !== "function")
       return withRow8({
         ok: false,
@@ -218524,16 +219286,16 @@ var Escalation = class _Escalation {
   /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
    *  Writes nothing. */
   escalationsFor({ determination, viewer } = {}) {
-    const asked4 = this.#seenDetermination(determination, viewer);
-    if (!asked4.ok) return asked4;
-    return { ok: true, determination: asked4.id, items: this.#escalationsOf(asked4.id, viewer) };
+    const asked5 = this.#seenDetermination(determination, viewer);
+    if (!asked5.ok) return asked5;
+    return { ok: true, determination: asked5.id, items: this.#escalationsOf(asked5.id, viewer) };
   }
   /* R22, R28: the determination named, when this viewer may read it, `{ok: true, id}`; else conformance R19's one
      answer for absent and unseen, the id as asked. */
   #seenDetermination(determination, viewer) {
-    const asked4 = typeof determination === "string" && determination ? determination : null;
-    const d = asked4 ? this.conformance.determinationRead({ id: asked4, viewer }) : null;
-    return !d || d.ok === false ? noSuchDetermination(asked4) : { ok: true, id: asked4 };
+    const asked5 = typeof determination === "string" && determination ? determination : null;
+    const d = asked5 ? this.conformance.determinationRead({ id: asked5, viewer }) : null;
+    return !d || d.ok === false ? noSuchDetermination(asked5) : { ok: true, id: asked5 };
   }
   /* R22, R28: the determination's escalations this viewer may see, oldest first, each with its opening reason. */
   #escalationsOf(determination, viewer) {
@@ -218599,10 +219361,10 @@ var Escalation = class _Escalation {
    *  declines to escalate, with every escalation (as R22) and every decline, each naming what superseded it, oldest
    *  first. Writes nothing. */
   escalationStatus({ determination, viewer } = {}) {
-    const asked4 = this.#seenDetermination(determination, viewer);
-    if (!asked4.ok) return asked4;
-    const escalations = this.#escalationsOf(asked4.id, viewer);
-    const declines = this.#declinesToOpen(asked4.id);
+    const asked5 = this.#seenDetermination(determination, viewer);
+    if (!asked5.ok) return asked5;
+    const escalations = this.#escalationsOf(asked5.id, viewer);
+    const declines = this.#declinesToOpen(asked5.id);
     const timeline = [];
     let i = 0;
     for (const x of declines) {
@@ -218613,7 +219375,7 @@ var Escalation = class _Escalation {
     const next = new Map(timeline.map((t2, k) => [t2.id, timeline[k + 1]?.id ?? null]));
     return {
       ok: true,
-      determination: asked4.id,
+      determination: asked5.id,
       status: timeline.at(-1)?.kind ?? "neither",
       escalations,
       declines: declines.map(({ seq: _, before: __, ...x }) => ({ ...x, superseded_by: next.get(x.id) }))
@@ -218636,9 +219398,9 @@ var Escalation = class _Escalation {
     const { d, pursued } = g;
     const at49 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
     const parts = [];
-    const say5 = (id, text9) => parts.push({ id, text: text9 });
+    const say6 = (id, text9) => parts.push({ id, text: text9 });
     const D = determination;
-    say5(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
+    say6(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
     const act2 = actOf(d);
     const actor = isObj47(act2.actor) && str48(act2.actor.role) && str48(act2.actor.body) ? `${str48(act2.actor.role)}, ${str48(act2.actor.body)}` : "an office the record does not name (undetermined)";
     const ev = isObj47(d.event) ? d.event : null;
@@ -218646,21 +219408,21 @@ var Escalation = class _Escalation {
     const when = str48(act2.at) ? `on ${str48(act2.at)}` : isObj47(act2.period) && str48(act2.period.from) && str48(act2.period.to) ? `from ${str48(act2.period.from)} to ${str48(act2.period.to)}` : str48(act2.event) || ev ? eventWhenWords(eventWhen, ev && str48(ev.why) ? str48(ev.why) : null) : "at a date the record does not state (undetermined)";
     const kind2 = str48(act2.kind) || (ev ? str48(ev.kind) : "");
     const what = str48(act2.description) ? quoted4(act2.description) : str48(act2.event) ? `the event ${str48(act2.event)}${kind2 ? ` (${kind2})` : ""}` : "its description could not be read (undetermined)";
-    say5(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${what}, by ${actor}, ${when}.`);
+    say6(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${what}, by ${actor}, ${when}.`);
     const held3 = Array.isArray(d.standards) ? d.standards.filter(isObj47) : [];
     for (const standard2 of pursued) {
       const st = held3.find((x) => x.standard === standard2);
       const rows4 = st && Array.isArray(st.rows) ? st.rows.filter(isObj47) : [];
       if (!rows4.length) {
-        say5(standard2, `Standard ${standard2} is breached: its basis in the determination could not be read (undetermined).`);
+        say6(standard2, `Standard ${standard2} is breached: its basis in the determination could not be read (undetermined).`);
         continue;
       }
       const basis = rows4.map((r) => `it requires ${str48(r.requires) ? quoted4(r.requires) : "what the record does not state (undetermined)"}; the act did ${str48(r.did) ? quoted4(r.did) : "what the record does not state (undetermined)"} (reading: ${str48(r.reading) || "undetermined"}${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
       const force = st.in_force === "in_force" ? "It was in force at the act's date." : `Whether it was in force at the act's date is undetermined${str48(st.in_force_why) ? ` (${str48(st.in_force_why)})` : ""}.`;
-      say5(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str48(st.disagreement) ? ` The determination states: ${str48(st.disagreement)}.` : ""}`);
+      say6(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str48(st.disagreement) ? ` The determination states: ${str48(st.disagreement)}.` : ""}`);
     }
     const listed = this.#actionsResting(D, viewer);
-    if (!listed) say5(D, "The actions resting on the determination could not be read (undetermined).");
+    if (!listed) say6(D, "The actions resting on the determination could not be read (undetermined).");
     else {
       const place9 = this.#place();
       const today2 = localToday(at49, zoneOf(place9));
@@ -218670,13 +219432,13 @@ var Escalation = class _Escalation {
         if (!a || a.ok === false) continue;
         shown3++;
         const cp = isObj47(a.counterparty) && str48(a.counterparty.role) && str48(a.counterparty.body) ? `${str48(a.counterparty.role)}, ${str48(a.counterparty.body)}` : "an office the record does not name (undetermined)";
-        say5(id, `Action ${id}${str48(a.kind) ? ` (${str48(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str48(a.current_state) ? `; its state is ${str48(a.current_state)}` : ""}.`);
+        say6(id, `Action ${id}${str48(a.kind) ? ` (${str48(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str48(a.current_state) ? `; its state is ${str48(a.current_state)}` : ""}.`);
         const clock2 = Array.isArray(a.clock) ? a.clock.filter(isObj47) : [];
-        if (!clock2.length) say5(id, `Action ${id} states no clock entry.`);
+        if (!clock2.length) say6(id, `Action ${id} states no clock entry.`);
         for (const c of clock2) {
           const what2 = str48(c.text) || str48(c.description);
           const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
-          say5(id, `Action ${id}'s clock entry ${what2 ? quoted4(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted4(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
+          say6(id, `Action ${id}'s clock entry ${what2 ? quoted4(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted4(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
           if (c.status === "pending" && date) {
             let past = null;
             try {
@@ -218685,20 +219447,20 @@ var Escalation = class _Escalation {
               past = null;
             }
             if (past === true)
-              say5(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today2 ?? "the day of reading"}.`);
+              say6(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today2 ?? "the day of reading"}.`);
             else if (past === null)
-              say5(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the office's local day.`);
+              say6(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the office's local day.`);
           }
         }
       }
-      if (!shown3) say5(D, "No action resting on the determination is recorded.");
+      if (!shown3) say6(D, "No action resting on the determination is recorded.");
     }
     const q10 = this.consequences.consequencesOf({ determination: D, viewer });
-    if (!q10 || q10.ok === false) say5(D, "The consequences of the breach could not be read (undetermined).");
+    if (!q10 || q10.ok === false) say6(D, "The consequences of the breach could not be read (undetermined).");
     else {
       const recorded = Array.isArray(q10.parts) ? q10.parts.filter(isObj47) : [];
-      if (!recorded.length) say5(D, "No consequence of the breach is recorded on the determination.");
-      for (const p3 of recorded) say5(p3.id, consequenceSentence(p3));
+      if (!recorded.length) say6(D, "No consequence of the breach is recorded on the determination.");
+      for (const p3 of recorded) say6(p3.id, consequenceSentence(p3));
     }
     const text8 = parts.map((p3) => p3.text).join("\n");
     return {
@@ -222001,8 +222763,8 @@ var ActionPlans = class {
     const cap = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Math.min(Number(limit), PLANS_PAGE_MAX) : PLANS_PAGE_MAX;
     const s = subject === null || subject === void 0 || subject === "" ? null : typeof subject === "string" ? subject : normSubject(subject) ? subjectKey(normSubject(subject)) : "\0";
     const see = this.#sight(viewer);
-    const asked4 = s === null ? null : subjectOfKey(s);
-    if (asked4 && !see.subject(asked4)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
+    const asked5 = s === null ? null : subjectOfKey(s);
+    if (asked5 && !see.subject(asked5)) return { ok: true, items: [], truncated: false, cursor: null, limit: cap };
     const where = [], args = [];
     if (project) {
       where.push("p.project_id=?");
@@ -223152,8 +223914,8 @@ var ActionReplies = class _ActionReplies {
   #openRow(a) {
     const ledger = (Array.isArray(a.correspondence) ? a.correspondence : []).filter((e2) => e2 && typeof e2 === "object");
     const sent = ledger.filter((e2) => e2.direction === "sent").sort((p3, q10) => p3.ord - q10.ord)[0];
-    const asked4 = sent ? dayOf6(sent.at) : null;
-    if (!asked4) return null;
+    const asked5 = sent ? dayOf6(sent.at) : null;
+    if (!asked5) return null;
     const cp = a.counterparty && typeof a.counterparty === "object" ? a.counterparty : {};
     const whom = counterpartyName(cp) || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null) || "an addressee not yet named";
     const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf6(c.date));
@@ -223171,7 +223933,7 @@ var ActionReplies = class _ActionReplies {
       const q10 = this.#quoting(a.id, o);
       return q10 && q10.quotable === false;
     });
-    return { whom, asked_at: asked4, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0, quotable: quotable2 };
+    return { whom, asked_at: asked5, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0, quotable: quotable2 };
   }
 };
 for (const m of ["actionReplyBearing", "actionBearingPropose", "actionReplyQuoting", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
@@ -223254,7 +224016,24 @@ __export(checks_exports64, {
 });
 var at38 = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
 var READING_GUIDES_WORDS = Object.freeze({
-  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognize, and this names another. Nothing was written.",
+  "refusal.GUIDE_CARRIES_CONDUCT": 'A reading guide says only what to look for in a document, and where. Each item opens with "Look for", "Note whether", "Note where", "Check whether", "Check that", "Watch for" or "Compare", and none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A procedure guide may name the acts and duties of a route, but none of its items speaks to the assistant or tells it what to do. The item named does not keep to this. Reword it. Nothing was written.',
+  "refusal.GUIDE_ITEMS_REFUSED": "A reading guide holds from 1 to 50 items, each a short label (at most 80 characters), what to look for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain text. A procedure guide holds from 1 to 50 items, each a route (at most 500 characters), if you like the reply to expect (at most 500 characters), and the citation the route rests on (at most 200 characters). The items given are not of that form. Nothing was written.",
+  "refusal.GUIDE_MEMBER_ACT": "Writing, reviewing, offering, adopting or retiring a reading guide is a member's act. An assistant may propose a guide for a member to take up; it may not do any of these. Sign in as an active member. Nothing was written.",
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your team's places recognize, and this names another. Nothing was written.",
+  "refusal.NO_SUCH_GUIDE": "No reading guide you can see answers to that id. Nothing was written.",
+  "refusal.GUIDE_READ_ONLY": "This reading guide comes with every copy of Civicsmith and is the same for every team, so no team can review, offer or retire it. Write your team's own guide for this kind instead, based on it if you like. Nothing was written.",
+  "refusal.GUIDE_REVIEW_BY_AUTHOR": "A reading guide is reviewed by a member other than the one who wrote or adopted it. Ask another member to review it. Nothing was written.",
+  "refusal.GUIDE_VERDICT_UNKNOWN": "A review either approves the guide, making it your team's, or refuses it, keeping it its author's. Say which. Nothing was written.",
+  "refusal.GUIDE_REASON_MISSING": "Refusing or retiring a reading guide needs a reason, in at most 500 characters, so its author and the team can see why. None was given, or it is too long. Nothing was written.",
+  "refusal.GUIDE_NOT_REVIEWABLE": "Only a guide not yet your team's can be reviewed: one a member wrote for themselves, or one adopted from another team. This one is already your team's or has been retired. Nothing was written.",
+  "refusal.GUIDE_NOT_OFFERABLE": "Only a guide your team has approved can be offered to another team. Have it reviewed and approved first. Nothing was sent.",
+  "refusal.GUIDE_OFFER_UNREADABLE": "What was given is not a reading guide another team offered, or it was changed after it was offered. Ask the offering team to send it again. Nothing was written.",
+  "refusal.GUIDE_NO_GROUP_SLUG": "An offered guide is labeled with your team's short name, and none is recorded for this team, so nothing can be offered. Whoever runs your team's Civicsmith can set it. Nothing was sent.",
+  "refusal.GUIDE_RETIRE_NOT_APPROVER": "A guide that is its author's alone is retired by its author; a team's guide by a member who could approve it, that is, any active member other than its author. Nothing was written.",
+  "refusal.GUIDE_RETIRED": "This reading guide has been retired. It stays readable, and nothing more can be done to it. Write a new guide based on it if it is still needed. Nothing was written.",
+  "refusal.GUIDE_BASED_ON_UNKNOWN": "A guide may say which guide or proposal it is based on, and the one named is not a guide or proposal you can see. Nothing was written.",
+  "refusal.GUIDE_PROPOSAL_NOT_MACHINE": "A proposed guide is the assistant's work, kept apart for members to take up. A member writes a guide directly instead. Nothing was written.",
+  "refusal.GUIDE_RUN_MISSING": "A proposed guide names the assistant's run that proposed it, so members can see where it came from. None was named. Nothing was written.",
   "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
   "guide.procedure.legalinfo": "Legal information, not legal advice"
 });
@@ -223262,17 +224041,17 @@ var READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_CARRIES_CONDUCT: {
     check: "C-144.1",
     where: at38("check.mjs", "checkGuide", "is-guide-look-for"),
-    translation: 'A reading guide says only what to look for in a document, and where. Each item opens with "Look for", "Note whether", "Note where", "Check whether", "Check that", "Watch for" or "Compare", and none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A procedure guide may name the acts and duties of a route, but none of its items speaks to the assistant or tells it what to do. The item named does not keep to this. Reword it. Nothing was written.'
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_CARRIES_CONDUCT"]
   },
   GUIDE_ITEMS_REFUSED: {
     check: "C-144.2",
     where: at38("check.mjs", "checkGuide", "is-guide-shape"),
-    translation: "A reading guide holds from 1 to 50 items, each a short label (at most 80 characters), what to look for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain text. A procedure guide holds from 1 to 50 items, each a route (at most 500 characters), if you like the reply to expect (at most 500 characters), and the citation the route rests on (at most 200 characters). The items given are not of that form. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_ITEMS_REFUSED"]
   },
   GUIDE_MEMBER_ACT: {
     check: "C-144.3",
     where: at38("index.mjs", "memberRefusal", "is-guide-member"),
-    translation: "Writing, reviewing, offering, adopting or retiring a reading guide is a member's act. An assistant may propose a guide for a member to take up; it may not do any of these. Sign in as an active member. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_MEMBER_ACT"]
   },
   GUIDE_KIND_UNKNOWN: {
     check: "C-144.4",
@@ -223282,72 +224061,72 @@ var READING_GUIDES_CHECKS = Object.freeze({
   NO_SUCH_GUIDE: {
     check: "C-144.5",
     where: at38("index.mjs", "noSuchGuide", "is-guide-held"),
-    translation: "No reading guide you can see answers to that id. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.NO_SUCH_GUIDE"]
   },
   GUIDE_READ_ONLY: {
     check: "C-144.6",
     where: at38("index.mjs", "readOnly", "is-guide-ours"),
-    translation: "This reading guide comes with every copy of Civicsmith and is the same for every group, so no group can review, offer or retire it. Write your group's own guide for this kind instead, based on it if you like. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_READ_ONLY"]
   },
   GUIDE_REVIEW_BY_AUTHOR: {
     check: "C-144.7",
     where: at38("index.mjs", "guideReview", "is-guide-reviewer"),
-    translation: "A reading guide is reviewed by a member other than the one who wrote or adopted it. Ask another member to review it. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_REVIEW_BY_AUTHOR"]
   },
   GUIDE_VERDICT_UNKNOWN: {
     check: "C-144.8",
     where: at38("index.mjs", "guideReview", "is-guide-verdict"),
-    translation: "A review either approves the guide, making it your group's, or refuses it, keeping it its author's. Say which. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_VERDICT_UNKNOWN"]
   },
   GUIDE_REASON_MISSING: {
     check: "C-144.9",
     where: at38("index.mjs", "reasonRefusal", "is-guide-reason"),
-    translation: "Refusing or retiring a reading guide needs a reason, in at most 500 characters, so its author and the group can see why. None was given, or it is too long. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_REASON_MISSING"]
   },
   GUIDE_NOT_REVIEWABLE: {
     check: "C-144.10",
     where: at38("index.mjs", "guideReview", "is-guide-reviewable"),
-    translation: "Only a guide not yet your group's can be reviewed: one a member wrote for themselves, or one adopted from another group. This one is already your group's or has been retired. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NOT_REVIEWABLE"]
   },
   GUIDE_NOT_OFFERABLE: {
     check: "C-144.11",
     where: at38("index.mjs", "offerable", "is-guide-offerable"),
-    translation: "Only a guide your group has approved can be offered to another group. Have it reviewed and approved first. Nothing was sent."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NOT_OFFERABLE"]
   },
   GUIDE_OFFER_UNREADABLE: {
     check: "C-144.12",
     where: at38("index.mjs", "guideAdopt", "is-guide-offer"),
-    translation: "What was given is not a reading guide another group offered, or it was changed after it was offered. Ask the offering group to send it again. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_OFFER_UNREADABLE"]
   },
   GUIDE_NO_GROUP_SLUG: {
     check: "C-144.13",
     where: at38("index.mjs", "slugRefusal", "is-guide-slug"),
-    translation: "An offered guide is labeled with your group's short name, and none is recorded for this group, so nothing can be offered. Whoever runs your group's Civicsmith can set it. Nothing was sent."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_NO_GROUP_SLUG"]
   },
   GUIDE_RETIRE_NOT_APPROVER: {
     check: "C-144.14",
     where: at38("index.mjs", "guideRetire", "is-guide-approver"),
-    translation: "A guide that is its author's alone is retired by its author; a group's guide by a member who could approve it, that is, any active member other than its author. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RETIRE_NOT_APPROVER"]
   },
   GUIDE_RETIRED: {
     check: "C-144.15",
     where: at38("index.mjs", "retiredRefusal", "is-guide-live"),
-    translation: "This reading guide has been retired. It stays readable, and nothing more can be done to it. Write a new guide based on it if it is still needed. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RETIRED"]
   },
   GUIDE_BASED_ON_UNKNOWN: {
     check: "C-144.16",
     where: at38("index.mjs", "guideDraft", "is-guide-basis"),
-    translation: "A guide may say which guide or proposal it is based on, and the one named is not a guide or proposal you can see. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_BASED_ON_UNKNOWN"]
   },
   GUIDE_PROPOSAL_NOT_MACHINE: {
     check: "C-144.17",
     where: at38("index.mjs", "guidePropose", "is-guide-machine"),
-    translation: "A proposed guide is the assistant's work, kept apart for members to take up. A member writes a guide directly instead. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_PROPOSAL_NOT_MACHINE"]
   },
   GUIDE_RUN_MISSING: {
     check: "C-144.18",
     where: at38("index.mjs", "guidePropose", "is-guide-run"),
-    translation: "A proposed guide names the assistant's run that proposed it, so members can see where it came from. None was named. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_RUN_MISSING"]
   },
   GUIDE_ITEM_UNSOURCED: {
     check: "C-144.19",
@@ -229129,11 +229908,11 @@ function recordedBy2(c, memo, args) {
     if (a.viewer === void 0 || a.viewer === null || typeof a.viewer === "string" && a.viewer.trim() === "")
       return refused4("VIEWER_MISSING", "a read names the member reading; with none, nothing is answered");
     if (!said9(a.captureSha)) return refused4("NO_SHA", "who cited a passage is read for one captured document, named by its capture sha256");
-    let asked4 = null;
+    let asked5 = null;
     if (a.extent !== void 0 && a.extent !== null) {
       if (!known2(a.extent))
         return refused4("EXTENT_MALFORMED", `an extent is an object of one of the kinds ${Object.keys(CONTENT_EXTENT_KINDS2).join(", ")}`);
-      asked4 = JSON.parse(canonicalExtent2(a.extent));
+      asked5 = JSON.parse(canonicalExtent2(a.extent));
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp9(a.limit);
@@ -229167,8 +229946,8 @@ function recordedBy2(c, memo, args) {
       if (!hits.length || !c.membership.inSight(id, a.viewer)) continue;
       if (!v.writers) v.writers = firstWriters(c, id, type, new Set(v.cites.map((x) => x.ident)));
       for (const x of hits) {
-        const relation2 = asked4 ? extentRelation2(asked4, x.extent) : null;
-        if (asked4 && !RELATIONS2.includes(relation2)) continue;
+        const relation2 = asked5 ? extentRelation2(asked5, x.extent) : null;
+        if (asked5 && !RELATIONS2.includes(relation2)) continue;
         const w = v.writers.get(x.ident) || { by: null, at: null };
         const item3 = {
           module: "citation",
@@ -231364,11 +232143,11 @@ var WizardScripts = class _WizardScripts {
   }
   /* ================================================================ the one-condition answers */
   /* R20: absent and invisible are one answer. */
-  #noWizard(asked4) {
+  #noWizard(asked5) {
     return refuse25(
       "NO_SUCH_WIZARD",
       "no wizard script by that id is readable here; one you may not see answers the same",
-      { script: typeof asked4 === "string" ? parseVersionId2(asked4)?.script ?? str51(asked4) : null }
+      { script: typeof asked5 === "string" ? parseVersionId2(asked5)?.script ?? str51(asked5) : null }
     );
   }
   #scope(s, detail) {
@@ -231503,17 +232282,17 @@ var WizardScripts = class _WizardScripts {
     const r = this.#latestRevision(s.id, n2);
     return r ? parse13(r.steps) || [] : [];
   }
-  #versionOf(s, asked4) {
-    const p3 = parseVersionId2(asked4);
-    const n2 = p3 ? p3.script === s.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked4 ?? "").trim()) ? Number(String(asked4).trim()) : null;
+  #versionOf(s, asked5) {
+    const p3 = parseVersionId2(asked5);
+    const n2 = p3 ? p3.script === s.id ? p3.version : null : /^[1-9][0-9]*$/.test(String(asked5 ?? "").trim()) ? Number(String(asked5).trim()) : null;
     if (n2 === null) return null;
     if (s.origin === "civicsmith") return _WizardScripts.#libVersion(s, n2) ? n2 : null;
     return this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n2) ? n2 : null;
   }
-  #resolve(asked4, viewer) {
-    const p3 = parseVersionId2(asked4);
+  #resolve(asked5, viewer) {
+    const p3 = parseVersionId2(asked5);
     const s = p3 ? this.#script(p3.script, viewer) : null;
-    const n2 = s ? this.#versionOf(s, asked4) : null;
+    const n2 = s ? this.#versionOf(s, asked5) : null;
     return s && n2 !== null ? { s, n: n2 } : null;
   }
   #latestApproved(s, events) {
@@ -231730,8 +232509,8 @@ var WizardScripts = class _WizardScripts {
   /* R2, R12: whether filing-templates offers `viewer` the template a `{template}` draft names (its R25; by handle, R26). */
   #templateOffered(ref, viewer, project = null) {
     if (!this.templates || typeof ref !== "string") return false;
-    const asked4 = ref.startsWith("@") ? { name: ref, ...project ? { project } : {} } : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
-    const r = this.#call(() => this.templates.offeredVersion({ ...asked4, viewer }));
+    const asked5 = ref.startsWith("@") ? { name: ref, ...project ? { project } : {} } : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
+    const r = this.#call(() => this.templates.offeredVersion({ ...asked5, viewer }));
     return !!r && r.ok === true;
   }
   /* The offered scripts `viewer` may see, each `{s, n, steps}`. */
@@ -231999,9 +232778,9 @@ var WizardScripts = class _WizardScripts {
   }
   /* R4 (DEC-158 (4)): a newer approved version of the base of the copy `s` (one approved after the version its `based_on`
      names, `updated` since or not) that the viewer may see, `{version, steps}`; or null. */
-  #newerBase(s, asked4, viewer) {
+  #newerBase(s, asked5, viewer) {
     const on = s.based_on ? parseVersionId2(s.based_on) : null;
-    const r = on && typeof asked4 === "string" ? this.#resolve(asked4, viewer) : null;
+    const r = on && typeof asked5 === "string" ? this.#resolve(asked5, viewer) : null;
     if (!r || r.s.id !== on.script || r.n <= on.version) return null;
     const st = this.#stateAt(r.s, r.n);
     return ["approved", "updated"].includes(st) ? { version: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
@@ -232502,8 +233281,8 @@ var WizardScripts = class _WizardScripts {
     const door = this.door || {};
     const pointer = door.pointer ? pointerOf(this.#call(() => door.pointer(viewer))) : null;
     const routes = START_ROUTES.map((r) => r.route === "elsewhere" ? { ...r, pointer } : r);
-    const asked4 = typeof message2 === "string" && message2.trim() ? message2.trim().slice(0, 4e3) : null;
-    const matches2 = asked4 && door.findExisting && viewerPredicate(viewer).scope !== "DENY" ? matchesOf(this.#call(() => door.findExisting(asked4, viewer), [])) : [];
+    const asked5 = typeof message2 === "string" && message2.trim() ? message2.trim().slice(0, 4e3) : null;
+    const matches2 = asked5 && door.findExisting && viewerPredicate(viewer).scope !== "DENY" ? matchesOf(this.#call(() => door.findExisting(asked5, viewer), [])) : [];
     return {
       ok: true,
       scripts,
@@ -232628,14 +233407,14 @@ var WizardScripts = class _WizardScripts {
     const noAccount = doorCode === "AI_NO_ACCOUNT" || doorCode === "NO_ACCOUNT";
     const seen = door && !noAccount ? { ...assistant, account: assistant.account || { refused: doorCode } } : assistant;
     const at49 = this.#helpAt({ op, field: field3, draftHeld, assistant: seen }, away);
-    const asked4 = { op: typeof op === "string" ? op.slice(0, 80) : null };
-    if (!at49.offered && at49.code === KEPT_AWAY && isObj55(away) && away.ok === false) return { ...away, ...asked4 };
-    if (!at49.offered && at49.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked4 };
-    if (!at49.offered) return refuse25(at49.code, "the assistant does not help word this field", asked4);
+    const asked5 = { op: typeof op === "string" ? op.slice(0, 80) : null };
+    if (!at49.offered && at49.code === KEPT_AWAY && isObj55(away) && away.ok === false) return { ...away, ...asked5 };
+    if (!at49.offered && at49.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked5 };
+    if (!at49.offered) return refuse25(at49.code, "the assistant does not help word this field", asked5);
     const text8 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     if (!text8.trim() || text8.length > TOLD_MAX)
       return refuse25("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
-    if (door) return { ...door, ...asked4 };
+    if (door) return { ...door, ...asked5 };
     const untested = this.#untested();
     return refuse25(
       "ASSISTANT_DRAFT_UNAVAILABLE",
@@ -233591,13 +234370,13 @@ function checkAnswer(answer2, { readLog = null, viewer = null } = {}) {
     const log = readLog instanceof ReadLog && (readLog.viewer === null || readLog.viewer === viewer) ? readLog : new ReadLog({ viewer });
     const withheld = [];
     const out = JSON.parse(JSON.stringify(answer2));
-    const say5 = (code) => ANSWERS_CHECKS[code].translation;
+    const say6 = (code) => ANSWERS_CHECKS[code].translation;
     const { holdOk, ruleOk, lookOk, codes } = judge3(answer2.sentences, answer2, log);
     const kept = /* @__PURE__ */ new Set();
     out.sentences = answer2.sentences.map((s, i) => {
       const code = codes[i];
       if (code) {
-        withheld.push({ sentence: `s${i + 1}`, code, translation: say5(code) });
+        withheld.push({ sentence: `s${i + 1}`, code, translation: say6(code) });
         return null;
       }
       kept.add(`s${i + 1}`);
@@ -233606,24 +234385,24 @@ function checkAnswer(answer2, { readLog = null, viewer = null } = {}) {
     answer2.holdings.forEach((_, i) => {
       if (!holdOk[i]) {
         out.holdings[i] = null;
-        withheld.push({ holding: `h${i + 1}`, code: "ANSWER_CITES_UNREAD", translation: say5("ANSWER_CITES_UNREAD") });
+        withheld.push({ holding: `h${i + 1}`, code: "ANSWER_CITES_UNREAD", translation: say6("ANSWER_CITES_UNREAD") });
       }
     });
     answer2.rules.forEach((_, i) => {
       if (!ruleOk[i]) {
         out.rules[i] = null;
-        withheld.push({ rule: `r${i + 1}`, code: "ANSWER_RULE_NOT_PLANE", translation: say5("ANSWER_RULE_NOT_PLANE") });
+        withheld.push({ rule: `r${i + 1}`, code: "ANSWER_RULE_NOT_PLANE", translation: say6("ANSWER_RULE_NOT_PLANE") });
       }
     });
     answer2.looks.forEach((_, i) => {
       if (!lookOk[i]) {
         out.looks[i] = null;
-        withheld.push({ look: `l${i + 1}`, code: "ANSWER_ABSENCE_WITHOUT_LEVEL", translation: say5("ANSWER_ABSENCE_WITHOUT_LEVEL") });
+        withheld.push({ look: `l${i + 1}`, code: "ANSWER_ABSENCE_WITHOUT_LEVEL", translation: say6("ANSWER_ABSENCE_WITHOUT_LEVEL") });
       }
     });
     if (answer2.summary && verdictIn(answer2.summary.text, [...answer2.holdings.map((h) => h.quote), ...answer2.rules.map((r) => r.quote)])) {
       out.summary = null;
-      withheld.push({ summary: true, code: "ANSWER_VERDICT_WORD", translation: say5("ANSWER_VERDICT_WORD") });
+      withheld.push({ summary: true, code: "ANSWER_VERDICT_WORD", translation: say6("ANSWER_VERDICT_WORD") });
     } else if (answer2.summary && answer2.summary.rests_on.some((id) => !kept.has(id))) {
       const first = withheld.find((w) => answer2.summary.rests_on.includes(w.sentence));
       out.summary = null;
@@ -233941,8 +234720,8 @@ function standingQuestionSet(self, {
     return refusal21("STANDING_NEEDS_SEARCH", given4(query) ? "a standing question keeps a saved query or a find, not both" : "a standing question keeps a saved query or a find, and neither was given");
   if (given4(find2)) return setFind(self, { author, owner, question, find: find2, cadence, ends });
   const ql = self.dep("query");
-  const asked4 = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
-  const saved = ql && typeof ql.savedForm === "function" ? ql.savedForm({ ...asked4, zone: self.zone() }, self.relations()) : { ok: false, reason: "SAVED_QUERY_EMPTY", detail: "no query compiler is reachable" };
+  const asked5 = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
+  const saved = ql && typeof ql.savedForm === "function" ? ql.savedForm({ ...asked5, zone: self.zone() }, self.relations()) : { ok: false, reason: "SAVED_QUERY_EMPTY", detail: "no query compiler is reachable" };
   if (!saved || saved.ok !== true) return saved;
   if (!CADENCES.includes(cadence)) return refusal21("BAD_CADENCE", `the cadence is one of ${CADENCES.join(", ")}`);
   const now = self.now();
@@ -244740,14 +245519,14 @@ var operatorFenceRow = (code) => rowOf18(OPERATOR_FENCE_CHECKS, "OPERATOR_FENCE_
 var identityFenceRow = (code) => rowOf18(GROUP_IDENTITY_FENCE_CHECKS, "GROUP_IDENTITY_FENCE_CHECKS", code);
 function namespaceGate(url) {
   if (!url.searchParams.has("store")) return null;
-  const asked4 = url.searchParams.get("store");
-  if (NAMESPACES2.includes(asked4)) return null;
+  const asked5 = url.searchParams.get("store");
+  if (NAMESPACES2.includes(asked5)) return null;
   return { status: 400, body: {
     ok: false,
     reason: "NAMESPACE_UNKNOWN",
     ...namespaceRow("NAMESPACE_UNKNOWN"),
-    error: `no namespace ${JSON.stringify(asked4.slice(0, 80))} exists on this instance`,
-    asked: asked4.slice(0, 80),
+    error: `no namespace ${JSON.stringify(asked5.slice(0, 80))} exists on this instance`,
+    asked: asked5.slice(0, 80),
     namespaces: [...NAMESPACES2]
   } };
 }
@@ -244806,11 +245585,11 @@ function confinedNamespaceGate(url, cred) {
 }
 function scopeFor(cls3, url) {
   const named3 = url.searchParams.has("store");
-  const asked4 = url.searchParams.get("store");
-  if (named3 && !NAMESPACES2.includes(asked4))
-    return { error: `no namespace ${JSON.stringify(asked4)} exists on this instance; the namespaces are ${NAMESPACES2.join(" and ")}` };
-  if (cls3 === "probe") return named3 && asked4 !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked4)}` } : { name: SCRATCH };
-  return { name: asked4 === SCRATCH ? SCRATCH : "bio" };
+  const asked5 = url.searchParams.get("store");
+  if (named3 && !NAMESPACES2.includes(asked5))
+    return { error: `no namespace ${JSON.stringify(asked5)} exists on this instance; the namespaces are ${NAMESPACES2.join(" and ")}` };
+  if (cls3 === "probe") return named3 && asked5 !== SCRATCH ? { error: `probe class is confined to the ${SCRATCH} namespace, refused request for ${JSON.stringify(asked5)}` } : { name: SCRATCH };
+  return { name: asked5 === SCRATCH ? SCRATCH : "bio" };
 }
 var BEARER = /^bearer ([\x21-\x7e]+)$/i;
 var ADDRESS_CREDENTIALS = Object.freeze(["token", "secret"]);
@@ -245000,8 +245779,8 @@ function runsNamed({ url = null, body = null } = {}) {
   return out;
 }
 function aiScopeDeclaration(writes) {
-  const asked4 = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
-  for (const op of asked4) {
+  const asked5 = Array.isArray(writes) ? writes.map((w) => String(w ?? "").trim()).filter(Boolean) : [];
+  for (const op of asked5) {
     if (!Object.prototype.hasOwnProperty.call(OPS4, op))
       return { refusal: { status: 403, body: {
         ok: false,
@@ -245020,25 +245799,25 @@ function aiScopeDeclaration(writes) {
         classes: Array.isArray(OPS4[op].classes) ? OPS4[op].classes : null
       } } };
   }
-  return { writes: [...new Set(asked4)].sort() };
+  return { writes: [...new Set(asked5)].sort() };
 }
 function aiConfinementDeclaration(confinedTo) {
   if (confinedTo === null || confinedTo === void 0) return { confinedTo: null };
-  const asked4 = String(confinedTo);
-  if (asked4 !== SCRATCH)
+  const asked5 = String(confinedTo);
+  if (asked5 !== SCRATCH)
     return { refusal: { status: 403, body: {
       ok: false,
       reason: "AI_CONFINEMENT_NOT_SCRATCH",
       ...aiScopeRow("AI_CONFINEMENT_NOT_SCRATCH"),
-      detail: `'${asked4.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
-      asked: asked4.slice(0, 80),
+      detail: `'${asked5.slice(0, 80)}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${JSON.stringify(SCRATCH)}; ${JSON.stringify("bio")} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.`,
+      asked: asked5.slice(0, 80),
       confinements: [SCRATCH]
     } } };
   return { confinedTo: SCRATCH };
 }
 var hexOf6 = (raw) => [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
-async function aiCredentialMint(asked4, cls3) {
-  const a = asked4 && typeof asked4 === "object" && !Array.isArray(asked4) ? asked4 : {};
+async function aiCredentialMint(asked5, cls3) {
+  const a = asked5 && typeof asked5 === "object" && !Array.isArray(asked5) ? asked5 : {};
   const declared2 = aiScopeDeclaration(a.writes);
   if (declared2.refusal) return { refusal: { status: declared2.refusal.status, body: { ...declared2.refusal.body, op: "aicredentialmint", cls: cls3 } } };
   const confinement = aiConfinementDeclaration(a.confinedTo);
@@ -245452,12 +246231,12 @@ async function doorWindowGate({
       const digest2 = await liveSessionDigest({ req, env, doAnswer: doAnswer2, credential, background });
       if (digest2 !== null) body.session = digest2;
     }
-    const asked4 = bioStore(env).fetch(new Request("http://do/doorwindow", {
+    const asked5 = bioStore(env).fetch(new Request("http://do/doorwindow", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body)
     }));
-    out = typeof doAnswer2 === "function" ? await doAnswer2(asked4) : null;
+    out = typeof doAnswer2 === "function" ? await doAnswer2(asked5) : null;
   } catch {
     out = null;
   }
@@ -245516,12 +246295,12 @@ async function securityTally({ op = null, answer: answer2 = null, presented = nu
   }
   try {
     if (env && env.STORE && typeof env.STORE.get === "function") {
-      const asked4 = bioStore(env).fetch(new Request("http://do/securitycount", {
+      const asked5 = bioStore(env).fetch(new Request("http://do/securitycount", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(counted)
       }));
-      const out = typeof doAnswer2 === "function" ? await doAnswer2(asked4) : { answered: !!await asked4 };
+      const out = typeof doAnswer2 === "function" ? await doAnswer2(asked5) : { answered: !!await asked5 };
       if (!out || !out.answered)
         console.warn(`admission: a security count was not written and is dropped (correlation ${out && typeof out.correlation === "string" ? out.correlation : "none"})`);
     }
@@ -249931,7 +250710,28 @@ var COMPOSITION = {
    *  inert, so this file names it nowhere. */
   unreachable_to_a_machine: VERSION_STRENGTH_INERT_SOURCES,
   ungraded_leg: "inert, and NAMED. It contributes nothing to the calculation, floors nothing and unrates nothing \u2014 and it is named in the description, per axis, with the reason. Inert never means invisible (DEC-18).",
-  where_the_grades_come_from: "the resolutions the legs rest on, through the record's earned-basis registry, exactly as `op=cite` already fills them"
+  where_the_grades_come_from: "the resolutions the legs rest on, through the record's earned-basis registry, exactly as `op=cite` already fills them",
+  /** R51 (T50; N1143; `agent-worker` R90): what a check run's compose step is handed, named so the model can name the
+   *  leg an accepted reading rests on. This module's own words, not a clause (R21 binds the clauses only), and it reads
+   *  no holdings (R22): each key is named once here as a selector, listed nowhere else (R23). */
+  handed_to_compose: Object.freeze({
+    defined_by: "agent-worker R90",
+    held_document: Object.freeze({
+      in: "the facts' holdings (by_document)",
+      carries: Object.freeze(["record_id", "capture_sha"]),
+      says: "each held document carries the record id a leg's target takes (record_id) and the fingerprint of the capture it was read from (capture_sha)"
+    }),
+    unchained_item: Object.freeze({
+      in: "the facts' unchained_items",
+      carries: Object.freeze(["record_id"]),
+      says: "an item with no chain carries its record id, or null when the record answers none"
+    }),
+    leg: Object.freeze({
+      target: "a leg's target is the record_id of the document it rests on",
+      extent: "a leg's extent_capture is that document's capture_sha"
+    }),
+    when_null: "a document whose record_id is null is not cited as a leg: it is named as held without a record id, and no leg is written against it"
+  })
 };
 var DESCRIPTION_STANDARD = {
   held_to: "a commit message's standard: what this composition says and why",
@@ -250026,6 +250826,44 @@ __export(checks_exports73, {
   EXPLORE_CHECKS: () => EXPLORE_CHECKS,
   EXPLORE_CHECK_KEYS: () => EXPLORE_CHECK_KEYS
 });
+
+// src/question-explorer/words.mjs
+var WORD_KEYS6 = Object.freeze([
+  "question-explorer.capture_page_act",
+  "question-explorer.explorer_false_alarm",
+  "question-explorer.exploring_question",
+  "question-explorer.gate_read",
+  "question-explorer.investigate_mode_explorer",
+  "question-explorer.known",
+  "question-explorer.label.exploring_question",
+  "question-explorer.promotion_question_writes",
+  "question-explorer.proposed_connection",
+  "question-explorer.provider_explorer_needs",
+  "question-explorer.says.exploring_run_enabled",
+  "question-explorer.system_explored_question",
+  "question-explorer.system_found_exploring",
+  "refusal.EXPLORE_ACCEPT_INVALID",
+  "refusal.EXPLORE_BEARING_INVALID",
+  "refusal.EXPLORE_FIND_UNKNOWN",
+  "refusal.EXPLORE_MUTE_IN_PROJECT",
+  "refusal.EXPLORE_NO_RUN",
+  "refusal.EXPLORE_NO_SUCH_FIND",
+  "refusal.EXPLORE_PAGES_BOUND",
+  "refusal.EXPLORE_PERSON_CAP_REACHED",
+  "refusal.EXPLORE_PERSON_NOT_TIED",
+  "refusal.EXPLORE_READ_KEPT_AWAY",
+  "refusal.EXPLORE_RUN_ENDED"
+]);
+var KEYS4 = new Set(WORD_KEYS6);
+var asked4 = /* @__PURE__ */ new Set();
+function say4(key2, vars = {}) {
+  if (!KEYS4.has(key2)) throw new Error(`question-explorer: ${key2} is not one of this module's word keys`);
+  asked4.add(key2);
+  return word(key2, vars);
+}
+var rowWord6 = (code) => say4(`refusal.${code}`);
+
+// src/question-explorer/checks.mjs
 var n = 0;
 var row8 = (where, translation) => Object.freeze({
   check: `C-145.${++n}`,
@@ -250034,28 +250872,28 @@ var row8 = (where, translation) => Object.freeze({
 });
 var EXPLORE_CHECKS = Object.freeze({
   /* R9: a look aimed at a person no member tied to the question. Recorded on the run; the run goes on. */
-  EXPLORE_PERSON_NOT_TIED: row8("look", "The system looks at a person only when a member has tied that person to the question. This look was not made, and the exploring goes on without it."),
+  EXPLORE_PERSON_NOT_TIED: row8("look", rowWord6("EXPLORE_PERSON_NOT_TIED")),
   /* R10: the run's distinct persons are at the cap; the run ends its step set aside (R8). */
-  EXPLORE_PERSON_CAP_REACHED: row8("look", "An exploring run looks at no more than 20 people. This one reached that number, so it stopped and its step was set aside."),
+  EXPLORE_PERSON_CAP_REACHED: row8("look", rowWord6("EXPLORE_PERSON_CAP_REACHED")),
   /* R3: an act under a run that is not an exploring run this module opened, or not the caller's. */
-  EXPLORE_NO_RUN: row8("run", "No exploring run by that name is open for this caller. Nothing was done."),
-  EXPLORE_RUN_ENDED: row8("run", "This exploring run has ended. Nothing was done."),
+  EXPLORE_NO_RUN: row8("run", rowWord6("EXPLORE_NO_RUN")),
+  EXPLORE_RUN_ENDED: row8("run", rowWord6("EXPLORE_RUN_ENDED")),
   /* R4: a find that is none of the three kinds, not held, or out of the principal's sight (answered alike). */
-  EXPLORE_FIND_UNKNOWN: row8("find", "The system can offer only a capture, a passage or a connection the record holds and the paying account may see. Nothing was offered."),
+  EXPLORE_FIND_UNKNOWN: row8("find", rowWord6("EXPLORE_FIND_UNKNOWN")),
   /* R4: a bearing that is not one of the three, or no account of how. */
-  EXPLORE_BEARING_INVALID: row8("find", "A find is gauged as supporting the question, cutting against it, or unclear, with a short account of how. Nothing was offered."),
+  EXPLORE_BEARING_INVALID: row8("find", rowWord6("EXPLORE_BEARING_INVALID")),
   /* R13: a document under a "no AI" material limit. */
-  EXPLORE_READ_KEPT_AWAY: row8("read", "This document is kept away from the assistant, so the system did not read it."),
+  EXPLORE_READ_KEPT_AWAY: row8("read", rowWord6("EXPLORE_READ_KEPT_AWAY")),
   /* R13: a read past the run's `pages` bound. Retired at B8 (K2499): `run-productions` R24 mints the pages refusals;
      the row stays so no number is reused, and nothing here mints it. */
-  EXPLORE_PAGES_BOUND: row8("read", "This exploring run has read as many pages as it may. It stopped where it was."),
+  EXPLORE_PAGES_BOUND: row8("read", rowWord6("EXPLORE_PAGES_BOUND")),
   /* R6: a door asked of a find the member cannot see or that was not offered to her (answered as absent). */
-  EXPLORE_NO_SUCH_FIND: row8("doors", "No find by that name was offered to you. Nothing was recorded."),
+  EXPLORE_NO_SUCH_FIND: row8("doors", rowWord6("EXPLORE_NO_SUCH_FIND")),
   /* R6: accepting is a member's act; a form outside `record-grammar` R52's three. */
-  EXPLORE_ACCEPT_INVALID: row8("doors", "A find is accepted by a member, as found, edited, or set aside for her own. Nothing was recorded."),
+  EXPLORE_ACCEPT_INVALID: row8("doors", rowWord6("EXPLORE_ACCEPT_INVALID")),
   /* R6: muting is for a follower outside every project drawing on the question; in a project it is the queue's
      dismissal (`queue` R27). */
-  EXPLORE_MUTE_IN_PROJECT: row8("doors", "You take part in a project drawing on this question, so a find is dismissed there, for the project. Nothing was recorded here.")
+  EXPLORE_MUTE_IN_PROJECT: row8("doors", rowWord6("EXPLORE_MUTE_IN_PROJECT"))
 });
 var EXPLORE_CHECK_KEYS = Object.freeze(Object.keys(EXPLORE_CHECKS));
 
@@ -255209,14 +256047,14 @@ var Monitoring = class {
     const who4 = typeof author === "string" ? author.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's own frequency is set by a named member, with the member's reason; a machine may suggest it and never sets it. Nothing was written.");
-    const asked4 = typeof address === "string" && address.trim() ? address.trim() : null;
-    const norm3 = asked4 ? normalizeAddress(asked4) : null;
+    const asked5 = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm3 = asked5 ? normalizeAddress(asked5) : null;
     const rows4 = norm3 ? this.#subjectsAt(norm3, viewer) : null;
     if (!rows4)
       return frequencyRefusal(
         "NO_SUCH_ADDRESS",
         "no monitored document this viewer may see is checked at that address; one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
-        { address: asked4 }
+        { address: asked5 }
       );
     if (!(frequency === null || typeof frequency === "string" && MONITOR_FREQ.includes(frequency)))
       return frequencyRefusal("BAD_FREQUENCY", `the frequency must be one of ${MONITOR_FREQ.join(", ")}, or null to return the address to the frequency its documents set. Nothing was written.`);
@@ -255230,7 +256068,7 @@ var Monitoring = class {
     const at49 = stampInstant("second", this.now());
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm3).n;
     this.sql.exec(`INSERT INTO monitor_address_frequency (address_norm, seq, address, frequency, reason, reason_text, author, at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked4, frequency, reason2, custom ? words24 : null, member2, at49);
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked5, frequency, reason2, custom ? words24 : null, member2, at49);
     const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm3).map(settingView);
     return {
       ok: true,
@@ -255254,14 +256092,14 @@ var Monitoring = class {
     const who4 = typeof by === "string" ? by.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's end date is set by a named member's act; a machine may suggest it and never sets it. Nothing was written.");
-    const asked4 = typeof address === "string" && address.trim() ? address.trim() : null;
-    const norm3 = asked4 ? normalizeAddress(asked4) : null;
+    const asked5 = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm3 = asked5 ? normalizeAddress(asked5) : null;
     const rows4 = norm3 ? this.#subjectsAt(norm3, viewer) : null;
     if (!rows4)
       return frequencyRefusal(
         "NO_SUCH_ADDRESS",
         "no monitored document this viewer may see is checked at that address; one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
-        { address: asked4 }
+        { address: asked5 }
       );
     const zone = this.#zone();
     const today2 = zone ? localDayOf2(this.now(), zone) : null;
@@ -255276,7 +256114,7 @@ var Monitoring = class {
       `INSERT INTO monitor_address_end (address_norm, seq, address, until, set_by, at) VALUES (?, ?, ?, ?, ?, ?)`,
       norm3,
       seq,
-      asked4,
+      asked5,
       until,
       member2,
       at49
@@ -255981,7 +256819,7 @@ var Monitoring = class {
    *  the request's id and its bundle named as the authorisation, in the request's bundle's project. `say`, when given
    *  (R65's `land`, for the link sweep), supplies the bundle's `title`, `summary`, `notes` and `trigger`. Answers `{ok:
    *  true, bundle_id, state}`, or `{ok: false, reason, detail}` with the promotion's refusal relayed; never throws. */
-  #land(q10, filed, at49, say5 = null) {
+  #land(q10, filed, at49, say6 = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
@@ -255994,7 +256832,7 @@ var Monitoring = class {
       const project = home2 && typeof home2.project === "string" && home2.project ? home2.project : null;
       return this.record.transact(() => {
         const id = `${this.record.allocId("INFO", at49.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
-        const title = (say5 ? say5.title : `Gathered for ${q10.id}: ${q10.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = (say6 ? say6.title : `Gathered for ${q10.id}: ${q10.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at49;
         const md = [
           "---",
@@ -256030,16 +256868,16 @@ var Monitoring = class {
           "",
           "## Summary",
           "",
-          (say5 ? say5.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q10.id} of ${q10.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          (say6 ? say6.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q10.id} of ${q10.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
           "",
           "## Provenance Notes",
           "",
-          say5 ? say5.notes : `Gathered for the named request ${q10.id}, carried by ${q10.bundle}'s data/gathering.json, which authorised the fetch; locator ${q10.locators.indexOf(filed.locator) + 1} of ${q10.locators.length} in the request's order. Collected ${at49}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
+          say6 ? say6.notes : `Gathered for the named request ${q10.id}, carried by ${q10.bundle}'s data/gathering.json, which authorised the fetch; locator ${q10.locators.indexOf(filed.locator) + 1} of ${q10.locators.length} in the request's order. Collected ${at49}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
           "",
           "## Session Log",
           "",
           `### Session ${at49} | Collected | ${GATHERING_AUTHOR}`,
-          `Trigger: ${say5 ? say5.trigger : `named request ${q10.id} (${q10.bundle})`}`,
+          `Trigger: ${say6 ? say6.trigger : `named request ${q10.id} (${q10.bundle})`}`,
           "Changes: created from the daemon's capture for the named request.",
           "",
           "## Review Notes",
@@ -256140,8 +256978,8 @@ var Monitoring = class {
    *  they carry no shell baseline this remedy could fix. */
   driveShells({ viewer = null, limit = null, after: after2 = null } = {}) {
     const gate = viewerPredicate(viewer);
-    const asked4 = Number(limit);
-    const cap = Number.isFinite(asked4) && asked4 > 0 ? Math.min(DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked4)) : DRIVE_SHELLS_LIMIT_DEFAULT;
+    const asked5 = Number(limit);
+    const cap = Number.isFinite(asked5) && asked5 > 0 ? Math.min(DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked5)) : DRIVE_SHELLS_LIMIT_DEFAULT;
     const where = [`bp.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...after2 ? [`b.bundle_id > ?`] : []];
     const raw = this.#rows(
       `SELECT b.bundle_id AS id, bp.source_locator AS locator, bp.monitor_enabled AS monitored
@@ -256339,7 +257177,7 @@ var Monitoring = class {
       },
       running: this.#tickRunning,
       ranked: (list6, item3, rank7, now) => this.#ranked(list6, item3, rank7, now),
-      land: (request2, filed, at49, say5 = null) => this.#land(request2, filed, at49, say5),
+      land: (request2, filed, at49, say6 = null) => this.#land(request2, filed, at49, say6),
       gate: (viewer) => viewerPredicate(viewer),
       recheckMs: () => this.#archiveTickMs()
     });
@@ -256606,10 +257444,10 @@ var Monitoring = class {
    *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
    *  disagreement only a hidden version makes would say that version exists. */
   #withheld(row12, sees) {
-    const { versions, newer_unmonitored: newer, disagreement, asked_after_end: asked4, ...rest } = row12;
+    const { versions, newer_unmonitored: newer, disagreement, asked_after_end: asked5, ...rest } = row12;
     const out = { ...rest };
     if (Array.isArray(versions)) out.versions = versions.filter(sees);
-    if (Array.isArray(asked4)) out.asked_after_end = asked4.filter(sees);
+    if (Array.isArray(asked5)) out.asked_after_end = asked5.filter(sees);
     const newerSeen = Array.isArray(newer) ? newer.filter(sees) : [];
     if (newerSeen.length) out.newer_unmonitored = newerSeen;
     if (disagreement && typeof disagreement === "object") {
@@ -259216,8 +260054,8 @@ function pageOf3(addr, count2) {
   const skipRaw = queryParam(addr.query, "$skip");
   const topRaw = queryParam(addr.query, "$top");
   const skip = skipRaw !== null && /^\d+$/.test(skipRaw) ? Number(skipRaw) : 0;
-  const asked4 = topRaw !== null && /^\d+$/.test(topRaw) ? Number(topRaw) : null;
-  const top2 = asked4 !== null && asked4 > 0 && asked4 < PAGE_SIZE ? asked4 : PAGE_SIZE;
+  const asked5 = topRaw !== null && /^\d+$/.test(topRaw) ? Number(topRaw) : null;
+  const top2 = asked5 !== null && asked5 > 0 && asked5 < PAGE_SIZE ? asked5 : PAGE_SIZE;
   return { skip, top: top2, may_continue: count2 >= top2 };
 }
 function nextPage(locator, page2) {
@@ -260287,7 +261125,7 @@ var Following = class {
   /* R29, R30, R31: `{id}` for a registered entity of kind `proceeding` that `viewer` may see; else `{refusal}`: absent or
      unseen alike `NO_SUCH_ENTITY` (`entities.noSuchEntity`), another kind `NOT_A_PROCEEDING` (`entities.notAProceeding`,
      the one site minting it). `asked` finishes the sentence naming what was asked of it. */
-  #proceedingNamed(value, viewer, asked4) {
+  #proceedingNamed(value, viewer, asked5) {
     const id = typeof value === "string" ? value.trim() : "";
     let r = null;
     if (id && said10(viewer) && viewerPredicate(viewer).scope !== "DENY") {
@@ -260300,7 +261138,7 @@ var Following = class {
     const e2 = r && r.ok && r.found && r.entity ? r.entity : null;
     if (!e2) return { refusal: noSuchEntity(id || null) };
     if (e2.kind !== "proceeding")
-      return { refusal: notAProceeding(`${asked4}, an entity of kind proceeding; the entity named is of kind ${e2.kind}.`, { entity_id: id, kind: e2.kind }) };
+      return { refusal: notAProceeding(`${asked5}, an entity of kind proceeding; the entity named is of kind ${e2.kind}.`, { entity_id: id, kind: e2.kind }) };
     return { id };
   }
   /* R29: the newest capture of a register followed for a proceeding handed to `events.followedRegister` (its R38), as
@@ -262943,10 +263781,10 @@ function runnerReport(host) {
 }
 async function memberVersions(env) {
   const out = {};
-  const asked4 = /* @__PURE__ */ new Map();
+  const asked5 = /* @__PURE__ */ new Map();
   const ask3 = (member2, binding) => {
-    if (!asked4.has(member2)) asked4.set(member2, askMemberVersion(env, member2, binding));
-    return asked4.get(member2);
+    if (!asked5.has(member2)) asked5.set(member2, askMemberVersion(env, member2, binding));
+    return asked5.get(member2);
   };
   const hostBinding = (FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) || [])[1];
   await Promise.all(FLEET_BINDINGS.map(async ([member2, binding]) => {
@@ -265497,17 +266335,17 @@ var InstanceSetup = class _InstanceSetup {
    *  each writing nothing: a missing or machine `by` `MACHINE_CANNOT_SET_INFO_LEVEL`; a `level` other than `prompt` or
    *  `pause`, or an `asked` other than absent, `true` or `false`, `INFO_LEVEL_UNKNOWN` (K2996). Each set is appended with
    *  when. */
-  infoLevelSet({ level = void 0, asked: asked4 = void 0, by = null } = {}) {
+  infoLevelSet({ level = void 0, asked: asked5 = void 0, by = null } = {}) {
     const who4 = typeof by === "string" ? by.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return refusal36("MACHINE_CANNOT_SET_INFO_LEVEL", "how quickly explanations open is set by the member, from their own signed-in session. Nothing was changed.", { by: by ?? null });
     if (!INFO_LEVELS.includes(level))
       return refusal36("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not` : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
-    if (asked4 !== void 0 && asked4 !== null && asked4 !== true && asked4 !== false)
+    if (asked5 !== void 0 && asked5 !== null && asked5 !== true && asked5 !== false)
       return refusal36("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, or not at all. Nothing was changed.");
     const before3 = this.#infoLevelRow(who4);
     const at49 = this.#iso();
-    const askedAt = before3 && before3.asked_at ? before3.asked_at : asked4 === true ? at49 : null;
+    const askedAt = before3 && before3.asked_at ? before3.asked_at : asked5 === true ? at49 : null;
     this.#sql.exec(`INSERT INTO member_info_levels (member, level, asked_at, set_at) VALUES (?, ?, ?, ?)`, who4, level, askedAt, at49);
     return {
       ok: true,
@@ -265848,22 +266686,22 @@ var InstanceSetup = class _InstanceSetup {
     if (keys !== void 0 && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
       return { refused: refusal36("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} different keys, or none for the first words still missing. Nothing was sent.`) };
     const shown3 = this.#shownAdoptions(tag2);
-    let asked4;
+    let asked5;
     if (Array.isArray(keys)) {
-      asked4 = [];
+      asked5 = [];
       for (const k of keys) {
         const w = this.#translationWord(k);
         if (w.refused) return w;
         if (shown3.has(w.word.key))
           return { refused: refusal36("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag2}, so the assistant does not draft it. Nothing was sent.`, { key: w.word.key, language: tag2 }) };
-        asked4.push(w.word);
+        asked5.push(w.word);
       }
     } else {
-      asked4 = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
+      asked5 = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
     }
     const names2 = this.#localNames(tag2);
     const offered_official = [], words24 = [];
-    for (const w of asked4) {
+    for (const w of asked5) {
       if (!Array.isArray(keys) && words24.length >= TRANSLATION_DRAFT_MAX) break;
       const n2 = _InstanceSetup.#officialFor(w, names2);
       if (n2) {
@@ -265875,7 +266713,7 @@ var InstanceSetup = class _InstanceSetup {
     if (!words24.length)
       return { refused: refusal36(
         "TRANSLATION_NOTHING_TO_DRAFT",
-        `every word asked for is ${asked4.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
+        `every word asked for is ${asked5.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
         { language: tag2, offered_official }
       ) };
     return { direction, tag: tag2, words: words24, offered_official };
@@ -265953,8 +266791,8 @@ var InstanceSetup = class _InstanceSetup {
     not_drafted = null,
     by = null
   } = {}) {
-    const asked4 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words24) ? words24.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
-    const req = this.#draftRequest({ language, direction, keys: asked4, key: key2, by });
+    const asked5 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words24) ? words24.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
+    const req = this.#draftRequest({ language, direction, keys: asked5, key: key2, by });
     if (req.refused) return req.refused;
     const unavailable = (why2) => draftUnavailable(`${why2} Nothing was saved.`);
     const at49 = this.#iso();
@@ -267639,8 +268477,8 @@ function draftDue(op, body) {
     return !!r && r.ok === true && Array.isArray(r.items) && r.items.length > 0;
   return DRAFT_OPS.includes(op) && !!r && r.ok === false && (r.reason === "ASSISTANT_DRAFT_UNAVAILABLE" || r.code === "ASSISTANT_DRAFT_UNAVAILABLE");
 }
-function draftAsk(op, asked4, { member: member2, session, firsthand, pack, owner = null }) {
-  const b = asked4 && typeof asked4 === "object" && !Array.isArray(asked4) ? asked4 : {};
+function draftAsk(op, asked5, { member: member2, session, firsthand, pack, owner = null }) {
+  const b = asked5 && typeof asked5 === "object" && !Array.isArray(asked5) ? asked5 : {};
   if (op === STATUS_REPORT_ASSIST) {
     const o = owner && typeof owner === "object" ? owner : {};
     return {
@@ -269245,13 +270083,13 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     if (THEME === "device") root.removeAttribute("data-theme");
     else root.setAttribute("data-theme", THEME);
   }
-  async function setLevel(v, asked4) {
+  async function setLevel(v, asked5) {
     LEVEL = v === "pause" ? "pause" : "prompt";
     local.set("cs-level", LEVEL);
-    const body = asked4 ? { level: LEVEL, asked: true } : { level: LEVEL };
+    const body = asked5 ? { level: LEVEL, asked: true } : { level: LEVEL };
     if (can("infolevelset")) {
       const a = await call("infolevelset", { body });
-      if (a.kind === "ok" && asked4) LEVEL_INFO = Object.assign({}, LEVEL_INFO || {}, { asked_at: "now" });
+      if (a.kind === "ok" && asked5) LEVEL_INFO = Object.assign({}, LEVEL_INFO || {}, { asked_at: "now" });
     }
     draw2();
   }
@@ -271174,8 +272012,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     const firstKey = "cs-first:" + (ME.member || "");
     if (!local.get(firstKey)) local.set(firstKey, String(Date.now()));
     const first = Math.min(Number(local.get(firstKey)) || Date.now(), LEVEL_INFO && LEVEL_INFO.set_at ? Date.parse(LEVEL_INFO.set_at) || Date.now() : Date.now());
-    const asked4 = LEVEL_INFO && LEVEL_INFO.asked_at || local.get("cs-level-asked");
-    ASK_LEVEL = !asked4 && Date.now() - first >= 30 * 24 * 3600 * 1e3;
+    const asked5 = LEVEL_INFO && LEVEL_INFO.asked_at || local.get("cs-level-asked");
+    ASK_LEVEL = !asked5 && Date.now() - first >= 30 * 24 * 3600 * 1e3;
     draw2();
   }
   async function loadReach() {
@@ -274657,7 +275495,7 @@ __export(panel_exports, {
 });
 
 // src/screens-settings/keys.mjs
-var KEYS4 = Object.freeze([
+var KEYS5 = Object.freeze([
   "act.aikeepaway.does",
   "act.declaredstakeset.does",
   "act.declaredstakeset.label.group",
@@ -275262,7 +276100,7 @@ var KEYS4 = Object.freeze([
 // src/screens-settings/panel.mjs
 var USE_KINDS4 = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
 var PANEL_KEYS = Object.freeze([
-  ...KEYS4.filter((k) => k.startsWith("screen.panel.")),
+  ...KEYS5.filter((k) => k.startsWith("screen.panel.")),
   ...USE_KINDS4.map((u) => `ai.use.${u}.name`),
   "ai.explore.no",
   "ai.explore.ask",
@@ -275394,7 +276232,7 @@ function aiLimitRefused(refusal39, cs) {
 var SCREEN_WORDS2 = Object.freeze([]);
 
 // src/screens-settings/index.mjs
-var own9 = (...prefixes) => KEYS4.filter((k) => prefixes.some((p3) => k.startsWith(p3)));
+var own9 = (...prefixes) => KEYS5.filter((k) => prefixes.some((p3) => k.startsWith(p3)));
 var PANEL = PANEL_KEYS;
 var STATES5 = ["state.loading", "state.empty", "state.failed"];
 var LABELS = (screen2, ops) => ops.flatMap((op) => [`act.${op}.label.${screen2}`, `act.${op}.does`]);
@@ -275951,7 +276789,7 @@ function renderHeld(cs, view) {
     const reason2 = why2.startsWith("CRUCIAL") ? "screen.held.ineligible.crucial" : why2.startsWith("CONTESTED") ? "screen.held.ineligible.contested" : null;
     return `${cs.mark("gap", "refused")} ${reason2 ? cs.w("screen.held.ineligible", { reason: { html: cs.w(reason2) } }) + " " : ""}${cs.w("screen.held.ineligible.alone")}`;
   };
-  const asked4 = (r) => {
+  const asked5 = (r) => {
     const f17 = r.captured_for;
     if (!f17) return r.captured_for_basis ? `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.forundetermined", { reason: r.captured_for_basis })}` : "";
     return (Array.isArray(f17.questions) ? f17.questions : []).map((q10) => `<span class="meta">${cs.w("screen.held.for", { asker: q10.asker || "", title: q10.title || "" })}</span>`).join("") + (f17.withheld ? `${cs.mark("gap", "withheld")} ${cs.w("screen.held.withheld")}` : "");
@@ -275982,7 +276820,7 @@ function renderHeld(cs, view) {
       items: v.held,
       key: (r) => r.bundle_id,
       pick: true,
-      cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}<span class="meta">${grade2(r)} ${age(r.age_days)} \xB7 ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}` + (r.source && r.source.address ? ` \xB7 ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>" + eligibility(r) + asked4(r) + files(r)]
+      cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}<span class="meta">${grade2(r)} ${age(r.age_days)} \xB7 ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}` + (r.source && r.source.address ? ` \xB7 ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>" + eligibility(r) + asked5(r) + files(r)]
     }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""),
     { empty: "screen.held.empty" }
   );
@@ -277853,12 +278691,12 @@ var finder = Object.freeze({
       const plain20 = w.every(function(x) {
         return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
       });
-      const asked4 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+      const asked5 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
         return "passage:" + x;
       }).join(" ") + ")" : q10;
       out.search = {
         op: "search",
-        query: { q: asked4, limit: "50", snippet: "160" },
+        query: { q: asked5, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -277939,10 +278777,10 @@ var finder = Object.freeze({
         const plain20 = w.every(function(x) {
           return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
         });
-        const asked4 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        const asked5 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
           return "passage:" + x;
         }).join(" ") + ")" : q10;
-        return { query: { q: asked4, limit: "50", snippet: "160" } };
+        return { query: { q: asked5, limit: "50", snippet: "160" } };
       }
     },
     // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
@@ -278407,12 +279245,12 @@ var answers = Object.freeze({
       const plain20 = w.every(function(x) {
         return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
       });
-      const asked4 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+      const asked5 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
         return "passage:" + x;
       }).join(" ") + ")" : ui.q;
       out.search = {
         op: "search",
-        query: { q: asked4, limit: "50", snippet: "160" },
+        query: { q: asked5, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -278545,10 +279383,10 @@ var answers = Object.freeze({
         const plain20 = w.every(function(x) {
           return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
         });
-        const asked4 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        const asked5 = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
           return "passage:" + x;
         }).join(" ") + ")" : q10;
-        return { query: { q: asked4, limit: "50", snippet: "160" } };
+        return { query: { q: asked5, limit: "50", snippet: "160" } };
       }
     },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
@@ -279211,8 +280049,8 @@ function render2(cs, view) {
     return `<p data-visibility="${v.setting === "discoverable" ? "discoverable" : "hidden"}">${W2(v.setting === "discoverable" ? "project.visibility.discoverable" : "project.visibility.hidden")}</p>` + lines2.join("") + (owner ? cs.field("project-visibility-why", "shell.reason", { area: true, rec: true, help: "shell.reason.help" }) + cs.act("projectvisibilityset", { label: "act.projectvisibilityset.label.project", data: { to: v.setting === "discoverable" ? "hidden" : "discoverable" } }) : "");
   })));
   out.push(cs.sec("screen.project.account.head", cs.state(!d.participants || d.participants.state === "loading" ? { state: "loading" } : later3("account", "projectaccountstate", { project: id }), (a) => {
-    const say5 = a.on === false && a.held ? "screen.project.account.off" : a.serving === "project" || a.on && a.held ? "screen.project.account.project" : "screen.project.account.member";
-    return `<p>${W2(say5)}</p>`;
+    const say6 = a.on === false && a.held ? "screen.project.account.off" : a.serving === "project" || a.on && a.held ? "screen.project.account.project" : "screen.project.account.member";
+    return `<p>${W2(say6)}</p>`;
   }) + `<p class="mk-small">${W2("screen.project.account.where")} <a class="cs-btn" data-tone="quiet" href="/app/projectai/${cs.esc(id)}" data-nav>${W2("screen.projectai.name")}</a></p>`));
   out.push(cs.sec("screen.project.members.head", cs.state("participants", view, () => {
     const rows4 = people.map((x) => {
@@ -279741,8 +280579,8 @@ function render3(cs, view) {
   const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
   const isMine = (s) => !!(s && member2 && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")));
   const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && ui.withheld !== s.id) || null;
-  const asked4 = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
-  const asking = !!ui.asking && !(asked4 && asked4.status !== "running");
+  const asked5 = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
+  const asking = !!ui.asking && !(asked5 && asked5.status !== "running");
   const lastMine = runList.find(isMine) || null;
   const ending = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
   const endedPart = (withAsk) => lastMine && lastMine.status !== "running" && !myRun && !asking ? `<div data-run="ended"><p class="mk-note">${W2("screen.assistant.run.ended", { why: ending(lastMine.condition) || String(lastMine.status || "") })}</p>${withAsk ? askAct : ""}</div>` : "";
@@ -281394,8 +282232,8 @@ function render6(cs, view) {
   }
   out.push(`<p class="mk-sub">${W2(S4 + "purpose")}</p>`);
   out.push(cs.sec(S4 + "account.head", cs.state("state", view, (a) => {
-    const say5 = !a.held ? S4 + "account.none" : a.on === false ? S4 + "account.off" : a.serving === false ? S4 + "account.suspended" : a.kind === "signin" ? S4 + "account.signin" : S4 + "account.key";
-    let h = `<p data-account="${E2(!a.held ? "none" : a.on === false ? "off" : a.serving === false ? "suspended" : String(a.kind || ""))}">${W2(say5)}</p>`;
+    const say6 = !a.held ? S4 + "account.none" : a.on === false ? S4 + "account.off" : a.serving === false ? S4 + "account.suspended" : a.kind === "signin" ? S4 + "account.signin" : S4 + "account.key";
+    let h = `<p data-account="${E2(!a.held ? "none" : a.on === false ? "off" : a.serving === false ? "suspended" : String(a.kind || ""))}">${W2(say6)}</p>`;
     if (a.held && (a.by || a.set_at))
       h += `<p class="mk-small">${W2(S4 + "account.since", { who: String(a.by || "").replace(/^member:/, ""), date: { html: a.set_at ? cs.date(String(a.set_at), { year: true }) : "" } })}</p>`;
     if (!isOwner) return h + `<p class="mk-small">${W2(S4 + "owners")}</p>`;
@@ -282162,8 +283000,8 @@ var PARTS3 = {
       cs.set("run", run2);
       return;
     }
-    const asked4 = r.label && r.label.asked_by ? String(r.label.asked_by).replace(/^member:/, "") : me.member;
-    const handle = asked4 === me.member && me.handle ? me.handle : asked4 || me.handle || "";
+    const asked5 = r.label && r.label.asked_by ? String(r.label.asked_by).replace(/^member:/, "") : me.member;
+    const handle = asked5 === me.member && me.handle ? me.handle : asked5 || me.handle || "";
     P.place(cs, view, text8, "screen.guide.draft.machine", { handle }, !!(r.untested || r.label && r.label.untested));
     cs.set("run", run2);
   }
@@ -287817,15 +288655,15 @@ var plan = Object.freeze({
         });
       });
       const pr = view.data.proposals;
-      const asked4 = view.ui.ask || null;
+      const asked5 = view.ui.ask || null;
       let askNote = "", fresh = null;
-      if (asked4 && asked4.refused) {
-        askNote = '<p class="mk-note" role="alert" data-run="refused">' + asked4.refused + "</p>";
-      } else if (asked4 && asked4.run) {
-        const st = P.later(cs, view, "run", "airun", { run: asked4.run }, String(view.ui.seq || 0));
+      if (asked5 && asked5.refused) {
+        askNote = '<p class="mk-note" role="alert" data-run="refused">' + asked5.refused + "</p>";
+      } else if (asked5 && asked5.run) {
+        const st = P.later(cs, view, "run", "airun", { run: asked5.run }, String(view.ui.seq || 0));
         const session = st.state === "ok" && st.value && st.value.session ? st.value.session : null;
-        if (session) view.ui.askStatus = { run: asked4.run, status: session.status };
-        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked4.run ? view.ui.askStatus.status : null;
+        if (session) view.ui.askStatus = { run: asked5.run, status: session.status };
+        const status = session ? session.status : view.ui.askStatus && view.ui.askStatus.run === asked5.run ? view.ui.askStatus.status : null;
         const poll = function() {
           if (st.state !== "loading" && !view.ui.askPolling && (view.ui.askPolls || 0) < 60) {
             view.ui.askPolling = true;
@@ -287837,11 +288675,11 @@ var plan = Object.freeze({
           }
         };
         if (status === "running") {
-          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked4.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
+          askNote = '<p class="mk-note" role="status" data-run="running">' + cs.w(asked5.existed ? "screen.plan.ask.already" : "screen.plan.ask.running") + "</p>";
           poll();
         } else if (status) {
           askNote = '<p class="mk-note" role="status" data-run="ended">' + cs.w("screen.plan.ask.ended") + "</p>";
-          fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked4.run);
+          fresh = P.later(cs, view, "tray", "planproposals", { plan: view.subject }, asked5.run);
         } else if (st.state === "failed") poll();
       }
       const trayRows = function(v) {
@@ -289158,8 +289996,8 @@ var DISCLOSURE_STEPS = Object.freeze(["start"]);
 var SIGNIN_WORDS = Object.freeze({
   "ai.refused.signinabsent": "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed your group's Civicsmith can add it."
 });
-var TRACE_HEADER = "x-civicsmith-trace";
-var MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+var TRACE_HEADER2 = "x-civicsmith-trace";
+var MEMBER_REF_HEADER2 = "x-civicsmith-member-ref";
 var MEMBER_REF_HEX = 12;
 var SIGNIN_TRACE_MAX = 200;
 var TRACE_FIELDS = Object.freeze([
@@ -289280,10 +290118,10 @@ async function writeLine({ env, store, log, line: line2 }) {
       body: JSON.stringify({ line: kept })
     });
 }
-async function subscriptionSignin({ env, member: member2, asked: asked4, store, log = defaultLog }) {
+async function subscriptionSignin({ env, member: member2, asked: asked5, store, log = defaultLog }) {
   const t0 = Date.now();
   const trace = mintTrace();
-  const a = isObject(asked4) ? asked4 : {};
+  const a = isObject(asked5) ? asked5 : {};
   const step = typeof a.step === "string" && SIGNIN_STEPS.includes(a.step) ? a.step : null;
   const memberRef = await memberRefOf(env, member2);
   let msAgent;
@@ -289332,7 +290170,7 @@ async function subscriptionSignin({ env, member: member2, asked: asked4, store, 
     payload.hold = true;
     if (typeof a.attempt === "string" && a.attempt.length <= ATTEMPT_MAX) payload.attempt = a.attempt;
   }
-  const headers = { [TRACE_HEADER]: trace, ...memberRef ? { [MEMBER_REF_HEADER]: memberRef } : {} };
+  const headers = { [TRACE_HEADER2]: trace, ...memberRef ? { [MEMBER_REF_HEADER2]: memberRef } : {} };
   const tSend = Date.now();
   const out = await send(env, payload, headers);
   msAgent = Date.now() - tSend;
@@ -289360,9 +290198,9 @@ async function subscriptionSignin({ env, member: member2, asked: asked4, store, 
   }
   return done(out, out.body.reason === "AGENT_WORKER_UNBOUND" || out.body.reason === "AGENT_WORKER_SILENT" ? "refused_local" : "relayed");
 }
-function leaverOf(op, asked4, result2, by) {
+function leaverOf(op, asked5, result2, by) {
   if (!isObject(result2) || result2.ok !== true) return null;
-  const a = isObject(asked4) ? asked4 : {};
+  const a = isObject(asked5) ? asked5 : {};
   const memberOf9 = (id) => typeof id === "string" && id.trim() !== "" ? id.startsWith("member:") ? id : `member:${id}` : null;
   if (op === "subscriptiondisconnect") return typeof by === "string" && by ? by : null;
   if (op === "memberset" && a.status === "revoked") return memberOf9(result2.memberId ?? a.memberId);
@@ -289373,7 +290211,7 @@ async function signoutLeaver(env, member2) {
   if (!member2) return;
   try {
     const trace = mintTrace(), ref = await memberRefOf(env, member2);
-    await send(env, { member: member2, step: "signout" }, { [TRACE_HEADER]: trace, ...ref ? { [MEMBER_REF_HEADER]: ref } : {} });
+    await send(env, { member: member2, step: "signout" }, { [TRACE_HEADER2]: trace, ...ref ? { [MEMBER_REF_HEADER2]: ref } : {} });
   } catch {
   }
 }
@@ -291032,13 +291870,13 @@ function makeFetch(hooks = {}) {
     seen.trace = trace ?? null;
     if (op === TEXT_CHECK || op === READ_TRANSLATE) {
       if (!viaSession || typeof stub.draft !== "function") return unboundRun();
-      const asked4 = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
-      const ask3 = op === TEXT_CHECK ? { op, member: sessMember, session: credential.token, text: asked4.text ?? null, trace, memberRef } : {
+      const asked5 = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody : {};
+      const ask3 = op === TEXT_CHECK ? { op, member: sessMember, session: credential.token, text: asked5.text ?? null, trace, memberRef } : {
         op,
         member: sessMember,
         session: credential.token,
-        subject: asked4.subject ?? null,
-        language: asked4.language ?? null,
+        subject: asked5.subject ?? null,
+        language: asked5.language ?? null,
         trace,
         memberRef
       };
@@ -291110,13 +291948,13 @@ function makeFetch(hooks = {}) {
       return tieToStep({ body: body2, status: res.status }, captureStep ?? url.searchParams.get("step"));
     }
     if (armed && op === "ask" && viaSession) {
-      let asked4 = null;
+      let asked5 = null;
       try {
-        asked4 = await armed.clone().json();
+        asked5 = await armed.clone().json();
       } catch {
-        asked4 = null;
+        asked5 = null;
       }
-      await tokenRefusedSeen({ member: stampOf2.by, answer: asked4, store: stored2 });
+      await tokenRefusedSeen({ member: stampOf2.by, answer: asked5, store: stored2 });
     }
     if (armed) return armed;
     async function forwarded(res) {
@@ -291484,20 +292322,20 @@ function makeFetch(hooks = {}) {
       inner.searchParams.delete("secretSha");
     }
     if (op === "aicredentialmint") {
-      let asked4 = {};
+      let asked5 = {};
       try {
-        asked4 = passBody ? JSON.parse(passBody) : {};
+        asked5 = passBody ? JSON.parse(passBody) : {};
       } catch {
-        asked4 = {};
+        asked5 = {};
       }
-      const mint = await aiCredentialMint(asked4, cls3);
+      const mint = await aiCredentialMint(asked5, cls3);
       if (mint.refusal) return refused5(mint.refusal);
       const secret = mint.secret;
       inner.searchParams.set("who", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`);
       const minted = await doAnswer(stub.fetch(new Request(
         inner,
         { method: "POST", body: JSON.stringify({
-          ...asked4,
+          ...asked5,
           writes: mint.writes,
           confinedTo: mint.confinedTo,
           secretSha: mint.secretSha
@@ -291574,11 +292412,11 @@ function makeFetch(hooks = {}) {
       }
     }
     if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
-      let asked4 = {};
+      let asked5 = {};
       try {
-        asked4 = passBody ? JSON.parse(passBody) : {};
+        asked5 = passBody ? JSON.parse(passBody) : {};
       } catch {
-        asked4 = {};
+        asked5 = {};
       }
       const pack = op === STATUS_REPORT_ASSIST ? null : await heldPack({
         req,
@@ -291595,7 +292433,7 @@ function makeFetch(hooks = {}) {
         storeName,
         stub
       });
-      const ask3 = { ...draftAsk(op, asked4, {
+      const ask3 = { ...draftAsk(op, asked5, {
         member: sessMember,
         session: credential.token,
         firsthand: body.result.firsthand === true,
@@ -291627,8 +292465,8 @@ function makeFetch(hooks = {}) {
         const handed = {
           direction: ask3.direction,
           language: ask3.language,
-          ...Array.isArray(asked4.keys) ? { keys: asked4.keys } : {},
-          ...asked4.key !== void 0 ? { key: asked4.key } : {},
+          ...Array.isArray(asked5.keys) ? { keys: asked5.keys } : {},
+          ...asked5.key !== void 0 ? { key: asked5.key } : {},
           words: ask3.words,
           draft: drafted.draft ?? null,
           ...Array.isArray(drafted.not_drafted) ? { not_drafted: drafted.not_drafted } : {}
@@ -294474,9 +295312,9 @@ function dayWords(day2, today2 = null) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(typeof day2 === "string" ? day2 : "");
   if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return null;
   const fills = { day: Number(m[3]), month: ACTION_WORDS[`date.month.${MONTHS8[Number(m[2]) - 1]}`], year: m[1] };
-  return say4(typeof today2 === "string" && today2.slice(0, 4) === m[1] ? "date.daymonth" : "date.daymonthyear", fills);
+  return say5(typeof today2 === "string" && today2.slice(0, 4) === m[1] ? "date.daymonth" : "date.daymonthyear", fills);
 }
-function say4(key2, fills = {}) {
+function say5(key2, fills = {}) {
   const t2 = ACTION_WORDS[key2] ?? OWN_WORDS[key2];
   if (typeof t2 !== "string") return null;
   return t2.replace(/\{([a-z_]+)\}/g, (_, k) => fills[k] === null || fills[k] === void 0 ? "" : String(fills[k]));
@@ -294739,31 +295577,31 @@ var ActionProducers = class _ActionProducers {
   static MEMBER_LEFT_REMINDER_ACTIONS = 200;
   /** R11: the doors, each the act whose taking makes the item leave, or routes it (take-up, plan-work R11). Plain acts:
    *  `queue` decorates every option (its R17). */
-  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: say4("door.actioncorrespond"), weight: "single" });
+  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: say5("door.actioncorrespond"), weight: "single" });
   /** R21: the door stating an entry met or waived. No action-clocks op states it: it is a member's revision of the
    *  action's document (`op=promote`, actions' revision within its R1 and R33), changing only that entry's `status` to
    *  `met` or `waived`. Its label is `door.clockentrystate` (R23); `#entryStateDoor` keys it to the action and entry. */
-  static ENTRY_STATE = Object.freeze({ id: "promote", label: say4("door.clockentrystate"), weight: "single" });
-  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: say4("door.itemtakeup"), weight: "single" });
-  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: say4("door.checkpointrecord"), weight: "single" });
-  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: say4("door.escalationadvance"), weight: "single" });
-  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: say4("door.escalationdecline"), weight: "single" });
-  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: say4("door.reminderanswer"), weight: "single" });
+  static ENTRY_STATE = Object.freeze({ id: "promote", label: say5("door.clockentrystate"), weight: "single" });
+  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: say5("door.itemtakeup"), weight: "single" });
+  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: say5("door.checkpointrecord"), weight: "single" });
+  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: say5("door.escalationadvance"), weight: "single" });
+  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: say5("door.escalationdecline"), weight: "single" });
+  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: say5("door.reminderanswer"), weight: "single" });
   /** R5: a member's statement that a hold is in place (action-holds R2, `op=actionhold`), or its release, its own act
    *  (action-holds R5, `op=actionholdrelease`, which words.json does not hold: its label stays), DEC-113. */
-  static HOLD_STATE = Object.freeze({ id: "actionhold", label: say4("door.actionhold"), weight: "single" });
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: say5("door.actionhold"), weight: "single" });
   static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
   static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
   static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
-  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say4("door.watchanswer"), weight: "single" });
-  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say4("door.planreviewrecord"), weight: "single" });
-  static PLAN_RESUME = Object.freeze({ id: "planresume", label: say4("door.planresume"), weight: "single" });
+  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say5("door.watchanswer"), weight: "single" });
+  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say5("door.planreviewrecord"), weight: "single" });
+  static PLAN_RESUME = Object.freeze({ id: "planresume", label: say5("door.planresume"), weight: "single" });
   /** R25 (DEC-212): the unsent request's doors: the action's screen at its step (`op=action`, actions R47's read, the
    *  screen opening at the send step; its label is this module's own, words.json holding none), keeping it for later
    *  (`queuesnooze`, queue's act) and dropping the request with a reason (`actionmove` to `abandoned`, actions' move). */
-  static OPEN_ACTION = Object.freeze({ id: "action", label: say4("request-unsent.open"), weight: "single" });
-  static SNOOZE = Object.freeze({ id: "queuesnooze", label: say4("act.queuesnooze.label.queue"), weight: "single" });
-  static DROP_REQUEST = Object.freeze({ id: "actionmove", label: say4("act.actionmove.label.queue"), weight: "single" });
+  static OPEN_ACTION = Object.freeze({ id: "action", label: say5("request-unsent.open"), weight: "single" });
+  static SNOOZE = Object.freeze({ id: "queuesnooze", label: say5("act.queuesnooze.label.queue"), weight: "single" });
+  static DROP_REQUEST = Object.freeze({ id: "actionmove", label: say5("act.actionmove.label.queue"), weight: "single" });
   /** R11: each kind's doors, in order (the producers lead their options with exactly these). */
   static DOORS = Object.freeze({
     "action-clock-overdue": ["actioncorrespond", "promote", "itemtakeup"],
@@ -295068,10 +295906,10 @@ ${e2.ord}`, author: e2.created_by, seen: e2.action, project: e2.project });
       const today2 = _ActionProducers.#today(now, zone) || (typeof e2.local_day === "string" ? e2.local_day : null);
       const steps = Array.isArray(e2.steps) ? e2.steps.filter((s) => typeof s === "string" && s) : [];
       const what = e2.text || "an entry on its clock";
-      const summary2 = say4(key2, { date: dated ? dayWords(e2.date, today2) : "its date", what });
+      const summary2 = say5(key2, { date: dated ? dayWords(e2.date, today2) : "its date", what });
       const venue = e2.owed_by === "group" ? _ActionProducers.#venueWords(e2.venue) : null;
       const ours = venue && dated ? {
-        detail: say4("queue.action-clock-overdue.ours.detail", { what, venue, date: dayWords(e2.date, today2) }),
+        detail: say5("queue.action-clock-overdue.ours.detail", { what, venue, date: dayWords(e2.date, today2) }),
         detail_key: "queue.action-clock-overdue.ours.detail"
       } : { detail: _ActionProducers.#detailOf(e2, dated, steps) };
       out.push({
@@ -295398,7 +296236,7 @@ ${p3.id}`, author: p3.opened_by, seen: p3.id, project: p3.project });
           case: this.#projectHomes(project, viewer),
           subject: { kind: "case", id: kase, entry: arrived.docket_entry, note: m.note ?? null, project },
           /* R23: the summary by key (a protected word); the detail keeps its present text, returned to BOB */
-          summary: say4("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
+          summary: say5("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
           summary_key: "queue.litigation-hold.docket.summary",
           detail: `an entry on this case's docket was marked as a legal threat${said12}. Record that the group is preserving what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is stated on the mark.`,
           basis: basisOf2(
@@ -295864,9 +296702,9 @@ ${project || "none"}`;
           more: Math.max(0, listed.length - named3.length)
         },
         /* R23: by key; {n} and {items} count and name only the items this recipient may see (R14) */
-        summary: say4("queue.member-left-items.summary", { member: g.member, n: listed.length }),
+        summary: say5("queue.member-left-items.summary", { member: g.member, n: listed.length }),
         summary_key: "queue.member-left-items.summary",
-        detail: say4("queue.member-left-items.detail", {
+        detail: say5("queue.member-left-items.detail", {
           member: g.member,
           place: g.project || "the group",
           items: _ActionProducers.#itemsWords(named3, listed.length - named3.length)
@@ -295956,9 +296794,9 @@ ${project || "none"}`;
         }, cause: q10.cause ?? null, relied_on: relied },
         /* R23: the summary by key on every entry; the detail by key where `watchanswer` is offered; a relied-on
            entry keeps its present detail (the key would offer what following R25 refuses, WATCH_RELIED_ON) */
-        summary: say4("queue.watch-keep-or-stop.summary", { what: _ActionProducers.#watchWords(w) }),
+        summary: say5("queue.watch-keep-or-stop.summary", { what: _ActionProducers.#watchWords(w) }),
         summary_key: "queue.watch-keep-or-stop.summary",
-        ...relied ? { detail: `${why2}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.` } : { detail: say4("queue.watch-keep-or-stop.detail", { plan: q10.plan }), detail_key: "queue.watch-keep-or-stop.detail" },
+        ...relied ? { detail: `${why2}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.` } : { detail: say5("queue.watch-keep-or-stop.detail", { plan: q10.plan }), detail_key: "queue.watch-keep-or-stop.detail" },
         basis: {
           source: "following.watchQuestions",
           link: q10.link,
@@ -296018,7 +296856,7 @@ ${project || "none"}`;
       const today2 = _ActionProducers.#today(now, zone) || _ActionProducers.#today(now, _ActionProducers.#knownZone(x.zone));
       const title = this.#planTitle(x.plan, viewer, now);
       const keyed8 = rhythm && since ? {
-        detail: say4("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today2) }),
+        detail: say5("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today2) }),
         detail_key: "queue.plan-review-due.detail"
       } : { detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. Open the review to see what changed, and record what the members decided. You are reminded only because the group asked for it." };
       out.push({
@@ -296029,7 +296867,7 @@ ${project || "none"}`;
         due: dueDay2,
         subject: { kind: "plan", id: x.plan, project: x.project, day: day2, set_by: x.member ?? null },
         /* R23: the summary by key; R24: the detail by key where the item holds the rhythm in words and the day since */
-        summary: say4("queue.plan-review-due.summary", { plan: x.plan }),
+        summary: say5("queue.plan-review-due.summary", { plan: x.plan }),
         summary_key: "queue.plan-review-due.summary",
         ...keyed8,
         basis: {
@@ -296142,8 +296980,8 @@ ${plan2}`;
           project
         },
         /* R25: this module's own words (words.json holds no key for them), returned to BOB */
-        summary: say4(approver === me && to.rule === "approver" ? "request-unsent.summary.mine" : "request-unsent.summary", { what }),
-        detail: approved ? say4("request-unsent.detail", { date: dayWords(approved, today2) }) : say4("request-unsent.detail.undated"),
+        summary: say5(approver === me && to.rule === "approver" ? "request-unsent.summary.mine" : "request-unsent.summary", { what }),
+        detail: approved ? say5("request-unsent.detail", { date: dayWords(approved, today2) }) : say5("request-unsent.detail.undated"),
         screen: { op: "action", id: x.action, step: "send" },
         basis: {
           source: "filings.approvedUnsent",
@@ -296212,7 +297050,7 @@ ${plan2}`;
           paused_by: x.paused_by ?? null
         },
         /* R23: the summary by key; the detail keeps its present text, returned to BOB */
-        summary: say4("queue.plan-look-again.summary", { plan: x.title ? `"${x.title}"` : x.plan }),
+        summary: say5("queue.plan-look-again.summary", { plan: x.title ? `"${x.title}"` : x.plan }),
         summary_key: "queue.plan-look-again.summary",
         detail: `a member paused this plan${x.reason ? `, because "${x.reason}"` : ""}, and named this day to look at it again. What it set running has gone on. Review it, and resume it if the members decide to.`,
         basis: {
@@ -300495,7 +301333,7 @@ function findingKind(name3) {
 
 // src/file-safety/index.mjs
 var FILE_SAFETY_MODULE = "file-safety";
-var WORD_KEYS6 = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey2), ...SENTENCE_KEYS2]);
+var WORD_KEYS7 = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey2), ...SENTENCE_KEYS2]);
 var RESCAN_INTERVAL_MS = 6048e5;
 var DEEPER_CHECK_FRESH_MS = 864e5;
 var DEEPER_CHECKS_PER_MONTH = 900;
@@ -302577,7 +303415,7 @@ var QUESTION_EXPLORER_SCHEMA = `
 -- R1, R3, R8, R12: each exploring run this module opened, one row a run. owner is the paying account (ai-use R1's
 -- spelling); step the system step it serves (steps R1); day the group's local day it was opened on (one run a
 -- question a day); seen the count of captures resolving to the question's subject entity at the open (R2's test);
--- estimate and actual (R12) answered only to the paying account's owners; ended and reason R8's.
+-- estimate and actual (R12) answered only to the paying account's owners; ended and reason R8's; close_refused R17's.
 CREATE TABLE IF NOT EXISTS explore_runs (
   run        TEXT PRIMARY KEY,
   question   TEXT NOT NULL,
@@ -302590,7 +303428,8 @@ CREATE TABLE IF NOT EXISTS explore_runs (
   ended      TEXT,              -- null while running, then 'ended' or 'set_aside'
   reason     TEXT,
   closed_at  TEXT,
-  actual     TEXT
+  actual     TEXT,
+  close_refused TEXT           -- null, or the plane's code when ai-runs did not accept the run close (R17)
 );
 CREATE INDEX IF NOT EXISTS explore_runs_question ON explore_runs(question, opened_at);
 
@@ -302676,6 +303515,8 @@ function migrateQuestionExplorer(sql) {
   for (const stmt of bare5.split(";")) if (stmt.trim()) sql.exec(stmt);
   const cols = [...sql.exec(`PRAGMA table_info(explore_finds)`)].map((c) => c.name);
   if (!cols.includes("untested")) sql.exec(`ALTER TABLE explore_finds ADD COLUMN untested TEXT`);
+  const runCols = [...sql.exec(`PRAGMA table_info(explore_runs)`)].map((c) => c.name);
+  if (!runCols.includes("close_refused")) sql.exec(`ALTER TABLE explore_runs ADD COLUMN close_refused TEXT`);
 }
 
 // src/question-explorer/index.mjs
@@ -302696,8 +303537,8 @@ var EXPLORE_BOUNDS = Object.freeze([
   /* R13: what an exploring run proposes while reading is minted within this bound (`run-productions` R21, R10). */
   Object.freeze({ bound: "mints", allowed: 50 })
 ]);
-var EXPLORE_WORK = "The system explored this question for material the record does not yet bring to it.";
-var EXPLORE_FIND_SAYS = "The system found this while exploring the question. It is the system's work, offered once; it is not evidence until a member takes it in by her own act.";
+var EXPLORE_WORK = say4("question-explorer.system_explored_question");
+var EXPLORE_FIND_SAYS = say4("question-explorer.system_found_exploring");
 var EXPLORE_ASK_RECHECK_MS = 36e5;
 var EXPLORE_SKILL = "explore@1";
 var EXPLORE_PRINCIPAL = "class:ai";
@@ -302759,6 +303600,7 @@ var QuestionExplorer = class {
     });
     this.testSet = testSet;
   }
+  #tail = Promise.resolve();
   #rows(q10, ...a) {
     return [...this.sql.exec(q10, ...a)];
   }
@@ -302951,19 +303793,19 @@ var QuestionExplorer = class {
   gate() {
     const shut = (why2) => ({ open: false, why: why2, false_alarm_rate: null, gold_set: null, untested: null });
     try {
-      if (!this.steps || !this.aiUse) return shut("a provider the explorer needs is not in place");
+      if (!this.steps || !this.aiUse) return shut(say4("question-explorer.provider_explorer_needs"));
       const held3 = this.held() || {};
       const inv2 = this.#admitted(EXPLORE_MODE, held3), use = this.#admitted(EXPLORE_TEST_PART, held3);
       if (!inv2.admitted || !use.admitted)
-        return shut("the investigate mode and the explorer's use are not both deployable on the test investigations");
+        return shut(say4("question-explorer.investigate_mode_explorer"));
       if (use.untested) return { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: use.untested };
       const tb = (Array.isArray(held3.testBars) ? held3.testBars : []).find((r) => checkTestBarRecord(r) === null && r.part === EXPLORE_TEST_PART && r.passed === true && r.set === this.testSet.id && r.set_version === this.testSet.version);
       const far = tb ? tb.false_alarm_rate : NaN;
       if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
-        return shut("the explorer's false-alarm rate on the test investigations is not recorded at or under 20%");
+        return shut(say4("question-explorer.explorer_false_alarm"));
       return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}`, untested: null };
     } catch {
-      return shut("the gate could not be read");
+      return shut(say4("question-explorer.gate_read"));
     }
   }
   /* ---------------------------------------------------------------- R1, R2: choosing */
@@ -303041,7 +303883,7 @@ var QuestionExplorer = class {
     });
   }
   /** R1: for `scheduler`: how many questions a tick would consider now; none while the gate is shut. */
-  exploreDue(now) {
+  async exploreDue(now) {
     try {
       return this.gate().open ? this.#due(this.#iso(now)).length : 0;
     } catch {
@@ -303050,7 +303892,7 @@ var QuestionExplorer = class {
   }
   /** R1: when a tick is next worth running: now while any is due; else, while an Ask waits for its approval today,
    *  the hour after it was made; else null. Answered in `now`'s own form (a number of ms, or an instant). */
-  exploreWake(now) {
+  async exploreWake(now) {
     try {
       if (!this.gate().open) return null;
       const iso8 = this.#iso(now);
@@ -303074,6 +303916,12 @@ var QuestionExplorer = class {
    *  owner's Ask (`ai-use.exploreAsk`, with the questions and their estimate, R12), and nothing runs without approval;
    *  a refusal passes. Answers what it did. */
   exploreTick(now) {
+    const tick = this.#tail.then(() => this.#tick(now));
+    this.#tail = tick.catch(() => {
+    });
+    return tick;
+  }
+  async #tick(now) {
     const at49 = this.#iso(now);
     const out = { at: at49, gate: "open", opened: [], asked: [], refused: 0, considered: 0 };
     const g = this.gate();
@@ -303108,7 +303956,7 @@ var QuestionExplorer = class {
           continue;
         }
         const label = a && a.label || { kind: "machine", enabled_by: owner };
-        const opened2 = this.#open(w, owner, label, at49, day2);
+        const opened2 = await this.#open(w, owner, label, at49, day2);
         if (opened2.ok) {
           this.#consider(w.question, owner, day2, "opened", at49);
           out.opened.push(opened2);
@@ -303140,40 +303988,45 @@ var QuestionExplorer = class {
     } catch {
       as = null;
     }
-    if (!as) return "not known yet";
+    if (!as) return say4("question-explorer.known");
     const viewer = as.startsWith("member:") || as === "admin" ? as : `member:${as}`;
     try {
       const e2 = this.aiUse.estimate({ owner, use: EXPLORE_USE, mode: EXPLORE_MODE, count: count2, viewer, at: at49 });
-      return e2 && e2.ok !== false && e2.estimate !== void 0 ? e2.estimate : "not known yet";
+      return e2 && e2.ok !== false && e2.estimate !== void 0 ? e2.estimate : say4("question-explorer.known");
     } catch {
-      return "not known yet";
+      return say4("question-explorer.known");
     }
   }
   /** R3, R12: open one exploring run on a question for an owner: its estimate, then the run, passing the step's place
    *  and work; `ai-runs` opens the run and then creates its system step (its R73, K2490), answering it. */
-  #open(w, owner, label, at49, day2) {
+  async #open(w, owner, label, at49, day2) {
     const estimate = this.#estimate(owner, 1, at49);
     const run2 = `XPL-${day2}-${sha256HexSync(`${w.question}|${owner}|${at49}`).slice(0, 12)}`;
-    const opened2 = this.aiRuns.open({
-      run: run2,
-      contextType: "inquiry",
-      contextId: w.question,
-      label: "exploring this question",
-      mode: EXPLORE_MODE,
-      origin: EXPLORE_ORIGIN,
-      use: EXPLORE_USE,
-      place: { questions: [w.question] },
-      work: EXPLORE_WORK,
-      principalPlane: this.principal,
-      principalClaude: owner,
-      principalClaudeRef: null,
-      enabledBy: label,
-      skillVersion: EXPLORE_SKILL,
-      bounds: EXPLORE_BOUNDS.map((b) => ({ ...b })),
-      at: at49,
-      actor: null,
-      viewer: this.principal
-    });
+    let opened2;
+    try {
+      opened2 = await this.aiRuns.open({
+        run: run2,
+        contextType: "inquiry",
+        contextId: w.question,
+        label: say4("question-explorer.label.exploring_question"),
+        mode: EXPLORE_MODE,
+        origin: EXPLORE_ORIGIN,
+        use: EXPLORE_USE,
+        place: { questions: [w.question] },
+        work: EXPLORE_WORK,
+        principalPlane: this.principal,
+        principalClaude: owner,
+        principalClaudeRef: null,
+        enabledBy: label,
+        skillVersion: EXPLORE_SKILL,
+        bounds: EXPLORE_BOUNDS.map((b) => ({ ...b })),
+        at: at49,
+        actor: null,
+        viewer: this.principal
+      });
+    } catch {
+      opened2 = null;
+    }
     if (!opened2 || opened2.ok === false || typeof opened2.step !== "string" || !opened2.step)
       return { ok: false, question: w.question, owner, refused: opened2 };
     const step = opened2.step;
@@ -303186,7 +304039,7 @@ var QuestionExplorer = class {
    *  cannot place, read as a person, fail closed) is made only when a member tied that person to the question; any
    *  other is refused `EXPLORE_PERSON_NOT_TIED`, recorded on the run, and the run goes on. A tied person past the
    *  run's 20th is refused `EXPLORE_PERSON_CAP_REACHED` and the run ends its step set aside (R8). */
-  look({ run: run2, entity: entity2 = null, aim = null, caller = null, at: at49 = null } = {}) {
+  async look({ run: run2, entity: entity2 = null, aim = null, caller = null, at: at49 = null } = {}) {
     const live7 = this.#liveRun(run2, caller);
     if (live7.refusal) return live7.refusal;
     const r = live7.run;
@@ -303224,7 +304077,7 @@ var QuestionExplorer = class {
         aimText,
         iso8
       );
-      const ended = this.#end(r, "set_aside", "EXPLORE_PERSON_CAP_REACHED", null, iso8, caller);
+      const ended = await this.#end(r, "set_aside", "EXPLORE_PERSON_CAP_REACHED", null, null, iso8, caller);
       return { ...this.#refuse(
         "EXPLORE_PERSON_CAP_REACHED",
         `the run gathered about ${EXPLORE_PERSON_CAP} persons`,
@@ -303369,11 +304222,11 @@ var QuestionExplorer = class {
     const r = live7.run;
     if (!this.captureRequests || typeof this.captureRequests.captureRequest !== "function")
       return this.#refuse("EXPLORE_NO_RUN", "the capture door is not in place", { run: r.run });
-    const asked4 = this.captureRequests.captureRequest(
-      { run: r.run, address, target: r.question, purpose: purpose ?? "exploring the question", render: render17, step: r.step },
+    const asked5 = this.captureRequests.captureRequest(
+      { run: r.run, address, target: r.question, purpose: purpose ?? say4("question-explorer.exploring_question"), render: render17, step: r.step },
       { viewer: this.principal, caller: caller ?? this.principal, ...at49 ? { at: at49 } : {} }
     );
-    if (asked4 && asked4.ok === false && asked4.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
+    if (asked5 && asked5.ok === false && asked5.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
       const iso8 = this.#iso(at49);
       const ref = address.trim().slice(0, 2048);
       const find2 = `XFD-${sha256HexSync(`${r.run}|page|${ref}`).slice(0, 16)}`;
@@ -303390,9 +304243,9 @@ var QuestionExplorer = class {
         r.owner,
         iso8
       );
-      return { ...asked4, named_to_members: true, find: find2 };
+      return { ...asked5, named_to_members: true, find: find2 };
     }
-    return asked4;
+    return asked5;
   }
   /* ---------------------------------------------------------------- R13: reading inside documents */
   /** R13: the run reads inside a held document through `run-productions` (its R24 `readPages`): a few pages at a time
@@ -303449,13 +304302,13 @@ var QuestionExplorer = class {
    *  passages and connections, each tied to its quote, labelled the system's, under the run's step, minted within its
    *  `mints` bound. Asked here first, as `read` asks; and a proposed connection to a person passes R9 and R10's gate (a
    *  person a member tied, within the run's 20), so the run gathers about no one else by proposing either. */
-  propose({ run: run2, bundleId, fn, version, cap = null, refs = [], connections = [], caller = null, at: at49 = null } = {}) {
+  async propose({ run: run2, bundleId, fn, version, cap = null, refs = [], connections = [], caller = null, at: at49 = null } = {}) {
     const d = this.#readable(run2, bundleId, caller);
     if (d.refusal) return d.refusal;
     const { r, id } = d;
     for (const c of Array.isArray(connections) ? connections : []) {
       if (!c || c.to_kind !== "person") continue;
-      const looked = this.look({ run: r.run, entity: c.to, aim: "a proposed connection", caller, at: at49 });
+      const looked = await this.look({ run: r.run, entity: c.to, aim: say4("question-explorer.proposed_connection"), caller, at: at49 });
       if (looked.ok === false) return { ...looked, nothing_proposed: true };
     }
     if (!this.runProductions || typeof this.runProductions.extractPropose !== "function")
@@ -303476,13 +304329,21 @@ var QuestionExplorer = class {
     });
   }
   /* ---------------------------------------------------------------- R8, R12: the end */
-  #end(r, end2, reason2, bound, iso8, caller) {
+  /** R17: the run's close through `ai-runs`, awaited, in the record's own words: a `bound` of `run-rules`' `RUN_BOUNDS`
+   *  or `RUN_ENDINGS` (the one named when it is one, else `completed`: a run this module ends by its own rule, the cap or
+   *  a limit, finished its work as far as it went) and a `condition` that is null or a key of `CONDITION_KINDS`. This
+   *  module's own reasons (`EXPLORE_PERSON_CAP_REACHED`, a limit's text) are the step's `reason` only, never the run's
+   *  condition. `ai-runs` ends the run's step at its close (its R73, `steps` R5's machine arm): `ended`, or `set_aside`
+   *  with the reason. A close `ai-runs` refuses, or that fails, is carried in the answer (`closed: false`, the plane's
+   *  code) and the row records that the end was not accepted (`close_refused`), the run staying open to end again; it
+   *  never throws. */
+  async #end(r, end2, reason2, bound, condition, iso8, caller) {
     let closed = null;
     try {
-      closed = this.aiRuns.close({
+      closed = await this.aiRuns.close({
         run: r.run,
-        bound: bound || (end2 === "ended" ? "completed" : "cancelled"),
-        condition: reason2 ?? null,
+        bound: typeof bound === "string" && checkBound(bound) === null ? bound : "completed",
+        condition: condition ?? null,
         stepEnd: end2,
         reason: reason2 ?? null,
         at: iso8,
@@ -303493,29 +304354,40 @@ var QuestionExplorer = class {
     } catch {
       closed = null;
     }
-    const actual = closed && (closed.actual ?? closed.cost) != null ? closed.actual ?? closed.cost : null;
+    const accepted = !!closed && closed.ok !== false && closed.terminated !== false && closed.found !== false;
+    if (!accepted) {
+      const code = closed && typeof closed.code === "string" ? closed.code : null;
+      this.sql.exec(`UPDATE explore_runs SET close_refused=? WHERE run=? AND ended IS NULL`, code ?? "NOT_ACCEPTED", r.run);
+      return { run: r.run, end: end2, reason: reason2 ?? null, closed: false, code, actual: null };
+    }
+    const actual = (closed.actual ?? closed.cost) != null ? closed.actual ?? closed.cost : null;
     this.sql.exec(
-      `UPDATE explore_runs SET ended=?, reason=?, closed_at=?, actual=? WHERE run=?`,
+      `UPDATE explore_runs SET ended=?, reason=?, closed_at=?, actual=?, close_refused=NULL WHERE run=? AND ended IS NULL`,
       end2,
       reason2 ?? null,
       iso8,
       json21(actual === null ? null : { actual }),
       r.run
     );
-    return { run: r.run, end: end2, reason: reason2 ?? null, closed: !!(closed && closed.ok !== false), actual };
+    return { run: r.run, end: end2, reason: reason2 ?? null, closed: true, actual };
   }
-  /** R8, R12: the run's end. `ended` ends its step with every outcome undetermined; `set_aside` (a limit reached, a
-   *  refusal) names its reason, and only the enabling owner is told (`stopsFor`). The run's actual cost (`ai-runs`
-   *  R76) is kept, answered only to the paying account's owners. An ended run answers as it ended. */
-  end({ run: run2, end: end2 = "ended", reason: reason2 = null, bound = null, caller = null, at: at49 = null } = {}) {
+  /** R8, R12, R17: the run's end. `ended` ends its step with every outcome undetermined; `set_aside` (a limit reached, a
+   *  refusal) names its reason, and only the enabling owner is told (`stopsFor`). The close is awaited and answers
+   *  `closed` only when `ai-runs` accepted it; the run's actual cost (`ai-runs` R76) is kept, answered only to the paying
+   *  account's owners. An ended run answers as it ended. A `condition` outside `CONDITION_KINDS` is refused before
+   *  anything is closed. */
+  async end({ run: run2, end: end2 = "ended", reason: reason2 = null, bound = null, condition = null, caller = null, at: at49 = null } = {}) {
     const held3 = typeof run2 === "string" ? this.#one(`SELECT * FROM explore_runs WHERE run=?`, run2.trim()) : null;
     if (held3 && held3.ended) return { ok: true, run: held3.run, end: held3.ended, reason: held3.reason, already: true };
     const live7 = this.#liveRun(run2, caller);
     if (live7.refusal) return live7.refusal;
     if (end2 !== "ended" && end2 !== "set_aside")
       return this.#refuse("EXPLORE_RUN_ENDED", "a run ends `ended` or `set_aside`", { run: live7.run.run });
+    const bad2 = checkCondition(condition);
+    if (bad2) return { ...bad2, run: live7.run.run };
     const why2 = end2 === "set_aside" ? str54(reason2) ? str54(reason2).slice(0, 500) : "LIMIT_REACHED" : null;
-    return { ok: true, ...this.#end(live7.run, end2, why2, bound, this.#iso(at49), caller), already: false };
+    const done = await this.#end(live7.run, end2, why2, bound, condition, this.#iso(at49), caller);
+    return done.closed ? { ok: true, ...done, already: false } : { ok: false, ...done, already: false };
   }
   /** R8: the runs set aside by a limit, each told once (a stable key) to the owners of the account that enabled it
    *  only; never naming a place. For `notice-producers`. Never throws. */
@@ -303529,7 +304401,7 @@ var QuestionExplorer = class {
         question: x.question,
         reason: x.reason,
         at: x.closed_at,
-        says: "An exploring run you enabled stopped before it finished, and its step was set aside."
+        says: say4("question-explorer.says.exploring_run_enabled")
       })) };
     } catch {
       return { ok: true, stops: [] };
@@ -303666,7 +304538,7 @@ var QuestionExplorer = class {
       question: o.f.question,
       accepted: rec,
       leg: leg2,
-      route: o.f.kind === "page" ? "capture the page by her own act, then cite it" : "her own promotion of the question, which writes the leg as hers",
+      route: o.f.kind === "page" ? say4("question-explorer.capture_page_act") : say4("question-explorer.promotion_question_writes"),
       wrote_leg: false
     };
   }
@@ -303911,8 +304783,8 @@ function caseIdentitySentence(caseId, edition, newCase) {
 }
 var printed = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 function listCap(limit) {
-  const asked4 = Number.parseInt(String(limit ?? ""), 10);
-  return Number.isInteger(asked4) && asked4 >= 1 ? Math.min(asked4, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
+  const asked5 = Number.parseInt(String(limit ?? ""), 10);
+  return Number.isInteger(asked5) && asked5 >= 1 ? Math.min(asked5, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
 }
 function lastChange({ draft, comments, grants, acknowledgements }) {
   const cand = [];
@@ -309336,8 +310208,8 @@ function sourcedSteps(registry, r, node, items, kinds3) {
   if (!sk) return items;
   const declared2 = new Set(items.filter((h) => registry.kindOf(h.kind)?.class === "declared").map((h) => h.id));
   if (!declared2.size) return items;
-  const asked4 = kinds3.includes(STEP_SOURCE);
-  const sources = asked4 ? items.filter((h) => h.kind === STEP_SOURCE) : r.read(sk.owner, node, [STEP_SOURCE]) ?? [];
+  const asked5 = kinds3.includes(STEP_SOURCE);
+  const sources = asked5 ? items.filter((h) => h.kind === STEP_SOURCE) : r.read(sk.owner, node, [STEP_SOURCE]) ?? [];
   const relationOf3 = (h) => Array.isArray(h.evidence) && isObj57(h.evidence[0]) ? h.evidence[0].relation : void 0;
   const backing = sources.filter((h) => declared2.has(relationOf3(h)));
   if (!backing.length) return items;
@@ -309348,7 +310220,7 @@ function sourcedSteps(registry, r, node, items, kinds3) {
     if (backed.has(h.id) && registry.kindOf(h.kind)?.class === "declared") continue;
     out.push(marked.get(h) ?? h);
   }
-  if (!asked4) out.push(...marked.values());
+  if (!asked5) out.push(...marked.values());
   return out;
 }
 function traverse(ctx, w) {
@@ -311153,11 +312025,11 @@ function hypothesesOps(hypotheses, url, body) {
 // src/plane/ask.mjs
 var json23 = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 var idOf5 = (m) => typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m;
-var HEADER_VALUE = /^[\x21-\x7e]{1,200}$/;
+var HEADER_VALUE2 = /^[\x21-\x7e]{1,200}$/;
 function doorHeaders({ trace = null, memberRef = null } = {}) {
   const h = { "content-type": "application/json" };
-  if (typeof trace === "string" && HEADER_VALUE.test(trace)) h[TRACE_HEADER] = trace;
-  if (typeof memberRef === "string" && HEADER_VALUE.test(memberRef)) h[MEMBER_REF_HEADER] = memberRef;
+  if (typeof trace === "string" && HEADER_VALUE2.test(trace)) h[TRACE_HEADER2] = trace;
+  if (typeof memberRef === "string" && HEADER_VALUE2.test(memberRef)) h[MEMBER_REF_HEADER2] = memberRef;
   return h;
 }
 var BEARER2 = /^bearer ([\x21-\x7e]+)$/i;
@@ -312474,9 +313346,9 @@ function handOn(req, url) {
     if (v !== null) for (const k of keys) url.searchParams.set(k, v);
   }
 }
-function underGrant(store, grant, asked4, op, body, answer2) {
+function underGrant(store, grant, asked5, op, body, answer2) {
   if (!grant || op === "rule" || !askAdmits(op)) return answer2;
-  const { grant: _g, viewer, ...args } = asked4;
+  const { grant: _g, viewer, ...args } = asked5;
   return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer: answer2, viewer });
 }
 var ACCOUNT_UNREAD = Object.freeze({
@@ -312532,7 +313404,7 @@ async function dispatch(req, store) {
   try {
     const grant = grantOf(req);
     url.searchParams.delete(SECRET_SHA_PARAM);
-    const asked4 = Object.fromEntries(url.searchParams);
+    const asked5 = Object.fromEntries(url.searchParams);
     handOn(req, url);
     const map = store.routes(url, body, grant);
     if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
@@ -312544,7 +313416,7 @@ async function dispatch(req, store) {
     if (existence) return Response.json({ ok: true, result: existence });
     const answer2 = await map[op]();
     if (answer2 instanceof Response) return answer2;
-    return Response.json({ ok: true, result: underGrant(store, grant, asked4, op, body, answer2) });
+    return Response.json({ ok: true, result: underGrant(store, grant, asked5, op, body, answer2) });
   } catch (e2) {
     return Response.json(storeInternalError(e2, op), { status: 500 });
   }
@@ -315345,7 +316217,7 @@ var ecourt_default = {
 
 // ../court-doctypes/index.mjs
 var COURT_TYPES2 = Object.freeze([courtlistener_default, cpuc_default, ecourt_default]);
-var KEYS5 = Object.freeze(COURT_TYPES2.map((t2) => t2.key));
+var KEYS6 = Object.freeze(COURT_TYPES2.map((t2) => t2.key));
 function registerCourtTypes(register3) {
   if (typeof register3 !== "function") return COURT_TYPES2.map((t2) => ({ key: t2.key, registered: false, why: "no register function was given" }));
   return COURT_TYPES2.map((t2) => {
@@ -315358,7 +316230,7 @@ function registerCourtTypes(register3) {
 }
 
 // ../budget-doctypes/view.mjs
-var KEYS6 = Object.freeze({
+var KEYS7 = Object.freeze({
   REPORT_TITLES: "financial_report_titles",
   BOOK_TITLES: "budget_book_titles",
   HEADINGS: "financial_headings",
@@ -315413,7 +316285,7 @@ var UNDECODED_ALL = /[\u0000\uFFFD]/g;
 var LIGATURES = ["fi", "fl", "ff", "ffi", "ffl"];
 function headerWords(ctx) {
   const out = [];
-  for (const e2 of vocabulary(ctx, KEYS6.HEADERS)) {
+  for (const e2 of vocabulary(ctx, KEYS7.HEADERS)) {
     if (!COLUMNS.includes(e2.column)) continue;
     const re = vocabRegex(e2.pattern, null, "i");
     if (re) out.push({ column: e2.column, re });
@@ -315592,7 +316464,7 @@ function readPage(ctx, page2, lines2, { chartSkip = false, method = "text-layer"
   for (const l2 of live7) {
     const t2 = l2.text.trim();
     if (l2.c.cells.length > 1 || l2.c.kind === "years") continue;
-    if (l2.c.dated || matchIn(ctx, KEYS6.HEADINGS, t2) || CAPTION.test(t2) || scaleIn(t2) || t2.split(/\s+/).length <= 6 && matchIn(ctx, KEYS6.FISCAL_YEARS, t2)) {
+    if (l2.c.dated || matchIn(ctx, KEYS7.HEADINGS, t2) || CAPTION.test(t2) || scaleIn(t2) || t2.split(/\s+/).length <= 6 && matchIn(ctx, KEYS7.FISCAL_YEARS, t2)) {
       l2.c = { kind: "text", label: t2, cells: [] };
       l2.meta = true;
     }
@@ -315649,7 +316521,7 @@ function buildTable(ctx, page2, live7, reg, prevEnd, nextStart, method, engine) 
         continue;
       }
       if (l2.c.kind !== "text") break;
-      if (scaleIn(t3) || matchIn(ctx, KEYS6.HEADINGS, t3) || CAPTION.test(t3) || isProse(t3)) break;
+      if (scaleIn(t3) || matchIn(ctx, KEYS7.HEADINGS, t3) || CAPTION.test(t3) || isProse(t3)) break;
       if (years) break;
       header2.unshift(l2);
     }
@@ -315769,7 +316641,7 @@ function row11(label, cells, line2, span3) {
 function describe4(ctx, lines2) {
   for (const l2 of lines2) {
     const t2 = l2.text.trim();
-    if (matchIn(ctx, KEYS6.HEADINGS, t2)) return { title: t2 };
+    if (matchIn(ctx, KEYS7.HEADINGS, t2)) return { title: t2 };
   }
   for (const l2 of lines2) {
     const t2 = l2.text.trim();
@@ -315780,12 +316652,12 @@ function describe4(ctx, lines2) {
 function periodCount(ctx, line2) {
   const s = String(line2).trim();
   let n2 = 0;
-  for (const tok3 of s.split(/\s+/)) if (isYear2(tok3) || matchIn(ctx, KEYS6.FISCAL_YEARS, tok3)) n2++;
+  for (const tok3 of s.split(/\s+/)) if (isYear2(tok3) || matchIn(ctx, KEYS7.FISCAL_YEARS, tok3)) n2++;
   return n2;
 }
 function periodIn(ctx, lines2) {
   for (const l2 of lines2) {
-    const m = matchIn(ctx, KEYS6.FISCAL_YEARS, l2.text);
+    const m = matchIn(ctx, KEYS7.FISCAL_YEARS, l2.text);
     if (m) return m.text;
   }
   return null;
@@ -315844,7 +316716,7 @@ function readTables(ctx, { budget }) {
     tables.push(...r.tables);
     skipped.push(...r.skipped);
     if (pg.page !== null && images.has(pg.page)) {
-      const captioned = r.lines.some((l2) => l2.c.kind === "text" && (CAPTION.test(l2.text.trim()) || matchIn(ctx, KEYS6.HEADINGS, l2.text.trim())));
+      const captioned = r.lines.some((l2) => l2.c.kind === "text" && (CAPTION.test(l2.text.trim()) || matchIn(ctx, KEYS7.HEADINGS, l2.text.trim())));
       const usable = r.tables.some((t2) => t2.usable);
       if (captioned && !usable) {
         const ocr = budget ? ocrOf(supplied2, pg.page) : null;
@@ -316205,7 +317077,7 @@ var financialReport = {
   version: 1,
   contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
-    return detectPdf(ctx, KEYS6.REPORT_TITLES, "financial report");
+    return detectPdf(ctx, KEYS7.REPORT_TITLES, "financial report");
   },
   parse(ctx) {
     return readPdf(ctx, false);
@@ -316220,7 +317092,7 @@ var budgetBook = {
   version: 1,
   contract: CONTRACT.SUBSTANCE,
   detect(ctx) {
-    return detectPdf(ctx, KEYS6.BOOK_TITLES, "budget book");
+    return detectPdf(ctx, KEYS7.BOOK_TITLES, "budget book");
   },
   parse(ctx) {
     return readPdf(ctx, true);
@@ -316814,10 +317686,10 @@ var Store = class extends DurableObject {
      `args` is neither read nor handed on; the segment's credential is minted here, in the plane, by ai-runs. */
   async dispatchMemberRun(args) {
     const a = args && typeof args === "object" ? args : {};
-    const asked4 = {};
-    for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== void 0) asked4[k] = a[k];
-    for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked4[k] = a[k];
-    return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked4);
+    const asked5 = {};
+    for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== void 0) asked5[k] = a[k];
+    for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked5[k] = a[k];
+    return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked5);
   }
   /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
   async groupFields() {
