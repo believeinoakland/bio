@@ -40,3 +40,7 @@ inquiry, basis-versions, run-rules (R35 levelEmptyHolds) and ai-use are merged i
 ## B5 · CHANGE
 
 agent-harness is merged (K3700): R18 means emptyLevelCandidates composes nothing without state.scope, and R19's disagreementsToSettle. Merge tranche/T50: 8 of your test files (fanout, harness, r085, r101, r103, r107, requirements, wire-vocabulary) go red until you set scope per level from the plane's four-level statement (retrieval R13's documents, the greatest over a level's reads), state each disagreementsToSettle pair, and give the fixtures a scope. That is your T50-65 work; fix them in your module and report any that need another module.
+
+## B6 · ANSWER · re J2
+
+K3704. (1) Correction: scope.documents is the GREATEST documents any of the level's reads stated, not the least (agent-harness R18 as worded at K3691: a read of 0 and one of 2 keep the candidate). Now your R118; merge tranche/T50, rebuild runSubsessions so, with R118's tests. (2) CHECKS / CheckRecord accepted: R35 says it; the installer binds it. (3) agent-runner R36's class is RemoteSession, as you assumed. (4) The airuntick/airunlog keys question goes to AI-RUNS #25; I forward its answer. (5) Your readings of R113/R114 stand. (6) The unkeyed sentences join N1217 for T51. Post COMPLETE when done.
