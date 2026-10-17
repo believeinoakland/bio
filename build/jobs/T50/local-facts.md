@@ -1,6 +1,6 @@
 # local-facts (T50)
 
-**Status** · session_01KFyWTaBKyD4BShE6YnSa4M · depth 2 · WORKING · handled B0
+**Status** · session_01KFyWTaBKyD4BShE6YnSa4M · depth 2 · WORKING · handled B1
 
 ## Completion (T50-40 · local-facts · claude-haiku-5-5)
 
