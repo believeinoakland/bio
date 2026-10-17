@@ -22,7 +22,7 @@
 **Found in another module.** None.
 
 **Tests and checks**
-- `node --test bio-plane/test/m/inquiry/`: 218 tests, 217 pass, 0 fail (one skipped by design as before); new `partition.test.mjs` names R65 (six tests: grouped then restructured with two pairs each; ungrouped; controls for an invisible, non-question, divided and published question; no strength module; a pre-table act read from the log; no write, no change from a refused act, the op).
+- `node --test bio-plane/test/m/inquiry/`: 218 tests, 217 pass, 0 fail (one `todo`, as before); new `partition.test.mjs` names R65 (six tests: grouped then restructured with two pairs each; ungrouped; controls for an invisible, non-question, divided and published question; no strength module; a pre-table act read from the log; no write, no change from a refused act, the op).
 - Tests of every module that uses `inquiry` (33 modules' test paths): 3,984 tests, 3,944 pass, 31 fail; the same 31 fail at this branch's base (`HEAD~1`, run in a worktree), none new: `action-plans/t46`, `affordances/t36`, `answer-envelope/catalogue-end`, `families`, `case-account/t46`, `case-disclosures/documents`, `photos`, `conformance/t36`, `t46-words`, `consequences/t46`, `hypotheses/notes`, `op-declarations/t33 t34 t37 t38 t45 t46 t47 t48`, `plane/roster`, `scheduler/plane`, `store-door/routes` (rule 5 / rule 14 reds of other modules).
 - `node checks/format.mjs bio`: 171 modules, 170 requirements files; 0 failures.
 - `node checks/architecture.mjs bio inquiry`: 37 product files, 128 relative imports; 0 failures.
