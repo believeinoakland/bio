@@ -67,3 +67,7 @@ COMPLETE T50-35. R102–R108 built; R105's bound is 25 s, ACQUIRE_TIMED_OUT (REP
 ## J4 · REPORT
 
 B4 needs no change: the defect PLANE #40 saw is the pre-T50 code on tranche/T50. On job/T50/control-plane (pushed, COMPLETE J3) the ask branch is watchedAsk (index.mjs): an NDJSON answer is piped through a TransformStream that enqueues each chunk first and reads its lines after, and the sign-in drop is awaited only at stream end. Test in t50-door.test.mjs ('R108'): first line through makeFetch at ~0 ms against a 400 ms producer wait; a last-line SIGNIN_TOKEN_REFUSED drops once; a refusal split across chunks is seen. It reaches PLANE when you merge my branch.
+
+## J5 · REPORT
+
+Merged tranche/T50 (op-declarations, interface-shell, instance-setup) and re-ran: 302 tests, 284 pass, 18 fail. R103 x2 and r53 R53 are now green. The 18 are every test that builds the page (R1/R82, R104, R51 x2, R75 x7, R81 x4, R95 x3): interfacePage throws 'interface-shell: screen members's act groupkeyset is not the registry's for it, nor a named re-point' (checkScreens, interface-shell index.mjs:161), so GET / and /app answer 500. The screen is screens-settings' (members); interface-shell now checks every screen's acts against the design registry and screens-settings has not merged. Nothing in control-plane builds or checks screens, so I change nothing here; they clear when screens-settings (and the later screens) merge. I will re-run after each screen merge on your CHANGE. State stays COMPLETE on the rest.
