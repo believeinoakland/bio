@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, DOC } from "./fixture.mjs";
-import { FILINGS_CHECKS, FILINGS_WORDS, KEYED } from "../../../src/filings/index.mjs";
+import * as filingsModule from "../../../src/filings/index.mjs";
+import { FILINGS_CHECKS } from "../../../src/filings/index.mjs";
 import { RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
 
 const OUTSIDER = V("quinn");
@@ -25,9 +26,8 @@ test("R57 R40 the quoting sentence a request for comment carries is filing-templ
   const { x, R } = rfcWorld();
   const f = x.f;
   assert.equal(typeof RFC_QUOTING_SENTENCE, "string");
-  assert.equal("rfc.quoting" in KEYED, false, "no copy of the sentence here");
+  assert.equal("KEYED" in filingsModule, false, "no copy of the sentence here");
   assert.equal("RFC_QUOTING_MISSING" in FILINGS_CHECKS, false, "C-115.47 is filing-templates'");
-  assert.equal("refusal.RFC_QUOTING_MISSING" in FILINGS_WORDS, false);
   for (const [name, make] of [["a draft", () => prep(f, R, { text: "Please comment on the works order." })],
                               ["a communication", () => comm(f, R, { text: "Please comment on the works order." })],
                               ["a documenting version for the violating party", () => comm(f, R, { text: undefined, purpose: "document_infraction", audience: "violating_party" })]]) {
@@ -63,7 +63,6 @@ test("R51 (N1053) NOT_A_PARTNER's translation is words.json's refusal.NOT_A_PART
   const words = JSON.parse((await import("node:fs")).readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"))
     .words.find((w) => w.key === "refusal.NOT_A_PARTNER").en;
   assert.match(words, /organization/);
-  assert.equal(FILINGS_WORDS["refusal.NOT_A_PARTNER"], words);
   assert.deepEqual([FILINGS_CHECKS.NOT_A_PARTNER.check, FILINGS_CHECKS.NOT_A_PARTNER.translation], ["C-115.48", words]);
   const f = x.filingsWith();
   const d = prep(f, x.action({ partners: [{ role: "Chair", organisation: "Harbour Watch" }] }));

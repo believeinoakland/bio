@@ -7,7 +7,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, V, F, WHY, actionsWith } from "./fixture.mjs";
-import { KEYED, FILINGS_CHECKS, FILINGS_WORDS } from "../../../src/filings/index.mjs";
+import * as filingsModule from "../../../src/filings/index.mjs";
+import { FILINGS_CHECKS, keyed } from "../../../src/filings/index.mjs";
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { ACTION_HOLDS_CHECKS } from "../../../src/action-holds/checks.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -59,20 +61,21 @@ test("R50 filingsFor answers second_needed per draft: true exactly while project
   assert.equal(needs(f, B, comm(f, B, { voice: "self", text: "My notes." }).id), false);
 });
 
-test("R51 the rows C-115.45, .46, .48, .49 and C-115.51–.53 translate (C-115.47 is filing-templates', R57) by words.json's refusal.<CODE>, read by key, each answered with it; SECOND_APPROVAL_NEEDED (C-115.50) keeps its own; HOLD_NOT_IN_PLACE is action-holds' row, relayed as it comes; codes and numbers unmoved", async () => {
+test("R51 R52 (words) every row of C-115 this module answers translates by words.json's refusal.<CODE>, read by key, each answered with it (T50 widened T46's eight rows to all); the codes and numbers unmoved; HOLD_NOT_IN_PLACE is action-holds' row, relayed as it comes", async () => {
   const taken = { CONTRADICTED_HELD: "C-115.45", SELF_BENEFIT_ASK: "C-115.46", NOT_A_PARTNER: "C-115.48",
-                  JOINT_FINGERPRINT_MISMATCH: "C-115.49", SAME_APPROVER: "C-115.51", ASSERTION_UNRESOLVED: "C-115.52",
-                  ASSERTION_RESOLUTION_REFUSED: "C-115.53" };
+                  JOINT_FINGERPRINT_MISMATCH: "C-115.49", SECOND_APPROVAL_NEEDED: "C-115.50", SAME_APPROVER: "C-115.51",
+                  ASSERTION_UNRESOLVED: "C-115.52", ASSERTION_RESOLUTION_REFUSED: "C-115.53" };
   for (const [code, check] of Object.entries(taken)) {
     assert.ok(WORDS.has(`refusal.${code}`), code);
-    assert.equal(FILINGS_WORDS[`refusal.${code}`], WORDS.get(`refusal.${code}`), `${code}: words.json's words, verbatim`);
     assert.deepEqual([FILINGS_CHECKS[code].check, FILINGS_CHECKS[code].translation], [check, WORDS.get(`refusal.${code}`)], code);
   }
-  assert.deepEqual(Object.keys(FILINGS_WORDS).sort(), Object.keys(taken).map((c) => `refusal.${c}`).sort(), "no other word is taken");
-  /* kept in T46 */
-  assert.equal(FILINGS_CHECKS.SECOND_APPROVAL_NEEDED.check, "C-115.50");
-  assert.notEqual(FILINGS_CHECKS.SECOND_APPROVAL_NEEDED.translation, WORDS.get("refusal.SECOND_APPROVAL_NEEDED"), "kept, returned to BOB");
-  for (const code of ["HOLD_NOT_IN_PLACE", "HOLD_PLACE_REFUSED"]) assert.equal(code in FILINGS_CHECKS, false, `${code} is action-holds'`);
+  /* every other row too: the English words.json holds for its code, never a copy */
+  for (const [code, row] of Object.entries(FILINGS_CHECKS)) {
+    assert.ok(WORDS.has(`refusal.${code}`), `words.json holds refusal.${code}`);
+    assert.equal(row.translation, WORDS.get(`refusal.${code}`), code);
+    assert.equal(row.translation, word(`refusal.${code}`), code);
+  }
+  for (const code of ["HOLD_NOT_IN_PLACE", "HOLD_PLACE_REFUSED", "RFC_QUOTING_MISSING"]) assert.equal(code in FILINGS_CHECKS, false, `${code} is another module's`);
   /* answered: each refusal carries its row's words */
   const x = world();
   const f = x.filingsWith();
@@ -90,18 +93,19 @@ test("R51 the rows C-115.45, .46, .48, .49 and C-115.51–.53 translate (C-115.4
                    ["HOLD_NOT_IN_PLACE", ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE.check, ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE.translation]);
 });
 
-test("R52 each keyed sentence is words.json's words for its key, read by key, its placeholders as words.json names them and filled from the record; phrasing.no_list keeps its sentence (rfc.quoting is filing-templates', R57); filings.voice.self and filings.staff.not_run are replaced by voice.self.means and pointer.staff.notrun", () => {
+test("R52 each keyed sentence this module writes is words.json's words for its key, read through setup-words, its placeholders as words.json names them; phrasing.no_list and the review copy's two sentences are now read by key too (the design lane holds them since T50)", () => {
   const taken = ["prepared.rests.held", "prepared.rests.accepted", "packet.privileged", "packet.privileged.warning", "filings.election.notice",
                  "recognition.staff_public", "pointer.record.supported", "pointer.record.unsupported", "pointer.record.contradicted",
                  "pointer.position", "pointer.selfbenefit", "pointer.staff", "pointer.staff.notrun", "voice.group", "voice.group.means",
-                 "voice.self", "voice.self.means", "filings.secondapproval.given"];
-  for (const k of taken) assert.equal(KEYED[k], WORDS.get(k), k);
-  assert.ok(WORDS.has("phrasing.no_list"));
-  assert.notEqual(KEYED["phrasing.no_list"], WORDS.get("phrasing.no_list"), "phrasing.no_list: kept in T46, returned to BOB");
-  assert.equal("rfc.quoting" in KEYED, false, "rfc.quoting is filing-templates' since T48 (R57)");
-  assert.equal("filings.secondapproval.waiting" in KEYED, false, "not taken in T46");
-  for (const k of ["filings.voice.self", "filings.staff.not_run"]) assert.equal(k in KEYED, false, `${k} replaced`);
-  for (const k of ["filings.review_copy.no_embargo", "filings.review_copy.terms"]) assert.equal(WORDS.has(k), false, `${k}: words.json holds none`);
+                 "voice.self", "voice.self.means", "filings.secondapproval.given", "phrasing.no_list", "filings.review_copy.no_embargo",
+                 "filings.review_copy.terms"];
+  for (const k of taken) {
+    assert.equal(hasWord(k), true, k);
+    assert.equal(hasWord(k) && word(k, Object.fromEntries([...WORDS.get(k).matchAll(/\{(\w+)\}/g)].map((m) => [m[1], `<${m[1]}>`]))),
+                 WORDS.get(k).replace(/\{(\w+)\}/g, "<$1>"), k);
+  }
+  assert.equal(keyed("phrasing.no_list"), WORDS.get("phrasing.no_list"), "phrasing.no_list: the design's words govern");
+  assert.equal("KEYED" in filingsModule, false, "no copy of any sentence is held here");
 });
 
 test("R52 control: each keyed sentence of a draft, packet or communication reads as words.json holds it, its placeholders filled from the record (disclosures, pointers, notices, voice, the second approval, the privilege marking)", async () => {
