@@ -1,6 +1,7 @@
 /* T45 (T45-44): the group's declared stake (R77, R11), the records laws' stages checked when the profiles load (R76), and
    the group-identity source registered with public-read at start (R78), at the module's interface. */
 import test from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { boot, providers, stubOver, doAnswer } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, DECLARED_STAKE_SETTING,
@@ -94,7 +95,7 @@ test("R77 STAKE_MALFORMED (C-64.27): a stake of 1,001 characters, with a line br
   assert.deepEqual([settingRows(w).length, historyRows(w).length], [before[0] + 2, before[1] + 2]);
   assert.equal(w.record.getSetting("declared_stake"), "Held before.");
   /* R63: the row's words name the group's own Civicsmith as "your group's", never "copy", "instance", "plane" or "server" */
-  assert.match(row.translation, /your group/i);
+  assert.equal(row.translation, word("refusal.STAKE_MALFORMED"));
   assert.doesNotMatch(row.translation, /\b(copy|instance|plane|server)\b/i);
   assert.match(row.where, /^src\/setup\.mjs declaredStakeSet > is-declared-stake$/);
 });

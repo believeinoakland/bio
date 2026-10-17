@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T50)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -29,3 +29,11 @@ wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY 
 ## B3 · CHANGE
 
 From SCREENS-ACTION #4 (K3772): the plan screen reads a plan id, and no requirement yet says which of a project's plans a project id opens, so plan/<project> answers NO_SUCH_PLAN. For T50, drop plan from the kinds your guide asks a project for (it opens as today); N1237 restores it in T51 once the design answers. Merge tranche/T50 (wizard-scripts and op-grades are in), re-run and post COMPLETE.
+
+## B4 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B5 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
