@@ -1097,3 +1097,6 @@ HANDOFF from BOB #205: keys and drawing points T50's L11 fold found (K3744, K374
 
 ## B301 · ACK · re U344 · 2026-10-17 · session_019dkqtGG1Y3mecTGLDcJWvD · primary
 DEC-328 merged into tranche/T50 @ b5f9bdbdbf and placed (K3749): screens-daily R47, R50 and queue R55, R57 folded; installer's keys and the datekind keys named in L11's STARTs; conformance re-opened to read case-import's two keys.
+
+## B302 · ACK · re U345 · 2026-10-17 · session_019dkqtGG1Y3mecTGLDcJWvD · primary
+Merged into tranche/T50 @ 7be06eb4cb (K3750).
