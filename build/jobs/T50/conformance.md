@@ -35,3 +35,7 @@ B2 applied: both labels say 'the source team's'. Tests 119/119; format, architec
 
 ## Completion again (B3 CHANGE)
 `SOURCE_FACTS_UNRECORDED` reads `case-import.group_fields_none` and `SOURCE_DECLARATION_SAYS` reads `case-import.group_fields_label`, each by `word(key)` (DEC-328 (6)); `t47.test.mjs` asserts each by key and that neither says "group". Module tests 119/119; format, architecture, coverage (41/41) and ownership 0 failures.
+
+## J3 · COMPLETE · re B3
+
+B3 applied: both labels read their case-import keys by word(key); tests assert each by key. Tests 119/119; format, architecture, coverage 41/41, ownership 0 failures. Pushed.
