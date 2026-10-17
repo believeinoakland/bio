@@ -138,7 +138,7 @@ export const DEF = (o = {}) => ({ ok: true, progression_key: "pra", found: true,
   versions: [{ version: 1, declared_by: "member:ana", at: "2026-09-24T09:00:00Z", basis: { statement: "first", citation: null } }, { version: 2, declared_by: "member:ana", at: "2026-09-30T09:00:00Z", basis: { statement: "the agency determines within 10 days", citation: "Gov. Code §7922.535" } }],
   stages: [{ stage_key: "sent", stage_no: 1, label: "Request sent", after_stage: null, cardinality: "1", within_interval: null, required: "always" }, { stage_key: "determination", stage_no: 2, label: "Determination", after_stage: "sent", cardinality: "0..1", within_interval: "10 days", required: "unless_exception" }], ...o });
 export const THEME = (o = {}) => ({ ok: true, theme_id: "THEME-2026-0001", name: "Deferred maintenance", test: "A document that shows repairs put off", at: "2026-10-01T09:00:00Z", declared_by_handle: "mai", evidence: false,
-  members: [{ target: "INFO-2026-0001", target_kind: "document", state: "member", placed_by_handle: "mai", placed_at: "2026-10-02T09:00:00Z", note: "the roof repair", proposed_by_handle: null }],
+  members: [{ target: "INFO-2026-0001", target_kind: "document", state: "member", placed_by_handle: "dev", placed_at: "2026-10-02T09:00:00Z", note: "the roof repair", proposed_by_handle: null }],
   hunches: [{ target: "INFO-2026-0002", target_kind: "document", state: "hunch", proposed_by_handle: "dev", proposed_at: "2026-10-03T09:00:00Z", proposal_note: "maybe" }],
   withdrawn: [{ target: "INFO-2026-0003", target_kind: "document", state: "withdrawn", ended_by_handle: "mai", ended_at: "2026-10-04T09:00:00Z", reason: "wrong year" }], ...o });
 

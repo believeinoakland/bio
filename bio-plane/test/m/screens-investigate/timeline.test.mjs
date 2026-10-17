@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, TIMELINE, P, ENT, ORG, SHA, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import {open, main, actsIn, button, fill, press, TIMELINE, P, ENT, ORG, SHA, word, drew, notDrew, dayOf, MORE_PATHS, MATTER, SHA2} from "./fixtures.mjs";
 
 const at = "/app/timeline/" + P;
 
@@ -114,4 +114,102 @@ test("R20 two events ordered by a cited relation are marked \"order cited, not d
   notDrew(dated, "screen.timeline.cite.first");
   const q = await open(at);
   notDrew(main(q).querySelector('[data-event="EVT-2026-0002"]'), "screen.timeline.order.cited.before", { other: "EVT-2026-0003" }, "control: no cited relation, nothing said");
+});
+
+/* ---- T50: R33, R34 ---- */
+const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
+const secOf = (p, key) => main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word(key));
+const NOENT = "---\nid: " + P + "\ntitle: \"Pothole repairs\"\nreferences: []\n---\n";
+const DATED = { items: [{ dated_fact_id: "DF-1", capture_sha: SHA, kind: "signed", value: "2024-03-01", precision: "day", grade: "B" },
+  { dated_fact_id: "DF-2", capture_sha: SHA2, kind: "hearing", value: "2025-07", precision: "edtf", grade: "C" }], placed_nowhere: [] };
+
+test("R33 (1) state a draws, after the two lanes, Progressions it follows: each matter a reference to its steps, with its progression, steps threaded and findings", async () => {
+  const p = await open(at);
+  assert.equal(p.byOp("instances")[0].query.set, ENT);
+  const s = secOf(p, "progression.follows");
+  assert.ok(s, "the section is drawn");
+  drew(s, "progression.followed", { progression: "A public records request", n: "2" });
+  assert.ok(s.textContent.includes("1 / 4"), "steps threaded");
+  assert.ok(s.querySelector(".cs-card, .cs-ref"), "a reference");
+  const none = await open(at, { plane: { instances: ok({ ok: true, count: 0, items: [], truncated: false }) } });
+  assert.equal(secOf(none, "progression.follows"), undefined, "a project that follows nothing draws no empty section");
+});
+
+test("R33 (2) state b: one matter's steps in order with each document, its own date and who threaded it; a step with no document draws the finding's own sentence; never overdue or late; the chain undetermined below two placed steps; findings listed", async () => {
+  const p = await open(MORE_PATHS.matter);
+  assert.deepEqual(p.byOp("instance")[0].query, { op: "instance", key: "pra", id: ORG });
+  const m = main(p);
+  const steps = secOf(p, "progression.steps");
+  drew(steps, "progression.req.always");
+  drew(steps, "progression.req.unless");
+  drew(steps, "progression.threadedby", { date: dayOf("2026-09-22"), who: "mai", when: dayOf("2026-09-22") });
+  drew(steps, "progression.nodoc");
+  drew(steps, "progression.expects", { interval: "10 days", n: "1", date: "2026-10-02" });
+  drew(m, "progression.finding.never");
+  drew(secOf(p, "progression.chain"), "progression.chain.undetermined");
+  assert.ok(secOf(p, "progression.findings").textContent.includes("Determination"));
+  assert.doesNotMatch(m.textContent.replace(word("progression.finding.never"), ""), /overdue|\blate\b/i, "no drawn text but the design's own never-sentence says overdue or late");
+  const aside = await open(MORE_PATHS.matter, { plane: { instance: ok(MATTER({ findings: [{ ...MATTER().findings[0], disposition: { applies: true, state: "dismissed", reason: "the clerk called" } }] })) } });
+  assert.ok(secOf(aside, "progression.findings").textContent.includes("the clerk called"), "a finding set aside stays listed");
+  const undet = await open(MORE_PATHS.matter, { plane: { instance: ok(MATTER({ findings: [{ ...MATTER().findings[0], says: { key: "progression.expects.undetermined", vars: { interval: "10 days", n: "1" } } }] })) } });
+  drew(secOf(undet, "progression.steps"), "progression.expects.undetermined", { interval: "10 days", n: "1" });
+});
+
+test("R33 (2) the matter's acts: thread keeps the placements it holds and adds the chosen document at the chosen step; a lawful skip with its reason and citation; set a finding aside with a reason", async () => {
+  const p = await open(MORE_PATHS.matter, { plane: { thread: ok({ ok: true }), discharge: ok({ ok: true }), proposedispose: ok({ ok: true }) } });
+  fill(p, { "pm-thread-stage": "determination", "pm-thread-doc": SHA2 });
+  await press(p, "thread");
+  assert.deepEqual(p.byOp("thread")[0].body, { progressionKey: "pra", entityId: ORG, placements: [{ stage: "sent", captureSha: SHA }, { stage: "determination", captureSha: SHA2 }] });
+  fill(p, { "pm-dis-stage": "determination", "pm-dis-doc": SHA2, "pm-dis-reason": "the request was withdrawn", "pm-dis-cite": "Gov. Code 7922.535" });
+  await press(p, "discharge");
+  assert.deepEqual(p.byOp("discharge")[0].body, { progressionKey: "pra", entityId: ORG, stageKey: "determination", captureSha: SHA2, reason: "the request was withdrawn", citation: "Gov. Code 7922.535" });
+  fill(p, { "pm-aside-finding": "determination|2", "pm-aside-reason": "the clerk called" });
+  await press(p, "proposedispose");
+  assert.deepEqual(p.byOp("proposedispose")[0].body, { progressionKey: "pra", stageKey: "determination", to: "dismissed", reason: "the clerk called", definitionVersion: 2 });
+});
+
+test("R33 (3) state c: a progression's steps (what comes before, how soon, required, how many), its basis with every version, Revise the steps and Define a progression send progressiondefine", async () => {
+  const p = await open(MORE_PATHS.progression, { plane: { progressiondefine: ok({ ok: true, progression_key: "pra", version: 3 }) } });
+  assert.deepEqual(p.byOp("progression")[0].query, { op: "progression", key: "pra" });
+  const steps = secOf(p, "progression.steps");
+  drew(steps, "screen.timeline.step.within", { days: "10", n: "1" });
+  drew(secOf(p, "progression.basis"), "screen.timeline.progression.sub", { what: "A public records request", n: "1", name: "ana", date: dayOf("2026-09-24") });
+  assert.ok(secOf(p, "progression.basis").textContent.includes("the agency determines within 10 days"));
+  fill(p, { "pd-rv-basis": "amended basis", "pd-rv-cite": "Gov. Code 7922.535", "pd-rv-steps": "sent | Request sent | | | always | 1\ndetermination | Determination | sent | 10 days | usually | 0..1" });
+  await press(p, "progressiondefine", { el: button(p, "progressiondefine") });
+  const b = p.byOp("progressiondefine")[0].body;
+  assert.equal(b.progressionKey, "pra");
+  assert.equal(b.basis, "amended basis");
+  assert.deepEqual(b.stages[1], { key: "determination", label: "Determination", after: "sent", within: "10 days", required: "usually", cardinality: "0..1" });
+  fill(p, { "pd-name": "A permit", "pd-basis": "the code", "pd-cite": "Code 1", "pd-steps": "filed" });
+  await press(p, "progressiondefine", { el: p.root().querySelectorAll('button[data-act="progressiondefine"]').pop() });
+  const d = p.byOp("progressiondefine")[1].body;
+  assert.deepEqual([d.progressionKey, d.label, d.stages[0].key, d.stages[0].required], ["a_permit", "A permit", "filed", "sometimes"]);
+});
+
+test("R33 (5) a project whose documents name no entity or event but hold dated facts draws Dated in the documents and no event, and not the no-set sentence; control: a project with no document says so", async () => {
+  const p = await open(at, { plane: { image: ok({ "bundle.md": NOENT }), timeline: ok({ ok: true, set: [], dated: DATED }) } });
+  assert.deepEqual(p.byOp("timeline")[0].query.set, undefined);
+  assert.ok(p.byOp("timeline")[0].query.captures.includes(SHA));
+  notDrew(main(p), "screen.timeline.noset");
+  const d = secOf(p, "timeline.dated.title");
+  assert.ok(d, "the dated list stands apart from the lanes");
+  drew(d, "screen.timeline.dated.meta", { precision: word("label.timeprecisions.day"), document: "Lease amendment 1", grade: "B" });
+  drew(d, "screen.timeline.dated.meta", { precision: word("label.timeprecisions.edtf"), document: "Rent schedule", grade: "C" });
+  drew(d, "screen.timeline.datekind.signed");
+  drew(d, "screen.timeline.datekind.hearing");
+  assert.equal(main(p).querySelectorAll(".mk-ev").length, 0, "no event is made of a dated fact");
+  assert.equal(main(p).querySelectorAll(".mk-lanes").length, 0);
+});
+
+test("R34 the timeline's event form chooses the project's documents by title and sends the capture's digest; no field names a fingerprint; with no document the choice's empty state is drawn and nothing is sent", async () => {
+  const p = await open(at);
+  assert.deepEqual(optsOf(p, "tl-doc"), [[SHA, "Lease amendment 1"], [SHA2, "Rent schedule"]]);
+  assert.equal(p.byOp("heldcaptures")[0].query.project, P, "the project's documents");
+  drew(main(p), "form.choose.passage");
+  assert.equal(main(p).querySelectorAll("*").filter((e) => /^tl-(sha|page)$/.test(e.getAttribute("id") || "")).length, 0);
+  const none = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  assert.equal(none.doc.getElementById("tl-doc"), null);
+  await press(none, "createevent", { reason: "x" });
+  assert.equal(none.byOp("createevent").length, 0);
 });

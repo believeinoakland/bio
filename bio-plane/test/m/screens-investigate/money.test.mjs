@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, word, drew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, SHA2, word, drew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/money/" + MSR;
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
@@ -154,4 +154,12 @@ test("R4 a refused act is drawn beside it, nothing else changed (control)", asyn
   const panel = await openPanel(p, M1);
   await press(p, "exclude", { within: panel, reason: "x" });
   assert.ok(panelOf(p, M1).textContent.includes("There is no such trail."), "the refusal by its words");
+});
+
+test("R34 the money trail's figure form chooses the document by title and sends its digest; no field asks for a fingerprint or a page number by itself", async () => {
+  const p = await open("/app/money/" + MSR);
+  assert.deepEqual(p.doc.getElementById("mf-doc").querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]), [[SHA, "Lease amendment 1"], [SHA2, "Rent schedule"]]);
+  assert.equal(main(p).querySelectorAll("*").filter((e) => /^mf-(sha|page)$/.test(e.getAttribute("id") || "")).length, 0);
+  const none = await open("/app/money/" + MSR, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  assert.equal(none.doc.getElementById("mf-doc"), null, "no document: the choice's empty state");
 });

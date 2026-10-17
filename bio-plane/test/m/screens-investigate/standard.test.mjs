@@ -74,3 +74,13 @@ test("R8 an amendment needs the day it takes effect (control: nothing sent)", as
   assert.equal(p.byOp("lawrelate").length, 0);
   drew(main(p), "screen.standard.relate.effective");
 });
+
+test("R34 the standard's text is a document chosen on screen, never typed content ids; with no document nothing is sent", async () => {
+  const p = await open("/app/standard/" + STD);
+  assert.equal(p.doc.getElementById("st-text"), null);
+  assert.deepEqual(p.doc.getElementById("st-doc").querySelectorAll("option").map((o) => o.textContent), ["Lease amendment 1", "Rent schedule"]);
+  const none = await open("/app/standard/" + STD, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  fill(none, { "st-cite": "c", "st-issuer": "i" });
+  await press(none, "standarddeclare", { reason: "r" });
+  assert.equal(none.byOp("standarddeclare").length, 0);
+});

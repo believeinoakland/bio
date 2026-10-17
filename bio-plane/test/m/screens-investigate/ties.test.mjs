@@ -43,3 +43,11 @@ test("R9 withdrawtie \"Remove a tie\" from its row, with a reason (control: an u
   await press(q, "declaretie");
   assert.equal(q.byOp("declaretie").length, 0);
 });
+
+test("R34 ties draws its two disclosure choices with every fill answered (the member's handle, the tie she is adding in words), never the braces", async () => {
+  const p = await open("/app/ties");
+  const texts = p.doc.getElementById("tie-says").querySelectorAll("option").map((o) => o.textContent);
+  const tie = word("screen.ties.kind.employer");
+  assert.deepEqual(texts, [word("screen.ties.says.group.choice", { handle: "mai", tie }), word("screen.ties.says.name.choice", { handle: "mai", tie })]);
+  assert.ok(texts.every((t) => !/[{}]/.test(t)), "no braces");
+});

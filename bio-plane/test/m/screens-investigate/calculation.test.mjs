@@ -110,3 +110,10 @@ test("R11 \"How spot-checks work\" is reached from calculation and says, in plai
   assert.equal(m.querySelectorAll("button[data-act]").length, 0, "a help page has no act");
   assert.equal(p.byOp("calculation").length >= 1, true);
 });
+
+test("R34 the calculation's draw set, tabled content, workbook and photo are chosen among documents by title, never typed as fingerprints", async () => {
+  const p = await open("/app/calculation/" + CALC);
+  for (const id of ["calc-set", "calc-content", "calc-wb", "calc-photo"]) {
+    assert.deepEqual(p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent), ["Lease amendment 1", "Rent schedule"], id);
+  }
+});
