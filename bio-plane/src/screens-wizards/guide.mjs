@@ -106,7 +106,7 @@ export const PARTS = {
     view.parts.ringStep(cs, view);
   },
 
-  kinds() { return { plan: "project", project: "project", projectai: "project", timeline: "project", money: "project",
+  kinds() { return { project: "project", projectai: "project", timeline: "project", money: "project",
     question: "question", document: "document" }; },
 
   /* R17: ask in the dock which project, question or document, as record data the member may see; none to choose for a

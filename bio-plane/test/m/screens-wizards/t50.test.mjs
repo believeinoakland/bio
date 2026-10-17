@@ -183,9 +183,9 @@ test("R16 Wizards draws the wizards in use and the list's states first; writing,
 /* ---------------- R17 ---------------- */
 
 const STEPS = [
-  { screen: "plan", act: null, what: "Open the plan", why: "To see its options" },
+  { screen: "timeline", act: null, what: "Open the plan", why: "To see its options" },
   { screen: "finder", act: "search", what: "Search", why: "Maybe it exists" },
-  { screen: "plan", act: null, what: "Back to the plan", why: "Again" }];
+  { screen: "timeline", act: null, what: "Back to the plan", why: "Again" }];
 const readSteps = (steps) => () => okr({ ok: true, script: { id: "WIZ-00000000000000c1", name: "Plan it", origin: "group" }, version: { id: "WIZ-00000000000000c1@1", state: "approved", steps } });
 const PROJECTS = okr({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }, { id: "P2", name: "The Coliseum lease" }] });
 const plane17 = (over = {}) => ({ wizardread: readSteps(STEPS), startfrom: okr({ ok: true, doors: [] }), wizardprogress: okr({ ok: true }), projectlist: PROJECTS,
@@ -202,11 +202,11 @@ test("R17 a step on a screen that works in a project, with none held for the run
   assert.ok(html.includes('id="wz-subject"') && html.includes("Pothole repairs") && html.includes("The Coliseum lease"), "the member's projects, as data");
   assert.ok(!html.includes('data-guide="next"'), "the choice is made before going on");
   await g.control("subjectgo");
-  assert.deepEqual(g.nav, [["plan", "P2"]]);
+  assert.deepEqual(g.nav, [["timeline", "P2"]]);
   // the subject chosen is kept for the run: the plan is opened on it again, never asked again
   await g.control("next");
   await g.control("next");
-  assert.deepEqual(g.nav.at(-1), ["plan", "P2"]);
+  assert.deepEqual(g.nav.at(-1), ["timeline", "P2"]);
   assert.equal(g.requests.filter((r) => r.op === "projectlist").length, 1, "asked once");
   // the subject is in the page's memory only
   assert.deepEqual([...g.store.keys()], []);
@@ -246,6 +246,13 @@ test("R17 a step on a screen that needs no subject opens at once; a question or 
   const h = standIn({ plane: plane17(), drawn: {} });
   await h.enter("project", "P9");
   await h.start({ script: "WIZ-00000000000000c1" });
-  assert.deepEqual(h.nav, [["plan", "P9"]]);
+  assert.deepEqual(h.nav, [["timeline", "P9"]]);
   assert.equal(h.requests.filter((r) => r.op === "projectlist").length, 0);
+});
+
+test("R17 the plan screen is not asked a project for (it reads a plan id) and opens as it always did", async () => {
+  const g = standIn({ plane: plane17({ wizardread: readSteps([{ screen: "plan", act: null, what: "a", why: "b" }]) }) });
+  await g.start({ script: "WIZ-00000000000000c1" });
+  assert.deepEqual(g.nav, [["plan", null]]);
+  assert.equal(g.requests.filter((r) => r.op === "projectlist").length, 0);
 });

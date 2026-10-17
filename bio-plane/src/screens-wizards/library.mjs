@@ -257,7 +257,8 @@ export const library = {
         if (d.mode === "copy") {
           const project = cs.value("wz-cp-" + k);
           if (!project) return { refuse: "screen.wizards.project.none" };
-          const name = String(cs.value("wz-cn-" + k) || "").trim();
+          // with no name typed (the act no longer asks a reason, op-grades), the copy keeps its original's name
+          const name = String(cs.value("wz-cn-" + k) || "").trim() || String(d.name || "");
           return { body: { copy: d.version, project, name } };
         }
         if (d.mode === "from") {

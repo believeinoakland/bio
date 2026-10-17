@@ -143,10 +143,10 @@ test("R7 in the page: after join the welcome offer sits on Home; \"Not now\" fol
 });
 
 test("R17 in the page: a step on a screen that works in a project asks in the dock, as a choice of the member's projects, and opens the screen on the one chosen", async () => {
-  const PLAN = { id: "plan", reads: () => ({}), render: (cs, view) => `<p data-subject="${cs.esc(view.subject)}">${cs.title()}</p>`, acts: [], words: [] };
+  const PLAN = { id: "timeline", reads: () => ({}), render: (cs, view) => `<p data-subject="${cs.esc(view.subject)}">${cs.title()}</p>`, acts: [], words: [] };
   const start = { id: "home", reads: () => ({}), render: (cs) => cs.act("startfrom", { data: { s: "1" } }),
     acts: [{ op: "startfrom", send(view, el, cs) { cs.wizard("WIZ-00000000000000e9", "WIZ-00000000000000e9@1", {}); return null; } }] };
-  const steps = [{ screen: "plan", act: null, what: "Open the plan", why: "To see its options" }, { screen: "wizards", act: null, what: "Then here", why: "Done" }];
+  const steps = [{ screen: "timeline", act: null, what: "Open the plan", why: "To see its options" }, { screen: "wizards", act: null, what: "Then here", why: "Done" }];
   const p = await boot({ screens: [start, PLAN, ...SCREENS], guide: GUIDE, path: "/app",
     plane: plane({ projectlist: ok({ ok: true, projects: [{ id: "P1", name: "Pothole repairs" }, { id: "P2", name: "The Coliseum lease" }], count: 2 }),
       wizardread: () => ok({ ok: true, script: { id: "WIZ-00000000000000e9", name: "Plan it", origin: "group" }, version: { id: "WIZ-00000000000000e9@1", state: "approved", steps } }) }) });
@@ -163,6 +163,6 @@ test("R17 in the page: a step on a screen that works in a project asks in the do
   select.value = "P2";
   await p.click(dock().querySelector('[data-guide="subjectgo"]'));
   await p.settle(120);
-  assert.equal(p.location.pathname, "/app/plan/P2");
+  assert.equal(p.location.pathname, "/app/timeline/P2");
   assert.equal(p.root().querySelector("#cs-main [data-subject]").getAttribute("data-subject"), "P2");
 });

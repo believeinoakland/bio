@@ -86,8 +86,9 @@ test("R1 wizarddraft: \"Copy a wizard to change it\" sends the version, the proj
   const { sent } = await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cp-" + k]: "P2", ["wz-cn-" + k]: "Get a record, our way" } });
   assert.deepEqual(sent[0].body, { copy: V.civ, project: "P2", name: "Get a record, our way" });
   assert.equal(a.p.requests.at(-1).op === "wizards" || a.p.requests.some((r, i) => i > 0 && r.op === "wizards"), true, "R8: read again");
-  // the name is the member's own words (interface-shell R11): with none, nothing is sent
-  assert.deepEqual((await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cn-" + k]: "" } })).sent, []);
+  // with no name typed, the copy keeps its original's name, never an empty one
+  const kept = await a.press("wizarddraft", { data: { mode: "copy", version: V.civ }, values: { ["wz-cp-" + k]: "P2", ["wz-cn-" + k]: "" } });
+  assert.deepEqual(kept.sent[0].body, { copy: V.civ, project: "P2", name: CIV.name });
   // control: with no project to choose, nothing is sent and the screen says why
   const n = await open("wizards", { me: MEMBER, table: libraryTable({ projectlist: env({ ok: true, projects: [], count: 0 }) }) });
   const r = await n.press("wizarddraft", { data: { mode: "copy", version: V.civ } });
