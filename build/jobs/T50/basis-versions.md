@@ -29,3 +29,14 @@ Four readings I carry on with; each is cheap to change if you read it otherwise.
 - Inherited reds, not mine, red before my change (same three on `tranche/T50`): `op-declarations` `t33.test.mjs` (R19, R6) and `t47.test.mjs` (R54, R60), `answer-envelope` `families.test.mjs` (R15, R7, R2).
 - Size: the module is 4,028 lines of code with this job (3,782 at START), just past the ~4,000 mark. BOB's note 3: it still runs; the `conclude` family's split is T51's first entry (P6).
 - Words: `refusal.NO_CLAIM`, `refusal.BAD_READING`, `refusal.VERSION_NAME_MALFORMED` and `refusal.VERSION_AFFIRMATION_INCOMPLETE` are read by key. Details (the diagnostic `detail` fields) remain this module's English as before, as the other refusals' are. `refusal.VERSION_NAME_NOT_UNIQUE` exists as a key; its row still carries its own sentence (not mine to change without a requirement).
+
+**Tests and checks run** (at commit 862a4009d9):
+- `node --test bio-plane/test/m/basis-versions/`: tests 174, pass 174, fail 0 (155 before; 19 added).
+- The 57 other test files that mention this module or its codes: tests 812, pass 804, fail 3; the three are the inherited reds above, red on `tranche/T50` before my change (checked by stashing).
+- `node checks/format.mjs`: `171 modules, 170 requirements files; 0 failures`.
+- `node checks/architecture.mjs bio basis-versions`: `33 product files, 111 relative imports (0 naming no tracked file, not judged); 0 failures`.
+- `node checks/coverage.mjs bio basis-versions`: `1 modules, 51 of 51 live requirement ids named by a test; 0 failures`.
+- `node checks/ownership.mjs bio basis-versions tranche/T50`: `11 files changed by basis-versions between tranche/T50 and HEAD; 0 failures`.
+- `node checks/run.mjs bio`: format 0 failures, architecture 0 failures (3,450 files), channels 0 failures; coverage 37 failures, none on this module (other modules' ids not yet named, their own jobs).
+
+Size (session_01A9kABDFujBr9RPjNiuHGvd): test runs 19, module lines 4028
