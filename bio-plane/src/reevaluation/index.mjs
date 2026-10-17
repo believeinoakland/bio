@@ -2767,6 +2767,9 @@ export class Reevaluation {
   /** R15: ADOPT writes a new version of the reference pinned to the newer capture, the old staying readable: for a
    *  basis leg, a new basis version through `basis-versions` (its R28), holding the question's live legs as written with
    *  this one re-pinned (its grade is not carried: it was given to the earlier passage). The live basis is untouched.
+   *  R37: the version's `author` is the adopting member, so it reads as a member's own at `versionAccept` (its R49).
+   *  R38: a refusal of `appendVersion` (a divided question's among them) comes back unchanged with the notice's id, and
+   *  the notice stays open.
    *  The version and the notice's closing land together or neither does. It requires `why`, the member's words on why
    *  the newer version is adopted (DEC-88), asked after the machine refusal and before anything is read for writing;
    *  the why is recorded with the new version (its description and Session Log entry) and on the notice's closure. */
@@ -2858,7 +2861,7 @@ export class Reevaluation {
       + `Every other leg is as the live basis holds it. Why: ${line}`;
     const answer = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
-        target: r.holder, version: { name, description, relationship: labels.size > 1 ? "or" : "and" },
+        target: r.holder, version: { name, description, relationship: labels.size > 1 ? "or" : "and", author: who },
         grounds, legs: vlegs, author: who, at: when,
         log: `### Session ${when} | Newer version adopted | ${who}\n`
            + `Trigger: adoptVersion on ${r.notice_id}\n`
