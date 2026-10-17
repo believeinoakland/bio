@@ -484,6 +484,7 @@ const SCREEN_HELP = {
   published: 'A case your team published, as anyone reads it: findings, their strength, the evidence, and how to check it without the team.',
   imported: 'Another team\'s published case, recreated here. Nothing in it counts for your team until a member accepts it with a reason.',
   docket: 'The public record of every edition, correction and withdrawal of your team\'s cases.',
+  'docket-public': 'A published case\'s docket as anyone reads it, with no account: each new edition, correction, withdrawal and court order after publishing, dated and signed.',
   inbox: 'Material handed to your team through its doorbell. Move it into the record, or discard it with a reason.',
   doorbell: 'Hand material to the team. You need no account; the page says what will happen to what you send.',
 };
