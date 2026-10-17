@@ -28,3 +28,7 @@
 - `format` 0 failures; `architecture standards` 0 failures; `coverage standards` 51 of 51 live ids named, 0 failures; `ownership standards tranche/T50` 0 failures; `checks/run.mjs`: architecture 0 failures, coverage reds are other modules' not-yet-met ids, none standards'.
 
 Size (session_01RDKpqZKsU8QiADDq4eKKT1): test runs 9, module lines 3637
+
+## J1 · COMPLETE
+
+T50-41 done: R58, R59, R60 met. standards 104/104; users of standards 3,075/3,105 (28 red = the 27 accepted reds of rule 5 + one new: conformance t36.test.mjs:55 asserts standards' old 'known in force through' sentence, now standard.inforce.known; REPORT in my record). format, architecture, coverage (51/51), ownership 0 failures. Record: build/jobs/T50/standards.md on job/T50/standards (readings: says.copy, cited_by_words, searched_words, release_by_words are new fields beside the old; words-reads.json for standards lacks keys now read).
