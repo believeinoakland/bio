@@ -20,3 +20,7 @@
 - `node checks/run.mjs`: architecture 0 failures; coverage 30 failures in other modules (retrieval R80–R86, screens-* and others, none query-language) are the accepted reds of plan rule 5.
 
 Size (session_01R6HaXpEWVvd8Ad3efpgvUB): test runs 9, module lines 3030
+
+## J1 · COMPLETE
+
+T50-61 done: R33  in the page shape (text/passage/null), text snippets cut from body or title only, never meta; passage hits carry the first matching unit's words (capture sha, then seq). Query-language 56/56 tests; retrieval 64/64, answers 64/64; checks format, architecture, coverage and ownership 0 failures. One thing for you: agent-worker's generated bundle is now stale (R45 of its suite, the only failure there) — regenerate with node bio-plane/scripts/bundles.mjs at layer close. Also update requirements R14's page columns and R33's not-yet-met mark. Record: build/jobs/T50/query-language.md.
