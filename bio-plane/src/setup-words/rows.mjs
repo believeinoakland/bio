@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12699 words, 891 protected; SHA-256
-   f44688953867c53d2a8e774af3bc371d4b6ccdd0a8a32d8c5583a8589b86c137), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12722 words, 892 protected; SHA-256
+   b4b6e7732880aae5019ba9e75b3d2d0c85b5f0183fd403989909917dd60e1d3e), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "f446889538";
+export const WORDS_COMMIT = "b4b6e77328";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5634,6 +5634,29 @@ export const WORD_ROWS = Object.freeze([
   ["findin.cell.uncalculated","{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.","DEC-303: retrieval R83",null,false],
   ["findin.match.nameinpassage","Named in this passage","DEC-303: retrieval R84: correspondence name_in_passage",null,false],
   ["findin.match.sheet","Sheet {sheet}, row {row}","DEC-303: retrieval R83: a sheet match's place",null,false],
+  ["refusal.STAKE_MALFORMED.action","This action's stake says, in your own words, only what this one action adds to your team's and the project's stakes: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.","DEC-304: action-records R17",null,false],
+  ["refusal.DIVIDED_CANNOT_RESTRUCTURE","This question was divided, and its smaller questions carry on from this source, so the newer version can't be adopted here. Adopt it in each smaller question that relies on it. Nothing was written.","DEC-304: reevaluation R38",null,false],
+  ["screen.review-outside.until.zone","It is not public: only people with this link can read it, until {date} at {time} ({zone}).","DEC-304: review R35: the grant's end in the team's own time zone; replaces screen.review-outside.until's UTC",null,false],
+  ["caseimport.stake.unreadable","The team that sent this case stated a stake in this matter, in a form Civicsmith can't read, so it isn't shown. Ask that team for its statement.","DEC-304: case-import R25",null,false],
+  ["refusal.COPYRIGHTED_TEXT_CARRIED","The case carries more of a copyrighted work's text than its findings rely on. Quote only the passages the findings rely on and cite the rest, then check again.","DEC-304: case-checker R26, a gate",null,false],
+  ["refusal.COPYRIGHTED_PASSAGE_UNRELIED","The case quotes a passage of a copyrighted work that no finding relies on. Remove the quotation or cite it without quoting, then check again.","DEC-304: case-checker R26, a gate",null,false],
+  ["refusal.MALFORMED","Something in this isn't in the form Civicsmith expects, so it couldn't be checked. Nothing was written.","DEC-304: case-checker R26, the general gate",null,false],
+  ["refusal.BENCHMARK_CALLED_NONCONFORMING.finding","A benchmark does not bind this body, so this finding cannot call the act a violation or nonconforming. Say how it compares: below, slower than, or above. Then check again.","DEC-304: case-checker R26: a finding's own sentence",null,false],
+  ["refusal.MARK_NO_ITEM","Say which item to mark. Nothing was written.","DEC-304: following R32",null,false],
+  ["refusal.MARK_NO_SUCH_ITEM","That item isn't in your team's records, or isn't one you can see. Nothing was written.","DEC-304: following R32",null,false],
+  ["refusal.SECOND_LOOK_NO_NOTE","Say in a note what the second look should check. Nothing was written.","DEC-304: following R33",null,false],
+  ["refusal.SECOND_LOOK_NOT_OPEN","That second look is already closed, so it can't be changed. Nothing was written.","DEC-304: following R33",null,false],
+  ["refusal.MACHINE_CANNOT_OPEN_FROM_ACTION","Only a member opens a question from an action, and this came from the assistant or another automated credential. Nothing was written.","DEC-304: action-records R19",null,true],
+  ["refusal.ACTION_INQUIRY_NO_QUESTION","Write the question to open. Nothing was written.","DEC-304: action-records R19",null,false],
+  ["refusal.ACTION_NO_PROJECT","This action belongs to no project, so a question can't be opened from it. Nothing was written.","DEC-304: action-records R19",null,false],
+  ["queue.watched-changed.summary","{what} changed","DEC-304: notice-producers (T50-82): a watched item changed (DEC-238)",null,false],
+  ["queue.watched-changed.detail","Something you watch changed on {date}. Open it to see what changed; nothing has been decided.","DEC-304: DEC-238",null,false],
+  ["ai.run.ending.nothing-written","it finished its work but wrote nothing","DEC-304: run-rules R34; after \"The run ended: \"",null,false],
+  ["refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE","Nothing is recorded as missing at this level: no document there was in scope, so none was looked at. Nothing was written.","DEC-304: run-rules R35",null,false],
+  ["refusal.VERSION_NAME_MALFORMED","A reading's name is a few plain words on one line. Rename it and try again. Nothing was written.","DEC-304: basis-versions R54",null,false],
+  ["refusal.BAD_READING","Your reading must say something, in at most 500 characters, and it takes the place of a named reading rather than going beside one. Nothing was written.","DEC-304: basis-versions R51",null,false],
+  ["ai.progress.reading.ask","Reading {document}","DEC-304: agent-worker R113: the assistant's reads while answering, with no total (DEC-298)","Each step shows as the assistant takes it. What it writes is held until Civicsmith has checked every passage it cites against the document itself; only then is it shown.",false],
+  ["ai.reading.levels.disagree","Two levels of the assistant's reading disagree about {record}: {first} and {second} give different results. Check the record yourself before you rely on either.","DEC-304: agent-worker R116: on the question page and in the run's result",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -10195,7 +10218,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.MACHINE_CANNOT_DISPOSE","Choosing, declining or marking an option done or blocked is a member's decision. An assistant may not make it. Nothing was written.","action-plans' translation, keyed by its code",null,false],
   ["refusal.MACHINE_CANNOT_FILE_DOCKET","Only a member, signed in as themselves, files to a case's docket. A machine, the assistant or an operator token cannot. Nothing was filed.","docket's translation, keyed by its code",null,false],
   ["refusal.MACHINE_CANNOT_JUDGE","Whether a checkpoint's condition was met is the team's own judgment. An assistant may not make it. Nothing was written.","action-plans' translation, keyed by its code",null,false],
-  ["refusal.MACHINE_CANNOT_MARK","Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written.","sources' translation, keyed by its code",null,false],
+  ["refusal.MACHINE_CANNOT_MARK","Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.","sources' translation, keyed by its code; DEC-259: reworded",null,false],
   ["refusal.MACHINE_CANNOT_MARK_DOCKET_PRESSURE","Only a member, signed in as themselves, marks a docket entry as a threat. Nothing was marked.","docket's translation, keyed by its code",null,false],
   ["refusal.MACHINE_CANNOT_PLACE_DOCKET","Only the case's manager, signed in as themselves, places, declines or signs a public docket entry. A machine, the assistant or an operator token cannot. Nothing was published.","docket's translation, keyed by its code",null,false],
   ["refusal.MACHINE_CANNOT_PLAN","An action plan is the team's own working material, and only a member opens it, changes what it is about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written.","action-plans' translation, keyed by its code",null,false],
