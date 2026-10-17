@@ -10,3 +10,7 @@
 - **Deferred:** none. **Other modules:** `build/modules.json` explore `uses` lacks `setup-words` (BOB's note 1 says it was added, K3632); I use no keyed words in this job, so nothing needs it yet; it is BOB's file.
 - **Ran:** `node --test bio-plane/test/m/explore/` 50 tests, 50 pass; format 0 failures; architecture 0 failures; coverage explore 25 of 25 ids named, 0 failures; ownership 0 failures. `checks/run.mjs` over the product: other modules' coverage reds (retrieval, screens-*, standards …) are inherited, none explore's.
 - Size (session_01GeqMMCaEHa6q6oxUuwc2TJ): test runs 4, module lines 1043
+
+## J1 · COMPLETE
+
+R25 met: exploregraph steps keep attached_by/at; nodes carry label and entity_kind via entities.labelsOf (R56), read in <=500-id reads. 50/50 explore tests pass; format, architecture, coverage (25/25) and ownership 0 failures. labelsOf was not yet merged from entities at my start: built against R56 with a guarded call and a stand-in in tests; assumed return shape is a map id -> {label, kind}|null (see my record). Please send CHANGE once entities merges so I re-run against the real read. modules.json: explore uses lacks setup-words (your note 1); unused by this job. Details in build/jobs/T50/explore.md.
