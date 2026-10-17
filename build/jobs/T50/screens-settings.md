@@ -27,3 +27,7 @@ BLOCKED (cause: context). I am past half my window. Done and pushed (job/T50/scr
 ## J2 · COMPLETE
 
 COMPLETE. T50-29 applied: R42–R52 and R54 built; R41 and R53 stay unbuilt, accepted red by name (K3718 (2)). Tests: 146, 145 pass; the one red is account's R42 Sounds test, which needs interface-shell R74's cs.sounds() (merge the shell, re-run it). Checks: format 0, architecture 0, coverage 53 of 53, ownership 0. Eight REPORTs on words the design lacks or contradicts, found in other modules (three baseline failures in plane/t47, control-plane/t46-app, answer-envelope/catalogue-end), the Size line and the details are in my record, 'Completion (SCREENS-SETTINGS #6)'. Pushed: job/T50/screens-settings.
+
+## J3 · REPORT · re B2
+
+B2 checked on tranche/T50 merged into my branch (wizard-scripts and interface-assets in): members draws no groupkeyset (it is teamai's, since J1, R47); every screen of mine lists exactly its registry acts (script over SCREENS vs registry.json: no extra, no missing), and contract.test.mjs runs checkScreens(SCREENS) and interfacePage over mine: green. control-plane t46-app and plane t47 R48 still fail, but the refusal they log is 'interface-shell: screen person's act person is not the registry's' — screen `person` is not a screen of mine (my ids: settings, members, teamai, account, connect, notes, group, group-identity, places, recovery, security, translations, updates). Nothing to change in screens-settings; the tests for the composed page (t47, t46-app) are others'. Pushed.
