@@ -35,3 +35,7 @@ I am building R36 and the words work (plan rule 6) meanwhile, and will leave R37
 - `format` 0 failures; `architecture public-read` 0 failures; `coverage public-read` 37 of 37 live ids named, 0 failures; `ownership public-read tranche/T50` 0 failures; `checks/run.mjs`: architecture 0 failures (coverage failures are other modules' not-yet-met ids).
 
 Size (session_01AwdRj3H21ktEZnLTXx3okd): test runs 12, module lines 3685
+
+## J2 · COMPLETE
+
+T50-71 done: R36 and R37 met (R37 as K3725: the publishedcase op carries corrections; the method does not). 39 word keys read through setup-words. public-read 206/206; format, architecture, coverage (37/37), ownership 0 failures. REPORT in my record: plane R40 now red (expects six groupFields keys, now matter_stake too); installer's credit-line equality copies now read teams/Neighborhood; the bar_detail sentence (bar recorded) has no key. Record: build/jobs/T50/public-read.md on job/T50/public-read.
