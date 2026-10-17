@@ -23,10 +23,11 @@
  * T33 (T33-32) adds C-100.24 `NOT_ATTESTED_BY_DOCUMENT` (R37); R37's `NO_SUCH_DATED_FACT` is events' one answer (its R7,
  * `noSuchDatedFact`; K1568 (3)), and C-100.25 is retired, never reused; R39's
  * `NO_SUCH_STANDARD` and `PORTION_UNKNOWN` are standards' one answers (its R17, `noSuchStandard`; `portionUnknown`,
- * K1563 (10)). */
+ * K1563 (10)). T50 (T50-62) adds C-100.26 `NO_SET` and C-100.27 `SET_TOO_LARGE` (R44). */
 
 import { SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { DISPOSITIONS } from "../promotion/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /** The two decisions a member may record about a derived question (D-79): `promotion`'s one list (its R51), the same
  *  frozen array, re-exported here (R35; N340). Adopting one authors a focus instead. */
@@ -37,125 +38,101 @@ const at = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 export const PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: 'C-100.2', where: at("defineProgression", "is-progression-labelled"),
-    translation: 'A declared flow carries a name a person can read, and this one has none. Give it a name. '
-      + 'Nothing was written.',
+    translation: word("refusal.PROGRESSION_NO_LABEL"),
   },
   NO_STAGES: {
     check: 'C-100.3', where: at("defineProgression", "is-progression-staged"),
-    translation: 'A declared flow is its steps in order, and this one names no step. Name at least one step. '
-      + 'Nothing was written.',
+    translation: word("refusal.NO_STAGES"),
   },
   NO_STAGE_KEY: {
     check: 'C-100.4', where: at("defineProgression", "is-stage-keyed"),
-    translation: 'One step of this flow has no key, so nothing could later be placed at it or found missing '
-      + 'from it. Give every step a key. Nothing was written.',
+    translation: word("refusal.NO_STAGE_KEY"),
   },
   DUPLICATE_STAGE: {
     check: 'C-100.5', where: at("defineProgression", "is-stage-unique"),
-    translation: 'Two steps of this flow share one key, so a document placed at that key could belong to '
-      + 'either. Give each step its own key. Nothing was written.',
+    translation: word("refusal.DUPLICATE_STAGE"),
   },
   NO_CARDINALITY: {
     check: 'C-100.6', where: at("defineProgression", "is-stage-counted"),
-    translation: 'One step does not say how many documents it may hold (exactly one, at most one, or any '
-      + 'number), so the record could not tell a step holding too many from one holding the usual set. '
-      + 'Say how many. Nothing was written.',
+    translation: word("refusal.NO_CARDINALITY"),
   },
   BAD_REQUIRED: {
     check: 'C-100.7', where: at("defineProgression", "is-stage-required"),
-    translation: 'One step does not say how firmly it is expected, in one of the five words the record '
-      + 'understands (always, usually, sometimes, never, unless an exception is recorded). Use one of '
-      + 'them. Nothing was written.',
+    translation: word("refusal.BAD_REQUIRED"),
   },
   UNKNOWN_AFTER: {
     check: 'C-33.26', where: at("defineProgression", "is-progression-order"),
-    translation: 'One step here says it comes after a step this sequence does not contain, so the '
-      + 'order cannot be worked out. Name a step that exists, or leave the ordering off and let it '
-      + 'stand on its own.',
+    translation: word("refusal.UNKNOWN_AFTER"),
   },
   PROGRESSION_VERSION_NOT_HELD: {
     check: 'C-100.8', where: at("readProgression", "is-version-held"),
-    translation: 'The record holds no such version of this flow. The versions it does hold are named '
-      + 'beside this message, and each reads back in full.',
+    translation: word("refusal.PROGRESSION_VERSION_NOT_HELD"),
   },
   NO_PLACEMENTS: {
     check: 'C-100.10', where: at("threadInstance", "is-thread-placed"),
-    translation: 'Threading places documents at the steps of a flow, and this request places none. Name at '
-      + 'least one step and the document that fills it. Nothing was written.',
+    translation: word("refusal.NO_PLACEMENTS"),
   },
   NO_SUCH_PROGRESSION: {
     check: 'C-100.11', where: at("#declared", "is-progression-declared"),
-    translation: 'No flow of that key has been declared, so there is nothing to place documents in or to '
-      + 'decide about. Declare the flow first. Nothing was written.',
+    translation: word("refusal.NO_SUCH_PROGRESSION"),
   },
   NO_STAGE: {
     check: 'C-100.13', where: at("#stageNamed", "is-stage-named"),
-    translation: 'This request does not say which step of the flow it is about. Name the step. Nothing was '
-      + 'written.',
+    translation: word("refusal.NO_STAGE"),
   },
   BAD_STAGE: {
     check: 'C-100.14', where: at("#stageOf", "is-stage-of-progression"),
-    translation: 'The step named here is not a step of this flow as it is declared now. Name one of its '
-      + 'steps. Nothing was written.',
+    translation: word("refusal.BAD_STAGE"),
   },
   NO_CAPTURE: {
     check: 'C-100.15', where: at("#documentNamed", "is-document-named"),
-    translation: 'A step is filled by a captured document, named by its fingerprint, and this request names '
-      + 'none. Name the document. Nothing was written.',
+    translation: word("refusal.NO_CAPTURE"),
   },
   DUPLICATE_PLACEMENT: {
     check: 'C-100.16', where: at("threadInstance", "is-placement-unique"),
-    translation: 'The same document is placed at the same step twice in this request. Place it once. Nothing '
-      + 'was written.',
+    translation: word("refusal.DUPLICATE_PLACEMENT"),
   },
   NOT_CONCERNED: {
     check: 'C-100.17', where: at("#concerned", "is-document-concerned"),
-    translation: 'The record does not show this document concerning the subject this instance follows, so '
-      + 'it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, '
-      + 'or use it in the instance of the subject it does concern. Nothing was written.',
+    translation: word("refusal.NOT_CONCERNED"),
   },
   NO_REASON: {
     check: 'C-100.18', where: at("#reasonStated", "is-reason-stated"),
-    translation: 'This act is recorded with a reason, in your own words, and none was given. A decision or '
-      + 'an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was '
-      + 'written.',
+    translation: word("refusal.NO_REASON"),
   },
   NOT_A_DISPOSITION: {
     check: 'C-100.20', where: 'src/progressions/checks.mjs notADisposition > is-disposition-word',
-    translation: 'Setting something down means deferring it (set aside for now) or dismissing it (declined); taking '
-      + 'it up is a different act. Choose deferred or dismissed. Nothing was written.',
+    translation: word("refusal.NOT_A_DISPOSITION"),
   },
   BAD_REASON: {
     check: 'C-100.21', where: at("disposeProposal", "is-reason-bounded"),
-    translation: 'The reason is too long or contains a quotation mark, a backslash or a line break, which '
-      + 'the record cannot keep as written. Shorten it to one plain line. Nothing was written.',
+    translation: word("refusal.BAD_REASON"),
   },
   NO_DECIDER: {
     check: 'C-100.22', where: at("disposeProposal", "is-decider-stamped"),
-    translation: 'A decision is recorded under the member who took it, and this request reached the record '
-      + 'without one. Sign in and decide again. Nothing was written.',
+    translation: word("refusal.NO_DECIDER"),
   },
   NO_DEFINITION_VERSION: {
     check: 'C-33.42', where: at("disposeProposal", "is-dispose-version-named"),
-    translation: 'Setting aside one of the record\'s own questions is a decision about the way a '
-      + 'body is said to work — and that description is written down, dated, and rewritten when the '
-      + 'group learns better. This request does not say which of those versions you were reading '
-      + 'when you decided, so the record cannot say what you actually judged. Open the question '
-      + 'again and send the version shown beside it. Nothing was recorded.',
+    translation: word("refusal.NO_DEFINITION_VERSION"),
   },
   NOT_ATTESTED_BY_DOCUMENT: {
     check: 'C-100.24', where: at("#ownDateNamed", "is-event-attested"),
-    translation: 'The event named for this document is not one the document attests, so its date cannot be the '
-      + 'date of this step. Name an event the document attests, or none. Nothing was written.',
+    translation: word("refusal.NOT_ATTESTED_BY_DOCUMENT"),
+  },
+  /* R44: the design lane's list holds no `refusal.NO_SET`; the nearest held sentence stands until it does (a REPORT). */
+  NO_SET: {
+    check: 'C-100.26', where: at("instancesFor", "is-set-named"),
+    translation: word("refusal.SET_NO_ITEMS"),
+  },
+  /* R44: `refusal.SET_TOO_LARGE` is record-core's key; its sentence is true of this read too (a REPORT). */
+  SET_TOO_LARGE: {
+    check: 'C-100.27', where: at("instancesFor", "is-set-bounded"),
+    translation: word("refusal.SET_TOO_LARGE"),
   },
   DEFINITION_MOVED: {
     check: 'C-33.43', where: at("disposeProposal", "is-dispose-version-current"),
-    translation: 'The version of the declared flow this decision names is not the one standing now. '
-      + 'Rather than file your decision against a description you did not read, the record keeps it '
-      + 'out and asks you to look again: read the question against the version in force and decide '
-      + 'again. The answer may well be the same one, and it will then be yours. Both versions are '
-      + 'named beside this message, the earlier one still reads back in full, and nothing was '
-      + 'recorded.',
+    translation: word("refusal.DEFINITION_MOVED"),
   },
 });
 
