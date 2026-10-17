@@ -132,7 +132,8 @@ export function blankUnknownRefusal(text, extra = null, why = "") {
 /** R33 (T48; N880; Actions D13, H17; v0.2 rule 8): the sentence every request for comment carries, moved here from
  *  `filings` (its `KEYED["rfc.quoting"]`) unchanged. Read by key (T50, N1130; DEC-260) from `words.json`'s
  *  `filing-templates.rfc_quoting_sentence` through setup-words' `word`, the same words (K2953; `filings` R52). */
-export const RFC_QUOTING_SENTENCE = word("filing-templates.rfc_quoting_sentence");
+const RFC_QUOTING_KEY = "filing-templates.rfc_quoting_sentence";
+export const RFC_QUOTING_SENTENCE = word(RFC_QUOTING_KEY);
 /* R33: the product kind whose file templates must hold it (`action-grammar`'s PRODUCT_KINDS, its R2). */
 const RFC_KIND = PRODUCT_KINDS.find((k) => k === "request_for_comment");
 
@@ -143,7 +144,7 @@ export function rfcQuotingRefusal(text, extra = null) {
   if (typeof text === "string" && text.includes(RFC_QUOTING_SENTENCE)) return null;
   /* DEC-49 REGION is-rfc-quoting-missing */
   return refuse("RFC_QUOTING_MISSING", "a request for comment carries the sentence that the reply may be quoted unless it says otherwise",
-                { ...(extra && typeof extra === "object" ? extra : {}), sentence: RFC_QUOTING_SENTENCE, key: "rfc.quoting" });
+                { ...(extra && typeof extra === "object" ? extra : {}), sentence: RFC_QUOTING_SENTENCE, key: RFC_QUOTING_KEY });
   /* END DEC-49 REGION is-rfc-quoting-missing */
 }
 

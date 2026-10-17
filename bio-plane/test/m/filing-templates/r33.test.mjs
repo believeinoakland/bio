@@ -59,7 +59,8 @@ test("R33 RFC_QUOTING_SENTENCE is the sentence filings held, unchanged (K2953), 
 test("R33 rfcQuotingRefusal answers C-115.47 RFC_QUOTING_MISSING with its row, extra fields merged, when the text lacks the sentence; control: a text holding it answers null", () => {
   const r = ft.rfcQuotingRefusal(`${BODY} Thanks.`, { filing: "FIL-1", version: "TPL-x@1" });
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "RFC_QUOTING_MISSING", "RFC_QUOTING_MISSING", "C-115.47", ROW.translation]);
-  assert.deepEqual([r.filing, r.version, r.sentence, r.key], ["FIL-1", "TPL-x@1", SENTENCE, "rfc.quoting"], "extra merged; the sentence named");
+  assert.deepEqual([r.filing, r.version, r.sentence, r.key], ["FIL-1", "TPL-x@1", SENTENCE, "filing-templates.rfc_quoting_sentence"],
+                   "extra merged; the sentence named by its current key (R33; rfc.quoting was withdrawn, DEC-234)");
   assert.equal(ft.rfcQuotingRefusal(BODY).reason, "RFC_QUOTING_MISSING", "extra may be absent");
   assert.equal(ft.rfcQuotingRefusal(BODY, { sentence: "other" }).sentence, SENTENCE, "the sentence named is the refusal's own");
   for (const text of ["", null, undefined, 7, "your reply may be quoted unless it says otherwise.", "Your reply may be quoted, unless you say otherwise in it."])
@@ -88,7 +89,7 @@ test("R33 templateApprove refuses a file version of the request-for-comment kind
   const d = inReview(w, { name: "lacking" });
   const before = w.snapshot();
   const r = refused(approve(w, d.version), "RFC_QUOTING_MISSING");
-  assert.deepEqual([r.version, r.sentence, r.key], [d.version, SENTENCE, "rfc.quoting"]);
+  assert.deepEqual([r.version, r.sentence, r.key], [d.version, SENTENCE, "filing-templates.rfc_quoting_sentence"]);
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.equal(w.ft.templateRead({ template: d.template, version: d.version, viewer: A }).version.state, "in_review");
   refused(w.ft.offeredVersion({ template: d.template, viewer: A }), "TEMPLATE_NOT_OFFERED");
@@ -120,7 +121,7 @@ test("R33 controls: a brief template of the kind, and a template of another kind
 test("R33 a profile template of the kind and use lacking the sentence is not offered and reads RFC_QUOTING_MISSING, in R15's form; controls: with it, a brief one, and a template of another kind are offered", () => {
   const w = world();
   const without = refused(w.ft.offeredVersion({ template: "TPL-test-rfc-without", viewer: A }), "RFC_QUOTING_MISSING");
-  assert.deepEqual([without.template, without.sentence, without.key], ["TPL-test-rfc-without", SENTENCE, "rfc.quoting"]);
+  assert.deepEqual([without.template, without.sentence, without.key], ["TPL-test-rfc-without", SENTENCE, "filing-templates.rfc_quoting_sentence"]);
   const read = w.ft.templateRead({ template: "TPL-test-rfc-without", viewer: A });
   assert.deepEqual([read.ok, read.offered, read.not_offered.reason, read.not_offered.check, read.version.state],
                    [true, false, "RFC_QUOTING_MISSING", "C-115.47", "approved"]);
