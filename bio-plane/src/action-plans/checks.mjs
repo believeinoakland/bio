@@ -26,21 +26,22 @@ export const PLAN_WORDS = Object.freeze({
   'refusal.DOCUMENT_FIRST_NO_REASON': 'Acting before what happened is documented needs your reason: why you are acting '
     + 'first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn\'t '
     + 'in that form. Give it, or document what happened first. Nothing was written.',
-  'plan.close.lessons': 'What would your group do differently next time? (optional, at most 4,000 characters)',
+  'plan.close.lessons': 'What would your team do differently next time? (optional, at most 4,000 characters)',
+  'refusal.PLAN_NO_TITLE': 'A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. '
+    + 'Nothing was written.',
 });
 
 export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
     check: 'C-124.1', where: at("machineCannotPlan", "is-plan-member"),
-    translation: 'An action plan is the group\'s own working material, and only a member opens it, changes what it is '
+    translation: 'An action plan is the team\'s own working material, and only a member opens it, changes what it is '
       + 'about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it '
       + 'may not do this. Sign in as a member. Nothing was written.',
   },
   PLAN_NO_TITLE: {
     check: 'C-124.2', where: at("planOpen", "is-plan-titled"),
-    translation: 'A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. '
-      + 'Nothing was written.',
+    translation: PLAN_WORDS['refusal.PLAN_NO_TITLE'],
   },
   PLAN_NO_SUBJECT: {
     check: 'C-124.3', where: at("refuseNoSubject", "is-plan-subjects"),
@@ -116,7 +117,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   ADDRESSEE_REFUSED: {
     check: 'C-124.17', where: at("#optionFields", "is-option-addressee"),
     translation: 'An addressee is an office by its role and body, a reporter or outlet, an organisation or another '
-      + 'civic group by role and organisation, or a described audience. It is never a private individual. Nothing '
+      + 'civic organization by role and organisation, or a described audience. It is never a private individual. Nothing '
       + 'was written.',
   },
   DATE_REFUSED: {
@@ -197,7 +198,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: 'C-124.33', where: at("#scenarioPhases", "is-phase-option-chosen"),
-    translation: 'A phase holds only options the group has chosen. Choose the option first. Nothing was written.',
+    translation: 'A phase holds only options the team has chosen. Choose the option first. Nothing was written.',
   },
   PHASE_CYCLE: {
     check: 'C-124.34', where: at("#scenarioPhases", "is-phase-acyclic"),
@@ -211,7 +212,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   MACHINE_CANNOT_JUDGE: {
     check: 'C-124.36', where: at("checkpointRecord", "is-judge-member"),
-    translation: 'Whether a checkpoint\'s condition was met is the group\'s own judgement. An assistant may not make '
+    translation: 'Whether a checkpoint\'s condition was met is the team\'s own judgement. An assistant may not make '
       + 'it. Nothing was written.',
   },
   CHECKPOINT_REFUSED: {
@@ -232,12 +233,12 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R18: starting an option ---- */
   MACHINE_CANNOT_START: {
     check: 'C-124.40', where: at("optionStart", "is-start-member"),
-    translation: 'Starting an option creates an action the group takes in the world, and only a member does that. '
+    translation: 'Starting an option creates an action the team takes in the world, and only a member does that. '
       + 'Nothing was written.',
   },
   OPTION_NOT_CHOSEN: {
     check: 'C-124.41', where: at("optionStart", "is-start-chosen"),
-    translation: 'Only an option the group has chosen is started. Choose it first. Nothing was written.',
+    translation: 'Only an option the team has chosen is started. Choose it first. Nothing was written.',
   },
   OPTION_STARTED: {
     check: 'C-124.42', where: at("optionStart", "is-start-once"),
@@ -316,7 +317,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   PLAN_PROVIDER_UNAVAILABLE: {
     check: 'C-124.57', where: at("refuseProviderUnavailable", "is-provider-present"),
     translation: 'An action plan reads matters, actions and runs held by other parts of the record, and one of them '
-      + 'is not in your group\'s Civicsmith yet, so the plan is not answered in part. Nothing was written.',
+      + 'is not in your team\'s Civicsmith yet, so the plan is not answered in part. Nothing was written.',
   },
 
   /* ---- R39, R40, R42, R20 (T45): scenarios set aside, the paused state, document first, the close ---- */
@@ -350,7 +351,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   CLOSE_NOTE_TOO_LONG: {
     check: 'C-124.65', where: at("planClose", "is-close-note"),
-    translation: 'A closing note on what the group would do differently is at most 4,000 characters. Nothing was written.',
+    translation: 'A closing note on what the team would do differently is at most 4,000 characters. Nothing was written.',
   },
 });
 
