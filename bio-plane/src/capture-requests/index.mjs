@@ -1357,11 +1357,14 @@ export class CaptureRequests {
    *  principal), `visible` by R23's sight, `title` the target's title when visible, `title` and `asker` null when not,
    *  and `waiting` whether the target inquiry is open (`open`, or its alias `surfaced`: inquiry R1), whatever the viewer
    *  sees, because capture records every waiting question with a set-aside (its R79). A document no request was filed
-   *  into answers `questions: []`; `lead_inquiry` is not a question the document was captured for. It writes nothing,
-   *  and a failure inside it answers nothing (null), never a partial list. */
+   *  into answers `questions: []`; `lead_inquiry` is not a question the document was captured for. (T50; N1117, K3627;
+   *  capture R83, R94) `asks`, `[{question, asker}]` (the asks `acquire`'s `for` recorded for those captures), adds one
+   *  entry for each of its pairs, by the same sight, title, `asker` and `waiting` rules; a pair that is both a request's
+   *  and an ask's is answered once, and an ask that names no question is skipped. It writes nothing, and a failure inside
+   *  it answers nothing (null), never a partial list. */
   capturedFor(a = {}) {
     try {
-      const { captures = [], viewer = null } = a && typeof a === "object" ? a : {};
+      const { captures = [], viewer = null, asks = [] } = a && typeof a === "object" ? a : {};
       const shas = [...new Set((Array.isArray(captures) ? captures : []).filter((x) => typeof x === "string" && x))];
       const pairs = new Map();
       for (let i = 0; i < shas.length; i += CAPTURED_FOR_CHUNK) {
@@ -1372,6 +1375,12 @@ export class CaptureRequests {
           const key = JSON.stringify([r.target, r.principal_plane]);
           if (!pairs.has(key)) pairs.set(key, r);
         }
+      }
+      for (const k of Array.isArray(asks) ? asks : []) {
+        if (!k || typeof k !== "object" || typeof k.question !== "string" || !k.question) continue;
+        const asker = typeof k.asker === "string" && k.asker ? k.asker : null;
+        const key = JSON.stringify([k.question, asker]);
+        if (!pairs.has(key)) pairs.set(key, { target: k.question, principal_plane: asker });
       }
       const seen = CaptureRequests.#gate("q.bundle_id", viewer);
       const questions = [];
