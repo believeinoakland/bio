@@ -81,7 +81,7 @@ function plane(cfg = {}) {
         const id = body?.ids?.[0];
         if ((id && (cfg.refuseIds ?? []).includes(id)) || (!id && cfg.refuseReads))
           return Response.json({ ok: false, reason: "MEANING_ROWS_REFUSED", check: "C-23.9" }, { status: 403 });
-        return ok({ ok: true, arm: "leg", rows: [], scope: { documents: cfg.scopeDocuments ?? 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
+        return ok({ ok: true, arm: "leg", rows: [], scope: { documents: cfg.scopeSeq ? cfg.scopeSeq[Math.min(cfg.seq = (cfg.seq ?? -1) + 1, cfg.scopeSeq.length - 1)] : (cfg.scopeDocuments ?? 3), documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       }
       case "search": {
         const id = /id:"([^"]+)"/.exec(query.q ?? "")?.[1];
@@ -470,6 +470,18 @@ section("agent-harness R18 · the shell sets a level's scope from the reads its 
     written(skipped), allFour.filter((n) => n !== `level-empty-${REPORTING_LEVEL.document}`));
   const mixed = await drive("run", base, { noRemote: true, modelCfg: absent, planeCfg: { scopeDocuments: 1 } });
   t("R18 (control): one document in scope is enough", written(mixed), allFour);
+  /* R118: the document level reads twice (the other levels once); `scopeSeq` is what the plane states, read by read. */
+  const twice = (names, body) => (names.includes("report") && /Search the document level/.test(JSON.stringify(body.messages))
+    && JSON.stringify(body.messages).split('"type":"tool_result"').length - 1 < 3 ? ["meaningrows", { rows: "leg", q: "", limit: 5 }] : null);
+  const doc = `level-empty-${REPORTING_LEVEL.document}`;
+  const greatest = await drive("run", base, { noRemote: true, modelCfg: { ...absent, custom: twice }, planeCfg: { scopeSeq: [3, 3, 0, 2, 3] } });
+  t("R118: a level whose reads state 0 and 2 has documents 2: its candidate is written", written(greatest).includes(doc), true);
+  const zeros = await drive("run", base, { noRemote: true, modelCfg: { ...absent, custom: twice }, planeCfg: { scopeSeq: [3, 3, 0, 0, 3] } });
+  t("R118: one whose reads all state 0 has documents 0: none is written for it, the other three are", written(zeros), allFour.filter((n) => n !== doc));
+  const unstated = await drive("run", base, { noRemote: true, modelCfg: { ...absent, custom: twice }, planeCfg: { scopeSeq: [3, 3, 0, null, 3] } });
+  t("R118: a read that states no documents adds nothing: the others' greatest stands (0), so none is written for the level", written(unstated), allFour.filter((n) => n !== doc));
+  const none = await drive("run", base, { noRemote: true, modelCfg: { ...absent, custom: twice }, planeCfg: { scopeSeq: [3, 3, null, null, 3] } });
+  t("R118: a level none of whose reads stated documents is left out of the scope: none is written for it", written(none), allFour.filter((n) => n !== doc));
   const reports = LEVELS.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` }));
   const stubbed = await drive("run", { ...base, judgements: [{ targets: [] }, { reports }, { candidates: [] }, {}] }, { noRemote: true });
   t("R18: reports a caller supplies are no read by a sub-session: with nothing published about scope, no absence is written",

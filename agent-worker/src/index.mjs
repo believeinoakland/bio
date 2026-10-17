@@ -1721,8 +1721,8 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [], dropped = [];
   /* agent-harness R18 (T50; N1169): WHAT EACH LEVEL'S SUB-SESSION READ, set here and nowhere else, from the plane's own
      four-level statement of each read it made (`retrieval` R13: `scope.documents`), never from a report's words and never
-     by a judgement. `reads` counts the reads that answered; `documents` is the greatest the statements gave (BOB's B5), and is left out
-     when any answered without a whole number, so the table (which fails closed) writes no absence for that level. */
+     by a judgement. `reads` counts the reads that answered; `documents` is the greatest the statements gave (R118), and is left out
+     when none stated one, so the table (which fails closed) writes no absence for that level. */
   const scope = {};
   for (const contract of contracts) {
     const got = await converse({
@@ -1755,11 +1755,11 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
                                             ids: ids.length ? ids : null });
         if (r.silent) return { halt: { planeSilent: r.silent } };
         if (!r.refused) {
-          const seen = (scope[contract.level] ??= { reads: 0, documents: null, whole: true });
+          const seen = (scope[contract.level] ??= { reads: 0, documents: null });
           const documents = r.result?.scope?.documents;
           seen.reads += 1;
+          /* R118: the greatest `documents` any read stated; a read that stated none adds nothing. */
           if (Number.isInteger(documents) && documents >= 0) seen.documents = seen.documents === null ? documents : Math.max(seen.documents, documents);
-          else seen.whole = false;
         }
         /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
         const told = toolContent(r.refused ? (r.refused.plane ?? { code: r.refused.code }) : r.result);
@@ -1814,7 +1814,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   }
   return { reports, refused, dropped,
            scope: Object.fromEntries(Object.entries(scope).map(([level, v]) =>
-             [level, { reads: v.reads, ...(v.whole && v.documents !== null ? { documents: v.documents } : {}) }])) };
+             [level, { reads: v.reads, ...(v.documents !== null ? { documents: v.documents } : {}) }])) };
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
