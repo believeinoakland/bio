@@ -43,3 +43,7 @@ FOUND IN OTHER MODULES (details in my record, build/jobs/T50/screens-intake.md):
 3. interface-shell: a silent or non-JSON act answer is drawn "shell.noanswer" beside the act, not shell.unread as R34 words it; the act stays usable. I left it as the shell draws it.
 4. R34's one timed live acquire is the remote proof (plan rule 9, your note 4): not run from my tools, left unbuilt. A cause found in the door is control-plane's REPORT after biosmoke8 runs it.
 5. Not mine, unchanged by this job: plane t47.test.mjs 1 fail and answer-envelope catalogue-end.test.mjs 2 fails (same before and after).
+
+## J2 · COMPLETE
+
+T50-30 applied: R29–R37 met. Module tests 112, pass 111, fail 1 (R37's link test, red until interface-shell R81's archive kind merges; no change of mine needed). format, architecture, coverage (37 of 37 ids), ownership: 0 failures. Pushed to job/T50/screens-intake. Open points are in the REPORT (held rows lack the uploader and size; shell.noanswer vs shell.unread; R34's live acquire left to the remote proof). Record: build/jobs/T50/screens-intake.md.
