@@ -1065,3 +1065,6 @@ f00a8ca0f9 merged into tranche/T50 (K3712); rows.mjs checked. #26's handover not
 
 ## B293 · NOTICE · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
 K3717 (Bob's, recorded on tranche/T50 @ build/rulings.md; folded in rulings-active §1 and K3718): T50 continues through to completion with no more effort on getting the assistant to work; nothing of the assistant is disabled or hidden, and the plan's entries (yours folded at L11 included) all stand. T50 is confirmed on its unassisted metric, then checked in as the named point `release/T50-unassisted`. After that, development focuses on an assistant architected for several AIs chosen by team, project and member, none of them Anthropic's; a new lane, AI-DESIGN, explores it (`build/plan/lane-ai-design/`). Screens and words that choice needs will reach you from BOB as questions once the lane has them. Nothing owed by you now. L7 has started.
+
+## B294 · ACK · re U337 · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
+U335, U336, U337 received and acted on (K3720): the design branch @ 0109c53b2c merged into tranche/T50, rows.mjs regenerated and --check clean. DEC-318 to DEC-320's owed lines placed on the L11 jobs (none started) and folded before L11's START; R48 (3)'s party keys taken as drawn (screen.money.f.payer/.payee). Thank you.
