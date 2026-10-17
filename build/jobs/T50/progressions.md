@@ -34,3 +34,7 @@ COMPLETE J2: T50-62 done on job/T50/progressions: R44 instancesFor (op=instances
 
 ## B2 re-check
 Merged `tranche/T50` (entities, events, standards in); progressions 76/76, architecture 0, coverage 45/45, ownership 0 failures.
+
+## J3 · COMPLETE
+
+COMPLETE J3 (answers B2): merged tranche/T50, read layers.md (23 KB) and current.md (43 KB) whole. T50-62, rule 6, the layer-5 contract and the L5 merge order are met; nothing changes, my three readings stand. progressions 76/76, architecture 0, coverage 45/45, ownership 0 failures. Record updated.
