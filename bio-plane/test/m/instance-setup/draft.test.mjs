@@ -2,6 +2,7 @@
    function the door calls in-process (control-plane R57) over the real record-core, wizard-scripts' real check and
    rows, and, for the path T35's model turn will take (N686), a turn a test hands in. */
 import test from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, GROUP_DRAFT_ANSWER_MAX, GROUP_DRAFT_ANSWERS_MAX } from "../../../src/setup.mjs";
@@ -45,8 +46,7 @@ test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything;
   for (const answers of [[], [{ question: "q", text: "" }], [{ question: "q", text: "  \n " }, { question: "r", text: "" }]]) {
     const r = await w.m.groupDescriptionDraft({ answers, assistant: ASSISTANT, viewer: "admin", by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.check], [false, "GROUP_DRAFT_NO_ANSWERS", "C-64.9"], JSON.stringify(answers));
-    assert.equal(r.translation, "Tell the assistant a little about your group first: it drafts only from what you tell it and what "
-      + "your group already holds. Nothing was saved.");
+    assert.equal(r.translation, word("refusal.GROUP_DRAFT_NO_ANSWERS"));
   }
   assert.equal(writes(w), mark, "no refusal writes");
   assert.equal(mark, before, "NOT_AN_ADMIN and AI_KEPT_AWAY wrote nothing either");

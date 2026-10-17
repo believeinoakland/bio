@@ -33,7 +33,7 @@ test("R66 the step answers {ok, administrators, codes_held, remaining, met} to e
   assert.deepEqual(m.adminRecoveryStep({ viewer: "second" }), { ok: true, administrators: 2, codes_held: true, remaining: 10, met: true });
   /* a spent code counts down; every code spent is codes_held false and met false */
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
-  await w.c.recover({ role: "member:second", code: codes[0], password: "new-passphrase-second-1", source: "s" });
+  await w.c.recover({ handle: "second", code: codes[0], password: "new-passphrase-second-1", source: "s" });
   assert.equal(m.adminRecoveryStep({ viewer: "second" }).remaining, 9);
   w.db.prepare(`UPDATE recovery_codes SET spent_at = '2026-10-07T00:00:00Z' WHERE role = 'member:second'`).run();
   assert.deepEqual(m.adminRecoveryStep({ viewer: "second" }), { ok: true, administrators: 2, codes_held: false, remaining: 0, met: false });

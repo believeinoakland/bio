@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T50)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ translations (T50-22) is merged into tranche/T50 (K3768). Merge tranche/T50, the
 ## B4 · CHANGE
 
 queue (T50-21) is merged into tranche/T50 (K3774): its C-33.27 KIND_NOT_PERSONAL and C-33.50 NO_PROJECT_SCOPE now read refusal.KIND_NOT_PERSONAL and refusal.NO_PROJECT_SCOPE, and four of your catalogue-end and families tests go red (R7/R2/R10/R13, R13, R7 N1128, R15). Merge tranche/T50, re-pin those rows to their keys as you did the 73 others, re-run and post COMPLETE.
+
+## B5 · CHANGE
+
+instance-setup (T50-23) is merged into tranche/T50 (K3777): its seven rows C-64.2, C-64.3, C-64.5, C-64.6, C-119.1, C-119.3, C-119.4 now read refusal.<CODE> from words.json ('team'), and four of your tests go red. Merge tranche/T50, re-pin those seven by key as before, re-run and post COMPLETE.

@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R91).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66, R76–R86, R88–R94; R67–R75 and R87 are `translations`', R94).
  *
  * THE PAGE AT THE ROOT is gone (R83, R86; N1002, K3171): `/` answers the interface, so this module composes and serves no
  * page and exports none (`setupPage`, `groupLine` and `SETUP_HTML` removed, with every use of `setup-page`). What stays
@@ -11,7 +11,7 @@ import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
 import { list as heldProfiles, get as heldProfile, combine as combineProfiles, isLocale } from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
-import { membershipOf, notAnAdmin, noSuchMember } from "./membership/index.mjs";
+import { membershipOf, notAnAdmin } from "./membership/index.mjs";
 import { credentialsOf } from "./credentials/index.mjs";
 /* N996 §5 (T48; ai-accounts R7, R21): whether the group keeps its material away from AI, and the disclosure read's
    registration, are `ai-accounts`', read there and never copied; `credentials` stays for `recoveryCodesState` (R66). */
@@ -33,15 +33,18 @@ import { parse as legistarParse, readPages as legistarPages, readBodyName as leg
 /* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
    wizard-scripts' (its R25, its rows), read there and never copied. */
 import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
+/* R63 (T50; N1116, K3366): each row's sentence is read by its key from setup-words, never held here. */
+import { word } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
-/* R67 (K2200, rule 5): a draft translation's label is record-grammar's (its R50); a machine is told apart by its one
-   predicate, never by a reading of this module's own. */
-import { proposalLabel, isMachineIdentity } from "./record-grammar/index.mjs";
-/* R68 (T39, N807): the interface's word list is setup-words' (its R1, R2), read, never copied. */
-import { WORD_ROWS, WORDS_COMMIT } from "./setup-words/index.mjs";
+/* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
+import { isMachineIdentity } from "./record-grammar/index.mjs";
+/* R94 (T50; N1084): the translation workspace is `translations`'; this module keeps its delegates, the registration of the
+   member's language (R64) and, for `store-door`'s test until it re-points, a re-export of the word list. */
+import { translationsOf } from "./translations/index.mjs";
+import { TRANSLATIONS_CHECKS } from "./translations/checks.mjs";
 /* R76 (T45; grammar doubt 11): whether a records law's stages are stages of a records request is action-grammar's check
    (its R25), read there and never copied. */
 import { lawStagesFindings } from "./action-grammar/index.mjs";
@@ -53,6 +56,7 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
+export { INTERFACE_WORDS } from "./translations/index.mjs";
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -173,61 +177,48 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   GROUP_SLUG_MALFORMED: {
     check: 'C-64.2',
     where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase '
-      + 'letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.',
+    translation: word('refusal.GROUP_SLUG_MALFORMED'),
   },
   GROUP_ALREADY_RECORDED: {
     check: 'C-64.3',
     where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'Your group\'s Civicsmith has its group recorded already, and it is recorded once: the name travels inside every '
-      + 'document the record has signed, so a second name would make those documents name a producer they were '
-      + 'not written under. Nothing was changed.',
+    translation: word('refusal.GROUP_ALREADY_RECORDED'),
   },
   GROUP_IDENTITY_NOT_ADMIN: {
     check: 'C-64.5',
     where: 'src/setup.mjs #groupIdentityGate > is-group-identity-admin',
-    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
-      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
-      + 'changed.',
+    translation: word('refusal.GROUP_IDENTITY_NOT_ADMIN'),
   },
   GROUP_DISPLAY_NAME_MALFORMED: {
     check: 'C-64.6',
     where: 'src/setup.mjs groupNameSet > is-group-display-name',
-    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
-      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
-      + 'changed.',
+    translation: word('refusal.GROUP_DISPLAY_NAME_MALFORMED'),
   },
   GROUP_DOMAIN_MALFORMED: {
     check: 'C-64.7',
     where: 'src/setup.mjs groupDomainSet > is-group-domain',
-    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
-      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
-      + 'the domain only while that check passes. Nothing was changed.',
+    translation: word('refusal.GROUP_DOMAIN_MALFORMED'),
   },
   /* R14 (N10, K102): the list of jurisdiction profiles this copy reads its local facts from. */
   PROFILES_NOT_ADMIN: {
     check: 'C-119.1',
     where: 'src/setup.mjs profilesSet > is-profiles-admin',
-    translation: 'Only one of the group\'s administrators, signed in as themselves, can choose which jurisdiction '
-      + 'profiles your group\'s Civicsmith reads its local facts from. Nothing was changed.',
+    translation: word('refusal.PROFILES_NOT_ADMIN'),
   },
   NOT_A_LIST: {
     check: 'C-119.2',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'The profiles are chosen as a list, in the order they are to be read, and an empty list means '
-      + 'none. What was sent is not a list. Nothing was changed.',
+    translation: word('refusal.NOT_A_LIST'),
   },
   UNKNOWN_PROFILE: {
     check: 'C-119.3',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'Your group\'s Civicsmith holds no jurisdiction profile by that name, so it cannot read local facts from it. '
-      + 'Choose among the profiles it offers. Nothing was changed.',
+    translation: word('refusal.UNKNOWN_PROFILE'),
   },
   PROFILE_IS_TEST: {
     check: 'C-119.4',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'That profile is made up for testing: its facts describe no real place, so no group\'s Civicsmith '
-      + 'reads local facts from it. Nothing was changed.',
+    translation: word('refusal.PROFILE_IS_TEST'),
   },
   /* R53–R55 (DEC-172; K1957, K2093; D311): the assistant, read from whether the group keeps its material away from AI
      (credentials R52), and each member's disclosure. C-119.6 (`ASSISTANT_SWITCH_MALFORMED`) retired with the switch
@@ -236,210 +227,95 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   DISCLOSURE_NOT_THE_MEMBERS: {
     check: 'C-119.7',
     where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
-    translation: 'The assistant\'s disclosure is recorded as shown only to the member it was shown to, by their own '
-      + 'act, never by another member or a machine on their behalf. Nothing was recorded.',
+    translation: word('refusal.DISCLOSURE_NOT_THE_MEMBERS'),
   },
   /* R51, R52: the captures a seeding reads. */
   SEED_CAPTURE_UNREADABLE: {
     check: 'C-119.9',
     where: 'src/setup.mjs seatsSeed > is-seed-capture',
-    translation: 'Seats are seeded from captures the record holds of Legistar\'s bodies, persons and office records, '
-      + 'and one of them is not named or cannot be read. Nothing was seeded.',
+    translation: word('refusal.SEED_CAPTURE_UNREADABLE'),
   },
   SEED_CAPTURE_NOT_LEGISTAR: {
     check: 'C-119.10',
     where: 'src/setup.mjs seatsSeed > is-seed-capture',
-    translation: 'Seats are seeded only from Legistar\'s own lists of bodies, persons and office records, each named '
-      + 'where it belongs, and this capture is not the list named. Nothing was seeded.',
+    translation: word('refusal.SEED_CAPTURE_NOT_LEGISTAR'),
   },
   DISCLOSURE_MALFORMED: {
     check: 'C-119.8',
     where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
-    translation: 'A shown disclosure is recorded with the member it was shown to and the version of its words. One '
-      + 'of them is missing. Nothing was recorded.',
+    translation: word('refusal.DISCLOSURE_MALFORMED'),
   },
   /* R60 (DEC-150 (1)): the name of a place the group works in that no held profile covers. */
   PLACE_NAME_MALFORMED: {
     check: 'C-64.8',
     where: 'src/setup.mjs placeWantedSet > is-place-name',
-    translation: 'A place your group works in is named in plain words: some text, at most 200 characters, on one '
-      + 'line. It is kept only in your group\'s Civicsmith and sent nowhere. Nothing was changed.',
+    translation: word('refusal.PLACE_NAME_MALFORMED'),
   },
   /* R65 (DEC-152): the assistant's draft of the group's focus and purpose, from the administrator's answers. */
   GROUP_DRAFT_NO_ANSWERS: {
     check: 'C-64.9',
     where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
-    translation: 'Tell the assistant a little about your group first: it drafts only from what you tell it and what '
-      + 'your group already holds. Nothing was saved.',
+    translation: word('refusal.GROUP_DRAFT_NO_ANSWERS'),
   },
   GROUP_DRAFT_ANSWERS_MALFORMED: {
     check: 'C-64.10',
     where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
-    translation: 'The assistant drafts from your answers to its questions: a short list of answers, each at most '
-      + '1,000 characters. Nothing was saved.',
+    translation: word('refusal.GROUP_DRAFT_ANSWERS_MALFORMED'),
   },
   /* R64 (DEC-127 (1)): the language a member chooses for the screens, the member's own act. */
   MACHINE_CANNOT_SET_LANGUAGE: {
     check: 'C-119.11',
     where: 'src/setup.mjs memberLanguageSet > is-member-language',
-    translation: 'The language your screens are shown in is your own choice, made from your own signed-in session, '
-      + 'never by another member or a machine. Nothing was changed.',
-  },
-  LANGUAGE_MALFORMED: {
-    check: 'C-119.12',
-    where: 'src/setup.mjs memberLanguageSet > is-member-language',
-    translation: 'A language is chosen by its standard tag, like en, es or zh-Hant, and what was sent is not one. '
-      + 'Nothing was changed.',
-  },
-  /* R67–R73 (T37-30; N669; DEC-127 (2), (5), DEC-157, DEC-179; K2200, K2201, K2216): the group's translation of the
-     interface. The next free numbers of C-64, awaiting T38's stamp. */
-  TRANSLATION_DIRECTION_UNKNOWN: {
-    check: 'C-64.11',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The assistant is asked either to draft words your group\'s language lacks, or to read one kept word '
-      + 'back into English, and this request asks for neither. Nothing was sent and nothing was saved.',
-  },
-  MACHINE_CANNOT_TRANSLATE: {
-    check: 'C-64.12',
-    where: 'src/setup.mjs #translationActor > is-translation-actor',
-    translation: 'Translating the screens is done by members, each from their own signed-in session. The assistant and '
-      + 'other machines can draft a translation for a member to check, and can never grant, keep, confirm, undo or mark '
-      + 'one. Nothing was changed.',
-  },
-  TRANSLATION_NOT_GRANTED: {
-    check: 'C-64.13',
-    where: 'src/setup.mjs #translationSpeaker > is-translation-speaker',
-    translation: 'Only the administrators, and members an administrator has asked to translate the screens into this '
-      + 'language, can work on its words. You have not been asked for this language. Nothing was changed.',
-  },
-  NO_SUCH_WORD: {
-    check: 'C-64.14',
-    where: 'src/setup.mjs #translationWord > is-translation-word',
-    translation: 'Each word on the screens is known by its key in the list of the interface\'s words, and that key is '
-      + 'not in the list your group\'s Civicsmith holds. Nothing was changed.',
-  },
-  TRANSLATION_NOT_MISSING: {
-    check: 'C-64.15',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The assistant drafts only the words your group has not yet translated into this language, and this '
-      + 'word already has a kept translation. Change a kept word by keeping a new one. Nothing was sent.',
-  },
-  TRANSLATION_KEYS_MALFORMED: {
-    check: 'C-64.16',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'The words to draft are named by their keys: a list of at most 100 different keys, or none to draft '
-      + 'the first words still missing. What was sent is not such a list. Nothing was sent.',
-  },
-  TRANSLATION_NOTHING_TO_DRAFT: {
-    check: 'C-64.17',
-    where: 'src/setup.mjs #draftRequest > is-translation-draft',
-    translation: 'There is nothing for the assistant to draft: every word asked for is either translated already or an '
-      + 'official name, which is shown as it is with its official translation where one is published. Nothing was sent.',
-  },
-  /* C-64.18 (`NO_SUCH_MEMBER`) is dropped and never reused (R75; N793, K231, K2275): the code is `membership`'s alone,
-     answered through its `noSuchMember` (its R121, C-96.47). */
-  NO_SUCH_DRAFT: {
-    check: 'C-64.19',
-    where: 'src/setup.mjs translationAdopt > is-translation-adopt',
-    translation: 'The draft named is not one the assistant drafted for this word in this language, so it cannot be '
-      + 'kept from. Keep the word as you typed it, or choose its draft. Nothing was changed.',
-  },
-  TRANSLATION_TEXT_REFUSED: {
-    check: 'C-64.20',
-    where: 'src/setup.mjs translationAdopt > is-translation-adopt',
-    translation: 'A translated word is one line of 1 to 2,000 characters, and it keeps every placeholder in braces, like '
-      + '{name}, exactly as the English has them, so the screen can fill them in. Nothing was changed.',
-  },
-  TRANSLATION_NOT_AWAITING: {
-    check: 'C-64.21',
-    where: 'src/setup.mjs #translationAwaiting > is-translation-awaiting',
-    translation: 'Only a protected word kept with changes, or typed without the assistant\'s draft, waits for a second '
-      + 'check, and this word is not waiting for one. Nothing was changed.',
-  },
-  TRANSLATION_CONFIRM_SELF: {
-    check: 'C-64.22',
-    where: 'src/setup.mjs translationConfirm > is-translation-confirm',
-    translation: 'A protected word is checked a second time by someone other than the member who kept it: another member '
-      + 'asked to translate this language, or an administrator. Nothing was changed.',
-  },
-  TRANSLATION_NOT_READ_BACK: {
-    check: 'C-64.23',
-    where: 'src/setup.mjs translationConfirm > is-translation-confirm',
-    translation: 'This word has not been read back into English for its current text, so an administrator cannot yet '
-      + 'confirm it. Read it back into English first, then confirm. Nothing was changed.',
-  },
-  TRANSLATION_NOTHING_TO_UNDO: {
-    check: 'C-64.24',
-    where: 'src/setup.mjs translationRevert > is-translation-revert',
-    translation: 'This word has never been translated into this language, so there is nothing to undo: members see it in '
-      + 'English. Nothing was changed.',
-  },
-  TRANSLATION_NOT_SHOWN: {
-    check: 'C-64.25',
-    where: 'src/setup.mjs translationMark > is-translation-mark',
-    translation: 'Only a translation members are shown can be marked as looking wrong, and this word shows no '
-      + 'translation in this language yet. Nothing was recorded.',
-  },
-  TRANSLATION_NOTE_REFUSED: {
-    check: 'C-64.26',
-    where: 'src/setup.mjs translationMark > is-translation-mark',
-    translation: 'A note on a translation that looks wrong is optional, and when given it is at most 500 characters. '
-      + 'Nothing was recorded.',
+    translation: word('refusal.MACHINE_CANNOT_SET_LANGUAGE'),
   },
   /* R79 (T46; DEC-162, DEC-175): how quickly explanations open for a member, the member's own act; the next free C-64
      numbers, awaiting T47's stamp. */
   MACHINE_CANNOT_SET_INFO_LEVEL: {
     check: 'C-64.28',
     where: 'src/setup.mjs infoLevelSet > is-info-level',
-    translation: 'How quickly explanations open on your screens is your own choice, made from your own signed-in session, '
-      + 'never by another member or a machine. Nothing was changed.',
+    translation: word('refusal.MACHINE_CANNOT_SET_INFO_LEVEL'),
   },
   INFO_LEVEL_UNKNOWN: {
     check: 'C-64.29',
     where: 'src/setup.mjs infoLevelSet > is-info-level',
-    translation: 'Explanations open either promptly or on a longer pause, and what was sent is neither. Nothing is ever '
-      + 'hidden at either. Nothing was changed.',
+    translation: word('refusal.INFO_LEVEL_UNKNOWN'),
   },
   /* R84 (T47; DEC-205 (2), DEC-201 (8)): the group's logo, a PNG or a JPEG of at most 200 KB; the next free C-64 number,
      awaiting T48's stamp. */
   LOGO_REFUSED: {
     check: 'C-64.30',
     where: 'src/setup.mjs groupLogoSet > is-group-logo',
-    translation: 'A logo is a PNG or JPEG picture of at most 200 KB, or nothing to remove it. What was sent is not one. '
-      + 'Nothing was changed.',
-  },
-  /* R87 (T48; N670; DEC-127 (3)): the language a passage is read in, when the member has set none and names none; the
-     next free C-64 numbers, BOB's draft words (an ASK to UX-DESIGN), awaiting T49's stamp (plan rule 5 (2)). */
-  LANGUAGE_NOT_SET: {
-    check: 'C-64.31',
-    where: 'src/setup.mjs readingLanguage > is-reading-language',
-    translation: 'Choose the language you read in, in Your account, or name one. Nothing was translated.',
+    translation: word('refusal.LOGO_REFUSED'),
   },
   /* R90 (T48; N1047; DEC-226): the update acts, BOB's drafts, re-wordable by the design stream, awaiting T49's stamp. */
   UPDATE_NOT_READY: {
     check: 'C-64.32',
     where: 'src/setup.mjs #updateReady > is-update-ready',
-    translation: 'That release is not the one ready to install. Nothing was recorded.',
+    translation: word('refusal.UPDATE_NOT_READY'),
   },
   UPDATE_SKIP_NO_REASON: {
     check: 'C-64.33',
     where: 'src/setup.mjs updateSkip > is-update-skip',
-    translation: 'Say why your group skips this release: every administrator will see it. Nothing was recorded.',
+    translation: word('refusal.UPDATE_SKIP_NO_REASON'),
   },
   /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
      T46's stamp. */
   STAKE_MALFORMED: {
     check: 'C-64.27',
     where: 'src/setup.mjs declaredStakeSet > is-declared-stake',
-    translation: 'Your group\'s declared stake says, in its own words, what your group itself has at stake in the matters '
-      + 'it works on: some text, at most 1,000 characters, on one line, or nothing to clear it. It is carried on '
-      + 'everything your group sends or publishes from now on. Nothing was changed.',
+    translation: word('refusal.STAKE_MALFORMED'),
   },
 });
 
 const refusal = (code, detail, extra) => {
   const row = INSTANCE_SETUP_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+};
+/* R64, R85 (T50; K3674, K3696): `LANGUAGE_MALFORMED` (C-119.12) is `translations`' row, built from its export, never a row of
+   this module's own. */
+const languageMalformed = (detail) => {
+  const row = TRANSLATIONS_CHECKS.LANGUAGE_MALFORMED;
+  return { ok: false, reason: "LANGUAGE_MALFORMED", code: "LANGUAGE_MALFORMED", check: row.check, translation: row.translation, detail };
 };
 /* R65: a refusal in one of wizard-scripts' rows (its R25's codes, and `ASSISTANT_DRAFT_UNAVAILABLE`), with its check and
    translation as that module holds them. */
@@ -519,9 +395,6 @@ export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_ide
   "place_wanted", "place_seen", "place_arrivals", "member_languages",
   /* R79 (T46): each member's explanation level, appended. */
   "member_info_levels",
-  /* R75 (T37; N669): the group's translation of the interface, append-only. */
-  "translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations", "translation_undos",
-  "translation_marks", "translation_readings",
   /* R77, R11 (T45): who set the declared stake and when, each act appended beside record-core's setting. */
   "declared_stake_history",
   /* R84 (T47): the group's logo, each set or clear appended. */
@@ -550,15 +423,6 @@ const TABLE_CLASSES = Object.freeze({
   member_languages: { export: "admin-only", version_chain: true },
   /* R79 (DEC-162, DEC-175): each member's own explanation level, appended, R64's class. */
   member_info_levels: { export: "admin-only", version_chain: true },
-  /* R75 (DEC-127 (4)): the group's translation work, the group's settings' class, exempt from purge; none of it leaves
-     your group's Civicsmith, so none is exported. */
-  translation_grants: { export: "never", version_chain: true },
-  translation_drafts: { export: "never", version_chain: true },
-  translation_adoptions: { export: "never", version_chain: true },
-  translation_confirmations: { export: "never", version_chain: true },
-  translation_undos: { export: "never", version_chain: true },
-  translation_marks: { export: "never", version_chain: true },
-  translation_readings: { export: "never", version_chain: true },
   /* R77: the group's settings' class, exempt from purge; the stake is public, who set it is the administrators'. */
   declared_stake_history: { export: "admin-only", version_chain: true },
   /* R84: the group's settings' class, exempt from purge; the logo is public once set, who set it the administrators'. */
@@ -755,95 +619,6 @@ CREATE TABLE IF NOT EXISTS member_info_levels (
   asked_at  TEXT,
   set_at    TEXT NOT NULL
 );
--- R67-R75 (T37; N669; DEC-127, DEC-157, DEC-179): THE GROUP'S TRANSLATION OF THE INTERFACE. Every table is
--- append-only: no statement updates or deletes a row. Each name is held by value (the handle) beside the member id.
--- 'language' is the tag as jurisdictions' isLocale accepts it, in its canonical form.
--- R69: a grant or a revocation (act 'grant' or 'revoke') of a member's right to translate one language.
-CREATE TABLE IF NOT EXISTS translation_grants (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  member     TEXT NOT NULL,
-  member_name TEXT,
-  language   TEXT NOT NULL,
-  act        TEXT NOT NULL CHECK (act IN ('grant','revoke')),
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
--- R67: each word the assistant drafted, as it drafted it, labelled machine work; never the group's wording.
-CREATE TABLE IF NOT EXISTS translation_drafts (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  en         TEXT NOT NULL,
-  text       TEXT NOT NULL,
-  label      TEXT NOT NULL,
-  asked_by   TEXT NOT NULL,
-  asked_name TEXT,
-  at         TEXT NOT NULL
-);
--- R70: each kept translation. 'act_n' numbers the word's adoptions and undos in one sequence per language and key;
--- 'prev' is the adoption it replaced (NULL: the English); 'state' is what it was kept as ('shown' or 'awaiting').
-CREATE TABLE IF NOT EXISTS translation_adoptions (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  act_n      INTEGER NOT NULL,
-  text       TEXT NOT NULL,
-  en         TEXT NOT NULL,
-  state      TEXT NOT NULL CHECK (state IN ('shown','awaiting')),
-  draft      INTEGER,
-  prev       INTEGER,
-  replaced   TEXT,
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
--- R71: a confirmation of an awaiting adoption, beside it.
-CREATE TABLE IF NOT EXISTS translation_confirmations (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  adoption   INTEGER NOT NULL,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  read_back  INTEGER,
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
--- R72: an undo, naming what it undoes (an adoption or an undo) and the adoptions it moves the word from and to.
-CREATE TABLE IF NOT EXISTS translation_undos (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  act_n      INTEGER NOT NULL,
-  undoes     TEXT NOT NULL CHECK (undoes IN ('adoption','undo')),
-  undoes_seq INTEGER NOT NULL,
-  from_adoption INTEGER,
-  to_adoption   INTEGER,
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
--- R73: "this translation looks wrong", open while the word's latest act is still 'act_n'.
-CREATE TABLE IF NOT EXISTS translation_marks (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  act_n      INTEGER NOT NULL,
-  note       TEXT,
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
--- R67's to_english (K2216): the fact of a reading back into English, no text: the SHA-256 of the kept text it read.
-CREATE TABLE IF NOT EXISTS translation_readings (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  language   TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  text_sha256 TEXT NOT NULL,
-  by_member  TEXT NOT NULL,
-  by_name    TEXT,
-  at         TEXT NOT NULL
-);
 -- R77, R11 (T45; N892 (d)): each set or clear of the group's declared stake, with who and when, appended after
 -- record-core's setting 'declared_stake' recorded it (the value public-read reads). stake NULL is a clear. Append-only.
 CREATE TABLE IF NOT EXISTS declared_stake_history (
@@ -920,28 +695,10 @@ CREATE TABLE IF NOT EXISTS assistant_disclosures (
 `;
 
 
-/* =====================================================================
- * R68 (DEC-179; K2200 (4); N807): THE INTERFACE'S WORD LIST, setup-words' `WORD_ROWS` in its order, each exported as a
- * frozen `{key, en, note, means, protected}`; this module holds no copy of the list.
- * ===================================================================== */
-export const INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
-  Object.freeze({ key, en, note, means, protected: prot })));
-export const INTERFACE_WORDS_COMMIT = WORDS_COMMIT;
-const WORD_BY_KEY = new Map(INTERFACE_WORDS.map((w) => [w.key, w]));
-/* R67 (K2201): at most this many words a draft; R70: a kept word's bounds; R73: a mark's note. */
-export const TRANSLATION_DRAFT_MAX = 100;
-export const TRANSLATION_TEXT_MAX = 2000;
-export const TRANSLATION_NOTE_MAX = 500;
-/* R67, R70: the assistant's stamp on what it drafts (record-grammar R50 reads it as machine work). */
-export const TRANSLATION_DRAFTER = "class:ai";
-/* A text's placeholders, `{name}`, as a sorted list, so two texts carry the same ones exactly when the lists are equal. */
-const placeholdersOf = (t) => [...String(t).matchAll(/\{([^{}\s]+)\}/g)].map((m) => m[1]).sort();
-const samePlaceholders = (a, b) => JSON.stringify(placeholdersOf(a)) === JSON.stringify(placeholdersOf(b));
 /* One line: no control character and no line or paragraph separator. */
 const oneLine = (t) => !/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(t);
 /* A language tag in its canonical form, so `pt-br` and `pt-BR` are one language; the tag as given when it has none. */
 const canonicalTag = (t) => { try { return Intl.getCanonicalLocales(t)[0] || t; } catch { return t; } };
-async function sha256Hex(text) { return sha256OfBytes(new TextEncoder().encode(String(text))); }
 async function sha256OfBytes(bytes) {
   const d = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -1147,7 +904,7 @@ function cmpVersion(a, b) {
  * `sleep`; each defaults to the module's own factory on the same `ctx`.
  * ===================================================================== */
 export class InstanceSetup {
-  #ctx; #env; #deps; #sql; #started = false;
+  #ctx; #env; #deps; #sql; #started = false; #languageRegistered = null;
 
   constructor(ctx, env = {}, deps = {}) {
     this.#ctx = ctx;
@@ -1220,7 +977,7 @@ export class InstanceSetup {
       due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
     /* R88 (T48): the daily update check, one consumer, due at the group's own minute of the day (scheduler R8). */
     out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
-      due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: () => this.updateCheckTick() });
+      due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: (now) => this.updateCheckTick(now) });
     try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
     catch (e) { out.slot = { drawn: false, detail: `the minute of the day could not be drawn: ${String(e && e.message || e).slice(0, 200)}` }; }
     try { out.running = this.#recordRunning(); }
@@ -1244,6 +1001,7 @@ export class InstanceSetup {
     catch (e) { out.places = { compared: false, detail: `the place could not be compared: ${String(e && e.message || e).slice(0, 200)}` }; }
     out.arrivals = this.#registerArrivals();
     out.identity = this.#registerIdentity();
+    out.language = this.#registerLanguage(this.#translations());
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -1655,7 +1413,7 @@ export class InstanceSetup {
     const tags = Array.isArray(languages) ? languages.map((t) => (typeof t === "string" ? t.trim() : t)) : null;
     const bad = tags ? tags.find((t) => typeof t !== "string" || !isLocale(t)) : undefined;
     if (!tags || tags.length < 1 || tags.length > GROUP_LANGUAGES_MAX || bad !== undefined)
-      return refusal("LANGUAGE_MALFORMED", `${!tags ? "the languages are sent as a list of" : tags.length < 1
+      return languageMalformed(`${!tags ? "the languages are sent as a list of" : tags.length < 1
         ? "an empty list names no language, and the languages are" : tags.length > GROUP_LANGUAGES_MAX
         ? `a list of ${tags.length} names too many, and the languages are` : `'${String(bad).slice(0, 40)}' is not one of`} `
         + `1 to ${GROUP_LANGUAGES_MAX} well-formed BCP 47 language tags (en, es, zh-Hant). Nothing was changed.`);
@@ -1865,7 +1623,7 @@ export class InstanceSetup {
   /* One entity found or seeded under one identifier: the entity already holding it (a member's, or this module's from
      an earlier run) is `already`; else it is created, machine-declared, and the identifier held on it with the
      system's row as its basis. Answers `{state: seeded | already | unseeded, entity_id?, why?}`. */
-  #seedEntity({ p, ident, kind, label, note, row, source, sector }) {
+  #seedEntity({ p, ident, kind, label, note, row, source, sector, forumKind }) {
     const why = InstanceSetup.#identWhy(p, ident, kind);
     if (why) return { state: "unseeded", why };
     const E = this.#entities();
@@ -1881,7 +1639,8 @@ export class InstanceSetup {
     }
     let entityId = mine ? mine.entity_id : null;
     if (!entityId) {
-      const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}) });
+      const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}),
+                                    ...(forumKind ? { forum_kind: forumKind } : {}) });
       if (!made || made.ok !== true) return { state: "unseeded", why: `the registry refused the entity: ${made && (made.reason || made.detail)}` };
       entityId = made.entity_id;
       this.#ledgerEntity(ident, entityId, kind, label, source);
@@ -1998,8 +1757,55 @@ export class InstanceSetup {
             { what: "part_of", ...where });
       });
     }
+    out.forums = this.#seedForums(active, put);
     out.counts = { seeded: out.seeded.length, already: out.already.length, unseeded: out.unseeded.length };
     return out;
+  }
+
+  /* R93 (T50; N1190; jurisdictions R94; entities R54): each forum the active profiles' combined view holds
+     (`{label, forum_kind, ids?, basis}`) is seeded as a `body` entity carrying `forum_kind`, under its first identifier
+     (a scheme of the profile that declares it, the profile entry as basis) with any further identifiers held on it,
+     machine-attributed as R50's are. A forum already held under the identifier is `already` and writes nothing; one with
+     no identifier, or that the registry refuses, is `unseeded` with why. Answers the forums as listed beside offices. */
+  #seedForums(active, put) {
+    const listed = [];
+    if (!active.length) return listed;
+    let combined = null;
+    try { combined = this.#juris().combine(active.map((a) => a.id)); } catch { combined = null; }
+    const forums = combined && combined.ok === true && combined.view && Array.isArray(combined.view.forums) ? combined.view.forums : [];
+    for (const f of forums) {
+      if (!f || typeof f.label !== "string" || !f.label.trim() || typeof f.forum_kind !== "string") continue;
+      const label = f.label.trim();
+      const where = { what: "forum", label, forum_kind: f.forum_kind };
+      const idents = (Array.isArray(f.ids) ? f.ids : []).map((x) => InstanceSetup.#ident(x)).filter(Boolean);
+      if (!idents.length) {
+        const r = { state: "unseeded", why: "the profile names no identifier for this forum (ids), so it is not seeded: an entity is "
+          + "seeded only under the profile's own identifier, never by its name" };
+        put(r, where); listed.push({ ...where, state: r.state, why: r.why });
+        continue;
+      }
+      const owner = (id) => active.find((a) => InstanceSetup.#scheme(a.p, id.scheme)) ?? active[0];
+      const first = owner(idents[0]);
+      const source = { profile: first.id, forum: label };
+      const row = `${first.id}/forums/${f.forum_kind}/${label}`;
+      const cite = `jurisdiction profile ${first.id}, forum ${label}${f.basis ? ` (basis: ${f.basis})` : ""}`;
+      let r = this.#seedEntity({ p: first.p, ident: idents[0], kind: "body", label, sector: "government", source, row, forumKind: f.forum_kind,
+        note: `The ${f.forum_kind} ${label}, a forum as the active ${cite} names it; seeded at setup.` });
+      for (const more of idents.slice(1)) {
+        if (!r.entity_id || r.state === "unseeded") break;
+        const o = owner(more);
+        const why = InstanceSetup.#identWhy(o.p, more, "body");
+        if (why) { r = { state: "unseeded", entity_id: r.entity_id, why }; break; }
+        const sch = InstanceSetup.#scheme(o.p, more.scheme);
+        const got = this.#entities().addIdentifier({ entityId: r.entity_id, scheme: more.scheme, id: more.id, by: SEED_MACHINE,
+                                                     basis: { system: sch.systems[0], row } });
+        if (!got || got.ok !== true) r = { state: "unseeded", entity_id: r.entity_id, why: `the registry refused the identifier ${more.scheme} ${more.id}: ${got && (got.reason || got.detail)}` };
+        else if (!got.already && r.state === "already") r = { state: "seeded", entity_id: r.entity_id };
+      }
+      put(r, { ...where, ident: idents[0] });
+      listed.push({ ...where, state: r.state, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.why ? { why: r.why } : {}) });
+    }
+    return listed;
   }
 
   /** K1683: the office a seeded office entity is, as `{role, body}` (with its profile), or null for an entity this
@@ -2443,7 +2249,7 @@ export class InstanceSetup {
     if (language !== null) {
       tag = typeof language === "string" ? language.trim() : "";
       if (!isLocale(tag))
-        return refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
+        return languageMalformed(`${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
           + "one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
     }
     /* END DEC-49 REGION is-member-language */
@@ -2547,7 +2353,7 @@ export class InstanceSetup {
 
   /* =====================================================================
    * THE ASSISTANT DRAFTS THE GROUP'S DESCRIPTION (R65; DEC-152, K1818, K1837, K1841 (2)). On "Who your group is", an
-   * administrator answers a few questions and asks for a labelled draft of the group's focus and purpose
+   * administrator answers a few questions and asks for a labeled draft of the group's focus and purpose
    * (`membership` R109). It writes nothing: the words become the group's only when the administrator keeps them through
    * `op=groupdescriptionset`. The draft is built from the answers and, while the suggestions switch of the account that
    * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T35
@@ -2611,609 +2417,53 @@ export class InstanceSetup {
     return out;
   }
 
-  /* =====================================================================
-   * THE GROUP'S TRANSLATION OF THE INTERFACE (R67–R75; T37-30; N669; DEC-127 (1), (2), (5), DEC-157, DEC-179; K1793,
-   * K2200, K2201, K2216). An administrator grants named members a language (R69); the assistant drafts the words a
-   * language lacks, each stored as labelled machine work (R67), or a granted member types one; a granted member keeps
-   * it (R70). A protected word (DEC-179 (4)) kept as the assistant drafted it shows at once; changed from the draft, or
-   * typed without one, it waits for a second check (R71): another granted member, or an administrator who has read it
-   * back into English. Every adoption records what it replaced, and an administrator undoes the latest act in one act
-   * (R72); any member may mark a shown word "looks wrong" (R73). Members read the screens word by word in their
-   * language, the English wherever no translation is shown (R74). Every table is append-only and nothing here leaves
-   * your group's Civicsmith (R75).
-   *
-   * A word's history in a language is one numbered sequence of acts (`act_n`), adoptions and undos alike: the latest
-   * act decides which adoption the word shows now (an adoption shows itself; an undo shows its `to_adoption`, null
-   * for the English). An adoption's state is what it was kept as, `awaiting` until a confirmation stands beside it.
-   * ===================================================================== */
-
   /* Who someone is, by value, beside their id (R75): their handle, or the id itself for the founder. */
   #nameOf(id) {
     try { const f = this.#membership().memberFacts?.(id); if (f && typeof f.handle === "string" && f.handle) return f.handle; }
     catch { /* the id stands */ }
     return id;
   }
-  /* An active member: an administrator (the founder included), or a member whose status is `active`. */
-  #isActiveMember(id) {
-    if (typeof id !== "string" || !id) return false;
-    try {
-      if (this.#membership().isAdministrator(id) === true) return true;
-      const f = this.#membership().memberFacts?.(id);
-      return !!f && f.status === "active";
-    } catch { return false; }
-  }
   #isAdmin(id) {
     try { return typeof id === "string" && !!id && this.#membership().isAdministrator(id) === true; } catch { return false; }
   }
 
-  /* Every act here: a person, never a machine (record-grammar R50: machine work can draft and never adopt or confirm). */
-  #translationActor(by) {
-    const who = typeof by === "string" ? by.trim() : "";
-    /* DEC-49 REGION is-translation-actor */
-    if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_TRANSLATE", "translating the screens is a member's own act, from their own "
-        + "signed-in session. Nothing was changed.", { by: by ?? null });
-    /* END DEC-49 REGION is-translation-actor */
-    return null;
-  }
-  /* A tag `jurisdictions.isLocale` accepts (R64's reading), answered in its canonical form, or R64's refusal. */
-  #translationLanguage(language) {
-    const tag = typeof language === "string" ? language.trim() : "";
-    if (!isLocale(tag))
-      return { refused: refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no "
-        + "language, and one is named as"} one well-formed BCP 47 language tag (en, es, zh-Hant). Nothing was changed.`) };
-    return { tag: canonicalTag(tag) };
-  }
-  /* R68: a word of the list by its key, or NO_SUCH_WORD. */
-  #translationWord(key) {
-    const k = typeof key === "string" ? key.trim() : "";
-    const w = WORD_BY_KEY.get(k);
-    /* DEC-49 REGION is-translation-word */
-    if (!w)
-      return { refused: refusal("NO_SUCH_WORD", `${k ? `'${k.slice(0, 80)}' is not` : "the request names no word, and "
-        + "one is named by"} a key of the interface's word list. Nothing was changed.`, { key: k || null }) };
-    /* END DEC-49 REGION is-translation-word */
-    return { word: w };
-  }
-
-  /** R69: whether `member` is a granted speaker of `language`: an administrator, or a member holding a live grant
-   *  (granted, not revoked since, and the member active). In-process, for R67 and R70–R74. Never throws. */
-  translationGranted({ member = null, language = null } = {}) {
-    try {
-      const who = typeof member === "string" ? member.trim() : "";
-      const tag = typeof language === "string" && isLocale(language.trim()) ? canonicalTag(language.trim()) : null;
-      if (!who || !tag || isMachineIdentity(who)) return false;
-      if (this.#isAdmin(who)) return true;
-      return this.#liveGrant(who, tag) && this.#isActiveMember(who);
-    } catch { return false; }
-  }
-  #liveGrant(member, tag) {
-    const r = this.#one(`SELECT act FROM translation_grants WHERE member = ? AND language = ? ORDER BY seq DESC LIMIT 1`, member, tag);
-    return !!r && r.act === "grant";
-  }
-  /* R69's NO_SUCH_MEMBER (and R73's "any active member"): `who` is an active member of the group, else membership's one
-     refusal for that condition (its R121, C-96.47; N793), `member` the id asked. This module mints no copy of the code. */
-  #translationMember(who) {
-    if (!who || isMachineIdentity(who) || !this.#isActiveMember(who)) return noSuchMember(who || null);
-    return null;
-  }
-  #translationSpeaker(by, tag) {
-    /* DEC-49 REGION is-translation-speaker */
-    if (!this.translationGranted({ member: by, language: tag }))
-      return refusal("TRANSLATION_NOT_GRANTED", `working on the words of ${tag} is for the administrators and the members `
-        + "an administrator has asked to translate it. Nothing was changed.", { by, language: tag });
-    /* END DEC-49 REGION is-translation-speaker */
-    return null;
-  }
-
-  /** R69, op=translationgrant: an administrator grants a named active member the right to translate the interface into
-   *  `language`, or revokes it (`revoke: true`). A second grant of a live grant, or a second revocation, answers
-   *  `existed: true` with the first. Append-only. */
-  translationGrant({ member = null, language = null, revoke = false, by = null } = {}) {
-    const machine = this.#translationActor(by);
-    if (machine) return machine;
-    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "asking a member to translate the screens");
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang.refused;
-    const who = typeof member === "string" ? member.trim() : "";
-    const notMember = this.#translationMember(who);
-    if (notMember) return notMember;
-    const act = revoke === true ? "revoke" : "grant";
-    const rows = this.#rows(`SELECT seq, act, by_member, by_name, at FROM translation_grants WHERE member = ? AND language = ?
-                             ORDER BY seq`, who, lang.tag);
-    const last = rows.length ? rows[rows.length - 1] : null;
-    const already = act === "grant" ? !!last && last.act === "grant" : !last || last.act === "revoke";
-    if (already) {
-      /* The first of the run of like acts that stands now (or, for a revocation with no grant ever, nothing). */
-      let i = rows.length - 1;
-      while (i > 0 && rows[i - 1].act === act) i -= 1;
-      const first = rows[i] && rows[i].act === act ? rows[i] : null;
-      return { ok: true, existed: true, member: who, language: lang.tag, act,
-               ...(first ? { by: first.by_member, by_name: first.by_name, at: first.at } : {}),
-               granted: this.translationGranted({ member: who, language: lang.tag }) };
-    }
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO translation_grants (member, member_name, language, act, by_member, by_name, at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, who, this.#nameOf(who), lang.tag, act, by, this.#nameOf(by), at);
-    return { ok: true, existed: false, member: who, language: lang.tag, act, by, at,
-             granted: this.translationGranted({ member: who, language: lang.tag }) };
-  }
-
-  /* ---- a word's state in a language ---- */
-
-  /* The word's acts in `tag`: its adoptions, undos and confirmed adoptions, and what it shows now. */
-  #wordHistory(tag, key) {
-    const adoptions = this.#rows(`SELECT * FROM translation_adoptions WHERE language = ? AND key = ? ORDER BY act_n`, tag, key);
-    const undos = this.#rows(`SELECT * FROM translation_undos WHERE language = ? AND key = ? ORDER BY act_n`, tag, key);
-    const confirmed = new Set(this.#rows(`SELECT adoption FROM translation_confirmations WHERE language = ? AND key = ?`, tag, key)
-      .map((r) => r.adoption));
-    return InstanceSetup.#current(adoptions, undos, confirmed);
-  }
-  /* From a word's acts: the latest act, the adoption shown now (or null, the English) and its state. */
-  static #current(adoptions, undos, confirmed) {
-    const lastA = adoptions.length ? adoptions[adoptions.length - 1] : null;
-    const lastU = undos.length ? undos[undos.length - 1] : null;
-    const latest = !lastA && !lastU ? null
-      : !lastU || (lastA && lastA.act_n > lastU.act_n) ? { kind: "adoption", row: lastA } : { kind: "undo", row: lastU };
-    const shownSeq = !latest ? null : latest.kind === "adoption" ? latest.row.seq : latest.row.to_adoption;
-    const adoption = shownSeq == null ? null : adoptions.find((a) => a.seq === shownSeq) || null;
-    const state = !adoption ? "missing" : adoption.state === "shown" || confirmed.has(adoption.seq) ? "shown" : "awaiting";
-    const actN = Math.max(lastA ? lastA.act_n : 0, lastU ? lastU.act_n : 0);
-    return { adoptions, undos, confirmed, latest, adoption, state, actN };
-  }
-  #translationAwaiting(tag, word) {
-    const h = this.#wordHistory(tag, word.key);
-    /* DEC-49 REGION is-translation-awaiting */
-    if (h.state !== "awaiting")
-      return { refused: refusal("TRANSLATION_NOT_AWAITING", `${word.key} is ${h.state === "missing" ? "not translated" : "shown"} `
-        + `in ${tag}, so it is not waiting for a second check. Nothing was changed.`, { key: word.key, language: tag, state: h.state }) };
-    /* END DEC-49 REGION is-translation-awaiting */
-    return { history: h };
-  }
-
-  /* R74: the active profiles' local names (jurisdictions R70, R72), each with its explanation and official translation
-     in `tag` when held. Never a word to draft, adopt or translate (DEC-157 (6)). */
-  #localNames(tag) {
-    const ids = this.#activeIds();
-    if (!ids.length) return [];
-    let combined = null;
-    try { combined = this.#juris().combine(ids); } catch { combined = null; }
-    const list = combined && combined.ok === true && combined.view && Array.isArray(combined.view.local_names)
-      ? combined.view.local_names : [];
-    const inTag = (xs) => (Array.isArray(xs) ? xs : []).find((x) => x && typeof x.locale === "string" && canonicalTag(x.locale) === tag) || null;
-    return list.map((n) => {
-      const ex = inTag(n.explanations), tr = inTag(n.translations);
-      return { name: n.name, kind: n.kind, explanation: ex ? ex.text : null,
-               translation: tr ? { text: tr.text, source: tr.source ?? null } : null, basis: n.basis ?? null };
-    });
-  }
-  /* R67 (DEC-157 (6)): the local name a word's English is, if any (folded as extraction's term fold, exactly). */
-  static #officialFor(word, names) {
-    const en = termFold(word.en);
-    return en ? names.find((n) => typeof n.name === "string" && termFold(n.name) === en) || null : null;
-  }
-
-  /* R67: the first refusals, shared by `translationdraft` and its record route, and the words the door sends. */
-  #draftRequest({ language, direction, keys, key, by }) {
-    /* DEC-49 REGION is-translation-draft */
-    if (direction !== "to_language" && direction !== "to_english")
-      return { refused: refusal("TRANSLATION_DIRECTION_UNKNOWN", `the direction is to_language or to_english, and `
-        + `${direction === undefined || direction === null ? "none was given" : `'${String(direction).slice(0, 40)}' is neither`}. `
-        + "Nothing was sent.", { direction: direction ?? null }) };
-    /* END DEC-49 REGION is-translation-draft */
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang;
-    const machine = this.#translationActor(by);
-    if (machine) return { refused: machine };
-    const tag = lang.tag;
-    if (direction === "to_english") {
-      if (!this.#isAdmin(by))
-        return { refused: notAnAdmin(by ?? null, "asking the assistant to read a kept word back into English") };
-      const w = this.#translationWord(key);
-      if (w.refused) return w;
-      const aw = this.#translationAwaiting(tag, w.word);
-      if (aw.refused) return aw;
-      const text = aw.history.adoption.text;
-      return { direction, tag, key: w.word.key, words: [{ key: w.word.key, en: w.word.en, text, protected: w.word.protected }] };
-    }
-    const speaker = this.#translationSpeaker(by, tag);
-    if (speaker) return { refused: speaker };
-    /* DEC-49 REGION is-translation-draft */
-    if (keys !== undefined && keys !== null && (!Array.isArray(keys) || keys.length < 1 || keys.length > TRANSLATION_DRAFT_MAX
-        || keys.some((k) => typeof k !== "string" || !k.trim()) || new Set(keys.map((k) => k.trim())).size !== keys.length))
-      return { refused: refusal("TRANSLATION_KEYS_MALFORMED", `the words to draft are a list of 1 to ${TRANSLATION_DRAFT_MAX} `
-        + "different keys, or none for the first words still missing. Nothing was sent.") };
-    /* END DEC-49 REGION is-translation-draft */
-    const shown = this.#shownAdoptions(tag);
-    let asked;
-    if (Array.isArray(keys)) {
-      asked = [];
-      for (const k of keys) {
-        const w = this.#translationWord(k);
-        if (w.refused) return w;
-        /* DEC-49 REGION is-translation-draft */
-        if (shown.has(w.word.key))
-          return { refused: refusal("TRANSLATION_NOT_MISSING", `${w.word.key} already has a kept translation in ${tag}, so the `
-            + "assistant does not draft it. Nothing was sent.", { key: w.word.key, language: tag }) };
-        /* END DEC-49 REGION is-translation-draft */
-        asked.push(w.word);
-      }
-    } else {
-      asked = INTERFACE_WORDS.filter((w) => !shown.has(w.key));
-    }
-    const names = this.#localNames(tag);
-    const offered_official = [], words = [];
-    for (const w of asked) {
-      if (!Array.isArray(keys) && words.length >= TRANSLATION_DRAFT_MAX) break;
-      const n = InstanceSetup.#officialFor(w, names);
-      if (n) { offered_official.push({ key: w.key, ...n }); continue; }
-      words.push({ key: w.key, en: w.en, note: w.note, means: w.means, protected: w.protected });
-    }
-    /* DEC-49 REGION is-translation-draft */
-    if (!words.length)
-      return { refused: refusal("TRANSLATION_NOTHING_TO_DRAFT", `every word asked for is ${asked.length ? "an official name, "
-        + "shown as it is" : "translated already"} in ${tag}, so there is nothing to draft. Nothing was sent.`,
-        { language: tag, offered_official }) };
-    /* END DEC-49 REGION is-translation-draft */
-    return { direction, tag, words, offered_official };
-  }
-  /* The keys that have an adoption standing now in `tag` (shown or awaiting): a word that is not `missing`. */
-  #shownAdoptions(tag) {
-    const out = new Set();
-    for (const { key, adoptions, undos } of this.#languageHistories(tag)) {
-      const h = InstanceSetup.#current(adoptions, undos, new Set());
-      if (h.adoption) out.add(key);
-    }
-    return out;
-  }
-  /* Every word's acts in `tag`, read once, grouped by key. */
-  #languageHistories(tag) {
-    const by = new Map();
-    const at = (k) => { if (!by.has(k)) by.set(k, { key: k, adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] }); return by.get(k); };
-    for (const r of this.#rows(`SELECT * FROM translation_adoptions WHERE language = ? ORDER BY act_n`, tag)) at(r.key).adoptions.push(r);
-    for (const r of this.#rows(`SELECT * FROM translation_undos WHERE language = ? ORDER BY act_n`, tag)) at(r.key).undos.push(r);
-    for (const r of this.#rows(`SELECT * FROM translation_confirmations WHERE language = ? ORDER BY seq`, tag)) at(r.key).confirmations.push(r);
-    for (const r of this.#rows(`SELECT * FROM translation_drafts WHERE language = ? ORDER BY seq`, tag)) at(r.key).drafts.push(r);
-    for (const r of this.#rows(`SELECT * FROM translation_marks WHERE language = ? ORDER BY seq`, tag)) at(r.key).marks.push(r);
-    return [...by.values()];
-  }
-
-  /** R67 (K2238), in-process: null, or R67's first refusal (the direction, the tag, a machine, `TRANSLATION_NOT_GRANTED`
-   *  or `NOT_AN_ADMIN`, the word, the keys, not missing or not awaiting, nothing left to draft), each code minted here
-   *  alone (K231). store-door's route asks it before its own gate (its R10). Writes nothing; never throws. */
-  translationDraftRefusal({ language = null, direction = undefined, keys = undefined, key = null, by = null } = {}) {
-    try {
-      const req = this.#draftRequest({ language, direction, keys, key, by });
-      return req.refused || null;
-    } catch (e) {
-      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the words to draft could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was sent.` };
-    }
-  }
-
-  /** R67, op=translationdraft, which the door routes and calls here (store-door R10; control-plane R57's third draft):
-   *  the first refusals (as `translationDraftRefusal`), then R55's gate, then, as the other two drafts do (K2238),
-   *  `ASSISTANT_DRAFT_UNAVAILABLE` carrying the words the door sends to agent-worker's `/draft`, the signal it drafts
-   *  on: `{key, en, note, means, protected}` for each word to draft (`to_language`, with `offered_official`), or the one
-   *  kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the door hands the answered draft to
-   *  `translationdraftrecord`. `assistant` is the door's `{on, account}`; a draft carries no project (T40), so a
-   *  project's account handed in answers ASSISTANT_DRAFT_UNAVAILABLE with no words, nothing to draft on. The door's
-   *  NO_ACCOUNT (credentials', K2577), AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there, never minted here. */
-  translationDraft({ language = null, direction = undefined, keys = undefined, key = null, assistant = null, by = null } = {}) {
-    const req = this.#draftRequest({ language, direction, keys, key, by });
-    if (req.refused) return req.refused;
-    const off = this.assistantGate();
-    if (off) return off;
-    if (draftAccount(assistant).project) return projectAccount("nothing is sent");
-    const out = draftUnavailable("the draft is asked of the assistant by the door with these words; nothing is drafted or "
-      + "saved here.");
-    return req.direction === "to_english"
-      ? { ...out, direction: req.direction, language: req.tag, key: req.key, words: req.words }
-      : { ...out, direction: req.direction, language: req.tag, words: req.words, offered_official: req.offered_official };
-  }
-
-  /** R67, the store-internal route `translationdraftrecord` (no spec): the door hands back the answered draft
-   *  (`draft`, agent-worker R70's: `{words: [{key, text}]}` or `{key, english}`) with the request's `language`,
-   *  `direction` and `keys` or `key`, and `words` as `translationdraft` answered them. The first refusals are asked
-   *  again, so a hand-back that no longer stands records nothing. `to_language`: each asked word answered is stored as
-   *  a draft labelled machine work (record-grammar R50), with who asked and when, unless its placeholders differ from
-   *  its English's or it is no one-line text within bounds (named in `not_drafted`). `to_english`: the reading's fact is
-   *  recorded (K2216: key, language, the SHA-256 of the kept text read, the administrator, the instant), no text. */
-  async translationDraftRecord({ language = null, direction = undefined, keys = undefined, key = null, words = null,
-                                 draft = null, not_drafted = null, by = null } = {}) {
-    const asked = direction === "to_language" && (keys === undefined || keys === null) && Array.isArray(words)
-      ? words.map((w) => (w && typeof w.key === "string" ? w.key : null)).filter(Boolean) : keys;
-    const req = this.#draftRequest({ language, direction, keys: asked, key, by });
-    if (req.refused) return req.refused;
-    const unavailable = (why) => draftUnavailable(`${why} Nothing was saved.`);
-    const at = this.#iso();
-    const askedBy = this.#nameOf(by);
-    if (req.direction === "to_english") {
-      if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
-        return unavailable("the assistant did not answer a reading of this word back into English.");
-      const sent = Array.isArray(words) && words[0] && words[0].key === req.key && typeof words[0].text === "string"
-        ? words[0].text : req.words[0].text;
-      this.#sql.exec(`INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
-                     req.tag, req.key, await sha256Hex(sent), by, askedBy, at);
-      return { ok: true, key: req.key, language: req.tag, english: draft.english,
-               label: { kind: "machine", asked_by: askedBy },
-               note: "machine work: the reading adopts and confirms nothing. Confirming the word is your own act." };
-    }
-    const got = draft && typeof draft === "object" && Array.isArray(draft.words) ? draft.words : null;
-    if (!got) return unavailable("the assistant did not answer a draft of these words.");
-    const label = proposalLabel(TRANSLATION_DRAFTER, "translation");
-    const drafted = [], refusedHere = [];
-    const answered = new Map();
-    for (const d of got) if (d && typeof d.key === "string" && !answered.has(d.key)) answered.set(d.key, d.text);
-    for (const w of req.words) {
-      if (!answered.has(w.key)) { refusedHere.push({ key: w.key, why: "the assistant did not draft it" }); continue; }
-      const text = answered.get(w.key);
-      if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)) {
-        refusedHere.push({ key: w.key, why: `the draft is not one line of 1 to ${TRANSLATION_TEXT_MAX} characters, so it is not stored` });
-        continue;
-      }
-      if (!samePlaceholders(text, w.en)) {
-        refusedHere.push({ key: w.key, why: "the draft's placeholders in braces differ from the English's, so it is not stored" });
-        continue;
-      }
-      const r = this.#rows(`INSERT INTO translation_drafts (language, key, en, text, label, asked_by, asked_name, at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING seq`, req.tag, w.key, w.en, text, JSON.stringify(label), by, askedBy, at);
-      drafted.push({ id: r[0].seq, key: w.key, text, label, asked_by: askedBy, at });
-    }
-    const theirs = (Array.isArray(not_drafted) ? not_drafted : []).map((x) => (typeof x === "string" ? x : x && x.key))
-      .filter((k) => typeof k === "string" && req.words.some((w) => w.key === k));
-    for (const r of refusedHere) if (theirs.includes(r.key)) r.why = "the assistant could not draft it";
-    return { ok: true, language: req.tag, drafted, not_drafted: refusedHere, offered_official: req.offered_official,
-             note: "drafts, labelled machine work: none is your group's wording, and members see none, until a member "
-               + "asked to translate this language keeps it." };
-  }
-
-  /** R70, op=translationadopt: a granted speaker keeps a word's translation, typed or from a stored draft. */
-  translationAdopt({ language = null, key = null, text = undefined, draft = null, by = null } = {}) {
-    const machine = this.#translationActor(by);
-    if (machine) return machine;
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang.refused;
-    const tag = lang.tag;
-    const speaker = this.#translationSpeaker(by, tag);
-    if (speaker) return speaker;
-    const w = this.#translationWord(key);
-    if (w.refused) return w.refused;
-    const word = w.word;
-    let d = null;
-    if (draft !== null && draft !== undefined) {
-      const id = typeof draft === "number" ? draft : typeof draft === "string" && /^\d+$/.test(draft.trim()) ? Number(draft.trim()) : NaN;
-      d = Number.isSafeInteger(id) ? this.#one(`SELECT seq, text FROM translation_drafts WHERE seq = ? AND language = ? AND key = ?`, id, tag, word.key) : null;
-      /* DEC-49 REGION is-translation-adopt */
-      if (!d)
-        return refusal("NO_SUCH_DRAFT", `there is no stored draft ${String(draft).slice(0, 40)} of ${word.key} in ${tag}. `
-          + "Nothing was changed.", { key: word.key, language: tag, draft });
-      /* END DEC-49 REGION is-translation-adopt */
-    }
-    /* DEC-49 REGION is-translation-adopt */
-    if (typeof text !== "string" || !text.trim() || [...text].length > TRANSLATION_TEXT_MAX || !oneLine(text)
-        || !samePlaceholders(text, word.en))
-      return refusal("TRANSLATION_TEXT_REFUSED", typeof text === "string" && text.trim() && [...text].length <= TRANSLATION_TEXT_MAX && oneLine(text)
-        ? `the text's placeholders (${placeholdersOf(text).map((x) => `{${x}}`).join(", ") || "none"}) differ from the English's `
-          + `(${placeholdersOf(word.en).map((x) => `{${x}}`).join(", ") || "none"}). Nothing was changed.`
-        : `a translated word is one line of 1 to ${TRANSLATION_TEXT_MAX} characters. Nothing was changed.`, { key: word.key, language: tag });
-    /* END DEC-49 REGION is-translation-adopt */
-    const h = this.#wordHistory(tag, word.key);
-    /* DEC-157 (3), (4); K2200 (1): an ordinary word shows once kept; a protected one only when kept exactly as drafted. */
-    const state = !word.protected || (d && text === d.text) ? "shown" : "awaiting";
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO translation_adoptions (language, key, act_n, text, en, state, draft, prev, replaced, by_member, by_name, at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tag, word.key, h.actN + 1, text, word.en, state, d ? d.seq : null,
-                   h.adoption ? h.adoption.seq : null, h.adoption ? h.adoption.text : null, by, this.#nameOf(by), at);
-    return { ok: true, language: tag, key: word.key, state, replaced: h.adoption ? h.adoption.text : null, at,
-             note: state === "shown" ? "every member reading this language sees it now."
-               : "a protected word changed from the assistant's draft, or typed without one: members see the English until "
-                 + "another member asked to translate this language, or an administrator who has read it back into English, "
-                 + "confirms it." };
-  }
-
-  /** R71, op=translationconfirm: an awaiting protected word confirmed, then shown: by a granted speaker who did not keep
-   *  it, or by an administrator holding a reading of its current text back into English (K2216). An administrator who
-   *  holds a grant of the language and did not keep the word is a second granted speaker and needs no reading. */
-  async translationConfirm({ language = null, key = null, by = null } = {}) {
-    const machine = this.#translationActor(by);
-    if (machine) return machine;
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang.refused;
-    const tag = lang.tag;
-    const speaker = this.#translationSpeaker(by, tag);
-    if (speaker) return speaker;
-    const w = this.#translationWord(key);
-    if (w.refused) return w.refused;
-    const aw = this.#translationAwaiting(tag, w.word);
-    if (aw.refused) return aw.refused;
-    const adoption = aw.history.adoption;
-    const admin = this.#isAdmin(by);
-    const self = adoption.by_member === by;
-    /* DEC-49 REGION is-translation-confirm */
-    if (self && !admin)
-      return refusal("TRANSLATION_CONFIRM_SELF", `you kept this translation of ${w.word.key}, so its second check is `
-        + "someone else's. Nothing was changed.", { key: w.word.key, language: tag });
-    /* END DEC-49 REGION is-translation-confirm */
-    const secondSpeaker = !self && this.#liveGrant(by, tag) && this.#isActiveMember(by);
-    let readBack = null;
-    if (!secondSpeaker) {
-      const sha = await sha256Hex(adoption.text);
-      readBack = this.#one(`SELECT seq FROM translation_readings WHERE language = ? AND key = ? AND by_member = ? AND text_sha256 = ?
-                            ORDER BY seq DESC LIMIT 1`, tag, w.word.key, by, sha);
-      /* DEC-49 REGION is-translation-confirm */
-      if (!readBack)
-        return refusal("TRANSLATION_NOT_READ_BACK", `${w.word.key} has not been read back into English for its current text `
-          + `in ${tag}. Read it back into English first, then confirm. Nothing was changed.`, { key: w.word.key, language: tag });
-      /* END DEC-49 REGION is-translation-confirm */
-    }
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO translation_confirmations (adoption, language, key, read_back, by_member, by_name, at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)`, adoption.seq, tag, w.word.key, readBack ? readBack.seq : null, by, this.#nameOf(by), at);
-    return { ok: true, language: tag, key: w.word.key, state: "shown", confirmed_by: by, at,
-             ...(readBack ? { read_back: true } : {}) };
-  }
-
-  /** R72, op=translationrevert: an administrator undoes the word's latest act in one act: its latest adoption (back to
-   *  what it replaced), or its latest undo (back to the adoption that undo moved from). Appended; nothing changes. */
-  translationRevert({ language = null, key = null, by = null } = {}) {
-    const machine = this.#translationActor(by);
-    if (machine) return machine;
-    if (!this.#isAdmin(by)) return notAnAdmin(by ?? null, "undoing a translation of the screens");
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang.refused;
-    const tag = lang.tag;
-    const w = this.#translationWord(key);
-    if (w.refused) return w.refused;
-    const h = this.#wordHistory(tag, w.word.key);
-    /* DEC-49 REGION is-translation-revert */
-    if (!h.latest)
-      return refusal("TRANSLATION_NOTHING_TO_UNDO", `${w.word.key} has never been translated into ${tag}. Nothing was changed.`,
-        { key: w.word.key, language: tag });
-    /* END DEC-49 REGION is-translation-revert */
-    const from = h.adoption ? h.adoption.seq : null;
-    const to = h.latest.kind === "adoption" ? h.latest.row.prev ?? null : h.latest.row.from_adoption ?? null;
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO translation_undos (language, key, act_n, undoes, undoes_seq, from_adoption, to_adoption, by_member, by_name, at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, tag, w.word.key, h.actN + 1, h.latest.kind, h.latest.row.seq, from, to,
-                   by, this.#nameOf(by), at);
-    const now = this.#wordHistory(tag, w.word.key);
-    return { ok: true, language: tag, key: w.word.key, undid: { kind: h.latest.kind, seq: h.latest.row.seq },
-             state: now.state, text: now.adoption ? now.adoption.text : null, at };
-  }
-
-  /** R73, op=translationmark: any active member marks a shown translation "this translation looks wrong". Open until
-   *  the word's next adoption or undo; a member's second open mark on the word answers `existed: true`. */
-  translationMark({ language = null, key = null, note = null, by = null } = {}) {
-    const machine = this.#translationActor(by);
-    if (machine) return machine;
-    const lang = this.#translationLanguage(language);
-    if (lang.refused) return lang.refused;
-    const tag = lang.tag;
-    const w = this.#translationWord(key);
-    if (w.refused) return w.refused;
-    const h = this.#wordHistory(tag, w.word.key);
-    /* DEC-49 REGION is-translation-mark */
-    if (h.state !== "shown")
-      return refusal("TRANSLATION_NOT_SHOWN", `${w.word.key} shows no translation in ${tag}. Nothing was recorded.`,
-        { key: w.word.key, language: tag });
-    const n = note === null || note === undefined ? null : typeof note === "string" ? note.trim() : undefined;
-    if (n === undefined || (n !== null && [...n].length > TRANSLATION_NOTE_MAX))
-      return refusal("TRANSLATION_NOTE_REFUSED", `a note is text of at most ${TRANSLATION_NOTE_MAX} characters. Nothing was recorded.`,
-        { key: w.word.key, language: tag });
-    /* END DEC-49 REGION is-translation-mark */
-    const notMember = this.#translationMember(by);
-    if (notMember) return notMember;
-    const open = this.#one(`SELECT seq, note, at FROM translation_marks WHERE language = ? AND key = ? AND by_member = ? AND act_n = ?
-                            ORDER BY seq LIMIT 1`, tag, w.word.key, by, h.actN);
-    if (open) return { ok: true, existed: true, language: tag, key: w.word.key, note: open.note ?? null, at: open.at };
-    const at = this.#iso();
-    this.#sql.exec(`INSERT INTO translation_marks (language, key, act_n, note, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                   tag, w.word.key, h.actN, n || null, by, this.#nameOf(by), at);
-    return { ok: true, existed: false, language: tag, key: w.word.key, note: n || null, at,
-             note_for_you: "the members asked to translate this language and the administrators see your mark." };
-  }
-
-  /** R74, op=translations: the workspace for a granted speaker of `language`: every word in the list's order with its
-   *  state, its shown or awaiting text, `english_changed`, its drafts, its acts newest first and its open marks; and
-   *  the active profiles' local names, offered first and never a word to translate. Writes nothing; never throws. */
-  translations({ language = null, viewer = null } = {}) {
-    try {
-      const machine = this.#translationActor(viewer);
-      if (machine) return machine;
-      const lang = this.#translationLanguage(language);
-      if (lang.refused) return lang.refused;
-      const tag = lang.tag;
-      const speaker = this.#translationSpeaker(viewer, tag);
-      if (speaker) return speaker;
-      const hist = new Map(this.#languageHistories(tag).map((h) => [h.key, h]));
-      const counts = { missing: 0, shown: 0, awaiting: 0 };
-      const words = INTERFACE_WORDS.map((w) => {
-        const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
-        const c = InstanceSetup.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
-        counts[c.state] += 1;
-        const a = c.adoption;
-        const acts = [
-          ...g.adoptions.map((r) => ({ act: "adoption", seq: r.seq, text: r.text, en: r.en, kept_as: r.state, draft: r.draft,
-                                       replaced: r.replaced, by: r.by_member, by_name: r.by_name, at: r.at, n: r.act_n })),
-          ...g.undos.map((r) => ({ act: "undo", seq: r.seq, undoes: r.undoes, undoes_seq: r.undoes_seq, by: r.by_member,
-                                   by_name: r.by_name, at: r.at, n: r.act_n })),
-          ...g.confirmations.map((r) => ({ act: "confirmation", seq: r.seq, adoption: r.adoption, read_back: r.read_back !== null,
-                                           by: r.by_member, by_name: r.by_name, at: r.at })),
-        ].sort((x, y) => (x.at < y.at ? 1 : x.at > y.at ? -1 : (y.n ?? 0) - (x.n ?? 0) || y.seq - x.seq));
-        return { key: w.key, en: w.en, note: w.note, means: w.means, protected: w.protected, state: c.state,
-                 text: a ? a.text : null, adopted_by: a ? a.by_member : null, adopted_by_name: a ? a.by_name : null,
-                 adopted_at: a ? a.at : null, english_changed: c.state === "shown" && !!a && a.en !== w.en,
-                 drafts: g.drafts.map((r) => ({ id: r.seq, text: r.text, label: JSON.parse(r.label), asked_by: r.asked_by,
-                                                asked_by_name: r.asked_name, at: r.at })).reverse(),
-                 acts,
-                 marks: g.marks.filter((r) => r.act_n === c.actN).map((r) => ({ note: r.note, by: r.by_member, by_name: r.by_name, at: r.at })) };
-      });
-      return { ok: true, language: tag, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag), words };
-    } catch (e) {
-      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the translation workspace could not be read (${String(e && e.message || e).slice(0, 160)}).` };
-    }
-  }
-
-  /** R74, op=interfacewords: every word for `language` (by default the viewer's own, R64), the group's shown translation
-   *  where one is held and the English otherwise (`fallback: true`), never blank, with `en` beside it. An awaiting word
-   *  answers the English. Writes nothing; never throws. */
-  interfaceWords({ language = undefined, viewer = null } = {}) {
-    try {
-      let tag = null;
-      if (language !== undefined && language !== null && language !== "") {
-        const lang = this.#translationLanguage(language);
-        if (lang.refused) return lang.refused;
-        tag = lang.tag;
-      } else {
-        const own = this.memberLanguage({ viewer }).language;
-        tag = typeof own === "string" && isLocale(own) ? canonicalTag(own) : null;
-      }
-      const shown = new Map();
-      if (tag)
-        for (const g of this.#languageHistories(tag)) {
-          const c = InstanceSetup.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
-          if (c.state === "shown") shown.set(g.key, c.adoption.text);
-        }
-      return { ok: true, language: tag, words: INTERFACE_WORDS.map((w) => (shown.has(w.key)
-        ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
-        : { key: w.key, text: w.en, en: w.en, fallback: true })) };
-    } catch {
-      return { ok: true, language: null, words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
-               detail: "the group's translations could not be read, so every word is shown in English." };
-    }
-  }
 
   /* =====================================================================
-   * THE LANGUAGE A MEMBER READS IN (R87; T48; N670; DEC-127 (1), (3)). The plane's draft door asks which language a
-   * passage is read in: the one named, else the member's own (R64), else it says none is set. Writes nothing.
+   * THE TRANSLATION WORKSPACE IS `translations`' (R94; T50; N1084; K3696). These delegates answer what it answers, as
+   * given, for the callers that have not re-pointed (`store-door`'s `translationdraft` route, the plane's draft door, the
+   * nine routes below); each goes when its last caller does. The workspace's code, tables and rows are its own.
    * ===================================================================== */
 
-  /** R87, in-process: `{ok: true, language, source}`, `language` the tag named when `jurisdictions.isLocale` accepts it
-   *  (`source: "named"`; else `LANGUAGE_MALFORMED`, R64's rule), without one the member's own language (`source:
-   *  "member"`), and with none set `LANGUAGE_NOT_SET`. Tags are answered in their canonical form. Writes nothing; never
-   *  throws. */
-  readingLanguage({ member = null, language = undefined } = {}) {
-    try {
-      if (language !== undefined && language !== null && language !== "") {
-        const named = this.#translationLanguage(language);
-        if (named.refused) return named.refused;
-        return { ok: true, language: named.tag, source: "named" };
-      }
-      const own = this.memberLanguage({ viewer: member }).language;
-      const tag = typeof own === "string" && isLocale(own) ? canonicalTag(own) : null;
-      /* DEC-49 REGION is-reading-language */
-      if (!tag)
-        return refusal("LANGUAGE_NOT_SET", `${typeof member === "string" && member.trim() ? "this member has" : "the request names no member and"} `
-          + "no language chosen for the screens, and the request names none. Nothing was translated.");
-      /* END DEC-49 REGION is-reading-language */
-      return { ok: true, language: tag, source: "member" };
-    } catch (e) {
-      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
-               detail: `the language could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was translated.` };
-    }
+  /* R94: `translations`' one instance on this storage, built over this module's own record, membership, ai-accounts,
+     profiles and clock, and given the member's language (R64) on its first construction, so a built and not yet started
+     InstanceSetup answers its delegates with the member's language. */
+  #translations() {
+    const me = this;
+    /* `aiAccounts` is a getter: `translations` asks for it only when a draft reaches the keep-away gate. */
+    const t = this.#deps.translations ?? translationsOf(this.#ctx, { record: this.#record(), membership: this.#membership(),
+      get aiAccounts() { return me.#aiAccounts(); }, jurisdictions: this.#deps.jurisdictions, now: this.#deps.now });
+    this.#registerLanguage(t);
+    return t;
   }
+  /* R94, R64: `memberLanguage` registered once with `translations` (its R11), which reads the member's own language
+     through it; a second registration is only `PROVIDER_DECLARED`, harmless. Answered in the start's report. */
+  #registerLanguage(t) {
+    if (this.#languageRegistered) return this.#languageRegistered;
+    try { this.#languageRegistered = t.registerMemberLanguageRead(({ viewer = null } = {}) => this.memberLanguage({ viewer })); }
+    catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
+    return this.#languageRegistered;
+  }
+  translationDraftRefusal(a) { return this.#translations().translationDraftRefusal(a); }
+  translationDraft(a) { return this.#translations().translationDraft(a); }
+  readingLanguage(a) { return this.#translations().readingLanguage(a); }
+  translationDraftRecord(a) { return this.#translations().translationDraftRecord(a); }
+  translationGrant(a) { return this.#translations().translationGrant(a); }
+  translationAdopt(a) { return this.#translations().translationAdopt(a); }
+  translationConfirm(a) { return this.#translations().translationConfirm(a); }
+  translationRevert(a) { return this.#translations().translationRevert(a); }
+  translationMark(a) { return this.#translations().translationMark(a); }
+  translations(a) { return this.#translations().translations(a); }
+  interfaceWords(a) { return this.#translations().interfaceWords(a); }
 
   /* =====================================================================
    * UPDATES OF THE GROUP'S CIVICSMITH (R88–R91; T48; N1047; K3158, Bob's; DEC-226; K3189; `build/plan/draft-updates.md`).
@@ -3258,12 +2508,13 @@ export class InstanceSetup {
     return t;
   }
 
-  /** R88, the consumer's `tick`: one check, answered under the consumer's key. A failed or tampered fetch stores no
-   *  notice and raises no item; the next day's run tries again. */
-  async updateCheckTick() { return { updatecheck: await this.#runUpdateCheck() }; }
+  /** R88, R92 (T50; N1113), the consumer's `tick`: one check at the alarm's `now` (milliseconds), answered under the
+   *  consumer's key. A failed or tampered fetch stores no notice and raises no item; the next day's run tries again. */
+  async updateCheckTick(now) { return { updatecheck: await this.#runUpdateCheck(now) }; }
 
-  async #runUpdateCheck() {
-    const at = this.#iso();
+  /* R92: the check's recorded instant is the alarm's `now` when one is handed in, else a read of the clock. */
+  async #runUpdateCheck(now) {
+    const at = Number.isFinite(now) ? new Date(now).toISOString() : this.#iso();
     let got;
     try { got = await this.#askNotice(); }
     catch (e) { got = { outcome: "unreachable", detail: `the check did not complete (${String(e && e.message || e).slice(0, 160)})` }; }
@@ -3712,7 +2963,7 @@ export function instanceSetupOps(m, url, body) {
     grouplanguages: () => m.groupLanguages(),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
     declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
-    /* R67–R74 (T37; N669): the translation ops, and the door's store-internal record route (no spec). */
+    /* R94: the translation ops and the door's store-internal record route (no spec), served through the delegates. */
     translationdraft: () => m.translationDraft({ ...(body || {}), by: q("by") }),
     translationdraftrecord: () => m.translationDraftRecord({ ...(body || {}), by: q("by") }),
     translationgrant: () => m.translationGrant({ ...(body || {}), by: q("by") }),
