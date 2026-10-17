@@ -849,7 +849,9 @@ console.log("\n--- B1 · a CHECK run walks the table and the plane holds the who
      record refuses. Every step still TICKS; no step here judged a look, so the log holds only the plane's own
      terminal entry. */
   t("every step the trace names ticked, and none that looked at nothing sent an entry",
-    [st.log.filter((l) => l.op === "airuntick").length, st.runlog.length], [(out.trace || []).length, 1]);
+    /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+    [st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length, st.runlog.length],
+    [(out.trace || []).length, 1]);
   t("the last entry is terminal", st.runlog[st.runlog.length - 1]?.terminal ?? null, 1);
   t("and names the bound", st.runlog[st.runlog.length - 1]?.bound ?? null, "completed");
 
@@ -973,8 +975,13 @@ console.log("\n--- B3 · A BUDGET EXHAUSTION WRITES `runtime-ceiling-reached` --
       .filter((e) => e && e.condition != null).length, 0);
   t("the word nevertheless reached the observation log — written by the PLANE",
     st.runlog.some((e) => e.condition === "runtime-ceiling-reached"), true);
-  t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it",
-    st.log.filter((l) => l.op === "airuntick").length, (out.trace || []).length);
+  /* R91 (R085): the one tick after its exit is the segment's `segment_end`, telling the plane how it ended, and no step. */
+  t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it; "
+    + "then only the segment's own segment_end, naming the plane's exit",
+    [st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length,
+     st.log.filter((l) => l.op === "airuntick" && "segment_end" in (l.body || {})).map((l) => l.body.segment_end.by),
+     st.log[st.log.length - 1]?.body?.segment_end?.done],
+    [(out.trace || []).length, ["the plane's own exit"], true]);
   await mf.dispose();
 }
 
@@ -1789,23 +1796,28 @@ export default {
   }
 
   /* R2 — (2), THE CLASS AND NOT THE INSTANCE: ANY entry the plane refuses is
-     SURFACED. A judged `condition` outside the record's vocabulary is refused
-     by the REAL plane per entry (C-22.4) — the member does not validate it and
-     should not (the plane does). Before REC-100 this member counted each such
-     tick `logged` and the run's own output said nothing. */
+     SURFACED. A judged state the record has no word for is refused by the REAL
+     plane per entry (C-22.1). Before REC-100 this member counted each such tick
+     `logged` and the run's own output said nothing.
+     MOVED BY R92 (R085), NEVER WEAKENED: this arm's trigger was a judged
+     `condition` outside the record's vocabulary (C-22.4). That was WALK-085's
+     cause B (every live entry refused), so this member now sends such a
+     condition as stated text in `detail` (`loggable` in `index.mjs`, through the plane's
+     own `checkCondition`) and it lands; REC100-3 below holds that. The class
+     this arm tests, a per-entry refusal surfaced, rides on a state instead,
+     which this member does not rewrite: a state is the look itself. */
   {
     const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
     const out = await (await runOp(mf, { ...base,
-      /* R26 (K148): only a step that states a look sends an entry, so the bad condition rides on a judged look. */
-      judgements: [{ targets: [], level: "document", observed: "LOOKED_INDETERMINATE",
-                     condition: "no-such-condition-rec100" }] })).json();
+      /* R26 (K148): only a step that states a look sends an entry, so the bad state rides on a judged look. */
+      judgements: [{ targets: [], level: "document", observed: "NO_SUCH_STATE_REC100" }] })).json();
     const log = await realLog(mf);
     const entries = Array.isArray(log.entries) ? log.entries : [];
     const lr = Array.isArray(out.log_refused) ? out.log_refused : [];
     t("REC100-2: every step entry the REAL plane refused is SURFACED in the run's own output — named by the "
       + "plane's code and C-number and the step it came from — and none is silently dropped",
       [lr.length > 0, [...new Set(lr.map((r) => `${r.code}/${r.check}`))], lr.every((r) => typeof r.step === "string")],
-      [true, ["AI_RUN_CONDITION_UNKNOWN/C-22.4"], true]);
+      [true, ["AI_LOG_STATE_UNKNOWN/C-22.1"], true]);
     /* THE EXPECTATION IS COUNTED OFF THE RECORD AND THE TRACE, NOT OFF `log_refused`.
        The first draft compared `refusals` against `log_refused` — two fields the
        same code fills — and the `aw-refused` control arm (refused[] unread) left
@@ -1820,6 +1832,27 @@ export default {
       [true, sent - entries.length, entries.length]);
     t("REC100-2c: …and the one step that looked is the only one that sent — no NEVER_LOOKED entry reached the plane",
       [entries.length + lr.length, entries.filter((e) => e.state === "NEVER_LOOKED").length], [sent, 0]);
+    await mf.dispose();
+  }
+
+  /* R3 — R92 (R085-8; WALK-085 F2, cause B), AT THE REAL PLANE'S APPEND PATH. A model writes prose where the judging
+     tool offers `condition`, and says `governed` beside a definitive state. Both were refused per entry (C-22.4,
+     C-22.2), so a live check run's log stayed empty. Now each lands, in the record's own words. */
+  {
+    const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
+    const out = await (await runOp(mf, { ...base,
+      judgements: [{ targets: [], level: "document", observed: "LOOKED_ABSENT", governed: true,
+                     condition: "the source answered slowly, so we stopped" }] })).json();
+    const log = await realLog(mf);
+    const entries = Array.isArray(log.entries) ? log.entries : [];
+    const e = entries.find((x) => String(x.detail || "").includes("condition stated as")) || {};
+    t("REC100-3 (R92): a judged look with a free condition and a governed definitive state LANDS at the REAL plane — "
+      + "nothing refused, logged > 0 and equal to what the record holds",
+      [out.log_refused, out.logged > 0, out.logged], [[], true, entries.length]);
+    t("REC100-3b (R92): …in the record's words: no condition, LOOKED_INDETERMINATE (D-104), and what the model said is "
+      + "stated in detail, never dropped",
+      [e.condition ?? null, e.state, /the source answered slowly/.test(e.detail || ""), /LOOKED_ABSENT/.test(e.detail || "")],
+      [null, "LOOKED_INDETERMINATE", true, true]);
     await mf.dispose();
   }
   PLANE_WORLD.dispose();

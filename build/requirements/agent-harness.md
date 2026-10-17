@@ -36,11 +36,17 @@ The report contract (`checkReport`, pure):
 
 Mode `plan`'s table (K660; `BIO_Action_v0_1.md` §4):
 - **R6** (was `agent-worker` R50; §4 rules 1, 3, 8; K660 (1), (3)) Mode `plan` walks its own control-flow table, `PLAN_FLOW`, pure and held beside `CONTROL_FLOW`: rows `gate-mode`, `resume`, `read`, `compose`, `dedup`, `submit`, `adjust`, `close`; one pass (R3's pass limit is 1 for this table); `stopBecause` asks `proposals` then `wallclock`. It has no `fanout`: it calls no `airunspawn`, `capturerequest` or `suggest`, makes no fetch and drafts no communication.
+- **R11** (R085-11; K3486 (B); R5) The spawn contract's `returns` carries `conditions`: the condition kinds `run-rules` admits (the vocabulary `checkCondition` checks), in a fixed order, so the sub-session's tool can offer them (`agent-model` R17). Test: a contract's `returns.conditions` is non-empty and each kind passes `checkCondition`; control: a kind not in it is refused by `checkCondition`.
+- **R12** (R085-16; K3501 (C1, C3)) `spawnContract({level, payload, arms, targets})` adds two keys after `scope`: `subjects`, the payload's `subjects.items` (`ai-runs` R85) followed by `targets` (the level's targets the plan judgement named, each `{id, extent}` as given, `kind: "target"`), deduplicated by `id` and `extent`, at most 50, frozen; and `arms`, the meaning arms the caller passes (names, in the caller's order), frozen. An absent `subjects`, `targets` or `arms` gives an empty list. Test: a payload with two subjects and one target gives three, in that order, frozen; control: a duplicate of a subject among the targets appears once.
+- **R13** (R085-23; K3510; `screens-inquiry` R39) An empty-level candidate's description (`emptyLevelCandidates`) names the target as "this question", never its record id. Test: a target `INQ-…` gives a description holding "this question" and not the id; control: its name stays `level-empty-<level>`.
+- **R14** (R085-29; K3528; `walk-085-r5` item (e); extends R13) A candidate's member-facing text never carries the sub-session's free-text summary or any raw record id; the report and its words stay in the run log. Test: an empty-level candidate from a report whose summary quotes `INQ-2026-0002` and `INFO-2026-0006-council-minutes` has a description holding neither id nor the summary. Control: the candidate's name stays `level-empty-<level>`.
+- **R15** (R085-29; K3529; `diag-085-slow` option 2; Bob, 2026-10-16: "there's no value in continuing at that point") A check run's `next-pass` closes the run, with condition `completed` and a log entry saying the pass added nothing new, when the pass just ended added no new candidate: every candidate it composed was dropped by `dedup` as already held, or it composed none. `maxPasses` stays the upper bound. Test: a pass whose candidates are all dropped as held closes before the next pass and logs why; control: a pass that submits a new candidate goes on to the next pass, below `maxPasses`.
 
 ## Private
 
 ### Uses
 
+- `observation-log`: its condition vocabulary `CONDITION_KINDS` (R11; K3491).
 - `runtime-limits`, as Rule 3's table names it. Neither `harness.mjs` nor `subsession.mjs` imports anything outside the two files today (checked on `tranche/T32`); see Suggestions.
 
 ### Invariants
@@ -49,6 +55,7 @@ Mode `plan`'s table (K660; `BIO_Action_v0_1.md` §4):
 - **R8** (new; Q0-1) Every export of this module is pure: it makes no network call, reads no binding, environment, clock or storage, and keeps no state between calls, so the same arguments always give the same answer. A test calls each exported function twice on equal inputs with the global `fetch` and `Date.now` replaced by throwing stubs and finds equal answers and no stub called.
 - **R9** (N586; K1615) It exports none of `PLANE_OPS`, `NAMESPACES` and `MEANING_ARM`: the run's plane ops, the namespace list and the meaning arm are `agent-worker`'s (its R37, R4, R44, R19 and R22), declared once there, so no name is declared in both modules. A test imports each of this module's files and finds none of the three among their exports.
 - **R10** (T46; N919; Bob's, K2892; amends R44's copies held in `harness.mjs`) `MODES.plan` is deployed by the same reviewed edit that sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s (its R53): the harness's copy agrees with both, `check` stays deployed, and every other mode stays as it is. A copy that disagrees with `run-rules` R14 fails this module's test.
+- **R16** (R085; S4 N4; K3557) A run that composed a candidate and wrote none never closes `completed`: it closes with the reason stated (`nothing written`, and why) in the member's result. Test: composed count 1, written count 0, at the last pass: the close is not `completed` and names the reason.
 
 ### Satisfies
 

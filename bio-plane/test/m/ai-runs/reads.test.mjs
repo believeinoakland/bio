@@ -8,12 +8,12 @@ import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATIO
 import { AI_RUNS_CONTEXT_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const CAP = "b".repeat(64);
-const INQ2 = "INQ-2026-0002", HIDDEN = "PROJ-2026-0009", INFO = "INF-2026-0001";
+const INQ2 = "INQ-2026-0002", INQ3 = "INQ-2026-0003", HIDDEN = "PROJ-2026-0009", INFO = "INF-2026-0001";
 
 async function readWorld() {
   const w = world();
   await w.group("ann", "bob", "dan");
-  w.bundle(INQ); w.bundle(INQ2); w.bundle(INFO, "information");
+  w.bundle(INQ); w.bundle(INQ2); w.bundle(INQ3); w.bundle(INFO, "information");
   w.project(PROJ, "ann", { joined: ["bob"] });
   w.project(HIDDEN, "ann");
   w.cites(PROJ, INQ); w.cites(PROJ, INQ2); w.cites(PROJ, INFO);
@@ -35,7 +35,7 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   assert.equal(s.rerun_of, null, "a run that re-runs nothing");
   assert.deepEqual(s.state, {}, "the run's scratch as the open wrote it");
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
-                   ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T01:00:00Z"]);
+                   ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T00:10:00Z"]);
   assert.deepEqual(s.context, { type: "inquiry", id: INQ });
   /* R52 (T41): `ref` is the member whose act the run is, never the opener's own word ("acct-1" was offered) */
   assert.deepEqual(s.principal, { plane: ORG, claude: "member:ann", ref: "member:ann", skill: "bio@1" });
@@ -137,7 +137,8 @@ test("R21: the bar — recorded, none-recorded, context-has-no-project, names-no
     [{ ...proj, standardPair: '{"capture":"B"}' }, "recorded", { capture: "B", connection: null }],
     [{ ...proj }, "none-recorded", null],
     [{ ...proj, standardPair: "  " }, "none-recorded", null],
-    [{}, "context-has-no-project", null],
+    [{ contextId: INQ3 }, "context-has-no-project", null],
+    [{}, "none-recorded", null],   /* R86: INQ sits in PROJ, so it takes that project's bar */
     [{ standardPair: '{"capture":"","other":"x"}' }, "names-no-axis", null],
     [{ standardPair: "{broken" }, "unreadable", null],
     [{ standardPair: "[1,2]" }, "unreadable", null],
@@ -189,7 +190,7 @@ test("R23, R34: the spawn payload — absent or invisible found false; the searc
     const s = await w.runs.spawnPayload({ run: "L1", viewer: "admin", half });
     assert.equal(s.half, "search");
     assert.deepEqual(Object.keys(s), ["run", "found", "half", "payload", "limit", "truncated", "fence"]);
-    assert.deepEqual(Object.keys(s.payload), ["run", "context", "mode", "skill", "standard_pair", "standard", "budget"]);
+    assert.deepEqual(Object.keys(s.payload), ["run", "context", "mode", "skill", "standard_pair", "standard", "budget", "subjects"]);
     const text = JSON.stringify(s);
     assert.equal(/bias|lens|manifest|statements_sha/i.test(text.replace(s.fence, "")), false, "R34: the search half never receives the lens");
     assert.deepEqual([s.payload.mode, s.payload.skill, s.payload.standard_pair, s.payload.standard.basis, s.limit, s.truncated],

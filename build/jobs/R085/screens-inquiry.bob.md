@@ -1,0 +1,27 @@
+# BOB to screens-inquiry (R085)
+
+**Read** · handled J6
+
+## B1 · START
+
+Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). The live walk WALK-085 (build/plan/walk-085.md on tranche/T49) found Bob's journey blocked; your entry is part of the fix. Branch from tranche/R085; your requirements file holds your new ids, marked not yet met. Six jobs run at once: capture R92, control-plane R100, screens-intake R27, screens-inquiry R45, ai-runs R82–R84, agent-worker R91–R92. Each new id needs its own explicit test naming it (the coverage check counts any string, and some of these ids are already named by older tests, K874). Run your module tests and the checks (format, architecture, coverage, ownership); rebuild no generated artifact of another module (REPORT one you stale). Lean: change only what your ids need. COMPLETE as soon as green.
+
+Model: claude-sonnet-5-5. Entry R085-6: screens-inquiry R45. Live: pressing Ask drew nothing for 12 s (`question.mjs` ~614–646 awaits `airunopen` then `airundispatch` before drawing); state d (~164–167) draws only fixed text though `airuns` answers `ticks`, `updated`, `status`; `myRun` (~144) matches only `running`, so an ended run vanishes and state c shows again. The dock (`assistant.mjs` ~155–175) already draws `screen.assistant.run.running` {ticks} and `screen.assistant.run.ended` {why} and polls every 10 s: reuse its keys and its pattern. No new keys: REPORT any you need.
+
+## B2 · START
+
+Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). The live re-walk on biosmoke8 (K3498) found a check run that ran to its end but whose sub-sessions could not see the question's captured document; the diagnosis is build/plan/diag-085-r4.md (read the parts naming your module). Your entry is part of fix round 4 (K3501): seven jobs at once, observation-log R38, ai-runs R85–R86, agent-harness R12, agent-model R20–R21, agent-worker R96–R100, machinery-producers R14, screens-inquiry R46. Branch from tranche/R085; your requirements file holds your new ids, marked not yet met. Each new id needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership); rebuild no generated artifact of another module (REPORT one you stale). Lean: change only what your ids need. COMPLETE as soon as green.
+
+Model: claude-haiku-5-5. Entry R085-20: screens-inquiry R46. bio-plane/src/screens-inquiry/common.mjs:83–84 turns the author `admin` into member.founder.unnamed without looking at the founder's handle (question.mjs:70–78; live: "Opened by The group's founder" where the founder is sparky). Draw the founder's handle from the members the screen already reads (or the read that names the founder), unnamed only when none.
+
+## B3 · START
+
+Depth 2. Tranche R085: a release fix on the 0.85.0 cut, outside the layer order (K1548; Bob's standing permission for development steps, K3466). The live re-walk after fix round 4 (K3507) found the check's sub-sessions reading 0 passages (they search bare words with rows=passage), a dropped candidate never logged, and the question page and dock not showing the run; the diagnosis is build/plan/diag-085-r5.md (read the parts naming your module). Your entry is part of fix round 5 (K3510): five jobs at once, query-language R31, agent-worker R101–R102, agent-harness R13, screens-inquiry R47–R48, control-plane R101. Branch from tranche/R085; your requirements file holds your new ids, marked not yet met. Each new id needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership); rebuild no generated artifact of another module (REPORT one you stale). Lean: change only what your ids need. COMPLETE as soon as green.
+
+Model: claude-sonnet-5-5. Entry R085-24: screens-inquiry R47, R48. R47 in question.mjs (~144-199): draw the latest ended run's ending and the ask above waiting proposals, and when airuns shows a running run of hers (started from the dock or found on load) draw state d and poll as R45 says. R48 in assistant.mjs (~137-153): when none is running, draw her latest ended run with screen.assistant.run.ended, `run.none` only when she has none there. Existing keys only (K3366); a missing key is a REPORT. The plane bundle is rebuilt at the round's close.
+
+## B4 · START
+
+Depth 2. Tranche R085: fix round 7 on the 0.85.0 cut (K3560). The browser walk (build/plan/lane-journeys/browser/FINDINGS.md B-7, on origin/tranche/T49) found that the document page's "In which question" lists every question the group holds and preselects the first (another project's), so "Cite a passage" pressed as drawn cites into the wrong question. Entry R085-40: screens-inquiry R49 (`bio-plane/src/screens-inquiry/document.mjs` ~30 reads `list type=inquiry`, ~149-156 draws the choice). What the document was captured for and filed under is in the document's own reads (held capture / capture record: its project and question); use what the page already reads where it can. Your requirements file marks R49 not yet met; it needs its own explicit test naming it (K874). Run your module tests and the checks (format, architecture, coverage, ownership). Lean: change only what R49 needs; tokens are billed at overage (K3549). COMPLETE as soon as green.
+
+Model: claude-haiku-5-5. Workers: haiku at low only, if needed.

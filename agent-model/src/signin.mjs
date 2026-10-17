@@ -49,8 +49,8 @@
  *
  * THE METER (D-611). Every message this side sends is a request: the conversation request and each `tool_result`
  * are counted, turn and bytes, before they are sent, and one that would pass a bound is not sent. */
-import { usageOf, sumUsage, callsOf, sumCalls, silent, refused, READ_FACTS, toolResultContent, relayText, factsOf,
-         scrub, scrubDeep } from "./outcome.mjs";
+import { usageOf, sumUsage, finalRefusal, callsOf, sumCalls, silent, refused, READ_FACTS, toolResultContent, relayText, factsOf,
+         scrub, scrubDeep, toolInput } from "./outcome.mjs";
 
 export const RUNNER_URL = "https://agent-runner/conversation";
 const ANSWERED = "received";
@@ -157,8 +157,8 @@ export function traceHeaders({ trace, memberRef } = {}, secret) {
 }
 
 /** The conversation request; its credential names the member and carries the held token (R16; agent-runner R28). */
-function conversationRequest({ member, secret }, { model, system, messages, tools, maxTurns }) {
-  return { credential: { kind: "signin", member, secret }, model, system: systemText(system),
+function conversationRequest({ member, secret }, { model, effort, system, messages, tools, maxTurns }) {
+  return { credential: { kind: "signin", member, secret }, model, ...(effort ? { effort } : {}), system: systemText(system),
            prompt: renderTranscript(messages), tools: offeredTools(tools, heldResults(messages)), max_turns: maxTurns };
 }
 
@@ -231,7 +231,7 @@ async function turn(account, runner, body) {
   /* A held result read over the relay is a turn of the runner's own, so the turn may take one per held result. */
   const reads = heldResults(body.messages).size;
   const serialized = JSON.stringify(conversationRequest(account, {
-    model: body.model, system: body.system, messages: body.messages, tools: body.tools, maxTurns: 1 + reads }));
+    model: body.model, effort: body.output_config?.effort, system: body.system, messages: body.messages, tools: body.tools, maxTurns: 1 + reads }));
   const conn = await openRunner(runner, account);
   if (!conn.send) return conn;
   conn.send(serialized);
@@ -260,18 +260,19 @@ async function turn(account, runner, body) {
 export async function signinConverse(args) {
   return scrubDeep(await conversation(args), args.account.secret);
 }
-async function conversation({ account, runner, model, system, messages, tools, finalTool, onTool, maxTurns, charge }) {
+async function conversation({ account, runner, model, effort, system, messages, tools, finalTool, onTool, checkFinal, maxTurns, charge }) {
   const { member, secret } = account;
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
   let calls = 0;
   let k = 0;
+  let handedBack = false;
   const unstated = () => sumUsage(usage, usageOf(null));
   const imagesRelayed = imageGate(runner, member);
   if (imageOutsideResult(messages)) return notRelayed();
   if (resultHoldsImage(messages) && !(await imagesRelayed())) return notRelayed();
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(account, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(account, { model, effort, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
@@ -296,11 +297,16 @@ async function conversation({ account, runner, model, system, messages, tools, f
         let content, blocks, isError = false;
         const here = answer ? null : answeredHere({ name: u.name, input }, messages);
         if (answer) { content = AFTER_ANSWER; isError = true; }
-        else if (u.name === finalTool) { answer = input; content = ANSWERED; }
+        else if (u.name === finalTool) {
+          /* R18: a refused final call is handed back once, as an error result; the next one is the answer. */
+          const refusedFinal = handedBack ? null : await finalRefusal(checkFinal, input);
+          if (refusedFinal) { handedBack = true; content = refusedFinal; isError = true; }
+          else { answer = input; content = ANSWERED; }
+        }
         else if (here) { content = here.content; isError = !!here.error; }
         else if (!offered.has(u.name)) { content = `'${String(u.name)}' is not a tool of this conversation`; isError = true; }
         else {
-          const r = await onTool(u.name, input);
+          const r = await onTool(u.name, toolInput(u.name, input));
           if (r && r.halt) { conn.close(); return r.halt; }
           blocks = toolResultContent(r);
           if (holdsImage(blocks) && !(await imagesRelayed())) {

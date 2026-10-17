@@ -48,6 +48,8 @@ export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 /** R72: a provider's refusal for a spent limit (Anthropic's 429 `enforced_spend_limit_reached`), recognised in the reason
  *  or type the agent-worker relays to the wake's dispatch. */
 const PROVIDER_LIMIT = /enforced_spend_limit_reached/;
+/** R85: the most subjects a search half names. */
+const SUBJECTS_MAX = 50;
 
 /** A member's id from any of the forms a stamp takes (`member:<id>`, `member:<id>/<tokenId>`, `<id>`); null for a
  *  machine identity, an absent value, or a deploy class. */
@@ -357,10 +359,15 @@ export class AiRuns {
   }
   #captureRequestTickMs() { const w = this.#wait(); return w ? Number(w.tickMs()) || 0 : 0; }
 
-  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
-     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
-     that stops heartbeating is dead within the lease and is reaped. */
-  static AI_RUN_LEASE_MS = 3600000;
+  /* R83 (R085-7; WALK-085 F2): TEN MINUTES, and it is a LEASE rather than a lifetime: every tick, and every dispatch the
+     segment accepts, pushes it out. A run that heartbeats lives; a run whose segment died is dead within the lease and is
+     reaped (bound `lease`), so it reads ended within minutes, never "working" for an hour. `AI_RUN_LEASE_MS` in the
+     environment overrides it. */
+  static AI_RUN_LEASE_MS = 600000;
+  #leaseMs() {
+    const v = Number(this.env && this.env.AI_RUN_LEASE_MS);
+    return Number.isFinite(v) && v > 0 ? v : AiRuns.AI_RUN_LEASE_MS;
+  }
 
   /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
      is deliberately not copied whole from either sibling, because this log has
@@ -777,6 +784,46 @@ export class AiRuns {
       out.push(q);
     }
     return out.sort();
+  }
+
+  /** R86 (R085-15; K3501; DEC-17): AN INQUIRY THAT SITS IN A PROJECT TAKES THAT PROJECT'S BAR, so with none handed its
+   *  basis is `none-recorded`, a fact about the formation, and `context-has-no-project` is left to an inquiry in no project.
+   *  "In a project" is `#runContextProjects`' set (the confirmed citations, the one live-cites predicate), kept to the
+   *  projects this viewer sees, so the answer never says that a project the viewer cannot see exists. */
+  #inProject(row, viewer) {
+    return this.#runContextProjects(row.context_type, row.context_id)
+      .some((p) => this.#membership().inSight(p, viewer));
+  }
+
+  /** R85 (R085-15; K3501 (C3); amends R23): WHAT A RUN'S SEARCH SHOULD LOOK AT, `{items, truncated}`. For a run over an
+   *  inquiry, each of its legs' targets (`{id, extent, kind: "leg"}`, the extent the leg's content row names in its human
+   *  form, null for a leg that names none or the whole document) and each record it cites (`kind: "cited"`); for a run
+   *  over a project, the same for each question R19's `questions` lists. Only what the viewer sees (`inSight`, the one
+   *  predicate), deduplicated by id and extent, at most `SUBJECTS_MAX`, `truncated` past that. The reads are SQL over
+   *  `inquiry_basis`, `content` and `refs`, as this module reads `bundles` and `refs` elsewhere. No lens is read. */
+  #runSubjects(row, viewer) {
+    const questions = row.context_type === "project" ? this.#runContextQuestions(row.context_id, viewer)
+      : row.context_type === "inquiry" ? [String(row.context_id)] : [];
+    const seen = new Set(), items = [];
+    let over = false;
+    const add = (id, extent, kind) => {
+      const key = `${id}\u0000${extent ?? ""}`;
+      if (seen.has(key) || !this.#membership().inSight(id, viewer)) return;
+      seen.add(key);
+      if (items.length >= SUBJECTS_MAX) { over = true; return; }
+      items.push({ id, extent, kind });
+    };
+    for (const q of questions) {
+      for (const l of this.#rows(
+        `SELECT b.target_id AS id, c.extent_kind AS extent_kind, c.ref AS ref FROM inquiry_basis b
+           LEFT JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id = ? ORDER BY b.ord`, q)) {
+        const named = l.ref != null && String(l.ref).trim() !== "" && l.extent_kind !== "document";
+        add(String(l.id), named ? String(l.ref) : null, "leg");
+      }
+      for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id = ? AND kind = 'cites' ORDER BY target_id`, q))
+        add(String(r.target_id), null, "cited");
+    }
+    return { items, truncated: over };
   }
 
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
@@ -1258,7 +1305,7 @@ export class AiRuns {
               note: "Nothing was written" });
     }
     /* END DEC-49 REGION is-airun-open-check */
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
     let systemStep = null;
     const STEP_REFUSED = Symbol("step refused");
     try { this.#transact(() => {
@@ -1457,6 +1504,8 @@ export class AiRuns {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   tick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
+              /* R84 (R085-7; agent-worker R91): how a segment ended, `{by, done, refusals, error?}`. */
+              segment_end = null,
               /* R72 (N588): one entry per conversation that reached the provider since the last tick,
                  `{mode, model, usage, calls}`. */
               usage = null,
@@ -1571,7 +1620,8 @@ export class AiRuns {
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(overLimit), counted };
     }
 
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
+    const seg = AiRuns.#segmentEnd(segment_end);
     const refused = [];
     let appended = 0;
     const USAGE_REFUSED = Symbol("usage refused");
@@ -1588,6 +1638,15 @@ export class AiRuns {
            already holds the row — see #aiRunAppend's note on why it is passed
            rather than looked up. */
         const bad = this.#aiRunAppend(run, e, now, 0, row.principal_claude || null, row.step || null);
+        if (bad) refused.push(bad); else appended += 1;
+      }
+      /* R84: the segment's end, at level `meaning`, after the entries the segment sent with it */
+      if (seg) {
+        const bad = this.#aiRunAppend(run, {
+          level: "meaning", subject: "segment -> end", ...this.#aiRunRestatedState(run), governed: false,
+          detail: `the segment ended (by: ${seg.by ?? "its own segment bound"}; ${seg.done ? "the run's work is done" : "the run's work is not done"}`
+                + `${seg.error ? `; in error ${seg.error}` : ""}). Refusals it met: ${seg.refusals.length ? seg.refusals.join(", ") : "none"}`,
+        }, now, 0, row.principal_claude || null, row.step || null);
         if (bad) refused.push(bad); else appended += 1;
       }
       for (const [k, v] of Object.entries(consume && typeof consume === "object" ? consume : {})) {
@@ -1620,11 +1679,70 @@ export class AiRuns {
           condition: hit === "runtime" ? "runtime-ceiling-reached" : null, at: now })
       : null;
 
+    /* R84: a segment that stopped on its own bound with the run not done is to be dispatched again (`tickAndContinue`); one that
+       ended in an error is logged with its code and is not (the run then ends on its lease, R83). */
+    let next = null;
+    if (seg && !ended) {
+      const live = this.#one(`SELECT status FROM ai_runs WHERE run = ?`, run);
+      next = !live || live.status !== "running" ? "ended" : seg.error ? "error" : seg.done ? "done" : "continue";
+    }
     const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
     return { run, found: true, ticked: true, ticks: after.ticks, status: after.status,
              expires: after.expires, appended, refused, ...(calls.length ? { counted: calls.length } : {}),
              ...AiRuns.#aiRunGateStated(gate),
+             ...(seg ? { segment_end: { logged: appended > 0, next: next || "ended" } } : {}),
              ...(ended ? { ended } : {}) };
+  }
+
+  /** R84's normal form of a tick's `segment_end`: null when none was sent (or it is no object), else `{by, done, refusals,
+   *  error}` with each field bounded and of its own type; a stray field is dropped. */
+  static #segmentEnd(x) {
+    if (!x || typeof x !== "object" || Array.isArray(x)) return null;
+    const text = (v, n) => (typeof v === "string" && v.trim() ? v.trim().slice(0, n) : null);
+    return { by: text(x.by, 80), done: x.done === true,
+             refusals: (Array.isArray(x.refusals) ? x.refusals : []).map((c) => text(c, 80)).filter(Boolean).slice(0, 20),
+             error: text(x.error, 80) };
+  }
+
+  /** R84: the tick of `op=airuntick`, and what follows it. The tick commits first (`tick`); then a segment that stopped on
+   *  its own bound with the run not done is dispatched again by the plane, with no member's act, on R18's principal rules:
+   *  a member's run on her own sign-in as `dispatchMemberRun` does it (a fresh segment credential), a run of the group's
+   *  organisation credential as the wake does it. A continuation that is not dispatched appends one entry saying so, and
+   *  the run waits for its principal. */
+  async tickAndContinue(args = {}) {
+    const out = this.tick(args);
+    if (!out || out.ticked !== true || !out.segment_end || out.segment_end.next !== "continue") return out;
+    const row = this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
+                                  principal_claude_ref, step FROM ai_runs WHERE run = ?`, out.run);
+    if (!row || row.status !== "running") return out;
+    const iso = AiRuns.#aiIso(args.at ? Date.parse(args.at) : Date.now());
+    let dispatch;
+    try {
+      const principal = String(row.principal_plane ?? "");
+      if (principal.startsWith("member:")) {
+        const r = await this.dispatchMemberRun({ run: row.run, by: principal, at: args.at || null });
+        dispatch = { dispatched: r.dispatched === true,
+                     ...(r.dispatch ? { state: r.dispatch.state } : { state: "WITHHELD", reason: String(r.withheld || r.code || "NOT_DISPATCHED").slice(0, 80) }) };
+      } else {
+        const resumer = await this.#aiRunResumer();
+        const decision = this.#aiRunResumeDecision(row, resumer);
+        if (decision.dispatch) {
+          const o = await this.#aiRunDispatch({ run: row.run, context_id: row.context_id, payer: AiRuns.#memberOfRun(row),
+            step: row.step || null, project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude },
+            resumer, iso);
+          dispatch = { dispatched: o.state === "DISPATCHED" || o.state === "RUNNING", state: o.state };
+        } else dispatch = { dispatched: false, state: "WITHHELD", reason: decision.withheld, says: decision.says };
+      }
+    } catch { dispatch = { dispatched: false, state: "WITHHELD", reason: "DISPATCH_FAILED" }; }
+    /* an unaccepted or refused call has its own entry (`#aiRunDispatch`); a withheld one is said here */
+    if (dispatch.state === "WITHHELD") {
+      this.#transact(() => this.#aiRunAppend(row.run, {
+        level: "meaning", subject: "segment -> end", ...this.#aiRunRestatedState(row.run), governed: false,
+        detail: `the next segment was not dispatched (${dispatch.reason}). The run is still resumable by its own principal; `
+              + `nothing it established is lost`,
+      }, iso, 0, row.principal_claude || null, row.step || null));
+    }
+    return { ...out, segment_end: { ...out.segment_end, dispatch } };
   }
 
   /** op=airunclose. The ordinary exit — the run is done, or a member stopped
@@ -1777,7 +1895,7 @@ export class AiRuns {
      spin an idle-looking instance for as long as that lasts. */
   #aiRunWakeTickMs() {
     return Math.max(1000, Math.min(this.#captureRequestTickMs(),
-                                   Math.floor(AiRuns.AI_RUN_LEASE_MS / 4)));
+                                   Math.floor(this.#leaseMs() / 4)));
   }
 
   /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
@@ -1873,7 +1991,7 @@ export class AiRuns {
    *  nothing renews it once the request is answered. */
   async wake(now) {
     const iso = AiRuns.#aiIso(now);
-    const until = AiRuns.#aiIso(now + AiRuns.AI_RUN_LEASE_MS);
+    const until = AiRuns.#aiIso(now + this.#leaseMs());
     const holds = [], wakes = [], dispatches = [];
     /* D-260: the resumer is resolved ONCE per tick and only when a run is about to be woken, BEFORE the synchronous
        hold-and-wake section below, so that section stays one uninterrupted read-and-write. */
@@ -1988,7 +2106,9 @@ export class AiRuns {
     return null;
   }
 
-  static AI_RUN_DISPATCH_WAIT_MS = 30_000;
+  /* R82 (R085-7; WALK-085 F2): the dispatch waits only for `agent-worker` to ACCEPT the segment (its R91 answers 202 at
+     once), so ten seconds; the segment then runs on whether or not this call is still connected. */
+  static AI_RUN_DISPATCH_WAIT_MS = 10_000;
   #aiRunDispatchWaitMs() {
     const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
     return Number.isFinite(v) && v > 0 ? v : AiRuns.AI_RUN_DISPATCH_WAIT_MS;
@@ -2117,7 +2237,11 @@ export class AiRuns {
       ]);
       const out = await res.json().catch(() => null);
       const said = String((out && (out.reason || out.code || out.type)) || `http ${res.status}`);
-      outcome = (res.ok && out && out.ok === true)
+      /* R82: `agent-worker` R91's acceptance (`202 {accepted: true}`) is RUNNING, the segment under way; an older `200 {ok: true}`
+         answer (a segment that ended inside the wait) is DISPATCHED. */
+      outcome = (res.ok && out && out.accepted === true)
+        ? { state: "RUNNING", status: res.status }
+        : (res.ok && out && out.ok === true)
         ? { state: "DISPATCHED", status: res.status }
         /* R50: the member's own provider limit is answered in plain words, as the ceiling is, never as an error. */
         : PROVIDER_LIMIT.test(said) ? { state: "LIMIT", status: res.status, ...this.#providerLimit() }
@@ -2128,15 +2252,16 @@ export class AiRuns {
       /* The sentinel is lowercase and compared on its own line: this outcome is a dispatch STATE, not a refusal
          code, and a code-shaped literal inside a `reason:` expression is read into DEC-49's census as one. */
       const elapsed = String(e && e.message) === "dispatch-wait-elapsed";
-      /* B6 (AGENT-WORKER #1 REPORT 2): a segment answers when it ends, and a model segment can run past the wait. The
-         request was delivered and nothing refused it, so it is RUNNING, not silent: no failure entry is written (the
-         segment's own ticks record what it does, and a segment that dies lets the lease lapse to the reaper). Only a
-         call that did not complete is SILENT. */
-      outcome = elapsed
-        ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" }
-        : { state: "SILENT", status: null, reason: "the call did not complete" };
+      /* R82: a worker that has not accepted within the bound is a call that did not complete (B6's "still running" reading
+         is retired: the worker now answers at once, so no answer means no acceptance), and it is logged as such below. */
+      outcome = { state: "SILENT", status: null,
+                  reason: elapsed ? "no acceptance within the bound" : "the call did not complete" };
     } finally { clearTimeout(timer); }
-    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
+    if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
+      /* R83: an accepted dispatch is a heartbeat, the lease counted from it */
+      try { this.#transact(() => { this.sql.exec(`UPDATE ai_runs SET expires = ? WHERE run = ? AND status = 'running'`,
+        AiRuns.#aiIso(Date.parse(iso) + this.#leaseMs()), d.run); }); } catch { /* the lease stands as it was */ }
+    } else {
       const refusal = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet", subject: d.context_id, ...this.#aiRunRestatedState(d.run), governed: false,
         detail: outcome.state === "LIMIT"
@@ -2171,8 +2296,8 @@ export class AiRuns {
    *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`); an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`.
    *  Then `credentials.aiRunCredentialMint({member, run, writes})` with the mode's own writes (`AI_RUN_MODE_WRITES`): a
    *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
-   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 30 s wait,
-   *  `RUNNING` past it, and one log entry for a refused or incomplete call. The token is used for that one call and is
+   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 10 s wait for
+   *  acceptance (R82: accepted is `RUNNING`), and one log entry for a refused or unaccepted call. The token is used for that one call and is
    *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
   async dispatchMemberRun({ run = null, by = null, viewer = null, at = null } = {}) {
     const iso = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
@@ -2372,7 +2497,7 @@ export class AiRuns {
          `standard.in_force: false` with its `basis` and its `stated` sentence
          means we looked and there was no bar. A consumer can tell those apart;
          a null could not, which is why no null is published here. */
-      standard: this.#standardForRun(row),
+      standard: this.#standardForRun(row, viewer),
       /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
@@ -2419,7 +2544,7 @@ export class AiRuns {
    *
    *  Synchronous, deliberately: unlike the manifest there is no hash and no
    *  second read, so making this async would buy a promise nobody awaits for. */
-  #standardForRun(row) {
+  #standardForRun(row, viewer = null) {
     const raw = row.standard_pair;
     let parsed = null, unreadable = false;
     if (raw != null && String(raw).trim() !== "") {
@@ -2448,7 +2573,7 @@ export class AiRuns {
          somewhere else would invent one."* So the projectless run's absence is
          STRUCTURAL and the projected run's is a fact about its formation, and
          the two are different answers rather than one null. */
-      : row.context_type === "project" ? "none-recorded"
+      : row.context_type === "project" || this.#inProject(row, viewer) ? "none-recorded"
       : "context-has-no-project";
     return {
       in_force: basis === "recorded",
@@ -2810,9 +2935,11 @@ export class AiRuns {
          Two readers of one row must not disagree about which of its facts
          exist, so both now answer from `#standardForRun` and neither computes
          its own. */
-      standard: this.#standardForRun(row),
+      standard: this.#standardForRun(row, viewer),
       budget: bounds.map((b) => ({ bound: b.bound, allowed: b.allowed,
                                    consumed: b.consumed, unit: b.unit })),
+      /* R85: the records and extents the search should look at, `{items, truncated}`; still no lens field. */
+      subjects: this.#runSubjects(row, viewer),
     };
 
     return {
@@ -3506,7 +3633,7 @@ export function aiRunsOps(runs, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
     airunopen: () => runs.open({ ...(body || {}), principalPlane: q("principal"), actor: q("actor"), viewer: q("viewer") }),
-    airuntick: () => runs.tick({ ...(body || {}), actor: q("actor"), viewer: q("viewer"), caller: q("principal") }),
+    airuntick: () => runs.tickAndContinue({ ...(body || {}), actor: q("actor"), viewer: q("viewer"), caller: q("principal") }),
     airunclose: () => runs.close({ ...(body || {}), actor: q("actor"), viewer: q("viewer"), caller: q("principal") }),
     airun: () => runs.read({ run: q("run"), viewer: q("viewer") }),
     airunlog: () => runs.log({ run: q("run"), viewer: q("viewer"), limit: q("limit") }),

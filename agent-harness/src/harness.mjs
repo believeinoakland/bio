@@ -487,13 +487,14 @@ export function emptyLevelCandidates(state, target) {
          level, and where the search that establishes it is written. That is an
          honest account of what changed and why — §6 rule 1's standard — and it
          overclaims nothing, because every word of it is a fact the report
-         carried. The model's own `summary` is APPENDED when it has one and is
-         never substituted for the composed sentence: a model that writes "n/a"
-         must not be able to turn the instrument's own object back into filler. */
-      description: `this run searched the ${reported} level of ${String(target ?? "this question")} `
+         carried. R14 (R085-29; K3528): the model's own `summary` is NOT appended. It is free prose written from
+         `read_facts`, which holds raw record ids, and it reached the member verbatim; the report and its words stay
+         in the run's log, which this description points to. */
+      /* R13 (R085-23; K3510): the description names the question as "this question", never its record id. The id
+         is the plane's to show with the question, and a raw id here reached the reader verbatim (`question.mjs`). */
+      description: `this run searched the ${reported} level of this question `
         + `and found nothing supportable there; the search that establishes it is written in the `
-        + `run's observation log at ${String(r.observed_at ?? "(no address)")}.`
-        + (typeof r.summary === "string" && r.summary.trim() ? ` The sub-session reported: ${r.summary.trim()}` : ""),
+        + `run's observation log at ${String(r.observed_at ?? "(no address)")}.`,
     });
   }
   return out;
@@ -606,6 +607,33 @@ export function gateStep(state) {
  *  log says WHERE it stopped and WHY in the table's own words rather than in a
  *  model's — §11's whole argument for the log existing. */
 export function nextStep(state) {
+  return nothingWrittenGuard(state || {}, tableStep(state));
+}
+
+/* R16 (R085; S4 N4; K3557): A RUN THAT COMPOSED A CANDIDATE AND WROTE NONE NEVER CLOSES `completed`. The counts are the
+   table's own (`advance` keeps them): `kept` is the candidates that survived dedup and went to be written (those
+   dropped there as already held are on the record, so they are not lost), `wrote` the writes that succeeded; the shell's
+   `written` list is honoured too. With no `kept` the figure falls to `composed`. */
+export const NOTHING_WRITTEN = "nothing-written";
+const countOf = (v) => (Array.isArray(v) ? v.length : Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : 0);
+
+/** The sentence a close states when a run composed candidates and wrote none, else null. Pure. */
+function nothingWrittenReason(state) {
+  const s = state || {};
+  const composed = countOf(s.composed);
+  const kept = s.kept === undefined || s.kept === null ? composed : countOf(s.kept);
+  if (kept <= 0 || Math.max(countOf(s.wrote), countOf(s.written)) > 0) return null;
+  return `nothing written: ${composed} candidate(s) composed, ${kept} sent to be written, none written`
+       + `${s.refusal ? ` (the plane refused '${String(s.refusal.code || s.refusal.reason || "?")}')` : ""}`;
+}
+
+function nothingWrittenGuard(s, decision) {
+  if (decision.step !== "close" || decision.bound !== "completed") return decision;
+  const reason = nothingWrittenReason(s);
+  return reason ? { ...decision, bound: NOTHING_WRITTEN, reason, why: `${decision.why}; ${reason}` } : decision;
+}
+
+function tableStep(state) {
   const s = state || {};
   const at = String(s.step || FIRST_STEP);
   const row = CONTROL_FLOW[at];
@@ -704,6 +732,12 @@ export function nextStep(state) {
     }
 
     case "next-pass":
+      /* R15 (R085-29; K3529): a pass that submitted no new candidate (every one it composed was dropped by dedup as
+         already held, or it composed none) closes the run: a further pass would search the same ground. */
+      if (s.passAdded !== true)
+        return { step: "close", bound: "completed",
+                 why: `pass ${s.pass} added no new candidate (each one composed was already held, or none was composed); `
+                    + "a further pass would find nothing the record does not hold, so the run closes" };
       return { step: "plan", why: `pass ${s.pass} done; the table decides there is another` };
 
     case "close":
@@ -728,6 +762,13 @@ export function advance(state, decision) {
     : { ...s, step: to, refusal: null, adjusted: false, refusedSubmission: null };
   /* The resume point is spent once `resume` has moved on from it. */
   if (s.step === "resume") { next.resumeAt = null; next.resumeBasis = null; }
+  /* R15: a candidate surviving dedup goes to `submit`, so this pass adds one; the next pass starts with none. */
+  if (s.step === "dedup" && to === "submit") next.passAdded = true;
+  /* R16: the counts a close is judged by. */
+  if (s.step === "compose") next.composed = countOf(s.composed) + (s.candidates || []).length;
+  if (s.step === "dedup") next.kept = countOf(s.kept) + (s.queue || []).length;
+  if (s.step === "submit" && to !== "adjust" && s.submission && !s.refusal) next.wrote = countOf(s.wrote) + 1;
+  if (s.step === "next-pass" && to === "plan") next.passAdded = false;
   return to === "next-pass" ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
 }
 
@@ -742,7 +783,8 @@ export function advance(state, decision) {
  * then override. The model's transcript is not in it (DEC-61: never a transcript), nor are the spawn contracts,
  * which each `fanout` composes afresh from the plane's payload. */
 export const RESUMABLE = ["step", "pass", "targets", "reports", "reportsRefused", "rereads", "holdings",
-                          "candidates", "queue", "submission", "refusal", "refusedSubmission", "adjusted"];
+                          "candidates", "queue", "submission", "refusal", "refusedSubmission", "adjusted", "passAdded",
+                          "composed", "kept", "wrote"];
 
 /** The scratch a tick publishes: the table's own fields, nothing else. */
 export function resumableState(state) {
@@ -782,7 +824,8 @@ export function publishableState(state, limit, flow = CONTROL_FLOW) {
   /* `PLAN_FLOW`'s pass restarts at `read` (R6), `CONTROL_FLOW`'s at `plan`. */
   const at = flow === PLAN_FLOW ? (full.step === "close" ? "close" : "read")
     : (STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan");
-  const restart = resumableState({ step: at, pass: full.pass, adjusted: false });
+  const restart = resumableState({ step: at, pass: full.pass, adjusted: false, passAdded: full.passAdded,
+    composed: full.composed, kept: full.kept, wrote: full.wrote });
   return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at } };
 }
 
@@ -817,6 +860,7 @@ export function resumeFrom(published, flow = CONTROL_FLOW) {
     rereads: Number(p.rereads) > 0 ? Number(p.rereads) : 0, holdings: record(p.holdings),
     candidates: list(p.candidates), queue: list(p.queue), submission: record(p.submission),
     refusal: record(p.refusal), refusedSubmission: record(p.refusedSubmission), adjusted: p.adjusted === true,
+    passAdded: p.passAdded === true, composed: countOf(p.composed), kept: countOf(p.kept), wrote: countOf(p.wrote),
   } };
 }
 

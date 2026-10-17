@@ -21,6 +21,8 @@ export const findIn = Object.freeze({
     };
     // R26: a project scope is named by the project's title, read from its document.
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
+    // R38 (K3562): a document's scope is its capture's fingerprint, read from its provenance, never its record id.
+    if (s && s.indexOf("PROJ-") !== 0 && s.indexOf("sel-") !== 0 && !/^[0-9a-f]{64}$/.test(s)) out.capture = { op: "image", query: { id: s } };
     return out;
   },
 
@@ -97,8 +99,10 @@ export const findIn = Object.freeze({
     const qs = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
       ? view.data.questions.value.hits : [];
     // The kit's labelled choice (R21: no hand-made field), its help beneath.
+    // R39 (K3562): the question the route chose stays chosen, though the list of questions does not name it.
+    const routedQ = ui.question && !qs.some(function (h) { return String(h.bundle_id) === String(ui.question); }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
     const question = cs.choice("findin-question", "screen.find-in.question",
-      [["", "screen.find-in.question.none"]].concat(qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; })),
+      [["", "screen.find-in.question.none"]].concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; })),
       { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>";
     const acts = '<div class="mk-acts">' + cs.act("findin", { label: "act.findin.label.find-in", tone: "primary" })
       + cs.act("standingquestionset", { label: "act.standingquestionset.label.find-in" }) + "</div>"
@@ -126,9 +130,9 @@ export const findIn = Object.freeze({
             + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
           const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
           const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
-          const right = rec
-            ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") })
-            : (op ? recordAct(op, ki, ii) : "");
+          // R39: a passage keeps its cite act beside who recorded it: it is cited into the question chosen, not recorded again.
+          const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "")
+            + (rec && op !== "cite" ? "" : (op ? recordAct(op, ki, ii) : ""));
           return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + "</span>"
             + '<span class="meta">' + where + "</span>", right, "");
         }).join("")) + notRead;
@@ -157,7 +161,13 @@ export const findIn = Object.freeze({
         cs.set("kinds", ticked);
         cs.set("term", term);
         cs.set("question", String(cs.value("findin-question") || ""));
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        // R38: a document's scope is its capture's fingerprint, read from its provenance; never its record id.
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try { pj = JSON.parse(String((pv && pv["data/provenance.json"]) || "")); } catch { pj = null; }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const body = { scope: scope, kinds: kinds };
         if (kinds.indexOf("term") >= 0) body.term = term;
         return { body: body };
@@ -180,7 +190,13 @@ export const findIn = Object.freeze({
         const qid = String(cs.value("findin-question") || "");
         const qs = view.data.questions && view.data.questions.value && Array.isArray(view.data.questions.value.hits) ? view.data.questions.value.hits : [];
         const chosen = qs.filter(function (h) { return String(h.bundle_id) === qid; })[0];
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        // R38: as findin, the document's capture's fingerprint, never its record id.
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try { pj = JSON.parse(String((pv && pv["data/provenance.json"]) || "")); } catch { pj = null; }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const find = { scope: scope, kinds: kinds };
         if (kinds.indexOf("term") >= 0) find.term = term;
         const ends = new Date(cs.now() + 365 * 86400000).toISOString().slice(0, 10);
@@ -260,9 +276,10 @@ export const findIn = Object.freeze({
         if (!it) return null;
         if (!ui.question) return { refuse: "screen.find-in.questionfirst" };
         // R24: refused in place until a role is chosen; the question is the citing object (`citation` R1: a role is a question's),
-        // and the one the passage was looked for.
+        // and the one the passage was looked for. "against" is sent as the question's role `cuts_against` (K3550).
         const chosen = cs.value(el.dataset.f + "-role");
-        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] : "";
+        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against")
+          ? (chosen[0] === "against" ? "cuts_against" : "supports") : "";
         if (!role) return { refuse: "screen.findin.cite.norole" };
         return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it), role: role }, body: {} };
       } },

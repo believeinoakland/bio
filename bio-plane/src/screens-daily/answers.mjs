@@ -12,8 +12,12 @@ export const answers = Object.freeze({
     const ui = view.ui || {};
     const out = {};
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
+      // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+      const w = ui.q.trim().split(/\s+/);
+      const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+      const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : ui.q;
       out.search = {
-        op: "search", query: { q: ui.q, limit: "50", snippet: "160" },
+        op: "search", query: { q: asked, limit: "50", snippet: "160" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       };
     }
@@ -145,7 +149,11 @@ export const answers = Object.freeze({
         if (!q) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q);
         if (view.reachable) { cs.go("finder", q); return null; }
-        return { query: { q: q, limit: "50", snippet: "160" } };
+        // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+        const w = q.split(/\s+/);
+        const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+        const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       } },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
     { op: "ruleanswer", label: "act.ruleanswer.label.answers", rereads: [],

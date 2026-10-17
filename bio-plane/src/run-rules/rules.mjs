@@ -258,6 +258,9 @@ export const RUN_BOUNDS = {
 export const RUN_ENDINGS = {
   completed:  "the run finished its work",
   cancelled:  "a member stopped it",
+  "nothing-written":
+    "the run composed a candidate and wrote none, so it closed with nothing to show for its work; "
+  + "no member stopped it and no budget ran out",
   "mode-not-deployed":
     "the deployment gate refused this launch before it spent anything: the mode it asked for "
   + "is not deployed yet, so no member stopped this run and no budget ran out",

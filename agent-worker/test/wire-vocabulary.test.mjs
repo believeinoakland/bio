@@ -189,10 +189,10 @@ console.log("\n--- W5 · WHY `description` HAD TO BE COMPOSED: a REPORT has no s
   const c = CANDIDATES[0];
   t("the composed description names the level it is about", c.description.includes("meaning"), true);
   t("and the observation-log address that establishes it", c.description.includes("log:1"), true);
-  t("and the question it belongs to", c.description.includes("INQ-1"), true);
+  t("and the question it belongs to, as \"this question\" and never its record id (agent-harness R13)", [c.description.includes("this question"), c.description.includes("INQ-1")], [true, false]);
 }
 
-console.log("\n--- W6 · THE MODEL'S SUMMARY IS APPENDED, NEVER SUBSTITUTED ---");
+console.log("\n--- W6 · THE MODEL'S SUMMARY IS NEVER SUBSTITUTED (NOR, SINCE agent-harness R14, APPENDED) ---");
 {
   /* A model that writes "n/a" must not be able to turn the instrument's own
      object back into filler — which is what a bare `description: r.summary`
@@ -200,7 +200,10 @@ console.log("\n--- W6 · THE MODEL'S SUMMARY IS APPENDED, NEVER SUBSTITUTED ---"
   const withSummary = emptyLevelCandidates(
     { reports: [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1",
                   summary: "four searches, no minutes published since March" }] }, "INQ-1")[0];
-  t("a real summary is carried through", withSummary.description.includes("no minutes published"), true);
+  /* agent-harness R14: the summary is the model's free prose and may carry record ids, so it is no longer appended; the
+     description is the table's own sentence and stays whole whatever the model wrote. */
+  t("a real summary is not carried through (agent-harness R14), and the composed sentence stands",
+    [withSummary.description.includes("no minutes published"), /meaning level of this question/.test(withSummary.description)], [false, true]);
   t("and the composed account is still there beside it", withSummary.description.includes("log:1"), true);
   t("that candidate is refused by nothing", wireRefusals(withSummary), []);
 

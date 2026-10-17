@@ -54,9 +54,11 @@ export function controlPlaneOwnerOps(of, url, body) {
 
     /* capture R86 (R72; K2458): a member's upload, the request's raw body handed on as `bytes` (a stream, never read
        here), its words from the address, `by` the door's. Capture's own map holds no arm for it, so this one calls its
-       service by name, as R71's do. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
+       service by name, as R71's do. R100 (R085-4): the media type the browser declared, `type`, travels from the address
+       as capture R92 takes it, and only when the request names one. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
        caller hands, never a request's field, so one in the address reaches nothing. */
-    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by") }),
+    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by"),
+                                                                   ...(q("type") !== null ? { type: q("type") } : {}) }),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */

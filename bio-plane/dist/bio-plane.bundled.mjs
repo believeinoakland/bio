@@ -72253,6 +72253,8 @@ var RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 var UPLOAD_PART = 8 * 1024 * 1024;
 var UPLOAD_STATEMENT_MAX = 2e3;
 var UPLOAD_NAME_MAX = 300;
+var UPLOAD_TYPE_MAX = 255;
+var UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
 var UPLOAD_WITHIN_FAILED_DETAIL = "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
 var uploadReader = (bytes2) => {
   const asBytes3 = (b) => b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : ArrayBuffer.isView(b) ? new Uint8Array(b.buffer, b.byteOffset, b.byteLength) : null;
@@ -72752,7 +72754,7 @@ var Capture = class _Capture {
    *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes: bytes2, statement, name: name3 = null, by, at: at49 = null, within: within3 = null } = {}) {
+  async uploadCapture({ bytes: bytes2, statement, name: name3 = null, type = null, by, at: at49 = null, within: within3 = null } = {}) {
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return {
         ok: false,
@@ -72774,6 +72776,8 @@ var Capture = class _Capture {
     }
     if (name3 != null && (typeof name3 !== "string" || [...name3].length > UPLOAD_NAME_MAX))
       return _Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name3);
+    if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
+      return _Capture.#missingArgument("captureupload", "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) {
       const row12 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
@@ -72885,10 +72889,25 @@ var Capture = class _Capture {
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha2, bytes: total2 }, receipt: receiptOf(r) } : notWritten;
     }
+    const named2 = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name3 === "string" ? name3 : "") : null;
+    const readAs2 = named2 ? UPLOAD_NAME_TYPES[named2[1].toLowerCase()] : type;
+    let ct = null;
+    if (typeof readAs2 === "string" && readAs2 !== "" && profilesAsText(readAs2, total2, multipart)) {
+      try {
+        const obj = await ev.get(sha2);
+        const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+        if (raw && raw.length === total2 && !raw.includes(0)) {
+          new TextDecoder("utf-8", { fatal: true }).decode(raw);
+          ct = readAs2;
+        }
+      } catch {
+        ct = null;
+      }
+    }
     const profile = await profileOf({
       ev,
       sha: sha2,
-      ct: null,
+      ct,
       total: total2,
       multipart,
       headers: {},
@@ -72898,6 +72917,10 @@ var Capture = class _Capture {
       origin: "member",
       parts: multipart ? parts : null
     });
+    if (typeof type === "string" && type !== "") {
+      profile.source_content_type = type;
+      profile.declared_by = "uploader";
+    } else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha: sha2, total: total2, parts, by, at: when, statement, name: name3, profile });
     let done;
     try {
@@ -82739,7 +82762,7 @@ function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
 }
 
 // src/observation-log/index.mjs
-var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
+var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv", "text"]));
 var INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["document"]));
 var LEAD_READ_LIMIT_DEFAULT = 200;
 var LEAD_READ_LIMIT_MAX = 2e3;
@@ -84997,7 +85020,7 @@ function parseTokens(tokens3, implicitOp, ctx) {
     }
     if (t2.k === "term") {
       eat();
-      return textAtom(null, t2.value, t2.quoted, ctx);
+      return bareAtom(textAtom(null, t2.value, t2.quoted, ctx));
     }
     if (t2.k === "sel") {
       eat();
@@ -85008,10 +85031,10 @@ function parseTokens(tokens3, implicitOp, ctx) {
       if (t2.field && t2.field.toLowerCase() === "passage") return meaningAtom("passage", t2, ctx);
       return nearAtom(
         t2.near,
-        (term) => textAtom(null, term.value, term.quoted, ctx),
+        (term) => bareAtom(textAtom(null, term.value, term.quoted, ctx)),
         (atom) => {
           ctx.textAtoms.push(atom);
-          return atom;
+          return bareAtom(atom);
         },
         ctx
       );
@@ -85057,6 +85080,10 @@ function parseTokens(tokens3, implicitOp, ctx) {
   };
   const ast = orExpr();
   return ast;
+}
+function bareAtom(atom) {
+  if (atom) atom.bare = true;
+  return atom;
 }
 function textAtom(column, value, quoted5, ctx) {
   let v = value;
@@ -85581,7 +85608,59 @@ function compile4({
   const frs = fieldRelationsOf(relation2, ctx.warnings);
   ctx.frs = frs;
   const fieldRef = (col) => frs.has(col) ? fieldValue2(frs.get(col)) : ref(col);
-  const ast = parseTokens(tokenize(q10), implicitOp === "or" ? "or" : "and", ctx);
+  let ast = parseTokens(tokenize(q10), implicitOp === "or" ? "or" : "and", ctx);
+  const rowArm = typeof rows4 === "string" && rows4.toLowerCase() in MEANING ? rows4.toLowerCase() : null;
+  if (rowArm === "passage") {
+    const hasPassage = (n2) => !!n2 && typeof n2 === "object" && (n2.op === "meaning" && n2.arm === "passage" && n2.field || hasPassage(n2.kid) || Array.isArray(n2.kids) && n2.kids.some(hasPassage));
+    if (!hasPassage(ast)) {
+      const sub = MEANING.passage.sub.text;
+      const moved = /* @__PURE__ */ new Set();
+      const toPassage = (n2, negated) => {
+        if (!n2 || typeof n2 !== "object") return n2;
+        if (n2.op === "not") {
+          const k = toPassage(n2.kid, !negated);
+          return k === n2.kid ? n2 : { ...n2, kid: k };
+        }
+        if (Array.isArray(n2.kids)) return { ...n2, kids: n2.kids.map((k) => toPassage(k, negated)) };
+        if (n2.op !== "text" || !n2.bare || negated) return n2;
+        moved.add(n2);
+        ctx.meaningArms.push({ arm: "passage", field: "text", column: sub.col });
+        const expr = ftsAtom(n2);
+        ctx.passageTerms.push(expr);
+        return { op: "meaning", arm: "passage", field: "text", col: sub.col, cmp: "match", value: n2.value, fts: expr };
+      };
+      ast = toPassage(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("words read as passage words (rows=passage); use text: for the record's own text");
+      }
+    }
+  }
+  if (rowArm === "leg") {
+    const hasText = (n2) => !!n2 && typeof n2 === "object" && (n2.op === "text" && !n2.bare || hasText(n2.kid) || Array.isArray(n2.kids) && n2.kids.some(hasText));
+    if (!hasText(ast)) {
+      const moved = /* @__PURE__ */ new Set();
+      const drop2 = (n2, negated) => {
+        if (!n2 || typeof n2 !== "object") return n2;
+        if (n2.op === "not") {
+          const k = drop2(n2.kid, !negated);
+          return k === n2.kid ? n2 : k ? { ...n2, kid: k } : null;
+        }
+        if (Array.isArray(n2.kids)) {
+          const kids = n2.kids.map((k) => drop2(k, negated)).filter(Boolean);
+          return !kids.length ? null : kids.length === 1 ? kids[0] : { ...n2, kids };
+        }
+        if (n2.op !== "text" || !n2.bare || negated) return n2;
+        moved.add(n2);
+        return null;
+      };
+      ast = drop2(ast, false);
+      if (moved.size) {
+        ctx.textAtoms = ctx.textAtoms.filter((a) => !moved.has(a));
+        ctx.warnings.push("bare words ignored (rows=leg); use text: for the record's own text");
+      }
+    }
+  }
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
   const positive = { text: [], passage: [] };
@@ -85621,7 +85700,6 @@ function compile4({
   const snipN = Number(snippetChars);
   const snip = Math.max(4, Math.min(64, Math.floor(Number.isFinite(snipN) ? snipN : 12)));
   const off = Math.max(0, Math.floor(Number(offset) || 0));
-  const rowArm = typeof rows4 === "string" && rows4.toLowerCase() in MEANING ? rows4.toLowerCase() : null;
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX2, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT2)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
   const cte = (withRanked, overrideSet = null) => {
@@ -110387,7 +110465,9 @@ var Retrieval = class _Retrieval {
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked,
       rowLimit: input.limit,
-      rowOffset: input.offset
+      rowOffset: input.offset,
+      /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
+      snippetChars: Number(input.snippetChars) || void 0
     });
     const tally = { applied: 0 };
     const total2 = this.runQuery(plan2.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -111440,6 +111520,7 @@ function retrievalRoutes(r, url, body) {
       viewer: q10.get("viewer"),
       limit: q10.get("limit"),
       offset: q10.get("offset"),
+      snippetChars: Number(q10.get("snippet")) || void 0,
       ids: Array.isArray(body?.ids) ? body.ids : null
     }),
     searchfields: () => r.searchFields(),
@@ -165820,6 +165901,7 @@ var RUN_BOUNDS = {
 var RUN_ENDINGS = {
   completed: "the run finished its work",
   cancelled: "a member stopped it",
+  "nothing-written": "the run composed a candidate and wrote none, so it closed with nothing to show for its work; no member stopped it and no budget ran out",
   "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
 };
 var RUN_NEVER_STARTED = { "mode-not-deployed": 1 };
@@ -169920,6 +170002,7 @@ CREATE TABLE IF NOT EXISTS ai_mode_verifications (
 
 // src/ai-runs/index.mjs
 var PROVIDER_LIMIT = /enforced_spend_limit_reached/;
+var SUBJECTS_MAX = 50;
 function memberIdOf3(x) {
   if (typeof x !== "string") return null;
   const t2 = x.trim();
@@ -170235,10 +170318,15 @@ var AiRuns = class _AiRuns {
     const w = this.#wait();
     return w ? Number(w.tickMs()) || 0 : 0;
   }
-  /* An hour, matching capture_sessions' own TTL, and it is a LEASE rather than
-     a lifetime: every tick pushes it out. A run that heartbeats lives; a run
-     that stops heartbeating is dead within the lease and is reaped. */
-  static AI_RUN_LEASE_MS = 36e5;
+  /* R83 (R085-7; WALK-085 F2): TEN MINUTES, and it is a LEASE rather than a lifetime: every tick, and every dispatch the
+     segment accepts, pushes it out. A run that heartbeats lives; a run whose segment died is dead within the lease and is
+     reaped (bound `lease`), so it reads ended within minutes, never "working" for an hour. `AI_RUN_LEASE_MS` in the
+     environment overrides it. */
+  static AI_RUN_LEASE_MS = 6e5;
+  #leaseMs() {
+    const v = Number(this.env && this.env.AI_RUN_LEASE_MS);
+    return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_LEASE_MS;
+  }
   /* REC-70 — THE OBSERVATION LOG'S BOUND. NEITHER FIGURE IS NEW, and the PAIR
        is deliberately not copied whole from either sibling, because this log has
        TWO READERS WITH OPPOSITE NEEDS and no single existing pair serves both.
@@ -170635,6 +170723,47 @@ var AiRuns = class _AiRuns {
     }
     return out.sort();
   }
+  /** R86 (R085-15; K3501; DEC-17): AN INQUIRY THAT SITS IN A PROJECT TAKES THAT PROJECT'S BAR, so with none handed its
+   *  basis is `none-recorded`, a fact about the formation, and `context-has-no-project` is left to an inquiry in no project.
+   *  "In a project" is `#runContextProjects`' set (the confirmed citations, the one live-cites predicate), kept to the
+   *  projects this viewer sees, so the answer never says that a project the viewer cannot see exists. */
+  #inProject(row12, viewer) {
+    return this.#runContextProjects(row12.context_type, row12.context_id).some((p3) => this.#membership().inSight(p3, viewer));
+  }
+  /** R85 (R085-15; K3501 (C3); amends R23): WHAT A RUN'S SEARCH SHOULD LOOK AT, `{items, truncated}`. For a run over an
+   *  inquiry, each of its legs' targets (`{id, extent, kind: "leg"}`, the extent the leg's content row names in its human
+   *  form, null for a leg that names none or the whole document) and each record it cites (`kind: "cited"`); for a run
+   *  over a project, the same for each question R19's `questions` lists. Only what the viewer sees (`inSight`, the one
+   *  predicate), deduplicated by id and extent, at most `SUBJECTS_MAX`, `truncated` past that. The reads are SQL over
+   *  `inquiry_basis`, `content` and `refs`, as this module reads `bundles` and `refs` elsewhere. No lens is read. */
+  #runSubjects(row12, viewer) {
+    const questions = row12.context_type === "project" ? this.#runContextQuestions(row12.context_id, viewer) : row12.context_type === "inquiry" ? [String(row12.context_id)] : [];
+    const seen = /* @__PURE__ */ new Set(), items = [];
+    let over = false;
+    const add2 = (id, extent, kind2) => {
+      const key2 = `${id}\0${extent ?? ""}`;
+      if (seen.has(key2) || !this.#membership().inSight(id, viewer)) return;
+      seen.add(key2);
+      if (items.length >= SUBJECTS_MAX) {
+        over = true;
+        return;
+      }
+      items.push({ id, extent, kind: kind2 });
+    };
+    for (const q10 of questions) {
+      for (const l2 of this.#rows(
+        `SELECT b.target_id AS id, c.extent_kind AS extent_kind, c.ref AS ref FROM inquiry_basis b
+           LEFT JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id = ? ORDER BY b.ord`,
+        q10
+      )) {
+        const named2 = l2.ref != null && String(l2.ref).trim() !== "" && l2.extent_kind !== "document";
+        add2(String(l2.id), named2 ? String(l2.ref) : null, "leg");
+      }
+      for (const r of this.#rows(`SELECT DISTINCT target_id FROM refs WHERE bundle_id = ? AND kind = 'cites' ORDER BY target_id`, q10))
+        add2(String(r.target_id), null, "cited");
+    }
+    return { items, truncated: over };
+  }
   /** REC-153 — THE NAMED CONTEXT'S TYPE, AS THE CALLER CAN SEE IT: the one fact `checkRunContextKind` needs
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
@@ -170956,7 +171085,7 @@ var AiRuns = class _AiRuns {
           note: "Nothing was written"
         });
     }
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
     let systemStep = null;
     const STEP_REFUSED = Symbol("step refused");
     try {
@@ -171208,6 +171337,8 @@ var AiRuns = class _AiRuns {
     log = null,
     leaseMs = null,
     at: at49 = null,
+    /* R84 (R085-7; agent-worker R91): how a segment ended, `{by, done, refusals, error?}`. */
+    segment_end = null,
     /* R72 (N588): one entry per conversation that reached the provider since the last tick,
        `{mode, model, usage, calls}`. */
     usage = null,
@@ -171321,7 +171452,8 @@ var AiRuns = class _AiRuns {
         };
       return { run: run2, ticked: false, found: true, status: row12.status, ..._AiRuns.#shed(overLimit), counted };
     }
-    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
+    const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
+    const seg = _AiRuns.#segmentEnd(segment_end);
     const refused5 = [];
     let appended2 = 0;
     const USAGE_REFUSED = Symbol("usage refused");
@@ -171337,6 +171469,17 @@ var AiRuns = class _AiRuns {
         }
         for (const e2 of Array.isArray(log) ? log : []) {
           const bad2 = this.#aiRunAppend(run2, e2, now, 0, row12.principal_claude || null, row12.step || null);
+          if (bad2) refused5.push(bad2);
+          else appended2 += 1;
+        }
+        if (seg) {
+          const bad2 = this.#aiRunAppend(run2, {
+            level: "meaning",
+            subject: "segment -> end",
+            ...this.#aiRunRestatedState(run2),
+            governed: false,
+            detail: `the segment ended (by: ${seg.by ?? "its own segment bound"}; ${seg.done ? "the run's work is done" : "the run's work is not done"}${seg.error ? `; in error ${seg.error}` : ""}). Refusals it met: ${seg.refusals.length ? seg.refusals.join(", ") : "none"}`
+          }, now, 0, row12.principal_claude || null, row12.step || null);
           if (bad2) refused5.push(bad2);
           else appended2 += 1;
         }
@@ -171376,6 +171519,11 @@ var AiRuns = class _AiRuns {
       condition: hit === "runtime" ? "runtime-ceiling-reached" : null,
       at: now
     }) : null;
+    let next = null;
+    if (seg && !ended) {
+      const live7 = this.#one(`SELECT status FROM ai_runs WHERE run = ?`, run2);
+      next = !live7 || live7.status !== "running" ? "ended" : seg.error ? "error" : seg.done ? "done" : "continue";
+    }
     const after2 = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run2);
     return {
       run: run2,
@@ -171388,8 +171536,75 @@ var AiRuns = class _AiRuns {
       refused: refused5,
       ...calls.length ? { counted: calls.length } : {},
       ..._AiRuns.#aiRunGateStated(gate),
+      ...seg ? { segment_end: { logged: appended2 > 0, next: next || "ended" } } : {},
       ...ended ? { ended } : {}
     };
+  }
+  /** R84's normal form of a tick's `segment_end`: null when none was sent (or it is no object), else `{by, done, refusals,
+   *  error}` with each field bounded and of its own type; a stray field is dropped. */
+  static #segmentEnd(x) {
+    if (!x || typeof x !== "object" || Array.isArray(x)) return null;
+    const text7 = (v, n2) => typeof v === "string" && v.trim() ? v.trim().slice(0, n2) : null;
+    return {
+      by: text7(x.by, 80),
+      done: x.done === true,
+      refusals: (Array.isArray(x.refusals) ? x.refusals : []).map((c) => text7(c, 80)).filter(Boolean).slice(0, 20),
+      error: text7(x.error, 80)
+    };
+  }
+  /** R84: the tick of `op=airuntick`, and what follows it. The tick commits first (`tick`); then a segment that stopped on
+   *  its own bound with the run not done is dispatched again by the plane, with no member's act, on R18's principal rules:
+   *  a member's run on her own sign-in as `dispatchMemberRun` does it (a fresh segment credential), a run of the group's
+   *  organisation credential as the wake does it. A continuation that is not dispatched appends one entry saying so, and
+   *  the run waits for its principal. */
+  async tickAndContinue(args = {}) {
+    const out = this.tick(args);
+    if (!out || out.ticked !== true || !out.segment_end || out.segment_end.next !== "continue") return out;
+    const row12 = this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
+                                  principal_claude_ref, step FROM ai_runs WHERE run = ?`, out.run);
+    if (!row12 || row12.status !== "running") return out;
+    const iso8 = _AiRuns.#aiIso(args.at ? Date.parse(args.at) : Date.now());
+    let dispatch2;
+    try {
+      const principal = String(row12.principal_plane ?? "");
+      if (principal.startsWith("member:")) {
+        const r = await this.dispatchMemberRun({ run: row12.run, by: principal, at: args.at || null });
+        dispatch2 = {
+          dispatched: r.dispatched === true,
+          ...r.dispatch ? { state: r.dispatch.state } : { state: "WITHHELD", reason: String(r.withheld || r.code || "NOT_DISPATCHED").slice(0, 80) }
+        };
+      } else {
+        const resumer = await this.#aiRunResumer();
+        const decision = this.#aiRunResumeDecision(row12, resumer);
+        if (decision.dispatch) {
+          const o = await this.#aiRunDispatch(
+            {
+              run: row12.run,
+              context_id: row12.context_id,
+              payer: _AiRuns.#memberOfRun(row12),
+              step: row12.step || null,
+              project: row12.context_type === "project" ? row12.context_id : null,
+              owner: row12.principal_claude
+            },
+            resumer,
+            iso8
+          );
+          dispatch2 = { dispatched: o.state === "DISPATCHED" || o.state === "RUNNING", state: o.state };
+        } else dispatch2 = { dispatched: false, state: "WITHHELD", reason: decision.withheld, says: decision.says };
+      }
+    } catch {
+      dispatch2 = { dispatched: false, state: "WITHHELD", reason: "DISPATCH_FAILED" };
+    }
+    if (dispatch2.state === "WITHHELD") {
+      this.#transact(() => this.#aiRunAppend(row12.run, {
+        level: "meaning",
+        subject: "segment -> end",
+        ...this.#aiRunRestatedState(row12.run),
+        governed: false,
+        detail: `the next segment was not dispatched (${dispatch2.reason}). The run is still resumable by its own principal; nothing it established is lost`
+      }, iso8, 0, row12.principal_claude || null, row12.step || null));
+    }
+    return { ...out, segment_end: { ...out.segment_end, dispatch: dispatch2 } };
   }
   /** op=airunclose. The ordinary exit — the run is done, or a member stopped
    *  it. It carries no arithmetic and DERIVES NOTHING: it hands what it was told
@@ -171530,7 +171745,7 @@ var AiRuns = class _AiRuns {
   #aiRunWakeTickMs() {
     return Math.max(1e3, Math.min(
       this.#captureRequestTickMs(),
-      Math.floor(_AiRuns.AI_RUN_LEASE_MS / 4)
+      Math.floor(this.#leaseMs() / 4)
     ));
   }
   /* HOW MANY RUNS ONE TICK HOLDS OR WAKES, AND THE FIGURE WAS NOT CHOSEN — IT
@@ -171610,7 +171825,7 @@ var AiRuns = class _AiRuns {
    *  nothing renews it once the request is answered. */
   async wake(now) {
     const iso8 = _AiRuns.#aiIso(now);
-    const until = _AiRuns.#aiIso(now + _AiRuns.AI_RUN_LEASE_MS);
+    const until = _AiRuns.#aiIso(now + this.#leaseMs());
     const holds2 = [], wakes = [], dispatches = [];
     const resumer = this.#aiRunWakeRuns().length ? await this.#aiRunResumer() : null;
     for (const r of this.#aiRunWakeHolds(iso8)) {
@@ -171708,7 +171923,9 @@ var AiRuns = class _AiRuns {
     for (const name3 of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name3))) return name3;
     return null;
   }
-  static AI_RUN_DISPATCH_WAIT_MS = 3e4;
+  /* R82 (R085-7; WALK-085 F2): the dispatch waits only for `agent-worker` to ACCEPT the segment (its R91 answers 202 at
+     once), so ten seconds; the segment then runs on whether or not this call is still connected. */
+  static AI_RUN_DISPATCH_WAIT_MS = 1e4;
   #aiRunDispatchWaitMs() {
     const v = Number(this.env && this.env.AI_RUN_DISPATCH_WAIT_MS);
     return Number.isFinite(v) && v > 0 ? v : _AiRuns.AI_RUN_DISPATCH_WAIT_MS;
@@ -171832,14 +172049,29 @@ var AiRuns = class _AiRuns {
       ]);
       const out = await res.json().catch(() => null);
       const said11 = String(out && (out.reason || out.code || out.type) || `http ${res.status}`);
-      outcome = res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : PROVIDER_LIMIT.test(said11) ? { state: "LIMIT", status: res.status, ...this.#providerLimit() } : { state: "REFUSED", status: res.status, reason: said11.slice(0, 80) };
+      outcome = res.ok && out && out.accepted === true ? { state: "RUNNING", status: res.status } : res.ok && out && out.ok === true ? { state: "DISPATCHED", status: res.status } : PROVIDER_LIMIT.test(said11) ? { state: "LIMIT", status: res.status, ...this.#providerLimit() } : { state: "REFUSED", status: res.status, reason: said11.slice(0, 80) };
     } catch (e2) {
       const elapsed = String(e2 && e2.message) === "dispatch-wait-elapsed";
-      outcome = elapsed ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" } : { state: "SILENT", status: null, reason: "the call did not complete" };
+      outcome = {
+        state: "SILENT",
+        status: null,
+        reason: elapsed ? "no acceptance within the bound" : "the call did not complete"
+      };
     } finally {
       clearTimeout(timer);
     }
-    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
+    if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
+      try {
+        this.#transact(() => {
+          this.sql.exec(
+            `UPDATE ai_runs SET expires = ? WHERE run = ? AND status = 'running'`,
+            _AiRuns.#aiIso(Date.parse(iso8) + this.#leaseMs()),
+            d.run
+          );
+        });
+      } catch {
+      }
+    } else {
       const refusal39 = this.#transact(() => this.#aiRunAppend(d.run, {
         level: "internet",
         subject: d.context_id,
@@ -171871,8 +172103,8 @@ var AiRuns = class _AiRuns {
    *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`); an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`.
    *  Then `credentials.aiRunCredentialMint({member, run, writes})` with the mode's own writes (`AI_RUN_MODE_WRITES`): a
    *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
-   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 30 s wait,
-   *  `RUNNING` past it, and one log entry for a refused or incomplete call. The token is used for that one call and is
+   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 10 s wait for
+   *  acceptance (R82: accepted is `RUNNING`), and one log entry for a refused or unaccepted call. The token is used for that one call and is
    *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
   async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, at: at49 = null } = {}) {
     const iso8 = _AiRuns.#aiIso(at49 ? Date.parse(at49) : Date.now());
@@ -172107,7 +172339,7 @@ var AiRuns = class _AiRuns {
                `standard.in_force: false` with its `basis` and its `stated` sentence
                means we looked and there was no bar. A consumer can tell those apart;
                a null could not, which is why no null is published here. */
-      standard: this.#standardForRun(row12),
+      standard: this.#standardForRun(row12, viewer),
       /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
@@ -172152,7 +172384,7 @@ var AiRuns = class _AiRuns {
    *
    *  Synchronous, deliberately: unlike the manifest there is no hash and no
    *  second read, so making this async would buy a promise nobody awaits for. */
-  #standardForRun(row12) {
+  #standardForRun(row12, viewer = null) {
     const raw = row12.standard_pair;
     let parsed = null, unreadable2 = false;
     if (raw != null && String(raw).trim() !== "") {
@@ -172169,7 +172401,7 @@ var AiRuns = class _AiRuns {
     const axis = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
     const capture2 = parsed ? axis(parsed.capture) : null;
     const connection = parsed ? axis(parsed.connection) : null;
-    const basis = unreadable2 ? "unreadable" : parsed !== null ? capture2 === null && connection === null ? "names-no-axis" : "recorded" : row12.context_type === "project" ? "none-recorded" : "context-has-no-project";
+    const basis = unreadable2 ? "unreadable" : parsed !== null ? capture2 === null && connection === null ? "names-no-axis" : "recorded" : row12.context_type === "project" || this.#inProject(row12, viewer) ? "none-recorded" : "context-has-no-project";
     return {
       in_force: basis === "recorded",
       basis,
@@ -172477,13 +172709,15 @@ var AiRuns = class _AiRuns {
          Two readers of one row must not disagree about which of its facts
          exist, so both now answer from `#standardForRun` and neither computes
          its own. */
-      standard: this.#standardForRun(row12),
+      standard: this.#standardForRun(row12, viewer),
       budget: bounds2.map((b) => ({
         bound: b.bound,
         allowed: b.allowed,
         consumed: b.consumed,
         unit: b.unit
-      }))
+      })),
+      /* R85: the records and extents the search should look at, `{items, truncated}`; still no lens field. */
+      subjects: this.#runSubjects(row12, viewer)
     };
     return {
       run: run2,
@@ -173207,7 +173441,7 @@ function aiRunsOps(runs, url, body) {
   const q10 = (k) => url.searchParams.get(k);
   return {
     airunopen: () => runs.open({ ...body || {}, principalPlane: q10("principal"), actor: q10("actor"), viewer: q10("viewer") }),
-    airuntick: () => runs.tick({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
+    airuntick: () => runs.tickAndContinue({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
     airunclose: () => runs.close({ ...body || {}, actor: q10("actor"), viewer: q10("viewer"), caller: q10("principal") }),
     airun: () => runs.read({ run: q10("run"), viewer: q10("viewer") }),
     airunlog: () => runs.log({ run: q10("run"), viewer: q10("viewer"), limit: q10("limit") }),
@@ -216910,7 +217144,7 @@ var SUMMARY_MAX2 = 200;
 var DETAIL_MAX2 = 5e3;
 var WHY_MAX4 = 500;
 var NOTE_MAX7 = 500;
-var SUBJECTS_MAX = 50;
+var SUBJECTS_MAX2 = 50;
 var PHASES_MAX = 50;
 var DATES_MAX = 20;
 var CHECKPOINT_DAYS_MAX = 3650;
@@ -216938,7 +217172,7 @@ function normSubject(s) {
       out.act = s.act;
     }
     if (s.standards !== void 0 && s.standards !== null) {
-      if (!Array.isArray(s.standards) || s.standards.length > SUBJECTS_MAX || !s.standards.every(isToken)) return null;
+      if (!Array.isArray(s.standards) || s.standards.length > SUBJECTS_MAX2 || !s.standards.every(isToken)) return null;
       out.standards = [...new Set(s.standards)];
     }
     return out;
@@ -217455,9 +217689,9 @@ var ActionPlans = class {
   /** R1, R3, R4: the subjects named, judged stage by stage across the list (malformed, unseen, of the project, live,
    *  free), so two faults at once answer the earlier code. `{items: [{subject, key}]}` or a refusal. */
   #subjects(project, list6, viewer, { plan: plan2 = null } = {}) {
-    if (!Array.isArray(list6) || !list6.length || list6.length > SUBJECTS_MAX)
+    if (!Array.isArray(list6) || !list6.length || list6.length > SUBJECTS_MAX2)
       return refuseNoSubject(
-        `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
+        `a plan is about 1 to ${SUBJECTS_MAX2} matters. Nothing was written.`,
         Array.isArray(list6) ? list6.length : null
       );
     const items = [];
@@ -219684,8 +219918,8 @@ function refuseNoSuchInquiry(inquiry, extra = null) {
 function refuseNoSubject(detail, count2) {
   return refusal32(
     "PLAN_NO_SUBJECT",
-    detail || `a plan is about 1 to ${SUBJECTS_MAX} matters. Nothing was written.`,
-    { count: count2 ?? null, max: SUBJECTS_MAX }
+    detail || `a plan is about 1 to ${SUBJECTS_MAX2} matters. Nothing was written.`,
+    { count: count2 ?? null, max: SUBJECTS_MAX2 }
   );
 }
 function refuseMalformed(detail, index2) {
@@ -228432,7 +228666,9 @@ function normaliseRegistration({
   machineRefused = [],
   machineDrafts = [],
   irreversible = [],
-  library: library2 = []
+  library: library2 = [],
+  adminActs = [],
+  adminScreens = []
 } = {}) {
   const opSet = ops === null || ops === void 0 ? null : nameSet2(ops);
   const sc = /* @__PURE__ */ new Map();
@@ -228450,7 +228686,9 @@ function normaliseRegistration({
     machineRefused: nameSet2(machineRefused),
     machineDrafts: opSet ? new Set([...drafts].filter((o) => opSet.has(o))) : drafts,
     irreversible: nameSet2(irreversible),
-    library: lib
+    library: lib,
+    adminActs: nameSet2(adminActs),
+    adminScreens: nameSet2(adminScreens)
   };
   reg.helpRefused = helpRefusedActs(reg);
   reg.withheld = withheldLibrary(reg);
@@ -229069,10 +229307,12 @@ var WizardScripts = class _WizardScripts {
     machineDrafts = [],
     irreversible = [],
     library: library2 = CIVICSMITH_LIBRARY,
-    door = null
+    door = null,
+    adminActs = [],
+    adminScreens = []
   } = {}) {
     if (this.reg) return refuse24("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
-    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library: library2 });
+    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library: library2, adminActs, adminScreens });
     const fn = (f17) => typeof f17 === "function" ? f17 : null;
     this.door = isObj55(door) ? { findExisting: fn(door.findExisting), pointer: fn(door.pointer) } : { findExisting: null, pointer: null };
     const broken = [], returned = [];
@@ -229793,7 +230033,14 @@ var WizardScripts = class _WizardScripts {
    *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
    *  credential and no key; starts nothing, records no use, writes nothing. */
   startFrom({ viewer = null, message: message2 = null, parts = void 0 } = {}) {
-    const offered = this.#offeredScripts(viewer);
+    const reg = this.#registration();
+    const administers = this.#call(() => this.membership.sessionRights(viewer))?.administer === true;
+    const adminFirst = (x) => {
+      if (x.s.origin !== "civicsmith") return false;
+      const t2 = isObj55(x.steps[0]) ? x.steps[0] : {};
+      return typeof t2.act === "string" && t2.act ? reg.adminActs.has(t2.act) : reg.adminScreens.has(t2.screen);
+    };
+    const offered = this.#offeredScripts(viewer).filter((x) => administers || !adminFirst(x));
     const scripts = offered.filter((x) => !(x.s.origin === "civicsmith" && x.s.required)).map((x) => ({ id: x.s.id, version: versionId2(x.s.id, x.n), name: x.s.name, start: startOf2(x.steps) }));
     const ids = new Set(offered.map((x) => x.s.id));
     const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) })).filter((d) => d.scripts.length);
@@ -265307,6 +265554,135 @@ async function promoteArchive({ stub, doAnswer: doAnswer2, docs, project = null,
   return { promoted, not_promoted };
 }
 
+// src/extraction/ops.mjs
+var CORRELATION2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function readAnswer(res) {
+  let r = null, out = null;
+  try {
+    r = await res;
+    out = await r.json();
+  } catch {
+    out = null;
+  }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION2.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
+}
+async function ask(store, path, init, doAnswer2) {
+  const res = (async () => store.fetch(path, init))();
+  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
+}
+var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (r && r.refused && r.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json24(r.reply.body, r.reply.status);
+  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
+  return null;
+}
+async function pdfStructureOp(url, env, store, {
+  json: json24,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls: cls3,
+  session,
+  caps: caps3,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pdfstructure";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha2))
+    return json24({ ok: false, ...requiredArgument2(
+      "pdfstructure",
+      "sha256",
+      "<64 lowercase hex>",
+      "pdfstructure requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q10 = new URLSearchParams({
+    sha256: sha2,
+    cls: cls3 || "",
+    session: session ? "1" : "0",
+    caps: [...caps3 || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  if (url.searchParams.has("ocr")) q10.set("ocr", url.searchParams.get("ocr") ?? "");
+  const r = await ask(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
+}
+async function pageTranscribeOp(url, env, store, {
+  json: json24,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls: cls3,
+  session,
+  caps: caps3,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pagetranscribe";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha2))
+    return json24({ ok: false, ...requiredArgument2(
+      op,
+      "sha256",
+      "<64 lowercase hex>",
+      "pagetranscribe requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q10 = new URLSearchParams({
+    sha256: sha2,
+    cls: cls3 || "",
+    session: session ? "1" : "0",
+    caps: [...caps3 || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  const project = url.searchParams.get("project");
+  if (project) q10.set("project", project);
+  const r = await ask(store, `http://x/pagetranscribe?${q10}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
+}
+var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
+async function extractionOp(op, url, env, getStore, stamps) {
+  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
+  return null;
+}
+async function acquireReadingOp(answer2, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
+  const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ document: answer2.document })
+  }, doAnswer2);
+  const relayed = unanswered2(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (relayed) return { response: relayed };
+  const out = r.result;
+  const body = withReading(answer2, {
+    reading: out.reading,
+    textUnits: out.text_units || null,
+    textUnitsOverBound: out.text_units_over_bound || 0
+  });
+  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
+  return { body };
+}
+
 // src/control-plane/app.mjs
 var APP = "/app";
 var ASSETS = "/app/assets/";
@@ -272934,7 +273310,7 @@ async function promoteDocument(cs, o) {
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const mid = minted && (minted.result || minted);
   if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why2(mid) };
-  const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
   const id = slug3 ? `${mid.id}-${slug3}` : mid.id;
   const sha2 = doc.capture && doc.capture.sha256;
   const len = (s) => {
@@ -273157,7 +273533,9 @@ function sendUpload(view, el, cs) {
     `${cs.w("screen.capture.file.what")}: ${what}`
   ].join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2e3) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
-  return { query: { statement, name: file.name }, raw: file };
+  const query = { statement, name: file.name };
+  if (typeof file.type === "string" && file.type) query.type = file.type;
+  return { query, raw: file };
 }
 async function doneUpload(view, answer2, cs) {
   const a = answer2 || {}, file = cs.file("ci-file");
@@ -275169,9 +275547,16 @@ var finder = Object.freeze({
     const q10 = typeof ui.q === "string" ? ui.q : view.subject ? String(view.subject) : "";
     const out = {};
     if (q10.trim()) {
+      const w = q10.trim().split(/\s+/);
+      const plain20 = w.every(function(x) {
+        return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+      });
+      const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        return "passage:" + x;
+      }).join(" ") + ")" : q10;
       out.search = {
         op: "search",
-        query: { q: q10, limit: "50", snippet: "160" },
+        query: { q: asked, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -275248,7 +275633,14 @@ var finder = Object.freeze({
         const q10 = String(cs.value("finder-q") || "").trim();
         if (!q10) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q10);
-        return { query: { q: q10, limit: "50", snippet: "160" } };
+        const w = q10.split(/\s+/);
+        const plain20 = w.every(function(x) {
+          return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+        });
+        const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+          return "passage:" + x;
+        }).join(" ") + ")" : q10;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       }
     },
     // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
@@ -275368,6 +275760,7 @@ var findIn = Object.freeze({
       }
     };
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
+    if (s && s.indexOf("PROJ-") !== 0 && s.indexOf("sel-") !== 0 && !/^[0-9a-f]{64}$/.test(s)) out.capture = { op: "image", query: { id: s } };
     return out;
   },
   // The path's project step (interface-shell R8) when the scope is a project: by its title, never its address (R26).
@@ -275432,10 +275825,13 @@ var findIn = Object.freeze({
     }).join("") + "</fieldset>";
     const term = cs.field("findin-term", "screen.find-in.term", { value: ui.term || "", help: "screen.find-in.term.help" });
     const qs = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits) ? view.data.questions.value.hits : [];
+    const routedQ = ui.question && !qs.some(function(h) {
+      return String(h.bundle_id) === String(ui.question);
+    }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
     const question = cs.choice(
       "findin-question",
       "screen.find-in.question",
-      [["", "screen.find-in.question.none"]].concat(qs.map(function(h) {
+      [["", "screen.find-in.question.none"]].concat(routedQ, qs.map(function(h) {
         return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) };
       })),
       { value: ui.question || "" }
@@ -275455,7 +275851,7 @@ var findIn = Object.freeze({
         const where = (dt2 && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt2, []) + " " : "") + (p3 !== void 0 ? "<span>" + cs.w("screen.find-in.passage", { n: String(p3) }) + "</span>" : "");
         const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
         const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
-        const right = rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : op ? recordAct(op, ki, ii) : "";
+        const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "") + (rec && op !== "cite" ? "" : op ? recordAct(op, ki, ii) : "");
         return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + '</span><span class="meta">' + where + "</span>", right, "");
       }).join("")) + notRead2;
       const more = k.kind === "term" && k.truncated ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found3.term || "") } }) + "</div>" : "";
@@ -275490,7 +275886,16 @@ var findIn = Object.freeze({
         cs.set("kinds", ticked);
         cs.set("term", term);
         cs.set("question", String(cs.value("findin-question") || ""));
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try {
+          pj = JSON.parse(String(pv && pv["data/provenance.json"] || ""));
+        } catch {
+          pj = null;
+        }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const body = { scope, kinds: kinds3 };
         if (kinds3.indexOf("term") >= 0) body.term = term;
         return { body };
@@ -275524,7 +275929,16 @@ var findIn = Object.freeze({
         const chosen = qs.filter(function(h) {
           return String(h.bundle_id) === qid;
         })[0];
-        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
+        const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
+        let pj = null;
+        try {
+          pj = JSON.parse(String(pv && pv["data/provenance.json"] || ""));
+        } catch {
+          pj = null;
+        }
+        const fd = pj && Array.isArray(pj.documents) && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : "";
+        const cap = /^[0-9a-f]{64}$/.test(fd) ? fd : s;
+        const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: cap };
         const find2 = { scope, kinds: kinds3 };
         if (kinds3.indexOf("term") >= 0) find2.term = term;
         const ends = new Date(cs.now() + 365 * 864e5).toISOString().slice(0, 10);
@@ -275660,7 +276074,7 @@ var findIn = Object.freeze({
         if (!it) return null;
         if (!ui.question) return { refuse: "screen.find-in.questionfirst" };
         const chosen = cs.value(el.dataset.f + "-role");
-        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] : "";
+        const role = Array.isArray(chosen) && chosen.length === 1 && (chosen[0] === "supports" || chosen[0] === "against") ? chosen[0] === "against" ? "cuts_against" : "supports" : "";
         if (!role) return { refuse: "screen.findin.cite.norole" };
         return { query: { project: ui.question, question: ui.question, found: JSON.stringify(it), role }, body: {} };
       }
@@ -275687,9 +276101,16 @@ var answers = Object.freeze({
     const ui = view.ui || {};
     const out = {};
     if (!view.reachable && typeof ui.q === "string" && ui.q.trim()) {
+      const w = ui.q.trim().split(/\s+/);
+      const plain20 = w.every(function(x) {
+        return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+      });
+      const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+        return "passage:" + x;
+      }).join(" ") + ")" : ui.q;
       out.search = {
         op: "search",
-        query: { q: ui.q, limit: "50", snippet: "160" },
+        query: { q: asked, limit: "50", snippet: "160" },
         empty: function(v) {
           return !v || !Array.isArray(v.hits) || v.hits.length === 0;
         }
@@ -275818,7 +276239,14 @@ var answers = Object.freeze({
           cs.go("finder", q10);
           return null;
         }
-        return { query: { q: q10, limit: "50", snippet: "160" } };
+        const w = q10.split(/\s+/);
+        const plain20 = w.every(function(x) {
+          return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x);
+        });
+        const asked = plain20 ? "(" + w.join(" ") + ") OR (" + w.map(function(x) {
+          return "passage:" + x;
+        }).join(" ") + ")" : q10;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       }
     },
     // "Show how this was counted": the rule service's answer with its basis and label (answers R7).
@@ -276277,13 +276705,14 @@ function later2(cs, ui, key2, op, query, token) {
 function plain19(cs, key2, fills) {
   return String(cs.w(key2, fills)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]);
 }
-function who3(cs, x) {
+function who3(cs, x, founder) {
   if (x && typeof x === "object") {
     if (x.handle) return String(x.handle);
     if (x.founder === true) return String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]);
     return "";
   }
   const s = String(x == null ? "" : x).replace(/^(member:|token:)/, "");
+  if (s === "admin" && founder) return String(founder);
   return s === "admin" ? String(cs.w("member.founder.unnamed")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]) : s;
 }
 var COMMON = Object.freeze({ front: front2, later: later2, plain: plain19, who: who3 });
@@ -276936,6 +277365,9 @@ function render3(cs, view) {
   })();
   {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
+    const parts2 = project ? later3("participants", "projectparticipants", { projectId: project }) : null;
+    const founder = parts2 && parts2.state === "ok" && Array.isArray(parts2.value.participants) ? parts2.value.participants.find((x) => x && x.founder === true) : null;
+    const founderHandle = founder && founder.handle ? String(founder.handle) : null;
     const opener = (() => {
       const img = d.inquiry.value || {};
       const first = Object.keys(img).filter((k) => /^_history\/promotion_.*\.json$/.test(k)).map((k) => {
@@ -276945,7 +277377,7 @@ function render3(cs, view) {
           return null;
         }
       }).filter((h) => h && h.author).sort((a, b3) => String(a.created || "").localeCompare(String(b3.created || "")))[0];
-      return first ? P.who(cs, first.author) : "";
+      return first ? P.who(cs, first.author, founderHandle) : "";
     })();
     const name3 = opener || T("state.undetermined", { reason: "" });
     if (project) out.push(`<p class="mk-sub">${W2("screen.question.opened", { name: name3, date: { html: date }, project: "" })}${cs.ref("project", project, projectTitle || T("state.undetermined", { reason: "" }), [])}</p>`);
@@ -277003,11 +277435,20 @@ function render3(cs, view) {
   const concluded = !!(b && b.conclusion && b.conclusion_stance !== "withdrawn");
   const member2 = view.me && view.me.member;
   const runs = view.reachable && member2 ? later3("runs", "airuns", { contextType: "inquiry", contextId: id, limit: "50" }, String(ui.seq || 0)) : null;
-  const myRun = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs.find((s) => s && s.status === "running" && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")) && (ui.dispatched === s.id || Number(s.ticks) > 1)) : null;
+  if (runs && runs.state === "ok" && Array.isArray(runs.value.runs)) ui.lastRuns = runs.value.runs;
+  const runList = runs && runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : runs && runs.state === "loading" && Array.isArray(ui.lastRuns) ? ui.lastRuns : [];
+  const isMine = (s) => !!(s && member2 && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/")));
+  const myRun = runList.find((s) => s && s.status === "running" && isMine(s) && ui.withheld !== s.id) || null;
+  const asked = ui.asking ? runList.find((s) => s && s.id === ui.asking) : null;
+  const asking = !!ui.asking && !(asked && asked.status !== "running");
+  const lastMine = runList.find(isMine) || null;
+  const ending = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
+  const endedPart = (withAsk) => lastMine && lastMine.status !== "running" && !myRun && !asking ? `<div data-run="ended"><p class="mk-note">${W2("screen.assistant.run.ended", { why: ending(lastMine.condition) || String(lastMine.status || "") })}</p>${withAsk ? askAct : ""}</div>` : "";
   const pack = view.reachable ? later3("pack", "agentpack", {}) : null;
   const packName = pack && pack.state === "ok" && pack.value && (pack.value.pack && (pack.value.pack.version || pack.value.pack.skillVersion) || pack.value.version);
   const askAct = view.reachable && packName && member2 ? cs.act("airunopen", { label: "act.airunopen.label.question", data: { pack: String(packName) } }) : "";
-  if (!citedLegs.length && !myRun && !concluded) {
+  const proposals = view.reachable ? vs.filter((v) => machine3(v) && v.state === "suggested" && !v.hidden) : [];
+  if (!citedLegs.length && !myRun && !asking && !concluded) {
     const rows4 = [
       cs.row(
         "",
@@ -277021,13 +277462,21 @@ function render3(cs, view) {
       )
     ];
     if (askAct) rows4.push(cs.row("", `<b>${W2("question.empty.ask")}</b><br><span class="mk-sub">${W2("question.empty.ask.line")}</span>`, askAct));
-    out.push(cs.sec("question.empty.heading", `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
+    out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W2("question.empty.note")}</p>` + cs.sheet(rows4.join("")), { id: "state-c" }));
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
   }
-  if (myRun) out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div><p class="mk-note">${W2("question.run.leave")}</p>` + cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } }), { id: "state-d" }));
-  const proposals = view.reachable ? vs.filter((v) => machine3(v) && v.state === "suggested" && !v.hidden) : [];
+  if (myRun || asking) {
+    out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div>` + (myRun ? `<p data-run="running">${W2("screen.assistant.run.running", { ticks: String(myRun.ticks || 1) })}</p>` : "") + `<p class="mk-note">${W2("question.run.leave")}</p>` + (myRun ? cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } }) : `<button class="cs-btn" data-tone="quiet" disabled data-pending="airunclose">${W2("act.airunclose.label.question")}</button>`), { id: "state-d" }));
+    if (myRun && runs && runs.state === "ok" && !ui.polling) {
+      ui.polling = true;
+      cs.later(1e4, (k, v) => {
+        v.ui.polling = false;
+        k.set("seq", (v.ui.seq || 0) + 1);
+      });
+    }
+  } else if (!concluded) out.push(endedPart(true));
   for (const v of proposals) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l2) => String(l2.target_title || l2.target_id || "")).filter(Boolean);
     out.push(cs.sec("question.proposal.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}` + (v.untested || b && b.untested ? `<span class="cs-draftlabel" data-label="untested">${W2("ai.label.untested")}</span>` : "") + `<p class="rec">${cs.esc(String(v.claim && v.claim.text ? v.claim.text : v.description || v.name))}</p>` + (rests.length ? `<p class="mk-small rec">${cs.esc(rests.join(" \xB7 "))}</p>` : "") + "</div>" + cs.act("versionaccept", { label: "act.versionaccept.label.question", data: { version: v.name, grounds: (v.grounds || []).join(",") }, tone: "primary" }) + cs.act("versionreject", { label: "act.versionreject.label.question", data: { version: v.name } }), { id: "state-e" }));
@@ -277474,18 +277923,23 @@ var acts3 = [
       const res = (a) => a && a.result !== void 0 ? a.result : a;
       const run2 = "RUN-" + hex11(16);
       const bounds2 = (view.parts.bounds || {}).check || [];
+      const pack = el.dataset.pack;
+      cs.set("said", null);
+      cs.set("limit", null);
+      cs.set("asking", run2);
       cs.call("airunopen", { body: {
         run: run2,
         contextType: "inquiry",
         contextId: String(view.subject || ""),
         mode: "check",
         principalClaude: "member:" + member2,
-        skillVersion: el.dataset.pack,
+        skillVersion: pack,
         bounds: bounds2
       } }).then((o) => {
         const r = res(o) || {};
         if (!o || o.ok === false || r.ok === false || r.started === false) {
           const code = String(r.code || r.reason || "");
+          cs.set("asking", null);
           if (code === "AI_LIMIT_REACHED") cs.set("limit", { whose: r.whose || "", period: r.period || "", when: r.when || "", reasons: [] });
           else cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airunopen">${r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: code })}</p>` });
           return;
@@ -277494,6 +277948,8 @@ var acts3 = [
           const xr = res(x) || {};
           if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
             const c = String(xr.code || xr.reason || xr.withheld || "");
+            cs.set("asking", null);
+            cs.set("withheld", run2);
             const key2 = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
             cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key2 ? cs.w(key2) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
             return;
@@ -277501,7 +277957,10 @@ var acts3 = [
           cs.set("dispatched", run2);
           cs.set("seq", (view.ui.seq || 0) + 1);
         });
-      }, () => cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` }));
+      }, () => {
+        cs.set("asking", null);
+        cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` });
+      });
       return null;
     }
   },
@@ -277669,6 +278128,8 @@ var words9 = Object.freeze([
   "question.adddoc",
   "question.run.heading",
   "question.run.leave",
+  "screen.assistant.run.running",
+  "screen.assistant.run.ended",
   "question.proposal.heading",
   "ai.refused.limit.overall",
   "question.limit.note",
@@ -277812,10 +278273,17 @@ function render4(cs, view) {
   if (sha2) out.push(testimony ? `<p><a class="cs-btn" data-tone="quiet" href="/app/find-in/${cs.esc(sha2)}" data-nav data-findin="link">${cs.w("act.findin.label.document")}</a></p>` : cs.act("findin", { label: "act.findin.label.document", data: { capture: sha2 } }));
   const reading3 = sha2 ? later3("reading", "reading", { sha256: sha2 }) : { state: "empty" };
   const qs = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles) ? d.questions.value.bundles : [];
+  const pq = project ? later3("projectq:" + project, "projectquestions", { project, limit: "100" }) : { state: "empty" };
+  const ownQ = new Set(pq.state === "ok" && Array.isArray(pq.value.items) ? pq.value.items.filter((x) => x && x.inquiry).map((x) => String(x.inquiry)) : []);
+  const heldFor = row12 && row12.captured_for && Array.isArray(row12.captured_for.questions) ? row12.captured_for.questions.filter((x) => x && x.question) : [];
+  const askable = qs.map((q10) => ({ value: String(q10.bundle_id), text: String(q10.title || q10.bundle_id) }));
+  for (const c of heldFor) if (!askable.some((o) => o.value === String(c.question))) askable.push({ value: String(c.question), text: String(c.title || c.question) });
+  const cites = askable.filter((o) => ownQ.has(o.value)).concat(askable.filter((o) => !ownQ.has(o.value)));
+  const preset = heldFor.length ? String(heldFor[0].question) : "";
   out.push(secOf("screen.document.passages.head", reading3, (r) => {
     const list6 = (Array.isArray(r.text_units) ? r.text_units : []).filter((p3) => p3 && String(p3.text || "").trim());
     if (!list6.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
-    const pick4 = qs.length ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q10) => ({ value: String(q10.bundle_id), text: String(q10.title || q10.bundle_id) })), {}) + cs.choice(
+    const pick4 = cites.length ? cs.choice("document-cite-question", "screen.document.cite.question", [{ value: "", text: "" }].concat(cites), { value: preset }) + cs.choice(
       "document-cite-role",
       "screen.document.cite.role",
       [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]],
@@ -277824,7 +278292,7 @@ function render4(cs, view) {
     return list6.map((p3, i) => {
       const extent = p3.extent && typeof p3.extent === "object" ? p3.extent : null;
       const page2 = extent && Number.isInteger(extent.page) ? extent.page : null;
-      return `<blockquote class="mk-passage rec" data-passage="${i}">\u201C${cs.esc(String(p3.text).trim())}\u201D` + (page2 !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page: page2 })}</span>` : "") + "</blockquote>" + (extent && qs.length ? cs.act("cite", {
+      return `<blockquote class="mk-passage rec" data-passage="${i}">\u201C${cs.esc(String(p3.text).trim())}\u201D` + (page2 !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page: page2 })}</span>` : "") + "</blockquote>" + (extent && cites.length ? cs.act("cite", {
         label: "act.cite.label.document",
         data: { found: JSON.stringify({ capture_sha: sha2, extent, kind: "passage" }) }
       }) : "");
@@ -278319,19 +278787,24 @@ function render5(cs, view) {
   }
   const member2 = view.me && view.me.member;
   let found3 = null;
+  let endedMine = null;
   if (!ui.run && context2 && member2) {
     const runs = later3("runs", "airuns", { contextType: context2.type, contextId: context2.id, limit: "50" }, String(ui.seq || 0));
     const list6 = runs.state === "ok" && Array.isArray(runs.value.runs) ? runs.value.runs : [];
     const mine = (s) => s && s.principal && typeof s.principal.plane === "string" && (s.principal.plane === "member:" + member2 || s.principal.plane.startsWith("member:" + member2 + "/"));
     const r = list6.find((s) => s && s.status === "running" && mine(s));
     if (r && r.id) found3 = { id: String(r.id), status: "running", untested: r.untested || null, dispatched: false, found: true };
+    else if (runs.state === "ok") {
+      endedMine = list6.find(mine) || null;
+    }
   }
   const run2 = ui.run || found3;
   const said11 = ui.said ? `<p class="mk-msg" role="alert" data-refusal="${cs.esc(ui.said.op || "")}">${ui.said.html}</p>` : "";
   let runPart = "";
   let status = null;
   if (!run2) {
-    runPart = `<p>${cs.w("screen.assistant.run.none")}</p>`;
+    const why2 = (c) => c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || "");
+    runPart = endedMine ? `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: why2(endedMine.condition) || String(endedMine.status || "") })}</p>` : `<p>${cs.w("screen.assistant.run.none")}</p>`;
   } else if (run2.found && !ui.run) {
     status = "running";
   } else {
@@ -286451,7 +286924,7 @@ async function unreadAnswer(op, out, trace) {
   }
   return { status: 502, body: { ...body, trace } };
 }
-async function ask(store, path, init = { method: "POST", body: "{}" }) {
+async function ask2(store, path, init = { method: "POST", body: "{}" }) {
   try {
     return await store(path, init) || { answered: false };
   } catch {
@@ -286499,7 +286972,7 @@ async function writeLine({ env, store, log, line: line2 }) {
   } catch {
   }
   if (testInstanceOf2(env))
-    await ask(store, STORE_ROUTES.traceKeep, {
+    await ask2(store, STORE_ROUTES.traceKeep, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ line: kept })
@@ -286531,20 +287004,20 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     return { status: answer2.status, body };
   };
   if (KEPT_AWAY_STEPS.includes(step)) {
-    const kept = await ask(store, STORE_ROUTES.keptAway);
+    const kept = await ask2(store, STORE_ROUTES.keptAway);
     if (kept.refused || !kept.answered) return done(await unreadAnswer("subscriptionsignin", kept, trace), "refused_local");
     const k = kept.result;
     if (!isObject(k) || k.ok !== true) return done({ status: 403, body: { ok: false, ...isObject(k) ? k : {} } }, "refused_local");
   }
   if (DISCLOSURE_STEPS.includes(step)) {
-    const due2 = await ask(store, `${STORE_ROUTES.disclosureDue}?by=${encodeURIComponent(member2)}`);
+    const due2 = await ask2(store, `${STORE_ROUTES.disclosureDue}?by=${encodeURIComponent(member2)}`);
     if (due2.refused || !due2.answered) return done(await unreadAnswer("subscriptionsignin", due2, trace), "refused_local");
     const d = due2.result;
     if (!isObject(d) || d.ok !== true) return done({ status: 409, body: { ok: false, ...isObject(d) ? d : {} } }, "refused_local");
   }
   if (step === "state") {
     const q10 = encodeURIComponent(member2);
-    const st = await ask(store, `${STORE_ROUTES.state}?member=${q10}&viewer=${q10}`, { method: "GET" });
+    const st = await ask2(store, `${STORE_ROUTES.state}?member=${q10}&viewer=${q10}`, { method: "GET" });
     if (st.refused || !st.answered) return done(await unreadAnswer("subscriptionsignin", st, trace), "refused_local");
     const r = st.result;
     if (!isObject(r) || r.ok !== true) return done({ status: 403, body: { ok: false, ...isObject(r) ? r : {} } }, "refused_local");
@@ -286568,7 +287041,7 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     let held3 = false, fact;
     if (!own11) fact = { code: "NOT_THIS_MEMBER" };
     else {
-      const h = await ask(store, `${STORE_ROUTES.hold}?by=${encodeURIComponent(member2)}`, {
+      const h = await ask2(store, `${STORE_ROUTES.hold}?by=${encodeURIComponent(member2)}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ token, validFor: validFor ?? null })
@@ -286581,7 +287054,7 @@ async function subscriptionSignin({ env, member: member2, asked, store, log = de
     return done({ status: out.status, body: { ...rest, held: held3, ...held3 ? {} : { fact } } }, "relayed", { held: held3 });
   }
   if (step === "code" && b.ok === true && b.connected === true && own11) {
-    await ask(store, `${STORE_ROUTES.connected}?by=${encodeURIComponent(member2)}`);
+    await ask2(store, `${STORE_ROUTES.connected}?by=${encodeURIComponent(member2)}`);
   }
   return done(out, out.body.reason === "AGENT_WORKER_UNBOUND" || out.body.reason === "AGENT_WORKER_SILENT" ? "refused_local" : "relayed");
 }
@@ -286603,7 +287076,7 @@ async function signoutLeaver(env, member2) {
   }
 }
 async function subscriptionDisconnect({ env, member: member2, store }) {
-  const out = await ask(store, `${STORE_ROUTES.disconnect}?by=${encodeURIComponent(member2)}`);
+  const out = await ask2(store, `${STORE_ROUTES.disconnect}?by=${encodeURIComponent(member2)}`);
   if (out.answered && leaverOf("subscriptiondisconnect", {}, out.result, member2)) await signoutLeaver(env, member2);
   return out;
 }
@@ -286611,13 +287084,13 @@ async function tokenRefusedSeen({ member: member2, answer: answer2, store }) {
   const b = isObject(answer2) ? answer2 : null;
   const refusedHere = (x) => isObject(x) && x.ok === false && codeOf2(x) === TOKEN_REFUSED;
   if (!member2 || !b || !(refusedHere(b) || refusedHere(b.result))) return false;
-  await ask(store, `${STORE_ROUTES.refused}?by=${encodeURIComponent(member2)}`);
+  await ask2(store, `${STORE_ROUTES.refused}?by=${encodeURIComponent(member2)}`);
   return true;
 }
 async function signintrace({ env, store }) {
   if (!testInstanceOf2(env))
     return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only on a test instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read." } };
-  const out = await ask(store, STORE_ROUTES.traceRead, { method: "GET" });
+  const out = await ask2(store, STORE_ROUTES.traceRead, { method: "GET" });
   if (out.refused || !out.answered) return unreadAnswer("signintrace", out, void 0);
   return { status: 200, body: isObject(out.result) ? out.result : { ok: true, lines: [] } };
 }
@@ -286943,7 +287416,7 @@ function disclosedLayers({
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,
-      body: wizardScripts
+      body: wizardScripts.map(offerableScript)
     } : {
       load_when: "never, in this edition",
       sourcing: SOURCING.wizard_scripts,
@@ -286964,6 +287437,11 @@ function disclosedLayers({
     case_account: caseAccountLayer(),
     account_check: accountCheckLayer()
   };
+}
+var USE_FIELD = /^(finished|approver|approved|started|abandoned|stopped|uses?|used|runs?|count|.*_(count|uses|runs))$/;
+function offerableScript(w) {
+  if (!w || typeof w !== "object" || Array.isArray(w)) return w;
+  return Object.fromEntries(Object.entries(w).filter(([k]) => !USE_FIELD.test(k)));
 }
 function validateWizardScripts(scripts, screens) {
   const opsByScreen = /* @__PURE__ */ new Map();
@@ -287613,6 +288091,8 @@ function makeFetch(hooks = {}) {
           "access-control-allow-origin": "*"
         } }
       );
+    if (req.method === "GET" && url.pathname === "/favicon.ico")
+      return new Response(null, { status: 204 });
     if (req.method === "GET" && (url.pathname === "/sign" || url.pathname === "/sign/"))
       return new Response(SIGN_HTML, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (req.method === "GET" && !url.pathname.startsWith("/api") && (url.pathname === "/" || url.pathname === "") && !url.searchParams.get("op")) {
@@ -288343,6 +288823,20 @@ function makeFetch(hooks = {}) {
       if (!out2.answered) return { early: storeSilent(op, out2.correlation) };
       return { body: out2.reply.body, status: out2.reply.status };
     }
+    async function readUploaded(got) {
+      if (got.early) return got;
+      const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
+      if (!r || r.ok !== true || r.existed === true || !r.document || typeof r.document !== "object") return got;
+      const read3 = await acquireReadingOp({ ok: true, document: r.document }, stub, {
+        json: json19,
+        storeSilent,
+        doAnswer,
+        storeName,
+        storeRefusal: (out2) => storeRefusal(out2, { store: storeName, tokenClass: cls3 })
+      });
+      if (read3.response) return { early: read3.response };
+      return { body: { ...got.body, result: { ...r, document: read3.body.document } }, status: got.status };
+    }
     async function tieToStep(got, step) {
       if (got.early) return got.early;
       const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
@@ -288439,7 +288933,7 @@ function makeFetch(hooks = {}) {
         },
         ...req.body ? { duplex: "half" } : {}
       })));
-      return tieToStep(await forwarded(uploaded), url.searchParams.get("step"));
+      return tieToStep(await readUploaded(await forwarded(uploaded)), url.searchParams.get("step"));
     }
     let passBody = req.method === "POST" ? await req.text() : void 0;
     if (passBody) {
@@ -290901,6 +291395,7 @@ var MachineryProducers = class _MachineryProducers {
         continue;
       const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
       if (!started) continue;
+      if (!this.#one(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT 1`, b.bundle_id)) continue;
       const createdMs = Date.parse(latest3.created);
       const title = this.#record.bundleInfo(b.bundle_id);
       const notes2 = this.#gradeNotes({ bundle: b.bundle_id }, visible);
@@ -306239,135 +306734,6 @@ async function registerAuditOp(env, store, { json: json24, doAnswer: doAnswer2, 
   return json24({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha2) => env.CAPTURES.head(captureKey2(storeName, sha2)), get: (sha2) => env.CAPTURES.get(captureKey2(storeName, sha2)) } : null), store: storeName, tokenClass: cls3 }, 200);
 }
 
-// src/extraction/ops.mjs
-var CORRELATION2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-async function readAnswer(res) {
-  let r = null, out = null;
-  try {
-    r = await res;
-    out = await r.json();
-  } catch {
-    out = null;
-  }
-  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
-  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
-  if (out.ok === true) return { answered: true, result: out.result, reply };
-  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
-  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION2.test(out.correlation) ? out.correlation : void 0;
-  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
-}
-async function ask2(store, path, init, doAnswer2) {
-  const res = (async () => store.fetch(path, init))();
-  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
-}
-var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
-  status,
-  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-});
-function unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
-  if (r && r.refused && r.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json24(r.reply.body, r.reply.status);
-  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
-  return null;
-}
-async function pdfStructureOp(url, env, store, {
-  json: json24,
-  storeSilent: storeSilent2,
-  storeRefusal: storeRefusal2,
-  doAnswer: doAnswer2,
-  storageAbsent: storageAbsent2,
-  requiredArgument: requiredArgument2,
-  cls: cls3,
-  session,
-  caps: caps3,
-  viewer,
-  author,
-  storeName
-}) {
-  const op = "pdfstructure";
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
-  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json24({ ok: false, ...requiredArgument2(
-      "pdfstructure",
-      "sha256",
-      "<64 lowercase hex>",
-      "pdfstructure requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const q10 = new URLSearchParams({
-    sha256: sha2,
-    cls: cls3 || "",
-    session: session ? "1" : "0",
-    caps: [...caps3 || []].join(","),
-    viewer: viewer || "",
-    author: author || "",
-    store: storeName || "bio"
-  });
-  if (url.searchParams.has("ocr")) q10.set("ocr", url.searchParams.get("ocr") ?? "");
-  const r = await ask2(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
-}
-async function pageTranscribeOp(url, env, store, {
-  json: json24,
-  storeSilent: storeSilent2,
-  storeRefusal: storeRefusal2,
-  doAnswer: doAnswer2,
-  storageAbsent: storageAbsent2,
-  requiredArgument: requiredArgument2,
-  cls: cls3,
-  session,
-  caps: caps3,
-  viewer,
-  author,
-  storeName
-}) {
-  const op = "pagetranscribe";
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
-  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha2))
-    return json24({ ok: false, ...requiredArgument2(
-      op,
-      "sha256",
-      "<64 lowercase hex>",
-      "pagetranscribe requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const q10 = new URLSearchParams({
-    sha256: sha2,
-    cls: cls3 || "",
-    session: session ? "1" : "0",
-    caps: [...caps3 || []].join(","),
-    viewer: viewer || "",
-    author: author || "",
-    store: storeName || "bio"
-  });
-  const project = url.searchParams.get("project");
-  if (project) q10.set("project", project);
-  const r = await ask2(store, `http://x/pagetranscribe?${q10}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
-}
-var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
-async function extractionOp(op, url, env, getStore, stamps) {
-  if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
-  return null;
-}
-async function acquireReadingOp(answer2, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
-  const r = await ask2(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ document: answer2.document })
-  }, doAnswer2);
-  const relayed = unanswered2(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (relayed) return { response: relayed };
-  const out = r.result;
-  const body = withReading(answer2, {
-    reading: out.reading,
-    textUnits: out.text_units || null,
-    textUnitsOverBound: out.text_units_over_bound || 0
-  });
-  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
-  return { body };
-}
-
 // src/connections/ops.mjs
 var CONNECTIONS_OPS = Object.freeze(["linkproject"]);
 async function linkProjectOp(url, store, { json: json24, doAnswer: doAnswer2, storeRefusal: storeRefusal2, storeSilent: storeSilent2, viewer, identity: identity2 }) {
@@ -309185,9 +309551,16 @@ function controlPlaneOwnerOps(of, url, body) {
     projectsshownon: () => of.legEarning().projectsShownOn({ id: f17("id"), viewer: q10("viewer") }),
     /* capture R86 (R72; K2458): a member's upload, the request's raw body handed on as `bytes` (a stream, never read
        here), its words from the address, `by` the door's. Capture's own map holds no arm for it, so this one calls its
-       service by name, as R71's do. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
+       service by name, as R71's do. R100 (R085-4): the media type the browser declared, `type`, travels from the address
+       as capture R92 takes it, and only when the request names one. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
        caller hands, never a request's field, so one in the address reaches nothing. */
-    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q10("statement"), name: q10("name"), by: q10("by") }),
+    captureupload: () => of.capture().uploadCapture({
+      bytes: body,
+      statement: q10("statement"),
+      name: q10("name"),
+      by: q10("by"),
+      ...q10("type") !== null ? { type: q10("type") } : {}
+    }),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */
@@ -310137,6 +310510,8 @@ var wizardRegistration = ({ door = null } = {}) => ({
   machineDrafts: MACHINE_DRAFTS,
   irreversible: irreversibleActs(),
   library: CIVICSMITH_LIBRARY,
+  adminActs: [...ADMIN_ACTS],
+  adminScreens: [...ADMIN_SCREENS],
   /* (K2586; wizard-scripts R23) the front door's in-process finder (and pointer, once one is given), the plane's
      composition (`wiring.mjs`' `frontDoorFinder`); absent, `matches` is [] and the pointer null. */
   ...door ? { door } : {}

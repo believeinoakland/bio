@@ -153,7 +153,7 @@ test("R6 R7 R8 registered on extraction's reading notice: the index row, the con
   assert.deepEqual(mine, { observed: { written: 1, states: ["PRESENT"], reextraction: false, refused: 0, unclassified: [] } });
   assert.deepEqual(w.log().map((r) => [r.level, r.authority_kind, r.state]),
     [["content", "derive", "PRESENT"], ["content", "extract", "PRESENT"], ["meaning", "derive", "PRESENT"]]);
-  assert.deepEqual([...CAPTURE_TEXT_UNIT_CONTAINERS].sort(), ["csv", "docx", "odp", "ods", "odt", "pdf", "pptx", "xlsx"]);
+  assert.deepEqual([...CAPTURE_TEXT_UNIT_CONTAINERS].sort(), ["csv", "docx", "odp", "ods", "odt", "pdf", "pptx", "text", "xlsx"]);
   // a workbook's sheets are units (extraction R16, N134): its index row reads indexed
   for (const book of ["xlsx", "ods", "csv"]) {
     notice(w, `INFO-2026-${book}`, sha(book), reading({ text_container: book }));
@@ -305,4 +305,16 @@ test("R6 R7 R8 end to end through extraction's own reading write (its R19, R24):
   assert.deepEqual(w.log().slice(3).map((x) => [x.level, x.authority_kind, x.state, x.actor_class]),
     [["content", "derive", "LOOKED_ABSENT", "plane"], ["content", "extract", "PRESENT", "plane"], ["meaning", "derive", "PRESENT", "plane"]]);
   assert.match(w.log()[4].detail, /^re-extraction; /);
+});
+
+test("R38 a text capture has a unit arm: a reading notice for a text container whose paragraphs were stored writes PRESENT, never LOOKED_INDETERMINATE; html stays unarmed and still writes LOOKED_INDETERMINATE naming its reason", () => {
+  const w = world();
+  const derive = (book) => w.log().find((r) => r.subject === sha(book) && r.authority_kind === "derive" && r.level === "content");
+  notice(w, "INFO-2026-0009", sha("txt"), reading({ text_container: "text" }), indexed({ written: 4, offered: 4 }));
+  assert.deepEqual([derive("txt").state, derive("txt").bound, derive("txt").result_kind, derive("txt").result_ref],
+    ["PRESENT", null, "reading", sha("txt")]);
+  notice(w, "INFO-2026-0010", sha("page"), reading({ text_container: "html" }));
+  assert.equal(derive("page").state, "LOOKED_INDETERMINATE");
+  assert.match(derive("page").bound, /a html has no indexing unit arm/);
+  assert.ok(!CAPTURE_TEXT_UNIT_CONTAINERS.has("html"), "html is not armed");
 });

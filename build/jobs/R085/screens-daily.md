@@ -1,0 +1,92 @@
+# screens-daily (R085)
+
+**Status** · session_012EfgYKhaee27SGrH6j3qUB · depth 2 · COMPLETE · handled B5
+
+## J1 · COMPLETE
+
+**Entry R085-12 (screens-daily R35): applied.** Commit `a78cabfb4f` on `job/R085/screens-daily`.
+
+**What changed.** Find's search (`finder.mjs`, `reads` and the `search` act) and the question's "Search here" (`answers.mjs`, `reads` and its `search` act, not reachable) now send the member's words both as words and as passages: `(work orders) OR (passage:work passage:orders)`, and `(pothole) OR (passage:pothole)` for one word. Each function is self-contained (interface-shell R21 (1)), so the same six-line helper is inlined in each. A query in the member's own syntax (a field, a quote, a leading `-`, `AND`/`OR`/`NOT`/`NEAR`) is sent as written. The search box keeps the words as typed; the `select` act's `q` is unchanged.
+
+**Form check.** I compiled both forms with `query.mjs` `compile()` (not imported by a test, see below): no warnings, and the AST holds a `passage` arm for each term.
+
+**Tests** (`test/m/screens-daily/`):
+- `finder.test.mjs`: the R4 search test now expects the asked form (its words are the same); new R35 test, one word and two, the form pinned, a field sent as written, an empty search sends nothing.
+- `answers.test.mjs`: "Search here" expects the asked form.
+- `find-in.test.mjs` (R5 "See all in Find"): the search that follows the navigation is Find's own read, so its expectation moves to the asked form. find-in's own act is untouched.
+
+**Deferred:** nothing.
+
+**Not changed, by design:** Home's matching search (`home.mjs`, `door.front.matching`) and find-in's own `search` act are not in R35's scope; they send the words as before.
+
+**Requirement marker:** R35 still reads "(not yet met: R085)" in `build/requirements/screens-daily.md`. I left the requirements file alone; BOB updates it.
+
+**Found in another module:** `contract.test.mjs` "R1–R13 ... each screen's acts are exactly its registered acts" fails on `projects`: interface-shell's registry (`bio-plane/src/interface-shell/index.mjs:114`) offers `themeread` on `projects`, and screens-daily's `projects` screen does not draw it. The same failure is on the base commit and on `origin/tranche/R085`; it is not caused by R35. Needs BOB's ruling: either `projects` draws `themeread` (a screen decision, in my module) or the registry drops it (interface-shell's). I did not change either.
+
+**Architecture note.** A test importing `query.mjs` fails `architecture.mjs` (query-language is not in screens-daily's `uses`), so I dropped that import; the test pins the exact form instead.
+
+**Checks and tests (run from `/home/user/civicos-process`):**
+- `node --test test/m/screens-daily/` (bio-plane): tests 109, pass 108, fail 1 (the `contract.test.mjs` failure above, pre-existing). `finder.test.mjs` and `answers.test.mjs` alone: tests 18, pass 18, fail 0.
+- `node checks/format.mjs /home/user/bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio screens-daily`: 24 product files, 47 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio screens-daily`: 35 of 35 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs /home/user/bio screens-daily tranche/R085`: 6 files changed by screens-daily between tranche/R085 and HEAD; 0 failures.
+
+**No generated artifact of another module is stale** from this change (screens-daily's bundles are not in the manifest's list).
+
+Size (session_01KMKGKQB8H39uXLhH43ccYQ): test runs 5, module lines 1802
+
+## J2 · BLOCKED
+
+**Applied: B2 and B3 (R24 only; R36 and R37 not done, per B3/K3551).** Commit `697b93a482` on `job/R085/screens-daily` (pushed), after merging `tranche/R085` (`a875ccc1cd`).
+
+**What changed.** On `find-in`, "against" is sent as the question's role `cuts_against` (the citation/inquiry vocabulary, `citation` R1), where it sent `against` (refused by the server). "supports" is unchanged. The radio's own words and the no-role refusal (`screen.findin.cite.norole`) are unchanged. `find-in.test.mjs` R24 test: its "against" assertion now expects `cuts_against` (it had pinned the bug).
+
+**Tests** (`node --test test/m/screens-daily/` in bio-plane): 109 tests, 108 pass, 1 fail: `contract.test.mjs` "R1–R13" (the known base red, K3543; unchanged from J1). `find-in.test.mjs` alone: 9 of 9 pass.
+
+**Checks** (from `/home/user/civicos-process`):
+- `node checks/format.mjs /home/user/bio`: 170 modules, 169 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio screens-daily`: 24 product files, 47 relative imports; 0 failures.
+- `node checks/coverage.mjs /home/user/bio screens-daily`: **FAIL**: 1 of 37 live ids named by no test: **R36**. 36 of 37 covered.
+- `node checks/ownership.mjs /home/user/bio screens-daily tranche/R085`: 3 files changed by screens-daily; 0 failures.
+
+**Deferred:** R36 and R37 (moved to T50 by K3551). I did not write a test for either: R36's test would have to fail, and a skipped one is not allowed.
+
+**Found, needs Bob (not changed by me):** R36 and R37 are still live in `build/requirements/screens-daily.md` ("not yet met: T50"). Coverage counts every live id, so R36 fails it. R37 passes only because other tests' titles cite "wizard-scripts R37" (the check counts any string). So this is a requirements/process question, not a code one. Bob's options, one of which unblocks the coverage check:
+1. Mark R36 and R37 out of this tranche in the requirements (for example, moved to T50 as "not in this tranche"), so the check does not count them live; or
+2. Keep them live and say how coverage should treat ids marked "not yet met: T50".
+Option 1 is the simpler fix; I recommend it. Once that is decided I will re-run coverage and post COMPLETE.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 2, module lines 1803
+
+## J3 · COMPLETE
+
+**COMPLETE (after B4).** B4 (ANSWER to J2): R36 and R37 are withdrawn from tranche/R085; merged `tranche/R085` (`c716ef3cc5`) into the branch and re-ran the checks. Applied entries: R24 (commit `697b93a482`, earlier). Deferred: R36 and R37, withdrawn by BOB (B4); nothing else.
+
+**Tests** (bio-plane, `node --test test/m/screens-daily/`): 109 tests, 108 pass, 1 fail: `contract.test.mjs` "R1–R13", the known base red (K3543), unchanged.
+
+**Checks** (from `/home/user/civicos-process`):
+- format: 170 modules, 169 requirements files; 0 failures.
+- architecture: 24 product files, 47 relative imports; 0 failures.
+- coverage: 35 of 35 live requirement ids named by a test; 0 failures.
+- ownership (`tranche/R085`): 3 files changed by screens-daily; 0 failures.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 3, module lines 1803
+
+## J4 · COMPLETE
+
+**COMPLETE (after B5, K3562).** Merged `tranche/R085` (no screens-daily conflicts), applied R38 and R39, pushed `job/R085/screens-daily`.
+
+**R38 (B-25; the document's search sent its record id).** Cause: `find-in` scoped `findin` by the route's subject as given. `capture.mjs` (screens-intake, not this module) opens `/app/find-in/<bundleId>/<INQ>` for "Cite a passage", so a record id arrives as the scope; the server answers `CAPTURE_NOT_HELD`. Fix (in find-in only): for a subject that is neither a project, a held set nor a 64-hex fingerprint, `find-in` reads the document's provenance (`image`, key `data/provenance.json`, as the Document page does) and sends `documents[0].capture.sha256`. `findin` and the standing question use it; with no provenance the subject is sent as it was. Test: "R38 …": a record id sends its fingerprint and never the id; control: a fingerprint subject is sent as it is.
+
+**R39 (B-26; cite not drawn; question lost).** Two causes in `find-in`: (a) a recorded result drew no act at all; a passage now keeps "Cite in the question" beside who recorded it (other kinds unchanged); (b) the question chosen from the route was not in the choice when the questions list lacked it, so the choice fell back to "None yet". The choice now always includes the routed question. Test: "R39 …": a recorded passage draws the cite act, which sends the chosen question; control: a question the list does not name is still drawn chosen.
+
+**Not verified in a browser.** The harness cannot show a select's displayed value, and I did not run the live walk. The B-25 and B-26 fixes are shown by the tests above, not by a browser screenshot. Please re-walk `journey6-findin-result-1280` and the document's "Find in this" on biosmoke8 to confirm.
+
+**Found in another module (REPORT, not changed):** `screens-intake/capture.mjs:117` builds the "Cite a passage" link from the document's record id (`g.bundleId`); find-in now copes with it, but the link's own argument is the record id, which the registry describes as a document's address. For BOB's view only.
+
+**Tests** (bio-plane, `node --test test/m/screens-daily/`): 111 tests, 110 pass, 1 fail: `contract.test.mjs` "R1–R13", the known base red (K3543), unchanged. `find-in.test.mjs`: 11 of 11 pass.
+
+**Checks** (from `/home/user/civicos-process`): format 170 modules, 0 failures; architecture 24 files, 47 imports, 0 failures; coverage 37 of 37 live ids named, 0 failures; ownership (`tranche/R085`) 2 files changed by screens-daily, 0 failures.
+
+Size (session_012EfgYKhaee27SGrH6j3qUB): test runs 4, module lines 1819

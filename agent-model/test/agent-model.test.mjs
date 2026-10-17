@@ -825,7 +825,7 @@ test("R11 a group-level reference is the group's API key and a project-level one
 const bytes = (text) => Buffer.byteLength(text, "utf8");
 const near = (actual, expected, what) =>
   assert.ok(typeof actual === "number" && Math.abs(actual - expected) < 1e-12, `${what}: ${actual} is not ${expected}`);
-const OPUS = "claude-opus-5";
+const OPUS = "claude-opus-5-5";
 
 test("R13 MODEL_PRICES holds USD per million input, output, cache-read and cache-write tokens for every MODEL_FOR_MODE model, a reviewed edit beside it", () => {
   assert.ok(Object.isFrozen(MODEL_PRICES));
@@ -839,8 +839,8 @@ test("R13 MODEL_PRICES holds USD per million input, output, cache-read and cache
     for (const v of Object.values(r)) assert.ok(Number.isFinite(v) && v > 0, model);
     assert.throws(() => { "use strict"; r.input = 0; });
   }
-  assert.deepEqual({ ...MODEL_PRICES[OPUS] }, { input: 5, output: 25, cache_read: 0.5, cache_write: 6.25 });
-  assert.match(MODEL_PRICES_SOURCE, /2026-10-06/);
+  assert.deepEqual({ ...MODEL_PRICES[OPUS] }, { input: 4, output: 20, cache_read: 0.4, cache_write: 5 });
+  assert.match(MODEL_PRICES_SOURCE, /2026-10-16/);
   assert.match(MODEL_PRICES_SOURCE, /five-minute/);
 });
 
@@ -848,29 +848,29 @@ test("R13 on the apikey path every outcome's usage adds estimated_cost_usd from 
   const opus = { ...BODY, model: OPUS };
   replies.push(json(200, message([{ type: "text", text: "a" }])));
   const a = await modelCall(APIKEY, opus);
-  near(a.usage[ESTIMATE], (10 * 5 + 5 * 25 + 3 * 0.5 + 2 * 6.25) / 1e6, "each figure at its own rate");
+  near(a.usage[ESTIMATE], (10 * 4 + 5 * 20 + 3 * 0.4 + 2 * 5) / 1e6, "each figure at its own rate");
   assert.equal(a.usage.total_cost_usd, null, "total_cost_usd stays the provider's (it stated none)");
   /* The provider's figures, its total and an estimate it names itself: the total kept as stated, its estimate not taken. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1000, output_tokens: 0,
     cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: 0.7, estimated_cost_usd: 999 } })));
   const b = await modelCall(APIKEY, opus);
-  near(b.usage[ESTIMATE], 1000 * 5 / 1e6, "input only");
+  near(b.usage[ESTIMATE], 1000 * 4 / 1e6, "input only");
   assert.equal(b.usage.total_cost_usd, 0.7);
   /* Negative control: one more output token moves the estimate by exactly the output rate. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1000, output_tokens: 1,
     cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } })));
-  near((await modelCall(APIKEY, opus)).usage[ESTIMATE] - b.usage[ESTIMATE], 25 / 1e6, "one output token");
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE] - b.usage[ESTIMATE], 20 / 1e6, "one output token");
   /* A model refusal still reached the provider: priced. */
   replies.push(json(200, message([], { stop_reason: "refusal", usage: { input_tokens: 4, output_tokens: 1,
     cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } })));
-  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (4 * 5 + 25) / 1e6, "a refusal");
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (4 * 4 + 20) / 1e6, "a refusal");
 
   /* A conversation: the sum of its turns' estimates, each at the table's model. */
   replies.push(json(200, message([toolUse("a", "lookup")])));
   replies.push(json(200, message([toolUse("b", "answer", { v: 1 })])));
   const c = await converse(conv());
   assert.equal(calls.at(-1).body.model, OPUS);
-  near(c.usage[ESTIMATE], 2 * (10 * 5 + 5 * 25 + 3 * 0.5 + 2 * 6.25) / 1e6, "summed over two turns");
+  near(c.usage[ESTIMATE], 2 * (10 * 4 + 5 * 20 + 3 * 0.4 + 2 * 5) / 1e6, "summed over two turns");
   /* Every apikey ending that carries usage carries a number, never null and never 0 for a turn that was answered. */
   for (const got of [a, b, c]) assert.ok(got.usage[ESTIMATE] > 0);
   /* A conversation stopped before any request spent nothing and states no usage at all. */
@@ -881,20 +881,20 @@ test("R13 on the apikey path every outcome's usage adds estimated_cost_usd from 
 
 test("R13 a null figure on the apikey path is priced at the model's highest rate, never as zero: its count bounded by the request sent (input side by its UTF-8 bytes, output by max_tokens); a model the table does not price is priced at the table's highest rate", async () => {
   const top = Math.max(...Object.values(MODEL_PRICES[OPUS]));
-  assert.equal(top, 25);
+  assert.equal(top, 20);
   const opus = { ...BODY, model: OPUS, messages: [{ role: "user", content: "naïve café — ☃ ✓" }] };
   /* Cache figures unstated: the input side's unstated remainder, the request's bytes less what was stated. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 7, output_tokens: 9 } })));
   const a = await modelCall(APIKEY, opus);
   const sentA = calls.at(-1).init.body;
   assert.ok(bytes(sentA) > sentA.length, "the request holds multi-byte text, so bytes and characters differ");
-  near(a.usage[ESTIMATE], (7 * 5 + 9 * 25 + (bytes(sentA) - 7) * top) / 1e6, "unstated cache figures");
+  near(a.usage[ESTIMATE], (7 * 4 + 9 * 20 + (bytes(sentA) - 7) * top) / 1e6, "unstated cache figures");
   /* Negative control: priced as zero, the same figures would give less. */
-  assert.ok(a.usage[ESTIMATE] > (7 * 5 + 9 * 25) / 1e6);
+  assert.ok(a.usage[ESTIMATE] > (7 * 4 + 9 * 20) / 1e6);
   /* Output unstated: max_tokens at the highest rate. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 7, cache_read_input_tokens: 0,
     cache_creation_input_tokens: 0 } })));
-  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (7 * 5 + opus.max_tokens * top) / 1e6, "unstated output");
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], (7 * 4 + opus.max_tokens * top) / 1e6, "unstated output");
   /* Nothing stated (a non-200 refusal, a body that is not JSON): the whole bound at the highest rate. */
   replies.push(json(400, { type: "error", error: { type: "invalid_request_error", message: "no" } }));
   const r = await modelCall(APIKEY, opus);
@@ -904,7 +904,7 @@ test("R13 a null figure on the apikey path is priced at the model's highest rate
   near(nj.usage[ESTIMATE], (bytes(calls.at(-1).init.body) + opus.max_tokens) * top / 1e6, "a body that is not JSON");
   /* Stated input-side figures beyond the request's bytes leave no remainder, never a negative one. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 1e6, output_tokens: 0 } })));
-  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], 5, "no negative remainder");
+  near((await modelCall(APIKEY, opus)).usage[ESTIMATE], 4, "no negative remainder");
   /* A body with no usable max_tokens is bounded by the module's own. */
   replies.push(json(200, message([{ type: "text", text: "a" }], { usage: { input_tokens: 0, cache_read_input_tokens: 0,
     cache_creation_input_tokens: 0 } })));
@@ -914,7 +914,7 @@ test("R13 a null figure on the apikey path is priced at the model's highest rate
     cache_creation_input_tokens: 0 } })));
   const c = await converse(conv());
   assert.equal(calls.at(-1).body.max_tokens, MODEL_MAX_TOKENS);
-  near(c.usage[ESTIMATE], (3 * 5 + MODEL_MAX_TOKENS * top) / 1e6, "a conversation's unstated output");
+  near(c.usage[ESTIMATE], (3 * 4 + MODEL_MAX_TOKENS * top) / 1e6, "a conversation's unstated output");
   /* A model the table does not price: every figure at the table's highest rate. */
   const tableTop = Math.max(...Object.values(MODEL_PRICES).flatMap((p) => Object.values(p)));
   replies.push(json(200, message([{ type: "text", text: "a" }])));
@@ -1412,4 +1412,162 @@ test("R16 the upgrade request carries x-civicsmith-trace and x-civicsmith-member
   const c = await converse(conv({ trace: TRACE, memberRef: REF }));
   assert.deepEqual(c.answer, { v: 1 });
   assert.ok(!JSON.stringify(calls.at(-1)).includes(TRACE) && !JSON.stringify(calls.at(-1)).includes(REF));
+});
+
+/* ------------------------------------------------------------------ R17, R18, R19 (R085-10) */
+
+test("R17 the report tool states its bounds in its description and enumerates condition from the contract's conditions; with none, condition stays a free string", () => {
+  const withConditions = subsessionTools({ level: "x", scope: "s", returns: { summary_max: 500, citations_max: 7, address_max: 123,
+    states: ["PRESENT"], conditions: ["a", "b"] } });
+  const report = withConditions.find((t) => t.name === "report");
+  assert.match(report.description, /500 characters/);
+  assert.match(report.description, /7 citations/);
+  assert.match(report.description, /123 characters/);
+  assert.deepEqual(report.input_schema.properties.condition.enum, ["a", "b"]);
+  assert.equal(report.input_schema.properties.summary.maxLength, 500);
+  /* Control: no conditions leaves condition a free string, and the default bounds are stated too. */
+  for (const returns of [{ states: ["PRESENT"] }, { states: ["PRESENT"], conditions: [] }]) {
+    const plain = subsessionTools({ level: "x", scope: "s", returns }).find((t) => t.name === "report");
+    assert.deepEqual(plain.input_schema.properties.condition, { type: "string" });
+    assert.match(plain.description, /500 characters/);
+  }
+});
+
+const refuseOnce = () => { const seen = []; return { seen, check: (input) => { seen.push(input); return seen.length === 1 ? { code: "TOO_LONG", detail: "shorten it" } : null; } }; };
+
+test("R18 apikey path: a refused final call is handed back once as an error result and the second ends the conversation; two refused calls still end on the second's input", async () => {
+  replies.push(json(200, message([toolUse("a", "answer", { v: "first" })])));
+  replies.push(json(200, message([toolUse("b", "answer", { v: "second" })])));
+  const { seen, check } = refuseOnce();
+  const messages = [{ role: "user", content: "row" }];
+  const got = await converse(conv({ messages, checkFinal: check }));
+  assert.deepEqual(got.answer, { v: "second" });
+  assert.deepEqual(seen, [{ v: "first" }], "checkFinal ran on the first final call only");
+  assert.equal(calls.length, 2);
+  const handBack = calls[1].body.messages.at(-1).content[0];
+  assert.equal(handBack.tool_use_id, "a");
+  assert.equal(handBack.is_error, true);
+  assert.match(handBack.content, /TOO_LONG/);
+  assert.match(handBack.content, /shorten it/);
+  /* Control: refused twice, the second's input ends it and no third turn is taken. */
+  calls.length = 0;
+  replies.push(json(200, message([toolUse("a", "answer", { v: "one" })])));
+  replies.push(json(200, message([toolUse("b", "answer", { v: "two" })])));
+  replies.push(json(200, message([toolUse("c", "answer", { v: "three" })])));
+  const twice = await converse(conv({ checkFinal: () => ({ code: "NO", detail: "no" }) }));
+  assert.deepEqual(twice.answer, { v: "two" });
+  assert.equal(calls.length, 2);
+  /* Without checkFinal, today's behaviour: the first final call ends it. */
+  calls.length = 0;
+  replies.length = 0;
+  replies.push(json(200, message([toolUse("a", "answer", { v: "one" })])));
+  assert.deepEqual((await converse(conv())).answer, { v: "one" });
+  assert.equal(calls.length, 1);
+});
+
+test("R18 signin path: a refused final call is handed back once as an error result and the second ends the conversation; two refused calls still end on the second's input", async () => {
+  const { seen, check } = refuseOnce();
+  const r = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "first" } } }],
+    () => [{ tool_use: { id: "u2", name: "answer", input: { v: "second" } } }], () => [end()]]);
+  const got = await converse(conv({ reference: SUB, runner: r.ns, checkFinal: check }));
+  assert.deepEqual(got.answer, { v: "second" });
+  assert.deepEqual(seen, [{ v: "first" }]);
+  assert.equal(r.log.opened, 1, "the hand-back stays in the one conversation");
+  const back = r.log.sent[1].tool_result;
+  assert.equal(back.id, "u1");
+  assert.equal(back.is_error, true);
+  assert.match(back.content, /TOO_LONG: shorten it/);
+  /* Control: refused twice, the second's input ends it. */
+  const t = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "one" } } }],
+    () => [{ tool_use: { id: "u2", name: "answer", input: { v: "two" } } }], () => [end()]]);
+  const twice = await converse(conv({ reference: SUB, runner: t.ns, checkFinal: () => ({ code: "NO", detail: "no" }) }));
+  assert.deepEqual(twice.answer, { v: "two" });
+  assert.equal(t.log.sent[2].tool_result.content, "received");
+});
+
+test("R19 a sub-session runs on claude-sonnet-5-5 at low effort and every other conversation on claude-opus-5-5 at medium, on each path; no request names claude-opus-5", async () => {
+  const bodies = [];
+  for (const [role, mode, model, effort] of [["subsession", "check", "claude-sonnet-5-5", "low"], [undefined, "check", "claude-opus-5-5", "medium"],
+                                             [undefined, "ask", "claude-opus-5-5", "medium"]]) {
+    replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+    await converse(conv({ role, mode }));
+    const b = calls.at(-1).body;
+    bodies.push(b);
+    assert.equal(b.model, model);
+    assert.deepEqual(b.output_config, { effort });
+    assert.ok(!("thinking" in b), "Opus 5.5 rejects thinking disabled");
+    assert.ok(!JSON.stringify(b).includes("budget_tokens"));
+    const s = fakeRunner([() => [{ tool_use: { id: "u", name: "answer", input: { v: 1 } } }], () => [end()]]);
+    await converse(conv({ reference: SUB, runner: s.ns, role, mode }));
+    assert.equal(s.log.sent[0].model, model);
+    assert.equal(s.log.sent[0].effort, effort);
+    bodies.push(s.log.sent[0]);
+  }
+  assert.ok(bodies.every((b) => !/claude-opus-5(?!-5)/.test(JSON.stringify(b))), "no request names claude-opus-5");
+  assert.deepEqual({ ...MODEL_PRICES["claude-sonnet-5-5"] }, { input: 2, output: 10, cache_read: 0.2, cache_write: 2.5 });
+  assert.deepEqual({ ...MODEL_PRICES["claude-opus-5-5"] }, { input: 4, output: 20, cache_read: 0.4, cache_write: 5 });
+  assert.match(MODEL_PRICES_SOURCE, /2026-10-16/);
+});
+
+/* ------------------------------------------------------------------ R20, R21 (R085-17) */
+
+test("R20 the meaningrows tool enumerates the contract's arms, takes ids, and says how to reach a document; no subject id is in any description", () => {
+  const contract = { level: "x", scope: "s", returns: { states: ["PRESENT"] }, arms: ["leg", "passage"],
+                     subjects: { items: [{ id: "SUBJECT-ID-7" }] } };
+  const tools = subsessionTools(contract);
+  const rows = tools.find((t) => t.name === "meaningrows");
+  assert.deepEqual(rows.input_schema.properties.rows.enum, ["leg", "passage"]);
+  assert.equal(rows.input_schema.properties.ids.type, "array");
+  assert.equal(rows.input_schema.properties.ids.maxItems, 20);
+  assert.equal(rows.input_schema.additionalProperties, false);
+  assert.match(rows.description, /passage:/);
+  assert.match(rows.description, /id:/);
+  assert.match(rows.description, /\bids\b/);
+  assert.match(rows.description, /subjects/);
+  assert.ok(!JSON.stringify(tools).includes("SUBJECT-ID-7"), "a subject id is record text, never in a description");
+  /* Control: no arms leaves rows a free string. */
+  const free = subsessionTools({ level: "x", scope: "s", returns: {} }).find((t) => t.name === "meaningrows");
+  assert.equal(free.input_schema.properties.rows.enum, undefined);
+});
+
+test("R21 converse answers the model and effort its requests named, on each path", async () => {
+  for (const [role, model, effort] of [["subsession", "claude-sonnet-5-5", "low"], [undefined, "claude-opus-5-5", "medium"]]) {
+    replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+    const a = await converse(conv({ role, mode: "check" }));
+    assert.equal(a.model, model);
+    assert.equal(a.effort, effort);
+    assert.deepEqual(a.answer, { v: 1 });
+    const s = fakeRunner([() => [{ tool_use: { id: "u", name: "answer", input: { v: 1 } } }], () => [end()]]);
+    const b = await converse(conv({ reference: SUB, runner: s.ns, role, mode: "check" }));
+    assert.equal(b.model, model);
+    assert.equal(b.effort, effort);
+  }
+});
+
+/* ------------------------------------------------------------------ R22 (R085-28) */
+
+test("R22 the meaningrows tool describes a 64-token snippet and a passage call sends snippet 64, on each path; another arm sends none", async () => {
+  const tools = subsessionTools({ level: "x", scope: "s", returns: { states: ["PRESENT"] }, arms: ["leg", "passage"] });
+  const rows = tools.find((t) => t.name === "meaningrows");
+  assert.match(rows.description, /snippet of about a sentence/);
+  assert.match(rows.description, /64 tokens/);
+  assert.equal(rows.input_schema.properties.snippet.maximum, 64);
+  const FINAL = { name: "answer", description: "answer", input_schema: { type: "object", properties: { v: { type: "number" } } } };
+  for (const path of ["apikey", "signin"]) {
+    const performed = [];
+    const onTool = async (name, input) => { performed.push(input); return { content: "ok" }; };
+    const calls = [{ rows: "passage", q: "passage:days" }, { rows: "leg", q: "x" }, { rows: "passage", q: "y", snippet: 20 }];
+    if (path === "apikey") {
+      replies.push(json(200, message(calls.map((c, i) => toolUse("t" + i, "meaningrows", c)))));
+      replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+      await converse(conv({ tools: [rows, FINAL], onTool }));
+    } else {
+      const s = fakeRunner([() => calls.map((c, i) => ({ tool_use: { id: "t" + i, name: "meaningrows", input: c } })),
+                            () => [{ tool_use: { id: "a", name: "answer", input: { v: 1 } } }], () => [end()]]);
+      await converse(conv({ reference: SUB, runner: s.ns, tools: [rows, FINAL], onTool }));
+    }
+    assert.equal(performed[0].snippet, 64, path);
+    assert.equal("snippet" in performed[1], false, path + " control: another arm sends none");
+    assert.equal(performed[2].snippet, 20, path + " a snippet the call names is kept");
+  }
 });

@@ -163,7 +163,7 @@ test("R24: \"Cite in the question\" asks whether the passage supports the questi
   assert.deepEqual(JSON.parse(ct.query.found), KINDS[5].items[0]);
   const against = await shown();
   await press(against, "cite", { values: { [button(against, "cite").dataset.f + "-role-against"]: true } });
-  assert.equal(last(against, "cite").query.role, "against");
+  assert.equal(last(against, "cite").query.role, "cuts_against", "\"against\" is the question's role cuts_against (citation R1)");
   // The question is still required first.
   const noQ = await open("/app/find-in/PROJ-1", PLANE);
   await press(noQ, "findin", { values: { "findin-kind-term": true, "findin-term": "closed" }, reason: R });
@@ -207,11 +207,38 @@ test("R5: standingquestionset keeps finding over the scope; search is \"See all 
   assert.equal(all[0].dataset.term, "closed");
   assert.ok(all[0].textContent.startsWith(word("act.search.label.find-in")));
   await press(p, "search", { reason: R });
-  assert.equal(last(p, "search").query.q, "closed");
+  assert.equal(last(p, "search").query.q, "(closed) OR (passage:closed)", "Find's own read of the term asks its passages too (R35)");
   assert.equal(p.location.pathname, "/app/finder/closed");
 });
 
 test("R34: every key find-in reads is a word of the list, and the cite choice's words are keys", () => {
   for (const k of screen("find-in").words) assert.ok(hasWord(k), k);
   for (const k of ["screen.findin.cite.supports", "screen.findin.cite.against", "screen.findin.cite.norole"]) assert.ok(screen("find-in").words.includes(k), k);
+});
+
+test("R38 (K3562): opened from a document by its record id, the search is scoped by its capture's fingerprint from its provenance, never the record id", async () => {
+  const provenance = JSON.stringify({ documents: [{ capture: { sha256: SHA } }] });
+  const p = await open("/app/find-in/INFO-7", { ...PLANE, image: ok({ "data/provenance.json": provenance }) });
+  await press(p, "findin", { values: { ...ALL_KINDS, "findin-question": "INQ-1" }, reason: R });
+  assert.deepEqual(last(p, "findin").body.scope, { capture: SHA }, "the fingerprint, not the record id");
+  assert.ok(!JSON.stringify(last(p, "findin").body).includes("INFO-7"), "the record id is never sent");
+  // Control: a fingerprint opened as the subject is sent as it is.
+  const d = await open("/app/find-in/" + SHA, PLANE);
+  await press(d, "findin", { reason: R });
+  assert.deepEqual(last(d, "findin").body.scope, { capture: SHA });
+});
+
+test("R39 (K3562): after a search with a question chosen, a passage result draws the cite act for that question; the chosen question stays chosen", async () => {
+  const recorded = ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 14 }, kinds: [
+    { kind: "term", items: [{ kind: "term", words: "closed", capture_sha: SHA, title: "Housing code", extent: { paragraph: 5 }, recorded: [{ by: "Mai" }] }], count: 1, nothing: false, not_read: [] }] });
+  const p = await open("/app/find-in/PROJ-1/INQ-1", { ...PLANE, findin: recorded });
+  await press(p, "findin", { values: { ...ALL_KINDS, "findin-question": "INQ-1" }, reason: R });
+  const cite = button(p, "cite");
+  assert.ok(cite, "a passage result draws Cite in the question, though recorded");
+  assert.ok(text(p, sections(p)[0]).includes(word("screen.find-in.recorded", { who: "Mai" })), "and shows who recorded it");
+  await press(p, "cite", { values: { [cite.dataset.f + "-role-supports"]: true } });
+  assert.equal(last(p, "cite").query.question, "INQ-1", "for the question chosen");
+  // Control: a question the list does not name is still drawn as chosen, not as "None yet".
+  const off = await open("/app/find-in/PROJ-1/INQ-9", { ...PLANE, search: ok({ hits: [] }), findin: recorded });
+  assert.ok(off.doc.getElementById("findin-question").querySelectorAll("option").some((o) => o.getAttribute("value") === "INQ-9"));
 });

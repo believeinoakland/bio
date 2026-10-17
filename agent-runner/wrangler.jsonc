@@ -11,7 +11,7 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // The release's version site (resolve-version ARM 7c), as every member's: a stamp, not a credential or address.
-  "vars": { "VERSION": "0.84.0" },
+  "vars": { "VERSION": "0.85.0" },
 
   // Reachable only through the Durable Object binding of its caller (agent-worker's RUNNER, script `agent-runner`):
   // no public address of its own.
@@ -26,7 +26,9 @@
   "containers": [
     {
       "class_name": "AgentRunner",
-      "image": "ghcr.io/believeinoakland/agent-runner@sha256:d7c81712ef95683068451476597ca22844937d6c9bccc756d713f5943c64ee00",
+      "image": "ghcr.io/believeinoakland/agent-runner@sha256:b0220ffa2336503cb97edea1355ddb14633264f48c915eb6426a7319cd9243d8",
+      // R33: 1/2 vCPU, 4 GiB. At the default size (1/16 vCPU, 256 MiB) one conversation's start-up took 27 s (study-assistant-link T1-T2).
+      "instance_type": "standard-1",
       "max_instances": 10
     }
   ],

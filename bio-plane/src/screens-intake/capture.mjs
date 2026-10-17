@@ -54,7 +54,8 @@ async function promoteDocument(cs, o) {
   const minted = await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } });
   const mid = minted && (minted.result || minted);
   if (!mid || mid.ok === false || typeof mid.id !== "string") return { refused: why(mid) };
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  /* R28: the cut comes first, then a trailing hyphen the cut left is trimmed, so the slug begins and ends with a letter or digit */
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
   const id = slug ? `${mid.id}-${slug}` : mid.id;
   const sha = doc.capture && doc.capture.sha256;
   /* UTF-8 length, computed from the code points (REC-178: a file's bytes is its UTF-8 length, never text.length). */
@@ -276,7 +277,10 @@ function sendUpload(view, el, cs) {
                      `${cs.w("screen.capture.file.where")}: ${where}`, `${cs.w("screen.capture.file.what")}: ${what}`]
     .join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2000) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
-  return { query: { statement, name: file.name }, raw: file };
+  /* R27 (control-plane R100): the file's declared media type rides beside `statement` and `name`; an empty type sends none */
+  const query = { statement, name: file.name };
+  if (typeof file.type === "string" && file.type) query.type = file.type;
+  return { query, raw: file };
 }
 /* R21 (D9; capture R86, control-plane R72): an upload's answer is a provenance document; it is promoted as an information
  * bundle at `collected`, as R1 promotes `acquire`'s (`promoteDocument`), filed under the subject's project (R22). "It waits

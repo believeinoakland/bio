@@ -141,9 +141,9 @@ console.log("\n--- A1 · THE SPAWN CONTRACT: four levels, no write scope, NO FIE
      GAINED here is as visible as one lost. */
   const tree = [...keyTree(cs[0] ?? {})].sort();
   t("the contract's complete key tree is pinned, at every depth", tree,
-    ["address_max", "basis", "citation_keys", "citations_max", "context", "id", "in_force", "keys",
+    ["address_max", "arms", "basis", "citation_keys", "citations_max", "conditions", "context", "id", "in_force", "keys",
      "level", "mode", "pair", "required", "returns", "rule", "run", "scope", "skill", "stated",
-     "standard", "standard_pair", "states", "summary_max", "type"].sort());
+     "standard", "standard_pair", "states", "subjects", "summary_max", "type"].sort());
   t("the tree is non-empty (a walk over nothing reports its verdict triumphantly)", tree.length > 10, true);
   /* THIS ARM ALREADY EARNED ITSELF. Its first run failed against a contract whose
      `standard` block was built with a SPREAD of the plane's, so four plane-side
@@ -825,8 +825,15 @@ console.log("\n--- B7 · LOG-ALWAYS holds across FL-5's row, and the observation
      entries said NEVER_LOOKED, which the record refuses from a member (observation-log R3). Log-always now means
      every step TICKS (its spend and lease), and an entry is sent only by a step whose judgement stated a look —
      none here, so the run's log holds none, and not one NEVER_LOOKED. */
-  t("every step still ticked", (out.trace || []).length, st.log.filter((l) => l.op === "airuntick").length);
-  t("and no step that looked at nothing sent an entry", st.runlog.length, 0);
+  /* R91 (R085): a segment also sends one closing tick, `segment_end`, beside its step ticks; this counts step ticks. */
+  t("every step still ticked", (out.trace || []).length,
+    st.log.filter((l) => l.op === "airuntick" && !("segment_end" in (l.body || {}))).length);
+  /* R105 (R085) adds the one entry a step may send beside its look: the write of a candidate, logged with its name,
+     level and pass. So the log holds exactly that entry for the one candidate written (`level-empty-content`), and
+     every other step, having looked at nothing, still sent none. */
+  t("and no step that looked at nothing sent an entry; the one candidate written is logged as written (R105)",
+    st.runlog.map((e) => [e.subject, e.state, /^wrote 'level-empty-content' at level content in pass 1$/.test(e.detail)]),
+    [["submit -> candidate written", "LOOKED_INDETERMINATE", true]]);
   t("and the run actually took some steps", (out.trace || []).length > 5, true);
   const collect = (out.trace || []).find((x) => x.step === "collect");
   t("the collect step's note names both numbers", /3 REPORT\(s\) taken, 1 REFUSED/.test(collect?.note ?? ""), true);

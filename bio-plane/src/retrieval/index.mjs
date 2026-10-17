@@ -858,6 +858,8 @@ export class Retrieval {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
+      /* R79: the caller's snippet length (query-language R12 clamps it to 4-64); none leaves R12's default. */
+      snippetChars: Number(input.snippetChars) || undefined,
     });
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
@@ -1786,6 +1788,7 @@ export function retrievalRoutes(r, url, body) {
     }),
     meaningrows: () => r.meaningRows({ q: q.get("q") ?? "", rows: q.get("rows"), viewer: q.get("viewer"),
                                        limit: q.get("limit"), offset: q.get("offset"),
+                                       snippetChars: Number(q.get("snippet")) || undefined,
                                        ids: Array.isArray(body?.ids) ? body.ids : null }),
     searchfields: () => r.searchFields(),
     select: () => r.selectionCreate({ q: q.get("q") ?? "", viewer: q.get("viewer"), owner: q.get("owner"),

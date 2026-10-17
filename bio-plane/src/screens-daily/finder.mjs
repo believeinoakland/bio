@@ -13,8 +13,12 @@ export const finder = Object.freeze({
     const q = typeof ui.q === "string" ? ui.q : (view.subject ? String(view.subject) : "");
     const out = {};
     if (q.trim()) {
+      // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+      const w = q.trim().split(/\s+/);
+      const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+      const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
       out.search = {
-        op: "search", query: { q: q, limit: "50", snippet: "160" },
+        op: "search", query: { q: asked, limit: "50", snippet: "160" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
       };
     }
@@ -113,7 +117,11 @@ export const finder = Object.freeze({
         const q = String(cs.value("finder-q") || "").trim();
         if (!q) return { refuse: "screen.finder.wordsfirst" };
         cs.set("q", q);
-        return { query: { q: q, limit: "50", snippet: "160" } };
+        // R35: the words asked as words, and as passages holding them (retrieval R15); a query in the member's own syntax is sent as written.
+        const w = q.split(/\s+/);
+        const plain = w.every(function (x) { return /^[\p{L}\p{N}][\p{L}\p{N}'-]*$/u.test(x) && !/^(AND|OR|NOT|NEAR)$/.test(x); });
+        const asked = plain ? "(" + w.join(" ") + ") OR (" + w.map(function (x) { return "passage:" + x; }).join(" ") + ")" : q;
+        return { query: { q: asked, limit: "50", snippet: "160" } };
       } },
     // Holds the picked results together: an enumerated selection over their ids (retrieval R18).
     { op: "select", label: "act.select.label.finder", rereads: ["selection"],

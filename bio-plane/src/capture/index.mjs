@@ -25,7 +25,7 @@ import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
+import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
          firstHopWho, CAPTURE_MAX } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
@@ -81,6 +81,9 @@ const UPLOAD_PART = 8 * 1024 * 1024;
 /** R86: the longest statement of origin, and the longest stated file name, in characters. */
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
+export const UPLOAD_TYPE_MAX = 255;
+/* R93: the text type a text extension in an upload's name stands for, when the member declared no type. */
+const UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
@@ -596,7 +599,7 @@ export class Capture {
    *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes, statement, name = null, by, at = null, within = null } = {}) {
+  async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null } = {}) {
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
                detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written" };
@@ -609,6 +612,9 @@ export class Capture {
     /* END DEC-49 REGION is-upload-stated */
     if (name != null && (typeof name !== "string" || [...name].length > UPLOAD_NAME_MAX))
       return Capture.#missingArgument("captureupload", "name", `a string of at most ${UPLOAD_NAME_MAX} characters`, name);
+    /* R92: the media type the member's browser declared, a string of at most 255 characters when given. */
+    if (type != null && (typeof type !== "string" || [...type].length > UPLOAD_TYPE_MAX))
+      return Capture.#missingArgument("captureupload", "type", `a string of at most ${UPLOAD_TYPE_MAX} characters`, type);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
@@ -688,8 +694,25 @@ export class Capture {
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r) } : notWritten;
     }
-    const profile = await profileOf({ ev, sha, ct: null, total, multipart, headers: {}, locator: address, view: profileView(this.core),
+    /* R92: a text type over bytes that are text (valid UTF-8, no NUL) is the profile's declared content type, so the bytes
+       are read as text; any other type, or a text type over bytes that are not text, profiles the bytes as R86 does without
+       it. Either way the type is recorded as the uploader's declaration, never a measured header. */
+    /* R93: with no `type`, a text extension in the name (.txt, .md, .csv) reads the bytes as that text type, under the
+       same test; the name is not a declaration, so no source_content_type or declared_by is recorded for it. */
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const readAs = named ? UPLOAD_NAME_TYPES[named[1].toLowerCase()] : type;
+    let ct = null;
+    if (typeof readAs === "string" && readAs !== "" && profilesAsText(readAs, total, multipart)) {
+      try {
+        const obj = await ev.get(sha);
+        const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+        if (raw && raw.length === total && !raw.includes(0)) { new TextDecoder("utf-8", { fatal: true }).decode(raw); ct = readAs; }
+      } catch { ct = null; }
+    }
+    const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
                                       retrieved: when, origin: "member", parts: multipart ? parts : null });
+    if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
+    else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
     let done;
     try {

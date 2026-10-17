@@ -27,7 +27,7 @@ import { WIZARD_HTML, updateHtml, PRODUCT, publisherFooter, PROFILE_CHOICES, ASS
   ASSET_PREFIX, UPDATE_KEEPS, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN } from "./ui.mjs";
 /* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
-import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
+import { RELEASE_BINARY, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* R38, R23 (T46): whether a container image can be pulled, and what your group's Civicsmith lacks without it; held once
    for this fleet step and the pages. */
@@ -101,7 +101,29 @@ async function fetchRepoAsset(man) {
       const e = new Error("signature"); e.signature = true; e.reason = v.reason; throw e;
     }
   }
-  return new TextDecoder().decode(bytes);
+  /* R33 (K3441, memory): the verified bytes ARE the release. They are never decoded into a string (a 21 MB module with a
+     few non-Latin-1 characters is a 43 MB string). What is read from them (R20's limits, R15's build fields) is read here,
+     as bytes, and what is kept is one Blob of them, uploaded as it is by every upload of this act (a Blob is shared, never
+     copied again) and, with the hash just verified, which the read-back is compared with. The downloaded bytes are then
+     let go, so the release is held once, not twice. */
+  return { blob: new Blob([bytes], { type: "application/javascript+module" }), sha: got,
+    limits: planeLimits(bytes), capable: reportsBuilds(bytes) };
+}
+
+/* R33 (K3441, K3442) — THE BUILT-IN RELEASE, HELD ONCE. `release.mjs` carries the signed plane as a binary string (one character
+   per byte, so the engine holds it one byte each: 21 MB, where the same release as text is two bytes each, 43 MB, because
+   a few characters are above 255). What an act uploads is one Blob made from it, in the one pass that turns each character
+   back into its byte, and kept for every upload of the act and the isolate's life; its limits and build fields are read from
+   the string as text (they are ASCII); its hash is taken from the Blob's bytes when the read-back first needs it. The bytes
+   uploaded and hashed are exactly the signed release's. */
+let builtInBlob = null;
+function builtInRelease() {
+  if (!builtInBlob) {
+    const bytes = new Uint8Array(RELEASE_BINARY.length);
+    for (let i = 0; i < bytes.length; i++) bytes[i] = RELEASE_BINARY.charCodeAt(i);
+    builtInBlob = new Blob([bytes], { type: "application/javascript+module" });
+  }
+  return { blob: builtInBlob, capable: reportsBuilds(RELEASE_BINARY) };
 }
 
 /* The installer prefers the newest verified release from the public
@@ -117,16 +139,15 @@ async function selectRelease(emit) {
   try {
     man = await fetchRepoManifest();
     if (vcmp(man.version, RELEASE_VERSION) > 0) {
-      const source = await fetchRepoAsset(man);
+      const { limits: lim, ...asset } = await fetchRepoAsset(man);
       /* R20: verified bytes that state no readable limits are not used either; the built-in stands in, and the page says why. */
-      const lim = planeLimits(source);
       if (lim.ok) {
         emit.ok("rel", "The repository has " + man.version + ", newer than the built-in "
           + RELEASE_VERSION + ". "
           + (ARMED_SIGNERS.length
               ? "It carries a valid signature from a key this installer trusts, so that is what installs."
               : "Its integrity checked out, so that is what installs."));
-        return { version: String(man.version), source, from: "repository", man, limits: lim.limits };
+        return { version: String(man.version), ...asset, from: "repository", man, limits: lim.limits };
       }
       said = "The repository has " + man.version + ", but it " + LIMITS_NOT_STATED[lim.why]
         + (lim.detail ? " (" + lim.detail + ")" : "") + ", so it was NOT used. The installer's own built-in release ("
@@ -153,7 +174,7 @@ async function selectRelease(emit) {
   }
   /* R20: the built-in is held to the same rule. One that states no readable limits is refused by name, before any plane
      upload; the caller stops the act (`refused`) and nothing installs. */
-  const lim = planeLimits(RELEASE_SOURCE);
+  const lim = planeLimits(RELEASE_BINARY);
   if (!lim.ok) {
     emit.no("rel", said);
     return { refused: "This installer's built-in release (" + RELEASE_VERSION + ") " + LIMITS_NOT_STATED[lim.why]
@@ -161,7 +182,7 @@ async function selectRelease(emit) {
       + "this installer holds no value of its own to send in their place." };
   }
   emit.ok("rel", said);
-  return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
+  return { version: RELEASE_VERSION, ...builtInRelease(), from: "built-in", man, limits: lim.limits };
 }
 
 /* R55 (T48; N1047; DEC-226 (4); K3158) — THE UPDATE INSTALLS THE RELEASE CHOSEN AND NO OTHER. `V` is the version the group's
@@ -170,7 +191,7 @@ async function selectRelease(emit) {
    repository's is held to R8's checks (its bytes hash to its manifest's `sha256`, its `sig` verifies in the release namespace
    against ARMED_SIGNERS, which are `signatures`' RELEASE_KEYS, R43) and to R20's (it states its limits). R8's "newer than the
    built-in" does not choose: V does. A release of any other version, or one failing a check, is not installed, and the answer
-   says why in words; nothing is uploaded. Answers `{version, source, from, man, limits}` like selectRelease, or `{stop}`. */
+   says why in words; nothing is uploaded. Answers `{version, blob, capable, sha?, from, man, limits}` like selectRelease, or `{stop}`. */
 async function selectChosen(emit, V) {
   emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
   const stop = (why) => { emit.no("rel"); return { stop: why }; };
@@ -182,23 +203,23 @@ async function selectChosen(emit, V) {
   if (!builtIn) {
     if (unreachable) return stop(`the public repository was not reachable just now, so release ${V} could not be fetched`);
     if (!man || String(man.version) !== V) return stop(`the public repository holds no release ${V}`);
-    let source;
-    try { source = await fetchRepoAsset(man); }
+    let asset;
+    try { asset = await fetchRepoAsset(man); }
     catch (e) {
       return stop(e && e.integrity ? `release ${V} did not pass its integrity check, so it was not used`
         : e && e.unsigned ? `release ${V} carries no signature, and this installer only installs signed releases`
         : e && e.signature ? `release ${V} is signed, but not by a key ${PRODUCT} releases are signed with (${e.reason || "invalid"})`
         : `release ${V} could not be fetched`);
     }
-    const lim = planeLimits(source);
+    const { limits: lim, ...rest } = asset;
     if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
     emit.ok("rel", UPDATE_WORDS.progressVerified(V));
-    return { version: V, source, from: "repository", man, limits: lim.limits };
+    return { version: V, ...rest, from: "repository", man, limits: lim.limits };
   }
-  const lim = planeLimits(RELEASE_SOURCE);
+  const lim = planeLimits(RELEASE_BINARY);
   if (!lim.ok) return stop(`release ${V} ${LIMITS_NOT_STATED[lim.why]}${lim.detail ? " (" + lim.detail + ")" : ""}`);
   emit.ok("rel", UPDATE_WORDS.progressVerified(V));
-  return { version: V, source: RELEASE_SOURCE, from: "built-in", man, limits: lim.limits };
+  return { version: V, ...builtInRelease(), from: "built-in", man, limits: lim.limits };
 }
 
 /* ------------------------------------------------------------------ utils */
@@ -327,10 +348,41 @@ async function copyHeld(token, acct, { buckets = true, members = [] } = {}) {
 }
 const ONE_COPY = `One installation of ${PRODUCT} per Cloudflare account is supported for now`;
 
-/* R33 (Distribution §5, "byte-verified on read-back"): the plane's script as the account now holds it, read back and
+/* R33 (Distribution §5, "byte-verified on read-back"; K3441): the plane's script as the account now holds it, read back and
    hashed against the release's own bytes, never believed from the upload's answer. The account answers the script
    either as the module itself or as a multipart body whose `index.mjs` part is the module (as `deploy.mjs` reads it).
-   `null` when nothing readable came back: an unread script is not a matching one. */
+   `null` when nothing readable came back: an unread script is not a matching one.
+
+   THE HASH IS OVER THE BYTES AS DOWNLOADED. The body is never turned into a string and back: that alters bytes (WHATWG's
+   "latin1" is windows-1252, which maps 0x80-0x9F to other code points, so no such hash ever matched a module holding
+   them) and costs several copies of a 21 MB module, past a Worker's 128 MB. The part is found by byte offsets in the
+   downloaded bytes and hashed as a view of them: the one copy held is the download itself. */
+const CRLF = [13, 10], HEADER_END = [13, 10, 13, 10];
+const ascii = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
+/* The first offset at or after `from` where `pat` (bytes) occurs in `hay`, or -1; the native scan finds each candidate. */
+function find(hay, pat, from = 0) {
+  for (let i = hay.indexOf(pat[0], from); i !== -1 && i + pat.length <= hay.length; i = hay.indexOf(pat[0], i + 1)) {
+    let k = 1;
+    while (k < pat.length && hay[i + k] === pat[k]) k++;
+    if (k === pat.length) return i;
+  }
+  return -1;
+}
+/* The `index.mjs` part of a multipart body, as a view of `bytes`, or null. */
+function multipartPart(bytes, boundary) {
+  const delim = ascii("--" + boundary), next = new Uint8Array([...CRLF, ...delim]);
+  for (let at = find(bytes, delim); at !== -1; ) {
+    const start = at + delim.length;
+    if (bytes[start] === 45 && bytes[start + 1] === 45) return null;          /* the closing delimiter */
+    const head = find(bytes, HEADER_END, start);
+    if (head === -1) return null;
+    const headers = new TextDecoder().decode(bytes.subarray(start, head));
+    const end = find(bytes, next, head + HEADER_END.length);
+    if (/name="index\.mjs"/.test(headers)) return bytes.subarray(head + HEADER_END.length, end === -1 ? bytes.length : end);
+    at = end === -1 ? -1 : end + CRLF.length;
+  }
+  return null;
+}
 async function scriptHash(token, acct, slug) {
   let r;
   try {
@@ -343,18 +395,20 @@ async function scriptHash(token, acct, slug) {
   if (/multipart/i.test(ct)) {
     const m = /boundary="?([^";]+)"?/i.exec(ct);
     if (!m) return null;
-    const text = new TextDecoder("latin1").decode(bytes);
-    const part = text.split("--" + m[1]).find((p) => /name="index\.mjs"/.test(p.slice(0, p.indexOf("\r\n\r\n"))));
-    if (!part) return null;
-    const body = part.slice(part.indexOf("\r\n\r\n") + 4).replace(/\r\n$/, "");
-    bytes = Uint8Array.from(body, (c) => c.charCodeAt(0));
+    bytes = multipartPart(bytes, m[1]);
+    if (!bytes) return null;
   }
   return hex(await crypto.subtle.digest("SHA-256", bytes));
+}
+/* The hash of the bytes a release uploads: a repository release carries the one it was verified against; the built-in
+   release's is taken from its Blob once, and kept on the release. */
+async function releaseSha(release) {
+  return (release.sha ??= hex(await crypto.subtle.digest("SHA-256", await release.blob.arrayBuffer())));
 }
 /* After a plane upload the account accepted: up to three reads, stopping at the first that matches. Answers null when the
    bytes are the release's, else the lag to name (R15's list: no success is claimed while it stands). */
 async function readBack(token, acct, slug, release) {
-  const want = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  const want = await releaseSha(release);
   let got = null;
   for (let i = 0; i < 3; i++) {
     got = await scriptHash(token, acct, slug);
@@ -366,10 +420,11 @@ async function readBack(token, acct, slug, release) {
     : `the software your Cloudflare account holds for your group's Civicsmith is not the ${release.version} release's own bytes (read back, it hashes to ${got.slice(0, 16)}…; the release hashes to ${want.slice(0, 16)}…)`;
 }
 
+/* `source` is the module as text, or already a Blob (a repository release, R33: made once, shared by every upload). */
 function uploadForm(meta, source) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
-  fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
+  fd.append("index.mjs", source instanceof Blob ? source : new Blob([source], { type: "application/javascript+module" }), "index.mjs");
   return fd;
 }
 
@@ -522,11 +577,30 @@ const hostOf = (base) => { try { return base ? new URL(base).host : null; } catc
  * different statements, or one not of the form). */
 /* One reader for both statements: the plane's (`bio-plane-limits/1`, R20) and a fleet member's (`bio-member-limits/1`,
    R39). The tag is matched as a whole quoted string, so neither statement is ever read as the other. */
+/* `source` is the module as text, or as bytes (a release's verified download, which is never decoded to text: R33); the
+   statements are found the same way in both. */
+const QUOTES = new Set([34, 39, 96]);                      /* " ' ` */
+const STATEMENT_STOP = new Set([34, 39, 96, 92, 10]);      /* a quote, a backslash, a newline end a statement's text */
+function statementsInBytes(bytes, tag) {
+  const pat = ascii(tag), bodies = new Set();
+  for (let i = find(bytes, pat); i !== -1; i = find(bytes, pat, i + 1)) {
+    const q = i > 0 ? bytes[i - 1] : -1, from = i + pat.length;
+    if (!QUOTES.has(q) || bytes[from] !== 32) continue;
+    let k = from;
+    while (k < bytes.length && !STATEMENT_STOP.has(bytes[k])) k++;
+    if (bytes[k] === q) bodies.add(new TextDecoder().decode(bytes.subarray(from, k)));
+  }
+  return bodies;
+}
 function statedLimits(source, tag) {
-  if (typeof source !== "string") return { ok: false, why: "none" };
-  const bodies = new Set();
-  const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
-  for (const m of source.matchAll(re)) bodies.add(m[2]);
+  const isBytes = source instanceof Uint8Array;
+  if (typeof source !== "string" && !isBytes) return { ok: false, why: "none" };
+  let bodies = new Set();
+  if (isBytes) bodies = statementsInBytes(source, tag);
+  else {
+    const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
+    for (const m of source.matchAll(re)) bodies.add(m[2]);
+  }
   if (bodies.size === 0) return { ok: false, why: "none" };
   if (bodies.size > 1) return { ok: false, why: "unreadable", detail: "it states them " + bodies.size + " different ways" };
   const [body] = bodies;
@@ -629,7 +703,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   };
   return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, release.source) });
+    { method: "PUT", body: uploadForm(meta, release.blob) });
 }
 
 /* The update path. No fork, no CI/CD: the wizard re-uploads the current
@@ -712,7 +786,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
   };
   return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
-    { method: "PUT", body: uploadForm(meta, release.source) });
+    { method: "PUT", body: uploadForm(meta, release.blob) });
 }
 
 
@@ -967,7 +1041,7 @@ async function installFleet(emit, token, acct, slug, release, ctx = {}) {
   }
   /* The pairing: the signed statement names the plane these members were built
      against, and it must be the plane THIS act just installed. */
-  const planeSha = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  const planeSha = await releaseSha(release);
   if (planeSha !== man.sha256) {
     emit.ok("fleet", "The capability workers are signed against a different release of Civicsmith than the one just "
       + "installed (the installer used its built-in copy), so no capability workers were "
@@ -1180,7 +1254,15 @@ async function verifyInstall(base, probe) {
  * — never a silent "confirmed", and never a refusal for lacking a field that release could not have. A plane that SHOULD answer and does not is a lag, not an absence:
  * after uploading a release that carries the fields, a reply without `storeVersion` is a DO still on older code. */
 const BUILD_FIELDS = ["storeVersion", "memberVersions"];
+const WORD_BYTE = (b) => (b >= 48 && b <= 57) || (b >= 65 && b <= 90) || b === 95 || (b >= 97 && b <= 122);
+const hasWord = (bytes, word) => {
+  const pat = ascii(word);
+  for (let i = find(bytes, pat); i !== -1; i = find(bytes, pat, i + 1))
+    if (!(i > 0 && WORD_BYTE(bytes[i - 1])) && !(i + pat.length < bytes.length && WORD_BYTE(bytes[i + pat.length]))) return true;
+  return false;
+};
 export function reportsBuilds(source) {
+  if (source instanceof Uint8Array) return BUILD_FIELDS.every((f) => hasWord(source, f));
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
 
@@ -1673,7 +1755,7 @@ async function runInstall(emit, code, saved) {
   /* D-116: answering is not serving. Once the address answers, each part's OWN build is read back — the record
      store's, and each capability worker's through the plane's binding — and a part that is not on this release is
      named. A release that cannot report those builds says so (UNDETERMINED_BUILDS) rather than claiming them. */
-  const capable = reportsBuilds(release.source);
+  const capable = release.capable;
   /* An install has always taken the selftest as its "answers"; a release that cannot report builds adds nothing to
      read, so the verdict is the selftest's plus the stated undetermined remainder — no new refusal is invented. */
   /* DIST-6: a bindable member whose upload failed is a lag on either branch, never a success over it. */
@@ -1961,7 +2043,7 @@ async function runUpdate(emit0, code, saved) {
   /* D-116: confirmed means EVERY part answers the release — the address, the record store, and each capability
      worker through the plane's binding (verifyServing). The patient tone stays, because a rollout genuinely takes
      minutes; what goes is reporting an update as done while a named part still runs the old build. */
-  const capable = reportsBuilds(release.source);
+  const capable = release.capable;
   let verdict = null;
   if (base) {
     emit.step("verify", UPDATE_WORDS.progressAnswers);

@@ -197,3 +197,22 @@ test("R29, R28: a passage in a project the viewer is not in is withheld whole â€
     assert.deepEqual(ids(w, "passage:*", viewer), [], String(viewer));
   }
 });
+
+test("R79: op=meaningrows with snippet=64 answers a passage row's snippet longer than the same read with none, through the service and through retrievalRoutes; snippet=4 answers a shorter one; no snippet answers R12's default (12 tokens), the same as snippet=12", async () => {
+  const { retrievalRoutes } = await import("../../../src/retrieval/index.mjs");
+  const w = world();
+  const pkt = w.cap("packet.pdf", "packet bytes");
+  w.doc("INFO-PKT", {}, { captures: [pkt] });
+  const words = Array.from({ length: 80 }, (_, i) => `w${i}`).join(" ");
+  unitAs(w, pkt.sha, "INFO-PKT", 0, `${words} hydrostatic ${words}`);
+  const snip = (extra) => w.retrieval.meaningRows({ q: "passage:hydrostatic", rows: "passage", viewer: V("vera"), ...extra }).rows[0].snippet;
+  const none = snip({}), long = snip({ snippetChars: 64 }), short = snip({ snippetChars: 4 }), twelve = snip({ snippetChars: 12 });
+  assert.match(long, /\[hydrostatic\]/);
+  assert.ok(long.length > none.length, "snippet=64 is longer than the default");
+  assert.ok(short.length < none.length, "snippet=4 is shorter than the default");
+  assert.equal(none, twelve, "no snippet is R12's default of 12");
+  const route = (params) => retrievalRoutes(w.retrieval, new URL(`http://x/meaningrows?${new URLSearchParams({
+    q: "passage:hydrostatic", rows: "passage", viewer: V("vera"), ...params })}`), null).meaningrows().rows[0].snippet;
+  assert.equal(route({ snippet: "64" }), long, "the op forwards snippet as the service takes it");
+  assert.equal(route({}), none, "the op with no snippet answers the default");
+});

@@ -196,7 +196,35 @@ test('R30 R10 one egress handler per egress host passes the request through unch
     assert.equal(h.lines.filter((l) => l.event === 'runner.egress').at(-1).path_template, '/v1/messages');
     const lines = h.lines.length;
     assert.equal((await proxy.fetch(new Request('https://example.com/'))).status, 520);
-    assert.equal(h.lines.length, lines, 'a refused host is not logged here');
+    assert.deepEqual(h.lines.slice(lines).map((l) => l.event), ['runner.egress.refused'], 'a refused host writes R34\'s line and no runner.egress line');
     assert.equal(seen.length, n + 1);
+  } finally { globalThis.fetch = fetch0; await h.stop(); }
+});
+
+test('R34 a request to a host outside egress is answered 520 and writes exactly one runner.egress.refused line, never its query, headers or body', async () => {
+  const h = await hosted();
+  const fetch0 = globalThis.fetch;
+  const SENT = 'sk-ant-oat01-REFUSED-SENTINEL-9a2e';
+  try {
+    const seen = [];
+    globalThis.fetch = async (req) => { seen.push(req); return new Response('{}', { status: 200 }); };
+    const proxy = new h.mod.ContainerProxy({ props: { className: 'AgentRunner', containerId: ID, allowedHosts: readManifest().egress, enableInternet: false, interceptAll: true } }, {});
+    const before = h.lines.length;
+    const res = await proxy.fetch(new Request(`https://Telemetry.Example.com/v1/${'b'.repeat(30)}/events?k=${SENT}`, {
+      method: 'POST', headers: { authorization: `Bearer ${SENT}` }, body: JSON.stringify({ k: SENT }) }));
+    assert.equal(res.status, 520, 'refused exactly as before');
+    assert.equal(await res.text(), 'Origin is disallowed');
+    assert.equal(seen.length, 0, 'nothing forwarded');
+    const added = h.lines.slice(before);
+    assert.deepEqual(added, [{ event: 'runner.egress.refused', instance_ref: ID.slice(0, 12), host: 'telemetry.example.com',
+      method: 'POST', path_template: '/v1/:id/events', status: 520 }], 'exactly that line');
+    assert.ok(!JSON.stringify(h.lines).includes(SENT), 'no query, header or body is logged');
+    // control: every allowed host writes runner.egress (R30) and no refused line
+    for (const host of readManifest().egress) {
+      const n = h.lines.length;
+      const ok = await proxy.fetch(new Request(`https://${host}/x`));
+      assert.equal(ok.status, 200, host);
+      assert.deepEqual(h.lines.slice(n).map((l) => l.event), ['runner.egress'], host);
+    }
   } finally { globalThis.fetch = fetch0; await h.stop(); }
 });

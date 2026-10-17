@@ -23,6 +23,8 @@ export const TOKEN_MAX = 2000;
 // The terminal the binary draws in (R27): wide enough that neither the address nor the token is wrapped.
 export const COLUMNS = 4000;
 export const ROWS = 200;
+// R18 (K3450): the pause between the code and its line end, so the terminal UI takes the code as a paste and the line end as Enter.
+export const LINE_END_DELAY_MS = 250;
 // Anthropic's sign-in hosts (R17): the address is answered only on one of these, or a subdomain of one.
 export const SIGNIN_HOSTS = ['claude.ai', 'claude.com', 'anthropic.com'];
 // The binary's own command, with no option: none selects or forbids a sign-in method (R22, AT-22).
@@ -103,7 +105,7 @@ const refuse = (status, code, detail, log = {}) => reply(status, { ok: false, co
 // One instance's sign-in. `root` is where each attempt's own directory is made and removed (the binary's home and
 // config directory while it runs); nothing of it outlasts the attempt.
 export function signinOf({ root = tmpdir(), binary = claudeBinary(), spawn = nodeSpawn, script = 'script', waits = {} } = {}) {
-  const wait = { address: ADDRESS_WAIT_MS, code: CODE_WAIT_MS, outcome: OUTCOME_WAIT_MS, ...waits };
+  const wait = { address: ADDRESS_WAIT_MS, code: CODE_WAIT_MS, outcome: OUTCOME_WAIT_MS, lineEnd: LINE_END_DELAY_MS, ...waits };
   let waiting = null;                      // {attempt, member, proc, out, dir, started, typed, ended, exited}
 
   const end = (w = waiting) => {
@@ -192,8 +194,11 @@ export function signinOf({ root = tmpdir(), binary = claudeBinary(), spawn = nod
     w.typed = true;
     clearTimeout(w.timer);
     const typedAt = Date.now();
-    // A terminal UI takes its Enter as a carriage return (START, K3068): the code, exactly as given, then one CR.
-    w.proc.stdin.write(`${given}\r`);
+    // A terminal UI takes its Enter as a carriage return (START, K3068). The code goes exactly as given; its CR goes as its
+    // own write after a pause, because a long chunk arriving at once is taken as a paste and its CR is not Enter (K3450).
+    w.proc.stdin.write(given);
+    await new Promise((resolve) => setTimeout(resolve, wait.lineEnd));
+    if (!w.ended) w.proc.stdin.write('\r');
     const outcome = await w.until(() => {
       const text = screen(w.out), got = tokenIn(w.out);
       if (got && (SAYS.tokenEnd.test(text) || w.exited !== null)) return got;

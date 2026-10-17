@@ -1,0 +1,87 @@
+# Plan R085
+
+**Status** · OPEN · BOB #197 · session_012CuwSMxDw6cByTgis9xsci · depth 1
+
+**Jobs** · installer: INSTALLER #13 session_014NJFRDyaFqVZ3Rve2MDf5G; observation-log: OBSERVATION-LOG #13 session_01SJrWSUDWk4ygPEnF4edtGH; ai-runs: AI-RUNS #24 session_014E6HztL3Ehb1nLBpG9td7t; machinery-producers: MACHINERY-PRODUCERS #4 session_01WdZWF2N7iamL2RKVC1vFPM; control-plane: CONTROL-PLANE #36 session_01WToWb3ATJirHryNuLb8h8A; retrieval: RETRIEVAL #18 session_016iwYPX2R9kqxoX6SNy7Nsc; query-language: QUERY-LANGUAGE #9 session_01CA3rwpqVLSJhjtGHPcvhZb; agent-model: AGENT-MODEL #11 session_01GcrjrR5bc9rU73FFW7djXc; capture: CAPTURE #34 session_01QG6bQ8xzeWQzwTQkGBvb2w; screens-intake: SCREENS-INTAKE #6 session_015Mf3ce3jZhcJKnA4udwzC2; wizard-scripts: WIZARD-SCRIPTS #11 session_01Hmwn13nBZEaJhdPFdzbyVK; plane: PLANE #39 session_012UeeSfNFsJWJBvbPHcGVSs; screens-daily: SCREENS-DAILY #6 session_012EfgYKhaee27SGrH6j3qUB; skills: SKILLS #1 session_01G9udrj9rd72VGwvKq7aJUu; agent-harness: AGENT-HARNESS #9 session_01WowT7fuUBypvb1g4kD9noF; agent-worker: AGENT-WORKER #30 session_01J4yAYV8SoXMA6MqDDAMcYQ; screens-inquiry: SCREENS-INQUIRY #9 session_01ExZBMDC8vZvzf4gpdgPENS; run-rules: RUN-RULES #1 session_01H9xmUp8jSyFLmjnVeXCqNU; agent-runner: AGENT-RUNNER #11 session_01NnHjFKMJsmWxn14TZTS5uy
+
+**Adopted** · K3441 (Bob's "A" to K3440): a one-job release fix on the 0.85.0 cut, outside the tranche order (K1548: an out-of-layer job, Bob's approval this once, no precedent). Branch `tranche/R085` from `dist/cut-0.85.0` @ 1053faa726; its job merges into `tranche/R085`, which is then merged into `dist/cut-0.85.0` (the cut reaches `main` through T50, K2273). Legacy census: none touched (no legacy module has an entry; each stays as `next.md` and T50's draft say).
+
+## L11
+
+- **R085-1 · installer** · (N1149, K3440) R33 as amended: the read-back hashes the script's part as downloaded bytes and the install and update keep within a Worker's 128 MB at the release's real size · req: R33 amended · claude-sonnet-5-5.
+
+- **R085-2 · agent-runner** · (N1155, K3450) R18 as amended: the code, then its line end as a separate keystroke · req: R18 amended · claude-sonnet-5-5. Out-of-layer, covered by Bob's approval of fixes on the cut until the sign-in works (K3450).
+
+## Fix round 2 (K3477; WALK-085 F1, F2; N1161's blockers), out of layer on the cut
+
+All six run at once (out-of-layer on the cut, K1548; Bob's standing permission K3466). Merge order: capture, then control-plane and screens-intake; ai-runs before agent-worker where both are complete; screens-inquiry any time.
+
+- **R085-3 · capture** · R92 (an upload's declared text type profiles it from text) · claude-sonnet-5-5.
+- **R085-4 · control-plane** · R100 (the upload's type passed on; an upload read as an acquire is) · claude-sonnet-5-5.
+- **R085-5 · screens-intake** · R27 (the upload sends `file.type`) · claude-haiku-5-5.
+- **R085-6 · screens-inquiry** · R45 (the question's run: drawn at once, seen to move, its end stated) · claude-sonnet-5-5.
+- **R085-7 · ai-runs** · R82 (dispatch waits only for acceptance), R83 (10-minute lease), R84 (segment ends logged; a stopped segment continued; an error ends the run) · claude-sonnet-5-5.
+- **R085-8 · agent-worker** · R91 (a segment outlives its caller and reports its end), R92 (tick entries and reports reach the log; the `REPORT_UNLOCATED` cause) · default model (a durable segment driver and an unknown cause).
+
+## Fix round 3 (K3486, K3489; the run's length and Find), out of layer on the cut
+
+All four run at once (out of layer on the cut, K1548; Bob's standing permission K3466, as round 2). Merge order: agent-harness and agent-model before agent-worker (R94 uses agent-model R18 and agent-harness R11); screens-daily any time.
+
+- **R085-9 · agent-worker** · R93 (`segment_end` sent after the segment is marked not running), R94 (a refused report handed back once through `checkFinal`), R95 (sub-sessions pass `role: "subsession"`) · claude-sonnet-5-5.
+- **R085-10 · agent-model** · R17 (the `report` tool states its bounds; `condition` an enum of the contract's conditions), R18 (`converse`'s `checkFinal`: one hand-back), R19 (Bob's K3490: Sonnet 5.5 sub-sessions at `low`, Opus 5.5 elsewhere at `medium`) · claude-sonnet-5-5.
+- **R085-11 · agent-harness** · R11 (the contract's `returns.conditions`) · claude-haiku-5-5.
+- **R085-12 · screens-daily** · R35 (Find's words also match held documents' passages) · claude-haiku-5-5.
+- **R085-13 · agent-runner** · R32 (a request's `effort` reaches the SDK's options; K3490) · claude-haiku-5-5. Its image is rebuilt by `agent-runner-image.yml` and reaches biosmoke8 at the round's deploy.
+
+## Fix round 4 (K3501; the check's sub-sessions blind to the question's document), out of layer on the cut
+
+All seven run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2 and 3). The diagnosis is `build/plan/diag-085-r4.md`. Merge order: observation-log, ai-runs, agent-harness and agent-model before agent-worker (R97 uses agent-harness R12 and ai-runs R85's payload, R98 uses agent-model R21); machinery-producers and screens-inquiry any time. DEC-283 (Settings › The assistant) is not in this round: its words exist only in the design's `words.json`, whose merge onto the cut would also bring T50's rewording (K3472); it stays first among T50's screens jobs (N1158).
+
+- **R085-14 · observation-log** · R38 (a `text` capture has a unit arm; C5) · claude-haiku-5-5.
+- **R085-15 · ai-runs** · R85 (the search half carries the context's subjects; C3), R86 (an inquiry in a project takes the project's bar; DEC-17) · claude-sonnet-5-5.
+- **R085-16 · agent-harness** · R12 (the contract's `subjects` and `arms`) · claude-haiku-5-5.
+- **R085-17 · agent-model** · R20 (the `meaningrows` tool: arms, `passage:`, `id:`, `ids`), R21 (`converse` answers its model and effort) · claude-sonnet-5-5.
+- **R085-18 · agent-worker** · R96 (forward `ids`), R97 (contracts carry subjects, targets and arms), R98 (each usage entry's real model), R99 (wallclock measured), R100 (a cited address with an extent resolves to its record) · claude-sonnet-5-5.
+- **R085-19 · machinery-producers** · R14 (no "capture finished" item for a record holding no capture) · claude-haiku-5-5.
+- **R085-20 · screens-inquiry** · R46 (the founder drawn by handle) · claude-haiku-5-5.
+
+## Fix round 5 (K3510; passage reads with bare words, and the run shown on the question), out of layer on the cut
+
+All five run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2–4). The diagnosis is `build/plan/diag-085-r5.md`. Merge order: query-language and agent-harness before agent-worker (its bundle takes both); screens-inquiry and control-plane any time. Not in the round, each with its hard reason: the dock's pass, level and cost (words missing, K3366; the cost is DEC-296's, T50, N1167); a `level-empty` proposal drawn by key (its sentence is missing from `words.json`); a backfill of pre-R38 captures' index state (only biosmoke8's trial capture is affected; the walk uses a fresh capture); `airunopen`'s project-gate wording (a permitting ground, not a bug); `/app/ai-session/<run>` (a legacy-interface registry entry, no requirement asks for it).
+
+- **R085-21 · query-language** · R31 (bare words under `rows=passage` read as passage words) · claude-sonnet-5-5.
+- **R085-22 · agent-worker** · R101 (a dedup drop is logged), R102 (`¶` ends a cited record id) · claude-sonnet-5-5.
+- **R085-23 · agent-harness** · R13 (an empty-level description names "this question") · claude-haiku-5-5.
+- **R085-24 · screens-inquiry** · R47 (the question page draws its run beside waiting proposals), R48 (the dock draws the latest ended run) · claude-sonnet-5-5.
+- **R085-25 · control-plane** · R101 (`/favicon.ico` answers 204) · claude-haiku-5-5.
+
+## Fix round 6 (K3528; walk-085-r5 D1–D7, D9, (e); diag-085-r6, diag-085-slow), out of layer on the cut
+
+All eight run at once (out of layer on the cut, K1548 read as covered by Bob's K3466, as rounds 2–5). The diagnoses are `build/plan/diag-085-r6.md` and `build/plan/diag-085-slow.md` (both on `tranche/T49`). Merge order: retrieval, query-language, agent-model and agent-harness before agent-worker (its bundle takes them); capture, screens-intake and wizard-scripts any time. Not in the round, each with its hard reason:
+
+- A whole-unit "read passage" tool for sub-sessions: measured first, i.e. whether 64-token snippets suffice at the next walk; if they do not, it goes to `next.md` as T50.
+- R106, the four level sub-sessions run concurrently: held for the study of the assistant's connection (K3529), since one subscription's limits on concurrent conversations are not yet known.
+- D8 (held text needs a vouch before reading): no cause found in code; it needs a screen walk.
+- Workers Observability read for the Cloudflare credential: not needed now.
+
+- **R085-26 · retrieval** · R79 (`op=meaningrows` passes `snippet` through; D3) · claude-sonnet-5-5.
+- **R085-27 · query-language** · R32 (bare words under `rows=leg` read as R31 reads them; D4) · claude-sonnet-5-5.
+- **R085-28 · agent-model** · R22 (the sub-session passage tool asks for 64-token snippets and says so; D3; `model.mjs` is agent-model's, `modules.json`) · claude-sonnet-5-5.
+- **R085-29 · agent-harness** · R14 (no free-text summary or raw record id in member-facing proposal text; item (e)), R15 (a check stops after a pass that adds nothing new; K3529) · claude-sonnet-5-5.
+- **R085-30 · agent-worker** · R103 (`meaningRead` passes the snippet; D3), R104 (an empty-level candidate kept only when the compose-time read confirms it; D5), R105 (a run's write is logged, so a later drop names it; D6) · claude-sonnet-5-5.
+- **R085-31 · capture** · R93 (an untyped upload with a text extension is read as text; D2) · claude-haiku-5-5.
+- **R085-32 · screens-intake** · R28 (the id slug is cut, then trimmed of a trailing hyphen; D1) · claude-haiku-5-5.
+- **R085-33 · wizard-scripts** · R40 (group-setup scripts offered only to an administrator; D9) · claude-sonnet-5-5.
+- **R085-34 · plane** · R57 (the registration hands `wizard-scripts` the administrator's acts and screens, so R40 holds live; found by WIZARD-SCRIPTS #11 J1; new `uses` edge `interface-shell`, earlier in the order) · claude-haiku-5-5.
+- **R085-35 · agent-runner** · R33 (the container at instance type `standard-1`; study-assistant-link T1–T2) · claude-haiku-5-5.
+- **R085-36 · screens-daily** · R24 (the "against" choice sends `cuts_against`); JOURNEYS J-2 (K3550; R36, R37 moved to T50 by Bob's K3551) · claude-haiku-5-5.
+- **R085-37 · skills** · R50 (wizard scripts in the pack carry no use counts or approvals, so the version holds through a run; S4 N1; K3557) · claude-sonnet-5-5.
+- **R085-38 · agent-harness** · R16 (no `completed` close when a composed candidate was never written; S4 N4; K3557) · claude-sonnet-5-5.
+- **R085-39 · agent-worker** · R107 (a refused segment writes what it composed or closes visibly), R108 (every dedup drop logged); S4 N1, N4; K3557; rebuilds its own bundle last · claude-sonnet-5-5.
+- **R085-40 · screens-inquiry** · R49 (citing from a document preselects the document's own question, never the group's first; JOURNEYS #2 B-7; K3560) · claude-haiku-5-5.
+- **R085-41 · run-rules** · R34 (`RUN_ENDINGS` gains `nothing-written`, the ending agent-harness R16 names; K3561) · claude-haiku-5-5.
+- **R085-42 · screens-daily** · R38 (Find in from a document scopes by its fingerprint), R39 (the chosen question stays and each result draws its act); JOURNEYS #2 B-25, B-26; K3562 · claude-haiku-5-5 (SCREENS-DAILY #6, re-opened).
+
+## Fix round 8 (K3580; ASSISTANT-HOSTING S8 F1), out of layer on the cut
+
+- **R085-43 · agent-runner** · R34 (each refused egress request logged by host, Worker side only; the container image is unchanged) · claude-sonnet-5-5.
