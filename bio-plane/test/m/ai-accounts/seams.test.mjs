@@ -227,6 +227,46 @@ test("R26: a listener that throws changes nothing of the act or of another liste
   assert.deepEqual(w.a.onAccountCleared("third", () => {}), { ok: true, module: "third" });
 });
 
+test("R26 (T50; N1060, K3218, K3224): a refused held sign-in tells its listeners once, inside the act, with why \"refused\" and no actor, and whether a reference still serves her; a refusal for a member with none held tells no one", async () => {
+  const w = await world().group("ann", "bob", "cat");
+  const heard = [];
+  w.a.onAccountCleared("credentials", (n) => heard.push({ ...n, inside: w.row(
+    `SELECT COUNT(*) AS n FROM subscription_connections WHERE member_id=? AND sealed IS NOT NULL`, n.member).n }));
+  /* her sign-in alone, then with a reference beside it */
+  await w.signin("ann");
+  assert.deepEqual(w.a.subscriptionTokenRefused({ member: "ann" }), { ok: true, dropped: true });
+  assert.deepEqual(heard, [{ member: "ann", account: "signin", by: null, why: "refused", reference_held: false, inside: 0 }]);
+  await w.signin("bob");
+  await w.a.accountReferenceSet({ member: "bob", kind: "apikey", secret: SECRET, by: "member:bob" });
+  w.a.subscriptionTokenRefused({ member: "bob" });
+  assert.deepEqual(heard[1], { member: "bob", account: "signin", by: null, why: "refused", reference_held: true, inside: 0 });
+  assert.equal(heard.length, 2);
+  /* control: nothing held, a sign-in already refused, an unknown member and a member with only a reference tell no one,
+     and record nothing */
+  const before = w.snapshot();
+  for (const member of ["cat", "ann", "bob", "nobody", null]) assert.deepEqual(w.a.subscriptionTokenRefused({ member }), { ok: true, dropped: false }, String(member));
+  assert.equal(w.snapshot(), before);
+  assert.equal(heard.length, 2);
+  /* her projects' sign-in accounts are cleared in the same act, and one told once */
+  w.project("PROJ-2026-0001-a", "cat");
+  await w.signin("cat");
+  assert.equal(w.a.projectSigninSet({ project: "PROJ-2026-0001-a", by: "member:cat" }).ok, true);
+  w.a.subscriptionTokenRefused({ member: "cat" });
+  assert.equal(heard.filter((n) => n.member === "cat").length, 1);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM project_accounts WHERE project_id='PROJ-2026-0001-a'`).n, 0);
+});
+
+test("R26 (T50): a listener that throws on a refusal changes nothing of the act or of another listener's notice", async () => {
+  const w = await world().group("ann");
+  const heard = [];
+  w.a.onAccountCleared("first", () => { throw new Error("listener fault"); });
+  w.a.onAccountCleared("second", (n) => heard.push(n.why));
+  await w.signin("ann");
+  assert.deepEqual(w.a.subscriptionTokenRefused({ member: "ann" }), { ok: true, dropped: true });
+  assert.deepEqual(heard, ["refused"]);
+  assert.equal(w.row(`SELECT refused_at IS NOT NULL AS r, sealed FROM subscription_connections WHERE member_id='ann'`).sealed, null);
+});
+
 /* ===== R27: its own revocation listener ===== */
 
 test("R27: a revoked member's sign-in, its token and her projects' sign-in accounts are cleared in the revoking act, each a change (control: another member's stand)", async () => {
@@ -327,14 +367,14 @@ test("R28: migrate keeps a running store's rows: the tables, names and columns u
 
 /* ===== R30: the words ===== */
 
-test("R30: every member-facing string of its rows calls the installation \"your group's Civicsmith\", never copy, instance, plane or server", () => {
+test("R30 (T50; K3472, DEC-259): every member-facing string of its rows calls the installation \"your team's Civicsmith\" as words.json says it, never copy, instance, plane or server, and never \"group\"", () => {
   for (const [code, r] of Object.entries(AI_ACCOUNT_CHECKS)) {
-    assert.doesNotMatch(r.translation, /\b(copy|instance|plane|server)\b/i, code);
-    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll("your group's Civicsmith", "")
-      .replaceAll("Your group's Civicsmith", ""), /Civicsmith/, code);
+    assert.doesNotMatch(r.translation, /\b(copy|instance|plane|server|group)\b/i, code);
+    if (/Civicsmith/.test(r.translation)) assert.doesNotMatch(r.translation.replaceAll("your team's Civicsmith", "")
+      .replaceAll("Your team's Civicsmith", ""), /Civicsmith/, code);
   }
-  for (const [k, v] of Object.entries(AI_WORDS)) assert.doesNotMatch(v, /\b(copy|instance|plane|server)\b/i, k);
-  assert.match(AI_ACCOUNT_CHECKS.ACCOUNT_SEAL_UNAVAILABLE.translation, /^Your group's Civicsmith /);
+  for (const [k, v] of Object.entries(AI_WORDS)) assert.doesNotMatch(v, /\b(copy|instance|plane|server|group)\b/i, k);
+  assert.match(AI_ACCOUNT_CHECKS.ACCOUNT_SEAL_UNAVAILABLE.translation, /^Your team's Civicsmith /);
 });
 
 test("R30: the refusals that name the installation in their detail say \"your group's Civicsmith\" (the seal, the kind)", async () => {

@@ -1,6 +1,6 @@
 # BOB to project-roster (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L2 merge order: membership, project-roster, ai-accounts, credentials, promotion last (the stamp). All five run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · ANSWER · re J1
+
+K3624: your recommendation taken. membership R152 `memberStatusSince(memberId)` is added to MEMBERSHIP #40's running job; R33 amended (merge the tranche branch): `since` is the latest of `memberStatusSince` over the owners, `null` when any is `null`; no `members.updated` stand-in. Build against R152's text; I send a CHANGE when membership is merged. `modules.json` now also gives you `setup-words` in `uses`.
+
+## B3 · CHANGE · re J2
+
+Re J2 (1): K3629 adds project-roster R34 on tranche/T50 @ 4bc2207af1: projectlist's rows carry participation, the viewer's own state (joined, leaving, invited; null for a non-participant). Merge tranche/T50 into your branch, build R34 with its test and control, run your tests and users' (screens-daily reads it later), and record COMPLETE again. (2) words: the two keys go to the design lane (HANDOFF B267); keep C-147.9 translation null until then. (3) the plane roster ops-map and op-declarations t45 reds are accepted by name until L11 declares the three ops (K3629). (4) bundle and program.mjs: regenerated at layer close. Membership R152 is not merged yet; I will CHANGE you when it is.

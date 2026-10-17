@@ -204,7 +204,7 @@ test("R8 (was credentials R36) groupKeyNotice answers {due, text} until the memb
   const n = w.c.groupKeyNotice({ member: "ann" });
   assert.deepEqual(Object.keys(n).sort(), ["due", "ok", "text"]);
   assert.deepEqual([n.ok, n.due, n.text], [true, true, AiAccounts.GROUP_KEY_NOTICE_TEXT]);
-  assert.match(n.text, /questions, and the material read to answer them, go to Anthropic under the group's API account/);
+  assert.match(n.text, /questions, and the material read to answer them, go to Anthropic under the team's API account/);
   const before = w.snapshot();
   assert.deepEqual(w.c.groupKeyNotice({ member: "member:ann" }), n);
   for (const [by, code] of [[null, "MACHINE_CANNOT_HOLD_ACCOUNT"], ["class:member", "MACHINE_CANNOT_HOLD_ACCOUNT"],
