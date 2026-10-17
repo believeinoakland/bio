@@ -108,7 +108,10 @@ test("R17 memberList: every stamp, expertise as R24; cover only under the admini
   }
   for (const administer of [true, "1"]) {
     const rows = w.m.memberList({ administer }).members;
-    assert.deepEqual(rows.map((r) => r.cover), ["cover of ann", "c", "cover of second"]);
+    /* R147: the founder's row comes first and, having no cover, carries none; the members' covers follow in id order */
+    assert.equal(rows[0].member_id, "admin");
+    assert.ok(!("cover" in rows[0]), "the founder's row carries no cover");
+    assert.deepEqual(rows.slice(1).map((r) => r.cover), ["cover of ann", "c", "cover of second"]);
   }
   const ann = w.m.memberList({}).members.find((r) => r.member_id === "ann");
   assert.deepEqual([ann.handle, ann.role, ann.status, ann.status_by, ann.invited_by, ann.capabilities],
@@ -116,8 +119,8 @@ test("R17 memberList: every stamp, expertise as R24; cover only under the admini
   assert.deepEqual(ann.expertise, w.m.expertiseList({ memberId: "ann" }).expertise);
   const old = w.m.memberList({}).members.find((r) => r.member_id === "old");
   assert.deepEqual([old.status_by, old.invited_by, old.handle], ["not recorded", "not recorded", null]);
-  assert.equal(w.ops("administer=1").memberlist().members[0].cover, "cover of ann");
-  assert.ok(!("cover" in w.ops("").memberlist().members[0]));
+  assert.equal(w.ops("administer=1").memberlist().members.find((r) => r.member_id === "ann").cover, "cover of ann");
+  assert.ok(w.ops("").memberlist().members.every((r) => !("cover" in r)));
 });
 
 test("R18 each row of an administrator's roster lists that member's projects the administrator sees at FULL, and of a hidden project it is not in only the owners (D54)", async () => {

@@ -41,10 +41,20 @@ import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLE
          MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         CASE_AUTHORITY_CHECKS, HANDLE_WORDS, REFUSAL_WORDS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS } from "./checks.mjs";
+import { keyed, rowKey, SENTENCE_KEYS } from "./words.mjs";
+
+/* R151: every key this module reads, each held by `setup-words` (`hasWord`): its rows' (`refusal.<CODE>`, or the key
+   `words.mjs` names) and the sentences it answers beside them. */
+export const WORD_KEYS = Object.freeze([...new Set([
+  ...[MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
+      CASE_AUTHORITY_CHECKS].flatMap((table) => Object.keys(table).map(rowKey)),
+  ...SENTENCE_KEYS])]);
 import { recordOf } from "../record-core/index.mjs";
+import { MODULE_IDS } from "./order.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
    comment, so it changes nothing about what runs; the runtime test asserts each gated statement contains it. */
@@ -70,8 +80,11 @@ export const GATE_MARK = "/*viewer-gate*/";
    participants and machine credentials alone (fail closed). At a hidden project's EXISTENCE an administrator learns
    its id, name and owners and nothing else (R44, R77). */
 const OWN_PROJECT = `(CASE WHEN b.object_type = 'project' THEN b.bundle_id ELSE b.project END)`;
-export function viewerPredicate(viewer) {
+export function viewerPredicate(viewer, reach = null) {
   const v = typeof viewer === "string" ? viewer : "";
+  /* R149: a viewer that carries a project (`projectViewer`) is the member's own viewer narrowed to the project's reach. */
+  const carried = carriedProject(v);
+  if (carried !== null) return projectGate(v, carried, reach);
   const CLS = MACHINE_CLASS_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const m = new RegExp(`^(${CLS}(admin|member|probe|daemon|ai)|member:([A-Za-z0-9._:-]{1,128})|admin)$`).exec(v);
   if (!m) return { sql: `${GATE_MARK} 0=1`, args: [], viewer: null, scope: "DENY", member: null };
@@ -98,6 +111,50 @@ export function viewerPredicate(viewer) {
   };
 }
 
+/* R149 (T50; N1186, K3557). A VIEWER THAT CARRIES A PROJECT. `projectViewer(viewer, project)` spells it `<viewer>@<project>`
+   for a viewer that names a member (`member:<id>`, or the founder's bare `admin`): a member id is `a-z0-9-` (R12) and
+   `viewerPredicate`'s pattern admits no `@` in one, so the first `@` splits the two and the old reading of `member:<id>`
+   is intact. A machine credential, a viewer R43 admits to nothing, an absent or empty project and a viewer that already
+   carries one are answered unchanged: a viewer with no project is exactly as R43 states, and a carried project is never
+   re-scoped. Writes nothing and never throws. */
+const CARRIED = /^(member:[A-Za-z0-9._:-]{1,128}|admin)@([\s\S]+)$/;
+export function projectViewer(viewer, project) {
+  if (typeof viewer !== "string" || typeof project !== "string" || !project) return viewer;
+  if (!/^(member:[A-Za-z0-9._:-]{1,128}|admin)$/.test(viewer)) return viewer;
+  return `${viewer}@${project}`;
+}
+
+/* The project a viewer carries, or null. */
+function carriedProject(viewer) {
+  const m = typeof viewer === "string" ? CARRIED.exec(viewer) : null;
+  return m ? m[2] : null;
+}
+
+/* The viewer without the project it carries: who is asking, as distinct from what the project reaches. */
+function baseViewer(viewer) {
+  const m = typeof viewer === "string" ? CARRIED.exec(viewer) : null;
+  return m ? m[1] : viewer;
+}
+
+/* R149, R150: the gate of a viewer carrying `project`: R43's gate for the member's own viewer, and the bundle in the
+   project's reach: the project's own bundle, every bundle that belongs to it (`record-core` R34's `project`), and the
+   `reach` ids the registered readers add (the instance's `viewerGate` reads them, R150). The ids travel as one JSON array,
+   one bound parameter however many, so the statement stays under the host's bound-parameter limit. A bundle outside the
+   reach is not admitted though the member sees it, and one the member's own gate refuses is not admitted though it is in
+   the reach: the reach narrows, never widens. */
+function projectGate(v, project, reach) {
+  const base = viewerPredicate(baseViewer(v));
+  if (base.scope === "DENY" || base.scope === "member") return base;
+  const ids = Array.isArray(reach) ? reach.filter((id) => typeof id === "string" && id) : [];
+  return {
+    member: base.member,
+    sql: `${GATE_MARK} (${base.sql.replace(GATE_MARK, "")}) AND (b.bundle_id = ? OR b.project = ?
+            OR b.bundle_id IN (SELECT value FROM json_each(?)))`,
+    args: [...base.args, project, project, JSON.stringify(ids)],
+    viewer: v, scope: "participant", project,
+  };
+}
+
 /* R88 (N352, K477). THE COMPLEMENT OF R43's RULE, spelled once: the bundles a viewer may NOT see, as a set to subtract
    (D-464, D-486). `null` when R43 lets the viewer see every bundle (its machine arm, scope `member`; since D54 no longer
    the founder's viewer, which is withheld the hidden projects it is not in), so there is nothing to subtract;
@@ -108,8 +165,8 @@ export function viewerPredicate(viewer) {
    `viewerPredicate` cannot disagree about who is hidden. A caller subtracts with `<key> NOT IN ${sql}` and binds `args`.
    What an absent viewer means stays the caller's: asked, it is R43's refusal and hides everything; an internal
    caller reads whole by not asking. Writes nothing and never throws. */
-export function hiddenBundles(viewer) {
-  const gate = viewerPredicate(viewer);
+export function hiddenBundles(viewer, reach = null) {
+  const gate = viewerPredicate(viewer, reach);
   if (gate.scope === "member") return null;
   return { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`,
            args: [...gate.args] };
@@ -165,7 +222,7 @@ export function notAnAdmin(by, act, extra = null) {
   return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
            by: by ?? null, ...Object.fromEntries(own),
            ...(remedy ? { remedy, message: `${row.translation} ${remedy}` } : {}),
-           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and your group's Civicsmith `
+           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and your team's Civicsmith `
                  + "takes who is asking from the signed-in session rather than from the caller. This caller is not "
                  + "one of the active administrators. Nothing was changed." };
   /* END DEC-49 REGION is-custodial-admin */
@@ -200,7 +257,7 @@ export function notAParticipant(projectId, by, extra = null) {
    instance-setup and control-plane in their own jobs). `member` is the id as asked (null when none); the detail is one
    fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never replaces one of
    them. Writes nothing and never throws. */
-const NO_SUCH_MEMBER_DETAIL = "no member of your group answers to that id here. Nothing was changed.";
+const NO_SUCH_MEMBER_DETAIL = "no member of your team answers to that id here. Nothing was changed.";
 const NO_SUCH_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "member", "detail"]);
 export function noSuchMember(memberId, extra = null) {
   let own = [];
@@ -248,67 +305,24 @@ export function notTheOwner(by, projectId, extra = null) {
   /* END DEC-49 REGION is-not-the-owner */
 }
 
-/* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
-   Product code cannot read `build/` at run time, so it is held here, the one list every module orders its listeners by
-   (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
-   the file, so a change there fails the suite until the list follows. T33-19a (K1438, K1504): re-pinned to plan T33's
-   Rules (2), its new modules in their places, `local-facts` and `standards` in layer 5 and `observation-log` after
-   `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
-   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14,
-   T36-6 (N697, N723; K1864, K1961, K2008): every module the file names is held, whether or not it registers one.
-   T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1, as T37's opening placed it. T38-4 (N783; K657,
-   K1185, K2270): `project-roster` in layer 2, directly after `membership` and before `credentials`. T39-M (N806, N807;
-   K657, K2333, K2343): `doc-clean` after `image-cover` in layer 1, `setup-words` before `instance-setup` in layer 11.
-   T40-M (N812 B10; K657, K2373, K2389): `ai-use` after `run-rules` in layer 6, before `ai-runs`. T41-3 (N820, N823;
-   K657, K2431): `steps` after `hypotheses`, `reading-guides` after `capture-requests` and `question-explorer` after
-   `skills` in layer 6, `investigation` after `intent` in layer 7, `publish-schedule` after `publication` in layer 8.
-   T42-3 (N826, N839; K657, K2607, K2608): `doorbell` after `capture` in layer 3, `case-account` after
-   `case-disclosures` and before `case-authoring` in layer 8. T45-2 (K2781 (1), K2784, K657): `case-check` after `review`
-   in layer 8, `action-holds` after `actions`, `action-replies` after `action-clocks` and `plan-work` after `action-plans`
-   in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). T46-4 (K2914, K657): `interface-assets`,
-   `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily` and `screens-inquiry` after `store-door` and
-   before `control-plane` in layer 11. T47-7 (K657, K3027, N991): `case-inputs` after `case-account` in layer 8,
-   `action-records` after `action-grammar` in layer 9, `screens-wizards` after `interface-shell`, and
-   `screens-investigate`, `screens-publish`, `screens-action` after `screens-inquiry` and before `control-plane`, in
-   layer 11. T47-82 (R140; K3064, K3069): `screens-entry` directly after `interface-shell`, before `screens-wizards`, in
-   layer 11. T48-9 (K657, K3100, K3190, K3196; N1014, N1055): `ai-accounts` after `project-roster` and before `credentials`
-   in layer 2, `signin-door` after `store-door` in layer 11 and `journey-check` last; `setup-page` gone, as its row left the
-   file; `legacy-ui` kept. T49-1 (R145; K657, K3328): `op-capabilities` directly before `op-declarations` and `site`
-   directly after `installer`, both in layer 11, each tolerated by name as not yet built until its job merges. */
-export const MODULE_ORDER = Object.freeze([
-  /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
-          "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
-          "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
-          "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
-          "pdf-pixels", "image-cover", "doc-clean", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
-  /* 2 */ "record-core", "membership", "project-roster", "ai-accounts", "credentials", "promotion",
-  /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
-          "capture", "doorbell", "file-safety", "sources",
-  /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
-  /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "law-relations", "standards",
-          "progressions", "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval",
-          "calculations", "workbooks",
-  /* 6 */ "inquiry-grammar", "accepted-work", "leg-earning", "inquiry", "hypotheses", "steps", "citation",
-          "basis-versions", "strength", "contradiction", "run-rules", "ai-use", "ai-runs", "run-productions",
-          "capture-requests", "reading-guides", "skills", "question-explorer", "answers", "agent-harness", "agent-model",
-          "agent-runner", "agent-worker",
-  /* 7 */ "intent", "investigation", "reevaluation",
-  /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "publish-schedule",
-          "docket", "public-read", "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
-          "case-disclosures", "case-account", "case-inputs", "case-authoring", "review", "case-check",
-  /* 9 */ "conformance", "consequences", "action-grammar", "action-records", "actions", "action-holds", "action-clocks", "action-replies",
-          "filing-templates", "filings", "escalation", "action-plans", "plan-work",
-  /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
-  /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
-           "queue-producers",
-           "notice-producers", "queue", "setup-words", "instance-setup", "op-capabilities", "op-declarations", "admission",
-           "answer-envelope", "store-door", "signin-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards",
-           "screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate",
-           "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "site", "stewards",
-           "journey-check",
-]);
-
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+
+/* R83, R146 (K289; N1115, N1171; K657, K3268): the modules' total order, `build/modules.json`'s ids in the file's order
+   (which is its layer order, K270). Product code cannot read `build/` at run time, so the list is made from the file at
+   build: `order.mjs` is written by `order-build.mjs` (its `--check` finds it stale), never by hand, so a module added,
+   moved or dropped in the file changes the list with no edit here. `moduleOrderFrom(modules)` answers the frozen list for a
+   parsed copy of the file (a test hands it a changed one), and `MODULE_ORDER`, the one list every module orders its
+   listeners by (this module's R79; promotion, provenance and the later modules import it), is its answer for the file
+   itself. A module the file lists before its job has built it is in the list in its place all the same; which are not yet
+   built is the file's to say (those without `paths`), never this module's. */
+export function moduleOrderFrom(modules) {
+  const list = Array.isArray(modules) ? modules : isObj(modules) && Array.isArray(modules.modules) ? modules.modules : [];
+  const ids = [];
+  for (const m of list) if (isObj(m) && typeof m.id === "string" && m.id && !ids.includes(m.id)) ids.push(m.id);
+  return Object.freeze(ids);
+}
+export const MODULE_ORDER = moduleOrderFrom(MODULE_IDS.map((id) => ({ id })));
+
 const LISTENER_REFUSAL_FIELDS = new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 
 /** R81 (N202, K231, K285; moved from promotion's R49, membership being the earliest module that registers listeners,
@@ -460,11 +474,8 @@ export class Membership {
       reservedId: id, held: !!m, role: m ? m.role : null, status: m ? m.status : null,
       check: MEMBER_ID_CHECKS.MEMBER_ID_RESERVED.check,
       says: m
-        ? `a member is enrolled under the reserved id '${id}' (role ${m.role}, status ${m.status}). `
-          + `Every check that asks whether someone administers by name reads it as the founding `
-          + `administrator. It was enrolled before the id was reserved and has NOT been renamed: an `
-          + `administrator should decide what it is and re-enrol the person under another id`
-        : `no member holds the reserved id '${id}'`,
+        ? word("membership.says.member_enrolled_under", { id, role: m.role, status: m.status })
+        : word("membership.says.member_holds_reserved", { id }),
     };
   }
 
@@ -680,7 +691,7 @@ export class Membership {
   memberPairings({ viewer = null, administer = null, limit = null } = {}) {
     const self = this.positionalMember(viewer);
     const admin = administer === true || administer === "1"
-      || (viewer === Membership.ROOT_ADMIN && this.isAdministrator(Membership.ROOT_ADMIN))
+      || (baseViewer(viewer) === Membership.ROOT_ADMIN && this.isAdministrator(Membership.ROOT_ADMIN))
       || (self !== null && this.isAdministrator(self));
     const cap = Math.max(1, Math.min(Number(limit) || Membership.MEMBER_PAIRINGS_LIMIT, Membership.MEMBER_PAIRINGS_LIMIT));
     const found = this.#rows(
@@ -857,6 +868,59 @@ export class Membership {
       }
       return false;
     } catch { return false; }
+  }
+
+  /* ===== R150 (T50; N1186, K3557; R79's, R128's form) — THE REACH BEYOND A PROJECT'S OWN RECORDS =====
+   *
+   * A viewer that carries a project (R149) reaches the project's own bundle and the bundles belonging to it, which this
+   * module's layer reads. What it cannot read, the captures a project's records hold (`provenance`) and the records they
+   * cite (`connections`), later modules register a reader for, once each, `fn({project})` answering a list of bundle ids.
+   * The registered readers are asked in `MODULE_ORDER` and their ids joined; a reader that throws, answers a promise or
+   * anything but a list of bundle ids adds nothing (the reach narrows, never widens), and an id is admitted only if R43
+   * admits the member's own viewer to it (the gate ANDs, `projectGate`). With none registered the reach is the project's
+   * own. The union is bounded (`PROJECT_REACH_LIMIT`), the first ids in that order kept. This module never reads another
+   * module's tables to decide it. Registration's refusals are R81's. */
+  #reachReaders = [];   // {module, fn, seq}
+
+  static PROJECT_REACH_LIMIT = 5000;
+
+  registerProjectReach(module, fn) {
+    const refused = listenerRefusal(this.#reachReaders, module, fn);
+    if (refused) return refused;
+    this.#reachReaders.push({ module, fn, seq: this.#reachReaders.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#reachReaders.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /** R150: the bundle ids the registered readers add to `project`'s reach, each once, in the readers' order. Writes
+   *  nothing; never throws. */
+  projectReach(project) {
+    const ids = new Set();
+    if (typeof project !== "string" || !project) return [];
+    for (const r of this.#reachReaders) {
+      let got;
+      try {
+        got = r.fn({ project });
+        if (got && typeof got.then === "function") { got.then(null, () => {}); continue; }
+      } catch { continue; }
+      if (!Array.isArray(got) || !got.every((id) => typeof id === "string" && id !== "")) continue;
+      for (const id of got) if (ids.size < Membership.PROJECT_REACH_LIMIT) ids.add(id);
+    }
+    return [...ids];
+  }
+
+  /** R43, R149: the gate for `viewer` as this instance answers it: `viewerPredicate`, with the reach the registered
+   *  readers add (R150) when the viewer carries a project. `inSight` and `sight` ask it. Never throws. */
+  viewerGate(viewer) {
+    const carried = carriedProject(viewer);
+    return viewerPredicate(viewer, carried === null ? null : this.projectReach(carried));
+  }
+
+  /** R88, R149: `hiddenBundles` with the reach this instance's readers add, for a viewer that carries a project. */
+  hiddenBundlesFor(viewer) {
+    const carried = carriedProject(viewer);
+    return hiddenBundles(viewer, carried === null ? null : this.projectReach(carried));
   }
 
   /* ===== R116, R117 (N783, K624; R79's form) — THE TWO NOTICES `project-roster` HEARS =====
@@ -1054,7 +1118,7 @@ export class Membership {
         `${subject} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
         + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
         + `The signature is ${signer ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
-        + `registered signer in your group's Civicsmith is not authority over a project. Nothing was committed.`);
+        + `registered signer in your team's Civicsmith is not authority over a project. Nothing was committed.`);
     /* END DEC-49 REGION is-case-signer-owner */
     return null;
   }
@@ -1088,7 +1152,7 @@ export class Membership {
      a non-empty string names no bundle, and nothing it is handed makes it throw. */
   inSight(bundleId, viewer) {
     if (typeof bundleId !== "string" || !bundleId) return false;
-    const g = viewerPredicate(viewer);
+    const g = this.viewerGate(viewer);
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
   }
 
@@ -1120,6 +1184,11 @@ export class Membership {
      contents. A discoverable project's EXISTENCE is unchanged, and administrators are FULL there already. */
   sight(bundleId, viewer) {
     if (this.inSight(bundleId, viewer)) return Membership.SIGHT_FULL;
+    /* R149: a viewer carrying a project sees at most that project's existence, the member's own sight of it, and every
+       other project as nothing, so no other project's existence is shown to it. */
+    const carried = carriedProject(viewer);
+    if (carried !== null && bundleId !== carried) return Membership.SIGHT_NONE;
+    viewer = baseViewer(viewer);
     if (typeof bundleId !== "string" || (!this.#administratorView(viewer) && !viewerPredicate(viewer).member))
       return Membership.SIGHT_NONE;
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
@@ -1131,6 +1200,7 @@ export class Membership {
   /* R43's administrator arms, as a viewer names them: the founder's viewer (bare `admin` or `member:admin`), or a
      `member:<id>` viewer naming an active administrator. A machine credential is neither: it sees every bundle. */
   #administratorView(viewer) {
+    viewer = baseViewer(viewer);
     const g = viewerPredicate(viewer);
     if (g.scope === "DENY" || g.scope === "member") return false;
     if (viewer === Membership.ROOT_ADMIN || g.member === Membership.ROOT_ADMIN) return true;
@@ -1543,8 +1613,7 @@ export class Membership {
        and an administrator's to use; the remedy names who acts instead. */
     if (!this.isAdministrator(by))
       return notAnAdmin(by, "adding an owner to a project whose owners are all inactive (7.13)",
-        { remedy: "An active administrator of this group can add the owner; while any owner of the project is active, "
-                + "its owners add one instead." });
+        { remedy: word("membership.remedy.active_administrator_group") });   /* R151 */
     const owners = this.projectOwners(projectId);
     if (!owners.length)
       return { ok: false, reason: "NO_OWNERS",
@@ -1620,8 +1689,7 @@ export class Membership {
     /* R84 (N327, DEC-83). */
     if (!this.isAdministrator(by))
       return notAnAdmin(by, "confirming or withdrawing a member's declared expertise",
-        { remedy: "An active administrator of this group can confirm it, for any member, another administrator "
-                + "included." });
+        { remedy: word("membership.remedy.active_administrator_group_confirm") });   /* R151 */
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
     const lab = Membership.#normLabel(label);
@@ -1707,15 +1775,15 @@ export class Membership {
   static ownerMath(n) {
     if (n <= 1)
       return { owners: n, votesNeeded: 0, eligibleVoters: 0, targetMayVote: false, possible: false,
-               why: "one owner is the floor, so the last owner is not removable" };
+               why: word("membership.why.owner_floor_last") };
     if (n === 2)
       return { owners: 2, votesNeeded: 2, eligibleVoters: 2, targetMayVote: true, possible: true,
-               why: "both owners must agree, the departing one included: resignation with the other's assent" };
+               why: word("membership.why.both_owners_agree") };
     const votesNeeded = Math.floor(n / 2) + 1;
     const eligibleVoters = n - 1;
     return { owners: n, votesNeeded, eligibleVoters, targetMayVote: false,
              possible: votesNeeded <= eligibleVoters,
-             why: "a majority of all owners, the target counted in the denominator and not voting" };
+             why: word("membership.why.majority_all_owners") };
   }
 
   /** REC-30: the TABLE is arithmetic and belongs to everyone. The LIVE arm reads
@@ -1922,7 +1990,7 @@ export class Membership {
       return { ok: false, reason: "ROOT_OF_TRUST",
                detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the "
                      + "application. Whoever can set ADMIN_TOKEN can take the group over, and there is no "
-                     + "arrangement in which nobody holds that power, because your group's Civicsmith runs in "
+                     + "arrangement in which nobody holds that power, because your team's Civicsmith runs in "
                      + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return noSuchMember(memberId);   /* R121 (N793): C-96.47 minted at its one site */
@@ -1967,8 +2035,7 @@ export class Membership {
     if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);   /* N123, R8 */
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
-             alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
-                   + "rotating ADMIN_TOKEN and reviewing hosting-account membership (4.8)." };
+             alsoDo: word("membership.also_do") };   /* R151 */
   }
 
   async memberAdd({ memberId, cover, role = "member", capabilities = null,
@@ -1997,7 +2064,7 @@ export class Membership {
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Membership.ROOT_ADMIN)
       return refusal("MEMBER_ID_RESERVED",
-        `'${Membership.ROOT_ADMIN}' names the founding administrator of your group's Civicsmith; no member may be `
+        `'${Membership.ROOT_ADMIN}' names the founding administrator of your team's Civicsmith; no member may be `
         + `enrolled under it`);
     /* END DEC-49 REGION is-member-id-reserved */
     /* DEC-49 REGION is-member-add-shape */
@@ -2222,7 +2289,7 @@ export class Membership {
        forgot it — yields the handle roster, so a bypass of the stamp loses the
        pairing rather than leaking it. */
     const pairs = administer === true || administer === "1";
-    return { members: this.#rows(
+    const rows = this.#rows(
       `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, pairing_published, created, updated,
               CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending,
               door, approved_by, invite_expires, invite_withdrawn
@@ -2240,7 +2307,17 @@ export class Membership {
                        /* R105: how each came in and their invitation, for an administrator's roster only. */
                        door: door ?? "administrator", approvedBy: approved_by ?? null,
                        expires: r.status === "proposed" ? null : invite_expires ?? null,
-                       invitation: Membership.#invitationState(r, invite_expires, invite_withdrawn) } : {}) })) };
+                       invitation: Membership.#invitationState(r, invite_expires, invite_withdrawn) } : {}) }));
+    /* R147 (T50; N1119, K3369; amends R17, R86): once the instance is claimed (R94) the founder is listed, first, as R86
+       orders her. She has no members row, so the row is built here: her id `admin` is `member_id` only, her `handle` the
+       one she holds (R144) or null, `founder: true` on her row alone; never a cover, a door or an invitation. */
+    const founder = this.#claimed() ? [{
+      member_id: Membership.ROOT_ADMIN, handle: this.founderHandle(), founder: true, role: "admin", status: "active",
+      status_by: Membership.#statusBy(null), invited_by: Membership.#statusBy(null), capabilities: [...Membership.CAPABILITIES],
+      pairing_published: false, created: null, updated: null, invite_pending: 0, expertise: [],
+      ...(pairs ? { projects: this.#projectsOf(Membership.ROOT_ADMIN, viewer) } : {}),
+    }] : [];
+    return { members: [...founder, ...rows] };
   }
 
   /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186, Bob's "S18: B"; K1881, K2394) — A MEMBER'S HANDLE, CHECKED AS IT
@@ -2260,8 +2337,8 @@ export class Membership {
      (`credentials` R38's form; `capture` R31's). */
   static HANDLE_CHECK_WINDOW = Object.freeze({ perKey: 60, windowMs: 10 * 60_000 });
 
-  static HANDLE_CHECK_STATED = `at most ${Membership.HANDLE_CHECK_WINDOW.perKey} handle checks in any `
-    + `${Membership.HANDLE_CHECK_WINDOW.windowMs / 60_000} minutes for one invitation or one member`;
+  static HANDLE_CHECK_STATED = word("membership.handle_check_stated",
+    { per_key: Membership.HANDLE_CHECK_WINDOW.perKey, minutes: Membership.HANDLE_CHECK_WINDOW.windowMs / 60_000 });
 
   /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
      (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
@@ -2356,14 +2433,14 @@ export class Membership {
       this.sql.exec(`DELETE FROM handle_check_window WHERE win < ?`, est.win - 1);
       const h = String(handle ?? "").trim();
       const shown = h.slice(0, 80);
-      const words = (k) => ({ key: k, en: HANDLE_WORDS[k] });
+      const words = (k, names = []) => ({ key: k, en: keyed(k, names) });   /* R123, R151: placeholders left for the screen */
       if (!Membership.HANDLE_PATTERN.test(h))
         return { ok: true, handle: shown, state: "not_allowed", problems: Membership.#handleProblems(h), suggestion: null,
                  words: words("handle.characters") };
       if (this.#heldByAnother(h, self))
         return { ok: true, handle: shown, state: "taken", problems: [], suggestion: this.#suggestion(h, self),
-                 words: words("handle.taken") };
-      return { ok: true, handle: shown, state: "free", problems: [], suggestion: null, words: words("handle.free") };
+                 words: words("handle.taken", ["handle", "group", "suggestion"]) };
+      return { ok: true, handle: shown, state: "free", problems: [], suggestion: null, words: words("handle.free", ["handle", "group"]) };
     } catch { return { ...Membership.#INVITE_MISS }; }
   }
 
@@ -2582,8 +2659,7 @@ export class Membership {
 
   /* ---- R99-R105 (DEC-133): the group's two doors ---- */
 
-  static DOOR_WARNING = "Anyone your website lets through can join and see your group's shared work, including people you "
-    + "are looking into. Keep sensitive work in hidden projects.";
+  static DOOR_WARNING = word("membership.door_warning");
 
   static #DOOR = {
     website: { door: "website", start: "create", stop: "revoke", actor: "website" },
@@ -2880,8 +2956,7 @@ export class Membership {
 
   /* ---- R107, R108 (DEC-136 (1)): whether members are told what a court can reach ---- */
 
-  static COURT_STATEMENT = "Your group's Civicsmith keeps this from the public and the people the group looks into. A "
-    + "court order your group can't defeat could still require it to be shown. Write accordingly.";
+  static COURT_STATEMENT = word("court.statement");
 
   /** R107: an administrator's choice, `tell` or `dont`, the same act at setup and in the settings; appended. */
   courtNoticeSet({ choice, by = null } = {}) {
@@ -2906,24 +2981,41 @@ export class Membership {
 
   /* ---- R143 (T48; N1036; DEC-218, K3146, K3189): when a member last looked at Home ---- */
 
+  /* R143, R148: the member whose Home mark `by` names, or null. Only an active member (`ann` or `member:ann`) or the founder
+     (`admin`, once the instance is claimed, R94) has a mark; an absent `by`, a machine credential, an operator token and a
+     member not active have none. */
+  #markHolder(by) {
+    const raw = typeof by === "string" ? by.trim() : "";
+    if (!raw || MACHINE_STAMP_PREFIXES.some((p) => raw.toLowerCase().startsWith(p))) return null;
+    const id = raw.startsWith("member:") ? raw.slice(7) : raw;
+    if (!id) return null;
+    if (id === Membership.ROOT_ADMIN) return this.#claimed() ? id : null;
+    return this.#one(`SELECT status FROM members WHERE member_id=?`, id)?.status === "active" ? id : null;
+  }
+
   /** R143: `{since}`, the instant `by`'s previous look was recorded (null when none was), recording this call's instant as
-   *  the new mark in the same act. Only an active member (`ann` or `member:ann`) or the founder (`admin`, once the
-   *  instance is claimed, R94) has a mark; any other `by` records nothing and answers `{since: null}`. Answers only the
-   *  caller's own mark; never throws. */
+   *  the new mark in the same act. A `by` without a mark records nothing and answers `{since: null}` (#markHolder).
+   *  Answers only the caller's own mark; never throws. */
   lookedSince(args = {}) {
     try {
-      const by = isObj(args) ? args.by : null;
-      const raw = typeof by === "string" ? by.trim() : "";
-      if (!raw || MACHINE_STAMP_PREFIXES.some((p) => raw.toLowerCase().startsWith(p))) return { since: null };
-      const id = raw.startsWith("member:") ? raw.slice(7) : raw;
-      if (!id) return { since: null };
-      const founder = id === Membership.ROOT_ADMIN;
-      if (founder ? !this.#claimed()
-          : this.#one(`SELECT status FROM members WHERE member_id=?`, id)?.status !== "active") return { since: null };
+      const id = this.#markHolder(isObj(args) ? args.by : null);
+      if (id === null) return { since: null };
       const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
       const now = new Date().toISOString();
       this.sql.exec(`INSERT INTO home_looks (member_id, at) VALUES (?,?) ON CONFLICT(member_id) DO UPDATE SET at=excluded.at`,
         id, now);
+      return { since: prev ? prev.at : null };
+    } catch { return { since: null }; }
+  }
+
+  /** R148 (`op=lookedat`, a read; N1092, DEC-238): `{since}`, the instant of `by`'s last recorded look at Home, the one
+   *  R143's next `lookedSince` would answer, or null when none was recorded. It records nothing and moves no mark. Who has
+   *  a mark is R143's rule (#markHolder); any other `by` is answered `{since: null}`. Never throws. */
+  lookedAt(args = {}) {
+    try {
+      const id = this.#markHolder(isObj(args) ? args.by : null);
+      if (id === null) return { since: null };
+      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
       return { since: prev ? prev.at : null };
     } catch { return { since: null }; }
   }
@@ -2967,6 +3059,7 @@ export class Membership {
 
   /* Who reads the description and its history: an active member, the founder once claimed, a machine credential. */
   #insider(viewer) {
+    viewer = baseViewer(viewer);
     const g = viewerPredicate(viewer);
     if (g.scope === "DENY") return false;
     if (g.member === null) return viewer !== Membership.ROOT_ADMIN || this.isAdministrator(Membership.ROOT_ADMIN);
@@ -3126,5 +3219,7 @@ export function membershipOps(m, url, body, env) {
            stamp, read from the query as `adminresign`'s is, and nothing the body says is read, so no caller names whose
            mark it moves. Its declaration and routing are `op-declarations`' and `control-plane`'s (T48-63, T48-77). */
         lookedsince: () => m.lookedSince({ by: url.searchParams.get("by") }),
+        /* R148 (T50; N1092): the same mark read without moving it; `by` the stamp, as `lookedsince`'s. */
+        lookedat: () => m.lookedAt({ by: url.searchParams.get("by") }),
   };
 }

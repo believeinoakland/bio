@@ -2,6 +2,7 @@
    and the joining statement (R107, R108), and the group's own description (R109, R110). At the interface only. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V } from "./fixture.mjs";
 import { Membership, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
@@ -13,9 +14,8 @@ const rowOf = (r, code) => {
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, code, code, row.check, row.translation], code);
   assert.match(r.detail, /Nothing was written\./);
 };
-/* R108 as DEC-149 amended it (T35-14, K1779): "Your group's Civicsmith", never "copy". */
-const COURT = "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order "
-  + "your group can't defeat could still require it to be shown. Write accordingly.";
+/* R108 as R151 states it (T50): the statement is the words of `court.statement`, read by key, never held here. */
+const COURT = word("court.statement");
 
 /* ---- R106 ---- */
 

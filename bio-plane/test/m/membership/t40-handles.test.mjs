@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
-import { notTheOwner, notAnAdmin, Membership, MEMBERSHIP_CHECKS, PROJECT_AUTHORITY_CHECKS, HANDLE_WORDS }
+import { notTheOwner, notAnAdmin, Membership, MEMBERSHIP_CHECKS, PROJECT_AUTHORITY_CHECKS }
   from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
@@ -90,11 +90,10 @@ test("R55 R122 projectAuthority answers its owner refusal through notTheOwner; i
 
 /* ---------------------------------------------------------------- R123 --------------------------------------------- */
 
-test("R123 handleCheck with a live invitation: free, taken (with the smallest free suggestion) or not allowed (naming each problem), with words.json's words", async () => {
+test("R123 handleCheck with a live invitation: free, taken (with the smallest free suggestion) or not allowed (naming each problem), with the words of handle.free, handle.taken and handle.characters read by key", async () => {
   const w = await handleWorld();
   const words = await wordsJson();
   const en = (k) => words.find((x) => x.key === k).en;
-  for (const k of ["handle.free", "handle.taken", "handle.characters"]) assert.equal(HANDLE_WORDS[k], en(k), k);
   const free = await w.m.handleCheck({ invite: w.inv, handle: "cal-k" });
   assert.deepEqual(free, { ok: true, handle: "cal-k", state: "free", problems: [], suggestion: null,
                            words: { key: "handle.free", en: en("handle.free") } });
