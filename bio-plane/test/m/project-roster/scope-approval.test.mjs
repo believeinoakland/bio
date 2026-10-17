@@ -246,7 +246,7 @@ test("R20 the scope rows: each code minted carries its row, frozen, numbered C-1
     assert.ok(Object.isFrozen(row), code);
     assert.match(row.where, /^src\/project-roster\/index\.mjs [#\w]+ > is-[a-z-]+$/, code);
     /* a code the words list does not yet hold (MACHINE_CANNOT_SET_STAKE, reported to BOB) reads null, never inline English */
-    if (hasWord(`refusal.${code}`)) assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
+    if (hasWord(code === "STAKE_MALFORMED" ? "refusal.STAKE_MALFORMED.project" : `refusal.${code}`)) assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     else assert.equal(row.translation, null, `${code}: no word held yet`);
     assert.doesNotMatch(row.translation ?? "", FORBIDDEN, code);
   }

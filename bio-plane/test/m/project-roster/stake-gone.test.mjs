@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const set = (w, by, stake, projectId = "PROJ-P", viewer = V(by)) => w.r.projectStakeSet({ projectId, stake, by, viewer });
@@ -52,6 +53,7 @@ test("R31 refusals, in order, each writing nothing: sight first, a machine crede
   const m = `${MACHINE_CLASS_PREFIX}ai`;
   const machine = refused(() => set(w, m, "x", "PROJ-P", m), "MACHINE_CANNOT_SET_STAKE");
   assert.equal(machine.check, "C-147.9");
+  assert.equal(machine.translation, word("refusal.MACHINE_CANNOT_SET_STAKE"));
   refused(() => set(w, null, "x", "PROJ-P", V("ann")), "MACHINE_CANNOT_SET_STAKE");
   refused(() => set(w, "cal", "x"), "PROJECT_ACT_NOT_A_PARTICIPANT");
   /* an administrator below FULL (hidden P, not in it) is refused as a non-participant is: no sight, no act */
@@ -59,6 +61,7 @@ test("R31 refusals, in order, each writing nothing: sight first, a machine crede
   for (const bad of ["x".repeat(1001), "two\nlines", "tab\there", "", "   ", 5, undefined, {}, "nul\u0000l"]) {
     const r = refused(() => set(w, "bob", bad), "STAKE_MALFORMED");
     assert.equal(r.check, "C-147.10");
+    assert.equal(r.translation, word("refusal.STAKE_MALFORMED.project"));
   }
   /* controls: the same acts land with a valid stake, the boundary lengths included */
   assert.equal(set(w, "bob", "x").ok, true);
@@ -103,18 +106,11 @@ test("R32 projectStakeHistory: every participant reads the history, as R8 reads 
     w.r.projectStakeHistory({ projectId: "PROJ-P", viewer: V("bob") }));
 });
 
-/* membership R152 is built by MEMBERSHIP #40 in this tranche: until it merges, a stand-in answers it from the members
-   row's `updated`, which every status write stamps and these tests change no other way; the real one replaces it. */
-const withStatusSince = (w) => {
-  if (typeof w.m.memberStatusSince !== "function")
-    w.m.memberStatusSince = (id) => w.row(`SELECT updated FROM members WHERE member_id=?`, id)?.updated ?? null;
-  return w;
-};
 const gone = (w, viewer, projectId = "PROJ-P") => w.r.projectOwnersGone({ projectId, viewer });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 test("R33 a project whose two owners are revoked at two instants answers gone: true and the later instant; with one owner still active gone: false and since null", async () => {
-  const w = withStatusSince(await stakeWorld());
+  const w = await stakeWorld();
   assert.equal(w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }).ok, true);
   assert.deepEqual(w.m.projectOwners("PROJ-P"), ["ann", "bob"]);
   assert.deepEqual(gone(w, V("second")), { ok: true, projectId: "PROJ-P", gone: false, since: null }, "all active");
@@ -122,15 +118,15 @@ test("R33 a project whose two owners are revoked at two instants answers gone: t
   assert.deepEqual(gone(w, V("second")), { ok: true, projectId: "PROJ-P", gone: false, since: null }, "bob still active");
   await sleep(15);
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
-  const later = w.row(`SELECT updated FROM members WHERE member_id='bob'`).updated;
-  const earlier = w.row(`SELECT updated FROM members WHERE member_id='ann'`).updated;
+  const later = w.m.memberStatusSince("bob");
+  const earlier = w.m.memberStatusSince("ann");
   assert.ok(earlier < later);
   for (const viewer of [V("second"), "admin", V("admin")]) {
     const g = gone(w, viewer);
     assert.deepEqual(g, { ok: true, projectId: "PROJ-P", gone: true, since: later }, `${viewer}: an administrator at EXISTENCE of the hidden project, or the founder`);
   }
   /* the instant is never invented: an owner whose instant is not recorded answers null */
-  const real = w.m.memberStatusSince;
+  const real = w.m.memberStatusSince.bind(w.m);
   w.m.memberStatusSince = (id) => (id === "ann" ? null : real(id));
   assert.equal(gone(w, V("second")).since, null);
   w.m.memberStatusSince = undefined;

@@ -11,7 +11,7 @@ import { hasWord, word } from "../setup-words/index.mjs";
 
 /* Plan rule 6 (N1116, DEC-258): a row's translation is words.json's `refusal.<CODE>`, read by key through setup-words;
    `null` while the design lane has not given a code its word (reported, never inline English). */
-const said = (code) => (hasWord(`refusal.${code}`) ? word(`refusal.${code}`) : null);
+const said = (code, key = `refusal.${code}`) => (hasWord(key) ? word(key) : null);
 
 const at = (fn, region) => `src/project-roster/index.mjs ${fn} > ${region}`;
 
@@ -124,6 +124,6 @@ export const PROJECT_SCOPE_CHECKS = Object.freeze({
   }),
   STAKE_MALFORMED: Object.freeze({
     check: 'C-147.10', where: at("projectStakeSet", "is-project-stake-set"),
-    translation: said('STAKE_MALFORMED'),
+    translation: said('STAKE_MALFORMED', 'refusal.STAKE_MALFORMED.project'),   /* DEC-303: a project's own sentence */
   }),
 });

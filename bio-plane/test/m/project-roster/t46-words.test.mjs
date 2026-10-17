@@ -8,7 +8,9 @@ import { world, V, snapshot } from "./fixture.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { PROJECT_SCOPE_CHECKS } from "../../../src/project-roster/index.mjs";
 
-const en = (code) => word(`refusal.${code}`);
+/* DEC-303: C-147.10 reads a project's own sentence, refusal.STAKE_MALFORMED.project */
+const keyOf = (code) => (code === "STAKE_MALFORMED" ? "refusal.STAKE_MALFORMED.project" : `refusal.${code}`);
+const en = (code) => word(keyOf(code));
 
 /* The family: each code's number and `where`. C-147.9 and .10 are R31's (T50). */
 const AT = (fn, region) => `src/project-roster/index.mjs ${fn} > ${region}`;
@@ -31,7 +33,7 @@ test("R25 every C-147 row's translation is words.json's refusal.<CODE>, read by 
     const row = PROJECT_SCOPE_CHECKS[code];
     assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
     /* a code the list holds is read from it; one it does not yet hold reads null, never inline English */
-    assert.equal(row.translation, hasWord(`refusal.${code}`) ? en(code) : null, `${code} reads refusal.${code}`);
+    assert.equal(row.translation, hasWord(keyOf(code)) ? en(code) : null, `${code} reads ${keyOf(code)}`);
   }
 });
 
