@@ -13,3 +13,7 @@
 **Deferred.** None. **Found in another module.** None. The requirement's `*(not yet met: T50)*` marker on R48 is BOB's to lift (build/requirements is not mine to write). No new member-facing text was added (plan rule 6 has nothing to apply).
 
 Size (session_018aSa4ST4fZKoWn5sZ9SNHw): test runs 8, module lines 2653
+
+## J1 · COMPLETE
+
+T50-81 done: R48's captured-for reader answers capture's asks (R94) beside its requests, same sight/title/asker/waiting rules, a pair in both once; asks empty = as before. 127/127 module tests pass (3 new unit + 1 plane test through the real acquire for, promote, heldcaptures). format, architecture, coverage (56/56), ownership: 0 failures. Nothing deferred; nothing found elsewhere. R48's not-yet-met marker is yours to lift. See record.
