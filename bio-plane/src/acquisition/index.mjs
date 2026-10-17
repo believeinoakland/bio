@@ -35,6 +35,7 @@ import { attest } from "../attestation/index.mjs";
 import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
+import { word } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
@@ -87,9 +88,7 @@ export const acquireGradeNote = (ceiling, unreachable) => {
   if (!ceiling || !unreachable)
     throw new Error("op=acquire's note states what this surface earns AND the grade above it; "
                   + "with no grade above the ceiling the sentence cannot be composed truthfully");
-  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a `
-       + "chain-of-custody web archive, which this surface cannot produce. Co-attestation raises "
-       + `${ceiling} toward evidentiary weight.`;
+  return word("acquisition.text.grade_bytes_fetched", { ceiling, unreachable });
 };
 export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
@@ -123,11 +122,11 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
     let od;
     try { od = await odfEvidentiaryDigest(containerBytes, sha256Hex); }
     catch (e) { od = { determined: false, flavour: "unread",
-      basis: `the container digest could not be taken (${String(e && e.message || e).slice(0, 90)}), so none is claimed` }; }
+      basis: word("acquisition.basis.container_digest_taken", { e: String(e && e.message || e).slice(0, 90) }) }; }
     if (od.determined) {
       if (await sha256Hex(containerBytes) !== sha)
         return { determined: false, rendition: null, evidentiary: null,
-          basis: "the container bytes read back from the store did not hash to the capture identity, so no container digest could be trusted" };
+          basis: word("acquisition.basis.container_bytes_read") };
       return { determined: true, rendition: null, evidentiary: od.evidentiary, over: od.over, container: od.flavour,
                boundary_missed: false, basis: od.basis };
     }
@@ -136,14 +135,14 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
   if (!digestCertain)
     return { determined: false, rendition: null, evidentiary: null,
       basis: profileBytes
-        ? `the ${stackId.handler.key} stack was not identified with certainty (${stackId.confidence}); its normalisation is not trusted to assert sameness, so the substance digest is undetermined`
-        : `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}); no normalisation was applied, so the substance digest is undetermined` };
+        ? word("acquisition.basis.stack_identified_certainty", { key: stackId.handler.key, confidence: stackId.confidence })
+        : word("acquisition.basis.document_read_text", { large: multipart ? "multipart" : word("acquisition.basis.non_textual_too") }) };
   const dg = await digests(profileBytes, stackId.handler, { ...profCtx, sha256: sha256Hex });
   if (dg.identity !== sha)
     return { determined: false, rendition: null, evidentiary: null,
-      basis: "the primary bytes read back from the store did not hash to the capture identity, so no normalised digest could be trusted" };
+      basis: word("acquisition.basis.primary_bytes_read") };
   return { determined: true, rendition: dg.rendition, evidentiary: dg.evidentiary, boundary_missed: !!dg.boundary_missed,
-           basis: `normalised under ${stackId.handler.key} v${stackId.handler.version} (certain); identity is the capture sha` };
+           basis: word("acquisition.basis.normalized_under_certain", { key: stackId.handler.key, version: stackId.handler.version }) };
 }
 
 /** R17: the combined view of the instance's active jurisdiction profiles (record-core's `jurisdiction_profiles`,
@@ -152,10 +151,10 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
  *  combine passes no view either, and says so in `basis`. */
 export function profileView(core) {
   const ids = core && typeof core.getSetting === "function" ? core.getSetting("jurisdiction_profiles") : null;
-  if (!Array.isArray(ids)) return { view: undefined, ids: null, basis: "no active jurisdiction profiles are set" };
+  if (!Array.isArray(ids)) return { view: undefined, ids: null, basis: word("acquisition.basis.active_jurisdiction_profiles") };
   const c = combine(ids);
-  return c.ok ? { view: c.view, ids, basis: `the combined view of ${ids.length ? ids.join(", ") : "no profile"}` }
-              : { view: undefined, ids, basis: `the active profiles did not combine (${(c.errors || []).map((e) => e.code).join(", ")})` };
+  return c.ok ? { view: c.view, ids, basis: word("acquisition.basis.combined_view", { profile: ids.length ? ids.join(", ") : "no profile" }) }
+              : { view: undefined, ids, basis: word("acquisition.basis.active_profiles_did", { code: (c.errors || []).map((e) => e.code).join(", ") }) };
 }
 
 /* The locale a render asks for (R7): capture-sources' `renderLocaleFor` over R17's view (K119), the default only as
@@ -270,9 +269,9 @@ function askedReading(asked, chosen) {
   if (!asked || !asked.at) return null;
   const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked.ms) / 1000);
   return { asked_at: asked.at, memento_datetime: chosen.archived_at, apart_seconds: apart,
-           asked_note: apart === 0 ? `the memento is of ${chosen.archived_at}, the instant asked about`
-             : `the memento is of ${chosen.archived_at}, ${apart} seconds ${Date.parse(chosen.archived_at) < asked.ms ? "before" : "after"} `
-               + `the instant asked about (${asked.at}); it is not the page at ${asked.at}` };
+           asked_note: apart === 0 ? word("acquisition.asked_note.memento_instant_asked", { archived_at: chosen.archived_at })
+             : word("acquisition.asked_note.memento_seconds_instant", { archived_at: chosen.archived_at, apart,
+                 after: Date.parse(chosen.archived_at) < asked.ms ? "before" : "after", at: asked.at }) };
 }
 
 /* A body not read is released, never awaited: a cancellation the source does not acknowledge must not hold the act. */
@@ -360,7 +359,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     if (tried.has(url)) return { next: true };
     tried.add(url);
     for (let hop = 0; ; hop++) {
-      if (!isPublicHttpsLocator(url)) { considered.push({ uri: url, refused: "not a public https address", reason: "BAD_LOCATOR" }); return { next: true }; }
+      if (!isPublicHttpsLocator(url)) { considered.push({ uri: url, refused: word("acquisition.refused.public_https_address"), reason: "BAD_LOCATOR" }); return { next: true }; }
       const c = await call(url, fetchPurpose);
       if (c.fail) return c;
       const res = c.res;
@@ -371,7 +370,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
       if (!ans.ok || ans.kind !== "memento") {
         cancelBody(res);
         considered.push({ uri: url, reason: ans.ok ? "MEMENTO_NOT_NEGOTIATED" : ans.reason,
-                          refused: ans.ok ? `the archive was still redirecting after ${MEMENTO_HOPS} hops` : ans.detail });
+                          refused: ans.ok ? word("acquisition.refused.archive_redirecting_hops", { memento_hops: MEMENTO_HOPS }) : ans.detail });
         return { next: true };
       }
       if (ans.status === 200) {
@@ -399,7 +398,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (ga.ok) {
     const m = await tryMemento(ga.kind === "redirect" ? ga.location : ga.memento_uri);
     if (!m.next) return m.fail || m;
-  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: "the TimeGate holds no memento of this address (404)" });
+  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: word("acquisition.refused.timegate_holds_memento") });
   else considered.push({ uri: ends.timegate, reason: ga.reason, refused: ga.detail });
   /* The TimeMap. */
   const tm = await call(ends.timemap, indexPurpose);
@@ -511,15 +510,15 @@ async function coAttest(cap, { sha, locator, via, ev, coArchive = { on: true, by
   /* R20, R43: the C-18.1 shape (`service`, `attempted`, `ok`) with `attempted: false`, so it reads as no attempt */
   const coNotAsked = via !== "archive.org" && !coArchive.on
     ? [{ service: "co_archive", kind: "co_archive", attempted: false, ok: false, asked: false, by: coArchive.by,
-         note: coArchive.by === "member" ? "the capturing member chose no co-archive for this capture"
-                                         : "your group's setting asks no co-archive at capture" }] : [];
+         note: coArchive.by === "member" ? word("acquisition.note.capturing_member_chose")
+                                         : word("acquisition.note.group_setting_asks") }] : [];
   try {
     const out = await attest({ sha256: sha, archive: via !== "archive.org" && coArchive.on, locator },
       { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
         holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
     return [...(attempts.length ? attempts.map(recorded)
-      : notAsked(String((out && (out.reason || out.note || out.detail)) || "no attempt was reported"))), ...coNotAsked];
+      : notAsked(String((out && (out.reason || out.note || out.detail)) || word("acquisition.string.attempt_reported")))), ...coNotAsked];
   } catch (e) {
     return [...notAsked(String(e && e.message || e).slice(0, 200)), ...coNotAsked];
   }
@@ -715,9 +714,9 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       return answer(400, { ok: false, reason: "RENDER_FLAG_MALFORMED", ...renderRow("RENDER_FLAG_MALFORMED"),
         op, detail: `render=${JSON.stringify(body.render).slice(0, 40)} is not a value this op reads. `
                   + `Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.` });
-    const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)"
-                   : driveCapture ? "a Google Drive export (a document, not a page)"
-                   : body.continue ? "continue: <session> (a capture already filed)" : null;
+    const conflict = body.via === "archive.org" ? word("acquisition.text.via_archive_org")
+                   : driveCapture ? word("acquisition.text.google_drive_export")
+                   : body.continue ? `continue: <session> ${word("acquisition.text.capture_already_filed")}` : null;
     if (conflict)
       return answer(400, { ok: false, reason: "RENDER_ARM_CONFLICT", ...renderRow("RENDER_ARM_CONFLICT"),
         op, conflict, detail: `render: true cannot be combined with ${conflict}.` });
@@ -862,9 +861,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     await noteOutcome("success", 304);
     try { await res.body?.cancel?.(); } catch { /* nothing to read */ }
     return answer(200, { ok: true, existed: true, unchanged: true, capture: { sha256: crHeldSha },
-      basis: `the source answered 304 Not Modified to a request conditional on the validators its fetch of the held `
-           + `capture ${crHeldSha.slice(0, 12)} was served with (${Object.keys(conditional).join(", ")}), so no new capture `
-           + "was made and no receipt written: the source asserted these bytes, it did not serve them",
+      basis: word("acquisition.basis.source_answered_modified", { cr_held_sha: crHeldSha.slice(0, 12), conditional: Object.keys(conditional).join(", ") }),
       store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
   }
   /* DEC-49 REGION is-drive-export — there is NO FALLBACK: a 403, a 404 or an HTML answer ends the capture with the
@@ -1018,20 +1015,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (reg && reg.registered === true) existed = true;
     else {
       existed = null;
-      existedUndetermined = reg
-        ? `this document was captured in ${parts.length} parts, so the store holds no object under its `
-          + `whole hash for the question a single-part capture asks, and the record's register - which `
-          + `does answer by the whole hash - holds no row for these bytes under a record that still `
-          + `exists. That is NOT a finding that the bytes are new: a capture acquired earlier and never `
-          + `promoted leaves its parts in the store and no register row, and part boundaries follow the `
-          + `stream's chunking, so this fetch's parts need not be the parts an earlier one made. `
-          + `Observed, and not the answer: ${heldParts} of this fetch's ${parts.length} parts were `
-          + `already held before it wrote them.`
-        : `this document was captured in ${parts.length} parts, so the store holds no object under its `
-          + `whole hash for the question a single-part capture asks, and the record's register could not `
-          + `be consulted. Nothing here is a statement about the record, and in particular it is not a `
-          + `claim that these bytes are new. Observed, and not the answer: ${heldParts} of this fetch's `
-          + `${parts.length} parts were already held before it wrote them.`;
+      existedUndetermined = word(reg ? "acquisition.text.document_captured_parts" : "acquisition.text.document_captured_parts_store",
+        { parts: parts.length, held_parts: heldParts });
     }
   }
 
@@ -1178,8 +1163,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       ...(authorityAsserted ? { authority: authorityAsserted } : {}),
       authority_state: authorityAsserted ? "determined" : "undetermined",
       authority_basis: authorityAsserted
-        ? `asserted by the capturing ${member ? "member" : "caller"} at intake, ${retrieved}`
-        : `no assertion was supplied and no mechanical determination is implemented; recorded ${retrieved} for resolution through the task list`,
+        ? word("acquisition.authority_basis.asserted_capturing_intake", { caller: member ? "member" : "caller", retrieved })
+        : word("acquisition.authority_basis.assertion_supplied_mechanical", { retrieved }),
     }),
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
@@ -1201,7 +1186,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
         : "bio-plane acquire, https fetch, hashed at receipt",
       /* R18 (D-698): provenance's rule, each letter read from its one definition, never typed here. */
       grade: via === "archive.org" ? ARCHIVE_CAPTURE_GRADE : EARNED_CAPTURE_CEILING,
-      ...(via === "archive.org" ? { authority: "Internet Archive" } : {}),
+      ...(via === "archive.org" ? { authority: word("acquisition.authority.internet_archive") } : {}),
       actor_class: member ? "member" : (cls === "probe" ? "session" : "daemon"),
       /* R16 (N364): which member captured it, the member stamp of a member session, else null (capture R69 reads it). */
       actor,
@@ -1525,7 +1510,7 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
-                 note: "a continuation files no new document: the primary was captured by the session's first tick and is never re-fetched" },
+                 note: word("acquisition.note.continuation_files_new") },
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };

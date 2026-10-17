@@ -24,6 +24,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { detectFormat } from "../formats.mjs";
 import { ARCHIVE_CHECKS, firstHopWho } from "./checks.mjs";
 import { profileOf, profileView, evidenceStorageAbsent } from "./index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 /* R40: one call's share, and the day's for automatic opening, each exported by its name (K1940: BOB's, K1881). The
    per-call figures keep one call within the plane's subrequest and CPU limits: every part stored is a write. */
@@ -390,12 +391,12 @@ async function heldParts(inst, store, ev, archiveSha, given) {
     catch { named = null; }
     if (named && named.state === "named") parts = named.parts.map((x) => ({ sha256: x.sha256, bytes: x.bytes }));
   }
-  if (!Array.isArray(parts) || !parts.length) return { why: "its bytes are not held whole or in parts the record names" };
+  if (!Array.isArray(parts) || !parts.length) return { why: word("acquisition.why.bytes_held_whole") };
   let v;
   try { v = await partsHeld(ev, (s) => s, parts.map((x, i) => ({ file: `part ${i}`, ...x }))); }
-  catch { return { why: "the evidence store could not be read" }; }
+  catch { return { why: word("acquisition.why.evidence_store_read") }; }
   if (v.missing.length || v.disagree.length || v.unverified.length)
-    return { why: `${v.missing.length} part(s) missing, ${v.disagree.length} disagreeing and ${v.unverified.length} unverified` };
+    return { why: word("acquisition.why.part_missing_disagreeing", { missing: v.missing.length, disagree: v.disagree.length, unverified: v.unverified.length }) };
   return { parts };
 }
 
@@ -590,7 +591,7 @@ async function cutOne(ctx, row, cost) {
   if (!verdict.ok || !stored || stored.sha256 !== verdict.sha256) {
     const code = verdict.ok ? "ARCHIVE_UNREADABLE" : verdict.why === "MEMBER_CORRUPT" ? "MEMBER_CORRUPT"
       : NOT_CUT.includes(verdict.why) ? verdict.why : "ARCHIVE_UNREADABLE";
-    const detail = verdict.ok ? "the evidence store could not hold the file's bytes" : (verdict.detail ?? verdict.why ?? null);
+    const detail = verdict.ok ? word("acquisition.text.evidence_store_hold") : (verdict.detail ?? verdict.why ?? null);
     inst.settle(sha, row.index, { state: "not_filed", code, detail, at, ...counted });
     out.not_filed.push({ index: row.index, ...rowed(code, { detail }) });
     return;
@@ -646,8 +647,7 @@ async function fileDocument(ctx, row, stored, receipt) {
     file: `snapshots/${name}`, locator: receipt.address, retrieved: at,
     profile,
     authority_state: "undetermined",
-    authority_basis: `a file cut out of an archive at ${at}: the cut asserts its bytes and where they sat, never who issued `
-      + "them; the archive's own document states its source",
+    authority_basis: word("acquisition.authority_basis.file_cut_out", { at }),
     provenance_chain: [{
       who: firstHopWho(env.INSTANCE_NAME, env.VERSION),
       asserts: `these bytes are entry ${row.index} (${path === null ? "a name that is not valid UTF-8" : path}, the archive's own `
@@ -757,7 +757,7 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
   let ev = null, held = null;
   if (!h) {
     ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
-    held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: "no evidence storage" };
+    held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: word("acquisition.why.evidence_storage") };
     if (!held.parts) return notHeld();
   }
   const notArchive = await archiveProfile(inst, ev, sha, held && held.parts);

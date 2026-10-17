@@ -10,6 +10,8 @@
  * 1.54.0. These are the only copies: T19's layer 1 deleted the catalogue's (legacy-checks, K717, K769). C-48.8 and
  * C-48.9 are `monitoring`'s; the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 
 /** R24. THE ONE COMPOSER FOR THE HONEST CIVICSMITH AGENT. SOURCE-ACCESS.md records that this string replaced "two bare
@@ -42,9 +44,7 @@ export const CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
     check: 'C-28.13',
     where: at('is-capture-request-arm'),
-    translation: 'Only the background worker of your group\'s Civicsmith fetches documents, and it does so from '
-      + 'its own queue. Nothing else can ask it to fetch something right now — including the assistant '
-      + 'that asked for the document in the first place.',
+    translation: word("refusal.CAPTURE_NOT_DRAINING"),
   }),
 });
 
@@ -63,26 +63,21 @@ export const RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_FLAG_MALFORMED: Object.freeze({
     check: 'C-83.1',
     where: at('is-render-admit'),
-    translation: 'This request asked for a rendered capture in a form your group\'s Civicsmith does not recognise. '
-      + 'It answers render: true or nothing, so a request for the page as a visitor saw it is never '
-      + 'quietly answered with the page\'s empty frame. Nothing was fetched.',
+    translation: word("refusal.RENDER_FLAG_MALFORMED"),
   }),
   /* A render combined with an arm whose bytes are not a live page: an archive replay, a Drive export, or the
      continuation of a capture already filed. */
   RENDER_ARM_CONFLICT: Object.freeze({
     check: 'C-83.2',
     where: at('is-render-admit'),
-    translation: 'A rendered capture runs the live page in a browser, and this request combined that with '
-      + 'a way of capturing that does not load a live page (an archived copy, a Drive export, or the '
-      + 'continuation of an earlier capture). Ask for one or the other. Nothing was fetched.',
+    translation: word("refusal.RENDER_ARM_CONFLICT"),
   }),
   /* No renderer bound: no RENDERER service binding and no BROWSER binding — or a BROWSER bound to something that is
      not a Fetcher, so there is no endpoint to open a devtools session on. Named rather than falling back. */
   RENDER_NO_RENDERER: Object.freeze({
     check: 'C-83.3',
     where: at('is-render-admit'),
-    translation: 'Your group\'s Civicsmith has no working page renderer, so it cannot capture the page as a visitor '
-      + 'saw it. Nothing was fetched, and the page\'s empty frame was not filed in its place.',
+    translation: word("refusal.RENDER_NO_RENDERER"),
   }),
   /* BOB #32 item 3: the daily render allowance is COMMITTED — spent, or reserved by renders in flight (D-492). The
      render is DEFERRED and the deferral is recorded; the shell is never the content. The sentence says which, without
@@ -90,37 +85,28 @@ export const RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_DEFERRED: Object.freeze({
     check: 'C-83.4',
     where: at('is-render-admit'),
-    translation: 'Today\'s allowance for rendering pages is fully committed — either already used, or '
-      + 'held by renders your group\'s Civicsmith is running right now — so this render is deferred, and that is '
-      + 'recorded. Nothing was fetched and nothing was filed in its place. Try again when the renders in '
-      + 'flight have finished, or after midnight UTC.',
+    translation: word("refusal.RENDER_DEFERRED"),
   }),
   /* The render loads the page again, which is a second document load to the host, so it asks the per-host governor
      like any other (BOB #32 item 3: "through the host governor"). Refused by name when the host is cooling off. */
   RENDER_HOST_COOLING_OFF: Object.freeze({
     check: 'C-83.5',
     where: at('is-render-admit'),
-    translation: 'Your group\'s Civicsmith is giving that website a rest after it asked us to slow down, and a '
-      + 'rendered capture loads the page again, so it was not attempted. Nothing was fetched. Try again '
-      + 'after the wait shown beside this message.',
+    translation: word("refusal.RENDER_HOST_COOLING_OFF"),
   }),
   /* The shell is not an HTML page small enough to render (a PDF, an office file, a multipart giant). A document that
      is not a page has nothing a browser adds; capture it without `render`. */
   RENDER_NOT_A_PAGE: Object.freeze({
     check: 'C-83.6',
     where: at('is-render-result'),
-    translation: 'The address served something that is not a web page a browser can render, such as a '
-      + 'PDF or an office file, so there is nothing for a rendered capture to add. Nothing was filed. '
-      + 'Capture it the ordinary way.',
+    translation: word("refusal.RENDER_NOT_A_PAGE"),
   }),
   /* The renderer did not produce a rendered document. The shell's bytes are held content-addressed and unregistered,
      exactly as TOO_LARGE's parts are; no document names them. */
   RENDER_FAILED: Object.freeze({
     check: 'C-83.7',
     where: at('is-render-result'),
-    translation: 'The page was fetched but the renderer did not produce the page as a visitor would see '
-      + 'it, so nothing was filed: the page\'s empty frame is never filed as its content. The reason the '
-      + 'renderer gave is beside this message.',
+    translation: word("refusal.RENDER_FAILED"),
   }),
   /* D-520: the instance's CONCURRENCY CAP is full (BOB #33, 2026-09-24: a render over it WAITS, never dropped).
      Decided in the admission span, before the shell is fetched, and distinct from C-83.4 on purpose: the day's
@@ -128,9 +114,7 @@ export const RENDER_CAPTURE_CHECKS = Object.freeze({
   RENDER_AT_CAPACITY: Object.freeze({
     check: 'C-83.8',
     where: at('is-render-admit'),
-    translation: 'Your group\'s Civicsmith is already rendering as many pages at once as it allows, so this render '
-      + 'is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. '
-      + 'A scheduled capture asks again on its own; try again in a minute.',
+    translation: word("refusal.RENDER_AT_CAPACITY"),
   }),
 });
 
@@ -151,9 +135,7 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
   DRIVE_HOP_FACT_SUPPLIED: Object.freeze({
     check: 'C-48.1',
     where: at('is-drive-capture'),
-    translation: 'This request tried to tell the record where a document was exported from, in what '
-      + 'format, or by whom. Those are facts your group\'s Civicsmith establishes by doing the fetch itself, '
-      + 'never facts it accepts from whoever asked. Send the Drive link and nothing else.',
+    translation: word("refusal.DRIVE_HOP_FACT_SUPPLIED"),
   }),
   /* A FOLDER. There is nothing to export and no single set of bytes a capture could honestly hold. */
   DRIVE_FOLDER_NOT_A_DOCUMENT: Object.freeze({
@@ -161,9 +143,7 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
     where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
          + '(op=monitor, ungoverned span, D-472): a folder is not a document to capture and not '
          + 'a document to watch, and one sentence is true of both',
-    translation: 'That address is a Drive FOLDER — a listing of files rather than a document. There '
-      + 'is nothing to export and no single set of bytes a capture of it would hold. Name the '
-      + 'document you want; harvesting everything a folder lists is a different act.',
+    translation: word("refusal.DRIVE_FOLDER_NOT_A_DOCUMENT"),
   }),
   /* A FILE ID WITH NO KIND. The kind decides the export format, so composing an export address here would mean
      guessing which conversion to ask for, and filing bytes whose format the record had invented. */
@@ -171,36 +151,28 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
     check: 'C-48.3',
     where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
          + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That Drive address names a file but not what KIND of file it is, and the kind is '
-      + 'what decides which export to ask for. Guessing would file bytes in a format nobody '
-      + 'established. Use the address that opens the document itself, which carries the kind.',
+    translation: word("refusal.DRIVE_KIND_UNDETERMINED"),
   }),
   /* A DRIVE HOST WITH AN UNREAD PATH: not a document this instance can promise to have captured. */
   DRIVE_SHAPE_UNRECOGNISED: Object.freeze({
     check: 'C-48.4',
     where: `${at('is-drive-capture')}, and the SAME condition on a monitor tick `
          + '(op=monitor, ungoverned span, D-472)',
-    translation: 'That is a Google Drive address in a form your group\'s Civicsmith does not recognise. Rather '
-      + 'than capture whatever bytes the address happens to serve and call it the document, it says '
-      + 'so. If this shape should be harvestable, that is a change worth making deliberately.',
+    translation: word("refusal.DRIVE_SHAPE_UNRECOGNISED"),
   }),
   /* THE APPLICATION SHELL, REFUSED BY NAME AND NEVER PARSED. Google answers the export address with `text/html` when
      the file is not shared with anyone who has the link. It is never the document. */
   DRIVE_EXPORT_IS_THE_SHELL: Object.freeze({
     check: 'C-48.5',
     where: at('is-drive-export'),
-    translation: 'Google answered the export address with a web page rather than a document — which '
-      + 'is what it does when a file is not shared with anyone who has the link. That page is the '
-      + 'application, not the document, and it is not filed as one. Check that the file is shared.',
+    translation: word("refusal.DRIVE_EXPORT_IS_THE_SHELL"),
   }),
   /* THE EXPORT FETCH FAILING, AND THE HALF THAT MATTERS IS WHAT DOES *NOT* HAPPEN: there is no fallback to the shell.
      A 403 or a 404 at the export address ends the capture with the failure named. */
   DRIVE_EXPORT_UNREACHABLE: Object.freeze({
     check: 'C-48.6',
     where: at('is-drive-export'),
-    translation: 'The OpenDocument export of that Drive document could not be fetched, so nothing '
-      + 'was captured. The application page at the same address is NOT captured instead: a record '
-      + 'holding the app in place of the document would look like evidence and be none.',
+    translation: word("refusal.DRIVE_EXPORT_UNREACHABLE"),
   }),
   /* THE SAME SHELL, CAUGHT ON THE BYTES, AND A SECOND CODE RATHER THAN C-48.5 FIRING TWICE (PL-4: one predicate at two
      points leaves one undrivable). C-48.5 is "Google told us it was a web page"; this is "Google told us it was a
@@ -208,9 +180,7 @@ export const DRIVE_CAPTURE_CHECKS = Object.freeze({
   DRIVE_EXPORT_BYTES_ARE_THE_SHELL: Object.freeze({
     check: 'C-48.7',
     where: at('is-drive-bytes'),
-    translation: 'The export address said it was sending a document and sent a web page instead. '
-      + 'Your group\'s Civicsmith checks the bytes rather than taking the label, so the application page was '
-      + 'recognised and refused. Nothing was filed under that document address.',
+    translation: word("refusal.DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
   }),
 });
 
@@ -223,10 +193,7 @@ export const INSTALLATION_CHECKS = Object.freeze({
   EVIDENCE_STORAGE_NOT_CONFIGURED: Object.freeze({
     check: 'C-68.1',
     where: 'src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent',
-    translation: 'Your group\'s Civicsmith was installed without the storage it keeps captured documents in, so it cannot '
-      + 'keep or read the bytes of a captured document. That is a fact about how your group\'s Civicsmith was set up, not '
-      + 'about this request: whoever installed it can connect that storage in the hosting account. Nothing '
-      + 'was changed.',
+    translation: word("refusal.EVIDENCE_STORAGE_NOT_CONFIGURED"),
   }),
 });
 
@@ -239,17 +206,14 @@ export const SWEEP_SCOPE_CHECKS = Object.freeze({
   SWEEP_SCOPE_MISSING: Object.freeze({
     check: 'C-128.1',
     where: at('is-sweep-scope'),
-    translation: 'A sweep asked your group\'s Civicsmith to fetch a document without saying which sites the sweep '
-      + 'may reach, so nothing was fetched. A sweep only ever fetches within the scope members ratified for it.',
+    translation: word("refusal.SWEEP_SCOPE_MISSING"),
   }),
   /* The source redirected the sweep to an address outside its scope: the redirect is not followed, nothing at its
      target is fetched and nothing is filed. */
   SWEEP_REDIRECT_OUT_OF_SCOPE: Object.freeze({
     check: 'C-128.2',
     where: at('is-sweep-redirect'),
-    translation: 'The page this sweep fetched sent it on to an address outside the sweep\'s ratified scope. '
-      + 'The sweep did not follow it: nothing there was fetched and nothing was filed. Members can widen the '
-      + 'scope if that address belongs in it.',
+    translation: word("refusal.SWEEP_REDIRECT_OUT_OF_SCOPE"),
   }),
 });
 
@@ -260,7 +224,7 @@ export const SWEEP_SCOPE_CHECKS = Object.freeze({
    member (DEC-167 (3)): what happened to the file and what to do instead, in DEC-149's voice. No offset, method number
    or figure is in any of them: those travel in the answer's own fields (`detail`, `limit`). New at T35 as C-137.1–
    C-137.19, renumbered C-139 in the same order at T36 (N738, K2027), each code, translation, reason and `where`
-   unchanged; C-139.20 (R41's NOT_AN_ARCHIVE, N720, K1955) new at T36. Each awaits promotion's stamp (T37).
+   unchanged; C-139.20 (R41's NOT_AN_ARCHIVE, N720, K1955) new at T36, and C-139.21 (R47's BAD_FOR, N1117) new at T50. Each awaits promotion's stamp (T37; C-139.21: T51's). Since T50 (plan rule 6) each translation is read by key from setup-words (`refusal.<CODE>`), never typed here.
    =========================================================================== */
 const un = (region) => `src/acquisition/unpack.mjs unpack > ${region}`;
 const ls = (region) => `src/acquisition/unpack.mjs archiveList > ${region}`;
@@ -270,134 +234,112 @@ export const ARCHIVE_CHECKS = Object.freeze({
   ARCHIVE_NOT_HELD: Object.freeze({
     check: 'C-139.1',
     where: `${un('is-archive-held')}; ${ls('is-archive-held')}`,
-    translation: 'Your group\'s Civicsmith does not hold that archive, or does not hold all of its bytes intact, so '
-      + 'nothing in it was opened. Capture the archive again, then open it.',
+    translation: word("refusal.ARCHIVE_NOT_HELD"),
   }),
   /* R38: the archive's own structure could not be read (a truncated directory, a multi-disk archive, too many
      entries, or storage that could not be read). Nothing in it is cut. */
   ARCHIVE_UNREADABLE: Object.freeze({
     check: 'C-139.2',
     where: un('is-archive-listed'),
-    translation: 'Your group\'s Civicsmith could not read the list of files inside this archive, so none of them '
-      + 'was filed. The archive itself is kept as it was captured; capture a fresh copy if the source has one.',
+    translation: word("refusal.ARCHIVE_UNREADABLE"),
   }),
   /* R38: the archive can be read more than one way (two end records, a directory that disagrees with its end
      record, entries out of range or overlapping). Read as one, it could hide a file or show one twice. */
   ARCHIVE_AMBIGUOUS: Object.freeze({
     check: 'C-139.3',
     where: un('is-archive-listed'),
-    translation: 'This archive can be read in more than one way, so your group\'s Civicsmith did not pick one: '
-      + 'none of its files was filed. The archive itself is kept as it was captured, and can be opened by hand '
-      + 'with an ordinary unzip tool.',
+    translation: word("refusal.ARCHIVE_AMBIGUOUS"),
   }),
   /* R40: only a member's own act, the daemon's continuation, or the capture that brought the archive in opens it. */
   UNPACK_NOT_PERMITTED: Object.freeze({
     check: 'C-139.4',
     where: un('is-unpack-caller'),
-    translation: 'Opening an archive is something a member asks for, or that happens on its own when the archive '
-      + 'is captured. This request came from neither, so nothing was opened.',
+    translation: word("refusal.UNPACK_NOT_PERMITTED"),
   }),
   MEMBER_ENCRYPTED: Object.freeze({
     check: 'C-139.5',
     where: un('is-entry-verdict'),
-    translation: 'This file is locked with a password inside the archive, so your group\'s Civicsmith cannot read '
-      + 'it and did not file it. If you have the password, open the archive yourself and capture the file.',
+    translation: word("refusal.MEMBER_ENCRYPTED"),
   }),
   MEMBER_METHOD_UNSUPPORTED: Object.freeze({
     check: 'C-139.6',
     where: un('is-entry-verdict'),
-    translation: 'This file is packed in a way your group\'s Civicsmith does not unpack, so it was not filed. Open '
-      + 'the archive with an unzip tool that supports it, and capture the file on its own.',
+    translation: word("refusal.MEMBER_METHOD_UNSUPPORTED"),
   }),
   /* The entry's own header disagrees with the archive's directory about it: which is the file is not decided. */
   MEMBER_AMBIGUOUS: Object.freeze({
     check: 'C-139.7',
     where: un('is-entry-verdict'),
-    translation: 'The archive describes this file in two places, and they disagree, so which bytes are the file '
-      + 'cannot be decided. It was not filed rather than filed as a guess.',
+    translation: word("refusal.MEMBER_AMBIGUOUS"),
   }),
   /* The cut did not come out exactly as declared (size, checksum, or the stream's end). Any bytes stored on the way
      stay content-addressed and named by nothing. */
   MEMBER_CORRUPT: Object.freeze({
     check: 'C-139.8',
     where: un('is-entry-cut'),
-    translation: 'This file came out of the archive damaged: it did not match the size or checksum the archive '
-      + 'states for it. It was not filed. A fresh copy of the archive from the source may hold it intact.',
+    translation: word("refusal.MEMBER_CORRUPT"),
   }),
   MEMBER_MAX: Object.freeze({
     check: 'C-139.9',
     where: un('is-entry-verdict'),
-    translation: 'This file is larger than your group\'s Civicsmith unpacks from an archive, so it was not filed. '
-      + 'If the source offers the file on its own, capture it directly.',
+    translation: word("refusal.MEMBER_MAX"),
   }),
   /* A declared size far beyond what compression can produce: the mark of an archive built to exhaust its reader. */
   ARCHIVE_RATIO_MAX: Object.freeze({
     check: 'C-139.10',
     where: un('is-entry-verdict'),
-    translation: 'This file claims to unpack to far more than packing can make, which is how an archive built to '
-      + 'overwhelm a reader looks. It was not filed.',
+    translation: word("refusal.ARCHIVE_RATIO_MAX"),
   }),
   ARCHIVE_ENTRIES_MAX: Object.freeze({
     check: 'C-139.11',
     where: un('is-archive-listed'),
-    translation: 'This archive holds more files than your group\'s Civicsmith opens in one archive, so none of them '
-      + 'was filed. The archive itself is kept as it was captured.',
+    translation: word("refusal.ARCHIVE_ENTRIES_MAX"),
   }),
   ARCHIVE_TOTAL_MAX: Object.freeze({
     check: 'C-139.12',
     where: un('is-archive-listed'),
-    translation: 'The files in this archive add up to more than your group\'s Civicsmith unpacks from one archive, '
-      + 'so it was listed and none of its files was filed. The archive itself is kept as it was captured.',
+    translation: word("refusal.ARCHIVE_TOTAL_MAX"),
   }),
   /* R40: an archive nested deeper than the published depth is filed as a file and never opened. */
   ARCHIVE_DEPTH_MAX: Object.freeze({
     check: 'C-139.13',
     where: un('is-unpack-budget'),
-    translation: 'This archive sits inside other archives deeper than your group\'s Civicsmith opens, so it is kept '
-      + 'as a file and its contents were not filed.',
+    translation: word("refusal.ARCHIVE_DEPTH_MAX"),
   }),
   /* R40 (F7): the whole tree under the outermost archive is held to a total; the automatic run stops and the rest
      waits for a member, whose own request goes past it. */
   ARCHIVE_TREE_TOTAL_MAX: Object.freeze({
     check: 'C-139.14',
     where: un('is-unpack-budget'),
-    translation: 'The archives nested inside this one add up to more than your group\'s Civicsmith unpacks on its '
-      + 'own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on.',
+    translation: word("refusal.ARCHIVE_TREE_TOTAL_MAX"),
   }),
   ARCHIVE_TREE_ENTRIES_MAX: Object.freeze({
     check: 'C-139.15',
     where: un('is-unpack-budget'),
-    translation: 'The archives nested inside this one hold more files than your group\'s Civicsmith unpacks on its '
-      + 'own, so the rest of these files are waiting. A member can ask to open the archive, and it will go on.',
+    translation: word("refusal.ARCHIVE_TREE_ENTRIES_MAX"),
   }),
   /* R40: the group's daily allowance for opening archives on their own is used for today. */
   UNPACK_DAILY_BYTES: Object.freeze({
     check: 'C-139.16',
     where: un('is-unpack-budget'),
-    translation: 'Your group\'s Civicsmith has unpacked as much from archives on its own as it does in one day, so '
-      + 'the rest of these files are waiting. A member can ask to open the archive now, or it goes on after '
-      + 'midnight UTC.',
+    translation: word("refusal.UNPACK_DAILY_BYTES"),
   }),
   UNPACK_DAILY_ENTRIES: Object.freeze({
     check: 'C-139.17',
     where: un('is-unpack-budget'),
-    translation: 'Your group\'s Civicsmith has unpacked as many files from archives on its own as it does in one '
-      + 'day, so the rest of these files are waiting. A member can ask to open the archive now, or it goes on '
-      + 'after midnight UTC.',
+    translation: word("refusal.UNPACK_DAILY_ENTRIES"),
   }),
   /* R42 (F16): a fetch never goes to one of the group's own hosts: the copy itself or a member of its fleet. */
   OWN_HOST_REFUSED: Object.freeze({
     check: 'C-139.18',
     where: 'src/acquisition/index.mjs acquire > is-own-host; src/acquisition/keyed.mjs keyedFetch > is-own-host',
-    translation: 'That address belongs to your group\'s own Civicsmith, and it never fetches from itself, so '
-      + 'nothing was fetched or filed. What your group holds is already in its record.',
+    translation: word("refusal.OWN_HOST_REFUSED"),
   }),
   /* R43 (K1888): the group's co-archive setting is on or off, nothing else. */
   CO_ARCHIVE_SETTING_INVALID: Object.freeze({
     check: 'C-139.19',
     where: 'src/acquisition/unpack.mjs coArchiveSet > is-co-archive-setting',
-    translation: 'Whether captures also ask a public archive to keep a copy is on or off, and this request said '
-      + 'neither, so the setting was not changed.',
+    translation: word("refusal.CO_ARCHIVE_SETTING_INVALID"),
   }),
   /* R41, R38 (N720, K1955, K2100): the capture asked about is held (and, for R41, visible), but R17's rule does not profile it as an archive (an
      office or OpenDocument file included, though both are ZIP containers): it has no list of files to show, and is never
@@ -405,8 +347,14 @@ export const ARCHIVE_CHECKS = Object.freeze({
   NOT_AN_ARCHIVE: Object.freeze({
     check: 'C-139.20',
     where: `${un('is-not-an-archive')}; ${ls('is-not-an-archive')}`,
-    translation: 'This file is not an archive, so there is no list of files inside it to show. Your group\'s Civicsmith '
-      + 'keeps it as a file of its own: open it as you would any other document.',
+    translation: word("refusal.NOT_AN_ARCHIVE"),
+  }),
+  /* R47 (N1117, DEC-302): a member's `for` that is not the id of a question; refused before any fetch, nothing written or
+     filed. The sentence is the design's (`refusal.BAD_FOR`), read by key. */
+  BAD_FOR: Object.freeze({
+    check: 'C-139.21',
+    where: at('is-for'),
+    translation: word("refusal.BAD_FOR"),
   }),
 });
 
