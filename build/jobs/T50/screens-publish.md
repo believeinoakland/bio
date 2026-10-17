@@ -61,3 +61,7 @@ Merged tranche/T50 (wizard-scripts registry) and re-ran: 112 tests, 105 pass; th
 ## Completion addendum (B5)
 
 Merged `tranche/T50` @ interface-shell (T50-27), instance-setup, op-declarations; no stand-in remains. `node --test bio-plane/test/m/screens-publish/`: tests 112, pass 112, fail 0 against the real shell (the seven accepted reds are gone). format, architecture, coverage (36 of 36) and ownership: 0 failures.
+
+## J4 · COMPLETE
+
+Merged tranche/T50 through B5 (interface-shell, instance-setup, op-declarations). No stand-in remains: module tests 112 of 112 against the real shell; format, architecture, coverage (36 of 36) and ownership 0 failures.
