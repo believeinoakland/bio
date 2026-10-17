@@ -262,14 +262,15 @@ export function frontDoorPointer({ setting }) {
 /** R58 (T50; N1186, K3557; `membership` R150): the two readers the plane registers with `membership.registerProjectReach`
  *  for the modules that cannot (`provenance` and `connections` are in closed layers). Each answers `fn({project})`, a list
  *  of bundle ids and nothing else, over the plane's own instances, handed as getters and asked at each call:
- *  - `provenance`: the home bundle (`provenance.homeOf`) of each capture (`provenance.capturesOf`, per bundle) that the
- *    project's own bundles hold (the project's bundle and every bundle `record.listBundles({project})` lists), since a
- *    capture's digest is no bundle id; a capture with no home adds nothing;
+ *  - `provenance`: the home bundle (`provenance.homeOf`) of each capture that the project's own bundles hold (the
+ *    project's bundle and every bundle `record.listBundles({project})` lists): each one's `provenance.capturesOf` and the
+ *    digests of its live files (`files.sha256`, record-core R37; K3771), since a capture's digest is no bundle id; a
+ *    digest with no home adds nothing;
  *  - `connections`: the records the project's document cites, the targets of its `references[]` entries of rel `cites`
  *    whose edge is not severed (`connections.edgeSevered`).
  *  A reader that throws, or reads nothing, adds nothing (membership R150: the reach narrows, never widens). Both are
  *  bounded by `Membership.PROJECT_REACH_LIMIT`. Neither writes. */
-export function projectReachReaders({ record, provenance, connections }) {
+export function projectReachReaders({ record, provenance, connections, sql = null }) {
   const LIMIT = Membership.PROJECT_REACH_LIMIT, PAGE = 200;
   const own = (project) => {
     const ids = [project];
@@ -289,7 +290,10 @@ export function projectReachReaders({ record, provenance, connections }) {
       if (!said(project)) return [];
       const out = new Set(), p = provenance();
       for (const b of own(project)) {
-        for (const { capture_sha } of p.capturesOf(b)) {
+        /* K3771 (R58): the captures homed in the bundle, and the digests of its live files (record-core R37), each through homeOf */
+        const digests = p.capturesOf(b).map((c) => c.capture_sha);
+        if (sql) for (const r of sql().exec(`SELECT DISTINCT sha256 FROM files WHERE bundle_id = ?`, b)) digests.push(r.sha256);
+        for (const capture_sha of digests) {
           const home = p.homeOf(capture_sha);
           if (home && typeof home.bundleId === "string" && home.bundleId !== "" && out.size < LIMIT) out.add(home.bundleId);
         }

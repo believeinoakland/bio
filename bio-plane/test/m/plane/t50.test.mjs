@@ -91,11 +91,16 @@ async function reachWorld() {
   };
   const A = promote("Project A", [{ target: "CITED", rel: "cites" }, { target: "SEV", rel: "cites", status: "severed" }, { target: "OTHER", rel: "links_to" }]);
   const B = promote("Project B", [{ target: "B-CITED", rel: "cites" }]);
-  for (const id of ["CITED", "SEV", "OTHER", "B-CITED", "LOOSE"]) bundle(id);
+  for (const id of ["CITED", "SEV", "OTHER", "B-CITED", "LOOSE", "LOOSE2", "HELD"]) bundle(id);
   bundle("REC-A", A); bundle("REC-B", B);
   const cap = (n, home) => sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'doc.txt', 'utf8', 1, '2026-09-27T00:00:00Z')`,
     createHash("sha256").update(n).digest("hex"), home);
-  cap("a", "REC-A"); cap("b", "REC-B"); cap("l", "LOOSE");
+  cap("a", "REC-A"); cap("b", "REC-B"); cap("l", "HELD"); cap("m", "LOOSE2");
+  /* K3771: REC-A holds a file whose digest is the capture homed in HELD; REC-B one whose digest is homed in LOOSE; a file
+     whose digest no register row names adds nothing */
+  const file = (b, p, n) => sql.exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, ?, 'x', 1, ?)`, b, p, n);
+  file("REC-A", "held.txt", createHash("sha256").update("l").digest("hex")); file("REC-A", "none.txt", "f".repeat(64));
+  file("REC-B", "b.txt", createHash("sha256").update("m").digest("hex"));
   const m = membershipOf(x.ctx);
   for (const id of [A, B, "CITED", "SEV", "OTHER", "B-CITED", "LOOSE", "REC-A", "REC-B"]) m.reindexProjectSight?.(id);
   return { ...x, A, B, m, sha: (n) => createHash("sha256").update(n).digest("hex") };
@@ -105,15 +110,17 @@ test("R58 (T50; membership R150): the plane registers, once each, the provenance
   const w = await reachWorld();
   const reach = w.m.projectReach(w.A);
   assert.ok(reach.includes("REC-A"), "the home of a capture A's own bundle holds");
+  assert.ok(reach.includes("HELD"), "the home of a capture whose digest A's bundle holds as a file (K3771)");
   assert.ok(reach.includes("CITED"), "a record A's document cites");
-  for (const id of ["SEV", "OTHER", "B-CITED", "REC-B", "LOOSE"]) assert.equal(reach.includes(id), false, `${id} is not in A's reach`);
+  for (const id of ["SEV", "OTHER", "B-CITED", "REC-B", "LOOSE", "LOOSE2"]) assert.equal(reach.includes(id), false, `${id} is not in A's reach`);
   const pv = projectViewer("member:alice", w.A);
-  for (const id of ["REC-A", "CITED"]) assert.equal(w.m.inSight(id, pv), true, `${id} is reached`);
-  for (const id of ["SEV", "OTHER", "B-CITED", "REC-B", "LOOSE"]) assert.equal(w.m.inSight(id, pv), false, `${id} is not reached`);
+  for (const id of ["REC-A", "CITED", "HELD"]) assert.equal(w.m.inSight(id, pv), true, `${id} is reached`);
+  for (const id of ["SEV", "OTHER", "B-CITED", "REC-B", "LOOSE", "LOOSE2"]) assert.equal(w.m.inSight(id, pv), false, `${id} is not reached`);
   assert.equal(w.m.inSight("REC-B", "member:alice"), true, "control: alice's own viewer sees B's record");
   /* project B's reach is its own */
   const rb = w.m.projectReach(w.B);
-  assert.ok(rb.includes("B-CITED") && rb.includes("REC-B"));
+  assert.ok(rb.includes("B-CITED") && rb.includes("REC-B") && rb.includes("LOOSE2"));
+  assert.equal(rb.includes("HELD"), false);
   assert.equal(rb.includes("CITED"), false);
   /* a second registration of either reader is refused naming its slot */
   for (const module of ["provenance", "connections"]) {
@@ -127,7 +134,7 @@ test("R58 (T50; membership R150): each reader answers a list of bundle ids and n
   const w = await reachWorld();
   const { recordOf } = await import("../../../src/record-core/index.mjs");
   const { connectionsOf } = await import("../../../src/connections/index.mjs");
-  const live = projectReachReaders({ record: () => recordOf(w.ctx), provenance: () => provenanceOf(w.ctx), connections: () => connectionsOf(w.ctx) });
+  const live = projectReachReaders({ record: () => recordOf(w.ctx), provenance: () => provenanceOf(w.ctx), connections: () => connectionsOf(w.ctx), sql: () => w.ctx.storage.sql });
   for (const [name, fn] of Object.entries(live)) {
     const got = fn({ project: w.A });
     assert.ok(Array.isArray(got) && got.every((id) => typeof id === "string" && id !== ""), `${name} answers bundle ids`);
@@ -135,7 +142,7 @@ test("R58 (T50; membership R150): each reader answers a list of bundle ids and n
     assert.deepEqual(fn({ project: "PROJ-2026-none" }).filter((id) => id !== "PROJ-2026-none"), [], `${name}: a project nothing holds adds nothing`);
   }
   assert.deepEqual(live.connections({ project: w.A }), ["CITED"], "only the cites edge not severed");
-  assert.deepEqual(live.provenance({ project: w.A }).sort(), ["REC-A"].sort());
+  assert.deepEqual(live.provenance({ project: w.A }).sort(), ["HELD", "REC-A"]);
   /* control: a reader whose instance throws adds nothing (membership R150 catches it), and the other reader's ids stand */
   const broken = projectReachReaders({ record: () => { throw new Error("down"); }, provenance: () => { throw new Error("down"); }, connections: () => { throw new Error("down"); } });
   for (const fn of Object.values(broken)) assert.throws(() => fn({ project: w.A }));
@@ -309,4 +316,42 @@ test("R63 (T50; V3 B-24; M-T50-7; K3664; admission R27; amends R5): a burst of t
     const out = await Promise.all(Array.from({ length: n }, () => call("securitymap")));
     for (const o of out) assert.deepEqual([o.status, o.inner && o.inner.ok, o.inner && o.inner.code], [200, false, "NOT_AN_ADMIN"], `securitymap at ${n}: its own refusal, in the store's envelope`);
   }
+});
+
+/* ===== R61: the plane composes translations ===== */
+
+const NINE = ["translationdraft", "translationdraftrecord", "translationgrant", "translationadopt", "translationconfirm",
+              "translationrevert", "translationmark", "translations", "interfacewords"];
+
+test("R61 (T50; N1084; translations R12; amends R2, R5): the plane builds translations on the object's storage, one instance, migrated once; its nine routes reach its handlers from its own map, each key once, and answer through the door what that map answers; control: instance-setup's copy of them is not the one that answers", async () => {
+  const { translationsOf, translationsOps } = await import("../../../src/translations/index.mjs");
+  const x = await store(), twin = await store();
+  const u = new URL("http://do/");
+  assert.equal(translationsOf(x.ctx), translationsOf(x.ctx), "one instance per storage");
+  assert.deepEqual(Object.keys(translationsOps(translationsOf(x.ctx), u, null)), NINE, "the nine routes");
+  const keys = Object.keys(x.s.routes(u, null));
+  for (const op of NINE) assert.equal(keys.filter((k) => k === op).length, 1, `${op} once`);
+  /* each is translations' handler: replaced on the instance, the route map reaches the replacement */
+  const m = translationsOf(x.ctx), seen = [];
+  const was = m.translations.bind(m);
+  m.translations = (a) => { seen.push(a); return was(a); };
+  try { await x.call("/translations?language=es&viewer=member:nobody"); } finally { m.translations = was; }
+  assert.equal(seen.length, 1, "op=translations is translations' own handler");
+  /* through the door, as translations' own map answers it called directly */
+  for (const op of ["translations", "interfacewords"]) {
+    const q = `${op}?language=es&viewer=member:nobody`;
+    const res = await x.fetch(`/${q}`, { method: "POST", body: "{}" });
+    const direct = await translationsOps(translationsOf(twin.ctx), new URL(`http://do/${q}`), {})[op]();
+    assert.equal(res.status, 200, op);
+    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), op);
+  }
+  /* the tables: made once, and a second migration changes nothing */
+  const tables = () => [...x.ctx.storage.sql.exec(`SELECT name, sql FROM sqlite_master ORDER BY name`)].map((r) => [r.name, r.sql]);
+  const before = tables();
+  translationsOf(x.ctx).migrate();
+  assert.deepEqual(tables(), before, "migrate() twice changes nothing");
+  const { TRANSLATION_TABLES } = await import("../../../src/translations/index.mjs");
+  for (const t of TRANSLATION_TABLES) assert.ok(before.some(([n]) => n === t), `table ${t}`);
+  /* control: a probe is no route */
+  assert.equal(keys.includes("zztranslation"), false);
 });

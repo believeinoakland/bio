@@ -88,6 +88,7 @@ import { machineryProducersOf } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
+import { translationsOf, translationsOps } from "../translations/index.mjs";
 import { instanceSetupOf, instanceSetupOps, disclosureReadOf, DISCLOSURE_READER } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
 import { promotionStep } from "../store-door/step.mjs";
@@ -315,7 +316,8 @@ export class Store extends DurableObject {
        register (closed layers), made here once each, over this object's own instances: the home bundles of the captures
        the project's bundles hold, and the records its document cites. A second registration is refused
        `LISTENER_DECLARED`; a reader that throws adds nothing. */
-    const reach = projectReachReaders({ record: () => recordOf(ctx), provenance: () => provenance, connections: () => connections });
+    const reach = projectReachReaders({ record: () => recordOf(ctx), provenance: () => provenance, connections: () => connections,
+      sql: () => this.sql });
     membershipOf(ctx).registerProjectReach("provenance", reach.provenance);
     membershipOf(ctx).registerProjectReach("connections", reach.connections);
     strengthOf(ctx, { retrieval, acceptedWork });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
@@ -506,6 +508,11 @@ export class Store extends DurableObject {
     schedulerOf(ctx, env).register("plane", archiveUnpackConsumer({ capture: () => captureOf(ctx), env }));
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
+    /* R61 (T50; N1084; translations R12): translations, directly before instance-setup in the modules' order, the one
+       instance per host; at creation it creates its seven tables and declares them to purge (held once, whichever of it
+       and instance-setup is built first). Its nine routes are spread beside instance-setup's (R5), and migrated in R3's
+       pass. */
+    translationsOf(ctx);
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
     /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
        credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
@@ -622,6 +629,7 @@ export class Store extends DurableObject {
     actionRepliesOf(this.ctx).migrate();
     planWorkOf(this.ctx).migrate();
     wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
+    translationsOf(this.ctx).migrate();   /* R61: its seven tables, in the modules' order (before instance-setup; idempotent) */
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -725,6 +733,7 @@ export class Store extends DurableObject {
       if (typeof grant === "string" && grant !== "") url.searchParams.set("use", draftUse(ctx, grant) || "ask");
     }
     const accountOps = aiAccountsOps(aiAccountsOf(ctx), url, body, env);
+    const translationsMap = translationsOps(translationsOf(ctx), url, body);
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       /* N783 (K2270): project-roster's ops (`projectowner*`, `projectvisibility`, `projectdirectory`,
@@ -856,7 +865,11 @@ export class Store extends DurableObject {
       /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */
       ...caseCheckOps(caseCheckOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
-      ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
+      /* R61 (T50; translations R12): translations' nine routes, over the one instance; instance-setup's own copy of them
+         (deleted in its own job, T50-23) is dropped here so each route reaches the one handler once. */
+      ...translationsMap,
+      ...Object.fromEntries(Object.entries(instanceSetupOps(instanceSetupOf(ctx, env), url, body))
+        .filter(([op]) => !Object.hasOwn(translationsMap, op))),
       /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
       ...admissionOps(admissionOf(ctx), url, body),
       /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
