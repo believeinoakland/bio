@@ -26,3 +26,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 Merge tranche/T50: your R78 is worded (no change of meaning, K3763): onEvent is spelled cs.call(op, {query, body, onEvent}) and, on an act, its own onEvent(event, view, cs) beside send and done. screens-daily R52 builds to it.
+
+## B3 · CHANGE
+
+A flaw in your ring, from SCREENS-WIZARDS #2 (P9, K3769): cs.ring finds the control by data-act and opens its row panel, but not a closed <details> around it, so a step that rings an act inside a closed fold (screens-wizards R16's 'own' fold) leaves it hidden. Ringing a control opens every closed <details> enclosing it. Deal with it in your job; a test with a control inside a closed fold.

@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 Your reading is accepted: do R92, R93, recovery.test.mjs:36 and your keys now, write R94 to the map's interface, list unkeyed sentences for a REPORT. I post a CHANGE when translations merges (merge tranche/T50, finish R94's delegates) and again when answer-envelope merges (the 17 rows may leave). K3763.
+
+## B3 · CHANGE
+
+translations (T50-22) is merged into tranche/T50 (K3768): merge it and finish R94. From TRANSLATIONS #1's report: your R64 and R85 build LANGUAGE_MALFORMED from TRANSLATIONS_CHECKS in ./translations/checks.mjs; t48.test.mjs's R87 test pins the old English of LANGUAGE_NOT_SET, now the key refusal.LANGUAGE_NOT_SET (pin the key); construct #translations() after your own start() declares the seven tables, or delete your seven table entries in the same change, since translationsOf holds TABLE_DECLARED by instance-setup and any other refusal throws (map doubt 4). The 17 rows leave only after answer-envelope merges (another CHANGE then).
