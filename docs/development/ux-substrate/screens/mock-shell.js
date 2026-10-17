@@ -45,6 +45,7 @@ function wizardGuide(w) {
     <span class="step">${I('wizard')}${esc(w.name)} · step ${w.i} of ${w.n}</span>
     <span class="what">${esc(w.what)}</span><span class="why">${esc(w.why)}</span>
     ${w.via ? `<p class="mk-small">${I('wizard')} Side trip: <b>${esc(w.via)}</b>. When it finishes or you stop it, you come back to this step.</p>` : ''}
+    ${w.ask === 'project' ? `<div class="cs-field"><label for="mk-wsubj">This step works in a project. Which one?</label><select id="mk-wsubj" class="cs-input"><option class="mk-data" selected>Pothole repairs</option><option class="mk-data">The Coliseum lease</option></select></div><details class="mk-details"><summary>With no project to choose</summary><p class="mk-small">This step works in a project, and you aren't in one yet. Start one, or ask to join one, then come back to this step.</p></details>` : ''}
     ${w.draft ? `<p class="mk-small">${I('machine')} This step places a labeled draft in the field. It becomes yours only when you keep or edit it.</p>` : ''}
     <span class="nav"><button type="button" class="cs-btn" data-tone="quiet">${I('back')}Back</button><button type="button" class="cs-btn">Next${I('next')}</button></span>
     ${w.act ? `<span class="nav"><button type="button" class="cs-btn" data-replay>${I('wizard')}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>` : ''}
