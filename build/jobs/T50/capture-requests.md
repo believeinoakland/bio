@@ -21,3 +21,7 @@ T50-81 done: R48's captured-for reader answers capture's asks (R94) beside its r
 ## Re-run after B2 (CHANGE)
 
 Merged `tranche/T50` (inquiry, basis-versions, run-rules, ai-use in) into the branch, no conflict. `node --test bio-plane/test/m/capture-requests/`: 127 tests, 127 pass, 0 fail, 0 skipped, against the real modules. Checks as before, 0 failures. No change to the module.
+
+## J2 · COMPLETE
+
+B2 done: merged tranche/T50, no conflict; module tests 127/127 pass against the real inquiry, basis-versions, run-rules, ai-use; format/architecture/coverage/ownership 0 failures. No module change.
