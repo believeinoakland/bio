@@ -14,3 +14,10 @@
 ## J1 · COMPLETE
 
 R25 met: exploregraph steps keep attached_by/at; nodes carry label and entity_kind via entities.labelsOf (R56), read in <=500-id reads. 50/50 explore tests pass; format, architecture, coverage (25/25) and ownership 0 failures. labelsOf was not yet merged from entities at my start: built against R56 with a guarded call and a stand-in in tests; assumed return shape is a map id -> {label, kind}|null (see my record). Please send CHANGE once entities merges so I re-run against the real read. modules.json: explore uses lacks setup-words (your note 1); unused by this job. Details in build/jobs/T50/explore.md.
+
+## J2 · QUESTION · re B2
+
+Merged tranche/T50; key screen.explore.unnamed.why = 'named in {n} documents only by an account number' is in setup-words. Two gaps stop me reading it for an unlabeled node:
+1. {n} has no source. R25/entities R56 give only {label, kind}; neither says how many documents name the entity only by an identifier. My best reading: entities (or another owner) would answer that count per unnamed ENT- id, and explore adds to each label-null ENT- node a field (e.g. unnamed_why) = word('screen.explore.unnamed.why', {n}). Without a count I would have to invent n or leave the sentence out. Which owner answers n, with what read, and what does a node show when n is 0 or unknown (I propose: no unnamed_why key)? R25 would also need the field named.
+2. build/modules.json explore uses lacks setup-words (needed for word(), architecture would fail); it is your file.
+I carry on with nothing else pending; the rest of R25 stands as pushed.
