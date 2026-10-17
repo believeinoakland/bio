@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { T50_SHARES, T50_FAMILIES } from "../../../src/op-declarations/t50.mjs";
 import { needsRows } from "../../../src/op-capabilities/index.mjs";
+import { SCREEN_REGISTRY, INSTALLER_ROUTES, registryActGaps } from "../../../src/wizard-scripts/index.mjs";
 import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
@@ -383,4 +384,13 @@ test("R75 (T50; affordances R64, R66; DEC-264, DEC-309 (5)): reauth leaves ACT_H
   const named = Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]);
   assert.deepEqual(named.filter((op) => explained(op)), [], "an op both explained and named");
   assert.equal(new Set(named).size, named.length, "an op named under two grounds");
+});
+
+test("R73, R21 (T50; wizard-scripts R41, B2 CHANGE): every act of the registry has a declaration — registryActGaps over SCREEN_REGISTRY and the declared ops finds none, the installer's four own routes excluded by name — and the check sees a gap (negative control: an op withdrawn from the declared set is found)", () => {
+  const declared = new Set(Object.keys(OPS));
+  assert.deepEqual(registryActGaps({ screens: SCREEN_REGISTRY, declared }), []);
+  for (const op of INSTALLER_ROUTES) assert.equal(Object.hasOwn(OPS, op), false, `${op}: declared`);
+  for (const op of ["watchitem", "secondlook", "secondlookclear", "projectstakeset", "actionstake", "actioninquiry"]) assert.ok(declared.has(op), op);
+  const without = new Set([...declared].filter((op) => op !== "secondlookclear"));
+  assert.deepEqual(registryActGaps({ screens: SCREEN_REGISTRY, declared: without }).map((g) => g.act), ["secondlookclear"]);
 });
