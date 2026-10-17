@@ -1,6 +1,6 @@
 # instance-setup (T50)
 
-**Status** · session_019Fh9dotp8A2XoNVR5RYBUK · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_019Fh9dotp8A2XoNVR5RYBUK · depth 2 · WAITING ON BOB (J2) · handled B4
 
 ## J1 · QUESTION
 
