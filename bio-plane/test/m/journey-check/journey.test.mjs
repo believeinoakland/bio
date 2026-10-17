@@ -13,6 +13,9 @@ import { fakeAccount, AUTHORIZE, TOKEN, API } from "../../../src/journey-check/a
 import { runLocal, runLive } from "../../../src/journey-check/run.mjs";
 import { FAIL } from "../../../src/journey-check/walker.mjs";
 import { JOURNEY_29_ORDER } from "../../../src/journey-check/design.mjs";
+import { RELEASE_MANIFEST } from "../../../../newgroup/src/release.mjs";
+import { createHash } from "node:crypto";
+import { planeOptions } from "../../../src/journey-check/local.mjs";
 
 const DIR = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 
@@ -56,6 +59,25 @@ test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verif
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/workers/scripts/grp`, { headers: { authorization: "Bearer nope" } }))).status, 403);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/queues`, { headers: auth }))).status, 599);
   assert.deepEqual(acct.unanswered, [`GET ${API}/accounts/${acct.account}/queues`]);
+});
+
+test("R1 (a): the fake account answers the release's member addresses from the repository's committed release, whose bytes the installer's manifest signs; RELEASE.json and the plane's own asset stay unanswered; control: an address outside it is 404", async () => {
+  const acct = fakeAccount();
+  const at = (p) => acct.handle(new Request(`https://raw.githubusercontent.com/believeinoakland/bio/v${RELEASE_MANIFEST.version}/release/${p}`));
+  for (const m of RELEASE_MANIFEST.fleet) {
+    const r = await at(m.asset);
+    assert.equal(r.status, 200, m.asset);
+    assert.equal(createHash("sha256").update(Buffer.from(await r.arrayBuffer())).digest("hex"), m.sha256, `${m.member} as the installer verifies it`);
+  }
+  assert.equal((await at("RELEASE.json")).status, 404);
+  assert.equal((await at("bio-plane.bundled.mjs")).status, 404);
+  assert.equal((await at("../package.json")).status, 404);
+  assert.equal((await at("no-such-member.bundled.mjs")).status, 404);
+  /* the copy binds each capability member the upload gave it, to a worker that answers its version */
+  const { opts } = planeOptions([{ type: "service", name: "PDF_WORKER", service: "pdf-worker-grp" }, { type: "plain_text", name: "VERSION", text: "9.9.9" }],
+    { dir: "/tmp/x", name: "grp", outbound: () => new Response("") });
+  assert.equal(opts.workers[0].serviceBindings.PDF_WORKER, "pdf-worker-grp");
+  assert.ok(opts.workers.some((w) => w.name === "pdf-worker-grp" && /"pdf-worker"/.test(w.script) && /9\.9\.9/.test(w.script)));
 });
 
 /* The local arm walked once, end to end, shared by the tests that name what it walks (R1 (a), R7, R9–R11, R13, R14). It is

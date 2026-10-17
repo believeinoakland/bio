@@ -6,6 +6,24 @@
    not answer, so the installer installs its built-in release and says why. Every call it does not answer is recorded as
    `unanswered` and refused, so the walk fails on it rather than passing over it. */
 
+import { readFileSync, existsSync, statSync } from "node:fs";
+import { join, dirname, normalize, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/* The release a person's install fetches its members from: the repository's own committed `release/` (whose bytes the
+   installer's built-in manifest signs, and the installer verifies), answered at the address the installer asks, and nothing
+   else: `RELEASE.json` stays unanswered so the installer takes its built-in release, and the plane's own asset is the
+   built-in's. */
+const RELEASE_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "release");
+function released(url) {
+  const m = /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/release\/(.+)$/.exec(url.replace(/[?#].*$/, ""));
+  const rel = m && decodeURIComponent(m[1]);
+  const file = rel && normalize(join(RELEASE_DIR, rel));
+  if (!file || !file.startsWith(RELEASE_DIR + sep) || rel === "RELEASE.json" || rel === "bio-plane.bundled.mjs" || !existsSync(file) || !statSync(file).isFile())
+    return new Response("not found", { status: 404 });
+  return new Response(readFileSync(file), { status: 200, headers: { "content-type": "application/octet-stream" } });
+}
+
 const enc = new TextEncoder();
 const b64url = (buf) => Buffer.from(buf).toString("base64url");
 const s256 = async (s) => b64url(await crypto.subtle.digest("SHA-256", enc.encode(s)));
@@ -125,7 +143,7 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     calls.push(`${req.method} ${url.replace(/[?#].*$/, "")}`);
     if (url.startsWith(AUTHORIZE)) return consent(url);
     if (url === TOKEN && req.method === "POST") return token(req);
-    if (url.startsWith(RELEASES)) return new Response("not found", { status: 404 });
+    if (url.startsWith(RELEASES)) return released(url);
     if (url.startsWith(API + "/")) {
       const auth = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
       if (!tokens.has(auth)) return no("Authentication error", 403, 10000);
