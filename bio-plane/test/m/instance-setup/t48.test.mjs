@@ -4,6 +4,7 @@
    key handed in as the module's list of release keys; the fetch, the governor and the clock are stand-ins that record
    what they were asked. Every refusal has a control (K874). */
 import test from "node:test";
+import { word } from "../../../src/setup-words/index.mjs";
 import assert from "node:assert/strict";
 import { boot, frame, providers } from "./fixture.mjs";
 import { INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, INSTANCE_SETUP_CHECKS, RELEASE_NOTICE_ADDRESS,
@@ -49,38 +50,6 @@ async function world({ version = "0.84.0", env = {}, st = null, prov = null, zon
 const found = async (w, n = notice("0.85.0"), opts) => { w.serve(feed(n, opts)); return w.tick(); };
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
-
-/* ---- R87: the language a member reads in ---- */
-
-test("R87 readingLanguage answers the member's own language when none is named: a member with Spanish set answers es; control: a member with none set and no language named answers LANGUAGE_NOT_SET, nothing written", async () => {
-  const w = await world();
-  w.m.memberLanguageSet({ language: "es", by: "ruth" });
-  assert.deepEqual(w.m.readingLanguage({ member: "ruth" }), { ok: true, language: "es", source: "member" });
-  const before = w.st.statements.length;
-  const none = w.m.readingLanguage({ member: "sam" });
-  assert.deepEqual([none.ok, none.reason, none.code, none.check], [false, "LANGUAGE_NOT_SET", "LANGUAGE_NOT_SET", "C-64.31"]);
-  assert.equal(none.translation, "Choose the language you read in, in Your account, or name one. Nothing was translated.");
-  assert.equal(w.m.readingLanguage({}).reason, "LANGUAGE_NOT_SET", "no member and no language");
-  assert.equal(w.m.readingLanguage().reason, "LANGUAGE_NOT_SET", "no argument at all never throws");
-  /* a member who cleared her choice has none set; a machine has none */
-  w.m.memberLanguageSet({ language: null, by: "ruth" });
-  assert.equal(w.m.readingLanguage({ member: "ruth" }).reason, "LANGUAGE_NOT_SET");
-  assert.equal(w.m.readingLanguage({ member: "class:ai" }).reason, "LANGUAGE_NOT_SET");
-  assert.deepEqual(w.st.statements.slice(before).filter((q) => /^\s*(INSERT|UPDATE|DELETE)/i.test(q)).length, 1 /* the clear above */);
-});
-
-test("R87 readingLanguage answers the language named when jurisdictions.isLocale accepts it, over the member's own, in its canonical form; control: a tag it refuses is LANGUAGE_MALFORMED (R64's rule), and a refused tag is not replaced by the member's own", async () => {
-  const w = await world();
-  w.m.memberLanguageSet({ language: "es", by: "ruth" });
-  assert.deepEqual(w.m.readingLanguage({ member: "ruth", language: "fr" }), { ok: true, language: "fr", source: "named" });
-  assert.equal(w.m.readingLanguage({ member: "ruth", language: "pt-br" }).language, "pt-BR", "canonical form");
-  assert.equal(w.m.readingLanguage({ language: "zh-Hant" }).language, "zh-Hant", "no member needed when one is named");
-  const bad = w.m.readingLanguage({ member: "ruth", language: "es es" });
-  assert.deepEqual([bad.ok, bad.reason, bad.check], [false, "LANGUAGE_MALFORMED", "C-119.12"]);
-  /* a member's stored tag is read in its canonical form too */
-  w.m.memberLanguageSet({ language: "pt-br", by: "tom" });
-  assert.equal(w.m.readingLanguage({ member: "tom" }).language, "pt-BR");
-});
 
 /* ---- R88: the daily check ---- */
 
@@ -389,7 +358,7 @@ test("R90 updateStart refusals: a member and a machine NOT_AN_ADMIN first, befor
     const r = w.m.updateStart({ version, by: "admin" });
     if (version === "0.85.0 ") { assert.equal(r.ok, true, "the version is trimmed"); continue; }
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "UPDATE_NOT_READY", "UPDATE_NOT_READY", "C-64.32"], String(version));
-    assert.equal(r.translation, "That release is not the one ready to install. Nothing was recorded.");
+    assert.equal(r.translation, word("refusal.UPDATE_NOT_READY"));
   }
   assert.equal(w.count("update_decisions"), before + 1, "only the control wrote");
 });
@@ -436,7 +405,7 @@ test("R90 updateSkip records the administrator's reason with who and when and th
   for (const reason of [undefined, null, "", "   ", "x".repeat(1001), "line one\nline two", 7]) {
     const r = w.m.updateSkip({ version: "0.85.0", reason, by: "admin" });
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "UPDATE_SKIP_NO_REASON", "UPDATE_SKIP_NO_REASON", "C-64.33"], JSON.stringify(reason));
-    assert.equal(r.translation, "Say why your group skips this release: every administrator will see it. Nothing was recorded.");
+    assert.equal(r.translation, word("refusal.UPDATE_SKIP_NO_REASON"));
   }
   assert.equal(w.count("update_decisions"), before);
   assert.equal(w.m.updateSkip({ version: "0.85.0", reason: "We freeze changes until the filing.", by: "ruth" }).reason, "NOT_AN_ADMIN");
@@ -467,9 +436,10 @@ test("R90 R29 over the routes: updatenotice, updatestart, updatelater and update
   assert.equal((await call(w.m, "updatenotice?viewer=admin")).result.ready, null);
 });
 
-test("R90 C-64.31–C-64.33: the three new rows carry BOB's words, each in this module's regions, and no row of this module names a copy, instance, plane or server", () => {
-  const rows = ["LANGUAGE_NOT_SET", "UPDATE_NOT_READY", "UPDATE_SKIP_NO_REASON"].map((k) => INSTANCE_SETUP_CHECKS[k]);
-  assert.deepEqual(rows.map((r) => r.check), ["C-64.31", "C-64.32", "C-64.33"]);
+test("R90 C-64.32–C-64.33: the two update rows carry their words by key, each in this module's regions, and no row of this module names a copy, instance, plane or server; C-64.31 (LANGUAGE_NOT_SET) is `translations`' and held here by none", () => {
+  const rows = ["UPDATE_NOT_READY", "UPDATE_SKIP_NO_REASON"].map((k) => INSTANCE_SETUP_CHECKS[k]);
+  assert.deepEqual(rows.map((r) => r.check), ["C-64.32", "C-64.33"]);
+  assert.equal("LANGUAGE_NOT_SET" in INSTANCE_SETUP_CHECKS, false);
   for (const r of rows) assert.doesNotMatch(r.translation, /\b(?:copy|copies|instance|plane|server)\b/i);
 });
 
@@ -563,4 +533,21 @@ test("R53 R55 (T48; N996) assistantState and assistantGate ask ai-accounts and n
   const bare = await boot({ prov: { ...providers(), aiAccounts: {} } });
   assert.equal(bare.m.assistantState().on, false);
   assert.equal(bare.m.assistantGate().reason, "STORE_DID_NOT_ANSWER");
+});
+
+/* ---- R92 (T50; N1113): the update check is given its clock ---- */
+
+test("R92 the update-check consumer's tick hands the alarm's now to the check: the recorded instant (update_checks.at) and the answered `at` are that now, not the clock's; control: a check run outside an alarm (no now handed) reads the clock as before", async () => {
+  const w = await world();
+  w.serve(feed(notice("0.85.0")));
+  const alarm = T0 + 3 * DAY + 12_345;
+  assert.notEqual(alarm, w.clock.t);
+  const r = await w.consumer().tick(alarm);
+  assert.equal(r.updatecheck.at, new Date(alarm).toISOString());
+  assert.equal(w.lastCheck().at, new Date(alarm).toISOString());
+  /* control: no now handed, the clock is read */
+  w.clock.t = T0 + 5 * DAY;
+  const r2 = await w.m.updateCheckTick();
+  assert.equal(r2.updatecheck.at, new Date(T0 + 5 * DAY).toISOString());
+  assert.equal(w.lastCheck().at, new Date(T0 + 5 * DAY).toISOString());
 });
