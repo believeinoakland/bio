@@ -1,9 +1,9 @@
-/* reading-pipeline R32 (T49; D6 B; K3324 (1)) and R22 (N1065): the text units of a capture read as text through no format
+/* reading-pipeline R32 (T49; D6 B; K3324 (1)), R33 (T50, lines), R34 (T50, the title) and R22 (N1065): the text units of a capture read as text through no format
    entry, at `read`'s interface, over stored captures; and the module's whole outward text against `jurisdictions`' full
    place list. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, hold, doc, member, withEntry, i2, noText, folio, ocrAnswer } from "./fixture.mjs";
+import { fresh, hold, doc, member, withEntry, i2, noText, folio, ocrAnswer, sha } from "./fixture.mjs";
 import { checkChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { ACQUIRE_TEXT_UNITS_BUDGET, CAPTURE_TEXT_UNIT_CAP, ACQUIRE_TEXT_UNIT_ENVELOPE, ReadHooks, tier4Extend } from "../../../src/reading-pipeline/index.mjs";
@@ -182,6 +182,160 @@ test("R33 R1 R32: the chain is carried whatever the content type's reader does, 
   assert.equal(r.text_chars, calendar.length);
   assert.equal(r.text_source.length, 1);
   assert.equal(r.text_container, "html");
+});
+
+/* ---------------------------------------------------------------- R33 (T50; N1191 (a)): lines */
+
+const ORDER = ["Bus shelter repair log, fiscal year 2025",
+  "Public Works received 85 shelter repair requests in 2025.",
+  "Director Maria Alvarez signed the repair standard on 3 March 2025.",
+  "The shelter repair contract was valued at $240,000 and paid on 12 June 2025.",
+  "Standard: every reported shelter defect shall be repaired within 30 days of the report."];
+
+test("R33 R32 (T50; N1191 (a)): a plain-text capture of a title line and four sentence lines with single breaks and no blank line answers five doc-para units, one per line, the line trimmed, para counting the non-empty lines from 0 and seq the position; \\n and \\r\\n breaks alike", async () => {
+  const want = ORDER.map((t, i) => ["doc-para", i, null, i, t]);
+  assert.deepEqual(shape(await plain(ORDER.join("\n") + "\n")), want);
+  assert.deepEqual(shape(await plain(ORDER.join("\r\n"))), want);
+  const padded = await plain(`  ${ORDER[0]}  \n\t${ORDER[1]}\t\n${ORDER[2]}`);
+  assert.deepEqual(shape(padded), ORDER.slice(0, 3).map((t, i) => ["doc-para", i, null, i, t]));
+  assert.deepEqual(Object.keys(padded.text_units[0]), ["extent", "seq", "text"]);
+  assert.deepEqual(Object.keys(padded.text_units[0].extent), ["kind", "para", "run"]);
+  /* R33's chain, R14's provenance and R17's counts stay as for any text read as text */
+  const body = ORDER.join("\n");
+  const r = (await plain(body)).reading;
+  assert.deepEqual([r.text_container, r.text_source.length, r.provenance.text_tier, r.text_chars], ["text", 1, null, body.length]);
+  assert.equal(checkChain(r.text_source), null);
+});
+
+test("R33 (control) R32: the same text with a blank line after the title answers two units as before, a wrapped paragraph is never split, a blank line anywhere (an edge included) keeps R32's paragraphs, a one-line text is one unit, an HTML capture is read by R32's rule, and a text with no glyph answers none", async () => {
+  assert.deepEqual(shape(await plain(ORDER[0] + "\n\n" + ORDER.slice(1).join("\n"))),
+    [["doc-para", 0, null, 0, ORDER[0]], ["doc-para", 1, null, 1, ORDER.slice(1).join("\n")]]);
+  assert.deepEqual(shape(await plain("First line\nstill the first\n\nSecond")),
+    [["doc-para", 0, null, 0, "First line\nstill the first"], ["doc-para", 1, null, 1, "Second"]]);
+  assert.deepEqual(shape(await plain("\n\nline one\nline two")), [["doc-para", 0, null, 0, "line one\nline two"]], "a leading blank line is a blank line");
+  assert.deepEqual(shape(await plain("\nline one\nline two")).map((u) => u[4]), ["line one", "line two"], "a single leading break is no blank line");
+  assert.deepEqual(shape(await plain("line one\nline two\n \n")), [["doc-para", 0, null, 0, "line one\nline two"]], "a trailing blank line is a blank line");
+  assert.deepEqual(shape(await plain("just one line")), [["doc-para", 0, null, 0, "just one line"]]);
+  assert.deepEqual(shape(await plain("just one line\n")), [["doc-para", 0, null, 0, "just one line"]]);
+  assert.deepEqual(shape(await html("<p>one</p>\n<p>two</p>\nthree\nfour")),
+    [["doc-para", 0, null, 0, "one"], ["doc-para", 1, null, 1, "two"], ["doc-para", 2, null, 2, "three four"]], "an HTML page's source line breaks are no line unit");
+  for (const none of [await plain(" \n \t"), await plain("\n"), await html("<div>\n</div>\n<div> </div>")]) assert.equal("text_units" in none, false);
+});
+
+test("R33 R15: the wire's bound, cap, truncated and named gaps apply unchanged to line units", async () => {
+  const big = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 10);
+  const per = CAPTURE_TEXT_UNIT_CAP + ACQUIRE_TEXT_UNIT_ENVELOPE;
+  const fit = Math.floor(ACQUIRE_TEXT_UNITS_BUDGET / per);
+  const out = await plain([big, big, big, big, big].join("\n"));
+  assert.equal(out.text_units.length, fit);
+  assert.ok(out.text_units.every((u) => u.truncated === true && u.text.length === CAPTURE_TEXT_UNIT_CAP));
+  assert.equal(out.text_units_over_bound, 5 - fit);
+  assert.deepEqual(out.text_units_skipped, [{ first: { kind: "doc-para", para: fit, run: null }, first_seq: fit,
+    last: { kind: "doc-para", para: 4, run: null }, last_seq: 4, units: 5 - fit }]);
+});
+
+test("R33 R32 (the measure, M-T50-4): textUnitsOfText gives V4's order shape one unit before this rule and one unit per non-empty line after", () => {
+  const r = rp.textUnitsOfText(ORDER.join("\n"));
+  assert.deepEqual(r.textUnits.map((u) => u.text), ORDER);
+  assert.deepEqual(rp.textUnitsOfText(ORDER.join(" ")).textUnits.length, 1);
+  assert.deepEqual(rp.textUnitsOfText("").textUnits, null);
+});
+
+/* ---------------------------------------------------------------- R34 (T50; N1139, B-12): the title */
+
+const titled = async (markup) => (await html(markup)).reading;
+
+test("R34 R32 R1: a captured notice reads the text of its first <title>, else of its first heading in document order, else null; markup is removed, references decoded, whitespace collapsed, at most 200 characters", async () => {
+  assert.equal((await titled("<html><head><title>Housing notice 2026-118</title></head><body><h1>Other</h1><p>Words</p></body></html>")).title, "Housing notice 2026-118");
+  assert.equal((await titled("<html><body><p>Words</p><h1>Notice 2026-118</h1><h2>Sub</h2></body></html>")).title, "Notice 2026-118");
+  assert.equal((await titled("<html><body><h3>Third</h3><p>x</p><h1>First level</h1></body></html>")).title, "Third", "document order, not level");
+  assert.equal((await titled("<html><body><p>Words only</p></body></html>")).title, null);
+  assert.equal((await titled("<TITLE lang=en>\n  Budget &amp;   <b>Rules</b>\n &lt;2026&gt; &#169;&nbsp;done </TITLE>")).title, "Budget & Rules <2026> © done");
+  assert.equal((await titled(`<title>${"ab ".repeat(100)}</title>`)).title, "ab ".repeat(100).slice(0, 200).trim());
+  assert.equal([...(await titled(`<title>${"é".repeat(300)}</title>`)).title].length, 200);
+  assert.equal((await titled("<title> \n </title><h1>Heading</h1>")).title, "Heading", "a title with no glyph is none; the heading is read in its place");
+  assert.equal((await titled("<title>&nbsp;</title><p>no heading</p>")).title, null);
+  assert.equal((await titled("<head><title/><title>Second</title></head>")).title, "Second", "a self-closing tag is no element");
+  assert.equal((await titled("<title>never closed <p>words")).title, null, "a start tag with no end tag is no element");
+  assert.equal((await titled("<h1>One</h1><h1>Two</h1>")).title, "One");
+});
+
+test("R34: nothing inside a script, style, comment or template is a title: a <title> in a script string, a comment, a style or a template is none, and the real one after it is read", async () => {
+  for (const hidden of ['<script>var s = "<title>Fake</title><h1>Fake</h1>";</script>', "<!-- <title>Fake</title> -->",
+                        "<style>/* <title>Fake</title> */</style>", "<template><h1>Fake</h1><title>Fake</title></template>"]) {
+    assert.equal((await titled(`<html><body>${hidden}<p>Words</p></body></html>`)).title, null, hidden);
+    assert.equal((await titled(`<html><body>${hidden}<h2>Real</h2><p>Words</p></body></html>`)).title, "Real", hidden);
+  }
+  assert.equal((await titled("<p>Words</p><script>var a = '<title>Fake</title>'")).title, null, "an unclosed script drops to the end");
+});
+
+test("R34 (control) R32 R17 R14: the units, counts and provenance of each captured page are as before the title: the title is read from markup the units drop and is no text of the body", async () => {
+  const withTitle = "<html><head><title>Housing notice 2026-118</title></head><body><p>Words in the body.</p></body></html>";
+  const out = await html(withTitle);
+  assert.deepEqual(shape(out), [["doc-para", 0, null, 0, "Words in the body."]]);
+  assert.equal(out.reading.text_chars, withTitle.length);
+  assert.equal(out.reading.provenance.text_chars, withTitle.length);
+  assert.equal(out.reading.provenance.text_sha256, sha(withTitle));
+  const heading = await html("<html><body><h1>Notice 2026-118</h1></body></html>");
+  assert.deepEqual(shape(heading), [["doc-para", 0, null, 0, "Notice 2026-118"]], "a heading is also a unit");
+  /* a page whose only words are in the title has a title and no unit */
+  const only = await html("<html><head><title>Only a title</title></head><body></body></html>");
+  assert.equal(only.reading.title, "Only a title");
+  assert.equal("text_units" in only, false);
+});
+
+test("R34 R1: a plain-text capture, delimited text and any text not HTML read null; the key is present on every reading R1 composes whether or not its reader found entities", async () => {
+  for (const out of [await plain("Notice 2026-118\n<title>Not markup here</title>"), await plain("one\n\ntwo"), await plain(" ")]) {
+    assert.equal(Object.hasOwn(out.reading, "title"), true);
+    assert.equal(out.reading.title, null);
+  }
+  const json = await readAs(fresh(), "{\"a\":1}", { ct: "application/json", format: "undetermined" });
+  assert.equal(json.reading.title, null);
+  const ROW = `<tr><td><a href="MeetingDetail.aspx?ID=2101&GUID=X">City Council</a></td><td>7/15/2026</td><td><a href="View.ashx?M=A&ID=52101">Agenda</a></td></tr>`;
+  const calendar = ['<!DOCTYPE html><html><head><title>Council Calendar</title></head><body><form id="aspnetForm" method="post">',
+    '<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="STATE" />', '<main id="mainContent" role="main">',
+    '<select id="lstYears_Input" name="lstYears" value="This Month"><option>This Month</option></select>',
+    '<table><tr><th>Name</th><th>Date</th><th>Agenda</th></tr>', ROW, '</table></main></form></body></html>'].join("");
+  const r = (await readAs(fresh(), calendar, { ct: "text/html", format: "html", headers: [["content-type", "text/html; charset=utf-8"], ["x-powered-by", "ASP.NET"], ["server", "Microsoft-IIS/10.0"]] })).reading;
+  assert.deepEqual([r.entities.length > 0, r.title], [true, "Council Calendar"]);
+});
+
+test("R34 R2 R28: a capture read through a format entry carries the title its metadata states when that is a non-blank string, else null; a PDF and an office capture read as before with title null", async () => {
+  const w = fresh();
+  const entryOf = (format, metadata) => ({ format, text: async () => ({ ok: true, container: "docx", document: "p1", paragraphs: [{ para: 0, text: "p1" }],
+    counts: { chars: 2, undetermined: 0 }, undetermined: [], ...(metadata === undefined ? {} : { metadata }) }) });
+  const run = (format, metadata) => withEntry(entryOf(format, metadata), async () => {
+    const d = await hold(w.evidence, `r34 ${format} ${Math.random()}`);
+    return (await w.read(doc({ digest: d, ct: "application/x", format, fromText: true }))).reading;
+  });
+  assert.equal((await run("r34a", { title: "  Quarterly\n  Report  " })).title, "Quarterly Report");
+  assert.equal((await run("r34b", { title: "   " })).title, null);
+  assert.equal((await run("r34c", { title: 7 })).title, null);
+  assert.equal((await run("r34d", { author: "x" })).title, null);
+  assert.equal((await run("r34e", undefined)).title, null);
+  assert.equal((await run("r34f", null)).title, null);
+  assert.equal((await run("r34g", { title: "t".repeat(300) })).title.length, 200);
+  const pdf = await withEntry({ format: "pdf", structure: async () => ({ ok: true, pages: 1, notes: [], text: i2([{ page: 0, text: "alpha words" }]) }) },
+    async () => { const d = await hold(w.evidence, "%PDF-1.7 r34"); return (await w.read(doc({ digest: d, ct: "application/pdf", format: "pdf" }))).reading; });
+  assert.equal(Object.hasOwn(pdf, "title"), true);
+  assert.equal(pdf.title, null);
+  const csv = (await readAs(w, "name,place\nAna,Hall\n", { ct: "text/csv", format: "csv" })).reading;
+  assert.equal(csv.title, null);
+});
+
+test("R34 R21 (control): a failed reading carries no title, absent and never null: no store, no digest, bytes not held, an entry that produces no text or throws, a capture not read as text", async () => {
+  const w = fresh();
+  const d = await hold(w.evidence, "<title>Held</title><p>words</p>");
+  const failedOnes = [
+    (await fresh({ evidence: null }).read(doc({ digest: d, ct: "text/html", format: "html", fromText: true }))).reading,
+    (await w.read({ capture: {} })).reading,
+    (await w.read(doc({ digest: "e".repeat(64), ct: "text/html", format: "html", fromText: true }))).reading,
+    (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: false }))).reading,
+    (await w.read(doc({ digest: d, ct: "text/html", format: "html", fromText: true, parts: [{ index: 0, sha256: d, bytes: 5 }] }))).reading,
+    await withEntry({ format: "r34none", text: async () => null }, async () => (await w.read(doc({ digest: d, format: "r34none", ct: "application/x" }))).reading),
+    await withEntry({ format: "r34boom", text: async () => { throw new Error("boom"); } }, async () => (await w.read(doc({ digest: d, format: "r34boom", ct: "application/x" }))).reading),
+  ];
+  for (const r of failedOnes) { assert.equal(r.found, false); assert.equal("title" in r, false, r.basis); }
 });
 
 /* ---------------------------------------------------------------- R22 (N1065) */
