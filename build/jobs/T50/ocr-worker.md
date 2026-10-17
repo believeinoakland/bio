@@ -1,6 +1,6 @@
 # ocr-worker (T50)
 
-**Status** · session_017dvjrzTYuZd2L9Q8GJ5Cn4 · depth 2 · WORKING · handled B1
+**Status** · session_017dvjrzTYuZd2L9Q8GJ5Cn4 · depth 2 · COMPLETE · handled B1
 
 ## Completion (T50-55 · R23)
 
