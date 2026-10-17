@@ -62,7 +62,7 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 
 ### L2
 - **T50-2 · membership** · (N1115, K657) R83's `MODULE_ORDER` after the opening act, assembled from `modules.json`, never hand-listed (N1171: with R140, R145, R79's listeners order). (N1119) `memberlist` answers the founder's row. (N1092 (owners §11)) `lookedAt({by})` (`op=lookedat`), the last-looked mark read without moving it. (N1186 (owners §12)) `viewerPredicate` narrows a viewer that carries a `project` (credentials R27) to that project's records and the records it cites, within the member's sight. (N1116) reads by key · Text: fold · claude-sonnet-5-5 · first in L2. START re-measures (3,903 lines): past ~4,000 it still runs, its split T51's first entry (P6).
-- **T50-3 · project-roster** · (N1129) `projectDirectory` takes the founder's viewer. (N1124) `projectparticipants`' `joined_at` and owner times; the rescue's "since"; `projectvisibility`'s `set_by` by handle. (N1135) owner votes tie by insertion order. (N933, Bob's K3230 "N933: B"; `archive/drafts/draft-N933-stake-per-matter.md` renumbered) R31, R32: `projectStakeSet`, `projectStake`, `projectStakeHistory`, the stake every later part reads. (N1118) confirm only · Text: fold · claude-sonnet-5-5 · provider for T50-30, T50-31 and N933's later parts.
+- **T50-3 · project-roster** · (N1129) `projectDirectory` takes the founder's viewer. (N1124) `projectparticipants`' `joined_at` and owner times; the rescue's "since"; `projectvisibility`'s `set_by` by handle. (N1135) owner votes tie by insertion order. (N933, Bob's K3230 "N933: B"; `archive/drafts/draft-N933-stake-per-matter.md` renumbered) R31, R32: `projectStakeSet`, `projectStake`, `projectStakeHistory`, the stake every later part reads. (N1118) R34 `projectlist`'s `participation`, the viewer's own state (found unmet by PROJECT-ROSTER #9 J2; K3629) · Text: fold · claude-sonnet-5-5 · provider for T50-30, T50-31 and N933's later parts.
 - **T50-4 · ai-accounts** · (N1060, K3218, K3224) R26: a refused sign-in tells its listeners. (N1132, N1171) its words-pin check and R10–R22's refusal keys by key · Text: fold · claude-sonnet-5-5 · provider for T50-5.
 - **T50-5 · credentials** · (N1060) R73's test against T50-4's clause. (N1186) R27: `aiGrantMint` and the run credential carry the run's optional `project`, the viewer it makes narrowed by membership's predicate · Text: fold · claude-sonnet-5-5 · after T50-2, T50-4.
 - **T50-6 · promotion** · the stamp: every row T49's, R085's and T50's L2 jobs added, moved or changed; (N1171) R39, R45, R46 from `modules.json` · Text: none · claude-sonnet-5-5 · last in L2.
@@ -204,7 +204,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 | DEC-265's `.dated` photo date | a dependency not yet built: `photosOf` answers no date |
 | N933's preparation prompt screen | the design's screen and words first (UX-DESIGN B191) |
 
-**Applied or closed at the fold (to `archive/next-applied.md`):** N847 (T48), N1176 (nothing reserves the inbox), N1120 (DEC-262), N1155 and N1189's runner halves (void under N1197), N1118 (confirmed by T50-3's START).
+**Applied or closed at the fold (to `archive/next-applied.md`):** N847 (T48), N1176 (nothing reserves the inbox), N1120 (DEC-262), N1155 and N1189's runner halves (void under N1197), N1118 (not met after all: R34, folded into T50-3 by K3629).
 
 ## Measure first
 

@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12687 words, 890 protected; SHA-256
-   6a70897f088a641cf1f6ceccb0789144f8d68c0c06a1e475019775f7236bbfa7), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12692 words, 890 protected; SHA-256
+   8e634c06356ea862dbf4b84de68a7e530357da173797d98adeda1f7a56a8a98c), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "6a70897f08";
+export const WORDS_COMMIT = "8e634c0635";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -1246,7 +1246,7 @@ export const WORD_ROWS = Object.freeze([
   ["dock.withheld.NAMESPACE_UNDETERMINED","The run can't start: your team's Civicsmith couldn't tell which of its stores to use. Nothing was sent. This is a fault in Civicsmith, not something you did: tell an administrator, with the reference below.","DEC-248",null,false],
   ["dock.withheld.CREDENTIAL_RECORD_SILENT","The run can't start: your team's Civicsmith didn't answer in time while preparing it. Nothing was sent. Try again in a moment.","DEC-248",null,false],
   ["dock.withheld.other","The run can't start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.","DEC-248: any withheld code without a key; never blank (R33)",null,false],
-  ["refusal.ACCOUNT_MEMBER_NOT_ACTIVE","The run can't start: your membership isn't active in your team's Civicsmith just now. Nothing was sent. An administrator can tell you why.","DEC-248: R13",null,false],
+  ["refusal.ACCOUNT_MEMBER_NOT_ACTIVE","Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.","DEC-248: R13; DEC-259: reworded",null,false],
   ["refusal.AI_RUN_NOT_PRINCIPAL","This run was opened on another member's account, so you can't set it working. Nothing was sent. Start your own with Work on this.","DEC-248: R6, R13",null,false],
   ["refusal.AI_RUN_NOT_RUNNING","This run has already ended, so it can't be set working again. Nothing was sent. Start a new one with Work on this.","DEC-248: R6",null,false],
   ["refusal.AI_RUN_BOUND_NO_ALLOWANCE","The run can't start: it was opened without the room this kind of run needs to fetch and work. Nothing was sent. Try again; if it happens again, tell an administrator, with the reference below.","DEC-248: D3, R33",null,false],
@@ -2549,7 +2549,7 @@ export const WORD_ROWS = Object.freeze([
   ["screen.archive.names","Names, folders and dates are as the archive states them, kept exactly; a name is never trusted as a place to write.","adopted from screens-intake's own rows",null,false],
   ["screen.archive.filed","Filed · held for review beside the archive","adopted from screens-intake's own rows",null,false],
   ["screen.archive.filedunseen","Filed, in a place you may not see","adopted from screens-intake's own rows",null,false],
-  ["screen.archive.alreadyheld","Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it","adopted from screens-intake's own rows; DEC-259: reworded",null,false],
+  ["screen.archive.alreadyheld","Already held · the same file {name} captured on {date}; this copy is kept as a second sighting of it","adopted from screens-intake's own rows; DEC-259: reworded",null,false],
   ["screen.archive.folder","A folder · its {count} files are listed and filed below it","adopted from screens-intake's own rows; DEC-259: reworded",null,false],
   ["screen.archive.link","A link to {target}: listed, never followed","adopted from screens-intake's own rows",null,false],
   ["screen.archive.waiting","Waiting to be filed","adopted from screens-intake's own rows",null,false],
@@ -5622,6 +5622,11 @@ export const WORD_ROWS = Object.freeze([
   ["proceeding.kind.appeal","Appeal","DEC-301: proceeding_kinds appeal",null,false],
   ["proceeding.kind.complaint","Administrative complaint","DEC-301: proceeding_kinds complaint: filed with an agency or board, not a court",null,false],
   ["proceeding.kind.help","What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.","DEC-301: the choice's explanation",null,false],
+  ["refusal.BAD_FOR","Say which question this capture is for: choose one of the project's questions. Nothing was captured.","DEC-302: acquisition R47: acquire's for is not a question",null,false],
+  ["screen.inbox.alreadyheld","Already held: {holder} brought in the same file. Marked as brought in; nothing new was written.","DEC-302: doorbell R13",null,false],
+  ["screen.inbox.alreadyheld.other","Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.","DEC-302: doorbell R13: the holder is not one the viewer may see",null,false],
+  ["screen.open-file.safetext","Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.","DEC-302: file-safety R45",null,false],
+  ["screen.open-file.safetext.cut","The file is longer than this view shows; the rest is in the original file.","DEC-302: file-safety R45",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -7182,7 +7187,7 @@ export const WORD_ROWS = Object.freeze([
   ["refusal.NO_ROLE","A leg of a question's basis has to say what the material DOES for the answer, and this one does not say. It is never assumed: material that cuts against the case is first-class here, and guessing would put a claim about your reasoning in the record that you did not make.","citation's translation, keyed by its code",null,false],
   ["refusal.NO_RUN","A machine reads and proposes only as part of an investigation a member opened, and this named none. Nothing was done.","run-productions' translation, keyed by its code",null,false],
   ["refusal.NO_SAFE_COPY","A safe copy is made by an outside tool that rebuilds files, and your team has none turned on. The safe view is still there.","file-safety's translation, keyed by its code",null,false],
-  ["refusal.NO_SAFE_VIEW","Your team's Civicsmith makes safe views of documents, presentations and spreadsheets, and this file is none of them, so it has no safe view.","file-safety's translation, keyed by its code",null,false],
+  ["refusal.NO_SAFE_VIEW","Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.","file-safety's translation, keyed by its code; DEC-259: reworded",null,false],
   ["refusal.NO_STANDARDS","A determination measures the act against at least one standard the record holds. Name the standards. Nothing was written.","conformance's translation, keyed by its code",null,false],
   ["refusal.NO_SUBJECT","An addressee is suggested for something: an entity in the subject registry, or a record the action rests on. None was named, so there is nothing to suggest an office for. Name the subject and ask again.","action-grammar's translation, keyed by its code",null,false],
   ["refusal.NO_SUCH_ACTION","No action answers to that here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.","action-grammar's translation, keyed by its code",null,false],
