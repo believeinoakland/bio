@@ -40,3 +40,7 @@ COMPLETE: T50-39 (R33 by key; rule 6 items 2 and 3). Module tests 79/79 pass; wi
 **CHANGE (B2, BOB #205, K3739) applied.** `tranche/T50` merged into the job branch. `rfcQuotingRefusal`'s `key` field now names the sentence's current key, `filing-templates.rfc_quoting_sentence`, read from one constant that also feeds the sentence's own `word()` lookup, so the two cannot drift. The r33 test pins that key on both answers (the direct refusal and the profile read, R33), beside the by-key pin and the sentence's text. Module tests: 79 of 79 pass. Checks: format, architecture (module), coverage (33 of 33) and ownership pass; ownership run after the commit below.
 
 Size line above updated for this change.
+
+## J2 · COMPLETE
+
+COMPLETE again after CHANGE B2 (J2). Merged tranche/T50 (K3739 in place). rfcQuotingRefusal's key field now names filing-templates.rfc_quoting_sentence, from one constant that also feeds the sentence's word() lookup; the r33 test pins it on the direct refusal and on the profile read, beside the by-key pin and the sentence's text. Module tests 79/79 pass. format, architecture (module), coverage (33 of 33) and ownership pass. Commit 03d7d647ac pushed to job/T50/filing-templates; the record's Completion section carries the B2 note and Size line (test runs 11, module lines 1922).
