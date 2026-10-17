@@ -46,6 +46,8 @@
 
 - No scans (Bob, K3588): "you must not scan documents, as that degrades the viability of the work. This is how you end up focusing on local after I've given you 3 ruling to focus on remote." Never act on a document read in part; read it whole, or stop, tell Bob and trim it first (K3586); after a search of rulings.md, read whole every ruling relied on and every ruling of Bob's on the same subject.
 
+- A job that scans stops (Bob, K3678): a job about to read a document of its reading set only in part stops at once (`BLOCKED`, cause `reading`); it prunes what it owns, BOB trims or splits a build-state document the same turn (§17); it continues if under half its window, else BOB restarts it and the new session reads it whole. Each START states it until `roles/JOB.md` carries it.
+
 ## 2. Standing approvals and recorded refusals (check before acting, §16)
 
 - Standing list (both repositories' `.claude/settings.json`, Bob's): `mcp__github__merge_pull_request` (development and design-stream PRs into `main` at a tranche boundary, CLAUDE.md, K1177), `archive_session` under both tool names (one name failed to match at K526), `delete_trigger`, `mail.mjs xcheck`, `git rm -q --` under the four test directories, removing `.git/hooks`. These cleared the refusals of K1014, K1177, K929, K1113, K526, K1067, K1095. Deleting a predecessor's routines and archiving it are BOB's own acts, never asked as Bob's. (K1261, K618, K511, K112, K687)
