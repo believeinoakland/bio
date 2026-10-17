@@ -1,13 +1,6 @@
-/* standards' words, read by key from the design stream's list (`docs/development/ux-substrate/screens/words.json`;
-   DEC-194, R55): `WORD(key)` is the key's `en` exactly, and a key the list lacks throws, so the test fails. `HAS(key)`
-   says whether the list holds the key. */
-import { readFileSync } from "node:fs";
+/* standards' words in tests, read by key through `setup-words` (R59; N1132): `WORD(key, vars)` is `word`, so a test holds a
+   key and never a sentence, and a key the list lacks throws. `HAS(key)` is `hasWord`. */
+import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
-const LIST = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
-const BY_KEY = new Map(LIST.words.map((w) => [w.key, w.en]));
-
-export function WORD(key) {
-  if (!BY_KEY.has(key)) throw new Error(`words.json holds no word ${key}`);
-  return BY_KEY.get(key);
-}
-export const HAS = (key) => BY_KEY.has(key);
+export const WORD = (key, vars) => word(key, vars);
+export const HAS = (key) => hasWord(key);
