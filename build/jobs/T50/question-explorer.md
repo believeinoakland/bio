@@ -25,3 +25,8 @@ R17 met: ai-runs open and close awaited; exploreDue/Wake/Tick, end, look and pro
 Tests: question-explorer 46/46. format, architecture question-explorer, coverage question-explorer (17/17), ownership: 0 failures. checks/run.mjs: architecture 0 failures; coverage failures are other modules'.
 For BOB: (1) scheduler T50-16: bio-plane/test/m/scheduler/explore.test.mjs goes red against the real explorer (3 tests) until scheduler R27 awaits exploreDue/Wake/Tick; (2) R17's text should also say propose answers a promise, end takes condition and answers ok: false on a refused close; Public size figure stale (own code 1,159 lines); (3) plane bundle stale (not mine).
 Size (session_01UkBvibqUu4XYbgFPhPXazF): test runs 9, module lines 1159
+
+## J2 · COMPLETE
+
+COMPLETE J2: T50-68 question-explorer re-done after B3: tranche/T50 merged (inquiry, basis-versions, run-rules, ai-use real). question-explorer 46/46; format, architecture, coverage (17/17), ownership: 0 failures. Users: notice-producers and plane t41 pass; scheduler explore.test.mjs same 3 reds as before (T50-16, accepted at merge, B2). No code change.
+Size (session_01UkBvibqUu4XYbgFPhPXazF): test runs 11, module lines 1159
