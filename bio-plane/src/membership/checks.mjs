@@ -33,6 +33,8 @@
  * C-96.8 BAD_KEY and C-63 left with the signer-key copies that answered them; `credentials` holds each as its own (its
  * R6, R9, R10). */
 
+import { rowWord } from "./words.mjs";
+
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
 /* R133 (T47; K3037): every refusal-row table this module exports is a frozen map from a code to a frozen row, read by
@@ -40,92 +42,51 @@ const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 const frozenRows = (table) => Object.freeze(Object.fromEntries(
   Object.entries(table).map(([code, row]) => [code, Object.freeze({ ...row })])));
 
-/* R123 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`), each
-   `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{minutes}`) are left for the screen.
-   `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123). T41-3 (DEC-188 (7)):
-   the paused refusal's words, `handle.refused.paused`, the UX stream's; its row reads them by key. T46 (DEC-197, R129):
-   `handle.fixed`, `handle.refused.unchecked` and `handle.refused.notmember` went with R124's change of handle; no row of
-   this module reads them. */
-export const HANDLE_WORDS = Object.freeze({
-  'handle.free': '{handle} is free in {group}',
-  'handle.taken': '{handle} is already taken in {group}. Try another, such as {suggestion}.',
-  'handle.characters': 'A handle uses only lower-case letters, digits and hyphens.',
-  'handle.refused.paused': 'Too many handles checked in a short time. Try again in {minutes} minutes.',
-});
-
-/* R142 (2) (T47; K3078; DEC-198 (7), DEC-194): the refusal words of `words.json` this module's rows read by key, each `en`
-   verbatim. R128's kept exception is spent: C-56.6 reads `refusal.PROJECT_GUARD_UNCHECKED`, which now says "your group's
-   Civicsmith" (R112). */
-export const REFUSAL_WORDS = Object.freeze({
-  'refusal.PROJECT_GUARD_UNCHECKED': 'Your group\'s Civicsmith couldn\'t check whether this project\'s own rules allow that, '
-    + 'so nothing was changed. Try again in a moment.',
-  /* T49 (N1075, K3269): the rows `words.json` already keys are read by key, their inline copies dropped. */
-  'refusal.HANDLE_FIXED': 'Your handle is already chosen, and a handle never changes in Civicsmith: it names your work for '
-    + 'good, and no one else can ever take it. Nothing was changed.',
-  'refusal.NO_SUCH_JOIN_LINK': 'This join link doesn\'t work: it may have been replaced or turned off. Ask the group for its '
-    + 'current link.',
-  'refusal.JOIN_LINK_DAILY_CAP': 'The group\'s join link has let in as many people as it allows today. Try again tomorrow.',
-});
-
 export const MEMBERSHIP_CHECKS = frozenRows({
   NOT_AN_ADMIN: Object.freeze({
     check: 'C-96.1', where: at("notAnAdmin", "is-custodial-admin"),
-    translation: 'Only an active administrator of this group can do that, and the account asking is not '
-      + 'one of them here. The record reads who is asking from the signed-in session, never from the '
-      + 'request. Nothing was changed.',
+    translation: rowWord("NOT_AN_ADMIN"),
   }),
   NO_SUCH_PROJECT: Object.freeze({
     check: 'C-70.5', where: at("noSuchProject", "is-project-seen"),
-    translation: 'No project answers to that id here. A project you cannot see is answered exactly as one that does '
-      + 'not exist, so this is not a hint either way.',
+    translation: rowWord("NO_SUCH_PROJECT"),
   }),
   NOT_PROPOSED: Object.freeze({
     check: 'C-96.14', where: at("adminEndorse", "is-endorse-proposed"),
-    translation: 'Only a member proposed as an administrator is endorsed, and this member is not proposed now: they '
-      + 'were never proposed, or every administrator has already endorsed them. Nothing was changed.',
+    translation: rowWord("NOT_PROPOSED"),
   }),
   NOT_A_PARTICIPANT: Object.freeze({
     check: 'C-56.3', where: at("notAParticipant", "is-not-a-participant"),
-    translation: 'You hold no place in this project, and this is an act one of its participants takes. Nothing was '
-      + 'changed. An owner of the project can invite you to it.',
+    translation: rowWord("NOT_A_PARTICIPANT"),
   }),
   TARGET_NOT_A_PARTICIPANT: Object.freeze({
     check: 'C-56.4', where: at("projectRemove", "is-remove-target-participant"),
-    translation: 'The member you named holds no place in this project, so there is nobody to remove from it. '
-      + 'Nothing was changed.',
+    translation: rowWord("TARGET_NOT_A_PARTICIPANT"),
   }),
   LISTENER_MALFORMED: Object.freeze({
     check: 'C-102.11', where: at("listenerRefusal", "is-listener-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register a listener without naming itself or without a '
-      + 'function to call, so nothing was registered. This is a fault in how your group\'s Civicsmith was built, not '
-      + 'in the record, and nothing in the record changed.',
+    translation: rowWord("LISTENER_MALFORMED"),
   }),
   LISTENER_DECLARED: Object.freeze({
     check: 'C-102.12', where: at("listenerRefusal", "is-listener-registration"),
-    translation: 'A part of your group\'s Civicsmith tried to register a listener it had already registered, or one '
-      + 'that another part already holds, so the second registration was refused and the first still stands. This is a '
-      + 'fault in how your group\'s Civicsmith was built, not in the record, and nothing in the record changed.',
+    translation: rowWord("LISTENER_DECLARED"),
   }),
   /* R95 (K774): an enrolment whose password the registered setter could not record (or with no setter registered).
      The next free number of C-96, this module's family for the acts on a member's own row (K107 (3), K174). */
   ENROL_NOT_RECORDED: Object.freeze({
     check: 'C-96.18', where: at("#enrolNotRecorded", "is-enrol-password-set"),
-    translation: 'Your enrolment could not be completed, because your password could not be recorded. Nothing was '
-      + 'changed, and your invitation link still works: try again, or ask an administrator.',
+    translation: rowWord("ENROL_NOT_RECORDED"),
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: 'C-96.13', where: at("expertiseDeclare", "is-expertise-labelled"),
-    translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. "
-      + 'Nothing was written.',
+    translation: rowWord("EXPERTISE_NO_LABEL"),
   }),
   /* T19 layer 2 (the families' move): C-33.48 COPIED from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
      unchanged (entities' C-33.25 precedent); C-33.28 LAST_OWNER went with `projectOwnerRemove` to `project-roster` (T38). */
   LAST_COMMITTED_OWNER: {
     check: 'C-33.48',
     where: 'src/membership/index.mjs projectLeave > is-leave-owner-floor',
-    translation: 'A project always keeps at least one owner who is committed to it, and this would leave it '
-      + 'with none: every other owner has asked to leave, or there is no other owner. Add another owner first '
-      + '— or stand the project down. Nothing was recorded.',
+    translation: rowWord("LAST_COMMITTED_OWNER"),
   },
   /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745): the next free numbers of C-96, this module's family for the
      acts on a member's row and the group's custodial acts (K107 (3), K174). C-96.19–.21 are credentials'. Each code is
@@ -133,106 +94,90 @@ export const MEMBERSHIP_CHECKS = frozenRows({
   /* R10 (DEC-134 (4)): only the last administrator is stopped from stepping down. */
   LAST_ADMIN: Object.freeze({
     check: 'C-96.22', where: at("adminResign", "is-admin-resign-last"),
-    translation: 'You are the only administrator of this group, so you cannot step down: the group would be left '
-      + 'with nobody to run it. Nothing was changed. Add another administrator first, then resign.',
+    translation: rowWord("LAST_ADMIN"),
   }),
   /* R97 (DEC-133 (2)): an invitation lasts a whole number of days from 1 to 30, seven when not chosen. */
   BAD_EXPIRY: Object.freeze({
     check: 'C-96.23', where: at("#expiryRefusal", "is-invitation-expiry"),
-    translation: 'An invitation lasts a whole number of days, from 1 to 30, and seven when you choose none. The '
-      + 'number given is not one of those. Nothing was written.',
+    translation: rowWord("BAD_EXPIRY"),
   }),
   /* R98 (DEC-133 (3)): only an unused invitation is withdrawn. */
   NO_UNUSED_INVITATION: Object.freeze({
     check: 'C-96.24', where: at("inviteWithdraw", "is-invitation-unused"),
-    translation: 'There is no unused invitation for this member to withdraw: they have already joined, their '
-      + 'invitation was already withdrawn, or none has been made yet. Nothing was changed.',
+    translation: rowWord("NO_UNUSED_INVITATION"),
   }),
   /* R99 (DEC-133 (1)): at most one live website key. */
   WEBSITE_KEY_EXISTS: Object.freeze({
     check: 'C-96.25', where: at("websiteKeyCreate", "is-website-key-one"),
-    translation: 'Your group already has a live website key, and it holds one at a time. Nothing was created. '
-      + 'Change the live key\'s settings, or switch it off and create a new one.',
+    translation: rowWord("WEBSITE_KEY_EXISTS"),
   }),
   /* R99, R100, R102, R103: the daily number of invitations a door may make, which the administrator sets. */
   BAD_DAILY_CAP: Object.freeze({
     check: 'C-96.26', where: at("#dailyCapRefusal", "is-door-daily-cap"),
-    translation: 'Say how many invitations it may make in a day: a whole number, at least 1. Nothing was changed.',
+    translation: rowWord("BAD_DAILY_CAP"),
   }),
   /* R100: the acts on the live website key, when none is live. */
   NO_WEBSITE_KEY: Object.freeze({
     check: 'C-96.27', where: at("#liveWebsiteKey", "is-website-key-live"),
-    translation: 'Your group has no live website key, so there is none to change or switch off. Nothing was '
-      + 'changed. An administrator can create one.',
+    translation: rowWord("NO_WEBSITE_KEY"),
   }),
   /* R101: the website's call with a key never made, switched off or malformed: one answer for each. */
   WEBSITE_KEY_UNKNOWN: Object.freeze({
     check: 'C-96.28', where: at("websiteInvite", "is-website-key-known"),
-    translation: 'This website key does not open this group: it was never made, was switched off, or is not a '
-      + 'key at all, and the answer does not say which. Nothing was written.',
+    translation: rowWord("WEBSITE_KEY_UNKNOWN"),
   }),
   /* R101: the key's daily cap reached. */
   WEBSITE_DAILY_CAP: Object.freeze({
     check: 'C-96.29', where: at("websiteInvite", "is-website-daily-cap"),
-    translation: 'The website has made as many invitations today as the group allows it in a day. Nothing was '
-      + 'written. Try again later, or ask an administrator to raise the daily number.',
+    translation: rowWord("WEBSITE_DAILY_CAP"),
   }),
   /* R102 (DEC-133 (6)): at most one live join link. */
   JOIN_LINK_ON: Object.freeze({
     check: 'C-96.30', where: at("joinLinkEnable", "is-join-link-one"),
-    translation: 'Your group\'s join link is already on, and it has one at a time. Nothing was changed. Change its '
-      + 'settings, replace it with a new link, or switch it off.',
+    translation: rowWord("JOIN_LINK_ON"),
   }),
   /* R103: the acts on the live join link, when none is live. */
   JOIN_LINK_OFF: Object.freeze({
     check: 'C-96.31', where: at("#liveJoinLink", "is-join-link-live"),
-    translation: 'Your group\'s join link is off, so there is none to change, replace or switch off. Nothing was '
-      + 'changed. An administrator can switch one on.',
+    translation: rowWord("JOIN_LINK_OFF"),
   }),
   /* R104: the join page's call with a link never made, replaced, switched off or malformed: one answer for each. */
   NO_SUCH_JOIN_LINK: Object.freeze({
     check: 'C-96.32', where: at("joinLinkInvite", "is-join-link-known"),
-    translation: REFUSAL_WORDS['refusal.NO_SUCH_JOIN_LINK'],
+    translation: rowWord("NO_SUCH_JOIN_LINK"),
   }),
   /* R104: the link's daily cap reached. */
   JOIN_LINK_DAILY_CAP: Object.freeze({
     check: 'C-96.33', where: at("joinLinkInvite", "is-join-link-daily-cap"),
-    translation: REFUSAL_WORDS['refusal.JOIN_LINK_DAILY_CAP'],
+    translation: rowWord("JOIN_LINK_DAILY_CAP"),
   }),
   /* R107 (DEC-136 (1)): tell our members, or don't. */
   COURT_NOTICE_UNKNOWN_CHOICE: Object.freeze({
     check: 'C-96.34', where: at("courtNoticeSet", "is-court-notice-choice"),
-    translation: 'Choose whether your members are told what a court can reach: tell them, or don\'t. Nothing '
-      + 'was changed.',
+    translation: rowWord("COURT_NOTICE_UNKNOWN_CHOICE"),
   }),
   /* R109 (DEC-132 (2)): the group's kinds come from one closed list. */
   GROUP_KIND_UNKNOWN: Object.freeze({
     check: 'C-96.35', where: at("groupDescriptionSet", "is-group-description"),
-    translation: 'A group says what kind it is from the list: professional, issue-specific, neighbourhood or '
-      + 'community, catch-all, or one it describes itself, and may choose none. Something else was given. '
-      + 'Nothing was written.',
+    translation: rowWord("GROUP_KIND_UNKNOWN"),
   }),
   GROUP_KIND_OTHER_EMPTY: Object.freeze({
     check: 'C-96.36', where: at("groupDescriptionSet", "is-group-description"),
-    translation: 'You chose to describe your group\'s kind yourself and wrote nothing to describe it. Write it, '
-      + 'or leave that choice out. Nothing was written.',
+    translation: rowWord("GROUP_KIND_OTHER_EMPTY"),
   }),
   GROUP_DESCRIPTION_TOO_LONG: Object.freeze({
     check: 'C-96.37', where: at("groupDescriptionSet", "is-group-description"),
-    translation: 'Part of what you wrote is longer than it may be: a kind you describe yourself is at most 120 '
-      + 'characters, the focus at most 1,000 and why the group exists at most 4,000. Nothing was written.',
+    translation: rowWord("GROUP_DESCRIPTION_TOO_LONG"),
   }),
   GROUP_VISIBILITY_UNKNOWN: Object.freeze({
     check: 'C-96.38', where: at("groupDescriptionSet", "is-group-description"),
-    translation: 'Who sees what your group says about itself is your members only, or the public as well, and '
-      + 'nothing else. Nothing was written.',
+    translation: rowWord("GROUP_VISIBILITY_UNKNOWN"),
   }),
   /* N793 (K231; T38-4): one code, one site. `NO_SUCH_MEMBER` is minted only by `noSuchMember`, which every module
      refusing that condition calls; a free number of C-96 (C-96.39 is credentials'; K2279), and instance-setup's C-64.18 gives way to it. */
   NO_SUCH_MEMBER: Object.freeze({
     check: 'C-96.47', where: at("noSuchMember", "is-no-such-member"),
-    translation: 'No member of your group answers to the name or id given. Nothing was changed. Check the name, or '
-      + 'add the person as a member first.',
+    translation: rowWord("NO_SUCH_MEMBER"),
   }),
   /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186; K2394; R126): a member's handle, checked as it is typed (R123). The
      next free numbers of C-96, this module's family for the acts on a member's own row (K107 (3), K174; C-96.47 the
@@ -243,7 +188,7 @@ export const MEMBERSHIP_CHECKS = frozenRows({
      is `words.json`'s `handle.refused.paused`, read by key, `{minutes}` the answer's `minutes` (DEC-188 (7)). */
   HANDLE_CHECK_PAUSED: Object.freeze({
     check: 'C-96.48', where: at("handleCheck", "is-handle-check-window"),
-    translation: HANDLE_WORDS['handle.refused.paused'],
+    translation: rowWord("HANDLE_CHECK_PAUSED"),
   }),
   /* ===== T46 (T46-4; N934; DEC-196, DEC-197; K2903; R129, R126): a handle is chosen at joining and never changed, so
      `op=handlechange` refuses every call. The code keeps its name; its one condition is now R129's, on a new row, the
@@ -251,14 +196,13 @@ export const MEMBERSHIP_CHECKS = frozenRows({
      `refusal.HANDLE_FIXED`, read by key since T49 (N1075, K3269). R144's founder-handle act answers through the same row. ===== */
   HANDLE_FIXED: Object.freeze({
     check: 'C-96.52', where: at("#handleFixed", "is-handle-fixed"),
-    translation: REFUSAL_WORDS['refusal.HANDLE_FIXED'],
+    translation: rowWord("HANDLE_FIXED"),
   }),
   /* ===== T49 (T49-1; N1072; Bob's K3265; R144): only the founder sets the founder's handle. The next free number of C-96
      (C-96.53 is credentials' RECOVERY_CODES_NOT_A_MEMBER). BOB's draft, re-wordable by the UX stream. ===== */
   FOUNDER_HANDLE_NOT_FOUNDER: Object.freeze({
     check: 'C-96.54', where: at("founderHandleSet", "is-founder-handle-founder"),
-    translation: 'Only the founder of this group chooses the founder\'s handle, and the account asking is not the '
-      + 'founder\'s. Nothing was changed.',
+    translation: rowWord("FOUNDER_HANDLE_NOT_FOUNDER"),
   }),
   /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
      it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a
@@ -266,7 +210,7 @@ export const MEMBERSHIP_CHECKS = frozenRows({
      `words.json`'s `refusal.PROJECT_GUARD_UNCHECKED`, read by key (a row change for T48's stamp). ===== */
   PROJECT_GUARD_UNCHECKED: Object.freeze({
     check: 'C-56.6', where: at("#projectActGuarded", "is-project-guard-checked"),
-    translation: REFUSAL_WORDS['refusal.PROJECT_GUARD_UNCHECKED'],
+    translation: rowWord("PROJECT_GUARD_UNCHECKED"),
   }),
 });
 
@@ -291,10 +235,7 @@ export const MEMBER_ID_CHECKS = frozenRows({
   MEMBER_ID_RESERVED: {
     check: 'C-55.1',
     where: 'src/membership/index.mjs memberAdd > is-member-id-reserved',
-    translation: 'That member id is reserved. `admin` is the name your group\'s Civicsmith gives its founding '
-      + 'administrator, and anything that checks whether someone is an administrator by name would '
-      + 'read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id '
-      + 'for this person.',
+    translation: rowWord("MEMBER_ID_RESERVED"),
   },
 });
 
@@ -328,42 +269,33 @@ export const CUSTODIAL_CHECKS = frozenRows({
   BAD_MEMBER_ID: {
     check: 'C-96.2',
     where: 'src/membership/index.mjs memberAdd > is-member-add-id',
-    translation: 'A member id is 2 to 41 characters of lowercase letters, digits and dashes, and starts with '
-      + 'a letter or a digit. Nothing was written. It is the name the record keeps for this person; the '
-      + 'handle they sign in with is theirs to choose when they enrol.',
+    translation: rowWord("BAD_MEMBER_ID"),
   },
   NO_COVER: {
     check: 'C-96.3',
     where: 'src/membership/index.mjs memberAdd > is-member-add-shape',
-    translation: 'A cover is needed: the label you use to tell members apart. It need not be, and often '
-      + 'should not be, a legal name. Nothing was written.',
+    translation: rowWord("NO_COVER"),
   },
   EXISTS: {
     check: 'C-96.4',
     where: 'src/membership/index.mjs memberAdd > is-member-add-shape',
-    translation: 'That id is already taken in this record, so nothing new was created under it. Choose a '
-      + 'different id.',
+    translation: rowWord("EXISTS"),
   },
   /* C-96.5 ADMINS_FIRST is retired (DEC-134 (1), R12) and never reused. */
   CONSENSUS_REQUIRED: {
     check: 'C-96.6',
     where: 'src/membership/index.mjs memberAdd > is-admin-consensus',
-    translation: 'This addition needs the agreement of everyone who must agree to it — every existing '
-      + 'administrator, or for a project every existing owner — and not all of them have agreed yet, so it '
-      + 'has not taken effect. The answer lists who has agreed and who it is still waiting on.',
+    translation: rowWord("CONSENSUS_REQUIRED"),
   },
   ADMIN_REQUIRES_VOTE: {
     check: 'C-96.7',
     where: 'src/membership/index.mjs memberSet > is-admin-requires-vote',
-    translation: 'An administrator cannot be deactivated by another administrator acting alone. Removing an '
-      + 'administrator takes a majority of all administrators, in which the one facing removal is counted '
-      + 'but does not vote. Nothing was changed.',
+    translation: rowWord("ADMIN_REQUIRES_VOTE"),
   },
   TARGET_NOT_AN_ADMIN: {
     check: 'C-96.9',
     where: 'src/membership/index.mjs adminRemove > is-remove-target-admin',
-    translation: 'The member named is not an administrator, so there is no administrator to remove. An '
-      + 'ordinary member is deactivated instead, which one administrator can do. Nothing was changed.',
+    translation: rowWord("TARGET_NOT_AN_ADMIN"),
   },
   /* ---- T4 (legacy-checks, N44), 2026-09-27: MEMBERSHIP'S NEW ACTS (N18), SAID IN WORDS. ----
      Each code is minted at ONE site in `src/membership/index.mjs`. A whole-function `where` could not serve: each
@@ -375,16 +307,14 @@ export const CUSTODIAL_CHECKS = frozenRows({
   NO_HOLDERS: {
     check: 'C-96.11',
     where: 'src/membership/index.mjs hostingAccessSet > is-hosting-access-holders',
-    translation: 'This records who holds access to the hosting account your group\'s Civicsmith runs in, and it '
-      + 'named nobody. Write the people who hold that access. Nothing was written.',
+    translation: rowWord("NO_HOLDERS"),
   },
   /* Membership R19 (§3, "Pairing"): whether a member's cover and handle are shown together is that member's
      decision, or an administrator's. */
   PAIRING_NOT_YOURS: {
     check: 'C-96.12',
     where: 'src/membership/index.mjs memberPairingSet > is-pairing-yours',
-    translation: 'Whether a member\'s cover is shown beside their handle is theirs to decide, or an '
-      + 'administrator\'s, and you are neither for this member. Nothing was changed.',
+    translation: rowWord("PAIRING_NOT_YOURS"),
   },
 });
 
@@ -403,17 +333,14 @@ export const PROJECT_AUTHORITY_CHECKS = frozenRows({
   PROJECT_ACT_NOT_A_PARTICIPANT: {
     check: 'C-56.1',
     where: 'src/membership/index.mjs projectAuthority > is-project-authority',
-    translation: 'Only someone working in this project can do that. You can see the project, but you '
-      + 'have not joined it, and seeing a project does not let you change it — administrators included. '
-      + 'Nothing was changed. Ask an owner of the project to invite you, then join it.',
+    translation: rowWord("PROJECT_ACT_NOT_A_PARTICIPANT"),
   },
   /* T40 (R122; N812, K231): minted at one site, `notTheOwner`, which `projectAuthority` (R55) and `credentials`
      (its R54–R57) answer through; the row's `where` moved there, its words unchanged. */
   PROJECT_ACT_NOT_THE_OWNER: {
     check: 'C-56.2',
     where: 'src/membership/index.mjs notTheOwner > is-not-the-owner',
-    translation: 'Only an owner of this project can do that. You are not one of its owners, and seeing '
-      + 'a project does not let you direct it — administrators included. Nothing was changed.',
+    translation: rowWord("PROJECT_ACT_NOT_THE_OWNER"),
   },
 });
 
@@ -431,23 +358,19 @@ export const PROJECT_VISIBILITY_CHECKS = frozenRows({
   PROJECT_SEEN_NOT_A_PARTICIPANT: {
     check: 'C-70.1',
     where: 'src/membership/index.mjs #existenceOnly > is-project-existence-only',
-    translation: 'You can see that this project exists, but you are not one of its participants, so you cannot '
-      + 'do that in it or see what is inside it. Nothing was changed. You can ask its owners to add you.',
+    translation: rowWord("PROJECT_SEEN_NOT_A_PARTICIPANT"),
   },
   PROJECT_VISIBILITY_NOT_THE_OWNER: {
     check: 'C-70.2',
     where: 'src/membership/index.mjs projectVisibilitySet > is-project-visibility-owner',
-    translation: 'Only an owner of this project can choose whether it can be found. You are not one of '
-      + 'its owners, and seeing a project does not let you direct it — administrators included. '
-      + 'Nothing was changed.',
+    translation: rowWord("PROJECT_VISIBILITY_NOT_THE_OWNER"),
   },
   PROJECT_VISIBILITY_UNKNOWN_SETTING: {
     check: 'C-70.3',
     /* REC-197: the value check moved into one helper both doors ask (the owner's act and a creation's
        `visibility`), so this row names that helper's region and the code keeps ONE site. */
     where: 'src/membership/index.mjs visibilitySettingRefusal > is-project-visibility-setting',
-    translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
-      + 'Choose one of the two.',
+    translation: rowWord("PROJECT_VISIBILITY_UNKNOWN_SETTING"),
   },
 });
 
@@ -470,8 +393,6 @@ export const CASE_AUTHORITY_CHECKS = frozenRows({
        was corrected from "this case" to "a case, and each finding in it" at the same time,
        because the same code now answers at both acts and the old sentence was false at one. */
     where: 'src/membership/index.mjs caseAuthority > is-case-signer-owner',
-    translation: 'A case and each finding in it are published in the project\'s name, so each has to be '
-      + 'signed by an owner of that project. This signature belongs to someone who is not one of its '
-      + 'owners. Nothing was committed. Ask an owner of the project to review it and sign it.',
+    translation: rowWord("CASE_SIGNER_NOT_AN_OWNER"),
   },
 });
