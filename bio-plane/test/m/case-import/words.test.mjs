@@ -16,7 +16,8 @@ const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-s
   .modules["case-import"].reads;
 
 test("R14 R4 R19 R21 (plan rule 6): the module's keys are the owner's declared list for case-import, every one held by the word list", () => {
-  assert.deepEqual([...WORD_KEYS].sort(), [...READS].sort());
+  /* the owner's list, and the one key K3727 adds for R25's sentence (DEC-323 holds it; the design lane's list names it in a fold) */
+  assert.deepEqual([...WORD_KEYS].sort(), [...READS, "caseimport.stake.unreadable"].sort());
   for (const k of WORD_KEYS) assert.equal(hasWord(k), true, k);
   assert.throws(() => say("not.a.key"), /not one of this module's word keys/, "a key outside the list is refused");
   assert.throws(() => say("case-import.why.evaluated"), /WORD_VAR_MISSING/, "a placeholder with no value is refused, never answered bare");

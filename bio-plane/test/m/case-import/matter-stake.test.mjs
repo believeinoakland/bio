@@ -6,8 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, caseFile, V, SOURCE } from "./fixture.mjs";
 import { GROUP_FIELDS_LABEL, GROUP_FIELDS_NONE, GROUP_FIELD_KEYS, caseImportOps } from "../../../src/case-import/index.mjs";
-import { hasWord, word } from "../../../src/setup-words/index.mjs";
-import { MATTER_STAKE_NOTE_KEY } from "../../../src/case-import/words.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const FIELDS = { group: SOURCE, name: "The Source Team", domain: "source.example.org", domain_verified_at: "2026-09-30T08:00:00Z",
                  stake: "We campaign for the measure this case examines.", detail: null, read_at: "2026-10-03T11:59:30Z" };
@@ -16,8 +15,8 @@ const MATTER = { stake: "We gain if the contract is voided.", set_by: "alice", s
 const UNREAD = { stake: "undetermined", set_by: null, set_at: null, source: "project" };
 const withFields = (w, gf) => w.ci.importCaseFile({ parts: caseFile().parts, by: V("alice"), viewer: V("alice"), groupFields: gf });
 const editionOf = (w, a) => w.ci.importedCase({ import: a.import, edition: 1, viewer: V("bob") }).edition;
-/* the sentence R25 owes: the list's word for its key once the list holds it, else null (the key is owed, REPORT to BOB) */
-const NOTE = hasWord(MATTER_STAKE_NOTE_KEY) ? word(MATTER_STAKE_NOTE_KEY) : null;
+/* the sentence R25 gives a malformed matter stake: the list's word for caseimport.stake.unreadable (DEC-323; K3727) */
+const NOTE = word("caseimport.stake.unreadable");
 
 test("R25 fields with a matter_stake are recorded and read back whole, labeled as the source's declaration when read", async () => {
   for (const matter of [MATTER, UNREAD, null]) {
@@ -62,7 +61,6 @@ test("R25 a matter_stake that is neither an object in R36's shape nor null is re
     assert.deepEqual(a.group_fields, { recorded: true, read_at: "2026-10-03T11:59:30Z" });
     const e = editionOf(w, a);
     assert.deepEqual(e.group_fields, { ...FIELDS, matter_stake: null }, `other fields intact: ${JSON.stringify(m).slice(0, 60)}`);
-    assert.ok(Object.hasOwn(e, "group_fields_note"), "the sentence's place is answered");
     assert.equal(e.group_fields_note, NOTE);
     assert.notEqual(e.group_fields_note, GROUP_FIELDS_NONE, "not the sentence of an edition with no fields");
     assert.equal(w.count("case_import_group_fields"), 1);

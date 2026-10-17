@@ -71,7 +71,7 @@ import { isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsig.mjs";
 import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
-import { say, noteWord } from "./words.mjs";
+import { say } from "./words.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import * as caseChecker from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
@@ -875,7 +875,7 @@ export class CaseImport {
     /* R25: an edition recorded before T50 carries no matter stake, which reads `null` and is no fault */
     out.matter_stake = isObj(f.matter_stake) ? f.matter_stake : null;
     return { group_fields: { ...out, read_at: r.read_at }, group_fields_label: GROUP_FIELDS_LABEL,
-             ...(f.matter_stake_malformed === true ? { group_fields_note: noteWord() } : {}) };
+             ...(f.matter_stake_malformed === true ? { group_fields_note: say("caseimport.stake.unreadable") } : {}) };
   }
 
   /* R4: one edition in full. */
