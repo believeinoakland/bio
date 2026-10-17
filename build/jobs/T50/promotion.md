@@ -1,3 +1,3 @@
 # promotion (T50)
 
-**Status** · session_01EYfi6HexhiJUBBmLxaSMur · depth 1 · WORKING · handled B0
+**Status** · session_01EYfi6HexhiJUBBmLxaSMur · depth 2 · WORKING · handled B0
