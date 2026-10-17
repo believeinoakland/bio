@@ -28,3 +28,16 @@ session_01R6HaXpEWVvd8Ad3efpgvUB,job,query-language,5957722,168458,72,21975,,9,3
 session_012ENiSBrCB2vHnYDrzpCCfT,job,retrieval,39844057,429534,226,125815,,19,4001
 session_01VwThqZeqZseMpazRhvxmLz,BOB-final,,43159569,428925,4612,85335,,,
 session_019YnVjfiCWzYuKJbotYWNhq,BOB-final,,100780924,1191786,8479,237911,,,
+session_015C9SKzHdvKkAX6rzVop4aT,job,agent-runner,7853824,165781,102,31532,,9,1041
+session_01ExtfTo6iBGUSsaBuUqEFKD,job,agent-worker,94185022,580415,938,184736,,16,4421
+session_01VB7aNzqCDcGRLaxhz6h5yc,job,agent-harness,8137984,175089,598,28760,,4,1939
+session_0123prY1gzJUGUmHHxUyixGp,job,agent-model,2462364,71890,46,9133,,6,1038
+session_01UkBvibqUu4XYbgFPhPXazF,job,question-explorer,12748062,224984,128,48080,,11,1159
+session_01ETky6ssFg9yMcL1BtmwKMs,job,ai-use,9693154,169468,120,46351,,7,1289
+session_0151Wr6ivcGYVcAcYyX8hkjn,job,run-rules,7618853,191507,82,21784,,7,2575
+session_014X2CqwZzjbc37AadwJA32T,job,inquiry,19146955,265294,154,44856,,12,3937
+session_01A9kABDFujBr9RPjNiuHGvd,job,basis-versions,21989604,317644,666,83214,,19,4028
+session_01HFyXekPPJFwXWYmk1asrfA,job,ai-runs,57420095,418876,828,93569,,19,3853
+session_018aSa4ST4fZKoWn5sZ9SNHw,job,capture-requests,5994913,166316,74,17397,,8,2653
+session_01TrmwWaBaigUmvekFR4BdGC,job,reading-guides,5308481,129783,81,37685,,2,1177
+session_012JQMoBhp13eHNaMt6dtzJw,job,skills,5017275,189521,56,10055,,5,3216
