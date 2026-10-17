@@ -96,13 +96,15 @@ export const cred = (extra = {}) => ({ tokenId: "agent-1", principal: "member:an
 /** Every kind of caller: sessions S, agent credentials K, and the four bindings on `env`. */
 export function world(opts = {}) {
   const allCaps = opts.caps ?? ["contribute", "publish", "create_projects"];
-  const S = { founder: hex64(), ann: hex64(), bare: hex64() };
+  const S = { founder: hex64(), ann: hex64(), bare: hex64(), admin: hex64() };
   const K = { ann: aik(), revoked: aik(), confined: aik(), org: aik() };
   /* (T47; R25) each signed-in caller here has given its password again within the window (credentials R66), so an
      act op-declarations' REAUTH_ACTS names reaches the gates the other tests judge; t47.test.mjs drives the window shut */
   const open = { reauthUntil: Date.now() + 60 * 60e3 };
   const sessions = { [S.founder]: { ...founder(allCaps), ...open }, [S.ann]: { ...member("ann", allCaps), ...open },
-                     [S.bare]: { ...member("bea", []), ...open }, ...(opts.sessions || {}) };
+                     [S.bare]: { ...member("bea", []), ...open }, ...(opts.sessions || {}),
+                     /* an enrolled administrator (R29): a member's session whose roster row reads admin */
+                     [S.admin]: { ...member("ada", allCaps), administer: true, ...open } };
   const creds = {
     [K.ann]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: opts.writes ?? [] }),
     [K.revoked]: cred({ tokenId: "agent-old", revoked: true, revokedAt: "2026-09-01", revokedBy: "ann" }),
