@@ -171,7 +171,7 @@ function journeySteps(j, ai) {
   if (j.wiz) {
     const w = LIB.find(x => x.name === j.wiz);
     const st = w.versions[0].steps;
-    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act } }));
+    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act, ask: i === 0 && x.screen === 'plan' ? 'project' : '' } }));
   }
   return j.steps.filter(x => !x.only || (x.only === 'ai') === ai);
 }

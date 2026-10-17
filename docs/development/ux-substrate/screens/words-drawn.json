@@ -8339,6 +8339,54 @@
    "en": "{precision} · a dated fact, from {document} · grade {grade}",
    "protected": false,
    "note": "DEC-319: R33 (5): each fact's stated date at its precision, its kind and grade"
+  },
+  {
+   "key": "wizard.subject.none.summary",
+   "en": "With no project to choose",
+   "protected": false,
+   "note": "DEC-320: screens-wizards R17: wizard.subject.none.project in a fold"
+  },
+  {
+   "key": "screen.document.cite.question.help",
+   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "protected": false,
+   "note": "DEC-320: screens-inquiry R61"
+  },
+  {
+   "key": "screen.document.cite.none.summary",
+   "en": "Captured for no question",
+   "protected": false,
+   "note": "DEC-320: R61: nothing preselected, the act says to choose"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose the question to cite this in first.",
+   "protected": false,
+   "note": "DEC-320: R61: as screen.find-in.questionfirst"
+  },
+  {
+   "key": "screen.request.state.offices",
+   "en": "offices are known",
+   "protected": false,
+   "note": "DEC-320: screens-action R20: the mockup state"
+  },
+  {
+   "key": "screen.request.state.nooffice",
+   "en": "no office is known yet",
+   "protected": false,
+   "note": "DEC-320: R20: the mockup state"
+  },
+  {
+   "key": "stake.unreadable.summary",
+   "en": "When the stake can't be read",
+   "protected": false,
+   "note": "DEC-320: screens-action R21"
+  },
+  {
+   "key": "stake.undetermined.summary",
+   "en": "When the tier can't be told",
+   "protected": false,
+   "note": "DEC-320: R21: stake.ask.undetermined in a fold"
   }
  ],
  "rewrite": {

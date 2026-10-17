@@ -1813,6 +1813,18 @@ w319('screen.places.court.done', 'Added the court: {name}.', False, 'R46: after 
 w319('screen.timeline.dated.meta', '{precision} · a dated fact, from {document} · grade {grade}', False, "R33 (5): each fact's stated date at its precision, its kind and grade")
 REWRITE.update({'screen.proceeding.kind.help': proceeding_kind_help})  # DEC-319: R36, the kind is a choice, explained by proceeding.kind.help's words
 # --- end DEC-319
+# --- DEC-320 (T50's gaps, batch 3: the wizard's subject, "In which question", the request's office and stake; screens-wizards R17, screens-inquiry R61, screens-action R20, R21)
+def w320(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-320' + (': ' + note if note else '')))
+w320('wizard.subject.none.summary', 'With no project to choose', False, 'screens-wizards R17: wizard.subject.none.project in a fold')
+w320('screen.document.cite.question.help', "Set to the question this document was captured for; this project's questions come first.", False, 'screens-inquiry R61')
+w320('screen.document.cite.none.summary', 'Captured for no question', False, 'R61: nothing preselected, the act says to choose')
+w320('screen.document.cite.choose', 'Choose the question to cite this in first.', False, 'R61: as screen.find-in.questionfirst')
+w320('screen.request.state.offices', 'offices are known', False, 'screens-action R20: the mockup state')
+w320('screen.request.state.nooffice', 'no office is known yet', False, 'R20: the mockup state')
+w320('stake.unreadable.summary', "When the stake can't be read", False, 'screens-action R21')
+w320('stake.undetermined.summary', "When the tier can't be told", False, 'R21: stake.ask.undetermined in a fold')
+# --- end DEC-320
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

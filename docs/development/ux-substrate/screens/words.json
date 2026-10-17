@@ -50,15 +50,15 @@
   "updates": 34,
   "home": 18,
   "installer": 19,
-  "wizard": 322,
+  "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3907,
+  "screen": 3912,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
   "member": 2,
-  "stake": 24,
+  "stake": 26,
   "translate": 8,
   "proceeding": 11,
   "duty": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13052,
+  "total": 13060,
   "protected": 901
  },
  "words": [
@@ -41262,6 +41262,62 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-319: R33 (5): each fact's stated date at its precision, its kind and grade"
+  },
+  {
+   "key": "wizard.subject.none.summary",
+   "en": "With no project to choose",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: screens-wizards R17: wizard.subject.none.project in a fold"
+  },
+  {
+   "key": "screen.document.cite.question.help",
+   "en": "Set to the question this document was captured for; this project's questions come first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: screens-inquiry R61"
+  },
+  {
+   "key": "screen.document.cite.none.summary",
+   "en": "Captured for no question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: R61: nothing preselected, the act says to choose"
+  },
+  {
+   "key": "screen.document.cite.choose",
+   "en": "Choose the question to cite this in first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: R61: as screen.find-in.questionfirst"
+  },
+  {
+   "key": "screen.request.state.offices",
+   "en": "offices are known",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: screens-action R20: the mockup state"
+  },
+  {
+   "key": "screen.request.state.nooffice",
+   "en": "no office is known yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: R20: the mockup state"
+  },
+  {
+   "key": "stake.unreadable.summary",
+   "en": "When the stake can't be read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: screens-action R21"
+  },
+  {
+   "key": "stake.undetermined.summary",
+   "en": "When the tier can't be told",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-320: R21: stake.ask.undetermined in a fold"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
