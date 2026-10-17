@@ -539,7 +539,7 @@ section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its en
   t("R11: the published state carries the table's fields and never the run's mode, target, pass limit or budget",
     Object.keys(freshTicks[1].body.state).sort(),
     ["adjusted", "candidates", "composed", "holdings", "pass", "passAdded", "queue", "refusal", "refusedSubmission", "reportsRefused",
-     "reports", "rereads", "step", "submission", "targets", "kept", "wrote"].sort());
+     "reports", "rereads", "step", "submission", "targets", "kept", "wrote", "disagreed", "scope"].sort());
 
   /* Two segments of one run: the first stops at its step bound mid-pass, the second continues where it stopped. */
   const REPORTS = [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1" }];
@@ -691,7 +691,7 @@ section("agent-harness R4 · judgements taken in order, one per judged row; a ju
   t("agent-harness R4: the judged rows are plan, collect, compose, dedup, adjust", judged, ["plan", "collect", "compose", "dedup", "adjust"]);
   t("agent-harness R4: the fields a judgement may set are exactly these, and the ones it may not are exactly these",
     [JUDGEABLE, NOT_JUDGEABLE],
-    [["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed", "governed", "condition"],
+    [["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed", "governed", "condition", "disagreements"],
      ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"]]);
   t("agent-harness R4: every NOT_JUDGEABLE field is refused and named, pure",
     NOT_JUDGEABLE.map((f) => applyJudgement({}, { [f]: 1 }).overreach), NOT_JUDGEABLE.map((f) => [f]));
@@ -852,7 +852,9 @@ section("R21 · collect, holdings: each citation resolved to its document by add
 
 section("R22 · compose: one meaning read; its note never a false zero; level-empty candidates made by the table");
 {
-  await reset(mf, { target: "INQ-R22", meaningRows: [{ ord: 0 }, { ord: 1 }] });
+  /* agent-harness R18 (T50): this run takes its judgements from the body, so the scope its absences need is published state. */
+  await reset(mf, { target: "INQ-R22", meaningRows: [{ ord: 0 }, { ord: 1 }], state: { step: "plan", pass: 0, scope: Object.fromEntries(
+    LEVELS.map((l) => [l, { reads: 1, documents: 3 }])) } });
   const r = await runOp(mf, { ...base, judgements: J([
     { level: "document", state: "LOOKED_ABSENT", observed_at: "log:3", summary: "nothing in the packets" },
     { level: "meaning", state: "LOOKED_INDETERMINATE", observed_at: "log:1" }]) });
@@ -1344,13 +1346,13 @@ section("agent-harness R7 · sub-sessions run, one per level, each under its con
 section("R35 · its only binding is PLANE; the plane is reached by no other route");
 {
   /* R91 (R085): and this member's own segment driver, one object per run, holding nothing of the record. */
-  t("R35, R91: wrangler declares exactly one service binding, PLANE, the runner's Container DO binding cross-script, the "
+  t("R35, R91, R109: wrangler declares exactly one service binding, PLANE, the remote class's DO binding cross-script (REMOTE; no RUNNER), the "
     + "segment driver SEGMENTS (its own SegmentDriver), and no other Durable Object, R2, KV, D1, queue or secret binding",
     [WRANGLER_CFG.services, WRANGLER_CFG.durable_objects, ["r2_buckets", "kv_namespaces", "d1_databases", "queues",
       "secrets_store_secrets", "secrets", "containers"].filter((k) => k in WRANGLER_CFG)],
     [[{ binding: "PLANE", service: "bio-plane" }],
-     { bindings: [{ name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner" },
-                  { name: "SEGMENTS", class_name: "SegmentDriver" }] }, []]);
+     { bindings: [{ name: "REMOTE", class_name: "RemoteSession", script_name: "agent-runner" },
+                  { name: "SEGMENTS", class_name: "SegmentDriver" }, { name: "CHECKS", class_name: "CheckRecord" }] }, []]);
   t("R35: its vars hold no token and no plane URL", Object.keys(WRANGLER_CFG.vars), ["VERSION"]);
   await reset(mf, {});
   await runOp(mf, { ...base, account: ACCOUNTS });

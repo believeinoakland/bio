@@ -67,7 +67,11 @@ export const meaningRowsBranch = (rowsExpr = "[]") => `
         return refuse(${JSON.stringify({ reason: "MEANING_ROWS_UNKNOWN_ARM", check: CHECKS.UNKNOWN_ARM.check, translation: CHECKS.UNKNOWN_ARM.translation })},
           "no meaning of the kind " + JSON.stringify(asked) + " is held. The kinds that are: " + KNOWN.join("; "));
       const rows = ${rowsExpr};
+      /* agent-harness R18: the plane's four-level statement, \`scope.documents\`, is what the shell sets a level's scope
+         from; three documents are in scope unless a suite says otherwise. */
+      const documents = typeof CFG !== "undefined" && CFG && Number.isInteger(CFG.scopeDocuments) ? CFG.scopeDocuments : 3;
       return Response.json({ ok: true, result: { ok: true, arm: asked, rows,
+        scope: { documents, documents_with_rows: 0, documents_without_rows: documents },
         count: rows.length, limit: 50, offset: 0, total: rows.length, truncated: false } });
     }
 `;

@@ -57,7 +57,7 @@ function planeStub(rec, { tick = "real", payer = MEMBER, throwAt = null } = {}) 
       case "agentpack": return Response.json({ ok: true, fences: [], pack: PACK, store: "scratch", tokenClass: "ai" });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
         context: { type: "inquiry", id: "INQ-085" }, mode: "check", skill: PACK_VERSION, standard_pair: null } });
-      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], count: 0 });
+      case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
       case "basisversions": return ok({ id: u.searchParams.get("id"), versions: [], limit: 50, truncated: false });
       case "search": return ok({ hits: [] });
       case "versionchain": return ok({ address_norm: null, total: 0, truncated: false, versions: [] });
@@ -245,7 +245,7 @@ export default { async fetch(req, env) {
     case "airunlog": return ok({ run, found: true, entries: [], limit: 200, truncated: false });
     case "airunspawn": return ok({ found: true, half: "search", payload: { run, context: { type: "inquiry", id: "INQ-085" },
       mode: "check", skill: "s@1", standard_pair: null } });
-    case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], count: 0 });
+    case "meaningrows": return ok({ ok: true, arm: "leg", rows: [], scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: 0 });
     case "basisversions": return ok({ versions: [], limit: 50, truncated: false });
     case "airuntick": return ok({ run, found: true, ticked: true, status: "running", appended: (body?.log || []).length, refused: [] });
     case "airunclose": return ok({ terminated: true, bound: body?.bound ?? null });

@@ -65,6 +65,9 @@
 import "../../bio-plane/test/sandbox.mjs";
 
 import { LEVELS, REPORTING_LEVEL, emptyLevelCandidates } from "../../agent-harness/src/harness.mjs";
+/* agent-harness R18 (T50): an absence is written only for a level the shell shows was read over a document, so these
+   direct calls state it the way the shell does: one read of each level, three documents in scope. */
+const SCOPE = Object.fromEntries(LEVELS.map((l) => [l, { reads: 1, documents: 3 }]));
 import { REPORT_KEYS, checkReport } from "../../agent-harness/src/subsession.mjs";
 /* T19 (rule 1): the version-name grammar and the placeholder predicate are basis-versions' (its R1). */
 import { VERSION_NAME_RE, isBoilerplate } from "../../bio-plane/src/basis-versions/index.mjs";
@@ -108,7 +111,7 @@ function wireRefusals(c) {
 /* THE CORPUS, PRINTED AND FLOORED. A headline totality assertion over an empty
    fixture has passed in this repository three times. */
 const REPORTS = LEVELS.map((l, i) => ({ level: l, state: "LOOKED_ABSENT", observed_at: `log:${i + 1}` }));
-const CANDIDATES = emptyLevelCandidates({ reports: REPORTS }, "INQ-1");
+const CANDIDATES = emptyLevelCandidates({ reports: REPORTS, scope: SCOPE }, "INQ-1");
 console.log(`\ncorpus: ${LEVELS.length} level(s) reported LOOKED_ABSENT -> ${CANDIDATES.length} candidate(s)`);
 for (const c of CANDIDATES) console.log(`  ${JSON.stringify({ name: c.name, kind: c.kind, level: c.level })}`);
 
@@ -199,7 +202,7 @@ console.log("\n--- W6 · THE MODEL'S SUMMARY IS NEVER SUBSTITUTED (NOR, SINCE ag
      would have done, one field further along the same defect. */
   const withSummary = emptyLevelCandidates(
     { reports: [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1",
-                  summary: "four searches, no minutes published since March" }] }, "INQ-1")[0];
+                  summary: "four searches, no minutes published since March" }], scope: SCOPE }, "INQ-1")[0];
   /* agent-harness R14: the summary is the model's free prose and may carry record ids, so it is no longer appended; the
      description is the table's own sentence and stays whole whatever the model wrote. */
   t("a real summary is not carried through (agent-harness R14), and the composed sentence stands",
@@ -209,7 +212,7 @@ console.log("\n--- W6 · THE MODEL'S SUMMARY IS NEVER SUBSTITUTED (NOR, SINCE ag
 
   for (const filler of ["n/a", "TBD", "  ", "<level summary>", "none"]) {
     const c = emptyLevelCandidates(
-      { reports: [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1", summary: filler }] },
+      { reports: [{ level: "meaning", state: "LOOKED_ABSENT", observed_at: "log:1", summary: filler }], scope: SCOPE },
       "INQ-1")[0];
     t(`a summary of ${JSON.stringify(filler)} cannot make the candidate filler`,
       wireRefusals(c), []);

@@ -12,6 +12,7 @@ import worker from "../src/index.mjs";
 import { READ_TEXT_MAX } from "../src/draft.mjs";
 import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -120,7 +121,7 @@ async function drive(path, body, headers = {}, model = null) {
   for (const k of ["log", "info", "warn", "error", "debug"]) { kept[k] = console[k]; console[k] = (...a) => lines.push(a.map(String).join(" ")); }
   try {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method: "POST", headers, body: JSON.stringify(body) }),
-      { VERSION: "t48", PLANE: p.binding, RUNNER: r });
+      { VERSION: "t48", PLANE: p.binding, ...remoteBindings(r) });
     const text = await res.text();
     const parsed = text.trim().split("\n").map((l) => { try { return JSON.parse(l); } catch { return null; } });
     return { status: res.status, text, out: parsed[parsed.length - 1], plane: p.calls, runner: r, api, lines };

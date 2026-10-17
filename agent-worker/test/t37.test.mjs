@@ -8,6 +8,7 @@ import worker from "../src/index.mjs";
 import { MODEL_FOR_MODE } from "../../agent-model/src/model.mjs";
 import { TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MEMBER } from "./account.mjs";
+import { remoteBindings } from "./remote.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -67,7 +68,7 @@ async function watched(fn, modelFetch = null) {
 async function signin(body, { env = {}, answer = honest, noRunner = false, method = "POST", path = "signin" } = {}) {
   const r = runner(answer), p = planeStub();
   const keys = new Set();
-  const base = { VERSION: "t37", PLANE: p.binding, ...(noRunner ? {} : { RUNNER: r.binding }), ...env };
+  const base = { VERSION: "t37", PLANE: p.binding, ...(noRunner ? {} : { ...remoteBindings(r.binding) }), ...env };
   const envProxy = new Proxy(base, { get: (o, k) => { keys.add(String(k)); return o[k]; } });
   const w = await watched(async () => {
     const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method,
@@ -86,7 +87,7 @@ section("R66 · POST /signin: refusals before any runner call, in order");
 {
   const r = await signin({ member: MEMBER, step: "start" }, { noRunner: true });
   t("R66: no RUNNER binding: 503 RUNNER_NOT_CONFIGURED, nothing sent", [codeOf(r), r.runner.length], [[503, "RUNNER_NOT_CONFIGURED"], 0]);
-  const half = await signin({ member: MEMBER, step: "start" }, { env: { RUNNER: { fetch: async () => Response.json({}) } } });
+  const half = await signin({ member: MEMBER, step: "start" }, { env: { REMOTE: { fetch: async () => Response.json({}) } } });
   t("R66: a RUNNER that names no instance (no idFromName/get): 503 RUNNER_NOT_CONFIGURED", codeOf(half), [503, "RUNNER_NOT_CONFIGURED"]);
   const first = await signin("not json", { noRunner: true });
   t("R66: RUNNER_NOT_CONFIGURED comes before the body is judged", codeOf(first), [503, "RUNNER_NOT_CONFIGURED"]);
@@ -156,7 +157,7 @@ section("R66 · each step sent to the member's own instance, the runner's answer
   t("R66: an empty runner answer: 502 RUNNER_SILENT", codeOf(empty), [502, "RUNNER_SILENT"]);
 }
 
-section("R66, R35 · no plane call, no PLANE binding needed, only the RUNNER binding read");
+section("R66, R35 · no plane call, no PLANE binding needed, only the REMOTE binding read");
 {
   const all = [];
   for (const step of Object.keys(ROUTES)) all.push(await signin({ member: MEMBER, step, code: step === "code" ? CODE : undefined }));
@@ -164,7 +165,7 @@ section("R66, R35 · no plane call, no PLANE binding needed, only the RUNNER bin
   t("R66, R35: no step makes a fetch of its own (the model's, the web's, or any other)", all.flatMap((r) => r.fetched), []);
   const noPlane = await signin({ member: MEMBER, step: "start" }, { env: { PLANE: undefined } });
   t("R66: with no PLANE binding a step is still sent and answered", [noPlane.status, noPlane.runner.length], [200, 1]);
-  t("R35: the only binding /signin reads from env is RUNNER", [...new Set(all.flatMap((r) => r.keys))].sort(), ["RUNNER"]);
+  t("R35, R109: the only binding /signin reads from env is REMOTE", [...new Set(all.flatMap((r) => r.keys))].sort(), ["REMOTE"]);
 }
 
 section("R31 · the route's neighbours");
@@ -283,7 +284,7 @@ async function draft(body, { model = {}, noPlane = false, env = {} } = {}) {
   const w = await watched(async () => {
     const res = await worker.fetch(new Request("http://agent-worker/draft", { method: "POST",
       body: typeof body === "string" ? body : JSON.stringify(body) }),
-      { VERSION: "t37", ...(noPlane ? {} : { PLANE: p.binding }), RUNNER: r.binding, ...env });
+      { VERSION: "t37", ...(noPlane ? {} : { PLANE: p.binding }), ...remoteBindings(r.binding), ...env });
     const text = await res.text();
     let out = null; try { out = JSON.parse(text); } catch { out = null; }
     return { status: res.status, text, out };

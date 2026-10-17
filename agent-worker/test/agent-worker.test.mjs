@@ -465,8 +465,8 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
 
   console.log("\n  -- it holds no binding but the plane: no store, no bucket, no write route --");
   /* R91 (R085): SEGMENTS, its own segment driver, joins them; it is read to learn whether a segment is handed over. */
-  t("R35, R91, R99: the only keys of env it reads are PLANE, RUNNER, SEGMENTS and its configuration (VERSION, the two segment bounds, CLOCK)",
-    [...all.envKeys].filter((k) => !["PLANE", "RUNNER", "SEGMENTS", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES", "CLOCK"].includes(k)), []);
+  t("R35, R91, R99, R109, R110: the only keys of env it reads are PLANE, REMOTE, SEGMENTS, CHECKS and its configuration (VERSION, the two segment bounds, CLOCK)",
+    [...all.envKeys].filter((k) => !["PLANE", "REMOTE", "SEGMENTS", "CHECKS", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES", "CLOCK"].includes(k)), []);
   t("R35: offered STORE, CAPTURES, PUBLISHED, a KV, a D1 and a queue, it read and touched none of them",
     all.forbiddenTouched, []);
   t("R35: of the PLANE binding it touches `fetch` and nothing else — no put, delete, get or list on any binding",
@@ -523,11 +523,11 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   /* R35 (K1601 (6)): its one Durable Object binding is the agent runner's Container, cross-script; no STORE. */
   const dos = (JSON.parse(cfg).durable_objects?.bindings) || [];
   /* R91 (R085): and its own segment driver, one object per run, holding nothing of the record. */
-  t("R35, R91: no durable_objects binding but the runner's Container (RUNNER, cross-script to agent-runner) and the "
+  t("R35, R91, R109, R110: no durable_objects binding but the remote class (REMOTE, cross-script to agent-runner), the "
     + "segment driver (SEGMENTS, this member's own SegmentDriver, migrated as a SQLite class); no STORE",
     [dos.map((b) => [b.name, b.class_name, b.script_name]), JSON.parse(cfg).migrations],
-    [[["RUNNER", "AgentRunner", "agent-runner"], ["SEGMENTS", "SegmentDriver", undefined]],
-     [{ tag: "v1", new_sqlite_classes: ["SegmentDriver"] }]]);
+    [[["REMOTE", "RemoteSession", "agent-runner"], ["SEGMENTS", "SegmentDriver", undefined], ["CHECKS", "CheckRecord", undefined]],
+     [{ tag: "v1", new_sqlite_classes: ["SegmentDriver"] }, { tag: "v2", new_sqlite_classes: ["CheckRecord"] }]]);
   t("no r2_buckets declared at all", /r2_buckets/.test(cfg), false);
   t("no PUBLISHED binding declared", /PUBLISHED/.test(cfg), false);
   t("no secret or token var declared", /TOKEN/.test(cfg), false);

@@ -54,7 +54,7 @@ function planeStub(rec) {
           return ok({ ok: false, reason: "MEANING_ROWS_UNKNOWN_ARM", check: "C-23.2", translation: "no", detail: "x" });
         const rows = parent && rec.rows === "target" ? [{ bundle_id: "INQ-096", ord: 1, target_id: "INFO-1" }]
           : parent && rec.rows === "other" ? [{ bundle_id: "INQ-OTHER", ord: 1, target_id: "INFO-1" }] : [];
-        return ok({ ok: true, arm: "leg", rows, count: rows.length });
+        return ok({ ok: true, arm: "leg", rows, scope: { documents: 3, documents_with_rows: 0, documents_without_rows: 3 }, count: rows.length });
       }
       case "basisversions": return ok({ id: u.searchParams.get("id"), versions: (rec.held || []).map((name) => ({ name })), limit: 50, truncated: false });
       case "search": {
