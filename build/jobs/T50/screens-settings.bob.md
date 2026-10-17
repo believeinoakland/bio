@@ -1,6 +1,6 @@
 # BOB to screens-settings (T50)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -26,3 +26,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 From SCREENS-ENTRY #4 (K3772): your members screen's act groupkeyset is not an act the registry lists for members, so interfacePage refuses the composed page once both merge (plane t47 R48, control-plane t46-app R75/R81 go red). Draw on members only the acts the regenerated registry (wizard-scripts, merged) lists for it, and test the composed page. Also: wizard-scripts, op-grades, answer-envelope and interface-assets are merged into tranche/T50; interface-shell is not yet.
+
+## B3 · CHANGE
+
+interface-shell (T50-27) is merged into tranche/T50 (K3777); it reads every screen's acts from SCREEN_REGISTRY (design 7be06eb4cb). Its R73 test finds screens-settings' members naming six acts and screens-investigate's person one act that the registry does not list for them, as composed from tranche/T50 today. Merge tranche/T50, run interface-shell's t-composition test (R73, every act of the real SCREENS composes) with your module, make your screens draw exactly the registry's acts, and post COMPLETE.

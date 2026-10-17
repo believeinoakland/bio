@@ -150,17 +150,17 @@ test("R72, R34 (T49): projectownervotes is named in ACT_HELP_ABSENT under the re
 const familyRows = () => Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds)
   .filter(([, k]) => OP_KINDS[k].needs !== undefined).map(([op, k]) => [op, OP_KINDS[k].needs])));
 
-test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows() (323 hand-written rows) and each family op's row from its kind (500 rows), the aliases applied over the whole — 850 keys, the 848 it held before the split and the two T49 family ops — every hand-written row and every family row answered as given, every alias row equal to its op's, the table frozen and the same on every read", () => {
+test("R3 (T49; K3298, K3339): NEEDS is composed from op-capabilities.needsRows() (323 hand-written rows) and each family op's row from its kind (515 rows), the aliases applied over the whole — 865 keys, the 848 it held before the split, the two T49 family ops and the 15 T50 adds (R73) — every hand-written row and every family row answered as given, every alias row equal to its op's, the table frozen and the same on every read", () => {
   const hand = needsRows();
   const fam = familyRows();
   assert.equal(Object.keys(hand).length, 323);
-  assert.equal(Object.keys(fam).length, 500);
+  assert.equal(Object.keys(fam).length, 500 + 15, "T49's 500 and R73's 15");
   /* the two parts share no op */
   assert.deepEqual(Object.keys(fam).filter((op) => Object.hasOwn(hand, op)), []);
   const aliasRows = Object.entries(OP_ALIASES).filter(([, op]) => Object.hasOwn(NEEDS, op)).map(([al]) => al);
   assert.equal(aliasRows.length, 27);
-  assert.equal(Object.keys(NEEDS).length, 323 + 500 + 27);
-  assert.equal(Object.keys(NEEDS).length, 848 + 2, "848 before the split, and founderhandleset and projectownervotes");
+  assert.equal(Object.keys(NEEDS).length, 323 + 515 + 27);
+  assert.equal(Object.keys(NEEDS).length, 848 + 2 + 15, "848 before the split, founderhandleset and projectownervotes (T49), and R73's 15 (T50)");
   for (const [op, row] of Object.entries(hand)) assert.equal(NEEDS[op], row, `${op}: the hand-written row`);
   for (const [op, row] of Object.entries(fam)) assert.equal(NEEDS[op], row, `${op}: the family row`);
   for (const al of aliasRows) assert.equal(NEEDS[al], NEEDS[OP_ALIASES[al]], `${al}: an alias row equals its op's`);

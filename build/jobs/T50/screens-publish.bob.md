@@ -29,3 +29,11 @@ All three readings accepted (K3765). (1) Fall back to publishpreflight's zone on
 ## B3 · CHANGE
 
 wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B4 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B5 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.

@@ -12,6 +12,8 @@
  * reserved for a concluded question. So no translation below calls a queue item a finding. R48 (DEC-107): nor a to-do an
  * obligation, nor a status item a condition or a signal (DEC-131). R49 (DEC-110 (1)): `QUEUE_SORT_UNKNOWN` is C-33.51, the row after C-33.50. */
 
+import { word } from "../setup-words/index.mjs";
+
 const at = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 
 /* C-31 — THE QUEUE MINT: every item carries a class, and a kind the catalogue names under that class (PL-15 / D-213,
@@ -23,25 +25,17 @@ export const QUEUE_MINT_CHECKS = Object.freeze({
   NO_CLASS: Object.freeze({
     check: 'C-31.1',
     where: at("queueFeed", "is-queue-mint"),
-    translation: 'Your list could not be assembled: something on it does not say what sort of item '
-      + 'it is, and showing it without that would put an entry in front of you that nobody can act '
-      + 'on. Nothing has been lost and nothing about the record has changed — this is a fault on '
-      + 'our side, not something you did.',
+    translation: word("refusal.NO_CLASS"),
   }),
   NO_SUCH_KIND: Object.freeze({
     check: 'C-31.2',
     where: at("queueFeed", "is-queue-mint"),
-    translation: 'Your list could not be assembled: something on it is described in a word this '
-      + 'record does not know, so there is no sentence to show you in place of it. Rather than '
-      + 'showing you a line you could not read, the list refuses whole. Nothing has been lost.',
+    translation: word("refusal.NO_SUCH_KIND"),
   }),
   KIND_MISCLASSED: Object.freeze({
     check: 'C-31.3',
     where: at("queueFeed", "is-queue-mint"),
-    translation: 'Your list could not be assembled: something on it is filed one way and described '
-      + 'another, and the difference decides whether setting it aside is a private choice of yours '
-      + 'or a change to the record everyone shares. That is not a difference to guess at, so the '
-      + 'list refuses until it is right. Nothing has been lost.',
+    translation: word("refusal.KIND_MISCLASSED"),
   }),
 });
 
@@ -51,37 +45,27 @@ export const QUEUE_ACT_CHECKS = Object.freeze({
   KIND_NOT_PERSONAL: Object.freeze({
     check: 'C-33.27',
     where: at("queueMute", "is-mute-class"),
-    translation: 'Setting this aside would be a change everybody sees rather than a private choice '
-      + 'of yours, and that is a decision the group takes together rather than one this control '
-      + 'makes. The kinds you can quiet for yourself are listed beside the refusal.',
+    translation: word("refusal.KIND_NOT_PERSONAL"),
   }),
   /* REC-205 / C-33.44: a CONDITION or an OBLIGATION named to the dispose act (R28). The translation names the act that
      does reach the item, since a member holding a selection needs the next move. N301: what the record NOTICED. */
   CLASS_NOT_DISPOSED: Object.freeze({
     check: 'C-33.44',
     where: at("proposeDispose", "is-dispose-class"),
-    translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
-      + 'about something the record NOTICED — its own question — and this item is a different kind of thing: a '
-      + 'status item is a fact about our machinery that you quiet for yourself, and a to-do is work '
-      + 'a named person owes and leaves every list when it is done. Nothing about it was changed, and '
-      + 'it is still in your list. The answer names the act that does reach it.',
+    translation: word("refusal.CLASS_NOT_DISPOSED"),
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
   NO_PROJECT_SCOPE: Object.freeze({
     check: 'C-33.50',
     where: at("#noProjectScope", "is-dispose-scope"),
-    translation: 'Setting this aside is a decision one project takes for its own list, and no project was named '
-      + 'for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. '
-      + 'Nothing was written, and no team\'s list moved.',
+    translation: word("refusal.NO_PROJECT_SCOPE"),
   }),
   /* R49 (DEC-110 (1)) / C-33.51: the feed asked for in an order it does not keep, refused before anything is read. */
   QUEUE_SORT_UNKNOWN: Object.freeze({
     check: 'C-33.51',
     where: at("queueFeed", "is-queue-sort"),
-    translation: 'Your list cannot be put in that order. It can be sorted by when each item was added, by when it is '
-      + 'due, by case or by kind, or left in its usual order, grouped by case. Nothing was read or changed; ask '
-      + 'again with one of those.',
+    translation: word("refusal.QUEUE_SORT_UNKNOWN"),
   }),
 });
 

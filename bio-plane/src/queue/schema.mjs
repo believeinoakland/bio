@@ -36,6 +36,10 @@ export const QUEUE_SCHEMA = `-- REC-21: the PERSONAL half of the queue, and it i
 -- with no instant is refused rather than filled in. last_seen is the anchor a
 -- re-notify clock reads.
 --
+-- muted_at (R55, T50) is a JSON object, kind -> the instant that kind was muted, for the kinds in muted_kinds that were
+-- muted since it was kept; a kind muted before it was has no entry and answers no instant (never back-filled). It is
+-- the muted list's "at", and it is added to a table made without it by migrate().
+--
 -- case_id IS a bundle id (an inquiry or a project), so this table clears in
 -- BOTH purge arms via a DELETE keyed on it (D-113); test/m/queue/invariants.test.mjs'
 -- R36 test holds that.
@@ -45,6 +49,7 @@ CREATE TABLE IF NOT EXISTS queue_state (
   muted_kinds   TEXT,
   snoozed_until TEXT,
   last_seen     TEXT,
+  muted_at      TEXT,
   PRIMARY KEY (member_id, case_id)
 );
 CREATE INDEX IF NOT EXISTS queue_state_member ON queue_state(member_id);
