@@ -104,7 +104,26 @@ export const REFUSALS = {
   PIXELS_UNREADABLE: "the rendered container could not be read back to samples",
   ENGINE_FAILED: "the engine refused or failed on this frame",
   NOTHING_TRANSCRIBED: "the engine returned no anchorable word for this page",
+  /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
+     stated before any pixel is made, so the page asked for is named. */
+  NO_SUCH_PAGE: "a picture is a one-page document (page 0); the page asked for does not exist",
 };
+
+/** R23 · THE LONG EDGE A PICTURE IS REDUCED TO, in pixels. Not a measurement: it is `PICTURE_FRAME_MAX`'s own
+ *  4096-pixel edge (pdf-pixels R42), so a 12-megapixel camera frame (4032 x 3024, 4000 x 3000) reaches the engine
+ *  at its own resolution and a larger one is reduced by a whole factor; a 4:3 frame at this edge is 50.3 MB of
+ *  RGBA, under `MAX_FRAME_BYTES`, and a squarer frame that would pass it is refused by R7 step 4, never attempted. */
+export const PICTURE_MAX_EDGE = 4096;
+
+/** R23 · Are these bytes a JPEG or a PNG picture, by their signature? The picture renderer re-judges them; this
+ *  only decides which renderer is asked, so bytes that are neither are left to the page renderer's refusal as today. */
+export function isPicture(bytes) {
+  const b = bytes;
+  if (!b || b.length < 4) return false;
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return true;
+  return b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47
+    && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a;
+}
 
 /** ONE PAGE PER INVOCATION. The page this call will do, and the ones it will not.
  *
