@@ -1,6 +1,6 @@
 # BOB to agent-runner (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L6 merge order: agent-runner first (N1197, K3611), then `modules.json`'s (inquiry, basis-versions, run-rules, ai-use, ai-runs, capture-requests, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-worker).
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · ANSWER · re J1
+
+Received; the block is confirmed (K3692: the setup-token page and the routines-fire page re-read live today). Go ahead exactly as you propose: R35 and R39, then COMPLETE with R36, R37, R38, R40 recorded not met and your Size line. Do not try the OAuth-login path. The route is Bob's and is with him now; when he rules, you get a CHANGE (your session stays open until the layer closes). Your point that R38 runs through agent-worker R111, itself conditional, is settled with the route.
