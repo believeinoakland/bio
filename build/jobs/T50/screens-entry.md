@@ -40,3 +40,7 @@ Found while building T50-28 (screens-entry), for other modules and the design la
 - `node checks/format.mjs`: 171 modules, 170 requirements files; 0 failures. `node checks/architecture.mjs … screens-entry`: 16 product files, 21 relative imports; 0 failures. `node checks/coverage.mjs … screens-entry`: 24 of 24 live requirement ids named by a test; 0 failures. `node checks/ownership.mjs … screens-entry tranche/T50`: 8 files changed; 0 failures. `node checks/run.mjs`: format, architecture, channels 0 failures; coverage 25 failures, all other modules' ids not yet met (rule 5 (1)), none screens-entry's.
 
 Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 22, module lines 1077
+
+## J3 · COMPLETE
+
+T50-28 complete on `job/T50/screens-entry` (tranche/T50 merged @ d1e6a4e9ca): R22 (setup as the design draws it), R23 (Skip for now; the second administrator; join state e), R24 (declared keys against hasWord, every drawn key declared). screens-entry 84 pass, 0 fail; format, architecture, coverage (24/24), ownership 0 failures. Found elsewhere (record, "Found in other modules"): screens-settings' `members` act `groupkeyset` is not the registry's for it, so `interfacePage` refuses the composed page after the merge (plane t47 R48, control-plane t46-app R75/R81 red); interface-shell R28, R7 red on the base too. Details and Size line in my record.
