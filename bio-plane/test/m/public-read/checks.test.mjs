@@ -4,6 +4,7 @@
    here and throws for any other code; and every refusal this module answers with one of these codes, at every site
    that raises it, carries its row from here. Driven at the module's interface: its store ops (`publicReadOps`) and the
    Worker's routes (`publishedRoutes`), the control plane's helpers bound as the plane binds them. */
+import { word } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -28,28 +29,28 @@ const call = async (w, env, op, q) => {
   return publishedRoutes({ op, url, env, stub: stubOf(w) });
 };
 
-/* The rows as moved: family → code → [check, where, the first 16 hex of the translation's sha256].
+/* The rows as moved: family → code → [check, where]; the translation is `word("refusal.<CODE>")` (plan rule 6).
    T34-87 (DEC-149; K1821): C-68.5, C-98.1, C-98.2, C-98.4–C-98.6 and C-98.8–C-98.10 re-worded for a reader with no
    credential ("this group's Civicsmith" for "this copy"), so their digests moved; every number and `where` is unchanged. */
 const MOVED = {
   CASE_RESOLUTION_CHECKS: {
-    FINDING_IN_SEVERAL_CASES: ["C-44.2", "src/public-read/index.mjs #resolveOneCase > is-finding-in-several-cases", "9bc6636d266af9ac"] },
+    FINDING_IN_SEVERAL_CASES: ["C-44.2", "src/public-read/index.mjs #resolveOneCase > is-finding-in-several-cases"] },
   PUBLISHED_STORE_CHECKS: {
-    NO_PUBLISHED_STORE: ["C-68.5", "src/publication/worker.mjs publishedStoreAbsent > is-published-store-absent", "fae6be42cf0d74a8"] },
+    NO_PUBLISHED_STORE: ["C-68.5", "src/publication/worker.mjs publishedStoreAbsent > is-published-store-absent"] },
   PUBLISHED_READ_CHECKS: {
-    NO_PUBLISHED_PART: ["C-98.1", "src/publication/worker.mjs noPublishedPart > is-no-published-part", "6062581f799d89ca"],
-    OBJECT_MISSING: ["C-98.2", "src/publication/worker.mjs publishedObjectMissing > is-published-object-missing", "8ae5236d04b3726f"],
-    NOT_A_CONTAINER: ["C-98.3", "src/publication/worker.mjs publishedRoutes > is-not-a-container", "45d2eb9c5e5c934d"],
-    MANIFEST_UNREADABLE: ["C-98.4", "src/publication/worker.mjs publishedRoutes > is-manifest-unreadable", "debd366306b7f3f3"],
-    PART_MISSING: ["C-98.5", "src/container.mjs containerEntries > is-part-missing", "d7e0ed1e273f9d1a"],
-    DUPLICATE_PATH: ["C-98.6", "src/container.mjs serialiseContainer > is-duplicate-path", "168418fd422010b8"],
-    CONTAINER_TOO_LARGE: ["C-98.7", "src/container.mjs serialiseContainer > is-container-too-large", "e299ef045e0a0d8b"],
-    NOT_PUBLISHED: ["C-98.8", "src/public-read/index.mjs publishedCase > is-not-published", "68f9d7e64867f3ee"],
-    CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable", "03a967bbbe72acb9"],
+    NO_PUBLISHED_PART: ["C-98.1", "src/publication/worker.mjs noPublishedPart > is-no-published-part"],
+    OBJECT_MISSING: ["C-98.2", "src/publication/worker.mjs publishedObjectMissing > is-published-object-missing"],
+    NOT_A_CONTAINER: ["C-98.3", "src/publication/worker.mjs publishedRoutes > is-not-a-container"],
+    MANIFEST_UNREADABLE: ["C-98.4", "src/publication/worker.mjs publishedRoutes > is-manifest-unreadable"],
+    PART_MISSING: ["C-98.5", "src/container.mjs containerEntries > is-part-missing"],
+    DUPLICATE_PATH: ["C-98.6", "src/container.mjs serialiseContainer > is-duplicate-path"],
+    CONTAINER_TOO_LARGE: ["C-98.7", "src/container.mjs serialiseContainer > is-container-too-large"],
+    NOT_PUBLISHED: ["C-98.8", "src/public-read/index.mjs publishedCase > is-not-published"],
+    CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable"],
     /* C-98.10 (R18; K1149): a row minted here in T23, stamped by 1.54.0; its translation as R17 states it, word for word. */
-    PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered", "3ed88ac966d32011"],
+    PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered"],
     /* C-98.11 (R28; J1 (6)): a row minted here in T33, its stamp by a release T34's (K1504). */
-    WITHHELD_BY_COURT_ORDER: ["C-98.11", "src/publication/worker.mjs withheldByCourtOrder > is-withheld-by-court-order", "cf8fe4e020217355"] },
+    WITHHELD_BY_COURT_ORDER: ["C-98.11", "src/publication/worker.mjs withheldByCourtOrder > is-withheld-by-court-order"] },
 };
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
@@ -89,7 +90,7 @@ test("R17 R28 the module holds C-44.2, C-68.5 and C-98.1–C-98.11 in its own ta
     for (const [code, [check, where, t]] of Object.entries(rows)) {
       const row = CHECKS[fam][code];
       assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
-      assert.deepEqual([row.check, row.where, digest(row.translation)], [check, where, t], `${code}: number, where and translation unchanged`);
+      assert.deepEqual([row.check, row.where, row.translation], [check, where, word(`refusal.${code}`)], `${code}: number, where unchanged, translation read by key`);
       assert.deepEqual(rowOf(code), { code, check, translation: row.translation }, code);
     }
   }
@@ -156,8 +157,7 @@ test("R17 every refusal the module answers with one of these codes, at every sit
       requiredArgument: () => ({}), doAnswer: async (res) => ({ answered: true, result: (await (await res).json()).result }) });
   assert.equal(nr.status, 404);
   seen(await nr.json(), "door publicread PUBLIC_READ_NOT_REGISTERED");
-  assert.equal(rowOf("PUBLIC_READ_NOT_REGISTERED").translation,
-               "This group's Civicsmith offers no public read by that name. Nothing was changed.");
+  assert.equal(rowOf("PUBLIC_READ_NOT_REGISTERED").translation, word("refusal.PUBLIC_READ_NOT_REGISTERED"));
   /* C-98.11: bytes a court order withholds, at publishedbytes (R28), with HTTP 451 */
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
   w.stamps.stamp({ case: "CASE-2026-0001", editions: [1], entry: { seq: 4, digest: "d".repeat(64) }, effect: "remove" });

@@ -19,6 +19,7 @@
  * `CONTAINER_TOO_LARGE` (C-98.7) at the zip while the file is still served by its own hash: a case file is never refused
  * for its size and nothing is left out. */
 
+import { word } from "../setup-words/index.mjs";
 import { canonicalJson } from "../record-grammar/index.mjs";
 import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
          provOf } from "../case-grammar/index.mjs";
@@ -45,8 +46,8 @@ export async function keyFingerprint(keyB64) {
 
 /* R23 (T37; T39, N806): why a material is named unheld: its bytes are those of a material this edition carries as its
    copy (a photo, or a member document). */
-export const ORIGINAL_NOT_CARRIED = "these are the bytes of a material this case carries as its obscured copy; the original is not carried";
-export const ARCHIVE_HOLDS_ORIGINAL = "the archive holds a material this case carries obscured";
+export const ORIGINAL_NOT_CARRIED = word("public-read.bytes_material_case");
+export const ARCHIVE_HOLDS_ORIGINAL = word("public-read.archive_holds_material");
 
 /* R6: the assembly's one statement that it built nothing, naming what it could not read. */
 const notAssembled = (cause, what) => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED", cause, ...what,

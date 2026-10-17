@@ -10,12 +10,13 @@
  * Civicsmith and every caller; it names no place (R15) and writes nothing. How the page is drawn is the UX stream's
  * (`legacy-ui`, K633): this gives it the words. */
 
+import { word } from "../setup-words/index.mjs";
+
 /* R30 (DEC-146): the one line saying what Civicsmith is. */
-export const CIVICSMITH_DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
+export const CIVICSMITH_DESCRIPTION = word("public-read.free_software_groups");
 
 /* R30 (DEC-146): the second line, for where there is room. */
-export const CIVICSMITH_WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices "
-  + "checking their own work.";
+export const CIVICSMITH_WHO = word("public-read.neighborhood_issue_groups");
 
 /** R30: the credit page's answer, `{ok: true, name: "Civicsmith", description, who}`, a fresh object each call. */
 export function creditPage() {
