@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { fakeAccount, AUTHORIZE, TOKEN, API } from "../../../src/journey-check/account.mjs";
 import { runLocal, runLive } from "../../../src/journey-check/run.mjs";
 import { FAIL } from "../../../src/journey-check/walker.mjs";
+import { JOURNEY_29_ORDER } from "../../../src/journey-check/design.mjs";
 
 const DIR = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 
@@ -68,7 +69,7 @@ test("R1 (a): the local arm, with no account: the installer over its fake accoun
   assert.equal(r.ok, true, r.report);
   assert.equal(shots.length, r.walk.steps.length);
   assert.deepEqual(stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label), ["civicsmith.org: what Civicsmith is",
-    "civicsmith.org: start a group, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
+    "civicsmith.org: start a team, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
@@ -117,8 +118,41 @@ test("R7: the walk as stated: signed in as the founder, no screen draws admin as
 
 test("R13: the local arm pairs each step of design journey 29 with the mock's drawing of it", { timeout: 2400000 }, async () => {
   const { r } = await local();
-  assert.ok(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length >= 14, r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, 18, r.report);
   assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.DESIGN).map((f) => f.detail), []);
+});
+
+test("R15: the local arm finds agent-worker's SEGMENTS binding present and walks R9's run step", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(!r.walk.failures.some((f) => /SEGMENTS/.test(f.detail)), r.report);
+  assert.ok(r.walk.steps.some((s) => s.label.startsWith("9 · run the assistant")), r.report);
+});
+
+test("R15 control: with the binding removed, step 9 fails by name, not with a silent stop", { timeout: 2400000 }, async () => {
+  const out = mkdtempSync(join(tmpdir(), "jc-nosegments-"));
+  try {
+    const r = await runLocal({ out, segments: false, parts: [] });
+    const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
+    /* the steps before it hold only where the assistant's own sign-in is drawn; where they stop, the walk says so by name */
+    if (nine) {
+      assert.equal(nine.ok, false, r.report);
+      assert.ok(r.walk.failures.some((f) => f.step === nine.label && /no SEGMENTS binding \(R15\)/.test(f.detail)), r.report);
+    } else assert.ok(r.walk.failures.length > 0, "a walk that stopped before step 9 says why: " + r.report);
+  } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test("R16, R18: the local arm walks journey 29's search path with no assistant, to a conclusion on her own reading, and visits each of the 18 steps", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  const steps = r.walk.steps.filter((s) => s.journey.startsWith("R16 without the assistant"));
+  assert.ok(steps.some((s) => /conclude on her own reading/.test(s.label) && s.ok), r.report);
+  assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+  assert.ok(r.walk.steps.some((s) => /sign out on this device/.test(s.label) && s.ok), r.report);
+  assert.equal(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length, JOURNEY_29_ORDER.length, r.report);
+});
+
+test("R17: no page the walk serves says \"group\" for a team", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.GROUP).map((f) => f.detail), []);
 });
 
 test("R1 (b): the live arm reads the administrator's and a member's credentials from the environment and never prints them; control: without them it refuses before any request", async () => {

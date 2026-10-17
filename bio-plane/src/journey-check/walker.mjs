@@ -6,6 +6,8 @@
    (`redact`). */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { designRule, groupIn, senseKeys, withoutGroupSense } from "./group-words.mjs";
+import { wordPattern } from "./words.mjs";
 
 /* The interface page's mark: every document the copy serves to a browser is `interfacePage`, which links the shell's own
    stylesheet (interface-shell R1). A document without it is an old page. */
@@ -21,7 +23,9 @@ export const FAIL = Object.freeze({ REFUSED: "refused", HTTP: "http", SCRIPT: "s
   /* R6: a working screen the design mock does not draw, and the limits of a live page (design.mjs' LIMIT) */
   DESIGN: "design", WIDER: "wider", TABS: "tabs", BAND: "band", CLASS: "class", WORDS: "words",
   /* R7: `admin` drawn as a person's name or handle */
-  ADMIN_NAME: "admin-name" });
+  ADMIN_NAME: "admin-name",
+  /* R17: a page that says "group" for a team */
+  GROUP: "group" });
 
 const slugOf = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -141,6 +145,35 @@ export class Walk {
     }
   }
 
+  /* R17: the words the page draws (its title, its text, hidden disclosures too, the labels a screen reader reads; not script
+     or style), with the rows the design's `GROUP_SENSE` keeps taken out: where one says "group" for a team, the step fails,
+     naming where. The rule is read once, from the design's build. */
+  async #scanGroup(page) {
+    let url;
+    try { url = new URL(page.url()); } catch { return; }
+    let text;
+    try {
+      text = await page.evaluate(() => {
+        const out = [document.title];
+        const skip = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT", "TITLE"]);
+        const w = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) {
+          if (n.nodeType === 3) { if (!skip.has(n.parentElement && n.parentElement.tagName)) out.push(n.nodeValue); continue; }
+          for (const a of ["aria-label", "title", "placeholder", "alt", "data-tip"]) if (n.hasAttribute(a)) out.push(n.getAttribute(a));
+        }
+        return out.join(" \n ");
+      });
+    } catch { return; }
+    try {
+      this.group ||= { rule: designRule() };
+      this.group.patterns ||= senseKeys({ rule: this.group.rule }).flatMap((k) => { try { return [wordPattern(k)]; } catch { return []; } });
+      const found = groupIn(withoutGroupSense(text, this.group.patterns), { rule: this.group.rule });
+      for (const f of found.slice(0, 5)) this.fail(FAIL.GROUP, `${url.pathname} says group for a team: …${f.at}…`);
+    } catch (e) {
+      if (!this.groupUnread) { this.groupUnread = true; this.fail(FAIL.GROUP, `the design's rule for "group" could not be read: ${e.message.split("\n")[0]}`); }
+    }
+  }
+
   /* A request the walk's router refused: an address outside the walk. */
   foreign(url) {
     const u = new URL(url);
@@ -159,6 +192,7 @@ export class Walk {
     try { await fn(page); } catch (e) { error = e; }
     await settle(page);
     await Promise.all(this.pending.splice(0));
+    await this.#scanGroup(page);
     try { await page.screenshot({ path: join(this.out, file), fullPage: true,
       mask: this.mask.map((sel) => page.locator(sel)) }); } catch { /* a closed page has none */ }
     const failed = this.failures.filter((f) => f.step === label && f.journey === this.journey);

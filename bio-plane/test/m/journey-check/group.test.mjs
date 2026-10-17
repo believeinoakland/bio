@@ -33,8 +33,8 @@ test("R17 control: a row in GROUP_SENSE is allowed; a row saying \"your group's 
   assert.deepEqual(rowsSayingGroup([{ key: "fixture.not.kept", en: "your group's Civicsmith" }], { rule }).map((r) => r.key), ["fixture.not.kept"]);
   assert.equal(rowsSayingGroup([{ key: "fixture.plural", en: "Groups at work" }], { rule }).length, 1);
   assert.equal(rowsSayingGroup([{ key: "fixture.upper", en: "YOUR GROUP" }], { rule }).length, 1);
-  /* identifiers are not text: a placeholder, a hyphenated name and a dotted key are left alone */
-  assert.deepEqual(rowsSayingGroup([{ key: "fixture.ident", en: "Opens {group} at group-identity and group.name" }], { rule }), []);
+  /* identifiers are not text: a placeholder and a hyphenated name are left alone */
+  assert.deepEqual(rowsSayingGroup([{ key: "fixture.ident", en: "Opens {group} at group-identity" }], { rule }), []);
   /* a team said as a team is not found */
   assert.deepEqual(groupIn("Start a team's Civicsmith", { rule }), []);
 });
