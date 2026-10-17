@@ -14,7 +14,7 @@
 - **Accepted reds by name, beyond plan rule 5:** agent-runner R36–R38, R40, agent-worker R111, agent-harness R17 and the other remote-proof ids (K3718 (2)); case-authoring `standards.test.mjs`:96, :140 (N1221, T51); plane `roster.test.mjs` R5, R9, R45 and `worker.test.mjs` R40 (T50-36); the installer's `CIVICSMITH_*` copies (T50-78); `site/build.mjs --check` (rule 5 (13), T50-37); scheduler `explore.test.mjs` 3 (T50-16).
 - **next.md new:** N1220 (multi-AI assistant), N1221, N1222, N1223 (DEC-327's keys for case-import and case-account).
 - **Channel:** UX design #27 `session_01S7xeW38PtVh94Sy8LiatgK`; read through U343, posted through B299. Its gaps list is drawn through. Merge each verified docs-only MERGE into `tranche/T50` at once (K3618; last K3730) and place owed lines on unstarted jobs.
-- **Timers:** WATCH #204 `trig_01D8m6erP7TxynCwN4YdHxqZ` into ROOT #7 (18:34Z); backstop `trig_` armed for 17:55Z (see K3734). Delete both at takeover; arm your own.
+- **Timers:** WATCH #204 `trig_01D8m6erP7TxynCwN4YdHxqZ` into ROOT #7 (18:34Z); backstop `trig_01Nsg3fMmvHtmyt6hZLwfu71` (17:55Z). Delete both at takeover; arm your own.
 - **Environment:** this container has `node_modules` in agent-runner, file-scanner, sheet-worker; a new one needs `npm ci --ignore-scripts` there before `fleetbundles`.
 
 ## What comes next, in order
