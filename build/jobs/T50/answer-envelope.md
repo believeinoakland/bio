@@ -33,3 +33,25 @@ Item 3, drift diagnosis. The drift came from ai-accounts' T50-4 (the C-29.x rows
 Still open: T50-22 (translations) has not merged to `tranche/T50`, so `src/translations/checks.mjs` does not exist. I will add it to `families.mjs` before `src/setup.mjs` when it merges, and then re-run the tests and checks.
 
 Waiting on BOB (J2). Nothing for Bob to do until T50-22 merges.
+
+## J3 · COMPLETE
+
+T50-25 answer-envelope is complete on `job/T50/answer-envelope` @ e292cf63da. The module's tests pass 41 of 41.
+
+Entries applied:
+- T50-25 (N1128): the catalogue's pins are by key. The 75 drifted pins were re-pinned to the owners' rows as they now declare them: 73 read `refusal.<CODE>` from words.json, and two (ADDRESSEE_REFUSED, MACHINE_CANNOT_JUDGE, both action-plans) are still inline. A new test in `catalogue-end.test.mjs` pins each keyed row by its key's sentence.
+- The composed catalogue lists `src/translations/checks.mjs` (`TRANSLATIONS`) before `src/setup.mjs` (N1084, K3674), as B3 directs. The file-count pins (90 files; 87 without the case-inputs, ai-accounts and translations files) are updated in `catalogue-end` and `t48`.
+- Rule 6, third item (N1073): `families.test.mjs` reads every family from its owner's file in `CHECK_FAMILY_FILES`, in place of the hand list of the moved rows and of the R2 family names. The five R2 paths stay listed.
+- Rule 6, second item: no "labelled" in the module's member-facing words, so nothing to change.
+
+Deferred: nothing. Found in other modules: the two action-plans rows (C-124.17, C-124.36) are inline until action-plans keys them (its T50-47).
+
+Checks and tests:
+- Module tests: `node --test test/m/answer-envelope/*.test.mjs`, 41 tests, 41 pass.
+- `checks/format.mjs bio`: 0 failures.
+- `checks/architecture.mjs bio answer-envelope`: 0 failures.
+- `checks/coverage.mjs bio answer-envelope`: 18 of 18 live ids named, 0 failures.
+- `checks/ownership.mjs bio answer-envelope tranche/T50`: 0 failures.
+- `checks/run.mjs bio answer-envelope`: architecture 0 failures, format 0 failures, channels 0 failures. Coverage reports 20 failing modules, none of them answer-envelope (affordances, agent-harness, agent-runner, control-plane, installer, instance-setup, interface-shell, journey-check, op-declarations, op-grades, queue, and the screens jobs). These are the other modules' own ids, not mine to change; I'm noting them for BOB.
+
+Size (session_01JzujgzuDHRDzLuCvJTsAv4): test runs 6, module lines 912.
