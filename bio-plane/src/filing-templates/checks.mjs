@@ -1,3 +1,5 @@
+import { word } from "../setup-words/index.mjs";
+
 /* filing-templates' refusal rows (requirements: `build/requirements/filing-templates.md`, R23; K921, K927, K933).
  * DEC-49: every refusal this module answers carries its code, its row and the member's translation.
  *
@@ -27,9 +29,8 @@ const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
    "Civicsmith" bare, where DEC-149 says "your group's Civicsmith" (R29). */
 export const FILING_TEMPLATES_WORDS = Object.freeze({
   "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
-  /* R33 (T48): moved from `filings`' `FILINGS_WORDS` (its R51) verbatim; `rfc.quoting` itself is not read (K2953) */
-  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that "
-    + "sentence before approving. Nothing was written.",
+  /* R33 (T48; by key since T50, N1130): `words.json`'s word, read through setup-words (DEC-260) */
+  "refusal.RFC_QUOTING_MISSING": word("refusal.RFC_QUOTING_MISSING"),
 });
 
 export const FILING_TEMPLATE_CHECKS = Object.freeze({

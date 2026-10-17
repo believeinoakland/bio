@@ -1,4 +1,4 @@
-/* action-records' tables (requirements: `build/requirements/action-records.md`, R1–R6, R11, R15; K4). Copied from
+/* action-records' tables (requirements: `build/requirements/action-records.md`, R1–R6, R11, R15, R17; K4). Copied from
  * `actions`' `schema.mjs` with their comments (K624; split map `build/extraction/actions-split.md` §2), each with the DDL
  * `actions` created it by, so a running store's rows are kept with no data move: the three proposals stored apart (was
  * `actions` R19, R28, R73) and the members' side records (was R80, R87, R88). Each is keyed by the action's `bundle_id`
@@ -117,11 +117,22 @@ CREATE TABLE IF NOT EXISTS action_promises (
   at           TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq)
 );
+
+-- R17 (T50; N933): THE ACTION'S OWN STAKE, each statement appended with who made it and when; the latest is the stake,
+-- NULL clears it and the action then falls back to its project's. by is the member's id; a reader names her by handle.
+CREATE TABLE IF NOT EXISTS action_stakes (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  stake        TEXT,             -- 1 to 1,000 characters on one line, or NULL (cleared)
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
 `;
 
 /** R11: the tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTION_RECORDS_TABLES = Object.freeze(["action_law_proposals", "action_risk_proposals",
-  "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises"]);
+  "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises", "action_stakes"]);
 
 /** R15: creates the tables (idempotent) and adds `action_law_proposals`' `standard` column where a table created before
  *  it had the column lacks it (`actions`' `migrate()` did the same), so a running store's rows are kept. */

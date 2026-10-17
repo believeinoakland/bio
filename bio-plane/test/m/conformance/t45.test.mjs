@@ -77,7 +77,7 @@ test("R2 R32 R9: another group's finding accepted at the edition named is pinned
   const [f] = d.findings;
   assert.deepEqual([f.finding, f.case, f.edition], [ref, "CASE-2026-0900", 3]);
   assert.deepEqual(f.basis, { kind: "accepted", group: "Hayward Parents", case: "CASE-2026-0900", edition: 3, edition_date: null,
-    accepted_at: "2026-09-20T00:00:00Z", accepted_by: "olive", identity: null, stake: "undetermined",
+    accepted_at: "2026-09-20T00:00:00Z", accepted_by: "olive", identity: null, stake: "undetermined", matter_stake: "undetermined",
     identity_says: SOURCE_FACTS_UNRECORDED, says: ACCEPTED_SAYS });
   const pair = { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" }, testimony: null };
   assert.deepEqual([f.frozen, f.live], [pair, pair], "the source edition's pair, never raised");

@@ -57,8 +57,7 @@ test("R26: C-117.32 OVERRIDE_GROUND_REFUSED, C-117.41 OFFICE_STATUS_WITHOUT_OUTC
   assert.match(en("refusal.OFFICE_STATUS_WITHOUT_OUTCOME"), /^Record what the reply said before/, "says only to record the outcome first");
   assert.match(en("refusal.REPLY_OWED_REFUSED"), /is yes or no\./, "says only yes or no, while R23 also refuses a missing reason");
   assert.match(en("refusal.LAW_STAGE_UNKNOWN"), /names a stage Civicsmith doesn't know/, "names Civicsmith bare (DEC-149)");
-  assert.equal(wordsEn("refusal.MACHINE_CANNOT_SET_COPIED"), undefined);
-  assert.deepEqual(C.MACHINE_CANNOT_SET_COPIED, T45_ROWS.MACHINE_CANNOT_SET_COPIED);
+  assert.deepEqual(C.MACHINE_CANNOT_SET_COPIED, { ...T45_ROWS.MACHINE_CANNOT_SET_COPIED, translation: en("refusal.MACHINE_CANNOT_SET_COPIED") }, "C-117.58 reads its key (T50)");
   /* BEARING_REFUSED: action-replies' C-150.3, minted and re-worded there (K231, K2953) */
   const all = ROW_NAMES.flatMap((n) => Object.entries(AG[n]));
   assert.ok(!all.some(([code]) => code === "BEARING_REFUSED"));
