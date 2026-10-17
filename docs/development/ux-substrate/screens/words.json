@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3922,
+  "screen": 3921,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13090,
+  "total": 13089,
   "protected": 901
  },
  "words": [
@@ -41020,7 +41020,7 @@
   },
   {
    "key": "label.personfactkinds.office",
-   "en": "Holds an office",
+   "en": "Office",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-318: people: a person fact of office (the line kind)"
@@ -41055,14 +41055,14 @@
   },
   {
    "key": "screen.find-in.flow.help",
-   "en": "Asked for an actual payment, before it is recorded.",
+   "en": "Asked only for an actual payment: who paid it, who received it, how much and on what day.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-318: R48 (3): the flow step's fields"
   },
   {
    "key": "findin.fieldneeded",
-   "en": "Fill in {field} first: it is needed to record this. Nothing was sent.",
+   "en": "Fill in {field} first: it is needed to record this. Nothing was recorded.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-318: R48's control, in capture.fieldneeded's form"
@@ -41083,7 +41083,7 @@
   },
   {
    "key": "screen.find-in.bounds.summary",
-   "en": "If the bounds can't be read",
+   "en": "When the bounds can't be read",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-318: R47: the refusal fold"
@@ -41285,13 +41285,6 @@
    "note": "DEC-320: R61: nothing preselected, the act says to choose"
   },
   {
-   "key": "screen.document.cite.choose",
-   "en": "Choose the question to cite this in first.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-320: R61: as screen.find-in.questionfirst"
-  },
-  {
    "key": "screen.request.state.offices",
    "en": "offices are known",
    "protected": false,
@@ -41412,7 +41405,7 @@
   },
   {
    "key": "screen.group.timezone.none.summary",
-   "en": "When no time zone is held",
+   "en": "When your team's time zone isn't set",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-322: R45: no zone, and no UTC drawn"
@@ -41475,14 +41468,14 @@
   },
   {
    "key": "caseimport.notrecorded.summary",
-   "en": "If they were not recorded",
+   "en": "When they were not recorded",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-323: screens-publish R26: case-import.group_fields_none in a fold"
   },
   {
    "key": "caseimport.unreadable.summary",
-   "en": "If its stake can't be read",
+   "en": "When its stake can't be read",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-323: R26: caseimport.stake.unreadable in a fold"
@@ -41524,7 +41517,7 @@
   },
   {
    "key": "home.strip.ours_passed.opens",
-   "en": "Opens your queue at it.",
+   "en": "Opens your queue at this item.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-323: screens-daily R50: the strip item"

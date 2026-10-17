@@ -5023,3 +5023,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: drawn where each state occurs, with a fold only for a refusal or an alternative: the queue's untitled subject (`queue.source.untitled`), the team's own passed date (`due.ours.passed`, `_says`), "Done: {what}. It has left your queue." and Home's strip item `home.strip.ours_passed.one` (screens-daily R49, R50); the question's `question.empty.conclude.own`, the project's bar in words in all four cases (`project.bar.*`), the stake's history and unreadable state, the document's `document.vouched` and `document.table.flattened` (screens-inquiry R50, R52, R53, R55); a held upload's "uploaded by {member}, {date}" and "less than 1 KB", the open-file safe text view with its cut line (screens-intake R35, R36); a theme's "Taken out by …" (screens-investigate R31); the imported case's stake section with its not-recorded and unreadable states, the review link's no-zone refusal, the ceremony's "Put these right before you sign" with both gates, the ladder's "not yet checked", the fingerprint check's "elsewhere" (screens-publish R26 to R29); the security map's period refusal, the time zone's "Set when your team's Civicsmith was set up", the same-name answer (screens-settings R43, R52). Left for a later batch: `document.untitled.web`, `document.image.unread`, `case.draft.untitled`, `screen.case-editor.tip.distributed`, `member.founder.unnamed`, `settings.set.system`; the assistant's states (screens-inquiry R57, R58) are left as K3717 directs.
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py` (DEC-323's block).
 owed: (BOB, T50) none beyond the requirements reading the drawings.
+
+### DEC-324 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency, over DEC-318 to DEC-323's keys)
+for: design
+question: What a consistency read (a Sonnet reader) of DEC-318 to DEC-323's keys found.
+why it is Bob's: it is not (P17).
+provisional: American English and "team" held throughout; one key duplicated an existing one; one refusal ended on the wrong verb; a few labels and fold summaries were uneven.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `screen.document.cite.choose` dropped: the document draws `screen.find-in.questionfirst`'s identical words. (2) `findin.fieldneeded` ends "Nothing was recorded." (3) `label.personfactkinds.office` is "Office", a noun like its siblings. (4) Fold summaries open with "When": `screen.find-in.bounds.summary`, `caseimport.notrecorded.summary`, `caseimport.unreadable.summary`; `screen.group.timezone.none.summary` says "When your team's time zone isn't set", as the review link's does. (5) `screen.find-in.flow.help` says what the step asks: "Asked only for an actual payment: who paid it, who received it, how much and on what day." (6) `home.strip.ours_passed.opens`: "Opens your queue at this item." Kept as they are: `label.timeprecisions.*` capitalized, since they are option labels like `label.personfactkinds.*` (the money precisions are read inside sentences); `screen.person.claim.kind.*` keep `label.identityclaimkinds.*`'s English deliberately.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `mock-screens.js`.
+owed: (BOB, T50) modules read the reworded keys as they stand; whatever would read `screen.document.cite.choose` reads `screen.find-in.questionfirst`.
