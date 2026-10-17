@@ -1721,7 +1721,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [], dropped = [];
   /* agent-harness R18 (T50; N1169): WHAT EACH LEVEL'S SUB-SESSION READ, set here and nowhere else, from the plane's own
      four-level statement of each read it made (`retrieval` R13: `scope.documents`), never from a report's words and never
-     by a judgement. `reads` counts the reads that answered; `documents` is the least the statements gave, and is left out
+     by a judgement. `reads` counts the reads that answered; `documents` is the greatest the statements gave (BOB's B5), and is left out
      when any answered without a whole number, so the table (which fails closed) writes no absence for that level. */
   const scope = {};
   for (const contract of contracts) {
@@ -1758,7 +1758,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
           const seen = (scope[contract.level] ??= { reads: 0, documents: null, whole: true });
           const documents = r.result?.scope?.documents;
           seen.reads += 1;
-          if (Number.isInteger(documents) && documents >= 0) seen.documents = seen.documents === null ? documents : Math.min(seen.documents, documents);
+          if (Number.isInteger(documents) && documents >= 0) seen.documents = seen.documents === null ? documents : Math.max(seen.documents, documents);
           else seen.whole = false;
         }
         /* R61, R63: what the plane answers reaches the sub-session only as this tool's result, text only. */
