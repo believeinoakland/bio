@@ -46,13 +46,13 @@ test("R38: actionreplyquoting `reversible` as actionreplybearing, an ACTS row on
 });
 
 test("R38: proceedingdates is a read, `read: …`, ungraded; readtranslate takes no rung, its sentence begins `draft: …` "
-   + "(labelled machine work, the original one tap away, held nowhere); both phone acts, neither a machine refusal; "
+   + "(labeled machine work, the original one tap away, held nowhere); both phone acts, neither a machine refusal; "
    + "followregister and reviewgrant keep their grades", () => {
   assert.ok(isRead("proceedingdates"));
   assert.equal(gradeOf("proceedingdates"), null);
   assert.match(NON_ACTS.proceedingdates, /following R30/);
   assert.match(NON_ACTS.readtranslate, /^draft: a machine translation of one passage of the group's own writing/);
-  assert.match(NON_ACTS.readtranslate, /labelled machine work, the original one tap away; held nowhere and writes nothing/);
+  assert.match(NON_ACTS.readtranslate, /labeled machine work, the original one tap away; held nowhere and writes nothing/);
   assert.equal(gradeOf("readtranslate"), null);
   assert.ok(!NON_ACTS.readtranslate.startsWith("read: "));
   for (const op of ["proceedingdates", "readtranslate"]) {
@@ -83,8 +83,8 @@ test("R39: translationdraft leaves `undetermined` for `caller-owned`; groupdescr
     assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
   }
   assert.equal(RUNG_ABSENT.translationdraft.ground, "caller-owned");
-  assert.match(NON_ACTS.translationdraft, /^translation-directed: keyed by a language and interface words; drafts labelled machine work/);
-  assert.equal(NON_ACTS.groupdescriptiondraft, "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; "
+  assert.match(NON_ACTS.translationdraft, /^translation-directed: keyed by a language and interface words; drafts labeled machine work/);
+  assert.equal(NON_ACTS.groupdescriptiondraft, "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; "
     + "the member's words only by the member's own act of keeping it");
   assert.match(NON_ACTS.securitymap, /^read: the group's count-only security tally by kind and period/);
   /* the ground is as memberlanguageset's */
@@ -238,16 +238,18 @@ test("R42: MARKS is frozen and total over the registry's rungless acts — a rea
 
 test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` key for an owed act), an op the kit does not "
    + "name Reasoned, the kit's default; the kit and the registry are read at the commit the marks name", () => {
-  assert.equal(MARKS_KIT_COMMIT, "fa3c8b7e8e");
+  assert.equal(MARKS_KIT_COMMIT, "7be06eb4cb");
   for (const op of Object.keys(MARKS)) {
+    /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it */
+    if (op === "notewrite") continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
-    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at fa3c8b7e8e$/ : /^kit default at fa3c8b7e8e/, op);
+    assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at 7be06eb4cb$/ : /^kit default at 7be06eb4cb/, op);
   }
   /* the kit now names acquire Reversible (K3284), so it is read from the kit like any other and no override remains */
   assert.equal(KIT_WEIGHT.acquire, 1);
   assert.equal(MARKS.acquire, "Reversible");
-  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at fa3c8b7e8e$/);
+  assert.match(MARK_SOURCES.acquire, /^mock-kit\.js WEIGHT at 7be06eb4cb$/);
   assert.ok(Object.values(MARK_SOURCES).every((s) => !s.startsWith("K3284")), "no entry still names the retired override");
   /* the examples R42 names: login is reversible, promote reasoned; and the interface-shell R64 examples */
   assert.equal(MARKS.login, "Reversible");
@@ -257,7 +259,8 @@ test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` 
   assert.equal(MARKS.queuemute, "Reversible");
   assert.equal(MARKS.claim, "Signed");
   /* an op the kit does not name is Reasoned (control) */
-  const unnamed = Object.keys(MARKS).filter((op) => KIT_WEIGHT[op] === undefined && KIT_WEIGHT[`owed_${op}`] === undefined);
+  const unnamed = Object.keys(MARKS).filter((op) => op !== "notewrite" && KIT_WEIGHT[op] === undefined
+    && KIT_WEIGHT[`owed_${op}`] === undefined);
   assert.ok(unnamed.length > 0);
   for (const op of unnamed) assert.equal(MARKS[op], "Reasoned", op);
 });

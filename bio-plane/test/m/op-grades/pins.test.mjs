@@ -11,6 +11,7 @@ import { T35_RUNGS, T35_RUNG_ABSENT } from "../../../src/op-grades/t35.mjs";
 import { T36_RUNG_ABSENT } from "../../../src/op-grades/t36.mjs";
 import { T41_RUNG_ABSENT } from "../../../src/op-grades/t41.mjs";
 import { T45_RUNGS, T45_RUNG_ABSENT } from "../../../src/op-grades/t45.mjs";
+import { T50_RUNGS } from "../../../src/op-grades/t50.mjs";
 
 const { RUNGS, RUNG_ABSENT, NON_ACTS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_CORRECTION_KEY,
         OP_ALIASES } = G;
@@ -91,6 +92,8 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
   /* R38, R40, R41 (T48) */
   want.reversible.push("actionreplyquoting", "updatelater", "updatestart", "planask");
   want.reasoned.push("updateskip", "stepsource", "stepsourcewithdraw");
+  /* R45, R47 (T50) */
+  for (const [op, r] of Object.entries(T50_RUNGS)) want[r].push(op);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -116,15 +119,15 @@ test("R1 R8 R14 R32 R33 R37 (N891): the closed `terminal` set is retire, DEC-88'
 });
 
 /* ---- R3: the `undetermined` ground, closed, with its tally ----------------------------------------------------------- */
-/* R3's 21, less inboxpull, which R35 (T47) moves to `reversible` */
+/* R3's 21, less inboxpull, which R35 (T47) moves to `reversible`, and planopen, which R47 (T50) moves too */
 const R3_LEFT = ["contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
-  "templatesave", "actioncreate", "actionpressure", "planopen", "optionadd", "optionpropose", "optionadopt",
+  "templatesave", "actioncreate", "actionpressure", "optionadd", "optionpropose", "optionadopt",
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21 less inboxpull (R35) and the ops ruled onto "
    + "it later on R3's rule, deepercheck no longer among them, and no other; the 78 held before DEC-88 are the 21 and "
    + "DEC-88's 57; a later op left out, or one of the 57 left there, is seen", () => {
-  const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument", "wizarddraft", "wizardrevise",
+  const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument", "wizardrevise",
     "wizardpropose", "wizardsubmit", "wizardapprove", ...undeterminedOf(T33_RUNG_ABSENT), ...undeterminedOf(T34_RUNG_ABSENT),
     ...undeterminedOf(T35_RUNG_ABSENT), "safecopyrequest", "translationmark" /* R39 (T48): translationdraft left the ground */,
     ...T41_UNDETERMINED, "pagetranscribe",
@@ -132,6 +135,8 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
     "dutyfromresponse", "actionreceipt", "holdnoticesent", "pressurerecord", "watchlink", "watchanswer", "jointsignatory",
     "holdnoticeprepare", "arosefrom", "successrecord", "outcomecarry", "clockstate", "planreviewrecord", "prepitemadd",
     "prepitemdone", "statusreportsave", "ruleconfirm", "advocacycheck" /* K2881 */,
+    /* R45 (T50): `actioninquiry`, the one new `undetermined` op T50 adds (wizarddraft and planopen left the ground, R47) */
+    "actioninquiry",
     /* R33 (T46), named by hand */
     "airundispatch",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
@@ -141,11 +146,11 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
   assert.equal(undeterminedOf(T45_RUNG_ABSENT).length, 18);
   const left = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   assert.deepEqual(left, [...R3_LEFT].sort());
-  assert.equal(left.length, 20, "R3's count: DEC-88 moved 57 of the 78 into RUNGS, and R35 inboxpull");
-  assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 20);
+  assert.equal(left.length, 19, "R3's count: DEC-88 moved 57 of the 78 into RUNGS, and R35 inboxpull and R47 planopen left");
+  assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 19);
   assert.ok(!undeterminedOf(RUNG_ABSENT).includes("inboxpull") && !undeterminedOf(RUNG_ABSENT).includes("deepercheck"));
   /* the 78 held before DEC-88: the 21 (inboxpull among them then) and the 57 together */
-  const before78 = [...R3_LEFT, "inboxpull", ...Object.values(DEC88).flat()];
+  const before78 = [...R3_LEFT, "planopen", "inboxpull", ...Object.values(DEC88).flat()];
   assert.equal(before78.length, 78);
   assert.equal(new Set(before78).size, 78);
   for (const op of Object.values(DEC88).flat()) assert.ok(Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
@@ -158,12 +163,13 @@ test("R3 R33 R35 (N891): the `undetermined` ground is closed — exactly R3's 21
 
 /* ---- R2, R5: layer 9's NON_ACTS and read rows ------------------------------------------------------------------------ */
 const LAYER9_RUNGS = ["standarddeclare", "standardpropose", "standardadopt", "comparisonpropose", "consequencerecord",
+  "planopen" /* R47 (T50): reversible, so no longer stated absent */,
   "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen", "escalationattach",
   "escalationend", "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline",
   "escalationsuspend", "escalationresume", "determine", "plansubjectadd", "plansubjectremove", "optionrevise",
   "optiondispose", "planclose", "scenarioset", "actionhold"];
 const LAYER9_ABSENT = { counselpacketexport: "substrate", communicationprepare: "undetermined",
-  templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined", planopen: "undetermined",
+  templatesave: "undetermined", actioncreate: "undetermined", actionpressure: "undetermined",
   optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined", checkpointrecord: "undetermined",
   optionstart: "undetermined", reminderset: "caller-owned", reminderanswer: "caller-owned" };
 /* reads with no NEEDS row: named in no registry (a row for an ungated op reads `stale`, affordances R12) */
@@ -335,7 +341,7 @@ test("R2 R5 (N891): every owner's read this module names writes nothing and take
   /* the stated absences whose sentences the reads stand beside */
   for (const op of ["signerregister", "signerrevoke", "knockerconsent", "contradictionrecommend",
     "contradictionoptin", "contradictionrespond", "whatchangedpropose", "docketpressure", "caseimport",
-    "caseimportdocument", "notewrite", "noteturn", "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit",
+    "caseimportdocument", "notewrite", "noteturn", "wizardrevise", "wizardpropose", "wizardsubmit",
     "wizardapprove", "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "templatereviewgrant",
     "templategrantrevoke", "templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereview",
     "templatecomment", "templateapprove"]) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
