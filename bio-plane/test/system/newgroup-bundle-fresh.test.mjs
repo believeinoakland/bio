@@ -1,4 +1,4 @@
-/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/images.mjs newgroup/src/release.mjs newgroup/src/signers.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
+/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/images.mjs newgroup/src/release.mjs newgroup/src/signers.mjs newgroup/src/account.mjs newgroup/src/cfx.mjs newgroup/src/words.mjs newgroup/scripts/build.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
  *
  * DIST-13 — THE INSTALLER'S COMMITTED BUNDLE IS FRESH, OR THE GATE SAYS WHICH WAY IT IS NOT.
  *
@@ -56,21 +56,22 @@ const committed = readFileSync(DIST, "utf8");
 const releaseSrc = readFileSync(NG + "src/release.mjs", "utf8");
 const want = { version: literal(releaseSrc, "RELEASE_VERSION"), source: shaBinary(literal(releaseSrc, "RELEASE_BINARY")) };
 
-/* The build flags are READ from newgroup/package.json, never restated here, so the guard cannot drift from the build. */
+/* The build is READ from newgroup/package.json, never restated here: `npm run build` embeds the release and then runs
+   `scripts/build.mjs`, which holds the esbuild options (T50, R72: the same bundle as a plain esbuild one, with `setup-words`' rows
+   cut to the keys the installer reads). The guard builds with that script's own `bundleText`, so it cannot drift from the build. */
 const buildLine = JSON.parse(readFileSync(NG + "package.json", "utf8")).scripts.build;
-const flags = Object.fromEntries([...buildLine.matchAll(/--([a-z]+)=([a-z./-]+)/g)].map((m) => [m[1], m[2]]));
-t("PIN: newgroup's build is the esbuild line this guard mirrors (bundle, esm, neutral, dist/newgroup.bundled.mjs)",
-  [/esbuild src\/index\.mjs --bundle/.test(buildLine), flags.format, flags.platform, flags.outfile],
-  [true, "esm", "neutral", "dist/newgroup.bundled.mjs"]);
+const { bundleText, bundleOptions } = await import(NG + "scripts/build.mjs");
+const options = await bundleOptions();
+t("PIN: newgroup's build is the script this guard mirrors (scripts/build.mjs: bundle, esm, neutral, dist/newgroup.bundled.mjs)",
+  [/node scripts\/build\.mjs/.test(buildLine), options.bundle, options.format, options.platform, options.outfile],
+  [true, true, "esm", "neutral", "dist/newgroup.bundled.mjs"]);
 
 t("(A) the bundle embeds the RELEASE_VERSION src/release.mjs carries",
   literal(committed, "RELEASE_VERSION"), want.version);
 t("(B) the bundle's RELEASE_BINARY is the one src/release.mjs carries (by sha256)",
   shaBinary(literal(committed, "RELEASE_BINARY")), want.source);
 
-const built = await esbuild.build({ absWorkingDir: NG, entryPoints: ["src/index.mjs"], bundle: true,
-  format: flags.format, platform: flags.platform, outfile: flags.outfile, write: false, logLevel: "silent" });
-const fresh = built.outputFiles[0].text;
+const fresh = await bundleText(esbuild);
 t("(C) the WHOLE committed bundle is byte-identical to a fresh build of newgroup/src (catches installer code the bundle lags)",
   { bytes: committed.length, sha256: sha(committed) }, { bytes: fresh.length, sha256: sha(fresh) });
 
