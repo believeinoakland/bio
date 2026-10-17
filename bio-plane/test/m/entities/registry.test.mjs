@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { ENTITY_KINDS, RELATION_KINDS, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 
 test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then ENTITY_NO_LABEL with its own row (C-91.6) (ENTITY_NO_NOTE's arm follows); otherwise ENT-<year>-NNNN with the canonical and each distinct folded alias once, in one transaction", () => {
@@ -13,7 +14,7 @@ test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then
   for (const k of ENTITY_KINDS) assert.ok(u.detail.includes(k));
   const row = ENTITY_CHECKS.ENTITY_NO_LABEL;
   assert.deepEqual([row.check, row.where], ["C-91.6", "src/entities/index.mjs createEntity > is-entity-labelled"]);
-  assert.equal(row.translation, "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written.");
+  assert.equal(row.translation, word("refusal.ENTITY_NO_LABEL"));
   for (const label of [undefined, null, "", "   ", " \t\n "]) {
     const nl = e.createEntity({ note: "a subject the test registers", kind: "office", label });
     assert.deepEqual([nl.ok, nl.reason, nl.code, nl.check, nl.translation], [false, "ENTITY_NO_LABEL", "ENTITY_NO_LABEL", row.check, row.translation], String(label));
@@ -174,9 +175,9 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   assert.equal(got.found, true);
   const ent = got.entity;
   assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "identifiers", "identifiers_truncated", "kind", "label", "limit", "note", "proceeding",
+    "defects_truncated", "entity_id", "forum_kind", "identifiers", "identifiers_truncated", "kind", "label", "limit", "note", "proceeding",
     "relations", "relations_limit", "relations_truncated", "sector", "sector_history", "sector_history_truncated"]);
-  assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding], [null, [], [], null], "an office: no sector, no identifier, no facet");
+  assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding, ent.forum_kind], [null, [], [], null, null], "an office: no sector, no identifier, no facet, no forum kind");
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);
   for (const x of ent.aliases) assert.ok(x.declared_by === "member:ann" && x.at);
   assert.deepEqual(ent.relations.map((r) => [r.relation_id, r.direction]), [[r1, "out"], [r2, "in"]]);

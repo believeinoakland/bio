@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, REASON } from "./fixture.mjs";
+import { WORD } from "./words.mjs";
 
 const PAGE0 = { kind: "pdf-page", page: 0 };
 const MHS = "MHS 101-2020 edition";
@@ -36,7 +37,7 @@ test("R43 R20 an adopted standard binds the body only while its version is in fo
   const ended = b("2026-01-01");
   assert.equal(w.s.inForceAt({ standard: std, date: "2026-01-01" }).state, "not_in_force");
   assert.equal(ended.state, "benchmark", "a standard kind nothing puts in force is a benchmark, never binding");
-  assert.equal(ended.says.binding, "Benchmark · not binding on Port Ellery Selectboard");
+  assert.equal(ended.says.binding, WORD("standard.binding.benchmark", { body: "Port Ellery Selectboard" }));
   assert.ok(ended.rests_on.some((x) => x.adoption === a.adoption.id));
   /* an adopted ordinance (a law kind) that has ended is undetermined as to binding, never a benchmark and never binds */
   const law = w.declare({ cite: "PEBL § 90", issuer: "State", period: { from: "2020-01-01", to: "2023-12-31" } }).id;
@@ -62,7 +63,8 @@ test("R43 R51 adopted with a recorded through, the standard binds up to through 
   const b = (date) => w.s.bindsAt({ standard: std, body, date, viewer: V("carol") });
   const on = b("2026-09-01");
   assert.equal(on.state, "binds");
-  assert.match(on.why, /known in force through 2026-09-01/, "names the record it rests on");
+  assert.ok(on.why.includes(WORD("standard.inforce.known", { through: "2026-09-01", author: V("bob"),
+    source: WORD("standard.source.capture", { capture: src.capSha.slice(0, 12), extent: "page 1" }) })), "names the record it rests on");
   assert.equal(b("2022-01-01").state, "binds");
   const after = b("2026-09-02");
   assert.equal(after.state, "undetermined", "after through");
@@ -81,7 +83,7 @@ test("R43 R20 adopted with no end stated and no record of it in force, whether t
   assert.equal(r.state, "undetermined");
   assert.match(r.why, new RegExp(`adopted it \\(${a.adoption.id}\\), effective 2022-01-01, and the record does not state when it ceased`));
   assert.ok(r.rests_on.some((x) => x.adoption === a.adoption.id));
-  assert.notEqual(r.says.binding, "Standard · binds Port Ellery Selectboard");
+  assert.notEqual(r.says.binding, WORD("standard.binding.binds", { body: "Port Ellery Selectboard" }));
   /* no start stated either: still undetermined */
   const open = w.declare({ cite: "MHS 303", kind: "standard", issuer: "MHSI", period: { from: null, to: null } }).id;
   assert.equal(adopt(open, "2022-01-01").ok, true);

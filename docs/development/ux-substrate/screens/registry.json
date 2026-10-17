@@ -973,6 +973,14 @@
      ]
     },
     {
+     "op": "factconfirm",
+     "label": "Correct the time zone",
+     "status": "declared",
+     "modules": [
+      "local-facts"
+     ]
+    },
+    {
      "op": "writinghelp",
      "label": "Help me write this",
      "status": "declared",
@@ -1535,6 +1543,14 @@
      ]
     },
     {
+     "op": "projectrequestanswer",
+     "label": "Grant or decline",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
      "op": "release",
      "label": "Vouch for a capture",
      "status": "declared",
@@ -1622,6 +1638,15 @@
      "op": "owed:secondlook DEC-238",
      "label": "Flag for a second look",
      "status": "owed"
+    },
+    {
+     "op": "secondlookclear",
+     "label": "Clear",
+     "status": "declared",
+     "onTranche": "origin/tranche/T50",
+     "modules": [
+      "following"
+     ]
     },
     {
      "op": "themeread",
@@ -2210,6 +2235,22 @@
      ]
     },
     {
+     "op": "projectrequest",
+     "label": "Ask to join",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectrequestwithdraw",
+     "label": "Withdraw your request",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
      "op": "projectfork",
      "label": "Start a project from this one",
      "status": "declared",
@@ -2604,6 +2645,14 @@
      ]
     },
     {
+     "op": "ask",
+     "label": "Ask",
+     "status": "declared",
+     "modules": [
+      "screens-daily"
+     ]
+    },
+    {
      "op": "suggest",
      "label": "Suggest",
      "status": "declared",
@@ -2734,6 +2783,11 @@
      "modules": [
       "entities"
      ]
+    },
+    {
+     "op": "owed:aliaswithdraw K3674",
+     "label": "Withdraw a name",
+     "status": "owed"
     },
     {
      "op": "relationdeclare",

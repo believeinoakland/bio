@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, MACHINE, OUTSIDER } from "./fixture.mjs";
 import { DATED_KINDS } from "../../../src/events/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -102,7 +103,7 @@ test("R5 edit acts: an office capture's created and modified values held on requ
   assert.equal(by.issued.value, "2026-05-01T09:30:00");
   assert.equal(by.issued.zone, "UTC");
   assert.match(by.issued.method, /the file's created value; author as the file writes it: A\. Clerk/);
-  assert.match(by.edited.method, /the file's modified value; last modified by as the file writes it: B\. Editor/);
+  assert.ok(by.edited.method.includes(`the file's modified value${word("events.transact.file_writes", { by: word("events.transact.last_modified"), who: "B. Editor" })}`));
   for (const f of r.dated_facts) {
     assert.match(f.method, /never a finding/);
     assert.equal(f.extent.kind, "envelope");

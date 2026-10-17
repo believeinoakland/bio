@@ -1545,6 +1545,129 @@ def w308(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-308' + (': ' + note if note else '')))
 w308('screen.explore.unnamed.why', 'named in {n} documents only by an account number', False, 'explore R25: why a node is not yet named, beside connection.node.unnamed')
 # --- end DEC-308
+# --- DEC-309 (BOB's B279, K3659, K3667, K3672, K3674: the keys T50's L4, L5 and L11 folds owe)
+def w309(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-309' + (': ' + note if note else '')))
+# extraction (L4, K3659)
+w309('extraction.why.reextraction_candidates', "your team's Civicsmith can now read this capture better than when it was first read, so it is being read again now", False, 'extraction structure.reextraction.candidates')
+w309('extraction.why.no_evidence_store', "your team's Civicsmith has no evidence store set up, so the stored file can't be read again", False, 'extraction: a migration skipped')
+w309('extraction.why.no_text_provenance', "this reading doesn't record how its text was produced; that is not the same as its text never having been transcribed", False, 'extraction readingFor, text_provenance.why')
+w309('extraction.why.no_reading_provenance', "this reading was recorded before readings kept how they were made, or by a process that didn't say, so the level, the member and the text it classified are not known, and are not guessed", False, 'extraction readingFor, reading_history provenance.why')
+w309('extraction.why.transcriptions_graded_weaker', "Transcriptions graded under a measurement that a later check found weaker: {count}. Nothing has been regraded, and nothing will be automatically; a member regrades each one", False, 'extraction calibrationDrift.why')
+w309('extraction.why.graded_under_weaker', "this text was graded under {engine} {version}'s measurement {calibration} (accuracy {fidelity}, measured {measured}). A check on {probeAt} measured that engine at {nowFidelity}, which is weaker, so this transcription may support less than the record says. Nothing has been regraded: a grade changes only when a member changes it", False, 'extraction drift.mjs, an obligation why')
+w309('extraction.why.fidelity_unknown', 'not known', False, 'the {fidelity} or {nowFidelity} of extraction.why.graded_under_weaker when none was measured')
+w309('extraction.why.migrated_n26', "this reading was made before a correction to how Word documents with alternative content are read, which had counted some paragraphs, runs and tables twice; it was read again from the stored file, and every reference it holds was renumbered to match", False, 'extraction migrated.n26.why')
+w309('extraction.why.migrated_n439', "this reading was made before a correction to how slides with alternative content are read, which had doubled some slide text and counted some shapes twice; it was read again from the stored file, and every shape reference it holds was renumbered to match", False, 'extraction migrated.n439.why')
+# events (L5, K3672)
+w309('events.text.reason_given', 'stated reason: {reason}', False, "the {why} of events.says.discretion_used and .waiver_waived")
+w309('events.text.found_unmet', 'found unmet: {standards}', False, 'the {result} of events.says.assessment_against')
+w309('events.text.conditions_listed', 'conditions: {conditions}', False, 'the {conditions} of events.says.waiver_waived')
+w309('events.text.expires_on', 'expires {date}', False, 'the {expiry} of events.says.waiver_waived')
+w309('events.outcome.granted', 'granted', False, 'the {outcome} of events.says.waiver_waived')
+w309('events.outcome.denied', 'denied', False, 'the {outcome} of events.says.waiver_waived')
+w309('events.outcome.partly_granted', 'partly granted', False, 'the {outcome} of events.says.waiver_waived')
+w309('events.outcome.other', 'decided', False, 'the {outcome} of events.says.waiver_waived, any other outcome')
+w309('events.sent.by', 'sent by', False, 'events whoWasSent')
+w309('events.sent.to', 'sent to', False, 'events whoWasSent')
+w309('events.sent.copied', 'copied', False, 'events whoWasSent')
+w309('events.sent.present', 'present', False, 'events whoWasSent')
+w309('events.sent.detail', "This says whom the record states it was sent to, who was copied and who was present. It never says who knew or saw anything.", False, 'events whoWasSent detail')
+for k, e in [('actor', 'acted in'), ('organizer', 'organized'), ('mover', 'moved'), ('seconder', 'seconded'), ('voted', 'voted in'), ('speaker', 'spoke at'), ('sender', 'sent'), ('recipient', 'was sent'), ('signatory', 'signed'), ('decider', 'decided'), ('author', 'wrote'), ('implementer', 'carried out'), ('authorises', 'authorizes'), ('answers', 'answers'), ('amends', 'amends'), ('reverses', 'reverses'), ('concerns', 'concerns')]:
+    w309('events.' + k, e, False, "events owner: a role's or link's words, as events.present")
+w309('events.why.grade_time_unread', "its time couldn't be read just now, so no attestation is named as governing it", False, 'events grade_why (cache stale)')
+w309('events.why.grade_placed_nowhere', 'placed nowhere: no attestation you can see dates this event, so none governs its time', False, 'events grade_why')
+w309('events.text.document_sha', 'the document {sha}…', False, 'the {source} of events.says.states_caused')
+# screens (the L11 screen fold, K3667)
+w309('shell.icon.plan', 'An action plan', False, 'interface-shell R82, a row icon explained')
+w309('screen.group.timezone.how', 'How you checked it', False, 'screens-settings R45, local-facts R1 how')
+w309('screen.group.timezone.how.help', "Required. For example: read it on the city's own website, or asked the clerk's office.", False, 'screens-settings R45')
+w309('screen.group.timezone.source', 'Where you checked it', False, 'screens-settings R45, local-facts R1 source')
+w309('screen.group.timezone.source.help', 'Required. The page, document or office that gives this time zone.', False, 'screens-settings R45')
+w309('screen.group.timezone.governs.local', '{zone}, corrected by your team', False, 'screens-settings R45, the governing zone')
+w309('screen.group.timezone.governs.profile', '{zone}, from {profile}', False, 'screens-settings R45, the governing zone')
+w309('screen.group.timezone.none', 'No time zone is held yet. Choose one below.', False, 'screens-settings R45: draws no UTC')
+w309('screen.group.timezone.saved', "Your team's time zone is now {zone}.", False, 'screens-settings R45')
+w309('court.add.done', '{name} was added. Your team can now choose it.', False, 'screens-settings R46')
+w309('act.secondlook.note', 'Why it needs a second look', False, 'screens-daily R45, the note field')
+w309('act.secondlook.note.help', 'Required. Your team reads this note beside the item.', False, 'screens-daily R45')
+w309('act.watchitem.off.label.finder', 'Take off my watch list', False, 'screens-daily R45')
+w309('act.watchitem.off.does', "Stops watching it: you won't be told when it changes.", False, 'screens-daily R45')
+w309('screen.person.fact.to', 'True until (optional)', False, 'screens-daily R47, valid.to')
+w309('screen.person.fact.valid.help', "Leave a day out when the passage doesn't state it; it then shows as not stated.", False, 'screens-daily R47')
+w309('screen.person.fact.notstated', 'not stated', False, 'screens-daily R47/R48, a bound not stated')
+w309('money.flow.from', 'Who paid', False, 'screens-daily R48 (3), the money form')
+w309('money.flow.to', 'Who was paid', False, 'screens-daily R48 (3), the money form')
+w309('screen.find-in.field.standardkind', 'What kind of standard', False, "screens-daily R48 (1): the standard kinds are screen.standard.kind.*")
+w309('size.kb', '{n} KB', False, 'screens-intake R35, DEC-299 (8)')
+w309('size.mb', '{n} MB', False, 'screens-intake R35, DEC-299 (8)')
+w309('size.gb', '{n} GB', False, 'screens-intake R35: a file over 1 GB')
+w309('project.rescue.title.nodate', 'Every owner of this project is gone', False, 'screens-inquiry R54: owner_since not held')
+w309('screen.request.nooffice.admin', 'An administrator can add the office under Settings, Places and offices.', False, 'screens-action R20')
+w309('screen.help-records.notheld', "Your team's Civicsmith doesn't hold records help for this place yet, so none is shown here. The law's own text is the place to look.", False, 'screens-action R22')
+w309('project.notmember', "You aren't in this project. Ask to join, and its owners decide.", False, 'interface-shell R85: projectrequest on project')
+# acts and queue (affordances R64, queue-producers R41-R42, queue R55)
+w309('act.retire.name', 'Retire this copy from new work, with a reason', False, 'affordances R64')
+w309('act.conclude.name', "Conclude the question with the team's answer", False, 'affordances R64')
+w309('act.reopen.name', 'Pick the question back up', False, 'affordances R64')
+w309('act.projectleave.name', 'Ask to leave this project', False, 'affordances R64')
+w309('queue.project-invitation.summary.unnamed', "You're invited to join {project}", False, 'queue-producers R41: the inviter not named')
+QK = {
+ 'monitoring-recheck-due': 'Watched pages due for another check', 'archive-fallback-eligible': 'Pages a public archive could capture instead',
+ 'capture-session-ttl-expiring': 'Saved capture sessions about to expire', 'source-unreachable-governed': "Sources that can't be reached",
+ 'capture-completed-unattended': 'Captures that finished after their member left', 'partial-capture-outstanding': 'Captures still missing parts',
+ 'text-undetermined': "Documents whose text couldn't be read", 'client-rendered-shell': 'Pages that show their content only in a browser',
+ 'invitation-spent-or-expired': 'Invitations used up or expired', 'governor-holding-host': "Sites Civicsmith is pausing its requests to",
+ 'runtime-ceiling-reached': 'Work stopped at its time limit', 'render-deferred': 'Page renderings put off to another day',
+ 'sweep-held-backlog': 'Site sweeps with work held back', 'sweep-yield-anomaly': 'Site sweeps finding far more or less than usual',
+ 'sweep-seed-unreachable': "Site sweeps whose starting page can't be reached", 'sweep-redirect-out-of-scope': 'Site sweeps sent outside their site',
+ 'sweep-silent': 'Site sweeps that found nothing new', 'notice-attestation-missed': 'Public notices not confirmed in time',
+ 'notice-lapse-near': 'Public notices about to lapse', 'notice-project-closed': 'Notices for closed projects',
+ 'action-clock-overdue': 'Actions past their deadline', 'cited-docket-unreadable': "Cited dockets that can't be read",
+ 'missing_predecessor': 'Steps missing the step that comes before', 'overdue_successor': 'Steps whose next step is overdue',
+ 'cardinality_exceeded': 'Things recorded more often than expected', 'temporal-expectation-due': 'Things expected by now',
+ 'source-modified': 'Sources that changed', 'source-removed': 'Sources that were taken down', 'duplicate-document': 'Documents held twice',
+ 'link-verdict-changed': 'Links whose target changed', 'reused-asset-changed': 'Reused page parts that changed',
+ 'assistant-surfaced-focus': 'Things the assistant points out', 'grade-improvable': 'Evidence that could be graded higher',
+ 'objective-gap': "Gaps in what a project set out to show", 'measure-decay': 'Measures losing their support', 'export-performed': 'Exports of the record',
+ 'audit-finding': 'Audit findings', 'register-unbacked': 'Register entries with no evidence behind them', 'out-of-inquiry-lead': 'Leads outside the question',
+ 'stance-changed-here-not-elsewhere': 'Positions changed here but not elsewhere', 'new-version-arrived-from-another-team': 'New versions from another team',
+ 'newer-capture-affects-reference': 'Newer captures that affect a citation', 'shared-inquiry-concluded-by-another-project': 'Shared questions another project concluded',
+ 'contradiction-lead': 'Possible contradictions', 'contradiction-plurality': 'Contradictions with more than two sides',
+ 'contradiction-plurality-unseen': "Contradictions with sides you can't see", 'side-corrected': 'Corrected sides of a contradiction',
+ 'tension-after-publication': 'Contradictions found after publishing', 'edition-withdrawn': 'Withdrawn editions', 'edition-contested': 'Contested editions',
+ 'litigation-hold-released': 'Released litigation holds', 'wizard-withdrawn': 'Withdrawn step-by-step guides', 'wizard-restored': 'Restored step-by-step guides',
+ 'cited-newer-edition': 'Cited cases with a newer edition', 'cited-edition-withdrawn': 'Cited editions that were withdrawn',
+ 'followed-case-entry': 'New entries in cases you follow', 'cited-docket-entry-refused': "Cited docket entries that couldn't be fetched",
+ 'interest-check-noticed': 'Possible conflicts of interest', 'money-detector-noticed': 'Payments worth a look', 'standing-answer': 'Answers to standing questions',
+ 'security-level-high': 'High security alerts', 'policy-changed-noticed': 'Policies changed without notice', 'scan-found': 'Scan findings',
+ 'security-tool-off': 'Security tools switched off', 'explore-ask': 'Questions from exploring connections', 'ai-limit-reached': "The assistant's limits reached",
+ 'project-account-suspended': "Projects whose assistant account is suspended", 'question-find': 'Finds while looking into a question',
+ 'step-later-found': 'Things found later', 'milestone-overdue': 'Milestones past their date', 'project-quiet': 'Projects gone quiet',
+ 'step-cost-shared': 'Shared work costs', 'step-cost-message': "Messages about a step's cost", 'review-comment-left-out': 'Review comments not included',
+ 'member-left-items': 'Dated items a departed member left',
+}
+assert len(QK) == 75, len(QK)
+for k, e in QK.items():
+    w309('queue.kind.' + k, e, False, "queue R55: the {kind} of queue.muted.kind")
+# site (site R14)
+w309('screen.site.steps.name.noplace', "You choose a short name and your places. The short name is a fixed label in your team's addresses and beside every signature; it never changes. The places are the city, county and state whose rules apply to you. No place is ready yet: Civicsmith holds no place's local facts (its offices, where its records are published, its deadlines and its holidays), so your team records them itself.", False, 'site R14: no place ready')
+# installer (installer R66-R71; install-situations F1-F9)
+w309('screen.install.resumed', 'Continuing where it stopped. Nothing already done is done again.', False, 'installer R69, F1')
+w309('screen.install.stopped.containers', "Stopped: this Cloudflare account doesn't allow containers yet.", False, 'installer R70, F2')
+w309('screen.install.stopped.containers.do', "Nothing was created. In Cloudflare's dashboard, open Compute (Workers), then Containers, and turn containers on. Then choose \"It's on now\", and setup begins again.", False, 'installer R70, F2')
+w309('screen.install.stopped.containers.done', "It's on now", False, 'installer R70, F2: the button')
+w309('screen.install.stopped.limit', 'Stopped: this Cloudflare account has reached its limit of {limit}.', False, 'installer R70, F3')
+w309('screen.install.stopped.limit.do', "Nothing was created. Remove one you no longer use in Cloudflare's dashboard, or ask Cloudflare to raise the limit, then start again.", False, 'installer R70, F3')
+w309('screen.install.progress.retrying', "Cloudflare didn't answer just now. Trying again, for up to {minutes} minutes.", False, 'installer R66, F4')
+w309('screen.install.stopped.lasting', 'Stopped: Cloudflare kept failing to answer.', False, 'installer R66, F4: a lasting failure')
+w309('screen.install.stopped.lasting.do', 'Nothing is left half-installed. Start again in a few minutes.', False, 'installer R66, F4')
+w309('screen.install.stopped.source', "Stopped: Civicsmith's software source isn't available right now.", False, 'installer R71, F5')
+w309('screen.install.stopped.source.do', 'Nothing is left half-installed. Try again later.', False, 'installer R71, F5')
+w309('screen.install.approveagain', "Cloudflare needs you to approve again. Approve on Cloudflare's page, and setup continues where it stopped.", False, 'installer R71, F6')
+w309('screen.install.stopped.nametaken', 'The short name {name} is already taken, so nothing was created.', False, 'installer R70, F7')
+w309('screen.install.stopped.nametaken.do', '{free} is free: use it, or type another.', False, 'installer R70, F7')
+w309('screen.install.stopped.running', 'Another install or update is already running in this account. This one waits until it finishes.', False, 'installer R69, F9')
+# --- end DEC-309
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

@@ -82,7 +82,8 @@ import { STANDARDS_CHECKS, refusal } from "./checks.mjs";
 import { STANDARDS_TABLES, migrateStandards } from "./schema.mjs";
 import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPortionPath } from "./instrument.mjs";
 import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWords, forceWords, bindingWords, heldWords,
-         accessWords, notPublicWords } from "./words.mjs";
+         accessWords, notPublicWords, copyWords, captureWords, textWithheldWords, noteWords, inForceKnownWords } from "./words.mjs";
+import { word } from "../setup-words/index.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
          weakestCeiling, machineRelate, refuseNoCitation } from "../law-relations/index.mjs";
 
@@ -134,8 +135,6 @@ const FORCE_PROPOSE_KEYS = Object.freeze(["standard", "portion", "force", "holde
                                           "viewer"]);
 const ADOPTION_KEYS = Object.freeze(["standard", "act", "edition", "from", "amendments", "mode", "citation", "reason",
                                      "author", "viewer"]);
-/* R41: what a read says in place of a reading-room or paywalled standard's words for a caller that is not a member. */
-const TEXT_WITHHELD = "this standard's words are read only by members of your group, inside the group";
 /* R37: the project a bundle is filed in (a project's own bundle is its project), as membership reads it. */
 const PROJECT_OF = "CASE WHEN b.object_type='project' THEN b.bundle_id ELSE b.project END";
 /* R41: a member viewer, `member:<id>`, never a machine credential. */
@@ -357,9 +356,13 @@ export class Standards {
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, DECLARE_KEYS);
     if (unknown) return unknown;
-    const d = this.#declareRefusal(a);
-    if (d.ok === false) return d;
-    return this.#write(d.fields, str(a.author), a.viewer ?? null, null);
+    /* R60: a found extent content holds no row for is minted while the declaration is checked, so the whole act is one
+       transaction: a refusal anywhere takes the minted rows back with it (record-core R32), and nothing is minted. */
+    return this.record.transact(() => {
+      const d = this.#declareRefusal(a);
+      if (d.ok === false) return d;
+      return this.#write(d.fields, str(a.author), a.viewer ?? null, null);
+    });
   }
 
   /* R1's refusals after the author, in R1's order, then R6's; `{ok: true, fields}`, checked, when none applies. */
@@ -423,7 +426,7 @@ export class Standards {
     if (!HELD_STATES.includes(held))
       return refuseFieldInvalid("held", `is one of ${HELD_STATES.join(", ")}`);
     if (held === "text") {
-      const texts = this.#textIdsResolved(a.text);
+      const texts = this.#textIdsResolved(a.text, str(a.author), viewer);
       if (texts && texts.unresolved) return refuseTextUnresolved(texts.unresolved);
       /* DEC-49 REGION is-standard-text */
       if (!texts || !texts.ids.length || texts.ids.length > TEXTS_MAX)
@@ -549,21 +552,44 @@ export class Standards {
     /* END DEC-49 REGION is-commitment-not-own-letter */
   }
 
-  /* R2, R47: a standard's named text as content ids: each a content id, or a found extent ({capture_sha, extent}, a
-     find's match, `retrieval` R73) resolved to `content`'s row for that extent, exactly as a content id named directly.
-     `{ids}`, `{ids, unresolved}` naming the first extent content holds no row for, or null when not in that shape. */
-  #textIdsResolved(v) {
+  /* R2, R47, R60: a standard's named text as content ids: each a content id, or a found extent ({capture_sha, extent}, a
+     find's match, `retrieval` R73) resolved to `content`'s row for that extent, exactly as a content id named directly;
+     an extent content holds no row for is minted by the declaring member's act (`#mintFound`). `{ids}`, `{ids,
+     unresolved}` naming the first extent that is neither held nor mintable, or null when not in that shape. */
+  #textIdsResolved(v, author = "", viewer = null) {
     const list = typeof v === "string" || isObj(v) ? [v] : Array.isArray(v) ? v : null;
     if (!list) return null;
     const ids = [];
     for (const x of list) {
       if (typeof x === "string") { if (x.trim()) ids.push(x.trim()); continue; }
       if (!isObj(x) || typeof (x.capture_sha ?? x.captureSha) !== "string" || !isObj(x.extent)) return null;
-      const row = this.#extentRow(x.capture_sha ?? x.captureSha, x.extent, null);
+      const row = this.#extentRow(x.capture_sha ?? x.captureSha, x.extent, null)
+        ?? this.#mintFound(x.capture_sha ?? x.captureSha, x.extent, author, viewer ?? author);
       if (!row) return { ids, unresolved: `${String(x.capture_sha ?? x.captureSha).slice(0, 64)}` };
       ids.push(row.content_id);
     }
     return { ids: [...new Set(ids)] };
+  }
+
+  /* R60 (N1177; `content` R12, R13): a found extent `content` holds no row for, made the standard's text by the declaring
+     member's own act: the row is minted by `author` (labelled by `content` R16 as a member's), for the capture and extent,
+     in a bundle that holds the capture and the viewer may see, as `events` mints the passages a use cites (R43). Null (so
+     `STANDARD_TEXT_UNRESOLVED`) for a capture not held or not visible, an extent `content` refuses (its R7), or no author;
+     a mint of a row already held finds it, never rewriting it (`content` R13). Called inside the act's transaction, so a
+     refusal after it takes the row back. */
+  #mintFound(captureSha, extent, author, viewer) {
+    try {
+      const sha = String(captureSha).trim().toLowerCase();
+      if (!/^[0-9a-f]{64}$/.test(sha) || !author || !isObj(extent)) return null;
+      const home = this.provenance && typeof this.provenance.homeOf === "function" ? this.provenance.homeOf(sha) : null;
+      const bundles = [...(home ? [home.bundleId] : []),
+                       ...this.#rows(`SELECT DISTINCT bundle_id FROM register WHERE capture_sha=? ORDER BY bundle_id`, sha)
+                         .map((r) => r.bundle_id)];
+      const bundleId = bundles.find((b) => b && this.membership.inSight(b, viewer));
+      if (!bundleId) return null;
+      const m = this.content.mint({ bundleId, captureSha: sha, extent, mintedBy: author });
+      return m && m.ok === true ? this.content.contentRow(m.content_id) : null;
+    } catch { return null; }
   }
 
   /* R33, R36–R42, R47: the fields T35 adds, each asked in R1's order (family, copy, versions, designation and issuer,
@@ -1059,8 +1085,9 @@ export class Standards {
     const notPublic = sight.class === "bundle" && !sight.released ? { release_by: this.#releaseBy(sight) } : null;
     const qn = row.question && viewer !== null && this.membership.inSight(row.question, viewer) ? row.question : null;
     const says = { ...(ownerWords(row.kind, issuerLabel) ? { owner: ownerWords(row.kind, issuerLabel) } : {}),
-                   ...(heldWords(held, heldDetail) || {}),
+                   ...(heldWords(held, heldDetail, sourceWords) || {}),
                    ...(accessWords(access) ? { access: accessWords(access) } : {}),
+                   ...(row.copy && copyWords(row.copy) ? { copy: copyWords(row.copy) } : {}),
                    ...(notPublic ? notPublicWords(notPublic.release_by) : {}) };
     return {
       family: safeJson(row.family_json) || { state: "undetermined", key: null, family_key: null,
@@ -1142,10 +1169,8 @@ export class Standards {
     /* R50: the standing records of the version known in force through a date */
     const through = this.#throughRecords(sid).filter((x) => !x.withdrawn);
     return { ok: true, ...a, texts, requires_quoted: quoted, in_force_through: through,
-             ...(withheld ? { text_withheld: TEXT_WITHHELD } : {}),
-             says: { ...a.says, note: "a standard as the record holds it: what it is and where it comes from, never "
-                 + "whether it is a good one. Each passage of its text says whether a newer capture of its document still "
-                 + "holds it; nothing is moved." } };
+             ...(withheld ? { text_withheld: textWithheldWords() } : {}),
+             says: { ...a.says, note: noteWords() } };
   }
 
   /* R5: what a viewer may read. A standard is a bundle outside any project, so membership R43 lets every member, machine
@@ -1349,7 +1374,7 @@ export class Standards {
     if (!r) return null;
     const source = sourceWords(r.capture_sha, safeJson(r.extent_json));
     return { record: r.record_id, through: r.through, source, by: r.author,
-             says: `known in force through ${r.through}, from ${source}, recorded by ${r.author}` };
+             says: inForceKnownWords({ through: r.through, source, author: r.author }) };
   }
 
   /** R20: `inForceAt({key | standard, portion?, date, viewer?})` → `{state, why, standard, version}`. With a standard,
@@ -2001,7 +2026,7 @@ export class Standards {
       const row = this.#row(sid);
       if (!row || (viewer !== null && !this.#readable(sid, viewer))) return refuseNoSuchStandard(sid);
       const ent = this.#entity(b, viewer);
-      const bodyLabel = ent ? ent.label : b || "the body";
+      const bodyLabel = ent ? ent.label : b || word("standard.binding.body.none");
       const answer = (state, why, rests_on) => ({ ok: true, standard: sid, body: b || null, date, state, why, rests_on,
                                                   says: { binding: bindingWords(state, bodyLabel),
                                                           ...this.#t35Answer(row, viewer).says } });
@@ -2479,7 +2504,7 @@ export class Standards {
       const items = kept.slice(0, n).map(({ p, adoption }) => {
         const label = proposalLabel(p.proposed_by, STANDARD);
         return { id: p.proposal_id, cite: p.cite, kind: p.kind ?? null, issuer: p.issuer ?? null, why: p.why, label,
-                 proposed_by: p.proposed_by, proposed_at: p.proposed_at, has_text: (safeJson(p.text_json) || []).length > 0,
+                 project: p.project, proposed_by: p.proposed_by, proposed_at: p.proposed_at, has_text: (safeJson(p.text_json) || []).length > 0,
                  adoption, standard: false, says: PROPOSAL_SAYS };
       });
       return { ok: true, project: pid, state: st, items, count: items.length, limit: n, truncated,
@@ -2514,9 +2539,12 @@ export class Standards {
                      /* R9: a proposal adopted as cited (or absent) takes no text from it: it is held without its words */
                      text: a.held === "cited" || a.held === "absent" ? a.text
                        : take("text", (safeJson(p.text_json) || []).length ? safeJson(p.text_json) : null) };
-    const d = this.#declareRefusal(fields);
-    if (d.ok === false) return d;
-    const r = this.#write(d.fields, str(a.author), a.viewer ?? null, p.proposal_id);
+    /* R60: one transaction, as `standardDeclare`'s: a found extent minted while checking is taken back by a refusal */
+    const r = this.record.transact(() => {
+      const d = this.#declareRefusal(fields);
+      if (d.ok === false) return d;
+      return this.#write(d.fields, str(a.author), a.viewer ?? null, p.proposal_id);
+    });
     if (!r || !r.ok) return r;
     return { ...r, adopted: { proposal: p.proposal_id, from_proposal: fromProposal, why: p.why, why_by: p.proposed_by,
                               says: fromProposal.length ? `${fromProposal.join(", ")} taken from the proposal as it was made`
@@ -2643,7 +2671,7 @@ function refuseProposalsArgument(argument, shape, given) {
 function sourceWords(captureSha, extent) {
   let where = "";
   try { where = describeExtent(isObj(extent) ? extent : {}); } catch { where = ""; }
-  return `capture ${String(captureSha).slice(0, 12)}${where ? `, ${where}` : ""}`;
+  return captureWords(captureSha, where);
 }
 
 /* R18, R19, R33, R39, R40: a field not in the form it takes, named. */

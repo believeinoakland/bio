@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, BYLAW, REASON, sha } from "./fixture.mjs";
+import { WORD } from "./words.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES, COPY_STATES, ACCESS_STATES, HELD_STATES, FORCES, POLICY_FORCES,
          familyKey, standardsOps, IN_FORCE_STATES } from "../../../src/standards/index.mjs";
 import { STANDARD_SOURCE_KINDS } from "../../../../jurisdictions/index.mjs";
@@ -145,7 +146,8 @@ test("R35 forceDeclare records the force of one provision by a member, citing it
   const f = w.s.forceDeclare(good);
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   assert.deepEqual([f.force.force, f.force.holder, f.force.criteria, f.force.citation, f.force.by], ["discretionary", holder, "none", t.contentId, V("bob")]);
-  assert.deepEqual(f.force.says, { force: "At the discretion of Harbour Master", beside: words, criteria: "no criteria stated" });
+  assert.deepEqual(f.force.says, { force: WORD("label.standardforce.discretionary", { holder: "Harbour Master" }), beside: words,
+    criteria: WORD("label.standardcriteria.none") });
   const again = w.s.forceDeclare({ ...good, force: "mandatory" });
   refusalRow(again, "FORCE_ALREADY_CONFIRMED");
   assert.equal(again.force_id, f.force.id);
@@ -159,14 +161,14 @@ test("R35 forceDeclare records the force of one provision by a member, citing it
   assert.deepEqual(m.force.says, { force: "Required", beside: words });
   const of = w.s.forcesOf({ standard: p, viewer: V("carol") });
   assert.deepEqual([of.forces.map((x) => x.force), of.withdrawn.map((x) => x.force)], [["mandatory"], ["discretionary"]]);
-  assert.equal(of.says.owner, "Harbour Master policy");
-  for (const [force, word] of [["requires", "Requires"], ["recommends", "Recommends"], ["allows", "Allows"]]) {
+  assert.equal(of.says.owner, WORD("standard.policy.owner", { issuer: "Harbour Master" }));
+  for (const [force, word] of FORCES.map((f) => [f, WORD(`label.standardforce.${f}`)])) {
     const x = w.declare({ cite: `PEBL § ${force.length}`, text: [t.contentId] }).id;
     assert.equal(w.s.forceDeclare({ ...good, standard: x, portion: "12", force, holder: undefined, criteria: undefined }).force.says.force, word);
   }
   /* criteria named: "criteria stated" */
   const crit = policy(w, { text: [t.contentId] }).id;
-  assert.equal(w.s.forceDeclare({ ...good, standard: crit, criteria: t.contentId }).force.says.criteria, "criteria stated");
+  assert.equal(w.s.forceDeclare({ ...good, standard: crit, criteria: t.contentId }).force.says.criteria, WORD("label.standardcriteria.stated"));
 });
 
 test("R35 R9 a machine's force label is only a proposal, stored apart, labelled through proposalLabel(proposer, \"standard\"), moving nothing until a member confirms it (forceConfirm, refused as forceDeclare is)", () => {
@@ -214,7 +216,7 @@ test("R37 R14 a policy whose text is filed in a hidden project is held at that b
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, hidden.bundleId);
   const r = policy(w, { text: [hidden.contentId], portion: { path: "3", content_id: hidden.contentId }, author: V("alice"), viewer: V("alice") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual([r.sight.class, r.not_public.release_by, r.says.public], ["bundle", [{ project: P, owners: ["alice"] }], "Not public"]);
+  assert.deepEqual([r.sight.class, r.not_public.release_by, r.says.public], ["bundle", [{ project: P, owners: ["alice"] }], WORD("standard.notpublic")]);
   assert.deepEqual(r.says.release_by, [{ project: P, owners: ["alice"] }]);
   /* an outsider: absent, everywhere */
   const absent = w.s.standardRead({ id: "STD-2026-9999-policy", viewer: V("carol") });
@@ -378,13 +380,13 @@ test("R41 access is free, reading_room or paywalled (ACCESS_UNKNOWN), a standard
   assert.equal(w.declare({ cite: MHS, kind: "standard", access: "free", text: [machine.contentId] }).ok, true, "free text from any capture");
   const pay = w.declare({ cite: MHS, kind: "standard", access: "paywalled", text: [own.contentId], requires: [own.contentId] });
   assert.equal(pay.ok, true, JSON.stringify(pay).slice(0, 300));
-  assert.deepEqual([pay.access, pay.says.access], ["paywalled", "Behind a paywall"]);
+  assert.deepEqual([pay.access, pay.says.access], ["paywalled", WORD("label.standardaccess.paywalled")]);
   assert.equal(w.s.standardRead({ id: pay.id, viewer: V("carol") }).requires_quoted[0].text, "Section 4: inspect the hull yearly.");
   const m = w.s.standardRead({ id: pay.id, viewer: MACHINE });
   assert.deepEqual([m.requires_quoted[0].text, typeof m.text_withheld], [null, "string"], "a machine viewer reads no words");
   assert.equal(w.declare({ cite: MHS, kind: "standard" }).access, "undetermined");
-  assert.equal(w.declare({ access: "reading_room", text: [own.contentId] }).says.access, "Reading room only");
-  assert.equal(w.declare({ access: "free" }).says.access, "Free to read");
+  assert.equal(w.declare({ access: "reading_room", text: [own.contentId] }).says.access, WORD("label.standardaccess.reading_room"));
+  assert.equal(w.declare({ access: "free" }).says.access, WORD("label.standardaccess.free"));
   assert.equal(w.declare().access, null, "not a standard kind: none stated");
 });
 
@@ -419,10 +421,10 @@ test("R43 bindsAt: binds when the body issued it, adopted it, an incorporating s
   const statute = w.declare({ cite: "Some Code § 4", kind: "statute", issuer: "State", period: { from: "2020-01-01", to: "2040-12-31" } }).id;
   const law = w.declare({ cite: "PEBL § 70", text: [lawText], issuer: "State", period: { from: "2022-01-01", to: "2040-01-01" } }).id;
   const b = (standard, date = "2025-01-01") => w.s.bindsAt({ standard, body, date, viewer: V("carol") });
-  assert.deepEqual([b(own).state, b(own).says.binding], ["binds", "Standard · binds Port Ellery Selectboard"]);
+  assert.deepEqual([b(own).state, b(own).says.binding], ["binds", WORD("standard.binding.binds", { body: "Port Ellery Selectboard" })]);
   assert.equal(b(own, "2019-01-01").state, "undetermined", "an ordinance not yet in force: a law is never a benchmark by default");
   const bench = b(pol);
-  assert.deepEqual([bench.state, bench.says.binding], ["benchmark", "Benchmark · not binding on Port Ellery Selectboard"]);
+  assert.deepEqual([bench.state, bench.says.binding], ["benchmark", WORD("standard.binding.benchmark", { body: "Port Ellery Selectboard" })]);
   assert.deepEqual([b(statute).state, b(statute).why], ["undetermined", "whether this law binds the body is not recorded"]);
   /* a member's declaration of a benchmark never makes it bind */
   assert.equal(codeOf(w.s.benchmarkDeclare({ standard: pol, body, reason: "", author: V("bob") })), "STANDARD_NO_REASON");
@@ -458,11 +460,11 @@ test("R45 every read carries says, the members' words of DEC-145 composed from t
   const w = seeded();
   const c = w.passage();
   const cited = w.declare({ held: "cited", text: [], cited_by: { captureSha: c.capSha, extent: { kind: "pdf-page", page: 0 } } });
-  assert.equal(cited.says.held, "Cited, not seen");
+  assert.equal(cited.says.held, WORD("label.standardheld.cited"));
   assert.equal(cited.says.cited_by.content_id, c.contentId);
   const absent = w.declare({ held: "absent", text: [], search: { places: ["the clerk"] } });
-  assert.deepEqual([absent.says.held, absent.says.searched.places], ["Looked for, not found", ["the clerk"]]);
-  assert.equal(policy(w).says.owner, "Harbour Master policy");
+  assert.deepEqual([absent.says.held, absent.says.searched.places], [WORD("label.standardheld.absent"), ["the clerk"]]);
+  assert.equal(policy(w).says.owner, WORD("standard.policy.owner", { issuer: "Harbour Master" }));
   assert.equal(w.declare().says.owner, undefined, "an ordinance carries no policy owner phrase");
   const listed = w.s.standardsIn({ viewer: V("carol") }).items;
   assert.ok(listed.every((x) => x.says && typeof x.says === "object"), "R8 items carry says");
@@ -480,7 +482,7 @@ test("R46 where no active profile is held or the profiles cannot be combined, R3
   assert.ok(![none.source.why, bad.source.why].some((s) => /instance/.test(s)));
 });
 
-test("R47 R2 a found extent ({capture_sha, extent}, a find's match) is taken as text exactly as its content id (STANDARD_TEXT_UNRESOLVED when content holds no row, nothing minted); the optional question is an inquiry the author may see (QUESTION_NOT_HELD otherwise, an unseen one alike), kept beside the standard through supersession, answered only to a viewer who may see it", () => {
+test("R47 R2 a found extent ({capture_sha, extent}, a find's match) is taken as text exactly as its content id (STANDARD_TEXT_UNRESOLVED when content refuses the extent, nothing minted; a row content holds none for is R60's); the optional question is an inquiry the author may see (QUESTION_NOT_HELD otherwise, an unseen one alike), kept beside the standard through supersession, answered only to a viewer who may see it", () => {
   const w = seeded();
   const p = w.passage("found", { text: "Fees are set yearly." });
   const match = { kind: "standard", words: "Fees are set yearly.", capture_sha: p.capSha, extent: { kind: "pdf-page", page: 0 } };
@@ -488,8 +490,8 @@ test("R47 R2 a found extent ({capture_sha, extent}, a find's match) is taken as 
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.deepEqual(r.text, [p.contentId], "the same content id as named directly");
   const rows = w.count("content");
-  refusalRow(w.declare({ text: [{ ...match, extent: { kind: "pdf-page", page: 2 } }] }), "STANDARD_TEXT_UNRESOLVED");
-  assert.equal(w.count("content"), rows, "nothing minted");
+  refusalRow(w.declare({ text: [{ ...match, extent: { kind: "pdf-page", page: 7 } }] }), "STANDARD_TEXT_UNRESOLVED");
+  assert.equal(w.count("content"), rows, "an extent content refuses mints nothing (R60)");
   /* the question */
   const q = w.inquiry();
   const P = w.project("Private", "alice");

@@ -8,6 +8,7 @@ import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { noEntity, noSuchEntity } from "../entities/index.mjs";
 import { joinLocal } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 export const MACHINE = "class:daemon";
 const said = (v) => typeof v === "string" && v.trim() !== "";
@@ -96,7 +97,7 @@ function within(k, sub, larger, attestationId) {
 }
 function change(k, eventId, detail) {
   k.rows(`INSERT INTO event_changes (event_id, kind, detail, reason, by_actor, at) VALUES (?,?,?,?,?,?)`, eventId, "source_changed",
-         JSON.stringify(detail), "the source's own value changed", MACHINE, k.now());
+         JSON.stringify(detail), word("events.rows.source_value_changed"), MACHINE, k.now());
 }
 function participant(k, eventId, entityId, role, attestationId, voteValue = null) {
   const live = k.one(`SELECT * FROM event_participants WHERE event_id=? AND role=? AND entity_id=? AND superseded_by IS NULL`, eventId, role, entityId);
@@ -105,7 +106,7 @@ function participant(k, eventId, entityId, role, attestationId, voteValue = null
     attestation_id: attestationId, by_actor: MACHINE, at: k.now() });
   if (live) {
     k.rows(`UPDATE event_participants SET superseded_by=?, superseded_actor=?, superseded_at=?, superseded_why=? WHERE participant_id=?`,
-           pid, MACHINE, k.now(), "the source's own value changed", live.participant_id);
+           pid, MACHINE, k.now(), word("events.rows.source_value_changed"), live.participant_id);
     change(k, eventId, { participant: Number(live.participant_id), was: live.vote_value, now: voteValue });
   }
   return { id: pid, added: true };
@@ -120,7 +121,7 @@ export function followedImport(k, { captureSha, body, period, by = MACHINE } = {
     return refuse("NO_PERIOD", "following names the period a member follows: {from, to}, days");
   if (!said(captureSha)) return noSha("an import reads one captured Legistar list, named by its capture sha256");
   const held = k.heldCapture(captureSha, null);
-  if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture");
+  if (!held) return refuse("CAPTURE_NOT_HELD", word("events.why.record_holds_capture"));
   const reading = readingOf(k, held.sha);
   if (!reading || reading.content_type !== "legistar_api")
     return refuse("NOT_LEGISTAR", "the capture is not one legistar-reader read");
@@ -140,13 +141,13 @@ export function followedImport(k, { captureSha, body, period, by = MACHINE } = {
   });
   if (res && res.ok === false) return res;
   return { ok: true, capture_sha: held.sha, endpoint, body, period: { from, to }, ...out,
-           ...(["events", "eventitems", "votes"].includes(endpoint) ? {} : { why: `a ${endpoint} list holds no event, item or vote to write` }) };
+           ...(["events", "eventitems", "votes"].includes(endpoint) ? {} : { why: word("events.why.list_holds_event", { endpoint }) }) };
 }
 
 function meeting(k, held, row, f, scope, out) {
   const bodyId = Number.isInteger(f.BodyId) ? bodyOf(k, f.BodyId) : null;
   if (bodyId !== scope.body) {
-    if (bodyId === null) out.unresolved.push({ row: row.source, key: row.key, why: "its BodyId resolves to no registered body" });
+    if (bodyId === null) out.unresolved.push({ row: row.source, key: row.key, why: word("events.why.bodyid_resolves_registered") });
     else out.outside++;
     return;
   }
@@ -154,7 +155,7 @@ function meeting(k, held, row, f, scope, out) {
   if (!day || (scope.from && day < scope.from) || (scope.to && day > scope.to)) { out.outside++; return; }
   /* R23: the source's day and its separate local time joined in the profile's zone (no EventDate carries a zone). */
   let date = null, why = null;
-  if (!scope.zone) why = "no active profile gives a time zone, so the meeting's time is not placed";
+  if (!scope.zone) why = word("events.why.active_profile_gives");
   else if (said(f.time)) {
     const j = joinLocal(day, f.time, scope.zone);
     if (j.refused || j.undetermined) why = j.why; else date = { value: j.value, precision: "minute", zone: j.zone };
@@ -177,7 +178,7 @@ function meeting(k, held, row, f, scope, out) {
     const moved = was.date !== facts.date || was.time !== facts.time;
     const aid = rowAttestation(k, eventId, held, row, fact);
     if (moved && fact) k.rows(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
-                              eventId, aid, "the source's own date or time changed", MACHINE, k.now());
+                              eventId, aid, word("events.rows.source_date_time"), MACHINE, k.now());
     if (was.status !== status) k.rows(`UPDATE events SET status=? WHERE event_id=?`, status, eventId);
     if (moved || was.status !== status) { change(k, eventId, { key: row.key, was: { date: was.date, time: was.time, status: was.status }, now: { date: facts.date, time: facts.time, status } }); out.updated.push({ key: row.key, event_id: eventId }); }
     else out.unchanged++;
@@ -210,7 +211,7 @@ function meeting(k, held, row, f, scope, out) {
       pub = k.resolve(p.target_id);
       const aid = rowAttestation(k, pub, held, row, pf);
       if (first !== seen) k.rows(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
-                                 pub, aid, "an earlier publication value was observed", MACHINE, k.now());
+                                 pub, aid, word("events.rows.earlier_publication_value"), MACHINE, k.now());
     }
     k.setWhen(pub);
     keepSource(k, key, "event", pub, { first, last: v }, held.sha);
@@ -220,7 +221,7 @@ function meeting(k, held, row, f, scope, out) {
 function item(k, held, row, f, out) {
   const m = Number.isInteger(f.EventId) ? source(k, `legistar:event:${f.EventId}`) : null;
   const meetingId = m ? k.resolve(m.target_id) : null;
-  if (!meetingId) { out.unresolved.push({ row: row.source, key: row.key, why: "its meeting is not held: import the meeting first" }); return; }
+  if (!meetingId) { out.unresolved.push({ row: row.source, key: row.key, why: word("events.why.meeting_held_import") }); return; }
   const prior = source(k, row.key);
   let eventId = prior ? k.resolve(prior.target_id) : null;
   const facts = { passed: f.passed ?? null, action: f.action ?? null };
@@ -237,7 +238,7 @@ function item(k, held, row, f, out) {
     const who = f[role];
     if (!who) continue;
     const ent = Number.isInteger(who.PersonId) ? personOf(k, who.PersonId) : null;
-    if (!ent) { out.unresolved.push({ row: row.source, key: row.key, role, source_row: who, why: "the source names no PersonId that resolves to a registered entity" }); continue; }
+    if (!ent) { out.unresolved.push({ row: row.source, key: row.key, role, source_row: who, why: word("events.why.source_names_personid") }); continue; }
     participant(k, eventId, ent, role, aid);
   }
   k.setWhen(eventId);
@@ -247,9 +248,9 @@ function item(k, held, row, f, out) {
 function vote(k, held, row, f, out) {
   const it = Number.isInteger(f.EventItemId) ? source(k, `legistar:event_item:${f.EventItemId}`) : null;
   const eventId = it ? k.resolve(it.target_id) : null;
-  if (!eventId) { out.unresolved.push({ row: row.source, key: row.key, why: "its item is not held: import the items first" }); return; }
+  if (!eventId) { out.unresolved.push({ row: row.source, key: row.key, why: word("events.why.item_held_import") }); return; }
   const ent = Number.isInteger(f.PersonId) ? personOf(k, f.PersonId) : null;
-  if (!ent) { out.unresolved.push({ row: row.source, key: row.key, source_row: { PersonId: f.PersonId ?? null }, why: "its PersonId resolves to no registered entity" }); return; }
+  if (!ent) { out.unresolved.push({ row: row.source, key: row.key, source_row: { PersonId: f.PersonId ?? null }, why: word("events.why.personid_resolves_registered") }); return; }
   /* R11 (K1788): the source's value matched on an entry's value, else exactly on its label; the entry's value is held */
   const m = k.voteMatch(typeof f.value === "string" ? f.value : f.value == null ? "" : String(f.value));
   if (!m.ok) { out.unresolved.push({ row: row.source, key: row.key, why: m.detail, refusal: m.reason }); return; }
@@ -284,14 +285,14 @@ export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {
   if (!k.entities || !k.entities.has(proceeding)) return noSuchEntity(proceeding);
   if (!said(captureSha)) return noSha("a register import reads one captured register, named by its capture sha256");
   const held = k.heldCapture(captureSha, null);
-  if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture");
+  if (!held) return refuse("CAPTURE_NOT_HELD", word("events.why.record_holds_capture"));
   const reading = readingOf(k, held.sha);
   if (!reading || !COURT_TYPES.includes(reading.content_type)) return refuse("NOT_A_REGISTER", "the capture is not a register court-doctypes read");
   const rows = reading.facts && Array.isArray(reading.facts.rows) ? reading.facts.rows : [];
   const out = { written: [], unchanged: 0, skipped: [] };
   const res = k.tx(() => {
     rows.forEach((row, i) => {
-      if (row.entry_id == null || row.entry_id === "") { out.skipped.push({ row: i, why: "the register assigns this entry no id" }); return; }
+      if (row.entry_id == null || row.entry_id === "") { out.skipped.push({ row: i, why: word("events.why.register_assigns_entry") }); return; }
       const key = `register:${reading.content_type}:${proceeding}:${row.entry_id}`;
       const p = source(k, key);
       if (p) { out.unchanged++; return; }
@@ -305,7 +306,7 @@ export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {
       k.insert("event_concerns", { event_id: eventId, end_id: proceeding, by_actor: MACHINE, at: k.now() });
       k.setWhen(eventId);
       keepSource(k, key, "event", eventId, { entry_id: row.entry_id, date: row.date ?? null }, held.sha);
-      out.written.push({ entry_id: row.entry_id, event_id: eventId, kind, ...(fact ? {} : { when_why: "the entry's date was not read as a day" }) });
+      out.written.push({ entry_id: row.entry_id, event_id: eventId, kind, ...(fact ? {} : { when_why: word("events.when_why") }) });
     });
     return { ok: true };
   });

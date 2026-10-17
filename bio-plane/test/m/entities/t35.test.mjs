@@ -90,7 +90,7 @@ test("R51 every recognised viewer sees every entity of the kind, in entity_id or
   for (const e of offices) assert.equal(e.at, w.e.readEntity({ entityId: e.entity_id }).entity.at);
   const orgs = w.e.entitiesOfKind({ kind: "institution", viewer: "member:ann" }).entities;
   assert.deepEqual(orgs.map((e) => [e.entity_id, e.sector]), [[w.trust, "nonprofit"], [w.board, "undetermined"]]);
-  for (const e of orgs) assert.deepEqual(Object.keys(e), ["entity_id", "kind", "label", "note", "sector", "declared_by", "at"]);
+  for (const e of orgs) assert.deepEqual(Object.keys(e), ["entity_id", "kind", "label", "note", "sector", "forum_kind", "declared_by", "at"], "R54: an organisation kind answers its forum_kind, null when none");
   assert.deepEqual(w.e.entitiesOfKind({ kind: "person", viewer: "member:ann" }).entities.map((e) => e.entity_id), [w.pat]);
   assert.deepEqual(w.e.entitiesOfKind({ kind: "fund", viewer: "member:ann" }), { ok: true, kind: "fund", entities: [], count: 0,
     limit: KIND_LIMIT_DEFAULT, truncated: false, next: null });

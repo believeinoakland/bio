@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, UNKNOWN_CITE, REASON } from "./fixture.mjs";
+import { WORD } from "./words.mjs";
 import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES, noSuchStandard } from "../../../src/standards/index.mjs";
 
 test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; STANDARD_NO_ID (N269: coded, R5's NO_ID); an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
@@ -29,7 +30,7 @@ test("R5 standardRead answers R1's fields, R3's source, the declarer and time, b
   assert.deepEqual(ta.newer, w.content.passageNotice({ contentId: a.contentId, viewer: V("carol") }), "content's notice, as content answers it");
   assert.equal(tb.newer.state, "chain_unread", "no recorded address: unread, never read as none");
   assert.deepEqual(read.text, [a.contentId, b.contentId], "nothing was moved");
-  assert.match(read.says.note, /never whether it is a good one/);
+  assert.equal(read.says.note, WORD("standard.note"));
   /* R5's NO_ID, refused through its own row as STANDARD_NO_ID (N269, K275), never codeless; for any viewer */
   for (const id of [null, undefined, "", "  "])
     for (const viewer of [V("carol"), null]) {
