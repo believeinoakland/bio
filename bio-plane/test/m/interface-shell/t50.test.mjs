@@ -591,3 +591,22 @@ test("R89 the phone layout as drawn: the rules for a row (auto minmax(0, 1fr), c
   /* control: nothing of the above outside the phone width */
   assert.doesNotMatch(wide, /grid-template-columns:auto minmax|flex-wrap:wrap|min-height:44px/);
 });
+
+/* ---------- R31 (B3): the ring opens a closed fold ---------- */
+
+test("R31 cs.ring opens every closed details enclosing the control it rings, and focuses it; control: a control outside any fold rings as before", async () => {
+  const mk = (body) => ({ id: "document", reads: () => ({}), acts: [{ op: "cite" }],
+    render: new Function("cs", "if (window.__r === undefined) cs.later(10, function (c) { window.__r = c.ring('cite'); }); return " + body + ";") });
+  const folded = mk(`'<details id="f1"><summary>x</summary><details id="f2"><summary>y</summary>' + cs.act("cite") + '</details></details>'`);
+  const p = await boot({ screens: [folded], path: "/app/document/x" });
+  assert.ok(!p.doc.getElementById("f1").hasAttribute("open"));
+  await p.clock.tick(20);
+  assert.equal(p.win.__r, true);
+  assert.ok(p.doc.getElementById("f1").hasAttribute("open") && p.doc.getElementById("f2").hasAttribute("open"));
+  assert.equal(p.doc.activeElement.getAttribute("data-act"), "cite");
+  const plain = mk(`cs.act("cite")`);
+  const q = await boot({ screens: [plain], path: "/app/document/x" });
+  await q.clock.tick(20);
+  assert.equal(q.win.__r, true);
+  assert.equal(q.root().querySelectorAll("details").length, 0);
+});

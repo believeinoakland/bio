@@ -1431,6 +1431,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const main = root.querySelector("#cs-main");
     const el = main ? main.querySelector('[data-act="' + RING.op.replace(/"/g, "") + '"]') : null;
     if (!el) return;
+    /* B3: a closed fold around the control is opened, every one enclosing it, so the ring is never on a hidden control */
+    for (let d = el.closest ? el.closest("details") : null; d; d = d.parentElement && d.parentElement.closest ? d.parentElement.closest("details") : null) d.setAttribute("open", "");
     /* the design's ring (`cs-target`) and its label */
     el.classList.add("cs-target");
     const label = doc.createElement("span");
