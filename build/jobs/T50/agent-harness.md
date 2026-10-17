@@ -20,3 +20,7 @@
 **Tests and checks (with the stub in place for the tests):** `node --test agent-harness/test/`: 55 tests, 55 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs agent-harness`: 0 failures. `checks/coverage.mjs agent-harness`: R17 named by no test (expected, not yet met). `checks/ownership.mjs agent-harness tranche/T50`: 0 failures. `checks/run.mjs`: architecture 0 failures; the coverage failures are other modules' (inherited), plus R17.
 
 Size (session_01VB7aNzqCDcGRLaxhz6h5yc): test runs 4, module lines 1939
+
+## J1 · QUESTION
+
+R18 text: scope documents is 'the least documents the plane's statement answered over a level's reads', but its control (one read of documents 0 and one of 2 keeps its candidate) needs the greatest. My reading: scope[level].documents is the shell's aggregate, any read with a document in scope making it 1 or more; the harness only passes that figure to run-rules R35 (levelEmptyHolds). Built and tested that way; please fix the wording of R18 (or tell me otherwise).
