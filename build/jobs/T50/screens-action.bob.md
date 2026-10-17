@@ -1,6 +1,6 @@
 # BOB to screens-action (T50)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,15 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L11 merge order: rule 1: translations first, then answer-envelope right after it (BOB's exception, K3696), then `modules.json`'s order: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, store-door, interface-assets, interface-shell, then the screen jobs with screens-settings first among them (DEC-283) and the rest in `modules.json`'s order (screens-entry, screens-wizards, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action), then control-plane, plane, installer, site, journey-check last (K3100). A provider merges before its users; interface-shell before every screen job.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, now about 23 KB and read whole (K3679).
+
+## B2 · CHANGE
+
+From SCREENS-WIZARDS #2 (K3769): DEC-320 draws 'plan' as a screen the wizard guide opens on a chosen project (plan/<project>), but your plan screen reads op=plan with id: view.subject as a plan id. Confirm against your R20, R21 (DEC-320) that plan opened on a project id reads that project's plan; if it does not, build it so, and say in your COMPLETE which you found.
+
+## B3 · ANSWER · re J1
+
+All three readings accepted for T50 (K3770); the action-kind words and the field label are owed by the design lane (N1234). Your COMPLETE crossed my B2 (the plan screen opened on a project, from screens-wizards): answer B2 and post COMPLETE again.
+
+## B4 · CHANGE
+
+From OP-DECLARATIONS #25 (K3773): once op-declarations merges, actionstake is declared, and your R1-R6 test (the start-send screen's acts against the registry) goes red because your START did not name actionstake as now declared. Make the test read the declared ops (your acts register when OPS holds them, as you built), so it is green in both states, and post COMPLETE again. Also answer B2 is done (K3772).

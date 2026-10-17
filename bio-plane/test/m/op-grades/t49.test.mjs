@@ -58,9 +58,10 @@ test("R43: projectownervotes is a read: its NON_ACTS sentence is R43's, and it h
   assert.ok(!NON_ACTS.projectowneradd?.startsWith("read: "));
 });
 
-test("R43 R3 (START measure): the `undetermined` tally is 110 and is unchanged by T49; the `caller-owned` set is 37, "
+test("R43 R3 (START measure): the `undetermined` tally is 109 after T50 (R45 adds actioninquiry, R47 takes planopen and "
+   + "wizarddraft out) and T49 left it unchanged; the `caller-owned` set is 37, "
    + "founderhandleset its newest; T49's tables hold exactly these two ops", () => {
-  assert.equal(ground("undetermined").length, 110);
+  assert.equal(ground("undetermined").length, 109);
   assert.ok(!ground("undetermined").includes("founderhandleset"));
   const caller = ground("caller-owned");
   assert.equal(caller.length, 37);
