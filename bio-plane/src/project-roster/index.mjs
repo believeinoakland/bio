@@ -739,10 +739,11 @@ export class ProjectRoster {
     } catch { return noSuchProject(projectId); }
   }
 
-  /* R33: the instant the last of `ids` stopped being active: the latest `members.updated`, which every status write
-     stamps. Interim read outside membership's R120 (QUESTION J1): null when any has no row. */
+  /* R33 (K3624): the instant the last of `ids` stopped being active: the latest of membership's `memberStatusSince`
+     (its R152), null when any owner's is null (or membership offers none), no other instant standing in for it. */
   #inactiveSince(ids) {
-    const at = ids.map((id) => this.#one(`SELECT updated FROM members WHERE member_id=?`, id)?.updated ?? null);
+    if (typeof this.m.memberStatusSince !== "function") return null;
+    const at = ids.map((id) => this.m.memberStatusSince(id));
     if (!at.length || at.some((x) => typeof x !== "string")) return null;
     return at.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a));
   }

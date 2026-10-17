@@ -103,11 +103,18 @@ test("R32 projectStakeHistory: every participant reads the history, as R8 reads 
     w.r.projectStakeHistory({ projectId: "PROJ-P", viewer: V("bob") }));
 });
 
+/* membership R152 is built by MEMBERSHIP #40 in this tranche: until it merges, a stand-in answers it from the members
+   row's `updated`, which every status write stamps and these tests change no other way; the real one replaces it. */
+const withStatusSince = (w) => {
+  if (typeof w.m.memberStatusSince !== "function")
+    w.m.memberStatusSince = (id) => w.row(`SELECT updated FROM members WHERE member_id=?`, id)?.updated ?? null;
+  return w;
+};
 const gone = (w, viewer, projectId = "PROJ-P") => w.r.projectOwnersGone({ projectId, viewer });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 test("R33 a project whose two owners are revoked at two instants answers gone: true and the later instant; with one owner still active gone: false and since null", async () => {
-  const w = await stakeWorld();
+  const w = withStatusSince(await stakeWorld());
   assert.equal(w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }).ok, true);
   assert.deepEqual(w.m.projectOwners("PROJ-P"), ["ann", "bob"]);
   assert.deepEqual(gone(w, V("second")), { ok: true, projectId: "PROJ-P", gone: false, since: null }, "all active");
@@ -122,9 +129,12 @@ test("R33 a project whose two owners are revoked at two instants answers gone: t
     const g = gone(w, viewer);
     assert.deepEqual(g, { ok: true, projectId: "PROJ-P", gone: true, since: later }, `${viewer}: an administrator at EXISTENCE of the hidden project, or the founder`);
   }
-  /* the instant is never invented: an owner with no member row has no instant: null */
-  w.sql.exec(`DELETE FROM members WHERE member_id='ann'`);
+  /* the instant is never invented: an owner whose instant is not recorded answers null */
+  const real = w.m.memberStatusSince;
+  w.m.memberStatusSince = (id) => (id === "ann" ? null : real(id));
   assert.equal(gone(w, V("second")).since, null);
+  w.m.memberStatusSince = undefined;
+  assert.equal(gone(w, V("second")).since, null, "membership offering none: null, no stand-in");
 });
 
 test("R33 control: a plain member, a participant, an outsider, no viewer, a machine and an id naming nothing get the absent answer; it names nothing at EXISTENCE and writes nothing", async () => {
