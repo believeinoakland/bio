@@ -1,6 +1,6 @@
 # store-door (T50)
 
-**Status** · session_01T1GNSh1aY2c4gjiKCeTLcz · depth 2 · COMPLETE · handled B0
+**Status** · session_01T1GNSh1aY2c4gjiKCeTLcz · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
