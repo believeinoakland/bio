@@ -25,3 +25,6 @@ Size (session_01A6uUMNWkd555swANVn8caL): test runs 6, module lines 2769
 ## J1 · COMPLETE
 
 T50-76 conformance complete. R40: C-113.6 reads refusal.NO_FINDINGS by key; R38's six rows also now read by key via setup-words word() (their copies said 'group', words.json says 'team', so t46 was red at the baseline). R41: accepted basis answers matter_stake (null / 'undetermined' as specified). t36:55 asserts key standard.inforce.known. Module tests 119/119; format, architecture, coverage (41/41), ownership 0 failures; checks/run.mjs shows no conformance failure (30 coverage failures are other modules'). Found elsewhere, red at base too: consequences R25 (2), escalation R30/R31/R33 (3), filings R51/R52 (3), action-plans R47 (2): the same words.json drift in their own tables. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs. REPORT-worthy: SOURCE_DECLARATION_SAYS and SOURCE_FACTS_UNRECORDED are inline English saying 'group' with no key. Details in build/jobs/T50/conformance.md.
+
+## Completion again (B2 CHANGE)
+`SOURCE_FACTS_UNRECORDED` and `SOURCE_DECLARATION_SAYS` now say "the source team's" (identifiers unchanged; still inline until the design lane keys them). No test pinned the old text. Module tests 119/119; format, architecture, coverage (41/41) and ownership 0 failures.
