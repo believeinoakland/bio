@@ -155,10 +155,10 @@ const ACT_RE = idPattern("ACT");
 export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never "
   + "stronger than that edition.";
 /** R32 (K2832): what an accepted finding reads while the source's identity and stake are not recorded at import. */
-export const SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this "
+export const SOURCE_FACTS_UNRECORDED = "the source team's public identity and declared stake were not recorded when this "
   + "edition was imported, so they read undetermined";
 /** R39 (N951): the label beside an accepted finding's identity and stake read from what case-import recorded at import. */
-export const SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they "
+export const SOURCE_DECLARATION_SAYS = "the source team's public identity and declared stake as it declared them when they "
   + "were read at import, current then, never as of the edition's signing";
 /** R33: the sentence beside a void determination. */
 export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
