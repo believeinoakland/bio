@@ -25,3 +25,17 @@
 - `node checks/coverage.mjs /home/user/bio wizard-scripts`: 43 of 43 live requirement ids named by a test; 0 failures.
 
 Size (session_01DSe7eXDH46x5xXSJpWcTk3): test runs 31, module lines 2690
+
+## J1 · COMPLETE
+
+wizard-scripts T50-17 is complete (commit d954042760 on job/T50/wizard-scripts; record `build/jobs/T50/wizard-scripts.md`).
+
+- R41: screen-registry.mjs and front-doors.mjs regenerated from the design commit 7be06eb4cb (71 screens, 413 acts, 16 owed naming 15 ops; the sixth door read from the file). `node bio-plane/src/wizard-scripts/build-data.mjs --check` fails when a carried generated file differs from its sources (tested by one-byte changes to each file and each source). New pure `registryActGaps` + `INSTALLER_ROUTES` carry "every registry act has a declaration", the four install acts excluded by name.
+- R42: civicsmith-library.mjs regenerated: 16 of 23 scripts gained the file's content as their next version (BOB, K2241, 2026-10-17), 4 by name (team pass), 7 unchanged.
+- R43: `wizards{state:"draft"}` already lists a saved draft to its author, the project's owners and administrators who may see the project; pinned by a test with controls (no code change).
+- Tests: 105 pass, 0 fail. format, architecture, coverage (43 of 43), ownership: 0 failures; `checks/run.mjs`: architecture 0 failures, none of the coverage failures is wizard-scripts'.
+
+For you (details in my record):
+1. plane/test/m/plane/wizards.test.mjs goes red on the new data: R19 "finder: secondlookclear" (a registry act with no op or alias; op-declarations) and R57 (names the group-setup scripts by their old "group" names; now "Say who your team is", "Update your team's Civicsmith").
+2. Registry acts with no declaration in op-declarations today: finder/secondlookclear and the owed watchitem, secondlook, projectstakeset, actionstake, actioninquiry (T50-24). op-declarations can call `registryActGaps` for its own test.
+3. Stale generated artifacts: the plane bundle; `build/manifest.md` to name the three generated files and the command (your act, R41).
