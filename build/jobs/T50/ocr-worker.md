@@ -26,3 +26,7 @@
 - `checks/format.mjs bio`: 2 failures, both in `build/rulings.md` (K3441 and K3597: no standing-list decision stated), not mine.
 
 Size (session_017dvjrzTYuZd2L9Q8GJ5Cn4): test runs 5, module lines 822
+
+## J1 · REPORT
+
+Found in another module: bio-plane/test/system/fleetbundles.test.mjs lines 294-298 (ocr-worker's expected cross-tree inputs) now FAILS one test, 'ocr-worker's build reaches into the RENDERER's tree and the PLANE's...': R23 makes the bundle reach two more renderer sources, ../pdf-worker/src/picturepixels.mjs and ../pdf-worker/src/pngdecode.mjs (want 9, got 11). Fix: add those two paths to the expected list and a line to the comment above it; its owner's change, not mine. Every other ocr-worker arm in that file passes (no staleness, byte-identical fresh build).
