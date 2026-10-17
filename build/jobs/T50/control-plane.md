@@ -49,3 +49,13 @@ Built (committed on job/T50/control-plane): R102, R103 (door-side; the ops answe
 **Size (session_013W39qjn8635aB3vuz3De9S): test runs 14, module lines 3,890** (3,785 at START; under 4,000).
 
 **Read.** Whole: requirements, `build/layers.md`, all five source files, `harness.mjs`, `r101-favicon.test.mjs`, `door-routes.mjs`, the parts of `t46-door.test.mjs` and `t49-door.test.mjs` that R20 and the helpers use; of the used services: `review` (the review copy's answer), `public-read` R36, `admission` (`callerViewer`, `admit`), `membership` (`projectViewer`, `sight`), `signin-door` (`tokenRefusedSeen`), `acquisition` R47, `inquiry` (`partitionOf`), `plane/ask.mjs` (the ask's stream), `op-declarations` R73–R74. The module's other tests run, not read.
+
+## Completion record (T50-35) — R105's bound added (B3, K3770)
+
+**R105's bound.** `bounded()` races the `acquire` handler against 25 s (`ACQUIRE_BOUND_MS`; `hooks.acquireBoundMs` lets a test shorten it); past it the door answers 504 `ACQUIRE_TIMED_OUT` (`code` the same, `op`, `store`, `tokenClass`), with no sentence of this module's. The handler is not cancelled: a capture it goes on to file stands. Test: a slow handler is answered the refusal, a quick one as it gave, another op unbounded. No live timing was taken (K3770: BOB times one in the release walk).
+
+**REPORT for the design lane:** the member-words key for `ACQUIRE_TIMED_OUT` (N1234); the refusal has no catalogue `check` or `translation` until it has one.
+
+**Tests.** `node --test test/m/control-plane/`: 302 tests, 299 pass, 3 fail, all for the one cause in the earlier record (op-declarations R73 unmerged: R103 ×2, `r53-routes` R53); they pass under a local declaration of the ops. Corrects J2's figure.
+
+**Size (session_013W39qjn8635aB3vuz3De9S): test runs 16, module lines 3,908.**

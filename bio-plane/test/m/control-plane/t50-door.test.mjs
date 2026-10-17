@@ -340,3 +340,22 @@ test("R108 (control): a short answer arrives whole and byte for byte as the plan
   assert.equal((await d.res.json()).reason, "AGENT_WORKER_UNBOUND");
   assert.deepEqual(dropped(d.w), []);
 });
+
+test("R105 (T50; K3770): the door answers `acquire` within its bound, 25 seconds: a handler still running past it is answered the refusal `ACQUIRE_TIMED_OUT` (504, no sentence of this module's), never a silent stop; one that ends inside the bound is answered as it gave (control: another op is not bounded)", async () => {
+  const w = world();
+  const slow = { ...defaultHooks(), acquireBoundMs: 60,
+    async gatedOp(ctx) {
+      if (ctx.op === "acquire") { await new Promise((r) => setTimeout(r, ctx.url.searchParams.get("wait") === "long" ? 400 : 5));
+        return M.json({ ok: true, result: { ok: true, done: true } }); }
+      if (ctx.op === "whoami") return undefined;
+      return undefined;
+    } };
+  const late = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, params: { wait: "long" }, body: { locator: "https://example.org/big" } });
+  assert.equal(late.status, 504, late.text);
+  assert.deepEqual([late.json.ok, late.json.reason, late.json.code, late.json.op], [false, "ACQUIRE_TIMED_OUT", "ACQUIRE_TIMED_OUT", "acquire"]);
+  const quick = await call(w.env, { op: "acquire", token: w.S.ann, method: "POST", hooks: slow, body: { locator: "https://example.org/small" } });
+  assert.equal(quick.status, 200);
+  assert.equal(quick.json.result.done, true);
+  const other = await call(w.env, { op: "list", token: w.S.ann, hooks: slow });
+  assert.equal(other.status, 200);
+});

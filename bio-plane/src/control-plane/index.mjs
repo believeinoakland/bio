@@ -188,6 +188,8 @@ async function withTrace(res, trace) {
    `scratch` rehearsal, which lives in a different Durable Object under a
    different PUBLISHED prefix, is therefore unreachable from the public surface. */
 const PUBLISHED_STORE = "bio";
+/* R105 (K3770): the longest an `acquire` is let run at the door. */
+const ACQUIRE_BOUND_MS = 25000;
 
 async function fingerprint(v) {
   if (!v) return null;
@@ -2260,9 +2262,22 @@ export function makeFetch(hooks = {}) {
                       store: storeName, tokenClass: cls }, 400);
       }
     }
-    const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
+    /* R105 (T50; K3770): THE DOOR ANSWERS `acquire` WITHIN A BOUND, 25 seconds: past it the answer is the refusal
+       `ACQUIRE_TIMED_OUT` (its member words owed by the design lane, so it carries no sentence of this module's), never a
+       silent stop. The handler is not cancelled: a capture it goes on to file stands, and the member's next look finds it. */
+    const bounded = (work) => {
+      if (op !== "acquire") return work;
+      let timer;
+      const late = new Promise((resolve) => { timer = setTimeout(() => resolve("late"), hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS); });
+      return Promise.race([work, late]).then((got) => {
+        clearTimeout(timer);
+        return got === "late" ? json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op,
+                                       store: storeName, tokenClass: cls }, 504) : got;
+      }, (e) => { clearTimeout(timer); throw e; });
+    };
+    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
-      grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
+      grantMember: aiCred?.grant ? aiCred.principal : undefined })) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);
       if (!captureStep && url.searchParams.get("step") === null) return res;
