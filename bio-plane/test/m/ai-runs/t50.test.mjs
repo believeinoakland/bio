@@ -4,7 +4,8 @@
    Every refusal has a control (K874). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, ORG, T0, sha, agentWorker, USAGE } from "./world.mjs";
+import { world, OPEN, INQ, ANN, ORG, sha, agentWorker, USAGE } from "./world.mjs";
+import { aiUseOf, AI_USE_TABLES } from "../../../src/ai-use/index.mjs";
 
 const AW = (aw) => ({ AGENT_WORKER: aw, STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50" });
 const SHAPE = /^aik-[0-9a-f]{64}$/;
@@ -95,74 +96,54 @@ test("R87 (controls): a value that is not a non-empty printable string of at mos
   assert.deepEqual(Object.keys(aw2.calls[0].headers), ["content-type"], "the wake sends neither header");
 });
 
-/* ---- R88 ---- */
+/* ---- R88 ---- (ai-use R15, merged: the real module, reached through its factory on the world's storage) */
 
-/** ai-use at its interface (its R1, R3, R11, R15): `countUsage` refuses an `effort` that is not null or a lowercase word of at most
- *  16 letters and counts nothing; `actualOf` answers the act's `by_model` to the paying owner alone. */
-function useStub() {
-  const counted = [];
-  return { counted,
-    useCheck: () => null,
-    countUsage: (a) => {
-      if (a.effort !== null && !(typeof a.effort === "string" && /^[a-z]{1,16}$/.test(a.effort)))
-        return { ok: false, reason: "AI_RUN_CONSUME_INVALID", code: "AI_RUN_CONSUME_INVALID", detail: "effort is a lowercase word" };
-      counted.push(a);
-      return { ok: true };
-    },
-    actualOf: ({ act, viewer }) => {
-      if (viewer !== "member:ann") return { ok: true, found: false };
-      const by = [];
-      for (const c of counted.filter((x) => x.act === act)) {
-        const k = by.find((b) => b.model === c.model && b.effort === c.effort);
-        if (k) k.calls += c.calls ?? 1; else by.push({ model: c.model, effort: c.effort, calls: c.calls ?? 1 });
-      }
-      return { ok: true, found: true, calls: by.reduce((n, b) => n + b.calls, 0), by_model: by };
-    },
-  };
-}
 const entry = (model, effort, calls = 1) => ({ mode: "check", model, ...(effort === undefined ? {} : { effort }), usage: USAGE(), calls });
+const at = (s) => `2026-07-01T${s}Z`;
 
 test("R88: each usage entry's effort is passed to ai-use.countUsage beside its model, an entry stating none as null; session.cost and the close's cost carry ai-use's by_model, to the paying account's owner alone; nothing of it reaches the run's log", async () => {
-  const use = useStub();
-  const w = world({ aiUse: use });
+  const w = world();
   await w.group("ann", "bob"); w.bundle(INQ);
+  aiUseOf(w.ctx);
   assert.equal((await w.runs.open(OPEN())).started, true);
   const logBefore = w.rows(`SELECT * FROM observation_log`);
-  const t = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:05:00Z",
+  const t = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"),
     usage: [entry("claude-sonnet-5-5", "low", 2), entry("claude-opus-5-5", "medium"), entry("claude-sonnet-5-5", "low"), entry("claude-haiku-5-5")] });
   assert.deepEqual([t.ticked, t.counted], [true, 4], JSON.stringify(t));
-  assert.deepEqual(use.counted.map((c) => [c.model, c.effort, c.act, c.use]),
-    [["claude-sonnet-5-5", "low", "R1", "run"], ["claude-opus-5-5", "medium", "R1", "run"], ["claude-sonnet-5-5", "low", "R1", "run"],
-     ["claude-haiku-5-5", null, "R1", "run"]], "effort passed unchanged beside the model; none stated is null");
   assert.deepEqual(w.rows(`SELECT * FROM observation_log`), logBefore, "no entry for the conversations");
   assert.equal(/claude-opus-5-5|medium/.test(JSON.stringify(w.rows(`SELECT * FROM ai_runs`))), false, "nothing of it on the run");
-  const owner = (await w.runs.read({ run: "R1", viewer: "member:ann" })).session.cost;
+  const owner = (await w.runs.read({ run: "R1", viewer: ANN })).session.cost;
   assert.deepEqual(owner.by_model, [{ model: "claude-sonnet-5-5", effort: "low", calls: 3 }, { model: "claude-opus-5-5", effort: "medium", calls: 1 },
                                     { model: "claude-haiku-5-5", effort: null, calls: 1 }]);
   assert.equal(owner.calls, 5, "their calls sum to the cost's calls");
   /* a non-owner who sees the run reads no cost at all */
-  assert.equal("cost" in (await w.runs.read({ run: "R1", viewer: "member:bob" })).session, false);
-  const closed = await w.runs.close({ run: "R1", bound: "completed", caller: ORG, viewer: "member:ann" });
+  for (const viewer of ["member:bob", "admin"]) assert.equal("cost" in (await w.runs.read({ run: "R1", viewer })).session, false, viewer);
+  const closed = await w.runs.close({ run: "R1", bound: "completed", caller: ORG, viewer: ANN, at: at("00:06:00") });
   assert.deepEqual([closed.terminated, closed.cost.final, closed.cost.by_model.length], [true, true, 3]);
-  const other = world({ aiUse: useStub() });
-  await other.group("ann", "bob"); other.bundle(INQ);
-  await other.runs.open(OPEN());
-  assert.equal("cost" in (await other.runs.close({ run: "R1", bound: "completed", caller: ORG, viewer: "member:bob" })), false);
+  /* control: a close read by another member carries no cost, hence no by_model */
+  await w.runs.open(OPEN({ run: "R2" }));
+  await w.runs.tick({ run: "R2", viewer: "admin", caller: ORG, at: at("00:07:00"), usage: [entry("claude-sonnet-5-5", "low")] });
+  assert.equal("cost" in (await w.runs.close({ run: "R2", bound: "completed", caller: ORG, viewer: "member:bob", at: at("00:08:00") })), false);
 });
 
-test("R88 (control): an entry whose effort is not a lowercase word is refused AI_RUN_CONSUME_INVALID by ai-use, the whole tick counting and writing nothing", async () => {
-  const use = useStub();
-  const w = world({ aiUse: use });
+test("R88 (control): an entry whose effort is not a lowercase word is refused AI_RUN_CONSUME_INVALID by ai-use, the whole tick counting and writing nothing; an entry stating neither model nor effort is kept as null and null", async () => {
+  const w = world();
   await w.group("ann"); w.bundle(INQ);
+  aiUseOf(w.ctx);
   await w.runs.open(OPEN({ bounds: [{ bound: "fetches", allowed: 9 }] }));
-  const before = w.dump();
+  const all = () => `${w.dump()}\n${AI_USE_TABLES.map((t) => JSON.stringify(w.rows(`SELECT * FROM ${t.name} ORDER BY rowid`))).join("\n")}`;
+  const before = all();
   for (const effort of ["Low!", "LOW", "low medium", "", 3, "x".repeat(17), {}]) {
-    const r = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:05:00Z",
+    const r = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"),
       consume: { fetches: 1 }, usage: [entry("claude-sonnet-5-5", "low"), entry("claude-opus-5-5", effort)] });
     assert.deepEqual([r.ticked, r.code], [false, "AI_RUN_CONSUME_INVALID"], JSON.stringify(effort));
     assert.match(r.detail, /^usage entry 2:/);
   }
-  assert.equal(w.dump(), before, "nothing written: no entry, no figure, no tick");
+  assert.equal(all(), before, "nothing written: no entry, no figure, no tick, nothing counted");
+  const kept = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:06:00"),
+    usage: [{ mode: "check", usage: USAGE(), calls: 1 }] });
+  assert.equal(kept.ticked, true, JSON.stringify(kept));
+  assert.deepEqual((await w.runs.read({ run: "R1", viewer: ANN })).session.cost.by_model, [{ model: null, effort: null, calls: 1 }]);
 });
 
 /* ---- R89 ---- */
