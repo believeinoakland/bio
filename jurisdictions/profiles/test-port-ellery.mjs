@@ -425,6 +425,9 @@ export default {
     { scheme: "ellery_seat", label: "minute-book seat number", entity_kinds: ["office"], space: "office", form: "minute-seat",
       systems: ["ellery.minutes"], basis: "TEST" },
     /* N574: an issuer of credentials, held through entities R43 */
+    /* R94: a forum's identifier */
+    { scheme: "marlow_court_no", label: "Marlow County court number", entity_kinds: ["forum"], space: "institution",
+      form: "marlow-registry", basis: "TEST" },
     { scheme: "port_ellery_registry", label: "Marlow County registry of institutions", entity_kinds: ["institution"], space: "institution",
       form: "marlow-registry", basis: "TEST" },
   ],
@@ -523,6 +526,23 @@ export default {
       contacts: [{ how: "web", value: "https://gazette.port-ellery.example/tips" }], source: "https://gazette.port-ellery.example/tips", status: "researched", basis: "TEST" },
   ],
   /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
+  /* R93 (T50): every value differs from the first profile's block */
+  records_help: {
+    law: "Freedom of Records Act (test)", days: 7, extra_days: 21,
+    extension_reasons: [
+      { reason: "the records are kept at the harbour depot", citation: "Test Stat. § 1.104(a)" },
+      { reason: "the request covers a great many separate records", citation: "Test Stat. § 1.104(b)" }],
+    portal: { name: "Port Ellery Records Window", url: "https://records.port-ellery.example/requests" },
+    faster: { ordinance: "Open Government Bylaw", window: "2 working days", request: "quick look", citation: "P.E.B.L. § 4.5" },
+    citations: { answer: "Test Stat. § 1.103", extend: "Test Stat. § 1.104", assist: "Test Stat. § 1.105", segregate: "Test Stat. § 1.106",
+      refuse_in_writing: "Test Stat. § 1.107", electronic: "Test Stat. § 1.108", cost: "Test Stat. § 1.109", cost_electronic: "Test Stat. § 1.110",
+      inspect_photograph: "Test Stat. § 1.111", purpose: "Test Stat. § 1.112" },
+    status: "researched", basis: "TEST" },
+  /* R94 (T50): the courts and forums of the place, with the kinds of proceeding (above) they hold */
+  forums: [
+    { label: "Marlow County Bench (test)", forum_kind: "court", ids: [{ scheme: "marlow_court_no", id: "MC-1" }], basis: "TEST" },
+    { label: "Port Ellery Harbour Commission (test)", forum_kind: "commission", basis: "TEST" },
+  ],
   local_names: [
     { name: "Town Clerk", kind: "office", explanations: [
       { locale: "en", text: "The town office that keeps the Selectboard's records and receives records requests.", basis: "TEST" },
