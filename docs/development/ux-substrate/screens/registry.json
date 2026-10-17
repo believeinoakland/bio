@@ -2729,14 +2729,6 @@
    "purpose": "A person or an organization the record follows: positions, career, credentials, memberships, interests, statements; same person?; what the team says about them (other names, declared ties, the documents that may name them) (DEC-233).",
    "acts": [
     {
-     "op": "person",
-     "label": "Open the person",
-     "status": "declared",
-     "modules": [
-      "people"
-     ]
-    },
-    {
      "op": "explore",
      "label": "Explore connections",
      "status": "declared",

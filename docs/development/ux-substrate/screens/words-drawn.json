@@ -8201,6 +8201,144 @@
    "en": "{name} holds the office of {office}, from {from}",
    "protected": false,
    "note": "DEC-318: findin.recorded {fact} for an office fact"
+  },
+  {
+   "key": "screen.person.facts.undetermined",
+   "en": "{reason} · from {document}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first"
+  },
+  {
+   "key": "screen.person.facts.source",
+   "en": "from {document}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): where an undetermined fact was read"
+  },
+  {
+   "key": "screen.person.facts.withdrawn",
+   "en": "Withdrawn facts · {n}",
+   "protected": false,
+   "note": "DEC-319: R32 (2): withdrawn facts apart"
+  },
+  {
+   "key": "screen.person.facts.withdrawn.by",
+   "en": "withdrawn by {name} on {date}: {reason}",
+   "protected": false,
+   "note": "DEC-319: R32 (2)"
+  },
+  {
+   "key": "screen.person.claim.kind.same_as",
+   "en": "claimed the same person",
+   "protected": false,
+   "note": "DEC-319: R38: You say, as label.identityclaimkinds.same_as"
+  },
+  {
+   "key": "screen.person.claim.kind.not_same_as",
+   "en": "claimed not the same person",
+   "protected": false,
+   "note": "DEC-319: R38"
+  },
+  {
+   "key": "screen.person.claim.kind.unsure",
+   "en": "unsure whether the same person",
+   "protected": false,
+   "note": "DEC-319: R38"
+  },
+  {
+   "key": "label.claimbases.identifier",
+   "en": "An identifier both records hold",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES; R38: the bases' labels owed to UX-DESIGN"
+  },
+  {
+   "key": "label.claimbases.corroborated_name",
+   "en": "The same name, with another detail that agrees",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "label.claimbases.name",
+   "en": "The same name only",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "label.claimbases.testimony",
+   "en": "What I know myself",
+   "protected": false,
+   "note": "DEC-319: people CLAIM_BASES"
+  },
+  {
+   "key": "screen.person.claim.basis.help",
+   "en": "The basis decides the highest grade the claim can earn: an identifier both records hold earns the most, what you know yourself the least.",
+   "protected": false,
+   "note": "DEC-319: R38: Because"
+  },
+  {
+   "key": "screen.person.claim.candidate",
+   "en": "{record} · agrees: {agrees}; differs: {differs}",
+   "protected": false,
+   "note": "DEC-319: R38: a samepersoncandidates row, what agrees and differs (people R7)"
+  },
+  {
+   "key": "screen.person.claim.empty.summary",
+   "en": "The other record or the reason left empty",
+   "protected": false,
+   "note": "DEC-319: R38: the refusal fold"
+  },
+  {
+   "key": "screen.person.claim.withdraw.reason",
+   "en": "Why you withdraw it",
+   "protected": false,
+   "note": "DEC-319: R38: withdrawidentityclaim's reason"
+  },
+  {
+   "key": "screen.person.state.none",
+   "en": "a person with no connections yet",
+   "protected": false,
+   "note": "DEC-319: R32 (3): the mockup state"
+  },
+  {
+   "key": "screen.proceeding.court.help",
+   "en": "The courts and forums your team holds, from its place and the ones members added.",
+   "protected": false,
+   "note": "DEC-319: R36"
+  },
+  {
+   "key": "screen.proceeding.court.none.summary",
+   "en": "When no court is held yet",
+   "protected": false,
+   "note": "DEC-319: R36: court.none and the form"
+  },
+  {
+   "key": "screen.places.courts",
+   "en": "Courts",
+   "protected": false,
+   "note": "DEC-319: screens-settings R46"
+  },
+  {
+   "key": "screen.places.court.seeded",
+   "en": "from your place's rules",
+   "protected": false,
+   "note": "DEC-319: R46: a forum the place seeds"
+  },
+  {
+   "key": "screen.places.court.added",
+   "en": "added by {name} on {date}",
+   "protected": false,
+   "note": "DEC-319: R46: a court a member added"
+  },
+  {
+   "key": "screen.places.court.done",
+   "en": "Added the court: {name}.",
+   "protected": false,
+   "note": "DEC-319: R46: after the act, by name"
+  },
+  {
+   "key": "screen.timeline.dated.meta",
+   "en": "{precision} · a dated fact, from {document} · grade {grade}",
+   "protected": false,
+   "note": "DEC-319: R33 (5): each fact's stated date at its precision, its kind and grade"
   }
  ],
  "rewrite": {
@@ -8353,6 +8491,7 @@
   "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
   "refusal.MACHINE_CANNOT_MARK": "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.",
   "screen.held.archivefiles": "Open its files",
+  "screen.proceeding.kind.help": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
   "screen.find-in.question": "For which question",
   "screen.find-in.term.help": "Only passages with this name or term are shown, when you fill it in."
  }

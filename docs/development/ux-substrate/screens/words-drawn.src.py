@@ -1784,6 +1784,35 @@ w318('screen.find-in.bounds.summary', "If the bounds can't be read", False, 'R47
 w318('screen.find-in.empty.summary', 'A required field left empty', False, "R48's control: the refusal fold")
 w318('screen.find-in.recorded.office', '{name} holds the office of {office}, from {from}', False, 'findin.recorded {fact} for an office fact')
 # --- end DEC-318
+proceeding_kind_help = "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later."
+# --- DEC-319 (T50's gaps, batch 2: the person's facts and same-person form, courts, the dated list; screens-investigate R32, R33 (5), R36, R38; screens-settings R46)
+def w319(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-319' + (': ' + note if note else '')))
+w319('screen.person.facts.undetermined', '{reason} · from {document}', False, "R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first")
+w319('screen.person.facts.source', 'from {document}', False, 'R32 (2): where an undetermined fact was read')
+w319('screen.person.facts.withdrawn', 'Withdrawn facts · {n}', False, 'R32 (2): withdrawn facts apart')
+w319('screen.person.facts.withdrawn.by', 'withdrawn by {name} on {date}: {reason}', False, 'R32 (2)')
+w319('screen.person.claim.kind.same_as', 'claimed the same person', False, 'R38: You say, as label.identityclaimkinds.same_as')
+w319('screen.person.claim.kind.not_same_as', 'claimed not the same person', False, 'R38')
+w319('screen.person.claim.kind.unsure', 'unsure whether the same person', False, 'R38')
+w319('label.claimbases.identifier', 'An identifier both records hold', False, 'people CLAIM_BASES; R38: the bases\' labels owed to UX-DESIGN')
+w319('label.claimbases.corroborated_name', 'The same name, with another detail that agrees', False, 'people CLAIM_BASES')
+w319('label.claimbases.name', 'The same name only', False, 'people CLAIM_BASES')
+w319('label.claimbases.testimony', 'What I know myself', False, 'people CLAIM_BASES')
+w319('screen.person.claim.basis.help', 'The basis decides the highest grade the claim can earn: an identifier both records hold earns the most, what you know yourself the least.', False, 'R38: Because')
+w319('screen.person.claim.candidate', '{record} · agrees: {agrees}; differs: {differs}', False, 'R38: a samepersoncandidates row, what agrees and differs (people R7)')
+w319('screen.person.claim.empty.summary', 'The other record or the reason left empty', False, 'R38: the refusal fold')
+w319('screen.person.claim.withdraw.reason', 'Why you withdraw it', False, "R38: withdrawidentityclaim's reason")
+w319('screen.person.state.none', 'a person with no connections yet', False, 'R32 (3): the mockup state')
+w319('screen.proceeding.court.help', 'The courts and forums your team holds, from its place and the ones members added.', False, 'R36')
+w319('screen.proceeding.court.none.summary', 'When no court is held yet', False, 'R36: court.none and the form')
+w319('screen.places.courts', 'Courts', False, 'screens-settings R46')
+w319('screen.places.court.seeded', "from your place's rules", False, 'R46: a forum the place seeds')
+w319('screen.places.court.added', 'added by {name} on {date}', False, 'R46: a court a member added')
+w319('screen.places.court.done', 'Added the court: {name}.', False, 'R46: after the act, by name')
+w319('screen.timeline.dated.meta', '{precision} · a dated fact, from {document} · grade {grade}', False, "R33 (5): each fact's stated date at its precision, its kind and grade")
+REWRITE.update({'screen.proceeding.kind.help': proceeding_kind_help})  # DEC-319: R36, the kind is a choice, explained by proceeding.kind.help's words
+# --- end DEC-319
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
