@@ -51,7 +51,7 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
   await press(p, "calculationdraw", { reason: "a sample to visit" });
   assert.deepEqual(p.byOp("calculationdraw")[0].body, { set: SHA, n: 40, seed: "2026-10-05-7f31", question: "Was it repaired?", project: P, reason: "a sample to visit" });
   assert.equal(p.byOp("spotcheck").at(-1).query.draw, "e".repeat(64), "the new draw is read");
-  fill(p, { "calc-content": "CNT-2026-0003", "calc-header": "report, closed, reported" });
+  fill(p, { "calc-content": SHA, "calc-header": "report, closed, reported" });
   await press(p, "tabledeclare", { reason: "the work orders" });
   assert.deepEqual(p.byOp("tabledeclare")[0].body.header, ["report", "closed", "reported"]);
   fill(p, { "calc-wb": SHA2, "calc-period": "FY2025" });

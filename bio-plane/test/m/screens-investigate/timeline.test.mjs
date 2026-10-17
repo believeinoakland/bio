@@ -44,22 +44,22 @@ test("R3 an event whose order is undetermined is drawn so, with the evidence tha
 
 test("R3 createevent from a passage; addparticipant; relate \"Link events\" and \"Cite which came first\"; recorddatedfact (a day or a month); each read again after", async () => {
   const p = await open(at, { plane: { createevent: ok({ ok: true, event_id: "EVT-2026-0050", attestation_ids: [9] }), addparticipant: ok({ ok: true }), relate: ok({ ok: true }), recorddatedfact: ok({ ok: true }) } });
-  fill(p, { "tl-sha": SHA, "tl-page": "3", "tl-kind": "vote" });
+  fill(p, { "tl-doc": SHA, "tl-kind": "vote" });
   await press(p, "createevent", { reason: "the minutes record the vote" });
   assert.deepEqual(p.byOp("createevent")[0].body, { kind: "vote", attestations: [{ captureSha: SHA, extent: { kind: "pdf-page", page: 2 } }], concerns: [ENT], reason: "the minutes record the vote" });
   assert.equal(p.byOp("timeline").at(-1).query.set, ENT + ",EVT-2026-0050", "the new event joins the set and the timeline is read again");
-  fill(p, { "tl-sha": SHA, "tl-page": "3", "tl-event": "EVT-2026-0001", "tl-who": ORG, "tl-role": "voted", "tl-vote": "yes" });
+  fill(p, { "tl-doc": SHA, "tl-event": "EVT-2026-0001", "tl-who": ORG, "tl-role": "voted", "tl-vote": "yes" });
   await press(p, "addparticipant", { reason: "the roll call" });
   assert.deepEqual(p.byOp("addparticipant")[0].body, { eventId: "EVT-2026-0001", entityId: ORG, role: "voted", attestation: { captureSha: SHA, extent: { kind: "pdf-page", page: 2 } }, voteValue: "yes", reason: "the roll call" });
-  fill(p, { "tl-sha": SHA, "tl-page": "3", "tl-event": "EVT-2026-0001", "tl-to": "EVT-2026-0002", "tl-rel": "authorises" });
+  fill(p, { "tl-doc": SHA, "tl-event": "EVT-2026-0001", "tl-to": "EVT-2026-0002", "tl-rel": "authorises" });
   const link = main(p).querySelectorAll('button[data-act="relate"]').find((b) => b.textContent.startsWith(word("act.relate.label.timeline")));
   await press(p, "relate", { el: link });
   assert.deepEqual(p.byOp("relate")[0].body, { from: "EVT-2026-0001", to: "EVT-2026-0002", kind: "authorises", attestation: { captureSha: SHA, extent: { kind: "pdf-page", page: 2 } } });
   const first = main(p).querySelectorAll('button[data-act="relate"]').find((b) => b.textContent.startsWith(word("screen.timeline.cite.first")));
-  fill(p, { "tl-sha": SHA, "tl-to": "EVT-2026-0001" });
+  fill(p, { "tl-doc": SHA, "tl-to": "EVT-2026-0001" });
   await press(p, "relate", { el: first });
   assert.deepEqual(p.byOp("relate")[1].body, { from: "EVT-2026-0002", to: "EVT-2026-0001", kind: "precedes", attestation: { captureSha: SHA, extent: { kind: "pdf-page", page: 2 } } }, "R20: kind precedes, from the event chosen as first");
-  fill(p, { "tl-sha": SHA, "tl-page": "", "tl-date": "2024-03", "tl-datekind": "signed" });
+  fill(p, { "tl-doc": SHA, "tl-date": "2024-03", "tl-datekind": "signed" });
   await press(p, "recorddatedfact");
   assert.deepEqual(p.byOp("recorddatedfact")[0].body, { captureSha: SHA, extent: { kind: "document" }, kind: "signed", value: { value: "2024-03", precision: "edtf" }, method: word("screen.timeline.method.member") });
 });

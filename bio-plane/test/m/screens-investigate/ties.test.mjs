@@ -24,7 +24,7 @@ test("R9 reads memberties (her own ties, seen only by her and the administrators
 test("R9 declaretie \"Add this tie\": its kind, who, her words, and whether a case names her by her handle or says \"a member of the group\", the disclosure stated either way", async () => {
   const p = await open(at, { plane: { declaretie: ok({ ok: true, tie_id: "MTI-2026-0003" }) } });
   drew(main(p), "screen.ties.either");
-  fill(p, { "tie-kind": "business", "tie-who": "ENT-2026-0702", "tie-note": "member-owner of Lakeshore Hardware Co-op", "tie-says-0": true, "tie-says-1": false });
+  fill(p, { "tie-kind": "business", "tie-who": "ENT-2026-0702", "tie-note": "member-owner of Lakeshore Hardware Co-op", "tie-says": "name" });
   await press(p, "declaretie");
   assert.deepEqual(p.byOp("declaretie")[0].body, { entity: "ENT-2026-0702", kind: "business", note: "member-owner of Lakeshore Hardware Co-op", attribution: "name" });
   const q = await open(at, { plane: { declaretie: ok({ ok: true }) } });

@@ -271,7 +271,6 @@ const acts = [
   { op: "entityalias", label: "entity.alias.add",
     send(view, el, cs) {
       const alias = String(cs.value("person-alias") || "").trim();
-      if (!alias) return { refuse: "screen.person.alias.empty" };
       return { body: { entityId: String(view.subject || ""), alias } };
     } },
   { op: "aliaswithdraw", label: "act.owed_aliaswithdraw.label.person",
@@ -283,7 +282,6 @@ const acts = [
     send(view, el, cs) {
       const toEntity = String(cs.value("person-rel-with") || "").trim(), justification = String(cs.value("person-rel-why") || "").trim();
       const citation = String(cs.value("person-rel-cite") || "").trim();
-      if (!toEntity || !justification || !citation) return { refuse: "screen.person.relation.empty" };
       return { body: { fromEntity: String(view.subject || ""), toEntity, relation: String(cs.value("person-rel-kind") || "member_of"), justification, citation } };
     } },
   { op: "resolve", label: "entity.naming.match",
@@ -295,7 +293,7 @@ const acts = [
     send(view, el, cs) {
       const captureSha = String((el && el.dataset && el.dataset.sha) || ""), ref = String((el && el.dataset && el.dataset.ref) || "");
       const basis = String(cs.value("person-naming-basis") || "").trim();
-      if (!captureSha || !basis) return { refuse: "screen.person.naming.empty" };
+      if (!captureSha) return null;
       return { body: { captureSha, ref, entityId: String(view.subject || ""), basis } };
     } },
   { op: "connect", label: "entity.connect",
@@ -305,7 +303,6 @@ const acts = [
     send(view, el, cs) {
       const field = String((el && el.dataset && el.dataset.field) || "");
       const told = String(cs.value(field === "basis" ? "person-naming-basis" : "person-rel-why") || "").trim();
-      if (!told) return { refuse: "screen.person.help.empty" };
       return { body: { op: field === "basis" ? "resolvetestify" : "relationdeclare", field, told } };
     },
     done(view, answer, cs) {
@@ -337,7 +334,6 @@ const PERSON_KEYS = [
   "entity.relation.member_of", "entity.relation.proxy_for", "entity.relation.overlaps", "entity.relation.with", "entity.relation.why", "entity.relation.cite",
   "entity.relation.cite.help", "entity.relation.declare", "entity.relation.declared", "entity.relation.none", "entity.naming.title", "entity.naming.says",
   "entity.naming.row", "entity.naming.match", "entity.naming.testify", "entity.naming.basis", "entity.naming.basis.help", "entity.connect", "entity.connect.org",
-  "screen.person.alias.empty", "screen.person.relation.empty", "screen.person.naming.empty", "screen.person.help.empty",
   "screen.person.expunge.head", "screen.person.expunge.statement", "screen.person.expunge.fact",
   "screen.person.expunge.ground", "screen.person.ground.court_order", "screen.person.ground.unlawful", "screen.person.ground.confidential",
   "screen.person.ground.lawful_demand", "screen.person.expunge.order", "screen.person.expunge.order.help", "screen.person.expunge.reason",

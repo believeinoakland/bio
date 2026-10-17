@@ -24,6 +24,8 @@ export const DRAW = "d".repeat(64);
 export const PROC = "ENT-2026-0100";
 export const ACT = "ACTN-2026-0005";
 export const STD = "STD-2026-0004-policy";
+export const COURT = "ENT-2026-0101";
+export const HELD = { ok: true, held: [{ bundle_id: "INFO-2026-0001", title: "Lease amendment 1", capture: { sha256: SHA } }, { bundle_id: "INFO-2026-0002", title: "Rent schedule", capture: { sha256: SHA2 } }], truncated: false };
 
 export const PROJECT_MD = ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "references:",
   `  - target: ${ENT}`, "    rel: cites", "    status: active", "  - target: INQ-2026-0001-seven-days", "    rel: cites", "    status: active", "---", ""].join("\n");
@@ -36,8 +38,12 @@ export const PERSON = (o = {}) => ({ ok: true, found: true, entity_id: ENT, at: 
   posts: [{ member: ENT, line_id: "LIN-2026-0040", kind: "holds", from: ENT, to: ORG, capacity: "employee", title: "Director of Public Works",
     valid: { from: "2022-03-01", to: null, precision: "day", zone: "UTC" }, grade: { assertion: "B", ends: ["B", "B"] }, citation: { captureSha: SHA, extent: { kind: "pdf-page", page: 0 } } }],
   duties: [], undetermined: [], truncated: {}, limit: 500,
-  claims: [{ claim_id: "IDC-2026-0001", a: ENT, b: "ENT-2026-0019", kind: "same_as", grade: "B", why: "both hold the Deputy Director post on the cited dates", by: "member:dev", at: "2026-10-03T09:00:00Z" },
-    { claim_id: "IDC-2026-0002", a: ENT, b: "ENT-2026-0021", kind: "unsure", grade: "C", why: "the same surname", by: "member:mai", at: "2026-10-04T09:00:00Z" }], ...o });
+  claims: [{ claim_id: "IDC-2026-0001", a: ENT, b: "ENT-2026-0019", kind: "same_as", basis: "name", grade: "B", why: "both hold the Deputy Director post on the cited dates", by: "member:dev", at: "2026-10-03T09:00:00Z" },
+    { claim_id: "IDC-2026-0002", a: ENT, b: "ENT-2026-0021", kind: "unsure", basis: "testimony", grade: "C", why: "the same surname", by: "member:mai", at: "2026-10-04T09:00:00Z" }], ...o });
+export const PERSON_ENTITY = { ok: true, found: true, entity: { entity_id: ENT, kind: "person", label: "L. Chen", note: "Director", aliases: [
+  { alias: "L. Chen", canonical: true, declared_by: "machine:roster", at: "2026-09-01T09:00:00Z", withdrawn: null },
+  { alias: "Lin Chen", canonical: false, declared_by: "member:mai", at: "2026-10-01T09:00:00Z", withdrawn: null }],
+  relations: [{ relation_id: "REL-2026-0001", relation: "member_of", from_entity: ENT, to_entity: ORG, direction: "out", justification: "sits on its board", citation: "minutes, page 2", declared_by: "member:dev", at: "2026-10-02T09:00:00Z", withdrawn: null }] } };
 export const DIRECTORY = (o = {}) => ({ ok: true, following: 3, in_your_projects: 1, limit: 50, truncated: false, cursor: null,
   rows: [{ entity: ENT, kind: "person", name: "L. Chen", today: { posts: [{ line_id: "LIN-1", title: "Director of Public Works", capacity: "employee", office: { entity: "ENT-9", label: "Director" }, body: { entity: ORG, label: "Public Works Department" } }] },
     documents: 14, questions: 2, projects: 1, newest_added: "2026-10-02T09:00:00Z", mine: true },
@@ -121,6 +127,21 @@ export const STD_PROPOSALS = (q = {}) => {
 export const TIES = { ok: true, member: "mai", count: 2, truncated: false, ties: [{ tie_id: "MTI-2026-0001", member: "mai", entity: "ENT-2026-0700", kind: "employer", note: "East Bay Transit", attribution: "group", at: "x", withdrawn: null },
   { tie_id: "MTI-2026-0002", member: "mai", entity: "ENT-2026-0701", kind: "relative", note: "a cousin on the Planning Commission staff", attribution: "name", at: "x", withdrawn: null }] };
 
+export const MATTER = (o = {}) => ({ ok: true, progression_key: "pra", entity_id: ORG, found: true, defined: true, definition_version: 2, label: "A public records request", entity: { entity_id: ORG, kind: "body", label: "Public Works Department" },
+  grade: null, grade_determined: false, established: false, stage_count: 2, placed_count: 1, chain: [], thread_version: 1,
+  threads: [{ version: 1, threaded_by: "member:mai", at: "2026-09-22T09:00:00Z", placements: [{ stage_key: "sent", capture_sha: SHA, bundle_id: "INFO-2026-0001", grade: "B" }] }],
+  stages: [{ stage_key: "sent", label: "Request sent", required: "always", present: true, document_count: 1, grade: "B", discharged: false, documents: [{ stage_key: "sent", capture_sha: SHA, bundle_id: "INFO-2026-0001", grade: "B", own_date: { value: "2026-09-22", precision: "day" }, own_date_why: null }] },
+    { stage_key: "determination", label: "Determination", required: "unless_exception", present: false, document_count: 0, grade: null, discharged: false, documents: [] }],
+  findings: [{ kind: "missing_predecessor", stage_key: "determination", stage_label: "Determination", definition_version: 2, says: { key: "progression.expects", vars: { interval: "10 days", n: "1", date: "2026-10-02" } }, disposition: null }], finding_count: 1, ...o });
+export const DEF = (o = {}) => ({ ok: true, progression_key: "pra", found: true, label: "A public records request", declared_by: "member:ana", at: "2026-09-30T09:00:00Z", version: 2, current: true, current_version: 2,
+  basis: { statement: "the agency determines within 10 days", citation: "Gov. Code §7922.535", stated: true }, version_count: 2,
+  versions: [{ version: 1, declared_by: "member:ana", at: "2026-09-24T09:00:00Z", basis: { statement: "first", citation: null } }, { version: 2, declared_by: "member:ana", at: "2026-09-30T09:00:00Z", basis: { statement: "the agency determines within 10 days", citation: "Gov. Code §7922.535" } }],
+  stages: [{ stage_key: "sent", stage_no: 1, label: "Request sent", after_stage: null, cardinality: "1", within_interval: null, required: "always" }, { stage_key: "determination", stage_no: 2, label: "Determination", after_stage: "sent", cardinality: "0..1", within_interval: "10 days", required: "unless_exception" }], ...o });
+export const THEME = (o = {}) => ({ ok: true, theme_id: "THEME-2026-0001", name: "Deferred maintenance", test: "A document that shows repairs put off", at: "2026-10-01T09:00:00Z", declared_by_handle: "mai", evidence: false,
+  members: [{ target: "INFO-2026-0001", target_kind: "document", state: "member", placed_by_handle: "mai", placed_at: "2026-10-02T09:00:00Z", note: "the roof repair", proposed_by_handle: null }],
+  hunches: [{ target: "INFO-2026-0002", target_kind: "document", state: "hunch", proposed_by_handle: "dev", proposed_at: "2026-10-03T09:00:00Z", proposal_note: "maybe" }],
+  withdrawn: [{ target: "INFO-2026-0003", target_kind: "document", state: "withdrawn", ended_by_handle: "mai", ended_at: "2026-10-04T09:00:00Z", reason: "wrong year" }], ...o });
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
@@ -138,7 +159,7 @@ export function plane(o = {}) {
     money: (r) => ok(FACTS[r.query.id] || { ok: false, reason: "NO_SUCH_FACT" }),
     calculation: (r) => ok(r.query.id === "CALC-2026-0002" ? ESTIMATE : CALCULATION()),
     spotcheck: ok(SPOT()),
-    entity: ok(ENTITY),
+    entity: (r) => ok(r.query.id === PROC ? ENTITY : PERSON_ENTITY),
     partiesof: ok(PARTIES),
     follows: ok(FOLLOWS),
     proceedingdates: ok(DATES()),
@@ -153,6 +174,13 @@ export function plane(o = {}) {
     standards: ok({ ok: true, items: [{ id: "STD-2026-0001-ordinance", cite: "Municipal Code §12.04" }, { id: STD, cite: "Administrative Instruction 4.12, §3" }], truncated: false }),
     sequence: ok({ ok: true, answer: "undetermined", why: "the sources date them no closer" }),
     memberties: ok(TIES),
+    heldcaptures: ok(HELD),
+    entitieskind: (r) => ok(r.query.kind === "body" ? { ok: true, kind: "body", entities: [{ entity_id: COURT, kind: "body", label: "Superior Court of California, County of Alameda", forum_kind: "court" }], count: 1, truncated: false } : { ok: true, kind: "institution", entities: [], count: 0, truncated: false }),
+    readingname: ok({ ok: true, entity_id: ENT, documents: [{ capture_sha: SHA, bundle_id: "INFO-2026-0001", ref: "L. Chen", label: "L. Chen", matched_alias: "L. Chen", page: 2 }], truncated: false }),
+    instances: ok({ ok: true, count: 1, items: [{ progression_key: "pra", label: "A public records request", definition_version: 2, entity_id: ORG, thread_version: 1, stage_count: 4, placed_count: 1, grade: null, grade_determined: false, established: false, finding_count: 1, open_finding_count: 1, next_deadline: "2026-10-02" }], truncated: false }),
+    instance: ok(MATTER()),
+    progression: ok(DEF()),
+    themeread: (r) => ok(r.query.id ? THEME() : { ok: true, q: null, limit: 200, truncated: false, evidence: false, themes: [{ theme_id: "THEME-2026-0001", name: "Deferred maintenance", test: "A document that shows repairs put off", at: "2026-10-01T09:00:00Z", declared_by_handle: "mai" }] }),
     clocksics: ok({ ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n", events: 1, left_out: { undated: 0 } }),
     ...(o.plane || {}),
   };
@@ -199,6 +227,9 @@ export const rawKeys = (root) => textNodes(root).map((t) => String(t.data).trim(
 export { ok, textNodes };
 
 /** The address each screen is opened at. */
-export const PATHS = { people: "/app/people", person: "/app/person/" + ENT, explore: "/app/explore/" + ENT, timeline: "/app/timeline/" + P,
+export const PATHS = { people: "/app/people", person: "/app/person/" + ENT, theme: "/app/theme", explore: "/app/explore/" + ENT, timeline: "/app/timeline/" + P,
   money: "/app/money/" + MSR, calculation: "/app/calculation/" + CALC, help: "/app/help", proceeding: "/app/proceeding/" + PROC,
   "due-date": "/app/due-date/" + ACT, standard: "/app/standard/" + STD, ties: "/app/ties" };
+
+/** Further addresses: one theme, one matter and one progression (screens-investigate R31, R33). */
+export const MORE_PATHS = { themeOne: "/app/theme/THEME-2026-0001", matter: "/app/timeline/" + P + "/matter/pra/" + ORG, progression: "/app/timeline/" + P + "/progression/pra" };

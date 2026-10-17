@@ -62,7 +62,7 @@ test("R8 standarddeclare \"Hold this as a standard\" from a passage; standardado
   await press(q, "standardadopt", { reason: "the budget's own target" });
   assert.deepEqual(q.byOp("standardadopt")[0].body, { proposal: "STDP-2026-0001", reason: "the budget's own target" });
   assert.equal(q.location.pathname, "/app/standard/STD-2026-0010-policy");
-  fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-text": "CNT-2026-0030, CNT-2026-0031", "st-from": "2026-07-01" });
+  fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-doc": SHA, "st-from": "2026-07-01" });
   await press(p, "standarddeclare", { reason: "the council adopted it" });
   assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: ["CNT-2026-0030", "CNT-2026-0031"], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });
 });

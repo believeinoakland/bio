@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf, COURT } from "./fixtures.mjs";
 
 const at = "/app/proceeding/" + PROC;
 const sec = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
@@ -31,7 +31,7 @@ test("R6 reads the proceeding (entity: its caption, court and neutral label), it
 test("R6 entitycreate \"Register the proceeding\" from its caption: court, number, a neutral label, the member's note; then it opens", async () => {
   const p = await open("/app/proceeding", { plane: { entitycreate: ok({ ok: true, entity_id: "ENT-2026-0200", kind: "proceeding" }) } });
   assert.deepEqual(actsIn(main(p)), ["entitycreate"]);
-  fill(p, { "pr-forum": "ENT-2026-0101", "pr-number": "RG26-114502", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
+  fill(p, { "pr-forum": COURT, "pr-number": "RG26-114502", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
   await press(p, "entitycreate");
   assert.deepEqual(p.byOp("entitycreate")[0].body, { kind: "proceeding", note: "From the court's caption, captured 1 October", proceeding: { forum: "ENT-2026-0101", kind: "civil", number: "RG26-114502" }, label: "the lease rent case", aliases: ["the lease rent case"] });
   assert.equal(p.location.pathname, "/app/proceeding/ENT-2026-0200");
@@ -39,7 +39,7 @@ test("R6 entitycreate \"Register the proceeding\" from its caption: court, numbe
 
 test("R6 recordline \"Add a party by role\"; followregister (a register needing a login says filings come only by capture); declare \"Hold an order as obligations\"; courtlink", async () => {
   const p = await open(at, { plane: { recordline: ok({ ok: true }), followregister: ok({ ok: true }), declare: ok({ ok: true }), courtlink: ok({ ok: true }) } });
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-sha": SHA, "pr-page": "1" });
+  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-doc": SHA });
   await press(p, "recordline");
   assert.deepEqual(p.byOp("recordline")[0].body, { kind: "party_to", from: "ENT-2026-0104", to: PROC, role: "intervenor", basis: { captureSha: SHA, extent: { kind: "pdf-page", page: 0 } } });
   drew(sec(p, "screen.proceeding.register.head"), "screen.proceeding.login.note");
@@ -58,7 +58,7 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {
   const p = await open(at, { plane: { recordline: refusedIn("PROCEEDING_ENDS", "A party is joined to a proceeding.") } });
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-sha": SHA });
+  fill(p, { "pr-party": "ENT-2026-0104", "pr-doc": SHA });
   await press(p, "recordline");
   assert.ok(sec(p, "screen.proceeding.parties").textContent.includes("A party is joined to a proceeding."), "the refusal by its words");
 });

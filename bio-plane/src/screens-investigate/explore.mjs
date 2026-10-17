@@ -257,7 +257,7 @@ const EXPLORE_KEYS = [
   "screen.explore.page", "screen.explore.testimony", "screen.explore.nosource", "screen.explore.atdate", "screen.explore.nochains",
   "screen.explore.noscore", "screen.explore.stopped", "screen.explore.verify.matches", "screen.explore.verify.differs", "screen.explore.promoted",
   "screen.explore.assert.head", "screen.explore.assert.sha", "screen.explore.assert.sha.help", "screen.explore.assert.page",
-  "screen.explore.attached", "screen.explore.withdraw", "screen.explore.graph", "screen.explore.graph.holds", "screen.explore.groups.empty",
+  "screen.explore.graph", "screen.explore.graph.holds", "screen.explore.groups.empty",
   "screen.explore.hunch", "screen.explore.verify.lead", "screen.explore.verify.cited", "screen.explore.verify.hop.holds",
   "screen.explore.verify.hop.differs", "screen.explore.assert.basis", "screen.explore.assert.empty",
 ];

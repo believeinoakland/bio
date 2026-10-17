@@ -84,7 +84,7 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   await press(p, "hypothesishold", { within: panelOf(p, M2) });
   assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: "INQ-2026-0001-seven-days", kind: "flow", statement: "the Sewer Fund's share of citywide overhead", about: [M2] });
   panel = await openPanel(p, M3);
-  fill(p, { "mf-sha": SHA, "mf-page": "214" });
+  fill(p, { "mf-doc": SHA });
   await press(p, "createevent", { within: panelOf(p, M3), reason: "the ledger dates it" });
   assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 213 } }]);
   await press(p, "findin", { within: panelOf(p, M3) });
@@ -102,7 +102,7 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
   const p = await open(at, { plane: { recordfact: ok({ ok: true, fact_id: "MNY-2026-new", grade: { reading: "B" } }), createset: ok({ ok: true, set_id: "MSR-2026-0002" }),
     committedagainstpaid: ok({ ok: true, committed: { sum: { value: "1300000.00" } }, paid: { sum: { value: "1250000.00" } }, difference: { figure: { value: "50000.00" } } }) } });
   fill(p, { "mf-amount": "310,000", "mf-asread": "Overhead allocation … 310,000", "mf-kind": "allocation", "mf-phase": "actual", "mf-stage": "paid", "mf-basis": "undetermined",
-    "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-sha": SHA, "mf-page": "214" });
+    "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-doc": SHA });
   await press(p, "recordfact", { el: main(p).querySelectorAll('button[data-act="recordfact"]')[0] });
   assert.deepEqual(p.byOp("recordfact")[0].body, { amount: "310,000", as_read: "Overhead allocation … 310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation",
     phase: "actual", basis: "undetermined", period: { fiscal: "FY2022" }, from: { as_written: "Sewer Fund 3100" }, to: null,
