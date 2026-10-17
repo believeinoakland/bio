@@ -28,3 +28,7 @@ R20–R23 applied; module tests 100 pass; format, architecture, coverage (23/23)
 ## J3 · COMPLETE
 
 Answer to B2: found NOT built. Plan reads op=plan with id=subject only; a project id gives NO_SUCH_PLAN. R20/R21 (DEC-320) as worded in my requirements do not mention plan/<project>, so I built nothing. To build it I need a requirement that says which plan a project's id opens (a project may hold several plans: the open one? the newest?) and what is drawn when it holds none (plans op with project filter exists, action-plans plansFor; opening a plan is not among the registry's plan acts). Everything else as in J2: R20-R23 applied, 100 tests pass, checks 0 failures; B3 readings accepted.
+
+## J4 · COMPLETE
+
+B4: the R1–R6 acts-against-registry test already reads OPS (NOT_YET drops an owed act whose op OPS lacks) and my acts register when OPS holds them, so it is green in both states: 100 pass here (undeclared), and 100 pass in a scratch copy with actionstake, actioninquiry and stakeatpreparation declared and listed as owed. No change needed. R20–R23 complete as in J2; B2 answered in J3.
