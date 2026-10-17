@@ -251956,164 +251956,40 @@ __export(checks_exports77, {
   followRefusal: () => followRefusal
 });
 var at45 = (fn, region) => `src/following/index.mjs ${fn} > ${region}`;
-var row9 = (n2, fn, region, translation) => Object.freeze({ check: `C-137.${n2}`, where: at45(fn, region), translation });
+var row9 = (code, n2, fn, region) => Object.freeze({ check: `C-137.${n2}`, where: at45(fn, region), translation: word(`refusal.${code}`) });
 var FOLLOWING_CHECKS = Object.freeze({
-  MACHINE_CANNOT_FOLLOW: row9(
-    1,
-    "#actorRefusal",
-    "is-follow-member",
-    "A follow, and the body a watch is captured before, is a member's own act; the machine follows nothing of its own accord. Nothing was written."
-  ),
-  NO_SUCH_HOME: row9(
-    2,
-    "#actorRefusal",
-    "is-follow-home",
-    "A follow lives in the project of a bundle you may see, named as its home; no such bundle was named. Nothing was written."
-  ),
-  NO_SUCH_BODY: row9(
-    3,
-    "followBody",
-    "is-follow-body",
-    "No body by that id is registered that you may see. Nothing was written."
-  ),
-  NO_LEGISTAR_ID: row9(
-    4,
-    "followBody",
-    "is-follow-legistar",
-    "That body holds no identifier in a scheme the active jurisdiction profiles name for Legistar, so its records cannot be read there. Nothing was written."
-  ),
-  BAD_PERIOD: row9(
-    5,
-    "followBody",
-    "is-follow-period",
-    "A follow names the days it covers: a first day, and a last day not before it, or none. Nothing was written."
-  ),
-  BAD_FOLLOW_CADENCE: row9(
-    6,
-    "#cadence",
-    "is-follow-cadence",
-    "A follow is read daily, weekly or monthly. Choose one of these. Nothing was written."
-  ),
-  NO_SUCH_FOLLOW: row9(
-    7,
-    "#follow",
-    "is-follow-held",
-    "No follow of that kind that you may see is held under that id. Nothing was changed."
-  ),
-  NOT_THE_AUTHOR: row9(
-    8,
-    "unfollow",
-    "is-follow-author",
-    "A follow is ended only by the member who made it. Nothing was changed."
-  ),
-  NO_LOCATOR: row9(
-    9,
-    "followRegister",
-    "is-follow-locator",
-    "A register or a portal is followed at a public https address. Nothing was written."
-  ),
-  BAD_RENDER: row9(
-    10,
-    "followRegister",
-    "is-follow-render",
-    "Whether the register is re-rendered is yes or no. Nothing was written."
-  ),
-  BAD_GATE: row9(
-    11,
-    "#gated",
-    "is-follow-gate",
-    "A register behind an account or a fee is declared as one or the other, and one that charges a fee names its price, so you see it before any refresh. Nothing was written."
-  ),
-  PERSON_QUERY_NOT_NAMED: row9(
-    12,
-    "followPersonQuery",
-    "is-person-query-named",
-    "A person is followed only through one register's own query for one identifier you name, in a scheme the active profiles list for that register, at the register's own address for it, in your project; a query by name alone or across registers is not followed. Nothing was written."
-  ),
-  NO_KEY: row9(
-    13,
-    "followPortal",
-    "is-portal-key",
-    "A portal follow declares the field that keys its rows. Nothing was written."
-  ),
-  NO_SUCH_MEETING_ADDRESS: row9(
-    14,
-    "perMeetingBody",
-    "is-meeting-address",
-    "No address you may see is watched per meeting, so no body's meetings can be named for it. Nothing was written."
-  ),
-  NO_SUCH_SNAPSHOT: row9(
-    15,
-    "snapshotDiff",
-    "is-snapshot-held",
-    "Each snapshot is named by its number among this portal follow's snapshots; one named is not held. Nothing was changed."
-  ),
-  NOT_GATED: row9(
-    16,
-    "refreshRegister",
-    "is-refresh-gated",
-    "A public register is read on its schedule; a member's refresh is only for one behind an account or a fee. Nothing was read."
-  ),
-  NOT_THE_FOLLOWER: row9(
-    17,
-    "refreshRegister",
-    "is-refresh-follower",
-    "Only the member who follows this register refreshes it, with their own credential. Nothing was read."
-  ),
-  PRICE_FIRST: row9(
-    18,
-    "refreshRegister",
-    "is-refresh-price",
-    "This register charges a fee; the refresh runs only once its price, as shown, is accepted. Nothing was read."
-  ),
-  NO_CREDENTIAL: row9(
-    19,
-    "refreshRegister",
-    "is-refresh-credential",
-    "A register behind an account is read with your own credential, and none was given. Nothing was read."
-  ),
-  NOT_READ: row9(
-    20,
-    "refreshRegister",
-    "is-refresh-read",
-    "The register could not be read; the reason is beside this. Nothing was changed."
-  ),
-  WATCH_ENDED: row9(
-    21,
-    "watchLink",
-    "is-watch-live",
-    "That watch has already ended, so it can no longer be linked or given an end date. Nothing was written."
-  ),
-  MACHINE_CANNOT_LINK_WATCH: row9(
-    22,
-    "watchLink",
-    "is-link-member",
-    "Linking a watch to a plan, and answering whether to keep it, is a member's own act; the machine does neither. Nothing was written."
-  ),
-  NO_SUCH_WATCH: row9(
-    23,
-    "watchLink",
-    "is-watch-seen",
-    "No watch of that kind that you may see is held under that id. Nothing was written."
-  ),
-  WATCH_NOT_ASKED: row9(
-    24,
-    "watchAnswer",
-    "is-answer-asked",
-    "There is no question about keeping this watch that is yours to answer now. Nothing was written."
-  ),
-  WATCH_RELIED_ON: row9(
-    25,
-    "watchAnswer",
-    "is-answer-relied",
-    "Something else still relies on this watch, so it is shown but not offered for keeping or stopping here. Nothing was written."
-  ),
-  BAD_PROCEEDING_DATES: row9(
-    26,
-    "proceedingDates",
-    "is-proceeding-dates",
-    "A proceeding's dates are read between two calendar days, written year-month-day, the first not after the second. Nothing was read."
-  )
+  MACHINE_CANNOT_FOLLOW: row9("MACHINE_CANNOT_FOLLOW", 1, "#actorRefusal", "is-follow-member"),
+  NO_SUCH_HOME: row9("NO_SUCH_HOME", 2, "#actorRefusal", "is-follow-home"),
+  NO_SUCH_BODY: row9("NO_SUCH_BODY", 3, "followBody", "is-follow-body"),
+  NO_LEGISTAR_ID: row9("NO_LEGISTAR_ID", 4, "followBody", "is-follow-legistar"),
+  BAD_PERIOD: row9("BAD_PERIOD", 5, "followBody", "is-follow-period"),
+  BAD_FOLLOW_CADENCE: row9("BAD_FOLLOW_CADENCE", 6, "#cadence", "is-follow-cadence"),
+  NO_SUCH_FOLLOW: row9("NO_SUCH_FOLLOW", 7, "#follow", "is-follow-held"),
+  NOT_THE_AUTHOR: row9("NOT_THE_AUTHOR", 8, "unfollow", "is-follow-author"),
+  NO_LOCATOR: row9("NO_LOCATOR", 9, "followRegister", "is-follow-locator"),
+  BAD_RENDER: row9("BAD_RENDER", 10, "followRegister", "is-follow-render"),
+  BAD_GATE: row9("BAD_GATE", 11, "#gated", "is-follow-gate"),
+  PERSON_QUERY_NOT_NAMED: row9("PERSON_QUERY_NOT_NAMED", 12, "followPersonQuery", "is-person-query-named"),
+  NO_KEY: row9("NO_KEY", 13, "followPortal", "is-portal-key"),
+  NO_SUCH_MEETING_ADDRESS: row9("NO_SUCH_MEETING_ADDRESS", 14, "perMeetingBody", "is-meeting-address"),
+  NO_SUCH_SNAPSHOT: row9("NO_SUCH_SNAPSHOT", 15, "snapshotDiff", "is-snapshot-held"),
+  NOT_GATED: row9("NOT_GATED", 16, "refreshRegister", "is-refresh-gated"),
+  NOT_THE_FOLLOWER: row9("NOT_THE_FOLLOWER", 17, "refreshRegister", "is-refresh-follower"),
+  PRICE_FIRST: row9("PRICE_FIRST", 18, "refreshRegister", "is-refresh-price"),
+  NO_CREDENTIAL: row9("NO_CREDENTIAL", 19, "refreshRegister", "is-refresh-credential"),
+  NOT_READ: row9("NOT_READ", 20, "refreshRegister", "is-refresh-read"),
+  WATCH_ENDED: row9("WATCH_ENDED", 21, "watchLink", "is-watch-live"),
+  MACHINE_CANNOT_LINK_WATCH: row9("MACHINE_CANNOT_LINK_WATCH", 22, "watchLink", "is-link-member"),
+  NO_SUCH_WATCH: row9("NO_SUCH_WATCH", 23, "watchLink", "is-watch-seen"),
+  WATCH_NOT_ASKED: row9("WATCH_NOT_ASKED", 24, "watchAnswer", "is-answer-asked"),
+  WATCH_RELIED_ON: row9("WATCH_RELIED_ON", 25, "watchAnswer", "is-answer-relied"),
+  BAD_PROCEEDING_DATES: row9("BAD_PROCEEDING_DATES", 26, "proceedingDates", "is-proceeding-dates"),
+  /* T50 (R32, R33; N1092): watch marks and second-look flags. `MACHINE_CANNOT_MARK` is sources' C-121.7 and is answered
+     bare (no row minted here), so no code is held in two families. */
+  MARK_NO_ITEM: row9("MARK_NO_ITEM", 27, "#markRefusal", "is-mark-item-named"),
+  MARK_NO_SUCH_ITEM: row9("MARK_NO_SUCH_ITEM", 28, "#markRefusal", "is-mark-item-seen"),
+  SECOND_LOOK_NO_NOTE: row9("SECOND_LOOK_NO_NOTE", 29, "secondLook", "is-second-look-note"),
+  SECOND_LOOK_NOT_OPEN: row9("SECOND_LOOK_NOT_OPEN", 30, "secondLookClear", "is-second-look-open")
 });
 function followRefusal(code, detail, extra = {}) {
   const r = FOLLOWING_CHECKS[code];
@@ -261034,6 +260910,30 @@ CREATE TABLE IF NOT EXISTS policy_versions (
   bundle_id   TEXT,
   at          TEXT NOT NULL,
   UNIQUE (follow_id, seq)
+);
+
+-- R32: a member's watch marks, one row per setting or taking off, never edited; the latest row of an (item, member)
+-- governs. member is the setter's identity (member:<id>, or admin); bundle_id the item's bundle, null for an entity.
+CREATE TABLE IF NOT EXISTS watch_marks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  item        TEXT NOT NULL,
+  bundle_id   TEXT,
+  member      TEXT NOT NULL,
+  on_mark     INTEGER NOT NULL,
+  at          TEXT NOT NULL
+);
+
+-- R33: the team's second-look flags, one row per flag; a flag is cleared once, by a field of the same row, and stays.
+-- raised_by and cleared_by are identities (member:<id>, or admin), answered as handles (membership), never as these.
+CREATE TABLE IF NOT EXISTS second_looks (
+  flag_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  item        TEXT NOT NULL,
+  bundle_id   TEXT,
+  raised_by   TEXT NOT NULL,
+  note        TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  cleared_by  TEXT,
+  cleared_at  TEXT
 );`;
 var t = (name3, cls3) => ({ name: name3, purge: "clear", expunge: "none", export: "admin-only", derive: "stored", version_chain: false, ...cls3 });
 var FOLLOWING_TABLES = Object.freeze([
@@ -261045,7 +260945,11 @@ var FOLLOWING_TABLES = Object.freeze([
   t("policy_versions", { keys: ["bundle_id"], sight: "source" }),
   t("follow_ends", { keys: [], sight: "group" }),
   t("watch_links", { keys: ["home"], sight: "bundle" }),
-  t("watch_answers", { keys: ["home"], sight: "bundle" })
+  t("watch_answers", { keys: ["home"], sight: "bundle" }),
+  /* R32: read back only to the member who set it (the standing question's classes, `answers`): no export carries it */
+  t("watch_marks", { keys: ["bundle_id"], sight: "owner", export: "never" }),
+  /* R33: seen by every member who may see the item */
+  t("second_looks", { keys: ["bundle_id"], sight: "bundle" })
 ]);
 function migrateFollowing(sql) {
   const bare5 = FOLLOWING_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
@@ -261136,13 +261040,13 @@ function addMonths2(t2, n2) {
   return d.getTime();
 }
 function noticeRule(view, name3) {
-  if (typeof name3 !== "string" || !name3) return { why: "the watch names no notice period for its body" };
+  if (typeof name3 !== "string" || !name3) return { why: word("following.why.watch_names_notice") };
   const rule = (Array.isArray(view && view.deadlines) ? view.deadlines : []).find((d) => d && d.rule === name3);
-  if (!rule) return { why: `the active profiles hold no notice period named ${name3}` };
+  if (!rule) return { why: word("following.why.active_profiles_hold", { name: name3 }) };
   if (rule.direction !== "backward" || !["act", "hearing"].includes(rule.starts))
-    return { why: `${name3} is not a period counted back from a meeting` };
+    return { why: word("following.why.period_counted_back", { name: name3 }) };
   if (!SOURCED.includes(rule.status) || typeof rule.citation !== "string" || !rule.citation)
-    return { why: `the profile does not hold ${name3} with a primary source` };
+    return { why: word("following.why.profile_hold_primary", { name: name3 }) };
   return { rule };
 }
 function observedStart(when) {
@@ -261188,16 +261092,16 @@ function meetingsOf({ view, bodyLabel, observed = [], fromMs, zone }) {
     byDay.set(d, { start: s.dt, instant: s.instant, source: "observed", event_id: e2.event_id });
   }
   const meetings = [...byDay.values()].filter(Boolean).sort((a, b) => ms4(a.instant) - ms4(b.instant));
-  return meetings.length ? { meetings } : { meetings, why: `the body has no stated meeting schedule and no observed meeting in the next ${MEETING_HORIZON_MONTHS} months` };
+  return meetings.length ? { meetings } : { meetings, why: word("following.why.body_stated_meeting", { meeting_horizon_months: MEETING_HORIZON_MONTHS }) };
 }
 function dueBefore(meeting2, rule, view) {
   const r = evaluateRule({ rule, anchor: meeting2.start, view });
-  if (!r || r.refused || r.undetermined || !r.due) return { why: `the notice period's count is undetermined: ${r && r.why || "no due"}` };
+  if (!r || r.refused || r.undetermined || !r.due) return { why: word("following.why.notice_period_count", { due: r && r.why || "no due" }) };
   const due2 = r.due.candidates ? r.due.candidates[0] : r.due;
   try {
     return { at: bounds(due2).earliest, trace: r.trace };
   } catch {
-    return { why: "the notice period's due is not a date-time" };
+    return { why: word("following.why.notice_period_due") };
   }
 }
 
@@ -261247,26 +261151,26 @@ function csvRows(text8) {
   return rows4;
 }
 function readDataset(text8) {
-  if (typeof text8 !== "string") return { why: "the snapshot's bytes could not be read as text" };
+  if (typeof text8 !== "string") return { why: word("following.why.snapshot_bytes_read_text") };
   const t2 = text8.replace(/^﻿/, "").trim();
   if (t2.startsWith("[") || t2.startsWith("{")) {
     let v;
     try {
       v = JSON.parse(t2);
     } catch {
-      return { why: "the answer is not well-formed JSON" };
+      return { why: word("following.why.answer_well_formed") };
     }
     if (v && !Array.isArray(v)) {
       if (Array.isArray(v.features)) v = v.features.map((x) => x && x.properties || x);
       else v = [v.data, v.rows, v.results].find(Array.isArray) || null;
     }
     if (!Array.isArray(v) || !v.every((r) => r && typeof r === "object" && !Array.isArray(r)))
-      return { why: "the JSON answer is not a list of rows" };
+      return { why: word("following.why.json_answer_list") };
     return { rows: v };
   }
-  if (t2.startsWith("<")) return { why: "the answer is markup, not rows: neither JSON rows nor CSV" };
+  if (t2.startsWith("<")) return { why: word("following.why.answer_markup_rows") };
   const lines2 = csvRows(t2);
-  if (lines2.length < 1 || lines2[0].length < 1) return { why: "the answer is neither JSON rows nor CSV with a header" };
+  if (lines2.length < 1 || lines2[0].length < 1) return { why: word("following.why.answer_neither_json") };
   const head = lines2[0];
   return { rows: lines2.slice(1).map((l2) => Object.fromEntries(head.map((h, i) => [h, l2[i] ?? null]))) };
 }
@@ -261294,9 +261198,9 @@ function diffRows(before3, after2, key2) {
   const added = [], removed = [], changed = [], undetermined3 = [];
   const doubtful = /* @__PURE__ */ new Set([...a.repeated, ...b.repeated]);
   for (const k of doubtful)
-    undetermined3.push({ key: k, why: `the key ${key2} = ${k} is repeated in the ${a.repeated.has(k) && b.repeated.has(k) ? "both snapshots" : a.repeated.has(k) ? "earlier snapshot" : "later snapshot"}, so which row is which is not settled` });
-  if (a.missing) undetermined3.push({ key: null, side: "from", rows: a.missing, why: `${a.missing} row${a.missing === 1 ? "" : "s"} of the earlier snapshot carry no ${key2}, so they are matched to nothing` });
-  if (b.missing) undetermined3.push({ key: null, side: "to", rows: b.missing, why: `${b.missing} row${b.missing === 1 ? "" : "s"} of the later snapshot carry no ${key2}, so they are matched to nothing` });
+    undetermined3.push({ key: k, why: word("following.why.key_repeated_row", { key: key2, k, snapshot: a.repeated.has(k) && b.repeated.has(k) ? "both snapshots" : a.repeated.has(k) ? "earlier snapshot" : "later snapshot" }) });
+  if (a.missing) undetermined3.push({ key: null, side: "from", rows: a.missing, why: word("following.why.row_earlier_snapshot", { missing: a.missing, s: a.missing === 1 ? "" : "s", key: key2 }) });
+  if (b.missing) undetermined3.push({ key: null, side: "to", rows: b.missing, why: word("following.why.row_later_snapshot", { missing: b.missing, s: b.missing === 1 ? "" : "s", key: key2 }) });
   for (const [k, row12] of b.by) {
     if (doubtful.has(k)) continue;
     if (!a.by.has(k)) {
@@ -261326,10 +261230,16 @@ var PROCEEDING_LANE_MAX = 500;
 var GROUP_LANE_PAGES = 50;
 var WATCH_KINDS = Object.freeze(["follow", "address", "duty", "question"]);
 var WATCH_QUESTIONS_MAX = 200;
+var MARK_BUNDLE_TYPES = Object.freeze(["information", "inquiry", "action", "action_plan"]);
+var MARK_ENTITY_KINDS = Object.freeze(["person", "institution", "body", "movement"]);
+var SECOND_LOOK_NOTE_MAX = 500;
+var BROWSE_MARKS_MAX2 = 5e3;
+var BROWSE_IDS_MAX = 200;
+var MEMBER_ADMIN = "admin";
 var MACHINE2 = MONITOR_VIEWER;
 var EPOCH_MS = 36e5;
-var STATIC_ONLY = "only its static form is followed: the register is not re-rendered, so what a visitor's browser would add is not seen";
-var NOT_PUBLIC = "not reproducible by the public: it was read with a member's own credential or for a fee";
+var STATIC_ONLY = word("following.static_only");
+var NOT_PUBLIC = word("following.not_public");
 var POLICY_PAGE = 200;
 var said10 = (v) => typeof v === "string" && v.trim() !== "";
 var refuse27 = (code, detail, extra) => code === "WATCH_END_REFUSED" ? watchEndRefusal(detail, extra) : followRefusal(code, detail, extra);
@@ -261386,11 +261296,13 @@ function followingOf(host, deps = {}) {
       duties: lazy3(deps.duties, () => dutiesOf(host, { record, membership })),
       answers: lazy3(deps.answers, () => answersOf(host, { record, membership })),
       actions: lazy3(deps.actions, () => actionsOf(host, { record, membership })),
-      actionClocks: lazy3(deps.actionClocks, () => actionClocksOf(host, { record, membership }))
+      actionClocks: lazy3(deps.actionClocks, () => actionClocksOf(host, { record, membership })),
+      retrieval: lazy3(deps.retrieval, () => retrievalOf(host))
     });
     instances74.set(storage, f17);
     f17.migrate();
     f17.registered = f17.registerWatches();
+    f17.marksRegistered = f17.registerMarks();
   }
   return f17;
 }
@@ -261415,7 +261327,8 @@ var Following = class {
     duties: duties2,
     answers: answers2,
     actions,
-    actionClocks
+    actionClocks,
+    retrieval
   }) {
     this.#sql = storage.sql;
     this.record = record;
@@ -261423,7 +261336,7 @@ var Following = class {
     this.now = typeof now === "function" ? now : () => Date.now();
     this.viewOpt = view;
     this.bytesOpt = bytes2;
-    this.dep = { capture: capture2, entities: entities2, events, standards, monitoring, actionPlans, planWork, duties: duties2, answers: answers2, actions, actionClocks };
+    this.dep = { capture: capture2, entities: entities2, events, standards, monitoring, actionPlans, planWork, duties: duties2, answers: answers2, actions, actionClocks, retrieval };
   }
   #rows(q10, ...a) {
     return [...this.#sql.exec(q10, ...a)];
@@ -261464,6 +261377,9 @@ var Following = class {
   }
   get actionClocks() {
     return this.dep.actionClocks();
+  }
+  get retrieval() {
+    return this.dep.retrieval();
   }
   get host() {
     return this.monitoring.sweepHost();
@@ -261581,8 +261497,8 @@ var Following = class {
      `{ends}` (null: none) or `{bad}`. */
   #endsGiven(v, nowMs = this.now()) {
     if (v == null) return { ends: null };
-    if (!said10(v) || !isCalendarDate(v.trim())) return { bad: "an end date is a calendar day (YYYY-MM-DD), or none" };
-    if (v.trim() <= this.#today(nowMs)) return { bad: `an end date is a day after today (${this.#today(nowMs)}), in the group's own zone` };
+    if (!said10(v) || !isCalendarDate(v.trim())) return { bad: word("following.bad.end_date_calendar") };
+    if (v.trim() <= this.#today(nowMs)) return { bad: word("following.bad.end_date_day", { today: this.#today(nowMs) }) };
     return { ends: v.trim() };
   }
   #today(nowMs = this.now()) {
@@ -261619,7 +261535,7 @@ var Following = class {
     if (typeof g !== "object") return { bad: "a gate is {kind: 'account' | 'fee', price?}" };
     if (g.kind === "account") return { gated: { kind: "account" } };
     if (g.kind === "fee" && said10(g.price)) return { gated: { kind: "fee", price: g.price.trim() } };
-    return { bad: "a fee-bearing register names its price, so the member sees it before any refresh" };
+    return { bad: word("following.bad.fee_bearing_register") };
   }
   /** R1: a member's follow of a body for a period. */
   followBody({ body, from, until = null, cadence = null, home: home2 = null, ends = null, author, viewer = null } = {}) {
@@ -261866,7 +261782,7 @@ var Following = class {
       const link = this.#one(`SELECT * FROM per_meeting_links WHERE address=? ORDER BY seq DESC LIMIT 1`, sub.address);
       const base2 = { kind: "meeting", address: sub.address, bundle: sub.bundle };
       if (!link || !link.body) {
-        out.push({ ...base2, unscheduled: "the watch names no body whose meetings it is captured before" });
+        out.push({ ...base2, unscheduled: word("following.unscheduled.watch_names_body") });
         continue;
       }
       const n2 = noticeRule(view, link.notice);
@@ -261974,7 +261890,7 @@ var Following = class {
     const nowMs = Number.isFinite(now) ? now : this.now();
     const at49 = instant3(nowMs);
     const answer2 = { configured: true, at: at49, epoch: null, read: [], captured: [], unscheduled: [], member_act_required: [], failed: [], paused: h.paused() };
-    if (answer2.paused.paused) return { ...answer2, note: "the daemon is paused by an administrator: nothing was read" };
+    if (answer2.paused.paused) return { ...answer2, note: word("following.note.daemon_paused_administrator") };
     if (h.running.has(FOLLOW_CONSUMER)) return { ...answer2, busy: true };
     h.running.add(FOLLOW_CONSUMER);
     try {
@@ -262032,7 +261948,7 @@ var Following = class {
       after_meeting_began: nowMs >= ms5(x.meeting),
       ...b.capture ? { capture: b.capture.sha256 ?? null } : {}
     };
-    if (!b.ok) return { read: { subject: `meeting:${x.address}`, outcome }, failed: [{ ...entry4, reason: b.reason || "the check did not answer" }] };
+    if (!b.ok) return { read: { subject: `meeting:${x.address}`, outcome }, failed: [{ ...entry4, reason: b.reason || word("following.reason.check_did_answer") }] };
     this.#sql.exec(
       `INSERT OR REPLACE INTO per_meeting_captures (address, meeting, bundle_id, due_at, taken_at, lateness_ms, outcome) VALUES (?,?,?,?,?,?,?)`,
       x.address,
@@ -262058,7 +261974,7 @@ var Following = class {
         kind: f17.kind,
         standard: subject.standard,
         gate: subject.access,
-        why: "this policy is read only by a member's own act: its copy is behind an account or a fee"
+        why: word("following.why.policy_read_member")
       }, outcome: "member_act_required" };
     } else if (gated && (f17.kind === "register" || f17.kind === "person-query")) {
       r = { member_act_required: {
@@ -262066,7 +261982,7 @@ var Following = class {
         kind: f17.kind,
         gate: gated.kind,
         ...gated.price ? { price: gated.price } : {},
-        why: "this register is read only by the act of the member whose own credential or fee it uses"
+        why: word("following.why.register_read_act")
       }, outcome: "member_act_required" };
     } else if (f17.kind === "body") r = await this.#readBody(f17, subject, nowMs);
     else if (f17.kind === "portal") r = await this.#readPortal(f17, subject, nowMs);
@@ -262113,7 +262029,7 @@ var Following = class {
     }
     if (!a.ok) return { failed: { address, reason: a.reason || a.code || "failed" } };
     const sha2 = a.document && a.document.capture && a.document.capture.sha256 || a.capture && a.capture.sha256 || null;
-    if (!sha2) return { failed: { address, reason: "the capture named no digest" } };
+    if (!sha2) return { failed: { address, reason: word("following.reason.capture_named_digest") } };
     if (a.unchanged === true || held3 && held3.capture_sha === sha2) return { sha: sha2, same: true, bundle: held3 ? held3.bundle_id : null };
     const at49 = instant3(nowMs);
     const doc = { ...a.document };
@@ -262124,11 +262040,11 @@ var Following = class {
       if (rd) doc.reading = rd;
     }
     if (notPublic) doc.capture = { ...doc.capture, reproducible_by_public: false };
-    const by = f17.kind === "policy" ? "the group's standing watch of a policy it holds" : `a member's standing act (${f17.author})`;
+    const by = f17.kind === "policy" ? word("following.text.group_standing_watch") : word("following.text.member_standing_act", { author: f17.author });
     const landed = this.host.land({ id: `follow ${f17.follow_id}`, bundle: home2, locators: [address], target: null }, { locator: address, doc }, at49, {
-      title: title || `Followed: ${address}`,
-      summary: `The answer served at ${address}, read for the follow ${f17.follow_id}.`,
-      notes: `Read for the follow ${f17.follow_id} (${f17.kind}), ${by}. Collected ${at49}. Filed at collected and never higher: verifying it is a named member's decision.${notPublic ? ` ${NOT_PUBLIC}.` : ""}`,
+      title: title || word("following.title.followed", { address }),
+      summary: word("following.summary", { address, follow_id: f17.follow_id }),
+      notes: word("following.notes", { follow_id: f17.follow_id, kind: f17.kind, by, at: at49, not_public: notPublic ? ` ${NOT_PUBLIC}.` : "" }),
       trigger: `follow ${f17.follow_id}`
     });
     if (!landed || !landed.ok) return { failed: { address, reason: landed && (landed.reason || landed.detail) || "NOT_FILED" } };
@@ -262163,7 +262079,7 @@ var Following = class {
         return null;
       }
       fetches++;
-      const t2 = await this.#take(f17, address, nowMs, { reading: legistarReading, title: `Followed body ${s.id}: ${address}` });
+      const t2 = await this.#take(f17, address, nowMs, { reading: legistarReading, title: word("following.title.followed_body", { id: s.id, address }) });
       if (t2.failed) {
         failed3.push({ follow: Number(f17.follow_id), ...t2.failed });
         return null;
@@ -262176,7 +262092,7 @@ var Following = class {
         } catch (e2) {
           imp = { ok: false, reason: String(e2 && e2.message || e2).slice(0, 160) };
         }
-        if (imp && imp.ok === false) failed3.push({ follow: Number(f17.follow_id), address, reason: `events refused the import: ${imp.reason}` });
+        if (imp && imp.ok === false) failed3.push({ follow: Number(f17.follow_id), address, reason: word("following.reason.events_refused_import", { imp: imp.reason }) });
         else imported.push({ address, capture: t2.sha });
       }
       return t2;
@@ -262219,7 +262135,7 @@ var Following = class {
   }
   /* R7, R9: a public register (or a person query on one), re-read, or re-rendered when the follow says so. */
   async #readRegister(f17, s, nowMs) {
-    const t2 = await this.#take(f17, s.address, nowMs, { render: s.render === true, title: `Followed register: ${s.address}` });
+    const t2 = await this.#take(f17, s.address, nowMs, { render: s.render === true, title: word("following.title.followed_register", { address: s.address }) });
     const form = f17.kind === "register" && !s.render ? { form: "static", note: STATIC_ONLY } : {};
     if (t2.failed) return { read: { follow: Number(f17.follow_id), kind: f17.kind, outcome: "failed", ...form }, failed: [{ follow: Number(f17.follow_id), ...t2.failed }], outcome: "failed" };
     let outcome = t2.same ? "unchanged" : "captured";
@@ -262236,11 +262152,11 @@ var Following = class {
   }
   /* R10: a portal's answer as a snapshot, a vintage valid at its capture instant. */
   async #readPortal(f17, s, nowMs) {
-    const t2 = await this.#take(f17, s.address, nowMs, { title: `Portal snapshot: ${s.address}` });
+    const t2 = await this.#take(f17, s.address, nowMs, { title: word("following.title.portal_snapshot", { address: s.address }) });
     if (t2.failed) return { read: { follow: Number(f17.follow_id), kind: "portal", outcome: "failed" }, failed: [{ follow: Number(f17.follow_id), ...t2.failed }], outcome: "failed" };
     if (t2.same) return { read: { follow: Number(f17.follow_id), kind: "portal", outcome: "unchanged", capture: t2.sha }, outcome: "unchanged" };
     const bytes2 = await this.#bytes(t2.sha);
-    const ds = bytes2 ? readDataset(new TextDecoder("utf-8", { fatal: false }).decode(bytes2)) : { why: "the snapshot's bytes could not be read back" };
+    const ds = bytes2 ? readDataset(new TextDecoder("utf-8", { fatal: false }).decode(bytes2)) : { why: word("following.why.snapshot_bytes_read") };
     const seq = Number(this.#one(`SELECT COALESCE(max(seq), 0) + 1 AS n FROM portal_snapshots WHERE follow_id=?`, f17.follow_id).n);
     const at49 = instant3(nowMs);
     this.#sql.exec(
@@ -262285,7 +262201,7 @@ var Following = class {
       member: author,
       credential,
       notPublic: true,
-      title: `Refreshed by its member: ${s.address}`
+      title: word("following.title.refreshed_member", { address: s.address })
     });
     if (t2.failed) return refuse27("NOT_READ", t2.failed.reason);
     this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, instant3(this.now()), t2.same ? "unchanged" : "captured", f17.follow_id);
@@ -262413,7 +262329,7 @@ ${s.address}`, Number(w.follow_id));
       if (a && a.ok !== false && a.sight && a.sight.class !== "bundle") home2 = null;
     } catch {
     }
-    const t2 = await this.#take(f17, s.address, nowMs, { home: home2, title: `Policy watched: ${s.address}` });
+    const t2 = await this.#take(f17, s.address, nowMs, { home: home2, title: word("following.title.policy_watched", { address: s.address }) });
     const base2 = { follow: Number(f17.follow_id), kind: "policy", standard: s.standard };
     if (t2.failed) return { read: { ...base2, outcome: "failed" }, failed: [{ ...base2, ...t2.failed }], outcome: "failed" };
     if (t2.same) return { read: { ...base2, outcome: "unchanged", capture: t2.sha }, outcome: "unchanged" };
@@ -262464,7 +262380,7 @@ ${s.address}`, Number(w.follow_id));
         changes: [],
         cursor: null,
         since_invalid: true,
-        note: "since is not an instant, so no policy change is listed"
+        note: word("following.note.since_instant_policy")
       };
     const from = said10(String(after2 ?? "")) ? this.#one(`SELECT change_id, at FROM policy_versions WHERE change_id=?`, Number(after2)) : null;
     const rows4 = this.#rows(`SELECT v.change_id, v.follow_id, v.capture_sha, v.at, p.capture_sha AS before_sha, p.at AS before_at, f.subject
@@ -262498,7 +262414,7 @@ ${s.address}`, Number(w.follow_id));
       ok: true,
       changes: changes.map(({ change: change2, ...c }) => c),
       cursor: more ? String(changes[changes.length - 1].change) : null,
-      note: "a difference between two captures of a policy's published copy, never a finding: what it means is a member's to say"
+      note: word("following.note.difference_between_two")
     };
   }
   /* R21: whether standards holds an amendment of the policy, or a version superseding it, effective between the two
@@ -262972,6 +262888,233 @@ ${s.address}`, Number(w.follow_id));
     }
   }
   /* ===================================================================== *
+   * WATCH MARKS AND SECOND-LOOK FLAGS (R32–R35; T50; N1092; DEC-238 S23 "A").
+   * ===================================================================== */
+  /* R32: the member a stamp names, as `member:<id>` (the founder as `admin`), or null for an absent, unrecognised or
+     machine stamp. A viewer carrying a project (`<viewer>@<project>`) is the same member. */
+  #memberKey(v) {
+    if (!said10(v) || viewerPredicate(v).scope === "DENY") return null;
+    const m = /^(?:member:([^@]+)|admin)(?:@[\s\S]*)?$/.exec(v);
+    if (!m) return null;
+    return m[1] === void 0 || m[1] === MEMBER_ADMIN ? MEMBER_ADMIN : `member:${m[1]}`;
+  }
+  /* R33: a member key as the handle a reader sees (never an internal id): the founder's through membership's
+     `founderHandle`; null while none is held. */
+  #handleOf(key2) {
+    try {
+      if (key2 === MEMBER_ADMIN) return this.membership.founderHandle() ?? null;
+      const m = /^member:(.+)$/.exec(String(key2));
+      return m ? this.membership.memberFacts(m[1])?.handle ?? null : null;
+    } catch {
+      return null;
+    }
+  }
+  /* R32: an item as `viewer` may see it: a bundle of the four types R85 lists that `membership` shows, or a registered
+     entity of the kinds it lists (team-wide, `entities` R51) to a viewer membership recognises; else null. */
+  #itemOf(id, viewer) {
+    if (!said10(id) || !said10(viewer) || viewerPredicate(viewer).scope === "DENY") return null;
+    const item3 = id.trim();
+    try {
+      const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, item3);
+      if (b) return MARK_BUNDLE_TYPES.includes(b.object_type) && this.membership.inSight(item3, viewer) ? { id: item3, bundle: item3 } : null;
+      const r = this.entities.readEntity({ entityId: item3, viewer });
+      const e2 = r && r.ok && r.found && r.entity ? r.entity : null;
+      return e2 && MARK_ENTITY_KINDS.includes(e2.kind) ? { id: item3, bundle: null } : null;
+    } catch {
+      return null;
+    }
+  }
+  /* R32: the refusals every mark act shares, in order: a machine (or absent) author, an item not named, one not seen. */
+  #markRefusal(by, item3, viewer) {
+    if (!said10(by) || isMachineIdentity(by) || !this.#memberKey(by))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_MARK",
+        code: "MACHINE_CANNOT_MARK",
+        check: null,
+        translation: word("refusal.MACHINE_CANNOT_MARK"),
+        detail: "watching and flagging are a member's own acts; the machine marks nothing"
+      };
+    if (!said10(item3)) return { refusal: refuse27("MARK_NO_ITEM", "an act on an item names the item") };
+    const it = this.#itemOf(item3, viewer ?? by);
+    if (!it) return { refusal: refuse27("MARK_NO_SUCH_ITEM", "no item by that id is one you may see") };
+    return { item: it };
+  }
+  /** R32 (`op=watchitem`): a member puts an item on her own watch list, or takes it off with `on: false`. Setting what is
+   *  set, or taking off what is not, answers `existed: true` and writes nothing. Each setting and taking off is kept
+   *  with its instant. A mark is read back only to the member who set it (R34, R35). */
+  watchItem({ item: item3, on = true, by, viewer = null } = {}) {
+    const m = this.#markRefusal(by, item3, viewer);
+    if (m.ok === false) return m;
+    if (m.refusal) return m.refusal;
+    const member2 = this.#memberKey(by);
+    const want = !(on === false || on === "false" || on === 0 || on === "0");
+    const cur = this.#one(`SELECT on_mark, at FROM watch_marks WHERE item=? AND member=? ORDER BY seq DESC LIMIT 1`, m.item.id, member2);
+    const has3 = !!cur && Number(cur.on_mark) === 1;
+    if (has3 === want) return { ok: true, existed: true, item: m.item.id, watched: want, ...cur ? { at: cur.at } : {} };
+    const at49 = instant3(this.now());
+    this.#sql.exec(`INSERT INTO watch_marks (item, bundle_id, member, on_mark, at) VALUES (?,?,?,?,?)`, m.item.id, m.item.bundle, member2, want ? 1 : 0, at49);
+    return { ok: true, item: m.item.id, watched: want, at: at49 };
+  }
+  /* R33: one flag as a reader sees it: who raised it and who cleared it as handles, never as internal ids. */
+  #flagView(f17) {
+    return {
+      flag: Number(f17.flag_id),
+      item: f17.item,
+      by: this.#handleOf(f17.raised_by),
+      at: f17.at,
+      note: f17.note,
+      cleared_by: f17.cleared_at ? this.#handleOf(f17.cleared_by) : null,
+      cleared_at: f17.cleared_at ?? null
+    };
+  }
+  #openFlag(item3) {
+    return this.#one(`SELECT * FROM second_looks WHERE item=? AND cleared_at IS NULL ORDER BY flag_id DESC LIMIT 1`, item3);
+  }
+  /** R33 (`op=secondlook`): a member raises a flag asking the team to look at an item again, with her note (one line,
+   *  at most 500 characters). An item already flagged and not cleared answers `existed: true` with that flag. */
+  secondLook({ item: item3, note, by, viewer = null } = {}) {
+    const m = this.#markRefusal(by, item3, viewer);
+    if (m.ok === false) return m;
+    if (m.refusal) return m.refusal;
+    if (typeof note !== "string" || !note.trim() || note.length > SECOND_LOOK_NOTE_MAX || /[\r\n\u2028\u2029]/.test(note))
+      return refuse27("SECOND_LOOK_NO_NOTE", `a second look carries a note: one line of at most ${SECOND_LOOK_NOTE_MAX} characters, saying what to check`);
+    const open = this.#openFlag(m.item.id);
+    if (open) return { ok: true, existed: true, ...this.#flagView(open) };
+    this.#sql.exec(
+      `INSERT INTO second_looks (item, bundle_id, raised_by, note, at) VALUES (?,?,?,?,?)`,
+      m.item.id,
+      m.item.bundle,
+      this.#memberKey(by),
+      note.trim(),
+      instant3(this.now())
+    );
+    return { ok: true, ...this.#flagView(this.#openFlag(m.item.id)) };
+  }
+  /** R33 (`op=secondlookclear`): any member who may see the item clears its open flag, no reason required; the flag stays
+   *  in the history with who cleared it and when. */
+  secondLookClear({ item: item3 = null, flag: flag2 = null, by, viewer = null } = {}) {
+    let row12 = null, named3 = item3;
+    if (flag2 != null && flag2 !== "") {
+      const n2 = Number(flag2);
+      row12 = Number.isSafeInteger(n2) ? this.#one(`SELECT * FROM second_looks WHERE flag_id=?`, n2) : null;
+      named3 = row12 ? row12.item : "\0";
+    }
+    const m = this.#markRefusal(by, named3, viewer);
+    if (m.ok === false) return m;
+    if (m.refusal) return m.refusal;
+    row12 = row12 || this.#openFlag(m.item.id);
+    if (!row12 || row12.cleared_at) return refuse27("SECOND_LOOK_NOT_OPEN", "the item has no open second look to clear");
+    this.#sql.exec(
+      `UPDATE second_looks SET cleared_by=?, cleared_at=? WHERE flag_id=? AND cleared_at IS NULL`,
+      this.#memberKey(by),
+      instant3(this.now()),
+      row12.flag_id
+    );
+    return { ok: true, ...this.#flagView(this.#one(`SELECT * FROM second_looks WHERE flag_id=?`, row12.flag_id)) };
+  }
+  /** R33: the flags raised on an item, open and cleared, oldest first, to a viewer who may see the item. Writes nothing. */
+  secondLooksOf({ item: item3, viewer = null } = {}) {
+    if (!said10(item3)) return refuse27("MARK_NO_ITEM", "a read of an item's second looks names the item");
+    if (!this.#itemOf(item3, viewer)) return refuse27("MARK_NO_SUCH_ITEM", "no item by that id is one you may see");
+    return { ok: true, item: item3.trim(), flags: this.#rows(`SELECT * FROM second_looks WHERE item=? ORDER BY flag_id`, item3.trim()).map((f17) => this.#flagView(f17)) };
+  }
+  /* R34: the viewer's own current watch marks, newest set first. */
+  #watchedOf(member2) {
+    if (!member2) return [];
+    return this.#rows(`SELECT m.item, m.at FROM watch_marks m WHERE m.member=? AND m.on_mark=1
+                       AND m.seq = (SELECT max(seq) FROM watch_marks WHERE item=m.item AND member=m.member) ORDER BY m.at DESC, m.seq DESC`, member2);
+  }
+  /** R34: the read this module registers with `retrieval.registerBrowseMarks` (its R86). `{viewer, only, limit}` answers
+   *  `{items, truncated}`: `watched`, the ids the viewer's own marks hold; `flagged`, every open flag the viewer may see
+   *  as `{id, by, at, note}`, at most 5,000. `{viewer, ids}` answers `{watched, flagged}` for those ids (at most 200).
+   *  Only what the viewer may see is answered. Writes nothing; never throws; a viewer membership does not recognise,
+   *  and a machine's, get nothing. */
+  browseMarks(a = {}) {
+    const asked6 = a && typeof a === "object" ? a : {};
+    const byIds = Array.isArray(asked6.ids);
+    const none = byIds ? { watched: [], flagged: [] } : { items: [], truncated: false };
+    try {
+      const viewer = asked6.viewer;
+      if (!said10(viewer) || viewerPredicate(viewer).scope === "DENY") return none;
+      const member2 = this.#memberKey(viewer);
+      if (!member2) return none;
+      const seen = /* @__PURE__ */ new Map();
+      const visible = (id) => {
+        if (!seen.has(id)) seen.set(id, !!this.#itemOf(id, viewer));
+        return seen.get(id);
+      };
+      const flag2 = (f17) => ({ id: f17.item, by: this.#handleOf(f17.raised_by), at: f17.at, note: f17.note });
+      if (byIds) {
+        const ids = [...new Set(asked6.ids.filter((x) => typeof x === "string" && x))].slice(0, BROWSE_IDS_MAX);
+        if (!ids.length) return none;
+        const mine = new Set(this.#watchedOf(member2).map((x) => x.item));
+        const flagged = new Map(this.#rows(`SELECT * FROM second_looks WHERE cleared_at IS NULL`).map((f17) => [f17.item, f17]));
+        return { watched: ids.filter((id) => mine.has(id) && visible(id)), flagged: ids.filter((id) => flagged.has(id) && visible(id)).map((id) => flag2(flagged.get(id))) };
+      }
+      const cap = Math.max(1, Math.min(BROWSE_MARKS_MAX2, Number.isFinite(Number(asked6.limit)) && asked6.limit != null ? Math.floor(Number(asked6.limit)) : BROWSE_MARKS_MAX2));
+      const out = [];
+      let truncated6 = false;
+      if (asked6.only === "watched") {
+        for (const x of this.#watchedOf(member2)) {
+          if (!visible(x.item)) continue;
+          if (out.length === cap) {
+            truncated6 = true;
+            break;
+          }
+          out.push(x.item);
+        }
+      } else if (asked6.only === "flagged") {
+        for (const f17 of this.#rows(`SELECT * FROM second_looks WHERE cleared_at IS NULL ORDER BY at DESC, flag_id DESC`)) {
+          if (!visible(f17.item)) continue;
+          if (out.length === cap) {
+            truncated6 = true;
+            break;
+          }
+          out.push(flag2(f17));
+        }
+      } else return none;
+      return { items: out, truncated: truncated6 };
+    } catch {
+      return none;
+    }
+  }
+  /** R34: this module's second registration, at start, with retrieval's door (its R86). A registration the door refuses
+   *  is a start-up fault, reported by throwing; a retrieval that cannot be reached answers why. */
+  registerMarks() {
+    let rt;
+    try {
+      rt = this.retrieval;
+    } catch (e2) {
+      return { ok: false, reason: "NO_BROWSE_DOOR", detail: String(e2 && e2.message || e2).slice(0, 160) };
+    }
+    if (!rt || typeof rt.registerBrowseMarks !== "function") return { ok: false, reason: "NO_BROWSE_DOOR" };
+    const r = rt.registerBrowseMarks(FOLLOWING_MODULE, (a) => this.browseMarks(a));
+    if (!r || r.ok === false) throw new Error(`following: retrieval refused its marks read: ${r && r.reason || "no answer"}`);
+    return r;
+  }
+  /** R35 (for `notice-producers` alone; no op serves it): each member whose watch mark on the item is set now, `member`
+   *  her id and `at` the instant that mark was last set, oldest first; `MARK_NO_SUCH_ITEM` for what is no item R32 lists.
+   *  Writes nothing; never throws. */
+  watchedBy(item3) {
+    const no9 = () => refuse27("MARK_NO_SUCH_ITEM", "no item by that id is one the marks list");
+    try {
+      if (!said10(item3)) return no9();
+      const id = item3.trim();
+      const bundle = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
+      let listed = !!bundle && MARK_BUNDLE_TYPES.includes(bundle.object_type);
+      if (!bundle) {
+        const r = this.entities.readEntity({ entityId: id, viewer: MACHINE2 });
+        listed = !!(r && r.ok && r.found && r.entity && MARK_ENTITY_KINDS.includes(r.entity.kind));
+      }
+      if (!listed) return no9();
+      return { ok: true, watchers: this.#rows(`SELECT m.member, m.at FROM watch_marks m WHERE m.item=? AND m.on_mark=1
+        AND m.seq = (SELECT max(seq) FROM watch_marks WHERE item=m.item AND member=m.member) ORDER BY m.at, m.seq`, id).map((x) => ({ member: x.member, at: x.at })) };
+    } catch {
+      return no9();
+    }
+  }
+  /* ===================================================================== *
    * THE READS (R11, R14).
    * ===================================================================== */
   #sees(f17, viewer) {
@@ -263017,7 +263160,7 @@ ${s.address}`, Number(w.follow_id));
       from: lo,
       to: hi,
       lanes: { proceeding: own11, group: group2 },
-      note: "the proceeding's own dates and the group's own deadlines on it, kept apart; neither is a finding"
+      note: word("following.note.proceeding_dates_group")
     };
   }
   /* R30: one event of the proceeding's lane: as eventsFor lists it, with its label (the place the event states, else
@@ -263039,7 +263182,7 @@ ${s.address}`, Number(w.follow_id));
       status: e2.status ?? null,
       label: label ?? e2.kind,
       when: e2.when ?? null,
-      ...e2.when ? {} : { when_undetermined: true, why: e2.why ?? "placed nowhere: no attestation you can see dates this event" },
+      ...e2.when ? {} : { when_undetermined: true, why: e2.why ?? word("following.why.placed_nowhere_attestation") },
       captures
     };
   }
@@ -263053,7 +263196,7 @@ ${s.address}`, Number(w.follow_id));
       for (let page2 = 0; page2 < GROUP_LANE_PAGES; page2++) {
         const r = this.actions.actionsFor({ proceeding, after: after2, limit: 200, viewer });
         if (!r || r.ok === false || !Array.isArray(r.items)) {
-          lane.unread = r && r.reason || "the actions could not be read";
+          lane.unread = r && r.reason || word("following.text.actions_read");
           return lane;
         }
         for (const a of r.items) ids.add(a.id);
@@ -263065,7 +263208,7 @@ ${s.address}`, Number(w.follow_id));
         if (page2 === GROUP_LANE_PAGES - 1) lane.truncated = true;
       }
     } catch {
-      lane.unread = "the actions could not be read";
+      lane.unread = word("following.text.actions_read");
       return lane;
     }
     if (!ids.size) return lane;
@@ -263074,7 +263217,7 @@ ${s.address}`, Number(w.follow_id));
       for (let page2 = 0; page2 < GROUP_LANE_PAGES; page2++) {
         const r = this.actionClocks.ourDeadlines({ from: lo, to: hi, after: after2, limit: PROCEEDING_LANE_MAX, viewer, now: nowMs });
         if (!r || r.ok === false || !Array.isArray(r.items)) {
-          lane.unread = r && (r.reason || r.detail) || "the deadlines could not be read";
+          lane.unread = r && (r.reason || r.detail) || word("following.text.deadlines_read");
           return lane;
         }
         for (const d of r.items) {
@@ -263090,7 +263233,7 @@ ${s.address}`, Number(w.follow_id));
       }
       lane.truncated = true;
     } catch {
-      lane.unread = "the deadlines could not be read";
+      lane.unread = word("following.text.deadlines_read");
     }
     return lane;
   }
@@ -263108,7 +263251,7 @@ ${s.address}`, Number(w.follow_id));
       key: key2,
       from: { seq: a.seq, at: a.at, valid: vintage(a.at) },
       to: { seq: b.seq, at: b.at, valid: vintage(b.at) },
-      note: "a difference between two answers of the portal, never a finding"
+      note: word("following.note.difference_between_two_answers")
     };
     const unread = [a, b].filter((x) => !x.rows);
     if (unread.length) return {
@@ -263116,7 +263259,7 @@ ${s.address}`, Number(w.follow_id));
       added: [],
       removed: [],
       changed: [],
-      undetermined: unread.map((x) => ({ key: null, snapshot: x.seq, why: x.why || "the snapshot was not read as rows" }))
+      undetermined: unread.map((x) => ({ key: null, snapshot: x.seq, why: x.why || word("following.why.snapshot_read_rows") }))
     };
     return { ...base2, ...diffRows(json18(a.rows) || [], json18(b.rows) || [], key2) };
   }
@@ -263178,8 +263321,8 @@ ${s.address}`, Number(w.follow_id));
         ...this.#endFields(f17),
         ...gated ? { gated, unscheduled: "read only at its member's own act (R8); the tick fetches nothing" } : {},
         ...f17.kind === "policy" ? {
-          watch: "the group's standing watch of a policy it holds: no member made it, and it ends when the policy is superseded",
-          ...POLICY_GATED_ACCESS.includes(s.access) ? { unscheduled: "read only by a member's own act: the policy's copy is behind an account or a fee; the tick fetches nothing" } : {}
+          watch: word("following.watch"),
+          ...POLICY_GATED_ACCESS.includes(s.access) ? { unscheduled: word("following.unscheduled.read_member_act") } : {}
         } : {},
         ...f17.kind === "register" && !s.render ? { form: "static", note: STATIC_ONLY } : {}
       });
@@ -263203,9 +263346,13 @@ function vintage(at49) {
 function followingOps(f17, url, body) {
   const q10 = (k) => url.searchParams.get(k);
   const act2 = (fn) => () => fn({ ...body || {}, author: q10("by") ?? null, viewer: q10("viewer") ?? null });
+  const mark = (fn) => () => fn({ ...body || {}, by: q10("by") ?? null, viewer: q10("viewer") ?? null });
   return {
     followbody: act2((b) => f17.followBody(b)),
     unfollow: act2((b) => f17.unfollow(b)),
+    watchitem: mark((b) => f17.watchItem(b)),
+    secondlook: mark((b) => f17.secondLook(b)),
+    secondlookclear: mark((b) => f17.secondLookClear(b)),
     followend: () => f17.followEnd({ ...body || {}, by: q10("by") ?? null, viewer: q10("viewer") ?? null }),
     followregister: act2((b) => f17.followRegister(b)),
     followpersonquery: act2((b) => f17.followPersonQuery(b)),
@@ -263403,6 +263550,8 @@ var Scheduler = class {
   #faults = [];
   /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
   #firing = false;
+  /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
+  #held = /* @__PURE__ */ new Map();
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
@@ -263703,8 +263852,8 @@ var Scheduler = class {
       };
     }
     if (this.#owners.questionExplorer) c["question-explore"] = {
-      due: (now) => counted(o("questionExplorer").exploreDue(now), now),
-      wake: (now) => msOf3(o("questionExplorer").exploreWake(now)),
+      due: async (now) => counted(await o("questionExplorer").exploreDue(now), now),
+      wake: async (now) => msOf3(await o("questionExplorer").exploreWake(now)),
       tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) })
     };
     return c;
@@ -263733,9 +263882,55 @@ var Scheduler = class {
         name: c.name,
         detail: `the key '${key2}' is one of the answer's own fields or another consumer's`
       };
-    this.#registered.set(c.name, { name: c.name, key: key2, module, due: c.due, wake: c.wake, tick: c.tick });
+    this.#registered.set(c.name, this.#holding({ name: c.name, key: key2, module, due: c.due, wake: c.wake, tick: c.tick }));
     this.#registeredOrder.push(c.name);
     return { ok: true, module, name: c.name, key: key2, placed: SCHEDULER_ORDER.includes(c.name) ? "R5" : "appended" };
+  }
+  /* R27: a registered consumer whose `wake`, read after its tick, equals the `wake` read before it and is at or before
+     the firing's `now` is held: its due and wake read as none, so it cannot keep the alarm firing at once, again and
+     again. It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
+     and tick of a consumer may answer a promise; each is awaited before its answer is read. Nothing is written, and no
+     interval of this module's is added (R7). */
+  #holding(c) {
+    const held3 = this.#held, name3 = c.name;
+    const wakeOf = async (now) => {
+      try {
+        return await c.wake(now);
+      } catch {
+        return null;
+      }
+    };
+    const heldWake = (w) => {
+      if (!held3.has(name3)) return w;
+      if (w === held3.get(name3)) return null;
+      held3.delete(name3);
+      return w;
+    };
+    return {
+      ...c,
+      due: async (now) => {
+        if (held3.has(name3) && heldWake(await c.wake(now)) === null) return null;
+        return await c.due(now);
+      },
+      wake: async (now) => heldWake(await c.wake(now)),
+      tick: async (now, rank7) => {
+        const before3 = await wakeOf(now);
+        const note = async () => {
+          const after2 = await wakeOf(now);
+          if (Number.isFinite(before3) && after2 === before3 && after2 <= now) held3.set(name3, after2);
+          else held3.delete(name3);
+        };
+        let r;
+        try {
+          r = await c.tick(now, rank7);
+        } catch (e2) {
+          await note();
+          throw e2;
+        }
+        await note();
+        return r;
+      }
+    };
   }
   /** The registry, in R5's order, then the registered consumers R5 does not name in the order they registered (the
    *  host registers the modules in their total order), then the test probes (R13). */
@@ -263794,7 +263989,7 @@ var Scheduler = class {
       for (const c of reg) {
         let d2;
         try {
-          d2 = c.due(now);
+          d2 = await c.due(now);
         } catch (e2) {
           answers2[c.key] = { error: message(e2) };
           continue;
@@ -263851,7 +264046,7 @@ var Scheduler = class {
     for (const c of reg) {
       let w;
       try {
-        w = c.wake(now);
+        w = await c.wake(now);
       } catch (e2) {
         if (errors) errors[c.key] = { error: message(e2) };
         continue;
@@ -263878,6 +264073,7 @@ var Scheduler = class {
   /** The producers' door: reconciles without firing, never pushing a set alarm later. Runs no tick and writes no
    *  work; answers the alarm as it stands. */
   async arm(now = Date.now()) {
+    if (!this.#firing) this.#held.clear();
     const probe = await this.#probeState(now, true);
     await this.#loadDaily();
     const at49 = await this.#reconcile(now, this.registry(probe), false);
@@ -263891,6 +264087,7 @@ var Scheduler = class {
     const probe = await this.#probeState(now, false);
     this.#dailyIdle.clear();
     this.#publishHeld = null;
+    this.#held.clear();
     await this.#loadDaily();
     return await this.#reconcile(now, this.registry(probe), false);
   }
