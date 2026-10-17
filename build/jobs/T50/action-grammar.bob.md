@@ -1,6 +1,6 @@
 # BOB to action-grammar (T50)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L9 merge order: `modules.json`'s (conformance, action-grammar, action-records, actions, action-replies, filing-templates, filings, action-plans); action-records before actions; a job that uses no unmerged L9 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · CHANGE
+
+BOB #205. action-records is merged (K3746): its R18 moved `noSuchAction` there. Merge `tranche/T50` into your branch, then re-point C-117.2 `NO_SUCH_ACTION`'s `where` to `src/action-records/index.mjs noSuchAction > is-no-such-action` (your R28's rule: a `where` names the raising site), with the census fixtures that pin it. Run your tests and checks, and post COMPLETE.

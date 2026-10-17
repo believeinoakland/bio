@@ -155,10 +155,10 @@ const ACT_RE = idPattern("ACT");
 export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never "
   + "stronger than that edition.";
 /** R32 (K2832): what an accepted finding reads while the source's identity and stake are not recorded at import. */
-export const SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this "
+export const SOURCE_FACTS_UNRECORDED = "the source team's public identity and declared stake were not recorded when this "
   + "edition was imported, so they read undetermined";
 /** R39 (N951): the label beside an accepted finding's identity and stake read from what case-import recorded at import. */
-export const SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they "
+export const SOURCE_DECLARATION_SAYS = "the source team's public identity and declared stake as it declared them when they "
   + "were read at import, current then, never as of the edition's signing";
 /** R33: the sentence beside a void determination. */
 export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
@@ -1261,8 +1261,10 @@ export class Conformance {
       const live = isObj(seenBy) && isObj(seenBy.pair) ? seenBy.pair : null;
       pins.set(x, { basis: { kind: "accepted", group: x.source_group ?? null, case: x.case_id, edition: ed,
                              edition_date: null, accepted_at: x.accepted_at ?? null, accepted_by: x.accepted_by ?? null,
-                             ...(declared ? { identity: declared.identity, stake: declared.stake, identity_label: SOURCE_DECLARATION_SAYS }
-                                          : { identity: null, stake: "undetermined", identity_says: SOURCE_FACTS_UNRECORDED }),
+                             ...(declared ? { identity: declared.identity, stake: declared.stake, matter_stake: declared.matter_stake,
+                                          identity_label: SOURCE_DECLARATION_SAYS }
+                                          : { identity: null, stake: "undetermined", matter_stake: "undetermined",
+                                              identity_says: SOURCE_FACTS_UNRECORDED }),
                              says: ACCEPTED_SAYS }, live, hidden });
       const moves = once("moves", () => this.#allMoves());
       if (!Array.isArray(moves)) {
@@ -1288,13 +1290,14 @@ export class Conformance {
     return { pins, causes };
   }
 
-  /* R32, R39 (N951): the source group's identity and declared stake for an accepted edition, mapped field by field from
+  /* R32, R39 (N951), R41 (T50; N933): the source group's identity, declared stake and matter stake for an accepted edition, mapped field by field from
      the `group_fields` `case-import.importedCase` (its R4) answers for that edition, read as `viewer` (R4 answers a
      viewer who is not an active member as if no import exists). `identity` is `{group, name, domain,
      domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none; a
-     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
+     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; `matter_stake` (R41) is `group_fields.matter_stake` as answered, null when the source
+     recorded none (an edition imported before T50); nothing is composed and no `identity` key is expected of the answer. Null when
      `group_fields` is null, the import cannot be read, or the read throws (the caller then answers identity null, stake
-     undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
+     undetermined, matter_stake undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
   #sourceFacts(imp, ed, viewer, once) {
     const facts = once(`imp:${imp}:${ed}:${viewer}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer }));
     const e = isObj(facts) && facts !== THREW && facts.ok !== false && isObj(facts.edition) ? facts.edition : null;
@@ -1303,7 +1306,8 @@ export class Conformance {
     const field = (k) => (Object.hasOwn(gf, k) && gf[k] !== undefined ? gf[k] : null);
     return { identity: { group: field("group"), name: field("name"), domain: field("domain"),
                          domain_verified_at: field("domain_verified_at"), read_at: field("read_at") },
-             stake: Object.hasOwn(gf, "stake") && gf.stake !== undefined ? gf.stake : "undetermined" };
+             stake: Object.hasOwn(gf, "stake") && gf.stake !== undefined ? gf.stake : "undetermined",
+             matter_stake: field("matter_stake") };
   }
 
   /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be

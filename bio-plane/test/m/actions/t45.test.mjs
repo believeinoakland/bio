@@ -136,7 +136,7 @@ test("R75 the read answers disclosures: one per distinct held check and per dist
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).disclosures, [
     { kind: "checked_held", checked_at: "2026-11-03" },
     { kind: "accepted", group: "Hayward Parents", edition_date: "2026-09-03", accepted_at: "2026-09-20",
-      identity: "Hayward Parents for Accountability", stake: "none declared" }]);
+      identity: "Hayward Parents for Accountability", stake: "none declared", matter_stake: null }]);
   /* control: an action resting only on published findings answers none */
   assert.equal(w.promote(B, breach(B, PUB)).ok, true);
   assert.deepEqual(w.a.actionRead({ id: B, viewer: M }).disclosures, []);
@@ -534,10 +534,10 @@ test("R33 (T47) that a machine never records a receipt, sets a scope or records 
     r.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: M, author: M })].every((x) => x.ok));
 });
 
-test("R36 (T47) this module's tables are action_basis, correspondence, action_quotes, action_overrides and action_field_history; the six moved are action-records', created and declared at this module's creation; each purges with the action", async () => {
+test("R36 (T47) this module's tables are action_basis, correspondence, action_quotes, action_overrides and action_field_history; the seven moved are action-records' (T50: action_stakes, its R17), created and declared at this module's creation; each purges with the action", async () => {
   const { ACTION_RECORDS_TABLES } = await import("../../../src/action-records/index.mjs");
   assert.deepEqual([...actions.ACTIONS_TABLES], ["action_basis", "correspondence", "action_quotes", "action_overrides", "action_field_history"]);
-  const moved = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises"];
+  const moved = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises", "action_stakes"];
   assert.deepEqual([...ACTION_RECORDS_TABLES].sort(), [...moved].sort());
   for (const t of moved) assert.ok(!actions.ACTIONS_TABLES.includes(t), t);
   const w = world();
@@ -561,7 +561,10 @@ test("R8 R74 R77 R78 R79 R82 R85 R86 (T45) each code this module mints has its r
   const MOVED = new Set(["PRESSURE_MARKED", "PRESSURE_NO_ENTRY", "MACHINE_CANNOT_SET_HOLD", "HOLD_REFUSED", "HOLD_NO_LEGAL_MARK",
     "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED",
     /* `NOT_A_PROCEEDING` is `entities`' one site since T48 (R104; its R53); action-grammar's C-117.28 row is reported */
-    "NOT_A_PROCEEDING"]);
+    "NOT_A_PROCEEDING",
+    /* `NO_SUCH_ACTION` is minted by `action-records.noSuchAction` since T50 (R107; its R18): its region moved with it, and
+       action-grammar's C-117.2 row is re-pointed there (its R29), reported at this job's COMPLETE */
+    "NO_SUCH_ACTION"]);
   /* K3128 (T48): the rows are read through the census (`test/system/row-census.mjs`, promotion R50), as every module's are,
      not through a table this test names; the regions are then looked up in the file each row's `where` names. */
   const { censusRows } = await import("../../system/row-census.mjs");

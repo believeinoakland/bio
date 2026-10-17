@@ -21,7 +21,7 @@ test("R4 actionReceipt: refusals in order; a receipt or a service recorded on a 
     R({ account: "" }), R({ target: "ACTN-2026-0404-x" }), R({ target: HIDDEN }), R({ target: INFO }), R({ ord: 1 }),
     R({ account: "", artifactSha: "d".repeat(64) })]),
     ["MACHINE_CANNOT_CORRESPOND", "NO_TARGET", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY",
-     "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "RECEIPT_NOT_ON_SENT", "UNREGISTERED_ARTIFACT"]);
+     "NO_SUCH_ACTION", "NO_SUCH_ACTION", "NO_SUCH_ACTION", "RECEIPT_NOT_ON_SENT", "UNREGISTERED_ARTIFACT"]);
   for (const r of [R({ author: MACHINE }), R({ at: "x" }), R({ artifactSha: s }), R({ account: "" }), R({ ord: 1 }),
                    R({ account: "", artifactSha: "d".repeat(64) })])
     assert.ok(r.check && r.translation && r.code === r.reason, `${r.reason} carries its row`);
@@ -64,8 +64,8 @@ test("R5 actionScope: refusals in order; each statement appended; confidential(i
   assert.deepEqual(reasons([S({ author: MACHINE }), S({ target: "" }), S({ confidential: "maybe" }), S({ reason: "" }),
     S({ reason: 'a"b' }), S({ reason: "x".repeat(501) }), S({ target: "ACTN-2026-0404-x" }), S({ target: HIDDEN }), S({ target: INFO }),
     S({ confidential: false })]),
-    ["MACHINE_CANNOT_SET_SCOPE", "NO_TARGET", "BAD_SCOPE", "SCOPE_NO_REASON", "BAD_REASON", "BAD_REASON", "NO_SUCH_BUNDLE",
-     "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "SCOPE_UNCHANGED"]);
+    ["MACHINE_CANNOT_SET_SCOPE", "NO_TARGET", "BAD_SCOPE", "SCOPE_NO_REASON", "BAD_REASON", "BAD_REASON", "NO_SUCH_ACTION",
+     "NO_SUCH_ACTION", "NO_SUCH_ACTION", "SCOPE_UNCHANGED"]);
   for (const r of [S({ author: MACHINE }), S({ reason: "" }), S({ confidential: false })]) assert.ok(r.check && r.translation, r.reason);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM action_scopes`).n, 0, "no refusal writes");
   assert.equal(w.r.confidential(B), false, "none stated reads not confidential");
@@ -96,7 +96,7 @@ test("R6 actionPromise: refusals in order; a promise recorded and ended by a lat
   assert.deepEqual(reasons([P({ author: MACHINE }), P({ target: "" }), P({ kind: "secrecy" }), P({ text: "" }),
     P({ text: "x".repeat(501) }), P({ ends: "one" }), P({ target: "ACTN-2026-0404-x" }), P({ target: HIDDEN }), P({ target: INFO }), P({ ends: 9 })]),
     ["MACHINE_CANNOT_RECORD_PROMISE", "NO_TARGET", "PROMISE_REFUSED", "PROMISE_REFUSED", "PROMISE_REFUSED", "PROMISE_REFUSED",
-     "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "PROMISE_REFUSED"]);
+     "NO_SUCH_ACTION", "NO_SUCH_ACTION", "NO_SUCH_ACTION", "PROMISE_REFUSED"]);
   const pr = P({ kind: "secrecy" });
   assert.deepEqual([pr.legal, pr.max, !!pr.check], [[...grammar.PROMISE_KINDS], records.PROMISE_TEXT_MAX, true]);
   assert.equal(records.PROMISE_TEXT_MAX, 500);

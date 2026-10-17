@@ -45,6 +45,7 @@ import { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPOND
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel,
          RFC_RESPONSE_WINDOW_PRECEDENT, SUCCESS_RECORD_ID_RE } from "./grammar.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASING_MAX, SENTENCES_MAX, SENTENCE_MAX,
          RESOLUTION_WORDS_MAX, readAs, phrasingsFor, pointOut, assertionResolutionFindings,
@@ -1638,45 +1639,34 @@ export const RECORDS_LAW_FENCE_CHECKS = {
    `OVERRIDE_GROUND_REFUSED` and C-117.41 `OFFICE_STATUS_WITHOUT_OUTCOME` (each refuses more than its sentence says),
    C-117.55 `REPLY_OWED_REFUSED` (it also refuses a reply_owed stated without its reason, K2859) and C-117.57
    `LAW_STAGE_UNKNOWN` (its sentence names "Civicsmith" bare, DEC-149). `BEARING_REFUSED` is `action-replies'` row
-   (C-150.3), re-worded at its one minting site (K231, K2953). C-117.58, which `words.json` does not hold, keeps its own.
+   (C-150.3), re-worded at its one minting site (K231, K2953). C-117.58 (MACHINE_CANNOT_SET_COPIED) reads its key too: `words.json` has held it since T50.
    Changed translations, awaiting T47's stamp. */
-export const ACTION_GRAMMAR_WORDS = Object.freeze({
-  "refusal.DETERMINATION_NOT_NONCOMPLIANT": "An action that claims a breach rests on a determination that the act broke "
-    + "a standard, and this determination found no such breach. Nothing was written.",
-  "refusal.OVERRIDE_NO_GROUND": "Acting before a determination needs one of two grounds: a legal deadline would pass "
-    + "first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
-  "refusal.COPIED_IS_ADDRESSEE": "The office the action is addressed to can't also be copied. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organizations acting with your group. Nothing was "
-    + "written.",
-  "refusal.PARTNERS_REFUSED": "Each partner is a named organization, listed once. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PRESS_TERMS": "Only a member sets the terms of talking to the press. Nothing was written.",
-  "refusal.PRESS_TERMS_NOT_PRESS": "Press terms apply only to an action with the press. Nothing was written.",
-  "refusal.PRESS_TERMS_REFUSED": "Press terms are on the record, on background or off the record, with any embargo as a "
-    + "real time and a note of at most 500 characters. Nothing was written.",
-  "refusal.RECEIPT_NOT_ON_SENT": "Only something sent can be received or served. Nothing was written.",
-  "refusal.OFFICE_STATUS_UNKNOWN": "That isn't one of the statuses this kind of reply takes in your places' rules. "
-    + "Choose one of them. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_REPLY_OWED": "Only a member says that no reply is owed, with a reason. Nothing was "
-    + "written.",
-  "refusal.NO_REPLY_OWED": "This action owes no reply, so a missing reply isn't recorded on it. Nothing was written.",
-  "refusal.FOUND_ELSEWHERE_NEEDS_CAPTURE": "A reply found elsewhere is captured first, so others can read it. Capture "
-    + "it, then record it. Nothing was written.",
-  "refusal.STAGE_NOT_IN_LAW": "This records law has no such stage. Choose one of the stages it has. Nothing was "
-    + "written.",
-  "refusal.FOLLOWS_ACTION_REWRITTEN": "Which action this one follows is set once, when it starts. Nothing was written.",
-  "refusal.FOLLOWS_ACTION_SELF": "An action can't follow itself. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_SCOPE": "Only a member makes an action confidential or not. Nothing was written.",
-  "refusal.SCOPE_NO_REASON": "Say why. Your reason is kept with the change. Nothing was written.",
-  "refusal.SCOPE_UNCHANGED": "The action is already that. Nothing was changed.",
-  "refusal.MACHINE_CANNOT_RECORD_PROMISE": "Only a member records a promise your group made to a person. Nothing was "
-    + "written.",
-  "refusal.PROMISE_REFUSED": "A promise is an embargo, anonymity or another promise, said in at most 500 characters; "
-    + "ending one names a promise that stands. Nothing was written.",
-  "refusal.FOUND_ELSEWHERE_REFUSED": "A reply found elsewhere was found in the press, a report, a decision, a public "
-    + "statement or elsewhere, with a note of at most 500 characters. Nothing was written.",
-  "refusal.SPEAKER_REFUSED": "Only a member who sent or spoke can be named as the speaker. Nothing was written.",
-  "refusal.FOLLOWS_ACTION_REFUSED": "Name the earlier action this one follows. Nothing was written.",
-});
+export const ACTION_GRAMMAR_WORDS = Object.freeze(Object.fromEntries([
+  "DETERMINATION_NOT_NONCOMPLIANT",
+  "OVERRIDE_NO_GROUND",
+  "COPIED_IS_ADDRESSEE",
+  "MACHINE_CANNOT_SET_PARTNERS",
+  "PARTNERS_REFUSED",
+  "MACHINE_CANNOT_SET_PRESS_TERMS",
+  "PRESS_TERMS_NOT_PRESS",
+  "PRESS_TERMS_REFUSED",
+  "RECEIPT_NOT_ON_SENT",
+  "OFFICE_STATUS_UNKNOWN",
+  "MACHINE_CANNOT_SET_REPLY_OWED",
+  "NO_REPLY_OWED",
+  "FOUND_ELSEWHERE_NEEDS_CAPTURE",
+  "STAGE_NOT_IN_LAW",
+  "FOLLOWS_ACTION_REWRITTEN",
+  "FOLLOWS_ACTION_SELF",
+  "MACHINE_CANNOT_SET_SCOPE",
+  "SCOPE_NO_REASON",
+  "SCOPE_UNCHANGED",
+  "MACHINE_CANNOT_RECORD_PROMISE",
+  "PROMISE_REFUSED",
+  "FOUND_ELSEWHERE_REFUSED",
+  "SPEAKER_REFUSED",
+  "FOLLOWS_ACTION_REFUSED"
+].map((code) => [`refusal.${code}`, word(`refusal.${code}`)])));
 
 /* =========================================================================
  * D-717 / C-101 (R7): THE ACTION CATALOGUE AT THE ACT. Five arms of C-2.10 that ran only in the audit are enforced
@@ -1735,7 +1725,7 @@ export const ACTION_CATALOGUE_CHECKS = {
      C-115.2 and escalation's C-116.11 give way to it. */
   NO_SUCH_ACTION: {
     check: 'C-117.2',
-    where: 'src/actions/index.mjs noSuchAction > is-no-such-action',
+    where: 'src/action-records/index.mjs noSuchAction > is-no-such-action',
     translation: 'No action answers to that here. An action you may not see is answered exactly as one that does not '
       + 'exist, so this is not a hint either way.',
   },
@@ -2025,8 +2015,6 @@ export const ACTION_CATALOGUE_CHECKS = {
   MACHINE_CANNOT_SET_COPIED: {
     check: 'C-117.58',
     where: 'src/actions/index.mjs #t45Fields > is-machine-set-copied',
-    translation: 'Which other offices are copied on an action is a member\'s statement, and somebody answers for it. The '
-      + 'credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in '
-      + 'to state them yourself.',
+    translation: word("refusal.MACHINE_CANNOT_SET_COPIED"),
   },
 };

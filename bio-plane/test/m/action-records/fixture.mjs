@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/index.mjs";
 import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -121,6 +122,34 @@ export function world({ deps = {}, profiles = ["test-port-ellery"], create = tru
       st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?,?,?,?,?,?)`,
         s, id, `snapshots/${id}.txt`, "utf8", Buffer.byteLength(words), "2026-09-01T00:00:00Z");
       return s;
+    },
+    /** The real promotion on this host (the one write path R19 opens a question through). */
+    get promotion() {
+      const p = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
+      if (!w.factRegistered) { p.registerFact("producingGroup", "instance-setup", () => "test-group"); w.factRegistered = true; }
+      return p;
+    },
+    /** An enrolled member (`id` bare, as membership holds it). */
+    member(id, { role = "member", handle = `h_${id}` } = {}) {
+      st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                   VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, handle, role);
+    },
+    /** A project promoted for real, owned by `owner`; answers its id. */
+    project(title, owner) {
+      const md = ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming",
+        "prior_state: null", 'created: "2026-09-27T00:00:00Z"', 'last_updated: "2026-09-27T00:00:00Z"', "references: []",
+        "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
+      const res = w.promotion.promote({ base: null, snapKey: `k${++n}`, author: V(owner), ownerMemberId: owner,
+        files: [{ path: "bundle.md", text: md }], meta: { object_type: "project" } });
+      if (!res.ok) throw new Error(`fixture project refused: ${JSON.stringify(res).slice(0, 300)}`);
+      return res.bundleId;
+    },
+    /** `member` invited by `owner` into `project` and joined. */
+    join(project, owner, member) {
+      const inv = membership.projectInvite({ projectId: project, handle: `h_${member}`, by: owner, viewer: V(owner) });
+      if (inv && inv.ok === false) throw new Error(`fixture invite refused: ${JSON.stringify(inv)}`);
+      const j = membership.projectJoin({ projectId: project, by: member, viewer: V(member) });
+      if (j && j.ok === false) throw new Error(`fixture join refused: ${JSON.stringify(j)}`);
     },
     /** A project no fixture member participates in, and an action belonging to it: hidden from `member:alice` and
      *  seen by a machine credential (membership R43). */
