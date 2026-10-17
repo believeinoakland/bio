@@ -45,3 +45,11 @@ Three readings I am building on; tell me if any is wrong (J1 — QUESTION).
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0 (3,488 files), channels 0; coverage 25 failures on other modules, none on `screens-publish`.
 
 Size (session_012WaKzFosNcsr8EvNnZ3p4h): test runs 16, module lines 1948
+
+## J2 · COMPLETE
+
+T50-34 is applied: R25–R36 (the imported list and whose stake a case states; the review link's end in the team's zone; plain ceremony and draft words; the check's third answer; the confirmation's own explanation; a project's first case; publish with nothing prepared; "Corrections and orders" and the new `docket-public` screen; "The account"; `publishedcase` awaited), plan rule 6 throughout. Three flaws of my own fixed (a failed hash read drew "no"/"elsewhere"; an unknown import was not "Nothing is here"; the roster read a preflight per list).
+
+Module tests: 112 of 112 with interface-shell's two features applied locally as stand-ins (not committed); without them seven of my tests are red, by name: R88 (`docket-public` in the public frame) and R80 (`cs.checks` over record data), both interface-shell's, red until it merges. The registry from wizard-scripts (merged) already serves `docket-public` and the account acts. Format, architecture, coverage (36 of 36) and ownership: 0 failures; `checks/run.mjs`: none on this module.
+
+For the design lane and others (details in my record): no key for the findings count beside a concluded question or for the link words "its docket"; `words-reads.json` lacks the T50 keys for this module; `casedrafts` rows carry member ids only (I read `*_handle` if added).
