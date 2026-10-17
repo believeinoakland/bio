@@ -43,3 +43,7 @@ COMPLETE (B2): merged tranche/T50; t50.test.mjs now calls registryActGaps over S
 
 ## Completion · B3 CHANGE (screens-investigate K3774)
 Merged `tranche/T50` (affordances and queue in). `themeread` added to both session sets (`instances` was already in both, from R73); test added in `t50.test.mjs`. Module tests: 218, pass 218, fail 0 (the four ACT_HELP reds cleared by affordances' merge). format, architecture, coverage (74 of 74) 0 failures. Size (session_013AaS71xBPWBv4QrWrZjCWX): test runs 29, module lines 3,228
+
+## J3 · COMPLETE
+
+COMPLETE (B3): merged tranche/T50; themeread added to both SESSION_OPS sets (instances was already in both); test added. Module tests 218/218 green (the four ACT_HELP reds cleared). format, architecture, coverage 0 failures.
