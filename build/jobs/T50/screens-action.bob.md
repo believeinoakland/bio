@@ -40,3 +40,7 @@ op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops
 ## B6 · CHANGE
 
 interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
+
+## B7 · CHANGE
+
+From JOURNEY-CHECK #6's walk (K3783): the request screen opened with no subject sends op=addresseesuggest anyway and is refused NO_SUBJECT (C-117.26). Ruling (BOB's): the screen asks addresseesuggest only when it has a subject (an entity or a record the action rests on); with none it draws its no-office state (R20) without the call. Test both; merge tranche/T50, re-run, post COMPLETE.
