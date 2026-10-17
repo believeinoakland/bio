@@ -1000,3 +1000,20 @@ K3666 (Bob, 2026-10-17): T50's focus is a release that can be walked and exercis
 
 ## B278 · NOTICE · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
 K3656 (Bob, 2026-10-17): "Civicsmith and all CC sessions related to its development have standing permission to access any and all websites as part of testing, investigating, researching, or any other purpose related to Civicsmith." No session asks before reaching a site; a site's own bot protection is never worked around (K3658). Folded: build/rulings-active.md §1.
+
+## B279 · HANDOFF · 2026-10-17 · session_01VwThqZeqZseMpazRhvxmLz · primary
+Keys owed to the design lane from T50's L4, L5 and L11 folds (K3659, K3672, K3674). Each is a sentence a module now reads by key (plan T50 rule 6) and no key in `words.json` holds yet; until it exists the module draws a provisional word and names the missing key. Please mint them in one DEC and answer with its commit; BOB merges the docs-and-words commit into `tranche/T50` as before.
+
+**Acts and queue (affordances R64, queue-producers R41–R42, queue R55):** `act.retire.name`, `act.conclude.name`, `act.reopen.name`, `act.projectleave.name`; `queue.project-invitation.summary.unnamed` (`{project}`); `act.projectrequestanswer.label.queue` with its grant and decline words; a name for each mutable kind for `queue.muted.kind`'s `{kind}`.
+
+**Site (site R14):** `screen.site.steps.name.noplace`, the step's sentence when no place is ready.
+
+**Installer (installer R66–R71):** F1 resumed after a closed browser; F2 Containers not enabled (with what to turn on); F3 an account limit reached; F4 a transient failure retried; F5 the software source unavailable; F6 approve again; F7 the name taken, a free one offered; F9 another install running.
+
+**Screens (from the screen fold, K3667):** `shell.icon.plan`; screens-settings R45's time-zone fields and R46's court-added sentence; screens-daily R45's flag note, clear and unwatch, R47/R48's validity labels, "Who paid whom", the standard kinds; `size.kb`, `size.mb`; `project.rescue.title` without a date; the cite's choose-first sentence; screens-action R20 and R22's sentences.
+
+**Re-points and asks (interface-shell R85):** where these acts sit: `secondlookclear` on the finder, `projectrequestanswer` on the queue, `projectrequest`/`projectrequestwithdraw` on the project, `factconfirm` on the team, `aliaswithdraw` on the person; wizard subject kinds beyond project, question and document; `ask` on `assistant`. The marks kit weighs `projectstakeset` and `actionstake` 2 (Reasoned) while op-grades grades them Reversible (op-grades R46): the grade rules; please correct the kit.
+
+**Extraction (L4, K3659):** `reextraction.candidates` (says "group"); `readingFor`'s whys; `calibrationDrift` and `drift.mjs`'s whys; `migrated.*.why`.
+
+**Events (L5, K3672):** "stated reason: " (discretion, waiver); "found unmet: " (assessment); "conditions: ", "expires " (waiver); the waiver outcomes "granted", "denied", "partly granted", "decided"; who-was-sent's "sent by", "sent to", "copied", "present"; the owner's role and link words beyond the seven keyed ("acted in", "organised" …); `grade_why`'s two sentences (placed nowhere; its time could not be read); the relation source "the document <sha>…".
