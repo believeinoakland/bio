@@ -1,6 +1,6 @@
 # agent-harness (T50)
 
-**Status** · session_01VB7aNzqCDcGRLaxhz6h5yc · depth 2 · COMPLETE · handled B2
+**Status** · session_01VB7aNzqCDcGRLaxhz6h5yc · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## Record
 
