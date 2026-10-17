@@ -145,7 +145,7 @@ const builtInBase = (repoMan) => (repoMan && String(repoMan.version) === RELEASE
    anything that failed verification, and it always says which copy it used
    and why, in words a person can act on. */
 async function selectRelease(emit) {
-  emit.step("rel", "Checking the public repository for the newest release");
+  await emit.step("rel", "Checking the public repository for the newest release");
   /* The manifest travels with the selection (IC-82): the fleet half reads
      `fleet[]`/`fleetSig` from it. null means the repository was unreachable —
      a STATED absence the fleet step reports, never rounds to "no members". */
@@ -207,7 +207,7 @@ async function selectRelease(emit) {
    built-in" does not choose: V does. A release of any other version, or one failing a check, is not installed, and the answer
    says why in words; nothing is uploaded. Answers `{version, blob, capable, sha?, from, man, limits}` like selectRelease, or `{stop}`. */
 async function selectChosen(emit, V) {
-  emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
+  await emit.step("rel", `Checking release ${V} is ${PRODUCT}'s own`);
   const stop = (why) => { emit.no("rel"); return { stop: why }; };
   let man = null, unreachable = false;
   try { man = await fetchRepoManifest(); } catch { unreachable = true; }
@@ -1151,7 +1151,7 @@ async function loadFleet(release, onWait = null) {
    (D-115's "quietly doing less" is the defect; the cure is the saying, not the refusing). `ctx.vpc`: the Workers VPC service
    the operator named (R45), or none. `ctx.names`: the copy's names (R64). Answers `{done, left, imageLags, completed}`. */
 async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) {
-  emit.step("fleet", "Installing the capability workers beside your team's Civicsmith");
+  await emit.step("fleet", "Installing the capability workers beside your team's Civicsmith");
   if (loaded.skip) { emit.ok("fleet", loaded.skip); return; }
   const names = ctx.names;
   const man = release.man;
@@ -1273,7 +1273,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
      known even with no member to add. An update states them in its own upload, and restates them here. */
   const hosts = opts.writeHosts && Array.isArray(opts.ownHosts) && opts.ownHosts.length ? opts.ownHosts : null;
   if (added.length === 0 && !hosts) return { bound: already, unbound: [] };
-  emit.step("bind", added.length ? "Connecting your team's Civicsmith to its capability workers"
+  await emit.step("bind", added.length ? "Connecting your team's Civicsmith to its capability workers"
     : "Telling your team's Civicsmith its own address");
   try {
     await uploadUpdate(token, acct, slug, opts.withR2, release,
@@ -1492,7 +1492,7 @@ const logLag = (j, names) => `the Logpush job ${JSON.stringify(String(j.name || 
   + `${names.join(", ")}), which would be a log of who opened which file: delete it, or give it a filter that leaves those Workers out`;
 /* The step itself: listed, said, and its named jobs returned as lags for the verdict (R15's rule: no success over one). */
 async function logsStep(emit, token, acct, names) {
-  emit.step("logs", "Checking that no log on your account records who opened which file");
+  await emit.step("logs", "Checking that no log on your account records who opened which file");
   const r = await logpushCheck(token, acct, names);
   if (r.state === "clear") {
     emit.ok("logs", "No Logpush job on your Cloudflare account keeps a record of each request to your team's Civicsmith.");
@@ -1643,8 +1643,8 @@ const tryAgain = (mode, said) => (mode === "update"
   + " (Cloudflare said: " + said + ")";
 
 /* DIST-9: say which way the organisation `ai` credential went — never its value. */
-function instanceAiNotice(emit, mode, carried) {
-  emit.step("ai", "Your organisation's AI credential");
+async function instanceAiNotice(emit, mode, carried) {
+  await emit.step("ai", "Your organisation's AI credential");
   if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your team's Civicsmith as a secret "
     + "(it is not shown here). It uses it to resume assistant runs that credential opened.");
   emit.ok("ai", mode === "update"
@@ -1659,7 +1659,7 @@ function instanceAiNotice(emit, mode, carried) {
    removed. Each outcome is said; an unread settings page is said as unread, never as "none". */
 const cap = (x) => x[0].toUpperCase() + x.slice(1);
 async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
-  emit.step("keys", "Your members' own accounts, and what earlier installers left behind");
+  await emit.step("keys", "Your members' own accounts, and what earlier installers left behind");
   if (!held) return emit.no("keys", "The settings of your team's Civicsmith could not be read, so the installer could not tell whether it "
     + "holds the secret that seals each member's own Claude account or API key, or anything an earlier installer bound that is now "
     + "retired (a team-wide Claude credential, the shared member key, the assistant choice). Nothing was sent or removed. "
@@ -1689,8 +1689,8 @@ async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
 /* R37 (T36; N721, DEC-172; K1957): the installer takes no choice about the assistant and binds no Claude credential
    (R36); the page says where its two settings are made, in the install page's own words (ui.mjs, ASSISTANT_OFFER). */
 export const ASSISTANT_OWN_ACCOUNTS = ASSISTANT_OFFER.replace(/\s+/g, " ").trim();
-function assistantNotice(emit) {
-  emit.step("assist", "The assistant");
+async function assistantNotice(emit) {
+  await emit.step("assist", "The assistant");
   emit.ok("assist", ASSISTANT_OWN_ACCOUNTS);
 }
 
@@ -1767,9 +1767,9 @@ async function installRun(emit0, code, saved, guard) {
     if (api) touchLock(api).catch(() => {});
     if (waited === 0) await emit0.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
-  const emit = { ...emit0, step: (id, label) => { if (api) touchLock(api).catch(() => {}); return emit0.step(id, label); } };
+  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit0.step(id, label); } };
 
-  emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
@@ -1778,7 +1778,7 @@ async function installRun(emit0, code, saved, guard) {
       tryAgain("install", e.message));
   }
 
-  emit.step("acct", "Finding your account");
+  await emit.step("acct", "Finding your account");
   let acct;
   try {
     const accts = await cf(token, "/accounts");
@@ -1801,7 +1801,7 @@ async function installRun(emit0, code, saved, guard) {
   } catch (e) { if (special(e)) throw e; /* a lock that cannot be taken is not a reason to refuse the install */ }
 
   /* R62, R64, R69, R70 (F7): what the account already holds, read before anything is created. */
-  emit.step("fresh", "Checking the name is free and what your account holds");
+  await emit.step("fresh", "Checking the name is free and what your account holds");
   const memberNames = memberNamesOf(null);
   let resumed = false;
   try {
@@ -1837,7 +1837,7 @@ async function installRun(emit0, code, saved, guard) {
      Free-plan account is refused while there is genuinely nothing to clean up. Refusing IS the fix: the D-106 failure this
      guards is a group getting something quietly different from every description of it — a copy that looks installed and
      degrades under load it was told it could carry. */
-  emit.step("plan", "Checking your account's Workers plan");
+  await emit.step("plan", "Checking your account's Workers plan");
   let planAnswer;
   try { planAnswer = await establishPlan(token, acct.id); }
   catch (e) { if (special(e)) throw e; planAnswer = { plan: "unknown", detail: e.message }; }
@@ -1862,7 +1862,7 @@ async function installRun(emit0, code, saved, guard) {
       + "automatically — it is harmless, and you can remove it from Workers & Pages any time." : ""));
 
   /* R70 (F2, F3): Containers on, and no account limit in the way, before anything is created. */
-  emit.step("room", "Checking that Containers are on and that nothing in your account is at its limit");
+  await emit.step("room", "Checking that Containers are on and that nothing in your account is at its limit");
   try {
     if (!(await containersOn(api))) {
       emit.no("room");
@@ -1900,7 +1900,7 @@ async function installRun(emit0, code, saved, guard) {
   /* Evidence storage is part of what a team's copy IS: captured documents, web pages, and their timestamp certificates
      live there. If storage cannot be created, nothing is installed, and the page explains the one Cloudflare prerequisite in
      plain terms. */
-  emit.step("r2", "Setting up your evidence storage");
+  await emit.step("r2", "Setting up your evidence storage");
   const completed = [];
   try { const there = await ensureBuckets(token, acct.id, names); if (there.length) completed.push("the evidence storage"); emit.ok("r2", word("screen.install.progress.storage")); }
   catch (e) {
@@ -1915,7 +1915,7 @@ async function installRun(emit0, code, saved, guard) {
       + "PayPal, then come back here and run the installer again. (Cloudflare said: " + e.message + ")");
   }
 
-  emit.step("gen", "Generating your credentials");
+  await emit.step("gen", "Generating your credentials");
   /* R9 (T36): four credentials; no shared member key. */
   const secrets = { boot: rand(32), probe: rand(32), daemon: rand(32), seal: rand(32),
                     ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
@@ -1926,7 +1926,7 @@ async function installRun(emit0, code, saved, guard) {
   if (present.length) completed.push(`${present.length} capability worker${present.length === 1 ? "" : "s"}`);
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
   let selfRefused = false;
-  emit.step("install", word("screen.install.progress.placing"));
+  await emit.step("install", word("screen.install.progress.placing"));
   /* R67, R69: the plane is uploaded unless the account already holds exactly this release's deployed state (its bytes, its
      bindings); bytes that match with a binding missing are uploaded, never skipped (S7). */
   const held = (await bindingsOf(api, slug));
@@ -1985,7 +1985,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R14, then R47: the address is enabled before the plane's last upload, so that upload can tell the copy its own
      hosts; with no address the copy is told none, and the page says so. */
-  emit.step("addr", "Turning on your web address");
+  await emit.step("addr", "Turning on your web address");
   let base = null, addrError = null;
   try {
     const { sub, registered } = await ensureSubdomain(token, acct.id, slug);
@@ -2003,8 +2003,8 @@ async function installRun(emit0, code, saved, guard) {
     { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles, ownHosts, writeHosts: true, names });
   if (bound.put) await readBackInto();
   /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
-  instanceAiNotice(emit, "install", !!secrets.instanceAi);
-  assistantNotice(emit);
+  await instanceAiNotice(emit, "install", !!secrets.instanceAi);
+  await assistantNotice(emit);
 
   if (addrError) {
     return emit.fail("Your team's Civicsmith installed but has no address yet",
@@ -2022,7 +2022,7 @@ async function installRun(emit0, code, saved, guard) {
   const logs = await logsStep(emit, token, acct.id, copyWorkers(slug, release, names));
   const logLags = logs.lags;
 
-  emit.step("verify", word("screen.install.progress.answers"));
+  await emit.step("verify", word("screen.install.progress.answers"));
   const st = await verifyInstall(base, secrets.probe, onWait);
   /* D-116: answering is not serving. Once the address answers, each part's OWN build is read back — the record
      store's, and each capability worker's through the plane's binding — and a part that is not on this release is
@@ -2233,7 +2233,7 @@ async function updateRun(emit00, code, saved, guard) {
     if (api) touchLock(api).catch(() => {});
     if (waited === 0) await emit00.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
-  const emit0 = { ...emit00, step: (id, label) => { if (api) touchLock(api).catch(() => {}); return emit00.step(id, label); } };
+  const emit0 = { ...emit00, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit00.step(id, label); } };
   /* R52 (DEC-201 (8)): every stop of an update, each before its upload changed anything, says your team's Civicsmith
      keeps running as it was. */
   const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, p === "" || /nothing changed\.$/.test(p) ? p : p + " " + UPDATE_KEEPS, d, ...at) };
@@ -2243,7 +2243,7 @@ async function updateRun(emit00, code, saved, guard) {
     UPDATE_WORDS.stoppedDo + detail);
   let token, scope;
 
-  emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
   catch (e) {
     emit.no("auth");
@@ -2252,7 +2252,7 @@ async function updateRun(emit00, code, saved, guard) {
       tryAgain("update", e.message));
   }
 
-  emit.step("acct", "Finding your account");
+  await emit.step("acct", "Finding your account");
   let acct;
   try {
     const accts = await cf(token, "/accounts");
@@ -2274,7 +2274,7 @@ async function updateRun(emit00, code, saved, guard) {
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
 
-  emit.step("find", `Finding your team's Civicsmith, installed as "${slug}"`);
+  await emit.step("find", `Finding your team's Civicsmith, installed as "${slug}"`);
   try {
     if (!(await scriptExists(token, acct.id, slug))) {
       emit.no("find");
@@ -2325,7 +2325,7 @@ async function updateRun(emit00, code, saved, guard) {
      work happened and moves on. Observed live on 2026-07-24, a 0.3.10 over
      0.3.10 update where the only honest line was easy to skim past. */
   let before = null, sub0 = null;
-  emit.step("read", "Reading the release your team's Civicsmith runs");
+  await emit.step("read", "Reading the release your team's Civicsmith runs");
   try {
     sub0 = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain || null;
     if (sub0) {
@@ -2345,7 +2345,7 @@ async function updateRun(emit00, code, saved, guard) {
   /* R47: the copy's own hosts, restated from the address found; none found, none written (and the page says so). */
   const ownHosts = sub0 ? [`${slug}.${sub0}.workers.dev`] : null;
 
-  emit.step("up", noop
+  await emit.step("up", noop
     ? `Your team's Civicsmith already runs ${release.version}. Re-uploading the same version`
     : UPDATE_WORDS.progressPlacing(release.version));
   /* DIST-6, step 1: restate the members the account already holds, so the update never un-binds a working copy's
@@ -2377,10 +2377,10 @@ async function updateRun(emit00, code, saved, guard) {
   /* DIST-6, step 3: this is what gives a copy installed WITHOUT member bindings its bindings. */
   const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2, ownHosts, names });
   if (bound.put) await readBackInto();
-  instanceAiNotice(emit, "update", !!instanceAi);
+  await instanceAiNotice(emit, "update", !!instanceAi);
   await accountSecretsNotice(emit, token, acct.id, slug, held, seal);
 
-  emit.step("addr", "Finding the address of your team's Civicsmith");
+  await emit.step("addr", "Finding the address of your team's Civicsmith");
   let base = null;
   try {
     const sub = (await cf(token, `/accounts/${acct.id}/workers/subdomain`))?.subdomain;
@@ -2401,7 +2401,7 @@ async function updateRun(emit00, code, saved, guard) {
   const capable = release.capable;
   let verdict = null;
   if (base) {
-    emit.step("verify", UPDATE_WORDS.progressAnswers);
+    await emit.step("verify", UPDATE_WORDS.progressAnswers);
     /* R67 (S9): the new version has to answer at all. An address that gives no answer for the whole bound, after an upload that
        changed the copy, puts the previous deployment back and stops, saying so. */
     const answered = await waitForAnswer(base, onWait);
@@ -2463,13 +2463,13 @@ passwords, your credentials, and everything in the record are exactly as they we
 async function runRemoveView(emit, code, saved) {
   const slug = saved.slug;
   let token, acct;
-  emit.step("auth", "Confirming your permission with Cloudflare");
+  await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
   catch (e) { emit.no("auth"); return emit.fail("Cloudflare did not confirm the permission", "Nothing was deleted.", tryAgain("install", e.message)); }
-  emit.step("acct", "Finding your account");
+  await emit.step("acct", "Finding your account");
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error("no accounts on this sign-in"); acct = accts[0]; emit.ok("acct", `Using the account "${acct.name}"`); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail("Could not read your account", "Nothing was deleted.", tryAgain("install", e.message)); }
-  emit.step("read", "Reading what is in your account");
+  await emit.step("read", "Reading what is in your account");
   let held;
   try {
     const memberNames = memberNamesOf(null);
@@ -2495,11 +2495,11 @@ async function runRemoveRun(emit, code, saved) {
 async function runRemove(emit0, code, saved, guard) {
   const slug = saved.slug;
   let token, acct, api;
-  const emit = { ...emit0, step: (id, label) => { if (api) touchLock(api).catch(() => {}); return emit0.step(id, label); } };
-  emit.step("auth", "Confirming your permission with Cloudflare");
+  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit0.step(id, label); } };
+  await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
   catch (e) { emit.no("auth"); return emit.fail("Cloudflare did not confirm the permission", "Nothing was deleted.", tryAgain("install", e.message)); }
-  emit.step("acct", "Finding your account");
+  await emit.step("acct", "Finding your account");
   try { const accts = await cf(token, "/accounts"); if (!accts?.length) throw new Error("no accounts on this sign-in"); acct = accts[0]; emit.ok("acct", `Using the account "${acct.name}"`); }
   catch (e) { if (special(e)) throw e; emit.no("acct"); return emit.fail("Could not read your account", "Nothing was deleted.", tryAgain("install", e.message)); }
   api = apiOf(token, acct.id);
@@ -2508,7 +2508,7 @@ async function runRemove(emit0, code, saved, guard) {
     if (!(await takeLock(api))) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
-  emit.step("list", "Listing everything this Civicsmith holds in your account");
+  await emit.step("list", "Listing everything this Civicsmith holds in your account");
   let resources;
   try {
     const memberNames = memberNamesOf(null);
@@ -2524,7 +2524,7 @@ async function runRemove(emit0, code, saved, guard) {
   }
   let n = 0;
   try {
-    await deleteResources(api, resources, (r) => { const id = "del" + (++n); emit.step(id, r.name); return emit.ok(id, word("installer.remove.progress", { what: r.name })); });
+    await deleteResources(api, resources, async (r) => { const id = "del" + (++n); await emit.step(id, r.name); return emit.ok(id, word("installer.remove.progress", { what: r.name })); });
   } catch (e) {
     if (special(e)) throw e;
     return emit.fail(word("installer.remove.refused.remains", { remaining: (e.remaining || []).join(", ") }), "", `(Cloudflare said: ${e.message})`);

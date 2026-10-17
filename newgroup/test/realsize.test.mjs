@@ -103,7 +103,7 @@ const prepare = async () => {
 };
 async function child(scenario) {
   await prepare();
-  const cfg = { bundle, dir: join(dir, "scripts-" + scenario.slug), mode: "install", readBack: "multipart", ...scenario,
+  const cfg = { bundle, real, dir: join(dir, "scripts-" + scenario.slug), mode: "install", readBack: "multipart", ...scenario,
     ...(scenario.repo ? { repo: scenario.repo === "fleet" ? repoFleet : repo, signer: SIGNER.line } : {}) };
   const out = execFileSync(process.execPath, ["--expose-gc", here("./realsize-child.mjs"), JSON.stringify(cfg)],
     { encoding: "utf8", maxBuffer: 1 << 24, timeout: 300000 });
@@ -115,6 +115,8 @@ const within = (r, what) => {
   /* And what the act added to the process's resident high-water mark, which sees what no sample point does. */
   assert.ok(r.rssGrowthMB < WORKER_MB, `${what}: the act took the process ${r.rssGrowthMB} MB above where loading the installer left it (limit ${WORKER_MB} MB)`);
 };
+/* R61: the built-in release carries its own fleet statement, so it names the real fleet as the repository's "fleet" release does. */
+const namesFleet = (scenario) => scenario.repo === "fleet" || !scenario.repo;
 /* A release naming the real fleet leaves its two container members out (their images are not yet published where an account can
    pull them, R38), and R15 then claims no success: the lags are exactly those two, and nothing about the read-back. */
 const finished = (r, what, fleet = false) => {
@@ -136,12 +138,12 @@ test("R33 the install keeps within a Worker's 128 MB at the release's real size:
     ["install, repository release with the real fleet", { slug: "rs-h", repo: "fleet" }, NEXT],
   ]) {
     const r = await child(scenario);
-    within(r, what); finished(r, what, scenario.repo === "fleet");
+    within(r, what); finished(r, what, namesFleet(scenario));
     assert.equal(r.install, "ok", what);
     assert.equal(r.uploads, 2, `${what}: the install upload and the re-upload both ran`);
     assert.equal(r.version, version, `${what}: the release installed`);
-    assert.equal(r.running, scenario.repo !== "fleet", `${what}: success claimed only because every check passed`);
-    if (scenario.repo === "fleet") assert.deepEqual([...r.members].sort(), ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"],
+    assert.equal(r.running, !namesFleet(scenario), `${what}: success claimed only because every check passed`);
+    if (namesFleet(scenario)) assert.deepEqual([...r.members].sort(), ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"],
       `${what}: the members that can install did (the two container members are left out until their images are published)`);
   }
 });
@@ -154,7 +156,7 @@ test("R33 the update keeps within a Worker's 128 MB at the release's real size: 
     ["update, repository release with the real fleet", { slug: "rs-i", mode: "update", pre: ["rs-i"], before: RELEASE_VERSION, chosen: NEXT, repo: "fleet" }, NEXT],
   ]) {
     const r = await child(scenario);
-    within(r, what); finished(r, what, scenario.repo === "fleet");
+    within(r, what); finished(r, what, namesFleet(scenario));
     assert.equal(r.up, "ok", what);
     assert.equal(r.version, version, `${what}: the release uploaded`);
   }
