@@ -18,3 +18,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L2 merge order: membership, project-roster, ai-accounts, credentials, promotion last (the stamp). All five run at once; a job that uses an unmerged one's new service builds against its requirement and merges the tranche branch when BOB's CHANGE says the provider is merged.
+
+## B2 · ANSWER · re J1
+
+K3624: your reading is right; carry on (refusal rows and the two `says` by key, unkeyed builder strings left, census moves stamped in your one stamp). `modules.json` now gives promotion `setup-words` in `uses` (merge the tranche branch). List in your record each other module's test that quotes your old English. ai-accounts is merged (K3625): its 21 C-29 translation moves are in your stamp. You still wait for my CHANGE before stamping the L2 rows.
