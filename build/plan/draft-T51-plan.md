@@ -171,6 +171,7 @@ Each entry: id · module · what (N ids, rulings) · requirements · model. "Tex
 - **At each layer close:** the generated artifacts (§14); at L1's close `rows.mjs` if setup-words' words changed.
 - **N1184:** one HANDOFF to UX-DESIGN (page titles, the project page's order and tooltips, the person page's empty graph, 390 px truncation and touch targets, unnamed controls), folded when its DECs return; and the T50 walks' look findings, as rule 8.
 - **Legacy-ui's retirement (deploy):** removing `civicos` Worker from biosmoke7 is a deploy act that Bob approves in session (K1716); BOB also removes `regression.yml`'s `civicos-ui` glob (`.github/` is not a module) and, after the job merges, the `legacy-ui` row of `modules.json`, `layers.md`'s legacy table and the matching `MODULE_ORDER` entry.
+- **N1242 (container images pullable, K3793):** BOB chooses the registry, sets up publishing in the image workflow, and re-cuts the release so `file-scanner` and `agent-runner` install; a registry account only Bob can open is named to him as one act.
 - **The meter:** Bob told T51 has opened (the opening ring) and asked nothing else.
 - **stewards (N1159):** BOB's routing acts on account 20b5…7f72 as T50's; no T51 entry until the route works.
 
