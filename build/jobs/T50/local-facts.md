@@ -52,3 +52,13 @@ Size (session_01KFyWTaBKyD4BShE6YnSa4M): test runs 6, module lines 1388
 
 R16's text (build/requirements/local-facts.md, R16) is stale against words.json, for you to amend. It says eight rows change by their key and that C-126.1-C-126.5, C-126.11 and C-126.16 keep their own translations. words.json now holds a refusal.<CODE> key for all sixteen C-126 rows (DEC-260, K3374), so the rule R16 states already reads every row by key. The code now does that (LOCAL_FACTS_WORDS, all sixteen; six rows' words change to the list's "team" wording: C-126.1, .6, .7, .10, .12, .16).
 Proposed text for R16's second and third sentences: "Every row of this module's family C-126 takes its translation from its refusal.<CODE> key in words.json, verbatim (all sixteen are held, DEC-260); codes, numbers, wheres and behaviour are unmoved." No behaviour depends on the old wording; I have not edited the requirement (Text: none). Until you rule, the requirement text is the only stale line in this module.
+
+## J2 · COMPLETE
+
+T50-40 local-facts is done (job/T50/local-facts @ 74cf2b4528; code in 05a33905df). Details, checks and the Size line are in build/jobs/T50/local-facts.md.
+- The refusal rows read every C-126 translation by its refusal.<CODE> key from words.json, all sixteen (LOCAL_FACTS_WORDS replaces RULE_WORDS). Codes, numbers, wheres and behaviour are unmoved; six rows' words now follow the list's "team" wording (N1160). Text: none.
+- The t46 pins that held eleven rows out of words.json are replaced: all sixteen are checked as held, and words-reads.json's local-facts reads are checked to name the same keys. Controls: an unheld key is not held and WORD throws on it.
+- Plan rule 6 for Haiku: no member-facing "labelled" here (one source comment only); no hand-listed foreign ops, rows or words in my tests.
+- Tests: local-facts 63 of 63 pass (4 failed before the change). Checks: format, architecture, coverage and ownership all 0 failures. checks/run.mjs: 31 coverage failures, all in other modules and none local-facts.
+- Consumer tests: 11 fail identically on HEAD without this change (not this module's).
+- For you (J1): R16's text is stale against words.json; the wording is yours to amend. Deferred: none.
