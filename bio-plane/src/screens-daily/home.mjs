@@ -292,9 +292,9 @@ export const home = Object.freeze({
     };
     const pv = ok(data.projects);
     const plist = pv && Array.isArray(pv.projects) ? pv.projects : [];
-    const counts = ui.counts || {};
-    const counted = plist.length && plist.every(function (p) { const c = counts[String(p.id)]; return c && c.state === "ok"; })
-      ? plist.reduce(function (a, p) { return a + counts[String(p.id)].n; }, 0) : null;
+    const countOf = function (p) { return ui["count:" + String(p.id)]; };
+    const counted = plist.length && plist.every(function (p) { const c = countOf(p); return c && c.state === "ok"; })
+      ? plist.reduce(function (a, p) { return a + countOf(p).n; }, 0) : null;
     const latest = plist.filter(function (p) { return p.lastChange; }).sort(function (a, b) { return String(b.lastChange).localeCompare(String(a.lastChange)); })[0];
     const ACTION = /^(action|request|milestone|step|plan|filing|escalation|litigation)/;
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
