@@ -12,7 +12,11 @@ function renderInbox(cs, view) {
   const L = view.ui || {}, D = view.data || {};
   const id = typeof view.subject === "string" && view.subject ? view.subject : null;
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
-  const size = (n) => !Number.isFinite(n) ? "" : n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : n >= 1024 ? `${Math.round(n / 1024)} KB` : `${n} B`;
+  /* R32 (3), R35: a size by `size.mb`, `size.kb` or `size.small`, never a byte count */
+  const size = (n) => !Number.isFinite(n) ? "" : n >= 1048576 ? cs.w("size.mb", { n: (n / 1048576).toFixed(1) }) : n >= 1024 ? cs.w("size.kb", { n: String(Math.round(n / 1024)) }) : cs.w("size.small");
+  const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  /* R32 (3): a knock is named by what was handed in and when, never by its id */
+  const handed = (k) => `${cs.w("screen.inbox.knock", { size: size(k.bytes) })} ${k.received ? cs.date(k.received) : ""}`.trim();
   const all = D.list && D.list.state === "ok" && Array.isArray(D.list.value.inbox) ? D.list.value.inbox : [];
   const same = (k) => k.pseudonym ? all.filter((x) => x.knock_id !== k.knock_id && x.pseudonym === k.pseudonym).length : 0;
   /* R12: a read that follows from another's answer (`sourceof` by a pulled knock's capture digest, then `sourcerung`),
@@ -43,15 +47,14 @@ function renderInbox(cs, view) {
   const ladder = (at) => `<div class="cs-ladder" data-ladder="ident" role="list" aria-label="${cs.w("screen.inbox.ladder")}">`
     + rungs.map((r, i) => `<span role="listitem" class="${i <= at ? "on" : ""}"${i === at ? ' aria-current="step"' : ""}>${cs.w(`screen.inbox.ladder.${r}`)}</span>`).join("")
     + `</div><p class="mk-small muted">${cs.w("screen.inbox.ladder.basis")}</p>`;
-  const facts = (k) => `<span class="meta">${cs.w("screen.inbox.knock", { size: size(k.bytes) })} ${k.received ? cs.date(k.received) : ""}`
-    + ` · ${cs.w(`screen.inbox.status.${["new", "pulled", "discarded"].includes(k.status) ? k.status : "new"}`)}</span>`
+  const facts = (k) => `<span class="meta">${cs.w(`screen.inbox.status.${["new", "pulled", "discarded"].includes(k.status) ? k.status : "new"}`)}</span>`
     + `<span>${k.note ? cs.w("screen.inbox.note", { note: k.note }) : cs.w("screen.inbox.nonote")}</span>`
     + (same(k) ? `<span class="meta">${cs.w("screen.inbox.same", { count: same(k) })}</span>` : "")
     + (k.status === "discarded" && k.resolve_reason ? `<span class="meta">${cs.w("screen.inbox.resolved", { reason: k.resolve_reason })}</span>` : "");
   /* R10: each knock named is a reference of the kind `knock`, its card what was handed in and when (interface-shell R27) */
   const card = (k) => [size(k.bytes), k.received ? cs.date(k.received) : "", k.note || ""];
   const list = cs.state(D.list, (v) => `<div class="cs-sheet" role="list">${v.inbox.map((k) => `<div class="cs-row" role="listitem"${k.knock_id === id ? ' aria-current="true"' : ""}>`
-      + `<span>${cs.ref("knock", k.knock_id, k.knock_id, card(k))}${facts(k)}</span></div>`).join("")}</div>`,
+      + `<span>${cs.ref("knock", k.knock_id, plain(handed(k)), card(k))}${facts(k)}</span></div>`).join("")}</div>`,
     { empty: "screen.inbox.empty" });
   const one = !id ? "" : cs.state(D.knock, (v) => {
     const k = v.item || {};
@@ -70,22 +73,29 @@ function renderInbox(cs, view) {
     if (src) for (const x of others) {
       const sid = sourceOf(x);
       if (sid && sid !== src && !choices.some((c) => c[0] === sid))
-        choices.push([sid, x.pseudonym && x.pseudonym === k.pseudonym ? "screen.inbox.link.samechoice" : "screen.inbox.link.choice", { source: sid, knock: x.knock_id }]);
+        choices.push({ value: sid, text: plain(x.pseudonym && x.pseudonym === k.pseudonym && x.received ? cs.w("screen.inbox.same.date", { date: { html: cs.date(x.received) } }) : handed(x)) });
     }
     const link = src === undefined ? `<p class="mk-small">${cs.w("state.loading")}</p>`
       : !src ? `<p class="mk-small muted">${cs.w("screen.inbox.link.nosource")}</p>`
-      : `<p class="mk-small">${cs.w("screen.inbox.source", { source: src })}</p>`
-        + (choices.length ? `<div class="cs-reason">${cs.choice("cx-to", "screen.inbox.link.to", choices, { value: L.to || choices[0][0] })}`
+      : (choices.length ? `<div class="cs-reason">${cs.choice("cx-to", "screen.inbox.link.to", choices, { value: L.to || choices[0].value })}`
           + `${cs.field("cx-evidence", "screen.inbox.link.evidence", { area: true, rec: true, value: L.evidence || "" })}`
           + `${cs.act("sourcelink", { data: { source: src } })}</div>` : `<p class="mk-small muted">${cs.w("screen.inbox.link.none")}</p>`);
-    return `<section class="cs-section mk-sec"><h2><span class="id">${cs.esc(k.knock_id || id)}</span></h2>${facts(k)}${ladder(at)}`
+    /* R32 (3): a delivery's id (and its source's) appears only on a folded "Reference" line, for support */
+    const reference = `<details class="mk-details" data-reference="knock"><summary>${cs.w("reference.label")}</summary><p class="mk-small"><span class="id">${cs.esc(k.knock_id || id)}</span>`
+      + `${src ? ` · <span class="id">${cs.esc(src)}</span>` : ""}</p></details>`;
+    return `<section class="cs-section mk-sec"><h2>${handed(k)}</h2>${facts(k)}${ladder(at)}`
       + (k.status === "new" ? `<div class="mk-acts">${cs.act("inboxpull", { tone: "primary" })}</div>`
+        /* R32 (1): discarding asks why first (`inbox.discard.why`), the words sent as `reason` */
+        + cs.field("cx-why", "inbox.discard.why", { area: true, rec: true, value: L.why || "" })
         + `<div class="mk-acts">${cs.act("inboxresolve")}</div>` : "")
-      + link + "</section>";
+      + link + reference + "</section>";
   });
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
     + one
-    + (L.pulled ? said(L.pulled === "existed" ? "screen.inbox.existed" : "screen.inbox.pulled") : "")
+    /* R32 (2): bytes the record already holds name the document that holds them when the viewer may see it */
+    + (L.pulled === "held" ? said(L.holder && L.holder.id ? "screen.inbox.alreadyheld" : "screen.inbox.alreadyheld.other",
+        L.holder && L.holder.id ? { holder: { html: cs.ref("document", L.holder.id, L.holder.title || cs.w("shell.card.document").replace(/<[^>]*>/g, ""), []) } } : undefined)
+      : L.pulled ? said(L.pulled === "existed" ? "screen.inbox.existed" : "screen.inbox.pulled") : "")
     + (L.discarded ? said("screen.inbox.discarded") : "")
     + (L.linked ? said("screen.inbox.link.done") : "")
     + list;
@@ -95,15 +105,32 @@ function renderInbox(cs, view) {
 function sendPull(view) {
   return { body: { knockId: view.subject } };
 }
-function donePull(view, answer, cs) {
-  cs.set("pulled", answer && answer.existed === true ? "existed" : "pulled");
+async function donePull(view, answer, cs) {
+  const a = answer || {};
   cs.set("discarded", false);
+  /* R32 (2) (doorbell R13): `existed` with a `holder` key is bytes the record held; `holder` null when the viewer may not see it */
+  if (a.existed === true && Object.prototype.hasOwnProperty.call(a, "holder")) {
+    let title = "";
+    if (typeof a.holder === "string" && a.holder) {
+      const got = await cs.call("image", { query: { id: a.holder } });
+      const r = got && typeof got.result === "object" && got.result ? got.result : got;
+      const md = r && typeof r["bundle.md"] === "string" ? r["bundle.md"].split(/\n---\s*\n/)[0] : "";
+      const m = /^title:\s*(.*?)\s*$/m.exec(md || "");
+      title = m ? m[1].replace(/^["']|["']$/g, "") : "";
+    }
+    cs.set("holder", { id: typeof a.holder === "string" ? a.holder : null, title });
+    cs.set("pulled", "held");
+    return;
+  }
+  cs.set("pulled", a.existed === true ? "existed" : "pulled");
 }
 
 /* R7: "Discard with a reason" (`inboxresolve` to `discarded`): a reasoned act, so the shell asks the reason first and
  * sends it as `reason` (setup-page R11's rule); `RESOLVE_NO_REASON` drawn by its words, the knock left as it was. */
-function sendDiscard(view) {
-  return { body: { knockId: view.subject, status: "discarded" } };
+function sendDiscard(view, el, cs) {
+  const why = String(cs.value("cx-why") || "").trim();
+  if (!why) return { refuse: "refusal.RESOLVE_NO_REASON" };
+  return { body: { knockId: view.subject, status: "discarded", reason: why } };
 }
 function doneDiscard(view, answer, cs) {
   cs.set("discarded", true);
@@ -133,8 +160,8 @@ export const INBOX_SCREEN = Object.freeze({
   render: renderInbox,
   acts: Object.freeze([
     Object.freeze({ op: "inboxpull", label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
-    Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard,
-                    refusals: Object.freeze({ RESOLVE_NO_REASON: "screen.inbox.refusal.RESOLVE_NO_REASON" }) }),
+    Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard, reasonField: "reason",
+                    refusals: Object.freeze({ RESOLVE_NO_REASON: "refusal.RESOLVE_NO_REASON" }) }),
     Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
   ]),
 });

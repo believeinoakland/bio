@@ -30,17 +30,34 @@ function renderHeld(cs, view) {
       .map((q) => `<span class="meta">${cs.w("screen.held.for", { asker: q.asker || "", title: q.title || "" })}</span>`).join("")
       + (f.withheld ? `${cs.mark("gap", "withheld")} ${cs.w("screen.held.withheld")}` : "");
   };
+  /* R37 (DEC-310 (5); capture R77): a row whose answer carries `archive` draws its summary (each part only above zero) and one
+     door, "Open its files", a reference of kind `archive` opening `archive` for the archive's own digest; the files the row
+     lists are drawn under it. A row whose `files` is null says nothing of a count it does not hold. */
   const files = (r) => {
-    const a = r.archive && r.archive.entries !== undefined ? r.archive : null;
+    const a = r.archive && typeof r.archive === "object" && r.archive.entries !== undefined ? r.archive : null;
     if (!a) return "";
-    /* R17: each count drawn only above zero */
     const parts = [["filed", a.filed], ["notfiled", a.not_filed]].filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.held.archive.${k}`, { count: n })).join(", ");
-    return (parts ? `<span class="meta">${cs.w("screen.held.archive", { parts })}</span>` : "")
-      + (Array.isArray(r.files) && r.files.length ? `<ul class="mk-list" aria-label="${cs.w("screen.held.archivefiles")}">`
-      + (Array.isArray(r.files) ? r.files : []).map((f) => `<li>${cs.ref("capture", f.sha256, f.name || f.document, [])}`
+    const door = typeof a.sha256 === "string" && a.sha256 ? `<span class="meta">${cs.ref("archive", a.sha256, cs.w("screen.held.archivefiles").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
+    return (parts ? `<span class="meta">${cs.w("screen.held.archive", { parts: { html: parts } })}</span>` : "")
+      + door
+      + (Array.isArray(r.files) && r.files.length ? `<ul class="mk-list">`
+      + r.files.map((f) => `<li>${cs.ref("capture", f.sha256, f.name || f.document, [])}`
         + (f.grade ? ` ${cs.grade("capture", f.grade)}` : "")
         + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>" : "")
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
+  };
+  /* R35 (N1185; DEC-299 (8); DEC-323): an upload's row names who uploaded it and when, never `upload:<hex>`, and its size by
+     `size.kb` / `size.mb` / `size.small`, after the uploader in the same row. The uploader and the size are what the row
+     answers (`capture.actor`, `capture.bytes`); a row answering none draws neither. */
+  const source = (r) => {
+    const s = r.source;
+    if (!s || !s.address) return "";
+    if (!(s.via === "upload" || /^upload:/.test(String(s.address)))) return ` · ${cs.w("screen.held.from", { address: s.address })}`;
+    const c = r.capture || {}, who = String(c.actor || c.by || r.uploaded_by || "").replace(/^member:/, "");
+    const n = Number.isFinite(c.bytes) ? c.bytes : Number.isFinite(r.bytes) ? r.bytes : null;
+    const size = n === null ? "" : n < 1024 ? cs.w("size.small") : n >= 1048576 ? cs.w("size.mb", { n: (n / 1048576).toFixed(1) }) : cs.w("size.kb", { n: String(Math.round(n / 1024)) });
+    const by = who ? cs.w("document.uploaded.by", { member: who, date: { html: r.collected_since ? cs.date(r.collected_since) : "" } }) : "";
+    return by || size ? ` · ${[by, size].filter(Boolean).join(" · ")}` : "";
   };
   /* R11 (capture R77's `capture`): the row's grade as one mark, as provenance states it (a received or authored capture
      never drawn as measured); its thumbnail opens `open-file` for the capture. No capture: undetermined, no thumbnail. */
@@ -68,7 +85,7 @@ function renderHeld(cs, view) {
     pick: true,
     cells: (r) => [`${thumb(r)}${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
       + `<span class="meta">${grade(r)} ${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
-      + (r.source && r.source.address ? ` · ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>"
+      + source(r) + "</span>"
       + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
     ,
