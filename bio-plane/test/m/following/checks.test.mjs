@@ -87,6 +87,14 @@ const CASES = {
   WATCH_NOT_ASKED: async (w) => [w.f.watchAnswer({ link: watched(w).open, stop: true, author: MEMBER }),
     w.f.watchAnswer({ link: watched(w).asked, stop: true, author: BOB })],
   WATCH_RELIED_ON: async (w) => [w.f.watchAnswer({ link: watched(w).relied, stop: true, author: MEMBER })],
+  /* T50 (R32, R33): the marks over a bundle alice sees; `MACHINE_CANNOT_MARK` is sources' row, tested in marks.test.mjs */
+  MARK_NO_ITEM: async (w) => [w.f.watchItem({ by: MEMBER, viewer: MEMBER }), w.f.secondLook({ note: "look again", by: MEMBER, viewer: MEMBER }),
+    w.f.secondLookClear({ by: MEMBER, viewer: MEMBER })],
+  MARK_NO_SUCH_ITEM: async (w) => [w.f.watchItem({ item: "INFO-2026-9999-none", by: MEMBER, viewer: MEMBER }),
+    w.f.secondLook({ item: "INFO-2026-9999-none", note: "look again", by: MEMBER, viewer: MEMBER }),
+    w.f.secondLookClear({ item: "INFO-2026-9999-none", by: MEMBER, viewer: MEMBER })],
+  SECOND_LOOK_NO_NOTE: async (w) => [w.f.secondLook({ item: "INFO-2026-0002-a", note: "  ", by: MEMBER, viewer: MEMBER })],
+  SECOND_LOOK_NOT_OPEN: async (w) => [w.f.secondLookClear({ item: "INFO-2026-0002-a", by: MEMBER, viewer: MEMBER })],
   BAD_PROCEEDING_DATES: async (w) => {
     const p = w.proceeding("Ellery v. Marlow");
     return [w.f.proceedingDates({ proceeding: p, from: "October", viewer: MEMBER }),
@@ -118,7 +126,7 @@ for (const [code, row] of Object.entries(FOLLOWING_CHECKS)) {
     w.bundle("INFO-2026-0002-a", { project: "PRJ-2026-0001-a" });
     assert.ok(CASES[code], `a case drives ${code}`);
     const before = (t) => w.rows(`SELECT count(*) AS n FROM ${t}`)[0].n;
-    const counts = () => ["follows", "per_meeting_links", "follow_ends", "watch_links", "watch_answers"].map(before);
+    const counts = () => ["follows", "per_meeting_links", "follow_ends", "watch_links", "watch_answers", "watch_marks", "second_looks"].map(before);
     const answers = await CASES[code](w);
     const held = counts();
     for (const r of answers) {

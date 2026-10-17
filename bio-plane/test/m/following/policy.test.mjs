@@ -1,5 +1,6 @@
 /* following R20, R21: every policy the group holds watched at its published copy, every version seen kept, and the
    changes a member reviews as "Noticed". */
+import { word } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
@@ -68,7 +69,7 @@ test("R20 the tick reads a watch every 7 days as a capture through acquire attri
   assert.deepEqual([t2.captured[0].standard, t2.captured[0].capture, t2.captured[0].before.capture], ["STD-2026-0001-policy", sha(V2), sha(V1)]);
   assert.equal(w.landed.length, 1);
   assert.equal(w.landed[0].request.target, null, "a new capture, never replacing the earlier one");
-  assert.match(w.landed[0].say.notes, /the group's standing watch of a policy it holds/);
+  assert.ok(w.landed[0].say.notes.includes(word("following.text.group_standing_watch")));
   assert.match(w.landed[0].say.notes, /never higher: verifying it is a named member's decision/);
   assert.deepEqual(w.rows(`SELECT seq, capture_sha FROM policy_versions ORDER BY seq`).map((r) => [r.seq, r.capture_sha]),
                    [[1, sha(V1)], [2, sha(V2)]], "every version seen is kept");

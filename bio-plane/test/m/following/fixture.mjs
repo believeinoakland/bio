@@ -23,6 +23,8 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 import { followingOf } from "../../../src/following/index.mjs";
 import { monitoringOf, MONITOR_PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
 import { noSuchPlan } from "../../../src/action-plans/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? s : Buffer.from(s)).digest("hex");
 export const MACHINE = "class:daemon";
@@ -83,7 +85,7 @@ export function testView({ legistar = true } = {}) {
 }
 
 /** A fresh world: the real modules, the injected host, monitoring and capture, and `following` over them. */
-export function world({ view = testView(), now = T0 } = {}) {
+export function world({ view = testView(), now = T0, realRetrieval = false, door = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const record = recordOf(host);
@@ -343,9 +345,19 @@ export function world({ view = testView(), now = T0 } = {}) {
       return { ok: true, items: page, limit, truncated: from2.length > limit, cursor: page.length ? `${page.at(-1).action}#${page.at(-1).ord}` : null };
     },
   };
-  Object.assign(w, { actionPlans, duties, planWork, answers, actions, actionClocks });
+  /* retrieval's door for the marks read (its R86, K31's pattern): a stand-in taking one registration, or, with
+     `realRetrieval`, the real retrieval, whose `browse` (its R85) a test calls over the registered read */
+  w.markReaders = [];
+  const retrieval = door ? door : realRetrieval ? retrievalOf(host, { record, membership, promotion, extraction: x })
+    : { registerBrowseMarks(module, fn) {
+          const refused = listenerRefusal(w.markReaders, module, fn);
+          if (refused) return refused;
+          w.markReaders.push({ module, fn });
+          return { ok: true, module };
+        } };
+  Object.assign(w, { actionPlans, duties, planWork, answers, actions, actionClocks, retrieval });
   w.f = followingOf(host, { record, membership, capture, entities: ents, events: ev, monitoring, standards, view: () => view,
-                            actionPlans, planWork, duties, answers, actions, actionClocks, now: () => w.t, bytes: async (s) => w.store.get(s) || null });
+                            actionPlans, planWork, duties, answers, actions, actionClocks, retrieval, now: () => w.t, bytes: async (s) => w.store.get(s) || null });
   w.capture = capture;
   w.monitoring = monitoring;
   w.sweepHost = sweepHost;
