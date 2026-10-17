@@ -1,0 +1,84 @@
+/* screens-inquiry R52, R53, R63 (T50-32): the project page's work, its bar and settings, what the team has at stake here, and
+ * its published cases and docket; on interface-shell's served page over a scripted plane. Every expectation is a word read
+ * by key (R44). */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { ok, refusedIn } from "../interface-shell/harness.mjs";
+import { REF_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { open, main, actsIn, fill, press, says, section, word, P } from "./fixtures.mjs";
+
+const at = "/app/project/" + P;
+const KINDS = ["plan", "timeline", "money", "calculation", "proceeding", "standard", "request", "matter", "action", "case-editor", "review-copy", "ceremony"];
+
+test("R52 (1) This project's work lists every screen that works within a project, each with its card, a kind with none still listed; a screen the shell cannot reach is no link", async () => {
+  const p = await open(at);
+  const s = section(p, "project.work.title");
+  for (const kind of KINDS) {
+    assert.ok(s.textContent.includes(word("screen." + kind + ".name")), `${kind} listed with no item of its own`);
+    /* this page serves only this module's screens, so none of these is reachable: each is a card, never a link that refuses */
+    assert.ok(!s.querySelector(`a[href*="/app/${REF_SCREENS[kind] || kind}/"]`), `${kind}: no link to a screen the page does not serve`);
+  }
+  assert.equal(s.querySelectorAll("a[href^='/app/published'], a[href^='/app/docket']").length, 0, "no published case: neither link (R63)");
+});
+
+test("R52 (2) The foot folds the project's settings (its bar's setting and who can find it); the bar's reading stays beside the stage", async () => {
+  const p = await open(at);
+  const fold = main(p).querySelector('details[data-fold="settings"]');
+  assert.ok(says(fold.querySelector("summary"), "project.settings.fold"));
+  assert.deepEqual(actsIn(fold).sort(), ["projectbarset"], "the bar's setting is inside the fold");
+  assert.ok(fold.querySelector(`#project-bar-capture`) && says(fold, "project.visibility.title"), "and who can find it");
+  assert.equal(section(p, "screen.project.bar.head").closest("details"), null, "the reading is not folded");
+  assert.ok(says(section(p, "screen.project.questions.head"), "act.promote.here.project"), "R52 (4): Open a question is explained in its place");
+});
+
+test("R53 what the team has at stake here: the team's statement read-only, the project's stake with who and when and its history, edited by a participant", async () => {
+  const identity = ok({ ok: true, declared_stake: { stake: "The team is funded by a union of city workers.", set_by: "dev", set_at: "2026-09-01T09:00:00Z" } });
+  const stake = ok({ ok: true, stake: "We rent from the contractor.", set_by: "dev", set_at: "2026-10-02T09:00:00Z",
+    history: [{ stake: null, by: "dev", at: "2026-10-01T09:00:00Z" }, { stake: "We rent from the contractor.", by: "dev", at: "2026-10-02T09:00:00Z" }] });
+  const p = await open(at, { plane: { groupidentity: identity, projectstake: stake, projectstakeset: ok({ ok: true }) } });
+  const s = section(p, "stake.project.title");
+  assert.ok(says(s, "stake.project.group", { stake: "The team is funded by a union of city workers." }));
+  assert.ok(s.textContent.includes("We rent from the contractor."));
+  assert.ok(says(s, "stake.set", { who: "dev", date: "2 October 2026" }) && says(s, "stake.history", { n: "1" }), "who, when, and the earlier statements");
+  const heads = main(p).querySelectorAll("section h2").map((h) => h.textContent);
+  assert.ok(heads.indexOf(word("stake.project.title")) < heads.indexOf(word("screen.project.members.head")), "above Members");
+  fill(p, { "project-stake": "We rent from the contractor, and from the city." });
+  await press(p, "projectstakeset", { reason: "we say so" });
+  assert.deepEqual([p.byOp("projectstakeset")[0].query.projectId, p.byOp("projectstakeset")[0].query.stake], [P, "We rent from the contractor, and from the city."]);
+  /* clearing: an emptied field sends the exact word `null` (project-roster R31) */
+  fill(p, { "project-stake": "" });
+  await press(p, "projectstakeset", { reason: "we say so" });
+  assert.equal(p.byOp("projectstakeset")[1].query.stake, "null");
+  /* none, and an unreadable stake is said (in its fold), never none */
+  const none = await open(at, { plane: { projectstake: ok({ ok: true, stake: null, set_by: null, set_at: null, history: [] }) } });
+  assert.ok(says(section(none, "stake.project.title"), "stake.none"));
+  const bad = await open(at, { plane: { projectstake: ok({ ok: true, stake: "undetermined", set_by: null, set_at: null, history: [] }) } });
+  const u = section(bad, "stake.project.title");
+  assert.ok(says(u.querySelector("details summary"), "stake.unreadable.summary") && says(u, "stake.unreadable"));
+  assert.ok(!says(u, "stake.none"));
+  /* the refusal by its words */
+  const refused = await open(at, { plane: { projectstake: stake, projectstakeset: refusedIn("STAKE_MALFORMED", "Too long.") } });
+  fill(refused, { "project-stake": "x" });
+  assert.ok((await press(refused, "projectstakeset", { reason: "we say so" })).textContent.length > 0);
+});
+
+test("R53 control: a member who is not in the project reads its stake and is drawn no field", async () => {
+  const p = await open(at, { plane: { projectdirectory: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", request: null }] }),
+    projectparticipants: refusedIn("NO_SUCH_PROJECT"), projectstage: refusedIn("PROJECT_SEEN_NOT_A_PARTICIPANT") } });
+  assert.equal(p.doc.getElementById("project-stake"), null);
+  assert.ok(!actsIn(main(p)).includes("projectstakeset"));
+});
+
+test("R63 the project's published cases and docket: each case it published a published reference and its docket, once however many editions; a read that fails is failed, never none", async () => {
+  const list = ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1 }, { case_id: "CASE-1", edition: 2 }, { case_id: "CASE-2", edition: 1 }] });
+  const pc = (r) => ok({ ok: true, case_id: r.query.caseId, edition: Number(r.query.edition), project: r.query.caseId === "CASE-1" ? P : "PROJ-2026-0042" });
+  const p = await open(at, { plane: { publishedlist: list, publishedcase: pc } });
+  assert.deepEqual(p.byOp("publishedcase").map((r) => [r.query.caseId, r.query.edition]).sort(), [["CASE-1", "2"], ["CASE-2", "1"]], "the latest edition of each case, once");
+  const s = section(p, "project.work.title");
+  assert.ok(s.textContent.includes(word("screen.published.name")) && s.textContent.includes(word("screen.docket.name")));
+  assert.ok(!s.textContent.includes("CASE-2"), "another project's case is not listed");
+  assert.equal(s.querySelectorAll(".cs-card").filter((c) => [word("screen.published.name"), word("screen.docket.name")].includes(c.textContent)).length, 0, "(the cards are the rows' text)");
+  /* control: none published lists neither; a failed read is drawn failed */
+  const bad = await open(at, { plane: { publishedlist: refusedIn("SOME_REFUSAL") } });
+  assert.ok(section(bad, "project.work.title").querySelector('[data-state="failed"]'));
+});
