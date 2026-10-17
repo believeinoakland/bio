@@ -10,3 +10,7 @@ Checks (process repo): format 0 failures; architecture skills 18 files, 87 impor
 Deferred: none. Found in other modules: none. Plan rule 6: this job adds no member-facing English (the note is instruction text for the model, as every layer here), no hand-lists of another module's rows; "labelled" in skills' text is the model's instruction text, not a member-facing word, left as is (a REPORT if BOB wants it respelled: ~25 occurrences in `skilldoctrine.mjs` clause notes, some inside canon-quoted spans that must stay verbatim, R21).
 Requirements Status line still says R51 "not yet met: T50"; BOB's to update. Generated artifacts staled: agent-worker's bundle does not input skills at this time (manifest row), none by this change.
 Size (session_012JQMoBhp13eHNaMt6dtzJw): test runs 4, module lines 3216
+
+## J2 · COMPLETE
+
+B2 applied: merged tranche/T50 (inquiry, basis-versions, run-rules, ai-use) into job/T50/skills, no conflicts. Skills tests against the real modules: 130 pass, 0 fail. Checks: format 0 failures; architecture skills 19 files, 90 imports, 0 failures; coverage 51 of 51; ownership 0 failures. No change to skills' code. Size (session_012JQMoBhp13eHNaMt6dtzJw): test runs 5, module lines 3216
