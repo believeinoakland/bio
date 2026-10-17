@@ -35,3 +35,5 @@ R54 forum_kind (createEntity/entitycreate, readEntity, entitiesOfKind filter + i
 Provider for retrieval (T50-10) and explore (T50-63): aliasesOf({kinds, limit, after, viewer}) -> {ok, aliases:[{entity_id,kind,label,alias}], count, limit, truncated, next}; labelsOf({ids, viewer}) -> {ok, labels:{id:{label,kind}|null}, count} or TOO_MANY_IDS.
 Tests: entities 118/118; format, architecture, coverage (56/56), ownership 0 failures; users of entities fail exactly as at tranche/T50 (46 same names, clean worktree). Stale until layer close: plane bundle, program.mjs.
 REPORT items in my record: sentences no key holds (the name; R47's kind words); no keys/rows for UNKNOWN_FORUM_KIND and FORUM_KIND_NOT_FOR_KIND.
+
+**CHANGE B3 (K3677).** `aliasesOf` now answers exactly `{ok, aliases, limit, truncated, next}` (I had also `kinds` and `count`; dropped); an unrecognised viewer `aliases: []`. Tests adjusted; entities 118/118; architecture, coverage (56/56), ownership 0 failures.
