@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3839,
+  "screen": 3844,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 846,
+  "act": 847,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -222,8 +222,8 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12932,
-  "protected": 899
+  "total": 12938,
+  "protected": 900
  },
  "words": [
   {
@@ -40464,6 +40464,41 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-309: installer R69, F9"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin",
+   "en": "Concluded questions, each with its findings",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: a project's first case: what goes in"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin.note",
+   "en": "Only a concluded question can go in a case. Each brings its findings and the evidence they rest on; you choose what it leaves out next.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: a project's first case"
+  },
+  {
+   "key": "screen.ceremony.nothing",
+   "en": "Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: Publish with no prepared case"
+  },
+  {
+   "key": "screen.published.corrections.none",
+   "en": "None since it was published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: the public page's corrections and orders"
+  },
+  {
+   "key": "screen.published.corrections",
+   "en": "Every correction, withdrawal and court order on this case is listed on its docket.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: the public page's corrections and orders; 'its docket' links to the docket"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -81482,6 +81517,12 @@
   {
    "key": "act.conclude.label.question",
    "en": "Conclude",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.casedraft.label.question",
+   "en": "Prepare a case from this",
    "protected": true,
    "source": "registry.json"
   },

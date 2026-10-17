@@ -7655,6 +7655,36 @@
    "en": "Another install or update is already running in this account. This one waits until it finishes.",
    "protected": false,
    "note": "DEC-309: installer R69, F9"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin",
+   "en": "Concluded questions, each with its findings",
+   "protected": false,
+   "note": "DEC-310: a project's first case: what goes in"
+  },
+  {
+   "key": "screen.case-editor.whatgoesin.note",
+   "en": "Only a concluded question can go in a case. Each brings its findings and the evidence they rest on; you choose what it leaves out next.",
+   "protected": false,
+   "note": "DEC-310: a project's first case"
+  },
+  {
+   "key": "screen.ceremony.nothing",
+   "en": "Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.",
+   "protected": false,
+   "note": "DEC-310: Publish with no prepared case"
+  },
+  {
+   "key": "screen.published.corrections.none",
+   "en": "None since it was published.",
+   "protected": false,
+   "note": "DEC-310: the public page's corrections and orders"
+  },
+  {
+   "key": "screen.published.corrections",
+   "en": "Every correction, withdrawal and court order on this case is listed on its docket.",
+   "protected": false,
+   "note": "DEC-310: the public page's corrections and orders; 'its docket' links to the docket"
   }
  ],
  "rewrite": {

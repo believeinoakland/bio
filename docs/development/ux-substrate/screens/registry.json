@@ -2430,6 +2430,14 @@
      ]
     },
     {
+     "op": "casedraft",
+     "label": "Prepare a case from this",
+     "status": "declared",
+     "modules": [
+      "review"
+     ]
+    },
+    {
      "op": "withdrawconclusion",
      "label": "Withdraw the conclusion",
      "status": "declared",

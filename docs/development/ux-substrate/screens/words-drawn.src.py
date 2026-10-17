@@ -1668,6 +1668,15 @@ w309('screen.install.stopped.nametaken', 'The short name {name} is already taken
 w309('screen.install.stopped.nametaken.do', '{free} is free: use it, or type another.', False, 'installer R70, F7')
 w309('screen.install.stopped.running', 'Another install or update is already running in this account. This one waits until it finishes.', False, 'installer R69, F9')
 # --- end DEC-309
+# --- DEC-310 (K3666: what the release walks need that no screen drew; K3664's doors)
+def w310(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-310' + (': ' + note if note else '')))
+w310('screen.case-editor.whatgoesin', 'Concluded questions, each with its findings', False, "a project's first case: what goes in")
+w310('screen.case-editor.whatgoesin.note', 'Only a concluded question can go in a case. Each brings its findings and the evidence they rest on; you choose what it leaves out next.', False, "a project's first case")
+w310('screen.ceremony.nothing', 'Nothing is ready to publish: this project has no prepared case yet. Prepare one from its concluded questions.', False, 'Publish with no prepared case')
+w310('screen.published.corrections.none', 'None since it was published.', False, "the public page's corrections and orders")
+w310('screen.published.corrections', 'Every correction, withdrawal and court order on this case is listed on its docket.', False, "the public page's corrections and orders; 'its docket' links to the docket")
+# --- end DEC-310
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
