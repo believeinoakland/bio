@@ -31,3 +31,7 @@
 - `node checks/run.mjs bio`: architecture 0 failures; format 0; coverage's 38 failures are other modules'; none names `inquiry`.
 
 Size (session_014X2CqwZzjbc37AadwJA32T): test runs 12, module lines 3,937
+
+## J1 · COMPLETE
+
+T50-11 inquiry COMPLETE on job/T50/inquiry: R65 partitionOf and op=inquirypartition met (partition.test.mjs names R65); plan rule 6 done for the module's 33 read keys (words by key, 'team'); inherited dispose R39 red cleared. Checks: format, architecture, coverage (56 of 56), ownership 0 failures. Module tests 217 of 218 pass (one todo); users' tests: the same 31 reds as the base, none new. Record has the REPORT items: (1) R36 needs the new table inquiry_ground_changes; (2) R65's 'stated' for a pre-table act is the field strength_after_recorded:false, no English, so a words key would let the page say it; (3) INQUIRY_WARNINGS key question.warning.person is not in words.json; (4) op inquirypartition awaits L11 declarations (T50-24, T50-18), the ops tests already red at base. Module lines 3,937 (under 4,000).
