@@ -34,6 +34,43 @@ export const UNPACK_DAILY_BYTES = 1073741824;       // 1 GiB, declared uncompres
 export const UNPACK_DAILY_ENTRIES = 40000;
 export const UNPACK_LIMITS = Object.freeze({ UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES });
 
+/* R48 (T50; N1104; CAPTURE #32, K3345): the most reads of the evidence store (each `head`, `get` or range read counting one)
+   R41's decision on a held capture never opened costs: ARCHIVE_NOT_HELD, then NOT_AN_ARCHIVE by R17's rule, before any
+   listing. Measured at this job's START (4.33 a capture over a mixed set of plain files and archives; four for a plain or an
+   office file and five for an archive with its listing): a head to learn the object is there and one read of its bytes,
+   which both verifies the part (provenance R7) and is the bytes R17's rule judges, so no object is read twice. This is the
+   figure for a capture held whole; one held in parts costs a head of the whole key, then a head of each part and, where the
+   store gives no stored checksum to verify it by, a read of each part, none twice (BOB's reading, recorded in the job record). */
+export const ARCHIVE_CHECK_READS = 2;
+
+/** R48: the evidence store as one decision reads it: a `head` asked twice is answered once, and the bytes of an object
+ *  (`get`, one part at most 8 MiB) are read once, the last two kept, so verifying a part (provenance R7), profiling the
+ *  capture (R17) and listing it (ooxml R27) share one read of each. Only `head` and `get` are passed on; it holds nothing
+ *  beyond the call that made it; `put` is passed on. */
+export function readThrough(ev) {
+  const heads = new Map();
+  const kept = [];   // [{key, buf}], the two most recently read
+  return {
+    async head(key) {
+      if (heads.has(key)) return heads.get(key);
+      const h = await ev.head(key);
+      heads.set(key, h);
+      return h;
+    },
+    async get(key) {
+      const hit = kept.find((k) => k.key === key);
+      if (hit) return { key, size: hit.buf.byteLength, arrayBuffer: async () => hit.buf };
+      const o = await ev.get(key);
+      if (!o) return o;
+      const buf = await o.arrayBuffer();
+      if (buf.byteLength <= PART) { kept.push({ key, buf }); if (kept.length > 2) kept.shift(); }
+      return { key, size: buf.byteLength, ...(o.checksums ? { checksums: o.checksums } : {}), arrayBuffer: async () => buf };
+    },
+    /* a write goes straight through, and what was asked about the key before it is asked again */
+    async put(key, bytes, opts) { heads.delete(key); return ev.put(key, bytes, opts); },
+  };
+}
+
 /* R38's form of a stored file: parts of 8 MiB, each under its own SHA-256, as R10 stores a fetched one. */
 const PART = 8 * 1024 * 1024;
 /* R41: a page of entries. */
@@ -289,6 +326,12 @@ export class Acquisition {
     } catch { return null; }
   }
 
+  /** R41: the title of a bundle (record-core's `bundles`), or null when it has none or the bundle is gone. */
+  titleOf(bundleId) {
+    try { const r = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, bundleId); return r && typeof r.title === "string" && r.title.trim() ? r.title : null; }
+    catch { return null; }
+  }
+
   /** R41: whether `viewer` may see `bundleId`, by membership's one rule (its R43), asked over record-core's `bundles`. */
   sees(viewer, bundleId) {
     const gate = viewerPredicate(viewer);
@@ -457,8 +500,9 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   if (!inst) return { ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE", code: "ARCHIVE_RECORD_UNAVAILABLE",
     detail: "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened" };
   const core = st.core || inst.record;
-  const ev = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
-  if (!ev) return evidenceStorageAbsent("unpack", "your group's Civicsmith has no evidence storage configured").body;
+  const rawEv = core && typeof core.evidenceStore === "function" ? core.evidenceStore() : null;
+  if (!rawEv) return evidenceStorageAbsent("unpack", "your group's Civicsmith has no evidence storage configured").body;
+  const ev = readThrough(rawEv);
 
   /* DEC-49 REGION is-archive-held */
   if (!(await holds(st, inst, sha)))
@@ -682,7 +726,7 @@ async function fileDocument(ctx, row, stored, receipt) {
  * ======================================================================= */
 
 /* R41: an entry as the screen shows it, from the listing's facts and R38's outcome. */
-function entryOf(r, { limit, refused, sees }) {
+function entryOf(r, { limit, refused, sees, heldOf }) {
   const base = { index: r.idx ?? r.index, name: r.name ?? null, name_raw: r.name_raw ?? null, name_encoding: r.name_encoding ?? null,
                  name_shared: r.name_shared ?? 1, path_unsafe: !!r.path_unsafe, kind: r.kind ?? null, dos_time_stated: r.dos_time ?? null,
                  uncompressed: r.uncompressed ?? null };
@@ -690,7 +734,10 @@ function entryOf(r, { limit, refused, sees }) {
   const verdict = r.verdict;
   const state = r.state || (verdict === "directory" ? "folder" : verdict === "symlink" ? "link"
     : NOT_CUT.includes(verdict) ? "not_filed" : "waiting");
-  if (state === "filed" || state === "already_held") return { ...base, state, sha256: r.sha256, bundle: sees(r.sha256) };
+  if (state === "filed") return { ...base, state, sha256: r.sha256, bundle: sees(r.sha256) };
+  /* R41 (T50; N1126): an `already_held` entry also states when, and under which document's title, the record first held the
+     same bytes (null when the earlier holding is no document the viewer may see, or has no document yet) */
+  if (state === "already_held") { const bundle = sees(r.sha256); return { ...base, state, sha256: r.sha256, bundle, ...heldOf(r.sha256, bundle) }; }
   if (state === "folder") return { ...base, state };
   if (state === "link") return { ...base, state, target: r.target ?? null };
   if (state === "not_filed") {
@@ -756,7 +803,8 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
   /* DEC-49 REGION is-not-an-archive */
   let ev = null, held = null;
   if (!h) {
-    ev = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
+    const rawEv = inst.record && typeof inst.record.evidenceStore === "function" ? inst.record.evidenceStore() : null;
+    ev = rawEv ? readThrough(rawEv) : null;
     held = ev ? await heldParts(inst, {}, ev, sha, null) : { why: word("acquisition.why.evidence_storage") };
     if (!held.parts) return notHeld();
   }
@@ -781,7 +829,16 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
     declaredTotal = listing.ok ? listing.declared_total : null;
     if (!refused && inst.placeOf(sha).depth > ARCHIVE_DEPTH_MAX) waitLimit = "ARCHIVE_DEPTH_MAX";
   }
-  const all = rows.map((r) => entryOf(r, { limit: waitLimit, refused, sees }));
+  /* R41: the earlier holding of the same bytes, from provenance's one reading of when a bundle first held a capture (its R12) and
+     the bundle's own title; null whenever `bundle` (what the viewer may see) is */
+  const heldOf = (s, bundle) => {
+    if (!bundle) return { held_at: null, held_name: null };
+    let at = null;
+    try { const c = p && typeof p.capturesOf === "function" ? p.capturesOf(bundle).find((x) => x.capture_sha === s) : null; at = c && c.held_at ? c.held_at : null; }
+    catch { at = null; }
+    return { held_at: at, held_name: inst.titleOf(bundle) };
+  };
+  const all = rows.map((r) => entryOf(r, { limit: waitLimit, refused, sees, heldOf }));
   const summary = { filed: 0, already_held: 0, not_filed: 0, folders: 0, links: 0, waiting: 0 };
   for (const e of all) {
     if (e.state === "folder") summary.folders++;

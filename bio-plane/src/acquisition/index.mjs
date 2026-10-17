@@ -15,7 +15,7 @@
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
@@ -48,7 +48,8 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
 export { unpack, archiveList, memberOf, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
-         UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS } from "./unpack.mjs";
+         UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
+         ARCHIVE_CHECK_READS } from "./unpack.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -211,6 +212,9 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
     }
   };
 }
+
+/* R47: the longest `for` (a question's id) a member may name. */
+export const FOR_MAX = 200;
 
 /* R10: the most this surface will take from one source, in parts or not; exported once, so every other reader of the
    limit imports it (K231; N825, K2453). */
@@ -587,6 +591,22 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
             + "(via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). "
             + "Direct acquisition is a member's or an operator's act, and the "
             + "unattended credential is scoped to the verbs the unattended paths need." });
+  /* R47 (N1117; T50): `for`, read only from a member session (as R43's `coArchive` is), names the question the member is
+     capturing for. Absent or null records nothing; anything but a non-blank string of at most 200 characters is refused
+     before any fetch, nothing written or filed. From any other caller the key is ignored, so the answer is the one
+     without it. */
+  const askingMember = member && typeof sessMember === "string" && sessMember ? sessMember : null;
+  let askedFor = null;
+  if (askingMember && body.for !== undefined && body.for !== null) {
+    /* DEC-49 REGION is-for */
+    if (typeof body.for !== "string" || !body.for.trim() || body.for.length > FOR_MAX) {
+      const row = ARCHIVE_CHECKS.BAD_FOR;
+      return answer(400, { ok: false, reason: "BAD_FOR", code: "BAD_FOR", check: row.check, translation: row.translation, op,
+        detail: "`for` names the question this capture is for by its id: a string of 1 to 200 characters; nothing was fetched or filed" });
+    }
+    /* END DEC-49 REGION is-for */
+    askedFor = body.for;
+  }
   /* R3, R32, D-112: the archive arm names the DOCUMENT and lets the plane find the memento, inside the same call that
      files the bytes, so the eligibility fence cannot be walked around and the hop is built from what the archive
      answered this call. A monitoring path: admin, probe and daemon only. */
@@ -1093,6 +1113,17 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     try { cap.recordCaptureActor({ captureSha: sha, actor, at: retrieved }); }
     catch { /* an unrecorded actor costs that member their account (capture R69), never this capture */ }
   }
+  /* R47 (N1117; capture R94): a member's `for`, recorded once the capture is filed or found already held, through the store
+     handed in: the digest, the question, the member, the instant. A failed or absent record never fails the capture. */
+  let forRecorded = null;
+  if (askedFor !== null) {
+    let rec = false;
+    try {
+      const r = typeof cap.recordCapturedFor === "function" ? await cap.recordCapturedFor({ captureSha: sha, question: askedFor, by: askingMember, at: retrieved }) : null;
+      rec = !!(r && r.recorded === true);
+    } catch { rec = false; }
+    forRecorded = { question: askedFor, recorded: rec };
+  }
   /* R22: what the source said about these bytes, kept for a later conditional fetch of the same document. */
   if (via === "direct" && !renderRecorded) {
     try { cap.recordValidators({ addressNorm: addrNorm, captureSha: sha, etag: res.headers.get("etag"),
@@ -1120,7 +1151,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
   if (body.subresources === true && !subsSkipped) {
     const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null, own });
+                                             retrieved, resume: null, sessionId: null, own, openedBy: actor });
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
@@ -1234,6 +1265,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* R22: the bytes are the capture the record already holds. */
     ...(crHeldSha && sha === crHeldSha ? { held: true } : {}),
     document,
+    ...(forRecorded ? { for: forRecorded } : {}),
     ...(multipart ? { parts: parts.length } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
@@ -1397,7 +1429,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
 /** R19: the walk of a page's supporting files, over the primary READ BACK from the store (the parser sees the bytes
  *  the record holds, never a copy in flight beside them). Every bookkeeping write after it is stated or ignored,
  *  never a failed capture. */
-async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null }) {
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null, openedBy = null }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -1468,7 +1500,10 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
   let sid = sessionId;
   if (subs.resumeState) {
     sid = sid || `cs_${sha.slice(0, 16)}_${Date.now().toString(36)}`;
-    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state: subs.resumeState }); }
+    /* R19, R46 (T50): the member whose member session's `acquire` parked this session is recorded with it, in its state
+       under `opened_by`; a session parked by any other caller records none. */
+    const state = typeof openedBy === "string" && openedBy ? { ...subs.resumeState, opened_by: openedBy } : subs.resumeState;
+    try { subs.session = cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base, state }); }
     catch { /* the caller starts over; the capture did not fail */ }
   } else if (sid) {
     try { cap.dropCaptureSession({ session: sid }); } catch { /* harmless */ }
@@ -1506,7 +1541,9 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
   const w = await walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
-    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own });
+    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own,
+    /* R19: a session parked again keeps the member who began it, whoever continues it */
+    openedBy: session.state && typeof session.state.opened_by === "string" ? session.state.opened_by : null });
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
@@ -1514,4 +1551,36 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
+}
+
+/* R46 (T50; N1094; DEC-240 (D3); K3317): A MEMBER'S OPEN CAPTURES, for Add's "Unfinished". */
+export const OPEN_CAPTURES_MAX = 50;
+
+/** R46: `openCaptures(store, {by, now}) → {ok: true, captures, truncated}` lists, newest started first, at most
+ *  `OPEN_CAPTURES_MAX`, each capture session (capture R22) that has not expired at `now` and was begun by `by`:
+ *  `{session, locator, primary_sha, started, updated, expires, outstanding}`. A session is begun by the member whose member
+ *  session called `acquire` when R19 parked it (`state.opened_by`); one parked by any other caller, or before this
+ *  requirement, has no member and is listed for no one, and one whose state cannot be read is not listed. A `by` that is
+ *  absent, not a string, blank or a machine identity answers `captures: []`. It lists nothing of another member's, writes
+ *  nothing and never throws; a store that cannot answer gives `captures: []`. */
+export function openCaptures(store, { by = null, now = undefined } = {}) {
+  const none = { ok: true, captures: [], truncated: false };
+  try {
+    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by) || !store || typeof store.liveCaptureSessions !== "function") return none;
+    const nowMs = typeof now === "string" && ISO_TS_RE.test(now) ? Date.parse(now) : Number.isFinite(Number(now)) && now !== null && now !== undefined ? Number(now) : Date.now();
+    const live = store.liveCaptureSessions(stampSecond(nowMs));
+    if (!Array.isArray(live)) return none;
+    const mine = [];
+    for (const s of live) {
+      const st = s && s.state;
+      if (!st || typeof st !== "object" || st.opened_by !== by) continue;
+      const outstanding = Array.isArray(st.queue) ? st.queue.length : 0;
+      const expires = Date.parse(s.expires);
+      if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
+      mine.push({ session: s.session, locator: s.locator ?? null, primary_sha: s.primarySha ?? null, started: s.created ?? null,
+                  updated: s.updated ?? null, expires: s.expires, outstanding });
+    }
+    mine.sort((a, b) => (Date.parse(b.started) || 0) - (Date.parse(a.started) || 0) || (a.session < b.session ? -1 : a.session > b.session ? 1 : 0));
+    return { ok: true, captures: mine.slice(0, OPEN_CAPTURES_MAX), truncated: mine.length > OPEN_CAPTURES_MAX };
+  } catch { return none; }
 }
