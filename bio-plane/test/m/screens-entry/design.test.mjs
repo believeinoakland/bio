@@ -205,29 +205,35 @@ test("R13 the head: the monogram (or the logo) and the group's name in the serif
   }
 });
 
-test("R14 setup's first part after the codes asks the group's name, before any other part, saying where the name shows", async () => {
+test("R14 setup's first part after the codes asks the team's name, before any other part, saying where the name shows", async () => {
   const o = await open("setup", { fragment: { boot: "otp" }, table: { ...EMPTY, login: FULL.login, recoverycodesissue: FULL.recoverycodesissue } });
   await o.press("claim", { values: { "su-handle": "rivera", "su-pw": "a long password!", "su-pw2": "a long password!" } });
-  const heads = all(o.tree, (e) => e.tag === "section").map((sec) => texts(all(sec, (e) => e.tag === "h2")[0]).join(""));
-  assert.deepEqual(heads.slice(0, 2), [said("screen.entry.codes.heading"), said("screen.setup.name")]);
-  const name = all(o.tree, (e) => e.tag === "section")[1];
-  assert.ok(all(name, (e) => e.attrs.id === "su-name").length === 1 && all(name, (e) => e.attrs["data-act"] === "groupnameset").length === 1);
+  const parts = all(o.tree, (e) => e.attrs["data-part"]);
+  assert.deepEqual(parts.slice(0, 2).map((e) => e.attrs["data-part"]), ["claim", "group"], "the codes, then the team's name");
+  assert.ok(all(parts[0], (e) => e.tag === "pre" && "data-codes" in e.attrs).length === 1);
+  // the name the first field of its part, with its act, open
+  const name = parts[1];
+  assert.equal(all(name, (e) => e.tag === "input" && e.attrs.type === "text")[0].attrs.id, "su-name");
+  assert.ok(all(name, (e) => e.attrs["data-act"] === "groupnameset").length === 1);
+  assert.ok("open" in name.attrs);
   has(o, "screen.setup.name.help");
-  const current = all(o.tree, (e) => e.tag === "li" && e.attrs["aria-current"] === "step");
-  assert.deepEqual(current.map((e) => texts(e)[0]), [said("screen.setup.step.name")]);
+  // no field of a later part comes before it
+  const fields = all(o.tree, (e) => e.tag === "input" && e.attrs.type === "text").map((e) => e.attrs.id);
+  assert.equal(fields[0], "su-name");
 });
 
-test("R14 control: a skipped name keeps its step open, and naming the group closes it", async () => {
+test("R14 control: a skipped name keeps its part open to do (not done, its state optional), and naming the team marks it done", async () => {
   const table = { ...EMPTY, placewanted: { ok: true, result: { ok: true } } };
   const o = await open("setup", { me: FOUNDER, table });
+  const group = (s) => all(s.tree, (e) => e.attrs["data-part"] === "group")[0];
+  o.fields["su-skip-group"] = true; await o.tick(300);
+  // another part done meanwhile leaves it as it is
   await o.press("placewanted", { values: { "su-place": "Somewhere" } });
-  const step = (s) => all(s.tree, (e) => e.tag === "li" && texts(e)[0] === said("screen.setup.step.name"))[0];
-  assert.equal(step(o).attrs.class, undefined, "Name is not done");
-  assert.equal(step(o).attrs["aria-current"], "step");
-  assert.ok(!o.drawn().includes("river-town"));
+  assert.equal(group(o).attrs["data-state"], "optional", "the name is not done");
+  assert.equal(group(o).attrs["data-skipped"], "true");
   const n = await open("setup", { me: FOUNDER, table: { ...table, groupidentity: { ok: true, result: { group: "river-town", display_name: "River Town" } } } });
-  assert.equal(step(n).attrs.class, "done");
-  assert.equal(step(n).attrs["aria-current"], undefined);
+  assert.equal(group(n).attrs["data-state"], "done");
+  assert.ok(!("open" in group(n).attrs), "a done name is not opened");
 });
 
 test("R15 R20 a claimed instance's setup draws no lede, only its own 'Already claimed' box (state c); nor once claimed here or signed in", async () => {
