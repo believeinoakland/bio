@@ -21,3 +21,7 @@ Also for BOB (other modules, reported again in my record): (1) escalation `struc
 **Tests and checks.** events tests: 81 pass, 0 fail (6 new, `timelinedated.test.mjs`); dependents run: explore 48, docket 79, lines 34, case-authoring timeline + actions t45 37, all pass. format 0 failures; coverage 53 of 53 live ids named; ownership 0 failures; architecture 0 failures after B2 (setup-words in uses; merged tranche/T50); `checks/run.mjs`: events shows no failure (the 30 coverage failures are other modules' not-yet-met ids).
 
 Size (session_011JmqU2tKmUjBgCV3phKJBQ): test runs 9, module lines 2727
+
+## J2 · COMPLETE
+
+R53 met; words keyed (rule 6). events tests 81 pass; architecture, format, coverage (53 of 53), ownership 0 failures after B2's merge. Record: build/jobs/T50/events.md. Other-module findings as placed in B2.
