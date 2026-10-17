@@ -385,7 +385,7 @@ test("R81 R88 more doors: request, matter, action and dash-project open their sc
   const KINDS = { request: "request", matter: "matter", action: "action", "dash-project": "dash-project", theme: "theme", published: "published", archive: "archive" };
   for (const [k, id] of Object.entries(KINDS)) assert.equal(REF_SCREENS[k], id, k);
   const target = (id) => stand(id, [], (cs) => cs.title());
-  const src = { id: "home", reads: () => ({}), acts: [], render: (cs) => Object.keys(KINDS).map((k, i) => cs.ref(k, "X" + i, "label " + k, ["a fact " + k])).join("") + cs.ref("zzz-unknown", "U1", "label unknown", ["a fact unknown"]) };
+  const src = { id: "home", reads: () => ({}), acts: [], render: (cs) => ["request", "matter", "action", "dash-project", "theme", "published", "archive"].map((k, i) => cs.ref(k, "X" + i, "label " + k, ["a fact " + k])).join("") + cs.ref("zzz-unknown", "U1", "label unknown", ["a fact unknown"]) };
   const targets = Object.values(KINDS).map((id) => (id === "published" ? { ...PUBLISHED } : target(id)));
   const p = await boot({ screens: [src, ...targets] });
   const refs = p.root().querySelectorAll("#cs-main a.cs-ref");

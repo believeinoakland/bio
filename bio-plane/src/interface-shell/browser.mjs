@@ -472,7 +472,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const st = ACTSTATE.get(key) || {};
         return '<span class="mk-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
           + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + (weighed ? ' data-weighed="1"' : "")
-          + (st.busy ? ' aria-busy="true"' : "") + (st.done ? " data-done" : "") + (st.lock ? " disabled" : "") + tipAttr(tip, 2) + ">"
+          + (st.busy ? ' aria-busy="true"' : "") + (st.done ? " data-done" : "") + (st.lock ? " disabled data-locked" : "") + tipAttr(tip, 2) + ">"
           + (o.icon ? I(o.icon) : "") + (outward ? I("outward") : "") + label
           + (weighed ? '<span class="w"' + (mark ? ' data-mark="' + esc(mark) + '"' : "") + ">" + pips + w("weight." + shown + ".name") + "</span>" : "") + "</button>"
           + '<span class="mk-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
@@ -484,7 +484,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
            own facts alone */
         const lead = kw("shell.card." + kind);
-        const card = (lead ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+        const card = (kind === "theme" && !lead ? "" : "<b>" + lead + "</b>") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
@@ -1654,7 +1654,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function actState(inst, d, st) {
     if (st === null) ACTSTATE.delete(d.key); else ACTSTATE.set(d.key, st);
     say(st && st.busy ? textOf(w("shell.working")) : "");
-    if (live(inst)) draw();
+    paint(inst, d.key);
+  }
+  /* the buttons of one act patched in place, never redrawn: a redraw would drop what the act's own `done` still reads from the
+     page (a chosen file, a typed field), which the screen may read after the request has been answered */
+  function paint(inst, key) {
+    const st = ACTSTATE.get(key) || {};
+    const root = doc.getElementById("cs-root");
+    if (!root || !live(inst)) return;
+    for (const b of root.querySelectorAll("button[data-ai]")) {
+      const [k, i] = String(b.getAttribute("data-ai")).split(":");
+      const a = instOf(k) && instOf(k).acts[Number(i)];
+      if (!a || a.key !== key) continue;
+      if (st.busy) b.setAttribute("aria-busy", "true"); else b.removeAttribute("aria-busy");
+      if (st.done) b.setAttribute("data-done", ""); else b.removeAttribute("data-done");
+      /* only the shell's own lock is touched: a screen may disable its button itself */
+      if (st.lock) { b.setAttribute("disabled", ""); b.setAttribute("data-locked", ""); } else if (b.hasAttribute("data-locked")) { b.removeAttribute("disabled"); b.removeAttribute("data-locked"); }
+    }
   }
   async function run(inst, d, btn, ai, extra) {
     let req;
@@ -1697,7 +1713,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const heavy = d.weight === "terminal" || d.weight === "signed" || d.weight === "irreversible" || d.outward;
     /* a read (an op that is no act on the record, weight `none`) is busy while it runs and carries no `data-done` */
     actState(inst, d, d.weight === "none" ? null : heavy ? { done: true, lock: true, gen: inst.gen + 1 } : { done: true });
-    if (!heavy && d.weight !== "none") setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); if (live(inst)) draw(); } }, 2000);
+    if (!heavy && d.weight !== "none") setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); paint(inst, d.key); } }, 2000);
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
