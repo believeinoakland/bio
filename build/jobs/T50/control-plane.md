@@ -58,4 +58,4 @@ Built (committed on job/T50/control-plane): R102, R103 (door-side; the ops answe
 
 **Tests.** `node --test test/m/control-plane/`: 302 tests, 299 pass, 3 fail, all for the one cause in the earlier record (op-declarations R73 unmerged: R103 ×2, `r53-routes` R53); they pass under a local declaration of the ops. Corrects J2's figure.
 
-**Size (session_013W39qjn8635aB3vuz3De9S): test runs 16, module lines 3,908.**
+**Size (session_013W39qjn8635aB3vuz3De9S): test runs 16, module lines 3,905.**
