@@ -1,6 +1,6 @@
 # Plan T50
 
-**Status** · OPEN · BOB #201 · session_01M7R11MGe5ccYRhkuGrM83Z · depth 1
+**Status** · OPEN · BOB #202 · session_01VwThqZeqZseMpazRhvxmLz · depth 1
 
 **Jobs** · membership: MEMBERSHIP #40 session_012b5v7Ekpv3CAbBibj4BTrH; project-roster: PROJECT-ROSTER #9 session_01CRP1uirZ6T4GoDiyhrh3i8; ai-accounts: AI-ACCOUNTS #2 session_019NEZYSTq2NQLrei2eoFATs; credentials: CREDENTIALS #18 session_01Cw1gQFEGMdYMeQLFcFZmXg; promotion: PROMOTION #48 session_01EYfi6HexhiJUBBmLxaSMur; acquisition: ACQUISITION #18 session_01EqTjCYB9asax5onCUFCEnt; capture: CAPTURE #35 session_01Fvr26rxm22dLhkoGV1L8eD; doorbell: DOORBELL #3 session_01XWMEFuyrSGAdEFQKYTTBGH; file-safety: FILE-SAFETY #9 session_01Ngr3SpogWDysPQgvCLp5r5; extraction: EXTRACTION #25 session_013sZYarANSXJ3Zy6EV93zJZ; reading-pipeline: READING-PIPELINE #15 session_01DB7ELQWnxgiNPnS5DJJeY9; entities: ENTITIES #13 session_01SZdSkPKdsPWvCmU3BMq2HD; events: EVENTS #8 session_011JmqU2tKmUjBgCV3phKJBQ; local-facts: LOCAL-FACTS #8 session_01KFyWTaBKyD4BShE6YnSa4M; standards: STANDARDS #15 session_01RDKpqZKsU8QiADDq4eKKT1; progressions: PROGRESSIONS #13 session_01L8enn3KdBrcuPWu8uTZDjV; explore: EXPLORE #5 session_01GeqMMCaEHa6q6oxUuwc2TJ; query-language: QUERY-LANGUAGE #10 session_01R6HaXpEWVvd8Ad3efpgvUB; retrieval: RETRIEVAL #19 session_012ENiSBrCB2vHnYDrzpCCfT
 
