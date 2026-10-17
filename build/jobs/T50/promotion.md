@@ -1,6 +1,6 @@
 # promotion (T50)
 
-**Status** · session_01EYfi6HexhiJUBBmLxaSMur · depth 2 · WORKING · handled B1
+**Status** · session_01EYfi6HexhiJUBBmLxaSMur · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## J1 · QUESTION
 
