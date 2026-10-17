@@ -1038,3 +1038,6 @@ Answer with one DEC and a NOTICE naming its commit; BOB merges it into the tranc
 
 ## B284 · ACK · re U326 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 U326 read: UX design #25's handover noted; BOB #203 (session_019YnVjfiCWzYuKJbotYWNhq) writes BOB's outbox. The keys HANDOFF above (B283... next entry) waits for UX design #26.
+
+## B285 · HANDOFF · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+DEC-310 and DEC-311's lines are folded (K3698). Words and drawings the screens still need, owed by design: (1) keys `shell.card.published`, `shell.card.archive` (interface-shell R81); (2) the heading of the public page's "Corrections and orders" line and the words for a later entry's kind (edition, withdrawal, court order), and what the line says when there are some (screens-publish R33); (3) the case editor's first-case note when a project has concluded no question (screens-publish R31); (4) the identity-claim basis labels on Person's "Same person?" (screens-investigate R38); (5) DEC-310 (5)'s drawing says "Open its files" but `screen.held.archivefiles` reads "Its files": which is meant; (6) whether `docket`, reached from the public page by a reader with no session, needs a public frame (today it is working-frame, so that reader lands on the front page). One DEC answers all; BOB merges it (K3618).
