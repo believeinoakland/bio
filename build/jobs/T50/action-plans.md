@@ -25,3 +25,21 @@ Tests run: `node --test test/m/action-plans/` in bio-plane: 3 runs, last 88 of 8
 Checks (from civicos-process): format 0 failures; architecture action-plans 0 failures (product: 0 failures); coverage action-plans 51 of 51 live ids named, 0 failures; ownership tranche/T50 3 files changed by action-plans, 0 failures; checks/run.mjs over the product: format 0, architecture 0, channels 0, coverage 30 failures in other modules (none in action-plans), listed in the run output; none is mine.
 
 Size (session_01FNgjb6KyseJCJGcT6rtbLh): test runs 3, module lines 3396
+
+## J3 · COMPLETE
+
+Answer to B2 (CHANGE), all three points done. Commit fc011e6210 on job/T50/action-plans, pushed.
+
+1. Reading. Merged tranche/T50 (b87f5cfa9b), then read whole: `build/requirements/action-plans.md` (45 KB, including R32 and R47 as the merge now has them), `build/layers.md` (23 KB), and the module's code: index.mjs (2,456 lines), checks.mjs, values.mjs, schema.mjs, doc.mjs. The reads changed nothing about the plan beyond point 3.
+
+2. "team", never "group". Every member-facing sentence in checks.mjs and index.mjs now says "team": the rows for C-124.1, C-124.6 (ADDRESSEE_REFUSED's "civic team"), C-124.32's neighbours, C-124.36, C-124.40, C-124.41, C-124.65, C-124.57 and the close-note row; the refusal details of PHASE_OPTION_NOT_CHOSEN and DOCUMENT_FIRST_NO_REASON; the check texts outward_on_hypothesis and no_hostile_branch; the R29 pause text's "the team chose"; and DISCLOSURE, now "It is not the team's decision", as R32 says. Tests whose text pinned the old sentences were updated: invariants.test.mjs (C-124.57's "your team's Civicsmith") and runs.test.mjs (the disclosure). No sentence was held by words.json, so none was moved to a key. Two kept on purpose: the `group` value of the addressee `kind` (an identifier, with the enum in values.mjs and the ADDRESSEE_REFUSED detail's list of kinds), and the code comments.
+   One judgement call for BOB: ADDRESSEE_REFUSED's "another civic group by role and organisation" now reads "another civic team". That follows the rule literally, but "civic team" may read oddly for other organisations. Say if you want a different phrase.
+
+3. PLAN_NO_TITLE. checks.mjs adds `refusal.PLAN_NO_TITLE` to PLAN_WORDS (verbatim from words.json) and reads its translation by key. The R47 test in t46.test.mjs now answers C-124.2 at the interface, checks it is held by key and verbatim, and names R47. The control stays SUBJECT_MALFORMED, the one row words.json still does not hold.
+
+Still open (not done here, outside this Haiku job's scope): the refusal details (the `detail` strings) are inline English throughout index.mjs, not keys. Rule 6's first item (words by key) is not in this job's second-and-third scope. Say if you want it done.
+
+Tests run this round: 1 run of `node --test test/m/action-plans/`, 88 of 88 pass (the rewording and the R47 test are included).
+Checks (from civicos-process): format 0 failures; architecture (action-plans) 0 failures; coverage (action-plans) 51 of 51 live ids named, 0 failures; ownership (tranche/T50) 3 files changed by action-plans, 0 failures; checks/run.mjs over the product: format 0, architecture 0 (3,479 product files), channels 0, coverage 30 failures, all in other modules (none in action-plans), the same 30 as before this round.
+
+Size (session_01FNgjb6KyseJCJGcT6rtbLh): test runs 1, module lines 3397
