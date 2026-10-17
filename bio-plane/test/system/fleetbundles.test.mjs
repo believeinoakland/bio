@@ -224,11 +224,16 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      renderer's CCITT fax decoder, `pdf-worker/src/ccittdecode.mjs`, is a
      ninth. */
   const ocr = manifests.get("ocr-worker");
-  t("ocr-worker's build reaches into the RENDERER's tree and the PLANE's, and the manifest hashes all of them",
-    (ocr?.inputs || []).map((i) => i.path).filter((p) => p.startsWith("../")).sort(),
-    ["../bio-plane/src/cpu.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/subresources.mjs",
-     "../pdf-worker/src/ccittdecode.mjs", "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs",
-     "../pdf-worker/src/mq.mjs", "../pdf-worker/src/pagepixels.mjs"]);
+  /* T50-1 (BUNDLER #19; B2/B3, OCR-WORKER #6's R23; K3268): asserted against what a fresh build reaches, never a hand
+     list: the cross-tree inputs the manifest records are exactly those the build reaches, and they still span both the
+     renderer's tree and the plane's. */
+  const ocrMember = members.find((m) => m.name === "ocr-worker");
+  const ocrCross = (list) => list.map((i) => i.path).filter((p) => p.startsWith("../")).sort();
+  const ocrReached = (await buildMember(ocrMember, { write: false })).inputs.filter((i) => !i.path.split("/").includes("node_modules"));
+  t("ocr-worker's recorded cross-tree inputs are exactly those a fresh build of it reaches — none missing, none extra",
+    ocrCross(ocr?.inputs || []), ocrCross(ocrReached));
+  t("and they reach into the RENDERER's tree and the PLANE's",
+    ["../bio-plane/", "../pdf-worker/"].map((d) => ocrCross(ocr?.inputs || []).some((p) => p.startsWith(d))), [true, true]);
   t("and it vendors NOTHING — its engine is a committed upload part, not an npm install, so its byte arm can never skip",
     (ocr?.vendoredInputs || []).length, 0);
 }
