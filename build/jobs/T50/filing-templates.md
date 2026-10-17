@@ -31,8 +31,16 @@
 - `test/m/wizard-scripts/`: `tests 97, pass 97, fail 0`
 - `test/m/filings/`: `tests 113, pass 110, fail 3`, and `test/m/action-producers/`: `tests 53, pass 50, fail 3`; the same six fail on the unmodified tree (report 4).
 
-Size (session_01WzaSmrRQDqba6v379sWLsz): test runs 10, module lines 1921
+Size (session_01WzaSmrRQDqba6v379sWLsz): test runs 11, module lines 1922
 
 ## J1 · COMPLETE
 
 COMPLETE: T50-39 (R33 by key; rule 6 items 2 and 3). Module tests 79/79 pass; wizard-scripts 97/97; filings and action-producers fail the same 6 as the base tree (reported). Checks: format, architecture (module and product), coverage (filing-templates 33/33) and ownership pass. Commit d24b948dcf pushed to job/T50/filing-templates. Reports for BOB, in the record's Completion section: (1) R33's text conflicts with DEC-260 and needs your update, plus the live-word consequence; (2) the refusal's key field still names rfc.quoting; (3) a rulings line for you to number; (4) the other modules' reds, unchanged; N1116 (rule 6 item 1) deferred, not a Haiku item.
+
+**CHANGE (B2, BOB #205, K3739) applied.** `tranche/T50` merged into the job branch. `rfcQuotingRefusal`'s `key` field now names the sentence's current key, `filing-templates.rfc_quoting_sentence`, read from one constant that also feeds the sentence's own `word()` lookup, so the two cannot drift. The r33 test pins that key on both answers (the direct refusal and the profile read, R33), beside the by-key pin and the sentence's text. Module tests: 79 of 79 pass. Checks: format, architecture (module), coverage (33 of 33) and ownership pass; ownership run after the commit below.
+
+Size line above updated for this change.
+
+## J2 · COMPLETE
+
+COMPLETE again after CHANGE B2 (J2). Merged tranche/T50 (K3739 in place). rfcQuotingRefusal's key field now names filing-templates.rfc_quoting_sentence, from one constant that also feeds the sentence's word() lookup; the r33 test pins it on the direct refusal and on the profile read, beside the by-key pin and the sentence's text. Module tests 79/79 pass. format, architecture (module), coverage (33 of 33) and ownership pass. Commit 03d7d647ac pushed to job/T50/filing-templates; the record's Completion section carries the B2 note and Size line (test runs 11, module lines 1922).
