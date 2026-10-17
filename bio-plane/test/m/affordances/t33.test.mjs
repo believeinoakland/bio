@@ -151,13 +151,17 @@ const T47_ADDS = { people: ["peopledirectory"] };
 /* T48 (op-grades R38; `following` R30, N882): following's read of a proceeding's dates, graded by op-grades as a read; pinned here
    so following's map stays closed. */
 const T48_ADDS = { following: ["proceedingdates"] };
+/* T50 (`following` R32–R34, N1092, DEC-238 S23; K3630): the member marks `watchitem`, `secondlook` and `secondlookclear`, graded by op-grades
+   in T50 (T50-18); pinned here so following's map stays closed (the grades are op-grades' tests'). */
+const T50_ADDS = { following: ["watchitem", "secondlook", "secondlookclear"] };
 
-test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41, T45, T47 and T48 add — "
+test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41, T45, T47, T48 and T50 add — "
    + "each earlier module's map holds the ops T33 adds to it, and no owner serves a retired op", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
     const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
-      ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? []), ...(T47_ADDS[name] ?? []), ...(T48_ADDS[name] ?? [])];
+      ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? []), ...(T47_ADDS[name] ?? []), ...(T48_ADDS[name] ?? []),
+      ...(T50_ADDS[name] ?? [])];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }
@@ -283,8 +287,8 @@ test("R39 R4: each vocabulary's values are the very objects its owner answers �
   assert.deepEqual(Object.keys(v.connection_kinds.words), v.connection_kinds.values);
 });
 
-test("R39 R62: each word is the design's, read by key through setup-words (DEC-253), else the owner's registered word where it holds "
-   + "one, else one plain word marked provisional; every key it reads is a word", () => {
+test("R39 R62 R63: each word is the design's, read by key through setup-words (DEC-253), else the owner's registered word where it holds "
+   + "one, else one plain word marked provisional; every key it reads is a word", (t) => {
   eventsWorld().ev.start();
   const v = A.vocabulariesFor(null);
   const expect = (k, value, registeredKind, set) => {
@@ -331,6 +335,38 @@ test("R39 R62: each word is the design's, read by key through setup-words (DEC-2
   assert.equal(v.line_kinds.words.holds.word, word("label.linekinds.holds"));
   assert.equal(v.identity_claim_kinds.words.same_as.word, word("label.identityclaimkinds.same_as"));
   assert.ok(events.EVENT_KINDS.every((k) => v.event_kinds.words[k].provisional === true), "the design keys none of the events' kinds yet");
+  /* R63's control: the provisional words are named in the report, never drawn silently */
+  const provisional = Object.entries(v).flatMap(([set, voc]) => (set === "line_roles" ? [] : Object.entries(voc.words ?? {}))
+    .filter(([, w]) => w && w.provisional === true).map(([value]) => `${set}.${value}`));
+  t.diagnostic(`R63: ${provisional.length} provisional words (no design key, no owner word): ${provisional.join(", ")}`);
+  assert.ok(provisional.length > 0, "the instrument sees provisional words");
+});
+
+test("R63: a connection kind's word is the design's key first (label.linekinds.*, label.connectionkinds.holds with its capacity, any other "
+   + "label.connectionkinds.*), else the owner's registered word, never English held here; a kind with no design key draws its owner's word", () => {
+  eventsWorld().ev.start();
+  const v = A.vocabulariesFor(null).connection_kinds;
+  const keyed = (k, vars) => (hasWord(k) ? word(k, vars) : null);
+  let byKey = 0, byOwner = 0;
+  for (const kind of v.values) {
+    const owner = v.words[kind];
+    const held = /^line:holds:(.+)$/.exec(kind);
+    const line = /^line:(.+)$/.exec(kind);
+    let design = null;
+    if (held) {
+      const capacity = keyed(`label.linecapacities.${held[1].replace(/ /g, "_")}`);
+      design = capacity !== null ? keyed("label.connectionkinds.holds", { capacity }) : null;
+    } else if (line) design = keyed(`label.linekinds.${line[1].replace(/ /g, "_")}`);
+    else design = keyed(`label.connectionkinds.${kind.replace(/ /g, "_")}`);
+    const reg = kindOf(kind);
+    const want = design ?? (reg && typeof reg.word === "string" && reg.word ? reg.word : null);
+    assert.ok(want !== null, `${kind}: a design key or an owner's word`);
+    assert.equal(owner.word, want, kind);
+    if (design !== null) byKey++; else byOwner++;
+  }
+  assert.ok(byKey > 0 && byOwner > 0, "both the keyed words and the owners' own are exercised");
+  /* control: a kind the design keys draws its word, not the owner's, when they differ */
+  assert.equal(v.words.proxy_for.word, word("label.connectionkinds.proxy_for"));
 });
 
 test("R39 R26: vocabulariesFor keeps every fixed vocabulary the same object and adds only R39's", () => {
@@ -367,13 +403,15 @@ test("R41: a refusal is explained from its catalogue row as its owner holds it, 
 test("R41: a code no catalogue row holds answers translation null with the one sentence that it is not catalogued; "
    + "a target the caller may not see answers no acts; malformed input never throws", () => {
   const e = A.explainRefusal({ op: "conclude", code: "SOMETHING_NEW", gate: GATE, rowOf });
-  assert.deepEqual([e.translation, e.check, e.detail], [null, null, A.NOT_CATALOGUED]);
+  assert.deepEqual([e.translation, e.check, e.detail], [null, null, word("refusal.uncatalogued")]);
   assert.deepEqual(A.explainRefusal({ op: "conclude", code: "NO_CONCLUSION" }).translation, null, "no lookup handed in");
   assert.deepEqual(A.explainRefusal({ op: "conclude", code: "X", facts: { ok: false, reason: "NO_SUCH_BUNDLE" } }).acts, []);
   for (const bad of [undefined, null, {}, { op: 7, code: {} }, { rowOf: () => { throw new Error("x"); }, code: "NO_CONCLUSION" },
     { facts: { ok: true, object_type: null }, op: "x" }, { gate: { needs: () => { throw new Error("g"); } }, op: "conclude" }])
     assert.doesNotThrow(() => A.explainRefusal(bad));
-  assert.match(A.NOT_CATALOGUED, /not in the catalogue/);
+  /* R64: the sentence is the key `refusal.uncatalogued`, read through `word`; the module no longer composes it (NOT_CATALOGUED is gone) */
+  assert.equal(A.NOT_CATALOGUED, undefined);
+  assert.equal(hasWord("refusal.uncatalogued"), true);
 });
 
 test("R41 R22: the instance's explainRefusal asks the target's facts as the acts would and writes nothing", () => {
