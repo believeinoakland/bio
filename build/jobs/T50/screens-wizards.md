@@ -1,6 +1,6 @@
 # screens-wizards (T50)
 
-**Status** · session_01AGe71oQir7m4tvcnQTRyA6 · depth 2 · WORKING · handled B2
+**Status** · session_01AGe71oQir7m4tvcnQTRyA6 · depth 2 · WORKING · handled B3
 
 ## Completion (T50-51)
 
@@ -34,3 +34,7 @@ T50-51 done: R13–R17 met. Module tests 51/51 (control-plane, screens-daily, in
 ## J2 · COMPLETE
 
 B2 handled: merged tranche/T50 (wizard-scripts T50-17, regenerated SCREEN_REGISTRY). Module tests 51/51 pass; format, architecture, coverage (17/17), ownership: 0 failures. Nothing else changed.
+
+## B3 (K3772) handled
+
+`plan` is no longer a kind the guide asks a project for (it opens as today; N1237 restores it in T51); the R17 tests now use `timeline`, and a control shows `plan` opening unasked. Finding 3 above is therefore closed. Found on the merge of `op-grades`: `wizarddraft` no longer asks a reason, so a copy with no name typed was sent with an empty name; it now keeps its original's name (library.mjs). Module tests 52/52.
