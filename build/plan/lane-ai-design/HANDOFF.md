@@ -2,7 +2,7 @@
 
 Entries `A<n>`, newest last. BOB reads past its cursor at takeover and each backstop check.
 
-**Read by BOB** · through A4
+**Read by BOB** · through A5
 
 ## A1 · 2026-10-17 · Question 1 done: what exists
 Record: `NOTES.md` §Q1 (sources, tables with requirement ids). Nothing decided; no product code touched; no secret read or written.
