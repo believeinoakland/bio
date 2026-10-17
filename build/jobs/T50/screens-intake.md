@@ -34,3 +34,12 @@
 - From the process repository: `format`: 171 modules, 170 requirements files; 0 failures. `architecture screens-intake`: 14 product files, 37 relative imports; 0 failures. `coverage screens-intake`: 37 of 37 live requirement ids named by a test; 0 failures.
 
 Size (session_01B1kqymq5KT8JWusgDebuhd): test runs 16, module lines 1301
+
+## J1 · REPORT
+
+FOUND IN OTHER MODULES (details in my record, build/jobs/T50/screens-intake.md):
+1. capture R77 (closed layer, T51 or name another source): a held row answers capture {sha256, grade} only, so neither an upload's uploader nor its byte count is on the row. R35 draws "uploaded by <member>, <date>" and the size from capture.actor / capture.bytes when the row answers them, and draws neither otherwise (never upload:<hex>). Needs an answer or a ruling on where the uploader and size come from.
+2. interface-shell: R81 must carry the kind "archive" for R37's door to link; until it merges, one test of mine (R37's link) is red and passes with no change of mine once tranche/T50 holds R81.
+3. interface-shell: a silent or non-JSON act answer is drawn "shell.noanswer" beside the act, not shell.unread as R34 words it; the act stays usable. I left it as the shell draws it.
+4. R34's one timed live acquire is the remote proof (plan rule 9, your note 4): not run from my tools, left unbuilt. A cause found in the door is control-plane's REPORT after biosmoke8 runs it.
+5. Not mine, unchanged by this job: plane t47.test.mjs 1 fail and answer-envelope catalogue-end.test.mjs 2 fails (same before and after).
