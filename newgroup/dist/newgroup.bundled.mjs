@@ -7022,11 +7022,12 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
   });
   for (const L of loaded.members) {
     const m = L.m;
+    const isContainer = containerPartsOf(m).length > 0;
     if (L.error) {
-      left.push({ member: m.member, why: withLacks(m, L.error) });
+      left.push({ member: m.member, why: withLacks(m, L.error), ...isContainer ? { out: true } : {} });
       continue;
     }
-    let uploaded = false;
+    let uploaded = false, attempted = false;
     try {
       const { box, bundle, limits, partBytes, own, classes } = L;
       const lacking = !L.workerPart && WORKER_PART_LACKS[m.member] ? `${m.member}: ${WORKER_PART_LACKS[m.member]}` : null;
@@ -7068,6 +7069,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       };
       if (scripts.has(names.member(m.member))) completed.push(m.member);
       if (!box.length) {
+        attempted = true;
         await upload({ bindings: classOf.get(m.member), limits });
         uploaded = true;
         await schedule();
@@ -7091,6 +7093,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
         if (!fresh) binds();
         throw new Error(conditions.why);
       }
+      attempted = true;
       await upload({
         limits,
         bindings: [...classOf.get(m.member) || [], ...selfBinds],
@@ -7107,7 +7110,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       if (lacking) notes.push(lacking);
     } catch (e) {
       if (special(e)) throw e;
-      left.push({ member: m.member, why: withLacks(m, String(e && e.message || e)) });
+      left.push({ member: m.member, why: withLacks(m, String(e && e.message || e)), ...isContainer && !attempted ? { out: true } : {} });
     }
   }
   if (vpcServiceOk(ctx.vpc) && !vpcTaken)
@@ -7210,7 +7213,7 @@ function reportsBuilds(source) {
   if (source instanceof Uint8Array) return BUILD_FIELDS.every((f) => hasWord2(source, f));
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
-var failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member)).map((l) => `the capability worker ${l.member} could not be installed, so your team's Civicsmith has no ${BINDING_OF.get(l.member)} connection to use (${l.why})`);
+var failedLags = (failed = []) => failed.filter((l) => l && !l.out && BINDING_OF.has(l.member)).map((l) => `the capability worker ${l.member} could not be installed, so your team's Civicsmith has no ${BINDING_OF.get(l.member)} connection to use (${l.why})`);
 function servingVerdict(j, want, installed, capable, failed = []) {
   const lags = [];
   if (!j || typeof j !== "object") {

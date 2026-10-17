@@ -118,15 +118,14 @@ const within = (r, what) => {
 /* R61: the built-in release carries its own fleet statement, so it names the real fleet as the repository's "fleet" release does. */
 const namesFleet = (scenario) => scenario.repo === "fleet" || !scenario.repo;
 /* A release naming the real fleet leaves its two container members out (their images are not yet published where an account can
-   pull them, R38), and R15 then claims no success: the lags are exactly those two, and nothing about the read-back. */
+   pull them, R38), names them at the fleet step, and R15 then confirms: they are no lag (K3793). Nothing about the read-back. */
 const finished = (r, what, fleet = false) => {
   assert.equal(r.failed, null, `${what}: no stop`);
   assert.equal(r.byteLag, false, `${what}: no byte lag named`);
   assert.equal(r.mismatch, false, `${what}: no mismatch named`);
   assert.equal(r.unread, false, `${what}: nothing unread`);
-  if (!fleet) return assert.equal(r.verify, "ok", `${what}: verify ok ${JSON.stringify({ lags: r.lags, fleet: r.fleet })}`);
-  assert.equal(r.verify, "no", what);
-  assert.deepEqual(r.lags.map((l) => /capability worker ([a-z-]+) could not be installed/.exec(l)?.[1] ?? l), ["agent-runner", "file-scanner"], what);
+  assert.equal(r.verify, "ok", `${what}: verify ok ${JSON.stringify({ lags: r.lags, fleet: r.fleet })}`);
+  if (fleet) for (const m of ["agent-runner", "file-scanner"]) assert.match(r.fleet || "", new RegExp(m), `${what}: ${m} named left out at the fleet step`);
 };
 
 test("R33 the install keeps within a Worker's 128 MB at the release's real size: the built-in 0.85.0 release (read back as multipart, and as the module itself) and a 21 MB release from the repository", async () => {
@@ -142,7 +141,7 @@ test("R33 the install keeps within a Worker's 128 MB at the release's real size:
     assert.equal(r.install, "ok", what);
     assert.equal(r.uploads, 2, `${what}: the install upload and the re-upload both ran`);
     assert.equal(r.version, version, `${what}: the release installed`);
-    assert.equal(r.running, !namesFleet(scenario), `${what}: success claimed only because every check passed`);
+    assert.equal(r.running, true, `${what}: success claimed because every check passed`);
     if (namesFleet(scenario)) assert.deepEqual([...r.members].sort(), ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"],
       `${what}: the members that can install did (the two container members are left out until their images are published)`);
   }

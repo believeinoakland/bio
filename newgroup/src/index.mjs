@@ -1161,8 +1161,12 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
   const scripts = await listScripts(apiOf(token, acct)).catch((e) => { if (approve(e)) throw e; return new Map(); });
   for (const L of loaded.members) {
     const m = L.m;
-    if (L.error) { left.push({ member: m.member, why: withLacks(m, L.error) }); continue; }
-    let uploaded = false;
+    /* R15, R38 (K3793): a container member that never reached its upload (its image not pullable or not pinned, no Containers
+       scope, not Workers Paid, a part missing or unreadable) is LEFT OUT, named here with why and what the copy lacks; it is
+       not a failed upload and the verdict does not wait on it (`out`). A member whose upload was attempted and failed is. */
+    const isContainer = containerPartsOf(m).length > 0;
+    if (L.error) { left.push({ member: m.member, why: withLacks(m, L.error), ...(isContainer ? { out: true } : {}) }); continue; }
+    let uploaded = false, attempted = false;
     try {
       const { box, bundle, limits, partBytes, own, classes } = L;
       /* Said once the member is installed (a member left out is named with its own reason). */
@@ -1196,6 +1200,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       };
       if (scripts.has(names.member(m.member))) completed.push(m.member);
       if (!box.length) {
+        attempted = true;
         await upload({ bindings: classOf.get(m.member), limits });
         uploaded = true;
         await schedule();
@@ -1220,6 +1225,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
         if (!fresh) binds();
         throw new Error(conditions.why);
       }
+      attempted = true;
       await upload({ limits, bindings: [...(classOf.get(m.member) || []), ...selfBinds],
         ...(fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: classes.map((d) => d.class_name) } } : {}) });
       uploaded = true;
@@ -1233,7 +1239,7 @@ async function installFleet(emit, token, acct, slug, release, loaded, ctx = {}) 
       if (lacking) notes.push(lacking);
     } catch (e) {
       if (special(e)) throw e;
-      left.push({ member: m.member, why: withLacks(m, String(e && e.message || e)) });
+      left.push({ member: m.member, why: withLacks(m, String(e && e.message || e)), ...(isContainer && !attempted ? { out: true } : {}) });
     }
   }
   /* R45: a VPC service named that no member installed here takes is said, never dropped in silence. */
@@ -1367,8 +1373,9 @@ export function reportsBuilds(source) {
 /* DIST-6: `failed` is the members the fleet step could NOT upload ({member, why}). A member the plane binds whose upload
    failed is named here whatever the plane answers, because the plane's own reading of it (UNBOUND, or a previous
    build) cannot say that THIS act tried and failed — and on a release that cannot report members it is the only
-   place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. */
-const failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member))
+   place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. A member
+   R38 left out (`out`: its upload was never attempted) is named at the fleet step, never a lag here (R15; K3793). */
+const failedLags = (failed = []) => failed.filter((l) => l && !l.out && BINDING_OF.has(l.member))
   .map((l) => `the capability worker ${l.member} could not be installed, so your team's Civicsmith has no ${BINDING_OF.get(l.member)}`
     + ` connection to use (${l.why})`);
 
