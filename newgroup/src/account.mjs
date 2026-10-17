@@ -204,20 +204,23 @@ export async function deleteResources(api, resources, done) {
 
 /* ------------------------------------------------------------------ R69 (F9): one run at a time */
 
-/* Takes the account's lock for this run, or answers that another run holds it (touched within LOCK_LIVE_MS). */
-export async function takeLock(api, now = Date.now()) {
+/* Takes the account's lock for this run, or answers that another run holds it (touched within LOCK_LIVE_MS). `lock` is
+   `{id, again}`: the run's own id, and the id of the run this one continues, when the founder was asked to approve again
+   (R71, F6): a revoked permission cannot drop its lock, and the continuing run must not be stopped by it. */
+export async function takeLock(api, lock, now = Date.now()) {
   const held = await bindingsOf(api, LOCK_SCRIPT);
   if (held) {
     const at = Number((held.find((b) => b.name === "T") || {}).text);
-    if (Number.isFinite(at) && now - at < LOCK_LIVE_MS) return false;
+    const owner = (held.find((b) => b.name === "ID") || {}).text;
+    if (Number.isFinite(at) && now - at < LOCK_LIVE_MS && !(lock.again && owner === lock.again)) return false;
   }
-  await touchLock(api, now);
+  await touchLock(api, lock.id, now);
   return true;
 }
-export async function touchLock(api, now = Date.now()) {
+export async function touchLock(api, id, now = Date.now()) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify({ main_module: "index.mjs", compatibility_date: "2026-07-01",
-    bindings: [{ type: "plain_text", name: "T", text: String(now) }] })], { type: "application/json" }));
+    bindings: [{ type: "plain_text", name: "T", text: String(now) }, { type: "plain_text", name: "ID", text: String(id) }] })], { type: "application/json" }));
   fd.append("index.mjs", new Blob(['export default { fetch() { return new Response("bio install lock"); } };'],
     { type: "application/javascript+module" }), "index.mjs");
   return api(`/workers/scripts/${LOCK_SCRIPT}`, { method: "PUT", body: fd });

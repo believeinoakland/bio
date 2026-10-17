@@ -4801,21 +4801,22 @@ async function deleteResources(api, resources, done) {
     if (done) await done(r);
   }
 }
-async function takeLock(api, now = Date.now()) {
+async function takeLock(api, lock, now = Date.now()) {
   const held = await bindingsOf(api, LOCK_SCRIPT);
   if (held) {
     const at = Number((held.find((b) => b.name === "T") || {}).text);
-    if (Number.isFinite(at) && now - at < LOCK_LIVE_MS) return false;
+    const owner = (held.find((b) => b.name === "ID") || {}).text;
+    if (Number.isFinite(at) && now - at < LOCK_LIVE_MS && !(lock.again && owner === lock.again)) return false;
   }
-  await touchLock(api, now);
+  await touchLock(api, lock.id, now);
   return true;
 }
-async function touchLock(api, now = Date.now()) {
+async function touchLock(api, id, now = Date.now()) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify({
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
-    bindings: [{ type: "plain_text", name: "T", text: String(now) }]
+    bindings: [{ type: "plain_text", name: "T", text: String(now) }, { type: "plain_text", name: "ID", text: String(id) }]
   })], { type: "application/json" }));
   fd.append("index.mjs", new Blob(
     ['export default { fetch() { return new Response("bio install lock"); } };'],
@@ -7496,12 +7497,12 @@ async function installRun(emit0, code, saved, guard) {
   const names = namesFor(slug, SLUG_SCHEME);
   let token, scope, api;
   const onWait = async (waited) => {
-    if (api) touchLock(api).catch(() => {
+    if (api) touchLock(api, saved.lock.id).catch(() => {
     });
     if (waited === 0) await emit0.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
   const emit = { ...emit0, step: async (id, label) => {
-    if (api) await touchLock(api).catch(() => {
+    if (api) await touchLock(api, saved.lock.id).catch(() => {
     });
     return emit0.step(id, label);
   } };
@@ -7537,7 +7538,7 @@ async function installRun(emit0, code, saved, guard) {
   }
   api = apiOf(token, acct.id);
   try {
-    if (!await takeLock(api)) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!await takeLock(api, saved.lock)) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
     guard.drop = () => dropLock(api);
   } catch (e) {
     if (special(e)) throw e;
@@ -7894,12 +7895,12 @@ async function updateRun(emit00, code, saved, guard) {
   const slug = saved.slug, V = saved.r;
   let api;
   const onWait = async (waited) => {
-    if (api) touchLock(api).catch(() => {
+    if (api) touchLock(api, saved.lock.id).catch(() => {
     });
     if (waited === 0) await emit00.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
   const emit0 = { ...emit00, step: async (id, label) => {
-    if (api) await touchLock(api).catch(() => {
+    if (api) await touchLock(api, saved.lock.id).catch(() => {
     });
     return emit00.step(id, label);
   } };
@@ -7942,7 +7943,7 @@ async function updateRun(emit00, code, saved, guard) {
   }
   api = apiOf(token, acct.id);
   try {
-    if (!await takeLock(api)) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!await takeLock(api, saved.lock)) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
     guard.drop = () => dropLock(api);
   } catch (e) {
     if (special(e)) throw e;
@@ -8137,7 +8138,7 @@ async function runRemove(emit0, code, saved, guard) {
   const slug = saved.slug;
   let token, acct, api;
   const emit = { ...emit0, step: async (id, label) => {
-    if (api) await touchLock(api).catch(() => {
+    if (api) await touchLock(api, saved.lock.id).catch(() => {
     });
     return emit0.step(id, label);
   } };
@@ -8164,7 +8165,7 @@ async function runRemove(emit0, code, saved, guard) {
   api = apiOf(token, acct.id);
   if (saved.ty !== slug) return emit.fail(word("screen.install.remove.type.label"), "Nothing was deleted.", word("screen.install.remove.type.help", { slug }));
   try {
-    if (!await takeLock(api)) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
+    if (!await takeLock(api, saved.lock)) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
     guard.drop = () => dropLock(api);
   } catch (e) {
     if (special(e)) throw e;
@@ -8264,7 +8265,8 @@ var index_default = {
         ...vpc ? { vpc } : {},
         ...mode === "update" ? { r: chosen } : {},
         ...mode === "install" && body.alongside === true ? { al: 1 } : {},
-        ...mode === "removeconfirm" ? { ty: body.typed } : {}
+        ...mode === "removeconfirm" ? { ty: body.typed } : {},
+        ...typeof body.lock === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(body.lock) ? { lk: body.lock } : {}
       })));
       return json(
         { ok: true, authorize: `${CFG.AUTHORIZE}?${q}` },
@@ -8304,9 +8306,11 @@ var index_default = {
       if (saved.mode === "update" && !versionOk(saved.r))
         return html(plainPage(NO_RELEASE_CHOSEN, "Nothing was changed. Open your team's Civicsmith, go to Settings \u203A Updates and choose Update there.", ""), 200, clear);
       const title = saved.mode === "update" ? UPDATE_WORDS.progressTitle : saved.mode === "remove" || saved.mode === "removeconfirm" ? word("screen.install.remove.title") : word("screen.install.progress.title");
+      saved.lock = { id: rand(8), again: typeof saved.lk === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(saved.lk) ? saved.lk : null };
       const again = {
         slug: saved.slug,
         mode: saved.mode,
+        lock: saved.lock.id,
         ...saved.mode === "update" ? { version: saved.r } : {},
         ...saved.al === 1 ? { alongside: true } : {},
         ...saved.p ? { profiles: saved.p } : {},

@@ -1764,10 +1764,10 @@ async function installRun(emit0, code, saved, guard) {
   let token, scope, api;
   /* R66: a wait on Cloudflare is drawn once as it begins, and the lock (R69) is touched with it. */
   const onWait = async (waited) => {
-    if (api) touchLock(api).catch(() => {});
+    if (api) touchLock(api, saved.lock.id).catch(() => {});
     if (waited === 0) await emit0.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
-  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit0.step(id, label); } };
+  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
 
   await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token, onWait); scope = ex.scope; emit.ok("auth"); }
@@ -1796,7 +1796,7 @@ async function installRun(emit0, code, saved, guard) {
 
   /* R69 (F9): one run at a time. */
   try {
-    if (!(await takeLock(api))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; /* a lock that cannot be taken is not a reason to refuse the install */ }
 
@@ -2230,10 +2230,10 @@ async function updateRun(emit00, code, saved, guard) {
   let api;
   /* R66: a wait is drawn once as it begins, and the lock (R69) is touched with it. */
   const onWait = async (waited) => {
-    if (api) touchLock(api).catch(() => {});
+    if (api) touchLock(api, saved.lock.id).catch(() => {});
     if (waited === 0) await emit00.wait(word("screen.install.progress.retrying", { minutes: WAIT_BOUND_MINUTES }));
   };
-  const emit0 = { ...emit00, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit00.step(id, label); } };
+  const emit0 = { ...emit00, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit00.step(id, label); } };
   /* R52 (DEC-201 (8)): every stop of an update, each before its upload changed anything, says your team's Civicsmith
      keeps running as it was. */
   const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, p === "" || /nothing changed\.$/.test(p) ? p : p + " " + UPDATE_KEEPS, d, ...at) };
@@ -2270,7 +2270,7 @@ async function updateRun(emit00, code, saved, guard) {
 
   /* R69 (F9): one run at a time. */
   try {
-    if (!(await takeLock(api))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
+    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was changed.", "");
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
 
@@ -2495,7 +2495,7 @@ async function runRemoveRun(emit, code, saved) {
 async function runRemove(emit0, code, saved, guard) {
   const slug = saved.slug;
   let token, acct, api;
-  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api).catch(() => {}); return emit0.step(id, label); } };
+  const emit = { ...emit0, step: async (id, label) => { if (api) await touchLock(api, saved.lock.id).catch(() => {}); return emit0.step(id, label); } };
   await emit.step("auth", "Confirming your permission with Cloudflare");
   try { const ex = await exchange(code, saved.v); token = new Session(ex.token); emit.ok("auth"); }
   catch (e) { emit.no("auth"); return emit.fail("Cloudflare did not confirm the permission", "Nothing was deleted.", tryAgain("install", e.message)); }
@@ -2505,7 +2505,7 @@ async function runRemove(emit0, code, saved, guard) {
   api = apiOf(token, acct.id);
   if (saved.ty !== slug) return emit.fail(word("screen.install.remove.type.label"), "Nothing was deleted.", word("screen.install.remove.type.help", { slug }));
   try {
-    if (!(await takeLock(api))) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
+    if (!(await takeLock(api, saved.lock))) return emit.fail(word("screen.install.stopped.running"), "Nothing was deleted.", "");
     guard.drop = () => dropLock(api);
   } catch (e) { if (special(e)) throw e; }
   await emit.step("list", "Listing everything this Civicsmith holds in your account");
@@ -2608,7 +2608,8 @@ export default {
          choice about the assistant (an `assistant` field is taken nowhere). */
       const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}),
         ...(vpc ? { vpc } : {}), ...(mode === "update" ? { r: chosen } : {}),
-        ...(mode === "install" && body.alongside === true ? { al: 1 } : {}), ...(mode === "removeconfirm" ? { ty: body.typed } : {}) })));
+        ...(mode === "install" && body.alongside === true ? { al: 1 } : {}), ...(mode === "removeconfirm" ? { ty: body.typed } : {}),
+        ...(typeof body.lock === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(body.lock) ? { lk: body.lock } : {}) })));
       return json({ ok: true, authorize: `${CFG.AUTHORIZE}?${q}` }, 200,
         { "set-cookie": setCookie(cookie, CFG.COOKIE_MAX_AGE_S) });
     }
@@ -2645,8 +2646,10 @@ export default {
 
       const title = saved.mode === "update" ? UPDATE_WORDS.progressTitle
         : saved.mode === "remove" || saved.mode === "removeconfirm" ? word("screen.install.remove.title") : word("screen.install.progress.title");
+      /* R69, R71: this run's own place on the account's lock, and the run it continues when the founder approved again. */
+      saved.lock = { id: rand(8), again: typeof saved.lk === "string" && /^[0-9A-Za-z_-]{6,64}$/.test(saved.lk) ? saved.lk : null };
       /* R71 (F6): what a new approval begins again, never a credential. */
-      const again = { slug: saved.slug, mode: saved.mode, ...(saved.mode === "update" ? { version: saved.r } : {}),
+      const again = { slug: saved.slug, mode: saved.mode, lock: saved.lock.id, ...(saved.mode === "update" ? { version: saved.r } : {}),
         ...(saved.al === 1 ? { alongside: true } : {}), ...(saved.p ? { profiles: saved.p } : {}), ...(saved.vpc ? { securityVpc: saved.vpc } : {}),
         ...(saved.mode === "removeconfirm" ? { typed: saved.ty } : {}) };
       return streamPage(clear, progressShell(title, saved.slug, saved.mode === "update" ? `/update?version=${saved.r}` : null),
