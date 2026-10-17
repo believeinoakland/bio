@@ -17,3 +17,11 @@
 **Tests and checks.** question-explorer: 46 tests, 46 pass (`end.test.mjs` 8, `words.test.mjs` 4; before: 34). Users: notice-producers (investigation, read) 26/26; plane `t41` pass; scheduler `explore.test.mjs` 15 of 18 across it and t41, the 3 failures item 1. Process repository, from the product: `format` 171 modules, 0 failures; `architecture question-explorer` 0 failures; `coverage question-explorer` 17 of 17 live ids named, 0 failures; `ownership question-explorer tranche/T50` 0 failures; `checks/run.mjs`: format 0, architecture 0 failures (3,449 files), coverage 38 failures, none mine (other modules' not-yet-met ids), channels 0.
 
 Size (session_01UkBvibqUu4XYbgFPhPXazF): test runs 9, module lines 1159
+
+## J1 · COMPLETE
+
+COMPLETE J1: T50-68 question-explorer done on job/T50/question-explorer (record: build/jobs/T50/question-explorer.md).
+R17 met: ai-runs open and close awaited; exploreDue/Wake/Tick, end, look and propose answer promises; the cap and a limit close with bound completed and condition null (the reason is the step's only); closed: true only when the close was accepted, a refused or failed close answers closed: false with the plane's code and is recorded in explore_runs.close_refused (migrated), the run staying open to end again; end takes an optional condition checked against CONDITION_KINDS; ticks are serialized. Plan rule 6: words.mjs (24 keys = words-reads.json), no member-facing English inline.
+Tests: question-explorer 46/46. format, architecture question-explorer, coverage question-explorer (17/17), ownership: 0 failures. checks/run.mjs: architecture 0 failures; coverage failures are other modules'.
+For BOB: (1) scheduler T50-16: bio-plane/test/m/scheduler/explore.test.mjs goes red against the real explorer (3 tests) until scheduler R27 awaits exploreDue/Wake/Tick; (2) R17's text should also say propose answers a promise, end takes condition and answers ok: false on a refused close; Public size figure stale (own code 1,159 lines); (3) plane bundle stale (not mine).
+Size (session_01UkBvibqUu4XYbgFPhPXazF): test runs 9, module lines 1159
