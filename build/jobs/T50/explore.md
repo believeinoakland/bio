@@ -27,3 +27,7 @@ I carry on with nothing else pending; the rest of R25 stands as pushed.
 - Merged `tranche/T50`. The real `entities.labelsOf` answers `{ok, labels: {id: {label, kind}|null}, count}`: the shape the code already read, so no code change. Added a real-owner test (`real-owners.test.mjs`, R25: city and vendor labelled and kinded by the real registry; an unrecognised viewer sees no names).
 - Ran: `node --test bio-plane/test/m/explore/` 51 tests, 51 pass; format, architecture, coverage, ownership as below.
 - Size (session_01GeqMMCaEHa6q6oxUuwc2TJ): test runs 7, module lines 1043
+
+## J3 · COMPLETE · re B4
+
+Merged tranche/T50 with entities. The real labelsOf answers the shape my code already read, so no code change; added a real-owner R25 test (labels and kinds from the real registry; unrecognised viewer sees none). 51/51 explore tests pass; format, architecture, coverage (25/25), ownership 0 failures. Record updated.
