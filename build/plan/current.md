@@ -62,7 +62,7 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 
 ### L2
 - **T50-2 · membership** · (N1115, K657) R83's `MODULE_ORDER` after the opening act, assembled from `modules.json`, never hand-listed (N1171: with R140, R145, R79's listeners order). (N1119) `memberlist` answers the founder's row. (N1092 (owners §11)) `lookedAt({by})` (`op=lookedat`), the last-looked mark read without moving it. (N1186 (owners §12)) `viewerPredicate` narrows a viewer that carries a `project` (credentials R27) to that project's records and the records it cites, within the member's sight. (N1116) reads by key · Text: fold · claude-sonnet-5-5 · first in L2. START re-measures (3,903 lines): past ~4,000 it still runs, its split T51's first entry (P6).
-- **T50-3 · project-roster** · (N1129) `projectDirectory` takes the founder's viewer. (N1124) `projectparticipants`' `joined_at` and owner times; the rescue's "since"; `projectvisibility`'s `set_by` by handle. (N1135) owner votes tie by insertion order. (N933, Bob's K3230 "N933: B"; `archive/drafts/draft-N933-stake-per-matter.md` renumbered) R31, R32: `projectStakeSet`, `projectStake`, `projectStakeHistory`, the stake every later part reads. (N1118) R34 `projectlist`'s `participation`, the viewer's own state (found unmet by PROJECT-ROSTER #9 J2; K3629) · Text: fold · claude-sonnet-5-5 · provider for T50-30, T50-31 and N933's later parts.
+- **T50-3 · project-roster** · (N1129) `projectDirectory` takes the founder's viewer. (N1124) `projectparticipants`' `joined_at` and owner times; the rescue's "since"; `projectvisibility`'s `set_by` by handle. (N1135) owner votes tie by insertion order. (N933, Bob's K3230 "N933: B"; `archive/drafts/draft-N933-stake-per-matter.md` renumbered) R31, R32: `projectStakeSet`, `projectStake`, `projectStakeHistory`, the stake every later part reads. (N933, K3635) R31's `stakeFault`, the stake codes' one site. (N1118) R34 `projectlist`'s `participation`, the viewer's own state (found unmet by PROJECT-ROSTER #9 J2; K3629) · Text: fold · claude-sonnet-5-5 · provider for T50-30, T50-31 and N933's later parts.
 - **T50-4 · ai-accounts** · (N1060, K3218, K3224) R26: a refused sign-in tells its listeners. (N1132, N1171) its words-pin check and R10–R22's refusal keys by key · Text: fold · claude-sonnet-5-5 · provider for T50-5.
 - **T50-5 · credentials** · (N1060) R73's test against T50-4's clause. (N1186) R27: `aiGrantMint` and the run credential carry the run's optional `project`, the viewer it makes narrowed by membership's predicate · Text: fold · claude-sonnet-5-5 · after T50-2, T50-4.
 - **T50-6 · promotion** · the stamp: every row T49's, R085's and T50's L2 jobs added, moved or changed; (N1171) R39, R45, R46 from `modules.json` · Text: none · claude-sonnet-5-5 · last in L2.
@@ -109,32 +109,34 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 **L6 merge order:** agent-runner first, then `modules.json`'s.
 
 ### L7
-- **T50-14 · reevaluation** · (N1069) `adoptVersion` names the adopting member as author. (N1070) the relayed refusal named and tested · Text: fold · claude-sonnet-5-5.
+- **T50-14 · reevaluation** · (N1069) `adoptVersion` names the adopting member as author. (N1070) the relayed refusal named and tested · Text: folded (K3635: R37, R38) · claude-sonnet-5-5.
 
 ### L8
-- **T50-15 · case-import** · (N1087, N1090; DEC-236) R26: the team's imported cases for `imported`. (N933) R25: accepts `matter_stake` · Text: fold · claude-sonnet-5-5 · provider for T50-34.
-- **T50-71 · public-read** · (N933) R36: `groupFields({project})` answers `matter_stake` · Text: fold · claude-sonnet-5-5.
-- **T50-72 · review** · (N1081) the outside reader's copy answer carries the team's zone beside `grant.until` · Text: fold · claude-sonnet-5-5.
-- **T50-73 · case-checker** · (N1181) the gates' words for the ceremony, by key, never developer text · Text: fold · claude-sonnet-5-5.
+- **T50-15 · case-import** · (N1087, N1090; DEC-236) R26: the team's imported cases for `imported`. (N933) R25: accepts `matter_stake` · Text: folded (K3635: R25, R26) · claude-sonnet-5-5 · provider for T50-34.
+- **T50-71 · public-read** · (N933) R36: `groupFields({project})` answers `matter_stake` · Text: folded (K3635: R36) · claude-sonnet-5-5.
+- **T50-72 · review** · (N1081) the outside reader's copy answer carries the team's zone beside `grant.until` · Text: folded (K3635: R35) · claude-sonnet-5-5.
+- **T50-73 · case-checker** · (N1181) the gates' words for the ceremony, by key, never developer text · Text: folded (K3635: R26, the departures' `says`) · claude-sonnet-5-5.
 - **T50-43 · case-account** · (N1132) its words check by key · Text: none · claude-haiku-5-5.
+- **T50-83 · ratification** · (N1203, K3635) R44's governing zone read as `retrieval` R69 reads it (`local-facts` first) · Text: fold · claude-haiku-5-5.
+- **T50-84 · publish-schedule** · (N1203, K3635) R1's governing zone read the same way · Text: fold · claude-haiku-5-5.
 
 ### L9
-- **T50-74 · actions** · (N1178, owners §3) `actionRead` answers an id no action answers to through R43 (`NO_SUCH_ACTION`), never `NO_SUCH_BUNDLE`. (N933) R105 `own_stake`; R75 `matter_stake` · Text: fold · claude-sonnet-5-5.
-- **T50-75 · action-records** · (N1093, DEC-239) `actioninquiry`, a question opened with an action as its reference. (N1178) its own `NO_SUCH_BUNDLE` sites for an action answer `NO_SUCH_ACTION`. (N933) R17 `actionStake` · Text: fold · claude-sonnet-5-5 · before T50-74 (order).
-- **T50-46 · filings** · (N933) R60–R63: which stake shows, the stamp's `group`, `stakeAtPreparation` (a prompt, never a gate). (N1132) its words check · Text: fold · claude-sonnet-5-5.
-- **T50-76 · conformance** · (N933) R41: an accepted finding's `basis` answers `matter_stake`. (N1023; joins) C-113.6's sentence by key · Text: fold · claude-sonnet-5-5.
+- **T50-74 · actions** · (N1178, owners §3) `actionRead` answers an id no action answers to through R43 (`NO_SUCH_ACTION`), never `NO_SUCH_BUNDLE`. (N933) R105 `own_stake`; R75 `matter_stake`; (N1178) `noSuchAction` re-exported from action-records · Text: folded (K3635: R105–R107) · claude-sonnet-5-5.
+- **T50-75 · action-records** · (N1093, DEC-239) `actioninquiry`, a question opened with an action as its reference. (N1178) its own `NO_SUCH_BUNDLE` sites for an action answer `NO_SUCH_ACTION`. (N933) R17 `actionStake`, its stake codes through project-roster's `stakeFault`; (N1178) R18 `noSuchAction` moved here · Text: folded (K3635: R17–R19) · claude-sonnet-5-5 · before T50-74 (order).
+- **T50-46 · filings** · (N933) R60–R63: which stake shows, the stamp's `group`, `stakeAtPreparation` (a prompt, never a gate). (N1132) its words check · Text: folded (K3635: R60–R63) · claude-sonnet-5-5.
+- **T50-76 · conformance** · (N933) R41: an accepted finding's `basis` answers `matter_stake`. (N1023; joins) C-113.6's sentence by key · Text: folded (K3635: R40, R41) · claude-sonnet-5-5.
 - **T50-39 · filing-templates** · (N1130) R33 by key · Text: none · claude-haiku-5-5.
 - **T50-44 · action-grammar**, **T50-45 · action-replies**, **T50-47 · action-plans** · (N1132; N1171 for action-plans R47) each its words check by key · Text: none · claude-haiku-5-5 each.
 
 ### L10
-- **T50-16 · scheduler** · (N1114) a consumer whose wake does not advance is held · Text: fold · claude-sonnet-5-5.
-- **T50-77 · following** · (N1092, DEC-238 S23 "A"; owners §11) the storage of `watchitem` (read back only to its setter) and `secondlook` (seen by every member, who raised it with date and note, cleared by any member with who and when), and registers their read with retrieval's `registerBrowseMarks` (its R86; K3630) · Text: fold · claude-sonnet-5-5.
+- **T50-16 · scheduler** · (N1114) a consumer whose wake does not advance is held · Text: folded (K3635: R27) · claude-sonnet-5-5.
+- **T50-77 · following** · (N1092, DEC-238 S23 "A"; owners §11) the storage of `watchitem` (read back only to its setter) and `secondlook` (seen by every member, who raised it with date and note, cleared by any member with who and when), and registers their read with retrieval's `registerBrowseMarks` (its R86; K3630) · Text: folded (K3635: R32–R34) · claude-sonnet-5-5.
 
 ### L11
 Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` places on it (its U-numbers, named in each START), folded as requirement lines before L11's START.
 - **T50-22 · translations** (new, by copy from instance-setup; N1084, P6) · the workspace (instance-setup R67–R75, R87) as `build/extraction/translations.md` maps it · Text: the map · claude-sonnet-5-5 · first in L11.
 - **T50-17 · wizard-scripts** · (N1122) `SCREEN_REGISTRY` generated from the design's `registry.json` (a generated artifact). (U14; DEC-266, DEC-279, DEC-281) the library's newest versions adopted (BOB's, K2241). (N1194) a saved draft listed by `wizards{state:"draft"}` (a test) · Text: fold · claude-sonnet-5-5 · provider for T50-27.
-- **T50-18 · op-grades** · grades for T50's new ops (`lookedat`, `browse`, `watchitem`, `secondlook`, the open-captures read, the capture grade, the partition, the imported list, `opencaptures`, `capturegrade`, `projectstakeset`, `projectstake`, `projectownersgone`, `actionstake`, `stakeatpreparation`, `actioninquiry`) · Text: fold · claude-haiku-5-5 · before T50-19.
+- **T50-18 · op-grades** · grades for T50's new ops (`lookedat`, `browse`, `watchitem`, `secondlook`, the open-captures read, the capture grade, the partition, the imported list, `opencaptures`, `capturegrade`, `projectstakeset`, `projectstake`, `projectownersgone`, `actionstake`, `stakeatpreparation`, `actioninquiry`; `watchitem`, `secondlook`, `secondlookclear`) · Text: fold · claude-haiku-5-5 · before T50-19. Its START reads `marks.mjs`' Reasoned class for the marks and `actioninquiry` against owners §11's "reversible" (K3635).
 - **T50-19 · affordances** · (N1108, N1125, N1147) keys by R39's order; acts' labels and prompts by key; `t36` R48, R61 · Text: fold · claude-sonnet-5-5.
 - **T50-20 · queue-producers** · (N1106, DEC-248) the `project-invitation` item; (U8, DEC-286) the owners' request item `queue.project-request.*` · Text: fold · claude-sonnet-5-5.
 - **T50-52 · machinery-producers** · (N1140, DEC-274) the capture-request producer by key · Text: fold · claude-sonnet-5-5.
@@ -155,6 +157,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 - **T50-33 · screens-investigate** · (N1101) the `theme` screen. (N1127) the registry's `person` and `timeline` acts. (N1102, DEC-243) `timeline` states a–c with T50-62's read. (N1079) choices from each row's `capture.sha256` (capture R77 already answers it, K3627). (N1183) placeholders, fingerprint-free forms, B-18. (N1086, N1090) nodes labeled, the unnamed node. (N1190) the court choice and "Add a court". (N1193) the Person page's every fact; the Timeline's dated facts. (U16, DEC-294) the People page · Text: fold · claude-sonnet-5-5 · START re-measures (as T50-32).
 - **T50-34 · screens-publish** · (N1087) `imported` draws its list. (N1144) `act.publish.here.ceremony`. (N1081) the outside reader's day. (N1181) plain ceremony and draft words. (U10, DEC-263) `published.check.elsewhere` · Text: fold · claude-sonnet-5-5.
 - **T50-80 · screens-action** · (N1182) Request records with no office known. (N1121) the records help from `records_help`. (N1093) the action page's `actioninquiry`. (N1178) its words if theirs · Text: fold · claude-sonnet-5-5.
+- **T50-82 · notice-producers** · (N1204, DEC-238, K3635) a watched item's changes reach the watching member's queue, from following's marks (R32, R34) · Text: fold · claude-sonnet-5-5 · after T50-77 (L10).
 - **T50-35 · control-plane** · routes T50's new ops; (N1186) a run credential's viewer carries its project (credentials R79); (N1174, B-14) an unknown address outside `/api/` draws the interface's `unavailable` page, 404, `UNKNOWN_OP` JSON unchanged for an op; (N933) R102: the review copy's `group` for the draft's project; (N1194) `acquire`'s door answers a document or a named refusal within a stated time; (N1117, K3627) the door refuses an `acquire` whose `for` names a question the member may not see, routes `opencaptures` and `capturegrade`, and passes the stamped `viewer` to `inboxpull` and `inboxresolve` (doorbell R13) · Text: fold · claude-sonnet-5-5 · after T50-24. START re-measures (3,763).
 - **T50-36 · plane** · wires T50's new ops; (N1171) store R2, R10; (N1195) its door streams each progress event as written · Text: fold · claude-sonnet-5-5 (a behaviour job now) · after T50-35.
 - **T50-78 · installer** · (N1148, DEC-282) an account already holding a Civicsmith: told and offered a way on (`installupdate`, `installalongside`, `installremove`, `installremoveconfirm`; `screen.install.exists.*`, `.remove.*`). (N1150) installs every part from the release's own signed fleet manifest. (N1157) every situation `install-situations.md` names. (N1162) binds `SEGMENTS`. (N1170) passes `instance_type`. (N1196) R56–R58 (R56, R58 once the proof passes; R57 now). (N1160) "team". The base red "realsize" · Text: folded and fold · claude-sonnet-5-5.
@@ -165,7 +168,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 
 ## Count
 
-**81 job ids, 74 jobs** (T50-81 capture-requests added at L3's fold, K3627) (T50-48, T50-49 dropped in T49, K3407; ids T50-54 to T50-80 new at the fold; T50-79 admission and T50-80 screens-action are the review's): L1 3, L2 5, L3 4, L4 2, L5 8, L6 13, L7 1, L8 5, L9 8, L10 2, L11 24. Models: default 2 (T50-64, T50-28), Haiku 12, Sonnet the rest.
+**84 job ids, 77 jobs** (T50-81 capture-requests added at L3's fold, K3627; T50-82–T50-84 at L7–L10's, K3635) (T50-48, T50-49 dropped in T49, K3407; ids T50-54 to T50-80 new at the fold; T50-79 admission and T50-80 screens-action are the review's): L1 3, L2 5, L3 4, L4 2, L5 8, L6 13, L7 1, L8 7, L9 8, L10 2, L11 25. Models: default 2 (T50-64, T50-28), Haiku 14, Sonnet the rest.
 
 ## BOB's acts (no job)
 
