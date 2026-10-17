@@ -6,7 +6,7 @@
 
 **Sources** · Adopted at the opening (K3614) from `archive/drafts/draft-T50-plan.md` (a planning worker's draft, reviewed by BOB #181 and BOB #195) with every review, paragraph and placement since folded in: N1148–N1197 of `next.md`, Bob's K3602 (N1195), K3607–K3611 (N1196, N1197), UX-DESIGN's DEC-257–DEC-300 (the design branch @ 92331996be, merged at the opening), and the owners settled at the fold by reading workers whose findings BOB reviewed (`plan/fold-T50-owners.md`, `plan/fold-T50-decs.md`, `plan/fold-T50-remote.md`). Every entry the draft or `next.md` held is placed below or left out with its hard reason (P19).
 
-**Aim.** **Bob's focus (K3666):** a release that can be walked and exercised, unassisted and with the assistant, through sample real-world investigation journeys to completion, and that renders every screen properly with every control operating and reacting as designed; judged by three walks on biosmoke8 before Bob is told it is ready. T50 carries every entry that can safely be done (P19). Its centre is Bob's K3607–K3611: the assistant runs on Claude Code remote, built in T50's own layers (N1196), with the local runner made impossible to run (N1197, first in L6); and K3320's journey (install, sign in and out, project, connect, capture, question, assistant, conclude, as administrator and member), with every defect the walks of the 0.85.0 cut found (JOURNEYS V4, WALK-085, R085's lanes). The rows the draft left out "under the meter" join: T50 opens on a fresh week (the reset, 2026-10-17 11:00 UTC; K3551's "all else goes to T50"), so P19 leaves them no hard reason. Bob takes inventory once T50 closes (K3609).
+**Aim.** (Bob, K3717: T50 runs to completion and is confirmed on its unassisted metric, then checked in as a named point, `release/T50-unassisted`; no more effort on getting the assistant to work, nothing of it disabled.) **Bob's focus (K3666):** a release that can be walked and exercised, unassisted and with the assistant, through sample real-world investigation journeys to completion, and that renders every screen properly with every control operating and reacting as designed; judged by three walks on biosmoke8 before Bob is told it is ready. T50 carries every entry that can safely be done (P19). Its centre is Bob's K3607–K3611: the assistant runs on Claude Code remote, built in T50's own layers (N1196), with the local runner made impossible to run (N1197, first in L6); and K3320's journey (install, sign in and out, project, connect, capture, question, assistant, conclude, as administrator and member), with every defect the walks of the 0.85.0 cut found (JOURNEYS V4, WALK-085, R085's lanes). The rows the draft left out "under the meter" join: T50 opens on a fresh week (the reset, 2026-10-17 11:00 UTC; K3551's "all else goes to T50"), so P19 leaves them no hard reason. Bob takes inventory once T50 closes (K3609).
 
 ## Legacy census (§5.2 (2))
 
@@ -109,7 +109,7 @@ N847 is found applied in T48 (jurisdictions R89–R92, wizard-scripts' sixth doo
 **L6 merge order:** agent-runner first, then `modules.json`'s.
 
 ### L7
-**Held (Bob, K3695):** not started until Bob's route for the remote assistant (K3692) is ruled and folded.
+**The hold (K3695) is lifted (Bob, K3717); L7 starts.** No more effort goes into getting the assistant to work; the plan's entries stand unchanged, and those waiting on the remote proof stay unbuilt (K3718).
 - **T50-14 · reevaluation** · (N1069) `adoptVersion` names the adopting member as author. (N1070) the relayed refusal named and tested · Text: folded (K3635: R37, R38) · claude-sonnet-5-5.
 
 ### L8
@@ -177,7 +177,7 @@ Every L11 job also draws the DEC-257–DEC-300 items `plan/fold-T50-decs.md` pla
 - **At each layer close:** the generated artifacts (§14), `rows.mjs` and the T50-17 registry among them.
 - **The channel:** one HANDOFF to UX-DESIGN at the opening: the keys T50's new refusals need (`ASSISTANT_REMOTE_NOT_READY`, `LOCAL_RUNNER_DISABLED` for logs only, `SIGNIN_EXPIRED` later), the remote check's step words (agent-worker R111, screens-settings R41), N1174's aliases question (`/doorbell`, `/tour`), and N1190's court kinds' labels.
 - **stewards (N1159):** BOB's routing acts on account 20b5…7f72 (the test delivery in the routing log) before the stewards job can be placed; if the route works before L11's START, stewards and N923 join L11.
-- **Bob's route for the remote assistant (K3692):** the proof blocked at R38 step 0; on his answer, BOB folds the route into agent-runner R36–R40 and its users and sends each running job a CHANGE (K3615).
+- ~~Bob's route for the remote assistant (K3692)~~: none is pursued (K3717). **The named point (K3718 (5)):** after T50's close PR merges, push `release/T50-unassisted` at that `main` commit.
 - **Bob, at the opening:** told that T50 has opened; asked his meter reading; ROOT #7 (ROOT #5 near its 55%).
 
 ## Left out of T50 (one hard reason each)
