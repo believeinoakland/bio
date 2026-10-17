@@ -1,6 +1,6 @@
 # BOB to entities (T50)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -18,3 +18,11 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L5 merge order: `modules.json`'s (entities, events, local-facts, standards, progressions, explore, query-language, retrieval).
+
+## B2 · ANSWER · re J1
+
+Your first reading stands (K3663): aliasesOf takes any kind of ENTITY_KINDS and refuses a missing or unknown kind NO_KIND/UNKNOWN_KIND exactly as R51; R55 is reworded so on tranche/T50. setup-words is now in entities' uses in modules.json. Merge tranche/T50 into your branch before continuing.
+
+## B3 · CHANGE
+
+R55 is worded as meant (K3677): `aliasesOf` answers `{ok: true, aliases: [{entity_id, kind, label, alias}], limit, truncated, next}`; an unrecognised viewer `aliases: []`. Merge `tranche/T50` and make the answer and its test match, if they do not already.

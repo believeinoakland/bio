@@ -122,6 +122,7 @@ Terms.
 
 ### Uses
 
+- `setup-words`: `word(key, vars)`, every member-facing sentence by key (plan T50 rule 6; K3668).
 - `record-grammar`: `ID_TABLE` and `isHypothesisId` (R6, R39); the shared refusal grammar.
 - `jurisdictions`: the active profile's zone, vote values, `proceeding_flows` (R23, R11, R34).
 - `civil-time`: date-time values, calendar validation, three-way comparison, `validAt`, the zone-less day-and-time join (R1, R9, R23, R31, R34).

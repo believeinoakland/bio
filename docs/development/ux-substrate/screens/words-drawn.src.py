@@ -1540,6 +1540,11 @@ def w307(key, en, prot=False, note=''):
 w307('refusal.SIGNIN_EXPIRED', "The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent.", False, 'screens-settings R41, agent-worker R84')
 w307('refusal.PUBLISH_AT_NO_ZONE', "Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.", False, 'ratification R44, publish-schedule R1: only "Publish now" is offered')
 # --- end DEC-307
+# --- DEC-308 (T50's requirements against the screens, drawn: explore R25, entities R54)
+def w308(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-308' + (': ' + note if note else '')))
+w308('screen.explore.unnamed.why', 'named in {n} documents only by an account number', False, 'explore R25: why a node is not yet named, beside connection.node.unnamed')
+# --- end DEC-308
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

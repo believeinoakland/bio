@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3808,
+  "screen": 3809,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12756,
+  "total": 12757,
   "protected": 892
  },
  "words": [
@@ -39302,6 +39302,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered"
+  },
+  {
+   "key": "screen.explore.unnamed.why",
+   "en": "named in {n} documents only by an account number",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-308: explore R25: why a node is not yet named, beside connection.node.unnamed"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
