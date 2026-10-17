@@ -5038,3 +5038,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: (1) `screen.document.cite.choose` dropped: the document draws `screen.find-in.questionfirst`'s identical words. (2) `findin.fieldneeded` ends "Nothing was recorded." (3) `label.personfactkinds.office` is "Office", a noun like its siblings. (4) Fold summaries open with "When": `screen.find-in.bounds.summary`, `caseimport.notrecorded.summary`, `caseimport.unreadable.summary`; `screen.group.timezone.none.summary` says "When your team's time zone isn't set", as the review link's does. (5) `screen.find-in.flow.help` says what the step asks: "Asked only for an actual payment: who paid it, who received it, how much and on what day." (6) `home.strip.ours_passed.opens`: "Opens your queue at this item." Kept as they are: `label.timeprecisions.*` capitalized, since they are option labels like `label.personfactkinds.*` (the money precisions are read inside sentences); `screen.person.claim.kind.*` keep `label.identityclaimkinds.*`'s English deliberately.
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `mock-screens.js`.
 owed: (BOB, T50) modules read the reworded keys as they stand; whatever would read `screen.document.cite.choose` reads `screen.find-in.questionfirst`.
+
+### DEC-325 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (T50's requirement gaps: the six states DEC-323 left)
+for: design
+question: Six held states were still undrawn after DEC-323.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: `document.untitled.web` heads a held page with no title ("A page from oaklandca.gov, captured 2 October"); `document.image.unread` in a fold on the document; `case.draft.untitled` heads a first case's draft ("Pothole repairs: draft case"); `screen.case-editor.tip.distributed` explains the ladder's last rung beneath it; `member.founder.unnamed` with its help in a fold on Members. `settings.set.system` stays undrawn: no setting the design draws is set by Civicsmith itself, so it waits for one (the walks will name it if a screen needs it). The gaps list is drawn through, apart from the assistant's states, which K3717 leaves.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
+owed: none.
