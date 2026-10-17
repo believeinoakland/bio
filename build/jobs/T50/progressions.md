@@ -27,3 +27,7 @@ Size (session_01L8enn3KdBrcuPWu8uTZDjV): test runs 14, module lines 2187
 ## J1 · REPORT
 
 REPORT J1. Found outside my module: (1) the word list has no refusal.NO_SET, so C-100.26 reads refusal.SET_NO_ITEMS until the design lane mints it; (2) refusal.SET_TOO_LARGE is record-core's key (C-75.2), C-100.27 reads it, the same code from two modules is the design lane's to settle; (3) op=instances is new in progressionOps: plane's ops map and op-declarations are untouched by me, their suites show the same reds as base (plane 1, op-declarations 9), none new, accepted until L11; (4) bio-plane/dist/bio-plane.bundled.mjs is stale (the plane bundles progressions). Details in build/jobs/T50/progressions.md.
+
+## J2 · COMPLETE
+
+COMPLETE J2: T50-62 done on job/T50/progressions: R44 instancesFor (op=instances, NO_SET C-100.26, SET_TOO_LARGE C-100.27) and R45 (overdue_successor says by key progression.nodoc / progression.expects[.undetermined]); plan rule 6: 21 refusal rows and 34 progressions.* sentences read by key. progressions 76/76; users green except inquiry's inherited R39 red; checks: format, architecture, ownership 0 failures, progressions coverage 45/45. Three readings of mine are in the record for you to confirm (says shape, next_deadline includes past deadlines, limit clamped). Layers.md and current.md read in part (record says which).
