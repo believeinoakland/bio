@@ -43,10 +43,14 @@ test("R82: a dispatch waits only for agent-worker to accept the segment — a wo
 
 test("R82: the wait for acceptance is ten seconds by default — nothing answers before it, the call that did not complete answers at it", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });
-  const w = await memberRun(agentWorker("hang"), { AI_RUN_DISPATCH_WAIT_MS: undefined });
+  const aw = agentWorker("hang");
+  const w = await memberRun(aw, { AI_RUN_DISPATCH_WAIT_MS: undefined });
   let out = null;
   const p = w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" }).then((x) => { out = x; });
-  for (let i = 0; i < 20; i++) await new Promise((res) => setImmediate(res));
+  /* until the call is made (its wait timer is set in the same step), not a fixed number of turns: the sealed key and the mint
+     are awaited first, and under load they take as many turns as they take */
+  for (let i = 0; i < 100000 && aw.calls.length === 0; i++) await new Promise((res) => setImmediate(res));
+  assert.equal(aw.calls.length, 1, "the call was made");
   t.mock.timers.tick(9999);
   for (let i = 0; i < 5; i++) await new Promise((res) => setImmediate(res));
   assert.equal(out, null, "not yet at 9.999 s");

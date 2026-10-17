@@ -2,6 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, inquiryMd } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { SURFACE_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
@@ -84,7 +85,7 @@ test("R27: surfacedIn — no row is not recorded; a run the viewer cannot read s
   w.surface(Q(1), { run: "RH", caller: "member:ann/t1", viewer: "member:ann" });
   const hidden = await w.runs.surfacedIn(Q(1), "member:dan");
   assert.deepEqual(hidden, { recorded: true, run: null, by: null, at: hidden.at, lens: null,
-                             stated: "this question was opened inside a run this reader cannot read" });
+                             stated: word("ai-runs.stated.question_opened_inside") });
   const seen = await w.runs.surfacedIn(Q(1), "member:ann");
   const read = (await w.runs.read({ run: "RH", viewer: "member:ann" })).session;
   assert.deepEqual(seen, { recorded: true, run: "RH", by: "member:ann/t1", at: hidden.at, context: read.context,

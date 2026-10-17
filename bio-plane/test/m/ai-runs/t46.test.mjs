@@ -5,6 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0, sha, agentWorker, SIGNIN_TOKEN } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { AI_RUN_MODE_WRITES } from "../../../src/ai-runs/index.mjs";
 import { AI_RUN_WRITES } from "../../../src/credentials/index.mjs";
 import { AI_RUNS_CHECKS, CIVICSMITH_TEST_SET, untestedLabel } from "../../../src/run-rules/index.mjs";
@@ -282,10 +283,10 @@ test("R18 (T46, T47) controls: another member's `by` is AI_RUN_NOT_PRINCIPAL; ab
   assert.deepEqual([notPrincipal.dispatched, notPrincipal.code, notPrincipal.check],
                    [false, "AI_RUN_NOT_PRINCIPAL", AI_RUNS_CHECKS.AI_RUN_NOT_PRINCIPAL.check]);
   assert.equal((await disp({ by: ORG, viewer: "member:ann" })).code, "AI_RUN_NOT_PRINCIPAL", "a machine is no member");
-  assert.deepEqual(await disp({ run: "NOPE" }), { run: "NOPE", found: false, note: "no such run: it either never existed or was purged" });
+  assert.deepEqual(await disp({ run: "NOPE" }), { run: "NOPE", found: false, note: word("ai-runs.note.run_either_existed") });
   assert.equal((await disp({ run: "" })).found, false);
   const hidden = await disp({ viewer: "who-knows" });
-  assert.deepEqual(hidden, { run: "R1", found: false, note: "no such run: it either never existed or was purged" });
+  assert.deepEqual(hidden, { run: "R1", found: false, note: word("ai-runs.note.run_either_existed") });
   assert.equal(w.dump(), before, "nothing written");
   assert.equal(runCreds(w).length, 0, "nothing minted");
   assert.equal(aw.calls.length, 0, "no call counted");
