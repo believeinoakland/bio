@@ -35,3 +35,13 @@ Tests and checks (from the repository root and the process repository)
 - `node checks/architecture.mjs <bio> bundler`: 24 product files, 59 relative imports; 0 failures. `node checks/coverage.mjs <bio> bundler`: 34 of 34 live requirement ids named by a test; 0 failures. `node checks/ownership.mjs <bio> bundler tranche/T50`: 0 failures. `node checks/format.mjs <bio>`: 2 failures, both in `build/rulings.md`.
 
 Size (session_0113McfBYeb5TMfMs7CF8GJq): test runs 12, module lines 3577
+
+## J3 · COMPLETE
+
+COMPLETE · bundler, T50-1, CHANGE B2/B3 (ocr-worker's cross-tree inputs).
+
+Merged tranche/T50 (with job/T50/ocr-worker) into the job branch. `fleetbundles.test.mjs` no longer hand-lists ocr-worker's cross-tree inputs: it asserts the manifest's `../` inputs equal exactly those a fresh build of ocr-worker reaches (metafile, nothing written), and that they still span the renderer's tree and the plane's. Both pass; ocr-worker's static arm is green on the merged tree.
+
+Tests and checks: `fleetbundles.test.mjs` 4 FAIL, all the plane bundle (accepted rule 5 (12)); architecture, coverage (34 of 34), ownership: 0 failures. The earlier COMPLETE (J2) otherwise stands.
+
+Size (session_0113McfBYeb5TMfMs7CF8GJq): test runs 14, module lines 3577
