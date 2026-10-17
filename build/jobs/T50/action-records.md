@@ -27,3 +27,12 @@
 - `node checks/format.mjs`: 171 modules, 170 requirements files; 0 failures. `architecture`: 3480 product files, 10804 relative imports; 0 failures. `coverage action-records`: 19 of 19 live ids named by a test; 0 failures. `ownership action-records tranche/T50`: 8 files changed; 0 failures. `node checks/run.mjs`: format and architecture 0 failures; coverage shows 29 failures in other modules (none mine); channels 0 failures.
 
 Size (session_01CuHJhi4h2Wp6LdpRTJE963): test runs 12, module lines 1065
+
+## J1 · REPORT
+
+T50-75 is done on `job/T50/action-records` (record: `build/jobs/T50/action-records.md`). Items for other modules and one ruling for you:
+
+1. Ruling for BOB (deviation, R19): `promotion.promote` does not itself refuse an invited member who has not joined the project (it fences by sight). So `actionInquiry` asks `membership.projectAuthority(project, author, "joined", "actioninquiry")` before promoting, as `conformance` does; that caller gets `PROJECT_ACT_NOT_A_PARTICIPANT` (C-56.1), nothing written. A caller who cannot see the project gets `NO_SUCH_ACTION`.
+2. action-grammar: C-117.2's `where` should name `src/action-records/index.mjs noSuchAction > is-no-such-action` (R18 moved the site); census fixtures follow. No rows exist for `MACHINE_CANNOT_OPEN_FROM_ACTION`, `ACTION_INQUIRY_NO_QUESTION`, `ACTION_NO_PROJECT`: they carry `code` and `translation` (`refusal.<CODE>` by key), no `check`.
+3. actions (T50-74): `test/m/actions` R36 asserts six moved tables; `ACTION_RECORDS_TABLES` now names seven (`action_stakes`), so it is red until that job updates it; `actions` keeps its own `noSuchAction` to re-export from `action-records`.
+4. plane L11: `test/m/plane/t47.test.mjs` R45 counts six action-records route arms, there are eight (`actionstake`, `actioninquiry`); op-declarations, ops-map and op-spec tests for those two ops are L11's. Accepted red until L11.
