@@ -14,7 +14,8 @@
  * R25; retrieval R53, R56), its "what we did" and trigger sources with events and duties (R66, R67), its none-exists
  * reader with intent (R71), and its own-act reader and own-sending check with consequences and standards (R97); and it
  * creates `action-records` (T47, N961; its R15), whose proposals, receipts, scopes and promises the read answers and
- * whose four judgments its acts ask (R18, R23, R64, R70; the getter `records`). The
+ * whose four judgments its acts ask (R18, R23, R64, R70; the getter `records`), whose `stakeOf` the read answers as
+ * `own_stake` (R105) and whose `noSuchAction` this module re-exports (R107, R43). The
  * pressure marks and litigation holds, their reads and their registrations with doorbell and ratification, are
  * `action-holds`' since T45 (R48, R52, R54–R60, R69; K2781 (1)). `place()` and `zoneOf` give the group's zone to modules
  * with no office (R68); `actionZone` is the one zone an action's clock is read in (R100; `action-clocks` reads it).
@@ -74,9 +75,12 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          premiseOverrideOf, overrideGroundFindings, copiedFindings, partnersFindings, pressTermsFindings,
          entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
-import { actionRecordsOf } from "../action-records/index.mjs";
+import { actionRecordsOf, noSuchAction } from "../action-records/index.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
+/* R107 (T50; N1178): `noSuchAction` is `action-records`' function (its R18), re-exported: one function, one answer, one
+   row; only its home moved, because `action-records` is earlier in the order and answers the condition at seven sites. */
+export { noSuchAction };
 
 /** R13, R15: the longest reason, account, medium or party (the value of the retired legacy store's `RELEASE_ACK_MAX`). */
 export const NOTE_MAX = 500;
@@ -152,29 +156,9 @@ export function withRow(r) {
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
 
-/* R43 (N217, K275). THE ONE ANSWER TO ONE CONDITION: no action the caller may see answers to `actionId` (absent,
-   invisible, or a bundle that is not an action, answered alike). Every act or read of a later module answering that
-   condition answers through here (filings R1, R8, R13; escalation R9), so `NO_SUCH_ACTION` is minted at one site and
-   its one row is this module's (C-117.2). The detail is one fixed sentence, the same for every caller, so an absent
-   id and a hidden one can never be told apart by it. `extra` adds a caller's own fields beside these and never
-   replaces one of them. Writes nothing and never throws. */
-const NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one "
-  + "that does not exist, so this is not a hint either way.";
-const NO_SUCH_ACTION_FIXED = new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
-export function noSuchAction(actionId, extra = null) {
-  let own = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own = Object.entries(extra).filter(([k]) => !NO_SUCH_ACTION_FIXED.has(k));
-  } catch { own = []; }
-  let action = null;
-  try { action = actionId === undefined || actionId === null ? null : String(actionId); } catch { action = null; }
-  /* DEC-49 REGION is-no-such-action */
-  const row = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
-  return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
-           translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
-  /* END DEC-49 REGION is-no-such-action */
-}
+/* R43 (N217, K275; R107, T50): `noSuchAction`, the one answer to one condition (no action the caller may see answers to
+   an id: absent, invisible, or a bundle that is not an action, alike), is `action-records`' (its R18) and re-exported
+   above. This module answers through it at R29's read and at R86's link. */
 
 /* R45 (N427, K711). THE ONE ANSWER TO ONE CONDITION: an action's stated contact names no member of the instance. This
    write answers it through here, and so does every later module asking it (`action-plans` R18), so
@@ -2555,6 +2539,9 @@ export class Actions {
       governing_laws: governingLawsOf(fm),
       /* R25 (T47; N961): the proposals stored apart are `action-records`' (its R1–R3), read through it. */
       governing_laws_proposals: this.records.lawProposalsFor(row.bundle_id),
+      /* R105 (T50; N933; `action-records` R17): the action's own stake, apart from its project's: `{stake, set_by, set_at,
+         history}`, `stake: null` when it states none, `"undetermined"` when unreadable. */
+      own_stake: this.records.stakeOf(row.bundle_id),
       risk_tier_proposals: this.records.riskProposalsFor(row.bundle_id),
       /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
       seeks: seeksOf(fm),
@@ -2658,7 +2645,9 @@ export class Actions {
           if (!seen.has(k)) {
             seen.add(k);
             out.push({ kind: "accepted", group: b.group ?? null, edition_date: b.edition_date ?? null,
-                       accepted_at: b.accepted_at ?? null, identity: b.identity ?? null, stake: b.stake ?? "undetermined" });
+                       accepted_at: b.accepted_at ?? null, identity: b.identity ?? null, stake: b.stake ?? "undetermined",
+                       /* R105 (T50; N933; `conformance` R41): the source's matter stake as the finding's basis answers it. */
+                       matter_stake: b.matter_stake ?? null });
           }
         }
       }
@@ -2808,10 +2797,10 @@ export class Actions {
 
   /** R29: one action's block (R25) for a viewer. */
   actionRead({ id, viewer = null, now = null } = {}) {
+    /* R106 (T50; N1178): an id no action the caller may see answers to (absent, invisible, or a bundle that is no action)
+       is answered through R43, `NO_SUCH_ACTION`, the same bytes for the three. */
     const b = id ? this.#visibleAction(id, viewer) : null;
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id ?? null };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target: id, object_type: b.object_type };
+    if (!b || normalizeType(b.object_type) !== "action") return noSuchAction(id ?? null);
     const fm = this.#heldFm(id) || {};
     const d = this.derived({ bundle_id: id }, now, viewer);
     /* R29 (K248): R25's keys, and the document's own values its users read (filings, escalation). */
