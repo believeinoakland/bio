@@ -23,3 +23,7 @@
 **Tests and checks.** progressions: 76 tests, 76 pass (instances.test.mjs, says.test.mjs new; define.test.mjs's row census extended). Users: money-checks 48/48, calculations 57/57, intent 82/82, retrieval 176/176, inquiry 210/211 (the 1 red, R39 DRAWN_ON_BY_A_PROJECT, is red on the base too). `node checks/run.mjs`: format 0 failures, architecture 0 failures, coverage 30 failures none progressions' (progressions 45 of 45 named), channels 0. ownership: 0 failures.
 
 Size (session_01L8enn3KdBrcuPWu8uTZDjV): test runs 14, module lines 2187
+
+## J1 · REPORT
+
+REPORT J1. Found outside my module: (1) the word list has no refusal.NO_SET, so C-100.26 reads refusal.SET_NO_ITEMS until the design lane mints it; (2) refusal.SET_TOO_LARGE is record-core's key (C-75.2), C-100.27 reads it, the same code from two modules is the design lane's to settle; (3) op=instances is new in progressionOps: plane's ops map and op-declarations are untouched by me, their suites show the same reds as base (plane 1, op-declarations 9), none new, accepted until L11; (4) bio-plane/dist/bio-plane.bundled.mjs is stale (the plane bundles progressions). Details in build/jobs/T50/progressions.md.
