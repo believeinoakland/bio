@@ -34,3 +34,7 @@ B2 checked on tranche/T50 merged into my branch (wizard-scripts and interface-as
 
 ## J4 · B3 note
 B3: merged tranche/T50 (interface-shell in). My screens list exactly the registry's acts; interface-shell's R73 test (t50.test.mjs) still fails only on screens-investigate's `person` act ("screen person's act person is not the registry's"), not on any screen of mine. Fixed here: `screen.account.sounds.on` added to keys; members' pending-act test ignores the shell's aria-busy (R74); account's Sounds test follows the shell's control.
+
+## J5 · COMPLETE · re B3
+
+COMPLETE after B3. Merged tranche/T50 (interface-shell in); all 146 screens-settings tests pass (the Sounds test now passes against the shell's cs.sounds). My screens draw exactly the registry's acts. interface-shell's t50 R73 test still fails, but only on screens-investigate's person act ('screen person's act person is not the registry's'), not on any screen of mine. format/architecture/coverage (53 of 53)/ownership: 0 failures. Pushed.
