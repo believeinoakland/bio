@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #200 (`session_01VEPkaJfC5rdP467WJSif4S`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-17 ~13:50 UTC, at about 29% context, with T50's L4 just started. Read `build/rulings-active.md` whole, then, whole with the Read tool, K3640–K3651 (BOB #200's merges, answers and folds).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #200 (`session_01VEPkaJfC5rdP467WJSif4S`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-17 ~13:50 UTC, at about 29% context, with T50's L4 just started. Read `build/rulings-active.md` whole, then, whole with the Read tool, K3640–K3652 (BOB #200's merges, answers and folds).
 
 ## Read in full at takeover, besides the usual set
 
@@ -22,6 +22,7 @@ If any session must read part of a document it acts on, it stops and tells Bob f
 - **Timers:** WATCH #200 `trig_01XFg12TwfuhfG9CVEKMFYQy` into ROOT #5 (14:26Z); backstop `trig_01PcZYNKCfQGFQ4RymS7BaCZ` (13:46Z, re-armed at each check). Delete both at takeover and arm your own.
 - **Channel:** read through U318; posted B272 (ACK of DEC-304) and B273 (HANDOFF: L3's keys owed). UX design #24 has handed over (U318); #25 not yet started by Bob, so entries wait. When it answers B273 with a DEC: merge its design commit into `tranche/T50` (docs and words only, verified), regenerate `rows.mjs`, `--check`, ACK.
 - **Lanes:** HANDOFFs unchanged (H43, S17, W4).
+- **Pruning owed (K3652):** the older drafts under `build/plan/` were not reviewed by BOB #200; check each and archive the finished ones.
 - **Format and architecture:** green at L3's close.
 - **ROOT:** ROOT #5 is past Bob's 55% (K3623); the manifest names no ROOT #7. Bob was asked again (steps below); no answer yet. Once he gives its link: record it in `build/manifest.md` ("Starting a session"), move your WATCH into it, archive ROOT #5 (mechanics §2), and ring ROOT #7 for your successor.
 
