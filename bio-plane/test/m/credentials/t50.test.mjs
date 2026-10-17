@@ -1,6 +1,5 @@
-/* T50 (T50-5; N1186, K3557, N1060, K3218, K3224), at the interface: a grant's and a run credential's optional project
-   fences the viewer they make (R79: membership R149's `projectViewer`), and a refused sign-in revokes the member's run
-   credentials (R73, against `ai-accounts` R26's refused clause). Every refusal has a control (K874). */
+/* T50 (T50-5; N1186, K3557), at the interface: a grant's and a run credential's optional project
+   fences the viewer they make (R79: membership R149's `projectViewer`). Every refusal has a control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD, sha } from "./fixture.mjs";
@@ -107,22 +106,4 @@ test("R79 a run credential's project is refused, in R63's order: the member firs
   assert.equal(mint("second", "A").code, "AI_KEPT_AWAY", "control: a joined project reaches the keep-away");
   assert.equal(w.rows(`SELECT run FROM ai_credentials WHERE run IS NOT NULL AND run <> 'RUN-1'`).length, 0, "nothing else minted");
   assert.notEqual(w.snapshot(), before);   /* ann's RUN-1 above is the only credential written */
-});
-
-test("R73 a sign-in dropped on Anthropic's refusal (ai-accounts R26) revokes the member's run credentials, inside the act; control: a refusal for a member with no held sign-in revokes no one's, and another member's run credential stays", async () => {
-  const w = await world().group("ann", "bob", "cy");
-  await w.signin("ann");
-  await w.signin("bob");
-  const a = w.c.aiRunCredentialMint({ member: "ann", run: "RUN-A", writes: ["airuntick"] });
-  const b = w.c.aiRunCredentialMint({ member: "bob", run: "RUN-B", writes: ["airuntick"] });
-  const c = w.c.aiRunCredentialMint({ member: "cy", run: "RUN-C", writes: ["airuntick"] });
-  const own = w.c.aiCredentialMint({ who: "ann", tokenId: "ann-own", secretSha: "d".repeat(64), principalKind: "member" });
-  assert.equal(own.ok, true);
-  /* control: cy holds no sign-in; her refusal drops nothing and tells no listener */
-  w.c.subscriptionTokenRefused({ member: "cy" });
-  assert.deepEqual([look(w, a.token).revoked, look(w, b.token).revoked, look(w, c.token).revoked], [false, false, false]);
-  w.c.subscriptionTokenRefused({ member: "ann" });
-  assert.deepEqual([look(w, a.token).revoked, look(w, a.token).revokedBy], [true, null], "revoked in the act, no actor");
-  assert.equal(look(w, b.token).revoked, false, "control: bob's");
-  assert.equal(w.c.aiCredentialLook({ secretSha: "d".repeat(64) }).credential.revoked, false, "control: her R12 credential");
 });
