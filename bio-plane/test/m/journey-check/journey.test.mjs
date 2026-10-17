@@ -56,6 +56,12 @@ test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verif
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/r2/buckets`, { method: "POST", headers: auth, body: JSON.stringify({ name: "bio-captures-grp" }) }))).status, 200);
   assert.deepEqual((await get("/r2/buckets")).result.buckets, [{ name: "bio-captures-grp" }]);
   assert.deepEqual((await get("/containers/applications")).result, [], "the account runs no container application");
+  /* a secret set on its own (installer R69): the script then holds it, restarted with it; one deleted is gone */
+  const call = async (path, method, body) => acct.handle(new Request(`${API}/accounts/${acct.account}${path}`, { method, headers: auth, body: body && JSON.stringify(body) }));
+  assert.equal((await call("/workers/scripts/grp/secrets", "PUT", { name: "ADMIN_TOKEN", text: "second", type: "secret_text" })).status, 200);
+  assert.deepEqual(uploads.at(-1), ["grp", ["ADMIN_TOKEN", "VERSION"]]);
+  assert.equal((await call("/workers/scripts/nobody/secrets", "PUT", { name: "X", text: "y" })).status, 404);
+  assert.equal((await call("/workers/scripts/grp/secrets/ADMIN_TOKEN", "DELETE")).status, 200);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/workers/scripts/grp`, { headers: { authorization: "Bearer nope" } }))).status, 403);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/queues`, { headers: auth }))).status, 599);
   assert.deepEqual(acct.unanswered, [`GET ${API}/accounts/${acct.account}/queues`]);

@@ -115,6 +115,20 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
       if (m === "GET") return scripts.has(x[1]) ? new Response(scripts.get(x[1]).source,
         { headers: { "content-type": "application/javascript+module" } }) : no("not found", 404, 10007);
     }
+    /* a secret set on its own, without an upload (installer R69): the script now holds it, and the copy restarts with it */
+    if ((x = /^\/workers\/scripts\/([^/]+)\/secrets$/.exec(rest)) && m === "PUT") {
+      const sc = scripts.get(x[1]);
+      if (!sc) return no("not found", 404, 10007);
+      const b = await req.json();
+      sc.bindings = [...sc.bindings.filter((k) => k.name !== b.name), { type: "secret_text", name: b.name, text: b.text }];
+      await onScript(x[1], { bindings: sc.bindings, source: sc.source, meta: sc.meta });
+      return ok({ name: b.name, type: "secret_text" });
+    }
+    if ((x = /^\/workers\/scripts\/([^/]+)\/secrets\/([^/]+)$/.exec(rest)) && m === "DELETE") {
+      const sc = scripts.get(x[1]);
+      if (sc) sc.bindings = sc.bindings.filter((k) => k.name !== x[2]);
+      return ok({});
+    }
     if ((x = /^\/workers\/scripts\/([^/]+)\/settings$/.exec(rest)) && m === "GET")
       return scripts.has(x[1]) ? ok({ bindings: scripts.get(x[1]).bindings.map(({ text, ...b }) => b) }) : no("not found", 404, 10007);
     if ((x = /^\/workers\/scripts\/([^/]+)\/subdomain$/.exec(rest)) && m === "POST") {
