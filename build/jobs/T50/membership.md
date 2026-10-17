@@ -25,3 +25,7 @@
 **Tests run.** `node --test bio-plane/test/m/membership/ bio-plane/test/members.test.mjs`: tests 264, pass 264, fail 0 (membership; `members.test.mjs` 1 file pass). Dependents run: credentials 155/0, promotion 137/0, control-plane 292/0, project-roster 64 pass 2 fail (base 2), affordances 258 pass 4 fail (base 4). Checks: format 2 failures (`build/rulings.md` K3441, K3597, not mine); architecture 6 failures (item 1); coverage 111 of 111; ownership 0 failures.
 
 Size (session_012b5v7Ekpv3CAbBibj4BTrH): test runs 16, module lines 4193
+
+## J1 · COMPLETE
+
+T50-2 membership complete: R146-R151 applied, record on job/T50/membership. 264 module tests pass; coverage 111/111; ownership 0. Architecture fails only because modules.json membership.uses lacks setup-words (BOB's file). Interface notes in my record: reach readers are read by instance viewerGate/hiddenBundlesFor; new generated order.mjs for the manifest; module is ~4,190 lines incl. generator (split T51).
