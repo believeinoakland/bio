@@ -18,7 +18,7 @@
 
 **Deferred:** none.
 
-**Read.** Whole: `build/requirements/progressions.md`, the module's `index.mjs` and `checks.mjs`, `setup-words/index.mjs`, test `fixture.mjs`, `overdue.test.mjs` (first 80 lines), `define.test.mjs` lines 195-300. Not read whole: `schema.mjs` (unchanged, tables only), `build/layers.md` (the layer-5 row and rules only; 62 KB), other progressions tests (run, not read), `build/plan/current.md` (rules 6 and my entry only). `layers.md` and `current.md` were read in part, against K3586: I read only what my entry names from them.
+**Read.** Whole: `build/requirements/progressions.md`, the module's `index.mjs` and `checks.mjs`, `setup-words/index.mjs`, test `fixture.mjs`, `overdue.test.mjs` (first 80 lines), `define.test.mjs` lines 195-300. After B2 (K3678), `build/layers.md` (pruned, 23 KB) and `build/plan/current.md` (43 KB) read whole on the merged `tranche/T50`: my entry T50-62, rule 6, the layer-5 contract and the L5 merge order are met as built; no reading changes. `schema.mjs` unchanged, other progressions tests run not read. "labelled" remains only in DEC-49 region identifiers (identifiers stay).
 
 **Tests and checks.** progressions: 76 tests, 76 pass (instances.test.mjs, says.test.mjs new; define.test.mjs's row census extended). Users: money-checks 48/48, calculations 57/57, intent 82/82, retrieval 176/176, inquiry 210/211 (the 1 red, R39 DRAWN_ON_BY_A_PROJECT, is red on the base too). `node checks/run.mjs`: format 0 failures, architecture 0 failures, coverage 30 failures none progressions' (progressions 45 of 45 named), channels 0. ownership: 0 failures.
 
@@ -31,3 +31,6 @@ REPORT J1. Found outside my module: (1) the word list has no refusal.NO_SET, so 
 ## J2 · COMPLETE
 
 COMPLETE J2: T50-62 done on job/T50/progressions: R44 instancesFor (op=instances, NO_SET C-100.26, SET_TOO_LARGE C-100.27) and R45 (overdue_successor says by key progression.nodoc / progression.expects[.undetermined]); plan rule 6: 21 refusal rows and 34 progressions.* sentences read by key. progressions 76/76; users green except inquiry's inherited R39 red; checks: format, architecture, ownership 0 failures, progressions coverage 45/45. Three readings of mine are in the record for you to confirm (says shape, next_deadline includes past deadlines, limit clamped). Layers.md and current.md read in part (record says which).
+
+## B2 re-check
+Merged `tranche/T50` (entities, events, standards in); progressions 76/76, architecture 0, coverage 45/45, ownership 0 failures.
