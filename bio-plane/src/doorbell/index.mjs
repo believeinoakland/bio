@@ -533,8 +533,9 @@ export class Doorbell {
    *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. N499
    *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
    *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
-   *  them. */
-  inboxResolve({ knockId, status, by, reason, at = null, within = null } = {}) {
+   *  them. T50 (N1194, R13): it takes `viewer`, the control plane's stamp, and passes it to the pull, which names the holder of
+   *  bytes the record already holds only to a viewer who may see it. */
+  inboxResolve({ knockId, status, by, reason, at = null, within = null, viewer = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -545,7 +546,7 @@ export class Doorbell {
                knockId, status: 400, maxChars: REASON_MAX };
     }
     /* END DEC-49 REGION is-resolve-reasoned */
-    if (status === "pulled") return this.#pull({ knockId, by, at, within }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at, within, viewer }, reason);
     this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
                                   status, new Date().toISOString(), by ?? null, reason, knockId));
     return { ok: true, knockId, status, resolve_reason: reason };
@@ -566,11 +567,11 @@ export class Doorbell {
    *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
    *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
    *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  pullKnock({ knockId, by, at = null, within = null } = {}) { return this.#pull({ knockId, by, at, within }, null); }
+  pullKnock({ knockId, by, at = null, within = null, viewer = null } = {}) { return this.#pull({ knockId, by, at, within, viewer }, null); }
 
   /* R13, and R3's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
      pull asked directly, which takes no reason). */
-  async #pull({ knockId, by, at = null, within = null } = {}, reason) {
+  async #pull({ knockId, by, at = null, within = null, viewer = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
                detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written" };
@@ -589,6 +590,17 @@ export class Doorbell {
       try { document = row.pulled_document ? JSON.parse(row.pulled_document) : null; } catch { document = null; }
       return { ok: true, existed: true, knockId, capture: { sha256: row.capture_sha, bytes: row.bytes },
                pulled_by: row.pulled_by, pulled_at: row.pulled_at, ...(document ? { document } : {}) };
+    }
+    /* R13 (T50; N1194; JOURNEYS V4 B-40): bytes the record already holds are not captured again. When provenance's register
+       files this digest under a bundle that exists (`homeOf`: a receipt alone does not count), the knock is marked pulled to
+       it and nothing else is written: no receipt, document, actor or bytes, and `within` is not called. */
+    const home = this.#homeOf(row.sha256);
+    if (home) {
+      const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
+      this.#tx(() => this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?,
+                                       pulled_at = ?, resolve_reason = ? WHERE knock_id = ?`, when, by, row.sha256, by, when, reason, knockId));
+      return { ok: true, existed: true, knockId, capture: { sha256: row.sha256, bytes: row.bytes },
+               holder: this.#sees(viewer, home.bundleId) ? home.bundleId : null, pulled_by: by, pulled_at: when };
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     if (!ev) {
@@ -659,6 +671,22 @@ export class Doorbell {
     return { ok: true, existed: false, knockId, capture: { sha256: sha, bytes: bytes.length }, pulled_by: by, pulled_at: when,
              receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null }, document,
              ...(typeof within === "function" ? { within: done.within } : {}) };
+  }
+
+  /* R13: the home of bytes the record holds, from provenance's register (its R4); null when none, or when it cannot be read. */
+  #homeOf(sha) {
+    try { return this.provenance && typeof this.provenance.homeOf === "function" ? this.provenance.homeOf(sha) : null; }
+    catch { return null; }
+  }
+
+  /* R13: whether `viewer` may see `bundleId`, by membership's one rule (its R43) over record-core's `bundles`; with no
+     viewer, or one R43 admits to nothing, no. */
+  #sees(viewer, bundleId) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    if (gate.scope === "member") return true;
+    try { return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, bundleId, ...gate.args); }
+    catch { return false; }
   }
 
   /* N380 (R13, capture R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
@@ -750,12 +778,12 @@ export function doorbellOps(d, url, body) {
     inboxlist: () => d.inboxList(q("status") || null, { ...page, sort: q("sort"), dir: q("dir") }),
     inboxget: () => d.inboxGet(q("id")),
     /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
-    inboxresolve: () => { const b = body || {}; return d.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason }); },
+    inboxresolve: () => { const b = body || {}; return d.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason, viewer: q("viewer") }); },
     /* R19: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
     doorbellrefused: () => d.doorbellRefused({ now: body && body.now, country: q("country") }),
     doorbelltally: () => d.doorbellTally({ viewer: q("viewer") ?? "" }),
     /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
-    inboxpull: () => d.pullKnock({ knockId: (body && body.knockId) || q("id"), by: q("by") ?? (body && body.by) }),
+    inboxpull: () => d.pullKnock({ knockId: (body && body.knockId) || q("id"), by: q("by") ?? (body && body.by), viewer: q("viewer") }),
     knocksof: () => d.knocksOf({ pseudonym: q("pseudonym") ?? (body && body.pseudonym), ...page }),
     pulledknocks: () => d.pulledKnocksOf(q("capture") ?? (body && body.captureSha)),
   };
