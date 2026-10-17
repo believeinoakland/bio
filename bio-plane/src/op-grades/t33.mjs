@@ -48,7 +48,7 @@ export const T33_RUNGS = {
   personfact:            "reversible", // personfactwithdraw takes it back
   personfactwithdraw:    "reasoned",   // NO_REASON (people R11)
   personexpunge:         "reasoned",   // NO_REASON (people R12: an administrator, on a listed ground, with a reason)
-  membertie:             "reasoned",   // NO_NOTE (people R20: the member's own tie, with a note)
+  membertie:             "reversible", // R47 (T50; DEC-300 (5)): membertiewithdraw takes it back (R3); its note is people R20's shape, not a reason (was `reasoned`, NO_NOTE)
   membertiewithdraw:     "reasoned",   // NO_REASON (people R20)
   sourcepersonlink:      "reasoned",   // NO_EVIDENCE (people R21: a member's evidenced account of who a source is, as sourcelink)
   interestcheckswitch:   "reversible", // a further switch turns it back; the latest governs
@@ -103,7 +103,7 @@ export const T33_RUNG_ABSENT = {
   linecurrentthrough:   { ground: "undetermined", is: "records, with its citation, that a holds line with no stated end is current as of a day; a later statement supersedes on read, the earlier kept (lines R21)" },
   /* money */
   moneysetcreate:       { ground: "undetermined", is: "a member declares a money trail or an attribution set with its label; it holds nothing until facts are included (money R12)" },
-  moneysetpropose:      { ground: "undetermined", is: "a machine or a member PROPOSES a fact for a set with its method, stored apart and labelled; included only when a member's include adopts it (money R13)" },
+  moneysetpropose:      { ground: "undetermined", is: "a machine or a member PROPOSES a fact for a set with its method, stored apart and labeled; included only when a member's include adopts it (money R13)" },
   moneyfundtype:        { ground: "undetermined", is: "records a fund's type from the source that states it, which sets its balance classes; a later record supersedes on read, the earlier kept (money, K1505 (10))" },
   /* money-checks */
   moneycheckparam:      { ground: "undetermined", is: "a member states a check's threshold, share or stage with its citation, for one contract or the group; the latest governs, every statement kept (money-checks R3)" },
@@ -111,7 +111,7 @@ export const T33_RUNG_ABSENT = {
   moneydetectorsrun:    { ground: "substrate", is: "the detectors' own run over the held money facts, holding each raised result apart with its derivation; a computation, never a model run (money-checks R6, R7)" },
   moneydetectorgate:    { ground: "substrate", is: "records a detector version's false-alarm rate measured on a named gold set; it moves no claim, and results show only at or under the gate (money-checks R8)" },
   /* duties */
-  dutypropose:          { ground: "undetermined", is: "a machine or a member PROPOSES an obligation with an optional why, stored apart and labelled; never tracked until a member adopts it (duties R2)" },
+  dutypropose:          { ground: "undetermined", is: "a machine or a member PROPOSES an obligation with an optional why, stored apart and labeled; never tracked until a member adopts it (duties R2)" },
   /* people */
   interestcheckdefine:  { ground: "undetermined", is: "a member or the machine defines an interest check, or a new version of one, with its condition and denominator; earlier versions kept, and a machine's results shown only once gated (people R22)" },
   interestcheckgate:    { ground: "substrate", is: "an administrator records a check version's false-alarm rate measured on a named gold set; results show only at or under the gate (people R24)" },
@@ -140,7 +140,7 @@ export const T33_RUNG_ABSENT = {
   /* following */
   refreshregister:      { ground: "substrate", is: "captures a gated register afresh with the following member's own credential, marked not reproducible by the public; the capture is the act (following R8)" },
   /* T33's ops in earlier modules */
-  lawpropose:           { ground: "undetermined", is: "a machine or a member PROPOSES a law relation, a court link or a treatment with its why, stored apart and labelled; recorded only when a member's act names it (standards R23, R26, R27)" },
+  lawpropose:           { ground: "undetermined", is: "a machine or a member PROPOSES a law relation, a court link or a treatment with its why, stored apart and labeled; recorded only when a member's act names it (standards R23, R26, R27)" },
   accountreferenceset:  { ground: "credential", is: "a member sets their own assistant account reference, its secret sealed and never answered (credentials R22, R23)" },
   accountreferenceremove: { ground: "credential", is: "a member removes their own assistant account reference (credentials R22, R25)" },
   aigrantmint:          { ground: "credential", is: "a member mints a short-lived, read-only ai grant under their own session, for their own account (credentials R27, R28)" },
@@ -204,7 +204,7 @@ export const T33_NON_ACTS = {
   moneysetcreate: "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle",
   moneysetinclude: "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
   moneysetexclude: "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle",
-  moneysetpropose: "money-set-directed: keyed by (set, fact); a proposal stored apart and labelled, never an inclusion until a member includes it",
+  moneysetpropose: "money-set-directed: keyed by (set, fact); a proposal stored apart and labeled, never an inclusion until a member includes it",
   moneyfundtype: "fund-directed: keyed by a fund entity; records its type from a cited source and moves no bundle",
   money: R("one money fact with both grades, its source, its adjustments and its withdrawal"),
   moneyof: R("the money facts an entity is a party to or that concern it, never a total"),
@@ -219,13 +219,13 @@ export const T33_NON_ACTS = {
   moneydetectorswitch: "detector-directed: keyed by (detector, project); a member's switch, moving no bundle",
   moneydetectorsrun: "derivation: the detectors' run over held money facts, holding results apart; asserts nothing of the caller's",
   moneydetectorgate: "detector-directed: keyed by (detector, version); records a measured false-alarm rate on a gold set, an administrator's",
-  moneyamountchecks: R("a contract's amount checks, each labelled Noticed with its derivation"),
-  moneyjunction: R("a progression instance's junction checks, labelled Noticed"),
+  moneyamountchecks: R("a contract's amount checks, each labeled Noticed with its derivation"),
+  moneyjunction: R("a progression instance's junction checks, labeled Noticed"),
   moneycheckparams: R("a check's stated parameters, each marked whether it governs"),
   moneydetectors: R("the money detectors with their versions, gates and switches"),
-  moneynoticed: R("a project's gated, switched-on detector results the viewer can see, labelled Noticed"),
+  moneynoticed: R("a project's gated, switched-on detector results the viewer can see, labeled Noticed"),
   /* duties */
-  dutypropose: "duty-directed: keyed by a new proposal; stored apart and labelled, never tracked until a member adopts it",
+  dutypropose: "duty-directed: keyed by a new proposal; stored apart and labeled, never tracked until a member adopts it",
   dutyadopt: "duty-directed: keyed by proposal; writes a DUT- duty and moves no bundle",
   dutydeclare: "duty-directed: keyed by a new DUT- id; writes duties' rows and moves no bundle",
   dutyrevise: "duty-directed: keyed by duty; writes a new version, the earlier kept, and moves no bundle",
@@ -260,7 +260,7 @@ export const T33_NON_ACTS = {
   staffing: R("who held posts in an organisation on a date, beside each roster source's answer"),
   memberties: R("a member's own declared ties, to that member or an administrator only"),
   sourcepersonlinks: R("the protected links of a source or a person, to their listed members only"),
-  interestchecks: R("interest checks' gated results, labelled Noticed, the viewer may see whole"),
+  interestchecks: R("interest checks' gated results, labeled Noticed, the viewer may see whole"),
   /* explore */
   explore: R("the paths from a node over the registered kinds as of a date, each hop cited and graded, within the bounds"),
   explorepreset: R("one preset walk — chain, flows, relations, a path between two nodes, overlaps — or the presets"),
@@ -270,7 +270,7 @@ export const T33_NON_ACTS = {
   hypothesishold: "inquiry-directed: keyed by a new HYP- id in an inquiry; held as a hypothesis, never a fact or a leg",
   hypothesisrevise: "hypothesis-directed: keyed by hypothesis; a new statement with its reason, the history kept",
   hypothesiswithdraw: "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn",
-  hypotheses: R("one hypothesis, or an inquiry's, each labelled a hypothesis with its history"),
+  hypotheses: R("one hypothesis, or an inquiry's, each labeled a hypothesis with its history"),
   /* R15: a member's own notes */
   notewrite: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
   noteturn: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
@@ -289,7 +289,7 @@ export const T33_NON_ACTS = {
   tablesat: R("the vintage of a table key valid on a date, or undetermined"),
   calculationevaluate: R("what a calculation would store for a recipe and its inputs"),
   calculation: R("one stored calculation with its grade facts and recompute status, never recomputed"),
-  patterns: R("each pattern's gated results, labelled Noticed, or why they are not shown"),
+  patterns: R("each pattern's gated results, labeled Noticed, or why they are not shown"),
   /* workbooks */
   workbookadd: "workbook-directed: keyed by (capture, project); writes workbooks' rows and moves no bundle",
   workbookbind: "workbook-directed: keyed by (capture, project) and a range; writes a binding and moves no bundle",
@@ -326,7 +326,7 @@ export const T33_NON_ACTS = {
   /* T33's ops in earlier modules: standards */
   lawrelate: "standard-directed: keyed by a new relation between two standards or portions; writes standards' rows and moves no bundle",
   lawwithdraw: "standard-directed: keyed by a relation, link or treatment; keeps it, shown withdrawn",
-  lawpropose: "standard-directed: keyed by a new proposal; stored apart and labelled, recorded only when a member's act names it",
+  lawpropose: "standard-directed: keyed by a new proposal; stored apart and labeled, recorded only when a member's act names it",
   courtlink: "standard-directed: keyed by a court standard and a portion; writes standards' rows and moves no bundle",
   courttreat: "standard-directed: keyed by two decisions; writes standards' rows and moves no bundle",
   inforceat: R("whether a standard, or an instrument's portion, was in force on a date, and which version"),
