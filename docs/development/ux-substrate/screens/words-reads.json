@@ -5423,7 +5423,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 12722
+    "generatedRows": 12939
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5881,6 +5881,7 @@
     "shell.band.working",
     "shell.cancel",
     "shell.card.action",
+    "shell.card.archive",
     "shell.card.calculation",
     "shell.card.capture",
     "shell.card.case-editor",
@@ -5897,6 +5898,7 @@
     "shell.card.plan",
     "shell.card.proceeding",
     "shell.card.project",
+    "shell.card.published",
     "shell.card.question",
     "shell.card.request",
     "shell.card.review-copy",
@@ -5987,14 +5989,14 @@
     "tab.more.name"
    ],
    "counts": {
-    "reads": 202,
+    "reads": 204,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 155,
     "inline": 3,
     "inlineKeyed": 0,
     "inlineUnkeyed": 3,
-    "computedKeys": 47
+    "computedKeys": 49
    },
    "unkeyed": [
     {
@@ -6477,6 +6479,8 @@
     "screen.dash-action.purpose",
     "screen.dash-project.name",
     "screen.dash-project.purpose",
+    "screen.docket-public.name",
+    "screen.docket-public.purpose",
     "screen.docket.name",
     "screen.docket.purpose",
     "screen.document.name",
@@ -6834,14 +6838,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 813,
+    "reads": 815,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 325,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 488
+    "computedKeys": 490
    },
    "unkeyed": []
   },
@@ -8661,6 +8665,7 @@
     "shell.card.person",
     "shell.card.plan",
     "shell.card.project",
+    "shell.card.published",
     "shell.card.question",
     "shell.card.review-copy",
     "shell.card.roster",
@@ -8681,14 +8686,14 @@
     "translate.read"
    ],
    "counts": {
-    "reads": 443,
+    "reads": 444,
     "minted": 2,
     "keyedRows": 0,
     "literalKeys": 385,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 58
+    "computedKeys": 59
    },
    "unkeyed": [
     {
@@ -10717,6 +10722,8 @@
     "screen.dash-action.purpose",
     "screen.dash-project.name",
     "screen.dash-project.purpose",
+    "screen.docket-public.name",
+    "screen.docket-public.purpose",
     "screen.docket.name",
     "screen.docket.purpose",
     "screen.document.name",
@@ -11261,14 +11268,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 1075,
+    "reads": 1077,
     "minted": 1,
     "keyedRows": 0,
     "literalKeys": 599,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 476
+    "computedKeys": 478
    },
    "unkeyed": []
   },

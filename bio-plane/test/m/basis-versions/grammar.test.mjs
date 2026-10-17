@@ -22,15 +22,18 @@ function fm({ v = {}, legs = null, grounds = null, more = [] } = {}) {
 }
 const codes = (x) => { const f = []; basisVersionFindings(x, f); return f.filter((y) => y.severity === "error").map((y) => y.code); };
 
-test("R1: a version carries a description, a unique permitted name, a known state, a boolean hidden, a known kind when present, and once moved a named member and an ISO instant", () => {
+test("R1, R54: a version carries a description, a unique permitted name (a name outside the form is VERSION_NAME_MALFORMED, a repeated one VERSION_NAME_NOT_UNIQUE), a known state, a boolean hidden, a known kind when present, and once moved a named member and an ISO instant", () => {
   assert.deepEqual(codes(fm()), [], "a well-formed version passes");
   assert.deepEqual(codes(fm({ v: { description: "" } })), ["VERSION_NO_DESCRIPTION"]);
   assert.deepEqual(codes(fm({ v: { description: "too short" } })), ["VERSION_NO_DESCRIPTION"]);
   for (const bad of ["", "x".repeat(65), "no/slash", "-dash-first"])
-    assert.ok(codes(fm({ v: { name: bad }, legs: [], grounds: [] })).includes("VERSION_NAME_NOT_UNIQUE"), `name '${bad}' is refused`);
+    assert.deepEqual(codes(fm({ v: { name: bad }, legs: [], grounds: [] })).filter((c) => c.startsWith("VERSION_NAME")),
+      ["VERSION_NAME_MALFORMED"], `name '${bad}' is refused as malformed, never as a duplicate`);
+  assert.deepEqual(codes(fm({ v: { name: "a".repeat(64) } })), [], "a valid unique name raises neither");
   assert.ok(VERSION_NAME_RE.test("a".repeat(64)) && !VERSION_NAME_RE.test("a".repeat(65)), "1–64 characters");
   const dup = fm({ more: [{ name: "first", description: "another reading entirely", relationship: "and", state: "suggested" }] });
-  assert.ok(codes(dup).includes("VERSION_NAME_NOT_UNIQUE"), "a name is unique within its inquiry");
+  assert.deepEqual(codes(dup).filter((c) => c.startsWith("VERSION_NAME")), ["VERSION_NAME_NOT_UNIQUE"],
+    "a name is unique within its inquiry, and a duplicate is not malformed");
   assert.deepEqual(codes(fm({ v: { state: "published" } })), ["VERSION_STATE_UNKNOWN"]);
   assert.deepEqual(codes(fm({ v: { hidden: "yes" } })), ["VERSION_HIDDEN_NOT_BOOLEAN"]);
   assert.deepEqual(codes(fm({ v: { kind: "hunch" } })), ["VERSION_KIND_UNKNOWN"]);
@@ -192,9 +195,10 @@ test("R5 (K182): versionAsWritten is the written form of a submission, which ver
     "idempotent: the written form writes as itself");
 });
 
-test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.35, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
+test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.36, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
   const nums = (m) => Object.values(m).map((r) => r.check);
-  const want25 = Array.from({ length: 35 }, (_, i) => `C-25.${i + 1}`);
+  const want25 = Array.from({ length: 36 }, (_, i) => `C-25.${i + 1}`);
+  assert.equal(BASIS_VERSION_CHECKS.VERSION_NAME_MALFORMED.check, "C-25.36", "R54: the name form's own row");
   /* C-25.35 (BAD_BIAS_APPLIED, R48) is a conclusion's refusal, so its row is in CONCLUDE_ACT_CHECKS */
   const c25 = [...nums(BASIS_VERSION_CHECKS), ...nums(VERSION_ACT_CHECKS), ...nums(CONCLUDE_ACT_CHECKS)].filter((c) => c.startsWith("C-25."));
   assert.deepEqual([...new Set(c25)].sort(), [...want25].sort());

@@ -6,6 +6,10 @@ import { installRuntime, loadWorker, fakeCtx, conversationThrough } from './stub
 import { readManifest } from '../src/manifest.mjs';
 import { parseJsonc } from '../../bio-plane/scripts/jsonc.mjs';
 
+// R35 (N1197, K3611): the class answers every request 410 and passes nothing to its container, so the tests that drive
+// its `fetch` are suspended, not deleted; they run again when R35 is lifted.
+const SUSPENDED = { skip: 'suspended while R35 holds: the class answers 410 and passes nothing to its container' };
+
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const wrangler = () => parseJsonc(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'), 'wrangler.jsonc');
 
@@ -35,7 +39,7 @@ test('R12 the Worker exports the Container Durable Object class AgentRunner and 
   } finally { await h.stop(); }
 });
 
-test('R12 every request reaches the image unchanged, on its one port, and is answered exactly as the image answers', async () => {
+test('R12 every request reaches the image unchanged, on its one port, and is answered exactly as the image answers', SUSPENDED, async () => {
   const h = await hosted();
   try {
     const port = readManifest().image.port;
@@ -56,7 +60,7 @@ test('R12 every request reaches the image unchanged, on its one port, and is ans
   } finally { await h.stop(); }
 });
 
-test('R12 the conversation\'s WebSocket upgrade passes through: R1–R4 answer through the binding as the image answers', async () => {
+test('R12 the conversation\'s WebSocket upgrade passes through: R1–R4 answer through the binding as the image answers', SUSPENDED, async () => {
   const relays = [];
   const h = await hosted(async (call, { callTool }) => { await callTool('search', { q: 'minutes' }); return success(); });
   try {
@@ -76,7 +80,7 @@ test('R12 the conversation\'s WebSocket upgrade passes through: R1–R4 answer t
   } finally { await h.stop(); }
 });
 
-test('R12 the Worker holds no credential: it starts the container with no environment, and has no binding but its own', async () => {
+test('R12 the Worker holds no credential: it starts the container with no environment, and has no binding but its own', SUSPENDED, async () => {
   const h = await hosted();
   try {
     await h.runner.fetch(new Request('https://agent-runner/version'));

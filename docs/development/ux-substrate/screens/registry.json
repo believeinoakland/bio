@@ -3790,6 +3790,22 @@
      "modules": [
       "wizard-scripts"
      ]
+    },
+    {
+     "op": "accountpropose",
+     "label": "Draft the account with the assistant",
+     "status": "declared",
+     "modules": [
+      "case-account"
+     ]
+    },
+    {
+     "op": "accountdrafts",
+     "label": "See its earlier drafts",
+     "status": "declared",
+     "modules": [
+      "case-account"
+     ]
     }
    ],
    "journeys": [
@@ -4068,6 +4084,16 @@
    "journeys": [
     23,
     24
+   ]
+  },
+  {
+   "id": "docket-public",
+   "name": "A case's docket, from outside",
+   "frame": "published",
+   "purpose": "The docket as a reader without an account sees it, from the public page's \"its docket\": each entry after publishing, dated and signed, read only (DEC-313; public-read R21).",
+   "acts": [],
+   "journeys": [
+    26
    ]
   },
   {

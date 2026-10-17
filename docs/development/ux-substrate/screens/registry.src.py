@@ -148,7 +148,7 @@ screen('matter', 'Matter', 'working', 'One government act: determination, conseq
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',
-  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('writinghelp','Help me write this')], [15,23])
+  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('writinghelp','Help me write this'),('accountpropose','Draft the account with the assistant'),('accountdrafts','See its earlier drafts')], [15,23])
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob\'s D9, K3060; Q4): when it becomes public, the password asked again (D3), the member\'s own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn\'t an owner (DEC-207).',
@@ -160,6 +160,8 @@ screen('imported', 'Another team\'s case', 'imported', 'An imported case in its 
   [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket')], [25])
 screen('docket', 'Docket', 'working', 'The case\'s public docket: corrections, withdrawals, court orders.',
   [('docketfile','File a docket entry'),('docketpost','Post it')], [23,24])
+screen('docket-public', 'A case\'s docket, from outside', 'published', 'The docket as a reader without an account sees it, from the public page\'s "its docket": each entry after publishing, dated and signed, read only (DEC-313; public-read R21).',
+  [], [26])
 
 # --- outside the team
 screen('inbox', 'Inbox', 'working', 'Material handed in through the doorbell.',

@@ -22,7 +22,7 @@
   "label": 192,
   "project": 52,
   "grouprule": 1,
-  "refusal": 1955,
+  "refusal": 1963,
   "signing": 17,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3845,
+  "screen": 3876,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -63,7 +63,7 @@
   "proceeding": 11,
   "duty": 6,
   "published": 9,
-  "shell": 151,
+  "shell": 153,
   "settings": 4,
   "entity": 33,
   "find": 26,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 847,
+  "act": 851,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -116,7 +116,10 @@
   "acquisition": 45,
   "file-safety": 47,
   "extraction": 25,
-  "events": 85,
+  "events": 86,
+  "entities": 22,
+  "retrieval": 71,
+  "case-account": 8,
   "duties": 79,
   "strength": 77,
   "basis-versions": 23,
@@ -125,7 +128,6 @@
   "record-grammar": 55,
   "idspaces": 51,
   "case-inputs": 33,
-  "entities": 15,
   "record-core": 3,
   "explore": 31,
   "capture-sources": 7,
@@ -169,7 +171,6 @@
   "case-authoring": 92,
   "observation-log": 73,
   "queue-producers": 89,
-  "retrieval": 58,
   "case-checker": 59,
   "membership": 10,
   "wizard-scripts": 18,
@@ -189,7 +190,6 @@
   "link-sweep": 14,
   "browserrender": 10,
   "corpus-export": 8,
-  "case-account": 5,
   "queuestate": 4,
   "csv": 2,
   "setup-fleet": 2,
@@ -222,8 +222,8 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12939,
-  "protected": 900
+  "total": 13008,
+  "protected": 902
  },
  "words": [
   {
@@ -16811,10 +16811,10 @@
   },
   {
    "key": "screen.held.archivefiles",
-   "en": "Its files",
+   "en": "Open its files",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.archivemore",
@@ -40506,6 +40506,447 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-310: screens-settings R41: the failed check, opened"
+  },
+  {
+   "key": "refusal.NO_SET",
+   "en": "Nothing was named for this to work on, so nothing was done. This is a fault in Civicsmith, not in what you did; report it if it happens again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set"
+  },
+  {
+   "key": "refusal.SET_TOO_LARGE.read",
+   "en": "That asks for more than Civicsmith reads at once ({max} at most; this named {given}), so nothing was read. Ask for fewer.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: progressions C-100.27: a read, so not record-core's SET_TOO_LARGE, which acts on a selection"
+  },
+  {
+   "key": "entities.considered.name",
+   "en": "the name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities: the recogniser's considered list, after the composite key and the source key"
+  },
+  {
+   "key": "entities.relation.proxy_for",
+   "en": "stands in for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47: \"A stands in for B\""
+  },
+  {
+   "key": "entities.relation.member_of",
+   "en": "is a member of",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47"
+  },
+  {
+   "key": "entities.relation.overlaps",
+   "en": "overlaps with",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47"
+  },
+  {
+   "key": "entities.relation.proxy_for.name",
+   "en": "Stands in for",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47: the kind named alone"
+  },
+  {
+   "key": "entities.relation.member_of.name",
+   "en": "Member of",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47"
+  },
+  {
+   "key": "entities.relation.overlaps.name",
+   "en": "Overlaps",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities R47"
+  },
+  {
+   "key": "refusal.UNKNOWN_FORUM_KIND",
+   "en": "That isn't a kind of forum Civicsmith knows. Choose one of these: {forum_kinds}. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities: createEntity, readEntity, entitiesOfKind"
+  },
+  {
+   "key": "refusal.FORUM_KIND_NOT_FOR_KIND",
+   "en": "Only a public body or an institution has a kind of forum; a {kind} has none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: entities: a forum kind given for another kind of entity"
+  },
+  {
+   "key": "events.grade_why.unplaced",
+   "en": "Placed nowhere: no record you can see gives this event a date, so nothing sets its time.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: events: grade_why when nothing dates the event"
+  },
+  {
+   "key": "retrieval.syntax.compare_range",
+   "en": "field:>value and field:<value compare; field:a..b asks for a range.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval searchFields().syntax (1)"
+  },
+  {
+   "key": "retrieval.syntax.content_layer",
+   "en": "content: searches the passages someone has cited or marked citable: content:pdf-page by the kind of extent, content:stale for citations made on a reading since replaced, content:machine by who made them, content:ocr by the reading's last step, content:cap<C by the strength cap, content:uncited for passages marked citable and not yet used.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval R16 (2)"
+  },
+  {
+   "key": "retrieval.syntax.content_not_text",
+   "en": "content: does not search what the documents say. It searches what has been cited or marked citable in them, so finding nothing tells you about citations, never about what a document says.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval R16 (3)"
+  },
+  {
+   "key": "retrieval.syntax.meaning_arm",
+   "en": "A meaning takes a bare word (leg:cuts_against), a part of it (leg:ground=*) or a comparison (resolves:>=B on the bare field; leg:grade>=B or content:cap<C on a named one).",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval (4): the whole sentence; retrieval.syntax.bare_field_leg, a fragment, is no longer read"
+  },
+  {
+   "key": "retrieval.notread.not_extracted",
+   "en": "Not read yet: Civicsmith holds no reading of this capture.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.no_text",
+   "en": "No text: this capture's reading holds no text to search.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.cells_only",
+   "en": "No text: this capture's reading holds table cells but no text to read sentences from.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.no_text_name",
+   "en": "No text: this capture's reading holds no text to find a name in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.no_matcher",
+   "en": "Civicsmith can't read {language} for this yet.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read: a language with no matcher"
+  },
+  {
+   "key": "retrieval.notread.no_language",
+   "en": "Civicsmith can't read this capture's language for this yet: neither its reading nor the team's profiles say what language it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.not_minutes",
+   "en": "Not minutes or an agenda.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin not_read"
+  },
+  {
+   "key": "retrieval.notread.wrong_shape",
+   "en": "The record answered in a form Civicsmith did not expect, so this was not read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval findin and browse: any read answering another shape than its contract's"
+  },
+  {
+   "key": "retrieval.notread.cells_why",
+   "en": "No row of cells is named: the reading holds no table cells for this sheet, or the words found run across cells.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-312: retrieval R83"
+  },
+  {
+   "key": "shell.card.published",
+   "en": "A case your team published, as anyone reads it: its findings, their strength, the evidence, and how to check it without the team.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: interface-shell R81"
+  },
+  {
+   "key": "shell.card.archive",
+   "en": "One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: interface-shell R81"
+  },
+  {
+   "key": "screen.published.corrections.heading",
+   "en": "Corrections and orders",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33"
+  },
+  {
+   "key": "screen.published.corrections.some",
+   "en": "{count} since it was published. The latest: {kind}, {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33: count above 1; the docket sentence follows"
+  },
+  {
+   "key": "screen.published.corrections.some.one",
+   "en": "One since it was published: {kind}, {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33: count 1"
+  },
+  {
+   "key": "screen.published.corrections.kind.edition",
+   "en": "a new edition",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33: {kind}"
+  },
+  {
+   "key": "screen.published.corrections.kind.withdrawal",
+   "en": "a withdrawal",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33: {kind}"
+  },
+  {
+   "key": "screen.published.corrections.kind.court-order",
+   "en": "a court order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R33: {kind}"
+  },
+  {
+   "key": "screen.case-editor.noconcluded",
+   "en": "No question in this project is concluded yet, and a case is made from concluded questions. Conclude one on its question page, then come back.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-publish R31: none to tick"
+  },
+  {
+   "key": "screen.person.basis.row.identifier",
+   "en": "the same identifier appears on the dates cited",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-investigate R38: {basis} in screen.person.same.because"
+  },
+  {
+   "key": "screen.person.basis.row.corroborated_name",
+   "en": "the name and the same post appear on the dates cited",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-investigate R38"
+  },
+  {
+   "key": "screen.person.basis.row.name",
+   "en": "both records carry the name",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-investigate R38"
+  },
+  {
+   "key": "screen.person.basis.row.testimony",
+   "en": "a member knows it to be so",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: screens-investigate R38"
+  },
+  {
+   "key": "screen.docket-public.sub",
+   "en": "Everything that happened to this case after it was published: each new edition, correction, withdrawal and court order, dated and signed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: the docket as a reader without an account sees it"
+  },
+  {
+   "key": "screen.docket-public.back",
+   "en": "Back to the case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-313: the public docket"
+  },
+  {
+   "key": "screen.answers.failed.next",
+   "en": "Ask again, perhaps more narrowly, or search instead.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-daily R52: after ai.progress.check.failed"
+  },
+  {
+   "key": "screen.connect.expired",
+   "en": "Your Claude sign-in has expired, on {date}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-settings R41: a member's own subscription, expired"
+  },
+  {
+   "key": "screen.connect.expired.means",
+   "en": "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-settings R41"
+  },
+  {
+   "key": "screen.connect.expired.state",
+   "en": "Expired",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-settings R41: the state beside it"
+  },
+  {
+   "key": "screen.connect.expired.next",
+   "en": "Once you are signed in again, Civicsmith checks the connection before the assistant works for you.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-settings R41, R53"
+  },
+  {
+   "key": "screen.question.stopped.kept",
+   "en": "What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: screens-inquiry R57: after ai.run.ending.cancelled"
+  },
+  {
+   "key": "screen.question.reject.reason",
+   "en": "Why you reject it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: basis-versions R4: the reason field"
+  },
+  {
+   "key": "screen.question.reject.reason.help",
+   "en": "Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: basis-versions R4"
+  },
+  {
+   "key": "screen.question.reject.summary",
+   "en": "Reject this reading",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: basis-versions R4: the fold"
+  },
+  {
+   "key": "screen.question.reject.go",
+   "en": "Reject it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-314: basis-versions R4: the button in the fold"
+  },
+  {
+   "key": "screen.case-editor.account",
+   "en": "The account",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: the case's account: section and field"
+  },
+  {
+   "key": "screen.case-editor.account.help",
+   "en": "The case's account: what happened, told in your words, each sentence resting on the evidence the case cites.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: the section"
+  },
+  {
+   "key": "screen.case-editor.account.order",
+   "en": "Order it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1: the framing"
+  },
+  {
+   "key": "case-account.framing.time_order",
+   "en": "In time order",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1 ACCOUNT_FRAMINGS"
+  },
+  {
+   "key": "case-account.framing.by_question",
+   "en": "Question by question",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "case-account.framing.by_rule",
+   "en": "Rule by rule",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "screen.case-editor.account.flagged",
+   "en": "Not supported by what it cites: “{sentence}”",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R2: an account_check's flag; the sentence follows"
+  },
+  {
+   "key": "screen.case-editor.account.use",
+   "en": "Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R4, R6: began_as machine_draft"
+  },
+  {
+   "key": "screen.case-editor.account.notasis",
+   "en": "Taking the draft as it stands is not offered: you vouch only for words you wrote.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R4: ACCEPT_MUST_REAUTHOR, never offered"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT_DRAFT",
+   "en": "The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT_FRAMING",
+   "en": "An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R1"
+  },
+  {
+   "key": "refusal.NO_SUCH_ACCOUNT_DRAFT",
+   "en": "No draft of this case's account that you can see has that name, so nothing was recorded.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R4"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT",
+   "en": "The account is missing or can't be read, so nothing was recorded. Write it, then save again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-315: case-account R4"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -80046,6 +80487,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.docket-public.name",
+   "en": "A case's docket, from outside",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.docket-public.purpose",
+   "en": "A published case's docket as anyone reads it, with no account: each new edition, correction, withdrawal and court order after publishing, dated and signed.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.inbox.name",
    "en": "Inbox",
    "protected": false,
@@ -82374,6 +82827,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.accountpropose.label.case-editor",
+   "en": "Draft the account with the assistant",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.accountdrafts.label.case-editor",
+   "en": "See its earlier drafts",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewgrant.label.review-copy",
    "en": "Share for review",
    "protected": true,
@@ -82958,6 +83423,18 @@
   {
    "key": "act.notedelete.does",
    "en": "Deletes your note. If you turned it into something shared, that stays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.accountpropose.does",
+   "en": "Asks the assistant to draft the case's account in the order you chose, from the case's own findings and evidence. Its draft arrives labeled as machine work, with the sentences Civicsmith could not support marked; the account stays the one you write.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.accountdrafts.does",
+   "en": "Lists every draft the assistant made of this case's account, oldest first, each with how it was ordered and what Civicsmith marked.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
