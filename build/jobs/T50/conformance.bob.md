@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L9 merge order: `modules.json`'s (conformance, action-grammar, action-records, actions, action-replies, filing-templates, filings, action-plans); action-records before actions; a job that uses no unmerged L9 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · CHANGE
+
+BOB #205. Merged (K3739). One fix, then COMPLETE again: `SOURCE_FACTS_UNRECORDED` and `SOURCE_DECLARATION_SAYS` (index.mjs 158, 161) are member-facing and say "the source group's"; say "the source team's" (K3472, P8; identifiers unchanged). No key holds them yet: they stay inline until the design lane keys them (BOB routes that). Update any of your tests that pin the old text, run your tests and checks, and post COMPLETE.
