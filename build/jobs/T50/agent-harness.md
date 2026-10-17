@@ -24,3 +24,7 @@ Size (session_01VB7aNzqCDcGRLaxhz6h5yc): test runs 4, module lines 1939
 ## J1 · QUESTION
 
 R18 text: scope documents is 'the least documents the plane's statement answered over a level's reads', but its control (one read of documents 0 and one of 2 keeps its candidate) needs the greatest. My reading: scope[level].documents is the shell's aggregate, any read with a document in scope making it 1 or more; the harness only passes that figure to run-rules R35 (levelEmptyHolds). Built and tested that way; please fix the wording of R18 (or tell me otherwise).
+
+## J2 · COMPLETE
+
+R18 and R19 built in agent-harness/src/harness.mjs, 55 module tests pass, format, architecture, ownership 0 failures; coverage names only R17 unmet. R17 NOT built: waiting on your CHANGE once agent-runner R38's proof passes. Caveat: R18 imports levelEmptyHolds (run-rules R35), not on tranche/T50 at my start; I tested against an uncommitted local stub, so my module's tests fail at import until run-rules merges. Send a CHANGE (merge tranche/T50) after it does. agent-worker must set scope per level and state each disagreementsToSettle pair. See record.
