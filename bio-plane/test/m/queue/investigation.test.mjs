@@ -15,7 +15,7 @@ const KINDS = {
   "explore-ask":               ["FINDING", /one of your accounts may explore today; approve it or let the day pass/],
   "ai-limit-reached":          ["FINDING", /a limit of an account you own was reached in this period/],
   "project-account-suspended": ["FINDING", /a project's sign-in account stopped serving because a second member joined/],
-  "question-find":             ["FINDING", /the machine found something that may bear on a question you follow; labelled as the machine's work/],
+  "question-find":             ["FINDING", /the machine found something that may bear on a question you follow; labeled as the machine's work/],
   "step-later-found":          ["FINDING", /something a step looked for and did not find has since arrived/],
   "step-date-due":             ["OBLIGATION", /a step you set a date on has passed that date and is not ended/],
   "step-reminder":             ["OBLIGATION", /a reminder you asked for on a step's date; answer it with another reminder or none/],

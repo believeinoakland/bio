@@ -185,7 +185,7 @@ test("R29 R30: affordances R12's totality holds over a stand-in of the table op-
 });
 
 /* ---- R30 (K2583, B3): the five reading-guides ops op-declarations adds ------------------------------------------------ */
-test("R30 (K2583): guidepropose graded as extractpropose (run-directed, labelled machine work); guideproposetocivicsmith "
+test("R30 (K2583): guidepropose graded as extractpropose (run-directed, labeled machine work); guideproposetocivicsmith "
    + "`undetermined` as guideoffer; guidefor, guide and guideproposals reads; none a machine refusal, all phone acts", () => {
   assert.equal(gradeOf("guidepropose"), gradeOf("extractpropose"));
   assert.equal(gradeOf("guidepropose"), "reversible");
