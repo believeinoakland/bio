@@ -27,3 +27,11 @@ R55 reads 'kinds (person, office; another kind refused as R51 refuses it)'. Best
 **Tests and checks.** entities: 118 tests, 118 pass (t50.test.mjs 19; changed: registry, contract, defects, idmatch, dec149, naming, t33, t35). From the process repository over `.`: `format` 171 modules, 0 failures; `architecture entities` 20 product files, 0 failures; `coverage entities` 56 of 56 live ids named, 0 failures; `ownership entities tranche/T50` 0 failures; `checks/run.mjs .`: format 0, architecture 0, channels 0; coverage 30 failures, none entities' (the other modules' not-yet-met ids).
 
 Size (session_01SZdSkPKdsPWvCmU3BMq2HD): test runs 9, module lines 2199
+
+## J2 · COMPLETE
+
+COMPLETE J2: T50-59 entities done on job/T50/entities (details in build/jobs/T50/entities.md).
+R54 forum_kind (createEntity/entitycreate, readEntity, entitiesOfKind filter + item field; UNKNOWN_FORUM_KIND, FORUM_KIND_NOT_FOR_KIND before any id; new entities.forum_kind column, migrated); R55 aliasesOf; R56 labelsOf; R35 label stated and pinned by test; plan rule 6 (10 rows and 16 sentences by key).
+Provider for retrieval (T50-10) and explore (T50-63): aliasesOf({kinds, limit, after, viewer}) -> {ok, aliases:[{entity_id,kind,label,alias}], count, limit, truncated, next}; labelsOf({ids, viewer}) -> {ok, labels:{id:{label,kind}|null}, count} or TOO_MANY_IDS.
+Tests: entities 118/118; format, architecture, coverage (56/56), ownership 0 failures; users of entities fail exactly as at tranche/T50 (46 same names, clean worktree). Stale until layer close: plane bundle, program.mjs.
+REPORT items in my record: sentences no key holds (the name; R47's kind words); no keys/rows for UNKNOWN_FORUM_KIND and FORUM_KIND_NOT_FOR_KIND.
