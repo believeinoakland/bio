@@ -201,7 +201,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
     "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
     "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED",
-    "NOT_ATTESTED_BY_DOCUMENT"];
+    "NOT_ATTESTED_BY_DOCUMENT", "NO_SET", "SET_TOO_LARGE"];
   assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
   const ids = new Set();
   for (const c of kept) {
@@ -267,6 +267,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
     X({ key: "" }), X({ key: "proc::" }), X({ to: "adopted" }), X({ reason: "" }), X({ reason: "a\nb" }), X({ decidedBy: "" }),
     X({ key: "nope::award" }), X({ key: "proc::bid" }), X({ definitionVersion: null }), X({ definitionVersion: 2 }),
     w.p.onThreaded("scheduler", f) && w.p.onThreaded("scheduler", f), w.p.onThreaded("", f),
+    w.p.instancesFor({}), w.p.instancesFor({ set: Array.from({ length: 201 }, (_, i) => `ENT-${i}`) }),
   ];
   const seen = new Set();
   for (const r of answered) {
