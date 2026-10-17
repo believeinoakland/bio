@@ -34,7 +34,7 @@ const J = [
    { s: 'document', act: 'identityclaim', say: 'Dev meets a name in the repair policy: L. Chen, Director of Public Works.' },
    { s: 'find-in', act: 'recordpersonfact', v: 'project', say: 'He uses "Find in this project" for people and offices: L. Chen is named in 6 of its 14 documents, each with its passage. Nothing is recorded until he records it.' },
    { s: 'people', act: 'search', say: 'He opens People and searches for “Chen”: L. Chen is listed under his projects, named in 14 documents, 2 questions and 1 project.' },
-   { s: 'person', act: 'person', say: 'He opens the person\'s page: positions over time, each dated and cited.' },
+   { s: 'person', act: null, say: 'He opens the person\'s page: positions over time, each dated and cited.' },
    { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a license from the state register.' },
    { s: 'person', act: 'identityclaim', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
    { s: 'person', act: null, dock: true, only: 'ai', say: 'He asks the assistant whether Chen held other posts; it answers from what the team holds and says where it looked.' },
@@ -171,7 +171,7 @@ function journeySteps(j, ai) {
   if (j.wiz) {
     const w = LIB.find(x => x.name === j.wiz);
     const st = w.versions[0].steps;
-    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act } }));
+    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act, ask: i === 0 && x.screen === 'plan' ? 'project' : '' } }));
   }
   return j.steps.filter(x => !x.only || (x.only === 'ai') === ai);
 }
