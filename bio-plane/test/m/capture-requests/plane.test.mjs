@@ -259,6 +259,44 @@ test("R48 in the plane: a requested capture, drained and promoted, is listed by 
   assert.ok(typeof row.captured_for.questions[0].asker === "string" && row.captured_for.questions[0].asker.length > 0);
 });
 
+/** A capture a member acquired, held: promoted at `collected` as an information bundle the register files it under, as the
+ *  drain's own promotion does (R38), so capture's op=heldcaptures lists it. */
+async function holdAcquired(tok, locator, over = {}) {
+  const got = (await call("acquire", tok, { locator, ...over })).body;
+  assert.equal(got.ok, true, JSON.stringify(got).slice(0, 400));
+  const doc = got.document, cap = doc.capture;
+  const id = `INFO-2026-${String(Math.floor(Math.random() * 9000) + 1000)}-acq`;
+  const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2", 'title: "Acquired"',
+    "current_state: collected", "prior_state: null", 'created: "2026-07-01T00:00:00Z"', 'last_updated: "2026-07-01T00:00:00Z"',
+    "produced_by:", "  mode: agent", "  capability_tier: session", "group: g", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "criticality: supporting", "source_status: unchanged", "source:", `  locator: ${JSON.stringify(locator)}`,
+    "  retrieved: 2026-07-01T00:00:00Z", "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", "x", ""].join("\n");
+  const p = (await call("promote", tok, { bundleId: id, base: null, snapKey: `${id}-000001`,
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: doc.file, blobSha: cap.sha256, sha256: cap.sha256, bytes: cap.bytes }],
+    register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }],
+    meta: { object_type: "information", group: "g", title: "Acquired", current_state: "collected",
+            created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z", criticality: "supporting" } })).body;
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  return cap.sha256;
+}
+
+test("R48 in the plane (T50): a capture a member made with acquire's `for` and no request is listed by op=heldcaptures with the question and its asker, read through this module's reader and capture's asks (capture R83, R94); a question no inquiry answers to is the withheld sentence with no id; a capture with no `for` answers questions: []", async () => {
+  const { RUTH } = await world();
+  const row = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-ask.pdf", { for: "INQ-2026-9000-cr" }));
+  assert.ok(row, "no held row for the acquired capture");
+  assert.equal(row.captured_for && row.captured_for.withheld, null, JSON.stringify(row.captured_for));
+  assert.deepEqual(row.captured_for.questions.map((q) => [q.question, q.title, q.asker]), [["INQ-2026-9000-cr", "What?", "ruth"]]);
+  const g = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-ghost.pdf", { for: "INQ-2026-9999-none" }));
+  assert.deepEqual(g.captured_for.questions, []);
+  assert.equal(typeof g.captured_for.withheld, "string");
+  assert.doesNotMatch(JSON.stringify(g.captured_for), /INQ-2026-9999-none/);
+  /* Control: no `for`, no request */
+  const n = await heldOf(RUTH, await holdAcquired(RUTH, "https://up.example.org/for-none.pdf"));
+  assert.deepEqual(n.captured_for, { questions: [], withheld: null });
+});
+
 test("R56 in the plane: a member's session asks for an address with no run (\"Ask for this later\"); the request is hers, drained by the daemon as any is; the same ask through an ai credential is refused CAPTURE_REQUEST_NO_RUN", async () => {
   const { RUTH } = await world();
   const address = "https://up.example.org/later.pdf";
