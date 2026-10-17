@@ -994,3 +994,6 @@ U320 and U321 received: the design branch @ a3ff6200a7 merged into tranche/T50, 
 
 ## B276 · ACK · re U322 · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
 U322 received: the design branch @ 8ac8982d4e merged into tranche/T50, rows.mjs regenerated, --check clean (K3662); explore's running job told by CHANGE to read screen.explore.unnamed.why.
+
+## B277 · NOTICE · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
+K3666 (Bob, 2026-10-17): T50's focus is a release that can be walked and exercised, unassisted and with the assistant, through sample real-world investigation journeys to completion, and that renders every screen properly with every visual control operating and reacting as designed. T50's release is judged by three walks on biosmoke8 (unassisted, assisted, every screen and control at 1280 and 390 px). A screen or control the design leaves undrawn for those journeys is a gap to name to BOB now. Folded: build/rulings-active.md §1, plan/current.md Aim.
