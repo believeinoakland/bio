@@ -1,6 +1,6 @@
 # following (T50)
 
-**Status** · session_01PPuBsoVTVYhEYoJL4H1GVK · depth 2 · WORKING · handled B1
+**Status** · session_01PPuBsoVTVYhEYoJL4H1GVK · depth 2 · COMPLETE · handled B1
 
 ## Completion · T50-77 following (R32–R35, plus rule 6)
 
