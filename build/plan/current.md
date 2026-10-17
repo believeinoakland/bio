@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #198 · session_0123mrvao6jY4o2Gj2M7N3ez · depth 1
 
-**Jobs** · membership: MEMBERSHIP #40 session_012b5v7Ekpv3CAbBibj4BTrH
+**Jobs** · membership: MEMBERSHIP #40 session_012b5v7Ekpv3CAbBibj4BTrH; project-roster: PROJECT-ROSTER #9 session_01CRP1uirZ6T4GoDiyhrh3i8
 
 **Sources** · Adopted at the opening (K3614) from `archive/drafts/draft-T50-plan.md` (a planning worker's draft, reviewed by BOB #181 and BOB #195) with every review, paragraph and placement since folded in: N1148–N1197 of `next.md`, Bob's K3602 (N1195), K3607–K3611 (N1196, N1197), UX-DESIGN's DEC-257–DEC-300 (the design branch @ 92331996be, merged at the opening), and the owners settled at the fold by reading workers whose findings BOB reviewed (`plan/fold-T50-owners.md`, `plan/fold-T50-decs.md`, `plan/fold-T50-remote.md`). Every entry the draft or `next.md` held is placed below or left out with its hard reason (P19).
 
