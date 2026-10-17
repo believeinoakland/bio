@@ -56,21 +56,13 @@ export const HISTORY = (owner) => ({ ok: true, owner, count: 3, limit: 200, trun
   { at: "2026-10-07T08:00:00Z", by: "member:lu", change: "use_set", switch: "explore", value: "ask" },
 ] });
 
-/** members, read by an administrator: every read answering. */
+/** members, read by an administrator: every read answering (R47: the roster only; the team's key is `teamai`'s). */
 export function membersTable(over = {}) {
   return {
-    memberlist: env({ members: ROSTER }),
-    // the founder holds the instance (membership R64, R86): an administrator beside the roster's
-    bootstrap: { ok: true, service: "bio-plane", claimed: true, part_signin: true, part_scanner: false, part_safe_view: false },
+    // the founder's row is the roster's own (membership R147; screens-settings R51)
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
     adminrecoverystep: env({ ok: true, administrators: 1, codes_held: false, remaining: 0, met: false }),
-    groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "member:rosa", suggestions: false, standing: false, uses: ALL_USES }),
-    aikeepawaystate: env({ on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"] }),
     expertiselist: (q) => env({ ok: true, memberId: q.memberId, expertise: (ROSTER.find((m) => m.member_id === q.memberId) || { expertise: [] }).expertise, gates: "nothing" }),
-    accountuses: (q) => env({ ok: true, owner: q.owner, held: true, uses: ALL_USES, keptAway: [] }),
-    ailimits: () => env(LIMITS),
-    aiusage: (q) => env(USAGE(q.owner)),
-    accounthistory: (q) => env(HISTORY(q.owner)),
-    aiuseovertime: (q) => env(OVER(q.owner)),
     memberadd: (q, b) => env({ ok: true, memberId: b.memberId, invite: "0123456789abcdef0123456789abcdef", expires: "2026-10-19T10:00:00Z", role: b.role || "member", capabilities: b.capabilities, invited_by: "rosa" }),
     membercaps: (q, b) => env({ ok: true, memberId: b.memberId, capabilities: b.capabilities, by: "rosa" }),
     memberset: (q, b) => env({ ok: true, memberId: b.memberId, status: b.status, by: "rosa" }),
@@ -80,12 +72,6 @@ export function membersTable(over = {}) {
     invitewithdraw: (q, b) => env({ ok: true, memberId: b.memberId, status: "revoked", invitation: "withdrawn", by: "rosa", at: "2026-10-12T00:00:00Z" }),
     websitekeycreate: () => env({ ok: true, keyId: "wk1", key: "a".repeat(64), capabilities: ["contribute"], dailyCap: 5, expiresInDays: 7, warning: "" }),
     joinlinkenable: () => env({ ok: true, linkId: "jl1", link: "b".repeat(64), capabilities: ["contribute"], dailyCap: 5, expiresInDays: 7, warning: "" }),
-    groupkeyset: () => env({ ok: true, set_at: "2026-10-12T00:00:00Z" }),
-    groupkeyswitch: (q, b) => env({ ok: true, on: b.on === true }),
-    groupkeyremove: () => env({ ok: true, removed: true }),
-    accountusesset: (q, b) => env({ ok: true, owner: b.owner, switch: b.switch, on: b.on }),
-    ailimitset: (q, b) => env({ ok: true, ...b, change: b.amount === null ? "removed" : "set", set_at: "2026-10-12T00:00:00Z" }),
-    aikeepaway: (q, b) => env({ ok: true, on: b.on, reason: b.reason || null, set_by: "rosa", set_at: "2026-10-12T00:00:00Z", uses: b.uses || [] }),
     // T47 (R23): the signing keys an administrator withdraws, and the reset link (credentials R10, R69)
     signerlist: env({ signers: [{ key_b64: "AAAAC3NzaC1lZDI1NTE5AAAAIDev000000000000000000000000000000000000001", member_id: "dev", comment: "", status: "active", added: "2026-10-04T00:00:00Z" }] }),
     signerset: (q, b) => env({ ok: true, keyB64: b.keyB64, status: b.status, by: "rosa" }),
@@ -97,12 +83,34 @@ export function membersTable(over = {}) {
 /** members, read by a member who does not administer: the projections the owners answer them. */
 export function membersTableMember(over = {}) {
   return membersTable({
-    memberlist: env({ members: ROSTER_MEMBER }),
-    groupkeystate: env({ ok: true, on: true }),
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER_MEMBER] }),
     adminrecoverystep: refuse("NOT_AN_ADMIN"),
-    accountuses: refuse("NOT_AN_ADMIN"), ailimits: refuse("NOT_AN_ADMIN"), aiusage: refuse("NOT_AN_ADMIN"), accounthistory: refuse("NOT_AN_ADMIN"), aiuseovertime: refuse("NOT_AN_ADMIN"),
     ...over,
   });
+}
+
+/** The founder's row as `memberlist` answers it (membership R147): first, `member_id: "admin"`, `founder: true`; `handle` null until she chooses one. */
+export const FOUNDER_ROW = Object.freeze({ member_id: "admin", handle: null, role: "admin", status: "active", capabilities: VOCAB, cover: "The founder", expertise: [], invitation: null, founder: true });
+
+/** teamai, read by an administrator (R48): the team's key and its account, every read answering. */
+export function teamaiTable(over = {}) {
+  return {
+    memberlist: env({ members: [FOUNDER_ROW, ...ROSTER] }),
+    groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "member:rosa", suggestions: false, standing: false, uses: ALL_USES }),
+    aikeepawaystate: env({ on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"] }),
+    accountuses: (q) => env({ ok: true, owner: q.owner, held: true, uses: ALL_USES, keptAway: [] }),
+    ailimits: () => env(LIMITS),
+    aiusage: (q) => env(USAGE(q.owner)),
+    accounthistory: (q) => env(HISTORY(q.owner)),
+    aiuseovertime: (q) => env(OVER(q.owner)),
+    groupkeyset: () => env({ ok: true, set_at: "2026-10-12T00:00:00Z" }),
+    groupkeyswitch: (q, b) => env({ ok: true, on: b.on === true }),
+    groupkeyremove: () => env({ ok: true, removed: true }),
+    accountusesset: (q, b) => env({ ok: true, owner: b.owner, switch: b.switch, on: b.on }),
+    ailimitset: (q, b) => env({ ok: true, ...b, change: b.amount === null ? "removed" : "set", set_at: "2026-10-12T00:00:00Z" }),
+    aikeepaway: (q, b) => env({ ok: true, on: b.on, reason: b.reason || null, set_by: "rosa", set_at: "2026-10-12T00:00:00Z", uses: b.uses || [] }),
+    ...over,
+  };
 }
 
 export const KEEPAWAY_ON = { on: true, reason: "We hold tips from city employees; none of it may go to an AI service.", set_by: "rosa", set_at: "2026-10-02T10:00:00Z", uses: ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"] };
@@ -141,7 +149,7 @@ export function connectTable(me, situation = "group", over = {}) {
     groupkeystate: env({ ok: true, on: situation === "group" || ownKey }),
     groupkeynotice: env({ ok: true, due: true, text: "notice" }),
     disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: true, shown_at: "2026-10-05T00:00:00Z" }),
-    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: ownKey ? "2026-10-06T09:00:00Z" : null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: sub ? "2026-10-04T00:00:00Z" : null, held: sub, valid_until: sub ? "2026-11-04T00:00:00Z" : undefined, uses: null } }),
+    accountreference: env({ ok: true, held: ownKey, kind: ownKey ? "apikey" : null, set_at: ownKey ? "2026-10-06T09:00:00Z" : null, suggestions: false, standing: false, uses: ownKey ? ALL_USES : null, subscription: { connected: sub, since: sub ? "2026-10-04T00:00:00Z" : null, held: sub, valid_until: sub ? "2036-11-04T00:00:00Z" : undefined, uses: null } }),
     subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: sub, member: "member:" + me.member }
       : b.step === "start" ? { ok: true, address: "https://claude.ai/oauth/authorize?code=true&state=s" }
       : { ok: true, connected: true, member: "member:" + me.member },

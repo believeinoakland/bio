@@ -36,7 +36,7 @@ const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`
 
 /** The keys each screen draws (interface-shell R5, R21; R39). */
 const WORDS = {
-  members: [...STATES, "screen.members.name", ...own("screen.members.", "column.members."), "member.founder.unnamed", "member.founder.unnamed.help", "screen.group.name", "screen.places.name", "screen.recovery.name",
+  members: [...STATES, "screen.members.name", ...own("screen.members."), ...["member", "may-do", "expertise"].flatMap((c) => [`column.members.${c}.name`, `column.members.${c}.shows`]), "member.founder.unnamed", "member.founder.unnamed.help", "screen.group.name", "screen.places.name", "screen.recovery.name",
     ...LABELS("members", ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
       "websitekeycreate", "joinlinkenable", "signerset"]),
     "act.owed_passwordresetlink.label.members"],

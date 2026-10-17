@@ -1,26 +1,27 @@
-/* Settings › Members at the module's interface (R1, R2, R8, R9 over `owner: "group"`): the screen run over the stand-in
-   shell and a fake plane answering each op in its owner's shape; what it reads, what it draws, and what each act sends. */
+/* Settings › Members at the module's interface (R1, R2, R8 as R47 leaves them: the roster only; R12, R23, R29, R35, R47, R51): the
+   screen run over the stand-in shell and a fake plane answering each op in its owner's shape; what it reads, what it draws, and
+   what each act sends. The team's key and its account are `teamai`'s (teamai.test.mjs). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, READER, ROSTER, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
+import { ADMIN, MEMBER, READER, ROSTER, FOUNDER_ROW, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
 
 const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-act"] === op && pred(b));
 
-test("R1 the reads: the roster, the group's key and the keep-away for every member; the recovery step and the group's account (owner group) for an administrator; a member's expertise when opened", async () => {
+test("R1 the reads: the roster for every member; the recovery step and the signing keys for an administrator; a member's expertise when opened; nothing of the team's key (R47)", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
   // the screen's own reads, from its first (the frame's own reads, interface-shell R20, come before it)
   const all0 = a.p.requests.map((r) => [r.op, r.query]);
-  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 10);
-  assert.deepEqual(reads, [["memberlist", {}], ["groupkeystate", {}], ["aikeepawaystate", {}], ["expertiselist", { memberId: "ana" }],
-    ["adminrecoverystep", {}], ["signerlist", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }]]);
+  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 4);
+  assert.deepEqual(reads, [["memberlist", {}], ["expertiselist", { memberId: "ana" }], ["adminrecoverystep", {}], ["signerlist", {}]]);
+  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory", "aiuseovertime"]) assert.ok(!a.p.requests.some((r) => r.op === op), `${op} is teamai's (R47)`);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   const mo = m.p.requests.map((r) => r.op);
-  assert.deepEqual(mo.slice(mo.indexOf("memberlist"), mo.indexOf("memberlist") + 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
+  assert.deepEqual(mo.filter((op) => !["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap"].includes(op)), ["memberlist"]);
   // what the owners refuse a member: the reads the screen asks of an administrator beyond those it asks of a member (N1073)
   const members = SCREENS.find((s) => s.id === "members");
   const adminOnly = Object.values(members.reads({ me: ADMIN, subject: "ana" })).map((r) => r.op).filter((op) => !Object.values(members.reads({ me: MEMBER })).some((r) => r.op === op));
-  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("aiusage"), "the administrators' reads");
+  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("signerlist"), "the administrators' reads");
   for (const op of adminOnly) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
@@ -33,15 +34,34 @@ test("R1 the roster: each member's handle, cover (to an administrator), role, ca
     assert.ok(t.includes(m.handle || said("screen.members.nohandle")));
     assert.ok(t.includes(m.cover), `${m.member_id}'s cover`);
     assert.ok(t.includes(said(m.role === "admin" ? "screen.members.role.admin" : "screen.members.role.member")));
-    for (const c of m.capabilities) assert.ok(t.includes(said("screen.members.cap." + c)));
+    // the capabilities in words; an administrator's row says all of it (R47)
+    if (m.role === "admin") assert.ok(t.includes(said("screen.members.cap.all")), `${m.member_id}'s capabilities`);
+    else for (const c of m.capabilities) assert.ok(t.includes(said("screen.members.cap." + c)));
     assert.ok(t.includes(said("screen.members.status." + m.status)));
   }
   has(a, "screen.members.count", { members: 5, administrators: 3 });
   assert.ok(!/formerly/i.test(a.html), "no formerly");
   assert.ok(textOf(rowOf(a.tree, "ana")).includes(said("screen.members.expertise.declared", { label: "CPA" })));
-  // a member who does not administer: no cover column, no cover
+});
+
+test("R47 to a member who does not administer, Members is a table of members, what each may do and their expertise, with who changes it; no key or keep-away section", async () => {
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
-  assert.ok(!m.html.includes("R. Medina") && !m.html.includes(said("screen.members.col.cover")));
+  assert.ok(!m.html.includes("R. Medina") && !m.html.includes(said("screen.members.col.cover")), "no cover column, no cover");
+  const th = all(m.tree, (e) => e.tag === "th").map((e) => textOf(e));
+  assert.deepEqual(th, ["column.members.member.name", "column.members.may-do.name", "column.members.expertise.name"].map((k) => said(k)));
+  for (const c of ["member", "may-do", "expertise"]) assert.ok(all(m.tree, (e) => e.attrs["data-tip"] === said(`column.members.${c}.shows`)).length, `${c} is explained`);
+  const dev = all(m.tree, (e) => e.tag === "tr").find((r) => textOf(r).startsWith("dev"));
+  assert.ok(textOf(dev).includes(said("screen.members.cap.contribute")), "the capabilities in words");
+  assert.ok(textOf(dev).includes(said("screen.members.expertise.none")), "an empty expertise is told");
+  const lu = all(m.tree, (e) => e.tag === "tr").find((r) => textOf(r).startsWith("lu"));
+  assert.ok(textOf(lu).includes(said("screen.members.cap.all")), "an administrator's row");
+  has(m, "screen.members.member.note");
+  for (const k of ["screen.members.key.heading", "screen.members.keepaway.heading", "screen.panel.usage.heading"]) lacks(m, k);
+  assert.deepEqual(acts(m.tree).map((b) => b.attrs["data-act"]), []);
+  // control: an administrator's roster keeps the invitations and the administrators' acts, and draws no key section either
+  const a = await open("members", { me: ADMIN, table: membersTable() });
+  for (const k of ["screen.members.key.heading", "screen.members.keepaway.heading"]) lacks(a, k);
+  assert.ok(btn(a.tree, "memberadd").length);
 });
 
 test("R1 the one-administrator note while the step is not met, as setup-page R16 states it; nothing once met", async () => {
@@ -62,39 +82,21 @@ test("R1 the one-administrator note while the step is not met, as setup-page R16
   assert.ok(!all(m.tree, (e) => e.attrs["data-note"] === "recovery").length);
 });
 
-test("R1 the group's key and its use: held and on, never the key; use summed over members, naming none (DEC-188 (5))", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
-  has(a, "screen.members.key.heldon", { by: "rosa", date: day("2026-10-06") });
-  const usage = all(a.tree, (e) => e.tag === "section" && textOf(e).startsWith(said("screen.panel.usage.heading")))[0];
-  assert.ok(usage, "the use is drawn");
-  const ut = textOf(usage);
-  for (const m of ROSTER) assert.ok(!new RegExp(`\\b${m.member_id}\\b`).test(ut), `the use names no member (${m.member_id})`);
-  assert.ok(ut.includes(said("screen.panel.usage.all")) && ut.includes("296") && ut.includes("$31.40"), "summed");
-  // a member who does not administer sees whether the key is on, nothing of its use
-  const m = await open("members", { me: MEMBER, table: membersTableMember() });
-  has(m, "screen.members.key.on");
-  assert.ok(!m.html.includes(said("screen.panel.usage.heading")));
-});
-
 test("R1 each read drawn in its state: still loading, empty, could not read (never as empty), or its data", async () => {
   const loading = await open("members", { me: ADMIN, table: membersTable({ memberlist: "pending" }) });
   assert.ok(all(loading.tree, (e) => e.attrs["data-state"] === "loading").length >= 1);
   const empty = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [] }) }) });
   has(empty, "screen.members.empty");
-  const failed = await open("members", { me: ADMIN, table: membersTable({ memberlist: "none", groupkeystate: refuse("NOT_AN_ADMIN") }) });
-  assert.equal(all(failed.tree, (e) => e.attrs["data-state"] === "failed").length, 2);
+  const failed = await open("members", { me: ADMIN, table: membersTable({ memberlist: "none" }) });
+  assert.equal(all(failed.tree, (e) => e.attrs["data-state"] === "failed").length, 1);
   lacks(failed, "screen.members.empty");
-  const ka = await open("members", { me: ADMIN, table: membersTable({ aikeepawaystate: env({ on: null, reason: null, set_by: null, set_at: null, uses: [] }) }) });
-  has(ka, "screen.members.keepaway.unread");
-  lacks(ka, "screen.members.keepaway.off");
 });
 
-/* R2's act table: every registry act of `members`, the state in which it applies, and where it is drawn. */
+/* R2's act table (R47: the roster's eleven): every registry act of `members`, the state in which it applies, and where it is drawn. */
 const TABLE = [
   ["passwordresetlink", "dev"], ["signerset", "dev"],
   ["memberadd", null], ["membercaps", "dev"], ["memberset", "dev"], ["adminendorse", "kim"], ["adminremove", "lu"], ["expertiseconfirm", "ana"],
-  ["invitewithdraw", "mai-k"], ["websitekeycreate", null], ["joinlinkenable", null], ["groupkeyset", null], ["groupkeyswitch", null],
-  ["groupkeyremove", null], ["accountusesset", null], ["ailimitset", null], ["aikeepaway", null],
+  ["invitewithdraw", "mai-k"], ["websitekeycreate", null], ["joinlinkenable", null],
 ];
 
 test("R2 every registry act is drawn for an administrator where it applies, each row's acts in its own panel; none to a member who does not administer", async () => {
@@ -162,43 +164,6 @@ test("R2 joining through the website: websitekeycreate and joinlinkenable with a
   assert.equal(a.refused.key, "screen.members.website.nocap");
 });
 
-test("R2 the group's key: groupkeyset sends the key in the body only, then groupkeyswitch on (setup-page R18); never drawn again; switch and remove", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
-  const KEY = "sk-ant-api03-SENTINELKEY";
-  const r = await a.press("groupkeyset", { values: { "mk-key0": KEY } });
-  assert.deepEqual(r.sent.map((x) => [x.op, x.query, x.body]).slice(0, 2), [["groupkeyset", {}, { key: KEY }], ["groupkeyswitch", {}, { on: true }]]);
-  assert.ok(!a.html.includes(KEY), "never drawn again");
-  assert.ok(!a.p.requests.slice(1).some((x) => x.op !== "groupkeyset" && JSON.stringify(x).includes(KEY)), "never sent again");
-  assert.deepEqual((await a.press("groupkeyswitch", { data: { on: "off" } })).sent[0].body, { on: false });
-  assert.equal(btn(a.tree, "groupkeyswitch")[0].attrs["data-on"], "off", "drawn to switch off while on");
-  assert.deepEqual((await a.press("groupkeyremove")).sent[0].body, {});
-  const empty = await a.press("groupkeyset", { values: { "mk-key0": " " } });
-  assert.deepEqual(empty.sent, []);
-});
-
-test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,000 characters, for every use or the ones chosen; off with its reason too (op-grades: reasoned)", async () => {
-  const a = await open("members", { me: ADMIN, table: membersTable() });
-  const form = ancestor(btn(a.tree, "aikeepaway")[0], (e) => e.tag === "div" && texts(e)[0] === said("act.aikeepaway.does"));
-  const words = texts(form);
-  assert.ok(words.indexOf(said("act.aikeepaway.does")) === 0, "what it does, first");
-  const spec = a.s.acts.find((x) => x.op === "aikeepaway");
-  assert.equal(spec.reasonField, "reason");
-  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "We hold tips." } })).sent[0].body, { on: true, reason: "We hold tips." });
-  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-use-ask": true, "mk-use-run": true, "mk-why": "Tips." } })).sent[0].body, { on: true, reason: "Tips.", uses: ["ask", "run"] });
-  for (const why of ["", " ", "x".repeat(2001)]) {
-    assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": why } })).sent, [], "no reason, no keep-away");
-    assert.equal(a.refused.key, "screen.members.keepaway.noreason");
-  }
-  assert.equal((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "x".repeat(2000) } })).sent[0].body.reason.length, 2000);
-  const none = await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-use-ask": false, "mk-use-run": false, "mk-why": "x" } });
-  assert.deepEqual(none.sent, []);
-  const on = await open("members", { me: ADMIN, table: membersTable({ aikeepawaystate: env({ on: true, reason: "We hold tips.", set_by: "rosa", set_at: "2026-10-02T00:00:00Z", uses: ["ask"] }) }) });
-  has(on, "screen.members.keepaway.on", { by: "rosa", date: day("2026-10-02") });
-  assert.ok(on.html.includes("We hold tips."));
-  assert.deepEqual((await on.press("aikeepaway", { data: { on: "off" }, values: { "mk-why": "We publish our sources now." } })).sent[0].body, { on: false, reason: "We publish our sources now." });
-  assert.deepEqual((await on.press("aikeepaway", { data: { on: "off" }, values: { "mk-why": "" } })).sent, [], "turning it off is reasoned too");
-});
-
 test("R2 a refusal is drawn beside its act and nothing else changes; R8 nothing is drawn as done before the answer", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable({ memberadd: refuse("EXISTS") }) });
   const before = a.text;
@@ -254,18 +219,16 @@ test("R23 More for administrators links group, places and recovery; a row offers
   assert.ok(!m.p.requests.some((r) => r.op === "signerlist"));
 });
 
-/* R29: the counts agree with what they name */
-test("R29 Administrators counts the founder once claimed, with or without a roster row; the members count says it counts active members", async () => {
+/* R29, R35, R51: the counts agree with what they name, and the founder's row is the roster's own */
+test("R29 Administrators and Active members count the roster as listed, the founder's row once among them (R51)", async () => {
   const one = [{ member_id: "rosa", handle: "rosa", role: "admin", status: "active", capabilities: [], cover: "R", expertise: [], invitation: "spent" }];
-  // a founder with no roster row and one roster administrator
-  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
-  // (R35) the founder is among the active members: never fewer than the administrators the count names
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [FOUNDER_ROW, ...one] }) }) });
   has(a, "screen.members.count", { members: 2, administrators: 2 });
-  // the same count to a member who does not administer (the founder is public as claimed)
-  const m = await open("members", { me: MEMBER, table: membersTableMember({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
+  // the same count to a member who does not administer
+  const m = await open("members", { me: MEMBER, table: membersTableMember({ memberlist: env({ members: [FOUNDER_ROW, ...one] }) }) });
   has(m, "screen.members.count", { members: 2, administrators: 2 });
-  // control: an unclaimed instance has no founder to count; a proposed or revoked administrator is not counted
-  const u = await open("members", { me: ADMIN, table: membersTable({ bootstrap: { ok: true, claimed: false } }) });
+  // control: an unclaimed team's roster holds no founder row, so none is counted; a proposed or revoked administrator is not counted
+  const u = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: ROSTER }) }) });
   has(u, "screen.members.count", { members: 4, administrators: 2 });
 });
 
@@ -278,39 +241,35 @@ test("R29 control: a member with no expertise shows no Expertise, and an empty c
   assert.ok(!textOf(rowOf(a.tree, "dev")).match(/undefined|null/));
 });
 
-/* R35 (T49; D26 M; membership R144, R64, R86; project-roster R29): the founder is counted among the active members, her row is drawn
-   whether or not the roster holds one, named by her handle or by member.founder.unnamed (explained by its help), never by `admin` */
-test("R35 the founder is among the active members and has a row: a founder with no roster row and one roster member read Active members 2, Administrators 1", async () => {
+test("R35, R51 a claimed team with no founder handle held draws her row from the roster, handle null: Active members 2, Administrators 1 with one other member; never named by admin", async () => {
   const one = [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }];
-  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true }, adminrecoverystep: env({ ok: true, administrators: 1, codes_held: true, remaining: 8, met: true }) }) });
+  const a = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [FOUNDER_ROW, ...one] }), adminrecoverystep: env({ ok: true, administrators: 1, codes_held: true, remaining: 8, met: true }) }) });
   has(a, "screen.members.count", { members: 2, administrators: 1 });
   const row = rowOf(a.tree, "admin", said("member.founder.unnamed") + said("member.founder.unnamed.help"));
   assert.ok(row, "her row is drawn");
   assert.ok(textOf(row).includes(said("member.founder.unnamed")) && textOf(row).includes(said("member.founder.unnamed.help")), "named, and explained");
   assert.ok(textOf(row).includes(said("screen.members.role.admin")) && textOf(row).includes(said("screen.members.status.active")));
   assert.ok(!/\badmin\b/.test(a.text.replace(said("screen.members.role.admin"), "")), "never named by admin");
+  assert.equal(all(a.tree, (e) => e.tag === "details" && textOf(e).includes(said("member.founder.unnamed.summary"))).length, 0, "her row stays in the roster, not folded");
+  assert.equal(all(a.tree, (e) => e.tag === "tr").filter((r) => textOf(r).includes(said("member.founder.unnamed"))).length, 1, "the page adds no row of its own");
   // no act removes or resets the founder
   assert.deepEqual(acts(panelOf(a.tree, "admin")).map((b) => b.attrs["data-act"]), [], "no act on her row");
-  // control: an unclaimed instance has no founder to count or to draw
-  const u = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), bootstrap: { ok: true, claimed: false }, adminrecoverystep: env({ ok: true, administrators: 0, codes_held: false, remaining: 0, met: false }) }) });
+  // control: an unclaimed team's roster holds no founder row, so none is drawn
+  const u = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: one }), adminrecoverystep: env({ ok: true, administrators: 0, codes_held: false, remaining: 0, met: false }) }) });
   has(u, "screen.members.count", { members: 1, administrators: 0 });
   assert.equal(rowOf(u.tree, "admin", said("member.founder.unnamed") + said("member.founder.unnamed.help")), null);
 });
 
-test("R35 control: with her handle held her row draws it, in her own session and wherever the roster answers it; the sole administrator is named by it", async () => {
+test("R35 control: with her handle held her row draws it, in her own session and wherever the roster answers it", async () => {
   const one = [{ member_id: "ana", handle: "ana", role: "member", status: "active", capabilities: ["contribute"], cover: "Ana", expertise: [], invitation: "spent" }];
   const founder = { member: "admin", handle: "cleo", administer: true, capabilities: ["contribute"], vocabulary: ["contribute", "publish", "create_projects"], tokenClass: "session" };
-  const mine = await open("members", { me: founder, table: membersTable({ whoami: env(founder), memberlist: env({ members: one }), bootstrap: { ok: true, claimed: true } }) });
+  const mine = await open("members", { me: founder, table: membersTable({ whoami: env(founder), memberlist: env({ members: [FOUNDER_ROW, ...one] }) }) });
   assert.ok(textOf(rowOf(mine.tree, "admin", "cleo")).includes("cleo"));
   assert.ok(!mine.text.includes(said("member.founder.unnamed.help")), "no explanation once she has a handle");
-  has(mine, "screen.members.recovery.one", { name: "cleo" });
-  // a roster that answers her row (project-roster R29) names her to every reader
-  const row = { member_id: "admin", handle: "cleo", founder: true, role: "admin", status: "active", capabilities: [] };
-  const other = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [row, ...one] }), bootstrap: { ok: true, claimed: true } }) });
+  // a roster that answers her row with her handle names her to every reader
+  const row = { ...FOUNDER_ROW, handle: "cleo" };
+  const other = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [row, ...one] }) }) });
   has(other, "screen.members.count", { members: 2, administrators: 1 });
   assert.ok(textOf(rowOf(other.tree, "admin", "cleo")).includes("cleo"));
-  has(other, "screen.members.recovery.one", { name: "cleo" });
-  // the keep-away line and the key's line name her too, never admin
-  const kept = await open("members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [row, ...one] }), bootstrap: { ok: true, claimed: true }, groupkeystate: env({ ok: true, held: true, on: true, set_at: "2026-10-06T08:00:00Z", by: "admin" }) }) });
-  has(kept, "screen.members.key.heldon", { by: "cleo", date: day("2026-10-06") });
+  assert.ok(!other.text.includes(said("member.founder.unnamed.help")));
 });
