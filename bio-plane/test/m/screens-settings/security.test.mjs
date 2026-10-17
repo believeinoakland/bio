@@ -1,7 +1,7 @@
 /* Settings › Security at the module's interface (R15). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, has, lacks, open, panelOf, said, SCREENS } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, said, textOf, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, env, securityTable, CATALOGUE_ENTRY } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
@@ -75,4 +75,77 @@ test("R15 securitytooltest and securitytoolremove from the tool's row panel; a r
   const t = await open("security", { me: ADMIN, table: securityTable({ securitytooltest: env({ ok: false, reason: "SOME_NEW_CODE", code: "SOME_NEW_CODE", translation: "file-safety's words" }) }) });
   await t.press("securitytooltest", { data: { tool: "T1" } });
   assert.equal(t.refused.text, "file-safety's words", "else its translation");
+});
+
+/* R43 (T50; U3; DEC-291; N1194): Security leads with how things stand, and a period may end today */
+const ordinaryMap = (q) => env({ ok: true, from: q.from, to: q.to, step: "day", level: "Ordinary", levelAt: null, note: "", buckets: [{ start: q.from, counts: { signin: 1, credential: 0, rate: 1, handover: 0, through: 1, total: 3 }, usual: { signin: 1, credential: 0, rate: 1, handover: 0, through: 1, total: 3 } }], totals: { count: 3, usual: 3, busiest: q.from }, countries: [], unplaced: 0 });
+const lastDay = (q) => new Date(Date.parse(q.to) - 1).toISOString();
+const HOUR = 3600000;
+
+test("R43 an ordinary period leads with one sentence under its mark, the period named by its first and last day, the counts folded, and the catalogue of kinds only in the 'Add another checker' fold", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable({ securitymap: ordinaryMap }) });
+  const q = a.p.requests.find((r) => r.op === "securitymap").query;
+  has(a, "screen.security.ordinary.head");
+  has(a, "screen.security.ordinary.line", { period: said("period.days", { first: day(q.from), last: day(lastDay(q)) }) });
+  const mark = all(a.tree, (e) => /\bcs-risk\b/.test(e.attrs.class || ""))[0];
+  assert.ok(mark && mark.attrs["data-tip"].includes(said("screen.security.risk.means.ordinary").slice(0, 30)), "the mark is explained");
+  has(a, "screen.security.period", { from: day(q.from), to: day(lastDay(q)) });
+  lacks(a, "screen.security.summary.signin", { when: day(q.to) });
+  // the counts are folded
+  const counts = all(a.tree, (e) => e.tag === "details" && e.attrs["data-fold"] === "counts")[0];
+  assert.ok(counts && textOf(counts).includes(said("screen.security.counts.fold")) && all(counts, (e) => e.tag === "table").length === 1);
+  const byKind = all(a.tree, (e) => e.tag === "table" && textOf(e).includes(said("screen.security.col.kind")));
+  assert.ok(byKind.length === 1 && ancestor(byKind[0], (x) => x === counts), "the counts by kind only inside their fold");
+  // the catalogue is drawn only inside the fold
+  const add = all(a.tree, (e) => e.tag === "details" && e.attrs["data-fold"] === "add")[0];
+  assert.ok(add && textOf(add).includes(said("screen.security.add.fold")) && textOf(add).includes("Acme"));
+  assert.ok(!a.text.replace(textOf(add), "").includes("Acme · Scan"), "no list of outside-tool kinds outside the fold");
+  // files are said once, while the scanner is built in
+  assert.equal(a.text.split(said("screen.security.files.on")).length, 2);
+});
+
+test("R43 a raised or high period leads with what happened (a hard try at signing in) and that it was refused", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable() });
+  const q = a.p.requests.find((r) => r.op === "securitymap").query;
+  has(a, "screen.security.level.raised");
+  has(a, "screen.security.summary.signin", { when: day(q.to) });
+  has(a, "screen.security.summary.detail", { times: 4, from: day(q.from), to: day(lastDay(q)), highfrom: day(q.to), highto: day(lastDay(q)) });
+  lacks(a, "screen.security.ordinary.head");
+  // control: a raised period with no hard try in the counts says no more than the answers hold
+  const quiet = await open("security", { me: ADMIN, table: securityTable({ securitymap: (q2) => env({ ok: true, from: q2.from, to: q2.to, step: "day", level: "Raised", levelAt: q2.to, buckets: [{ start: q2.from, counts: { signin: 0, credential: 1, rate: 0, handover: 0, through: 0, total: 1 }, usual: { signin: 1, credential: 0, rate: 0, handover: 0, through: 0, total: 1 } }], totals: { count: 1, usual: 1, busiest: q2.from } }) }) });
+  assert.ok(!/\{\w+\}|undefined|NaN/.test(quiet.html));
+});
+
+test("R43 a period may end today: to is no later than the end of the present hour; the opening period asked again lands; a period ending yesterday sends the next midnight as before", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable() });
+  const first = a.p.requests.find((r) => r.op === "securitymap").query;
+  const today = first.to.slice(0, 10), from = first.from.slice(0, 10);
+  const presses = a.p.requests.filter((r) => r.op === "securitymap").length;
+  const r = await a.press("securitymap", { values: { "se-from": from, "se-to": today } });
+  const to = Date.parse(r.sent[0].query.to), nowHour = Date.parse(first.to);
+  assert.ok(to <= nowHour + HOUR && to > nowHour - HOUR, "the end of the present hour at the latest");
+  assert.equal(r.sent[0].query.from, from + "T00:00:00.000Z");
+  assert.ok(a.p.requests.filter((x) => x.op === "securitymap").length > presses && a.p.requests.filter((x) => x.op === "securitymap").at(-1).query.to === r.sent[0].query.to, "and it lands: read again for that period");
+  lacks(a, "screen.security.period.bad");
+  // the day before today: the next day's 00:00Z, as before
+  const yesterday = new Date(Date.parse(today + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
+  assert.equal((await a.press("securitymap", { values: { "se-from": from, "se-to": yesterday } })).sent[0].query.to, today + "T00:00:00.000Z");
+});
+
+test("R43 a start after the end sends nothing and draws the refusal in a fold, open, that is drawn only then; a member who does not administer reads only that the screen is administrators'", async () => {
+  const a = await open("security", { me: ADMIN, table: securityTable() });
+  assert.equal(all(a.tree, (e) => e.attrs["data-state"] === "periodbad").length, 0, "the fold is not drawn otherwise");
+  const before = a.p.requests.length;
+  const r = await a.press("securitymap", { values: { "se-from": "2026-10-10", "se-to": "2026-10-01" } });
+  assert.deepEqual(r.sent, []);
+  a.redraw();
+  assert.equal(a.p.requests.length, before, "nothing read");
+  const fold = all(a.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "periodbad")[0];
+  assert.ok(fold && "open" in fold.attrs && textOf(fold).includes(said("screen.security.period.bad.summary")) && textOf(fold).includes(said("screen.security.period.bad")));
+  // a good period afterwards clears it
+  await a.press("securitymap", { values: { "se-from": "2026-10-01", "se-to": "2026-10-02" } });
+  assert.equal(all(a.tree, (e) => e.attrs["data-state"] === "periodbad").length, 0);
+  const m = await open("security", { me: MEMBER, table: securityTable() });
+  has(m, "screen.security.admins", { admins: `${said("member.founder.unnamed")}, rosa, lu` });
+  assert.deepEqual(ops(m), []);
 });

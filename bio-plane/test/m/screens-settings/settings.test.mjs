@@ -84,3 +84,13 @@ test("R20 recovery: to an administrator, adminrecoverystep's note while not met;
   const silent = await open("recovery", { me: ADMIN, table: recoveryTable({ adminrecoverystep: refuse("STORE_DID_NOT_ANSWER") }) });
   assert.equal(all(silent.tree, (e) => e.attrs["data-note"] === "step").length, 0);
 });
+
+/* R42 (T50; U3b): recovery says the codes were shown once, to the member alone */
+test("R42 recovery draws screen.recovery.onlyyou once, above the act that issues new codes", async () => {
+  for (const me of [MEMBER, ADMIN]) {
+    const m = await open("recovery", { me, table: recoveryTable() });
+    has(m, "screen.recovery.onlyyou");
+    assert.equal(m.text.split(said("screen.recovery.onlyyou")).length, 2, "once");
+    assert.ok(m.text.indexOf(said("screen.recovery.onlyyou")) < m.text.indexOf(said("act.recoverycodesissue.label.recovery")), "above the act");
+  }
+});

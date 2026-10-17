@@ -145,3 +145,23 @@ test("R22 Register your signing key: made by the kit's signer in this browser (c
   const spec = a.s.acts.find((x) => x.op === "signerregisterown");
   assert.deepEqual(await spec.send({}, {}, { value: () => false, signer: { publicLine: async () => null } }), { refuse: "screen.account.key.declined" });
 });
+
+/* R42 (T50; U3b; interface-shell R74): the Sounds setting beside Language and Appearance, kept on the device */
+test("R42 account draws the Sounds choice (off by default) beside Language and Appearance, and sends nothing when it is changed; no sentence is drawn twice", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  // the kit's own control (`cs.sounds()`, interface-shell R74): this fails until the shell that provides it is merged
+  has(a, "screen.account.sounds");
+  has(a, "screen.account.sounds.help");
+  const sel = all(a.tree, (e) => e.tag === "select" && all(e, (o) => o.tag === "option").some((o) => textOf(o) === said("screen.account.sounds.on")))[0];
+  assert.ok(sel, "a choice of on and off");
+  const opts = all(sel, (o) => o.tag === "option");
+  assert.deepEqual(opts.map((o) => textOf(o)).sort(), [said("screen.account.sounds.off"), said("screen.account.sounds.on")].sort());
+  assert.equal(textOf(opts.find((o) => "selected" in o.attrs) || opts.find((o) => textOf(o) === said("screen.account.sounds.off"))), said("screen.account.sounds.off"), "off by default");
+  const before = a.b.requests.length;
+  await a.choose(sel.attrs.id, opts.find((o) => textOf(o) === said("screen.account.sounds.on")).attrs.value);
+  assert.equal(a.b.requests.length, before, "nothing is sent for it");
+  // beside Language and Appearance: in the same section
+  const sec = all(a.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.account.language.heading")))[0];
+  assert.ok(sec && all(sec, (e) => e === sel).length === 1, "in the language section");
+  for (const k of ["screen.account.sounds", "screen.account.sounds.help", "screen.account.language.help"]) assert.equal(a.text.split(said(k)).length, 2, `${k} is said once`);
+});
