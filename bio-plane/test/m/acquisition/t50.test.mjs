@@ -296,7 +296,7 @@ test("R48: a held capture never opened is decided (ARCHIVE_NOT_HELD, then NOT_AN
   }
 });
 
-test("R48: the same decision on a capture held in parts reads each part once (a head of the whole key, then a head and, for a store with no stored checksum, a read of each part): 1 + 2 a part, five for two, never a part twice; its answer is what it was", async () => {
+test("R48: the same decision on a capture held in parts reads each part once (one head of the whole key, then a head and, for a store with no stored checksum, a read of each part): at most 1 + 2 a part, five for two, never a part twice; its answer is what it was", async () => {
   const big = "x".repeat(9 * 1024 * 1024);
   const cases = [["a ZIP archive in two parts", makeZip([{ name: "big", data: big, method: 0 }, { name: "b", data: "b" }]), true],
                  ["an office file in two parts", docx(big), false]];
@@ -312,6 +312,7 @@ test("R48: the same decision on a capture held in parts reads each part once (a 
     w.b.calls.length = 0;
     const r = await w.acq.archiveList({ archiveSha: sha(bytes), viewer: ADMIN });
     assert.equal(reads(w), 5, `${what}: ${JSON.stringify(w.b.calls.map((x) => x[0]))}`);
+    assert.ok(reads(w) <= 1 + 2 * c.body.document.parts.length, `${what}: held to R48's bound for a capture in parts, one head of the whole key and at most two reads per part`);
     const perKey = {};
     for (const x of w.b.calls) perKey[`${x[0]} ${x[1]}`] = (perKey[`${x[0]} ${x[1]}`] || 0) + 1;
     assert.ok(Object.values(perKey).every((n) => n === 1), `${what}: no object is read twice`);

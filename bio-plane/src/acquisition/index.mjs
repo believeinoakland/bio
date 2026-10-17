@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R44, its archives R38–R41 and R45 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -12,6 +12,9 @@
  *
  * T35 (N688, F16, K1888): an archive this act captures is opened in the same call (R40; `unpack.mjs`, R38–R41), no fetch
  * goes to one of the group's own hosts (R42), and the co-archive is asked as the group or the member chooses (R20, R43).
+ *
+ * T50 (N1117, N1094): a member's `for` is recorded with the capture (R47), the member who parks a session is recorded with it
+ * and listed by `openCaptures` (R19, R46), and every member-facing sentence is read by key from setup-words (plan rule 6).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
