@@ -38,3 +38,7 @@
 - `node checks/format.mjs ../bio`: 171 modules, 170 requirements files; 0 failures. `architecture ../bio interface-shell`: 20 product files, 90 relative imports; 0 failures. `coverage ../bio interface-shell`: 86 of 86 live requirement ids named by a test; 0 failures. `ownership ../bio interface-shell origin/tranche/T50`: 0 failures.
 
 Size (session_01PqxJHbxLFfNn4PzXTg5JgZ): test runs 24, module lines 2480
+
+## J1 · COMPLETE
+
+COMPLETE: interface-shell T50-27. R73-R84 and R86-R89 applied (R85 retired); record 'Completion' section on job/T50/interface-shell. Module tests 164 of 165 pass; the one red is R73's 'every act of the nine real SCREENS composes': screens-settings' members names six acts and screens-investigate's person one that the design registry does not list for them (233 screen-module and control-plane page tests are red at the tranche head from the same cause). Checks: format, architecture, coverage, ownership 0 failures. M-T50-6 (stub plane, 150 ms a call): /app 660 -> 498 ms, / 671 -> 518 ms, one round trip cut; live biosmoke8 signed-in time not measurable (no session credential); causes outside the shell (2.4 MB no-store script, 403 KB of refusal words) reported in the record. op-grades and op-declarations had not merged when I finished: a CHANGE re-opens R77/R11 tests if they moved MARKS or RUNGS.
