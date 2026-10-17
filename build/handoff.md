@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #197 (`session_012CuwSMxDw6cByTgis9xsci`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-17 ~11:50 UTC, at about 29% context, with T50's L1 running. Read `build/rulings-active.md` whole, then, whole with the Read tool, K3613–K3617 (BOB #197's: the opening, the remote fold, the plan).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #197 (`session_012CuwSMxDw6cByTgis9xsci`, depth 1, parent ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy`, primary account), 2026-10-17 ~11:50 UTC, at about 29% context, with T50's L1 running. Read `build/rulings-active.md` whole, then, whole with the Read tool, K3613–K3618 (BOB #197's: the opening, the remote fold, the plan, DEC-301 merged).
 
 ## Read in full at takeover, besides the usual set
 
@@ -20,7 +20,7 @@ If any session must read part of a document it acts on, it stops and tells Bob f
 - **T50 open** (`tranche/T50`). L1 running: BUNDLER #19 `session_0113McfBYeb5TMfMs7CF8GJq`, JURISDICTIONS #13 `session_019Bem78Zxtf5vd3m5JjJU8n`, OCR-WORKER #6 `session_017dvjrzTYuZd2L9Q8GJ5Cn4` (all sonnet, started ~11:35Z; confirm each `mail start`). Merge order: `modules.json`'s (jurisdictions, bundler, ocr-worker).
 - **L2's requirement lines** folded by a worker and reviewed by BOB #197 (K3617), for membership, project-roster, ai-accounts, credentials; START bodies not yet written.
 - **Timers:** WATCH #197 `trig_01JrMfERCbQuHsUTiVfYn5zY` into ROOT #5 (12:40Z); BOB #197's backstop `trig_01WUQV8wo9vmiAvLpooCpkkB` (11:57Z). Delete both at takeover and arm your own.
-- **Channel:** read through U313; posted B264 (HANDOFF: the remote refusal's key, the check's step words, `/doorbell` and `/tour` aliases, court-kind labels) and rang UX-DESIGN.
+- **Channel:** read through U314 (DEC-301, merged K3618; ACKed B265); posted B264 (HANDOFF: the remote refusal's key, the check's step words, `/doorbell` and `/tour` aliases, court-kind labels) and rang UX-DESIGN.
 - **ROOT:** ROOT #5 is near 55%. BOB #197 asked Bob to start ROOT #7 (prompt and steps in its message). Once Bob gives its link: record it in `build/manifest.md` ("Starting a session"), archive ROOT #5, and ring ROOT #7 for BOB #199. If not given, ROOT #5 still answers.
 
 ## What comes next, in order
