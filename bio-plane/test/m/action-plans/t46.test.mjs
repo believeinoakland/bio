@@ -122,8 +122,10 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
      on C-124.63, which now reads DEC-199's sentence by key; its test is t47's.) */
   for (const [c, r] of Object.entries(ACTION_PLAN_CHECKS))
     if (!(`refusal.${c}` in WORDS)) assert.equal(`refusal.${c}` in PLAN_WORDS, false, c);
-  assert.equal(WORDS["refusal.PLAN_NO_TITLE"], undefined);
-  assert.match(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, /^A plan needs a title of 1 to 200 characters/);
+  /* T50-47: words.json now holds refusal.PLAN_NO_TITLE (DEC-260), so the unheld control row is SUBJECT_MALFORMED */
+  assert.equal(WORDS["refusal.SUBJECT_MALFORMED"], undefined);
+  assert.match(ACTION_PLAN_CHECKS.SUBJECT_MALFORMED.translation, /\S/);
+  assert.equal("refusal.SUBJECT_MALFORMED" in PLAN_WORDS, false);
 });
 
 test("R47 R20: the closing note is prompted with the key plan.close.lessons and words.json's words for it, read by key; a closed plan asks for none (control)", () => {

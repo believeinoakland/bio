@@ -26,7 +26,7 @@ export const PLAN_WORDS = Object.freeze({
   'refusal.DOCUMENT_FIRST_NO_REASON': 'Acting before what happened is documented needs your reason: why you are acting '
     + 'first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn\'t '
     + 'in that form. Give it, or document what happened first. Nothing was written.',
-  'plan.close.lessons': 'What would your group do differently next time? (optional, at most 4,000 characters)',
+  'plan.close.lessons': 'What would your team do differently next time? (optional, at most 4,000 characters)',
 });
 
 export const ACTION_PLAN_CHECKS = Object.freeze({
