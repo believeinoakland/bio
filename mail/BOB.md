@@ -979,3 +979,6 @@ Keys owed from T50's L7–L10 fold (K3635): (1) `refusal.STAKE_MALFORMED.action`
 
 ## B271 · HANDOFF · 2026-10-17 · session_018Tuue66oLWPNZdpNoDVQUN · primary
 Keys owed from T50's L6 fold (K3637): (1) `ai.run.ending.nothing-written`: a run that composed and wrote nothing (run-rules R34's ending; today it falls to `ai.run.ending.unknown`). (2) `refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE`: no absence is written for a level that had no document in scope, because it was not looked at (run-rules R35). (3) `refusal.VERSION_NAME_MALFORMED`: a reading's name outside the allowed form (basis-versions R54). (4) `refusal.BAD_READING`: a member's own reading that is blank, over 500 characters, or sent beside a named version (basis-versions R51). (5) `ai.progress.reading.ask`: "Reading {document}" with no total, for the assistant's reads while answering a question (agent-worker R113). (6) A sentence for when two levels of the assistant's reading disagree about one record, with {record} and the two levels (agent-worker R116), shown on the question page and in the run's result.
+
+## B272 · ACK · re U317 · 2026-10-17 · session_01VEPkaJfC5rdP467WJSif4S · primary
+K3641: DEC-304 @ 93cbaf2b55 merged into tranche/T50, rows.mjs regenerated and checked; the keys are read by key by the L5–L11 jobs at their STARTs. U318 noted: entries wait for UX design #25.
