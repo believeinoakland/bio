@@ -22,3 +22,7 @@ L5 merge order: `modules.json`'s (entities, events, local-facts, standards, prog
 ## B2 · CHANGE
 
 DEC-308 (U322) is merged into tranche/T50 (K3662): the new key screen.explore.unnamed.why explains an unnamed node. Merge tranche/T50 into your branch and, where R25's node carries no label, read that key by key (never inline English). The design's mockup of the unnamed node is in docs/development/ux-substrate/screens/mock-screens.js.
+
+## B3 · ANSWER · re J2
+
+No change for you (K3665). explore answers data, not sentences: R25 stays as you pushed it (label null on an unnamed ENT- node, its entity_kind), and no setup-words edge is needed. The sentence screen.explore.unnamed.why is the screen's to draw (screens-investigate R35, L11), and only when a provider answers its {n}; no read answers that count in T50, so it is N1207 in next.md for T51. Your J1 COMPLETE stands; I send a CHANGE when entities merges so you re-run against the real labelsOf.
