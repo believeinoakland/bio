@@ -37,8 +37,16 @@ export const LIBRARY_ADOPTED = Object.freeze([
   Object.freeze({ names: Object.freeze(["Start and send"]), version: 3,
                   source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
 ]);
-/** R33 (T47; DEC-198 (4); N992): the commit of the library whose `doors` are carried as the front doors (PR #31's merge). */
-export const DOORS_SOURCE = "a0fab7abf0";
+/** R33, R41 (T47, T50; DEC-198 (4), DEC-266; N992, N1130): the commit of the library whose `doors` are carried as the front
+ *  doors: the design commit named at T50's START, whose file holds the sixth door. */
+export const DOORS_SOURCE = "7be06eb4cb";
+/** R42 (T50; N1130; DEC-266, DEC-279, DEC-281; K2241, which needs no approval from Bob): the library re-taken from the
+ *  design file's content at the design commit named at T50's START (`7be06eb4cb`, the design branch's last merge into
+ *  `tranche/T50`, K3750): every script whose name or steps differ from its latest carried version gains the file's
+ *  content as its next version, approved as the entry records, the earlier version kept (R1, R7). */
+export const LIBRARY_RETAKEN = Object.freeze([
+  Object.freeze({ source: "7be06eb4cb", approved: Object.freeze({ by: "BOB", at: "2026-10-17", ruling: "K2241" }) }),
+]);
 /** R30 (T46; DEC-194 (5); N913; K2241): the scripts BOB adds to the library from a newer design file, each by name, at
  *  version 1, from the commit of the library it is taken from, approved by BOB on the date of the adoption; none
  *  required (R22's three stay the only required ones). */
@@ -52,6 +60,25 @@ export const LIBRARY_ADDED = Object.freeze([
 ]);
 /** R22: the three required scripts, by name (DEC-148). */
 export const REQUIRED_NAMES = Object.freeze(["Set up and claim", "Welcome a new member", "Publication ceremony"]);
+
+/** R41 (T50; K3471): the installer's four routes. The registry owes them (`owed:installupdate` and the others), but they are
+ *  the installer's routes, not plane ops: the check that every registry act has a declaration excludes them by name. */
+export const INSTALLER_ROUTES = Object.freeze(["installupdate", "installalongside", "installremove", "installremoveconfirm"]);
+
+/** R41 (pure): the acts of the registry (`screensFromFile`'s form, as `SCREEN_REGISTRY` carries it) that have no declaration.
+ *  `declared` is what the member op table holds, aliases included (a Set, a list of names or an object keyed by name). Each
+ *  gap is `{screen, act, owed}`, in the registry's order: an act the file marks `declared` or `function` that `declared` lacks
+ *  (`owed: false`), and an owed act whose op `declared` lacks (`owed: true`: R13 registers it once its op is declared), but
+ *  never one of `INSTALLER_ROUTES`. `[]` when every registry act has its declaration. Writes nothing; never throws. */
+export function registryActGaps({ screens = [], declared = [] } = {}) {
+  const have = declared instanceof Set ? declared : new Set(Array.isArray(declared) ? declared : declared && typeof declared === "object" ? Object.keys(declared) : []);
+  const gaps = [];
+  for (const s of Array.isArray(screens) ? screens : []) {
+    for (const act of Array.isArray(s.acts) ? s.acts : []) if (!have.has(act)) gaps.push({ screen: s.id, act, owed: false });
+    for (const o of Array.isArray(s.owed) ? s.owed : []) if (!have.has(o.op) && !INSTALLER_ROUTES.includes(o.op)) gaps.push({ screen: s.id, act: o.op, owed: true });
+  }
+  return gaps;
+}
 
 /** R13 (DEC-139 (5)): the registry's screens as `[{id, name, purpose, acts, owed}]`: `acts` the op of each act marked
  *  `declared` or `function`, in the file's order; `owed` each act marked `owed`, `{op, dec, at}`, `at` the number of
@@ -97,9 +124,9 @@ export function libraryFromFile(file, commit = null) {
  *  (Connect: version 2 at T41, version 3 at T47) keeps every earlier version, oldest first. The newer file's id, name,
  *  start and required are the script's (R22: kept unless the file changes them). Each script an entry of `added` names
  *  joins the library from that entry's file as its version 1, approved as the entry records, never required, at its
- *  place in that file's order (before the first script that follows it there and is already held; else last). Every
- *  other script keeps the version it has, whatever a newer file holds for it. */
-export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRARY_ADOPTED, added = LIBRARY_ADDED) {
+ *  place in that file's order (before the first script that follows it there and is already held; else last). Last,
+ *  each entry of `retaken` (R42, T50) brings every script of its file to the file's content, as a next version. */
+export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRARY_ADOPTED, added = LIBRARY_ADDED, retaken = LIBRARY_RETAKEN) {
   const base = libraryFromFile(baseFile, baseCommit);
   const read = new Map((Array.isArray(newer) ? newer : []).map((n) => [n.commit, libraryFromFile(n.file, n.commit)]));
   const files = new Map([...read].map(([c, list]) => [c, new Map(list.map((e) => [e.name, e]))]));
@@ -123,6 +150,24 @@ export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRA
       const order = read.get(a.source).map((e) => e.name);
       const next = order.slice(order.indexOf(name) + 1).map((x) => out.findIndex((e) => e.name === x)).find((i) => i >= 0);
       out.splice(next === undefined ? out.length : next, 0, { ...n, required: false, version: 1, approved: { ...a.approved } });
+    }
+  }
+  /* R42 (T50): the library re-taken from the file's content. Each entry of `retaken` reads the whole file at its `source`:
+     a script it holds (by id) whose name, start or steps differ from the latest version carried gains the file's content
+     as the next version, approved as the entry records, the latest kept in `earlier`; `required` stays what the script
+     was (R22: the three), the file's id, name, start and steps are the script's. A script the file holds and the library
+     does not is an error: the library holds every script of the file. */
+  for (const r of Array.isArray(retaken) ? retaken : []) {
+    const file = read.get(r.source);
+    if (!file) throw new Error(`library: the library is re-taken from ${r.source}, which is not given`);
+    for (const n of file) {
+      const i = out.findIndex((e) => e.id === n.id);
+      if (i < 0) throw new Error(`library: the file at ${r.source} holds '${n.name}', which the library does not`);
+      const held = out[i];
+      if (held.name === n.name && held.start === n.start && JSON.stringify(held.steps) === JSON.stringify(n.steps)) continue;
+      const { version, steps, author, approved, source } = held;
+      out[i] = { ...n, required: held.required, version: version + 1, approved: { ...r.approved },
+                 earlier: [...(held.earlier || []), { version, steps, author, approved, source }] };
     }
   }
   return out;

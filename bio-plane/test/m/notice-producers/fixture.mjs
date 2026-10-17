@@ -20,7 +20,10 @@ export const NONE = Object.freeze({
                  securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }) },
   /* R16 (T48; N996 §5): the suspended sign-ins are ai-accounts' (its R13), no longer credentials' */
   aiAccounts: { projectAccountsSuspended: () => [] },
-  following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEndAt: () => null },
+  following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEndAt: () => null,
+               watchedBy: () => ({ ok: true, watchers: [] }) },
+  /* R24 (T50; retrieval R85): the viewer's own watches */
+  retrieval: { browse: ({ only }) => ({ ok: true, kinds: [], only, items: [], count: 0, limit: 200, truncated: false, next: null }) },
   standards: { standardRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_STANDARD", id }) },
   fileSafety: { scanFindings: ({ after }) => ({ ok: true, findings: [], cursor: after ?? null, truncated: false }),
                 securityToolEvents: ({ after }) => ({ ok: true, events: [], cursor: after ?? null, truncated: false }),

@@ -142,9 +142,15 @@ test("R19: the group key's ops are admitted only from a session — a bearer, a 
     refused(await gate(w2.env, { op, token: wide, params: { key: APIKEY } }), 403, "AI_BEYOND_TASK_SCOPE", "C-29.6", [wide, APIKEY]);
     assert.equal(opCalls(w2.env).length, 0, "before any store call");
     refused(A.aiScopeDeclaration([op]), 403, "AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9");
-    /* every session reaches credentials (an administrator's or not: NOT_AN_ADMIN is credentials'); no fence here */
-    for (const t of [S.founder, S.ann, S.bare]) {
+    /* every session reaches credentials (an administrator's or not: NOT_AN_ADMIN is credentials'); no fence here, except
+       the one R29 puts before the password for an act REAUTH_ACTS names (groupkeyset): a member who is not an
+       administrator is refused membership's NOT_AN_ADMIN there, the answer credentials would give, asked first */
+    for (const t of [S.founder, S.admin, S.ann, S.bare]) {
       const r = await gate(env, { op, token: t, params: { key: APIKEY } });
+      if (Object.hasOwn(O.REAUTH_ACTS, op) && ![S.founder, S.admin].includes(t)) {
+        assert.equal(r.refusal?.body.reason, "NOT_AN_ADMIN", `${op}: R29 asks the roster first`);
+        continue;
+      }
       assert.equal(r.caller?.viaSession, true, `${op}: a session is admitted`);
       assert.equal(r.url.searchParams.has("token"), false, "the session's own token travels in the header, never the address");
       assert.equal(r.url.searchParams.has("key"), op !== "groupkeyset", `${op}: only groupkeyset's key is the body's`);
