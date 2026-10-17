@@ -41,3 +41,7 @@ op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops
 ## B6 · CHANGE
 
 interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
+
+## B7 · CHANGE
+
+Every screen job, plane and your branch are merged into tranche/T50 (K3778). Two of your t47-e2e.test.mjs R81 tests fail there: (1) Home's busy project row reads 'Last change 17 October 2026: The dark streets', not /2 questions/ (line 161); (2) 'the door's script is a control' is undefined (line 189). Diagnose against screens-daily's requirements as merged (R8, R9, R40, R42, R43 and the design 7be06eb4cb): if screens-daily fails a requirement of its own, REPORT it with the line; if the screen is right, make your test read the screen as it now stands. Re-run, post COMPLETE.
