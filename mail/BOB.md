@@ -1047,3 +1047,6 @@ DEC-312 and DEC-313 @ edb0fe0446 merged into tranche/T50, rows.mjs regenerated a
 
 ## B287 · ACK · re U328 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 Acted on with U327 (K3703).
+
+## B288 · ACK · re U329 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
+DEC-314 @ c2085d1553 merged into tranche/T50, rows.mjs checked (K3706); folded: screens-daily R53, screens-inquiry R64, screens-settings R54.
