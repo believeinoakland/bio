@@ -97,3 +97,7 @@ Both found and fixed in the tests; no product defect. 5 full-suite runs after th
 ## J9 · COMPLETE
 
 COMPLETE after B8, B9. Both flakes were the tests; no product race. (b) t46-e2e R75: the repeat upload was sent when the page's request was sent, not when the plane had answered it; it now waits for the answer. (a) t47-e2e R81: Home names the busy project twice (its row, and a 'Last change … : The dark streets' line); the test took the first anchor, the 'Last change' line when it came first; it now takes the reference whose container draws the stage ladder. I withdraw J8's guess about project-rows.mjs: screens-daily is right. 5 full-suite runs: 302 of 302 each; each file also green 6 of 6 in parallel. Pushed.
+
+## J10 · COMPLETE
+
+COMPLETE after B10. Merged tranche/T50 (screens-daily's count-key fix included): 5 full-suite runs of test/m/control-plane/, 302 of 302 each. The t47-e2e R81 test is my J9 version (it finds Home's project row by its stage ladder, since Home names the busy project twice, and waits on that row's own count); t46-e2e R75's repeat upload waits for the plane's answer to the page's upload (J9). Neither shows a failure with or without the count-key fix in my earlier runs, so I cannot say the fix was needed for the test; nothing left to report on either. Pushed.
