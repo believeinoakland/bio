@@ -237,6 +237,7 @@ ol.rules b { display: block; font-size: var(--t-md); margin-bottom: 2px; }
 fieldset.mk-checks { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
 fieldset.mk-checks legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
+fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }  /* DEC-316: a choice's words stay one block */
 .mk-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); background: var(--c-surface); }
 .mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
 .mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
@@ -320,8 +321,8 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-facts .cs-btn { min-height: 0; padding: 2px 6px; font-size: var(--t-sm); }
 @media (max-width: 560px) { .mk-facts { grid-template-columns: 1fr; } .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-facts > div:last-child { border-bottom: 0; } }
 .mk-device[data-device="phone"] .mk-facts { grid-template-columns: 1fr; } .mk-device[data-device="phone"] .mk-facts > div { border-right: 0; border-bottom: var(--hair); } .mk-device[data-device="phone"] .mk-facts > div:last-child { border-bottom: 0; }
-.mk-tabs2 { display: flex; gap: 0; border-bottom: var(--hair); }
-.mk-tabs2 span { padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
+.mk-tabs2 { display: flex; flex-wrap: wrap; gap: 0; border-bottom: var(--hair); }  /* DEC-316: tabs wrap whole on a phone */
+.mk-tabs2 span { white-space: nowrap; padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
 .mk-tabs2 span[aria-selected] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
 .mk-drop { border: 1.5px dashed var(--c-rule-strong); padding: 18px; text-align: center; color: var(--c-ink-2); display: flex; gap: 8px; align-items: center; justify-content: center; background: var(--c-surface); }
 .mk-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: var(--t-sm); }
@@ -380,8 +381,10 @@ button.mk-avatar { border: 0; padding: 0; flex: none; } .mk-grp { min-width: 0; 
 .mk-frontgrid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); gap: 24px; align-items: start; }
 .mk-signin { background: var(--c-sheet); border: var(--hair-strong); padding: 16px; display: grid; gap: 10px; }
 .mk-device[data-device="phone"] .mk-frontgrid { grid-template-columns: 1fr; }
-.mk-device[data-device="phone"] .cs-row { grid-template-columns: auto 1fr; }
-.mk-device[data-device="phone"] .cs-row > :nth-child(3) { grid-column: 2; }
+.mk-device[data-device="phone"] .cs-row { grid-template-columns: auto minmax(0, 1fr); }
+.mk-device[data-device="phone"] .cs-row > :nth-child(n+3) { grid-column: 2; }  /* DEC-316: a row's later cells stay under its words, never in the icon's column */
+.mk-device[data-device="phone"] .mk-dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.mk-device[data-device="phone"] .mk-dl dd { margin-bottom: 6px; }
 /* anatomy */
 .anat { display: grid; grid-template-columns: 200px minmax(0, 1fr) 240px; grid-template-rows: 36px 22px 230px; gap: 3px; font: 600 var(--t-xs)/1.3 var(--f-sans); margin-top: 10px; }
 .anat > div { background: var(--c-surface); border: 1.5px solid var(--c-rule-strong); padding: 6px 8px; color: var(--c-ink-2); display: grid; align-content: start; gap: 2px; }
