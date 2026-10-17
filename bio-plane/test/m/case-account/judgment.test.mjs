@@ -8,6 +8,7 @@ import { world, V, sha } from "./fixture.mjs";
 import { CaseAccount, accountShaped, ACCOUNT_SENTENCES_MAX, ACCOUNT_CITES_MAX, COMPLETENESS_MAX, ACCOUNT_ACCEPT_KIND }
   from "../../../src/case-account/index.mjs";
 import { SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR, ACCEPTANCE_FORMS, acceptanceRecord } from "../../../src/record-grammar/index.mjs";
+import { WORD } from "./words.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const RUN = "RUN-2026-0001", CASE = "CASE-2026-0001", OTHER = "CASE-2026-0002";
@@ -160,7 +161,9 @@ test("R5 (D56; K2533): accountShaped answers {ok, sentences, statementCites} or 
   for (const [account, sc, reason, field] of bad) {
     const r = accountShaped(account, sc, 1);
     assert.deepEqual([r.ok, r.reason, r.field], [false, reason, field], JSON.stringify([account, sc]).slice(0, 100));
-    assert.match(r.detail, /Nothing was written\./);
+    /* DEC-315 (N1132): BAD_ACCOUNT's sentence is words.json's, read by key; BAD_STATEMENT_CITES keeps its own */
+    if (reason === "BAD_ACCOUNT") assert.equal(r.detail, WORD("refusal.BAD_ACCOUNT"));
+    else assert.match(r.detail, /Nothing was written\./);
     assert.deepEqual(w.cacc.accountShaped(account, sc, 1), r, "the instance answers as the export");
   }
   assert.equal(accountShaped(null, { excluded: [[{ kind: "finding", ref: Q }]] }, 1).ok, true, "one list per exclusion row, at most excludedCount");
