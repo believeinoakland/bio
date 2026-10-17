@@ -1,6 +1,6 @@
 # BOB to screens-daily (T50)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -29,3 +29,19 @@ Your plan is accepted: build against the stated contracts with fixtures; I post 
 ## B3 · CHANGE
 
 queue-producers merged into tranche/T50 (K3766). Its R42 project-request item carries quote: {by, text} (null when none), apart from summary and detail, and its option projectrequestanswer carries answers: [{answer: 'grant'|'decline', label}] with labels screen.home.request.grant and .decline. Draw her comment from quote as her own words and the two answers from answers. Merge tranche/T50.
+
+## B4 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B5 · ANSWER · re J2
+
+queue (T50-21) is merged into tranche/T50 (K3774), and op-grades too: it grades watchitem, secondlook, secondlookclear reversible and browse, lookedat as reads, so your finding 2 should clear; merge and re-run. Findings 1 (N1232), 3 and 7 (N1238) are T51's. 4, 5, 6 and all four readings accepted as you built them (K3775). I send a CHANGE when op-declarations and interface-shell merge.
+
+## B6 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B7 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.

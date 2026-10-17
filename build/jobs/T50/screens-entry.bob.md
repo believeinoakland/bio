@@ -1,6 +1,6 @@
 # BOB to screens-entry (T50)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -26,3 +26,15 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 J1: both readings accepted. J2 (1): interface-assets is merged into tranche/T50 (ASSETS_COMMIT 7be06eb4cb, which holds .cs-part and .cs-choice): merge tranche/T50 and re-run your page tests. J2 (2): your cs.later watch and the explanation wrapper stand for T50; a kit control and an act explanation option are N1232 for T51. J2 (3): the missing keys are N1233, for the design lane. K3767.
+
+## B3 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
+
+## B4 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B5 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.

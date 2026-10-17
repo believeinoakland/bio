@@ -103,14 +103,14 @@ test("R21 interfacePage throws, naming the screen, for a screen whose id is not 
   assert.equal(checkScreens([{ ...DOCUMENT }]), true);
 });
 
-test("R38 R21 admits only the registry's ops, infolevelset, and two re-points until the registry lists them (ratify on ceremony, unlock on front); R28's four re-points and R21's three T46 ones are retired: a screen naming an unlisted op throws at interfacePage", () => {
+test("R38 R21 (as R73 amends) admits an op on a screen only when the registry lists it there (acts, or owed under its op name), infolevelset, or the one named re-point; ratify on ceremony is no longer admitted; a screen naming an unlisted op throws at interfacePage", () => {
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
-  const listed = (id, op) => SCREEN_REGISTRY.find((s) => s.id === id).acts.includes(op);
-  assert.equal(checkScreens([r("ceremony", "ratify")]), true);
+  const reg = (id) => SCREEN_REGISTRY.find((s) => s.id === id);
+  const listed = (id, op) => !!reg(id) && (reg(id).acts.includes(op) || (reg(id).owed || []).some((o) => o.op === op));
   assert.equal(checkScreens([r("account", "infolevelset"), r("home", "infolevelset")]), true);
-  assert.equal(checkScreens([r("front", "unlock", "login")]), true);
-  /* each T46 and T47 re-point stands only where the registry itself now lists it */
-  for (const [id, op] of [["capture", "captureupload"], ["connect", "subscriptionsignin"], ["connect", "subscriptiondisconnect"], ["answers", "ask"], ["capture", "monitorset"], ["project", "projectbarset"], ["project", "drawquestion"], ["calculation", "spotcheckvisit"]]) {
+  /* R73: ratify goes (screens-publish sends caseratify); unlock on front and founderhandleset on setup are the registry's when it lists them */
+  assert.throws(() => checkScreens([r("ceremony", "ratify")]), /ceremony.*ratify/);
+  for (const [id, op] of [["front", "unlock"], ["setup", "founderhandleset"], ["capture", "captureupload"], ["connect", "subscriptionsignin"], ["connect", "subscriptiondisconnect"], ["answers", "ask"], ["capture", "monitorset"], ["project", "projectbarset"], ["project", "drawquestion"], ["calculation", "spotcheckvisit"]]) {
     if (listed(id, op)) assert.equal(checkScreens([r(id, op)]), true, id + " " + op);
     else assert.throws(() => checkScreens([r(id, op)]), new RegExp(id + ".*" + op), id + " " + op);
   }

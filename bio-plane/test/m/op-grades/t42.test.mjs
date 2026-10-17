@@ -11,7 +11,7 @@ import * as T42 from "../../../src/op-grades/t42.mjs";
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
 const R31_REASON = "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, "
-  + "on the account that pays and within its limits; the text is labelled the AI's reading and undetermined; moves no "
+  + "on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no "
   + "bundle";
 
 /* ---- R31 ----------------------------------------------------------------------------------------------------------- */

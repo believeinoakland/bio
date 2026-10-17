@@ -1,6 +1,7 @@
 /* A member's language (R64; DEC-127 (1)) at the module's interface: the module over the real record-core and its
    routes through the frame control-plane joins them to. */
 import test from "node:test";
+import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import assert from "node:assert/strict";
 import { boot, frame } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS } from "../../../src/setup.mjs";
@@ -22,7 +23,7 @@ test("R64 memberLanguageSet keeps any one well-formed BCP 47 tag as given, the m
                      "a".repeat(300)]) {
     const r = w.m.memberLanguageSet({ language: bad, by: "ruth" });
     assert.deepEqual([r.ok, r.reason, r.check], [false, "LANGUAGE_MALFORMED", "C-119.12"], JSON.stringify(bad));
-    assert.equal(r.translation, INSTANCE_SETUP_CHECKS.LANGUAGE_MALFORMED.translation);
+    assert.equal(r.translation, TRANSLATIONS_CHECKS.LANGUAGE_MALFORMED.translation);
   }
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM member_languages`).get().n, 0);
   /* any well-formed tag is kept, as given: a tag no translation is held for included */

@@ -128,6 +128,8 @@ test("R10 R61 a refusal's words: refusal.<code> when held, else the answer's tra
   const st = async (answer) => (await boot({ screens: ALL, path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('[data-state="failed"]').textContent;
   assert.equal(await st(refused(code, "ignored")), en);
   assert.equal(await st(refused("ZZ_UNHELD", "Its own words.")), "Its own words.");
-  assert.equal(await st(refused("ZZ_UNHELD")), word("shell.unread"));
-  assert.equal(await st(refused("ZZ_UNHELD", null, 400, { trace: "abcdef0123456789" })), word("shell.unread") + " " + word("refusal.reference", { ref: "abcdef01" }), "R39's reference beside it");
+  /* R83: a code with neither word nor translation is refusal.uncatalogued and the code; no code at all is shell.unread */
+  assert.equal(await st(refused("ZZ_UNHELD")), word("refusal.uncatalogued") + " ZZ_UNHELD");
+  assert.equal(await st(httpError(500)), word("shell.unread"));
+  assert.equal(await st(refused("ZZ_UNHELD", null, 400, { trace: "abcdef0123456789" })), word("refusal.uncatalogued") + " ZZ_UNHELD " + word("refusal.reference", { ref: "abcdef01" }), "R39's reference beside it");
 });

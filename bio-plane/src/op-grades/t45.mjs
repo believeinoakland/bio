@@ -65,14 +65,14 @@ export const T45_RUNG_ABSENT = {
   prepitemtakeup:   { ground: "caller-owned", is: "a member takes a plan's preparation item up herself, with her own target date; nobody assigns anybody (plan-work R5)" },
   itemtakeup:       { ground: "caller-owned", is: "a member routes a clock entry's, a checkpoint's, a proposed stage's or a hold's to-dos to herself from then; nobody assigns anybody (plan-work R11)" },
   /* on R3's rule: none asks an authored reason, and no published act takes it back */
-  dutyfromresponse: { ground: "undetermined", is: "a machine or a member PROPOSES one duty from a body's reply or a report, its quote held as written, stored apart and labelled; never tracked until a member adopts it (duties R30, as R2)" },
+  dutyfromresponse: { ground: "undetermined", is: "a machine or a member PROPOSES one duty from a body's reply or a report, its quote held as written, stored apart and labeled; never tracked until a member adopts it (duties R30, as R2)" },
   actionreceipt:    { ground: "undetermined", is: "a member records that a sent entry was received or served, how and when, held as a capture or the member's account; a second record appends (actions R80)" },
   holdnoticesent:   { ground: "undetermined", is: "a member records that she sent the hold notice for a hold in place, held as the bytes sent or her account; it records no recipient and no one's compliance (action-holds R11)" },
   pressurerecord:   { ground: "undetermined", is: "a member records pressure that arrived outside any action, held as a capture or her account, in a project she sees; no action is created (action-holds R12)" },
   watchlink:        { ground: "undetermined", is: "a member records that a plan set a watch running, naming the matters it serves; links are append-only (following R23)" },
   watchanswer:      { ground: "undetermined", is: "one of a watch's recipients answers its once-only question, keep until a day or stop, setting the watch's end in its owner's terms; answered once (following R25)" },
   jointsignatory:   { ground: "undetermined", is: "a member records that a partner organisation approved the same text in its own copy, by its own act; recorded once per partner (filings R36)" },
-  holdnoticeprepare: { ground: "undetermined", is: "a member prepares a plain notice telling members what to keep outside Civicsmith for a hold in place, assembled from the record and labelled as a draft; a member sends it by her own hand (filings R47)" },
+  holdnoticeprepare: { ground: "undetermined", is: "a member prepares a plain notice telling members what to keep outside Civicsmith for a hold in place, assembled from the record and labeled as a draft; a member sends it by her own hand (filings R47)" },
   arosefrom:        { ground: "undetermined", is: "a member records that a matter or project arose from a response; appended, never edited (action-replies R2)" },
   successrecord:    { ground: "undetermined", is: "a member records what changed and when for a matter, on evidence, its figures computed and any cause on evidence other than the group's own act; never edited, revised by a successor (consequences R17)" },
   outcomecarry:     { ground: "undetermined", is: "a member carries a success, a harm addressed or a cure into a case's next edition through the case's own service, its text and citations only (consequences R22)" },
@@ -99,7 +99,7 @@ export const T45_NON_ACTS = {
     + "seen only by them",
   /* duties (R30, R31) */
   dutyfromresponse: "duty-directed: keyed by a reply's or a report's capture and its quoted extent; a proposal stored apart "
-    + "and labelled, never tracked until a member adopts it",
+    + "and labeled, never tracked until a member adopts it",
   dutiesarising: R("the adopted duties arising in named captures, each with its occurrences' states, and whether every one "
     + "is met"),
   /* actions (R80, R87, R88, R92) */
@@ -158,7 +158,7 @@ export const T45_NON_ACTS = {
   whereitstands: R("where a plan stands: its waits, next dates, holds, overrides, declines, set-asides, escalations and "
     + "watches"),
   statusreportdraft: "draft: answers a sourced list assembled by the system from where a plan stands, each item naming "
-    + "its source and labelled machine work; writes nothing of the record; the member's words only by her own act of "
+    + "its source and labeled machine work; writes nothing of the record; the member's words only by her own act of "
     + "keeping a report",
   statusreportsave: PLAN("keyed by plan; a member keeps her status report, never required"),
   statusreports: R("a plan's kept status reports, never published"),
@@ -186,8 +186,8 @@ export const T45_NON_ACTS = {
   advocacychecks: R("a member's kept text checks in her own hidden project, newest first, to a viewer with full sight of "
     + "it"),
   infractiondraft: "draft: answers a documented account of an infraction for one audience, drafted by the assistant from "
-    + "what the member may see of the matter, each point with its source, labelled machine work; writes nothing of the "
+    + "what the member may see of the matter, each point with its source, labeled machine work; writes nothing of the "
     + "record; the member's words only by her own act",
   bearingdraft: "draft: answers the assistant's proposed bearing of each claim of an action on a reply, each with its "
-    + "quote, labelled machine work; writes nothing of the record; a bearing only by a member's own act",
+    + "quote, labeled machine work; writes nothing of the record; a bearing only by a member's own act",
 };
