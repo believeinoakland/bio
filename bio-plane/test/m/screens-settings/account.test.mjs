@@ -145,3 +145,25 @@ test("R22 Register your signing key: made by the kit's signer in this browser (c
   const spec = a.s.acts.find((x) => x.op === "signerregisterown");
   assert.deepEqual(await spec.send({}, {}, { value: () => false, signer: { publicLine: async () => null } }), { refuse: "screen.account.key.declined" });
 });
+
+/* R42 (T50; U3b; interface-shell R74): the Sounds setting beside Language and Appearance, kept on the device */
+test("R42 account draws the Sounds choice (off by default) beside Language and Appearance, and sends nothing when it is changed; no sentence is drawn twice", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
+  // the kit's own control (`cs.sounds()`, interface-shell R74): a labeled pair of buttons, on and off
+  const group = all(a.tree, (e) => e.attrs.role === "group" && e.attrs["aria-label"] === said("screen.account.sounds"))[0];
+  assert.ok(group, "the Sounds choice is drawn, named by screen.account.sounds");
+  const btn = (to) => all(group, (e) => e.tag === "button" && e.attrs["data-sounds-to"] === to)[0];
+  assert.equal(textOf(btn("on")), said("screen.account.sounds.on"));
+  assert.equal(textOf(btn("off")), said("screen.account.sounds.off"));
+  assert.equal(btn("off").attrs["aria-pressed"], "true", "off by default");
+  assert.ok(group.attrs["data-tip"] && group.attrs["data-tip"].includes(said("screen.account.sounds.help").slice(0, 25)), "explained by screen.account.sounds.help");
+  const before = a.b.requests.length;
+  a.b.fire(a.b.doc.querySelector('[data-sounds-to="on"]'), "click");
+  await a.b.settle(40); a.redraw();
+  assert.equal(a.b.requests.length, before, "nothing is sent for it");
+  assert.equal(all(a.tree, (e) => e.attrs["data-sounds-to"] === "on")[0].attrs["aria-pressed"], "true", "kept as chosen");
+  // beside Language and Appearance: in the same section
+  const sec = all(a.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("screen.account.language.heading")))[0];
+  assert.ok(sec && all(sec, (e) => e.attrs.role === "group" && e.attrs["aria-label"] === said("screen.account.sounds")).length === 1, "in the language section");
+  assert.equal(a.text.split(said("screen.account.language.help")).length, 2, "said once");
+});

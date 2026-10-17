@@ -4,7 +4,8 @@
    the signing page gives it); links to `connect` and `notes`. Every function is self-contained (interface-shell R21).
    T47: appearance is the kit's own control (`cs.appearance()`, R12); "Sign out on this device" and "Sign out everywhere"
    (`signout`, `signouteverywhere`), each then drawing `front`'s signed-out state (R21); the signing key is made in the
-   browser by the kit's signer (`cs.signer`, interface-shell R40) and its public line sent, nothing pasted (R22). */
+   browser by the kit's signer (`cs.signer`, interface-shell R40) and its public line sent, nothing pasted (R22).
+   T50 (R42): the Sounds setting beside Language and Appearance, the kit's `cs.sounds()` (interface-shell R74). */
 
 export const account = {
   id: "account",
@@ -50,6 +51,8 @@ export const account = {
     });
     // appearance is kept on the device (interface-shell R18): the kit's own control (R12; interface-shell R27)
     lang += cs.appearance();
+    // Sounds (R42; interface-shell R74): the kit's own control, off by default and kept on the device, so nothing is sent for it
+    lang += typeof cs.sounds === "function" ? cs.sounds() : "";
     // the explanation level is the shell's (R17): its value, and its act through the shell's own setting
     const lv = cs.level() === "pause" ? "pause" : "prompt";
     lang += cs.choice("ma-level", S + "level.field", ["prompt", "pause"].map((v) => [v, "level." + v + ".name"]), { value: lv }) + cs.act("infolevelset");

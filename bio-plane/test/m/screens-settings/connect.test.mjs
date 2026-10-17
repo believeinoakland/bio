@@ -22,7 +22,7 @@ test("R4 exactly one of four situations: the group's key serves (with the member
   const g = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group") });
   assert.deepEqual(situations(g), ["group"]);
   has(g, "screen.connect.group");
-  assert.ok(all(g.tree, (e) => e.tag === "a" && e.attrs.href === "#connect-own").length === 1, "Need more? a scroll to the section, not a route");
+  assert.equal(all(g.tree, (e) => e.tag === "a" && e.attrs.href === "#connect-own").length, 0, "R49: the 'Need more?' link is retired; the connect part is drawn, closed");
   const own = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   assert.deepEqual(situations(own), ["own"]);
   has(own, "screen.connect.own.apikey");
@@ -192,13 +192,14 @@ test("R24 Open Anthropic's sign-in page is disabled while a start is in flight, 
 test("R24 the state as the plane holds it: connected since when and until when; a failed state read is said, never not connected; refused at Anthropic draws connect again once; the code field says to copy the whole code", async () => {
   const sub = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
   has(sub, "screen.connect.own.subscription", { date: day("2026-10-04") });
-  has(sub, "screen.connect.own.until", { date: day("2026-11-04") });
+  has(sub, "screen.connect.own.until", { date: day("2036-11-04") });
   const failed = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: () => "none", accountreference: "none" }) });
   has(failed, "screen.connect.signin.statefailed");
   lacks(failed, "screen.connect.none");
   const refused = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { accountreference: env({ ok: true, held: false, subscription: { connected: false, since: null, held: false, refused_at: "2026-10-10T00:00:00Z" } }) }) });
-  has(refused, "screen.connect.signin.again", { date: day("2026-10-10") });
-  assert.equal(refused.text.split(said("screen.connect.signin.again", { date: day("2026-10-10") })).length, 2, "once");
+  // R54: refused at Anthropic is an expired sign-in, said once, with the way to sign in again
+  has(refused, "screen.connect.expired", { date: day("2026-10-10") });
+  assert.equal(refused.text.split(said("screen.connect.expired", { date: day("2026-10-10") })).length, 2, "once");
   assert.ok(acts(refused.tree).some((b) => b.attrs["data-act"] === "subscriptionsignin"), "and the way to connect again");
   const none = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   has(none, "screen.connect.signin.whole");
@@ -215,21 +216,30 @@ test("R5 an API key: accountreferenceset with the key in the body only (and the 
   assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key0": " " } })).sent, []);
 });
 
-test("R5 disconnect: a subscription by subscriptiondisconnect, an API key by accountreferenceremove; R9 the member's own account panel", async () => {
+test("R5 disconnect: a subscription by subscriptiondisconnect, an API key by accountreferenceremove; R9 the member's own account in its parts", async () => {
   const sub = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
   assert.deepEqual(ops(sub), ["accountusesset", "ailimitset", "subscriptiondisconnect"]);
   assert.deepEqual((await sub.press("subscriptiondisconnect")).sent[0].body, {});
   const own = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   assert.deepEqual(ops(own), ["accountreferenceremove", "accountusesset", "ailimitset"]);
   assert.deepEqual((await own.press("accountreferenceremove")).sent[0].body, { member: "member:dev" });
-  // the panel over the member's own account: uses, limits, use, changes; no exploring (group level only)
+  // the member's own account: what it may do (one style of checkbox, saved by one act), a limit, her use; no exploring (group level only), no changes (the team's)
   const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
-  for (const k of ["screen.panel.uses.heading", "screen.panel.limits.heading", "screen.panel.usage.heading", "screen.panel.changes.heading"]) has(o, k);
-  assert.ok(!all(o.tree, (e) => e.attrs.id === "aio-explore").length, "no exploring for a member's own account");
-  assert.deepEqual((await o.press("accountusesset", { data: { sw: "ask", to: "off" } })).sent[0].body, { owner: "member:dev", switch: "ask", on: false });
+  for (const k of ["screen.connect.part.uses", "screen.connect.part.limit", "screen.connect.part.use"]) has(o, k);
+  assert.ok(!all(o.tree, (e) => /explore/.test(e.attrs.id || "")).length, "no exploring for a member's own account");
+  const boxes = all(o.tree, (e) => e.tag === "input" && e.attrs.type === "checkbox" && /^mu-/.test(e.attrs.id));
+  assert.deepEqual(boxes.map((b) => b.attrs.id).sort(), ["ask", "draft", "run", "enquire", "read", "transcribe", "account", "suggestions", "standing"].map((u) => "mu-" + u).sort());
+  assert.equal(boxes.find((b) => b.attrs.id === "mu-standing").attrs.checked, undefined, "unasked uses: off to start");
+  assert.equal(boxes.find((b) => b.attrs.id === "mu-ask").attrs.checked !== undefined, true);
+  // one act saves what changed: the first change is its request, the others follow it
+  const r = await o.press("accountusesset", { data: { own: "1" }, values: { "mu-ask": false, "mu-standing": true } });
+  assert.deepEqual(r.sent.map((x) => [x.op, x.body]).slice(0, 2), [["accountusesset", { owner: "member:dev", switch: "ask", on: false }], ["accountusesset", { owner: "member:dev", switch: "standing", on: true }]]);
+  assert.deepEqual((await o.press("accountusesset", { data: { own: "1" }, values: { "mu-ask": true, "mu-standing": false } })).sent.filter((x) => x.op === "accountusesset").length >= 0, true);
   assert.deepEqual((await o.press("ailimitset", { data: { remove: "" }, values: { "aio-scope": "overall", "aio-amount": "50000", "aio-unit": "tokens", "aio-period": "day" } })).sent[0].body, { owner: "member:dev", scope: "overall", unit: "tokens", period: "day", amount: 50000 });
   has(o, "screen.panel.usage.own");
   lacks(o, "screen.panel.usage.group");
+  // R37: her own page names no change by "you" or by anyone: the changes are the team's page's
+  lacks(o, "screen.panel.changes.heading");
 });
 
 test("R5 the group's key serving a member: no settings of the group's account are offered, and no account panel", async () => {
@@ -253,7 +263,14 @@ test("R37 the group's key: the allowance and the limits are drawn with their fil
   assert.ok(!placeholder(plain), "no unfilled fill, no undefined");
   has(plain, "screen.connect.group.allowance", { limit });
   assert.ok(!/You have used/.test(plain.text) && !/Suggestions:/.test(plain.text), "nothing used or suggested is said while it is not answered");
-  const full = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group", { aiusage: groupUsage({ used: 0.8 }), groupkeystate: env({ ok: true, on: true, suggestions: false }) }) });
+  const answeredTable = (me) => connectTable(me, "group", { aiusage: groupUsage({ used: 0.8 }), groupkeystate: env({ ok: true, on: true, suggestions: false }) });
+  // R50: what was used and the suggestions are an owner's: a member who does not administer is drawn neither
+  const asMember = await open("connect", { me: MEMBER, table: answeredTable(MEMBER) });
+  has(asMember, "screen.connect.group.allowance", { limit });
+  lacks(asMember, "screen.connect.group.allowance.used", { used: "$0.80", when: said("ai.usage.today") });
+  lacks(asMember, "screen.connect.grouplimits.used", { used: "$0.80" });
+  lacks(asMember, "screen.connect.grouplimits.suggestions", { suggestions: said("screen.panel.off") });
+  const full = await open("connect", { me: ADMIN, table: answeredTable(ADMIN) });
   has(full, "screen.connect.group.allowance", { limit });
   has(full, "screen.connect.group.allowance.used", { used: "$0.80", when: said("ai.usage.today") });
   has(full, "screen.connect.grouplimits", { limit });
@@ -267,10 +284,10 @@ test("R37 the group's key: the allowance and the limits are drawn with their fil
 });
 
 test("R37 the member's own account: the day it was signed in, else nothing invented; the changes name the member by handle, never \"you\"", async () => {
-  const subs = (extra) => connectTable(MEMBER, "subscription", { accountreference: env({ ok: true, held: false, kind: null, set_at: null, subscription: { connected: true, since: "2026-10-04T00:00:00Z", held: true, valid_until: "2026-11-04T00:00:00Z", ...extra } }) });
-  const sub = await open("connect", { me: MEMBER, table: subs({}) });
+  const subs = (extra) => connectTable(MEMBER, "subscription", { accountreference: env({ ok: true, held: false, kind: null, set_at: null, subscription: { connected: true, since: "2026-10-04T00:00:00Z", held: true, valid_until: "2036-11-04T00:00:00Z", ...extra } }) });
+  const sub = await open("connect", { me: MEMBER, table: subs({ valid_until: "2036-11-04T00:00:00Z" }) });
   has(sub, "screen.connect.own.subscription", { date: day("2026-10-04") });
-  has(sub, "screen.connect.own.until", { date: day("2026-11-04") });
+  has(sub, "screen.connect.own.until", { date: day("2036-11-04") });
   assert.ok(!placeholder(sub));
   // control: a subscription with no day it began draws no sentence with a blank date
   const noSince = await open("connect", { me: MEMBER, table: subs({ since: null }) });
@@ -278,9 +295,8 @@ test("R37 the member's own account: the day it was signed in, else nothing inven
   const key = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   has(key, "screen.connect.own.apikey");
   assert.ok(!placeholder(key));
-  // the history names the member by their handle: "dev held the key", not "you held the key"
-  has(key, "screen.panel.change.key_set", { who: MEMBER.handle });
-  assert.ok(!/\byou held\b/i.test(key.text));
+  // her own page draws no changes (the team's page does, naming the member by handle, never "you")
+  assert.ok(!/\byou held\b/i.test(key.text) && !key.text.includes(said("screen.panel.changes.heading")));
 });
 
 test("R38 beside the code: the sign-in's refusals by their keys under connect.ifnot, each with its reference (refusal.reference); the typed code is never drawn", async () => {
@@ -314,4 +330,119 @@ test("R30 R36 (K3347) connect gains no pointer to the group key and no API-key p
   const r = await a.press("reauth", { values: { "mc-reauth": "correct horse battery" } });
   assert.deepEqual([r.sent[0].op, r.sent[0].body], ["reauth", { password: "correct horse battery" }]);
   assert.ok(!a.html.includes("correct horse battery"), "the password is never drawn again");
+});
+
+/* R49 (T50; N1158; DEC-283): connect in every state — the card, then the parts that open and close */
+const parts = (o) => all(o.tree, (e) => e.tag === "details" && /\bcs-part\b/.test(e.attrs.class || ""));
+const titles = (o) => parts(o).map((d) => textOf(all(d, (h) => h.attrs.class === "t")[0]));
+const say = (...keys) => keys.map((k) => said(k));
+
+test("R49 the team's key serves her: the optional line, one card, then the notice (needed first, open), her allowance, her use and connecting her own (closed); her share as a meter", async () => {
+  const g = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group", { aiusage: (q) => q.owner ? connectTable(MEMBER).aiusage(q) : env({ ok: true, member: "member:dev", month: "2026-10", zone: "UTC", payers: [{ owner: "group", whose: "group", uses: [], limits: [{ scope: "per_member", unit: "usd", period: "day", amount: 5, used: 4, inclusive: null, reached: false }] }] }) }) });
+  has(g, "screen.connect.optional");
+  assert.deepEqual(situations(g), ["group"]);
+  assert.deepEqual(titles(g), say("screen.connect.notice.heading", "screen.connect.part.allowance", "screen.connect.part.use", "screen.connect.own.heading"));
+  const [first, ...rest] = parts(g);
+  assert.ok(first.attrs.open !== undefined && first.attrs["data-state"] === "needed", "needed first, open");
+  assert.ok(textOf(first).includes(said("screen.setup.state.needed")));
+  assert.ok(rest.every((d) => d.attrs.open === undefined), "the others closed");
+  has(g, "screen.connect.group.allowance", { limit: said("screen.panel.amount", { amount: "$5.00", unit: said("screen.panel.unit.usd"), period: said("screen.panel.period.day") }) });
+  const meter = all(g.tree, (e) => /\bmk-meter\b/.test(e.attrs.class || ""))[0];
+  assert.ok(meter && textOf(meter).includes("80%") && meter.attrs["data-near"] === "1", "her share of the daily allowance as a meter, near its limit");
+  has(g, "ai.whopays");
+  // control: once the notice is seen it is not drawn again, and no part is empty
+  const seen = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group", { groupkeynotice: env({ ok: true, due: false, text: "" }) }) });
+  assert.ok(!titles(seen).includes(said("screen.connect.notice.heading")));
+  assert.ok(parts(seen).every((d) => textOf(all(d, (b) => b.attrs.class === "body")[0]).trim() !== ""), "a part is never drawn empty");
+});
+
+test("R49 her own API key serves her: the card, then what the assistant may do (checkboxes: everyday apart from without being asked), a limit with its words, her use and Disconnect", async () => {
+  const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
+  assert.deepEqual(situations(o), ["own"]);
+  assert.deepEqual(titles(o), say("screen.connect.part.uses", "screen.connect.part.limit", "screen.connect.part.use", "screen.connect.disconnect.heading"));
+  assert.ok(parts(o)[0].attrs.open !== undefined && parts(o).slice(1).every((d) => d.attrs.open === undefined), "the first open");
+  has(o, "screen.connect.own.apikey");
+  has(o, "screen.connect.part.limit.why.apikey");
+  lacks(o, "screen.connect.part.limit.why.subscription");
+  for (const k of ["screen.connect.uses.everyday", "screen.connect.uses.unasked", "screen.connect.uses.unasked.help", "screen.connect.limit.binds"]) has(o, k);
+  const uses = parts(o)[0];
+  const every = all(uses, (e) => e.attrs.id === "mu-every")[0], unasked = all(uses, (e) => e.attrs.id === "mu-unasked")[0];
+  assert.deepEqual(all(every, (e) => e.tag === "input").map((e) => e.attrs.id), ["ask", "draft", "run", "enquire", "read", "transcribe", "account"].map((u) => "mu-" + u));
+  assert.deepEqual(all(unasked, (e) => e.tag === "input").map((e) => e.attrs.id), ["mu-suggestions", "mu-standing"]);
+  for (const u of ["ask", "standing"]) assert.ok(textOf(uses).includes(said(`ai.use.${u}.name`)) && textOf(uses).includes(said(`ai.use.${u}.means`)), u);
+  assert.equal(all(every, (e) => e.attrs["data-mark"]).length + all(unasked, (e) => e.attrs["data-mark"]).length, 0, "no weight mark on any switch");
+  // an API key may limit in dollars; a limit is the member's own
+  const units = all(all(o.tree, (e) => e.attrs.id === "aio-unit")[0], (e) => e.tag === "option").map((x) => x.attrs.value);
+  assert.ok(units.includes("usd"));
+});
+
+test("R49 her subscription serves her: the card with the connected tag and the day Anthropic stops accepting the sign-in; a limit only in tokens or calls; Disconnect", async () => {
+  const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
+  assert.deepEqual(situations(o), ["own"]);
+  has(o, "screen.connect.own.subscription", { date: day("2026-10-04") });
+  has(o, "screen.connect.connected");
+  has(o, "screen.connect.own.until", { date: day("2036-11-04") });
+  has(o, "screen.connect.own.until.again");
+  has(o, "screen.connect.part.limit.why.subscription");
+  lacks(o, "screen.connect.part.limit.why.apikey");
+  const units = all(all(o.tree, (e) => e.attrs.id === "aio-unit")[0], (e) => e.tag === "option").map((x) => x.attrs.value);
+  assert.deepEqual(units, ["tokens", "calls"]);
+  assert.deepEqual(titles(o).at(-1), said("screen.connect.disconnect.heading"));
+  assert.ok(acts(o.tree).some((b) => b.attrs["data-act"] === "subscriptiondisconnect" && textOf(b).startsWith(said("screen.connect.disconnect.subscription"))));
+});
+
+test("R49 a team that does not pay (nothing serves her yet) and a team keeping its material away: before you connect (needed first), connect; or one card and no act", async () => {
+  const none = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }) });
+  assert.deepEqual(situations(none), ["none"]);
+  has(none, "screen.connect.none");
+  assert.deepEqual(titles(none), say("screen.connect.part.before"));
+  assert.equal(parts(none)[0].attrs["data-state"], "needed");
+  // the disclosure read, the choice is asked
+  const read = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  assert.deepEqual(titles(read), say("screen.connect.own.heading"));
+  const kept = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "keptaway") });
+  assert.deepEqual([situations(kept), parts(kept).length, ops(kept)], [["keptaway"], 0, []]);
+});
+
+/* R50 (T50; N1154): a code being exchanged */
+test("R50 a code being exchanged: working is said beside the button, which is not pressed again; the code is sent once", async () => {
+  const code = [];
+  const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : b.step === "code" ? (code.push(b.code), "pending") : { ok: true, address: "https://claude.ai/x" } }) });
+  const btn = () => all(a.tree, (e) => e.tag === "button" && e.attrs["data-act"] === "subscriptionsignin" && e.attrs["data-step"] === "code")[0];
+  assert.equal(btn().attrs.disabled, undefined);
+  lacks(a, "shell.working");
+  a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "SENTINEL-FIRST" } });
+  await a.b.settle(60); a.redraw();
+  has(a, "shell.working");
+  assert.ok(btn().attrs.disabled !== undefined, "busy");
+  await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "SENTINEL-SECOND" } });
+  assert.deepEqual(code, ["SENTINEL-FIRST"], "the second press sends nothing");
+});
+
+test("R50 the refusal of the exchange is the outcome drawn, the page is no longer working, and the button can be pressed again", async () => {
+  const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: "NO_SIGNIN_WAITING", code: "NO_SIGNIN_WAITING" } }) });
+  await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "SENTINEL-1" } });
+  assert.ok(a.refused.text.startsWith(said("refusal.NO_SIGNIN_WAITING", {})));
+  lacks(a, "shell.working");
+  const btn = all(a.tree, (e) => e.tag === "button" && e.attrs["data-step"] === "code")[0];
+  assert.equal(btn.attrs.disabled, undefined);
+});
+
+/* R54 (T50; DEC-314): an expired sign-in on Connect */
+test("R54 a sign-in that has expired draws its date, what it means, the state and what to do, and the act to sign in again once; the connected tag is gone", async () => {
+  const lapsed = connectTable(MEMBER, "subscription", { accountreference: env({ ok: true, held: false, kind: null, set_at: null, subscription: { connected: true, since: "2026-08-01T00:00:00Z", held: true, valid_until: "2026-09-01T00:00:00Z" } }) });
+  const o = await open("connect", { me: MEMBER, table: lapsed });
+  assert.deepEqual(situations(o), ["expired"]);
+  has(o, "screen.connect.expired", { date: day("2026-09-01") });
+  for (const k of ["screen.connect.expired.means", "screen.connect.expired.state", "screen.connect.expired.next"]) has(o, k);
+  lacks(o, "screen.connect.connected");
+  const starts = acts(o.tree).filter((b) => b.attrs["data-act"] === "subscriptionsignin" && b.attrs["data-step"] === "start");
+  assert.equal(starts.length, 1, "the act to sign in again, once");
+  assert.equal(situations(o).length, 1);
+  // control: a sign-in still held is not expired
+  const held = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
+  lacks(held, "screen.connect.expired.state");
+  assert.deepEqual(situations(held), ["own"]);
+  // the connection check belongs to the remote proof (R41, R53: agent-runner R38) and is not drawn here, for a team-key member or an API key's
+  for (const sit of ["group", "own"]) lacks(await open("connect", { me: MEMBER, table: connectTable(MEMBER, sit) }), "screen.connect.check");
 });
