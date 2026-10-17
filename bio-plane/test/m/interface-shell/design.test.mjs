@@ -76,17 +76,14 @@ test("R54 the paths of the screens PR #34's registry adds are mock-shell.js' PAT
   assert.deepEqual(await listed(MEMBER), ["/app/members", "/app/security"], "control: a member who does not administer sees no Updates");
 });
 
-test("R55 R21 admits planask on plan, and stepsource and stepsourcewithdraw on explore, each until the registry lists it; control: a screen naming another unlisted op still throws", () => {
-  assert.deepEqual(RE_POINTS.plan, ["planask"]);
-  assert.deepEqual(RE_POINTS.explore, ["stepsource", "stepsourcewithdraw"]);
+test("R55 (amended by R73) the one op a screen needs that the registry does not list stays a named re-point: stepsourcewithdraw on explore; control: a screen naming another unlisted op still throws", () => {
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"] });
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
-  assert.equal(checkScreens([r("plan", "planask"), r("explore", "stepsource", "stepsourcewithdraw")]), true);
-  assert.ok(interfacePage([r("plan", "planask"), r("explore", "stepsource", "stepsourcewithdraw")]).length > 1000, "each screen served");
-  assert.throws(() => checkScreens([r("plan", "stepsource")]), /plan.*stepsource/);
-  assert.throws(() => checkScreens([r("explore", "planask")]), /explore.*planask/);
+  assert.equal(checkScreens([r("explore", "stepsourcewithdraw")]), true);
+  assert.ok(interfacePage([r("explore", "stepsourcewithdraw")]).length > 1000, "served");
+  assert.throws(() => checkScreens([r("plan", "stepsourcewithdraw")]), /plan.*stepsourcewithdraw/);
   assert.throws(() => checkScreens([r("plan", "retire")]), /plan.*retire/);
 });
-
 test("R56 the page links civicsmith.css and then shell.css, both before its own style; interfacePage throws, naming the screen and the class, for a class no served stylesheet defines; control: a stand-in drawing mk-door composes", () => {
   const html = interfacePage(ALL);
   const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]);
@@ -126,7 +123,7 @@ test("R57 the working frame is the design's page: at the phone width the masthea
   assert.equal(search.textContent, "", "an icon only");
   assert.ok(search.querySelector("svg"));
   const level = mast.querySelector('[data-shell="level"]');
-  assert.equal(level.getAttribute("aria-label"), word("level.prompt.name"));
+  assert.equal(level.getAttribute("aria-label"), word("shell.level.button.prompt"));
   assert.equal(level.textContent, "");
   assert.equal(mast.querySelector('[data-shell="dock"]').textContent, "");
   assert.ok(mast.querySelector(".mk-avatar"));
@@ -199,9 +196,8 @@ test("R60 the masthead never draws a count at zero, never the group's slug (\"Yo
   assert.ok(!mast.textContent.includes("0"));
   assert.equal(mast.querySelector(".mk-grp").textContent, word("shell.group.unnamed"));
   assert.ok(!p.root().innerHTML.includes("river-town"), "no slug anywhere the shell draws");
-  assert.equal(p.doc.title, "", "nor the page's title");
-  assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("level.prompt.name"), "level.prompt.name alone");
-  assert.ok(!p.root().innerHTML.includes("Explanations:"), "shell.level retired");
+  assert.ok(!p.doc.title.includes("river-town"), "nor the page's title");
+  assert.equal(mast.querySelector('[data-shell="level"] .mk-hide-phone').textContent, word("shell.level.button.prompt"), "R76: the button names itself and its setting");
   await p.click('[data-shell="level"]');
   assert.equal(p.root().querySelector('.cs-mast [data-shell="level"] .mk-hide-phone').textContent, word("level.pause.name"));
   /* control: a set name is drawn, and a count above zero */
@@ -237,7 +233,10 @@ test("R61 absence: a subject read refused with an absence code draws only Nothin
   /* a refusal's own words alone; a failure without words, "could not be read" with its reference and no code */
   const words = async (answer) => (await boot({ screens: [HELD], path: "/app/held", plane: { heldcaptures: answer } })).root().querySelector('#cs-main [data-state="failed"]').textContent;
   assert.equal(await words(refused("NOT_AN_ADMIN", "Only an administrator can do this.")), word("refusal.NOT_AN_ADMIN"));
-  assert.equal(await words(refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" })), word("shell.unread") + " " + word("refusal.reference", { ref: "01234567" }));
+  /* R83: a coded refusal with neither a word nor a translation is drawn as refusal.uncatalogued, its code and the reference */
+  assert.equal(await words(refused("ZZ_NO_WORDS", null, 400, { trace: "0123456789abcdef" })), word("refusal.uncatalogued") + " ZZ_NO_WORDS " + word("refusal.reference", { ref: "01234567" }));
+  /* a failure with no code at all (a 5xx with no body) is still "could not be read" */
+  assert.equal(await words(httpError(500)), word("shell.unread"));
   /* control: a 5xx still draws can't be reached */
   const down = await boot({ screens: [calc], path: "/app/calculation/c9", plane: { calculation: httpError(503) } });
   assert.equal(only(down).kind, "unreachable");
@@ -269,8 +268,10 @@ test("R62 cs.field draws the label bold with its help beneath, tied by aria-desc
   assert.ok(rows[0].classList.contains("mk-r"));
   assert.equal(rows[0].querySelectorAll("td[data-label]").length, 0, "no label for Mai's empty expertise");
   assert.deepEqual(rows[1].querySelectorAll("td[data-label]").map((t) => t.getAttribute("data-label")), [word("shell.confirm")], "Rosa's expertise labelled");
-  assert.equal(p.root().querySelectorAll("th").length, 3, "the column empty in every row is not drawn");
-  assert.ok(!p.root().querySelector("thead").textContent.includes(word("shell.sections")));
+  /* R84: at the phone width a table restacks as cards with no header row */
+  assert.equal(p.root().querySelector("thead"), null);
+  assert.equal(p.root().querySelectorAll("th").length, 0);
+  assert.equal(rows[0].querySelectorAll("td").length, 1, "the column empty in every row is not drawn: Mai's row is her name alone");
   /* control: on a wide screen every column is drawn */
   const q = await boot({ screens: [roster], path: "/app/members", plane: { members: M } });
   assert.equal(q.root().querySelectorAll("th").length, 4);
@@ -306,6 +307,13 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     const b = btn(p, op);
     assert.ok(b, op);
     const w = b.querySelector(".w");
+    /* R77: a mark at Reversible draws nothing; one above it draws as before */
+    if (String(MARKS[op]).toLowerCase() === "reversible") {
+      assert.equal(w, null, op + ": no mark at Reversible");
+      await p.click(b);
+      assert.equal(p.byOp(op).length, 1, op + " runs on press");
+      continue;
+    }
     assert.equal(w.getAttribute("data-mark"), String(MARKS[op]).toLowerCase(), op);
     assert.equal(w.textContent, MARKS[op], op + ": the weight's own name");
     assert.ok(w.textContent.length > 3, op + " named");

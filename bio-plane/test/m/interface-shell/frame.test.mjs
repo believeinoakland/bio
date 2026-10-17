@@ -31,7 +31,7 @@ test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your gr
   const m = p.root().querySelector(".cs-mast");
   assert.equal(m.querySelector('a[href="/app/find"]').textContent, word("shell.search"));
   assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
-  assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(en("level.prompt.name")));
+  assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(word("shell.level.button.prompt")));
   assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 2 }));
   assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
@@ -45,7 +45,7 @@ test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven p
   const p = await boot({ screens: ALL, plane: PLANE });
   const band = p.root().querySelector(".cs-band");
   assert.equal(band.getAttribute("data-band"), "working");
-  assert.equal(band.textContent, en("mark.path.working.name") + " · not public · seen by your group's members", "R57: the band as drawn");
+  assert.equal(band.textContent, word("mark.path.working.name") + " " + word("shell.band.working"), "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
   assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name")), "the shell's places, in its order");
@@ -128,7 +128,9 @@ test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a p
 test("R28 every screen of the new screen modules has its path from mock-shell.js' PATH at a0fab7abf0 (plan: Projects › <project> › Action plan; wizards: Settings › Wizards; due-date: Queue › Due date; person: People › Person), and L11's screens from PATH at PR #33's head; the public, published and setup frames have none", async () => {
   const A = pathAt("a0fab7abf0"), B = pathAt("f90b187c7b");
   const NEW = ["wizards", "person", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties", "case-editor", "review-copy", "ceremony", "imported", "docket", "plan", "start-send", "request", "action", "matter", "archive", "group-identity", "security", "translations"];
-  for (const id of NEW) assert.deepEqual(PATHS[id].map(step), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)), id);
+  /* the design's PATH is in its words of the day; the interface says "team" where it said "group" (setup-words) */
+  const team = (x) => x.replace(/\bgroup('s)?\b/g, "team$1");
+  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team), id);
   for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step), B[id], id);
   assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
   assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);

@@ -112,21 +112,21 @@ test("R17 the explanation level is the member's: the masthead shows it and switc
   const served = Object.hasOwn(OPS, "infolevelset");
   const p = await boot({ screens: ALL, plane: PLANE });
   const ctl = () => p.root().querySelector('[data-shell="level"]');
-  assert.ok(ctl().textContent.includes(en("level.prompt.name")));
+  assert.ok(ctl().textContent.includes(en("shell.level.button.prompt")));
   await p.click(ctl());
-  assert.ok(ctl().textContent.includes(en("level.pause.name")));
+  assert.ok(ctl().textContent.includes(en("shell.level.button.pause")));
   assert.equal(p.local.get("cs-level"), "pause");
   assert.equal(p.byOp("infolevelset").length, served ? 1 : 0);
   if (served) assert.deepEqual(p.byOp("infolevelset")[0].body, { level: "pause" });
   p.fire(p.doc.body, "keydown", { key: "I", altKey: true, shiftKey: true });
   await p.settle();
-  assert.ok(ctl().textContent.includes(en("level.prompt.name")));
+  assert.ok(ctl().textContent.includes(en("shell.level.button.prompt")));
   const q = await boot({ screens: ALL, plane: { ...PLANE, infolevel: ok({ level: "pause", set_at: "2026-10-01T00:00:00Z", asked_at: null }) } });
-  assert.ok(q.root().querySelector('[data-shell="level"]').textContent.includes(en("level.pause.name")), "read with infolevel");
+  assert.ok(q.root().querySelector('[data-shell="level"]').textContent.includes(en("shell.level.button.pause")), "read with infolevel");
   const r = await boot({ screens: ALL, plane: { ...PLANE, infolevel: refused("NO") }, local: { "cs-level": "pause" } });
-  assert.ok(r.root().querySelector('[data-shell="level"]').textContent.includes(en("level.pause.name")), "kept on the device");
+  assert.ok(r.root().querySelector('[data-shell="level"]').textContent.includes(en("shell.level.button.pause")), "kept on the device");
   const fresh = await boot({ screens: ALL, plane: { ...PLANE, infolevel: pending } });
-  assert.ok(fresh.root().querySelector('[data-shell="level"]').textContent.includes(en("level.prompt.name")), "a new member starts at Explain promptly");
+  assert.ok(fresh.root().querySelector('[data-shell="level"]').textContent.includes(en("shell.level.button.prompt")), "a new member starts at Explain promptly");
 });
 
 test("R17 after the member's first month the shell asks once whether to keep the level (DEC-162 (2)), the answer recorded through the same op, and never asks again", async () => {
@@ -134,17 +134,27 @@ test("R17 after the member's first month the shell asks once whether to keep the
   const young = await boot({ screens: ALL, plane: PLANE, local: { "cs-first:mai": String(Date.now() - 1000) } });
   assert.equal(young.root().querySelector('[data-shell="level-keep"]'), null);
   const p = await boot({ screens: ALL, plane: PLANE, local: { "cs-first:mai": String(Date.now() - MONTH) } });
-  assert.ok(p.root().querySelector("#cs-main").textContent.includes("for a month"));
-  await p.click('[data-shell="level-keep"]');
+  /* R75 (2): the question is one note at the top of Home, above everything else on it, in the design's words */
+  assert.equal(p.root().querySelector("#cs-main").children[0].getAttribute("data-level-note"), "ask");
+  assert.ok(p.root().querySelector("#cs-main").textContent.includes(word("level.keep.ask")));
+  assert.deepEqual(p.root().querySelectorAll('[data-shell="level-keep"]').map((b) => b.textContent), [word("level.keep.prompt"), word("level.keep.pause")]);
+  await p.click('[data-level-to="prompt"]');
   assert.equal(p.root().querySelector('[data-shell="level-keep"]'), null);
+  assert.ok(p.root().querySelector("#cs-main").textContent.includes(word("level.keep.later")), "level.keep.later once, after the answer");
   if (served) assert.deepEqual(p.byOp("infolevelset")[0].body, { level: "prompt", asked: true });
   const again = await boot({ screens: ALL, plane: PLANE, local: Object.fromEntries(p.local) });
   assert.equal(again.root().querySelector('[data-shell="level-keep"]'), null);
   const answered = await boot({ screens: ALL, plane: { ...PLANE, infolevel: ok({ level: "prompt", set_at: "2026-01-01T00:00:00Z", asked_at: "2026-02-01T00:00:00Z" }) }, local: { "cs-first:mai": String(Date.now() - MONTH) } });
   assert.equal(answered.root().querySelector('[data-shell="level-keep"]'), null);
   const sw = await boot({ screens: ALL, plane: PLANE, local: { "cs-first:mai": String(Date.now() - MONTH) } });
-  await sw.click('[data-shell="level-switch"]');
+  await sw.click('[data-level-to="pause"]');
   assert.equal(sw.local.get("cs-level"), "pause");
+  if (served) assert.deepEqual(sw.byOp("infolevelset")[0].body, { level: "pause", asked: true });
+  /* control: asked on Home only (not on another screen), and never of a member whose level is not the default */
+  const other = await boot({ screens: ALL, path: "/app/queue", plane: PLANE, local: { "cs-first:mai": String(Date.now() - MONTH) } });
+  assert.equal(other.root().querySelector('[data-shell="level-keep"]'), null);
+  const set = await boot({ screens: ALL, plane: { ...PLANE, infolevel: ok({ level: "pause", set_at: "2026-01-01T00:00:00Z", asked_at: null }) }, local: { "cs-first:mai": String(Date.now() - MONTH) } });
+  assert.equal(set.root().querySelector('[data-shell="level-keep"]'), null, "a member whose level is not the default is not asked");
 });
 
 test("R18 appearance is Follow my device, Light or Dark, kept on the device; print is always light", async () => {

@@ -118,7 +118,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
     const server = r.status >= 500;
     const refusedOf = (o) => {
-      const a = { kind: "refused", code: String((o && (o.code || o.reason)) || r.status), translation: o && typeof o.translation === "string" ? o.translation : null, fields: o || {}, server };
+      /* R83: `coded` marks a refusal that answered with a code (`ok: false` with `code` or `reason`) */
+      const a = { kind: "refused", code: String((o && (o.code || o.reason)) || r.status), coded: !!(o && (o.code || o.reason)), translation: o && typeof o.translation === "string" ? o.translation : null, fields: o || {}, server };
       if (a.code === "SESSION_LOCKED" && !own && !pub && !req.noLock && S === held) lock(false);
       return a;
     };
@@ -126,7 +127,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R21 (K3011): a streamed answer (application/x-ndjson, `agent-worker` R54) is its list of parsed events, the
          answer the last; a line that does not parse is no answer */
       let events = null;
-      try { events = String(await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { events = null; }
+      const lineOf = (l) => JSON.parse(l);
+      try {
+        if (typeof req.onEvent === "function" && r.body && typeof r.body.getReader === "function") {
+          /* R78 (N1195, DEC-298): the body read as it arrives; each complete line parsed and handed to `onEvent` at once and
+             in order, the page redrawing the screen that asked; the whole list still answered, the answer the last event */
+          const reader = r.body.getReader(), dec = new TextDecoder();
+          events = [];
+          let buf = "";
+          const take = (l) => { if (!l.trim()) return; const ev = lineOf(l); events.push(ev); try { req.onEvent(ev); } catch { /* a screen's own handler never stops the stream */ } draw(); };
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (value) buf += dec.decode(value, { stream: !done });
+            const cut = buf.lastIndexOf("\n");
+            if (cut >= 0) { const head = buf.slice(0, cut); buf = buf.slice(cut + 1); for (const l of head.split("\n")) take(l); }
+            if (done) { if (buf.trim()) take(buf); break; }
+          }
+        } else events = String(await r.text()).split("\n").filter((l) => l.trim()).map(lineOf);
+      } catch { events = null; }
       if (!events || !events.length) return { kind: "silent" };
       const last = events[events.length - 1];
       if (!r.ok || (last && typeof last === "object" && last.ok === false)) return refusedOf(last && typeof last === "object" ? last : null);
@@ -161,6 +179,32 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const WEIGHTS = ["reversible", "reasoned", "terminal", "signed", "irreversible"];
   const weightOf = (op) => { const r = D.rungs[op]; const n = r === "attested" ? "signed" : r; return n === "none" || WEIGHTS.includes(n) ? n : "reasoned"; };
 
+  /* ---------- an act button's answer to the press (R74) and the Sounds setting ---------- */
+  /* act key -> {busy, done, lock, gen}: `busy` while the request is out, `done` after success (cleared after about two
+     seconds, or `lock` it: disabled until the screen is redrawn from a read, `gen` the read that redraws it) */
+  const ACTSTATE = new Map();
+  let SOUNDS = local.get("cs-sounds") === "on", AUDIO = null;
+  function say(text) { const el = doc.getElementById("cs-live"); if (el) el.textContent = text || ""; }
+  /* R74 (DEC-280, "C"): with Sounds on, a press plays a soft click and a refusal drawn beside an act a low tone, both made in
+     the page (no sound file, no other origin, R2); with it off nothing sounds */
+  function sound(kind) {
+    if (!SOUNDS) return;
+    try {
+      const Ctx = win.AudioContext || win.webkitAudioContext;
+      if (!Ctx) return;
+      AUDIO = AUDIO || new Ctx();
+      const osc = AUDIO.createOscillator(), gain = AUDIO.createGain();
+      const low = kind === "refused";
+      osc.type = "sine";
+      osc.frequency.value = low ? 180 : 880;
+      gain.gain.value = low ? 0.08 : 0.04;
+      osc.connect(gain); gain.connect(AUDIO.destination);
+      osc.start();
+      osc.stop(AUDIO.currentTime + (low ? 0.25 : 0.05));
+    } catch { /* no audio: nothing sounds */ }
+  }
+  function setSounds(on) { SOUNDS = !!on; local.set("cs-sounds", SOUNDS ? "on" : "off"); }
+
   /* ---------- explanation level (R17), appearance (R18), the rail's width (R26) ---------- */
   let LEVEL = local.get("cs-level") === "pause" ? "pause" : "prompt";
   let LEVEL_INFO = null;
@@ -189,7 +233,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const phone = () => !!(mq && mq.matches);
 
   /* ---------- the frame's reads ---------- */
-  let GROUP = null, TODO = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, BOOT = null, BOOT_READ = false;
+  let GROUP = null, TODO = null, QUEUE_COUNTS = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, KEEP_LATER = false, BOOT = null, BOOT_READ = false;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
 
   /* ---------- screen instances: reads, states, acts ---------- */
@@ -215,6 +259,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const key = own && typeof own[a.code] === "string" ? own[a.code] : "refusal." + a.code;
     if (has(key)) return { words: w(key, a.fields || {}) + traceOf(a), own: true };
     if (a.translation) return { words: esc(a.translation) + traceOf(a), own: true };
+    /* R83 (N1192): a refusal that answered with a code, with neither a word nor a translation, is drawn as `refusal.uncatalogued`
+       followed by the code as the act gave it and R39's reference: the one place a code is drawn to a member. `shell.unread`
+       is for an answer that was no refusal at all (no answer, a 5xx without a code). */
+    if (a.coded) return { words: w("refusal.uncatalogued") + " <code>" + esc(a.code) + "</code>" + traceOf(a), own: true };
     return { words: w("shell.unread") + traceOf(a), own: false };
   }
   const refusalWords = (a, own, inst) => refusalOf(a, own, inst).words;
@@ -262,6 +310,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
       if (gen !== inst.gen && !names) return;
       inst.data[n] = outcome(spec, a);
+      /* R74: a locked act is enabled again once a read started after it has redrawn the screen */
+      for (const [k, v] of ACTSTATE) if (v.lock && k.startsWith(inst.key + "|") && gen >= v.gen) ACTSTATE.delete(k);
       /* R9, R35: the subject's read decides whether the screen can be drawn at all */
       if (spec.subject) {
         const was = inst.unavail;
@@ -317,7 +367,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R21 (K2998): one op, its parsed answer (null when none came); `bearer` replaces the session for this request only;
          R33: a call made from `cs.later` is background */
       async call(op, o = {}) {
-        const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer, public: inst.pub, background: !!(bg || o.background) });
+        const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer, public: inst.pub, background: !!(bg || o.background), onEvent: o.onEvent });
         return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null;
       },
       /* R21 (K2999): a byte answer handed to the browser as a file, its object address released once the download starts */
@@ -403,18 +453,26 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
          is held at the phone width */
         if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
-        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
+        const key = inst.key + "|" + op + "|" + JSON.stringify(o.data || {});
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null, key, weight, outward }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
-           only; its friction stays R11's (it runs on press) */
+           only; its friction stays R11's (it runs on press). R77 (U2c; DEC-295): only an act above Reversible draws dots and a
+           weight name, on its button and in its explanation; public pages carry no weight marks (R30, R84). */
         const mark = weight === "none" && WEIGHTS.includes(D.marks[op]) ? D.marks[op] : null;
         const shown = mark || weight;
-        const weighed = shown !== "none";
+        const weighed = shown !== "none" && shown !== "reversible" && !inst.pub;
         const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(shown) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
-        const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + (weighed ? '<span class="why">' + w("weight." + shown + ".means") + "</span>" : "")
+        /* R76: an explanation never repeats the button's label: it is the act's own sentence (the label leading it, as the
+           design draws it), and an act with none draws none of its own */
+        const tip = (does ? "<b>" + label + "</b>: " + does : "") + (weighed ? '<span class="why">' + w("weight." + shown + ".means") + "</span>" : "")
           + (outward ? '<span class="why">' + w("mark.outward.means") + "</span>" : "");
+        /* R74 (U2): the button answers the press: busy while the request is out, done after, locked when the act cannot be
+           repeated */
+        const st = ACTSTATE.get(key) || {};
         return '<span class="mk-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
-          + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + tipAttr(tip, 2) + ">"
+          + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + (weighed ? ' data-weighed="1"' : "")
+          + (st.busy ? ' aria-busy="true"' : "") + (st.done ? " data-done" : "") + (st.lock ? " disabled" : "") + tipAttr(tip, 2) + ">"
           + (o.icon ? I(o.icon) : "") + (outward ? I("outward") : "") + label
           + (weighed ? '<span class="w"' + (mark ? ' data-mark="' + esc(mark) + '"' : "") + ">" + pips + w("weight." + shown + ".name") + "</span>" : "") + "</button>"
           + '<span class="mk-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
@@ -423,8 +481,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       ref(kind, id, label, facts) {
         const screen = D.refScreens[kind];
         const target = screen && screenOf(screen) && id !== undefined && id !== null && id !== "" ? hrefOf(screen, id) : null;
-        const card = "<b>" + kw("shell.card." + kind) + "</b>" + (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
-          .map((f) => '<span class="why">' + soft(f) + "</span>").join("") + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
+        /* R81, R88: a `published` or `archive` card is the kind's word alone; a kind with no word held (`theme`) is the item's
+           own facts alone */
+        const lead = kw("shell.card." + kind);
+        const card = (lead ? "<b>" + lead + "</b>" : "") + (D.cardWordOnly.includes(kind) ? "" : (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
+          .map((f) => '<span class="why">' + soft(f) + "</span>").join("")) + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
           : '<span class="cs-card" tabindex="0"' + tipAttr(card, 1) + ">" + soft(label) + "</span>";
@@ -520,9 +581,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           + '</div><p class="mk-note">' + w("shell.areas.help") + '</p><span class="mk-acts"><button type="button" class="cs-btn" data-tone="quiet" data-shell="area-add" data-areas="' + esc(id) + '">' + w("shell.areas.add") + "</button>"
           + (list.length ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="area-clear" data-areas="' + esc(id) + '">' + w("shell.areas.clear") + "</button>" : "") + "</span></div>";
       },
+      /* R80 (N1083; K3297): options as words by key, `[value, key, on]`, or as record data, `{value, text, on}`, the text drawn as data,
+         HTML-escaped and never read as a key; the legend a word key or `{text}`; each box sits beside its own words */
       checks(id, legendKey, options, o = {}) {
-        return '<fieldset class="cs-field" id="' + esc(id) + '"><legend>' + w(legendKey) + "</legend>" + options.map(([v, k, on], i) =>
-          '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> " + w(k) + "</label>").join("") + "</fieldset>";
+        const opt = (x, i) => {
+          const [v, text, on] = Array.isArray(x) ? [x[0], w(x[1]), x[2]] : [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text), x.on];
+          return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
+        };
+        return '<fieldset class="cs-field" id="' + esc(id) + '"><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
+      },
+      /* R74: the Sounds setting's control, drawn as `appearance()` draws R18's, so `screens-settings` draws none of its own */
+      sounds() {
+        return '<div class="mk-acts" role="group" aria-label="' + w("screen.account.sounds") + '"' + tipAttr(w("screen.account.sounds.help"), 2) + ">" + ["on", "off"].map((t) =>
+          '<button type="button" class="cs-btn" data-tone="quiet" aria-pressed="' + (SOUNDS === (t === "on")) + '" data-shell="sounds" data-sounds-to="' + t + '">' + w("screen.account.sounds." + t) + "</button>").join("") + "</div>";
+      },
+      /* R82 (DEC-275): a row's icon, explained by `shell.icon.<kind>` */
+      icon(kind) {
+        const key = "shell.icon." + kind;
+        return '<span class="cs-card" tabindex="0"' + tipAttr(has(key) ? w(key) : "", 1) + ">" + I(kind) + "</span>";
       },
       /* R27 (N985): R18's control, drawn by the kit, so no screen draws the shell's own buttons */
       appearance() {
@@ -555,7 +631,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         });
         /* R62: at the phone width a column empty in every row is not drawn */
         const shownCols = cols.map((c, i) => i === 0 || !narrow || drawn.some((d) => !blank(d.cells[i])));
-        const head = "<thead><tr>" + (t.pick ? '<th class="mk-pickc"></th>' : "") + cols.map((c, i) => {
+        /* R84: at the phone width a table restacks as cards with no header row */
+        const head = narrow ? "" : "<thead><tr>" + (t.pick ? '<th class="mk-pickc"></th>' : "") + cols.map((c, i) => {
           if (!shownCols[i]) return "";
           const s = sort && sort.col === i ? (sort.dir === "desc" ? "descending" : "ascending") : "none";
           return '<th aria-sort="' + s + '">' + (typeof t.sortKey === "function"
@@ -714,7 +791,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function parse(pathname) {
     const p = String(pathname || "");
     /* R32: `/` opens Home with a live record and `front` without one */
-    if (!/^\/app(\/|$)/.test(p)) return { screen: S ? "home" : "front", subject: null, root: true };
+    if (p === "" || p === "/") return { screen: S ? "home" : "front", subject: null, root: true };
+    if (!/^\/app(\/|$)/.test(p)) {
+      /* R79 (N1174; DEC-299 (11); DEC-301 (3)): `/doorbell` and `/tour` draw their screens in the public frame at that address;
+         any other path outside `/` and `/app` draws `unavailable` in the public frame, reading no session */
+      const one = /^\/([^/]+)\/?$/.exec(p);
+      if (one && Object.hasOwn(D.publicAddresses, one[1])) return { screen: D.publicAddresses[one[1]], subject: null, root: false };
+      return { screen: "unavailable", subject: null, root: false, outside: true };
+    }
     const rest = p.replace(/^\/app\/?/, "");
     const [s, ...sub] = rest.split("/").filter((x) => x !== "");
     let subject = sub.length ? sub.join("/") : null;
@@ -836,6 +920,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     row.insertBefore(chip, h1.nextElementSibling);
   }
   function mainHtml(route) {
+    if (OUTSIDE) return '<h1 class="t-title" tabindex="0">' + w("screen.unavailable.name") + '</h1><p class="cs-state" data-state="empty" data-unavailable="public">' + w("unavailable.public")
+      + '</p><p><a class="cs-btn" data-tone="quiet" href="/">' + w("unavailable.public.go") + "</a></p>";
     if (UNREACHED) return unavailableHtml("unreachable");
     if (!MAIN && !ENTRY_PAGE && !ME) return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
     if (ENTRY_PAGE) return entryPage();
@@ -848,7 +934,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) : "") + body;
   }
   /* R32: with no `front` registered, the state the session ended in, drawn by the shell */
-  let ENTRY_PAGE = false;
+  let ENTRY_PAGE = false, OUTSIDE = false;
   const entryPage = () => '<h1 class="t-title">' + w("screen.unavailable.name") + "</h1>"
     + '<p class="cs-state" data-state="empty">' + w(ENTRY.state ? "session." + ENTRY.state : "shell.unavailable.notyours.says") + "</p>";
   function dockHtml() {
@@ -870,25 +956,38 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      menu. At the phone width it shows icons only, each label kept as the control's accessible name. */
   function mastHtml() {
     const narrow = phone();
-    /* R60: the group's display name, else "Your group", never its slug */
+    /* R60: the group's display name, else "Your team", never its slug */
     const name = GROUP ? esc(GROUP) : w("shell.group.unnamed");
-    const level = w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name");
+    /* R76 (U2b; DEC-292 D9, D17): the explanations button names itself and its setting */
+    const level = w("shell.level.button." + (LEVEL === "pause" ? "pause" : "prompt"));
     const handle = handleOf();
     const label = (text) => (narrow ? "" : '<span class="mk-hide-phone">' + text + "</span>");
-    const signout = can("signout") ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout" role="menuitem"' + tipAttr(w("shell.signout.does"), 2) + ">" + w("shell.signout") + "</button>" : "";
+    /* R76: every masthead icon keeps its accessible name, said on a tap: at the phone width the explanation leads with it */
+    const named = (nm, says) => tipAttr((narrow ? "<b>" + nm + "</b>" + (says ? ": " : "") : "") + (says || ""), 2);
+    /* R75 (N1106; DEC-251 (1)): the member's initial opens "Your menu": who is signed in, the account, sign out, appearance */
+    const accountHref = screenOf("account") ? hrefOf("account") : "/app";
+    const signout = can("signout") ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout" role="menuitem"' + tipAttr(w("shell.menu.signout_does"), 2) + ">" + w("shell.menu.signout") + "</button>" : "";
     const themes = ["device", "light", "dark"].map((t) => '<button type="button" class="cs-btn" data-tone="quiet" role="menuitemradio" aria-checked="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("");
-    /* R43 (DEC-214 (1)): the mark opens the masthead, before the group's name */
+    /* R43 (DEC-214 (1)): the mark opens the masthead, before the team's name */
     const mark = '<span class="cs-mark" role="img" aria-label="' + w("shell.mark") + '" tabindex="0"' + tipAttr("<b>" + w("shell.mark") + "</b>: " + w("shell.mark.means"), 1)
       + '><svg viewBox="0 0 60 90" aria-hidden="true"><use href="' + D.icons + '#i-mark"/></svg></span>';
-    return '<header class="cs-mast">' + mark + '<a class="mk-grp" href="/app" data-nav' + tipAttr("<b>" + (GROUP ? soft(GROUP) : w("shell.group.unnamed")) + "</b>", 1) + ">" + name + "</a>" + '<span class="spacer"></span>'
-      + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + tipAttr(w("shell.search.holds"), 2) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
-      + '<button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + label(level) + "</button>"
-      + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
-      + (TODO && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(w("shell.todo.means"), 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
+    /* R82 (DEC-273): the team's name opens who the team is, and says so; the To do count says what waits, with every fill
+       answered or no sentence */
+    const groupHref = screenOf("group-identity") ? hrefOf("group-identity") : "/app";
+    const waiting = QUEUE_COUNTS ? w("shell.queue.waiting", { n: String(QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status), todo: String(QUEUE_COUNTS.todo),
+      noticed: String(QUEUE_COUNTS.noticed), status: String(QUEUE_COUNTS.status) }) + '<span class="more">' + w("shell.queue.open") + "</span>" : "";
+    return '<header class="cs-mast">' + mark + '<a class="mk-grp" href="' + esc(groupHref) + '" data-nav' + tipAttr("<b>" + (GROUP ? soft(GROUP) : w("shell.group.unnamed")) + "</b>" + '<span class="more">' + w("shell.group.open") + "</span>", 1) + ">" + name + "</a>" + '<span class="spacer"></span>'
+      + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + named(w("shell.search"), w("shell.search.holds")) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
+      + '<button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + named(level, w("shell.level.holds")) + ">" + I("question") + label(level) + "</button>"
+      + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + named(w("shell.assistant"), w("shell.assistant.holds")) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
+      + (TODO && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(waiting, 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
       + '<span class="mk-menuwrap"><button type="button" class="mk-avatar" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
-      + ' aria-label="' + (handle ? w("shell.you", { handle }) : w("shell.you.holds")) + '"' + tipAttr(w("shell.you.holds"), 2) + ">"
+      + ' aria-label="' + (handle ? w("shell.you", { handle }) : w("shell.you.holds")) + '"' + named(handle ? w("shell.you", { handle }) : w("shell.you.holds"), w("shell.you.holds")) + ">"
       + (handle ? '<span aria-hidden="true">' + esc(handle.slice(0, 1).toUpperCase()) + "</span>" : I("subject")) + "</button>"
-      + '<div class="cs-dialog mk-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
+      + '<div class="cs-dialog mk-menu" id="cs-menu" role="menu" aria-label="' + w("shell.menu.name") + '"' + (MENU ? "" : " hidden") + ">"
+      + '<h2 class="eyebrow" tabindex="0"' + tipAttr(w("shell.menu.says"), 2) + ">" + w("shell.menu.name") + "</h2>"
+      + '<p class="muted">' + w("shell.menu.who", { name: GROUP ? GROUP : html(w("shell.group.unnamed")), handle }) + "</p>"
+      + '<a class="cs-btn" data-tone="quiet" role="menuitem" href="' + esc(accountHref) + '" data-nav>' + w("shell.menu.account") + "</a>" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
   /* R48: the main frame's root names the registered screen it drew; the shell's own fallbacks name none */
@@ -919,7 +1018,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function frameHtml(route) {
     if (GUIDEI) { GUIDEI.acts = []; GUIDEI.binds = []; }
     const shown = MAIN ? MAIN.spec.id : route.screen;
-    const frame = ENTRY_PAGE ? "public" : MAIN ? frameOf(shown) : "working";
+    const frame = ENTRY_PAGE || OUTSIDE ? "public" : MAIN ? frameOf(shown) : "working";
     if (frame !== "working") {
       /* R30, R45: the public, published and setup frames: no rail, tabs, dock or member menu */
       return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame"><main class="cs-main" id="cs-main"' + screenAttr() + ">" + mainHtml(route) + "</main></div>";
@@ -935,9 +1034,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const dock = dockHtml();
     /* R57: the band as drawn: "Working" and who sees it */
     const band = '<div class="cs-band" data-band="working"><span tabindex="0"' + tipAttr(w("mark.band.means") + '<span class="why">' + w("mark.path.working.means") + "</span>", 1) + "><b>" + w("mark.path.working.name") + "</b> " + w("shell.band.working") + "</span></div>";
-    const ask = ASK_LEVEL ? '<div class="cs-reason" role="region"><p>' + w("shell.level.ask", { level: html(w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name")) }) + '</p><div class="mk-acts">'
-      + '<button type="button" class="cs-btn" data-shell="level-keep">' + w("shell.level.keep") + "</button>"
-      + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level-switch">' + w("shell.level.switch", { level: html(w(LEVEL === "pause" ? "level.prompt.name" : "level.pause.name")) }) + "</button></div></div>" : "";
+    /* R75 (2) (N1106; DEC-251 (2)): after the first month the question is asked once, on Home only, of a member whose level is
+       still the default: one note at the top of Home, above everything else on it; after either answer `level.keep.later` once */
+    const onHome = route.screen === "home" && !!MAIN && !MAIN.unavail;
+    const ask = onHome && ASK_LEVEL ? '<div class="cs-reason" role="region" data-level-note="ask"><p>' + w("level.keep.ask") + '</p><div class="mk-acts">'
+      + '<button type="button" class="cs-btn" data-shell="level-keep" data-level-to="prompt">' + w("level.keep.prompt") + "</button>"
+      + '<button type="button" class="cs-btn" data-shell="level-keep" data-level-to="pause">' + w("level.keep.pause") + "</button></div></div>"
+      : onHome && KEEP_LATER ? '<div class="cs-reason" role="status" data-level-note="later"><p>' + w("level.keep.later") + "</p></div>" : "";
     return '<div class="cs-frame cs-shell' + (dock ? " with-dock" : "") + (RAILW < 120 ? " rail-icons" : "") + '" data-frame="working" id="cs-frame" style="--rail:' + RAILW + 'px">'
       + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
       + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + ask + main + "</main>" + dock
@@ -955,9 +1058,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="lock-other">' + w("shell.lock.other", { handle: who }) + "</button></span></div></div>";
     }
     if (REAUTH) {
-      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("shell.reauth.title") + "</h2><p>" + w("session.reauth") + "</p>"
-        + field("cs-reauth-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
-        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel">' + w("shell.cancel") + "</button></span></div></div>";
+      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("session.reauth.head") + "</h2><p>" + w("session.reauth") + "</p>"
+        + field("cs-reauth-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth"' + tipAttr(w("session.reauth.go_does"), 2) + ">" + w("session.reauth.go") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel"' + tipAttr(w("session.reauth.cancel_does"), 2) + ">" + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "register") {
       return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-key-t" data-overlay="register"><h2 id="cs-key-t">' + w("shell.signer.passphrase") + "</h2>"
@@ -1029,7 +1132,17 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     ringDraw(root);
     testBand();
     if (fk) { let el = null; try { el = root.querySelector(fk); } catch { el = null; } if (el && el.focus) el.focus(); }
-    if (GROUP) doc.title = GROUP;
+    doc.title = titleOf();
+  }
+  /* R84 (N1184; DEC-299 (12)): the browser tab's title: `page.title` ({screen}, {team}), and on a public page `page.title.public`
+     ({page}, {team}); the screen by its `screen.<id>.name`, the team by R60's name */
+  function titleOf() {
+    const team = GROUP ? GROUP : textOf(w("shell.group.unnamed"));
+    const id = OUTSIDE ? "unavailable" : MAIN && !MAIN.unavail ? MAIN.spec.id : ROUTE.screen;
+    const name = has("screen." + id + ".name") ? textOf(w("screen." + id + ".name"))
+      : D.places.includes(ROUTE.screen) ? textOf(w(ROUTE.screen === "more" ? "shell.more" : "rail." + ROUTE.screen + ".name")) : textOf(w("screen.unavailable.name"));
+    const plain = OUTSIDE || ENTRY_PAGE || (MAIN && frameOf(MAIN.spec.id) !== "working");
+    return plain ? textOf(w("page.title.public", { page: name, team })) : textOf(w("page.title", { screen: name, team }));
   }
 
   /* ---------- navigation ---------- */
@@ -1042,6 +1155,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!inst) return;
     for (const t of inst.timers) clearTimeout(t);
     inst.timers = [];
+    for (const k of [...ACTSTATE.keys()]) if (k.startsWith(inst.key + "|")) ACTSTATE.delete(k);
     if (inst.retry !== null) { clearTimeout(inst.retry); inst.retry = null; }
     /* R49: the images' object addresses released with the screen */
     for (const im of Object.values(inst.images)) if (im.url) { try { win.URL.revokeObjectURL(im.url); } catch { /* released */ } im.url = null; }
@@ -1053,9 +1167,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const n = ++ROUTING;
     closing(MAIN);
     closing(DOCKI);
-    MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null;
+    MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null; KEEP_LATER = false;
     ROUTE = parse(win.location.pathname);
+    OUTSIDE = !!ROUTE.outside;
     MENU = false;
+    /* R79: an address outside the team's pages draws `unavailable` in the public frame, reading no session */
+    if (OUTSIDE) return draw();
     let id = ROUTE.screen;
     /* R30: a screen of the public or published frame, drawn without a session, asking no record */
     if (sessionless(id) && !ROUTE.root) return show(id);
@@ -1120,10 +1237,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (who.kind === "ok" && who.value && who.value.session && who.value.member) {
       UNREACHED = false;
       ME = who.value;
-      await loadWords();
-      wordsRetry = !wordsRead;
       armIdle();
-      Promise.all([loadFrame(), loadReach()]);
+      /* R86 (N1161 F11): what the frame needs is asked at once, together and with the screen's own reads (the caller shows the
+         screen on this answer): the words, the team's name, the queue, the level and the assistant's four reads; none waits
+         for another, and a screen's first draw never waits for the words (they redraw it when they arrive, R5) */
+      loadWords().then(() => { wordsRetry = !wordsRead; });
+      loadFrame();
+      loadReach();
       return "ok";
     }
     if (unreachable(who)) {
@@ -1247,7 +1367,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (field) field.value = "";
     if (a.kind === "ok") { REAUTH = null; OVERLAY_REFUSAL = ""; draw(); return r.resolve(true); }
     if (!S || LOCKED) { REAUTH = null; return r.resolve(false); }
-    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, null) : w("shell.noanswer"));
+    /* R75 (3): a refusal of the password is `session.reauth.wrong` beside the field; nothing is resent and the act is not lost */
+    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? w("session.reauth.wrong") : w("shell.noanswer"));
     draw();
   }
 
@@ -1498,7 +1619,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const inst = instOf(k);
     const d = inst && inst.acts[Number(i)];
     if (!d) return;
+    /* R74: a second press while the request is out, or on a locked act, does nothing */
+    const st = ACTSTATE.get(d.key);
+    if (st && (st.busy || st.lock)) return;
     activity();
+    sound("click");
     if (RING && RING.op === d.op) RING = null;
     /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
     if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
@@ -1521,6 +1646,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + '<button type="button" class="cs-btn" data-tone="primary" data-shell="confirm" data-for="' + esc(ai) + '">' + w("shell.confirm") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="cancel" data-for="' + esc(ai) + '">' + w("shell.cancel") + "</button></span></span>");
   }
+  /* R13, R74: a refusal drawn beside its act, with the low tone when Sounds is on */
+  function refuseBeside(ai, words) { besideAct(ai, refusalHtml(words)); sound("refused"); }
+  /* R74: the act button's state: busy while the request is out; done after, locked for a terminal, signed or irreversible
+     or outward act until a read redraws the screen, cleared after about two seconds for any other; a refusal clears both */
+  function actState(inst, d, st) {
+    if (st === null) ACTSTATE.delete(d.key); else ACTSTATE.set(d.key, st);
+    say(st && st.busy ? textOf(w("shell.working")) : "");
+    if (live(inst)) draw();
+  }
   async function run(inst, d, btn, ai, extra) {
     let req;
     if (d.table) extra.picked = (inst.ui["pick:" + d.table] || []).slice();
@@ -1528,10 +1662,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       req = d.spec.send ? await d.spec.send(inst.view, btn, kit(inst), extra) : { body: Object.assign({}, d.data) };
     } catch { req = null; }
     if (!req) return;
-    if (req.refuse) return besideAct(ai, refusalHtml(w(req.refuse, req.fills)));
+    if (req.refuse) return refuseBeside(ai, w(req.refuse, req.fills));
     if (extra.own) {
       const words = req.raw !== undefined ? (req.query || {})[d.spec.reasonField] : (req.body || {})[d.spec.reasonField];
-      if (!(typeof words === "string" && words.trim())) return besideAct(ai, refusalHtml(w("shell.reason.needed")));
+      if (!(typeof words === "string" && words.trim())) return refuseBeside(ai, w("shell.reason.needed"));
     }
     if (extra.reason !== undefined) {
       if (req.raw !== undefined) req.query = Object.assign({}, req.query, { [d.spec.reasonField || "reason"]: extra.reason });
@@ -1539,22 +1673,29 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     besideAct(ai, "");
     req.public = inst.pub;
+    actState(inst, d, { busy: true });
     let a = await call(d.op, req);
     /* R34: an act answered `REAUTH_DUE` asks the password again and, on `reauth`'s success, is sent once more */
     if (a.kind === "refused" && a.code === "REAUTH_DUE" && S) {
-      if (!(await reauthAsk())) return;
+      if (!(await reauthAsk())) return actState(inst, d, null);
       a = await call(d.op, req);
     }
     if (a.kind !== "ok") {
+      actState(inst, d, null);
       if (a.kind === "silent" && !S && !inst.pub) return;
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
-      return besideAct(ai, refusalHtml(words));
+      return refuseBeside(ai, words);
     }
-    if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
+    if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { ACTSTATE.delete(d.key); for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
     let after = null;
     /* R21 (K3009): no secret survives a successful act: every password field its screen drew is cleared, so no redraw
        restores one */
     for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = "";
+    /* R74: done; a terminal, signed or irreversible or outward act stays disabled until a read redraws the screen (`gen`), any
+       other clears about two seconds later on the page clock */
+    const heavy = d.weight === "terminal" || d.weight === "signed" || d.weight === "irreversible" || d.outward;
+    actState(inst, d, heavy ? { done: true, lock: true, gen: inst.gen + 1 } : { done: true });
+    if (!heavy) setTimeout(() => { const now = ACTSTATE.get(d.key); if (now && now.done && !now.lock) { ACTSTATE.delete(d.key); if (live(inst)) draw(); } }, 2000);
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
@@ -1562,21 +1703,27 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
 
   /* ---------- explanations (R14) ---------- */
-  let TIP = null, openT = null, closeT = null;
+  let TIP = null, openT = null, closeT = null, DOTS_SAID = local.get("cs-dots-said") === "1";
   const tipEl = () => doc.getElementById("cs-tip");
   function openTip(el) {
     clearTimeout(closeT); clearTimeout(openT);
     if (TIP && TIP !== el) closeTip();
     const t = tipEl();
     if (!t || !el.getAttribute("data-tip")) return;
-    t.innerHTML = el.getAttribute("data-tip");
+    /* R77 (U2c): `weight.dots.means` is said once for a member, the first time a marked button's explanation opens, and kept
+       on the device with the explanation settings */
+    let inner = el.getAttribute("data-tip");
+    if (el.getAttribute("data-weighed") && !DOTS_SAID && has("weight.dots.means")) { DOTS_SAID = true; local.set("cs-dots-said", "1"); inner += '<span class="why">' + w("weight.dots.means") + "</span>"; }
+    t.innerHTML = inner;
     t.hidden = false;
     TIP = el;
     el.setAttribute("aria-describedby", "cs-tip");
     if (el.getBoundingClientRect && t.style) {
+      /* R84: below what it explains, above when the room below is short, never over the next control */
       const r = el.getBoundingClientRect();
+      const h = Number(t.offsetHeight) || 0, vh = Number(win.innerHeight) || 0;
       t.style.left = Math.max(8, Math.round(r.left)) + "px";
-      t.style.top = Math.round(r.bottom + 6) + "px";
+      t.style.top = Math.round(vh && h && r.bottom + 6 + h > vh && r.top - 6 - h > 0 ? r.top - 6 - h : r.bottom + 6) + "px";
     }
   }
   function closeTip() {
@@ -1788,8 +1935,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (what === "signout") return signOut();
     if (what === "theme") { MENU = false; return setTheme(el.getAttribute("data-theme-to")); }
     if (what === "level") return setLevel(LEVEL === "prompt" ? "pause" : "prompt");
-    if (what === "level-keep") { ASK_LEVEL = false; local.set("cs-level-asked", "1"); return setLevel(LEVEL, true); }
-    if (what === "level-switch") { ASK_LEVEL = false; local.set("cs-level-asked", "1"); return setLevel(LEVEL === "prompt" ? "pause" : "prompt", true); }
+    if (what === "level-keep") { ASK_LEVEL = false; KEEP_LATER = true; local.set("cs-level-asked", "1"); return setLevel(el.getAttribute("data-level-to") === "pause" ? "pause" : "prompt", true); }
+    if (what === "sounds") { setSounds(el.getAttribute("data-sounds-to") === "on"); draw(); return sound("click"); }
     if (what === "dock") {
       if (DOCK) closing(DOCKI);
       DOCK = !DOCK;
@@ -1853,7 +2000,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!ME) return;
     /* R60: the display name only; the slug is never drawn as the group's name */
     if (g.kind === "ok" && g.value) GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
-    if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) TODO = q.value.items.filter((x) => x && x.class === "OBLIGATION").length;
+    if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) {
+      const count = (c) => q.value.items.filter((x) => x && x.class === c).length;
+      TODO = count("OBLIGATION");
+      /* R82: the queue's three kinds (To do, Noticed, Status), answered only with the queue read; none, no sentence */
+      QUEUE_COUNTS = { todo: TODO, noticed: count("FINDING"), status: count("CONDITION") };
+    }
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
       LEVEL_INFO = lv.value;
       if (lv.value.set_at) { LEVEL = lv.value.level; local.set("cs-level", LEVEL); }
@@ -1864,7 +2016,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!local.get(firstKey)) local.set(firstKey, String(Date.now()));
     const first = Math.min(Number(local.get(firstKey)) || Date.now(), LEVEL_INFO && LEVEL_INFO.set_at ? Date.parse(LEVEL_INFO.set_at) || Date.now() : Date.now());
     const asked = (LEVEL_INFO && LEVEL_INFO.asked_at) || local.get("cs-level-asked");
-    ASK_LEVEL = !asked && Date.now() - first >= 30 * 24 * 3600 * 1000;
+    /* R75 (2): a member whose level is still the default, and of no other */
+    ASK_LEVEL = !asked && LEVEL === "prompt" && Date.now() - first >= 30 * 24 * 3600 * 1000;
     draw();
   }
   async function loadReach() {
@@ -1886,7 +2039,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* R36: old addresses forwarded, the fragment carried and nothing else */
   function forward() {
     const p = String(win.location.pathname || "/"), h = String(win.location.hash || "");
-    if (/^\/app(\/|$)/.test(p)) return;
+    if (p !== "/" && p !== "") return;
     if (/^#(invite|join)=/.test(h)) win.history.replaceState({}, "", "/app/join" + h);
     else if (/^#boot=/.test(h)) win.history.replaceState({}, "", "/app/setup" + h);
   }

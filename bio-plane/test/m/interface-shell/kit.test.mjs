@@ -119,7 +119,7 @@ test("R27 R47 R66 REF_SCREENS: a knock opens inbox at that knock; a person, proc
   const unknown = p.root().querySelector("#cs-main .cs-card");
   assert.equal(unknown.localName, "span", "an unknown kind is no link");
   assert.equal(p.root().querySelectorAll("#cs-main a.cs-ref").length, KINDS.length);
-  assert.ok(!tip(unknown).includes(word("shell.card.open")), "nothing to open");
+  assert.ok(!String(tip(unknown) || "").includes(word("shell.card.open")), "nothing to open");
   /* a kind whose screen is not registered carries its card only (R16) */
   const q = await boot({ screens: [s] });
   assert.equal(q.root().querySelectorAll("#cs-main a.cs-ref").length, 0);
@@ -455,7 +455,8 @@ test("R50 (K3156) at the phone width every weighed act op-grades.phoneOf answers
     const p = await boot({ screens, path, phone: true, session: null });
     assert.ok(btn(p, op), op + " is a phone act");
     assert.equal(p.root().querySelector(`[data-phone-act="${op}"]`), null, op);
-    assert.ok(btn(p, op).querySelector(".w").hasAttribute("data-mark"), op + " carries no weight, only R64's mark");
+    const mk = btn(p, op).querySelector(".w");
+    assert.ok(!mk || mk.hasAttribute("data-mark"), op + " carries no weight, only R64's mark (R77: none at Reversible)");
   }
 });
 
