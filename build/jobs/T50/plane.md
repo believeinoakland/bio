@@ -20,3 +20,11 @@ REPORT 1 (PLANE #40, depth 2). Four things; the first is another module's.
 **3. Inherited reds that were this module's, now green** (all test-side): the archive-unpack tests awaited a consumer's `due`/`wake` as plain values (scheduler R27 now returns promises) and counted the scheduler wrapper's own wake reads as the drain's; the infraction/bearing draft tests expected `NO_SUCH_BUNDLE` where action-records' own `NO_SUCH_ACTION` is now what an unseen action answers; `roster.test.mjs` and `t47.test.mjs` now read project-roster's and action-records' ops from their own maps (K3729, K3746); `t46`'s groupFields pin is replaced by `t50`'s R62 test (K3731, K3747).
 
 **4. Waiting on others.** `translations` (R61), `op-declarations`' `t50.mjs` and the L11 modules my route-list tests read are not on my branch yet (the tranche head is "L11 started"); R61 and the final checks wait for them and `control-plane` (T50-35). I merge `tranche/T50` as each lands.
+
+## J2 · QUESTION
+
+QUESTION 1 (PLANE #40). R58's provenance reach reader, my best reading and the doubt.
+
+R58 says: for `provenance`, "the home bundles (`provenance.homeOf`) of the captures (`provenance.capturesOf`, per bundle) that the project's own bundles hold". As provenance defines them, `capturesOf(b)` lists the register rows whose home is `b`, and `homeOf(sha)` answers that same `b`; so over the project's own bundles (its bundle and `record.listBundles({project})`) the reader as worded answers only those own bundles again, which membership R149 already reaches. I built it exactly as worded (it is registered, bounded, refuses nothing, and tested), and the `connections` reader (the targets of the project's document's `cites` references not severed, by `connections.edgeSevered`) is not in doubt.
+
+What I think the intent is: the captures that a project's bundles hold as FILES (the live file digests of its own bundles, `files.sha256`, which the plane could read as record-core R37 states) whose home is another bundle, since a capture first registered in one bundle is held by later bundles under the same digest. Best reading, if you want it: add those digests to the ones `capturesOf` gives, each through `homeOf`. Say "as worded" or "add the file digests" and I will do that one; until then it stays as worded.
