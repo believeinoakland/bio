@@ -64,7 +64,7 @@ const TAKEN_BACK_BY = {
   actionbearingpropose: "actionbearingpropose", curelink: "cureunlink", matteroutcomeset: "matteroutcomeset",
   plancomment: "plancomment", declaredstakeset: "declaredstakeset",
 };
-/* every other op T45's owners serve: a read, or (statusreportdraft) a labelled draft that writes nothing */
+/* every other op T45's owners serve: a read, or (statusreportdraft) a labeled draft that writes nothing */
 const R32_READS = ["dutiesarising", "openitemswith", "watchquestions", "templatesforaction", "casecheck", "procedureguides",
   "successread", "successrecords", "matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments",
   "whereitstands", "statusreports", "matterpromiseduties", "cures", "ruleoffer",

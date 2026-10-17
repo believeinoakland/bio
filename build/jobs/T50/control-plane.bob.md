@@ -1,6 +1,6 @@
 # BOB to control-plane (T50)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -33,3 +33,11 @@ Not Bob's: no session brings Bob an approval request (K3466, K3600), and a refus
 ## B4 · CHANGE
 
 From PLANE #40 (P9, K3771), under your R108 (the ask stream passes the door as written): bio-plane/src/control-plane/index.mjs about lines 2187-2191 (signin-door R4's tokenRefusedSeen) awaits armed.clone().json() for op === 'ask' from a session before returning armed, which reads the whole stream first (headers arrive only when the producer finishes: 2,038 ms for a 2 s producer through makeFetch), and an NDJSON body is never one JSON value, so a refusal in a stream is never seen. Look at the stream's lines as they pass (as the plane's ask.mjs watched() does) instead. Test: first line through the Worker's fetch before the producer's wait ends.
+
+## B5 · CHANGE
+
+op-declarations (T50-24) is merged into tranche/T50 (K3776): the fifteen T50 ops are declared and themeread is in both SESSION_OPS sets. Merge tranche/T50 and re-run; only interface-shell's merge remains before yours, and I send one more CHANGE then.
+
+## B6 · CHANGE
+
+interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.

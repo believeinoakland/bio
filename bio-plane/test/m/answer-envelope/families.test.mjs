@@ -88,15 +88,10 @@ test("R2: CHECK_FAMILIES holds each code once, the first source's translated row
       if (hit.length) { if (kept.translation) assert.ok(hit.some((r) => r === kept) || !hit.some((r) => r.translation), code); break; }
     }
   }
-  const moved = [
-    ["../../../src/textchain.mjs", "TEXT_CHAIN_CHECKS"], ["../../../src/connections/checks.mjs", "CONNECTION_CHOICE_CHECKS"],
-    ["../../../src/content/checks.mjs", "TRANSCRIBE_CHECKS"], ["../../../src/action-clocks/checks.mjs", "ACTION_CLOCK_CHECKS"],
-    ["../../../src/monitoring/checks.mjs", "MONITORING_CHECKS"], ["../../../src/action-plans/checks.mjs", "ACTION_PLAN_CHECKS"],
-    ["../../../src/setup.mjs", "INSTANCE_SETUP_CHECKS"], ["../../../src/run-rules/checks.mjs", "AI_RUN_OWN_CHECKS"],
-    ["../../../src/acquisition/checks.mjs", "ACQUISITION_CHECKS"]];
-  for (const [file, fam] of moved) {
-    const rows = (await import(file))[fam];
-    assert.ok(rows && Object.keys(rows).length, `${file} ${fam}`);
+  /* N1073 (K3268): every family is read from its owner's own file, as the list names it, never hand-listed here */
+  for (const [file, ns] of M.CHECK_FAMILY_FILES) for (const fam of Object.keys(ns).filter((k) => isFamily(k, ns[k]))) {
+    const rows = ns[fam];
+    assert.ok(Object.keys(rows).length, `${file} ${fam}`);
     for (const [code, row] of Object.entries(rows)) if (row.translation)
       assert.ok(M.dec49Row(code), `${fam}.${code} reaches the wire`);
   }
@@ -110,18 +105,17 @@ test("R2: CHECK_FAMILIES holds each code once, the first source's translated row
 });
 
 test("R2 (K782, K813, K817, K831, K837): the list reads credentials' three families, basis-versions', inquiry-grammar's, public-read's and action-grammar's (not actions' re-export), and each of their translated rows decorates with its own check and words (negative control: the list without one of them misses its families)", async () => {
-  const files = [["src/credentials/checks.mjs", ["SIGNER_ENROLMENT_CHECKS", "AI_CREDENTIAL_CHECKS", "CREDENTIALS_CHECKS"]],
-                 ["src/basis-versions/checks.mjs", ["BASIS_VERSION_CHECKS", "VERSION_ACT_CHECKS", "VERSION_KIND_CHECKS", "CONCLUDE_ACT_CHECKS", "NARROW_CHECKS"]],
-                 ["src/inquiry-grammar/checks.mjs", ["LEAD_CHECKS", "INQUIRY_GRAMMAR_CHECKS"]],
-                 ["src/public-read/checks.mjs", ["CASE_RESOLUTION_CHECKS", "PUBLISHED_STORE_CHECKS", "PUBLISHED_READ_CHECKS"]],
-                 ["src/action-grammar/checks.mjs", ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS",
-                                                    "LIFECYCLE_CHECKS", "RISK_TIER_REVISION_CHECKS", "RECORDS_LAW_FENCE_CHECKS", "ACTION_CATALOGUE_CHECKS"]]];
+  /* N1073 (K3268): each family is read from its owner's file, as the list names it, never hand-listed by name */
+  const files = ["src/credentials/checks.mjs", "src/basis-versions/checks.mjs", "src/inquiry-grammar/checks.mjs",
+                 "src/public-read/checks.mjs", "src/action-grammar/checks.mjs"];
   const listed = new Map(M.CHECK_FAMILY_FILES.map(([p, ns]) => [p, ns]));
   assert.equal(listed.has("src/actions/checks.mjs"), false, "actions' re-export is not a source of its own");
   let rows = 0;
-  for (const [path, fams] of files) {
+  for (const path of files) {
     assert.ok(listed.has(path), path);
-    for (const fam of fams) {
+    const ownFams = Object.keys(listed.get(path)).filter((k) => isFamily(k, listed.get(path)[k]));
+    assert.ok(ownFams.length >= 1, path);
+    for (const fam of ownFams) {
       const table = listed.get(path)[fam];
       assert.ok(table && Object.keys(table).length, `${path} ${fam}`);
       for (const [code, row] of Object.entries(table)) if (row.translation) {
