@@ -18,3 +18,7 @@ Model and effort: you run at medium effort; any worker you spawn names its model
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
 L5 merge order: `modules.json`'s (entities, events, local-facts, standards, progressions, explore, query-language, retrieval).
+
+## B2 · CHANGE
+
+DEC-308 (U322) is merged into tranche/T50 (K3662): the new key screen.explore.unnamed.why explains an unnamed node. Merge tranche/T50 into your branch and, where R25's node carries no label, read that key by key (never inline English). The design's mockup of the unnamed node is in docs/development/ux-substrate/screens/mock-screens.js.
