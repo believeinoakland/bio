@@ -18,3 +18,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Answered (K3619): complete with what needs no web, as you built it. The first profile's records_help (R93) and forums with proceeding_kinds (R94) stay absent; I amend R93 and R94 on the tranche branch so that data is owed by a later job (N1201, once Bob allows leginfo.legislature.ca.gov and the courts' and City's hosts for the environment). Never from memory or snippets, as you said. No RESUME needed: merge the tranche branch, confirm your tests against the amended lines, then set COMPLETE and post COMPLETE.
