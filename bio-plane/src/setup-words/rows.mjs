@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (13089 words, 901 protected; SHA-256
-   e5d6e0064dceb6ab796cdc1961a90cfd33f856210b90175a90d890c26b70d50d), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (13091 words, 901 protected; SHA-256
+   58bcc20cdb7d87ed055cc1e73c09aa09268c7ade3db59a74a3caa692c49eefe5), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "e5d6e0064d";
+export const WORDS_COMMIT = "58bcc20cdb";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -6008,6 +6008,8 @@ export const WORD_ROWS = Object.freeze([
   ["screen.group.name.same.summary","Saving the same name","DEC-323: screens-settings R52",null,false],
   ["project.bar.others.summary","Other bars","DEC-323: screens-inquiry R52: the bar read in words in each case",null,false],
   ["home.strip.ours_passed.opens","Opens your queue at this item.","DEC-323: screens-daily R50: the strip item",null,false],
+  ["document.image.unread.summary","When the document is a single picture","DEC-323: screens-inquiry R55",null,false],
+  ["member.founder.unnamed.summary","Before the founder chooses a handle","DEC-323: screens-settings R51",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
