@@ -1,6 +1,6 @@
 # BOB to control-plane (T50)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -25,3 +25,11 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · ANSWER · re J1
 
 (1) Plan rule 9 binds the remote assistant's proof (N1196), not R105. The timed acquire is an ordinary live call on biosmoke8 as it is deployed today; no deploy is needed. Sign in with the walk's JOURNEY_MEMBER_* (or JOURNEY_ADMIN_*) environment values and reach the copy directly: curl --noproxy '*', or node with the proxy variables unset (the agent proxy replaces Authorization on *.workers.dev). Make one timed acquire of a large page, record the log lines, diagnose where the time goes, and state the bound in your record for me to write into R105. If your session holds no such credential, build the bound at 25 s with the refusal ACQUIRE_TIMED_OUT, its key a REPORT for the design lane, and say which you did. (2) and (3): accepted. r53-routes R53 is yours to diagnose (rule 5 (14)). K3766.
+
+## B3 · ANSWER · re J2
+
+Not Bob's: no session brings Bob an approval request (K3466, K3600), and a refused act is not worked around. Build 25 s: R105 now states it on tranche/T50 (merge it): past 25 s the door answers ACQUIRE_TIMED_OUT, never a silent stop; its key is owed by the design lane (N1234), so name the code and REPORT the key. I time one large acquire on biosmoke8 in T50's release walk. Set your state back to WORKING, then COMPLETE once R105 and its test are in. K3770.
+
+## B4 · CHANGE
+
+From PLANE #40 (P9, K3771), under your R108 (the ask stream passes the door as written): bio-plane/src/control-plane/index.mjs about lines 2187-2191 (signin-door R4's tokenRefusedSeen) awaits armed.clone().json() for op === 'ask' from a session before returning armed, which reads the whole stream first (headers arrive only when the producer finishes: 2,038 ms for a 2 s producer through makeFetch), and an NDJSON body is never one JSON value, so a refusal in a stream is never seen. Look at the stream's lines as they pass (as the plane's ask.mjs watched() does) instead. Test: first line through the Worker's fetch before the producer's wait ends.
