@@ -1456,6 +1456,17 @@ REWRITE.update({  # DEC-302 (1), (4): keys minted in words-t48 and words-mod-2
   'refusal.NO_SAFE_VIEW': "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
 })
 # --- end DEC-302
+# --- DEC-303 (BOB's B267, K3629; B268, K3630): T50's L2 stake keys and L5 fold keys for the L11 screens
+def w303(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-303' + (': ' + note if note else '')))
+w303('refusal.MACHINE_CANNOT_SET_STAKE', "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.", True, 'project-roster R31, C-147.9')
+w303('refusal.STAKE_MALFORMED.project', "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.", False, "project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's")
+w303('timeline.dated.title', 'Dated in the documents', False, "events R53: the Timeline's third list")
+w303('timeline.dated.tip', "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.", False, "the list's explanation")
+w303('findin.cell.uncalculated', "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.", False, 'retrieval R83')
+w303('findin.match.nameinpassage', 'Named in this passage', False, 'retrieval R84: correspondence name_in_passage')
+w303('findin.match.sheet', 'Sheet {sheet}, row {row}', False, "retrieval R83: a sheet match's place")
+# --- end DEC-303
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
