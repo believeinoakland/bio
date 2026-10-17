@@ -1571,3 +1571,34 @@ test("R22 the meaningrows tool describes a 64-token snippet and a passage call s
     assert.equal(performed[2].snippet, 20, path + " a snippet the call names is kept");
   }
 });
+
+/* ------------------------------------------------------------------ R23, R24 (T50-67) */
+
+test("R23 judge_plan and judge_compose enumerate condition from the list handed in; with none handed it stays a string and the other tools carry none", () => {
+  const byName = (tools) => Object.fromEntries(tools.map((t) => [t.name, t]));
+  const given = byName(judgeTools(["web", "docs"], ["a", "b"]));
+  for (const n of ["judge_plan", "judge_compose"]) assert.deepEqual(given[n].input_schema.properties.condition.enum, ["a", "b"], n);
+  for (const n of ["judge_dedup", "judge_adjust", "read_facts"]) assert.equal("condition" in (given[n].input_schema.properties || {}), false, n);
+  /* Control: none, or an empty list, leaves a free string. */
+  for (const none of [undefined, []]) {
+    const plain = byName(judgeTools(["web"], none));
+    for (const n of ["judge_plan", "judge_compose"]) assert.deepEqual(plain[n].input_schema.properties.condition, { type: "string" }, n);
+  }
+});
+
+test("R24 judge_compose alone offers disagreements, at most 10 pairs of two level enums, described as contradiction about a record", () => {
+  const levels = ["web", "docs"];
+  const tools = judgeTools(levels, ["a"]);
+  const d = tools.find((t) => t.name === "judge_compose").input_schema.properties.disagreements;
+  assert.equal(d.type, "array");
+  assert.equal(d.maxItems, 10);
+  assert.deepEqual(d.items.properties.record, { type: "string" });
+  assert.deepEqual(d.items.properties.levels.items.enum, levels);
+  assert.equal(d.items.properties.levels.minItems, 2);
+  assert.equal(d.items.properties.levels.maxItems, 2);
+  assert.deepEqual(d.items.required, ["record", "levels"]);
+  assert.match(d.description, /contradict/);
+  for (const t of tools.filter((x) => x.name !== "judge_compose"))
+    assert.equal("disagreements" in (t.input_schema?.properties || {}), false, t.name + " control");
+  for (const t of planJudgeTools(["title"])) assert.equal("disagreements" in (t.input_schema?.properties || {}), false, "plan-mode " + t.name);
+});
