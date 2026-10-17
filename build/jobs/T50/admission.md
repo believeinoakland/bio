@@ -21,3 +21,7 @@
 **Ran:** `node --test bio-plane/test/m/admission/*.test.mjs`: 58 tests, 58 pass, 0 fail. Users: `signin-door` and `control-plane` tests, 307 tests, 306 pass, 1 fail (R53, above, red before my change). Checks: format 0 failures; architecture (admission) 0 failures; coverage (admission) 31 of 31 live ids named, 0 failures; ownership 0 failures (8 files); `checks/run.mjs`: format 0, architecture 0, channels 0, coverage 25 failures (other modules' unmet ids, none admission's).
 
 Size (session_01QHhDyvdY7dW9CPvpQkC1u8): test runs 7, module lines 1578
+
+## J1 · COMPLETE
+
+T50-79 admission complete: R29 (administrator asked first, NOT_AN_ADMIN before REAUTH_DUE), R30 (aiViewerOf carries the credential's project), R31 (31-key list test). 58/58 admission tests pass; checks clean for admission (coverage 31/31). Notes for BOB in the record: R19 and R28 wording now stale; control-plane r53-routes red is pre-existing. Pushed on job/T50/admission.
