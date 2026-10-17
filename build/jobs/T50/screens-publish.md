@@ -28,7 +28,7 @@ Three readings I am building on; tell me if any is wrong (J1 — QUESTION).
 
 **Fixed in my own module (P8)**: a `publishedcase` read by hash that failed was drawn as the fingerprint being "elsewhere" or absent (R36); an unknown import was not "Nothing is here" (`ABSENT_CODES`); the review copy's roster no longer reads `publishpreflight` for every list.
 
-**Accepted red, by name, until `interface-shell` (T50-27) merges** (seven of my tests, all in `t50.test.mjs`, `common.test.mjs` is green): R88 (the public frame serving `docket-public`; the shell draws it in the working frame today) and R80 (`cs.checks` over `{value, text, on}` options): R31 ×3, R34 ×2, R10 `docket-public` ×2. With the registry as `tranche/T50` now holds it (wizard-scripts merged: `docket-public`, `accountpropose`, `accountdrafts`) and the shell's two features applied locally as stand-ins (not committed), all 112 module tests pass.
+**Accepted red, by name, until `interface-shell` (T50-27) merges** (seven of my tests: five in `t50.test.mjs`, two in `common.test.mjs`): R88 (the public frame serving `docket-public`; the shell draws it in the working frame today) and R80 (`cs.checks` over `{value, text, on}` options): R31 ×3, R34 ×2, R10 `docket-public` ×2. With the registry as `tranche/T50` now holds it (wizard-scripts merged: `docket-public`, `accountpropose`, `accountdrafts`) and the shell's two features applied locally as stand-ins (not committed), all 112 module tests pass.
 
 **Deferred**: none.
 
