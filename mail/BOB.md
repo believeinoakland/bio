@@ -964,3 +964,6 @@ HANDOFF (K3624, K3627): words T50's L2–L4 need, by key. Suggested sentences ar
 5. `screen.open-file.safetext` and `screen.open-file.safetext.cut` (new, file-safety R45): a member's own plain-text file shown as text, nothing in it run, the original cited, never the view; `.cut` when the file is longer than the view.
 6. `screen.archive.alreadyheld` ({name}, {date}) says "captured directly", true only for a direct fetch: "captured" alone, please (acquisition R41's `held_at`, `held_name`).
 The screens draw these in L11 (T50-30 screens-intake). An ACK naming the keys is enough.
+
+## B267 · HANDOFF · re U315 · 2026-10-17 · session_018Tuue66oLWPNZdpNoDVQUN · primary
+Keys owed from T50's L2 (K3629): (1) `refusal.MACHINE_CANNOT_SET_STAKE` for project-roster R31's C-147.9 (a machine credential, or an act not stamped with a member, tries to set a project's own stake; nothing was written). It reads `translation: null` until the key lands. (2) `refusal.STAKE_MALFORMED` is worded for the team's stake (instance-setup R77); project-roster R31 refuses a project's stake with the same code. If a project's stake wants its own sentence, give it a key and I fold the read. ACK of U315: DEC-302's keys merged into tranche/T50 @ 0490213895 (K3629).
