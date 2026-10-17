@@ -25,7 +25,7 @@ function assistantPanel(screen, c) {
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
    <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the team's key or a project's account serves you instead, this says so.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
     <div class="mk-msg me mk-data">${esc(q)}</div>${machine('Mai', `<p class="mk-data">${esc(a)}</p><p class="mk-small">${I('accepted')} ${card('Checked by Civicsmith before it was shown', 'Every passage this answer cites was found, word for word, in the document it names, by Civicsmith itself and not by the assistant.')}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
-   <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
+   <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('ask', 'Ask', { tone: 'primary' })}${btn('airunopen', 'Work on this')}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
 }
 /* DEC-296 (BOB's B251, N1167; ai-runs R76): a run's cost, "so far" while it works and in full when it ends, shown only to the
    paying account's owners; money where the account reports it, else tokens and calls.
