@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (13091 words, 901 protected; SHA-256
-   58bcc20cdb7d87ed055cc1e73c09aa09268c7ade3db59a74a3caa692c49eefe5), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (13116 words, 905 protected; SHA-256
+   ca65e133b4caad13f2327051d4ab820b9f34a976fa17401b6bce375cc06992d8), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "58bcc20cdb";
+export const WORDS_COMMIT = "ca65e133b4";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -6010,6 +6010,31 @@ export const WORD_ROWS = Object.freeze([
   ["home.strip.ours_passed.opens","Opens your queue at this item.","DEC-323: screens-daily R50: the strip item",null,false],
   ["document.image.unread.summary","When the document is a single picture","DEC-323: screens-inquiry R55",null,false],
   ["member.founder.unnamed.summary","Before the founder chooses a handle","DEC-323: screens-settings R51",null,false],
+  ["screen.case-editor.noconcluded.summary","When no question is concluded yet","DEC-326: R34",null,false],
+  ["screen.case-editor.account.refused.summary","When the account can't be saved","DEC-326: R35, refusal.BAD_ACCOUNT",null,false],
+  ["refusal.IMPORT_NOT_A_CASE_FILE.noparts","No part of the case file was given, so nothing was imported. Choose the case file, then import again.","DEC-327: case-import importCaseFile: no part given",null,false],
+  ["refusal.IMPORT_NOT_A_CASE_FILE.notbytes","Part {n} of what was given can't be read as a file, so nothing was imported. Choose the case file again.","DEC-327: importCaseFile: a part that is not bytes; {n} counts from 1",null,false],
+  ["refusal.IMPORT_NOT_A_CASE_FILE.manifest","The case file's manifest doesn't name the team, case and edition it holds, so it isn't a case file Civicsmith can import. Nothing was imported.","DEC-327: importCaseFile: a manifest naming no team, case and edition",null,false],
+  ["refusal.BAD_ACCOUNT.list","The account must be a list of sentences, each with its words and what it cites. Nothing was recorded.","DEC-327: case-account accountShaped: field account",null,false],
+  ["refusal.BAD_ACCOUNT.toomany","An account holds at most {max} sentences, and this one has more. Shorten it, then save again. Nothing was recorded.","DEC-327: accountShaped: ACCOUNT_SENTENCES_MAX",null,false],
+  ["refusal.BAD_ACCOUNT.sentence","Sentence {n} of the account needs its words and what it cites. Nothing was recorded.","DEC-327: accountShaped: account[i]",null,false],
+  ["refusal.BAD_ACCOUNT.extra","Sentence {n} carries something besides its words, what it cites and the bias statement it follows. Nothing was recorded.","DEC-327: accountShaped: account[i].<extra>",null,false],
+  ["refusal.BAD_ACCOUNT.text","Sentence {n} must be words on one line, at most {max} characters. Nothing was recorded.","DEC-327: accountShaped: account[i].text",null,false],
+  ["refusal.BAD_ACCOUNT.cites","What sentence {n} cites can't be read: at most {max} citations, each naming a document, a finding or a step of this case. Nothing was recorded.","DEC-327: accountShaped: account[i].cites; the kinds are the case's own",null,false],
+  ["refusal.BAD_ACCOUNT.bias","Sentence {n} names a bias statement this case doesn't print. Choose one of the case's own statements. Nothing was recorded.","DEC-327: accountShaped: account[i].bias_statement",null,false],
+  ["refusal.BAD_STATEMENT_CITES","What the case's statement cites can't be read: it gives citations for the statement, the people it names, what it leaves out and what changed. Nothing was written.","DEC-327: case-account: statementCites",null,false],
+  ["refusal.BAD_STATEMENT_CITES.nostatement","The {part} has citations but no statement for them to support. Write the statement, or remove its citations. Nothing was written.","DEC-327: statementCites.<k>: {part} is the section's own name",null,false],
+  ["refusal.BAD_STATEMENT_CITES.excluded","What the case leaves out needs one list of citations for each thing left out, in the same order. Nothing was written.","DEC-327: statementCites.excluded",null,false],
+  ["refusal.BAD_STATEMENT_CITES.citelist","The citations of the {part} can't be read: each must name what it cites. Nothing was written.","DEC-327: statementCites.excluded[i], statementCites.<k>",null,false],
+  ["refusal.ACCEPT_MUST_REAUTHOR.account","These are the assistant's words as it drafted them. The published account is yours: write it in your own words, from the draft or from nothing, then publish again. Nothing was written.","DEC-327: accountDraftJudged (D56)",null,false],
+  ["refusal.ACCOUNT_CITES_COUNSEL_MATTER.sentence","Sentence {n} cites {cites}, held in a counsel matter, which is never used as evidence outside it. Cite something else, or leave it out. Nothing was written.","DEC-327: the per-sentence form; {cites} names each by title",null,false],
+  ["refusal.BAD_REVIEW_COMMENTS","The comments to carry can't be read: choose at most {max} comments from the case's review copies. Nothing was written.","DEC-327: case-account reviewCommentsChosen",null,false],
+  ["refusal.REVIEW_COMMENTS_UNREAD","The comments on this case's review copies couldn't be read, so the ones you chose can't be carried. Try again. Nothing was written.","DEC-327: case-account",null,false],
+  ["refusal.REVIEW_COMMENT_NOT_FOUND","A comment you chose is no longer on this case's review copies. Choose again among the comments they hold. Nothing was written.","DEC-327: case-account; no comment id is shown",null,false],
+  ["case-account.document.left_out.one","1 comment was left out. A reviewer left out may file a response in the case's docket.","DEC-327: the signed case document body; wording frozen (K1333): a change is a new key for new documents",null,true],
+  ["case-account.document.left_out.other","{n} comments were left out. A reviewer left out may file a response in the case's docket.","DEC-327: the signed body; frozen (K1333)",null,true],
+  ["case-account.document.reviewer.unknown","(a reviewer)","DEC-327: the signed body; frozen (K1333)",null,true],
+  ["case-account.document.date.unknown","(an unrecorded date)","DEC-327: the signed body; frozen (K1333)",null,true],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
