@@ -19,6 +19,7 @@ import { isCalendarDate } from "../civil-time/index.mjs";
 import { parseFigure } from "../calc-grammar/index.mjs";
 import { extentRelation, canonicalExtent } from "../content/index.mjs";
 import { normAlias } from "../extraction/index.mjs";
+import { say } from "./words.mjs";
 
 /* R74: the kinds, closed (DEC-164 (2)). */
 export const FIND_KINDS = Object.freeze(["people", "money", "dates", "requirements", "events", "term"]);
@@ -45,7 +46,7 @@ export const FIND_ORIGIN = "search";
    later module is registered. */
 export const RECORDED_BY_MODULES = Object.freeze(["events", "standards", "money", "people"]);
 export const RECORDED_BY_LIMIT = 500;
-export const RECORDED_NONE_REGISTERED = "no later module's records were read: none registered";
+export const RECORDED_NONE_REGISTERED = say("retrieval.recorded_none_registered");
 /* R73 (T50; N1191 (d)): the relations under which a recorded item is the match's: the same extent, or one inside it.
    A fact recorded around the match (the whole document, a whole sheet, the page holding it) marks none of the passages
    inside it, so `wider` is not one. */
@@ -82,7 +83,7 @@ export const FIND_MATCHERS = deepFreeze({
                  "forty-five": 45, forty: 40, sixty: 60, ninety: 90, "one hundred twenty": 120, "one hundred eighty": 180 },
     },
     /* The requirement words, longest first so "shall not" is read before "shall". A sentence carrying one is found;
-       it is never labelled a force (standards R35; K1722). */
+       it is never labeled a force (standards R35; K1722). */
     requirements: ["is required to", "are required to", "shall not", "must not", "may not", "shall", "must"],
   },
 });
@@ -172,9 +173,9 @@ export function matchDates(text, set) {
     if (g[0] !== undefined) date = `${g[2]}-${two(p.monthOf.get(g[0].toLowerCase()))}-${two(g[1])}`;
     else if (g[3] !== undefined) date = `${g[5]}-${two(p.monthOf.get(g[4].toLowerCase()))}-${two(g[3])}`;
     else if (g[6] !== undefined) date = `${g[6]}-${g[7]}-${g[8]}`;
-    else if (g[9] !== undefined) why = "the words write the day and the month as numbers, and which comes first is not said";
-    else why = "the words name a month, not a day";
-    if (date && !isCalendarDate(date)) { why = `${date} names no day of the calendar`; date = null; }
+    else if (g[9] !== undefined) why = say("retrieval.why.words_write_day");
+    else why = say("retrieval.why.words_name_month");
+    if (date && !isCalendarDate(date)) { why = say("retrieval.why.names_day_calendar", { date }); date = null; }
     out.push({ index: m.index, end: m.index + m[0].length, as_read: m[0], date, ...(why ? { date_why: why } : {}) });
   }
   for (const m of t.matchAll(p.period)) {
@@ -253,7 +254,7 @@ export class Finder {
       const items = acc.items.slice(0, limit);
       /* DEC-98: "Nothing here" only when every capture of the scope was read for this kind and none matched. */
       const nothing = whole && items.length === 0 && acc.not_read.length === 0 && !truncated;
-      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: "Nothing here" } : {}),
+      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: say("state.empty") } : {}),
                not_read: acc.not_read };
     });
   }
@@ -374,8 +375,7 @@ export class Finder {
         /* A table in a document: its reading holds the table's text but not its cells, so which column holds the
            dates or amounts is not read. It is one result naming the table, as a column is. */
         add({ kind, table: { capture_sha: c.capture_sha, extent: e, column: null, rows: null,
-                             column_why: "the reading holds this table's text but not its cells, so which column "
-                                       + "holds these is not read" },
+                             column_why: say("retrieval.column_why") },
               words: cutWords(String(u.text).split("\n")[0]), capture_sha: c.capture_sha, extent: e, origin: FIND_ORIGIN });
         continue;
       }
@@ -478,12 +478,12 @@ export class Finder {
     /* DEC-98: a page whose names could not be read is in `not_read`, never "Nothing here". */
     const unread = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
     const entities = this.r.entitiesFor();
-    if (!entities) { unread("not read: the followed people and offices could not be read"); return; }
+    if (!entities) { unread(say("retrieval.unread.read_followed_people")); return; }
     /* entities R52 (K1972): R17's candidates for every followed person and office over this page's captures, in one
        bounded read; its page is this kind's own, so its `truncated` is this kind's. */
     const ans = entities.namingIn({ captureShas: read, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
     if (!ans || ans.ok !== true) {
-      unread(`not read: the followed people and offices could not be read${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+      unread(say("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
       return;
     }
     if (ans.truncated) acc.truncated = true;
@@ -517,7 +517,7 @@ export class Finder {
   #aliasPeople(captures, read, data, entities, add, skip, acc, viewer, refs) {
     const unreadAll = (why) => { for (const c of captures) if (read.includes(c.capture_sha)) skip(c, why); };
     if (typeof entities.aliasesOf !== "function") {
-      unreadAll("not read: the followed people and offices could not be read by their held names");
+      unreadAll(say("retrieval.unread.read_followed_people"));
       return;
     }
     const held = [];
@@ -527,7 +527,7 @@ export class Finder {
       try { ans = entities.aliasesOf({ kinds: [...FIND_PEOPLE_KINDS], limit: ALIAS_PAGE, after, viewer }); } catch { ans = null; }
       const list = Array.isArray(ans) ? ans : ans && Array.isArray(ans.aliases) ? ans.aliases : ans && Array.isArray(ans.items) ? ans.items : null;
       if (!list || (ans && ans.ok === false)) {
-        unreadAll(`not read: the followed people and offices could not be read by their held names${ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : ""}`);
+        unreadAll(say("retrieval.unread.read_followed_people_offices", { ans: ans && ans.reason ? ` (${String(ans.reason).slice(0, 80)})` : "" }));
         return;
       }
       held.push(...list);
@@ -724,7 +724,7 @@ export function extentOfSource(source) {
     const { ref, ...extent } = source;
     return { extent, extent_why: null };
   }
-  return { extent: null, extent_why: "the reading does not say where in the document this was read" };
+  return { extent: null, extent_why: say("retrieval.extent_why") };
 }
 
 /* R73 (N715): one recorder read for one capture: its items and `truncated`, or `{why}` when it threw, answered a
@@ -733,13 +733,13 @@ export function extentOfSource(source) {
 function callRead(read, captureSha, viewer) {
   let a;
   try { a = read({ captureSha, limit: RECORDED_BY_LIMIT, viewer }); }
-  catch (e) { return { why: `the read threw: ${String((e && e.message) || e).slice(0, 200)}` }; }
+  catch (e) { return { why: say("retrieval.why.read_threw", { e: String((e && e.message) || e).slice(0, 200) }) }; }
   if (a && typeof a.then === "function") {
     Promise.resolve(a).catch(() => {});
-    return { why: "the read answered a promise: it is called in process, synchronously" };
+    return { why: say("retrieval.why.read_answered_promise") };
   }
   if (a && typeof a === "object" && a.ok === false)
-    return { why: `the read refused: ${String(a.code ?? a.reason ?? "no reason given").slice(0, 200)}` };
+    return { why: say("retrieval.why.read_refused", { given: String(a.code ?? a.reason ?? say("monitoring.reason_given")).slice(0, 200) }) };
   if (!a || typeof a !== "object" || a.ok !== true || !Array.isArray(a.items)
       || !a.items.every((it) => it && typeof it === "object" && !Array.isArray(it)))
     return { why: "the read answered another shape than events R49's" };

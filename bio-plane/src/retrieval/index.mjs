@@ -40,6 +40,7 @@ import { standardsOf } from "../standards/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { Browser } from "./browse.mjs";
+import { say } from "./words.mjs";
 import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
          FIND_TERM_MAX, RECORDED_BY_MODULES } from "./findin.mjs";
 
@@ -84,7 +85,7 @@ export const SEARCH_ORPHAN_MAX = 100;
    and a longer list is cut and SAID to be cut. */
 export const CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 /* D-724: the words a skipped unit is served in. */
-export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
+export const CAPTURE_TEXT_SKIPPED_SAYS = say("retrieval.capture_text_skipped_says");
 
 /* R17, R61: the text-index keys a bundle claims, through its projection row. */
 const CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
@@ -441,7 +442,7 @@ export class Retrieval {
       return inst && typeof inst.recordedBy === "function"
         ? { module: m, read: (a) => inst.recordedBy(a), registered: false }
         : { module: m, read: null, registered: false,
-            why: inst ? `${m} offers no recordedBy read` : `${m} is not reachable here` };
+            why: inst ? say("retrieval.why.offers_recordedby_read", { m }) : say("retrieval.why.reachable", { m }) };
     });
     return [...own, ...this.#recordedBy.map((r) => ({ module: r.module, read: r.fn, registered: true }))];
   }
@@ -996,20 +997,18 @@ export class Retrieval {
       ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
       meaning: meaningVocabulary(),
       syntax: [
-        "bare words are AND, ranked by relevance",
-        "\"quoted phrase\" is one unit",
-        "term* is a prefix match",
-        "-term and NOT term exclude",
-        "OR and parentheses nest",
+        say("retrieval.syntax.bare_words_ranked"),
+        say("retrieval.syntax.quoted_phrase_unit"),
+        say("retrieval.syntax.term_prefix_match"),
+        say("retrieval.syntax.term_term_exclude"),
+        say("retrieval.syntax.parentheses_nest"),
         /* R54 (K105): the proximity operator, stated in the published grammar. */
-        "NEAR(a b) finds the words within 10 words of each other, NEAR(a b, 5) within 5 (0 to 100); in "
-        + "passage: it matches only inside one passage, never across two",
-        "field:value filters; free-text fields (title, locator, authority) match text, enumerations match exactly",
+        say("retrieval.syntax.near_finds_words"),
+        say("retrieval.syntax.field_value_filters"),
         "field:>value, field:<value, field:a..b compare and range",
-        "has:field asks whether the field carries any value",
-        "fm:path and fm:path=value reach frontmatter no column projects",
-        "leg:, resolves: and concerns: reach the MEANING layer -- leg:hunch is outstanding hunch debt, "
-        + "resolves:C the flagged resolutions, concerns:ENT-1 the reverse index; they answer at RECORD grain",
+        say("retrieval.syntax.field_asks_field"),
+        say("retrieval.syntax.fm_path_fm"),
+        say("retrieval.syntax.leg_resolves_concerns"),
         /* REC-90: `content:` searches WHAT HAS BEEN CITED OR MARKED CITABLE, never the text of the documents
            themselves — `passage:` is that question. */
         "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: "
@@ -1018,20 +1017,14 @@ export class Retrieval {
         + "content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
         "content: does NOT search the text of the documents -- it searches what has been cited or marked "
         + "citable in them, so an empty answer is a fact about citation and never about what a document says",
-        "passage: searches what the documents SAY -- the indexed text of every captured document, one "
-        + "passage per page, paragraph, slide or sheet; rows=passage lists the passages it matched",
-        "content:cap=undetermined and content:chain=undetermined are their own values, never folded into a "
-        + "letter or a step; a comparison like content:cap<=B does not match them, because NULL compares to nothing",
-        "content:chain=does-not-apply names the images cited as their own bytes -- no transcription stands "
-        + "between such a citation and what it points at, so its chain is not undetermined and "
-        + "content:chain=undetermined does not match it",
-        "content:cap=does-not-apply names the same images -- with nothing transcribed there is no derivation "
-        + "step for a cap to be the weakest of, so their cap is not undetermined and content:cap=undetermined "
-        + "does not match them",
+        say("retrieval.syntax.passage_searches_documents"),
+        say("retrieval.syntax.content_cap_undetermined"),
+        say("retrieval.syntax.content_chain_apply"),
+        say("retrieval.syntax.content_cap_apply"),
         "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison "
         + "(resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
-        "has:leg asks whether the record carries any row in the meaning table at all",
-        "sort:field and sort:-field order the result",
+        say("retrieval.syntax.leg_asks_record"),
+        say("retrieval.syntax.sort_field_sort"),
       ],
     };
   }
@@ -1490,16 +1483,14 @@ export class Retrieval {
     if (!sha)
       return { found: false, vocabulary: V.CONTENT_AXIS_STATES,
                undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
-               note: "a content-axis read names one capture by its sha256" };
+               note: say("retrieval.note.content_axis_read") };
     const owner = this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha = ? LIMIT 1`, sha);
     const held = owner && this.sight(viewer)(owner.bundle_id) ? owner : null;
     if (!held)
       return { found: false, capture_sha: sha, capture_held: false,
                vocabulary: V.CONTENT_AXIS_STATES,
                undetermined_value: V.CONTENT_AXIS_UNDETERMINED,
-               note: "this record holds no capture with that fingerprint, so there is nothing to "
-                   + `say about its content axis. That is NOT '${Object.keys(V.CONTENT_AXIS_STATES)[3]}', `
-                   + `which is a statement about a document the record DOES hold and has never read` };
+               note: say("retrieval.note.record_holds_capture", { content_axis_states: Object.keys(V.CONTENT_AXIS_STATES)[3] }) };
     const latest = this.#one(
       `SELECT state, condition, detail, authority_kind, authority, actor_class, actor, at, seq
          FROM observation_log
