@@ -1,6 +1,6 @@
 # capture-requests (T50)
 
-**Status** · session_018aSa4ST4fZKoWn5sZ9SNHw · depth 2 · COMPLETE · handled B1
+**Status** · session_018aSa4ST4fZKoWn5sZ9SNHw · depth 2 · COMPLETE · handled B2
 
 ## Completion (T50-81)
 
