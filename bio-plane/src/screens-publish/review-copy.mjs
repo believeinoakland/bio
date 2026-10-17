@@ -42,16 +42,17 @@ export const REVIEW_COPY = Object.freeze({
     out.push(P.sec(cs, "screen.review-copy.readers", cs.state(copy, function (v) {
       const grants = (Array.isArray(v.grants) ? v.grants : []).filter(function (g) { return !g.revoked_at && !g.revokedAt; });
       if (!grants.length) return "";
-      // R18: the end date is drawn in the group's zone (its day, as the member chose it), read as the sharing reads it.
-      const zonePre = grants.some(function (g) { return g.until; }) ? P.later(cs, view, "zone", "publishpreflight", { body: P.caseArgs(v, chosen.draft_id) }) : null;
-      const zone = zonePre && zonePre.state === "ok" ? P.zoneOf(zonePre.value) : "";
+      // R18, R27: the end is drawn in the team's zone, as the copy answer carries it on each row (`review` R35).
+      const held = P.copyZone(v).zone;
       return cs.sheet(grants.map(function (g) {
         const id = g.grant_id || g.grantId || "";
         const until = typeof g.until === "string" && g.until ? g.until : "";
+        const zone = typeof g.zone === "string" && g.zone ? g.zone : held;
         const ended = until && Date.parse(until) <= cs.now();
+        const day = until ? P.localDay(until, zone) || until : "";
         const says = !until ? cs.w("screen.review-copy.reads.stop", { edition: String(c.edition || "") })
-          : cs.w(ended ? "screen.review-copy.reads.ended" : "screen.review-copy.reads.until",
-            { edition: String(c.edition || ""), until: { html: cs.date(P.localDay(until, zone) || until) } });
+          : ended ? cs.w("screen.review-copy.reads.ended", { edition: String(c.edition || ""), until: { html: cs.date(day) } })
+            : P.untilIn(cs, view, until, zone) || cs.w("screen.review-copy.reads.until", { until: { html: cs.date(day) } });
         return cs.row("", "<b>" + cs.esc(g.recipient || "") + "</b>", '<span class="meta" data-grant-until="' + (ended ? "ended" : until ? "until" : "open") + '">' + says + "</span>",
           cs.act("reviewrevoke", { data: { grant: id } }));
       }).join(""));
@@ -99,9 +100,16 @@ export const REVIEW_COPY = Object.freeze({
         const held = view.ui.later && view.ui.later.copy;
         const copy = held && held.state === "ok" ? held.value : null;
         if (!view.ui.draft || !copy) return null;
-        // R18: the end of the chosen day in the group's zone, as an instant in the record's stamp form.
-        const zone = P.zoneOf(P.value(await cs.call("publishpreflight", { body: P.caseArgs(copy, view.ui.draft.draft_id) })));
-        if (!zone) return { refuse: "screen.review-copy.until.nozone" };
+        // R18, R27: the end of the chosen day in the team's zone, as an instant in the record's stamp form; the zone is the
+        // copy answer's (`review` R35). A first share has no roster row to carry it, so the team's zone is read as the
+        // ceremony reads it; with none held the share is refused in its fold and nothing is sent.
+        const zoned = P.copyZone(copy);
+        const zone = zoned.zone || (zoned.known ? "" : P.zoneOf(P.value(await cs.call("publishpreflight", { body: P.caseArgs(copy, view.ui.draft.draft_id) }))));
+        if (!zone) {
+          const key = view.me && view.me.administer === true ? "screen.review-copy.until.nozone" : "screen.review-copy.until.nozone.member";
+          P.say(cs, view, "reviewgrant", P.fold(cs, "screen.review-copy.until.nozone.summary", "<p>" + cs.w(key) + "</p>"), false);
+          return null;
+        }
         const until = P.endOfDay(day, zone);
         if (!until) return { refuse: "screen.review-copy.reader.needed" };
         view.ui.pendingWho = name;

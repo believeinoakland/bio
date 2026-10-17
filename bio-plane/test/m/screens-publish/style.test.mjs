@@ -17,9 +17,9 @@ const undefinedIn = (p) => [...drawn(p)].filter((c) => !SERVED.has(c) && !Object
 
 const PATHS = {
   "case-editor": `/app/case-editor/${P}`, "review-copy": `/app/review-copy/${P}`, ceremony: `/app/ceremony/${P}/${DR}`,
-  published: `/app/published/${C}`, imported: "/app/imported/IMP-2026-0001", docket: `/app/docket/${P}/${C}`, doorbell: "/app/doorbell",
+  published: `/app/published/${C}`, imported: "/app/imported/IMP-2026-0001", docket: `/app/docket/${P}/${C}`, "docket-public": `/app/docket-public/${C}`, doorbell: "/app/doorbell",
 };
-const PUBLIC = { published: true, doorbell: true };
+const PUBLIC = { published: true, "docket-public": true, doorbell: true };
 const bootOf = (id) => (PUBLIC[id] ? { session: null } : {});
 
 test("R20 every class the module's screens draw is defined by a served stylesheet (the module's real SCREENS compose; control: the check sees an undefined class)", async () => {

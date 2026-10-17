@@ -10,24 +10,27 @@ const PATH = `/app/review-copy/${P}`;
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 
 const withGrants = (grants) => ({ reviewcopy: ok(COPY({ grants })) });
-const zoned = (zone) => ({ publishpreflight: ok(PREFLIGHT({ steps: [{ signer: "dev", open_requests: [], publish_at: zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" } }] })) });
+/* R27 (`review` R35): the zone the copy answer carries on each roster row; a zone of null is "none held". */
+const zoned = (zone) => ({ reviewcopy: ok(COPY({ grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL, zone }] })) });
+const PACIFIC = "Pacific Time, Los Angeles";
 const share = (p, until, name = "Prof. N. Iyer") => press(p, "reviewgrant", { values: { "rc-name": name, "rc-role": "housing law", "rc-until": until } });
 
 test("R2 R18 each named reader is a row with what they may read and until when, drawn \"until <date>\" from the grant's own end in the group's zone (not the UTC day), offering \"Stop sharing\"", async () => {
   const p = await open(PATH);
   assert.equal(last(p, "reviewcopy").query.draft, DR);
-  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-copy.reads.until", { edition: "2", until: day("2099-10-20") }));
+  assert.ok(text(p).includes("Prof. N. Iyer · housing law") && drew(p, "screen.review-outside.until.zone", { date: day("2099-10-20"), time: "23:59", zone: PACIFIC }));
   assert.ok(!text(p).includes(day("2099-10-21")), "the group's day, not the UTC day");
+  assert.equal(p.byOp("publishpreflight").length, 0, "R27: the zone is the copy answer's, not a separate publishpreflight read");
   assert.equal(main(p).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "until");
   await press(p, "reviewrevoke");
   carries(last(p, "reviewrevoke").body, { grant: "GRT-1" });
 });
 
 test("R18 a lapsed grant is drawn ended; a grant with no end date draws \"until you stop sharing\" (controls)", async () => {
-  const lapsed = await open(PATH, { plane: withGrants([{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: "2020-03-11T06:59:59Z" }]) });
+  const lapsed = await open(PATH, { plane: withGrants([{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: "2020-03-11T06:59:59Z", zone: "America/Los_Angeles" }]) });
   assert.equal(main(lapsed).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "ended");
   assert.ok(drew(lapsed, "screen.review-copy.reads.ended", { edition: "2", until: day("2020-03-10") }));
-  assert.ok(!drew(lapsed, "screen.review-copy.reads.until", { edition: "2", until: day("2020-03-10") }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
+  assert.ok(!drew(lapsed, "screen.review-outside.until.zone", { date: day("2020-03-10"), time: "23:59", zone: PACIFIC }) && !drew(lapsed, "screen.review-copy.reads.stop", { edition: "2" }));
   const open_ = await open(PATH, { plane: withGrants([{ grant_id: "GRT-2", recipient: "Ana · editor" }]) });
   assert.ok(text(open_).includes("Ana · editor") && drew(open_, "screen.review-copy.reads.stop", { edition: "2" }));
   assert.equal(main(open_).querySelector("[data-grant-until]").getAttribute("data-grant-until"), "open");
@@ -44,15 +47,18 @@ test("R18 \"Share with a named reader\" sends `until` as the end of the chosen d
     assert.match(sent.until, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/, "the record's stamp form, never a bare date");
     assert.equal(sent.recipient, "Prof. N. Iyer · housing law", "the date is the grant's own field, not part of the reader's line");
     assert.equal(sent.draft, DR);
-    assert.equal(last(p, "publishpreflight").body.draft, DR, "the zone read from the preflight of this draft");
+    assert.equal(p.byOp("publishpreflight").length, 0, "R27: the zone read from the copy answer, not a preflight");
   }
 });
 
-test("R18 with no time zone held, or a date that is no day, nothing is shared and the member is told why (controls)", async () => {
+test("R18 R27 with no time zone held, or a date that is no day, nothing is shared and the member is told why in the fold (controls)", async () => {
   const p = await open(PATH, { plane: zoned(null) });
   await share(p, "2099-10-20");
   assert.equal(p.byOp("reviewgrant").length, 0);
-  assert.ok(drew(p, "screen.review-copy.until.nozone"));
+  assert.equal(p.byOp("publishpreflight").length, 0, "a row that says no zone is held is not asked again");
+  const fold = main(p).querySelector('[data-fold="screen.review-copy.until.nozone.summary"]');
+  assert.ok(fold && drewIn(fold, "screen.review-copy.until.nozone.summary") && fold.hasAttribute("open"), "drawn in its fold, open");
+  assert.ok(drewIn(fold, "screen.review-copy.until.nozone.member") && !drewIn(fold, "screen.review-copy.until.nozone"), "a member is told to ask an administrator");
   const q = await open(PATH, { plane: zoned("America/Los_Angeles") });
   await share(q, "2099-02-31");
   assert.equal(q.byOp("reviewgrant").length, 0, "31 February is no day");
@@ -125,9 +131,10 @@ test("R17 review-outside: the fragment's secret goes only in reviewcopy's body, 
 
 test("R17 review-outside: the link's end date, and \"Send your comment\" with the secret in the body; with no link nothing is read (control)", async () => {
   const until = { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
-    authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z" } }) };
+    authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana", until: "2026-10-20T06:59:59Z", zone: "America/Los_Angeles" } }) };
   const p = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: until });
-  assert.ok(drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: "06:59" }), "K3295: date and time with UTC named");
+  assert.ok(drew(p, "screen.review-outside.until.zone", { date: day("2026-10-19"), time: "23:59", zone: PACIFIC }), "R27: the end day in the team's zone, never UTC");
+  assert.ok(!drew(p, "screen.review-outside.until", { date: day("2026-10-20"), time: "06:59" }), "the sentence that names UTC is not drawn");
   const none = await open("/app/review", { boot: { session: null, hash: "#grant=" + GRANT_SECRET }, plane: { reviewcopy: ok({ kind: "review-copy", reader: "recipient", draft: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" },
     authored: { scope: "Rents." }, findings: [], grant: { recipient: "Ana" } }) } });
   assert.ok(drew(none, "screen.review-outside.untilstopped"), "R18: a grant with no end date");

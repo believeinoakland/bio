@@ -69,8 +69,10 @@ export const PARTS = Object.freeze({
   said: function (view, key) {
     const s = view.ui.said && view.ui.said[key];
     // R20: the note is the design's `mk-note`; a refusal is drawn as the shell draws one (`cs-gap`, interface-shell R61).
-    return s ? (s.ok ? '<p class="mk-note" role="status" data-said="' + key + '">' : '<p class="cs-gap" data-gap="refused" role="alert" data-said="' + key + '">')
-      + s.html + "</p>" : "";
+    // K3742: a state drawn in a fold is a block, so it sits in a `div`, never a paragraph.
+    const tag = /^<details/.test(s ? s.html : "") ? "div" : "p";
+    return s ? (s.ok ? "<" + tag + ' class="mk-note" role="status" data-said="' + key + '">' : "<" + tag + ' class="cs-gap" data-gap="refused" role="alert" data-said="' + key + '">')
+      + s.html + "</" + tag + ">" : "";
   },
   say: function (cs, view, key, html, ok) {
     const s = view.ui.said || (view.ui.said = {});
@@ -94,6 +96,69 @@ export const PARTS = Object.freeze({
     const words = view.parts.refusalText(cs, f);
     view.parts.say(cs, view, key, words || cs.w("state.failed", { reason: String(f.code || f.reason || "") }), false);
     return true;
+  },
+
+  /* K3742: a state the design draws "in a fold" is drawn inside a `details` headed by its `.summary` key, open whenever
+     it is drawn (a roster row is never folded). */
+  fold: function (cs, summaryKey, inner) {
+    return '<details class="mk-details" open data-fold="' + cs.esc(summaryKey) + '"><summary>' + cs.w(summaryKey) + "</summary>" + inner + "</details>";
+  },
+
+  /* The review copy a ceremony draws from: the one its address names (read as the screen's own), else the newest draft's. */
+  copyOf: function (view) {
+    const r = view.data.copy || (view.ui.later && view.ui.later.copy);
+    return r && r.state === "ok" ? r.value : null;
+  },
+
+  /* A kit sentence (`cs.w`, HTML) read back as plain text, for a kit part that escapes the text it is given. */
+  plain: function (html) {
+    return String(html).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, function (m, e) { return { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]; });
+  },
+
+  /* R30 (DEC-276): an act's explanation in its place: the button's explanation carries `now`'s word where the kit drew
+     `was`'s (the kit names no way for a screen to choose an act's explanation); unchanged when `was` is not in it. */
+  explained: function (cs, html, was, now) {
+    return String(html).split(cs.esc(cs.w(was))).join(cs.esc(cs.w(now)));
+  },
+
+  /* R27 (`review` R35): the team's time zone as the copy answer carries it: its own `zone`, else the first roster row's;
+     `known` says whether the answer carried one at all (a member's first share has no row yet); `zone` is "" when none is
+     held, never UTC in its place. */
+  copyZone: function (copy) {
+    const rows = copy && Array.isArray(copy.grants) ? copy.grants : [];
+    const own = copy && typeof copy.zone === "string" && copy.zone ? copy.zone : null;
+    const held = own || (rows.find(function (g) { return g && typeof g.zone === "string" && g.zone; }) || {}).zone || "";
+    const said = copy && Object.hasOwn(copy, "zone") || rows.some(function (g) { return g && Object.hasOwn(g, "zone"); });
+    return { zone: typeof held === "string" ? held : "", known: !!said };
+  },
+
+  /* R27: the zone drawn as the browser names it: its generic name and its city (a zone with no key of its own). */
+  zoneName: function (zone) {
+    const city = String(zone).split("/").pop().replace(/_/g, " ");
+    let generic = "";
+    try {
+      const p = new Intl.DateTimeFormat("en-US", { timeZone: String(zone), timeZoneName: "longGeneric" }).formatToParts(new Date())
+        .find(function (x) { return x.type === "timeZoneName"; });
+      generic = p ? p.value : "";
+    } catch (e) { generic = ""; }
+    return generic && generic !== city ? generic + ", " + city : city;
+  },
+
+  /* R27: the wall-clock time `HH:MM` of `instant` in `zone`; "" when either is unusable. */
+  localTime: function (instant, zone) {
+    const t = Date.parse(String(instant || ""));
+    if (isNaN(t) || !zone) return "";
+    try {
+      return new Intl.DateTimeFormat("en-GB", { timeZone: String(zone), hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(t));
+    } catch (e) { return ""; }
+  },
+
+  /* R27: the end of a review link as `screen.review-outside.until.zone` says it (date, time and zone in the team's zone);
+     "" when the zone or the instant is not held (no UTC is drawn in its place). */
+  untilIn: function (cs, view, until, zone) {
+    const P = view.parts, day = P.localDay(until, zone), time = P.localTime(until, zone);
+    if (!day || !time) return "";
+    return cs.w("screen.review-outside.until.zone", { date: { html: cs.date(day) }, time: time, zone: P.zoneName(zone) });
   },
 
   /* A date and time the member typed, `YYYY-MM-DD` and `HH:MM`, as `publishat` and `publishatmove` take them; null when
