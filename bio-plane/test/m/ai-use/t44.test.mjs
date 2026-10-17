@@ -31,7 +31,7 @@ test("R13 (T44) AI_USE_WORDS equals words.json for every key it reads: the explo
   assert.equal(AI_USE_WORDS["ai.when.month"], "on 1 {month}");
   assert.equal(AI_USE_WORDS["ai.refused.exploreoutofscope"], "The assistant can't explore this question on {whose} account: it "
     + "lies outside what the account's owners chose to explore.");
-  assert.equal(AI_USE_WORDS["ai.use.account.name"], "A case's account");
+  assert.equal(AI_USE_WORDS["ai.use.account.name"], "Drafting a case's account");
   /* ai.use.suggestions names a switch, not a use: not read here */
   assert.equal(Object.keys(AI_USE_WORDS).some((k) => k.startsWith("ai.use.suggestions")), false);
   /* negative controls: one character changed on either side, or a key the file lacks, is found */
