@@ -44,7 +44,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
   11. Ask, and read the answer;
   12. accept a reading, stand on it for the project, and conclude.
 
-  Each step asserts what the design says the screen then shows, and the walk fails on any refused or missing step (R8). *(not yet met: T49)*
+  Each step asserts what the design says the screen then shows, and the walk fails on any refused or missing step (R8).
 - **R10** (T49; K3320, K3324 (2); K3347; `ai-runs` R18's T46 clause) **The same journey as a member** invited to the group and joined to the project. She connects her own Claude subscription, her own run is dispatched on that sign-in, and `projectai`, plan help (`planask`) and Ask are walked as hers. *(not yet met: T49)*
 - **R11** (T49; K3324 (2); amends R1 (a)) The local arm binds four things:
   - the plane's `AGENT_WORKER` to `agent-worker`, run under Miniflare, with its `RUNNER` binding (the subscription runner, `agent-worker` R35, R66) bound to a stub this module serves: a fake model answering the answers contract and the run modes' tools as `agent-runner`'s contract states, so `uses` stays empty (K3351; no model address is added to `agent-worker` or `agent-model`);

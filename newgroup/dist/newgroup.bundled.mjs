@@ -5182,6 +5182,20 @@ var ASSET_FILES = Object.freeze({
 .cs-btn[data-tone="quiet"] { border-color: transparent; color: var(--c-accent); padding-inline: 8px; }
 .cs-btn[data-tone="quiet"]:hover { background: var(--c-accent-tint); }
 .cs-btn[disabled] { opacity: 1; color: var(--c-muted); border-color: var(--c-rule-strong); background: transparent; cursor: not-allowed; }
+/* Pressing a button (DEC-280, Bob, 15 October): it answers at once. Held, it sinks. From the press until Civicsmith answers,
+   it shows it is working (a turning ring, the busy pointer) and can't be pressed again. Then an act done for good (Terminal,
+   Signed, Outward) stays disabled with a check: nothing more is needed. Any other shows a check for a moment and is ready
+   again, while its result appears where the member is looking. A refusal returns it to ready, the refusal beside it. */
+.cs-btn { transition: background-color var(--d-1) var(--ease), transform 60ms ease-out, box-shadow 60ms ease-out; -webkit-tap-highlight-color: transparent; }
+.cs-btn:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.cs-btn:active:not([disabled]):not([aria-busy="true"]) { transform: translateY(1px) scale(0.98); box-shadow: inset 0 2px 0 color-mix(in srgb, var(--c-ink) 14%, transparent); background: var(--c-ground-2); }
+.cs-btn[data-tone="primary"]:active:not([disabled]):not([aria-busy="true"]) { background: var(--c-accent-strong); border-color: var(--c-accent-strong); }
+.cs-btn[aria-busy="true"] { cursor: progress; pointer-events: none; }
+.cs-btn[aria-busy="true"]::before { content: ""; flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: cs-turn 0.7s linear infinite; }
+.cs-btn[data-done]::before { content: ""; flex: none; width: 5px; height: 10px; margin: 0 3px 3px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.cs-btn[data-done][disabled] { color: var(--c-accent); border-color: var(--c-accent); cursor: default; }
+@keyframes cs-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cs-btn:active:not([disabled]) { transform: none; } .cs-btn[aria-busy="true"]::before { animation-duration: 2.4s; } }
 .cs-btn .w { white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; padding-left: var(--s-2); margin-left: 2px;
              border-left: 1px solid currentColor; font: 500 var(--t-xs)/1 var(--f-sans); letter-spacing: .02em; }
 .cs-btn[data-tone="primary"] .w { border-left-color: color-mix(in srgb, var(--c-on-accent) 55%, transparent); }
@@ -5347,6 +5361,13 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-shell { display: grid; grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr); min-height: 100%; }
 .cs-shell.with-dock { grid-template-columns: var(--rail) minmax(0,1fr) var(--dock); }
 .cs-shell > .cs-mast, .cs-shell > .cs-band { grid-column: 1 / -1; }
+/* DEC-249 (interface-shell R36, R53, R58): the test-copy band. On a test copy every frame opens with it, the whole frame's
+   width, above the masthead, the rail and the work, from first paint; a released copy never draws it. */
+.cs-testband { display: flex; gap: var(--s-2); align-items: baseline; flex-wrap: wrap; padding: 6px var(--s-3); background: var(--c-signal-tint); color: var(--c-ink); border-bottom: 2px solid var(--c-signal); font: 600 var(--t-sm)/1.35 var(--f-sans); }
+.cs-testband b { color: var(--c-signal); text-transform: uppercase; letter-spacing: .04em; font-size: var(--t-xs); }
+.cs-testband span { font-weight: 400; }
+.cs-shell > .cs-testband { grid-column: 1 / -1; }
+.cs-shell:has(> .cs-testband) { grid-template-rows: auto auto auto minmax(0,1fr); }
 .cs-rail { position: relative; border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); min-width: 0; }
 /* DEC-155: the rail's width is the member's: drag its edge, or focus the edge and use the arrow keys; double-click or Home
    resets it. Narrower than 120px it becomes icons only, each with its name on hover and focus. */
@@ -5407,6 +5428,43 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-heat i[data-x="3"] { background: var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px); border-color: var(--c-signal); }
 .cs-heatkey { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: center; font-size: var(--t-xs); color: var(--c-ink-2); }
 .cs-heatkey i { display: inline-block; width: 16px; height: 12px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--c-rule); background: var(--c-surface); }
+
+/* ============================================================
+   Parts of a longer task (DEC-279, Bob's review of setup, K3446): a numbered card that opens and closes. Its head says
+   what the part is for in one line and whether it is done; a done part's number becomes a check.
+   ============================================================ */
+.cs-part { background: var(--c-surface); border: var(--hair); border-radius: var(--r-1); }
+.cs-part + .cs-part { margin-top: var(--s-2); }
+.cs-part > summary, .cs-part > .sum { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 2px var(--s-3); align-items: center;
+  padding: var(--s-3) var(--s-4); list-style: none; }
+.cs-part > summary { cursor: pointer; }
+.cs-part > summary::-webkit-details-marker { display: none; }
+.cs-part .n { grid-row: 1 / span 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font: 600 var(--t-sm)/1 var(--f-sans); border: 1.5px solid var(--c-rule-strong); color: var(--c-ink-2); }
+.cs-part .n .i { width: 16px; height: 16px; }
+.cs-part .t { display: block; font: 600 var(--t-md)/1.25 var(--f-sans); color: var(--c-ink); }
+.cs-part .why { display: block; grid-column: 2; font-size: var(--t-sm); color: var(--c-muted); }
+.cs-part > summary > .cs-due { grid-row: 1 / span 2; grid-column: 3; }
+.cs-part .chev { grid-row: 1 / span 2; grid-column: 4; width: 8px; height: 8px; margin: 0 4px 4px; border: solid var(--c-muted); border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg); transition: transform var(--d-2) var(--ease); }
+.cs-part[open] .chev { transform: rotate(-135deg); margin-top: 6px; }
+.cs-part > .body { display: grid; gap: var(--s-3); padding: 0 var(--s-4) var(--s-4) calc(var(--s-4) + 28px + var(--s-3)); }
+.cs-part[data-state="needed"] { border-color: var(--c-ink); }
+.cs-part[data-state="needed"] .n { border-color: var(--c-ink); color: var(--c-ink); }
+.cs-part[data-state="done"] .n { border-color: var(--c-accent); background: var(--c-accent); color: var(--c-sheet); }
+.cs-part[data-state="later"] { background: transparent; border-style: dashed; }
+.cs-part[data-state="later"] .t { color: var(--c-ink-2); }
+@media (max-width: 600px) { .cs-part > .body { padding-left: var(--s-4); } }
+
+/* a choice whose options each say, in one line, what choosing them means (DEC-279) */
+.cs-choice { display: grid; gap: var(--s-2); border: 0; padding: 0; margin: 0; }
+.cs-choice > legend { font: 600 var(--t-sm)/1.3 var(--f-sans); color: var(--c-ink); margin-bottom: var(--s-1); padding: 0; }
+.cs-choice > label { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--s-2); align-items: baseline; padding: var(--s-2) var(--s-3);
+  border: var(--hair); border-radius: var(--r-1); background: var(--c-sheet); cursor: pointer; }
+.cs-choice > label:has(input:checked) { border-color: var(--c-accent); box-shadow: inset 3px 0 0 var(--c-accent); }
+.cs-choice > label > input { grid-row: 1 / span 2; margin: 0; accent-color: var(--c-accent); }
+.cs-choice > label > .t { display: block; font-weight: 600; color: var(--c-ink); }
+.cs-choice > label > .help { display: block; grid-column: 2; font-size: var(--t-sm); color: var(--c-muted); }
 /* The faces (DEC-138): Source Serif 4, Source Sans 3 and Source Code Pro, SIL Open Font License 1.1 (fonts/OFL-*.txt),
    shipped inside the group's copy and never fetched from outside (principle 9.6). Latin, Latin Extended and Vietnamese subsets;
    other scripts fall back to the device's own faces until a group adds a language that needs them. */
@@ -5427,7 +5485,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 @font-face{font-family:"Civicsmith Mono";font-style:normal;font-weight:200 900;font-display:swap;src:url("/app/assets/fonts/source-code-pro-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 ` }),
   "shell.css": Object.freeze({ type: "text/css", body: `/* GENERATED by bio-plane/src/interface-assets/generate.mjs (interface-assets R7) from the product rules of
-   docs/development/ux-substrate/screens/page.src.html's <style> at f498560a37. Never edited by hand. */
+   docs/development/ux-substrate/screens/page.src.html's <style> at 7be06eb4cb. Never edited by hand. */
 .cell { background: var(--c-surface); border: var(--hair); padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .cell h4 { margin: 0; font: 600 var(--t-md)/1.3 var(--f-sans); }
 .cell p, .cell li { font-size: var(--t-sm); color: var(--c-ink-2); }
@@ -5584,6 +5642,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 fieldset.mk-checks { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
 fieldset.mk-checks legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
 fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
+fieldset.mk-checks label > span { flex: 1 1 0; min-width: 0; }
 .mk-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); background: var(--c-surface); }
 .mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
 .mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
@@ -5676,8 +5735,8 @@ button.mk-avatar { border: 0; padding: 0; flex: none; }
   .mk-facts > div { border-right: 0; border-bottom: var(--hair); }
   .mk-facts > div:last-child { border-bottom: 0; }
 }
-.mk-tabs2 { display: flex; gap: 0; border-bottom: var(--hair); }
-.mk-tabs2 span { padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
+.mk-tabs2 { display: flex; flex-wrap: wrap; gap: 0; border-bottom: var(--hair); }
+.mk-tabs2 span { white-space: nowrap; padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
 .mk-tabs2 span[aria-selected] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
 .mk-drop { border: 1.5px dashed var(--c-rule-strong); padding: 18px; text-align: center; color: var(--c-ink-2); display: flex; gap: 8px; align-items: center; justify-content: center; background: var(--c-surface); }
 .mk-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: var(--t-sm); }
@@ -5734,7 +5793,7 @@ button.mk-avatar { border: 0; padding: 0; flex: none; }
 .mk-more h4 { margin: 12px 0 4px; font-size: var(--t-sm); }
 .mk-more p { font-weight: 400; margin: 4px 0; }
 .st { display: none; }
-main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f, main[data-st="g"] .st-g { display: block; }
+main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f, main[data-st="g"] .st-g, main[data-st="h"] .st-h, main[data-st="i"] .st-i { display: block; }
 main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, main[data-st="b"] .mk-frontgrid.st-b, main[data-st="c"] .mk-frontgrid.st-c, main[data-st="d"] .mk-frontgrid.st-d, main[data-st="e"] .mk-frontgrid.st-e { display: grid; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }
@@ -5753,6 +5812,23 @@ main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; }
 main.mk-other .mk-ifother { display: block; }
 main.mk-other .mk-ifheld { display: none; }
+.mk-ifai, .mk-ifsite { display: grid; gap: var(--s-3); }
+.mk-ifnoai { display: none; }
+main.mk-noai .mk-ifnoai { display: grid; gap: var(--s-3); }
+main.mk-noai .mk-ifai { display: none; }
+main.mk-nosite .mk-ifsite { display: none; }
+.mk-ifkey { display: none; }
+main.mk-paykey .mk-ifkey { display: grid; gap: var(--s-3); }
+.mk-setuphead .grp { font-weight: 600; }
+.mk-h + .cs-part, .mk-h + .cs-row, .cs-row + div > .cs-part:first-child, .cs-part + .mk-note, .mk-note + div > .cs-part:first-child, div > .cs-part:last-child { margin-top: var(--s-3); }
+.st > div > .cs-part:last-child { margin-bottom: var(--s-5); }
+.mk-usermenu { position: relative; flex: none; }
+.mk-usermenu > summary { list-style: none; cursor: pointer; }
+.mk-usermenu > summary::-webkit-details-marker { display: none; }
+.mk-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; display: grid; gap: 2px; min-width: 200px; padding: 6px; background: var(--c-sheet); border: var(--hair); border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+.mk-menu > span { padding: 4px 8px; }
+.mk-menu a { padding: 6px 8px; color: var(--c-ink); text-decoration: none; border-radius: 4px; }
+.mk-menu a:hover, .mk-menu a:focus-visible { background: var(--c-accent-tint); }
 @media (max-width: 760px) {
   :root:root .mk-strip > .cs-ref { display:none; }
   :root:root .mk-strip .mk-strip-sum { display:inline-flex; }
@@ -5792,8 +5868,10 @@ main.mk-other .mk-ifheld { display: none; }
   :root:root .mk-lanes { grid-template-columns: 1fr; }
   :root:root .mk-grid2 { grid-template-columns: 1fr; }
   :root:root .mk-frontgrid { grid-template-columns: 1fr; }
-  :root:root .cs-row { grid-template-columns: auto 1fr; }
-  :root:root .cs-row > :nth-child(3) { grid-column: 2; }
+  :root:root .cs-row { grid-template-columns: auto minmax(0, 1fr); }
+  :root:root .cs-row > :nth-child(n+3) { grid-column: 2; }
+  :root:root .mk-dl { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  :root:root .mk-dl dd { margin-bottom: 6px; }
 }
 ` }),
   "icons.svg": Object.freeze({ type: "image/svg+xml", body: `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
@@ -5839,6 +5917,7 @@ main.mk-other .mk-ifheld { display: none; }
 <symbol id="i-finding" viewBox="0 0 16 16"><circle class="s" cx="8" cy="8" r="6"/><path class="s" d="M5.25 8.25l2 2 3.5-4"/></symbol>
 <symbol id="i-case" viewBox="0 0 16 16"><path class="s" d="M3 2.25h8.5l1.5 1.5v10H3z M5.5 6h5 M5.5 8.5h5 M5.5 11h3"/></symbol>
 <symbol id="i-plan" viewBox="0 0 16 16"><path class="s" d="M2.5 3.5h3 M2.5 8h3 M2.5 12.5h3 M8 3.5h5.5 M8 8h5.5 M8 12.5h3.5"/></symbol>
+<symbol id="i-standard" viewBox="0 0 16 16"><path class="s" d="M1.75 11.5h12.5 M3.5 11.5v-5 M6.5 11.5v-3 M9.5 11.5v-5 M12.5 11.5v-3"/></symbol>
 <symbol id="i-timeline" viewBox="0 0 16 16"><path class="s" d="M1.75 8h12.5"/><circle class="f" cx="4" cy="8" r="1.5"/><circle class="f" cx="8.5" cy="8" r="1.5"/><circle class="s" cx="12.25" cy="8" r="1.5"/></symbol>
 <symbol id="i-money" viewBox="0 0 16 16"><circle class="s" cx="8" cy="8" r="6"/><path class="s" d="M10 5.75H7.25a1.25 1.25 0 0 0 0 2.5h1.5a1.25 1.25 0 0 1 0 2.5H6 M8 4.25v1.5 M8 10.75v1.5"/></symbol>
 <symbol id="i-queue" viewBox="0 0 16 16"><path class="s" d="M1.75 9.25l1.5-6.5h9.5l1.5 6.5v4H1.75z M1.75 9.25h3.5l1 1.75h3.5l1-1.75h3.5"/></symbol>
