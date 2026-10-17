@@ -25,6 +25,8 @@ export function itemWords() {
       const m = /^queue\.(.+)\.summary$/.exec(it.word);
       if (m && KEYED.indexOf(m[1]) >= 0) return m[1];
     }
+    // The two project kinds (queue-producers R41, R42) carry no `fills`: their words are filled from the item's subject and basis.
+    if (it.kind === "project-invitation" || it.kind === "project-request") return String(it.kind);
     return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
   };
   const open = function (it) {
@@ -53,14 +55,22 @@ export function itemWords() {
   };
   const words = function (cs, it) {
     const k = keyOf(it);
-    const fills = it.fills && typeof it.fills === "object" ? dated(cs, it.fills) : {};
+    let fills = it.fills && typeof it.fills === "object" ? dated(cs, it.fills) : {};
+    if (k === "project-invitation" || k === "project-request") {
+      const s = it.subject || {};
+      const who = k === "project-request" ? s.requester : it.basis && typeof it.basis.inviter === "string" ? it.basis.inviter : null;
+      const pid = s.id !== undefined && s.id !== null ? String(s.id) : "";
+      fills = { project: { html: cs.ref("project", pid, typeof s.name === "string" && s.name.trim() ? s.name : cs.w("queue.source.untitled", { date: { html: cs.date(String((it.age && it.age.since) || "")) } }), []) } };
+      if (who) fills.who = String(who);
+    }
     if (k === "action-clock-overdue.theirs") {
       return { summary: cs.w("action.noreply.title", { date: fills.date === undefined ? "" : fills.date }), detail: cs.w("queue." + k + ".detail", fills) };
     }
     // R50 (3): an invitation whose inviter is not named reads `.summary.unnamed`; a request carries her own words.
     if (k === "project-invitation" && !fills.who) return { summary: cs.w("queue." + k + ".summary.unnamed", fills), detail: cs.w("queue." + k + ".detail", fills) };
     if (k === "project-request") {
-      const note = typeof it.comment === "string" && it.comment.trim() ? it.comment : typeof fills.comment === "string" && fills.comment.trim() ? fills.comment : "";
+      // Her comment is `quote: {by, text}` (queue-producers R42), apart from summary and detail; null when she added none.
+      const note = it.quote && typeof it.quote === "object" && typeof it.quote.text === "string" && it.quote.text.trim() ? it.quote.text : "";
       return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) + (note ? ' <span class="muted">' + cs.esc(note) + "</span>" : "") };
     }
     if (k) return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) };

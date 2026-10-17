@@ -49,11 +49,14 @@ export const queue = Object.freeze({
       projectkeyset: [["key", "screen.queue.projectkey"]], queuesnooze: [["until", "screen.queue.snooze.until"]],
     };
     let seq = 0;
-    const actOf = function (op, data) {
-      // R42: an owner answers a request to join with Grant or Decline.
+    const actOf = function (op, data, it) {
+      // R42: an owner answers a request to join with Grant or Decline, the answers the item's option carries (queue-producers R42).
       if (op === "projectrequestanswer") {
-        return ["grant", "decline"].map(function (a) {
-          return cs.act(op, { label: "screen.home.request." + a, data: Object.assign({ answer: a }, data) });
+        const opt = (it && Array.isArray(it.options) ? it.options : []).filter(function (o) { return o && (o.id || o.op) === op; })[0];
+        const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
+          : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
+        return answers.map(function (a) {
+          return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
         }).join("");
       }
       const fields = FIELDS[op];
@@ -120,7 +123,7 @@ export const queue = Object.freeze({
         mutecase: near ? String(near.id) : "",
         item: it.id, cls: it.class || "", kind: it.kind || "",
         subject: it.subject && it.subject.id ? String(it.subject.id) : "",
-        who: it.fills && it.fills.who ? String(it.fills.who) : "",
+        who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : ""),
         entry: it.subject && it.subject.entry !== undefined ? String(it.subject.entry) : "",
         day: it.subject && it.subject.day ? String(it.subject.day) : "",
         owner: it.basis && it.basis.owner ? String(it.basis.owner) : "",
@@ -130,7 +133,7 @@ export const queue = Object.freeze({
       };
       // R42: an invitation or a request to join names its project as its subject, not as a case.
       if ((it.kind === "project-invitation" || it.kind === "project-request") && it.subject && it.subject.id) data.project = String(it.subject.id);
-      const drawn = ops.map(function (op) { return actOf(op, data); }).join("");
+      const drawn = ops.map(function (op) { return actOf(op, data, it); }).join("");
       const to = iw.open(it);
       const open = other && to ? '<a class="cs-btn" data-tone="quiet" data-nav href="' + to + '">' + cs.w("screen.queue.open") + "</a>" : "";
       return drawn + open;

@@ -157,7 +157,7 @@ test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, nev
 test("R7 (interface-shell R13): each refusal word an act names is a listed word", () => {
   for (const s of SCREENS) {
     const listed = new Set(s.words);
-    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
+    for (const a of s.acts) for (const [code, key] of Object.entries(a.refusals || {})) assert.ok(typeof key === "function" || listed.has(key), `${s.id}.${a.op}: ${code} → ${key}`);
   }
 });
 

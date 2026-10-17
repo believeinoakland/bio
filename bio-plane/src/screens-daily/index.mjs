@@ -135,7 +135,10 @@ const WORDS_OF = {
     ...["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED", "other"].map((s) => `screen.answers.state.${s}`), "screen.answers.withheld", "screen.answers.withheld.one", "screen.answers.notestablished",
     "screen.answers.legal", "screen.answers.offtitle", "screen.answers.offsub", "screen.answers.rule.value", "screen.answers.rule.basis", "screen.answers.rule.notheld",
     ...["legal_information", "procedural_fact", "computed_fact"].map((l) => `screen.answers.label.${l}`), "screen.answers.refused.off", "screen.answers.refused.notdeployed",
-    "screen.answers.keeping", "screen.answers.kept", "screen.answers.cadence.weekly"],
+    "screen.answers.keeping", "screen.answers.kept", "screen.answers.cadence.weekly",
+    // R52, R53: the ask's progress, its check, and the states.
+    "ai.progress.reading.ask", "ai.progress.composing.answer", "ai.progress.checking", "ai.progress.hold.answer", "ai.progress.means", "ai.progress.checked.all",
+    "ai.progress.checked.all.means", "ai.progress.check.failed", "screen.answers.failed.next", "refusal.ASSISTANT_REMOTE_NOT_READY", "screen.connect.name"],
 };
 
 /** The seven screens, in the registry's order of the rail (Home and its Where else to go, Projects, Queue, Find, Find in

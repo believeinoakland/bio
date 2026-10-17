@@ -96,11 +96,14 @@ export const home = Object.freeze({
       if (d.instead) add(d.instead);
       return ops.map(function (op) {
         const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "",
-          project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.fills && it.fills.who ? String(it.fills.who) : "" };
+          project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.subject && it.subject.requester ? String(it.subject.requester) : (it.fills && it.fills.who ? String(it.fills.who) : "") };
         // R42: an owner answers a request to join with Grant or Decline.
         if (op === "projectrequestanswer") {
-          return ["grant", "decline"].map(function (a) {
-            return cs.act(op, { label: "screen.home.request." + a, data: Object.assign({ answer: a }, data) });
+          const opt = (Array.isArray(it.options) ? it.options : []).filter(function (o) { return o && (o.id || o.op) === op; })[0];
+          const answers = opt && Array.isArray(opt.answers) && opt.answers.length ? opt.answers
+            : [{ answer: "grant", label: "screen.home.request.grant" }, { answer: "decline", label: "screen.home.request.decline" }];
+          return answers.map(function (a) {
+            return cs.act(op, { label: "screen.home.request." + (String(a.answer) === "decline" ? "decline" : "grant"), data: Object.assign({ answer: String(a.answer) }, data) });
           }).join("");
         }
         if (op !== "adoptversion") return cs.act(op, { label: "act." + op + ".label.home", data: data });
@@ -296,10 +299,10 @@ export const home = Object.freeze({
     const ACTION = /^(action|request|milestone|step|plan|filing|escalation|litigation)/;
     const actionMine = forMe.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
     const actionGroup = forGroup.filter(function (it) { return ACTION.test(String(it.kind || "")); }).length;
-    const investigation = area("investigation", "/app/projects",
+    const investigation = area("investigation", "/app/dash-project",
       forMe.filter(function (it) { return !ACTION.test(String(it.kind || "")) && it.kind !== "update-ready"; }).length + invited.length,
       [rd(plist.length, "screen.home.rd.project", "screen.home.rd.projects"), rd(counted, "screen.home.rd.question", "screen.home.rd.questions")],
-      latest ? [cs.w("screen.home.line.lastchange", { project: String(latest.name || latest.id), date: cs.date(String(latest.lastChange)) })] : [],
+      latest ? [cs.w("screen.home.line.lastchange", { project: { html: cs.ref("project", String(latest.id), String(latest.name || latest.id), []) }, date: { html: cs.date(String(latest.lastChange)) } })] : [],
       failed(data.projects) ? [data.projects] : []);
     const action = area("action", "/app/dash-action", actionMine,
       [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")], [], []);
