@@ -1467,6 +1467,37 @@ w303('findin.cell.uncalculated', "{cell}: a formula the file never calculated, s
 w303('findin.match.nameinpassage', 'Named in this passage', False, 'retrieval R84: correspondence name_in_passage')
 w303('findin.match.sheet', 'Sheet {sheet}, row {row}', False, "retrieval R83: a sheet match's place")
 # --- end DEC-303
+# --- DEC-304 (BOB's B270, K3635, T50's L7-L10 fold; B271, K3637, L6): keys owed by the folds
+def w304(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-304' + (': ' + note if note else '')))
+NWR = ' Nothing was written.'
+w304('refusal.STAKE_MALFORMED.action', "This action's stake says, in your own words, only what this one action adds to your team's and the project's stakes: some text, at most 1,000 characters, on one line, or nothing to clear it." + NWR, False, 'action-records R17')
+w304('refusal.DIVIDED_CANNOT_RESTRUCTURE', "This question was divided, and its smaller questions carry on from this source, so the newer version can't be adopted here. Adopt it in each smaller question that relies on it." + NWR, False, 'reevaluation R38')
+w304('screen.review-outside.until.zone', 'It is not public: only people with this link can read it, until {date} at {time} ({zone}).', False, "review R35: the grant's end in the team's own time zone; replaces screen.review-outside.until's UTC")
+w304('caseimport.stake.unreadable', "The team that sent this case stated a stake in this matter, in a form Civicsmith can't read, so it isn't shown. Ask that team for its statement.", False, 'case-import R25')
+w304('refusal.COPYRIGHTED_TEXT_CARRIED', "The case carries more of a copyrighted work's text than its findings rely on. Quote only the passages the findings rely on and cite the rest, then check again.", False, 'case-checker R26, a gate')
+w304('refusal.COPYRIGHTED_PASSAGE_UNRELIED', "The case quotes a passage of a copyrighted work that no finding relies on. Remove the quotation or cite it without quoting, then check again.", False, 'case-checker R26, a gate')
+w304('refusal.MALFORMED', "Something in this isn't in the form Civicsmith expects, so it couldn't be checked." + NWR, False, 'case-checker R26, the general gate')
+w304('refusal.BENCHMARK_CALLED_NONCONFORMING.finding', "A benchmark does not bind this body, so this finding cannot call the act a violation or nonconforming. Say how it compares: below, slower than, or above. Then check again.", False, "case-checker R26: a finding's own sentence")
+REWRITE.update({  # DEC-304 (7): one sentence for sources' paid results and following's watch and second look
+  'refusal.MACHINE_CANNOT_MARK': "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written.",
+})
+w304('refusal.MARK_NO_ITEM', 'Say which item to mark.' + NWR, False, 'following R32')
+w304('refusal.MARK_NO_SUCH_ITEM', "That item isn't in your team's records, or isn't one you can see." + NWR, False, 'following R32')
+w304('refusal.SECOND_LOOK_NO_NOTE', 'Say in a note what the second look should check.' + NWR, False, 'following R33')
+w304('refusal.SECOND_LOOK_NOT_OPEN', "That second look is already closed, so it can't be changed." + NWR, False, 'following R33')
+w304('refusal.MACHINE_CANNOT_OPEN_FROM_ACTION', "Only a member opens a question from an action, and this came from the assistant or another automated credential." + NWR, True, 'action-records R19')
+w304('refusal.ACTION_INQUIRY_NO_QUESTION', 'Write the question to open.' + NWR, False, 'action-records R19')
+w304('refusal.ACTION_NO_PROJECT', "This action belongs to no project, so a question can't be opened from it." + NWR, False, 'action-records R19')
+w304('queue.watched-changed.summary', '{what} changed', False, 'notice-producers (T50-82): a watched item changed (DEC-238)')
+w304('queue.watched-changed.detail', "Something you watch changed on {date}. Open it to see what changed; nothing has been decided.", False, 'DEC-238')
+w304('ai.run.ending.nothing-written', 'it finished its work but wrote nothing', False, 'run-rules R34; after "The run ended: "')
+w304('refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE', "Nothing is recorded as missing at this level: no document there was in scope, so none was looked at." + NWR, False, 'run-rules R35')
+w304('refusal.VERSION_NAME_MALFORMED', "A reading's name is a few plain words on one line. Rename it and try again." + NWR, False, 'basis-versions R54')
+w304('refusal.BAD_READING', "Your reading must say something, in at most 500 characters, and it takes the place of a named reading rather than going beside one." + NWR, False, 'basis-versions R51')
+w304('ai.progress.reading.ask', 'Reading {document}', False, "agent-worker R113: the assistant's reads while answering, with no total (DEC-298)")
+w304('ai.reading.levels.disagree', "Two levels of the assistant's reading disagree about {record}: {first} and {second} give different results. Check the record yourself before you rely on either.", False, 'agent-worker R116: on the question page and in the run\'s result')
+# --- end DEC-304
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
