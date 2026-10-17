@@ -30,3 +30,12 @@
 **Tests and checks.** capture: 179 tests, 179 pass (`t50.test.mjs` 14, `t50-words.test.mjs` 8; before: 156). Process repository, from the product: `format` 0 failures; `architecture capture` 0 failures (the run over every module: one failure, doorbell's, above); `coverage capture` 48 of 48 live ids named, 0 failures (the run over every module: 23 failures, none capture's: other modules' ids marked not yet met); `ownership capture origin/tranche/T50` 15 files changed by capture, 0 failures; `node checks/run.mjs` ran format, architecture, coverage and channels (channels 0 failures). The tests of capture's users: the same failures as at the base, test for test (13 of 1,288 in the first eleven modules, 6 of 1,006 in the other six).
 
 Size (session_01Fvr26rxm22dLhkoGV1L8eD): test runs 20, module lines 3518
+
+## J1 · REPORT
+
+REPORT J1: T50-8 capture, for the design lane and for the requirement text (details in build/jobs/T50/capture.md, 'Found in other modules / for BOB').
+1. Sentences no key holds, still English in capture/index.mjs: the upload document's provenance_chain asserts/evidence (the asserts sentence says 'your group's Civicsmith'), the posthoc reuse verdict's basis, the render allowance's defer why, the chrome classifications' basis. None is in words-reads.json's reads or unkeyed list for capture.
+2. R77 quotes the withheld sentence without its full stop; words.json's screen.held.withheld has one, and WITHHELD_QUESTION now carries it. R77's text should read the key.
+3. acquisition.string.attempt_reported is in capture's reads but unreachable (attest always reports an attempt); held and read by say(), no fixture draws it.
+4. New store routes capturegrade and opencaptures are in captureOps; no ops-map, op-declarations or affordances test went red for them (the users' tests fail test for test as at the base). Their grades, specs and routes are L11's.
+5. doorbell/held.test.mjs imports record-grammar without declaring it in uses (the only architecture failure over every module; doorbell's).
