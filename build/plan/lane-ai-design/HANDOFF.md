@@ -14,3 +14,21 @@ Record: `NOTES.md` §Q1 (sources, tables with requirement ids). Nothing decided;
 **Needs from BOB, none urgent:** (a) D14's AI bar is not stated in `rulings-active.md`; I will read it in `build/rulings.md` before Q3 unless told otherwise. (b) I read `build/terms/anthropic.md` and `words.json` next only for method (how terms are recorded), not for Anthropic content.
 
 **Next:** Q2, candidate AIs, from providers' own latest pages, quoted with page and date; workers sonnet/medium. Open points are recorded as open (K3540).
+
+## A2 · 2026-10-17 · Question 2 done: candidate AIs
+Record: `NOTES.md` §Q2 (per provider: page, quote as relayed, date read; OPEN items listed), `OPTIONS.md` §Q2 (options and recommendation). No product code touched; no secret read or written; no bot protection worked around (openai.com policy and pricing pages, x.ai terms and privacy, returned 403 and stay OPEN).
+
+**Surveyed:** OpenAI, Google Gemini, Mistral, Cohere, Cloudflare Workers AI and AI Gateway, Together, Fireworks, Groq, OpenRouter, xAI, DeepSeek. Anthropic excluded (K3717).
+
+**Findings for BOB.**
+1. Every provider's account is the team's own. Four terms bar resale or transfer of keys (Mistral, Fireworks, Together, OpenRouter) and others are silent on an app *holding* a customer's key; no page confirms it is allowed. This is the main legal OPEN. Proposed handling: record as open (K3540), restrict nothing, and have the design never rely on a Civicsmith-held shared key.
+2. Cloudflare Workers AI is the one route needing no key from the team (the Worker's binding uses the team's own account); its models, prices, rate limits and no-training statement are confirmed from Cloudflare's pages, but per-model tool/JSON flags, response usage fields and Workers AI terms are OPEN. A multi-turn tool loop on premium models is limited to 20 requests per minute.
+3. Only OpenRouter documents an app-facing OAuth flow giving a member a user-owned key.
+4. Facts that bear on the boundary (Q3): usage fields differ across providers; Cohere and Groq (strict) cannot combine a schema with tools in one request; effort/caching exist only on some.
+5. Two flags that are Bob's (policy): DeepSeek stores and processes data in the PRC under PRC law by its own text; Gemini's free tier uses data for training and human review.
+
+**Question for Bob (via BOB), with recommendation.** Which ways may a team connect an AI: pasted key, sign-in flow, built in on the team's own Cloudflare? Recommendation: pasted key plus built-in Cloudflare first, sign-in flow where a provider documents one; no shared Civicsmith key. Options and tradeoffs: `OPTIONS.md` §Q2. Not urgent: Q3 proceeds without waiting, assuming "pasted key and built-in" as the working case.
+
+**Needs a person:** the blocked terms pages (OpenAI, xAI) and counsel's read of the "app holds the customer's key" question; BOB to say whether to put them to Bob.
+
+**Next:** Q3, the boundary (one neutral interface, one adapter per AI, cascade); first read K1364 and its named rulings, and the Capability Ladders "Labelled drafts" row, as BOB directed.
