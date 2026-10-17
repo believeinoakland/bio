@@ -36,3 +36,7 @@ COMPLETE (T50-24 op-declarations; details in my record, "Completion"):
 
 ## Completion · B2 CHANGE (wizard-scripts merged)
 Merged `tranche/T50`. Added a test in `t50.test.mjs` calling wizard-scripts' `registryActGaps` over `SCREEN_REGISTRY` with the declared ops (the installer's four routes excluded by `INSTALLER_ROUTES`): no gaps; a withdrawn op is found. Module tests: 217, pass 213, fail 4 (the same four, waiting on affordances' `ACT_HELP` texts). Size (session_013AaS71xBPWBv4QrWrZjCWX): test runs 26, module lines 3,225
+
+## J2 · COMPLETE
+
+COMPLETE (B2): merged tranche/T50; t50.test.mjs now calls registryActGaps over SCREEN_REGISTRY (no gaps, installer routes excluded). Module tests 217, 213 pass, 4 red, all waiting on affordances T50-19's ACT_HELP texts. Unchanged otherwise; see my record.
