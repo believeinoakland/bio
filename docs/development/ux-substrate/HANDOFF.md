@@ -17,6 +17,7 @@
   1. BOB's HANDOFFs and QUESTIONs, first whenever they come (keys for T50's folds; Connect's sign-in once the remote proof passes).
   2. Bob's answers and page comments as they come; publish v55 when the page can be published (see Working page).
   3. Connect's check drawn (screens-settings R41: the button, its steps with times, a failure by key, `refusal.ASSISTANT_REMOTE_NOT_READY` and `refusal.SIGNIN_EXPIRED`) with BOB's sign-in HANDOFF (K3607).
+  4. The visual-language page (QuvX7DzX7XbxS6SQG4MtT1) is behind its build: live is an older build (British spellings, no `i-standard` icon); a publish asks you to Read every line of the live copy (1,095 lines, 118 KB) first; nothing on it is newer than the build, so publish `visual-language.html` once read, when context allows.
   4. The standing tail: the words' consistency; T50's requirement files against the screens; `build/plan/install-situations.md` when it changes; BOB's channel at each check-in.
 
 ## 1. Who you are
