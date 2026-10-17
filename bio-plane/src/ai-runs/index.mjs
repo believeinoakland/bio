@@ -19,6 +19,7 @@
  * (`aiCredentialLook`, R18). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { biasOf } from "../bias/index.mjs";
@@ -50,6 +51,11 @@ export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 const PROVIDER_LIMIT = /enforced_spend_limit_reached/;
 /** R85: the most subjects a search half names. */
 const SUBJECTS_MAX = 50;
+/** R87 (T50; agent-worker R83, R87): the headers of a member's dispatch to `agent-worker`'s `/run`, each sent only when the
+ *  door handed a non-empty printable string of at most 200 characters (the shape `signin-door` R3 mints, which a module of
+ *  this layer cannot import); never in a body or an address. */
+const TRACE_HEADER = "x-civicsmith-trace", MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+const HEADER_VALUE = /^[\x21-\x7e]{1,200}$/;
 
 /** A member's id from any of the forms a stamp takes (`member:<id>`, `member:<id>/<tokenId>`, `<id>`); null for a
  *  machine identity, an absent value, or a deploy class. */
@@ -570,12 +576,11 @@ export class AiRuns {
   #aiRunTerminate({ run, offered = null, condition = null, at, expired = false, derive = true }) {
     const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
     if (!row) return { run, found: false,
-      note: "no such run: it either never existed or was purged" };
+      note: word("ai-runs.note.run_either_existed") };
     if (row.status !== "running")
       return { run, found: true, terminated: false, status: row.status,
                bound: row.stopped_bound, condition: row.stopped_condition,
-               note: "this run already ended; a second ending would overwrite the first, "
-                   + "and the log is append-only for the same reason state history is" };
+               note: word("ai-runs.note.run_already_ended") };
 
     const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
     const bound = derive ? finishedBound(bounds, { expired, offered })
@@ -666,7 +671,7 @@ export class AiRuns {
    *  steps said, never throws. */
   #endStep(row, bound) {
     const st = this.#steps();
-    if (!st || typeof st.stepEnd !== "function") return { told: false, reason: "steps is not reachable" };
+    if (!st || typeof st.stepEnd !== "function") return { told: false, reason: word("ai-runs.reason.steps_reachable") };
     const by = AiRuns.systemOf(row.run);
     try {
       const products = this.#rows(
@@ -686,7 +691,7 @@ export class AiRuns {
         : { step: row.step, end: "set_aside", reason: RUN_BOUNDS[bound] || RUN_ENDINGS[bound] || bound, by });
       return { told: !!(said && said.ok === true), end: completed ? "ended" : "set_aside", products: tied,
                ...(said && said.ok !== true ? { refusal: said.code || said.reason || null } : {}) };
-    } catch { return { told: false, reason: "steps did not answer" }; }
+    } catch { return { told: false, reason: word("ai-runs.reason.steps_did_answer") }; }
   }
 
   /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
@@ -843,6 +848,25 @@ export class AiRuns {
     return normalizeType(b.object_type);
   }
 
+  /** R89 (T50; N1186): THE PROJECT A RUN IS OPENED IN, `{project, refusal}`. A run over a project is in that project,
+   *  whatever `project` carries. A run over a question is in the project it names, or in none when it names none; the
+   *  project must be one that draws on the question (`#runContextProjects`, the one live-cites predicate) and that the
+   *  opening member has joined (membership's `participation`, as R6 reads it), the member being the one whose act it is
+   *  (R52's `#accountMember`). The refusal is `run-rules` R6's `projectGate`, relayed over that project, so a project that
+   *  is absent, hidden, not drawn on or not joined is refused alike; with no member behind the caller it is refused too
+   *  (a project is a member's to name). Reads only; writes nothing. */
+  #runProjectGate({ actor, principalPlane, principalClaude, contextType, contextId, project }) {
+    if (String(contextType) === "project") return { project: String(contextId), refusal: null };
+    const named = typeof project === "string" ? project.trim() : project == null ? "" : String(project).trim();
+    if (!named) return { project: null, refusal: null };
+    const member = AiRuns.#accountMember({ actor, principalPlane, principalClaude });
+    const drawn = this.#runContextProjects(contextType, contextId).includes(named);
+    const part = member && drawn ? this.#membership().participation(named, member) : null;
+    const said = projectGate({ actor: member || "no-member", contextType: "project", contextId: named, projects: [named],
+                               projectsJoined: part && part.state === "joined" ? [named] : [] });
+    return said.permitted ? { project: named, refusal: null } : { project: null, refusal: said };
+  }
+
   /** The gate, as the three run verbs call it. Returns `projectGate`'s verdict
    *  object — `refusal` null or built, and a `ground` that is stated either way.
    *
@@ -939,6 +963,9 @@ export class AiRuns {
               /* R77 (T45): the recorded response a re-examination run (`origin: "reexamination"`, mode `plan`) re-examines
                  its plan after, an opaque id stored verbatim; read only on such a run. */
               response = null,
+              /* R89 (T50; N1186): the project a run over a question is opened in, explicit at the open; a run over a project
+                 is in that project whatever is sent. */
+              project = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
                  `control-plane` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
@@ -981,8 +1008,7 @@ export class AiRuns {
        refusal written elsewhere in this function is judged by ITS OWN row and not by these three. */
     if (!run || !contextType || !contextId)
       return refusal("AI_RUN_NO_CONTEXT", {
-               note: "a run needs an id and the context it runs in (an inquiry or a project): "
-                   + "a run nothing is in the context of has nowhere to be visible" });
+               note: word("ai-runs.note.run_needs_id") });
     /* END DEC-49 REGION is-airun-open-context */
     /* PL-18 / DEC-63 — THE GATE, AND IT RUNS BEFORE THE RUN'S OWN SHAPE IS
        JUDGED. Placed here, immediately after the context is known and before
@@ -1023,9 +1049,7 @@ export class AiRuns {
       return { run, started: false,
                code: kind.code, check: kind.check,
                translation: kind.translation, detail: kind.detail,
-               note: "a run's context kind is checked against the thing it names, and a thing the caller "
-                   + "cannot see answers as one that does not exist (Membership Architecture v2 §7, BOB #16, "
-                   + "2026-09-19): the project gate turns on the kind, so the kind cannot be the caller's word" };
+               note: word("ai-runs.note.run_context_kind") };
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
       return { run, started: false,
@@ -1036,6 +1060,14 @@ export class AiRuns {
                    + "amended 2026-09-18), and the contribute capability "
                    + "is only the floor beneath that. These are two different facts about an "
                    + "account and they are refused separately so each names its own remedy" };
+    /* R89 (T50; N1186; credentials R79): THE PROJECT THE RUN IS OPENED IN, judged here with the gate it belongs to and
+       recorded at the open. A run over a project is in that project, whatever `project` carries; a run over a question names
+       one explicitly: a project the opening member has joined that draws on the question (`run-rules` R6's refusal,
+       relayed, so a project that is absent, hidden, not drawn on or not joined answers alike). */
+    const inProject = this.#runProjectGate({ actor, principalPlane, principalClaude, contextType, contextId, project });
+    if (inProject.refusal)
+      return { run, started: false, code: inProject.refusal.code, check: inProject.refusal.check,
+               translation: inProject.refusal.translation, detail: inProject.refusal.detail, note: word("consequences.nothing") };
     /* REC-64 — UI-38's §14a RIDER, DISCHARGED HERE AND NOT AT A SURFACE.
        §14a promises the running-session surface SAYS SO when the capability is
        unavailable, and IS-BUILD-PLAN's FL-6 row states the failure it is
@@ -1093,9 +1125,8 @@ export class AiRuns {
     if (!deployed.includes(runMode))
       return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
-               note: `the mode '${String(mode).slice(0, 60)}' is not deployed in your group's Civicsmith: the modes deploy in one `
-                   + `order, each only after the one before it is verified live, and today ${deployed.join(", ")} `
-                   + `${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written` });
+               note: word("ai-runs.note.mode_deployed_group", { mode: String(mode).slice(0, 60), deployed: deployed.join(", "),
+                                                                are: deployed.length === 1 ? "is" : "are" }) });
     /* END DEC-49 REGION is-airun-open-mode */
     /* R78, R32: the label a run admitted on the test-instance exception carries, fixed now and never derived later;
        null for a run the bar admitted. */
@@ -1103,7 +1134,7 @@ export class AiRuns {
     /* R46 (K660; BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN, asked after the mode is known deployed and before
        anything else about the run's shape: its plan named (and a plan named by no other mode), over a project, by a
        member, with no search allowance, in that order. Each code is written once, at its refusal (`refusal` above). */
-    const planRefusal = (code, detail, extra = {}) => refusal(code, { detail, ...extra, note: "Nothing was written" });
+    const planRefusal = (code, detail, extra = {}) => refusal(code, { detail, ...extra, note: word("consequences.nothing") });
     const planNamed = typeof plan === "string" && plan.trim() !== "";
     const who = actor == null ? "" : String(actor).trim();
     const search = (Array.isArray(bounds) ? bounds : []).find((b) => b && typeof b === "object"
@@ -1135,7 +1166,7 @@ export class AiRuns {
                                        investigateDeployable: this.partAdmitted("investigate").admitted });
     if (!originSaid || originSaid.ok !== true)
       return { run, started: false, code: originSaid.code, check: originSaid.check, translation: originSaid.translation,
-               detail: originSaid.detail, note: "Nothing was written" };
+               detail: originSaid.detail, note: word("consequences.nothing") };
     const reexam = runMode === "plan" && runOrigin === "reexamination";
     const responseId = reexam && typeof response === "string" && response.trim() !== "" ? response.trim() : null;
     /* DEC-49 REGION is-airun-open-reexam */
@@ -1161,11 +1192,11 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-step */
     if (runOrigin === "explore" && (!ownStep || stepId))
       return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the "
-        + "step's place and work, and no step", note: "Nothing was written" });
+        + "step's place and work, and no step", note: word("consequences.nothing") });
     if (stepId && (ownStep || !this.#stepSeen(stepId, viewer)))
       return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? "a run works one step: an existing one, or a step of its own "
         + "by its place and work, not both" : `no step '${stepId.slice(0, 60)}' is open to this caller`, step: stepId.slice(0, 60),
-        note: "Nothing was written" });
+        note: word("consequences.nothing") });
     /* END DEC-49 REGION is-airun-open-step */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
        `ai_run_bounds`, and `Number(b.consumed) || 0` let a run OPEN already refunded (`consumed: -10`) or seed a
@@ -1221,7 +1252,7 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-already — C-33.31. The run id is already on record.
        Asked AFTER the lens is computed and immediately before the insert, with no await between them. */
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
-      return refusal("AI_RUN_ALREADY_OPEN", { note: "a run with this id already exists" });
+      return refusal("AI_RUN_ALREADY_OPEN", { note: word("ai-runs.note.run_id_already") });
     /* END DEC-49 REGION is-airun-open-already */
     /* R77: asked again here, with no await between it and the insert, so two acts recording the same response cannot both
        open a re-examination run while the lens and the account above were awaited. The refusal is the one above's. */
@@ -1246,21 +1277,16 @@ export class AiRuns {
     if (reRuns) {
       if (reRuns === String(run))
         return refusal("AI_RUN_RERUN_SELF", {
-                 note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's "
-                     + "work this one repeats, and a self-reference would let one run discharge its own "
-                     + "bias debt" });
+                 note: word("ai-runs.note.run_re_run") });
       const target = this.#one(`SELECT context_type, context_id FROM ai_runs WHERE run = ?`, reRuns);
       /* UNSEEN ANSWERS AS ABSENT, byte for byte — `aiRunClose`'s own posture and REC-25/REC-30's rule.
          A caller must not be able to establish that a run exists by offering to re-run it. */
       if (!target || !this.#aiRunInSight(reRuns, viewer))
         return refusal("AI_RUN_RERUN_UNKNOWN", {
-                 note: "no such run: it either never existed, was purged, or is not one this caller can "
-                     + "open" });
+                 note: word("ai-runs.note.run_either_existed_purged") });
       if (target.context_type !== String(contextType) || target.context_id !== String(contextId))
         return refusal("AI_RUN_RERUN_OTHER_CONTEXT", {
-                 note: "a re-run runs the same question or project again. The lens a bias debt is owed "
-                     + "against is the one in force for the INDEBTED run's context, so a re-run somewhere "
-                     + "else would be measured against a different lens entirely" });
+                 note: word("ai-runs.note.re_run_runs") });
     }
 
     /* R52 (K1502, K1503, K1755): THE ACCOUNT THE RUN CARRIES, the one `ai-accounts.accountFor` answered above for the act
@@ -1282,7 +1308,7 @@ export class AiRuns {
     if (overLimit) return { run, started: false, ...AiRuns.#shed(overLimit) };
     /* R73, R74: a system step of its own needs steps, asked before anything is written. */
     if (ownStep && !this.#steps())
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: "Nothing was written" });
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: word("consequences.nothing") });
 
     /* R47 (K660): THE CHECK A LATER MODULE REGISTERED FOR THIS MODE, applied LAST, synchronously, just before the
        write, and its refusal passed on unchanged. A planning run with no check registered is refused (fail closed); so
@@ -1302,7 +1328,7 @@ export class AiRuns {
           : refusal("AI_RUN_MODE_UNCHECKED", {
               detail: held ? `the check ${held.module} registered for mode '${runMode}' gave no answer`
                            : `nothing is registered to check a run in mode '${runMode}'`,
-              note: "Nothing was written" });
+              note: word("consequences.nothing") });
     }
     /* END DEC-49 REGION is-airun-open-check */
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : this.#leaseMs();
@@ -1313,8 +1339,8 @@ export class AiRuns {
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of, plan, step, origin, response, untested)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           rerun_of, plan, step, origin, response, untested, project)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         run, label, runMode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
@@ -1335,7 +1361,9 @@ export class AiRuns {
         /* R73: the step and the origin, judged above; R77: a re-examination's response, verbatim (trimmed, as judged) */
         stepId, runOrigin, responseId,
         /* R78: the exception's label, as admitted above */
-        untested ? JSON.stringify(untested) : null);
+        untested ? JSON.stringify(untested) : null,
+        /* R89: the project the run is opened in, judged above; recorded here and never changed */
+        inProject.project);
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
         this.sql.exec(
@@ -1360,7 +1388,7 @@ export class AiRuns {
       const said = systemStep && typeof systemStep === "object" ? systemStep : {};
       return { run, started: false, code: said.code || said.reason || "STEP_REFUSED", check: said.check ?? null,
                translation: said.translation ?? null, detail: said.detail ?? null, ...(said.step ? { step: said.step } : {}),
-               note: "the run's own step was refused, so the run was not opened. Nothing was written" };
+               note: word("ai-runs.note.run_step_refused") };
     }
     /* R43: the post-write notice, after the run's transaction has committed, to every listener once in the modules'
        order; one that throws or rejects changes neither the run nor this answer. */
@@ -1387,6 +1415,8 @@ export class AiRuns {
              ...(responseId ? { response: responseId } : {}),
              /* R78: the label, null for a run the bar admitted */
              untested,
+             /* R89: the project the run was opened in; null for a run in none */
+             project: inProject.project,
              ...AiRuns.#aiRunGateStated(gate) };
   }
 
@@ -1506,8 +1536,8 @@ export class AiRuns {
   tick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
               /* R84 (R085-7; agent-worker R91): how a segment ended, `{by, done, refusals, error?}`. */
               segment_end = null,
-              /* R72 (N588): one entry per conversation that reached the provider since the last tick,
-                 `{mode, model, usage, calls}`. */
+              /* R72 (N588), R88: one entry per conversation that reached the provider since the last tick,
+                 `{mode, model, effort, usage, calls}`. */
               usage = null,
               actor = null, viewer = null,
               /* REC-152: the caller's PRINCIPAL, stamped server-side by `control-plane` in the form the open
@@ -1517,7 +1547,7 @@ export class AiRuns {
     const now = AiRuns.#aiIso(nowMs);
     const row = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
     if (!row) return { run: run || null, found: false,
-      note: "no such run: it either never existed or was purged" };
+      note: word("ai-runs.note.run_either_existed") };
     /* REC-152 (Membership v2 §7, "WHO MAY TICK AND CLOSE A RUN", BOB #16) — SIGHT FIRST, THEN POSITION.
        A caller who cannot see the run's context is answered EXACTLY as for a run that does not exist —
        the answer two lines up, byte for byte — because a refusal would tell them the run exists (§7.9).
@@ -1526,13 +1556,13 @@ export class AiRuns {
        did not take them. Sight is `aiRunRead`'s own question (`#aiRunInSight`), so a run `op=airun`
        hides is a run this door hides. */
     if (!this.#aiRunInSight(run, viewer)) return { run: run || null, found: false,
-      note: "no such run: it either never existed or was purged" };
+      note: word("ai-runs.note.run_either_existed") };
     const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
     if (notPrincipal)
       return { run, ticked: false, found: true, status: row.status,
                code: notPrincipal.code, check: notPrincipal.check,
                translation: notPrincipal.translation, detail: notPrincipal.detail,
-               note: "a run is driven by its principal alone. Nothing was appended and no budget was spent" };
+               note: word("ai-runs.note.run_driven_principal") };
     /* PL-18 / DEC-63 — THE SAME GATE, AFTER THE RUN IS FOUND AND BEFORE
        ANYTHING IS WRITTEN. Ordered this way deliberately: an unknown run is
        answered as unknown to everybody, so the gate cannot be used to learn
@@ -1565,7 +1595,7 @@ export class AiRuns {
     if (row.status !== "running")
       return { run, found: true, ticked: false, status: row.status,
                bound: row.stopped_bound,
-               note: "this run has ended; its log is closed and a later tick does not reopen it" };
+               note: word("ai-runs.note.run_ended_log") };
     /* REC-169 (§14b.6; §11 item 5 rule 2) — THE FIGURES ARE JUDGED WHOLE, BEFORE ANYTHING IS WRITTEN. The loop below
        used to write `Number(v) || 0` for every bound named, so the run's own principal could send `surfaces: -1`
        after its last question and open another — a REFUND of a bound its member set. One bad figure refuses the
@@ -1580,8 +1610,7 @@ export class AiRuns {
       return { run, ticked: false, found: true, status: row.status,
                code: badConsume.code, check: badConsume.check,
                translation: badConsume.translation, detail: badConsume.detail, bound: badConsume.bound,
-               note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. "
-                   + "Nothing was appended and no budget was spent" };
+               note: word("ai-runs.note.run_budget_moves") };
     /* R45 (N293) — THE STATE IS BOUNDED, judged whole after the figures and before anything is written: a state over
        the ceiling refuses the whole tick (no entry, no figure, no lease, no tick), and an absent or null one is not
        measured and the held state stands (R12). A RELAY of `run-rules checkRunState`, as the figures' refusal is. */
@@ -1591,8 +1620,7 @@ export class AiRuns {
                code: badState.code, check: badState.check,
                translation: badState.translation, detail: badState.detail,
                bytes: badState.bytes, limit: badState.limit,
-               note: "a run's state is its resumable work list, and it is bounded. "
-                   + "Nothing was appended and no budget was spent" };
+               note: word("ai-runs.note.run_state_resumable") };
     /* R72 — THE CONVERSATIONS' FIGURES: a list, one entry per conversation that reached the provider. Each entry's shape
        is judged by `ai-use.countUsage` (its R1: `AI_RUN_CONSUME_INVALID`), the one judge, inside the tick's own
        transaction: a refused entry rolls the whole tick back, so nothing of it is written. */
@@ -1601,7 +1629,7 @@ export class AiRuns {
       return { run, ticked: false, found: true, status: row.status,
                ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", "`usage` is a list with one entry per conversation that "
                  + "reached the model since the last tick, each {mode, model, usage, calls}.")),
-               note: "Nothing was appended and no budget was spent" };
+               note: word("ai-runs.note.appended_budget_spent") };
     /* R52: the calls are counted to the account the run recorded as paying (`principal_claude`) and the member whose act
        the run is (`principal_claude_ref`); a run that names no member (one opened before T33-50) cannot have its calls
        counted, and a tick reporting calls for it is refused by name. */
@@ -1616,7 +1644,7 @@ export class AiRuns {
       const counted = calls.length ? this.#countTick(row, payer, calls, nowMs) : 0;
       if (counted && typeof counted === "object")
         return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(counted),
-                 note: "Nothing was appended and no budget was spent" };
+                 note: word("ai-runs.note.appended_budget_spent") };
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(overLimit), counted };
     }
 
@@ -1664,8 +1692,7 @@ export class AiRuns {
     }); } catch (e) {
       if (e !== USAGE_REFUSED) throw e;
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(usageRefusal),
-               note: "each conversation's figures and calls are as the model service states them. Nothing was appended and "
-                   + "no budget was spent" };
+               note: word("ai-runs.note.conversation_figures_calls") };
     }
 
     /* The exhaustion check reads the rows back rather than trusting the deltas
@@ -1780,14 +1807,13 @@ export class AiRuns {
          REAPER does not come through here — it calls `#aiRunTerminate` directly — so a run nobody may
          close by hand still ends on its lease and bounds, and no member is asked. */
       if (!this.#aiRunInSight(run, viewer)) return { run, found: false,
-        note: "no such run: it either never existed or was purged" };
+        note: word("ai-runs.note.run_either_existed") };
       const notPrincipal = runPrincipalGate({ caller, principal: row.principal_plane });
       if (notPrincipal)
         return { run, terminated: false, found: true, ok: false,
                  code: notPrincipal.code, check: notPrincipal.check,
                  translation: notPrincipal.translation, detail: notPrincipal.detail,
-                 note: "a run is ended by its principal, or by its own lease and bounds. The run is untouched "
-                     + "and is still running" };
+                 note: word("ai-runs.note.run_ended_principal") };
       const gate = this.#aiRunProjectGate({ actor, contextType: row.context_type, contextId: row.context_id, viewer });
       if (!gate.permitted)
         /* THE SHAPE IS `#aiRunTerminate`'S OWN — `found` / `terminated`, with
@@ -2174,8 +2200,7 @@ export class AiRuns {
                    + "account that serves that member's act (K1503, K1755). It waits." };
     if (resumer && resumer.ready && principal === resumer.stamp)
       return { dispatch: true, withheld: null,
-               says: `Resumption: handed to agent-worker under the organisation credential '${resumer.tokenId}' of `
-                   + `your group's Civicsmith, which opened this run.` };
+               says: word("ai-runs.says.resumption_handed_agent", { token_id: resumer.tokenId }) };
     const member = principal.startsWith("member:");
     const withheld = member ? "MEMBER_PRINCIPAL_RUN"
       : (resumer && !resumer.ready) ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
@@ -2184,10 +2209,9 @@ export class AiRuns {
         + "opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). "
         + "It waits for its own principal"
       : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN"
-        ? "another principal opened it, and the organisation credential of your group's Civicsmith resumes only the runs "
-          + "it opened"
-        : `your group's Civicsmith cannot resume anything here (${withheld})`;
-    return { dispatch: false, withheld, says: `Resumption: NOT dispatched — ${why}.` };
+        ? word("ai-runs.text.principal_opened_organization")
+        : word("ai-runs.text.group_civicsmith_resume", { withheld });
+    return { dispatch: false, withheld, says: word("ai-runs.says.resumption_dispatched", { why }) };
   }
 
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
@@ -2232,7 +2256,7 @@ export class AiRuns {
     if (body) try {
       const res = await Promise.race([
         this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
-          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+          method: "POST", headers: { "content-type": "application/json", ...(d.headers || {}) }, body: JSON.stringify(body) }),
         new Promise((_, no) => { timer = setTimeout(() => no(new Error("dispatch-wait-elapsed")), this.#aiRunDispatchWaitMs()); }),
       ]);
       const out = await res.json().catch(() => null);
@@ -2255,7 +2279,7 @@ export class AiRuns {
       /* R82: a worker that has not accepted within the bound is a call that did not complete (B6's "still running" reading
          is retired: the worker now answers at once, so no answer means no acceptance), and it is logged as such below. */
       outcome = { state: "SILENT", status: null,
-                  reason: elapsed ? "no acceptance within the bound" : "the call did not complete" };
+                  reason: elapsed ? "no acceptance within the bound" : word("ai-runs.reason.call_did_complete") };
     } finally { clearTimeout(timer); }
     if (outcome.state === "DISPATCHED" || outcome.state === "RUNNING") {
       /* R83: an accepted dispatch is a heartbeat, the lease counted from it */
@@ -2273,6 +2297,15 @@ export class AiRuns {
       if (refusal) outcome.unwritable = refusal;
     }
     return outcome;
+  }
+
+  /** R87: the headers a member's dispatch adds, `trace` and `memberRef` each only when a non-empty printable string of at
+   *  most 200 characters; none handed (or one of another shape) adds none. */
+  static #doorHeaders(trace, memberRef) {
+    const h = {};
+    if (typeof trace === "string" && HEADER_VALUE.test(trace)) h[TRACE_HEADER] = trace;
+    if (typeof memberRef === "string" && HEADER_VALUE.test(memberRef)) h[MEMBER_REF_HEADER] = memberRef;
+    return h;
   }
 
   /** R52 (T41): the account that serves the run's member now, `ai-accounts.accountFor`'s answer as `#accountFor` reads
@@ -2298,31 +2331,33 @@ export class AiRuns {
    *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
    *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 10 s wait for
    *  acceptance (R82: accepted is `RUNNING`), and one log entry for a refused or unaccepted call. The token is used for that one call and is
-   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
-  async dispatchMemberRun({ run = null, by = null, viewer = null, at = null } = {}) {
+   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all.
+   *  (T50; R87, R89) `trace` and `memberRef`, the door's strings, ride the call as `x-civicsmith-trace` and
+   *  `x-civicsmith-member-ref` and nowhere else; the mint carries the run's `project` when it has one. */
+  async dispatchMemberRun({ run = null, by = null, viewer = null, at = null, trace = null, memberRef = null } = {}) {
     const iso = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
     const id = run == null ? "" : String(run).trim();
     const sight = viewer == null || viewer === "" ? by : viewer;
     const row = id ? this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
-                                       principal_claude_ref, step FROM ai_runs WHERE run = ?`, id) : null;
+                                       principal_claude_ref, step, project FROM ai_runs WHERE run = ?`, id) : null;
     if (!row || !this.#aiRunInSight(id, sight))
-      return { run: run || null, found: false, note: "no such run: it either never existed or was purged" };
+      return { run: run || null, found: false, note: word("ai-runs.note.run_either_existed") };
     /* run-rules R5's comparison, relayed: `by` must be the member the run's principal names. A run whose principal is no
        member (the organisation credential's, which the wake resumes) is no member's to continue, so it is refused as R5
        refuses a caller it does not recognise (asked with no caller). */
     const owner = String(row.principal_plane ?? "");
     const member = memberIdOf(by);
-    const act = "continuing a run";
+    const act = word("ai-runs.act.continuing_run");
     const notPrincipal = owner.startsWith("member:") && member
       ? runPrincipalGate({ caller: `member:${member}`, principal: owner, act })
       : runPrincipalGate({ caller: "", principal: owner, act });
     if (notPrincipal)
       return { run, dispatched: false, found: true, status: row.status, code: notPrincipal.code, check: notPrincipal.check,
                translation: notPrincipal.translation, detail: notPrincipal.detail,
-               note: "a run is continued by its principal alone. Nothing was sent" };
+               note: word("ai-runs.note.run_continued_principal") };
     if (row.status !== "running")
       return { run, found: true, dispatched: false, status: row.status,
-               note: "this run has ended; a later dispatch does not reopen it. Nothing was sent" };
+               note: word("ai-runs.note.run_ended_later") };
     /* DEC-49 REGION is-airun-member-dispatch */
     if (row.mode !== "check" && row.mode !== "plan")
       return { run, found: true, dispatched: false, status: row.status,
@@ -2331,13 +2366,15 @@ export class AiRuns {
                mode: row.mode };
     /* END DEC-49 REGION is-airun-member-dispatch */
     const withheld = (w, extra = {}) => ({ run, found: true, dispatched: false, status: row.status, withheld: w, ...extra,
-                                          note: "Nothing was sent" });
+                                          note: word("ai-runs.note.sent") });
     const env = this.env || {};
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
     const store = this.#ownNamespace();
     if (!store) return withheld("NAMESPACE_UNDETERMINED");
     const d = { run: row.run, context_id: row.context_id, payer: AiRuns.#memberOfRun(row), step: row.step || null,
-                project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude };
+                project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude,
+                /* R87: the door's trace and member ref, for the one call's headers; kept nowhere (no row, log or answer) */
+                headers: AiRuns.#doorHeaders(trace, memberRef) };
     /* (T46; Bob's, K2892) on her own sign-in alone: any other account that would serve her (her API-key reference, the
        group's key, a project's account) is withheld, nothing sent, nothing written. */
     d.ref = await this.#dispatchAccount(d);
@@ -2346,7 +2383,7 @@ export class AiRuns {
     if (d.ref && d.ref.refusal && d.ref.refusal.code === "AI_KEPT_AWAY") {
       const { ok: _ok, ...kept } = d.ref.refusal;
       d.ref = null;
-      return { run, found: true, dispatched: false, status: row.status, ...kept, note: "Nothing was sent" };
+      return { run, found: true, dispatched: false, status: row.status, ...kept, note: word("ai-runs.note.sent") };
     }
     if (!(d.ref && !d.ref.refusal && d.ref.kind === "signin" && d.ref.level === "member")) {
       d.ref = null;
@@ -2355,15 +2392,18 @@ export class AiRuns {
     /* (T47; credentials R63) the segment's own credential, minted in the plane for this run and the mode's writes */
     let minted = null;
     try {
+      /* R89 (credentials R79): the project the run was opened in, so everything the segment reads is within it; a run with
+         none passes none and reads as before */
       minted = credentialsOf(this.ctx).aiRunCredentialMint({ member: `member:${member}`, run: row.run,
-                                                             writes: [...AI_RUN_MODE_WRITES[row.mode]] });
+                                                             writes: [...AI_RUN_MODE_WRITES[row.mode]],
+                                                             ...(row.project ? { project: row.project } : {}) });
     } catch { minted = null; }
     if (!minted || typeof minted !== "object") { d.ref = null; return withheld("CREDENTIAL_RECORD_SILENT"); }
     if (minted.ok !== true || typeof minted.token !== "string") {
       d.ref = null;
       if (typeof minted.code !== "string") return withheld("CREDENTIAL_RECORD_SILENT");
       const { ok: _ok, token: _t, ...refusal } = minted;
-      return { run, found: true, dispatched: false, status: row.status, ...refusal, note: "Nothing was sent" };
+      return { run, found: true, dispatched: false, status: row.status, ...refusal, note: word("ai-runs.note.sent") };
     }
     const outcome = await this.#aiRunDispatch(d, { store, token: minted.token, tokenId: minted.tokenId }, iso);
     minted = null;
@@ -2509,6 +2549,8 @@ export class AiRuns {
         ? String(row.rerun_of) : null,
       /* R78: the label recorded at the open (null for a run the bar admitted, and for one opened before T46) */
       untested: AiRuns.#untestedOf(row),
+      /* R89: the project the run was opened in, as recorded at the open; null for a run opened in none */
+      project: row.project ?? null,
       /* R73: the step a step-run works on, and its origin; the keys exist only on a run that names a step or explores. */
       ...(row.step ? { step: row.step } : {}),
       ...(row.origin && row.origin !== "member" ? { origin: row.origin } : {}),
@@ -2811,7 +2853,7 @@ export class AiRuns {
           bundles: Array.isArray(atOpen.bundles) ? atOpen.bundles : [], at: atOpen.at ?? null }
       : atOpenUnreadable
         ? { recorded: true, unreadable: true,
-            stated: "the lens in force at this run's open was recorded and cannot be read back" }
+            stated: word("ai-runs.stated.lens_force_run") }
         : { recorded: false, stated: "not recorded" };
     const handOf = (handedSha) => (!atOpen ? null : handedSha === openSha ? "in_force" : "stale");
     const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
@@ -2822,8 +2864,8 @@ export class AiRuns {
       const staleEmpty = !!atOpen && atOpen.in_force === true;
       return { in_force: false,
                stated: staleEmpty
-                 ? "no manifest was handed to this run, and one was in force when it opened"
-                 : "no manifest was in force",
+                 ? word("ai-runs.stated.manifest_handed_run")
+                 : word("bias.manifest_force"),
                manifest: null,
                now: atOpen ? nowBlock : null,
                moved: atOpen ? openSha !== nowSha : null,
@@ -2832,7 +2874,7 @@ export class AiRuns {
     }
     if (unreadable)
       return { in_force: false,
-               stated: "a manifest was recorded for this run and cannot be read back",
+               stated: word("ai-runs.stated.manifest_recorded_run"),
                manifest: null,
                now: atOpen ? nowBlock : null,
                moved: atOpen ? openSha !== nowSha : null,
@@ -2956,9 +2998,8 @@ export class AiRuns {
       /* Stated, because a caller holding the search payload should be able to
          read WHY it is thinner rather than conclude something failed. */
       fence: composing
-        ? "the composing half carries the lens, for disclosure and for the weighing it discloses"
-        : "the search half never receives the lens: bias never shapes what is captured or searched, "
-          + "only how conclusions are weighed. There is no field here to read.",
+        ? word("ai-runs.fence.composing_half_carries")
+        : word("ai-runs.fence.search_half_receives"),
     };
   }
 
@@ -3149,11 +3190,13 @@ export class AiRuns {
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
-                                  r.plan, r.origin, r.response, r.untested FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+                                  r.plan, r.origin, r.response, r.untested, r.project FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? { run: r.run, status: r.status, mode: r.mode, context_type: r.context_type,
                    context_id: r.context_id, principal_plane: r.principal_plane, principal_claude: r.principal_claude,
                    /* R78: the label recorded at the open */
                    untested: AiRuns.#untestedOf(r),
+                   /* R89: the project the run was opened in */
+                   project: r.project ?? null,
                    ...(r.mode === "plan" ? { plan: r.plan ?? null } : {}),
                    /* R77: a re-examination run's response, as `read` answers it */
                    ...(r.origin === "reexamination" ? { response: r.response ?? null } : {}) } : null;
@@ -3247,7 +3290,8 @@ export class AiRuns {
       const e = entries[i];
       const said = e && typeof e === "object" && !Array.isArray(e)
         ? use.countUsage({ owner: row.principal_claude, member: `member:${payer}`, use: "run", mode: e.mode, model: e.model ?? null,
-                           usage: e.usage, calls: e.calls, at: AiRuns.#aiIso(ms), act: String(row.run) })
+                           /* R88: the conversation's effort beside its model, ai-use R15's to judge; null where none is stated */
+                           effort: e.effort ?? null, usage: e.usage, calls: e.calls, at: AiRuns.#aiIso(ms), act: String(row.run) })
         : this.#refuse("AI_RUN_CONSUME_INVALID", "the entry is not an object {mode, model, usage, calls}.");
       if (!said || said.ok !== true)
         return { ...(said || this.#refuse("AI_RUN_CONSUME_INVALID", "the entry could not be counted.")),
@@ -3513,11 +3557,11 @@ export class AiRuns {
               + "surfaced under> in the promotion. The run carries the lens in force and the objective it "
               + "pursued (INVESTIGATIVE-SESSION.md §11 item 5, rule 2). Nothing was created.");
     const notPrincipal = runPrincipalGate({ caller, principal: runRow.principal_plane,
-                                            act: "opening a question under a run" });
+                                            act: word("ai-runs.act.opening_question_under") });
     if (notPrincipal)
       return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
                translation: notPrincipal.translation, detail: notPrincipal.detail, run,
-               note: "an assistant opens a question only inside a run it holds. Nothing was created" };
+               note: word("ai-runs.note.assistant_opens_question") };
     if (runRow.status !== "running")
       return refusal("SURFACE_RUN_NOT_RUNNING",
         `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read `
@@ -3582,7 +3626,7 @@ export class AiRuns {
     const read = await this.read({ run: link.run, viewer });
     if (!read || read.found !== true || !read.session)
       return { recorded: true, run: null, by: null, at: link.at, lens: null,
-               stated: "this question was opened inside a run this reader cannot read" };
+               stated: word("ai-runs.stated.question_opened_inside") };
     return { recorded: true, run: link.run, by: link.principal, at: link.at,
              context: read.session.context, status: read.session.status, lens: read.session.bias };
   }

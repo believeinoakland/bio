@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS, OBSERVATION_COVERAGE,
          OBSERVATION_COVERAGE_UNDETERMINED } from "../../../src/run-rules/index.mjs";
 import { AI_RUNS_CONTEXT_CHECKS } from "../../../src/run-rules/index.mjs";
@@ -30,8 +31,9 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   assert.deepEqual(await w.runs.read({ run: "R1", viewer: "nobody-we-know" }), { run: "R1", found: false, session: null });
   const s = (await w.runs.read({ run: "R1", viewer: "member:dan" })).session;
   assert.deepEqual(Object.keys(s), ["id", "label", "mode", "status", "ticks", "created", "updated", "expires", "context",
-    "principal", "budget", "condition", "bias", "standard", "state", "rerun_of", "untested"]);
+    "principal", "budget", "condition", "bias", "standard", "state", "rerun_of", "untested", "project"]);
   assert.equal(s.untested, null, "R78: a run the bar admitted carries no label");
+  assert.equal(s.project, null, "R89: a run over a question opened in no project records none");
   assert.equal(s.rerun_of, null, "a run that re-runs nothing");
   assert.deepEqual(s.state, {}, "the run's scratch as the open wrote it");
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
@@ -89,7 +91,7 @@ test("R20: the lens block — manifest in force or stated absent or unreadable, 
   /* nothing in force, nothing handed */
   await w.runs.open(OPEN({ run: "A" }));
   let b = await bias("A");
-  assert.deepEqual([b.in_force, b.stated, b.manifest, b.moved, b.moved_basis, b.hand], [false, "no manifest was in force", null, false, "at_open", "in_force"]);
+  assert.deepEqual([b.in_force, b.stated, b.manifest, b.moved, b.moved_basis, b.hand], [false, word("bias.manifest_force"), null, false, "at_open", "in_force"]);
   assert.deepEqual([b.at_open.recorded, b.at_open.in_force, b.now.in_force], [true, false, false]);
   /* a lens in force at the open */
   w.lens("BIAS-2026-0001-a");
@@ -99,13 +101,13 @@ test("R20: the lens block — manifest in force or stated absent or unreadable, 
   await w.runs.open(OPEN({ run: "D", biasManifest: JSON.stringify({ statements_sha: "stale-hash" }) }));
   await w.runs.open(OPEN({ run: "E", biasManifest: "{not json" }));
   b = await bias("B");
-  assert.deepEqual([b.in_force, b.stated, b.hand, b.moved], [false, "no manifest was handed to this run, and one was in force when it opened", "stale", false]);
+  assert.deepEqual([b.in_force, b.stated, b.hand, b.moved], [false, word("ai-runs.stated.manifest_handed_run"), "stale", false]);
   b = await bias("C");
   assert.deepEqual([b.in_force, b.stated, b.manifest.statements_sha, b.hand, b.moved, b.moved_basis, b.now.statements_sha, b.at_open.statements_sha],
                    [true, null, inForce, "in_force", false, "at_open", inForce, inForce]);
   assert.equal((await bias("D")).hand, "stale");
   b = await bias("E");
-  assert.deepEqual([b.in_force, b.stated, b.manifest, b.hand], [false, "a manifest was recorded for this run and cannot be read back", null, null]);
+  assert.deepEqual([b.in_force, b.stated, b.manifest, b.hand], [false, word("ai-runs.stated.manifest_recorded_run"), null, null]);
   /* the lens moves after the open: moved, against the open */
   w.lens("BIAS-2026-0002-b", { statement: "s2" });
   b = await bias("C");
