@@ -88,6 +88,7 @@ import { machineryProducersOf } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
+import { translationsOf, translationsOps } from "../translations/index.mjs";
 import { instanceSetupOf, instanceSetupOps, disclosureReadOf, DISCLOSURE_READER } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
 import { promotionStep } from "../store-door/step.mjs";
@@ -116,7 +117,7 @@ import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
-         ratificationWorker, frontDoorFinder, frontDoorPointer } from "./wiring.mjs";
+         ratificationWorker, frontDoorFinder, frontDoorPointer, projectReachReaders } from "./wiring.mjs";
 
 /* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
 const STEP = "store-door";
@@ -125,15 +126,18 @@ const STEP = "store-door";
    `build/` at run time, so it is named here; `store.test.mjs`' R2 test holds it to `build/modules.json`'s layers. */
 const FIRST_LAYER_11 = "wizard-scripts";
 
-/* The order promotion ranks its steps by: the modules' total order (membership R83), with store-door's step (its R5;
-   R10) after every module of layers 1–10 and before every later one (K1416: before the first layer-11 module, now
-   `wizard-scripts`, N544), the rank the step has held since it was `legacy-store`'s, so every step's checks and
-   projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
-export const STEP_ORDER = Object.freeze((() => {
-  const o = MODULE_ORDER.filter((m) => m !== STEP);
+/* The order promotion ranks its steps by: the modules' total order (membership R83, R146: `build/modules.json`'s, made
+   from the file), with store-door's step (its R5; R10) after every module of layers 1–10 and before every later one
+   (K1416: before the first layer-11 module, now `wizard-scripts`, N544), the rank the step has held since it was
+   `legacy-store`'s, so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name
+   the order lacks last (its R39). `stepOrderFrom(order)` is the rule for any order a test hands it (R60); `STEP_ORDER` is
+   its answer for `MODULE_ORDER`. */
+export const stepOrderFrom = (order) => {
+  const o = order.filter((m) => m !== STEP);
   const at = o.indexOf(FIRST_LAYER_11);
-  return at === -1 ? [...o, STEP] : [...o.slice(0, at), STEP, ...o.slice(at)];
-})());
+  return Object.freeze(at === -1 ? [...o, STEP] : [...o.slice(0, at), STEP, ...o.slice(at)]);
+};
+export const STEP_ORDER = stepOrderFrom(MODULE_ORDER);
 
 /* D-432: the live rows the PROJ mint site's `taken` reads, as `[prefix, table, column]`, seeded at every boot (record-core
    R40). The CASE rows are ratification's and publication's registered seeds (record-core R70). */
@@ -306,7 +310,16 @@ export class Store extends DurableObject {
        `purgeHeld` (its R9) is the reader store-door's door is handed (R14). */
     const actionHolds = actionHoldsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
-    observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
+    const connections = connectionsOf(ctx, { env });
+    observationLogOf(ctx).attachMeaning({ connections });
+    /* R58 (T50; N1186, K3557; membership R150): the two readers of a project's reach `provenance` and `connections` cannot
+       register (closed layers), made here once each, over this object's own instances: the home bundles of the captures
+       the project's bundles hold, and the records its document cites. A second registration is refused
+       `LISTENER_DECLARED`; a reader that throws adds nothing. */
+    const reach = projectReachReaders({ record: () => recordOf(ctx), provenance: () => provenance, connections: () => connections,
+      sql: () => this.sql });
+    membershipOf(ctx).registerProjectReach("provenance", reach.provenance);
+    membershipOf(ctx).registerProjectReach("connections", reach.connections);
     strengthOf(ctx, { retrieval, acceptedWork });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
     /* R17 (N520, N522): case-checker, then case-import, at their places after ratification in the modules' order, built
        here once strength (with its retrieval, above) and reevaluation (with its environment) exist, since a factory reads
@@ -423,7 +436,9 @@ export class Store extends DurableObject {
     /* R39 (K2874): handed the plane's own instances it reads (action-plans, plan-work, duties, answers, standards), so
        none is built bare by its lazy getters; at creation it registers its watch reader with plan-work (its R26,
        plan-work R9), once. */
-    followingOf(ctx, { monitoring, events, entities: entitiesOf(ctx), capture, actionPlans: actionPlansOf(ctx),
+    /* R58 (T50; following R34, retrieval R86): handed the one retrieval instance above, so its start registers its watch
+       marks with `retrieval.registerBrowseMarks` before the first request; the plane makes no second registration. */
+    followingOf(ctx, { monitoring, events, entities: entitiesOf(ctx), capture, retrieval, actionPlans: actionPlansOf(ctx),
                        planWork: planWorkOf(ctx), duties, answers: answersOf(ctx), standards });
     /* R19 (N528; DEC-120, DEC-121): wizard-scripts, first in layer 11, built here before every layer-11 reader
        (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
@@ -493,6 +508,11 @@ export class Store extends DurableObject {
     schedulerOf(ctx, env).register("plane", archiveUnpackConsumer({ capture: () => captureOf(ctx), env }));
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
+    /* R61 (T50; N1084; translations R12): translations, directly before instance-setup in the modules' order, the one
+       instance per host; at creation it creates its seven tables and declares them to purge (held once, whichever of it
+       and instance-setup is built first). Its nine routes are spread beside instance-setup's (R5), and migrated in R3's
+       pass. */
+    translationsOf(ctx);
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
     /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
        credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
@@ -609,6 +629,7 @@ export class Store extends DurableObject {
     actionRepliesOf(this.ctx).migrate();
     planWorkOf(this.ctx).migrate();
     wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
+    translationsOf(this.ctx).migrate();   /* R61: its seven tables, in the modules' order (before instance-setup; idempotent) */
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -635,8 +656,13 @@ export class Store extends DurableObject {
     for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked[k] = a[k];
     return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked);
   }
-  /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
-  async groupFields() { return publicReadOf(this.ctx).groupFields(); }
+  /* R40 (T46; K2999; control-plane R20), R62 (T50; N933; control-plane R102, public-read R36): public-read's group fields
+     of this object (the door asks the `bio` object's); `project`, when named, is passed on so the answer carries that
+     matter's `matter_stake` (null with none). */
+  async groupFields(args) {
+    const project = args && typeof args === "object" && typeof args.project === "string" && args.project !== "" ? args.project : null;
+    return publicReadOf(this.ctx).groupFields(project ? { project } : {});
+  }
 
   /* R41 (K2824): one read the asking member may make, answered by this object's route map exactly as the door would
      answer it, her viewer stamp in `params.viewer`; a synchronous read's answer, or null for an op the map lacks. It
@@ -707,6 +733,7 @@ export class Store extends DurableObject {
       if (typeof grant === "string" && grant !== "") url.searchParams.set("use", draftUse(ctx, grant) || "ask");
     }
     const accountOps = aiAccountsOps(aiAccountsOf(ctx), url, body, env);
+    const translationsMap = translationsOps(translationsOf(ctx), url, body);
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       /* N783 (K2270): project-roster's ops (`projectowner*`, `projectvisibility`, `projectdirectory`,
@@ -838,7 +865,11 @@ export class Store extends DurableObject {
       /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */
       ...caseCheckOps(caseCheckOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
-      ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
+      /* R61 (T50; translations R12): translations' nine routes, over the one instance; instance-setup's own copy of them
+         (deleted in its own job, T50-23) is dropped here so each route reaches the one handler once. */
+      ...translationsMap,
+      ...Object.fromEntries(Object.entries(instanceSetupOps(instanceSetupOf(ctx, env), url, body))
+        .filter(([op]) => !Object.hasOwn(translationsMap, op))),
       /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
       ...admissionOps(admissionOf(ctx), url, body),
       /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
