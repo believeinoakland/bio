@@ -162,7 +162,11 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
   /* each act sends its op with the version; Stand on with project; accept affirms every ground */
   await press(p, "versionaccept", { within: row("Two counts") });
   await press(p, "versionconsider", { within: row("The audit alone"), reason: "worth weighing" });
-  await press(p, "versionreject", { within: row("Two counts"), reason: "not enough on its own" });
+  /* R64: Reject is a fold holding the required reason; with none it sends nothing */
+  await press(p, "versionreject", { within: row("Two counts") });
+  assert.equal(p.byOp("versionreject").length, 0, "no reason, nothing sent");
+  fill(p, { "question-reject-1": "not enough on its own" });
+  await press(p, "versionreject", { within: row("Two counts") });
   await press(p, "versionrevert", { within: row("Seven-day standard") });
   await press(p, "versionhide", { within: row("The audit alone") });
   const sent = { versionaccept: "Two counts", versionconsider: "The audit alone", versionreject: "Two counts", versionrevert: "Seven-day standard", versionhide: "The audit alone" };
@@ -217,18 +221,25 @@ test("R27 Concluding links the case's screens where a read names the question's 
   assert.equal(section(n, "screen.question.concluding.head").querySelector("[data-case]"), null);
 });
 
-test("R35 R41 before a reading stands, no conclude, what is owed said; after versioncurrent, conclude offered as the form, carrying it", async () => {
+test("R35 R41 R50 conclude is offered once a passage is cited, on a reading that stands or one she writes; before a citation it is not and what is owed is said", async () => {
+  /* nothing cited: no Concluding section, the owed sentence beneath the three ways (R50) */
+  const empty = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, [], { legs: [] }) } } });
+  assert.ok(says(main(empty), "question.empty.conclude.own"));
+  assert.ok(!actsIn(main(empty)).includes("conclude") && section(empty, "screen.question.concluding.head") === undefined);
+  /* cited, and no reading stands: the form is offered with her own reading as the choice */
   const none = await open(at, { ...A, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [{ name: "draft", state: "considering", legs: [] }] }) } });
   const c = section(none, "screen.question.concluding.head");
-  assert.ok(!actsIn(c).includes("conclude"));
-  assert.ok(says(c, "question.empty.conclude.own"));
+  assert.ok(actsIn(c).includes("conclude"));
+  assert.equal(none.doc.getElementById("question-conclude-reading").value, "", "no reading stands: her own is the choice");
   const p = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
   const form = section(p, "screen.question.concluding.head").querySelector('[data-conclude="form"]');
+  assert.ok(form.hasAttribute("open"), "a reading stands: Conclude opens by itself");
   for (const k of ["question.conclude.reading", "question.conclude.falsifier", "question.conclude.nofalsifier", "question.conclude.commentary"]) assert.ok(says(form, k), k);
   fill(p, { "question-conclude-falsifier": "inspection records showing repair", "question-conclude-commentary": "the counts agree" });
   await press(p, "conclude");
   const q = p.byOp("conclude")[0].query;
   assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.commentary], [Q, P, "main", "inspection records showing repair", "the counts agree"]);
+  assert.ok(!("reading" in q), "an accepted reading sends version, never reading");
   for (const r of p.requests) for (const k of ["by", "author", "viewer", "assist", "draft"])
     assert.ok(!(k in (r.query || {})) && !(r.body && typeof r.body === "object" && k in r.body), `${r.op} sends ${k}`);
 });
@@ -282,7 +293,12 @@ test("R41 state e: the assistant's proposal, machine work, accepted or declined 
   const s = section(p, "question.proposal.heading");
   assert.ok(s.querySelector('[data-origin="machine"]') && s.textContent.includes("About 9 in 10 within seven days."));
   assert.ok(s.textContent.includes("the 2026 performance report"));
-  await press(p, "versionreject", { within: s, reason: "it skips the audit" });
+  assert.ok(says(s.querySelector("details[data-reject] summary"), "screen.question.reject.summary"), "R64: the fold");
+  assert.ok(says(s, "ai.progress.checked.all"), "R58: beneath the proposal");
+  await press(p, "versionreject", { within: s });
+  assert.equal(p.byOp("versionreject").length, 0, "R64: no reason, nothing sent");
+  fill(p, { "question-reject-0": "it skips the audit" });
+  await press(p, "versionreject", { within: s });
   assert.deepEqual([p.byOp("versionreject")[0].body.version, p.byOp("versionreject")[0].body.reason], ["Proposed", "it skips the audit"]);
 });
 
@@ -307,7 +323,7 @@ test("R41 state g: concluded, who and when, the reading's words, what would chan
   assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time."));
   assert.ok(says(g, "question.concluded.falsifier", { falsifier: "logs showing repairs dated later" }));
   assert.equal(g.querySelectorAll(".cs-grade").length, 2);
-  assert.deepEqual(actsIn(g).sort(), ["planopen", "withdrawconclusion"]);
+  assert.deepEqual(actsIn(g), ["casedraft", "planopen", "withdrawconclusion"], "R62: in this order");
   assert.ok(!actsIn(main(p)).includes("conclude"), "never a second conclusion");
   await press(p, "withdrawconclusion", { within: g, reason: "new evidence" });
   assert.deepEqual(p.byOp("withdrawconclusion")[0].query, { op: "withdrawconclusion", target: Q, project: P, reason: "new evidence" });
@@ -319,7 +335,7 @@ test("R41 state g: concluded over a project is drawn from the read that names th
   const p = await open(at, { ...A, plane: { basisversions: basis(false) } });
   const g = section(p, "question.concluded.heading");
   assert.ok(g.textContent.includes("No: 1 in 10 is not repaired in time.") && g.textContent.includes("dev"));
-  assert.deepEqual(actsIn(g).sort(), ["planopen", "withdrawconclusion"]);
+  assert.deepEqual(actsIn(g), ["casedraft", "planopen", "withdrawconclusion"]);
   assert.ok(p.byOp("basisversions").some((c) => c.query.project === P), "read with the project");
   /* control: the project's read answers the conclusion withdrawn: state g is not drawn */
   const w = await open(at, { ...A, plane: { basisversions: basis(true) } });

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, press, inquiryMd, plane, says, section, P, Q } from "./fixtures.mjs";
+import { open, main, actsIn, press, inquiryMd, plane, says, section, word, P, Q } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }), agentpack: ok({ ok: true, pack: { version: "p@1" } }) };
@@ -69,7 +69,7 @@ test("R45 while the run works, airuns is read again at most once every 10 second
   await p.settle();
   assert.equal(section(p, "question.run.heading"), undefined, "an ended run is not drawn at work");
   const s = section(p, "question.empty.heading");
-  assert.ok(says(s, "screen.assistant.run.ended", { why: "wallclock" }), "its ending is stated");
+  assert.ok(says(s, "screen.assistant.run.ended", { why: word("ai.run.ending.wallclock") }), "its ending is stated");
   assert.deepEqual(actsIn(s).filter((a) => a === "airunopen"), ["airunopen"], "and the ask is offered again, once");
   const after = reads();
   await p.clock.tick(30000);
@@ -80,14 +80,14 @@ test("R45 a run of hers that ended with no proposal draws the ending and the ask
   const ended = mine({ status: "ended", ticks: 5, condition: { kind: "finished", bound: "cancelled" } });
   const p = await open(at, reach({ reach: { airuns: ok({ ok: true, runs: [ended] }) } }));
   const m = main(p);
-  assert.ok(says(m, "screen.assistant.run.ended", { why: "cancelled" }));
+  assert.ok(says(m, "screen.assistant.run.ended", { why: word("ai.run.ending.cancelled") }));
   assert.equal(section(p, "question.run.heading"), undefined);
   assert.deepEqual(actsIn(m).filter((a) => a === "airunopen"), ["airunopen"]);
 });
 
 test("R45 a run that ended without a condition is named by its status; another member's ended run is not hers", async () => {
   const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, reach: { airuns: ok({ ok: true, runs: [mine({ status: "failed", ticks: 3 })] }) } }));
-  assert.ok(says(section(p, "question.empty.heading"), "screen.assistant.run.ended", { why: "failed" }));
+  assert.ok(says(section(p, "question.empty.heading"), "screen.assistant.run.ended", { why: word("ai.run.ending.unknown") }));
   const other = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, reach: { airuns: ok({ ok: true, runs: [mine({ status: "ended", principal: { plane: "member:ben" } })] }) } }));
   assert.equal(main(other).querySelector('[data-run="ended"]'), null);
 });

@@ -20,7 +20,7 @@ test("R47 an ended run with proposals waiting draws the ending and the ask above
   const p = await open(at, reach({ plane: withProposal, reach: { airuns: ok({ ok: true, runs: [ended] }) } }));
   const m = main(p);
   const text = m.textContent;
-  const end = text.indexOf(word("screen.assistant.run.ended", { why: "wallclock" }));
+  const end = text.indexOf(word("screen.assistant.run.ended", { why: word("ai.run.ending.wallclock") }));
   const prop = text.indexOf(word("question.proposal.heading"));
   assert.ok(end >= 0 && prop >= 0, "both are drawn");
   assert.ok(end < prop, "the ending stands above the proposals");
@@ -30,7 +30,7 @@ test("R47 an ended run with proposals waiting draws the ending and the ask above
   /* a state-c question (nothing cited) with waiting proposals says the ending too */
   const empty = inquiryMd(P, [], { legs: [] });
   const c = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, plane: withProposal, reach: { airuns: ok({ ok: true, runs: [ended] }) } }));
-  assert.ok(says(section(c, "question.empty.heading"), "screen.assistant.run.ended", { why: "wallclock" }));
+  assert.ok(says(section(c, "question.empty.heading"), "screen.assistant.run.ended", { why: word("ai.run.ending.wallclock") }));
 });
 
 test("R47 a running run found on load, not pressed on this page, draws state d and is read again until it ends", async () => {
@@ -53,7 +53,7 @@ test("R47 a running run found on load, not pressed on this page, draws state d a
   await p.clock.tick(10000);
   await p.settle();
   assert.equal(section(p, "question.run.heading"), undefined);
-  assert.ok(says(main(p), "screen.assistant.run.ended", { why: "wallclock" }));
+  assert.ok(says(main(p), "screen.assistant.run.ended", { why: word("ai.run.ending.wallclock") }));
   const after = reads();
   await p.clock.tick(30000);
   assert.equal(reads(), after, "reading stops once it has ended");
@@ -84,13 +84,13 @@ test("R48 two ended runs draw the later's ending, not \"No run yet\"; the ask is
   const later = mine({ id: "RUN-" + "b".repeat(16), status: "ended", condition: { kind: "finished", bound: "wallclock" } });
   const earlier = mine({ id: "RUN-" + "a".repeat(16), status: "ended", condition: { kind: "finished", bound: "cancelled" } });
   const p = await dock([later, earlier]);
-  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: "wallclock" }));
-  assert.ok(!says(panel(p), "screen.assistant.run.ended", { why: "cancelled" }));
+  assert.ok(says(panel(p), "screen.assistant.run.ended", { why: word("ai.run.ending.wallclock") }));
+  assert.ok(!says(panel(p), "screen.assistant.run.ended", { why: word("ai.run.ending.cancelled") }));
   assert.ok(!says(panel(p), "screen.assistant.run.none"));
   assert.ok(button(p, "airunopen", panel(p)), "Work on this is offered again");
   /* an ended run with no condition is named by its status; another member's ended run is not hers */
   const failed = await dock([mine({ status: "failed" })]);
-  assert.ok(says(panel(failed), "screen.assistant.run.ended", { why: "failed" }));
+  assert.ok(says(panel(failed), "screen.assistant.run.ended", { why: word("ai.run.ending.unknown") }));
   const other = await dock([mine({ status: "ended", principal: { plane: "member:ben" } })]);
   assert.ok(says(panel(other), "screen.assistant.run.none"));
 });

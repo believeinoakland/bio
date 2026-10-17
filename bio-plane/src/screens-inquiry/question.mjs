@@ -22,6 +22,8 @@ function reads(view) {
     hunches: { op: "hypotheses", query: { inquiry: id },
                empty: (v) => !v || !Array.isArray(v.hypotheses) || v.hypotheses.length === 0 },
     waits: { op: "questionwaits", query: { question: id } },
+    /* R54: the partition as the inquiry holds it, with the history of its changes (`inquiry` R65) */
+    partition: { op: "inquirypartition", query: { id }, empty: () => false },
     relies: { op: "backlinks", query: { target: id },
               empty: (v) => !v || ((!Array.isArray(v.backlinks) || v.backlinks.length === 0) && v.out_of_view !== true) },
   };
@@ -85,6 +87,9 @@ function render(cs, view) {
     else out.push(`<p class="mk-sub">${W("screen.question.opened.noproject", { name, date: { html: date } })}</p>`);
   }
 
+  const stepsAt = out.length;
+  out.push("");
+
   /* R31: "Read in my language", only while the assistant is reachable: its answer drawn in place, labeled, and the
      original back by one press of the same control (nothing saved, nothing read again) */
   if (view.reachable) {
@@ -136,6 +141,27 @@ function render(cs, view) {
   };
   const legName = (l) => legTitle(l) + (l.extent_page ? " · " + T("screen.document.passage.where", { page: l.extent_page }) : "");
 
+  /* R51: the three steps under the title, each done, current or still to do from the question's state */
+  function stepsHtml(st) {
+    return `<ol class="mk-next" data-steps="1">` + ["source", "mark", "conclude"].map((k, i) => `<li data-step="${k}" data-state="${st[i]}"${st[i] === "current" ? ' aria-current="step"' : ""}>${W("question.steps." + k)}</li>`).join("") + "</ol>";
+  }
+  /* R59: accepting a reading of several separately sufficient parts opens "Before you accept", one tick per part */
+  function acceptPart(v, tone) {
+    const parts = Array.isArray(v.parts) ? v.parts.map(String) : [];
+    const name = String(v.name), ix = vs.findIndex((x) => x && x.name === v.name);
+    if (parts.length < 2) return cs.act("versionaccept", { label: "act.versionaccept.label.question", data: { version: name, idx: String(ix) }, tone });
+    return `<fieldset class="cs-field" id="affirm-${ix}" data-affirm="${cs.esc(name)}"><legend>${W("reading.affirm.head")}</legend><p class="mk-small">${W("reading.affirm.says", { n: String(parts.length) })}</p>`
+      + parts.map((pt, i) => `<label><input type="checkbox" name="affirm-${ix}" id="affirm-${ix}-${i}" value="${cs.esc(pt)}"> ${W("reading.affirm.part", { part: pt })}</label>`).join("") + "</fieldset>"
+      + cs.act("versionaccept", { label: "reading.affirm.accept", data: { version: name, idx: String(ix) }, tone });
+  }
+  /* R64: "Reject this reading, with a reason" is a fold holding the required reason and the act that sends it */
+  function declineFold(v) {
+    const name = String(v.name), ix = vs.findIndex((x) => x && x.name === v.name);
+    return `<details class="mk-details" data-reject="${cs.esc(name)}"><summary>${W("screen.question.reject.summary")}</summary>`
+      + cs.field("question-reject-" + ix, "screen.question.reject.reason", { area: true, rec: true, help: "screen.question.reject.reason.help" })
+      + cs.act("versionreject", { label: "screen.question.reject.go", data: { version: name, idx: String(ix) } }) + "</details>";
+  }
+  const around = [];
   /* R41 state g: concluded; c: nothing cited; d: a run of hers at work; e: the assistant's proposal; f: its limit */
   /* the conclusion is answered only to a read that names the project (`basis-versions` R12, R16): `cur` when there is one */
   const b = cur && cur.state === "ok" && cur.value ? cur.value : (d.basis && d.basis.state === "ok" ? d.basis.value : null);
@@ -158,8 +184,19 @@ function render(cs, view) {
   /* her latest run on it (newest first), and R45's ending: drawn when it has ended and nothing else is drawn from it */
   const lastMine = runList.find(isMine) || null;
   const ending = (c) => (c && typeof c === "object" ? String(c.bound || c.kind || "") : String(c || ""));
+  /* R57, R58: the run's session (its cost, to the paying account's owners only) and its log (its steps, as they arrive) */
+  const watched = myRun || lastMine;
+  const sess = watched && watched.id ? later("sess", "airun", { run: String(watched.id) }, String(myRun ? ui.seq || 0 : "")) : null;
+  const session = sess && sess.state === "ok" && sess.value && sess.value.session ? sess.value.session : null;
+  const log = watched && watched.id && (myRun || asking || lastMine) ? later("log", "airunlog", { run: String(watched.id), limit: "200" }, String(myRun ? ui.seq || 0 : "")) : null;
+  const logEntries = log && log.state === "ok" && log.value && Array.isArray(log.value.entries) ? log.value.entries : [];
+  const prog = P.progress(cs, logEntries, { title: (record) => { const t = later("doc:" + record, "image", { id: record });
+    const m = t.state === "ok" && t.value && typeof t.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(t.value["bundle.md"].split(/\n---\s*\n/)[0] || "") : null;
+    let title = m ? m[1].trim() : ""; try { if (title.startsWith("\"")) title = JSON.parse(title); } catch { /* raw */ } return title; } });
   const endedPart = (withAsk) => lastMine && lastMine.status !== "running" && !myRun && !asking
-    ? `<div data-run="ended"><p class="mk-note">${W("screen.assistant.run.ended", { why: ending(lastMine.condition) || String(lastMine.status || "") })}</p>${withAsk ? askAct : ""}</div>` : "";
+    ? `<div data-run="ended"><p class="mk-note">${W("screen.assistant.run.ended", { why: { html: P.ending(cs, ending(lastMine.condition) || String(lastMine.status || ""), proposals.length > 0) } })}</p>`
+      + (ending(lastMine.condition) === "cancelled" || lastMine.status === "cancelled" ? `<p class="mk-small" data-run="stopped">${W("screen.question.stopped.kept")}</p>` : "")
+      + P.costLine(cs, session, true) + (withAsk ? askAct : "") + "</div>" : "";
   const pack = view.reachable ? later("pack", "agentpack", {}) : null;
   const packName = pack && pack.state === "ok" && pack.value && ((pack.value.pack && (pack.value.pack.version || pack.value.pack.skillVersion)) || pack.value.version);
   const askAct = view.reachable && packName && member
@@ -169,12 +206,15 @@ function render(cs, view) {
   if (!citedLegs.length && !myRun && !asking && !concluded) {
     /* state c: new and empty, the three ways in (R38: "Capture a document for it" opens `capture` with this question) */
     const rows = [cs.row("", `<b>${W("question.empty.capture")}</b><br><span class="mk-sub">${W("question.empty.capture.line")}</span>`,
-        `<a class="cs-btn" data-tone="quiet" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="question">${W("question.adddoc")}</a>`),
+        `<a class="cs-btn" data-tone="primary" href="/app/capture/address/${cs.esc(id)}" data-nav data-adddoc="question">${W("question.adddoc")}</a>`),
       cs.row("", `<b>${W("question.empty.find")}</b><br><span class="mk-sub">${W("question.empty.find.line")}</span>`,
         cs.act("search", { label: "act.search.label.question", data: { q: heading } }))];
     if (askAct) rows.push(cs.row("", `<b>${W("question.empty.ask")}</b><br><span class="mk-sub">${W("question.empty.ask.line")}</span>`, askAct));
     /* R45: a run of hers that ended with no proposal is said, above the three ways in (which offer the ask again) */
     out.push(cs.sec("question.empty.heading", endedPart(false) + `<p class="mk-note">${W("question.empty.note")}</p>` + cs.sheet(rows.join("")), { id: "state-c" }));
+    /* R50, R51: nothing to conclude on before the first citation, said beneath the three ways; no "Concluding" section */
+    out.push(`<p class="mk-note" data-owed="reading">${W("question.empty.conclude.own")}</p>`);
+    out[stepsAt] = stepsHtml(["current", "todo", "todo"]);
     if (ui.said) out.push(ui.said.html);
     out.push(limitPart());
     return out.join("");
@@ -184,6 +224,8 @@ function render(cs, view) {
   if (myRun || asking) {
     out.push(cs.sec("question.run.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}</div>`
       + (myRun ? `<p data-run="running">${W("screen.assistant.run.running", { ticks: String(myRun.ticks || 1) })}</p>` : "")
+      + (myRun ? P.costLine(cs, session, false) : "")
+      + prog.html
       + `<p class="mk-note">${W("question.run.leave")}</p>`
       + (myRun ? cs.act("airunclose", { label: "act.airunclose.label.question", data: { run: String(myRun.id || "") } })
         : `<button class="cs-btn" data-tone="quiet" disabled data-pending="airunclose">${W("act.airunclose.label.question")}</button>`), { id: "state-d" }));
@@ -193,14 +235,16 @@ function render(cs, view) {
     }
   } else if (!concluded) out.push(endedPart(true)); /* R47: above the proposals, whether or not any wait */
   /* state e: a reading the assistant proposed, not yet weighed, only while the assistant is reachable */
-  for (const v of proposals) {
+  const checkFailed = !myRun && !asking && lastMine && prog.none;
+  if (checkFailed) out.push(`<p class="mk-note" data-check="failed">${W("ai.progress.check.failed")}</p>`);
+  for (const v of (myRun || asking || checkFailed ? [] : proposals)) {
     const rests = (Array.isArray(v.legs) ? v.legs : []).map((l) => String(l.target_title || l.target_id || "")).filter(Boolean);
     out.push(cs.sec("question.proposal.heading", `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}`
       + (v.untested || (b && b.untested) ? `<span class="cs-draftlabel" data-label="untested">${W("ai.label.untested")}</span>` : "")
       + `<p class="rec">${cs.esc(String(v.claim && v.claim.text ? v.claim.text : v.description || v.name))}</p>`
       + (rests.length ? `<p class="mk-small rec">${cs.esc(rests.join(" · "))}</p>` : "") + "</div>"
-      + cs.act("versionaccept", { label: "act.versionaccept.label.question", data: { version: v.name, grounds: (v.grounds || []).join(",") }, tone: "primary" })
-      + cs.act("versionreject", { label: "act.versionreject.label.question", data: { version: v.name } }), { id: "state-e" }));
+      + `<p class="mk-small" data-checked="all" data-tip="${cs.esc(W("ai.progress.checked.all.means"))}">${W("ai.progress.checked.all")}</p>`
+      + acceptPart(v, "primary") + declineFold(v), { id: "state-e" }));
   }
   /* state f: the assistant's limit, and the other reasons it can't work here (R42) */
   out.push(limitPart());
@@ -213,18 +257,23 @@ function render(cs, view) {
       + (f.reasons || []).map((k) => `<p class="mk-small">${W(k)}</p>`).join("") + `<p class="mk-small">${W("question.ai.whose")}</p></details>`, { id: "state-f" });
   }
 
-  /* state g: concluded (who, when, the reading's words, what would change it, its strength) */
+  /* state g: concluded (who, when, the reading's words, what would change it, its strength), and its three acts (R62): prepare a
+     case from it, plan what to do, withdraw the conclusion */
   if (concluded) {
     const c = b.conclusion;
     const claim = typeof c === "string" ? c : (c.text || (c.claim && c.claim.text) || (typeof c.claim === "string" ? c.claim : "") || "");
     const by = P.who(cs, c.by || c.author || "");
     const at = c.at ? cs.date(String(c.at), { year: true }) : "";
     const fal = c.falsifier && typeof c.falsifier === "object" ? c.falsifier.text : c.falsifier;
+    /* R50: a conclusion on a member's own reading says who wrote it, never marked machine work */
+    const cv = vs.find((v) => v && v.name === String(c.version || c.reading || ""));
+    const wrote = cv && !machine(cv) && cv.author ? `<br><span class="mk-sub" data-reading="member">${W("question.reading.by.member", { member: P.who(cs, cv.author) })}</span>` : "";
     out.push(cs.sec("question.concluded.heading", cs.sheet(cs.row("", `<b>${W("question.concluded.by", { who: by, date: { html: at } })}</b> <span class="rec">“${cs.esc(claim)}”</span>`
-        + (fal ? `<br><span class="mk-sub">${W("question.concluded.falsifier", { falsifier: String(fal) })}</span>` : "")
+        + wrote + (fal ? `<br><span class="mk-sub">${W("question.concluded.falsifier", { falsifier: String(fal) })}</span>` : "")
         + (d.strength && d.strength.state === "ok" ? `<br>${grades(d.strength.value)}` : "")))
-      + cs.act("withdrawconclusion", { label: "act.withdrawconclusion.label.question", data: { inquiry: id } })
-      + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } }), { id: "state-g" }));
+      + (project ? cs.act("casedraft", { label: "act.casedraft.label.question", data: { project }, tone: "primary" }) : "")
+      + cs.field("question-plan", "screen.question.plan.label", {}) + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } })
+      + cs.act("withdrawconclusion", { label: "act.withdrawconclusion.label.question", data: { inquiry: id } }), { id: "state-g" }));
   }
 
   /* two grades, never one score (R2); a grade's strength sentence is drawn by its words (R34), never raw grade text */
@@ -363,15 +412,24 @@ function render(cs, view) {
       const origin = /^undetermined:/.test(t) ? T("state.undetermined", { reason: t.replace(/^undetermined:/, "") }) : t.replace(/^\w+:/, "");
       return `<p class="mk-small" data-origin-shared="${cs.esc(t)}">${W("question.origin.shared", { passages: nameOfPart(s.a) + ", " + nameOfPart(s.b), origin })}</p>`;
     }).join("") : "";
-    const set = grounds[0] || {};
-    const changes = doc.log.filter((e) => e.act === "Restructured");
-    const now = d.strength && d.strength.state === "ok" ? strengthText(d.strength.value) : "";
+    /* R54: who set it and every later change come from `inquirypartition` (`inquiry` R65); a `strength_after` of null is said as
+       not recorded, never computed */
+    const pc = d.partition && d.partition.state === "ok" && d.partition.value && d.partition.value.ok !== false ? d.partition.value : null;
+    const set = pc && Array.isArray(pc.groups) && pc.groups[0] ? pc.groups[0] : grounds[0] || {};
+    const pair = (x) => (x && typeof x === "object" ? strengthText(x).replace(/\?/g, "").replace(/\//g, "/") : "");
+    const changes = pc && Array.isArray(pc.changes) ? pc.changes.filter((e) => e && e.act === "restructured")
+      : doc.log.filter((e) => e.act === "Restructured");
+    const now = pc && pc.strength_now ? pair(pc.strength_now) : d.strength && d.strength.state === "ok" ? strengthText(d.strength.value) : "";
+    const strengthOf = (x) => (typeof x === "string" ? x : x && typeof x === "object" ? pair(x) : { html: cs.mark("gap", "undetermined", { reason: "" }) });
     restsBack = cs.sec("question.rests.title",
       (singles.length ? `<p><b>${W("question.rests.any")}</b></p>` + singles.map((p) => `<p class="mk-small">· ${cs.esc(legName(p.legs[0]))}</p>`).join("") : "")
       + many.map((p) => `<p class="mk-small">${W("question.rests.all", { passages: p.legs.map(legName).join(", ") })}</p>`).join("")
       + shared + (iv && iv.complete === false ? `<p class="mk-small" data-complete="false">${cs.mark("gap", "undetermined", { reason: "" })}</p>` : "")
+      + (d.partition && d.partition.state === "failed" ? cs.state(d.partition, () => "") : "")
       + (set.asserted_by || set.at ? `<p class="mk-small">${W("question.rests.set", { who: P.who(cs, set.asserted_by || ""), date: { html: set.at ? cs.date(String(set.at), { year: true }) : "" } })}</p>` : "")
-      + changes.map((e, i) => `<p class="mk-small" data-change="${i}">${W("question.rests.changed", { who: P.who(cs, e.who), date: { html: cs.date(e.at, { year: true }) },
+      + changes.map((e, i) => `<p class="mk-small" data-change="${i}">${pc ? W("question.rests.changed", { who: P.who(cs, e.by || ""), date: { html: cs.date(e.at, { year: true }) }, reason: String(e.reason || ""),
+          before: strengthOf(e.strength_before), after: e.strength_after === null || e.strength_after === undefined ? strengthOf(null) : strengthOf(e.strength_after) })
+        : W("question.rests.changed", { who: P.who(cs, e.who), date: { html: cs.date(e.at, { year: true }) },
           reason: e.reason, before: e.before.replace(/capture |connection |testimony /g, ""), after: changes[i + 1] ? changes[i + 1].before.replace(/capture |connection |testimony /g, "") : now })}</p>`).join("")
       /* "Change what a passage carries…" reopens R23's questions in place; the save carries her reason (NO_REASON) */
       + `<details class="mk-details" data-regroup="1"><summary>${W("question.rests.change")}</summary>`
@@ -418,9 +476,9 @@ function render(cs, view) {
       const stands = currentName && v.name === currentName ? ` · <b data-standson="1">${W("question.reading.standson", { project: projectTitle || T("state.undetermined", { reason: "" }) })}</b>` : "";
       const data = { version: String(v.name), grounds: (v.grounds || []).join(",") };
       const acts = [
-        v.state !== "accepted" ? cs.act("versionaccept", { label: "act.versionaccept.label.question", data }) : "",
+        v.state !== "accepted" ? acceptPart(v, "") : "",
         v.state === "suggested" || v.state === "rejected" ? cs.act("versionconsider", { label: "act.versionconsider.label.question", data }) : "",
-        v.state !== "rejected" ? cs.act("versionreject", { label: "act.versionreject.label.question", data }) : "",
+        v.state !== "rejected" ? declineFold(v) : "",
         v.state === "accepted" || v.state === "considering" || v.state === "rejected" ? cs.act("versionrevert", { label: "act.versionrevert.label.question", data }) : "",
         v.state === "accepted" && project && joined && v.name !== currentName ? cs.act("versioncurrent", { label: "act.versioncurrent.label.question", fills: { project: projectTitle }, data: { ...data, project } }) : "",
         !v.hidden ? cs.act("versionhide", { label: "act.versionhide.label.question", data }) : "",
@@ -454,23 +512,28 @@ function render(cs, view) {
       };
       return (list.length ? cs.sheet(list.map(row).join("")) : "") + (r.out_of_view === true ? `<p class="mk-note" data-outofview="1">${W("question.relies.outofview")}</p>` : "");
     });
-    if (relies) out.push(cs.sec("question.relies.title", relies, { help: "question.relies.help" }));
+    if (relies) around.push(cs.sec("question.relies.title", relies, { help: "question.relies.help" }));
   }
 
-  /* Concluding (R35, R41): conclude only once the project stands on an accepted reading, carrying it; the form */
+  /* Concluding (R35, R41, R50, R51): offered once the question cites a passage, on an accepted reading or one she writes
+     herself; open by itself when a reading stands */
   const stands = project ? (current && vs.some((v) => v.name === currentName && v.state === "accepted")) : accepted.length > 0;
   const reading = project ? currentName : (shown && shown.state === "accepted" ? shown.name : (accepted[0] && accepted[0].name) || "");
+  const cited = citedLegs.length > 0;
   let concl = "";
   if (b && b.conclusion_stance === "withdrawn") concl += `<p>${W("screen.question.concluded.withdrawn")}</p>`;
-  if (!concluded) {
-    if (!stands) concl += `<p class="mk-note" data-owed="reading">${W("question.empty.conclude.own")}</p>`;
-    else concl += `<details class="mk-details" data-conclude="form"><summary>${W("act.conclude.label.question")}</summary>`
-      + cs.choice("question-conclude-reading", "question.conclude.reading", [{ value: reading, text: reading }], { value: reading })
+  /* the form is drawn once the reads that say which reading stands have answered, so its default is not kept from a pending draw */
+  const settled = (!cur || cur.state !== "loading") && !(d.basis && d.basis.state === "loading");
+  if (!concluded && cited && settled) {
+    const names = [...new Set((reading ? [reading] : []).concat(accepted.map((v) => String(v.name))))];
+    concl += `<details class="mk-details" data-conclude="form"${stands ? " open" : ""}><summary>${W("act.conclude.label.question")}</summary>`
+      + cs.choice("question-conclude-reading", "question.conclude.reading", names.map((n) => ({ value: n, text: n })).concat([{ value: "", key: "question.conclude.own.choice" }]), { value: stands ? reading : "" })
+      + cs.field("question-conclude-own", "question.conclude.own.field", { area: true, rec: true, max: 500, help: "question.conclude.own.help" })
       + (project ? "" : cs.field("question-conclude-claim", "screen.question.conclude.claim", { area: true, rec: true }))
       + cs.field("question-conclude-falsifier", "question.conclude.falsifier", { area: true, rec: true, help: "question.conclude.falsifier.help" })
       + cs.checks("question-conclude-none", "question.conclude.falsifier", [["none", "question.conclude.nofalsifier"]])
       + cs.field("question-conclude-commentary", "question.conclude.commentary", { area: true, rec: true, help: "question.conclude.commentary.help" })
-      + cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id, version: reading } })
+      + cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id } })
       + `<p class="mk-small">${W("screen.question.conclude.who")}</p></details>`;
   }
   /* R27: the case's screens, where a read names the question's case (a citing case) */
@@ -482,16 +545,38 @@ function render(cs, view) {
   /* R36: a plan opened from this question links it by name */
   const plans = Array.isArray(ui.plans) ? ui.plans : [];
   for (const p of plans) concl += `<p class="mk-note" data-plan="${cs.esc(p.id)}">${W("question.plan.link", { plan: "" })}${cs.ref("plan", String(p.id), String(p.title || T("state.undetermined", { reason: "" })), [T("question.plan.link.tip")])}</p>`;
-  out.push(cs.sec("screen.question.concluding.head", concl
-    + cs.field("question-narrow-name", "screen.question.narrow.name", {})
+  if (concl) out.push(cs.sec("screen.question.concluding.head", concl));
+
+  /* R51: the secondary acts fold under `question.more` (before a conclusion; a concluded question has its own row, R62) */
+  const moreInner = cs.field("question-narrow-name", "screen.question.narrow.name", {})
     + cs.field("question-narrow-description", "screen.question.narrow.description", { area: true, rec: true })
     + cs.act("narrow", { label: "act.narrow.label.question", data: { inquiry: id } })
-    + (concluded ? "" : "")
+    + cs.act("search", { label: "act.search.label.question", data: { q: heading } })
     + cs.field("question-check", "screen.question.check.label", { help: "screen.question.check.help" })
     + cs.field("question-check-note", "screen.question.check.note", { area: true, rec: true })
     + cs.act("checkrequest", { label: "act.checkrequest.label.question", data: { inquiry: id } })
-    + (concluded ? "" : cs.field("question-plan", "screen.question.plan.label", {})
-      + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } }))));
+    + (concluded ? "" : cs.field("question-plan", "screen.question.plan.label", {}) + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } }));
+  out.push(`<details class="mk-details" data-fold="more"><summary>${W("question.more")}</summary>${moreInner}</details>`);
+
+  /* R56: the themes its passages are in, each with how many of the question's passages it holds (the question has no theme
+     of its own, `connections` R40); and the act that places a passage in one */
+  const passageDocs = [...new Set(citedLegs.filter(live).map((l) => String(l.target)))];
+  if (passageDocs.length) {
+    const tl = later("themes", "themeread", { limit: "200" });
+    const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
+    const held = themes.map((t) => { const r = later("theme:" + t.theme_id, "themeread", { id: String(t.theme_id), limit: "500" });
+      const ms = r.state === "ok" && r.value && Array.isArray(r.value.members) ? r.value.members : [];
+      return { t, n: ms.filter((m) => m && passageDocs.includes(String(m.document || m.target || "").split(/[#/:?]/)[0])).length, state: r.state }; });
+    const rows = held.filter((h) => h.n > 0).map((h) => cs.row("", `<span class="rec">${cs.esc(String(h.t.name || ""))}</span>`, "", String(h.n)));
+    const place = themes.length ? cs.choice("question-theme-passage", "theme.question.place", passageDocs.map((x) => ({ value: x, text: legTitle({ target: x }) })), {})
+      + cs.choice("question-theme-which", "theme.section", themes.map((t) => ({ value: String(t.theme_id), text: String(t.name || "") })), {})
+      + cs.field("question-theme-note", "theme.place", { rec: true, help: "act.themeplace.here.question" })
+      + cs.act("themeplace", { label: "theme.question.place", data: { inquiry: id } }) : "";
+    if (tl.state === "failed") around.push(cs.sec("theme.question.section", cs.state(tl, () => "")));
+    else if (rows.length || place) around.push(cs.sec("theme.question.section", (rows.length ? cs.sheet(rows.join("")) : "") + `<p class="mk-small">${W("theme.never.evidence")}</p>` + place));
+  }
+  if (around.length) out.push(`<details class="mk-details" data-fold="around"${around.length ? "" : ""}><summary>${W("question.around")}</summary>${around.join("")}</details>`);
+  out[stepsAt] = stepsHtml(concluded ? ["done", "done", "done"] : !cited ? ["current", "todo", "todo"] : stands ? ["done", "done", "current"] : ["done", "current", "todo"]);
   return out.join("");
 }
 
@@ -521,20 +606,41 @@ const acts = [
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
       const version = String(cs.value("question-conclude-reading") || el.dataset.version || "");
+      const own = String(cs.value("question-conclude-own") || "").trim();
       const claim = String(cs.value("question-conclude-claim") || "").trim();
       const falsifier = String(cs.value("question-conclude-falsifier") || "").trim();
       const none = (cs.value("question-conclude-none") || []).includes("none");
       const commentary = String(cs.value("question-conclude-commentary") || "").trim();
+      /* R50: no reading chosen is her own: 1 to 500 characters, sent as `reading` in place of `version`; empty refused in place */
+      if (!version && !claim && (!own || own.length > 500)) return { refuse: "refusal.BAD_READING" };
       if (!falsifier && !none) return { refuse: "question.conclude.falsifier.help" };
       const q = { target: String(view.subject || "") };
-      if (m) q.project = m[1]; else if (claim) q.conclusion = claim;
-      if (version) q.version = version;
+      if (m) q.project = m[1]; else if (claim && !version) q.conclusion = claim;
+      if (version) q.version = version; else if (own) q.reading = own;
       if (falsifier) q.falsifier = falsifier; else q.no_falsifier = "1";
       if (commentary) q.commentary = commentary;
       return { query: q, raw: "" };
     },
     /* R41 state g: the conclusion is answered to the project-aware read, read again once it is made or withdrawn */
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } },
+  /* R62: a concluded question offers a case: the question's project and itself as the one target, no case named; then the
+     case editor, where the draft stands */
+  { op: "casedraft", label: "act.casedraft.label.question",
+    send(view, el) { return { body: { project: String(el.dataset.project || ""), targets: [String(view.subject || "")] } }; },
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      if (!r || r.ok === false || !r.draftId) return { stay: true };
+      cs.go("case-editor", String(r.project || ""));
+    } },
+  /* R56: a passage placed in a theme, with an optional note; the question has no theme of its own (`connections` R40) */
+  { op: "themeplace", label: "theme.question.place",
+    send(view, el, cs) {
+      const theme = String(cs.value("question-theme-which") || ""), target = String(cs.value("question-theme-passage") || "");
+      if (!theme || !target) return { refuse: "screen.question.plan.empty" };
+      const note = String(cs.value("question-theme-note") || "").trim();
+      return { body: { theme, target, ...(note ? { note } : {}) } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { themes: null })); } },
   { op: "withdrawconclusion", label: "act.withdrawconclusion.label.question",
     send(view) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
@@ -608,17 +714,23 @@ const acts = [
   /* R25: the reading acts, each with the version; Stand on with the project; accept with the affirmation of every ground */
   ...["versionaccept", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "versionhide"].map((op) => ({
     op, label: "act." + op + ".label.question", rereads: ["basis", "strength", "inquiry"],
-    send(view, el) {
+    ...(op === "versionreject" ? { reasonField: "reason" } : {}),
+    send(view, el, cs) {
       /* each function is served by its own text (interface-shell R21 (1)), so the op is read from the pressed control */
       const op = el.getAttribute("data-act");
-      const body = { target: String(view.subject || ""), version: String(el.dataset.version || "") };
+      const version = String(el.dataset.version || "");
+      const body = { target: String(view.subject || ""), version };
       if (op === "versioncurrent") body.project = String(el.dataset.project || "");
-      if (op === "versionaccept" && el.dataset.grounds) body.affirmed = String(el.dataset.grounds).split(",").filter(Boolean);
+      /* R59: the parts she ticked ("Before you accept"); a reading of one part asks none */
+      const ix = String(el.dataset.idx || "");
+      if (op === "versionaccept" && cs.value("affirm-" + ix) !== null) body.affirmed = cs.value("affirm-" + ix);
+      /* R64: Decline sends the version's reject with her reason, and nothing while the reason is empty */
+      if (op === "versionreject") body.reason = String(cs.value("question-reject-" + ix) || "").trim();
       return { body };
     },
-    /* VERSION_AFFIRMATION_INCOMPLETE by its words, naming the parts not yet affirmed */
+    /* VERSION_AFFIRMATION_INCOMPLETE by its words, naming the first part not yet affirmed */
     refusals: { VERSION_AFFIRMATION_INCOMPLETE: (r, cs) => cs.w("refusal.VERSION_AFFIRMATION_INCOMPLETE",
-      { part: (Array.isArray(r && r.missing) ? r.missing : []).join(", ") }) },
+      { part: String((r && (r.part !== undefined ? r.part : Array.isArray(r.missing) ? r.missing[0] : "")) || "") }) },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { current: null })); } })),
   /* R31: the question read in her language, drawn in place; nothing saved */
   { op: "readtranslate", label: "act.readtranslate.label.question",
@@ -650,8 +762,9 @@ const acts = [
       cs.set("said", null);
       cs.set("limit", null);
       cs.set("asking", run);
+      const pm = /^project:\s*(\S+)\s*$/m.exec(String((view.data.inquiry && view.data.inquiry.state === "ok" && view.data.inquiry.value["bundle.md"]) || "").split(/\n---\s*\n/)[0] || "");
       cs.call("airunopen", { body: { run, contextType: "inquiry", contextId: String(view.subject || ""), mode: "check",
-        principalClaude: "member:" + member, skillVersion: pack, bounds } }).then((o) => {
+        principalClaude: "member:" + member, skillVersion: pack, bounds, ...(pm ? { project: pm[1] } : {}) } }).then((o) => {
         const r = res(o) || {};
         if (!o || o.ok === false || r.ok === false || r.started === false) {
           const code = String(r.code || r.reason || "");
@@ -722,6 +835,22 @@ const words = Object.freeze([
   "question.conclude.commentary", "question.conclude.commentary.help", "question.plan.link", "question.plan.link.tip",
   "refusal.VERSION_AFFIRMATION_INCOMPLETE", "dock.withheld.other", "dock.withheld.MEMBER_PRINCIPAL_RUN", "dock.withheld.AGENT_WORKER_UNBOUND",
   "dock.withheld.NAMESPACE_UNDETERMINED", "dock.withheld.CREDENTIAL_RECORD_SILENT",
+  /* T50 (R50–R64) */
+  "question.steps.source", "question.steps.mark", "question.steps.conclude", "question.more", "question.around",
+  "question.conclude.own.choice", "question.conclude.own.field", "question.conclude.own.help", "question.reading.by.member",
+  "refusal.BAD_READING", "act.casedraft.label.question", "act.casedraft.does", "screen.question.stopped.kept",
+  "screen.question.reject.summary", "screen.question.reject.reason", "screen.question.reject.reason.help", "screen.question.reject.go",
+  "reading.affirm.head", "reading.affirm.says", "reading.affirm.part", "reading.affirm.accept",
+  "ai.run.ending.completed", "ai.run.ending.completed.none", "ai.run.ending.cancelled", "ai.run.ending.mode-not-deployed", "ai.run.ending.fetches",
+  "ai.run.ending.subsessions", "ai.run.ending.wallclock", "ai.run.ending.runtime", "ai.run.ending.mints", "ai.run.ending.surfaces",
+  "ai.run.ending.proposals", "ai.run.ending.pages", "ai.run.ending.lease", "ai.run.ending.nothing-written", "ai.run.ending.unknown",
+  "screen.assistant.run.cost.sofar", "screen.assistant.run.cost.final", "ai.run.cost.money", "ai.run.cost.money.one", "ai.run.cost.tokens",
+  "ai.run.cost.tokens.one", "ai.run.cost.on.subscription", "ai.run.cost.on.apikey", "ai.run.cost.on.team", "ai.run.cost.on.project",
+  "ai.run.cost.means", "ai.run.cost.tokens.means", "ai.progress.reading", "ai.progress.read", "ai.progress.read.one", "ai.progress.found",
+  "ai.progress.found.one", "ai.progress.found.none", "ai.progress.composing", "ai.progress.checking", "ai.progress.hold", "ai.progress.means",
+  "ai.progress.checked.all", "ai.progress.checked.all.means", "ai.progress.check.ok", "ai.progress.check.fail", "ai.progress.checked",
+  "ai.progress.check.failed", "ai.reading.levels.disagree", "theme.question.section", "theme.question.place", "theme.section",
+  "theme.place", "theme.never.evidence", "act.themeplace.here.question",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */
