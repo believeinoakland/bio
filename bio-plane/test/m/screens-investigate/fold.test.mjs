@@ -102,12 +102,13 @@ test("R23 no field asks for a record id: ties offers named people from the direc
 test("R23 the other people fields are choices too: a claim's other record, a timeline participant, a proceeding party, obligor and court, explore's end, a standard's law, a money trail's question", async () => {
   const names = ["L. Chen", "Public Works Department"];
   const opts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent);
-  const person = await open(PATHS.person);
+  const person = await open(PATHS.person, { plane: { samepersoncandidates: ok({ ok: true, entity_id: "ENT-2026-0012", count: 0, candidates: [], truncated: false }) } });
   assert.deepEqual(opts(person, "person-claim-other"), ["Public Works Department"], "the person herself is not offered");
   const tl = await open(PATHS.timeline);
   assert.deepEqual(opts(tl, "tl-who"), names);
   const pr = await open(PATHS.proceeding);
-  for (const id of ["pr-party", "pr-obligor", "pr-forum"]) assert.deepEqual(opts(pr, id), names, id);
+  for (const id of ["pr-party", "pr-obligor"]) assert.deepEqual(opts(pr, id), names, id);
+  assert.deepEqual(opts(pr, "pr-forum"), ["Superior Court of California, County of Alameda"], "R36: the court is among the forums");
   assert.deepEqual(opts(pr, "pr-court"), ["Municipal Code §12.04", "Administrative Instruction 4.12, §3"]);
   const ex = await open(PATHS.explore);
   assert.deepEqual(opts(ex, "explore-to"), [word("screen.explore.to.any"), ...names]);

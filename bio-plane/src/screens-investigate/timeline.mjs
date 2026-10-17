@@ -85,7 +85,7 @@ function render(cs, view) {
   const q = {};
   if (set.length) q.set = set.join(",");
   if (shas.length) q.captures = shas.join(",");
-  const tl = set.length || shas.length ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
+  const tl = doc && (set.length || shas.length) ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
   const titleOf = (sha) => { const r = docsRead.find((x) => x && x.capture && x.capture.sha256 === sha); return (r && r.title) || ""; };
   const kinds = ["meeting", "adopted", "effective", "signed", "issued", "published", "received", "entered", "hearing", "period_covered", "edited"];
   const precisions = ["day", "minute", "second", "edtf"];
@@ -281,11 +281,11 @@ const PROGRESSION_KEYS = [
   "theme.name.label", "theme.name.help", "entity.relation.why", "entity.relation.cite", "entity.relation.cite.help", "connection.node.unnamed", "mark.grade.reading",
 ];
 
-const words = ["screen.timeline.name", "screen.timeline.purpose", ...PROGRESSION_KEYS,
+const words = [...new Set(["screen.timeline.name", "screen.timeline.purpose", ...PROGRESSION_KEYS,
   ...["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...TIMELINE_KEYS];
+  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...TIMELINE_KEYS])];
 
 export const TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads, place, render, acts, words, parts: Object.freeze(Object.assign({}, PARTS, TIMELINE_PARTS)) });

@@ -62,7 +62,7 @@ VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
 export const GRAPH_PERSON = "ENT-2026-0200";
 export const GRAPH = (o = {}) => ({ ok: true, centre: ENT, at: { value: "2026-10-14", precision: "day", zone: "UTC" },
-  nodes: [{ id: ENT, ring: 0, id_kind: "ENT" }, { id: GRAPH_PERSON, ring: 1, id_kind: "ENT" }, { id: ORG, ring: 2, id_kind: "ENT" }],
+  nodes: [{ id: ENT, ring: 0, id_kind: "ENT", label: "L. Chen", entity_kind: "person" }, { id: GRAPH_PERSON, ring: 1, id_kind: "ENT", label: "R. Alvarez", entity_kind: "person" }, { id: ORG, ring: 2, id_kind: "ENT", label: null, entity_kind: "body" }],
   steps: [{ id: "co:1", from: ENT, to: GRAPH_PERSON, kind: "mentioned_together", word: "mentioned together", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [{ source: "capture:" + SHA }], valid: {} },
     { id: "lines:holds:1", from: GRAPH_PERSON, to: ORG, kind: "line:holds:employee", word: "held the post (employee)", class: "evidentiary", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA, extent: { kind: "pdf-page", page: 1 } }], valid: {} }],
   stopped: [{ node: ORG, why: "ring" }], visited: 3, budget_ms: 10000, elapsed_ms: 2, ...o });

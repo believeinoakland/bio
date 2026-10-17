@@ -86,7 +86,7 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   panel = await openPanel(p, M3);
   fill(p, { "mf-doc": SHA });
   await press(p, "createevent", { within: panelOf(p, M3), reason: "the ledger dates it" });
-  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 213 } }]);
+  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "document" } }]);
   await press(p, "findin", { within: panelOf(p, M3) });
   assert.equal(p.location.pathname, "/app/find-in/" + P);
 });
@@ -106,7 +106,7 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
   await press(p, "recordfact", { el: main(p).querySelectorAll('button[data-act="recordfact"]')[0] });
   assert.deepEqual(p.byOp("recordfact")[0].body, { amount: "310,000", as_read: "Overhead allocation … 310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation",
     phase: "actual", basis: "undetermined", period: { fiscal: "FY2022" }, from: { as_written: "Sewer Fund 3100" }, to: null,
-    source: { capture_sha: SHA, extent: { kind: "pdf-page", page: 213 } }, stage: "paid" });
+    source: { capture_sha: SHA, extent: { kind: "document" } }, stage: "paid" });
   assert.ok(rowOf(p, "MNY-2026-new"), "the new figure is a row, not yet in the trail");
   fill(p, { "mf-contract": "ENT-2026-0005" });
   await press(p, "committedagainstpaid");

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, STD, P, STD_PROPOSALS, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, STD, P, SHA, STD_PROPOSALS, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/standard/" + STD;
 const reachable = (o = {}) => ({ boot: { plane: { ...plane(o), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } } });
@@ -64,7 +64,7 @@ test("R8 standarddeclare \"Hold this as a standard\" from a passage; standardado
   assert.equal(q.location.pathname, "/app/standard/STD-2026-0010-policy");
   fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-doc": SHA, "st-from": "2026-07-01" });
   await press(p, "standarddeclare", { reason: "the council adopted it" });
-  assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: ["CNT-2026-0030", "CNT-2026-0031"], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });
+  assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: [{ capture_sha: SHA, extent: { kind: "document" } }], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });
 });
 
 test("R8 an amendment needs the day it takes effect (control: nothing sent)", async () => {
