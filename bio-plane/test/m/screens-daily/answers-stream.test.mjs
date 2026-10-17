@@ -1,10 +1,9 @@
-/* The ask's progress as it is written, its answer only after the check (R52), and Ask's four states (R53). The page-level tests
-   run on the real served page (interface-shell's harness) over the stream's last event; the event-by-event tests run the act's
-   own `onEvent` (interface-shell R78) over a stand-in kit that holds the screen's page memory, because the harness delivers a
-   stream as one body. Every sentence is asserted as `word(key, vars)` (R34). */
+/* The ask's progress as it is written, its answer only after the check (R52), and Ask's four states (R53), on the real served
+   page (interface-shell's harness): a streamed body whose lines arrive two seconds apart on the page's clock (interface-shell
+   R78). Every sentence is asserted as `word(key, vars)` (R34). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS, open, ok, refused, text, press, beside, last, main, screen, word } from "./page.mjs";
+import { SCREENS, open, ok, refused, text, press, beside, last, main, screen, word, button } from "./page.mjs";
 import { ndjson } from "../interface-shell/harness.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -12,34 +11,45 @@ const ANSWER = { event: "answer", ok: true, answer: { question_as_read: "How man
   holdings: [{ address: "INF-1#p3", quote: "903 rows" }], looks: [], label: "machine work" }, withheld: [] };
 const STREAM = [{ event: "step", step: "interpreting" }, { event: "read", op: "retrieve", record: "INF-1" }, { event: "composing", found: true, count: 2 },
   { event: "checking", count: 1 }, { event: "checked", passage: "h1", found: true }, ANSWER];
-const askAct = SCREENS.find((s) => s.id === "answers").acts.find((a) => a.op === "ask");
 
-// The stand-in kit: `set` writes the screen's page memory, `call` answers a document's front matter.
-const kit = (ui) => ({ set: (k, v) => { ui[k] = v; }, call: async () => ({ result: { "bundle.md": '---\ntitle: "Work orders FY2025"\n---\n' } }) });
-const view = (ui) => ({ ui, parts: { frontTitle: SCREENS.find((s) => s.id === "answers").parts.frontTitle } });
+// A streamed body whose lines arrive two seconds apart on the page's clock (interface-shell R78's own stand-in).
+const streamed = (p, lines) => async () => {
+  const enc = new TextEncoder();
+  let i = 0;
+  return { status: 200, ok: true, headers: { get: (k) => (k.toLowerCase() === "content-type" ? "application/x-ndjson" : null) },
+    body: { getReader: () => ({ read: async () => { if (i >= lines.length) return { done: true }; const line = lines[i++]; await new Promise((r) => p.clock.setTimeout(r, 2000)); return { done: false, value: enc.encode(JSON.stringify(line) + "\n") }; } }) },
+    text: async () => lines.map((l) => JSON.stringify(l)).join("\n") };
+};
 
-test("R52: each stream event is handed on as it arrives: the reads, that the answer is being written and that it is being checked; no word of the answer before the answer event", async () => {
-  assert.equal(typeof askAct.onEvent, "function");
-  const ui = {};
-  const cs = kit(ui), v = view(ui);
-  const seen = [];
-  for (const ev of STREAM.slice(0, 5)) {
-    askAct.onEvent(ev, v, cs);
-    await new Promise((r) => setTimeout(r, 0));
-    seen.push(JSON.stringify({ working: ui.stream.working, reads: ui.stream.reads, composing: ui.stream.composing, checking: ui.stream.checking, answer: ui.answer || null }));
-  }
-  assert.deepEqual(seen.map((x) => JSON.parse(x).reads.length), [0, 1, 1, 1, 1], "a read row per read event");
-  assert.deepEqual(seen.map((x) => JSON.parse(x).composing), [false, false, true, true, true]);
-  assert.deepEqual(seen.map((x) => JSON.parse(x).checking), [false, false, false, true, true]);
-  assert.ok(seen.every((x) => JSON.parse(x).working === true && JSON.parse(x).answer === null), "working, with no answer yet");
-  assert.deepEqual(ui.titles, { "INF-1": "Work orders FY2025" }, "the read names the document by its title");
-  askAct.onEvent(STREAM[5], v, cs);
-  assert.equal(ui.stream.working, false);
-  assert.equal(ui.answer.summary.text, "812 of 903 were closed.", "the answer, after the answer event");
+test("R52: each stream event is drawn as it arrives, in a polite live region: the reads, that the answer is being written and that it is being checked; no word of the answer before the answer event, which carries the check beneath it", async () => {
+  const p = await open("/app/answers", { ...REACH, image: ok({ "bundle.md": '---\ntitle: "Work orders FY2025"\n---\n' }) });
+  const real = p.win.fetch;
+  p.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(p, STREAM)() : real(url, init));
+  p.doc.getElementById("answers-q").value = "How many?";
+  await p.click(button(p, "ask"));
+  const live = () => main(p).querySelector('[data-ask="working"]');
+  await p.clock.tick(2000);
+  assert.ok(live() && live().getAttribute("aria-live") === "polite", "the first event: working, in a polite live region");
+  assert.ok(text(p, live()).includes(word("ai.progress.hold.answer")));
+  await p.clock.tick(2000); await p.settle();
+  assert.ok(text(p, live()).includes(word("ai.progress.reading.ask", { document: "Work orders FY2025" })), "the read by the title of its record");
+  await p.clock.tick(2000);
+  assert.ok(text(p, live()).includes(word("ai.progress.composing.answer")) && !text(p, live()).includes(word("ai.progress.checking")));
+  await p.clock.tick(2000);
+  assert.ok(text(p, live()).includes(word("ai.progress.checking")));
+  assert.ok(!main(p).querySelector(".cs-machinework") && !text(p).includes("812 of 903"), "no word of the answer before its event");
+  await p.clock.tick(2000); await p.clock.tick(2000); await p.settle();
+  assert.ok(!live(), "the progress gives way to the answer");
+  assert.ok(text(p).includes("812 of 903 were closed."));
+  assert.ok(text(p).includes(word("ai.progress.checked.all")));
   // Control: a read that names no record draws no row.
-  const u2 = {};
-  askAct.onEvent({ event: "read", op: "retrieve", record: null }, view(u2), kit(u2));
-  assert.deepEqual(u2.stream.reads, []);
+  const q = await open("/app/answers", REACH);
+  const realQ = q.win.fetch;
+  q.win.fetch = (url, init) => (new URL(url, "https://x").searchParams.get("op") === "ask" ? streamed(q, [{ event: "read", op: "retrieve", record: null }, { event: "composing", found: false, count: 0 }, ANSWER])() : realQ(url, init));
+  q.doc.getElementById("answers-q").value = "How many?";
+  await q.click(button(q, "ask"));
+  await q.clock.tick(2000); await q.clock.tick(2000); await q.settle();
+  assert.ok(!text(q, q.root().querySelector('[data-ask="working"]') || q.doc.body).includes(word("ai.progress.reading.ask", { document: "" })));
 });
 
 test("R52, R53: a stream that ends refused (ASK_CHECK_FAILED) draws the failed-check sentence and no answer; a full stream draws the answer with the check beneath it; a non-streamed refusal is drawn as before", async () => {

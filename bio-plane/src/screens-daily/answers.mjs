@@ -153,43 +153,44 @@ export const answers = Object.freeze({
         // R52: a new ask clears the last answer and its progress.
         view.ui.stream = null;
         view.ui.answer = null;
-        return { body: { question: q } };
-      },
+
       // R52, R53: each stream event as it arrives (interface-shell R78). The reads, that the answer is being written and that it
       // is being checked are drawn as they come; nothing of the answer is drawn before the `answer` event, which follows the
       // plane's check; a stream that ends `refused` (`ASK_CHECK_FAILED`) draws the failed-check sentence and no answer.
-      onEvent: function (event, view, cs) {
-        const ui = view.ui || {};
-        const ev = event && typeof event === "object" ? event : {};
-        const cur = ui.stream && typeof ui.stream === "object" ? ui.stream : { working: false, reads: [], composing: false, checking: false, failed: false };
-        const next = { working: true, reads: cur.reads.slice(), composing: cur.composing, checking: cur.checking, failed: false };
-        if (ev.event === "read" && ev.record) {
-          const id = String(ev.record);
-          if (next.reads.indexOf(id) < 0) next.reads.push(id);
-          if (!(ui.titles && ui.titles[id])) {
-            // The document is named by its title, read once (R26): the row shows when the title is known.
-            cs.call("image", { query: { id: id } }).then(function (a) {
-              const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
-              const t = view.parts.frontTitle(v);
-              if (t) { const titles = Object.assign({}, (view.ui || {}).titles || {}); titles[id] = t; cs.set("titles", titles); }
-            }, function () {});
+        const onEvent = function (event) {
+          const ui = view.ui || {};
+          const ev = event && typeof event === "object" ? event : {};
+          const cur = ui.stream && typeof ui.stream === "object" ? ui.stream : { working: false, reads: [], composing: false, checking: false, failed: false };
+          const next = { working: true, reads: cur.reads.slice(), composing: cur.composing, checking: cur.checking, failed: false };
+          if (ev.event === "read" && ev.record) {
+            const id = String(ev.record);
+            if (next.reads.indexOf(id) < 0) next.reads.push(id);
+            if (!(ui.titles && ui.titles[id])) {
+              // The document is named by its title, read once (R26): the row shows when the title is known.
+              cs.call("image", { query: { id: id } }).then(function (a) {
+                const v = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+                const t = view.parts.frontTitle(v);
+                if (t) { const titles = Object.assign({}, (view.ui || {}).titles || {}); titles[id] = t; cs.set("titles", titles); }
+              }, function () {});
+            }
+          } else if (ev.event === "composing") next.composing = true;
+          else if (ev.event === "checking") next.checking = true;
+          else if (ev.event === "answer") {
+            next.working = false;
+            const a = ev.answer && typeof ev.answer === "object" ? ev.answer : null;
+            cs.set("stream", next);
+            cs.set("answer", a);
+            cs.set("withheld", Array.isArray(ev.withheld) ? ev.withheld : []);
+            cs.set("untested", !!ev.untested || !!(a && a.untested));
+            return;
+          } else if (ev.event === "refused") {
+            cs.set("stream", { working: false, reads: next.reads, composing: false, checking: false, failed: ev.code === "ASK_CHECK_FAILED" });
+            cs.set("answer", null);
+            return;
           }
-        } else if (ev.event === "composing") next.composing = true;
-        else if (ev.event === "checking") next.checking = true;
-        else if (ev.event === "answer") {
-          next.working = false;
-          const a = ev.answer && typeof ev.answer === "object" ? ev.answer : null;
           cs.set("stream", next);
-          cs.set("answer", a);
-          cs.set("withheld", Array.isArray(ev.withheld) ? ev.withheld : []);
-          cs.set("untested", !!ev.untested || !!(a && a.untested));
-          return;
-        } else if (ev.event === "refused") {
-          cs.set("stream", { working: false, reads: next.reads, composing: false, checking: false, failed: ev.code === "ASK_CHECK_FAILED" });
-          cs.set("answer", null);
-          return;
-        }
-        cs.set("stream", next);
+        };
+        return { body: { question: q }, onEvent: onEvent };
       },
       done: function (view, answer, cs) {
         let ev = answer;

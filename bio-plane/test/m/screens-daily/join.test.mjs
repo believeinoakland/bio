@@ -2,7 +2,10 @@
    (interface-shell's harness). Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, last, main, word, settle, MEMBER } from "./page.mjs";
+import { open as openRaw, ok, refused, text, ops, button, press, last, main, word, settle, MEMBER, withScreens } from "./page.mjs";
+
+// The screens a reference opens are registered, as on the real page (a reference to one that is not is a card only).
+const open = (path, plane, o = {}) => openRaw(path, plane, { screens: withScreens("theme", "project", "document"), ...o });
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 const NOCREATE = { whoami: ok({ ...MEMBER, capabilities: ["contribute"] }) };
@@ -105,7 +108,8 @@ test("R43: Projects reads themeread and draws the Themes section under the list:
   assert.ok(!text(p, sec).includes("a repair put off"));
   const every = sec.querySelectorAll("a").find((a) => a.textContent === word("theme.every"));
   assert.equal(every.getAttribute("href"), "/app/theme");
-  // (The reference opens `theme` once interface-shell R81 gains the kind: a card until then.)
+  const row = sec.querySelectorAll("a").find((a) => a.textContent === "Overtime");
+  assert.equal(row.getAttribute("href"), "/app/theme/THM-2", "a reference opening theme");
   // Control: none declared, no section.
   const none = await open("/app/projects", { ...plane, themeread: ok({ ok: true, themes: [] }) });
   assert.ok(!text(none).includes(word("theme.section")));
