@@ -85,14 +85,19 @@ export const ADMIN_SCREENS = Object.freeze(["updates"]);
 export const REF_SCREENS = Object.freeze({ document: "document", passage: "document", question: "question", project: "project",
   member: "members", capture: "open-file", knock: "inbox", person: "person", proceeding: "proceeding", standard: "standard",
   plan: "plan", timeline: "timeline", money: "money", calculation: "calculation", "case-editor": "case-editor",
-  "review-copy": "review-copy", ceremony: "ceremony", docket: "docket" });
+  "review-copy": "review-copy", ceremony: "ceremony", docket: "docket",
+  /* R81 (N1180; DEC-299 (1); DEC-310 (4), (5)): more doors; `published` opens in the public frame (R30), `archive` at a held
+     ZIP's capture digest; `dash-action` is not added: nothing links it in T50 */
+  request: "request", matter: "matter", action: "action", "dash-project": "dash-project", theme: "theme", published: "published", archive: "archive" });
+/* R81, R88: the kinds whose card is the kind's word alone (`shell.card.published`, `shell.card.archive`), not the item's facts */
+export const CARD_WORD_ONLY = Object.freeze(["published", "archive"]);
 
 /* R30, R45: the frames of `registry.json` other than `working` that the shell draws: `public` and `published` without a
    session, `setup` with or without one; the dock's panel is `dock`. A screen not named here is drawn in the working
    frame. */
 export const FRAMES = Object.freeze({
   front: "public", tour: "public", reset: "public", forgot: "public", doorbell: "public",
-  published: "published", "review-outside": "published",
+  published: "published", "review-outside": "published", "docket-public": "published",
   setup: "setup", join: "setup", site: "setup", install: "setup", update: "setup",
   assistant: "dock",
 });
@@ -100,37 +105,19 @@ const sessionless = (id) => FRAMES[id] === "public" || FRAMES[id] === "published
 
 /* R9 (K3137): addresses whose first part is not the screen's id: `/app/review` is `review-outside` (`screens-publish` R17). */
 export const ADDRESSES = Object.freeze({ review: "review-outside" });
+/* R79 (N1174; DEC-299 (11); DEC-301 (3)): the two addresses outside `/app` that draw a screen in its public frame, at that
+   address: `/doorbell` and `/tour`. Every other path outside `/` and `/app` draws `unavailable` in the public frame. */
+export const PUBLIC_ADDRESSES = Object.freeze({ doorbell: "doorbell", tour: "tour" });
 
-/* R21, R38: the ops a screen may name beyond its registry acts: `infolevelset` on any screen, and the re-points, each
-   until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2);
-   R55: `planask` on `plan` (`screens-action` R13), `stepsource` and `stepsourcewithdraw` on `explore` (`screens-investigate`
-   R17). */
-/* R72 (K3373): until the screen registry is re-taken from the design's `registry.json` (N1122, T50), the acts that file lists
-   at fa3c8b7e8e and the generated registry (4664e8efd4) lacks, each admitted on its screen; R71: `founderhandleset` on
-   `setup`. Each entry goes when the registry lists it. */
+/* R21, R73 (T50): the ops a screen may name beyond the registry's acts (its declared, function and owed acts, each owed one
+   under its op name, `wizard-scripts` R13, R41): `infolevelset` on any screen (`ANY_SCREEN_OPS`), and the one op a screen
+   needs that the registry does not list for it, until it does: `stepsourcewithdraw` on `explore` (R55). A test fails on an
+   entry the registry lists for that screen. `unlock` on a screen drawn without a session is R46's, under the locked
+   session's token (`LOCKED_OPS`), not a re-point. */
 export const RE_POINTS = Object.freeze({
-  connect: Object.freeze(["reauth"]),
-  group: Object.freeze(["declaredstakeset", "writinghelp"]),
-  projects: Object.freeze(["themeread", "projectjoin"]),
-  theme: Object.freeze(["themeread", "themedeclare", "themeplace", "themewithdraw"]),
-  queue: Object.freeze(["projectjoin", "release", "filingapprove"]),
-  finder: Object.freeze(["themeread"]),
-  document: Object.freeze(["adoptversion", "keepversion", "connectionchoose", "explore", "themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"]),
-  project: Object.freeze(["projectvisibilityset", "projectownerremove", "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue", "writinghelp"]),
-  projectai: Object.freeze(["projectjoin"]),
-  question: Object.freeze(["inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "themeplace", "airunopen", "airunclose"]),
-  person: Object.freeze(["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"]),
-  timeline: Object.freeze(["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"]),
-  explore: Object.freeze(["stepsource", "stepsourcewithdraw"]),
-  plan: Object.freeze(["planask"]),
-  "start-send": Object.freeze(["writinghelp"]),
-  action: Object.freeze(["actionrisktier", "actionlaws", "actionlawspropose"]),
-  "review-outside": Object.freeze(["statementack"]),
-  home: Object.freeze(["projectjoin"]),
-  ceremony: Object.freeze(["ratify"]),
-  front: Object.freeze(["unlock"]),
-  setup: Object.freeze(["founderhandleset"]),
+  explore: Object.freeze(["stepsourcewithdraw"]),
 });
+export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
 
 /* R12: the acts their owners refuse to a member who does not administer: `membership`'s administrator acts (its R84's
@@ -173,8 +160,11 @@ export function checkScreens(screens) {
       if (typeof op !== "string" || !Object.hasOwn(OPS, op)) throw new Error(`interface-shell: screen ${id}'s act names ${String(op)}, which OPS does not hold`);
       if (!allowed.has(op)) throw new Error(`interface-shell: screen ${id}'s act ${op} is not the registry's for it, nor a named re-point`);
       /* R30: a screen drawn without a session calls only public ops (R46: `unlock`, under the locked session's token) */
-      if (sessionless(id) && OPS[op].classes !== null && !(RE_POINTS[id] || []).includes(op)) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
+      if (sessionless(id) && OPS[op].classes !== null && !(RE_POINTS[id] || []).includes(op) && !LOCKED_OPS.includes(op)) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
     }
+    /* R87: the shell asks a Reasoned act's reason, or sends the member's own words in the act's `reasonField`; a screen that
+       names a `reasonField` that is no field's name supplies neither, so it is never served */
+    for (const a of s.acts) if (a && a.reasonField !== undefined && !(typeof a.reasonField === "string" && a.reasonField)) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names a reasonField that is no field's name, so it would send without a reason`);
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
     if (s.ABSENT_CODES !== undefined && !(Array.isArray(s.ABSENT_CODES) && s.ABSENT_CODES.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s ABSENT_CODES is not a list of codes`);
   }
@@ -221,7 +211,7 @@ export function wordsOf(screens) {
 /* The words the page carries (R70: the keys of `setup-words`' list, read from it, never English held here): the families the shell and its kit draw (R5–R7, R10, R11, R13, R14, R16, R32–R36, R40),
    each act's label and explanation, each registered screen's, and every key a screen (or the guide) names. */
 const FAMILIES = ["shell.", "rail.", "tab.", "state.", "weight.", "mark.", "level.", "date.", "refusal.", "ai.refused.", "session.",
-  "signing.ceremony.", "instance.test."];
+  "signing.ceremony.", "instance.test.", "page.", "unavailable."];
 function pageWords(screens, ops) {
   const named = new Set(screens.flatMap((s) => (s.words || []).map((x) => (Array.isArray(x) ? x[0] : x))));
   const ids = screens.map((s) => s.id).filter(Boolean).concat(Object.keys(PATHS), ["unavailable", "more"]);
@@ -270,7 +260,7 @@ function dataOf(screens, guide) {
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
        credential acts `knock`, `enroll`, `recover` stay on the phone) */
     larger: [...ops].filter((op) => Object.hasOwn(OPS, op) && rungOf(op) !== "none" && phoneOf(op) === false),
-    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES,
+    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, cardWordOnly: CARD_WORD_ONLY, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES, publicAddresses: PUBLIC_ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS, absence: ABSENCE.source, adminScreens: ADMIN_SCREENS,
   };
@@ -284,6 +274,12 @@ function dataOf(screens, guide) {
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
+@media (max-width:${PHONE_WIDTH}px){.cs-mast .mk-grp{white-space:normal;overflow-wrap:anywhere;min-width:0;flex:1 1 auto}
+.cs-main{overflow-x:hidden}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
+.cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
+.cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
+.cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
+.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
 /* R56: the script-hook classes, each with what reads it; a class here needs no style. */
@@ -375,6 +371,7 @@ export function interfacePage(screens = [], options = {}) {
 </head>
 <body class="cs">
 ${band}<div id="cs-root"></div>
+<div class="sr" id="cs-live" role="status" aria-live="polite"></div>
 <div class="cs-tip" id="cs-tip" role="tooltip" hidden></div>
 <script nonce="${NONCE_SLOT}">${script}</script>
 </body>
