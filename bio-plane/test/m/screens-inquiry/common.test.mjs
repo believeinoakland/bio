@@ -36,8 +36,10 @@ const base = (id) => (id === "projectai" ? AI : {});
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
 /* the registry acts this module's requirements do not name (reported to BOB, J3): every other act the registry lists for
    its screens is drawn (N1073: the acts are read from the registry, the owner's declaration, never hand-listed) */
-const NOT_NAMED = { project: ["writinghelp", "owed:projectstakeset K3230"], question: ["themeplace"],
-  document: ["themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"] };
+const NOT_NAMED = { project: ["writinghelp", "owed:projectstakeset K3230"], question: [], document: ["captureprogressions"] };
+/* T50: the registry still owes `projectstakeset` (K3230, "owed:"); R53 draws it, re-pointed by interface-shell. Labels the requirements name by key. */
+const OWED = { project: ["projectstakeset"] };
+const LABEL = { projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here" };
 const NAMED = Object.fromEntries(REGISTRY.screens.filter((s) => SCREENS.some((x) => x.id === s.id))
   .map((s) => [s.id, s.acts.map((a) => a.op).filter((op) => !(NOT_NAMED[s.id] || []).includes(op))]));
 
@@ -88,11 +90,12 @@ test("R5 R14–R16 R25 R28–R33 R37 R41 each screen draws its requirements' act
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
     const ops = s.acts.map((a) => a.op);
-    assert.deepEqual([...ops].sort(), [...NAMED[s.id]].sort(), `${s.id}: exactly the acts its requirements name`);
-    for (const op of ops) assert.ok(reg.acts.some((a) => a.op === op), `${s.id}: ${op} is the registry's`);
+    assert.deepEqual([...ops].sort(), [...NAMED[s.id], ...(OWED[s.id] || [])].sort(), `${s.id}: exactly the acts its requirements name`);
+    for (const op of ops) assert.ok(reg.acts.some((a) => a.op === op) || (OWED[s.id] || []).includes(op), `${s.id}: ${op} is the registry's`);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, `act.${a.op}.label.${s.id}`);
+      const named = LABEL[a.op];
+      assert.equal(a.label, named ? (typeof named === "string" ? named : named[s.id]) : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.includes(a.label), `${a.label} listed`);
     }
   }

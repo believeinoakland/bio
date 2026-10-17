@@ -40,5 +40,6 @@ test("R49 a document held for no question preselects none, and a cite with none 
   assert.equal(choice(p).querySelector("option[selected]").getAttribute("value"), "", "the blank choice is the one chosen");
   await press(p, "cite", { within: cite(p) });
   assert.equal(p.byOp("cite").length, 0, "nothing is sent");
-  assert.ok(says(main(p), "screen.document.cite.noquestion"), "said in place");
+  assert.ok(says(main(p), "screen.find-in.questionfirst"), "R61: said in place, in the fold that holds it");
+  assert.ok(says(main(p).querySelector("details[data-cite=none] summary"), "screen.document.cite.none.summary"));
 });

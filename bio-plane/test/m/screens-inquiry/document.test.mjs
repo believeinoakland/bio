@@ -54,7 +54,9 @@ test("R3 R32 the document drawn: title, source as an outside link, its grade as 
 });
 
 test("R32 control: a capture graded B draws B; one no read grades draws no grade mark at all, never Unrated", async () => {
-  const p = await open(at, { plane: { heldcaptures: ok({ ok: true, rows: [] }) } });
+  /* R54: the grade is `capturegrade`'s own answer for the digest; none answered draws no mark */
+  const p = await open(at, { plane: { capturegrade: ok({ ok: true, captureSha: SHA, grade: null }) } });
+  assert.equal(p.byOp("capturegrade")[0].query.capture, SHA);
   assert.equal(main(p).querySelector(".mk-facts .cs-grade"), null);
   assert.equal(main(p).querySelector(".mk-facts .cs-gap"), null);
 });
@@ -62,7 +64,8 @@ test("R32 control: a capture graded B draws B; one no read grades draws no grade
 test("R32 R39 the title is the document's, never the address's last segment or its id", async () => {
   const slug = DOCUMENT_MD.replace(/^title: .*$/m, "title: \"ai-4-12.pdf\"");
   const p = await open(at, { images: { [D]: { "bundle.md": slug, "data/provenance.json": provenanceOf(SHA) } } });
-  assert.ok(main(p).querySelector("h1").textContent.startsWith(lead("state.undetermined")));
+  /* R55: a held page with no title of its own is headed by its site and capture day, never the address */
+  assert.equal(main(p).querySelector("h1").textContent, word("document.untitled.web", { site: "example.org", date: "2 October 2026" }));
   for (const h of main(p).querySelectorAll("h1, h2")) assert.doesNotMatch(h.textContent, /INFO-|ai-4-12/);
 });
 

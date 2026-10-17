@@ -112,7 +112,12 @@ test("R24 the read-back: one single part and one two-passage part in both shapes
   const titled = (id, t) => ({ "bundle.md": `---\nid: ${id}\ntitle: "${t}"\n---\n` });
   const docs = { "INFO-2026-0007": titled("INFO-2026-0007", "The count"), "INFO-2026-0009": titled("INFO-2026-0009", "The audit") };
   const p = await open(at, { images: { [Q]: { "bundle.md": md }, ...docs }, plane: {
-    partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }) } });
+    partitionindependence: ok({ ok: true, inquiry: Q, independence: { checked: true, parts: 2, shared: [{ a: "part 1", b: "part 2", through: ["issuer:Public Works"] }], complete: true } }),
+    /* R54: who set it and each change come from `inquirypartition`; a `strength_after` of null is said, never computed */
+    inquirypartition: ok({ ok: true, id: Q, grouped: true, groups: [{ ground: "part 1", asserted_by: "dev", at: "2026-10-05T09:00:00Z", legs: [0] }], ungrouped: [],
+      changes: [{ at: "2026-10-05T09:00:00Z", by: "dev", act: "authored", reason: null, strength_before: null, strength_after: null },
+        { at: "2026-10-08T09:00:00Z", by: "mai", act: "restructured", reason: "the audit stands alone", strength_before: { capture: { grade: "B" }, connection: { grade: "C" } }, strength_after: null }],
+      strength_now: { capture: { grade: "B" }, connection: { grade: "C" } } }) } });
   const r = section(p, "question.rests.title");
   assert.ok(says(r, "question.rests.any"));
   assert.ok(r.textContent.includes("Administrative Instruction 4.12"), "the single part, by its title as the reading shown names it");
@@ -120,7 +125,9 @@ test("R24 the read-back: one single part and one two-passage part in both shapes
   assert.ok(says(r, "question.origin.shared", { passages: "Administrative Instruction 4.12, The count, The audit", origin: "Public Works" }));
   assert.ok(r.textContent.includes(lead("question.rests.set")) && r.textContent.includes("dev"));
   assert.ok(r.querySelector('[data-change="0"]').textContent.includes("the audit stands alone"));
-  assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B, C"), "the strength before, as the Session Log records it");
+  assert.ok(r.querySelector('[data-change="0"]').textContent.includes("B/C"), "the strength before, as the change records it");
+  assert.equal(r.querySelectorAll("[data-change]").length, 1, "the first authoring is the setting, not a change");
+  assert.ok(r.querySelector('[data-change="0"] .cs-gap'), "a strength_after of null is said as undetermined, never computed");
   /* "Change what a passage carries…" reopens the questions in place; the change is sent with her reason */
   const change = r.querySelector('[data-regroup="1"]');
   assert.ok(says(change.querySelector("summary"), "question.rests.change"));

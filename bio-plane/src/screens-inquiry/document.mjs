@@ -124,12 +124,27 @@ function render(cs, view) {
     source: outside ? { html: `<a class="cs-btn" data-tone="quiet" href="${cs.esc(locator)}" rel="noopener noreferrer" target="_blank" data-outward="1">${cs.esc(locator)}</a>` }
       : (locator || doc.source.authority || "") })}</p>`);
 
-  /* R32: this copy's grade, the capture's own grade object (its held row), drawn as one mark; none where none is read */
+  /* R54: this copy's grade is `capturegrade`'s own answer for its digest, not the project's list of held captures; the row of
+     that list (R49, R61) still says what the capture was held for. R55: the viewer's own held captures say whether this copy
+     is hers and not yet vouched for. */
   const held = project && sha ? later("held", "heldcaptures", { project, limit: "500" }) : null;
   const row = held && held.state === "ok" && Array.isArray(held.value.rows || held.value.items || held.value.captures)
     ? (held.value.rows || held.value.items || held.value.captures).find((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id)) : null;
-  const gradeObj = row && row.capture && row.capture.grade ? row.capture.grade : null;
+  const gr = sha ? later("grade", "capturegrade", { capture: sha }) : null;
+  const gradeObj = gr && gr.state === "ok" && gr.value && gr.value.grade ? gr.value.grade : null;
   const letter = gradeObj && /^[A-D]$/.test(String(gradeObj.grade || "")) ? String(gradeObj.grade) : "";
+  const mineHeld = project && sha && view.me && view.me.member ? later("minehelds", "heldcaptures", { project, member: String(view.me.member), limit: "500" }) : null;
+  const mineRows = mineHeld && mineHeld.state === "ok" && mineHeld.value ? (mineHeld.value.rows || mineHeld.value.items || mineHeld.value.captures || []) : [];
+  const isHeld = mineRows.some((r) => r && ((r.capture && r.capture.sha256 === sha) || r.bundle_id === id || r.document === id || r.id === id));
+  const vouched = ui.outcome && ui.outcome.release && ui.outcome.release.ok === true;
+  if (isHeld && !vouched) out.push(`<div class="mk-note" data-held="1"><p>${cs.w("document.held.says")}</p>`
+    + cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
+    + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
+    + cs.act("release", { label: "act.release.label.document", data: { document: id }, tone: "primary" }) + own("release") + "</div>");
+  else if (vouched) out.push(`<p class="mk-note" data-vouched="1">${cs.w("document.vouched", { member: view.parts.who(cs, view.me && (view.me.handle || view.me.member) || ""), date: { html: cs.date(new Date(cs.now()).toISOString(), { year: true }) } })}</p>`);
+  /* R55: a held page with no title of its own is headed by its site and capture day, never the address */
+  if (!titled && outside) { let site = ""; try { site = new URL(locator).hostname; } catch { site = ""; }
+    out[0] = cs.title(site ? T("document.untitled.web", { site, date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : "" }) : T("state.undetermined", { reason: "" }), { thing: "document" }); }
   const note = sha ? later("gradenote", "gradenote", { capture: sha }) : { state: "empty" };
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
@@ -169,14 +184,16 @@ function render(cs, view) {
         + cs.choice("document-cite-role", "screen.document.cite.role",
             [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="mk-small">${cs.w("screen.document.cite.noquestion")}</p>`;
+    const pickHelp = cites.length ? `<p class="mk-small">${cs.w("screen.document.cite.question.help")}</p>` : "";
+    const none = ui.citeNone ? `<details class="mk-details" data-cite="none" open><summary>${cs.w("screen.document.cite.none.summary")}</summary><p class="mk-small">${cs.w("screen.find-in.questionfirst")}</p></details>` : "";
     return list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       const page = extent && Number.isInteger(extent.page) ? extent.page : null;
       return `<blockquote class="mk-passage rec" data-passage="${i}">“${cs.esc(String(p.text).trim())}”`
         + (page !== null ? `<span class="mk-small">${cs.w("screen.document.passage.where", { page })}</span>` : "") + "</blockquote>"
-        + (extent && cites.length ? cs.act("cite", { label: "act.cite.label.document",
+        + (extent && cites.length ? cs.act("cite", { label: "document.read.cite",
             data: { found: JSON.stringify({ capture_sha: sha, extent, kind: "passage" }) } }) : "");
-    }).join("") + pick + own("cite");
+    }).join("") + pick + pickHelp + none + own("cite");
   }));
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
@@ -190,6 +207,13 @@ function render(cs, view) {
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
   out.push(own("transcribe") + own("pagetranscribe"));
+  /* R55: a picture whose text the reading could not make out, and a table read flat, say so */
+  if (reading.state === "ok" && reading.value && reading.value.reading) {
+    const rd0 = reading.value.reading;
+    if (rd0.content_type && /^image\//.test(String(rd0.content_type)) && !(Array.isArray(reading.value.text_units) && reading.value.text_units.length))
+      out.push(`<details class="mk-details" data-fold="image" open><summary>${cs.w("document.image.unread.summary")}</summary><p class="mk-small">${cs.w("document.image.unread")}</p></details>`);
+    if (rd0.tables_flattened === true || rd0.table_flattened === true) out.push(`<p class="mk-note" data-note="table">${cs.w("document.table.flattened")}</p>`);
+  }
   if (reading.state === "ok" && reading.value.untested && reading.value.text_provenance && reading.value.text_provenance.transcribed)
     out.push(`<p class="cs-draftlabel" data-label="untested">${cs.w("ai.label.untested")}</p>`);
 
@@ -204,6 +228,36 @@ function render(cs, view) {
         + cs.choice("document-claim-basis", "screen.document.claim.basis",
             [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
         + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim")));
+  }
+
+  /* R56: themes this document or its passages are placed in (never evidence), placements and hunches apart, and the steps it is
+     threaded to (`captureprogressions`) */
+  if (sha) {
+    const tl = later("themes", "themeread", { limit: "200" });
+    const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
+    const lines = [];
+    for (const t of themes) {
+      const r = later("theme:" + t.theme_id, "themeread", { id: String(t.theme_id), limit: "500" });
+      if (r.state !== "ok" || !r.value) continue;
+      const mine = (x) => x && (String(x.document || "") === id || String(x.target || "").split(/[#/:?]/)[0] === id);
+      for (const m of (Array.isArray(r.value.members) ? r.value.members : []).filter(mine))
+        lines.push(`<p class="mk-small" data-theme="${cs.esc(t.theme_id)}"><b>${cs.esc(String(t.name || ""))}</b> ${m.page ? cs.w("screen.document.theme.page", { page: String(m.page), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" }, note: String(m.note || "") })
+          : cs.w("screen.document.theme.whole", { kind: T("shell.card.document"), name: String(m.placer_handle || ""), date: { html: m.placed_at ? cs.date(String(m.placed_at), { year: true }) : "" } })}`
+          + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(m.target || id) } }) + "</p>");
+      for (const h of (Array.isArray(r.value.hunches) ? r.value.hunches : []).filter(mine))
+        lines.push(`<p class="mk-small" data-hunch="${cs.esc(t.theme_id)}"><span class="cs-hunch" data-mark="hunch">${cs.w("theme.hunch.mark")}</span> <b>${cs.esc(String(t.name || ""))}</b> ${cs.w("screen.document.theme.proposed", { page: String(h.page || ""), date: { html: h.proposed_at ? cs.date(String(h.proposed_at), { year: true }) : "" }, note: String(h.proposal_note || "") })}`
+          + cs.act("themewithdraw", { label: "act.themewithdraw.label.document", data: { theme: String(t.theme_id), target: String(h.target || id) } }) + "</p>");
+    }
+    const placeBox = themes.length ? cs.choice("document-theme-which", "theme.section", themes.map((t) => ({ value: String(t.theme_id), text: String(t.name || "") })), {})
+      + cs.field("document-theme-note", "theme.place", { rec: true })
+      + cs.act("themeplace", { label: "theme.place", data: { target: id } }) + cs.act("themepropose", { label: "theme.propose", data: { target: id } }) : "";
+    if (tl.state === "failed") out.push(cs.sec("theme.section", cs.state(tl, () => "")));
+    else if (lines.length || placeBox) out.push(cs.sec("theme.section", lines.join("") + `<p class="mk-small">${W("theme.never.evidence")}</p>` + placeBox));
+    const pg = later("progs", "captureprogressions", { sha256: sha });
+    const plist = pg.state === "ok" && pg.value ? (Array.isArray(pg.value.instances) ? pg.value.instances : Array.isArray(pg.value.progressions) ? pg.value.progressions : []) : [];
+    if (pg.state === "failed") out.push(cs.sec("progression.threadedto", cs.state(pg, () => "")));
+    else if (plist.length) out.push(cs.sec("progression.threadedto", cs.sheet(plist.map((x) => cs.row("", `<span class="rec">${cs.esc(String(x.label || x.progression_key || ""))}</span>`, "",
+      W("progression.followed", { progression: String(x.label || x.progression_key || ""), n: String(x.definition_version || x.thread_version || "") }))).join("")) + cs.act("thread", { label: "progression.thread.here", data: { sha } })));
   }
 
   /* its versions (provenance's versionchain): a newer version than this copy marked changed; refused by its words
@@ -278,21 +332,33 @@ function render(cs, view) {
       String(x.from || ""), x.from_title || T("state.undetermined", { reason: "" }), [x.from_title || ""]), "")).join(""))
     + (bk.out_of_view ? `<p class="mk-small">${cs.w("screen.document.backlinks.hidden")}</p>` : "") : ""));
 
-  /* this copy's acts: vouch (by its weight), attest (signed), watch for changes and check now (R15), retire (terminal) */
+  /* R55: the copy's other acts sit at the foot: attest with when it is useful, watching and checking (R15), and retire folded apart */
   out.push(cs.sec("screen.document.copyacts.head",
-    cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
-    + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
-    + cs.act("release", { label: "act.release.label.document", data: { document: id } }) + own("release")
-    + cs.act("attest", { label: "act.attest.label.document", data: { sha } }) + own("attest")
-    /* R32: a testimony has no address to watch or check */
+    cs.act("attest", { label: "document.attest.label", data: { sha } }) + `<p class="mk-small">${cs.w("document.attest.when")}</p>` + own("attest")
     + (testimony ? "" : cs.act("monitorset", { label: "act.monitorset.label.document", data: { document: id } }) + own("monitorset")
       + cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor"))
-    + cs.act("retire", { label: "act.retire.label.document", data: { document: id } }) + own("retire")));
+    + `<details class="mk-details" data-fold="retire"><summary>${cs.w("document.retire.fold")}</summary><p class="mk-small">${cs.w("document.retire.when")}</p>`
+    + cs.act("retire", { label: "document.retire.label", data: { document: id } }) + own("retire") + "</details>"));
   return out.join("");
 }
 
-/** R3's, R15's and R32's acts. */
+/** R3's, R15's, R32's, R56's and R61's acts. */
 const acts = [
+  /* R56: a placement in a theme (or a hunch, apart), taken out with a reason */
+  ...["themeplace", "themepropose"].map((op) => ({ op, label: "theme." + (op === "themeplace" ? "place" : "propose"),
+    send(view, el, cs) {
+      const theme = String(cs.value("document-theme-which") || "");
+      if (!theme) return { refuse: "screen.document.cite.noquestion" };
+      const note = String(cs.value("document-theme-note") || "").trim();
+      return { body: { theme, target: String(view.subject || ""), ...(note ? { note } : {}) } };
+    },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { themes: null })); } })),
+  { op: "themewithdraw", label: "act.themewithdraw.label.document", reasonField: "reason",
+    send(view, el) { return { body: { theme: String(el.dataset.theme || ""), target: String(el.dataset.target || view.subject || "") } }; },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { themes: null })); } },
+  { op: "thread", label: "progression.thread.here",
+    send(view, el) { return { body: { sha256: String(el.dataset.sha || "") } }; },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { progs: null })); } },
   /* R32: a newer version's notice decided here: adopt it with her reason, or keep the version cited */
   { op: "adoptversion", label: "act.adoptversion.label.document", reasonField: "why", rereads: ["backlinks"],
     send(view, el, cs) {
@@ -326,7 +392,8 @@ const acts = [
   { op: "cite", label: "act.cite.label.document",
     send(view, el, cs) {
       const question = String(cs.value("document-cite-question") || "").trim();
-      if (!question) return { refuse: "screen.document.cite.noquestion" };
+      if (!question) { cs.set("citeNone", true); return null; }
+      cs.set("citeNone", false);
       const role = cs.value("document-cite-role") === "cuts_against" ? "cuts_against" : "supports";
       return { query: { project: question, role, found: el.dataset.found || "" } };
     } },
@@ -424,6 +491,13 @@ const words = Object.freeze([
   ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe",
     "adoptversion", "keepversion", "connectionchoose", "explore"].map((op) => "act." + op + ".label.document"),
   "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages",
+  /* T50 (R54–R56, R61) */
+  "document.held.says", "document.vouched", "document.attest.label", "document.attest.when", "document.retire.fold", "document.retire.when",
+  "document.retire.label", "document.image.unread", "document.image.unread.summary", "document.table.flattened", "document.untitled.web",
+  "document.read.cite", "screen.document.cite.question.help", "screen.document.cite.none.summary", "screen.find-in.questionfirst",
+  "theme.section", "theme.never.evidence", "theme.place", "theme.propose", "theme.hunch.mark", "screen.document.theme.page",
+  "screen.document.theme.whole", "screen.document.theme.proposed", "progression.threadedto", "progression.followed", "progression.thread.here",
+  "shell.card.document", "act.themewithdraw.label.document",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "state.empty", "state.loading", "state.failed", "state.undetermined", "shell.reason", "shell.reason.help", "member.founder.unnamed",
   "screen.question.supports.head", "screen.question.against.head",
