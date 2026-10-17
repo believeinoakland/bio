@@ -4,6 +4,7 @@
  * (`proposals`), each drawn as machine work, "not a standard until a member adopts it". */
 
 import { PARTS } from "./parts.mjs";
+import { FORM_SHARED } from "./graphwords.mjs";
 
 function place(view) {
   const id = String(view.subject || "").split("/")[0];
@@ -13,7 +14,7 @@ function place(view) {
 function reads(view) {
   const [id, mode] = String(view.subject || "").split("/");
   const state = mode === "adopted" || mode === "all" ? mode : "open";
-  const out = {};
+  const out = { docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length } };
   if (/^STD-/.test(id)) {
     out.standard = { op: "standard", query: { id }, subject: true };
     out.relations = { op: "lawrelations", query: { id } };
@@ -65,7 +66,7 @@ function render(cs, view) {
   /* "Hold this as a standard", from a passage */
   out.push(cs.sec(S + "declare", cs.field("st-cite", S + "cite", { help: S + "cite.help" })
     + cs.choice("st-kind", S + "kindpick", ["policy", "ordinance", "regulation", "statute", "commitment", "standard"].map((k) => [k, S + "kind." + k]), {})
-    + cs.field("st-issuer", S + "issuer", {}) + cs.field("st-text", S + "text", { help: S + "text.help" })
+    + cs.field("st-issuer", S + "issuer", {}) + P.docChoice(cs, view, "st-doc", { label: S + "text", help: S + "text.help" })
     + cs.field("st-from", S + "from", { type: "date" })
     + cs.act("standarddeclare", { label: "act.standarddeclare.label.standard", tone: "primary" })));
   return out.join("");
@@ -75,7 +76,8 @@ const acts = [
   { op: "standarddeclare", label: "act.standarddeclare.label.standard",
     send(view, el, cs) {
       const cite = String(cs.value("st-cite") || "").trim(), issuer = String(cs.value("st-issuer") || "").trim();
-      const text = String(cs.value("st-text") || "").split(",").map((x) => x.trim()).filter(Boolean);
+      const at = view.parts.chosen(cs, "st-doc");
+      const text = at ? [{ capture_sha: at.captureSha, extent: at.extent }] : [];
       const from = String(cs.value("st-from") || "").trim();
       if (!cite || !issuer || !text.length) return { refuse: "screen.standard.declare.empty" };
       return { body: Object.assign({ cite, kind: String(cs.value("st-kind") || "policy"), issuer, text }, from ? { period: { from, to: null } } : {}) };
@@ -116,6 +118,6 @@ const STANDARD_KEYS = [
 const words = ["screen.standard.name", "screen.standard.purpose",
   ...["standarddeclare", "standardadopt", "lawrelate"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
   "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...STANDARD_KEYS];
+  "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...STANDARD_KEYS];
 
 export const STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });

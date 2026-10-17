@@ -29,10 +29,13 @@ function render(cs, view) {
       cs.ref("person", t.entity, nameOf(t.entity), [t.note || ""]) + (t.note ? ` <span class="mk-small">${cs.esc(t.note)}</span>` : ""),
       cs.w(t.attribution === "name" ? S + "says.name" : S + "says.group", { handle: me })],
     acts: (t) => cs.act("withdrawtie", { label: "act.withdrawtie.label.ties", data: { tie: t.tie_id } }) }))));
-  out.push(cs.sec(S + "add", cs.choice("tie-kind", S + "kind", [["employer", S + "kind.employer"], ["relative", S + "kind.relative"], ["business", S + "kind.business"], ["other", S + "kind.other"]], {})
+  /* R34: the two disclosure choices with every fill answered: `{handle}` the member's, `{tie}` the tie she is adding, in words */
+  const kindNow = ["employer", "relative", "business", "other"].includes(view.ui["choice:tie-kind"]) ? view.ui["choice:tie-kind"] : "employer";
+  const fills = { handle: me, tie: view.parts.plain(cs, S + "kind." + kindNow) };
+  out.push(cs.sec(S + "add", cs.choice("tie-kind", S + "kind", [["employer", S + "kind.employer"], ["relative", S + "kind.relative"], ["business", S + "kind.business"], ["other", S + "kind.other"]], { acts: {} })
     + cs.choice("tie-who", S + "whofield", who, {})
     + cs.field("tie-note", S + "note", { area: true, rec: true, help: S + "note.help" })
-    + cs.checks("tie-says", S + "says", [["name", S + "says.name.choice", false], ["group", S + "says.group.choice", true]], { radio: true })
+    + cs.choice("tie-says", S + "says", [["group", S + "says.group.choice", fills], ["name", S + "says.name.choice", fills]], {})
     + `<p class="mk-note">${cs.w(S + "either")}</p>`
     + cs.act("declaretie", { label: "act.declaretie.label.ties", tone: "primary" })));
   return out.join("");
@@ -44,7 +47,7 @@ const acts = [
     send(view, el, cs) {
       const entity = String(cs.value("tie-who") || "").trim(), note = String(cs.value("tie-note") || "").trim();
       if (!entity || !note) return { refuse: "screen.ties.add.empty" };
-      return { body: { entity, kind: String(cs.value("tie-kind") || "other"), note, attribution: cs.value("tie-says-0") === true ? "name" : "group" } };
+      return { body: { entity, kind: String(cs.value("tie-kind") || "other"), note, attribution: cs.value("tie-says") === "name" ? "name" : "group" } };
     } },
   /* "Remove a tie", from its row, with a reason */
   { op: "withdrawtie", label: "act.withdrawtie.label.ties",

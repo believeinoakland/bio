@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, PROC, SHA, ACT, DATES, word, drew, notDrew, dayOf, COURT } from "./fixtures.mjs";
 
 const at = "/app/proceeding/" + PROC;
 const sec = (p, key) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word(key));
@@ -31,17 +31,17 @@ test("R6 reads the proceeding (entity: its caption, court and neutral label), it
 test("R6 entitycreate \"Register the proceeding\" from its caption: court, number, a neutral label, the member's note; then it opens", async () => {
   const p = await open("/app/proceeding", { plane: { entitycreate: ok({ ok: true, entity_id: "ENT-2026-0200", kind: "proceeding" }) } });
   assert.deepEqual(actsIn(main(p)), ["entitycreate"]);
-  fill(p, { "pr-forum": "ENT-2026-0101", "pr-number": "RG26-114502", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
-  await press(p, "entitycreate");
+  fill(p, { "pr-forum": COURT, "pr-number": "RG26-114502", "pr-kind": "civil", "pr-label": "the lease rent case", "pr-note": "From the court's caption, captured 1 October" });
+  await press(p, "entitycreate", { el: p.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
   assert.deepEqual(p.byOp("entitycreate")[0].body, { kind: "proceeding", note: "From the court's caption, captured 1 October", proceeding: { forum: "ENT-2026-0101", kind: "civil", number: "RG26-114502" }, label: "the lease rent case", aliases: ["the lease rent case"] });
   assert.equal(p.location.pathname, "/app/proceeding/ENT-2026-0200");
 });
 
 test("R6 recordline \"Add a party by role\"; followregister (a register needing a login says filings come only by capture); declare \"Hold an order as obligations\"; courtlink", async () => {
   const p = await open(at, { plane: { recordline: ok({ ok: true }), followregister: ok({ ok: true }), declare: ok({ ok: true }), courtlink: ok({ ok: true }) } });
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-sha": SHA, "pr-page": "1" });
+  fill(p, { "pr-party": "ENT-2026-0104", "pr-role": "intervenor", "pr-doc": SHA });
   await press(p, "recordline");
-  assert.deepEqual(p.byOp("recordline")[0].body, { kind: "party_to", from: "ENT-2026-0104", to: PROC, role: "intervenor", basis: { captureSha: SHA, extent: { kind: "pdf-page", page: 0 } } });
+  assert.deepEqual(p.byOp("recordline")[0].body, { kind: "party_to", from: "ENT-2026-0104", to: PROC, role: "intervenor", basis: { captureSha: SHA, extent: { kind: "document" } } });
   drew(sec(p, "screen.proceeding.register.head"), "screen.proceeding.login.note");
   fill(p, { "pr-register": "https://court.example/register/RG26", "pr-login-0": true });
   await press(p, "followregister");
@@ -58,7 +58,7 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
 test("R6 each act names what it needs (control: nothing sent), and a refusal is drawn beside the act", async () => {
   const p = await open(at, { plane: { recordline: refusedIn("PROCEEDING_ENDS", "A party is joined to a proceeding.") } });
   for (const op of ["recordline", "followregister", "declare"]) { await press(p, op); assert.equal(p.byOp(op).length, 0, op); }
-  fill(p, { "pr-party": "ENT-2026-0104", "pr-sha": SHA });
+  fill(p, { "pr-party": "ENT-2026-0104", "pr-doc": SHA });
   await press(p, "recordline");
   assert.ok(sec(p, "screen.proceeding.parties").textContent.includes("A party is joined to a proceeding."), "the refusal by its words");
 });
@@ -105,4 +105,49 @@ test("R28 control: a body's own deadline is never in the group's lane; with no d
   assert.equal(main(q).querySelectorAll("section[data-lane]").length, 0, "no lane is drawn over nothing");
   const r = await open(at, { plane: { proceedingdates: refusedIn("NOT_A_PROCEEDING", "That is not a proceeding.") } });
   assert.ok(sec(r, "proceeding.dates.title").querySelector('[data-state="failed"]'), "a failed read is drawn failed");
+});
+
+const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
+
+test("R36 the court is chosen among the registered forums (entitieskind with forum_kind, as record data), never among the people; the kind among the forum's, worded by proceeding.kind.<kind>", async () => {
+  const p = await open("/app/proceeding");
+  assert.deepEqual(optsOf(p, "pr-forum"), [[COURT, "Superior Court of California, County of Alameda"]]);
+  assert.ok(p.byOp("entitieskind").some((r) => r.query.kind === "body" && /court/.test(r.query.forum_kind)), "forum kinds asked");
+  assert.equal(p.byOp("peopledirectory").length === 0 || !p.doc.getElementById("pr-forum").querySelectorAll("option").some((o) => o.textContent === "L. Chen"), true, "no person is offered as a court");
+  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[0]), ["civil", "writ", "appeal"]);
+  assert.deepEqual(optsOf(p, "pr-kind").map((o) => o[1]), ["civil", "writ", "appeal"].map((k) => word("proceeding.kind." + k)));
+  drew(main(p), "proceeding.kind.help");
+  drew(main(p), "screen.proceeding.court.help");
+  const prof = await open("/app/proceeding", { plane: { affordances: ok({ vocabularies: { proceeding_kinds: [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "tribunal_hearing", label: "A tribunal hearing", forum_kind: "commission" }] } }) } });
+  assert.deepEqual(optsOf(prof, "pr-kind"), [["civil", word("proceeding.kind.civil")]], "only the forum's kinds");
+});
+
+test("R36 with no forum held the screen draws court.none in its fold and the Add a court form; adding one lists it and chooses it; control: a refusal of the kind is drawn by its words", async () => {
+  const none = ok({ ok: true, kind: "body", entities: [], count: 0, truncated: false });
+  let added = false;
+  const p = await open("/app/proceeding", { plane: { entitieskind: (r) => ok(r.query.kind === "body" && added ? { ok: true, kind: "body", entities: [{ entity_id: "ENT-2026-0555", kind: "body", label: "Court of Appeal", forum_kind: "court" }], truncated: false } : { ok: true, kind: r.query.kind, entities: [], truncated: false }),
+    entitycreate: (r) => { added = true; return ok({ ok: true, entity_id: "ENT-2026-0555" }); } } });
+  const fold = main(p).querySelector("details");
+  drew(fold, "screen.proceeding.court.none.summary");
+  drew(fold, "court.none");
+  assert.equal(p.doc.getElementById("pr-forum"), null);
+  fill(p, { "pr-court-name": "Court of Appeal" });
+  await press(p, "entitycreate", { el: p.root().querySelector('button[data-act="entitycreate"]') });
+  assert.deepEqual(p.byOp("entitycreate")[0].body, { kind: "body", label: "Court of Appeal", forum_kind: "court", note: "Court of Appeal" });
+  assert.deepEqual(optsOf(p, "pr-forum"), [["ENT-2026-0555", "Court of Appeal"]], "the new court is listed and chosen");
+  drew(main(p), "court.add.done", { name: "Court of Appeal" });
+  const bad = await open("/app/proceeding", { plane: { entitycreate: refusedIn("PROCEEDING_KIND_UNKNOWN", "That kind of proceeding is not one your profiles name.") } });
+  fill(bad, { "pr-forum": COURT, "pr-number": "RG1", "pr-kind": "civil", "pr-note": "n" });
+  await press(bad, "entitycreate", { el: bad.root().querySelectorAll('button[data-act="entitycreate"]').pop() });
+  assert.ok(main(bad).textContent.includes("That kind of proceeding is not one your profiles name."));
+});
+
+test("R34 recordline chooses the document by title; with no document the choice's empty state is drawn and nothing is sent", async () => {
+  const p = await open(at);
+  assert.deepEqual(optsOf(p, "pr-doc").map((o) => o[1]), ["Lease amendment 1", "Rent schedule"]);
+  const none = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  assert.equal(none.doc.getElementById("pr-doc"), null);
+  fill(none, { "pr-party": "ENT-2026-0104" });
+  await press(none, "recordline");
+  assert.equal(none.byOp("recordline").length, 0);
 });

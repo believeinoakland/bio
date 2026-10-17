@@ -8,7 +8,7 @@
  * drawn, compared, never one picked. */
 
 import { PARTS } from "./parts.mjs";
-import { GRAPH_SHARED } from "./graphwords.mjs";
+import { GRAPH_SHARED, FORM_SHARED } from "./graphwords.mjs";
 
 const S = "screen.money.";
 
@@ -16,7 +16,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { questions: { op: "list", query: { type: "inquiry", limit: "500" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
+    ? { docs: { op: "heldcaptures", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] } };
 }
 
@@ -132,7 +132,7 @@ function render(cs, view) {
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
   const groups = P.groupMap(vocab);
   const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre: id, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
-  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource" } }))));
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached", withdraw: "screen.explore.withdraw" } }))));
   out.push(cs.state("trail", view, () => `<div class="mk-tablebar"><a class="cs-btn" data-tone="quiet" data-nav href="/app/money/${encodeURIComponent(id)}${onlyGaps ? "" : "/undetermined"}" aria-pressed="${onlyGaps}">`
     + cs.w(onlyGaps ? S + "filter.all" : nGaps ? S + "filter.gaps" : S + "filter.gaps.none", { n: String(nGaps) }) + "</a></div>"
     + (shown.length ? cs.rows({ id: "money", pick: true, items: shown, key: (e) => e.key, name: (e) => e.key,
@@ -157,7 +157,7 @@ function render(cs, view) {
     + ch("mf-basis", S + "f.basis", ["undetermined", "budgetary", "cash", "modified_accrual", "accrual"])
     + cs.field("mf-from-date", S + "f.periodfrom", { type: "date" }) + cs.field("mf-to-date", S + "f.periodto", { type: "date" }) + cs.field("mf-fiscal", S + "f.fiscal", {})
     + cs.field("mf-payer", S + "f.payer", {}) + cs.field("mf-payee", S + "f.payee", {})
-    + cs.field("mf-sha", S + "f.sha", { help: S + "f.sha.help" }) + cs.field("mf-page", S + "f.page", {})
+    + P.docChoice(cs, view, "mf-doc")
     + cs.field("mf-contract", S + "f.contract", {}) + cs.field("mf-label", S + "label", {})
     + cs.field("mf-expertise", S + "f.expertise", { help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
@@ -170,7 +170,7 @@ const acts = [
   { op: "recordfact", label: "act.recordfact.label.money",
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
-      const src = view.parts.passage(cs.value("mf-sha"), cs.value("mf-page"));
+      const src = view.parts.chosen(cs, "mf-doc");
       if (el && el.dataset && el.dataset.fact && !amount) { cs.set("readFor", el.dataset.fact); return null; }
       if (!amount || !as_read || !src) return { refuse: "screen.money.f.empty" };
       const phase = String(cs.value("mf-phase") || "adopted"), stage = String(cs.value("mf-stage") || "none");
@@ -261,7 +261,7 @@ const acts = [
   /* "Record when it moved": the movement as an event from the passage that dates it, the figure among what it concerns */
   { op: "createevent", label: "act.createevent.label.money",
     send(view, el, cs) {
-      const at = view.parts.passage(cs.value("mf-sha"), cs.value("mf-page"));
+      const at = view.parts.chosen(cs, "mf-doc");
       if (!at) return { refuse: "screen.money.f.nopassage" };
       return { body: { kind: "payment", attestations: [at] } };
     },
@@ -340,6 +340,6 @@ const words = ["screen.money.name", "screen.money.purpose",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
   ...GRAPH_SHARED,
-  "state.empty", "state.loading", "state.failed", ...MONEY_KEYS];
+  "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...MONEY_KEYS];
 
 export const MONEY_SCREEN = Object.freeze({ id: "money", reads, place, render, acts, words, parts: PARTS });

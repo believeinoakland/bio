@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, word, drew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, SHA2, word, drew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/money/" + MSR;
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
@@ -84,9 +84,9 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   await press(p, "hypothesishold", { within: panelOf(p, M2) });
   assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: "INQ-2026-0001-seven-days", kind: "flow", statement: "the Sewer Fund's share of citywide overhead", about: [M2] });
   panel = await openPanel(p, M3);
-  fill(p, { "mf-sha": SHA, "mf-page": "214" });
+  fill(p, { "mf-doc": SHA });
   await press(p, "createevent", { within: panelOf(p, M3), reason: "the ledger dates it" });
-  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "pdf-page", page: 213 } }]);
+  assert.deepEqual(p.byOp("createevent")[0].body.attestations, [{ captureSha: SHA, extent: { kind: "document" } }]);
   await press(p, "findin", { within: panelOf(p, M3) });
   assert.equal(p.location.pathname, "/app/find-in/" + P);
 });
@@ -102,11 +102,11 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
   const p = await open(at, { plane: { recordfact: ok({ ok: true, fact_id: "MNY-2026-new", grade: { reading: "B" } }), createset: ok({ ok: true, set_id: "MSR-2026-0002" }),
     committedagainstpaid: ok({ ok: true, committed: { sum: { value: "1300000.00" } }, paid: { sum: { value: "1250000.00" } }, difference: { figure: { value: "50000.00" } } }) } });
   fill(p, { "mf-amount": "310,000", "mf-asread": "Overhead allocation … 310,000", "mf-kind": "allocation", "mf-phase": "actual", "mf-stage": "paid", "mf-basis": "undetermined",
-    "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-sha": SHA, "mf-page": "214" });
+    "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-doc": SHA });
   await press(p, "recordfact", { el: main(p).querySelectorAll('button[data-act="recordfact"]')[0] });
   assert.deepEqual(p.byOp("recordfact")[0].body, { amount: "310,000", as_read: "Overhead allocation … 310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation",
     phase: "actual", basis: "undetermined", period: { fiscal: "FY2022" }, from: { as_written: "Sewer Fund 3100" }, to: null,
-    source: { capture_sha: SHA, extent: { kind: "pdf-page", page: 213 } }, stage: "paid" });
+    source: { capture_sha: SHA, extent: { kind: "document" } }, stage: "paid" });
   assert.ok(rowOf(p, "MNY-2026-new"), "the new figure is a row, not yet in the trail");
   fill(p, { "mf-contract": "ENT-2026-0005" });
   await press(p, "committedagainstpaid");
@@ -154,4 +154,12 @@ test("R4 a refused act is drawn beside it, nothing else changed (control)", asyn
   const panel = await openPanel(p, M1);
   await press(p, "exclude", { within: panel, reason: "x" });
   assert.ok(panelOf(p, M1).textContent.includes("There is no such trail."), "the refusal by its words");
+});
+
+test("R34 the money trail's figure form chooses the document by title and sends its digest; no field asks for a fingerprint or a page number by itself", async () => {
+  const p = await open("/app/money/" + MSR);
+  assert.deepEqual(p.doc.getElementById("mf-doc").querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]), [[SHA, "Lease amendment 1"], [SHA2, "Rent schedule"]]);
+  assert.equal(main(p).querySelectorAll("*").filter((e) => /^mf-(sha|page)$/.test(e.getAttribute("id") || "")).length, 0);
+  const none = await open("/app/money/" + MSR, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  assert.equal(none.doc.getElementById("mf-doc"), null, "no document: the choice's empty state");
 });
