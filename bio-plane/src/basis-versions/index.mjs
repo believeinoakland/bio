@@ -84,6 +84,8 @@ export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
 });
 
+/** R51 (K3697): the shortest own reading, the grammar's description floor (C-25.1), since her words are the description. */
+export const READING_MIN = 12;
 /** R51: the extent fields of a leg, with the type `narrow` reads each as, and the leg fields a copied leg carries. */
 const EXTENT_FIELDS = {
   extent_kind: "text", extent_ref: "text", extent_page: "int", extent_rect: "nums",
@@ -1212,9 +1214,9 @@ export class BasisVersions {
     /* END DEC-49 REGION is-conclude-answer */
     /* R51: 1 to 500 characters once made frontmatter-safe; it takes the place of a named reading (`version`) and, with
        no project, has nowhere for commentary to go */
-    if (hasReading && (!ownText || ownText.length > VERSION_REASON_MAX || vname || (comm && !pid)))
+    if (hasReading && (ownText.length < READING_MIN || ownText.length > VERSION_REASON_MAX || vname || (comm && !pid)))
       return { ok: false, reason: "BAD_READING", code: "BAD_READING", translation: word("refusal.BAD_READING"),
-               detail: `reading is 1 to ${VERSION_REASON_MAX} characters${vname ? ", and it takes the place of version, which was also named" : ""}`
+               detail: `reading is ${READING_MIN} to ${VERSION_REASON_MAX} characters${vname ? ", and it takes the place of version, which was also named" : ""}`
                      + `${comm && !pid ? "; commentary beside it needs a project" : ""}` };
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > VERSION_REASON_MAX || /["\\\r\n]/.test(v))

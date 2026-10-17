@@ -44,3 +44,6 @@ Size (session_01A9kABDFujBr9RPjNiuHGvd): test runs 19, module lines 4028
 ## J2 · COMPLETE
 
 T50-12 is applied: R51 (an own reading accepted and concluded in one act), R52 (DIVIDED_CANNOT_RESTRUCTURE relayed), R53 (part named, parts read), R54 (VERSION_NAME_MALFORMED, C-25.36). Tests 174/174 in the module, coverage 51/51, format, architecture and ownership 0 failures. The module is 4,028 lines, so its conclude split is T51-first as you ruled. My J1 question (four readings, none blocking) is open: apply an ANSWER with a CHANGE. See the record, "Completion", for what I found in other modules (inquiry-grammar golden.json keeps the old name code; the three inherited reds).
+
+## Change B2 (K3697)
+R51's reading is 12 to 500 characters (`READING_MIN`, the C-25.1 floor); shorter is `BAD_READING`. Test added in `own-reading.test.mjs` (11 refused, nothing written; 12 accepted). Module tests 175 of 175. `tranche/T50` merged first. Open items (2)-(4) confirmed; (4) is N1215, the golden N1216.

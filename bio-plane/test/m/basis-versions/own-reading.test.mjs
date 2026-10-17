@@ -139,6 +139,16 @@ test("R51 control: BAD_READING — blank, 501 characters, beside a version, or b
   assert.equal(bad({ project: p, reading: WORDS, commentary: "beside her words" }).ok, true, "commentary with a project stays allowed");
 });
 
+test("R51: the floor is 12 characters — an 11-character reading is BAD_READING and writes nothing, 12 are accepted", () => {
+  const w = setup();
+  const p = project(w);
+  const base = [w.sha(Q), w.sha(p), w.count("inquiry_basis_versions")];
+  const r = conclude(w, { project: p, reading: "x".repeat(11), falsifier: "f" });
+  assert.deepEqual([r.ok, r.reason], [false, "BAD_READING"]);
+  assert.deepEqual([w.sha(Q), w.sha(p), w.count("inquiry_basis_versions")], base);
+  assert.equal(conclude(w, { project: p, reading: "x".repeat(12), falsifier: "f" }).ok, true);
+});
+
 test("R51: preview answers the receipt with wrote: false and writes nothing; a refusal the act would give is the preview's", () => {
   const w = setup();
   const p = project(w);
