@@ -39,3 +39,12 @@ QUESTION J1. Four readings I am building on, none blocking; answer only if you r
 **Tests and checks.** acquisition: 173 tests, 173 pass (t50.test.mjs 14, archivelist 9). Process repository, from the product: `format` 0 failures; `architecture` 0 failures; `coverage` acquisition 48 of 48 live ids named, 0 failures (the run over every module shows 24 failures, none acquisition's); `ownership` 12 files changed by acquisition, 0 failures; `node checks/run.mjs` ran format, architecture and coverage as above.
 
 Size (session_01EqTjCYB9asax5onCUFCEnt): test runs 12, module lines 3014
+
+## J2 · COMPLETE
+
+COMPLETE J2: T50-7 acquisition done on job/T50/acquisition (details in build/jobs/T50/acquisition.md).
+R47 `for` (BAD_FOR C-139.21 before any fetch; recordCapturedFor once; `for: {question, recorded}`); R46 openCaptures + R19 (state.opened_by, kept across continuations); R41 held_at/held_name on already_held only; R48 ARCHIVE_CHECK_READS = 2 via a read-through evidence store; N1064's R23/R29/R30/R38 tests; plan rule 6 (40 rows and 37 sentences read by key).
+M-T50-3: heldcaptures' per-row archiveList(limit 1) over 300 held never-opened captures: 4.33 reads a capture before, 2.00 after (a ZIP archive 5 to 2, two parts 10 to 5); in-memory ms per row unchanged (about 0.7).
+Provider for capture (T50-8): the store must answer recordCapturedFor({captureSha, question, by, at}) and liveCaptureSessions (state carries opened_by).
+For the design lane (REPORT, in my record): fragments no key holds (before/after, member/caller, multipart, no profile, `continue: <session>`) and the phrase coArchiveSet hands membership's notAnAdmin.
+Tests: acquisition 173/173; format, architecture, coverage (48/48) and ownership 0 failures; users of acquisition fail only as at tranche/T50. Stale until the layer close: plane bundle, newgroup release.
