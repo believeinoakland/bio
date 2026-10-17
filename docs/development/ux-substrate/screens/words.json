@@ -40509,7 +40509,7 @@
   },
   {
    "key": "refusal.NO_SET",
-   "en": "Nothing was named for this to work on, so nothing was done. This is a fault in Civicsmith, not in what you did; report it if it happens again.",
+   "en": "Nothing was named for this to work on. This is a fault in Civicsmith, not in what you did; report it if it happens again. Nothing was changed.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-312: one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set"
@@ -40845,7 +40845,7 @@
   },
   {
    "key": "screen.question.reject.summary",
-   "en": "Reject this reading",
+   "en": "Reject this reading, with a reason",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-314: basis-versions R4: the fold"
@@ -40908,7 +40908,7 @@
   },
   {
    "key": "screen.case-editor.account.use",
-   "en": "Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.",
+   "en": "Use what you agree with in the account below, in your own words; Civicsmith records that it began as the assistant's draft.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R4, R6: began_as machine_draft"
@@ -40922,28 +40922,28 @@
   },
   {
    "key": "refusal.BAD_ACCOUNT_DRAFT",
-   "en": "The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.",
+   "en": "The assistant's draft of the account was empty or longer than 8,000 characters. Nothing was kept. Ask for it again.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R1"
   },
   {
    "key": "refusal.BAD_ACCOUNT_FRAMING",
-   "en": "An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.",
+   "en": "Choose how to order the account: in time order, question by question, or rule by rule. Nothing was kept.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R1"
   },
   {
    "key": "refusal.NO_SUCH_ACCOUNT_DRAFT",
-   "en": "No draft of this case's account that you can see has that name, so nothing was recorded.",
+   "en": "No draft of this case's account that you can see has that name. Choose one of the drafts listed, or ask for a new one. Nothing was recorded.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R4"
   },
   {
    "key": "refusal.BAD_ACCOUNT",
-   "en": "The account is missing or can't be read, so nothing was recorded. Write it, then save again.",
+   "en": "The account is missing or can't be read. Write it, then save again. Nothing was recorded.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-315: case-account R4"

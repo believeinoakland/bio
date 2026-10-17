@@ -1681,7 +1681,7 @@ w310('screen.connect.check.ifstops', 'If the check stops', False, 'screens-setti
 # --- DEC-312 (B283: keys T50's L4 and L5 modules still say in English)
 def w312(key, en, prot=False, note=''):
     W.append(dict(key=key, en=en, protected=prot, note='DEC-312' + (': ' + note if note else '')))
-w312('refusal.NO_SET', 'Nothing was named for this to work on, so nothing was done. This is a fault in Civicsmith, not in what you did; report it if it happens again.', False, "one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set")
+w312('refusal.NO_SET', 'Nothing was named for this to work on. This is a fault in Civicsmith, not in what you did; report it if it happens again. Nothing was changed.', False, "one key for every module's NO_SET (progressions C-100.26, events, explore, money, calculations): each is a caller naming no set")
 w312('refusal.SET_TOO_LARGE.read', 'That asks for more than Civicsmith reads at once ({max} at most; this named {given}), so nothing was read. Ask for fewer.', False, "progressions C-100.27: a read, so not record-core's SET_TOO_LARGE, which acts on a selection")
 w312('entities.considered.name', 'the name', False, "entities: the recogniser's considered list, after the composite key and the source key")
 w312('entities.relation.proxy_for', 'stands in for', False, 'entities R47: "A stands in for B"')
@@ -1738,7 +1738,7 @@ w314('screen.connect.expired.next', 'Once you are signed in again, Civicsmith ch
 w314('screen.question.stopped.kept', 'What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.', False, 'screens-inquiry R57: after ai.run.ending.cancelled')
 w314('screen.question.reject.reason', 'Why you reject it', False, 'basis-versions R4: the reason field')
 w314('screen.question.reject.reason.help', 'Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.', False, 'basis-versions R4')
-w314('screen.question.reject.summary', 'Reject this reading', False, 'basis-versions R4: the fold')
+w314('screen.question.reject.summary', 'Reject this reading, with a reason', False, 'basis-versions R4: the fold')
 w314('screen.question.reject.go', 'Reject it', False, 'basis-versions R4: the button in the fold')
 # --- end DEC-314
 # --- DEC-315 (K3666, the assisted walk: drafting a case's account with the assistant; case-account R1-R4)
@@ -1751,12 +1751,12 @@ w315('case-account.framing.time_order', 'In time order', False, 'case-account R1
 w315('case-account.framing.by_question', 'Question by question', False, 'case-account R1')
 w315('case-account.framing.by_rule', 'Rule by rule', False, 'case-account R1')
 w315('screen.case-editor.account.flagged', 'Not supported by what it cites: “{sentence}”', False, "case-account R2: an account_check's flag; the sentence follows")
-w315('screen.case-editor.account.use', "Use what you agree with in your own account below; Civicsmith records that it began as the assistant's draft.", False, "case-account R4, R6: began_as machine_draft")
+w315('screen.case-editor.account.use', "Use what you agree with in the account below, in your own words; Civicsmith records that it began as the assistant's draft.", False, "case-account R4, R6: began_as machine_draft")
 w315('screen.case-editor.account.notasis', 'Taking the draft as it stands is not offered: you vouch only for words you wrote.', False, 'case-account R4: ACCEPT_MUST_REAUTHOR, never offered')
-w315('refusal.BAD_ACCOUNT_DRAFT', "The assistant's draft of the account was empty or longer than 8,000 characters, so it was not kept. Ask for it again.", False, 'case-account R1')
-w315('refusal.BAD_ACCOUNT_FRAMING', 'An account is ordered in time order, question by question, or rule by rule; that is none of them. Nothing was kept.', False, 'case-account R1')
-w315('refusal.NO_SUCH_ACCOUNT_DRAFT', "No draft of this case's account that you can see has that name, so nothing was recorded.", False, 'case-account R4')
-w315('refusal.BAD_ACCOUNT', "The account is missing or can't be read, so nothing was recorded. Write it, then save again.", False, 'case-account R4')
+w315('refusal.BAD_ACCOUNT_DRAFT', "The assistant's draft of the account was empty or longer than 8,000 characters. Nothing was kept. Ask for it again.", False, 'case-account R1')
+w315('refusal.BAD_ACCOUNT_FRAMING', 'Choose how to order the account: in time order, question by question, or rule by rule. Nothing was kept.', False, 'case-account R1')
+w315('refusal.NO_SUCH_ACCOUNT_DRAFT', "No draft of this case's account that you can see has that name. Choose one of the drafts listed, or ask for a new one. Nothing was recorded.", False, 'case-account R4')
+w315('refusal.BAD_ACCOUNT', "The account is missing or can't be read. Write it, then save again. Nothing was recorded.", False, 'case-account R4')
 # --- end DEC-315
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

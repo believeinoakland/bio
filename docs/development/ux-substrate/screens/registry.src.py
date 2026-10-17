@@ -160,7 +160,7 @@ screen('imported', 'Another team\'s case', 'imported', 'An imported case in its 
   [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket')], [25])
 screen('docket', 'Docket', 'working', 'The case\'s public docket: corrections, withdrawals, court orders.',
   [('docketfile','File a docket entry'),('docketpost','Post it')], [23,24])
-screen('docket-public', 'A case\'s docket, from outside', 'published', 'The docket as a reader without an account sees it, from the public page\'s "its docket": each entry after publishing, dated and signed, read only (DEC-313; public-read R21).',
+screen('docket-public', 'A case\'s docket, from outside', 'published', 'A published case\'s docket, read without an account (DEC-313; public-read R21).',
   [], [26])
 
 # --- outside the team
