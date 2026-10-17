@@ -18,6 +18,8 @@
 4. `memberList` now returns a row with no members-table row; readers that join its `member_id` to `members` (project-roster R29 names her) should tolerate it.
 5. Words: rows now say "team" (the key's words). Tests of other modules holding membership's old English were not found; project-roster `R25` and affordances `R48/R53/R57/R61/R62` fail identically at the base (inherited).
 
+**CHANGE B2 (K3624) applied.** R152: new `members.status_at` column (additive), set by every status-changing write (invitation by consensus, revocation, enrolment, `memberSet` only when the status differs, withdrawal), never by other writes; `memberStatusSince(memberId)` answers it or null. A member created `invited` has none until its status changes. `modules.json` now gives `setup-words`: architecture 0 failures. Tests 267/267; coverage 112/112; ownership 0. index.mjs 3,238 lines.
+
 **Deferred.** None.
 
 **Size (P6).** `index.mjs` 3,225 lines; module total 4,193 incl. generated `order.mjs` (176) and `order-build.mjs` (68); own hand-written code about 3,950. Past ~4,000 with the generator counted: its split is T51's first entry.
@@ -29,3 +31,5 @@ Size (session_012b5v7Ekpv3CAbBibj4BTrH): test runs 16, module lines 4193
 ## J1 · COMPLETE
 
 T50-2 membership complete: R146-R151 applied, record on job/T50/membership. 264 module tests pass; coverage 111/111; ownership 0. Architecture fails only because modules.json membership.uses lacks setup-words (BOB's file). Interface notes in my record: reach readers are read by instance viewerGate/hiddenBundlesFor; new generated order.mjs for the manifest; module is ~4,190 lines incl. generator (split T51).
+
+Size (session_012b5v7Ekpv3CAbBibj4BTrH), after B2: test runs 20, module lines 4206
