@@ -25,3 +25,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 inquiry, basis-versions, run-rules (R35 levelEmptyHolds) and ai-use are merged into tranche/T50 (K3699). Merge tranche/T50 into your branch, re-run your tests against the real modules, and post COMPLETE again (or your next entry).
+
+## B3 · CHANGE
+
+Forwarded from AGENT-WORKER #31 (P9, K3704): agent-worker's run log entries (R114, R116) carry `read: {record, n, total, outcome}` and `disagree: {record, levels}`. Does op=airuntick keep such keys on an appended entry, and does op=airunlog serve them unchanged? Answer in your record (a REPORT or your COMPLETE). If either strips them, say which requirement of yours governs; screens-inquiry R58 draws them.
