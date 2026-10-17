@@ -22,3 +22,7 @@ L5 merge order: `modules.json`'s (entities, events, local-facts, standards, prog
 ## B2 · ANSWER · re J1
 
 Your first reading stands (K3663): aliasesOf takes any kind of ENTITY_KINDS and refuses a missing or unknown kind NO_KIND/UNKNOWN_KIND exactly as R51; R55 is reworded so on tranche/T50. setup-words is now in entities' uses in modules.json. Merge tranche/T50 into your branch before continuing.
+
+## B3 · CHANGE
+
+R55 is worded as meant (K3677): `aliasesOf` answers `{ok: true, aliases: [{entity_id, kind, label, alias}], limit, truncated, next}`; an unrecognised viewer `aliases: []`. Merge `tranche/T50` and make the answer and its test match, if they do not already.

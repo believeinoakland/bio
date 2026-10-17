@@ -147,6 +147,7 @@ Internet level
 
 ### Uses
 
+- `setup-words`: `word(key, vars)`, every member-facing sentence by key (plan T50 rule 6; K3668).
 - `query-language`: `compile`, `textOf`, `FIELDS`, `FTS_COLUMNS`, `DEFAULT_FACETS`, `IDS_MAX`, `MEANING`, `meaningVocabulary`, `cachedNotes`, `MEANING_AXIS_CAP`, `GATE_MARK`.
 - `membership`: `viewerPredicate` (R5, R17, R21, R38); `hiddenBundles` (R88) for R17's, R21's and R60's subtraction (N352) and `inSight` for `contentAxis` and the frontier (R23, R38); `positionalMember` (R47); `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
 - `record-core`: `recordOf(ctx)`, `transact`, the `bundles` read contract (R37; `group_id` and `prior_state` for R1's projection, N287) and the bundle's live files (R41–R43), the latest manifest row (R19's revision class), `declarePurge`, `declareTable` and the derived-cache convention (its R21, R77; R71, T33-40).
