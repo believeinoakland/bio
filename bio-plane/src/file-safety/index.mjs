@@ -36,13 +36,19 @@ import { PROVIDERS, REFUSED_PROVIDERS, HELD_PROVIDERS, providerById, resolveDesc
   from "../../../file-scanner/src/providers/catalogue.mjs";
 import { FILE_SAFETY_SCHEMA, FILE_SAFETY_TABLES, FILE_SAFETY_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
-import { formatOf, readActive, sheetsOf, structureFlags, safeViewRoute, ACTIVE_FORMATS, PLAIN_FORMATS } from "./formats.mjs";
+import { formatOf, readActive, sheetsOf, structureFlags, safeViewRoute, ACTIVE_FORMATS, PLAIN_FORMATS, SAFE_VIEW_TEXT_MAX, HEAD_MAX,
+         needsWholeFile, wholeCharacters, textView } from "./formats.mjs";
+import { rowKey, SENTENCE_KEYS } from "./words.mjs";
 export { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
+export { SAFE_VIEW_TEXT_MAX } from "./formats.mjs";
+export { SENTENCE_KEYS } from "./words.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
 import { findingKind } from "./kinds.mjs";
 
 export const FILE_SAFETY_MODULE = "file-safety";
+/* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. */
+export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey), ...SENTENCE_KEYS]);
 
 /* R21: the constants, by name. `SCAN_BATCH_MAX` and `LOG_COUNT_KINDS` are `file-scanner`'s (its R16). */
 export const RESCAN_INTERVAL_MS = 604_800_000;
@@ -274,6 +280,28 @@ export class FileSafety {
   }
   /* The target `file-scanner` reads (its Terms): the digest and, for a capture held in parts, its parts in order. */
   #target(sha) { return { capture_sha: sha, parts: this.#parts(sha) }; }
+  /* R45: the first `max` bytes of the stored object, read from its stream and no further (the rest is not pulled), and
+     whether that is the whole of it; null when the object gives no stream, so the caller reads it whole. */
+  static async #headOf(obj, max) {
+    const body = obj && obj.body;
+    if (!body || typeof body.getReader !== "function") return null;
+    const size = Number(obj.size);
+    const reader = body.getReader();
+    const out = new Uint8Array(Math.min(max, Number.isFinite(size) ? size : max));
+    let n = 0, complete = false;
+    try {
+      while (n < out.length) {
+        const { done, value } = await reader.read();
+        if (done) { complete = true; break; }
+        const take = Math.min(value.length, out.length - n);
+        out.set(value.subarray(0, take), n);
+        n += take;
+      }
+      if (!complete && Number.isFinite(size) && size <= max) complete = true;
+      if (!complete && !Number.isFinite(size)) { const next = await reader.read(); complete = next.done === true; }
+    } finally { try { await reader.cancel(); } catch { /* nothing more is wanted of it */ } }
+    return { bytes: out.subarray(0, n), complete };
+  }
   static async #bytesOf(obj) {
     if (!obj) return null;
     if (typeof obj.arrayBuffer === "function") return new Uint8Array(await obj.arrayBuffer());
@@ -294,6 +322,32 @@ export class FileSafety {
       const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
       let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; }
       return out;
+    } catch { return null; }
+  }
+
+  /* R45: what a file is, read no further than it need be. The first `HEAD_MAX` bytes (four for each character a safe view
+     of plain text keeps) are read; a file that ends within them is read whole, and is judged as it always was. A longer
+     file whose start is a PDF, a container (an office or OpenDocument file, an archive) or a compound file is read whole
+     (its format is its whole structure); any other longer file is judged by its start, cut back to a whole character, its
+     remainder not read. `{bytes, whole, format}`, or null when the bytes are not held. */
+  async #look(sha, cache = null) {
+    const kept = cache ? cache.get(`look:${sha}`) : undefined;
+    if (kept !== undefined) return kept;
+    const out = await this.#lookAt(sha);
+    if (cache) cache.set(`look:${sha}`, out);
+    return out;
+  }
+  async #lookAt(sha) {
+    const ev = this.#evidence();
+    if (!ev) return null;
+    try {
+      const head = await FileSafety.#headOf(await ev.get(sha), HEAD_MAX);
+      if (head && (head.complete || !needsWholeFile(head.bytes))) {
+        const bytes = head.complete ? head.bytes : wholeCharacters(head.bytes);
+        return { bytes, whole: head.complete, format: formatOf(bytes) };
+      }
+      const bytes = await this.#bytes(sha);
+      return bytes ? { bytes, whole: true, format: formatOf(bytes) } : null;
     } catch { return null; }
   }
 
@@ -538,8 +592,9 @@ export class FileSafety {
     const add = (code, extra) => { if (!reasons.some((r) => r.code === code)) reasons.push(reasonOf(code, extra)); };
     const source = await this.#fetched(sha);
     if (source.fetched !== true) add("source_not_fetched");
-    const bytes = await this.#bytes(sha);
-    const format = bytes ? formatOf(bytes) : "unknown";
+    const look = await this.#look(sha, cache);
+    const bytes = look ? look.bytes : null;
+    const format = look ? look.format : "unknown";
     let active = null, archive = null;
     if (format === "zip") {
       const l = await this.#listing(sha);
@@ -629,11 +684,11 @@ export class FileSafety {
 
   /* R8 and R9 decide by one rule: `{open: path, stated?}` or `{refuse: code, …}`. With `run` false (R9) nothing is
      scanned: a scan R8 would run is stated as the path it would open by. */
-  async #decide(sha, { override = false, warned = undefined, run = true } = {}) {
+  async #decide(sha, { override = false, warned = undefined, run = true, cache = new Map() } = {}) {
     /* DEC-49 REGION is-under-scan-hold */
     if (this.#openHolds(sha).length) return { refuse: "SCAN_HOLD" };
     /* END DEC-49 REGION is-under-scan-hold */
-    const g = await this.#grade(sha, [], new Map());
+    const g = await this.#grade(sha, [], cache);
     /* DEC-49 REGION is-scan-before-opening */
     const scan = async (path, high) => {
       if (this.#cleanFresh(sha)) return { open: path };
@@ -721,9 +776,9 @@ export class FileSafety {
       return { ok: true, captureSha: h.sha, ...(await this.#stateOf(h.sha)) };
     } catch { return { ok: true, captureSha: shaOf(captureSha) || null, may_open: false, path: null, why: "NOT_SCANNED" }; }
   }
-  async #stateOf(sha) {
+  async #stateOf(sha, cache = new Map()) {
     const deeperFirst = this.#freshDeeper(sha) && !this.#openHolds(sha).length;
-    const d = await this.#decide(sha, { override: deeperFirst, warned: undefined, run: false });
+    const d = await this.#decide(sha, { override: deeperFirst, warned: undefined, run: false, cache });
     if (d.open) return { may_open: true, path: d.open, why: null, ...(d.stated ? { stated: d.stated } : {}) };
     return { may_open: false, path: null, why: d.refuse, ...(d.reason ? { not_scanned: d.reason } : {}) };
   }
@@ -736,22 +791,32 @@ export class FileSafety {
     return this.#one(`SELECT * FROM fs_files WHERE capture_sha = ?`, sha);
   }
 
-  /** R11: the safe view by route: a rendered PDF of page images (its bytes, the description in `x-file-safety`) or a
-   *  spreadsheet's cells as data; a file under a scan hold still gets it (K1892). */
+  /** R11: the safe view by route: a rendered PDF of page images (its bytes, the description in `x-file-safety`), a
+   *  spreadsheet's cells as data or (R45) a plain-text file's own characters; a file under a scan hold still gets it (K1892). */
   async safeView({ captureSha = null, viewer = undefined } = {}) {
     try {
       const h = this.#held(captureSha, viewer);
       if (h.refused) return h.refused;
       const sha = h.sha;
-      const bytes = await this.#bytes(sha);
-      const format = bytes ? formatOf(bytes) : "unknown";
+      const cache = new Map();
+      const look = await this.#look(sha, cache);
+      const format = look ? look.format : "unknown";
       const route = safeViewRoute(format);
       /* DEC-49 REGION is-safe-view-route */
-      if (!route) return refusal("NO_SAFE_VIEW", "A safe view is made of documents, presentations and spreadsheets only.", { captureSha: sha, format });
+      if (!route && format !== "text")
+        return refusal("NO_SAFE_VIEW", "A safe view is made of documents, presentations, spreadsheets and plain text only.", { captureSha: sha, format });
       /* END DEC-49 REGION is-safe-view-route */
-      const original = await this.#stateOf(sha);
+      const original = await this.#stateOf(sha, cache);
+      if (!route) {
+        /* R45: plain text is shown as it stands, cut at SAFE_VIEW_TEXT_MAX characters; it needs no renderer and is never queued */
+        const t = textView(look.bytes, !look.whole);
+        if (!t.ok) return refusal("SAFE_VIEW_FAILED", "The text could not be read.", { captureSha: sha, renderer_reason: "NOT_TEXT" });
+        this.#count("safe_views");
+        return { ok: true, kind: "text", derived: true, of: sha, text: t.text, truncated: t.truncated, original };
+      }
       if (route === "data") {
-        const s = await sheetsOf(format, bytes);
+        const whole = look.whole ? look.bytes : await this.#bytes(sha);
+        const s = whole ? await sheetsOf(format, whole) : { ok: false, why: "NOT_FOUND" };
         if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { captureSha: sha, renderer_reason: s.why });
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
@@ -775,12 +840,12 @@ export class FileSafety {
   }
 
   /* R12: one file's render, after its capture: the image-only PDF stored under its own digest outside `captures/`,
-     labelled derived and naming its original; never registered, graded or chained. */
+     labeled derived and naming its original; never registered, graded or chained. */
   async #render(row) {
     const sha = row.capture_sha;
-    const bytes = await this.#bytes(sha);
-    if (!bytes) { this.sql.exec(`UPDATE fs_files SET render_state = 'failed', render_reason = 'NOT_FOUND' WHERE capture_sha = ?`, sha); return "failed"; }
-    const format = formatOf(bytes), route = safeViewRoute(format);
+    const look = await this.#look(sha);
+    if (!look) { this.sql.exec(`UPDATE fs_files SET render_state = 'failed', render_reason = 'NOT_FOUND' WHERE capture_sha = ?`, sha); return "failed"; }
+    const format = look.format, route = safeViewRoute(format);
     if (!route || route === "data") {
       this.sql.exec(`UPDATE fs_files SET render_state = ?, render_route = ? WHERE capture_sha = ?`, route ? "data" : "none", route, sha);
       return route ? "data" : "none";
@@ -1212,10 +1277,11 @@ export class FileSafety {
 
   /* R14's structure check: the file's reader reads it whole (K1928 Q2), an archive by its listing. */
   async #structureCheck(sha) {
-    const bytes = await this.#bytes(sha);
+    const look = await this.#look(sha);
+    const bytes = look ? look.bytes : null;
     const entry = (result, detail) => ({ check: "structure", tool: "file-safety", engine: "structure", result, detail });
     if (!bytes) return entry("not_scanned", "NOT_FOUND");
-    const format = formatOf(bytes);
+    const format = look.format;
     if (format === "zip") {
       const l = await this.#listing(sha);
       if (!l.ok) return entry("flagged", `refused:${l.code}`);
