@@ -42,3 +42,7 @@ Checks (from civicos-process):
 - run.mjs over the product: architecture 0 failures in 3486 files; coverage 25 failures, all in other modules' not-yet-met ids, none in op-grades.
 
 Size (session_0123Ja8xLuQ1vCztuMojXSJ7): test runs 12, module lines 3381
+
+## J3 · REPORT
+
+Reading-order note, for the record. I read `build/layers.md` after the code change, not before it, which step 2 of the job asks otherwise. I have now read it whole: layer 11 is the interface layer ("Nothing below depends on them"), `op-grades` imports nothing, and the new tables add no dependency, so the change conflicts with nothing in the layer contract. The jurisdiction rule holds too: none of the new reasons names a place.
