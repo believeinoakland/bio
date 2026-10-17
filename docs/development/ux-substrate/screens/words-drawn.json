@@ -8585,6 +8585,144 @@
    "en": "When the account can't be saved",
    "protected": false,
    "note": "DEC-326: R35, refusal.BAD_ACCOUNT"
+  },
+  {
+   "key": "refusal.IMPORT_NOT_A_CASE_FILE.noparts",
+   "en": "No part of the case file was given, so nothing was imported. Choose the case file, then import again.",
+   "protected": false,
+   "note": "DEC-327: case-import importCaseFile: no part given"
+  },
+  {
+   "key": "refusal.IMPORT_NOT_A_CASE_FILE.notbytes",
+   "en": "Part {n} of what was given can't be read as a file, so nothing was imported. Choose the case file again.",
+   "protected": false,
+   "note": "DEC-327: importCaseFile: a part that is not bytes; {n} counts from 1"
+  },
+  {
+   "key": "refusal.IMPORT_NOT_A_CASE_FILE.manifest",
+   "en": "The case file's manifest doesn't name the team, case and edition it holds, so it isn't a case file Civicsmith can import. Nothing was imported.",
+   "protected": false,
+   "note": "DEC-327: importCaseFile: a manifest naming no team, case and edition"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.list",
+   "en": "The account must be a list of sentences, each with its words and what it cites. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: case-account accountShaped: field account"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.toomany",
+   "en": "An account holds at most {max} sentences, and this one has more. Shorten it, then save again. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: ACCOUNT_SENTENCES_MAX"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.sentence",
+   "en": "Sentence {n} of the account needs its words and what it cites. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: account[i]"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.extra",
+   "en": "Sentence {n} carries something besides its words, what it cites and the bias statement it follows. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: account[i].<extra>"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.text",
+   "en": "Sentence {n} must be words on one line, at most {max} characters. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: account[i].text"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.cites",
+   "en": "What sentence {n} cites can't be read: at most {max} citations, each naming a document, a finding or a step of this case. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: account[i].cites; the kinds are the case's own"
+  },
+  {
+   "key": "refusal.BAD_ACCOUNT.bias",
+   "en": "Sentence {n} names a bias statement this case doesn't print. Choose one of the case's own statements. Nothing was recorded.",
+   "protected": false,
+   "note": "DEC-327: accountShaped: account[i].bias_statement"
+  },
+  {
+   "key": "refusal.BAD_STATEMENT_CITES",
+   "en": "What the case's statement cites can't be read: it gives citations for the statement, the people it names, what it leaves out and what changed. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: case-account: statementCites"
+  },
+  {
+   "key": "refusal.BAD_STATEMENT_CITES.nostatement",
+   "en": "The {part} has citations but no statement for them to support. Write the statement, or remove its citations. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: statementCites.<k>: {part} is the section's own name"
+  },
+  {
+   "key": "refusal.BAD_STATEMENT_CITES.excluded",
+   "en": "What the case leaves out needs one list of citations for each thing left out, in the same order. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: statementCites.excluded"
+  },
+  {
+   "key": "refusal.BAD_STATEMENT_CITES.citelist",
+   "en": "The citations of the {part} can't be read: each must name what it cites. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: statementCites.excluded[i], statementCites.<k>"
+  },
+  {
+   "key": "refusal.ACCEPT_MUST_REAUTHOR.account",
+   "en": "These are the assistant's words as it drafted them. The published account is yours: write it in your own words, from the draft or from nothing, then publish again. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: accountDraftJudged (D56)"
+  },
+  {
+   "key": "refusal.ACCOUNT_CITES_COUNSEL_MATTER.sentence",
+   "en": "Sentence {n} cites {cites}, held in a counsel matter, which is never used as evidence outside it. Cite something else, or leave it out. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: the per-sentence form; {cites} names each by title"
+  },
+  {
+   "key": "refusal.BAD_REVIEW_COMMENTS",
+   "en": "The comments to carry can't be read: choose at most {max} comments from the case's review copies. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: case-account reviewCommentsChosen"
+  },
+  {
+   "key": "refusal.REVIEW_COMMENTS_UNREAD",
+   "en": "The comments on this case's review copies couldn't be read, so the ones you chose can't be carried. Try again. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: case-account"
+  },
+  {
+   "key": "refusal.REVIEW_COMMENT_NOT_FOUND",
+   "en": "A comment you chose is no longer on this case's review copies. Choose again among the comments they hold. Nothing was written.",
+   "protected": false,
+   "note": "DEC-327: case-account; no comment id is shown"
+  },
+  {
+   "key": "case-account.document.left_out.one",
+   "en": "1 comment was left out. A reviewer left out may file a response in the case's docket.",
+   "protected": true,
+   "note": "DEC-327: the signed case document body; wording frozen (K1333): a change is a new key for new documents"
+  },
+  {
+   "key": "case-account.document.left_out.other",
+   "en": "{n} comments were left out. A reviewer left out may file a response in the case's docket.",
+   "protected": true,
+   "note": "DEC-327: the signed body; frozen (K1333)"
+  },
+  {
+   "key": "case-account.document.reviewer.unknown",
+   "en": "(a reviewer)",
+   "protected": true,
+   "note": "DEC-327: the signed body; frozen (K1333)"
+  },
+  {
+   "key": "case-account.document.date.unknown",
+   "en": "(an unrecorded date)",
+   "protected": true,
+   "note": "DEC-327: the signed body; frozen (K1333)"
   }
  ],
  "rewrite": {
