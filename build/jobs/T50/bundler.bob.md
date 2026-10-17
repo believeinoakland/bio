@@ -18,3 +18,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+From OCR-WORKER #6 (J1 REPORT; confirmed): ocr-worker's R23 makes its bundle reach two more renderer sources, ../pdf-worker/src/picturepixels.mjs and ../pdf-worker/src/pngdecode.mjs. bio-plane/test/system/fleetbundles.test.mjs (yours) lines ~294-298 pin ocr-worker's cross-tree inputs (want 9, got 11). Per K3268, assert them against what the committed manifest and a fresh build reach (as you did for agent-worker), never a hand list; once job/T50/ocr-worker is merged into tranche/T50 (BOB will CHANGE you), merge the tranche branch and re-run. Then COMPLETE again.
