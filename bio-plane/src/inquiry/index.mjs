@@ -58,6 +58,8 @@ import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHEC
          INQUIRY_WARNINGS } from "./checks.mjs";
 import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
+import { word } from "../setup-words/index.mjs";
+import { partitionOfDoc, loggedChanges } from "./partition.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
@@ -171,7 +173,7 @@ export function biasNotInForce(args = {}) {
   const id = typeof statement === "string" ? statement : null;
   const at = typeof where === "string" && where ? where : null;
   const lens = scope && typeof scope === "object" && scope.type === "project" && typeof scope.id === "string" && scope.id
-    ? `the lens in force for ${scope.id}` : "the group's lens in force";
+    ? word("inquiry.text.lens_force", { id: scope.id }) : word("inquiry.text.group_lens_force");
   return { check: row.check, code: "BIAS_APPLICATION_NOT_IN_FORCE", translation: row.translation,
            statement: id, where: at, in_force: inForce === null ? null : false,
            detail: `${at ?? "a bias application"} names the bias statement ${id === null ? "(none)" : `'${fmSafe(id)}'`}, `
@@ -498,7 +500,7 @@ export class Inquiry {
      object names then, each module once; absent while none has failed. */
   static #reevaluation(cause, since, raises) {
     if (raises === null)
-      return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
+      return { reevaluation_absent: word("inquiry.reevaluation_absent") };
     return { reevaluation: liveFailures({ source: cause, since, raised: raises.flatMap((r) => r.raised) }, () => {
       const failed = [];
       for (const r of raises)
@@ -1255,7 +1257,7 @@ export class Inquiry {
     try {
       if (!id || typeof id !== "string") return null;
       const mig = this.#one(`SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, id);
-      return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
+      return mig ? { recorded: false, stated: word("inquiry.stated.recorded_migrated_drive"), run: null, lens: null,
                      migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
     } catch { return null; }
   }
@@ -1377,8 +1379,7 @@ export class Inquiry {
                      ...(state === "looked" ? { looked_at: w.looked_at, ...(w.look_note ? { note: w.look_note } : {}) } : {}),
                      ...(state === "ended" ? { inquiry_state: w.current_state } : {}),
                      ...(state === "undetermined"
-                       ? { why: "no time zone is held for your group's Civicsmith, so the local day the wait falls due on "
-                              + "cannot be read (it is never read as the UTC day)" } : {}) });
+                       ? { why: word("inquiry.why.time_zone_held") } : {}) });
       }
       return { ok: true, member: m, as_of: at, zone, waits };
     } catch { return { ok: true, member: memberStamp(member), waits: [] }; }
@@ -1438,7 +1439,7 @@ export class Inquiry {
   #projectsField(question, viewer) {
     const r = this.#projectsShown(question, viewer);
     if (r === null)
-      return { projects: null, projects_undetermined: "which projects draw on this question could not be read" };
+      return { projects: null, projects_undetermined: word("inquiry.projects_undetermined") };
     return { projects: r.projects, ...(r.truncated ? { projects_truncated: true } : {}) };
   }
 
@@ -1544,20 +1545,20 @@ export class Inquiry {
     let capture = null;
     try { capture = this.capture; } catch { capture = null; }
     if (!capture || typeof capture.heldActsOf !== "function")
-      return undetermined("the documents set aside for this question could not be read: no capture module answers here");
+      return undetermined(word("inquiry.undetermined.documents_set_aside"));
     const acts = [], setAside = new Map();
     for (let after = null, pages = 0; ; pages++) {
       let r;
       try { r = capture.heldActsOf({ question: id, viewer, limit: HELD_ACTS_PAGE, after }); } catch { r = null; }
       if (!r || r.ok !== true || !Array.isArray(r.acts))
-        return undetermined(`the documents set aside for this question could not be read${r && typeof r.reason === "string"
-          ? ` (${r.reason})` : ""}, so whether it waits on one is not known`);
+        return undetermined(word("inquiry.undetermined.documents_set_aside_question",
+          { r: r && typeof r.reason === "string" ? ` (${r.reason})` : "" }));
       acts.push(...r.acts.filter((a) => a && typeof a === "object"));
       for (const d of (Array.isArray(r.documents) ? r.documents : []))
         if (d && typeof d.document === "string") setAside.set(d.document, d.set_aside === true);
       if (!r.truncated || typeof r.next !== "string" || !r.next) break;
       if (pages >= HELD_ACTS_PAGES_MAX)
-        return undetermined("this question's history of set-asides is longer than can be read at once, so whether it waits on a document is not known");
+        return undetermined(word("inquiry.undetermined.question_history_set"));
       after = r.next;
     }
     const history = acts.map((a) => ({ document: a.document, act: a.act, reason: a.reason ?? null, by: a.author ?? null,
@@ -1619,14 +1620,14 @@ export class Inquiry {
         try { await g.arm(ctx, found); }
         catch (e) {
           found.push({ check: g.module, severity: "error",
-                       message: `${g.module}'s grammar threw, so it judged nothing and the document is not passed: `
-                              + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` });
+                       message: word("inquiry.message.grammar_threw_judged",
+                         { module: g.module, e: fmSafe(e && e.message ? e.message : e).slice(0, 200) }) });
         }
       } }));
     } catch (e) {
       return [{ check: "C-2.8", severity: "error",
-                message: `the registered grammars could not be read, so the entry requirements were not judged: `
-                       + `${fmSafe(e && e.message ? e.message : e).slice(0, 200)}` }];
+                message: word("inquiry.message.registered_grammars_read",
+                  { e: fmSafe(e && e.message ? e.message : e).slice(0, 200) }) }];
     }
     const claimed = new Set(grammars.flatMap((g) => (Array.isArray(g.ids) ? g.ids : [])));
     grammars = [...grammars, ...INQUIRY_GRAMMARS.filter((g) => !g.ids.some((id) => claimed.has(id)))];
@@ -2328,11 +2329,9 @@ export class Inquiry {
          takes with `## What This Excludes`. A disclosure only a parser can find
          is not a disclosure. */
       text = setSection(text, "## What It Rests On", [
-        `Divided out of ${target} on ${when} by ${who}.`, "",
+        word("inquiry.set_section.divided_out", { target, when, who }), "",
         why, "",
-        `The other half of that question stays on the record: ${sibs.join(", ")}. `
-        + `${target} is the divided parent and records where every leg went, including any leg that cuts `
-        + `against this question.`]);
+        word("inquiry.set_section.half_question_stays", { sibs: sibs.join(", "), target })]);
       text = setSection(text, "## Conclusion", []);
       text = setSection(text, "## What Would Falsify This", []);
       text = setSection(text, "## Session Log", [
@@ -2434,8 +2433,8 @@ export class Inquiry {
        concluded, it says the question was two questions. */
     text = setSection(text, "## Conclusion", [
       ...(typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : []),
-      `Divided on ${when} by ${who} into ${ids.join(", ")}: ${why}`, "",
-      "Where every leg went:", "",
+      word("inquiry.set_section.divided", { when, who, ids: ids.join(", "), why }), "",
+      word("inquiry.set_section.where_leg_went"), "",
       ...legs.map((l, i) => `- ${l.target}${l.role === "cuts_against" ? " (cuts against)" : ""} -> `
                           + `${homes.get(i).join(", ")}`)]);
 
@@ -2461,13 +2460,13 @@ export class Inquiry {
     const created = [];
     const refused = this.record.transact(() => {
       promoted = this.#promote({
-        bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
-        author: who,
-        files: [mdFile(text), ...carriedFiles(this.sql, target)],
-        meta: { object_type: fm.object_type ?? b.object_type,
-                title: fm.title, current_state: "divided", prior_state: b.current_state,
-                created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null },
+          bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
+          author: who,
+          files: [mdFile(text), ...carriedFiles(this.sql, target)],
+          meta: { object_type: fm.object_type ?? b.object_type,
+                  title: fm.title, current_state: "divided", prior_state: b.current_state,
+                  created: fm.created, last_updated: when,
+                  criticality: fm.criticality ?? null },
       });
       if (!promoted.ok) return { ...promoted, target };
       for (const pl of plans) {
@@ -2508,8 +2507,7 @@ export class Inquiry {
                 query, derived from the supersedes edge the children just made,
                 and their strengths are untouched. */
              ...this.#reevaluationField(target, "supersession", when, viewer),
-             next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id "
-                 + "and every sibling's. This question is terminal: it is answered by its children now." };
+             next: word("inquiry.next.child_open_carries") };
   }
 
 
@@ -2865,7 +2863,11 @@ export class Inquiry {
       + (restructure ? `Reason: ${why}\n` : "First grouping: no earlier structure to revise.\n")
       + (before ? `Strength before: ${w(before)}.\n` : "Strength before: not stated (no module answers it here).\n"));
 
-    const promoted = this.#promote({
+    /* R65: the act and the pair after it are recorded in the promotion's own transaction (the Session Log, being part of
+       the bytes promoted, cannot hold the pair after), so a refusal after the write leaves neither. */
+    let promoted = null, after = null;
+    const refused = this.record.transact(() => {
+      promoted = this.#promote({
       bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${rand(4)}`,
       author: who,
       files: [mdFile(text), ...carriedFiles(this.sql, target)],
@@ -2876,9 +2878,17 @@ export class Inquiry {
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when,
               criticality: fm.criticality ?? null },
+      });
+      if (!promoted.ok) return { ...promoted, target };
+      after = this.#strength(target);
+      const json = (v) => (v ? JSON.stringify(v) : null);
+      this.sql.exec(`INSERT INTO inquiry_ground_changes (bundle_id, at, by, act, reason, groups, strength_before, strength_after)
+                     VALUES (?,?,?,?,?,?,?,?)`, target, when, who, restructure ? "restructured" : "authored",
+        restructure ? why : null, JSON.stringify(rowsOut.map((r) => ({ ground: r.ground, statement: r.statement,
+          asserted_by: r.asserted_by, at: r.at, legs: r.legs }))), json(before), json(before && after ? after : null));
+      return null;
     });
-    if (!promoted.ok) return { ...promoted, target };
-    const after = this.#strength(target);
+    if (refused) return refused;
 
     /* `weight: "single"` for conclude's reason, and here it is load-bearing
        rather than conventional: one question's structure is authored at a time,
@@ -2895,15 +2905,43 @@ export class Inquiry {
                 restructure is the same noticing material as the other two. */
              ...(before && after
                ? { strength: { before, after } }
-               : { strength_absent: "no module is registered to answer this question's strength, so the pair before and after is not stated here" }),
+               : { strength_absent: word("inquiry.strength_absent") }),
              next: grouped
-               ? "each group's strength is its weakest leg, and this question's is its strongest group. "
-                 + "Every group carries the name and the date of the member who asserted it was enough on "
-                 + "its own, and a published case carries the per-group breakdown inside the signed bytes."
-               : "this question reads as its weakest leg again, which is the conservative reading and the "
-                 + "one an ungrouped basis always takes." };
+               ? word("inquiry.next.group_strength_weakest")
+               : word("inquiry.next.question_reads_weakest") };
   }
 
+
+  /** R65 (T50; N1124; DEC-32 clauses 3, 5, 6): a question's partition with the history of its changes, for the question
+   *  page: `{ok: true, id, grouped, groups, ungrouped, changes, strength_now}` and R60's `projects`. `groups` and
+   *  `ungrouped` are the document's (R27's ordinals); `changes` the `ground` acts recorded for it, oldest first, each
+   *  `{at, by, act, reason, groups, strength_before, strength_after, strength_after_recorded}`: an act made since the
+   *  table records them keeps both pairs as they stood at the act; one made before is read from the Session Log with
+   *  its pair before and `strength_after: null` (`strength_after_recorded: false`), never computed. `strength_now` is the
+   *  pair now; where no module answers strength, the pairs are null and `strength_absent` says so (R28). A question the
+   *  viewer may not see, or that is no question, is answered as an absent one (R33). A divided or published question is
+   *  read. Writes nothing; never throws. */
+  partitionOf({ id = null, viewer = null } = {}) {
+    try {
+      if (!id || typeof id !== "string" || this.membership.inSight(id, viewer) !== true)
+        return { ok: false, reason: "NO_SUCH_BUNDLE", target: id ?? null };
+      const info = this.record.bundleInfo(id);
+      if (!info) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+      if (normalizeType(info.type) !== "inquiry") return { ok: false, reason: "NOT_AN_INQUIRY", target: id };
+      const md = this.record.readFile(id, "bundle.md");
+      const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+      if (!fm || typeof fm !== "object") return { ok: false, reason: "NO_DOCUMENT", target: id };
+      const rows = this.#rows(`SELECT * FROM inquiry_ground_changes WHERE bundle_id=? ORDER BY change_id`, id);
+      const held = new Set(rows.map((r) => `${r.at}\u0000${r.by}`));
+      const changes = [...loggedChanges(md.text, (at, by) => held.has(`${at}\u0000${by}`)),
+        ...rows.map((r) => ({ at: r.at, by: r.by, act: r.act, reason: r.reason ?? null, groups: safeJson(r.groups) ?? [],
+          strength_before: safeJson(r.strength_before), strength_after: safeJson(r.strength_after),
+          strength_after_recorded: true }))];
+      const now = this.#strength(id);
+      return { ok: true, id, ...partitionOfDoc(fm), changes, strength_now: now,
+               ...(now === null ? { strength_absent: word("inquiry.strength_absent") } : {}), ...this.#projectsField(id, viewer) };
+    } catch { return { ok: false, reason: "NO_SUCH_BUNDLE", target: typeof id === "string" ? id : null }; }
+  }
 
   /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
      null; never throws. The bytes stay the authority: the write path and the gate read the document's own
@@ -3003,6 +3041,8 @@ export function inquiryOps(k, url, body) {
                                owner: q("owner"), author: q("author") }),
     inquirydivide: () => k.divide({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
     inquiryground: () => k.ground({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
+    /* R65 (T50; N1124): a question's partition with the history of its changes */
+    inquirypartition: () => k.partitionOf({ id: q("id") || b.id, viewer: q("viewer") }),
     /* R55 (T41; D17): every wait on a question, to a viewer who may see it */
     questionwaits: () => k.questionWaits({ question: q("question") || b.question, viewer: q("viewer"),
                                            asOf: q("asOf") || null }),

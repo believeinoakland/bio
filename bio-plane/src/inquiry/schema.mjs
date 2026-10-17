@@ -1,7 +1,7 @@
 /* inquiry's tables (requirements: `build/requirements/inquiry.md`, R36). Moved out of the legacy `schema.mjs` at this
  * module's extraction (layers.md ruling 3, "each module owns its tables"): `inquiry_exclusions` and
  * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`; since T15, `inquiry_contradiction_links`; since
- * T18, `inquiry_bundle_facts`, which gained the subject entity in T19; since T33, `inquiry_dated_waits`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
+ * T18, `inquiry_bundle_facts`, which gained the subject entity in T19; since T33, `inquiry_dated_waits`; since T50, `inquiry_ground_changes`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
  * and is declared to record-core's purge by this module (K23). `migrateInquiry` brings a store created under an
  * earlier shape to this one. `inquiry_basis` is `leg-earning`'s since T33 (K1505 (2)), which creates and declares it. */
 
@@ -163,12 +163,32 @@ CREATE TABLE IF NOT EXISTS inquiry_person_warnings (
   choice       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS inquiry_person_warnings_bundle ON inquiry_person_warnings(bundle_id, choice);
+
+-- R65 (T50; N1124; DEC-32 clause 6): the ground acts recorded for a question, one row per act, oldest first (change_id).
+-- The document's Session Log keeps the act's reason and the strength pair BEFORE it, but cannot hold the pair AFTER (the
+-- log is part of the bytes the act promotes, and the pair after is read once they have landed), so the act records both
+-- pairs here in its own transaction, with the groups as it left them. strength_before and strength_after are the pairs as
+-- JSON, NULL where no module answered strength (the act's answer said so). A question grouped before this table has no
+-- row: partitionOf reads such an act from the Session Log, with only the pair before. Keyed by bundle_id and cleared
+-- with its inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_ground_changes (
+  change_id        INTEGER PRIMARY KEY,
+  bundle_id        TEXT NOT NULL,
+  at               TEXT NOT NULL,
+  by               TEXT NOT NULL,
+  act              TEXT NOT NULL,
+  reason           TEXT,
+  groups           TEXT NOT NULL,
+  strength_before  TEXT,
+  strength_after   TEXT
+);
+CREATE INDEX IF NOT EXISTS inquiry_ground_changes_bundle ON inquiry_ground_changes(bundle_id, change_id);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
 export const INQUIRY_TABLES = ["inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
                               "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings",
-                              "inquiry_dated_waits", "inquiry_person_warnings"];
+                              "inquiry_dated_waits", "inquiry_person_warnings", "inquiry_ground_changes"];
 /** R36 (plan T33, Rules (6)): every table declared explicitly through `record-core.declareTable` (its R21), with the
  *  classes `declarePurge`'s default form gives (purge `clear`, expunge `none`, export `admin-only`, derive `stored`, no
  *  version chain), each with the sight of the bundle it names; `inquiry_findings` also keyed by the project its lens
