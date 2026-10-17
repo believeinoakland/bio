@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R89). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R108). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -8,13 +8,13 @@
    prefixes) is record-grammar's. */
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 /* C-68.1 (K794, K796, K850): the capability complaint is acquisition's, minted at its one region (`evidenceStorageAbsent`). */
-import { evidenceStorageAbsent } from "../acquisition/index.mjs";
+import { evidenceStorageAbsent, ARCHIVE_CHECKS, FOR_MAX } from "../acquisition/index.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
    in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
-         projectCreationGate, queryGate } from "../admission/index.mjs";
+         projectCreationGate, queryGate, callerViewer } from "../admission/index.mjs";
 /* T35 (admission R20–R22; F1, F4, N703; K2044): the credential read once from the header or the body, the public ops'
    window and the caller's source and country, and the security tally of every refusal the door gives or relays. (T36;
    K2111) A credential in the address is refused by admission's gate (its R20, C-38.10), the code's one site. */
@@ -33,7 +33,7 @@ import { acquireReadingOp } from "../extraction/ops.mjs";
 /* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
    nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
    interface-assets' files. */
-import { appRouteOf, appPage, appAsset, logoAsked } from "./app.mjs";
+import { appRouteOf, appPage, appAsset, logoAsked, addressPageOf } from "./app.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
@@ -212,10 +212,12 @@ async function sha256Hex(v) {
 /* R20 (T46; N905; public-read R34, R7; v0.2 rule 21): `group`, public-read's `groupFields()` read at this request from the
    `bio` object (plane's `groupFields` on the object), handed to the quartet beside `hash`, which it never enters; null when
    the object offers no such read or it fails, never a guess. */
-async function groupOf(stub) {
+async function groupOf(stub, project = null) {
   if (!stub || typeof stub.groupFields !== "function") return null;
   try {
-    const g = await stub.groupFields();
+    /* R102 (T50; N933; public-read R36): read for the project the draft belongs to, so the quartet's `group` carries that
+       project's `matter_stake` beside the team's; a draft in no project reads it as before */
+    const g = await (typeof project === "string" && project ? stub.groupFields({ project }) : stub.groupFields());
     return g && typeof g === "object" && !Array.isArray(g) ? g : null;
   } catch { return null; }
 }
@@ -450,6 +452,48 @@ async function knockerConsent(req, store) {
   return json({ ...rec, ok: true }, 200);
 }
 
+/* R108 (T50; N1195; K3602, K3637 (3); DEC-298 (1); plane R59, agent-worker R113; signin-door R4): THE ASK'S ANSWER PASSES THROUGH
+   THE DOOR AS THE PLANE WRITES IT. The response is returned before the stream ends and no chunk is held for a later one:
+   each reaches the caller as the plane's body yields it, the status and headers the plane's. What the door must learn
+   from the answer (a refused sign-in token, signin-door R4) it learns from the lines as they pass, read beside the
+   caller's bytes and never before them: a chunk is enqueued first, then its lines are looked at, and the drop of the
+   held sign-in, once, is awaited only when the stream ends, after its last line, so it delays no chunk. A JSON answer
+   (a refusal made before any stream, `application/json`) is short and is read whole, as it always was. */
+async function watchedAsk(res, { member, store }) {
+  const type = res.headers.get("content-type") || "";
+  if (!res.body || /application\/json/i.test(type)) {
+    let asked = null;
+    try { asked = await res.clone().json(); } catch { asked = null; }
+    await tokenRefusedSeen({ member, answer: asked, store });
+    return res;
+  }
+  const decoder = new TextDecoder();
+  let held = "", chain = Promise.resolve(false);
+  /* each parsed line is asked in turn, off the caller's path; once a line has dropped the sign-in, no other is asked */
+  const look = (line) => {
+    const t = line.trim();
+    if (!t) return;
+    let answer;
+    try { answer = JSON.parse(t); } catch { return; }
+    chain = chain.then((done) => done || tokenRefusedSeen({ member, answer, store }).catch(() => false));
+  };
+  const body = res.body.pipeThrough(new TransformStream({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
+      held += decoder.decode(chunk, { stream: true });
+      const lines = held.split("\n");
+      held = lines.pop();
+      for (const line of lines) look(line);
+    },
+    async flush() {
+      held += decoder.decode();
+      look(held);
+      await chain;
+    },
+  }));
+  return new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers });
+}
+
 /* R41 (K585 (1), K674 (1); agent-worker R48, N157; T36: N695, K2135): THE PUBLISHED FENCES AND THE RENDERED PACK, served
    by `op=agentpack` alone, from the untargeted `op=affordances` answer (affordances R17's, whose handler answers it):
    `fences`, skills' `machineFences` over `CHECK_FAMILIES`, and `pack`, `renderPack` over that same answer with its
@@ -675,6 +719,19 @@ export function makeFetch(hooks = {}) {
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 
+    /* R104 (T50; N1174, B-14; interface-shell R79): an address outside the team's pages that names no op draws the
+       interface's public "nothing is here" page, 404, and `/doorbell` and `/tour` the same page at 200, through the same
+       namespace and address gates as the other page routes; an `op=` request, a path below `/api/` and a path naming
+       an op go on below, and `UNKNOWN_OP` stays JSON for them (R2). */
+    const addressPage = addressPageOf(req, url, { opNamed: (name) => Object.hasOwn(OPS, Object.hasOwn(OP_ALIASES, name) ? OP_ALIASES[name] : name) });
+    if (addressPage) {
+      const pageNamespace = namespaceGate(url);   /* admission R1 */
+      if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
+      const pageAddress = addressGate(url);   /* R59: admission R20 */
+      if (pageAddress) return json(pageAddress.body, pageAddress.status);
+      return appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env), status: addressPage.status });
+    }
+
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const askedOp = op;   /* R50: the op the caller asked, before R36's re-route */
@@ -836,7 +893,7 @@ export function makeFetch(hooks = {}) {
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
                                              body: JSON.stringify(innerBody) }));
-        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub) : null);
+        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
@@ -947,6 +1004,11 @@ export function makeFetch(hooks = {}) {
     /* REC-132: the session's two halves, apart: `sessViewer` wherever a VISIBILITY gate is stamped, `sessIdentity`
        wherever the question is WHO; `sessMember` the folded id every author, by and actor stamp carries. */
     const { member: sessMember, viewer: sessViewer, identity: sessIdentity, rights: sessRights, caps: sessCaps } = caller;
+    /* R106 (T50; N1186, K3557; admission R30, credentials R79): THE VIEWER OF AN `ai` CALLER is the one admission answers,
+       the principal's viewer carrying the project its credential was minted for (the plain principal's viewer when it was
+       minted with none), so what the caller reads is what membership R149 admits within that project. Every viewer stamp
+       below, the sight ones and the promotions' `actorViewer`, takes it; identity and author stamps keep the principal. */
+    const aiViewer = cls === "ai" ? callerViewer(caller, { carry: false }) : null;
 
     /* D-9. The register audit finishes HERE and not in the Durable Object,
        because classifying a register row needs R2, and the DO neither holds the
@@ -1025,6 +1087,9 @@ export function makeFetch(hooks = {}) {
     if (Object.hasOwn(BODY_ONLY, op)) for (const k of BODY_ONLY[op]) inner.searchParams.delete(k);
     /* R17 (T46; K3003): an act's own clock is the record's */
     if (ACT_CLOCK_OPS.includes(op)) inner.searchParams.delete("at");
+    /* R103 (T50; K3627; acquisition R46; op-declarations R73): `opencaptures` takes its caller from the stamp alone, and no
+       instant from the request: the owner's clock is the record's */
+    if (op === "opencaptures") for (const k of ["at", "now"]) inner.searchParams.delete(k);
     /* R53 (K1122, K1674; op-declarations R17–R20): T33'S OPS' STAMPS, each declared key (`OP_STAMPS`) deleted from the
        caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
        the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
@@ -1033,7 +1098,7 @@ export function makeFetch(hooks = {}) {
        token travels in the `x-bio-grant` header (below). */
     const declared = OP_STAMPS[op] || [];
     const actor = viaSession ? sessViewer : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-    const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
+    const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiViewer : actor, by: actor,
       author: viaSession ? sessIdentity : actor, proposer: viaSession ? sessMember : actor,
       member: viaSession ? sessViewer : null, session: viaSession ? credential.token : null,
       /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
@@ -1487,6 +1552,10 @@ export function makeFetch(hooks = {}) {
            tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
            call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
+        /* R107 (T50; N1194, K3644; doorbell R13, R3; op-declarations R74): `inboxresolve` is stamped the viewer as
+           `inboxpull` is (the `pulled` resolve is routed as the pull above), so a knock whose bytes the record already holds
+           names its holder only to a viewer who may see it */
+        || op === "inboxresolve"
         /* R45 (K1168; op-declarations R10): case-inputs' draft of what changed and its read (its R6, was case-authoring R39) and network-notices'
            act and reads (R1, R4, R22, R23) each answer by the caller's sight, and fail closed without the stamp
            (escalation's `escalationreasondraft` and link-sweep's `sweeps`, its R9 (N506), take it as `ACTION_LAYER_READS`). */
@@ -1521,7 +1590,7 @@ export function makeFetch(hooks = {}) {
          viewer the record cannot account for. */
       inner.searchParams.set("viewer",
         viaSession ? sessViewer
-        : cls === "ai" ? aiCred.principal
+        : cls === "ai" ? aiViewer
         : `${MACHINE_CLASS_PREFIX}${cls}`);
       /* REC-132 / D-422: THE POSITIONAL HALF, stamped beside the viewer for the ops whose
          store method READS it. It differs from the viewer for exactly ONE principal — the
@@ -2043,7 +2112,7 @@ export function makeFetch(hooks = {}) {
       u.searchParams.set("op", "affordances");
       u.searchParams.delete("target");
       const res = hooks.gatedOp ? await hooks.gatedOp({ req: new Request(u, { method: "GET", headers: req.headers }), url: u, env,
-        op: "affordances", cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+        op: "affordances", cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub,
         grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;
       if (!res) return storeSilent("agentpack");
       const served = await packOf(res);
@@ -2055,7 +2124,7 @@ export function makeFetch(hooks = {}) {
     const archiveWho = { author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`,
       ...(viaSession ? { actorMemberId: sessMember } : {}),
       actorIdentity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
-      actorViewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      actorViewer: viaSession ? sessViewer : cls === "ai" ? aiViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
       ...(viaSession ? {} : { assistantPrincipal: cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}` }) };
     let archiveProject = null, captureStep = null;
     if ((op === "acquire" || op === "unpack") && req.method === "POST")
@@ -2083,7 +2152,7 @@ export function makeFetch(hooks = {}) {
       const warned = warnedOf(url);
       const at = new URL(`http://x/${warned === undefined ? "openoriginal" : "openwithwarning"}`);
       at.searchParams.set("capture", (url.searchParams.get("sha256") || "").toLowerCase());
-      at.searchParams.set("viewer", viaSession ? sessViewer : aiCred.principal);
+      at.searchParams.set("viewer", viaSession ? sessViewer : aiViewer);
       return byteAnswer(await stub.fetch(new Request(at, warned === undefined ? { method: "GET" }
         : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) })), op,
         { store: storeName, tokenClass: cls });
@@ -2173,8 +2242,26 @@ export function makeFetch(hooks = {}) {
                     out.code === "AI_RUN_NOT_PRINCIPAL" || out.code === "MEMBER_RUN_MODE_NOT_ADMITTED" ? 403 : 400);
       return json({ ok: true, result: out, store: storeName, tokenClass: cls }, 200);
     }
+    /* R105 (T50; N1117; K3369, K3627; acquisition R47 `BAD_FOR`, C-139.21; capture R83): A MEMBER'S `for` IS JUDGED FOR
+       SIGHT BEFORE ANY FETCH. `acquire`'s `for`, read by acquisition only from a member's session, names by id the question
+       the capture is for; acquisition judges its shape (a malformed one is its own `BAD_FOR`), and this door judges whether
+       she may see it: the store's `inquirypartition` read is asked as her viewer, and only an answered question is
+       accepted. A question she may not see, one that does not exist and a bundle that is no question are one answer, the
+       same `BAD_FOR` row acquisition gives (one code, one sentence), nothing fetched, written or filed. A store that does
+       not answer is a silence, never a verdict on her `for`. Any other caller's `for` is acquisition's to ignore. */
+    if (op === "acquire" && viaSession && req.method === "POST" && reqBody && typeof reqBody === "object" && !Array.isArray(reqBody)
+        && typeof reqBody.for === "string" && reqBody.for.trim() && reqBody.for.length <= FOR_MAX) {
+      const sight = await doAnswer(stub.fetch(new Request(
+        `http://do/inquirypartition?id=${encodeURIComponent(reqBody.for)}&viewer=${encodeURIComponent(sessViewer)}`, { method: "GET" })));
+      if (!sight.refused && !sight.answered) return storeSilent(op, sight.correlation);
+      if (sight.refused || !sight.result || sight.result.ok !== true) {
+        const row = ARCHIVE_CHECKS.BAD_FOR;
+        return json({ ok: false, reason: "BAD_FOR", code: "BAD_FOR", check: row.check, translation: row.translation, op,
+                      store: storeName, tokenClass: cls }, 400);
+      }
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe */
+      sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, trace, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);
@@ -2183,13 +2270,9 @@ export function makeFetch(hooks = {}) {
       try { body = await res.clone().json(); } catch { return res; }
       return tieToStep({ body, status: res.status }, captureStep ?? url.searchParams.get("step"));
     }
-    /* signin-door R4: an ask answered SIGNIN_TOKEN_REFUSED (plane's ask arm) drops the member's held sign-in; the answer
-       is unchanged */
-    if (armed && op === "ask" && viaSession) {
-      let asked = null;
-      try { asked = await armed.clone().json(); } catch { asked = null; }
-      await tokenRefusedSeen({ member: stampOf.by, answer: asked, store: stored });
-    }
+    /* signin-door R4, R108: an ask answered SIGNIN_TOKEN_REFUSED (plane's ask arm) drops the member's held sign-in; the
+       answer is unchanged, and a stream is handed on as the plane writes it (`watchedAsk`) */
+    if (armed && op === "ask" && viaSession) return watchedAsk(armed, { member: stampOf.by, store: stored });
     if (armed) return armed;
     /* The forward's answer, read once through `doAnswer`: the store's refusal at its status, a silence a silence. */
     async function forwarded(res) {
@@ -2505,6 +2588,8 @@ export function makeFetch(hooks = {}) {
            from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
+                       /* R107: the doorbell's two acts take the viewer from the stamp alone */
+                       ...(op === "inboxpull" || op === "inboxresolve" ? ["viewer"] : []),
                        ...declared.filter((k) => k === "by" || k === "viewer" || k === "session"
                                                  || (k === "member" && SESSION_MEMBER_BODY_OPS.includes(op)))];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
@@ -2573,7 +2658,7 @@ export function makeFetch(hooks = {}) {
            the founder's is the administrator viewer, an `ai` key its principal. Deleted first. */
         delete b.actorViewer;
         b.actorViewer = viaSession ? sessViewer
-          : cls === "ai" ? aiCred.principal
+          : cls === "ai" ? aiViewer
           : `${MACHINE_CLASS_PREFIX}${cls}`;
         /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
            RUN IT HOLDS. The store asks that of a creation carrying THIS stamp, and only an `ai` credential carries
