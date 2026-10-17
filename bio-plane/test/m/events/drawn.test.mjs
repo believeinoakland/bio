@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, MEMBER, OUTSIDER, MACHINE, ZONE } from "./fixture.mjs";
 import { ITEM_PARTICIPANTS_MAX } from "../../../src/events/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const doc = { kind: "document" };
 const PROJ = "PROJ-2026-0001-f";
@@ -177,7 +178,7 @@ test("R51 two standing relations ordering the pair both ways answer undetermined
   assert.equal(chain.basis, undefined);
   const ba = w.ev.relate({ from: b, to: a, kind: "precedes", attestation: { captureSha: t, extent: doc }, by: MEMBER }).relation.relation_id;
   const q = w.ev.sequence({ a, b, viewer: MEMBER });
-  assert.deepEqual([q.answer, q.why, q.relation_ids], ["undetermined", "the cited orders disagree", [ab, ba]]);
+  assert.deepEqual([q.answer, q.why, q.relation_ids], ["undetermined", word("events.why.cited_orders_disagree"), [ab, ba]]);
   w.ev.withdrawRelation({ relationId: ba, reason: "the second source misread it", by: MEMBER });
   assert.deepEqual([w.ev.sequence({ a, b, viewer: MEMBER }).answer, w.ev.sequence({ a, b, viewer: MEMBER }).relation_id], ["before", ab]);
   w.ev.withdrawRelation({ relationId: ab, reason: "withdrawn", by: MEMBER });
