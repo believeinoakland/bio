@@ -137,7 +137,7 @@ test("R30: partRefusal(part) is AI_PART_NOT_DEPLOYED (C-22.29, the next free C-2
   for (const x of [null, undefined, 3, "x".repeat(99), {}]) assert.equal(refusal(partRefusal(x), "AI_PART_NOT_DEPLOYED").part.length <= 40, true);
   /* the next free number: C-22.28 was the last taken, and no retired number is reused */
   const c22 = Object.values(AI_RUN_CHECKS).map((r) => r.check).filter((c) => c.startsWith("C-22.")).map((c) => Number(c.slice(5)));
-  assert.equal(c22.filter((n) => n > 28).sort().join(), "29,30", "29 R30's, 30 R32's");
+  assert.equal(c22.filter((n) => n > 28).sort().join(), "29,30,31", "29 R30's, 30 R32's, 31 R35's");
   assert.equal(new Set(c22).size, c22.length);
   for (const r of Object.values(RETIRED_CHECKS)) assert.notEqual(r.check, "C-22.29");
   /* control: the codes it stands beside keep theirs */
@@ -200,9 +200,10 @@ test("R27 (T46): DRAFT_KINDS gains statusreport after the action drafts — reac
 
 test("R31: C-109.13 and C-109.14 take their translations from words.json's refusal.<CODE>, read by key (RUN_RULES_WORDS), codes, numbers and wheres unmoved; C-22.25 AI_RUN_ORIGIN_UNKNOWN keeps its present translation, since words.json's speaks only of a planning run", () => {
   assert.ok(Object.isFrozen(RUN_RULES_WORDS));
-  /* R32 (T47) adds C-22.30's key after R31's two; t46's R32 test holds it */
+  /* R32 (T47) adds C-22.30's key after R31's two, and R35 (T50) C-22.31's; t46's R32 test and t50's R35 test hold them */
   assert.deepEqual(Object.keys(RUN_RULES_WORDS), ["refusal.AI_RUN_REEXAM_NEEDS_RESPONSE", "refusal.AI_RUN_REEXAM_OPEN",
-                                                   "refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]);
+                                                   "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+                                                   "refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE"]);
   for (const [key, en] of Object.entries(RUN_RULES_WORDS)) assert.equal(en, WORD(key), `${key} is the list's word, verbatim`);
   for (const [code, n] of [["AI_RUN_REEXAM_NEEDS_RESPONSE", "C-109.13"], ["AI_RUN_REEXAM_OPEN", "C-109.14"]]) {
     const row = AI_RUN_PLAN_CHECKS[code];

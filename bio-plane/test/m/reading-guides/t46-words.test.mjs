@@ -1,8 +1,8 @@
-/* reading-guides, T46 (T46-15; R14; DEC-194, N913): the rows C-144.4 GUIDE_KIND_UNKNOWN and C-144.19
-   GUIDE_ITEM_UNSOURCED take their translations from `words.json`'s `refusal.<CODE>`, read by key, never a copy; R13's
-   label carries `guide.procedure.legalinfo`'s words, read by that key; every other row keeps its own; codes, numbers,
-   `where`s and behaviour unmoved. At the interface: the rows and the label as exported, and each refusal as the acts
-   answer it, each beside its control, the same act landing without the refusing condition; over the real modules. */
+/* reading-guides, T46 (T46-15; R14; DEC-194, N913), by key since T50 (T50-42; N1132): every refusal row
+   (C-144.1–.19) takes its translation from `words.json`'s `refusal.<CODE>`, read by key, never a copy; R13's label
+   carries `guide.procedure.legalinfo`'s words, read by that key; codes, numbers and `where`s unmoved, and behaviour
+   unmoved. At the interface: the rows and the label as exported, and each refusal as the acts answer it, each beside
+   its control, the same act landing without the refusing condition; over the real modules. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -20,14 +20,8 @@ const word = (key) => {
 };
 const en = (key) => word(key).en;
 
-/* The two rows R14 re-words, with their numbers and `where`s, which it does not move. */
-const AT = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
-const TAKEN = {
-  GUIDE_KIND_UNKNOWN: ["C-144.4", AT("index.mjs", "kindRefusal", "is-guide-kind")],
-  GUIDE_ITEM_UNSOURCED: ["C-144.19", AT("check.mjs", "checkGuide", "is-guide-sourced")],
-};
 const LABEL_KEY = "guide.procedure.legalinfo";
-/* The two rows and the label as T45 worded them: none is answered any longer. */
+/* T45's words, which none is answered any longer: the label and the two rows R14 first re-took. */
 const T45 = {
   GUIDE_KIND_UNKNOWN: "A reading guide is for one kind of document your group's Civicsmith recognises (a meeting "
     + "calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, "
@@ -38,41 +32,33 @@ const T45 = {
     + "Nothing was written.",
   label: "legal information, not legal advice",
 };
-/* Every other row of the family (17: C-144.1–.3, .5–.18): their canonical JSON's sha256, so no check, where or
-   translation of theirs moves. T48 (N1053; DEC-221): C-144.13's one British spelling, "labelled", is re-spelled
-   "labeled"; `T45_KEPT` is T45's pin, which the rows match with that one word put back, so nothing else moved. */
-const KEPT = { count: 17, sha256: "49d38e68c37d4887445ccab5aafbb2c6427ce686041b3c342e6fb105b5642823" };
-const T45_KEPT = "5f32fbded9573276c596e725febe05eb66afd0b14262654e5cd39ee73014a550";
+/* Every row's number, check and `where`, unmoved since T50 (canonical JSON's sha256 over {check, where} of the 19 rows,
+   in order). T50-42 (N1132) moves only translations: each row now reads its `refusal.<CODE>` key. */
+const NUMBERS_AND_WHERES = { count: 19, sha256: "96c05f885f8c780365f5a51c1372a6d7d4376341d69a5f45640bb5906d7aa55d" };
 
-test("R14 C-144.4 and C-144.19 read words.json's refusal.<CODE> by key from READING_GUIDES_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
+test("R14 every refusal row reads words.json's refusal.<CODE> by key from READING_GUIDES_WORDS, never a copy; the table holds exactly those words and the label's, verbatim; numbers and wheres unmoved", () => {
   assert.ok(Object.isFrozen(READING_GUIDES_WORDS));
-  assert.deepEqual(Object.keys(READING_GUIDES_WORDS).sort(), [...Object.keys(TAKEN).map((c) => `refusal.${c}`), LABEL_KEY].sort(),
-    "the table holds exactly the two rows' keys and the label's");
+  const rows = Object.entries(READING_GUIDES_CHECKS);
+  assert.deepEqual(Object.keys(READING_GUIDES_WORDS).sort(),
+    [...rows.map(([c]) => `refusal.${c}`), LABEL_KEY].sort(), "the table holds the rows' keys and the label's");
   for (const [key, text] of Object.entries(READING_GUIDES_WORDS)) assert.equal(text, en(key), `${key} verbatim`);
-  for (const [code, [check, where]] of Object.entries(TAKEN)) {
-    const r = READING_GUIDES_CHECKS[code];
-    assert.deepEqual([r.check, r.where], [check, where], code);
+  const numbers = Object.fromEntries(rows.map(([c, r]) => [c, { check: r.check, where: r.where }]));
+  assert.deepEqual([rows.length, sha256HexSync(canonicalJson(numbers))], [NUMBERS_AND_WHERES.count, NUMBERS_AND_WHERES.sha256],
+    "no row's check or where moved");
+  for (const [code, r] of rows) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
     assert.equal(r.translation, READING_GUIDES_WORDS[`refusal.${code}`], `${code} reads refusal.${code}`);
     assert.equal(r.translation, en(`refusal.${code}`), code);
-    assert.notEqual(r.translation, T45[code], `${code}: T45's words no longer`);
-    assert.match(r.translation, /Nothing was written\.$/, `${code} still says nothing was written`);
+    assert.match(r.translation, /Nothing was written\.$|Nothing was sent\.$/, `${code} still says nothing was written or sent`);
   }
+  for (const code of ["GUIDE_KIND_UNKNOWN", "GUIDE_ITEM_UNSOURCED"])
+    assert.notEqual(READING_GUIDES_CHECKS[code].translation, T45[code], `${code}: T45's words no longer`);
 });
 
-test("R14 every other row keeps its own translation (words.json holds none of them); the family's order and count unmoved", () => {
-  const kept = Object.fromEntries(Object.entries(READING_GUIDES_CHECKS).filter(([c]) => !(c in TAKEN)));
-  assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
-    "no other row's check, where or translation moved");
-  const t45 = { ...kept, GUIDE_NO_GROUP_SLUG: { ...kept.GUIDE_NO_GROUP_SLUG,
-    translation: kept.GUIDE_NO_GROUP_SLUG.translation.replace("labeled", "labelled") } };
-  assert.equal(sha256HexSync(canonicalJson(t45)), T45_KEPT, "only C-144.13's spelling moved since T45");
-  for (const code of Object.keys(kept)) {
-    assert.ok(!WORDS.some((w) => w.key === `refusal.${code}`), `words.json holds no refusal.${code}`);
-    assert.ok(!Object.values(READING_GUIDES_WORDS).includes(kept[code].translation), code);
-  }
+test("R14 the family's order and count unmoved; every row's words are the design's, none a copy kept beside them", () => {
   assert.deepEqual(Object.values(READING_GUIDES_CHECKS).map((r) => r.check),
     Array.from({ length: 19 }, (_, i) => `C-144.${i + 1}`));
+  for (const code of Object.keys(READING_GUIDES_CHECKS)) assert.ok(WORDS.some((w) => w.key === `refusal.${code}`), `words.json holds refusal.${code}`);
 });
 
 test("R14 R13's label carries guide.procedure.legalinfo's words, read by that key (protected), never a copy; the key unchanged", () => {

@@ -144,7 +144,7 @@ test("R7 the tables (ai_usage, ai_limits and their history, with the act measure
   const w = await standard();
   const mine = w.rc.declaredTables().filter((d) => d.module === "ai-use");
   assert.deepEqual(mine.map((d) => d.name).sort(), ["ai_explore_asks", "ai_limit_history", "ai_limit_reached", "ai_limits",
-    "ai_usage", "ai_use_acts", "ai_use_migrations"]);
+    "ai_usage", "ai_use_act_models", "ai_use_acts", "ai_use_migrations"]);
   for (const d of mine) assert.deepEqual([d.export, d.sight, d.purge, d.expunge], ["admin-only", "group", "clear", "none"], d.name);
   assert.deepEqual(AI_USE_TABLES.map((t) => t.name).sort(), mine.map((d) => d.name).sort());
   w.count("member:ann", "ann", "ask");
