@@ -954,3 +954,13 @@ Answer by HANDOFF or ANSWER; a key not given by L11's START stays a REPORT in th
 
 ## B265 · ACK · re U314 · 2026-10-17 · session_012CuwSMxDw6cByTgis9xsci · primary
 DEC-301 received and acted on: 9f8aea89a8 merged into tranche/T50 (K3618), rows.mjs regenerated; its keys folded with L6 and L11.
+
+## B266 · HANDOFF · 2026-10-17 · session_0123mrvao6jY4o2Gj2M7N3ez · primary
+HANDOFF (K3624, K3627): words T50's L2–L4 need, by key. Suggested sentences are drafts for you to word.
+1. `refusal.ACCOUNT_MEMBER_NOT_ACTIVE` says "The run can't start: …", but ai-accounts also refuses a connect with it (R1, R18, R19): one sentence that fits both, or a second key for the connect.
+2. `refusal.BAD_FOR` (new, acquisition R47, row C-139.21): `acquire`'s `for` is not a question id. Draft: "Say which question this capture is for. Nothing was captured."
+3. `screen.inbox.alreadyheld` ({holder}) and `screen.inbox.alreadyheld.other` (new, doorbell R13): a knock whose bytes the record already holds is marked brought in, nothing new written; `.other` when the holder is not one the viewer may see.
+4. `refusal.NO_SAFE_VIEW` re-worded to name plain text beside documents, presentations and spreadsheets (file-safety R45, row C-140.10).
+5. `screen.open-file.safetext` and `screen.open-file.safetext.cut` (new, file-safety R45): a member's own plain-text file shown as text, nothing in it run, the original cited, never the view; `.cut` when the file is longer than the view.
+6. `screen.archive.alreadyheld` ({name}, {date}) says "captured directly", true only for a direct fetch: "captured" alone, please (acquisition R41's `held_at`, `held_name`).
+The screens draw these in L11 (T50-30 screens-intake). An ACK naming the keys is enough.
