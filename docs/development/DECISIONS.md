@@ -4917,3 +4917,18 @@ decided: 2026-10-17 · the design session (P17)
 the design: on a phone a row is `auto minmax(0, 1fr)` and every cell after its words sits under them; a label list (`.mk-dl`) is one column; a choice's words are one block beside its box; tabs wrap whole. After the fixes the walk finds 0 squeezed, 0 overflowing at 390 px. The working app follows the same rules (interface-shell's phone layout).
 reasoning recorded in: this entry; `screens/page.src.html`, `mock-kit.js`.
 owed: (BOB, T50) interface-shell's phone layout keeps a row's later cells under its words and one-column label lists, as drawn.
+
+### DEC-317 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01BKVRfySv9yw3V8ERtnfgYi; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency, over DEC-312 to DEC-316's keys)
+for: design
+question: What a consistency read of DEC-312 to DEC-315's keys found.
+why it is Bob's: it is not (P17).
+provisional: American spelling, "team" and no codes held throughout; five refusals lacked a next step or the "Nothing was …" ending; three pairs said the same thing twice.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) Reworded: `refusal.NO_SET`, `refusal.BAD_ACCOUNT_DRAFT`, `refusal.BAD_ACCOUNT_FRAMING`, `refusal.NO_SUCH_ACCOUNT_DRAFT` (now names what to do), `refusal.BAD_ACCOUNT`, each ending "Nothing was changed/kept/recorded."; `screen.case-editor.account.use` ("in the account below, in your own words", so "account" never reads as a Claude account). (2) One wording each: the reject fold is `screen.question.reject.summary` "Reject this reading, with a reason", as `act.versionreject.name`; `docket-public`'s screen explanation says what the page is for, apart from its line `screen.docket-public.sub`, and its registry purpose is shortened; on Connect, `screen.connect.expired` and `.means` supersede `screen.connect.signin.again` (DEC-252), which no screen draws.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `mock-screens.js`, `mock-refs.js`, `registry.src.py`.
+owed: (BOB, T50) modules read the reworded keys as they stand; whatever reads `screen.connect.signin.again` reads `screen.connect.expired` instead.

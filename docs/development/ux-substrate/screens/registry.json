@@ -4090,7 +4090,7 @@
    "id": "docket-public",
    "name": "A case's docket, from outside",
    "frame": "published",
-   "purpose": "The docket as a reader without an account sees it, from the public page's \"its docket\": each entry after publishing, dated and signed, read only (DEC-313; public-read R21).",
+   "purpose": "A published case's docket, read without an account (DEC-313; public-read R21).",
    "acts": [],
    "journeys": [
     26

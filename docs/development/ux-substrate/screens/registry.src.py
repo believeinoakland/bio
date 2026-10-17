@@ -160,7 +160,7 @@ screen('imported', 'Another team\'s case', 'imported', 'An imported case in its 
   [('caseimport','Import a case'),('importaccept','Accept what recreated'),('importflag','Flag an issue'),('importwatch','Watch the publisher\'s docket')], [25])
 screen('docket', 'Docket', 'working', 'The case\'s public docket: corrections, withdrawals, court orders.',
   [('docketfile','File a docket entry'),('docketpost','Post it')], [23,24])
-screen('docket-public', 'A case\'s docket, from outside', 'published', 'The docket as a reader without an account sees it, from the public page\'s "its docket": each entry after publishing, dated and signed, read only (DEC-313; public-read R21).',
+screen('docket-public', 'A case\'s docket, from outside', 'published', 'A published case\'s docket, read without an account (DEC-313; public-read R21).',
   [], [26])
 
 # --- outside the team
@@ -195,5 +195,5 @@ for _s in S:
 for _s in S:
     if _s['id'] == 'question':
         _have = {a['op'] for a in _s['acts']}
-        for _op, _l in [('search','Find another source'),('airunopen','Ask the assistant'),('airunclose','Stop the assistant'),('versionaccept','Accept a proposed reading'),('versionreject','Decline a proposed reading'),('planopen','Plan what to do')]:
+        for _op, _l in [('search','Find another source'),('airunopen','Ask the assistant'),('airunclose','Stop the assistant'),('versionaccept','Accept a proposed reading'),('versionreject','Reject a proposed reading'),('planopen','Plan what to do')]:
             if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
