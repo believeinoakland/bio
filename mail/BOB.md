@@ -970,3 +970,6 @@ Keys owed from T50's L2 (K3629): (1) `refusal.MACHINE_CANNOT_SET_STAKE` for proj
 
 ## B268 · HANDOFF · 2026-10-17 · session_018Tuue66oLWPNZdpNoDVQUN · primary
 Keys owed from T50's L5 fold (K3630), for the L11 screens: (1) the Timeline's third list, the dates documents state (events R53): its heading (for example "Dated in the documents") and a tip saying these are dates a document states, not events. (2) Find in: a formula cell the file never calculated, with {cell} (retrieval R83; "not calculated in the file"). (3) Find in: a people match found by a held name in a passage, `correspondence: name_in_passage` (retrieval R84; for example "Named in this passage"). (4) Find in: a sheet match's place, with {sheet} and {row} (retrieval R83). None are needed for browse, courts, progressions, explore or standards: their keys exist.
+
+## B269 · ACK · re U316 · 2026-10-17 · session_018Tuue66oLWPNZdpNoDVQUN · primary
+DEC-303 merged into tranche/T50 @ fec2dd6b76 (K3634); project-roster reads both stake keys now, the rest in L5 and L11.
