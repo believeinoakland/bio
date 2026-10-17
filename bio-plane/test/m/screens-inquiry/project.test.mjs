@@ -205,7 +205,7 @@ test("R28 who can find it: the setting, its history newest first ending with how
   assert.ok(!actsIn(section(m, "project.visibility.title")).includes("projectvisibilityset"));
 });
 
-test("R29 R40 members: one row each with role, the founder unnamed by key, never admin; an owner's acts on each row", async () => {
+test("R29 R40 R54 members: one row each with role, the founder unnamed by key, never admin; an owner's acts on each row", async () => {
   const parts = ok({ ok: true, projectId: P, participants: [{ founder: true, handle: null, state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 1, owner_since: "2026-10-02T09:00:00Z" },
     { handle: "ana", state: "joined", owner: 0, joined_at: "2026-10-03T09:00:00Z" }] });
   const p = await open(at(), { plane: { projectparticipants: parts, projectowneradd: ok({ ok: true }), projectremove: ok({ ok: true }), projectownerremove: ok({ ok: true }) } });

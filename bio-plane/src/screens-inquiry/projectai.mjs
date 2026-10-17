@@ -13,7 +13,7 @@
 
 import * as settingsPanel from "../screens-settings/panel.mjs";
 import { SCREEN_WORDS as SETTINGS_ROWS } from "../screens-settings/index.mjs";
-import { later } from "./common.mjs";
+import { later, unavailable } from "./common.mjs";
 
 const { aiPanel, aiPanelSend } = settingsPanel;
 
@@ -86,6 +86,9 @@ function render(cs, view) {
   const refusedHer = ["project", "participants", "state", "notice", "keepaway"].some((k) => d[k] && d[k].state === "failed"
     && d[k].refusal && NOT_JOINED.includes(d[k].refusal.code));
   const absent = parts && !parts.some((x) => x.handle === me && x.state === "joined");
+  /* R60: a hidden project she is not in is unavailable (state b), with no form; a findable one, or her invitation, keeps Join */
+  const invited = !!(parts && parts.some((x) => x.handle === me && x.state === "invited"));
+  if ((refusedHer || absent) && !listed && !invited) return out.join("") + view.parts.unavailable(cs);
   if (listed || refusedHer || absent) {
     out.push(`<p data-state="notjoined">${W("projectai.notjoined", { project: title || plain("state.undetermined") })}</p>`
       + cs.act("projectjoin", { label: "act.projectjoin.label.projectai", data: { project: id }, tone: "primary" }));
@@ -206,7 +209,7 @@ const words = Object.freeze([
   ...["projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove", "projectkeynoticeseen",
     "accountusesset", "ailimitset", "projectaikeepaway", "projectjoin"].map((op) => "act." + op + ".label.projectai"),
   "act.projectaikeepaway.does", "ai.refused.notsole", "ai.refused.signinnotconnected", "mark.outward.means",
-  "state.undetermined", "projectai.notjoined",
+  "state.undetermined", "projectai.notjoined", "shell.unavailable.notyours.title", "shell.unavailable.notyours.says",
   ...PANEL,
   ...["purpose", "account.head", "account.none", "account.key", "account.signin", "account.off", "account.suspended",
     "account.since", "owners", "key.field", "key.replace", "key.nokey", "key.never", "signin.help", "switch.on", "switch.off",
@@ -216,4 +219,4 @@ const words = Object.freeze([
 
 /** The project's AI account (interface-shell R21), with the panel's functions as its parts. */
 export const PROJECTAI_SCREEN = Object.freeze({ id: "projectai", reads, place, render, acts, words,
-  parts: Object.freeze({ aiPanel, aiPanelSend, later }) });
+  parts: Object.freeze({ aiPanel, aiPanelSend, later, unavailable }) });

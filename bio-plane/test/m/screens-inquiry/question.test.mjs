@@ -103,7 +103,7 @@ test("R23 state b: three cited passages and no partition: the ask first, no stre
   assert.ok(main(a).querySelector(".mk-strengthbox") && !section(a, "question.ask.title"));
 });
 
-test("R24 the read-back: one single part and one two-passage part in both shapes; who set it; each change; a shared origin's line", async () => {
+test("R24 R54 the read-back: one single part and one two-passage part in both shapes; who set it; each change; a shared origin's line", async () => {
   const legs = [{ target: D, role: "supports", ground: "part 1" }, { target: "INFO-2026-0007", role: "supports", ground: "part 2" }, { target: "INFO-2026-0009", role: "supports", ground: "part 2" }];
   const refs = legs.map((l) => [l.target, "cites", "confirmed", null]);
   const log = ["### Session 2026-10-08T09:00:00Z | Restructured | member:mai", "Trigger: op=inquiryground on " + Q, "Reason: the audit stands alone",

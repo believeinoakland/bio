@@ -36,7 +36,7 @@ const base = (id) => (id === "projectai" ? AI : {});
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
 /* the registry acts this module's requirements do not name (reported to BOB, J3): every other act the registry lists for
    its screens is drawn (N1073: the acts are read from the registry, the owner's declaration, never hand-listed) */
-const NOT_NAMED = { project: ["writinghelp", "owed:projectstakeset K3230"], question: [], document: ["captureprogressions"] };
+const NOT_NAMED = { project: ["writinghelp", "owed:projectstakeset K3230"], question: [], document: ["captureprogressions"], assistant: ["ask"] };
 /* T50: the registry still owes `projectstakeset` (K3230, "owed:"); R53 draws it, re-pointed by interface-shell. Labels the requirements name by key. */
 const OWED = { project: ["projectstakeset"] };
 const LABEL = { projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here" };
