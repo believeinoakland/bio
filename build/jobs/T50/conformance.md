@@ -32,3 +32,6 @@ T50-76 conformance complete. R40: C-113.6 reads refusal.NO_FINDINGS by key; R38'
 ## J2 · COMPLETE · re B2
 
 B2 applied: both labels say 'the source team's'. Tests 119/119; format, architecture, coverage 41/41, ownership 0 failures. Pushed.
+
+## Completion again (B3 CHANGE)
+`SOURCE_FACTS_UNRECORDED` reads `case-import.group_fields_none` and `SOURCE_DECLARATION_SAYS` reads `case-import.group_fields_label`, each by `word(key)` (DEC-328 (6)); `t47.test.mjs` asserts each by key and that neither says "group". Module tests 119/119; format, architecture, coverage (41/41) and ownership 0 failures.
