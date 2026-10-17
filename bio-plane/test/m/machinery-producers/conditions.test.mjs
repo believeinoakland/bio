@@ -126,7 +126,7 @@ test("R3 (DEC-95 (1); K1105): each capture-completed-unattended item carries in 
   manifest("k1", "carol", "2026-07-31T12:00:00Z"); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
   const u = byId(w.read("dave"))["CONDITION::capture-completed-unattended::INFO-88"];
   assert.ok(u.detail.endsWith(ACQUIRE_GRADE_NOTE), "the same words a member present at the capture read");
-  assert.ok(u.detail.includes("(cap88)"), "naming the capture the note is of");
+  assert.ok(u.detail.endsWith(word("queue.capture-completed-unattended.gradenote", { note: ACQUIRE_GRADE_NOTE })), "the note read by key (R15)");
   assert.deepEqual(u.basis.grade_notes, [{ capture_sha: "cap88", note: ACQUIRE_GRADE_NOTE }]);
   /* the second producer: a capture request, its own digest; one registered under a document dave may not see carries none */
   w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('caph','PRJ-1','snapshots/h','binary',?,1)`, iso(NOW));
@@ -202,4 +202,65 @@ test("R14 (R085-19; K3501 (b)): capture-completed-unattended is raised only for 
   /* control: a machine-written capture still raises it */
   manifest("k1", "carol", "2026-07-31T12:00:00Z"); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
   assert.ok(byId(w.read("dave"))["CONDITION::capture-completed-unattended::INFO-88"], "a machine-written capture still raises its item");
+});
+
+test("R15 (T50; N1143; DEC-274): a completed capture request is told by key: a member's request and a run's draw their details, the run's naming the member; an untitled document draws the untitled word", () => {
+  const { w } = corpus();
+  w.run(`UPDATE members SET handle=? WHERE member_id=?`, "Carol Ruiz", "carol");
+  w.run(`INSERT INTO founder_handle (id, handle, at) VALUES (1,?,?)`, "Dana Founder", iso(NOW));
+  w.bundle("INFO-UNT", "information", { title: "" });
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('capunt','INFO-UNT','snapshots/u','binary',?,1)`, iso(NOW));
+  const at = (extra) => ({ ok: true, statement: "the daemon captured this", ...extra });
+  const req = (request, sha, attribution) => ({ request, run: "r", target: "INQ-1", address: `https://${HOST}/${request}`, host: HOST,
+    purpose: "investigate", ua_mode: "civicos", capture_sha: sha, captured_at: iso(NOW), attribution });
+  w.fakes.captureRequests.completed = () => ({ requests: [
+    req("CR-M", "cap88", at({ at_the_request_of: { member: "carol", inquiry: "INQ-1" }, principals: { plane: "member:carol" } })),
+    req("CR-R", "cap88", at({ at_the_request_of: { run: "run-1", inquiry: "INQ-1" }, principals: { plane: "member:carol/tok-9", claude: "acct" } })),
+    req("CR-F", "capunt", at({ at_the_request_of: { member: "admin", inquiry: "INQ-1" }, principals: { plane: "member:admin" } }))] });
+  const k = (name) => `queue.capture-completed-unattended.request.${name}`;
+  for (const n of ["summary", "summary.unnamed", "detail", "detail.assistant", "detail.unnamed"]) assert.ok(hasWord(k(n)), `${k(n)} is in the word list`);
+  assert.ok(hasWord("queue.capture-completed-unattended.gradenote"));
+  const items = byId(w.read("carol"));
+  const note = " " + word("queue.capture-completed-unattended.gradenote", { note: (items["CONDITION::capture-completed-unattended::CR-M"].basis.grade_notes[0] || {}).note });
+  const m = items["CONDITION::capture-completed-unattended::CR-M"];
+  assert.equal(m.summary, word(k("summary"), { member: "Carol Ruiz", title: "Controller memo" }), "a member's request: her handle, the document's title");
+  assert.equal(m.detail, word(k("detail"), { member: "Carol Ruiz" }) + note, "the detail, then the grade note once");
+  const r = items["CONDITION::capture-completed-unattended::CR-R"];
+  assert.equal(r.summary, word(k("summary"), { member: "Carol Ruiz", title: "Controller memo" }));
+  assert.equal(r.detail, word(k("detail.assistant"), { member: "Carol Ruiz" }) + note, "a run's request names the member read from the run's principal, not the credential");
+  const f = items["CONDITION::capture-completed-unattended::CR-F"];
+  assert.equal(f.summary, word(k("summary"), { member: "Dana Founder", title: word("screen.held.untitled") }), "the founder by her handle; an untitled document by the untitled word");
+  for (const it of [m, r, f]) assert.ok(!/carol|admin|run-1|tok-9|token:|INFO-|CR-|member:/.test(it.summary + it.detail), `no id in: ${it.summary} ${it.detail}`);
+});
+
+test("R15 control: a request naming no member, and a run whose principal cannot be read, draw the unnamed forms and name no id", () => {
+  const { w } = corpus();
+  const at = (extra) => ({ ok: true, statement: "s", ...extra });
+  const req = (request, attribution) => ({ request, run: "r", target: "INQ-1", address: `https://${HOST}/${request}`, host: HOST,
+    purpose: "investigate", ua_mode: "civicos", capture_sha: "cap88", captured_at: iso(NOW), attribution });
+  w.fakes.captureRequests.completed = () => ({ requests: [
+    req("CR-1", at({ at_the_request_of: { run: "run-2", inquiry: "INQ-1" }, principals: { plane: "class:ai/tok-3", claude: "acct" } })),
+    req("CR-2", at({ at_the_request_of: { run: "run-3", inquiry: "INQ-1" }, principals: { plane: "member:ghost", claude: "acct" } })),
+    req("CR-3", at({ at_the_request_of: { member: "ghost", inquiry: "INQ-1" }, principals: { plane: "member:ghost" } })),
+    req("CR-4", at({ at_the_request_of: { run: "run-4", inquiry: "INQ-1" } }))] });
+  const k = (name) => `queue.capture-completed-unattended.request.${name}`;
+  const items = byId(w.read("carol"));
+  for (const id of ["CR-1", "CR-2", "CR-3", "CR-4"]) {
+    const it = items[`CONDITION::capture-completed-unattended::${id}`];
+    assert.equal(it.summary, word(k("summary.unnamed"), { title: "Controller memo" }), id);
+    assert.ok(it.detail.startsWith(word(k("detail.unnamed"))), id);
+    assert.ok(!/ghost|run-|tok-|class:|member:|CR-/.test(it.summary + it.detail), `no id in: ${it.summary} ${it.detail}`);
+  }
+});
+
+test("R15: a request's title is hidden from a viewer who may not see its document; the item stands under the untitled word", () => {
+  const { w } = corpus();
+  w.bundle("PRJ-H", "project", { title: "Hidden project" });
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('caph','PRJ-H','snapshots/h','binary',?,1)`, iso(NOW));
+  w.fakes.captureRequests.completed = () => ({ requests: [{ request: "CR-H", run: "r", target: "INQ-1", address: `https://${HOST}/h`, host: HOST,
+    purpose: "investigate", ua_mode: "civicos", capture_sha: "caph", captured_at: iso(NOW),
+    attribution: { ok: true, statement: "s", at_the_request_of: { member: "carol", inquiry: "INQ-1" }, principals: { plane: "member:carol" } } }] });
+  const seen = byId(w.read("dave"))["CONDITION::capture-completed-unattended::CR-H"];
+  assert.ok(seen && !seen.summary.includes("Hidden project"), "dave may not see the document: its title is not told");
+  assert.ok(seen.summary.includes(word("screen.held.untitled")));
 });
