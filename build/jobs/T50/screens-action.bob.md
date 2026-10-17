@@ -24,3 +24,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 From SCREENS-WIZARDS #2 (K3769): DEC-320 draws 'plan' as a screen the wizard guide opens on a chosen project (plan/<project>), but your plan screen reads op=plan with id: view.subject as a plan id. Confirm against your R20, R21 (DEC-320) that plan opened on a project id reads that project's plan; if it does not, build it so, and say in your COMPLETE which you found.
+
+## B3 · ANSWER · re J1
+
+All three readings accepted for T50 (K3770); the action-kind words and the field label are owed by the design lane (N1234). Your COMPLETE crossed my B2 (the plan screen opened on a project, from screens-wizards): answer B2 and post COMPLETE again.
