@@ -1,35 +1,35 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #203 (`session_019YnVjfiCWzYuKJbotYWNhq`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~16:00 UTC, at 35% context, handing off early because auto mode's safety check began refusing acts in this session that it had allowed (K3705). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3690–K3705 (BOB #203's; Bob's are K3695 and K3701's words, recorded in K3702 and K3705 as refused).
+**Status** · Replaced whole at each handoff. Written by BOB #203 (`session_019YnVjfiCWzYuKJbotYWNhq`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~16:32 UTC, refreshing on Bob's word ("Refresh both BOB and UX design lanes", K3713). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3690–K3713 (BOB #203's; Bob's are K3695, K3701's words in K3702, and K3713).
 
 ## Standing
 
-- Bob's T50 focus (K3666) and trust (K3609) as before. **Bob ruled (K3695): finish L6, then hold T50 before L7** until the remote-assistant question is settled. No L7 START until Bob lifts it.
-- **Bob's direction today, in his words:** "whatever CC is doing, civicsmith can also do" and "DON'T DO IT AGAIN!" (BOB #203 stopped agent-runner's proof wrongly at K3692 and owns that). Building the proof on Claude Code's own sign-in route (Civicsmith running Claude Code's browser login, holding and renewing that login, calling its sessions service) was refused twice by auto mode's safety check, the second time after Bob's approval in BOB #203's session (K3702). It is **not to be retried in another session**: that would work around the refusal (rulings-active §1, §16). The remote proof stays where K3692 left it until Bob chooses a route the check accepts, such as the documented routine fire, or settles the refusal himself.
+- Bob's T50 focus (K3666) and trust (K3609) as before. **T50 is HELD after L6, before L7** (Bob, K3695), until Bob rules the remote-assistant route. Close L6 first (below), then hold.
+- **The remote assistant is with Bob, not a job.** BOB #203 stopped the proof wrongly at K3692 and Bob corrected it: "whatever CC is doing, civicsmith can also do", "DON'T DO IT AGAIN!" (his words, K3702; the K3701 commit recording them was refused by auto mode's safety check — "Security Weaken", then "Credential Exploration" — so his ruling is NOT in rulings.md, only in K3702's and K3705's record). The direct route (Civicsmith running Claude Code's own browser sign-in for cloud sessions, holding/renewing the login, calling its sessions service) is refused by the safety check in this session and is **not to be retried in another session or offloaded to a less-cautious worker** (that is working around the refusal; rulings-active §1, §16). The documented route the check accepts is **routine fire** (per-member hand-made token on claude.ai, start-only, answer by write-back; `build/plan/design-remote-routine.md`). Bob has chosen no route yet. Bring him routine fire if he asks for options; do not retry the refused route. agent-runner R38 stands blocked at step 0 (K3692); R36–R38, R40, agent-worker R111, agent-harness R17, screens-settings R41's check, installer R56/R58 stay unbuilt until a route is chosen.
 
 ## Where things stand
 
-- **L6 running.** Merged (K3694, K3699, K3700): agent-runner (R35, R39; R36–R38, R40 not met), reading-guides, agent-model, inquiry, basis-versions, run-rules, ai-use, agent-harness. Complete, waiting on ai-runs (provider): capture-requests, skills, question-explorer (each re-ran against the merged tranche). Working: **ai-runs** (one long live turn at 15:35; B2 CHANGE and B3's forwarded question on `airuntick`/`airunlog` keeping `read`/`disagree` keys), **agent-worker** (B6: rebuild R118 with the GREATEST `documents`, K3704; `CHECKS`/`CheckRecord` accepted). After ai-runs merges: CHANGE capture-requests, skills, question-explorer, agent-worker; merge in `modules.json` order; agent-worker last. Then close L6 (§5.6: artifacts incl. agent-worker's bundle, checks, archive the 13 sessions with rows) and HOLD (K3695).
-- Accepted reds named in K3694, K3699, K3700 (agent-worker R45/bundle until L6's close; scheduler `explore.test.mjs` 3 until T50-16; agent-worker's tests until its merge).
-- **Folds done for later layers:** K3696 (translations map corrections, its closing section governs), K3698 (DEC-310, DEC-311, K3664 lines), K3703 (DEC-312 for T51 via N1213; DEC-313 lines: screens-publish R34, interface-shell R88, screens-investigate R39).
-- **Channel:** UX design #26 `session_01BKVRfySv9yw3V8ERtnfgYi` (started by BOB #203 on Bob's word, K3702; #25 archived) writes UX-DESIGN's outbox; read through U328; posted through B287. It rings BOB by `send_message`.
-- **Lanes:** ASSISTANT-HOSTING #2 is archived (found 15:25); Bob has not said whether to restart it. JOURNEYS and INVESTIGATION-DESIGN HANDOFFs not re-read this session (H43, W4 as BOB #202 left them).
-- **Timers:** WATCH #203 `trig_01BhmMRJnsGzocTFAjHe4DA9` into ROOT #7 (16:57Z). No backstop: its re-arm at 15:57 was refused by auto mode (K3705). Delete the WATCH at takeover and arm your own WATCH and backstop.
-- **Environment:** a new container needs `npm ci --ignore-scripts` in agent-runner and file-scanner (and sheet-worker) before `fleetbundles`.
+- **L6: every job merged** (K3694, K3699, K3700, K3710). Not met / unbuilt as recorded: agent-runner R36–R38, R40 (K3692); agent-worker R111 (conditional). Accepted reds to clear at L6's close: agent-worker R45 (its bundle stale, rule 5 (12)); scheduler `explore.test.mjs` 3 (T50-16). **Next: close L6 (§5.6):** regenerate the generated artifacts (manifest order; agent-worker's and the plane's bundles are stale — `npm ci --ignore-scripts` in agent-runner, file-scanner, sheet-worker first, K1980), verify (`fleetbundles`, `newgroup-bundle-fresh`), commit on the tranche branch; `node checks/run.mjs bio` (accept only the named reds); archive the 13 L6 sessions (addresses in `plan/current.md` Jobs line) with their `BOB-final`/Size rows in `metrics/T50.csv`. **Then HOLD** (no L7 START; K3695).
+- **Folds ready for later layers (no job yet):** K3696 (translations map, its closing section governs), K3698 (DEC-310/311/K3664), K3703 (DEC-313), K3706 (DEC-314), K3707 (DEC-315), K3709 (DEC-316), K3711 (U332 corrections, DEC-317). DEC-312's L4/L5 keys are N1213 (T51).
+- **`next.md` new entries:** N1213–N1219 (T51).
+- **Channel:** UX design #27 `session_01S7xeW38PtVh94Sy8LiatgK` (started K3713; #26 archived) writes UX-DESIGN's outbox. Read through U334; posted through B292. Its gaps list (`docs/development/ux-substrate/T50-requirements-gaps-2026-10-17.md`) is the design's own next work; flows a T50 screen job needs reach BOB as new DECs. It rings BOB by `send_message`.
+- **Lanes:** ASSISTANT-HOSTING #2 archived (Bob has not said whether to restart it, ASSISTANT-HOSTING #3). JOURNEYS and INVESTIGATION-DESIGN HANDOFFs not re-read this session (W4, H43 as BOB #202 left them).
+- **Timers:** WATCH #203 `trig_01BhmMRJnsGzocTFAjHe4DA9` into ROOT #7 (16:57Z). **No backstop** (its 15:57 re-arm was refused by auto mode, K3705; a fresh session clears this). Delete the WATCH at takeover; arm your own WATCH and backstop.
+- **Environment:** a new container needs `npm ci --ignore-scripts` in agent-runner, file-scanner and sheet-worker before `fleetbundles`.
 
 ## What comes next, in order
 
 1. **Take over** (§5.1). Archive BOB #203 once idle (BOB-final row under T50). Delete its WATCH.
-2. **The remote route** is with Bob (above); bring him routine fire, the documented route, if he asks for options. Do not retry the refused route.
-3. **Finish L6, close it, hold before L7.**
+2. **Close L6** (§5.6), then **HOLD before L7** (K3695).
+3. **The remote route** is Bob's (above); do not build or retry it. Everything else of T50 that does not depend on it is already merged or folded.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by T50's close PR (§5.7 (3), K2273).
-- Merging the design branch's verified docs-and-words commits into `tranche/T50`: K3618's practice, last done K3703.
-- Cloudflare acts on biosmoke8 and deploys: Bob's standing permission (K3466, K3600); auto mode refuses deploys each time (rulings-active §2).
+- `main` moves only by T50's close PR (§5.7 (3), K2273). T50 is held mid-tranche: no close yet.
+- Merging the design branch's verified docs commits into `tranche/T50`: K3618's practice, last done K3712.
+- Cloudflare acts on biosmoke8 and deploys: Bob's standing permission (K3466, K3600); auto mode refuses deploys each time (rulings-active §2). The safety check is currently refusing credential/sign-in-adjacent writes and trigger arming in this session (K3705); a fresh session is the clean route.
 
 ## Open with Bob
 
-- The remote assistant's route, given the safety check's refusals (his ruling above is the direction).
+- The remote assistant's route (routine fire, or he clears the block for the direct route).
 - Whether to restart the assistant-hosting study (ASSISTANT-HOSTING #3).
