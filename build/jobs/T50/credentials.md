@@ -18,3 +18,7 @@ What is unproven until your CHANGE:
 Checks (from the process repo): architecture 0 failures; coverage 55 of 55 ids named; ownership 0 failures. `format.mjs` fails on 2 lines of `build/rulings.md` (K3441, K3597, no standing-list decision): BOB's file, not mine.
 
 Found in another module: none.
+
+## J2 · REPORT
+
+B2 applied (pushed). (1) tranche/T50 merged; R73's refused-sign-in test now runs against ai-accounts' real clause and passes (it is in `t50-signin.test.mjs`, apart from R79's tests so it runs before membership merges). (2) R48's sweep test now reads ai-accounts' translation by key (`word("refusal.ACCOUNT_SEAL_UNAVAILABLE")`), no English quoted. (3) setup-words in `uses` noted; architecture 0 failures, coverage 55 of 55, ownership 0 failures. Credentials tests: 155 pass; the only 2 failing files are `t40` and `t50` (R79), which cannot load until membership R149's `projectViewer` exists. Waiting for your CHANGE when membership merges.
