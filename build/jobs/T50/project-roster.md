@@ -38,3 +38,11 @@ Tests and checks (from /home/user/bio; checks from civicos-process):
 - `node checks/ownership.mjs /home/user/bio project-roster tranche/T50`: 0 failures.
 
 Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 8, module lines 1505
+
+## J4 · COMPLETE
+
+Re B3: R34 built. `projectList` rows carry `participation` (`joined`/`leaving`/`invited`, the viewer's own; `null` for an administrator or founder who is no participant and for a machine credential). Test names R34 with its control; the R26 key-set test now lists `participation`. Merged tranche/T50 @ 4bc2207af1.
+
+Tests: project-roster 77 pass, 0 fail. screens-daily and op-declarations: only the accepted reds (the T45 owner-map spec test for the three new ops, and the registry/screen-act reds already in base). checks: format 0, architecture 0, ownership 0, coverage 0 for project-roster. C-147.9 translation stays null (HANDOFF B267). R33 still `since: null` until membership R152 merges; waiting for your CHANGE.
+
+Size (session_01CRP1uirZ6T4GoDiyhrh3i8): test runs 11, module lines 1514
