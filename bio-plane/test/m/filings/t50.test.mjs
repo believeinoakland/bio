@@ -249,3 +249,18 @@ test("R63 an accepted finding's source line prints that source's matter stake af
   assert.equal(matterWords(null), null);
   assert.equal(matterWords({ stake: null }), null);
 });
+
+test("R60 R61 over the real actions: a member's statement through actions' actionStake is the action's own stake, shown over the project's, and cleared it falls back to the project's", async () => {
+  const x = world();
+  const A = x.action();
+  projectStake(x, PROJECT_STAKE);
+  const f = x.filingsWith();
+  const set = x.actions.records.actionStake({ target: A, stake: OWN_STAKE, author: V("olive"), viewer: V("olive") });
+  assert.equal(set.ok, true, JSON.stringify(set).slice(0, 300));
+  const m = matterOf(f, A);
+  assert.deepEqual([m.stake, m.source], [OWN_STAKE, "action"]);
+  const ap = await approve(f, comm(f, A, { text: "A plain letter." }).id);
+  assert.deepEqual([ap.inband.group.matter_stake.stake, ap.inband.group.matter_stake.source], [OWN_STAKE, "action"]);
+  assert.equal(x.actions.records.actionStake({ target: A, stake: null, author: V("olive"), viewer: V("olive") }).ok, true);
+  assert.deepEqual([matterOf(f, A).stake, matterOf(f, A).source], [PROJECT_STAKE, "project"]);
+});
