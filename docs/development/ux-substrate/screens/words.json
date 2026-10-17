@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 159,
+  "queue": 162,
   "transcribe": 19,
   "capture": 71,
   "document": 62,
@@ -19,7 +19,7 @@
   "connection": 34,
   "guide": 7,
   "prepared": 2,
-  "label": 211,
+  "label": 207,
   "project": 53,
   "grouprule": 1,
   "refusal": 1983,
@@ -49,11 +49,11 @@
   "session": 11,
   "updates": 34,
   "home": 19,
-  "installer": 19,
+  "installer": 36,
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3923,
+  "screen": 3928,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13116,
+  "total": 13137,
   "protected": 905
  },
  "words": [
@@ -7593,13 +7593,6 @@
   {
    "key": "queue.muted.kind",
    "en": "{kind}, in {project}",
-   "protected": false,
-   "source": "DEC-240",
-   "note": "DEC-240"
-  },
-  {
-   "key": "queue.muted.case",
-   "en": "Everything from {project}",
    "protected": false,
    "source": "DEC-240",
    "note": "DEC-240"
@@ -41019,34 +41012,6 @@
    "note": "DEC-318: R47: the zone is the team's, civil-time R23"
   },
   {
-   "key": "label.personfactkinds.office",
-   "en": "Office",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-318: people: a person fact of office (the line kind)"
-  },
-  {
-   "key": "label.personfactkinds.name",
-   "en": "Name",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-318: people PERSON_FACT_KINDS"
-  },
-  {
-   "key": "label.personfactkinds.birth",
-   "en": "Birth",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-318: people PERSON_FACT_KINDS"
-  },
-  {
-   "key": "label.personfactkinds.death",
-   "en": "Death",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-318: people PERSON_FACT_KINDS"
-  },
-  {
    "key": "refusal.BAD_VALIDITY",
    "en": "Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.",
    "protected": false,
@@ -41094,13 +41059,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-318: R48's control: the refusal fold"
-  },
-  {
-   "key": "screen.find-in.recorded.office",
-   "en": "{name} holds the office of {office}, from {from}",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-318: findin.recorded {fact} for an office fact"
   },
   {
    "key": "screen.person.facts.undetermined",
@@ -41710,6 +41668,195 @@
    "protected": true,
    "source": "DEC-259",
    "note": "DEC-327: the signed body; frozen (K1333)"
+  },
+  {
+   "key": "screen.timeline.datekind.entered",
+   "en": "Entered in the record",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (1): screens-investigate R33 (5), screens-daily R48 (1)"
+  },
+  {
+   "key": "screen.timeline.datekind.hearing",
+   "en": "A hearing",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (1)"
+  },
+  {
+   "key": "screen.timeline.datekind.period_covered",
+   "en": "The period it covers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (1)"
+  },
+  {
+   "key": "screen.timeline.datekind.edited",
+   "en": "Edited",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (1)"
+  },
+  {
+   "key": "queue.muted.item",
+   "en": "This item only: {item}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (2): a single muted item (queue R55)"
+  },
+  {
+   "key": "queue.muted.by.undated",
+   "en": "muted by you, before Civicsmith kept the date",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (2): a kind muted before T50, at null"
+  },
+  {
+   "key": "queue.kind.watched-changed",
+   "en": "Things you watch that changed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (3): queue R57"
+  },
+  {
+   "key": "screen.find-in.fact.office",
+   "en": "That someone holds an office is recorded as a position, from the office's own records, not as a fact here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (4): an office is a holds line, not a person fact"
+  },
+  {
+   "key": "screen.find-in.recorded.fact",
+   "en": "{kind} for {name}: {value}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: findin.recorded {fact} for a person fact"
+  },
+  {
+   "key": "installer.remove.progress",
+   "en": "Deleted: {what}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7): the removal, one line per deletion (installer R62-R73)"
+  },
+  {
+   "key": "installer.remove.refused.remains",
+   "en": "The removal stopped before it finished. Still in this account: {remaining}. Nothing more was deleted; remove again to finish.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7): the refusal naming what remains"
+  },
+  {
+   "key": "installer.fact.unknown",
+   "en": "Not known: {reason}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7): a fact a silent or older copy does not answer"
+  },
+  {
+   "key": "installer.fact.unknown.silent",
+   "en": "this copy didn't answer",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {reason} for a silent copy"
+  },
+  {
+   "key": "installer.fact.unknown.older",
+   "en": "this copy is older than the release that reports it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {reason} for an older copy"
+  },
+  {
+   "key": "installer.holdings.projects.one",
+   "en": "1 project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}, joined with \", \""
+  },
+  {
+   "key": "installer.holdings.projects.other",
+   "en": "{n} projects",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.documents.one",
+   "en": "1 document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.documents.other",
+   "en": "{n} documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.published.one",
+   "en": "1 published case",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.published.other",
+   "en": "{n} published cases",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.members.one",
+   "en": "1 member",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.holdings.members.other",
+   "en": "{n} members",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: {holdings}"
+  },
+  {
+   "key": "installer.update.stopped.noanswer",
+   "en": "Stopped: the new version didn't answer once it was uploaded, so your team's Civicsmith was put back on release {version}. Nothing else changed. Try again; if it stops again, the stop names the step and what to do.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7)"
+  },
+  {
+   "key": "installer.update.stopped.foreign",
+   "en": "Stopped: something still running in this account isn't part of this release, so it was left alone. Nothing was changed. Ask whoever added it, or remove it in Cloudflare, then try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7): an image still running is not the release's"
+  },
+  {
+   "key": "installer.partial.completed",
+   "en": "Finished what an earlier run left half done: {what}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7)"
+  },
+  {
+   "key": "installer.partial.rolledback",
+   "en": "Undid what an earlier run left half done: {what}. Nothing of it remains.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (7)"
+  },
+  {
+   "key": "queue.muted.unmute.item.help",
+   "en": "Lets this item reach your queue again, from now on.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-328: B300 (2)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
