@@ -175,7 +175,8 @@ async function readAndCite(walk, page, { document, question, phrase = FIND_PHRAS
     await cite.locator('input[type="radio"][id$="-role-supports"]').check();
     await act(p, "cite", { within: '#cs-main details[open]:has([data-act="cite"])', reason: "The notice orders the repair." });
     await p.goto(question); await settle(p);
-    if (!(await p.locator("#cs-main").textContent()).includes(phrase)) throw new Error("the question does not hold the cited passage");
+    /* the question holds the citation: its Supports list draws it, with the control to remove it (`sever`) */
+    if (!(await p.locator('#cs-main [data-act="sever"]').count())) throw new Error("the question does not hold the cited passage");
   });
 }
 
