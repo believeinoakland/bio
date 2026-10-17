@@ -48,3 +48,7 @@ T50-28 complete on `job/T50/screens-entry` (tranche/T50 merged @ d1e6a4e9ca): R2
 **B3 (CHANGE, K3771) re-run.** `tranche/T50` merged @ 9a6c50dfc5 (wizard-scripts' SCREEN_REGISTRY from design 7be06eb4cb): screens-entry tests 84 pass, 0 fail; format, architecture, coverage (24 of 24), ownership (8 files) 0 failures. No code change needed.
 
 Size (session_01SPnXeuBWixFqDaAKUnfxj4): test runs 23, module lines 1077
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T50 merged @ 9a6c50dfc5 (the regenerated SCREEN_REGISTRY); screens-entry 84 pass, 0 fail; format, architecture, coverage 24/24, ownership 0 failures. No code change.
