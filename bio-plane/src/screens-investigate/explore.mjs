@@ -27,7 +27,10 @@ function render(cs, view) {
   const out = [cs.title()];
   /* R29: opened with no centre, the screen says where to start and asks the plane nothing (never the plane's refusal) */
   if (!from.trim()) return out.join("") + `<p class="cs-state" data-state="empty">${cs.w(S + "nocentre")}</p>`;
-  out.push(`<p class="mk-sub">${cs.w(S + "from")} ${P.refOf(cs, from, from, [])}</p>`);
+  /* R35: the start is drawn by its name from the people the record follows, never by its id */
+  const known = view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
+  const fromName = (known.find((o) => o.value === from) || {}).text || "";
+  out.push(`<p class="mk-sub">${cs.w(S + "from")} ${P.refOf(cs, from, fromName || P.plain(cs, "connection.node.unnamed"), [])}</p>`);
   const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
   const groupOf = (k) => P.groupMap(vocab)[k] || null;
   const wordOf = (k) => (vocab && vocab.vocabularies.connection_kinds.words[k] && vocab.vocabularies.connection_kinds.words[k].word) || k;
@@ -48,7 +51,7 @@ function render(cs, view) {
   const at = ui.at || P.today(cs);
   const gk = Array.isArray(ui.graphKinds) ? ui.graphKinds : null;
   const gq = P.later(cs, view, "graph", "exploregraph", { body: Object.assign({ centre, at: { value: at, precision: "day", zone: "UTC" }, rings: 2 }, gk && gk.length ? { kinds: gk } : {}) });
-  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { groupOf, trail: Array.isArray(ui.trail) && ui.trail.length ? ui.trail : [centre], act: "explore", names: {}, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource" } }))));
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { groupOf, trail: Array.isArray(ui.trail) && ui.trail.length ? ui.trail : [centre], act: "explore", names: fromName ? { [from]: fromName } : {}, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: S + "attached", withdraw: S + "withdraw" }, withdraw: true }))));
 
   /* the chains, as the last walk answered them */
   const a = ui.answer;

@@ -5,6 +5,7 @@
  * guessed into order; undated events are listed apart. */
 
 import { PARTS } from "./parts.mjs";
+import { FORM_SHARED } from "./graphwords.mjs";
 
 const S = "screen.timeline.";
 
@@ -15,6 +16,7 @@ function reads(view) {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
+    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
   };
 }
 
@@ -93,7 +95,7 @@ function render(cs, view) {
   const cited = doc ? doc.refs.filter((r) => /^INQ-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target) : [];
   const qChoice = cited.map((q) => { const b = qs.find((x) => x.bundle_id === q); return { value: q, text: (b && b.title) || q }; });
   out.push(cs.sec(S + "record.head",
-    cs.field("tl-sha", S + "sha", { help: S + "sha.help" }) + cs.field("tl-page", S + "page", {})
+    P.docChoice(cs, view, "tl-doc")
     + cs.choice("tl-kind", S + "evkind", ["vote", "meeting", "decision", "award", "statement", "filing", "other"].map((k) => [k, S + "evkind." + k]), {})
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
@@ -115,7 +117,7 @@ function render(cs, view) {
 const acts = [
   { op: "createevent", label: "act.createevent.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.passage(cs.value("tl-sha"), cs.value("tl-page"));
+      const at = view.parts.chosen(cs, "tl-doc");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
       const proj = view.data.project;
       const set = proj && proj.state === "ok" ? view.parts.front(proj.value["bundle.md"]).refs.filter((r) => /^ENT-/.test(String(r.target || ""))).map((r) => r.target) : [];
@@ -129,7 +131,7 @@ const acts = [
   { op: "addparticipant", label: "act.addparticipant.label.timeline",
     send(view, el, cs) {
       const eventId = String(cs.value("tl-event") || ""), entityId = String(cs.value("tl-who") || "").trim();
-      const at = view.parts.passage(cs.value("tl-sha"), cs.value("tl-page"));
+      const at = view.parts.chosen(cs, "tl-doc");
       if (!eventId || !entityId || !at) return { refuse: "screen.timeline.who.empty" };
       const role = String(cs.value("tl-role") || "actor");
       const vote = String(cs.value("tl-vote") || "").trim();
@@ -140,7 +142,7 @@ const acts = [
   { op: "relate", label: "act.relate.label.timeline",
     send(view, el, cs) {
       const from = String(el.dataset.event || cs.value("tl-event") || ""), to = String(cs.value("tl-to") || "");
-      const at = view.parts.passage(cs.value("tl-sha"), cs.value("tl-page"));
+      const at = view.parts.chosen(cs, "tl-doc");
       if (!from || !to || from === to || !at) return { refuse: "screen.timeline.relate.empty" };
       /* "Cite which came first": the member's chosen event came first, so `precedes` runs from it */
       if (el.dataset.kind === "precedes") return { body: { from, to, kind: "precedes", attestation: at } };
@@ -150,7 +152,7 @@ const acts = [
   /* an exact date from a passage, a day or a month ("YYYY-MM", month known) */
   { op: "recorddatedfact", label: "act.recorddatedfact.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.passage(cs.value("tl-sha"), cs.value("tl-page"));
+      const at = view.parts.chosen(cs, "tl-doc");
       const v = String(cs.value("tl-date") || "").trim();
       if (!at || !/^\d{4}-\d{2}(-\d{2})?$/.test(v)) return { refuse: "screen.timeline.date.empty" };
       return { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
@@ -195,6 +197,6 @@ const words = ["screen.timeline.name", "screen.timeline.purpose",
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...TIMELINE_KEYS];
+  "screen.timeline.method.member", "state.empty", "state.loading", "state.failed", ...FORM_SHARED, ...TIMELINE_KEYS];
 
 export const TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads, place, render, acts, words, parts: PARTS });
