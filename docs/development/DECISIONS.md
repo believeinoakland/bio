@@ -4752,3 +4752,33 @@ decided: 2026-10-17 · the design session (P17)
 the design: the 30 keys of the DEC-305 block in `screens/words-drawn.src.py`, word for word. (1) acquisition: `acquisition.asked_note.after.before` "before" and `.after.after` "after" (the `{after}` of `memento_seconds_instant`); `acquisition.authority_basis.caller.member` "member" and `.caller.caller` "assistant or automated process" (the `{caller}` of `asserted_capturing_intake`); `acquisition.basis.multipart` "held in parts" (the `{large}` of `document_read_text`); `acquisition.basis.combined_view_none` "no place is chosen, so no place's rules were combined", read in place of `combined_view` when no profile is chosen (no "no profile" fragment); `acquisition.text.continue_session` "continue: a saved session", beside `capture_already_filed` as `via_archive_org` names its parameter; `acquisition.act.set_archive_copy` "setting whether your team's captures ask a public archive for a copy", the act `notAnAdmin` names ("team", never "group", DEC-281). (2) file-safety: `file-safety.kind.<kind>` for each of the 14 kinds (downloader, dropper, trojan, macro, exploit, phishing, potentially_unwanted, heuristic, worm, ransomware, backdoor, virus, spyware, test), the sentences of `kinds.mjs` with American spelling ("recognize", "ads"); `file-safety.scanners_report_file` still follows each. (3) capture: `capture.upload.asserts` (with {by}, {at}; "your team's") and `capture.upload.evidence`; `capture.reuse.posthoc_changed`; `capture.render.defer.no_reservation` (no ruling code in a member's sentence); `capture.chrome.basis.recurred` ({n}, {host}) and `.one_page` ({host}); `capture.chrome.ref.containment` ({regions}) and `.unrecorded`. (4) `acquisition.string.attempt_reported` stays a word (acquisition reads it); if capture's call cannot be reached, capture drops it from its code and `words-reads.json` follows the source.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (DEC-305 block).
 owed: (BOB, T50) acquisition, file-safety and capture read these keys by key in a CHANGE or a later layer, as BOB places them.
+
+### DEC-306 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01Hvep9zb4SEqxGdEYh4wbyi; the development process also runs on his primary account since K1428) (the standing tail: the words' consistency)
+for: design
+question: Do the keyed words still hold British spellings, and do T50's requirement files name any key `words.json` lacks?
+why it is Bob's: it is not (P17).
+provisional: `membership.says.member_enrolled_under` read "re-enrol" and "has NOT been renamed".
+alternative: none.
+recommendation: as below.
+reversal cost: none.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: `membership.says.member_enrolled_under` reworded in `words-mod-3.src.py`: "… has not been renamed: an administrator should decide what it is and re-enroll the person under another id" (American spelling; no shouted word). A sweep of the 12,752 words for British spellings found nothing else. Every word key the T50 requirement files name (backticked, of a word's prefix) is in `words.json`; the names it flagged are code identifiers or rows a requirement retires (`screen.updates.skip.noreason`, DEC-256) or names as not read (`ai.use.suggestions`).
+reasoning recorded in: this entry.
+owed: none (membership reads the key; the new English reaches it at the next merge).
+
+### DEC-307 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01Hvep9zb4SEqxGdEYh4wbyi; the development process also runs on his primary account since K1428) (the standing tail: T50's requirement files against the screens; screens-settings R41, agent-worker R84, ratification R44, installer R57, R58)
+for: design
+question: Two refusal codes T50's requirements draw by key had no words (`SIGNIN_EXPIRED`, `PUBLISH_AT_NO_ZONE`); the installer still tied a container to the assistant (R57: the assistant needs a Claude plan with cloud sessions, not a container); its checks did not name the assistant's connection (R58).
+why it is Bob's: it is not (P17; K3607 is Bob's, this is its words).
+provisional: no words; "signing in with a Claude subscription" among the containers' uses; a reference "The assistant's container" that no screen drew.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: (1) `refusal.SIGNIN_EXPIRED` "The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent." (2) `refusal.PUBLISH_AT_NO_ZONE` "Your team's time zone isn't set, and a publishing time is counted in it, so only "Sign and publish now" is offered. An administrator can set it under Settings, Your team." (3) Installer (R57): `screen.install.cf.containers` names only the file scanner and the safe view; the install wizard's test step asks to allow "its file scanner", not "the assistant's container"; the unused reference "The assistant's container" removed. (4) Installer (R58): while it works, "Checking the assistant's connection answers this release" (`progress.assistant`); when ready, "The assistant's connection answers this release" (`ready.assistant`); among the stops, "the assistant's connection answering an older release". Keys in the DEC-307 block and the installer's `wi` rows of `screens/words-drawn.src.py`; `library.src.py`; `mock-screens.js`, `mock-refs.js`.
+reasoning recorded in: this entry.
+owed: (BOB, T50) screens-settings and agent-worker read `refusal.SIGNIN_EXPIRED`; ratification `refusal.PUBLISH_AT_NO_ZONE` where only "Sign and publish now" is offered; installer R57's pages and R58's `verify` read the reworded and new keys. Drawn next by design (DEC-308): Connect's check (R41) once BOB's sign-in HANDOFF comes; the ceremony with no zone held and its standards-use departures (case-checker R26); a standard's states (standards R59); an unnamed node (explore R25, entities R54).

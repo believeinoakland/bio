@@ -6242,7 +6242,7 @@
   },
   {
    "key": "membership.says.member_enrolled_under",
-   "en": "a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has NOT been renamed: an administrator should decide what it is and re-enrol the person under another id",
+   "en": "a member is enrolled under the reserved id '{id}' (role {role}, status {status}). Every check that asks whether someone administers by name reads it as the founding administrator. It was enrolled before the id was reserved and has not been renamed: an administrator should decide what it is and re-enroll the person under another id",
    "protected": false,
    "note": "DEC-260: membership, says"
   },

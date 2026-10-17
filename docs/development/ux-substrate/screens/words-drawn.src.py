@@ -188,7 +188,7 @@ wi('cf.sub', "Next you go to Cloudflare's own page, sign in there, and allow thi
 wi('cf.asks', 'What Cloudflare will ask you to allow', True)
 wi('cf.programs', "Putting your team's Civicsmith's programs in your account, and its storage for documents and evidence.", True)
 wi('cf.plan', 'Reading which plan your account is on.', True)
-wi('cf.containers', "Running its containers: the built-in file scanner, the safe view for risky files, and signing in with a Claude subscription. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.", True)
+wi('cf.containers', "Running its containers: the built-in file scanner and the safe view for risky files. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.", True)
 wi('cf.join', 'Joining its parts together inside your account.', True)
 wi('hold.head', "Whoever can sign in to this Cloudflare account controls your team's Civicsmith", True, 'says who can see and control everything')
 wi('hold.what', 'They can read everything and lock everyone out, and no vote of administrators can stop them. Use a team account, and add at least one other trusted person to it. It is also the way back in if every administrator is locked out.', True)
@@ -201,15 +201,17 @@ wi('progress.verified', "Checked the release is Civicsmith's own, signed and una
 wi('progress.placing', "Putting your team's Civicsmith in place…")
 wi('progress.scanner', 'Starting the file scanner and safe view')
 wi('progress.address', 'Giving it its address')
+wi('progress.assistant', "Checking the assistant's connection answers this release")  # DEC-307, installer R58
 wi('progress.answers', 'Checking it answers, and that nothing keeps a log of who opens which file')
 wi('stopped.exists', "This account already holds a Civicsmith, so nothing was created or changed.", False, 'DEC-282: reworded (K3471); the page that follows is screen.install.exists.*')
 wi('stopped.plan', "Stopped: this account is on Cloudflare's free plan.", False, 'DEC-282')
 wi('stopped.plan.do', "Nothing was created. Switch it to Workers Paid in Cloudflare's dashboard, then start again.", False, 'DEC-282')
-wi('stopped.others', "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.")
+wi('stopped.others', "Other steps stop the same way and say what to do: no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file; the assistant's connection answering an older release. A stop before setup has begun creates nothing.")
 wi('ready.sub', 'It answered its own checks. One step is left: you become its first administrator.')
 wi('ready.answers', 'It answers at its address')
 wi('ready.scanner', 'File scanner and safe view running')
 wi('ready.nolog', 'No log records who opens which file')
+wi('ready.assistant', "The assistant's connection answers this release")  # DEC-307, installer R58
 wi('ready.note', "These checks ran as part of the installation; the installer keeps nothing of your team's Civicsmith once it hands over.")
 wi('otp.head', 'Your one-time password: save it now', True)
 wi('otp.what', "This makes you your team's first administrator, in the next step. It is shown once, here, and is spent when you claim. Keep it to yourself: don't share, print or send it, because whoever has it before you claim can claim in your place. Save it somewhere safe, such as a password manager. Continuing below fills it in for you.", True, 'DEC-282: reworded (install situation S10)')
@@ -1532,6 +1534,12 @@ w305('capture.chrome.basis.one_page', "in a chrome region on one page of {host} 
 w305('capture.chrome.ref.containment', 'in a chrome region: {regions}', False, "capture R29: one page's chrome observation, its basis")
 w305('capture.chrome.ref.unrecorded', 'the chrome region was not recorded', False, "capture R29: one page's chrome observation with no region named")
 # --- end DEC-305
+# --- DEC-307 (T50's requirements against the screens: screens-settings R41, agent-worker R84, ratification R44, installer R57, R58)
+def w307(key, en, prot=False, note=''):
+    W.append(dict(key=key, en=en, protected=prot, note='DEC-307' + (': ' + note if note else '')))
+w307('refusal.SIGNIN_EXPIRED', "The Claude sign-in your team's assistant uses has expired, so the assistant can't work until it is connected again. An administrator can connect again under Settings, The assistant. Nothing was sent.", False, 'screens-settings R41, agent-worker R84')
+w307('refusal.PUBLISH_AT_NO_ZONE', "Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.", False, 'ratification R44, publish-schedule R1: only "Publish now" is offered')
+# --- end DEC-307
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
