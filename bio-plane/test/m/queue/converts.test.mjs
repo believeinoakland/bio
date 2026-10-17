@@ -277,7 +277,7 @@ test("R6, R8 (queue): an OBLIGATION and a FINDING under one contract, key for ke
                     "options", "disposition"];
   for (const it of [ob, fi]) for (const k of CONTRACT) assert.ok(k in it, `${it.id} ${k}`);
   assert.deepEqual([ob.class, fi.class], ["OBLIGATION", "FINDING"]);
-  assert.deepEqual(ob.subject, { kind: "bundle", id: "INF-1" });
+  assert.deepEqual(ob.subject, { kind: "bundle", id: "INF-1", title: "INF-1" });   // R56: the bundle's title
   assert.equal(ob.basis.refers_to, "INF-1");
   assert.deepEqual(ob.case.ancestors.map((a) => a.id), ["INQ-1"], "refers_to and case are never collapsed");
   assert.deepEqual(Object.keys(f.counts), ["obligation", "finding", "condition", "ungrouped", "case_undetermined", "suppressed"]);

@@ -434,7 +434,8 @@ test("R9, R4: the act lists name each of T22's ops, so its stamps are named — 
   /* declinetoescalate and escalationstatus take the very places of escalationopen and escalationsdue. */
   assert.deepEqual(listsHolding("declinetoescalate"), listsHolding("escalationopen"));
   assert.deepEqual(listsHolding("escalationstatus"), listsHolding("escalationsdue"));
-  assert.deepEqual([...O.CAPTURE_VIEWER_ACTIONS], ["heldsetaside", "heldrestore"]);
+  /* T50 (R74; doorbell R13): the pull and the resolve join them, `viewer` stamped by the door, never the caller's */
+  assert.deepEqual([...O.CAPTURE_VIEWER_ACTIONS], ["heldsetaside", "heldrestore", "inboxpull", "inboxresolve"]);
   assert.deepEqual([...O.CAPTURE_READS], ["heldcaptures", "gradenote", "doorbelltally"]);
   /* T47 (R55; monitoring R74): `monitorset` joins monitoring's act list, `addressfrequencyset`'s stamps. */
   assert.deepEqual([...O.MONITORING_ACTIONS], ["addressfrequencyset", "monitorset"]);
