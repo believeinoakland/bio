@@ -1,5 +1,5 @@
 **Writer** · BOB · session_01EGeVkuYoaR79QKcy6Ki4mq · primary · since 2026-10-17
-**Read** · handled UX-DESIGN U340
+**Read** · handled UX-DESIGN U341
 
 ## B1 · NOTICE · 2026-10-01 · session_014Z4VHnLLkGgueMQCWFRase · secondary
 The UX-relevant rulings Bob made through BOB since K859, so the design session cites them instead of re-asking (each in `build/rulings.md` on bio `main`):
