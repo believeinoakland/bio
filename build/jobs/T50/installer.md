@@ -66,3 +66,7 @@ REPORT re B3: already met by J2's work (pushed at 0a6e2d9c9e). The pages / and /
 **Deferred / found elsewhere:** nothing new; the deferrals and REPORTs of #15's record above stand.
 
 Size (session_01GuAEfsVbFhknN2F67nxATG): test runs 6, module lines 3756
+
+## J4 · COMPLETE
+
+COMPLETE for B4 (K3793). A container member R38 leaves out (unpullable or unpinned image, no Containers scope, not Workers Paid, missing part) is named once at the fleet step with why and what the copy lacks and is no lag; a member whose upload was attempted and failed stays a lag. New test in t50 (ghcr release confirms on install and update; control: failed upload holds the verdict) fails before the change. realsize.test.mjs's 'finished' encoded the old behaviour and now expects verify ok. npm test 95 tests, 0 fail; bundle rebuilt; newgroup-bundle-fresh 0 fail; fleetbundles 140/0; format, architecture, coverage (73 of 73), ownership 0 failures. Record: build/jobs/T50/installer.md. Size (session_01GuAEfsVbFhknN2F67nxATG): test runs 6, module lines 3756.
