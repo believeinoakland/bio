@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (12981 words, 900 protected; SHA-256
-   e8e6cd76261b774fd092de3df4a77b27c6b73f2e8144b1b0945dc2e412821545), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (12991 words, 900 protected; SHA-256
+   b9d25d71c94a15fc43517b60828e3bf10ec2cf8d9eb515a5fbe597e94b70f045), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "e8e6cd7626";
+export const WORDS_COMMIT = "b9d25d71c9";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5903,6 +5903,16 @@ export const WORD_ROWS = Object.freeze([
   ["screen.person.basis.row.testimony","a member knows it to be so","DEC-313: screens-investigate R38",null,false],
   ["screen.docket-public.sub","Everything that happened to this case after it was published: each new edition, correction, withdrawal and court order, dated and signed.","DEC-313: the docket as a reader without an account sees it",null,false],
   ["screen.docket-public.back","Back to the case","DEC-313: the public docket",null,false],
+  ["screen.answers.failed.next","Ask again, perhaps more narrowly, or search instead.","DEC-314: screens-daily R52: after ai.progress.check.failed",null,false],
+  ["screen.connect.expired","Your Claude sign-in has expired, on {date}.","DEC-314: screens-settings R41: a member's own subscription, expired",null,false],
+  ["screen.connect.expired.means","The assistant can't work for you until you sign in again; nothing you asked of it since was sent.","DEC-314: screens-settings R41",null,false],
+  ["screen.connect.expired.state","Expired","DEC-314: screens-settings R41: the state beside it","The assistant can't work for you until you sign in again; nothing you asked of it since was sent.",false],
+  ["screen.connect.expired.next","Once you are signed in again, Civicsmith checks the connection before the assistant works for you.","DEC-314: screens-settings R41, R53","The assistant can't work for you until you sign in again; nothing you asked of it since was sent.",false],
+  ["screen.question.stopped.kept","What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.","DEC-314: screens-inquiry R57: after ai.run.ending.cancelled",null,false],
+  ["screen.question.reject.reason","Why you reject it","DEC-314: basis-versions R4: the reason field",null,false],
+  ["screen.question.reject.reason.help","Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.","DEC-314: basis-versions R4",null,false],
+  ["screen.question.reject.summary","Reject this reading","DEC-314: basis-versions R4: the fold",null,false],
+  ["screen.question.reject.go","Reject it","DEC-314: basis-versions R4: the button in the fold",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
