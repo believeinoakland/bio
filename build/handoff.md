@@ -1,11 +1,11 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #204 (`session_01EGeVkuYoaR79QKcy6Ki4mq`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~17:35 UTC, at 38% context, at a clean point (L9 just started, every mailbox read). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3715–K3733 (Bob's is K3717; K3718 applies it).
+**Status** · Replaced whole at each handoff. Written by BOB #204 (`session_01EGeVkuYoaR79QKcy6Ki4mq`, depth 1, parent ROOT #7, primary account), 2026-10-17 ~17:35 UTC, at 38% context, at a clean point (L9 just started, every mailbox read). Read `build/rulings-active.md` whole, then, whole with the Read tool, K3715–K3735 (Bob's are K3717 and K3735; K3718 applies K3717).
 
 ## Standing
 
 - **Bob's direction (K3717, K3718):** T50 runs through L11 with no more effort on getting the assistant to work; nothing of it is disabled or hidden; **no plan entry is withdrawn** (Bob said so twice: "no need to withdraw entries in the current plan - just don't put extra work into getting it to work"). The parts waiting on the remote proof stay unbuilt and accepted red (K3718 (2)). T50 is confirmed on its unassisted metric (K3666's first and third clauses, walked on biosmoke8); after T50's close PR merges, push branch `release/T50-unassisted` at that `main` commit (K3718 (4)). Then the focus is N1220: an assistant for several AIs chosen by team, project and member, none of Anthropic's.
-- **AI-DESIGN #1** (`session_01GLY6Z5UAa6urPzovQPKCkR`, sonnet, on `tranche/T50`, `build/plan/lane-ai-design/`): read through A2 (cursor line in its `HANDOFF.md`). It is on Q3 (the boundary). A2's three questions were put to Bob (below).
+- **AI-DESIGN #1** (`session_01GLY6Z5UAa6urPzovQPKCkR`, sonnet, on `tranche/T50`, `build/plan/lane-ai-design/`): read through A4 (cursor line in its `HANDOFF.md`). It is on Q2b (plans and terms), then Q3 (the boundary). Bob works with it directly: his direction and his provisional agreement to AIR1–AIR10 are K3735 (expect revisions); record each later word of his it relays as a K in his words.
 
 ## Where things stand
 
