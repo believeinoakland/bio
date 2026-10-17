@@ -6659,6 +6659,12 @@
    "en": "Your team's time zone isn't set, and a publishing time is counted in it, so only \"Sign and publish now\" is offered. An administrator can set it under Settings, Your team.",
    "protected": false,
    "note": "DEC-307: ratification R44, publish-schedule R1: only \"Publish now\" is offered"
+  },
+  {
+   "key": "screen.explore.unnamed.why",
+   "en": "named in {n} documents only by an account number",
+   "protected": false,
+   "note": "DEC-308: explore R25: why a node is not yet named, beside connection.node.unnamed"
   }
  ],
  "rewrite": {
