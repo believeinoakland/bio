@@ -169,7 +169,7 @@ test("R12: each new module's op map holds exactly the ops graded for it — T33'
      table, and its words, are op-grades' tests') */
   for (const op of [...Object.values(T35_ADDS).flat(), ...Object.values(T36_ADDS).flatMap((ops) => Object.keys(ops)),
                     ...Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops)), ...Object.values(T45_ADDS).flat(),
-                    ...Object.values(T47_ADDS).flat(), ...Object.values(T48_ADDS).flat()])
+                    ...Object.values(T47_ADDS).flat(), ...Object.values(T48_ADDS).flat(), ...Object.values(T50_ADDS).flat()])
     assert.ok(Object.hasOwn(NON_ACTS, op) && !published().has(op), op);
   /* retired: served by no owner's map (op-grades' tests hold them graded and named nowhere) */
   for (const op of RETIRED) assert.ok(!keysOf(credentialsOps).includes(op) && !keysOf(aiRunsOps).includes(op), op);
