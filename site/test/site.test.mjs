@@ -1,5 +1,5 @@
 /* site's tests at its interface: the Worker's fetch(request, env), the generator's output and the served files
- * (build/requirements/site.md R1–R12). No test holds a sentence's English: each reads it through setup-words' `word`
+ * (build/requirements/site.md R1–R16). No test holds a sentence's English: each reads it through setup-words' `word`
  * or from the design at SITE_COMMIT. The browser pairs (R9 at 1280 and 390 px) are in browser.test.mjs. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -7,10 +7,10 @@ import { mkdtempSync, writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { word, hasWord } from "../../bio-plane/src/setup-words/index.mjs";
-import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
+import { ASSET_FILES, ASSETS_COMMIT } from "../../bio-plane/src/interface-assets/index.mjs";
 import worker, { CSP, FAVICON } from "../src/index.mjs";
 import { SITE_COMMIT as SERVED_COMMIT } from "../src/pages.mjs";
-import { KEYS, STATES, SITE_COMMIT, designMain, parse, find, generate, render, placesReady, esc } from "../build.mjs";
+import { KEYS, STATES, SITE_COMMIT, designMain, parse, find, generate, render, placesReady, joinPlaces, esc } from "../build.mjs";
 
 const INSTALLER = "https://install.example/start";
 const GROUP_A = { name: "Group A", place: "Place A", focus: "Focus A", cases: 1, editions: 2, latest: "Date A", address: "https://a.example/" };
@@ -378,7 +378,7 @@ test("R11: the places ready now come from the released jurisdictions profiles at
   const { t } = await html("/start");
   assert.ok(norm(textOf(mainOf(t))).includes(norm(word("screen.site.steps.name", { places: placesReady() }))));
   mkdirSync(join(dir, "none"));
-  assert.throws(() => placesReady(new URL(`file://${dir}/none/`)), /no released jurisdiction profile/);
+  assert.equal(placesReady(new URL(`file://${dir}/none/`)), "");
 });
 
 test("R11 control: no place is drawn but the profiles' and the listed groups' own", async () => {
@@ -408,4 +408,98 @@ test("R12: every key the site reads exists, and what it draws is word(key, vars)
   assert.ok((await drawn("/groups", { ...ENV, LISTED_GROUPS: [] })).includes(norm(word("screen.site.groups.none"))));
   /* a sentence no key holds stops the generation, never drawn inline */
   assert.throws(() => word("screen.site.no-such-key"), (e) => /UNKNOWN_WORD/.test(e.code || e.message));
+});
+
+/* R13 to R16 (T50): the design's "team" words, the empty state, the places sentence, the listing rule. */
+const ONE_TEAM = { ...ENV, LISTED_GROUPS: [GROUP_B] };
+const EMPTY = { ...ENV, LISTED_GROUPS: [] };
+
+test("R13: with no team listed the page draws the lede, the none sentence and the listing rule, no row and no listing note", async () => {
+  for (const env of [EMPTY, { ...ENV, LISTED_GROUPS: undefined }]) {
+    const { t } = await html("/groups", env);
+    const order = ["screen.site.groups.lede", "screen.site.groups.none", "site.groups.rule"].map((k) => t.indexOf(w(k)));
+    assert.ok(order.every((x) => x > 0), JSON.stringify(order));
+    assert.deepEqual(order, [...order].sort((a, b) => a - b));
+    assert.equal(find(mainOf(t), (e) => cls(e).includes("cs-row") || cls(e).includes("cs-sheet")).length, 0);
+    assert.ok(!t.includes(w("screen.site.groups.listing")));
+    assert.ok(t.indexOf(w("site.groups.rule")) < t.indexOf("<details"));
+  }
+});
+
+test("R13 control: one listed team draws its row and the listing note", async () => {
+  const { t } = await html("/groups", ONE_TEAM);
+  assert.equal(find(mainOf(t), (e) => cls(e).includes("cs-row")).length, 1);
+  assert.ok(t.includes(w("screen.site.groups.listing")));
+  assert.ok(!t.includes(w("screen.site.groups.none")));
+});
+
+test("R14: the places step draws screen.site.steps.name with the released places joined without a serial comma", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "site-places-r14-"));
+  const profile = (id, name, test) => writeFileSync(join(dir, `${id}.mjs`), `export default {\n  id: "${id}",\n  name: "${name}",\n  covers: ["${id}"],\n  test: ${test},\n};\n`);
+  profile("a", "Place A", false); profile("b", "Place B", false); profile("c", "Place C", false); profile("d", "Place D (test)", true);
+  assert.equal(placesReady(new URL(`file://${dir}/`)), "Place A, Place B and Place C");
+  assert.equal(joinPlaces(["Place A", "Place B"]), "Place A and Place B");
+  assert.equal(joinPlaces(["Place A"]), "Place A");
+  const g = generate({ places: "Place A and Place B" });
+  const start = norm(textOf(mainOf(g.pages.start.replace("{{installer}}", ""))));
+  assert.ok(start.includes(norm(word("screen.site.steps.name", { places: "Place A and Place B" }))));
+  assert.ok(!start.includes(norm(word("screen.site.steps.name.noplace"))));
+  assert.ok(!g.pages.start.includes("Place D"));
+});
+
+test("R14 control: no place ready draws screen.site.steps.name.noplace, never an empty places sentence", async () => {
+  const g = generate({ places: "" });
+  const start = norm(textOf(mainOf(g.pages.start.replace("{{installer}}", ""))));
+  assert.ok(start.includes(norm(word("screen.site.steps.name.noplace"))));
+  assert.doesNotMatch(start, /Places ready now:\s*(\.|$|For each)/);
+  assert.ok(!start.includes(norm(word("screen.site.steps.name", { places: "" }))));
+  assert.ok(hasWord("screen.site.steps.name.noplace") && Object.keys(KEYS).includes("screen.site.steps.name.noplace"));
+});
+
+test("R15: the listing rule, its note and its details with Bob's heading and text, are on Teams at work with and without listed teams", async () => {
+  for (const env of [ENV, ONE_TEAM, EMPTY]) {
+    const { t } = await html("/groups", env);
+    for (const k of ["site.groups.rule", "site.groups.rule.head", "site.groups.rule.text"]) assert.ok(t.includes(w(k)), k);
+    listingRule(t);
+  }
+});
+
+test("R15 control: no listing rule text is written in the site's code", () => {
+  const rule = [word("site.groups.rule"), word("site.groups.rule.head"), word("site.groups.rule.text")];
+  for (const f of ["../src/index.mjs", "../build.mjs"]) {
+    const src = readFileSync(new URL(f, import.meta.url), "utf8");
+    for (const sentence of rule) assert.ok(!src.includes(sentence), f);
+  }
+  assert.ok(Object.keys(KEYS).includes("site.groups.rule") && Object.keys(KEYS).includes("site.groups.rule.text"));
+});
+
+test("R16: SITE_COMMIT is interface-assets' ASSETS_COMMIT (red until interface-assets' T50 job moves it, K3750)", () => {
+  assert.equal(SITE_COMMIT, ASSETS_COMMIT);
+});
+
+test("R16: the design has four states, and the pages equal them", async () => {
+  assert.equal(SERVED_COMMIT, SITE_COMMIT);
+  assert.deepEqual(Object.keys(STATES), ["a", "b", "c", "d"]);
+  await sameAsDesign("/", "a");
+  await sameAsDesign("/start", "b");
+  await sameAsDesign("/groups", "c");
+  await sameAsDesign("/groups", "d", EMPTY);
+  const fresh = render(generate());
+  assert.equal(readFileSync(new URL("../src/pages.mjs", import.meta.url), "utf8"), fresh);
+  for (const k of ["screen.site.nav.home", "screen.site.nav.start", "screen.site.nav.groups", "screen.site.start", "screen.site.seegroups", "screen.site.create", "screen.site.line1", "screen.site.line2"]) assert.ok(Object.keys(KEYS).includes(k), k);
+});
+
+test("R16 control: no served page says \"group\" for a team; the design's own sense is read from its list", async () => {
+  const list = readFileSync(new URL("../../docs/development/ux-substrate/screens/build_words.mjs", import.meta.url), "utf8");
+  const sense = new RegExp(/const GROUP_SENSE = (\/.*\/);/.exec(list)[1].slice(1, -1));
+  const kept = Object.keys(KEYS).filter((k) => sense.test(k));
+  assert.deepEqual(kept, ["screen.site.line2"]);
+  for (const path of ["/", "/start", "/groups", "/nonesuch"]) {
+    for (const env of [EMPTY, ONE_TEAM]) {
+      let text = norm(textOf(mainOf((await html(path, { ...env, FEATURED_CASE: undefined })).t)));
+      if (env === ONE_TEAM) text = text.replace(norm(`${GROUP_B.name} · ${GROUP_B.place}`), "");
+      for (const k of kept) text = text.replace(norm(word(k)), "");
+      assert.doesNotMatch(text, /group/i, path);
+    }
+  }
 });

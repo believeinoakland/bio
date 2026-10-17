@@ -1,4 +1,4 @@
-/* interface-assets at its interface (R1–R8; DEC-138; N897 (1); N559; N1039; K3254): `ASSET_FILES` read against the
+/* interface-assets at its interface (R1–R9; DEC-138; N897 (1); N559; N1039; K3254): `ASSET_FILES` read against the
    design stream's docs/development/ux-substrate/visual-language/ and screens/page.src.html at ASSETS_COMMIT, read from
    git so the working copy never moves it.
    Each check is a function returning its failures, so a negative control shows it refusing a wrong map. */
@@ -17,7 +17,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const MODULE = join(ROOT, "bio-plane/src/interface-assets/index.mjs");
 const DIR = "docs/development/ux-substrate/visual-language";
 const PAGE = "docs/development/ux-substrate/screens/page.src.html";
-const COMMIT = "f498560a37"; // R8: main at PR #37's merge (DEC-236's classes, DEC-240's band); R5 named 4664e8efd4 before it
+const COMMIT = "7be06eb4cb"; // R9 (T50): the design commit the START names; R8 named f498560a37 before it
 const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
 const atCommit = (path) => git(["show", `${ASSETS_COMMIT}:${DIR}/${path}`]);
 const bytesOf = (e) => (e.encoding === "base64" ? Buffer.from(e.body, "base64") : Buffer.from(e.body, "utf8"));
@@ -139,7 +139,7 @@ function r4Failures(loaded) {
   return out;
 }
 
-test("R1, R5, R8: ASSETS_COMMIT is f498560a37 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
+test("R1, R5, R8, R9: ASSETS_COMMIT is 7be06eb4cb and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
   const { faces } = expected();
   assert.equal(faces.length, 15);
   assert.equal(Object.keys(ASSET_FILES).length, 21);
@@ -161,7 +161,7 @@ test("R1 control: a wrong commit, a changed byte, a lost face, an extra name, a 
   c = copy(); delete c[face]; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["page.src.html"] = { type: "text/html", body: "" }; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["icons.svg"].type = "text/xml"; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
-  assert.ok(r1Failures(ASSET_FILES, "4664e8efd4").length > 0, "R8: the commit before R8 no longer holds");
+  assert.ok(r1Failures(ASSET_FILES, "f498560a37").length > 0, "R9: the commit before R9 is refused");
   c = copy(); delete c[face].encoding; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["fonts/OFL-source-sans-3.txt"].encoding = "base64"; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
 });
@@ -256,7 +256,7 @@ function r5Failures(css) {
   return out;
 }
 
-test("R5, R8: civicsmith.css at f498560a37 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
+test("R5, R8, R9: civicsmith.css at 7be06eb4cb holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
   assert.equal(ASSETS_COMMIT, COMMIT);
   const css = ASSET_FILES["civicsmith.css"].body;
   assert.deepEqual(r5Failures(css), []);
@@ -403,8 +403,7 @@ function r8Failures(shell, civicsmith) {
   return out;
 }
 
-test("R8: ASSETS_COMMIT is f498560a37; shell.css carries DEC-236's classes, .e-step_source and DEC-241's .mk-morerows and .mk-morerow; civicsmith.css carries .cs-band[data-band=\"test\"]", () => {
-  assert.equal(ASSETS_COMMIT, "f498560a37");
+test("R8: shell.css carries DEC-236's classes, .e-step_source and DEC-241's .mk-morerows and .mk-morerow; civicsmith.css carries .cs-band[data-band=\"test\"]", () => {
   assert.deepEqual(r8Failures(ASSET_FILES["shell.css"].body, ASSET_FILES["civicsmith.css"].body), []);
   // Each named rule is in the page's source at the commit, so the carried rules are not invented here.
   const page = git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8");
@@ -423,4 +422,32 @@ test("R8 control: a shell.css without one named class, a civicsmith.css without 
   assert.ok(r8Failures(shell, civ.split(R8_BAND).join('.cs-band[data-band="x"]')).some((f) => f.includes("cs-band")));
   assert.ok(r7Failures(shell + "\n.mk-device .mk-menu { gap: 0; }").length > 0);
   assert.ok(r7Failures(shell + "\n.mk-scaler .mk-grp { gap: 0; }").length > 0);
+});
+
+/* R9: the classes DEC-280 (.cs-btn's pressed, working and done states), DEC-249 (the test band) and DEC-279 (.cs-part and
+   .cs-choice) added to civicsmith.css at the design commit the START names. `[aria-busy="true"]` is the stylesheet's own
+   spelling of the working state. */
+const R9_CLASSES = [".cs-btn:active", '.cs-btn[aria-busy="true"]', ".cs-btn[data-done]", ".cs-testband", ".cs-part", ".cs-choice"];
+function r9Failures(civicsmith) {
+  const named = rules(civicsmith).flatMap(sels);
+  return R9_CLASSES.filter((c) => !namedBy(named, c)).map((c) => `civicsmith.css: no rule for ${c}`);
+}
+
+test("R9: ASSETS_COMMIT is 7be06eb4cb, the design commit the START names; civicsmith.css names each class DEC-280, DEC-249 and DEC-279 added; each served file is R1's bytes and R7's transform", () => {
+  assert.equal(ASSETS_COMMIT, "7be06eb4cb");
+  const civ = ASSET_FILES["civicsmith.css"].body;
+  assert.deepEqual(r9Failures(civ), []);
+  assert.ok(civ.includes(R8_BAND), "R8's band is kept");
+  assert.deepEqual(r1Failures(ASSET_FILES, ASSETS_COMMIT), []);
+  assert.equal(ASSET_FILES["shell.css"].body, shellCss(git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8")));
+  assert.deepEqual(r7Failures(ASSET_FILES["shell.css"].body, sourceQuerySels()), []);
+});
+
+test("R9 control: another commit, a hand edit of a served file, and a stylesheet missing one named class are refused", () => {
+  const civ = ASSET_FILES["civicsmith.css"].body;
+  assert.ok(r1Failures(ASSET_FILES, "f498560a37").length > 0, "R9: the commit before R9 is refused");
+  for (const c of R9_CLASSES) assert.ok(r9Failures(civ.split(c).join(c.replace(/\.cs-/, ".cs-x"))).some((f) => f.includes(c)), c);
+  const copy = Object.fromEntries(Object.entries(ASSET_FILES).map(([n, e]) => [n, { ...e }]));
+  copy["civicsmith.css"].body = civ + "\n/* a hand edit */";
+  assert.ok(r1Failures(copy, ASSETS_COMMIT).some((f) => f.startsWith("civicsmith.css")), "a hand edit of a served file fails the equality");
 });
