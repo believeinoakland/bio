@@ -21,3 +21,9 @@ Merged tranche/T50; key screen.explore.unnamed.why = 'named in {n} documents onl
 1. {n} has no source. R25/entities R56 give only {label, kind}; neither says how many documents name the entity only by an identifier. My best reading: entities (or another owner) would answer that count per unnamed ENT- id, and explore adds to each label-null ENT- node a field (e.g. unnamed_why) = word('screen.explore.unnamed.why', {n}). Without a count I would have to invent n or leave the sentence out. Which owner answers n, with what read, and what does a node show when n is 0 or unknown (I propose: no unnamed_why key)? R25 would also need the field named.
 2. build/modules.json explore uses lacks setup-words (needed for word(), architecture would fail); it is your file.
 I carry on with nothing else pending; the rest of R25 stands as pushed.
+
+## Re-run on B4 (entities merged)
+
+- Merged `tranche/T50`. The real `entities.labelsOf` answers `{ok, labels: {id: {label, kind}|null}, count}`: the shape the code already read, so no code change. Added a real-owner test (`real-owners.test.mjs`, R25: city and vendor labelled and kinded by the real registry; an unrecognised viewer sees no names).
+- Ran: `node --test bio-plane/test/m/explore/` 51 tests, 51 pass; format, architecture, coverage, ownership as below.
+- Size (session_01GeqMMCaEHa6q6oxUuwc2TJ): test runs 7, module lines 1043

@@ -41,3 +41,17 @@ test("R2 R3 R10 the walk and its presets over the real registered owners: money'
   // A missing viewer is refused before any owner is read.
   assert.equal(x.explore({ from: s.city, at }).refused, "VIEWER_MISSING");
 });
+
+test("R25 over the real entities: the graph's nodes carry the registered label and kind, read through labelsOf; control: a viewer entities does not recognise is shown no name,", () => {
+  const s = seeded();
+  s.rec({});
+  const at = { value: "2014-03-01", precision: "day", zone: ZONE };
+  const x = exploreOf(s.host, { entities: s.e });
+  const g = x.neighbourhood({ centre: s.city, at, viewer: ANN, rings: 1 });
+  assert.equal(g.ok, true, JSON.stringify(g).slice(0, 300));
+  const by = Object.fromEntries(g.nodes.map((n) => [n.id, n]));
+  assert.deepEqual([by[s.city].label, by[s.city].entity_kind], ["City of Port Ellery", "institution"]);
+  assert.deepEqual([by[s.vendor].label, by[s.vendor].entity_kind], ["Harbour Dredging Co", "institution"]);
+  const out = x.neighbourhood({ centre: s.city, at, viewer: "nobody-we-know", rings: 1 });
+  assert.ok(out.nodes.every((n) => n.label === null && n.entity_kind === null));
+});
