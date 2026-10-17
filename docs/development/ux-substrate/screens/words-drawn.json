@@ -8561,6 +8561,18 @@
    "en": "Opens your queue at this item.",
    "protected": false,
    "note": "DEC-323: screens-daily R50: the strip item"
+  },
+  {
+   "key": "document.image.unread.summary",
+   "en": "When the document is a single picture",
+   "protected": false,
+   "note": "DEC-323: screens-inquiry R55"
+  },
+  {
+   "key": "member.founder.unnamed.summary",
+   "en": "Before the founder chooses a handle",
+   "protected": false,
+   "note": "DEC-323: screens-settings R51"
   }
  ],
  "rewrite": {

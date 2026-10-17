@@ -1860,6 +1860,8 @@ w323('screen.security.period.bad.summary', 'Dates in the wrong order', False, 's
 w323('screen.group.name.same.summary', 'Saving the same name', False, 'screens-settings R52')
 w323('project.bar.others.summary', 'Other bars', False, 'screens-inquiry R52: the bar read in words in each case')
 w323('home.strip.ours_passed.opens', 'Opens your queue at this item.', False, 'screens-daily R50: the strip item')
+w323('document.image.unread.summary', 'When the document is a single picture', False, 'screens-inquiry R55')
+w323('member.founder.unnamed.summary', 'Before the founder chooses a handle', False, 'screens-settings R51')
 # --- end DEC-323
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]

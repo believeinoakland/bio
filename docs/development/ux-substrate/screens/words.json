@@ -14,7 +14,7 @@
   "queue": 159,
   "transcribe": 19,
   "capture": 71,
-  "document": 61,
+  "document": 62,
   "question": 79,
   "connection": 34,
   "guide": 7,
@@ -57,7 +57,7 @@
   "signin": 1,
   "forgot": 1,
   "founder": 6,
-  "member": 2,
+  "member": 3,
   "stake": 26,
   "translate": 8,
   "proceeding": 11,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13089,
+  "total": 13091,
   "protected": 901
  },
  "words": [
@@ -41521,6 +41521,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-323: screens-daily R50: the strip item"
+  },
+  {
+   "key": "document.image.unread.summary",
+   "en": "When the document is a single picture",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-inquiry R55"
+  },
+  {
+   "key": "member.founder.unnamed.summary",
+   "en": "Before the founder chooses a handle",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-323: screens-settings R51"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
