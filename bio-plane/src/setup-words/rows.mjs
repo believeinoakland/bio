@@ -1,11 +1,11 @@
 /* GENERATED: do not edit by hand. setup-words R10 (R1's rule; DEC-179, DEC-257; K3366): the interface's word list,
-   docs/development/ux-substrate/screens/words.json (13060 words, 901 protected; SHA-256
-   9a85588ebde54b8267ce64a2f2efbcd1f9bc5c011208bf91cd7c22b0498e57c7), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
+   docs/development/ux-substrate/screens/words.json (13082 words, 901 protected; SHA-256
+   6e8d64615b60c7d102aee96324244afea8c9c32d2a2f3452e01c52db30a4c7b3), each [key, en, note, means, protected]: key, en, note (or null) and protected as the file gives
    them, means the en of the word's sibling .means or .does entry (the nearest dotted prefix of at least two segments
    holding one), or null. WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list and each row are frozen (R3). Written by
    `node bio-plane/src/setup-words/build.mjs` from the repository root (`--check` finds it stale);
    bio-plane/test/m/setup-words/word-list.test.mjs checks it word by word. */
-export const WORDS_COMMIT = "9a85588ebd";
+export const WORDS_COMMIT = "6e8d64615b";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true],
   ["weight.reasoned.name","Reasoned",null,"Reasoned: asks for your reason, which becomes part of the record.",true],
@@ -5979,6 +5979,28 @@ export const WORD_ROWS = Object.freeze([
   ["screen.request.state.nooffice","no office is known yet","DEC-320: R20: the mockup state",null,false],
   ["stake.unreadable.summary","When the stake can't be read","DEC-320: screens-action R21",null,false],
   ["stake.undetermined.summary","When the tier can't be told","DEC-320: R21: stake.ask.undetermined in a fold",null,false],
+  ["capture.forquestion.refused.summary","A question that isn't the project's","DEC-321: screens-intake R29: refusal.BAD_FOR in a fold",null,false],
+  ["find.row.unwatch","Take off my watch list","DEC-321: screens-daily R45: watchitem with on: false",null,false],
+  ["find.secondlook.note","Why look again","DEC-321: R45: secondlook's required note",null,false],
+  ["find.secondlook.note.help","Your note is required: it says what the second look should check.","DEC-321: R45",null,false],
+  ["label.timezones.America/Los_Angeles","Pacific Time (Los Angeles)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.America/Denver","Mountain Time (Denver)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.America/Phoenix","Arizona Time (Phoenix)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.America/Chicago","Central Time (Chicago)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.America/New_York","Eastern Time (New York)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.America/Anchorage","Alaska Time (Anchorage)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["label.timezones.Pacific/Honolulu","Hawaii Time (Honolulu)","DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form",null,false],
+  ["screen.group.timezone.two.summary","When two places give different zones","DEC-322: R45: two active profiles",null,false],
+  ["screen.group.timezone.two","Your places give different time zones, so none is named as your team's. Correct each place's zone on its own.","DEC-322: R45: each profile asked once",null,false],
+  ["screen.group.timezone.none.summary","When no time zone is held","DEC-322: R45: no zone, and no UTC drawn",null,false],
+  ["find.browse.more","Your team holds more than is shown here.","DEC-322: screens-daily R44: truncated, paged by next",null,false],
+  ["find.browse.showmore","Show more","DEC-322: R44: the next page",null,false],
+  ["find.browse.nosince.summary","Before your first visit to Home","DEC-322: R44: since null",null,false],
+  ["find.browse.nosince","“New since you last looked” is offered once you have visited Home: it counts from that visit.","DEC-322: R44: since null draws no new choice",null,false],
+  ["screen.published.corrections.state.none","none","DEC-322: screens-publish R34: the mockup states",null,false],
+  ["screen.published.corrections.state.one","one","DEC-322: R34",null,false],
+  ["screen.published.corrections.state.some","several","DEC-322: R34",null,false],
+  ["screen.published.corrections.state.undetermined","can't be counted","DEC-322: R34: undetermined draws only the docket sentence",null,false],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false],
@@ -11990,7 +12012,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.adoptversion.label.home","Adopt the newer version",null,"Moves your citations to the newer version of this document. You see what changed first.",true],
   ["act.keepversion.label.home","Keep the version you cited",null,"Keeps citing the version you cited. The newer one stays in the record beside it.",true],
   ["act.filingapprove.label.home","Approve the text",null,"Approves this exact text for sending. Changing it afterwards needs approving again.",true],
-  ["act.taskresolve.label.home","Act on an item",null,"Does what this item asks, on the screen it concerns. It leaves your queue when done.",true],
+  ["act.taskresolve.label.home","Open the item",null,"Does what this item asks, on the screen it concerns. It leaves your queue when done.",true],
   ["act.promote.label.home","Start a project",null,"Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.",true],
   ["act.startfrom.label.home","Start from…",null,"Starts from where you are: a problem you live with, a document, a deadline, a claim to check or a person. Each opens the right first step.",true],
   ["act.projectjoin.label.home","Join",null,"Joins this project to see and work on it.",true],
@@ -12087,7 +12109,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.release.label.dash-project","Vouch for photos",null,"Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.",true],
   ["act.adoptversion.label.dash-project","Adopt the newer version",null,"Moves your citations to the newer version of this document. You see what changed first.",true],
   ["act.keepversion.label.dash-project","Keep the version you cited",null,"Keeps citing the version you cited. The newer one stays in the record beside it.",true],
-  ["act.taskresolve.label.queue","Act on an item",null,"Does what this item asks, on the screen it concerns. It leaves your queue when done.",true],
+  ["act.taskresolve.label.queue","Open the item",null,"Does what this item asks, on the screen it concerns. It leaves your queue when done.",true],
   ["act.taskforward.label.queue","Forward to a member",null,"Passes this item to another member better placed to act, with a note.",true],
   ["act.owed_updatelater.label.queue","Not now",null,"Puts this release aside for every administrator. It comes back later, the next day for a security fix, and at once when a newer release replaces it.",true],
   ["act.proposedispose.label.queue","Dismiss with a reason",null,"Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.",true],
@@ -12111,7 +12133,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.frontier.label.finder","See where nobody looked",null,"Shows where nobody has looked yet for this, so the team knows what an answer does not cover.",true],
   ["act.calculationcreate.label.finder","Count",null,"Works out a figure from the record, with its method shown so anyone can repeat it.",true],
   ["act.owed_watchitem.label.finder","Watch",null,"Puts what you picked on your watch list: Find shows it under Watched by you, and a change to it reaches your queue. Only you see what you watch.",true],
-  ["act.owed_secondlook.label.finder","Flag for a second look",null,"Asks the team to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",true],
+  ["act.owed_secondlook.label.finder","Flag for a second look…",null,"Asks the team to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",true],
   ["act.secondlookclear.label.finder","Clear",null,"Takes the flag off. No reason is asked; any member who can see the item may clear it.",true],
   ["act.themeread.label.finder","Filter by theme",null,"Lists the team's themes, newest first, or what one theme gathers: what was placed in it, then its hunches apart. Documents you cannot open are left out.",true],
   ["act.acquire.label.capture","Capture from an address",null,"Has your team's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.",true],
