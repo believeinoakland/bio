@@ -6,6 +6,7 @@
  * decided (the caller class, the viewer, the member). `store` is the Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
+import { say } from "./words.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 
 /** R64 (N339, K421): the one way this module's handlers answer what `doAnswer` read that was not an answer. The
@@ -147,7 +148,7 @@ export async function acquireOp(req, env, store, { json, storeSilent, storeRefus
                                                     storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
-    return { response: storageAbsent("acquire", "your group's Civicsmith has no evidence storage configured") };
+    return { response: storageAbsent("acquire", say("capture.response.group_civicsmith_evidence")) };
   const body = await req.json().catch(() => null);
   const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
   const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },

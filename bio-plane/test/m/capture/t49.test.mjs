@@ -11,12 +11,18 @@ import { makeZip } from "../../make-zip.mjs";
 import { HELD_PAGE_WAIT_MS } from "../../../src/capture/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ADMIN = "class:admin";
 const ids = (r) => r.held.map((x) => x.bundle_id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const never = () => new Promise(() => {});
 const flush = () => new Promise((r) => setImmediate(r));
+/* Lets the real work of a call (sqlite, the digest the evidence store's reads take, promise hops) run to where it waits on the
+   mocked clock: `flush` is one turn of the event loop, and a digest on the thread pool can outlast one under load, which
+   made the first reading of a page's wait flaky (T50). 50 ms of real turns, with the timers mocked, never advances the
+   page's wait. */
+const settle = async (ms = 50) => { const end = performance.now() + ms; while (performance.now() < end) await flush(); };
 
 /* A world over this module's fixture, provenance as acquisition's tests stand it in, and acquisition's instance handed to
    the store. `latency` is the evidence store's round trip in milliseconds on every head and get. */
@@ -78,11 +84,11 @@ async function runOut(call, { before = 0 } = {}) {
     let settled = false;
     const p = call();
     p.then(() => { settled = true; }, () => { settled = true; });
-    await flush();
-    if (before) { mock.timers.tick(before); await flush(); }
+    await settle();
+    if (before) { mock.timers.tick(before); await settle(); }
     const early = settled;
     mock.timers.tick(HELD_PAGE_WAIT_MS - before);
-    await flush();
+    await settle();
     return { early, result: await p };
   } finally { mock.timers.reset(); }
 }
@@ -144,10 +150,10 @@ test("R91 R78: an examination that never settles leaves each row eligible null w
   for (const row of r.held) {
     if (["INFO-001", "INFO-002", "INFO-003"].includes(row.bundle_id)) continue;
     assert.equal(row.eligible, null, row.bundle_id);
-    assert.match(row.eligibility_basis, /^ratification's examination did not answer in time, so eligibility is undetermined$/);
+    assert.equal(row.eligibility_basis, word("capture.undetermined.examination_did_answer", { module: "ratification" }));
   }
   assert.deepEqual([by["INFO-001"].eligible, by["INFO-002"].eligible, by["INFO-002"].class], [true, false, "crucial"], "control: an answer in time is R78's");
-  assert.match(by["INFO-003"].eligibility_basis, /did not answer for this document/, "an examination that threw says that, not that it was late");
+  assert.equal(by["INFO-003"].eligibility_basis, word("capture.undetermined.examination_did_answer_document", { module: "ratification" }), "an examination that threw says that, not that it was late");
   /* every other field of the answer is unchanged by the lateness */
   const strip = ({ eligible, eligibility_basis, class: c, reason, ...rest }) => rest;
   assert.deepEqual(r.held.map(strip), plainAnswer.held.map(strip));
@@ -182,7 +188,7 @@ test("R91 R77: an archive listing that never settles leaves that row archive {sh
   const zip = r.held.find((x) => x.bundle_id === "INFO-ZIP");
   assert.deepEqual(zip.archive, { sha256: a.digest, grouping: null });
   assert.equal(zip.files, null);
-  assert.match(zip.files_basis, /undetermined/);
+  assert.equal(zip.files_basis, word("capture.files_basis"));
   assert.equal("files_total" in zip || "files_truncated" in zip, false, "no file is counted as listed");
   assert.equal(zip.eligible, true, "its eligibility is its own answer, given in time");
   const plain = r.held.find((x) => x.bundle_id === "INFO-001");

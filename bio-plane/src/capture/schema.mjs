@@ -436,7 +436,21 @@ CREATE TABLE IF NOT EXISTS held_act_questions (
   question  TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq, question)
 );
-CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq)`;
+CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq);
+-- R94 (T50; N1117; acquisition R47): the questions a member captured bytes for, through acquire's for: one row per
+-- (capture, question, asker), written once at the first instant, never rewritten or removed but by purge. A stated
+-- read contract, as links is (R57): a later module may join it in its own SQL, and this module changes none of its
+-- columns' names or meaning without a change to R94. capture_sha is the digest of the capture; question the
+-- question's id as the member gave it (this module decides nothing about it, R94); asker the member's id (R69's
+-- spelling, no member: prefix); at the whole-second UTC instant first recorded.
+CREATE TABLE IF NOT EXISTS captured_for (
+  capture_sha TEXT NOT NULL,
+  question    TEXT NOT NULL,
+  asker       TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (capture_sha, question, asker)
+);
+CREATE INDEX IF NOT EXISTS captured_for_question ON captured_for (question)`;
 
 /* Columns an older store's tables gained after they were first written, added at boot (never back-filled; each
    reason is where the column is read). Moved from the legacy store's additive list. */
@@ -457,5 +471,5 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
    corpus-derived. The doorbell's tables are `doorbell`'s to declare (T43; N849, N864). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for"];
 export const CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];

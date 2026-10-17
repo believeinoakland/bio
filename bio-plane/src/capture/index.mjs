@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, a member's upload (R86) and the information grammar
  * (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R91). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R95). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -20,9 +20,15 @@
  * the knocker secret, the source fingerprint and its key; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72,
  * R80, R85) is `doorbell`'s; this module's copy of it was deleted in T43 (N849), its rows (R37) and tables with it, and
  * the last held piece, `sourceFingerprint`, in T44 (N870, K2708). This module answers no source fingerprint and creates,
- * declares and reads no table of `doorbell`'s, `knock_key` included (R87). */
+ * declares and reads no table of `doorbell`'s, `knock_key` included (R87).
+ *
+ * T50 (T50-8). R94 `recordCapturedFor` records the asks `acquire`'s `for` makes (table `captured_for`); R83's reader is
+ * handed them as `asks`, so R77 and R79 name the questions through it and this module names none itself. R95
+ * `captureGradeOf` reads one capture's grade (`op=capturegrade`). R73 passes `openCaptures` through with this store. Plan
+ * rule 6 (N1116): the member-facing sentences are read by key through `words.mjs`; this file holds keys, not English. */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
+import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
@@ -34,7 +40,7 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import { unpack, archiveList, memberOf, acquisitionOf } from "../acquisition/index.mjs";
+import { unpack, archiveList, memberOf, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
@@ -58,7 +64,7 @@ const hexOf = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2
 const memberIdOf = (who) => (typeof who === "string" ? who.replace(/^member:/, "") : "");
 
 /* R68: the sentence every late attestation carries: what it proves, and what it does not. */
-const lateSentence = (at) => `proves the bytes existed by ${at}, not at capture`;
+const lateSentence = (at) => say("capture.text.proves_bytes_existed", { at });
 /* R68: the raw replay of an archived locator (`/web/<ts>/` becomes `/web/<ts>id_/`): the bytes as the archive holds
    them, without its overlay, which is what a digest can be compared against. Null for a locator not of that shape. */
 const rawReplayOf = (archived) => {
@@ -78,6 +84,8 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
+/** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
+export const CAPTURED_FOR_QUESTION_MAX = 200;
 /** R86: the longest statement of origin, and the longest stated file name, in characters. */
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
@@ -170,12 +178,12 @@ export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute"
 
 /* The readers a later module may register, once at start, each taking one registration whoever makes it: the
    batch-release examination of one document (R78; `ratification` R34) and the questions a document was captured for
-   (R83; `capture-requests` R48). The litigation hold's reader is `doorbell`'s (its R3; T43, N849). */
+   (R83; `capture-requests` R48; T50: handed R94's asks beside). The litigation hold's reader is `doorbell`'s (its R3; T43, N849). */
 export const CAPTURE_READERS = Object.freeze(["batch-examination", "captured-for"]);
 
 /* R77, R79 (DEC-141 (1)): the one sentence a row carries when a question the viewer may not see is among those its
    document was captured for, or waits on it. It names no question, no asker and no count. */
-export const WITHHELD_QUESTION = "Captured for a question you may not see";
+export const WITHHELD_QUESTION = say("screen.held.withheld");
 
 /* R79, R81: the longest reason a member may give, in characters. */
 export const REASON_MAX = 2000;
@@ -201,7 +209,7 @@ export const HELD_PAGE_WAIT_MS = 5000;
    that cannot be answered in time asks no more of the evidence store than it can wait for. */
 const HELD_PAGE_LANES = 8;
 /* R91: what a wait answers when it ran out first. */
-const TOO_LATE = Symbol("the page's wait ran out");
+const TOO_LATE = Symbol(say("capture.symbol.page_wait_ran"));
 /* R91: the answers of an examination that ran out of time, so a file beside an archive can say so (R77's file keeps its shape
    otherwise); held by identity, never carried into an answer. */
 const RAN_OUT = new WeakSet();
@@ -514,6 +522,10 @@ export class Capture {
    *  found in, `[]` for none. */
   memberOf(captureSha) { return memberOf(this, captureSha); }
 
+  /** R73 (T50; N1094; `acquisition` R46): `acquisition`'s `openCaptures` (a member's open captures, `{by, now}`), likewise,
+   *  over this module's `liveCaptureSessions` (R46); an `args` with no `now` is read at this module's clock (R90). */
+  openCaptures(args) { return openCaptures(this, { ...(args ?? {}), now: args?.now ?? this.#instant() }); }
+
   #emitSync(event, payload) {
     const out = [];
     for (const { module, fn } of this.#listeners.get(event) || []) {
@@ -620,7 +632,7 @@ export class Capture {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503,
-               detail: "this group's Civicsmith has no evidence storage configured, so the file cannot be held under its own digest; nothing was written" };
+               detail: `${say("capture.response.group_civicsmith_evidence")}, so the file cannot be held under its own digest; nothing was written` };
     }
     const reader = uploadReader(bytes);
     if (!reader) return { ok: false, reason: "NO_BODY", status: 400, detail: "the upload carried no bytes; nothing was written" };
@@ -746,7 +758,7 @@ export class Capture {
       file, locator: `upload:${sha}`, retrieved: at,
       profile,
       authority_state: "undetermined",
-      authority_basis: `a file a member brought into the record, which no one fetched; no authority is asserted; recorded ${at} for resolution through the task list`,
+      authority_basis: say("capture.authority_basis", { at }),
       provenance_chain: [{
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: `these bytes were uploaded to your group's Civicsmith by ${by} and hashed as they arrived, at ${at}; `
@@ -781,6 +793,24 @@ export class Capture {
     this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
                                   captureSha, actor, at && ISO_INSTANT.test(at) ? at : stampSecond()));
     return { recorded: true };
+  }
+
+  /** R94 (T50; N1117; `acquisition` R47): that a member captured these bytes for a question, once for each (capture
+   *  digest, question, member), at the first instant. The service `acquisition` calls through the store handed in when
+   *  `acquire` carries `for`. It decides nothing about the question's existence, sight, title or openness (R83's reader
+   *  does); it records the ask. `{recorded: false}`, writing nothing, for a digest that is not 64 lowercase hex, a
+   *  `question` that is not a non-blank string of at most 200 characters, or a `by` that is not a member's stamp
+   *  (absent, blank, naming no member, or a machine identity). Never throws. */
+  recordCapturedFor(args) {
+    try {
+      const { captureSha, question, by, at = null } = args ?? {};
+      if (typeof captureSha !== "string" || !HEX64.test(captureSha)) return { recorded: false };
+      if (typeof question !== "string" || !question.trim() || [...question].length > CAPTURED_FOR_QUESTION_MAX) return { recorded: false };
+      if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by)) return { recorded: false };
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO captured_for (capture_sha, question, asker, at) VALUES (?, ?, ?, ?)`,
+                                    captureSha, question, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
+      return { recorded: true };
+    } catch { return { recorded: false }; }
   }
 
   /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
@@ -874,7 +904,7 @@ export class Capture {
       return { ...out, status: 409 };
     const now = stampSecond();
     const outcomes = [];
-    for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String((out && (out.note || out.reason)) || "no attempt was reported") }]) {
+    for (const a of attempts.length ? attempts : [{ service: "attest", ok: false, note: String((out && (out.note || out.reason)) || say("acquisition.string.attempt_reported")) }]) {
       const at = typeof a.attempted === "string" && ISO_INSTANT.test(a.attempted) ? a.attempted : now;
       const coArchive = a.service === ARCHIVE_SERVICE || a.kind === "co-archive";
       const o = { kind: coArchive ? "co_archive" : "timestamp", service: String(a.service || "attest"), ok: a.ok === true, at,
@@ -893,33 +923,33 @@ export class Capture {
     });
     return { ok: true, captureSha: sha, late_attestations: outcomes, attested: out && out.ok === true,
              ...(out && out.attestation ? { attestation: out.attestation } : {}),
-             note: "each attempt is recorded as late: it proves the bytes existed by its instant, never at capture" };
+             note: say("capture.note.attempt_recorded_late") };
   }
 
   /* R68: whether the co-archive's raw replay hashes to the capture digest. Undetermined, with the reason, when there
      is no archived locator, the replay cannot be fetched (the governor holding its host included), or it is too large. */
   async #replayMatches(sha, archived) {
     const replay = rawReplayOf(archived);
-    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay your group's Civicsmith can read raw" : "the co-archive gave no archived locator to compare" };
+    if (!replay) return { matches: "undetermined", match_basis: say(archived ? "capture.match_basis.archived_locator_replay" : "capture.match_basis.co_archive_gave") };
     try {
       const g = await governedFetch(this, replay, "reattest");
-      if (g.refusedByGovernor) return { matches: "undetermined", replay, match_basis: `the governor is holding requests to the archive (${g.reason})` };
+      if (g.refusedByGovernor) return { matches: "undetermined", replay, match_basis: say("capture.match_basis.governor_holding_requests", { g: g.reason }) };
       const res = g.res;
-      if (!res.ok || !res.body) return { matches: "undetermined", replay, match_basis: `the replay answered ${res.status}` };
+      if (!res.ok || !res.body) return { matches: "undetermined", replay, match_basis: say("capture.match_basis.replay_answered", { status: res.status }) };
       const h = createSha256(), reader = res.body.getReader();
       let total = 0;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         total += value.length;
-        if (total > REPLAY_MAX) { try { await reader.cancel(); } catch { /* gone */ } return { matches: "undetermined", replay, match_basis: "the replay is larger than your group's Civicsmith compares" }; }
+        if (total > REPLAY_MAX) { try { await reader.cancel(); } catch { /* gone */ } return { matches: "undetermined", replay, match_basis: say("capture.match_basis.replay_larger_group") }; }
         h.update(value);
       }
       const got = h.hex();
       return { matches: got === sha, replay, replay_sha256: got,
-               match_basis: got === sha ? "the co-archive's replay hashes to the capture digest" : "the co-archive's replay holds other bytes than the capture" };
+               match_basis: say(got === sha ? "capture.match_basis.co_archive_replay" : "capture.match_basis.co_archive_replay_holds") };
     } catch (e) {
-      return { matches: "undetermined", replay, match_basis: `the replay could not be fetched (${String(e && e.message || e).slice(0, 120)})` };
+      return { matches: "undetermined", replay, match_basis: say("capture.match_basis.replay_fetched", { e: String(e && e.message || e).slice(0, 120) }) };
     }
   }
 
@@ -935,6 +965,19 @@ export class Capture {
     } catch { return { captureSha: null, late_attestations: [] }; }
   }
 
+  /* R76, R95: whether the record holds a capture: its bytes in the evidence store, or provenance's register or receipt
+     naming it (provenance R5). */
+  async #holds(sha) {
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    let held = false;
+    if (ev) { try { held = !!(await ev.head(sha)); } catch { held = false; } }
+    if (!held && this.provenance && typeof this.provenance.registerHolds === "function") {
+      try { const h = await this.provenance.registerHolds({ sha }); held = h?.registered === true || h?.acquired === true; }
+      catch { held = false; }
+    }
+    return held;
+  }
+
   /** R76 (DEC-95 (1)): the grade note of a capture this record holds (its bytes in the evidence store, or provenance's
    *  register or receipt naming it, provenance R5), so a capture completed with no member present carries it
    *  afterwards: `acquisition`'s `ACQUIRE_GRADE_NOTE`, the words `op=acquire`'s answer carries. By the viewer, as
@@ -945,14 +988,7 @@ export class Capture {
     const none = { captureSha: sha || null, note: null };
     try {
       if (!HEX64.test(sha) || !this.#captureSeen(sha, viewer)) return none;
-      const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-      let held = false;
-      if (ev) { try { held = !!(await ev.head(sha)); } catch { held = false; } }
-      if (!held && this.provenance && typeof this.provenance.registerHolds === "function") {
-        try { const h = await this.provenance.registerHolds({ sha }); held = h?.registered === true || h?.acquired === true; }
-        catch { held = false; }
-      }
-      if (!held) return none;
+      if (!(await this.#holds(sha))) return none;
       /* K2455: a capture whose every receipt is a received route was not fetched, which the acquire note says it was;
          it answers null. Its receipts are read through provenance R60; a capture with none, or a read that fails,
          answers the note as before. */
@@ -960,6 +996,23 @@ export class Capture {
       try { rows = this.provenance?.receiptsOfCapture?.({ captureSha: sha })?.rows ?? []; } catch { rows = []; }
       if (Array.isArray(rows) && rows.length && rows.every((r) => RECEIVED_VIAS.includes(r && r.via))) return none;
       return { captureSha: sha, note: ACQUIRE_GRADE_NOTE };
+    } catch { return none; }
+  }
+
+  /** R95 (T50; N1124; `provenance` R24–R27): the grade of one capture, read on its own, `{ok: true, captureSha, grade}`:
+   *  `grade` is `provenance.captureGrade(captureSha)`'s answer whole (as R77's `capture.grade`), so a page that holds a
+   *  document's capture digest asks one read, not the project's list of held captures. By the viewer, as R76: a capture
+   *  the viewer may not see, one never held, and one provenance does not answer (it throws, or answers no object) all
+   *  answer `grade: null` alike. A `captureSha` that is not 64 lowercase hex is the required-argument refusal naming it.
+   *  Writes nothing and never throws. */
+  async captureGradeOf({ captureSha, viewer = undefined } = {}) {
+    if (typeof captureSha !== "string" || !HEX64.test(captureSha))
+      return Capture.#missingArgument("capturegrade", "captureSha", "64 lowercase hex characters", captureSha);
+    const none = { ok: true, captureSha, grade: null };
+    try {
+      if (!this.#captureSeen(captureSha, viewer) || !(await this.#holds(captureSha))) return none;
+      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(captureSha) : null;
+      return { ok: true, captureSha, grade: g && typeof g === "object" && typeof g.then !== "function" ? g : null };
     } catch { return none; }
   }
 
@@ -1197,7 +1250,7 @@ export class Capture {
       ]);
       if (group === TOO_LATE)
         return { eligibility, grouped: { archive: { sha256: progress.sha, grouping: null }, files: null,
-                                         files_basis: "the archive grouping of this document did not answer in time, so the files beside it, if it is an archive, are undetermined" } };
+                                         files_basis: say("capture.files_basis") } };
       if (!group) return { eligibility, grouped: null };
       const shown = await Promise.all(group.files.slice(0, HELD_FILES_IN_ROW).map(async (f) => {
         const e = await examine(f.document);
@@ -1268,9 +1321,9 @@ export class Capture {
   async #eligibility(bundleId, wait) {
     const reader = this.#readers.get("batch-examination");
     const undetermined = (basis) => ({ eligible: null, eligibility_basis: basis });
-    if (!reader) return undetermined("no batch-release examination is registered, so eligibility is undetermined");
+    if (!reader) return undetermined(say("capture.undetermined.batch_release_examination"));
     const tooLate = () => {
-      const a = undetermined(`${reader.module}'s examination did not answer in time, so eligibility is undetermined`);
+      const a = undetermined(say("capture.undetermined.examination_did_answer", { module: reader.module }));
       RAN_OUT.add(a);
       return a;
     };
@@ -1287,7 +1340,7 @@ export class Capture {
     if (v && v.eligible === true) return { eligible: true };
     if (v && v.eligible === false && typeof v.class === "string" && v.class)
       return { eligible: false, class: v.class, reason: typeof v.reason === "string" ? v.reason : null };
-    return undetermined(`${reader.module}'s examination did not answer for this document, so eligibility is undetermined`);
+    return undetermined(say("capture.undetermined.examination_did_answer_document", { module: reader.module }));
   }
 
   /* R83 (DEC-141): the questions one document was captured for, read through the registered `captured-for` reader,
@@ -1298,15 +1351,20 @@ export class Capture {
      but `{questions: [...]}` with every entry well formed is no answer, never a partial list (`capture-requests` R48). */
   #questionsOf(bundleId, viewer) {
     const reader = this.#readers.get("captured-for");
-    if (!reader) return { questions: null,
-      basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined" };
-    const silent = { questions: null,
-      basis: `${reader.module} did not answer which questions this document was captured for, so they are undetermined` };
+    if (!reader) return { questions: null, basis: say("capture.basis.reader_questions_document") };
+    const silent = { questions: null, basis: say("capture.basis.did_answer_questions", { module: reader.module }) };
     let captures = [];
     try { captures = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
     catch { captures = []; }
+    /* R83, R94 (T50): the asks `acquire`'s `for` recorded for those captures, handed on for the reader to answer; this
+       module names no question from them itself. */
+    let asks = [];
+    try {
+      asks = captures.length ? this.#rows(`SELECT DISTINCT question, asker FROM captured_for WHERE capture_sha IN (SELECT value FROM json_each(?))
+                                             ORDER BY question, asker`, JSON.stringify(captures)).map((r) => ({ question: r.question, asker: r.asker })) : [];
+    } catch { asks = []; }
     let v;
-    try { v = reader.fn({ document: bundleId, viewer, captures }); } catch { return silent; }
+    try { v = reader.fn({ document: bundleId, viewer, captures, asks }); } catch { return silent; }
     if (v && typeof v.then === "function") { Promise.resolve(v).catch(() => {}); return silent; }
     const list = v && typeof v === "object" ? v.questions : null;
     const str = (x) => (typeof x === "string" && x ? x : null);
@@ -1414,7 +1472,7 @@ export class Capture {
     const documents = [...asked].map(([document, a]) => (a.questions
       ? { document, captured_for: Capture.#shown(a.questions), waiting: Capture.#shown(a.questions.filter((q) => q.waiting)) }
       : { document, captured_for: null, captured_for_basis: a.basis, waiting: null,
-          waiting_basis: "the questions waiting on this document are undetermined, so none was recorded with its set-aside" }));
+          waiting_basis: say("capture.waiting_basis") }));
     return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at, documents };
   }
 
@@ -1526,7 +1584,7 @@ export class Capture {
         const running = this.#one(`SELECT COUNT(*) AS n FROM render_slots`).n;
         if (running >= capN)
           return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
-                   why: `${running} renders are running and your group's Civicsmith runs at most ${capN} at once` };
+                   why: say("capture.why.renders_running_group", { running, cap_n: capN }) };
       }
       const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
       const spent = cur ? cur.spent_ms : 0;
@@ -1565,7 +1623,7 @@ export class Capture {
       const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
       if (n === null)
         return { day, spent_ms: cur ? cur.spent_ms : 0, reserved_ms: cur ? (cur.reserved_ms || 0) : 0, released_ms: 0,
-                 why: "the renderer reported no elapsed time, so nothing was added and its reservation stays charged for the day" };
+                 why: say("capture.why.renderer_reported_elapsed") };
       const held = cur ? (cur.reserved_ms || 0) : 0;
       const released = Math.min(held, rel);
       if (cur) this.#sql.exec(`UPDATE render_allowance SET spent_ms = spent_ms + ?, reserved_ms = ?, last_at = ? WHERE day = ?`,
@@ -1697,7 +1755,7 @@ export class Capture {
       const count = Number((found.find((f) => f.k === "n") || {}).observations || 0);
       if (!count) {
         tally.offsite++;
-        out.push({ ...r, resolution: "offsite", verdict: null, basis: "the record holds no capture of this address" });
+        out.push({ ...r, resolution: "offsite", verdict: null, basis: say("capture.basis.record_holds_capture") });
         continue;
       }
       tally.linked++;
@@ -1710,41 +1768,32 @@ export class Capture {
       let verdict, basis, detail = null, pick = null;
       if (bracket && bracket.capture_sha === sourceCapture) {
         verdict = "contemporaneous"; pick = bracket;
-        basis = "this link points at the document itself: the capture the record holds of its target is "
-              + "this very capture, and those same bytes were seen served on both sides of its retrieval";
+        basis = say("capture.basis.link_points_document");
         detail = `self-reference: ${bracket.capture_sha.slice(0, 12)}, observed ${bracket.observations} times `
                + `between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
       } else if (bracket) {
         verdict = "contemporaneous"; pick = bracket;
-        basis = "the same bytes were seen served on both sides of this document's retrieval and "
-              + "hash equal, so the target did not change across the interval";
+        basis = say("capture.basis.bytes_seen_served");
         detail = `observed ${bracket.observations} times between ${bracket.first_retrieved} and ${bracket.last_retrieved}`;
       } else if (selfCap && oneCapture && before.capture_sha === sourceCapture) {
         verdict = "undetermined"; pick = selfCap;
-        basis = "this link points at the document itself: the capture the record holds of its target is "
-              + "this very capture, observed once, so no second observation says whether the target "
-              + "was ever served as anything else";
+        basis = say("capture.basis.link_points_document_itself");
         detail = `self-reference: ${selfCap.capture_sha.slice(0, 12)} retrieved ${selfCap.first_retrieved}`;
       } else if (oneCapture) {
         verdict = "undetermined"; pick = before;
-        basis = "the record holds one capture of the target made at this document's retrieval instant and "
-              + "observed once; one observation is not a second version, and it does not establish that "
-              + "the target was unchanged on either side";
+        basis = say("capture.basis.record_holds_capture_target");
         detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
       } else if (before && after) {
         verdict = "undetermined"; pick = before;
-        basis = "the target changed somewhere between the captures bracketing this document's "
-              + "retrieval, so which version it pointed at is not established";
+        basis = say("capture.basis.target_changed_somewhere");
         detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, `
                + `${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
       } else if (!before && after) {
         verdict = "superseded"; pick = after;
-        basis = "every capture of the target postdates this document's retrieval, so the record "
-              + "holds a later version than the one pointed at";
+        basis = say("capture.basis.capture_target_postdates");
       } else {
         verdict = "undetermined"; pick = before;
-        basis = "the record's captures of the target all predate this document's retrieval, and "
-              + "nothing establishes that it was unchanged in between";
+        basis = say("capture.basis.record_captures_target");
       }
       verdicts[verdict]++;
       const reg = pick ? this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, pick.capture_sha) : null;
@@ -1757,9 +1806,7 @@ export class Capture {
     }
     return { sourceCapture, resolved: out.length, at: rows[0].captured_at, tally, verdicts, links: out,
       limit: cap, truncated, next,
-      note: "undetermined is the resting state and the expected common case, not a failure: it means "
-          + "nothing established which version the source pointed at, which is different from the "
-          + "record holding nothing and different again from holding a later version" };
+      note: say("capture.note.undetermined_resting_state") };
   }
 
   /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. N90: the history
@@ -1960,16 +2007,14 @@ export class Capture {
         } else {
           undetermined.push({ address_norm, recurred_on: pages.size, last_carried: obs(a), first_missing: obs(b),
                               chrome: "undetermined",
-                              why: "carried in a chrome region on one page only, so whether it was the site's navigation is undetermined" });
+                              why: say("capture.why.carried_chrome_region") });
         }
       }
     }
     return { host: h, observations: seq.length, limit: cap, truncated: found.length > cap, records,
              sequence: seq.map((o) => ({ ...obs(o), basis: o.basis })), changes, lost, undetermined,
-             note: (seq.length < 2 ? "fewer than two captures of this host carried navigation: nothing to compare yet"
-                                   : "a link is LOST when the site's chrome carried it in one capture and not in the next")
-               + "; chrome is containment in a chrome region AND recurrence on two or more distinct pages of the host; "
-               + "a capture with no chrome at all is not an observation; direct captures only" };
+             note: say(seq.length < 2 ? "capture.note.fewer_two_captures" : "capture.note.link_lost_site")
+               + say("capture.note.chrome_containment_chrome") };
   }
 
   /* ==================================================================== *
@@ -2004,8 +2049,7 @@ export class Capture {
       const now = at ? new Date(at) : new Date();
       this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond(now.getTime()));
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
-      if (!r) return { session, found: false,
-        note: "no such capture session: it either never existed, was already finished, or expired" };
+      if (!r) return { session, found: false, note: say("capture.note.capture_session_either") };
       let state = null;
       try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
       return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
@@ -2231,10 +2275,8 @@ export class Capture {
                chrome: documents >= 3 && share >= threshold };
     });
     return { host, documents, documents_undetermined: undetermined, threshold, assets, total, limit: cap, truncated: found.length > cap,
-             note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet"
-                                  : "chrome here means the address recurs across at least this share of the host's captured documents")
-               + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, `
-                                 + "so which document each was is undetermined and none is counted" : "") };
+             note: say(documents < 3 ? "capture.note.fewer_three_documents" : "capture.note.chrome_means_address")
+               + (undetermined ? say("capture.note.further_capture_host", { undetermined, s: undetermined === 1 ? "" : "s" }) : "") };
   }
 
   /* ==================================================================== *
@@ -2258,7 +2300,7 @@ export class Capture {
       if (observed == null) {
         if (cur) this.#sql.exec(`UPDATE capture_limits SET since_probe = since_probe + 1 WHERE runtime = ?`, runtime);
         return { runtime, observed: cur ? cur.observed : null, recorded: false,
-                 note: "a run that was never refused says the ceiling is at least what it spent, and nothing about where it is" };
+                 note: say("capture.note.run_refused_says") };
       }
       if (!cur) {
         this.#sql.exec(`INSERT INTO capture_limits (runtime, observed, observed_at, first_seen, samples, since_probe) VALUES (?, ?, ?, ?, 1, 0)`,
@@ -2291,7 +2333,7 @@ export class Capture {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
-    const text = boundedSubject(subject) || "a capture whose authority could not be determined";
+    const text = boundedSubject(subject) || say("capture.text.capture_whose_authority");
     const loc = typeof locator === "string" && locator.length <= 2000 ? locator : null;
     const now = at && ISO_INSTANT.test(at) ? at : stampSecond();
     const existing = this.#tx(() => {
@@ -2448,7 +2490,7 @@ export class Capture {
     const TH = this.reachabilityThresholds();
     if (!row)
       return { address_norm: addressNorm, known: false, consecutive_failures: 0, governed_refusals: 0,
-               fallback_eligible: false, thresholds: TH, basis: "no attempt on this address has ever been recorded" };
+               fallback_eligible: false, thresholds: TH, basis: say("capture.basis.attempt_address_ever") };
     const at = now && ISO_INSTANT.test(now) ? now : stampSecond(this.#instant());
     const byCount = row.consecutive_failures >= TH.failures;
     const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
@@ -2466,14 +2508,15 @@ export class Capture {
       fallback_eligible: byCount || byAge,
       thresholds: TH,
       basis: byCount
-        ? `${row.consecutive_failures} consecutive failures produced by the source, threshold ${TH.failures}`
+        ? say("capture.basis.consecutive_failures_produced", { consecutive_failures: row.consecutive_failures, failures: TH.failures })
         : byAge
-          ? `failing since ${row.first_failure_since}, ${Math.floor(staleDays)} days, threshold ${TH.days} with at least ${TH.minForAge} failures`
+          ? say("capture.basis.failing_since_days", { first_failure_since: row.first_failure_since, stale_days: Math.floor(staleDays),
+                                                      days: TH.days, min_for_age: TH.minForAge })
           : row.governed_refusals > 0 && row.consecutive_failures === 0
-            ? `not eligible: ${row.governed_refusals} governed refusal(s) recorded and DELIBERATELY not counted; the source has not failed`
+            ? say("capture.basis.eligible_governed_refusal", { governed_refusals: row.governed_refusals })
             : row.consecutive_failures === 1 && staleDays >= TH.days
-              ? `not eligible: failing for ${Math.floor(staleDays)} days but on ONE failure that was never retried, which is a gap in our monitoring rather than evidence the source is unreachable; retry it`
-              : "not eligible: the threshold is not met",
+              ? say("capture.basis.eligible_failing_days", { stale_days: Math.floor(staleDays) })
+              : say("capture.basis.eligible_threshold_met"),
     };
   }
 
@@ -2538,6 +2581,8 @@ export function captureOps(c, url, body, env) {
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
     /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
     gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
+    /* R95 (T50): one capture's grade, by the caller's stamped viewer as `gradenote` is. */
+    capturegrade: () => c.captureGradeOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
     heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), sort: q("sort"), dir: q("dir"), ...page,
                                          state: q("state"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
@@ -2556,6 +2601,9 @@ export function captureOps(c, url, body, env) {
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */
     unpack: () => c.unpack({ archiveSha: (body && body.archiveSha) || q("archive"), by: q("by"), cls: q("cls"), member: q("member") === "1" }),
+    /* R73 (T50; `acquisition` R46): a member's open captures; `by` is the control plane's stamp, never the body's, and the
+       instant is this instance's clock, never the request's. */
+    opencaptures: () => c.openCaptures({ by: q("by") }),
     archivelist: () => c.archiveList({ archiveSha: q("archive") ?? (body && body.archiveSha), viewer: q("viewer") ?? "",
                                        state: q("state"), ...page }),
   };
