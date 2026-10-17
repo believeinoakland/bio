@@ -58,7 +58,7 @@ test("R8 projectVisibility gives the setting and its history to a caller at FULL
 
 test("R9 projectDirectory: needs a member; the discoverable projects the caller does not see at FULL, each {id, name, request} with its own latest request, in id order; capped, measured one past the cap", async () => {
   const w = await sightWorld();
-  for (const viewer of [`${MACHINE_CLASS_PREFIX}member`, "admin", "junk", null, ""]) {
+  for (const viewer of [`${MACHINE_CLASS_PREFIX}member`, "junk", null, ""]) {
     const r = w.r.projectDirectory({ viewer });
     const row = PROJECT_ROSTER_CHECKS.PROJECT_DIRECTORY_NEEDS_A_MEMBER;
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "PROJECT_DIRECTORY_NEEDS_A_MEMBER",
@@ -117,4 +117,33 @@ test("R9 projectDirectory: needs a member; the discoverable projects the caller 
   const before = snapshot(w);
   w.r.projectDirectory({ viewer: V("cal") });
   assert.equal(snapshot(w), before, "a read writes nothing");
+});
+
+test("R9 (T50; N1129) the founder's viewer, bare admin or member:admin, is a viewer naming a member: ok with the empty list and each request null, never refused; a machine credential and a viewer naming no member still are", async () => {
+  const w = await sightWorld();
+  for (const viewer of ["admin", V("admin")]) {
+    const r = w.r.projectDirectory({ viewer });
+    assert.deepEqual([r.ok, r.projects, r.count, r.truncated, r.reason], [true, [], 0, false, undefined], viewer);
+  }
+  const via = w.ops(`viewer=admin`).projectdirectory();
+  assert.equal(via.ok, true);
+  for (const viewer of [`${MACHINE_CLASS_PREFIX}member`, "junk", null])
+    assert.equal(w.r.projectDirectory({ viewer }).reason, "PROJECT_DIRECTORY_NEEDS_A_MEMBER", String(viewer));
+});
+
+test("R8 (T50; N1124) each history entry's set_by is a handle; the founder's is founderHandle(), null while none, and the string admin appears at no depth", async () => {
+  const w = await sightWorld();
+  w.m.projectVisibilitySet({ projectId: "PROJ-D", setting: "hidden", by: "ann", viewer: V("ann") });
+  const h = w.r.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") }).history;
+  assert.deepEqual(h.map((x) => x.set_by), ["ann", "ann"], "a member's handle");
+  w.sql.exec(`UPDATE members SET handle='anne' WHERE member_id='ann'`);
+  assert.deepEqual(w.r.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") }).history.map((x) => x.set_by), ["anne", "anne"]);
+  w.sql.exec(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES ('PROJ-D','discoverable','admin',NULL,'2026-01-01T00:00:00.000Z')`);
+  const none = w.r.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") });
+  assert.equal(none.history.at(-1).set_by, null, "none held: null");
+  assert.doesNotMatch(JSON.stringify(none), /"admin"/);
+  w.founderHandle("foundress");
+  const held = w.r.projectVisibility({ projectId: "PROJ-D", viewer: V("ann") });
+  assert.equal(held.history.at(-1).set_by, "foundress");
+  assert.doesNotMatch(JSON.stringify(held), /"admin"/);
 });

@@ -42,7 +42,7 @@ test("R1 projectParticipants: a participant (any state), or an administrator at 
   assert.deepEqual(listed().map((x) => [x.handle, x.state]),
     [["ann", "joined"], ["bob", "joined"], ["cal", "invited"], [null, "invited"]], "none held: handle null, after the handles");
   assert.deepEqual(listed().find((x) => x.founder), { handle: null, founder: true, state: "invited", owner: 0, comment: null,
-    created: "t" });
+    created: "t", joined_at: null, owner_since: null });
   assert.deepEqual(listed().filter((x) => "founder" in x).length, 1, "no member carries founder");
   assert.doesNotMatch(JSON.stringify(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" })), /"admin"/, "no `admin` at any depth");
   w.founderHandle("foundress");
@@ -99,4 +99,33 @@ test("R2 every removal an owner makes stays recorded with who removed whom, when
   /* a removed member who has no handle any more is still named by their id */
   w.sql.exec(`INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES ('PROJ-P','gone','ann','x','t')`);
   assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by: "ann" }).removals.at(-1).handle, "gone");
+});
+
+test("R1 (T50; N1124) each participant's row carries joined_at, the instant her row last became joined, and an owner's owner_since: a carried vote's instant, the joined_at of a founding owner; null where not joined, not an owner, or not recorded; created is neither", async () => {
+  const w = await projectWorld();
+  const rows = () => Object.fromEntries(w.r.projectParticipants({ projectId: "PROJ-P", by: "ann" }).participants
+    .map((x) => [x.handle, x]));
+  const early = rows();
+  assert.equal(early.bob.joined_at !== null && /^\d{4}-/.test(early.bob.joined_at), true, "bob joined");
+  assert.equal(early.cal.joined_at, null, "control: an invited member has not joined");
+  assert.equal(early.cal.owner_since, null);
+  assert.equal(early.bob.owner_since, null, "control: a non-owner has no owner_since");
+  assert.equal(early.ann.owner_since, early.ann.joined_at, "the founding owner: her joined_at");
+  w.time.now = Date.parse(early.bob.joined_at) + 60_000;
+  assert.equal(w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") }).ok, true);
+  const now = rows();
+  assert.equal(now.bob.owner_since, new Date(w.time.now).toISOString(), "the decision's instant");
+  assert.ok(now.bob.joined_at < now.bob.owner_since, "joined before made an owner");
+  assert.notEqual(now.bob.created, now.bob.owner_since, "created is neither");
+  assert.equal(now.bob.joined_at, early.bob.joined_at, "joined_at is unmoved");
+  /* a row joined before the instant was recorded is never back-filled */
+  w.sql.exec(`UPDATE project_participants SET joined_at=NULL WHERE project_id='PROJ-P' AND member_id='bob'`);
+  assert.deepEqual([rows().bob.joined_at, rows().bob.owner_since], [null, new Date(w.time.now).toISOString()]);
+  /* a rescue's instant */
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  w.time.now += 60_000;
+  assert.equal(w.r.projectOwnerRescue({ projectId: "PROJ-P", handle: "cal", by: "second", reason: "r", viewer: V("second") }).ok, true);
+  const cal = w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants.find((x) => x.handle === "cal");
+  assert.equal(cal.owner_since, new Date(w.time.now).toISOString());
 });

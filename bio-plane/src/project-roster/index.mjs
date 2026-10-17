@@ -1,10 +1,10 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R30). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R33). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
- * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`); T47 (R26) lists the
+ * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
  * projects a viewer sees at FULL with each one's recorded stage, R27 each one's opener and R28 its members and recent
  * activity. Split from membership for
  * size at T38 (N783; K617, K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's
@@ -23,10 +23,11 @@ import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../membership/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { PROJECT_ROSTER_SCHEMA, PROJECT_ROSTER_TABLES } from "./schema.mjs";
 import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
-export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS, PROJECT_SCOPE_WORDS } from "./checks.mjs";
+export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
 
@@ -172,12 +173,20 @@ export class ProjectRoster {
     const mine = this.m.participation(projectId, by);
     if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
     /* R29: a name given to a reader is a handle, the founder's the one membership holds for her (null while none). */
-    const handleOf = (id) => id === ROOT_ADMIN ? this.#founderHandle() : (this.m.memberFacts(id)?.handle ?? id);
+    const handleOf = (id) => this.#handleOf(id);
     /* The founder, a participant once invited (D54) with no roster row, is listed by `founderHandle()` with
        `founder: true` (R29), never by her id. */
+    /* T50 (R1; N1124): `joined_at`, membership's `since` (R127), and `owner_since`, the instant of the decision that made
+       her an owner (R6; a rescue's), her `joined_at` for a founding owner, `null` for a non-owner and where none was
+       recorded. `created` is neither. */
+    const since = new Map(this.m.joinedParticipants(projectId).map((x) => [x.member, x.since ?? null]));
+    const ownedAt = new Map(this.#rows(`SELECT target, at FROM project_owner_decisions
+                                         WHERE project_id=? AND kind IN ('add','rescue') ORDER BY seq`, projectId)
+      .map((d) => [d.target, d.at]));
     return { ok: true, projectId, participants: this.#roster([projectId]).get(projectId)
       .map((x) => ({ handle: x.handle, ...(x.founder ? { founder: true } : {}), state: x.state, owner: x.owner,
-                     comment: x.comment, created: x.created })),
+                     comment: x.comment, created: x.created, joined_at: since.get(x.member) ?? null,
+                     owner_since: x.owner ? (ownedAt.get(x.member) ?? since.get(x.member) ?? null) : null })),
       /* R6: every ownership decision, with its deciders and reasons, in the order it was carried. */
       ownership: this.#rows(`SELECT kind, target, deciders, reasons, at FROM project_owner_decisions
                               WHERE project_id=? ORDER BY seq`, projectId).map((d) => ({
@@ -194,6 +203,9 @@ export class ProjectRoster {
                               ORDER BY seq`, projectId)
         .map((x) => ({ needs: JSON.parse(x.needs), reason: x.reason, by: handleOf(x.set_by), at: x.at })) };
   }
+
+  /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others by handle. */
+  #handleOf(id) { return id === ROOT_ADMIN ? this.#founderHandle() : (this.m.memberFacts(id)?.handle ?? id); }
 
   /* R29: the founder's own handle, membership's (its R144); null while she holds none, and when membership offers none. */
   #founderHandle() {
@@ -267,7 +279,7 @@ export class ProjectRoster {
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
 
     const owners = this.m.projectOwners(projectId);
-    const now = new Date().toISOString();
+    const now = this.#iso();
     this.sql.exec(
       `INSERT OR REPLACE INTO project_owner_votes (project_id,kind,target,voter,reason,created)
        VALUES (?,'add',?,?,NULL,?)`, projectId, target.member_id, by, now);
@@ -320,7 +332,7 @@ export class ProjectRoster {
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
 
-    const now = new Date().toISOString();
+    const now = this.#iso();
     /* Recorded, and visible to every participant, like every other authority change: the §7.10 vote log with its own
        kind, so the project's ownership history reads in one place. */
     this.sql.exec(
@@ -374,7 +386,7 @@ export class ProjectRoster {
       `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? AND voter=?`,
       projectId, target.member_id, by))
       return { ok: false, reason: "ALREADY_VOTED", by };
-    const now = new Date().toISOString();
+    const now = this.#iso();
     this.sql.exec(
       `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
       projectId, target.member_id, by, why, now);
@@ -410,13 +422,13 @@ export class ProjectRoster {
       const b = this.#bundle(projectId);
       if (!b || !this.m.inSight(projectId, viewer)) return noSuchProject(projectId);
       if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
-      const nameOf = (id) => id === ROOT_ADMIN ? this.#founderHandle() : (this.m.memberFacts(id)?.handle ?? id);
+      const nameOf = (id) => this.#handleOf(id);
       const owners = this.m.projectOwners(projectId);
       const math = Membership.ownerMath(owners.length);
       const proposals = new Map();
       for (const v of this.#rows(
         `SELECT kind, target FROM project_owner_votes WHERE project_id=? AND kind IN ('add','remove')
-          GROUP BY kind, target ORDER BY MIN(created), kind, target`, projectId)) {
+          GROUP BY kind, target ORDER BY MIN(created), MIN(rowid)`, projectId)) {
         const stale = v.kind === "add" ? owners.includes(v.target) : !owners.includes(v.target);
         if (stale) continue;
         const counted = this.#ownerVotes(projectId, v.kind, v.target, owners)
@@ -649,6 +661,92 @@ export class ProjectRoster {
     } catch { return { needed: false, matched: [] }; }
   }
 
+  /* ===== R31, R32 (T50; N933; K3230) — THE PROJECT'S DECLARED STAKE =====
+   *
+   * The team's own words on what it has at stake in this matter beyond its usual stake (`instance-setup` R77), appended
+   * with who set it and when; the latest entry is the stake, `null` clears it. It is read at the act that sends or
+   * publishes, never applied to anything already signed, sent or published. */
+  static STAKE_MAX = 1000;
+
+  /* R31: trimmed text of 1 to 1,000 characters on one line, no control characters; answers it, or undefined. */
+  static #stakeText(stake) {
+    if (typeof stake !== "string") return undefined;
+    const t = stake.trim();
+    return t.length >= 1 && t.length <= ProjectRoster.STAKE_MAX && !/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(t)
+      ? t : undefined;
+  }
+
+  /** R31: SET OR CLEAR THE PROJECT'S STAKE. Sight first (the Terms'), then a machine credential, then position (joined,
+   *  or an administrator at FULL sight), then the text; each refusal writes nothing. */
+  projectStakeSet({ projectId, stake, by, viewer = null } = {}) {
+    { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
+      if (refused) return refused; }
+    const refusal = (code, detail) => ProjectRoster.#scopeRefusal(code, projectId, detail);
+    /* DEC-49 REGION is-project-stake-set */
+    if (typeof by !== "string" || !by || by.startsWith(MACHINE_CLASS_PREFIX) || !/^[A-Za-z0-9._:-]{1,128}$/.test(by))
+      return refusal("MACHINE_CANNOT_SET_STAKE", "a project's stake is a member's own words, set by a signed-in member. "
+        + "Nothing was written.");
+    if (!this.#adminAtFull(projectId, by)) {
+      const denied = this.m.projectAuthority(projectId, `member:${by}`, "joined", "projectstakeset");
+      if (denied) return denied;
+    }
+    const text = stake === null ? null : ProjectRoster.#stakeText(stake);
+    if (text === undefined)
+      return refusal("STAKE_MALFORMED", "the stake is some text of 1 to 1,000 characters on one line, or null to clear "
+        + "it. Nothing was written.");
+    /* END DEC-49 REGION is-project-stake-set */
+    const at = this.#iso();
+    this.sql.exec(`INSERT INTO project_stakes (project_id, stake, set_by, at) VALUES (?,?,?,?)`, projectId, text, by, at);
+    return { ok: true, projectId, stake: text, by: this.#handleOf(by), at };
+  }
+
+  /** R32: THE STAKE, `{stake, set_by, set_at, history}`, history oldest first, each `{stake, set_by, set_at}`; none for
+   *  a project with no record and for an id naming nothing; `"undetermined"` for a record that cannot be read. Asks no
+   *  viewer (its callers gate by sight), writes nothing, never throws. */
+  projectStake(projectId) {
+    const none = { stake: null, set_by: null, set_at: null, history: [] };
+    try {
+      if (typeof projectId !== "string" || !projectId) return none;
+      const rows = this.#rows(`SELECT stake, set_by, at FROM project_stakes WHERE project_id=? ORDER BY seq`, projectId);
+      if (rows.some((r) => r.stake !== null && typeof r.stake !== "string")) return { ...none, stake: "undetermined" };
+      const history = rows.map((r) => ({ stake: r.stake, set_by: this.#handleOf(r.set_by), set_at: r.at }));
+      const last = history.at(-1);
+      return last ? { stake: last.stake, set_by: last.set_by, set_at: last.set_at, history } : none;
+    } catch { return { ...none, stake: "undetermined" }; }
+  }
+
+  /** R32: EVERY PARTICIPANT READS THE HISTORY, as R8 reads visibility: a caller at FULL gets it, any other the absent answer. */
+  projectStakeHistory({ projectId, viewer = null } = {}) {
+    const b = this.#bundle(projectId);
+    if (!b || !this.m.inSight(projectId, viewer)) return noSuchProject(projectId);
+    if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    return { ok: true, projectId, ...this.projectStake(projectId) };
+  }
+
+  /** R33 (T50; N1124): WHETHER THE PROJECT'S OWNERS ARE ALL GONE, to a caller who may be offered R5's rescue: an active
+   *  administrator or the founder, at FULL sight or at an administrator's EXISTENCE of a hidden project. `gone` is
+   *  membership's `rescueRefusal` (R75) null; `since` the later of the owners' last status instants, null when not gone
+   *  or not recorded. Any other caller and a project naming nothing: the absent answer. Writes nothing, never throws. */
+  projectOwnersGone({ projectId, viewer = null } = {}) {
+    try {
+      const b = this.#bundle(projectId);
+      const asker = viewer === ROOT_ADMIN ? ROOT_ADMIN : viewerPredicate(viewer).member;
+      if (!b || !asker || !this.m.isAdministrator(asker)) return noSuchProject(projectId);
+      if (!this.m.inSight(projectId, viewer) && !this.#rescueAtExistence(projectId, viewer)) return noSuchProject(projectId);
+      if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+      const gone = this.m.rescueRefusal(projectId, asker) === null;
+      return { ok: true, projectId, gone, since: gone ? this.#inactiveSince(this.m.projectOwners(projectId)) : null };
+    } catch { return noSuchProject(projectId); }
+  }
+
+  /* R33: the instant the last of `ids` stopped being active: the latest `members.updated`, which every status write
+     stamps. Interim read outside membership's R120 (QUESTION J1): null when any has no row. */
+  #inactiveSince(ids) {
+    const at = ids.map((id) => this.#one(`SELECT updated FROM members WHERE member_id=?`, id)?.updated ?? null);
+    if (!at.length || at.some((x) => typeof x !== "string")) return null;
+    return at.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a));
+  }
+
   /* ===== R8, R9 — THE VISIBILITY HISTORY AND THE DIRECTORY (§7.14) ===== */
 
   /** R8: THE SETTING AND ITS HISTORY, for a caller with FULL sight (a participant, an administrator, the founder:
@@ -659,12 +757,12 @@ export class ProjectRoster {
     const b = this.#bundle(projectId);
     if (!b || !this.m.inSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+    /* T50 (R8; N1124): `set_by` by handle, the founder as R29 names her, never her id `admin`. */
     const history = this.#rows(
-      `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId);
+      `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId)
+      .map((h) => ({ ...h, set_by: this.#handleOf(h.set_by) }));
     return { ok: true, projectId, setting: this.m.visibilityOf(projectId), recorded: history.length > 0, history,
-             note: history.length ? undefined
-               : "no owner has set this project's visibility, so it is HIDDEN: a project with no record reads "
-                 + "hidden (Membership Architecture v2 §7.14)." };
+             note: history.length ? undefined : word("project-roster.note.owner_set_project") };
   }
 
   /** R9: THE DIRECTORY (§7.14 "The directory"): for a member session, the DISCOVERABLE projects it does not see at FULL,
@@ -686,7 +784,8 @@ export class ProjectRoster {
    *  past it, never derived from the page (a full page and a complete answer read alike). The page is the first `limit`
    *  in `bundle_id` order, so a page means the same thing twice. */
   projectDirectory({ viewer = null, limit = null } = {}) {
-    const gate = viewerPredicate(viewer);
+    /* T50 (R9; N1129): the founder's viewer, bare `admin` or `member:admin`, names a member here. */
+    const gate = viewerPredicate(viewer === ROOT_ADMIN ? `member:${ROOT_ADMIN}` : viewer);
     const member = gate.member;
     const refusal = (code, detail) => {
       const row = PROJECT_ROSTER_CHECKS[code];
@@ -781,6 +880,8 @@ export class ProjectRoster {
   static WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
   /* The server's instant in milliseconds: the host's clock when it gave one that reads as a finite number, else now. */
+  #iso() { return new Date(this.#now()).toISOString(); }
+
   #now() {
     let t;
     try { t = Number(this.clock()); } catch { t = NaN; }
@@ -1128,6 +1229,10 @@ export function projectRosterOf(ctx, { record = null, membership = null, clock =
    carries the control plane's stamps (`by`, `viewer`); every parameter is read from it, never from a body. */
 const parseList = (v) => { try { return JSON.parse(v); } catch { return v; } };
 
+/* R31: the query carries `stake` as text; the exact word `null` clears it, a missing parameter is malformed. */
+const stakeParam = (url) => (!url.searchParams.has("stake") ? undefined
+  : url.searchParams.get("stake") === "null" ? null : url.searchParams.get("stake"));
+
 export function projectRosterOps(r, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1142,6 +1247,11 @@ export function projectRosterOps(r, url, body, env) {
     /* T49 (R30): a read; `viewer` is the control plane's stamp. */
     projectownervotes: () => r.projectOwnerVotes({ projectId: q("projectId"), viewer: q("viewer") }),
     /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
+    /* T50 (R31–R33): the stake, its history, and whether a project's owners are gone. */
+    projectstakeset: () => r.projectStakeSet({ projectId: q("projectId"), stake: stakeParam(url), by: q("by"),
+      viewer: q("viewer") }),
+    projectstake: () => r.projectStakeHistory({ projectId: q("projectId"), viewer: q("viewer") }),
+    projectownersgone: () => r.projectOwnersGone({ projectId: q("projectId"), viewer: q("viewer") }),
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
        activity; the instant is the server's, never a query's. */
