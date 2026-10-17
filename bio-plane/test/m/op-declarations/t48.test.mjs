@@ -198,9 +198,14 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
   /* T49 (K3321 (B); PR #36's registry): `owed:founderhandleset K3265` is declared by R71 (membership's founder-only op, the
      founder's set alone); the five owed acts T49 leaves out (N933, DEC-238, DEC-239) have no op yet. */
   const OWED_T49 = ["founderhandleset"];
-  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...LEFT_OUT].sort());
+  /* T50 (R73, R75; K3674, K3471): the five owed acts T49 left out are declared by R73 and the registry's `aliaswithdraw`
+     (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
+     owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
+  const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...OWED_T50, ...LEFT_OUT].sort());
   for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
+  for (const op of OWED_T50) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op) && SESSION_OPS.member.has(op), `${op}: owed and undeclared`);
   for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   assert.deepEqual(owed.filter((a) => /^owed:updatelater /.test(a.op)).map((a) => a.screen).sort(), ["queue", "updates"]);
   for (const op of ["updatestart", "updatelater", "updateskip"]) {
