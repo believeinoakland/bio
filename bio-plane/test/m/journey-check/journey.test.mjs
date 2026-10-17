@@ -52,6 +52,7 @@ test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verif
   assert.deepEqual((await get("/workers/scripts")).result.map((x) => x.id), ["grp"]);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/r2/buckets`, { method: "POST", headers: auth, body: JSON.stringify({ name: "bio-captures-grp" }) }))).status, 200);
   assert.deepEqual((await get("/r2/buckets")).result.buckets, [{ name: "bio-captures-grp" }]);
+  assert.deepEqual((await get("/containers/applications")).result, [], "the account runs no container application");
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/workers/scripts/grp`, { headers: { authorization: "Bearer nope" } }))).status, 403);
   assert.equal((await acct.handle(new Request(`${API}/accounts/${acct.account}/queues`, { headers: auth }))).status, 599);
   assert.deepEqual(acct.unanswered, [`GET ${API}/accounts/${acct.account}/queues`]);

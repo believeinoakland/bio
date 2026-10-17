@@ -89,6 +89,7 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     /* the lists the installer reads to know the copies and parts the account holds (installer R62, R69) */
     if (rest === "/workers/scripts" && m === "GET")
       return ok([...scripts].filter(([, v]) => !v.probe).map(([id, v]) => ({ id, ...(v.meta?.migrations?.new_tag ? { migration_tag: v.meta.migrations.new_tag } : {}) })));
+    if (rest === "/containers/applications" && m === "GET") return ok([]);
     if (rest === "/r2/buckets" && m === "GET") return ok({ buckets: [...buckets].map((n) => ({ name: n })) });
     if ((x = /^\/workers\/scripts\/([^/]+)$/.exec(rest))) {
       if (m === "PUT") return putScript(x[1], req);
