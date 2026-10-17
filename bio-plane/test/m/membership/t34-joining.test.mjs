@@ -3,14 +3,14 @@
    and R111's exemption and hashing. At the interface only: the services, the ops map, and the store read as tables. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { word } from "../../../src/setup-words/index.mjs";
 import { world, V, realWorld } from "./fixture.mjs";
 import { Membership, notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
 const DAY = 86_400_000;
-const WARNING = "Anyone your website lets through can join and see your group's shared work, including people you are "
-  + "looking into. Keep sensitive work in hidden projects.";
+const WARNING = word("membership.door_warning");   /* R151: the words are the key's, never held here */
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
 const rowOf = (r, code) => {
@@ -357,7 +357,7 @@ test("R105 a door's member is always an ordinary member, never proposed, its act
   const viaKey = await w.m.websiteInvite({ key: k.key, cover: "k1", approvedBy: "Pat" });
   await w.m.joinLinkInvite({ link: l.link, cover: "l1", role: "admin" });
   const rows = w.m.memberList({ administer: true }).members;
-  const doorRows = rows.filter((m) => m.door !== "administrator");
+  const doorRows = rows.filter((m) => m.founder !== true && m.door !== "administrator");   /* R147: the founder's row has no door */
   assert.equal(doorRows.length, 2);
   for (const r of doorRows) {
     assert.deepEqual([r.role, r.status], ["member", "invited"]);
@@ -367,7 +367,10 @@ test("R105 a door's member is always an ordinary member, never proposed, its act
   }
   assert.deepEqual(doorRows.map((r) => [r.door, r.approvedBy]).sort(), [["join link", null], ["website", "Pat"]]);
   /* an administrator's roster: every row carries the four; the founder's enrolled members are 'administrator', spent */
-  for (const r of rows) for (const f of ["door", "approvedBy", "expires", "invitation"]) assert.ok(f in r, `${r.member_id} ${f}`);
+  for (const r of rows.filter((m) => m.founder !== true))
+    for (const f of ["door", "approvedBy", "expires", "invitation"]) assert.ok(f in r, `${r.member_id} ${f}`);
+  /* R147: the founder's row holds no door and no invitation (she holds none) */
+  for (const f of ["door", "approvedBy", "expires", "invitation"]) assert.equal(f in rows.find((m) => m.founder === true), false, f);
   assert.deepEqual([roster(w, "ann").door, roster(w, "ann").invitation], ["administrator", "spent"]);
   /* a member's roster carries none of them */
   for (const administer of [undefined, false, "0"])

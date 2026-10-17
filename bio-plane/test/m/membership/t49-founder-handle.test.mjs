@@ -159,8 +159,12 @@ test("R144 the founder's member id stays admin everywhere: R43, R44, R64, R86 an
   assert.equal(w.m.positionalMember("member:admin"), "admin", "and the second spelling names `admin`, not her handle");
   assert.equal(w.m.memberFacts("admin"), null, "R68: she is no members row");
   assert.equal(w.m.memberByHandle("steward"), null, "R119: a handle in `members` only");
-  assert.equal(w.m.memberList({ administer: true }).members.some((r) => r.member_id === "admin" || r.handle === "steward"), false,
-    "R17: the roster lists members; she is not one");
+  /* R147: the roster lists the founder, first, as `admin` in member_id only; her handle is the one she holds */
+  const listed = w.m.memberList({ administer: true }).members;
+  assert.deepEqual([listed[0].member_id, listed[0].handle, listed[0].founder], ["admin", "steward", true]);
+  assert.equal(listed.slice(1).some((r) => r.member_id === "admin" || r.handle === "steward" || r.founder === true), false,
+    "R17: no member row is hers");
+  assert.equal(listed.some((r) => r.handle === "admin"), false, "`admin` is no one's handle");
   /* a project she owns: participation rows keep the id `admin` */
   w.project("PROJ-F");
   assert.equal(w.m.projectClaimOwner({ projectId: "PROJ-F", memberId: "admin" }).ok, true);

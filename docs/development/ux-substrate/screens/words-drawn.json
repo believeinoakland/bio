@@ -6245,11 +6245,83 @@
    "en": "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.",
    "protected": false,
    "note": "DEC-301: the choice's explanation"
+  },
+  {
+   "key": "refusal.BAD_FOR",
+   "en": "Say which question this capture is for: choose one of the project's questions. Nothing was captured.",
+   "protected": false,
+   "note": "DEC-302: acquisition R47: acquire's for is not a question"
+  },
+  {
+   "key": "screen.inbox.alreadyheld",
+   "en": "Already held: {holder} brought in the same file. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "note": "DEC-302: doorbell R13"
+  },
+  {
+   "key": "screen.inbox.alreadyheld.other",
+   "en": "Already held: the same file is already in your team's records. Marked as brought in; nothing new was written.",
+   "protected": false,
+   "note": "DEC-302: doorbell R13: the holder is not one the viewer may see"
+  },
+  {
+   "key": "screen.open-file.safetext",
+   "en": "Your own plain-text file, shown as text. Nothing in it is run. To cite it, cite the original file.",
+   "protected": false,
+   "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "screen.open-file.safetext.cut",
+   "en": "The file is longer than this view shows; the rest is in the original file.",
+   "protected": false,
+   "note": "DEC-302: file-safety R45"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_STAKE",
+   "en": "Only a member sets a project's stake, and this came from the assistant or another automated credential. Sign in to set it. Nothing was written.",
+   "protected": true,
+   "note": "DEC-303: project-roster R31, C-147.9"
+  },
+  {
+   "key": "refusal.STAKE_MALFORMED.project",
+   "en": "This project's stake says, in your own words, only what this matter adds to your team's usual stake: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-303: project-roster R31: a project's stake; refusal.STAKE_MALFORMED stays the team's"
+  },
+  {
+   "key": "timeline.dated.title",
+   "en": "Dated in the documents",
+   "protected": false,
+   "note": "DEC-303: events R53: the Timeline's third list"
+  },
+  {
+   "key": "timeline.dated.tip",
+   "en": "Dates a document states, such as a deadline it sets or the date a letter bears. They are not events on the timeline until you record one from them.",
+   "protected": false,
+   "note": "DEC-303: the list's explanation"
+  },
+  {
+   "key": "findin.cell.uncalculated",
+   "en": "{cell}: a formula the file never calculated, so it has no value here. Open the original in a spreadsheet program to see its result.",
+   "protected": false,
+   "note": "DEC-303: retrieval R83"
+  },
+  {
+   "key": "findin.match.nameinpassage",
+   "en": "Named in this passage",
+   "protected": false,
+   "note": "DEC-303: retrieval R84: correspondence name_in_passage"
+  },
+  {
+   "key": "findin.match.sheet",
+   "en": "Sheet {sheet}, row {row}",
+   "protected": false,
+   "note": "DEC-303: retrieval R83: a sheet match's place"
   }
  ],
  "rewrite": {
   "screen.archive.summary": "Opened when it was captured: {filed} files filed and held for review beside it, {held} already held, {notfiled} not filed, {folders} folders.",
-  "screen.archive.alreadyheld": "Already held · the same file {name} captured directly on {date}; this copy is kept as a second sighting of it",
+  "screen.archive.alreadyheld": "Already held · the same file {name} captured on {date}; this copy is kept as a second sighting of it",
   "screen.archive.folder": "A folder · its {count} files are listed and filed below it",
   "screen.archive.refused.none": "Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.",
   "screen.calculation.counts": "{visited} of {n} visited: {yes} yes, {no} no, {unsure} could not tell",
@@ -6392,6 +6464,8 @@
   "wizard.marks.chip.one": "Show me how",
   "screen.people.add.kind": "A person or an organization?",
   "stake.none": "No stake of its own beyond the team's",
-  "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share."
+  "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
+  "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
+  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view."
  }
 }
