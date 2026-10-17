@@ -63,3 +63,7 @@ Built (committed on job/T50/control-plane): R102, R103 (door-side; the ops answe
 ## J3 · COMPLETE
 
 COMPLETE T50-35. R102–R108 built; R105's bound is 25 s, ACQUIRE_TIMED_OUT (REPORT: its key, N1234). Three module reds all from op-declarations R73 being unmerged (R103 x2, r53-routes R53); they pass under a local declaration. Checks: format, architecture, ownership 0 failures; coverage control-plane 0 failures. Plane (T50-36) notes in my record: groupFields({project}), ctx.aiViewer. Size: test runs 16, module lines 3,905.
+
+## J4 · REPORT
+
+B4 needs no change: the defect PLANE #40 saw is the pre-T50 code on tranche/T50. On job/T50/control-plane (pushed, COMPLETE J3) the ask branch is watchedAsk (index.mjs): an NDJSON answer is piped through a TransformStream that enqueues each chunk first and reads its lines after, and the sign-in drop is awaited only at stream end. Test in t50-door.test.mjs ('R108'): first line through makeFetch at ~0 ms against a 400 ms producer wait; a last-line SIGNIN_TOKEN_REFUSED drops once; a refusal split across chunks is seen. It reaches PLANE when you merge my branch.
