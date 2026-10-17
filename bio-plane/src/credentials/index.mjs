@@ -35,8 +35,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject } from "../membership/index.mjs";
-import * as MembershipExports from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, projectViewer } from "../membership/index.mjs";
 import { aiAccountsOf, aiAccountsOps, AI_ACCOUNT_CHECKS, USE_KINDS } from "../ai-accounts/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
@@ -1312,7 +1311,7 @@ export class Credentials {
   static #viewerOf(principal, project) {
     if (typeof project !== "string" || project === "") return principal;
     try {
-      const v = MembershipExports.projectViewer(principal, project);
+      const v = projectViewer(principal, project);
       return v === undefined || v === null ? null : v;
     } catch { return null; }
   }
