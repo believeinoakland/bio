@@ -34,32 +34,26 @@
  * translations by key from `CONFORMANCE_WORDS` below; C-113.7, .37 and .44 keep theirs (R38 names why each waits);
  * codes, numbers and `where`s unmoved; awaiting T47's promotion stamp (plan T46, accepted red 2). T48-45 (R40; N1023,
  * K3123): C-113.6 `NO_FINDINGS` names R2's three kinds of finding, BOB's draft until the design stream gives
- * `refusal.NO_FINDINGS`, then read by key like R38's rows; code, number and `where` unmoved; awaiting T49's stamp. */
+ * `refusal.NO_FINDINGS`, then read by key like R38's rows; code, number and `where` unmoved; awaiting T49's stamp. T50-76
+ * (R40, DEC-232): the design stream gave `refusal.NO_FINDINGS`; C-113.6 now reads it by key, as do C-113.38–C-113.43,
+ * all seven through `setup-words`' `word` (their copies are gone); awaiting T51's stamp (plan rule 5 (2)). */
+
+import { word } from "../setup-words/index.mjs";
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
-/* R38 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the six
-   rows R38 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
-   extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
-   never holds a copy of its sentence. Not taken in T46 (R38): `refusal.FINDING_NOT_PUBLISHED` (it says "your group has
-   published", while R2 refuses a finding published only by another project, which may be the group's own),
-   `refusal.DETERMINATION_VOID` (it says "a finding under it changed", while R33 is also void when a read cannot
-   complete) and `refusal.CURE_LINKED` (it says "That correction", while R36 refuses any standing link, this cure's or
-   another's). */
-export const CONFORMANCE_WORDS = Object.freeze({
-  "refusal.DETERMINATION_NOT_ADOPTABLE": "Another group's determination is never adopted as yours. Read its findings, "
-    + "and make your own determination from them. Nothing was written.",
-  "refusal.MACHINE_CANNOT_LINK_CURE": "Only a member links a later act as what corrected an earlier one. Nothing was "
-    + "written.",
-  "refusal.CURE_TARGET_NOT_NONCOMPLIANT": "Only an act found noncompliant with this standard can be corrected by a "
-    + "later one, and this one wasn't. Nothing was written.",
-  "refusal.CURE_NOT_COMPLIANT": "The later act must be found compliant with the same standard to count as the "
-    + "correction, and it isn't. Nothing was written.",
-  "refusal.CURE_OTHER_OFFICE": "Only a later act of the same office can correct this one, and this act is another "
-    + "office's. Nothing was written.",
-  "refusal.CURE_NOT_LATER": "The correcting act must come after the act it corrects, and this one doesn't, or their "
-    + "order isn't known. Nothing was written.",
-});
+/* R38 (T46; DEC-194, N913), R40 (T50): the rows whose translations are `words.json`'s `refusal.<CODE>`, each read by
+   key through `setup-words`' `word(key)` (as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are), never
+   a copy of the sentence: C-113.6 NO_FINDINGS (R40, once the design stream gave the key, DEC-232) and C-113.38–C-113.43
+   (R38). The design stream's words: re-worded there, they change here with no code. Not taken (R38): `refusal.
+   FINDING_NOT_PUBLISHED` (it says "your team has published", while R2 refuses a finding published only by another
+   project, which may be the group's own), `refusal.DETERMINATION_VOID` (it says "a finding under it changed", while R33
+   is also void when a read cannot complete) and `refusal.CURE_LINKED` (it says "That correction", while R36 refuses any
+   standing link, this cure's or another's). */
+const TAKEN_CODES = Object.freeze(["NO_FINDINGS", "DETERMINATION_NOT_ADOPTABLE", "MACHINE_CANNOT_LINK_CURE",
+  "CURE_TARGET_NOT_NONCOMPLIANT", "CURE_NOT_COMPLIANT", "CURE_OTHER_OFFICE", "CURE_NOT_LATER"]);
+export const CONFORMANCE_WORDS = Object.freeze(Object.fromEntries(
+  TAKEN_CODES.map((code) => [`refusal.${code}`, word(`refusal.${code}`)])));
 const words = (code) => CONFORMANCE_WORDS[`refusal.${code}`];
 
 export const CONFORMANCE_CHECKS = Object.freeze({
@@ -100,9 +94,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   NO_FINDINGS: {
     check: 'C-113.6', where: at("#pinFindings", "is-finding-named"),
-    translation: 'A determination rests on at least one finding: one your group published, one checked and held for '
-      + 'publication, or another group\'s finding your group has accepted. Name the findings it rests on. Nothing was '
-      + 'written.',
+    translation: words("NO_FINDINGS"),
   },
   FINDING_NOT_PUBLISHED: {
     check: 'C-113.7', where: at("#pinFindings", "is-finding-published"),

@@ -106,3 +106,52 @@ test("R39 R32 (N995): no key named identity, and no edition_date, is taken from 
   w.imports.editions.set(`${IMP}|2`, { identity: "a composed identity", edition_date: "2026-09-03", group_fields: null });
   assert.deepEqual([basis().identity, basis().stake, basis().edition_date], [null, "undetermined", null]);
 });
+
+/* T50-76 (R41; N933; K3230; case-import R25): an accepted finding's `basis` also answers `matter_stake`, mapped as R39
+   maps `stake`: the `group_fields.matter_stake` importedCase answers, as answered. */
+const MATTER = { stake: "the team's members rent in the building", set_by: "member:hayward", set_at: "2026-09-02T00:00:00Z",
+                 source: "declared" };
+
+test("R41 R32: an edition imported with a matter_stake answers it in the accepted finding's basis exactly as case-import answers it, beside the stake and the identity, under the same label", () => {
+  const { w, basis } = acceptedScene();
+  w.imports.editions.set(`${IMP}|2`, { group_fields: { ...FIELDS, matter_stake: MATTER } });
+  const b = basis();
+  assert.deepEqual(b.matter_stake, MATTER);
+  assert.deepEqual([b.stake, b.identity.name, b.identity_label, "identity_says" in b],
+                   [FIELDS.stake, FIELDS.name, SOURCE_DECLARATION_SAYS, false]);
+  /* the same through the other viewer's read: a determination read as another member */
+  assert.deepEqual(basis(V("olive")).matter_stake, MATTER);
+});
+
+test("R41: an edition imported without a matter_stake (before T50, or declared none) answers matter_stake: null, never undetermined, and its stake and identity are unchanged", () => {
+  const { w, basis } = acceptedScene();
+  w.imports.editions.set(`${IMP}|2`, { group_fields: FIELDS });
+  const b = basis();
+  assert.deepEqual([b.matter_stake, b.stake, b.identity.name], [null, FIELDS.stake, FIELDS.name]);
+  assert.equal(Object.hasOwn(b, "matter_stake"), true, "the key is answered, with null");
+  w.imports.editions.set(`${IMP}|2`, { group_fields: { ...FIELDS, matter_stake: null } });
+  assert.equal(basis().matter_stake, null);
+});
+
+test("R41 control: an edition imported with no group_fields (null, unreadable, thrown, another edition) answers identity: null, stake: \"undetermined\" and matter_stake: \"undetermined\" with the sentence", () => {
+  const { w, basis } = acceptedScene();
+  const unrecorded = (b) => assert.deepEqual([b.identity, b.stake, b.matter_stake, b.identity_says],
+                                             [null, "undetermined", "undetermined", SOURCE_FACTS_UNRECORDED]);
+  w.imports.editions.set(`${IMP}|2`, { group_fields: null });
+  unrecorded(basis());
+  w.imports.editions.set(`${IMP}|2`, { edition: 3, group_fields: { ...FIELDS, matter_stake: MATTER } });
+  unrecorded(basis());
+  w.imports.fail = true;
+  unrecorded(basis());
+});
+
+test("R41: a published or checked-and-held finding's basis answers no matter_stake, and a list of determinations (R11) answers no basis and so none", () => {
+  const { w, d, input } = acceptedScene();
+  w.imports.editions.set(`${IMP}|2`, { group_fields: { ...FIELDS, matter_stake: MATTER } });
+  const own = w.c.determine(input());
+  assert.equal(own.ok, true);
+  assert.equal(Object.hasOwn(own.findings[0].basis, "matter_stake"), false, "a published finding is this team's own");
+  const page = w.c.determinationsFor({ project: input().project, viewer: V("pat") });
+  assert.ok(page.items.some((i) => i.id === d.id));
+  assert.ok(!JSON.stringify(page).includes("matter_stake"));
+});

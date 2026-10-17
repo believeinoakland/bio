@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS } from "../../../src/conformance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -52,7 +53,9 @@ test("R27 R3: a determination noncompliant against a standard with no stated end
   assert.match(s.binds_why, /in force on 2026-03-02/);
   /* R3: in force on the act's day, from the record, nothing stated beside it */
   assert.deepEqual([s.in_force, s.in_force_why], ["in_force", null]);
-  assert.match(w.standards.inForceAt({ standard: open, date: D, viewer: V("olive") }).why ?? "", /known in force through 2026-03-02/);
+  const why = w.standards.inForceAt({ standard: open, date: D, viewer: V("olive") }).why ?? "";
+  /* standards' sentence is its key `standard.inforce.known`, never a copy of its words (K3677) */
+  assert.equal(why, word("standard.inforce.known", { through: D, source: rec.source.says, author: rec.by }));
   /* the read answers the same as the act did */
   assert.deepEqual(w.c.determinationRead({ id: d.id, viewer: V("pat") }).standards, d.standards);
   assert.match(w.text(d.id), /Standard · binds Parks Department/);
