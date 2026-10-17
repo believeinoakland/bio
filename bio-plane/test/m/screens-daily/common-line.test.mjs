@@ -78,7 +78,7 @@ test("R21 (DEC-219 (3)): each screen drawn over an empty fixture shows no empty 
     }
     assert.doesNotMatch(text(p), ZERO, `${id} draws a zero`);
   }
-  assert.ok(text(await open("/app/queue", EMPTY)).includes(word("screen.queue.uptodate")), "the queue's designed empty state");
+  assert.ok(text(await open("/app/queue", EMPTY)).includes(word("screen.queue.empty")), "the queue's designed empty state");
   assert.ok(text(await open("/app/projects", EMPTY)).includes(word("projects.empty.sub")), "Projects' designed empty state names the first step");
   const finder = await open("/app/finder/pothole", EMPTY);
   assert.ok(!main(finder).querySelector(".cs-hold"), "finder draws no empty hold tray");

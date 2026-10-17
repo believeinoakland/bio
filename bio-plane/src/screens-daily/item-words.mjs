@@ -11,7 +11,7 @@ export function itemWords() {
   const KEYED = ["question-find", "step-later-found", "step-date-due", "step-reminder", "step-cost-shared", "step-cost-message",
     "milestone-overdue", "milestone-reminder", "project-quiet", "review-comment-left-out", "action-clock-overdue.ours",
     "action-clock-overdue.theirs", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again",
-    "litigation-hold.docket"];
+    "litigation-hold.docket", "project-invitation", "project-request"];
   // The screens a subject opens, by the kind of subject an item names, and by the id's own prefix.
   const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
   const screenOf = function (s) {
@@ -25,6 +25,8 @@ export function itemWords() {
       const m = /^queue\.(.+)\.summary$/.exec(it.word);
       if (m && KEYED.indexOf(m[1]) >= 0) return m[1];
     }
+    // The two project kinds (queue-producers R41, R42) carry no `fills`: their words are filled from the item's subject and basis.
+    if (it.kind === "project-invitation" || it.kind === "project-request") return String(it.kind);
     return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
   };
   const open = function (it) {
@@ -43,7 +45,7 @@ export function itemWords() {
     const screen = screenOf(s);
     if (!screen || s.id === undefined || s.id === null || s.id === "") return "";
     const title = titleOf(it);
-    const since = it.captured || s.captured || (it.age && it.age.since) || "";
+    const since = it.since || it.captured || s.captured || (it.age && it.age.since) || "";
     return cs.ref(screen, String(s.id), title || cs.w("queue.source.untitled", { date: { html: cs.date(String(since)) } }), []);
   };
   const dated = function (cs, fills) {
@@ -53,9 +55,23 @@ export function itemWords() {
   };
   const words = function (cs, it) {
     const k = keyOf(it);
-    const fills = it.fills && typeof it.fills === "object" ? dated(cs, it.fills) : {};
+    let fills = it.fills && typeof it.fills === "object" ? dated(cs, it.fills) : {};
+    if (k === "project-invitation" || k === "project-request") {
+      const s = it.subject || {};
+      const who = k === "project-request" ? s.requester : it.basis && typeof it.basis.inviter === "string" ? it.basis.inviter : null;
+      const pid = s.id !== undefined && s.id !== null ? String(s.id) : "";
+      fills = { project: { html: cs.ref("project", pid, typeof s.name === "string" && s.name.trim() ? s.name : cs.w("queue.source.untitled", { date: { html: cs.date(String((it.age && it.age.since) || "")) } }), []) } };
+      if (who) fills.who = String(who);
+    }
     if (k === "action-clock-overdue.theirs") {
       return { summary: cs.w("action.noreply.title", { date: fills.date === undefined ? "" : fills.date }), detail: cs.w("queue." + k + ".detail", fills) };
+    }
+    // R50 (3): an invitation whose inviter is not named reads `.summary.unnamed`; a request carries her own words.
+    if (k === "project-invitation" && !fills.who) return { summary: cs.w("queue." + k + ".summary.unnamed", fills), detail: cs.w("queue." + k + ".detail", fills) };
+    if (k === "project-request") {
+      // Her comment is `quote: {by, text}` (queue-producers R42), apart from summary and detail; null when she added none.
+      const note = it.quote && typeof it.quote === "object" && typeof it.quote.text === "string" && it.quote.text.trim() ? it.quote.text : "";
+      return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) + (note ? ' <span class="muted">' + cs.esc(note) + "</span>" : "") };
     }
     if (k) return { summary: cs.w("queue." + k + ".summary", fills), detail: cs.w("queue." + k + ".detail", fills) };
     // R28: the subject by its title, beside the producer's words when they say something other than an address.
@@ -66,5 +82,11 @@ export function itemWords() {
     if (!ref) return { summary: bare ? "" : cs.esc(own), detail: detail };
     return { summary: ref + (bare || own === titleOf(it) ? "" : ' <span class="muted">' + cs.esc(own) + "</span>"), detail: detail };
   };
-  return { keyOf: keyOf, words: words, subject: subject, open: open, titleOf: titleOf };
+  // R50 (3): a team's own passed date, `due.ours.passed`, explained by `due.ours.passed_says`: its own, not a law's or an office's.
+  const ours = function (cs, it) {
+    if (!it || String(it.kind) !== "action-clock-overdue.ours" || !it.due) return "";
+    return '<span class="mk-tag" tabindex="0" data-level="1" data-tip="' + cs.w("due.ours.passed_says") + '">'
+      + cs.w("due.ours.passed", { date: { html: cs.date(String(it.due)) } }) + "</span>";
+  };
+  return { keyOf: keyOf, ours: ours, words: words, subject: subject, open: open, titleOf: titleOf };
 }

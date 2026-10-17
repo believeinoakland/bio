@@ -31,7 +31,7 @@ const ITEMS = [
 ];
 const FEED = { items: ITEMS, item_count: 8, truncated: true };
 const PLANE = { queue: ok(FEED) };
-const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500");
+const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500" && r.query.muted === undefined);
 const itemOf = (p, id) => main(p).querySelectorAll(".cs-row").find((r) => r.querySelectorAll("button[data-act]").some((b) => b.dataset.item === id));
 const opsOf = (row) => row.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 const UNTITLED = word("queue.source.untitled", { date: "" }).trim();
@@ -198,12 +198,12 @@ test("R3: forwarding, a project key and a question from a hint, each with its ow
 
 test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal beside its act; an item resolved or muted leaves the list on the re-read", async () => {
   const empty = await open("/app/queue", { queue: ok({ items: [] }) });
-  assert.ok(text(empty).includes(word("screen.queue.uptodate")));
+  assert.ok(text(empty).includes(word("screen.queue.empty")));
   const loading = await open("/app/queue", { queue: { pending: true } });
   assert.ok(main(loading).querySelector('[data-state="loading"]'));
   const failed = await open("/app/queue/kind", { queue: (req) => (req.query.sort ? refused("QUEUE_SORT_UNKNOWN", "That sort is not one the queue knows.") : ok({ items: [] })) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));
-  assert.ok(!text(failed).includes(word("screen.queue.uptodate")));
+  assert.ok(!text(failed).includes(word("screen.queue.empty")));
   let done = false;
   const p = await open("/app/queue", { queue: () => ok({ items: done ? ITEMS.slice(1) : ITEMS }), taskresolve: () => { done = true; return ok({ ok: true, id: "TSK-1", status: "resolved" }); } });
   await press(p, "taskresolve");
@@ -214,16 +214,18 @@ test("R2, R3 (interface-shell R10, R13): the queue's four states; a refusal besi
   assert.ok(itemOf(r, "TSK-1"), "nothing on the screen changes but the refusal");
 });
 
-test("R12 (DEC-201 (13)): with nothing waiting the queue says the member is up to date, one step from Home", async () => {
+test("R41 (U8b; DEC-292 D13): with nothing waiting the queue draws the sentence only: no kinds legend, no sort controls, no way-home button", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [] }) });
-  assert.ok(text(p).includes(word("screen.queue.uptodate")));
-  assert.equal(main(p).querySelector('a[data-nav][href="/app"]').textContent, word("screen.queue.gohome"));
-  // Controls: a queue with items, and a failed read, say neither.
-  for (const plane of [PLANE, { queue: refused("STORE_DID_NOT_ANSWER", null, 502) }]) {
-    const q = await open("/app/queue", plane);
-    assert.ok(!text(q).includes(word("screen.queue.uptodate")));
-    assert.ok(!main(q).querySelector('a[data-nav][href="/app"]'));
-  }
+  assert.ok(text(p).includes(word("screen.queue.empty")));
+  assert.ok(!main(p).querySelector("nav.mk-sortrow"), "no sort controls");
+  assert.ok(!main(p).querySelector(".mk-note"), "no kinds legend");
+  assert.ok(!main(p).querySelector('a[data-nav][href="/app"]'));
+  // Control: a queue with items draws the legend and the controls and not the sentence; a failed read says neither.
+  const q = await open("/app/queue", PLANE);
+  assert.ok(main(q).querySelector("nav.mk-sortrow"));
+  assert.ok(!text(q).includes(word("screen.queue.empty")));
+  const f = await open("/app/queue", { queue: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  assert.ok(!text(f).includes(word("screen.queue.empty")));
 });
 
 // The unsent request (action-producers R25): its subject the action, homed under its project.
