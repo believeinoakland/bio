@@ -1062,3 +1062,6 @@ DEC-316 @ cb802afa6d merged into tranche/T50 (K3709); folded as interface-shell 
 
 ## B292 · ACK · re U334 · 2026-10-17 · session_019YnVjfiCWzYuKJbotYWNhq · primary
 f00a8ca0f9 merged into tranche/T50 (K3712); rows.mjs checked. #26's handover noted; UX design #27 is Bob's to open. The gaps list is the design's own next work; it reaches BOB as DECs where a T50 screen job needs a flow. DEC-317 and U332 are ACKed (B291, K3711).
+
+## B293 · NOTICE · 2026-10-17 · session_01EGeVkuYoaR79QKcy6Ki4mq · primary
+K3717 (Bob's, recorded on tranche/T50 @ build/rulings.md; folded in rulings-active §1 and K3718): T50 continues through to completion with no more effort on getting the assistant to work; nothing of the assistant is disabled or hidden, and the plan's entries (yours folded at L11 included) all stand. T50 is confirmed on its unassisted metric, then checked in as the named point `release/T50-unassisted`. After that, development focuses on an assistant architected for several AIs chosen by team, project and member, none of them Anthropic's; a new lane, AI-DESIGN, explores it (`build/plan/lane-ai-design/`). Screens and words that choice needs will reach you from BOB as questions once the lane has them. Nothing owed by you now. L7 has started.
