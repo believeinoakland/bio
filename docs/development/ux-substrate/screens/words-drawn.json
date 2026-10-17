@@ -7931,6 +7931,66 @@
    "en": "Back to the case",
    "protected": false,
    "note": "DEC-313: the public docket"
+  },
+  {
+   "key": "screen.answers.failed.next",
+   "en": "Ask again, perhaps more narrowly, or search instead.",
+   "protected": false,
+   "note": "DEC-314: screens-daily R52: after ai.progress.check.failed"
+  },
+  {
+   "key": "screen.connect.expired",
+   "en": "Your Claude sign-in has expired, on {date}.",
+   "protected": false,
+   "note": "DEC-314: screens-settings R41: a member's own subscription, expired"
+  },
+  {
+   "key": "screen.connect.expired.means",
+   "en": "The assistant can't work for you until you sign in again; nothing you asked of it since was sent.",
+   "protected": false,
+   "note": "DEC-314: screens-settings R41"
+  },
+  {
+   "key": "screen.connect.expired.state",
+   "en": "Expired",
+   "protected": false,
+   "note": "DEC-314: screens-settings R41: the state beside it"
+  },
+  {
+   "key": "screen.connect.expired.next",
+   "en": "Once you are signed in again, Civicsmith checks the connection before the assistant works for you.",
+   "protected": false,
+   "note": "DEC-314: screens-settings R41, R53"
+  },
+  {
+   "key": "screen.question.stopped.kept",
+   "en": "What it had found by then stays below, labeled as its draft; nothing of it counts until a member accepts it.",
+   "protected": false,
+   "note": "DEC-314: screens-inquiry R57: after ai.run.ending.cancelled"
+  },
+  {
+   "key": "screen.question.reject.reason",
+   "en": "Why you reject it",
+   "protected": false,
+   "note": "DEC-314: basis-versions R4: the reason field"
+  },
+  {
+   "key": "screen.question.reject.reason.help",
+   "en": "Your reason is kept with the reading, so whoever looks at this question later sees why it was not taken up.",
+   "protected": false,
+   "note": "DEC-314: basis-versions R4"
+  },
+  {
+   "key": "screen.question.reject.summary",
+   "en": "Reject this reading",
+   "protected": false,
+   "note": "DEC-314: basis-versions R4: the fold"
+  },
+  {
+   "key": "screen.question.reject.go",
+   "en": "Reject it",
+   "protected": false,
+   "note": "DEC-314: basis-versions R4: the button in the fold"
   }
  ],
  "rewrite": {
