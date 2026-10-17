@@ -146,3 +146,70 @@ test("R26 every key the open-file screen reads is a word of the list, and its th
     assert.ok(says(p, `screen.open-file.risk.${kind}.means`), kind);
   }
 });
+
+/* ---- T50 (T50-30): R36 ---- */
+const MINE = { threatof: ok({ ok: true, threat: "high", reasons: [{ code: "source_not_fetched", translation: "Nothing fetched it: it was handed in." }], scan_hold: null }),
+               originalstate: ok({ may_open: false, path: null, why: "NOT_SCANNED" }), verdictnotes: ok({ ok: true, notes: [] }),
+               captureaccounts: ok({ ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-04T10:00:00Z" }], accounts: [] }) };
+const mine = (plane = {}, o = {}) => open(`/app/open-file/${SHA}`, { plane: { ...BASE, ...MINE, ...plane }, ...o });
+
+test("R36 a file the viewer added opens as her own: High risk with the yours sentence, the next steps, the safe view primary and a deeper check; checks said in words", async () => {
+  const p = await mine({ scanstatus: ok({ queued: 1, overdue: 0, held: 0 }) });
+  assert.ok(main(p).querySelector('[data-risk="high"]'));
+  assert.ok(says(p, "screen.open-file.risk.high"));
+  assert.ok(says(p, "screen.open-file.high.yours"));
+  assert.ok(!says(p, "screen.open-file.risk.high.means"), "the generic line is replaced");
+  assert.ok(says(p, "screen.open-file.next.head"));
+  assert.ok(says(p, "screen.open-file.next.yours"));
+  assert.equal(btn(p, "safeview").getAttribute("data-tone"), "primary", "Read the safe view is primary");
+  assert.ok(btn(p, "deepercheck"));
+  assert.ok(btn(p, "safeview").textContent.includes(word("act.safeview.label.open-file")));
+  assert.ok(says(p, "screen.open-file.check.notyet"), "its checks, in words");
+  const t = text(p);
+  assert.doesNotMatch(t, /not_scanned|NOT_SCANNED|SAFE_VIEW_ONLY/i, "never a scanner's raw state");
+  assert.ok(!t.includes(word("screen.open-file.status.queued", { count: 1 })), "never '1 files waiting'");
+  assert.equal(btn(p, "openoriginal"), null, "the original never opens before a check");
+  assert.deepEqual(rawKeys(p), []);
+  assert.equal(p.byOp("captureaccounts")[0].query.capture, SHA);
+});
+
+test("R36 the safe view of a plain-text file is drawn as text, line by line, nothing in it run or followed; the cut is said when the file was longer", async () => {
+  const p = await mine({ safeview: ok({ ok: true, kind: "text", derived: true, text: "first line of the notice\n<script>alert(1)</script>\n[a link](http://x.example/)", truncated: false }) });
+  await press(p, "safeview");
+  assert.equal(p.byOp("safeview")[0].query.capture, SHA);
+  assert.ok(says(p, "screen.open-file.safetext"));
+  assert.ok(!says(p, "screen.open-file.safetext.cut"));
+  const lines = main(p).querySelectorAll('[data-safetext] p').map((e) => e.textContent);
+  assert.deepEqual(lines, ["first line of the notice", "<script>alert(1)</script>", "[a link](http://x.example/)"], "each line as text");
+  assert.equal(main(p).querySelector("[data-safetext] script"), null, "nothing is run");
+  assert.equal(main(p).querySelector("[data-safetext] a"), null, "nothing is followed");
+  assert.equal(p.files.length, 0, "drawn, not downloaded");
+  const cut = await mine({ safeview: ok({ ok: true, kind: "text", derived: true, text: "a\nb", truncated: true }) });
+  await press(cut, "safeview");
+  assert.ok(says(cut, "screen.open-file.safetext.cut"));
+});
+
+test("R36 a file with no safe view draws refusal.NO_SAFE_VIEW; any other refusal its own words, an answer with none the shell's — never nothing", async () => {
+  const png = await mine({ safeview: refused("NO_SAFE_VIEW", "the owner's words") });
+  await press(png, "safeview");
+  assert.ok(says(png, "refusal.NO_SAFE_VIEW"));
+  assert.ok(!text(png).includes("the owner's words"));
+  const other = await mine({ safeview: refused("SAFE_VIEW_PENDING", "The safe view is being made.") });
+  await press(other, "safeview");
+  assert.match(text(other), /The safe view is being made\./);
+  const none = await mine({ safeview: refused("SOMETHING", "") });
+  await press(none, "safeview");
+  assert.ok(says(none, "shell.unread"));
+});
+
+test("R36 controls: a file the team's Civicsmith fetched, or one another member added, is not worded as the viewer's own", async () => {
+  const fetched = await at("warned", { captureaccounts: ok({ ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-04T10:00:00Z" }], accounts: [] }) });
+  assert.ok(!says(fetched, "screen.open-file.high.yours"), "a fetched file the viewer also captured has active content, not 'added by you'");
+  assert.ok(says(fetched, "screen.open-file.risk.high.means"));
+  const other = await mine({ captureaccounts: ok({ ok: true, captureSha: SHA, actors: [{ actor: "member:rosa", at: "2026-10-04T10:00:00Z" }], accounts: [] }) });
+  assert.ok(!says(other, "screen.open-file.high.yours"));
+  assert.ok(!says(other, "screen.open-file.next.head"));
+  assert.ok(says(other, "screen.open-file.closed", { why: "NOT_SCANNED" }), "the generic line for a file that is not hers");
+  const unknown = await mine({ captureaccounts: refused("STORE_SILENT", "x") });
+  assert.ok(!says(unknown, "screen.open-file.high.yours"), "who added it unknown: not worded as hers");
+});

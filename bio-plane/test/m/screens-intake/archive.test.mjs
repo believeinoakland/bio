@@ -149,3 +149,29 @@ test("R26 every key the archive screen reads is a word of the list, and its stat
   const p = await at();
   for (const [k, v] of [["screen.archive.files"], ["screen.archive.gradeabout", { grade: "B" }], ["screen.archive.facts", { short: "9999…9999" }]]) assert.ok(says(p, k, v), k);
 });
+
+/* ---- T50 (T50-30): R30 ---- */
+const dayWord = (d, m, y) => word("date.daymonthyear", { day: String(d), month: word(`date.month.${m}`), year: String(y) });
+const withHeld = (extra) => at({ archivelist: ok({ ok: true, archive: ARCHIVE, summary: { filed: 3, already_held: 1, not_filed: 1, folders: 1, waiting: 0 },
+  entries: ENTRIES.map((e) => (e.state === "already_held" ? { ...e, ...extra } : e)) }) });
+
+test("R30 an already held entry is drawn whole: the earlier capture's name and when it was captured, with both fills", async () => {
+  const p = await withHeld({ held_at: "2026-09-30T12:00:00Z", held_name: "Resolution 2026-41 (earlier capture)" });
+  assert.ok(says(p, "screen.archive.alreadyheld", { name: "Resolution 2026-41 (earlier capture)", date: dayWord(30, "september", 2026) }), "the earlier capture's own name");
+  /* the entry's own name when no earlier name is stated */
+  const q = await withHeld({ held_at: "2026-09-30T12:00:00Z" });
+  assert.ok(says(q, "screen.archive.alreadyheld", { name: "03_Resolution.pdf", date: dayWord(30, "september", 2026) }));
+});
+
+test("R30 control: an entry stating neither draws no sentence with a blank, only the row's name and its state; one stating only a date draws none either", async () => {
+  for (const extra of [{}, { held_at: null, held_name: null }, { held_at: "2026-09-30T12:00:00Z", name: "" }]) {
+    const p = await withHeld(extra);
+    const t = text(p);
+    assert.ok(!t.includes(word("screen.archive.alreadyheld", { name: "x", date: "y" }).split("x")[0].trim()), JSON.stringify(extra));
+    assert.ok(!/captured on\s*[;.]|the same file\s+captured/.test(t), `no blank fill: ${JSON.stringify(extra)}`);
+    assert.ok(t.includes(word("screen.archive.sum.held", { count: 1 })), `its state is said: ${JSON.stringify(extra)}`);
+    assert.ok(!t.includes("Captured directly"));
+  }
+  const p = await withHeld({});
+  assert.ok(text(p).includes("03_Resolution.pdf"), "the row's name");
+});

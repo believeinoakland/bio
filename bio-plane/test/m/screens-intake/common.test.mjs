@@ -11,7 +11,7 @@ import { pending } from "../interface-shell/harness.mjs";
 import { open, html, text, main, ok, refused, MEMBER, rawKeys, fill, press, word, hasWord } from "./page.mjs";
 
 const SHA = "a".repeat(64);
-const PATHS = { capture: ["/app/capture/address", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"], archive: [`/app/archive/${SHA}`],
+const PATHS = { capture: ["/app/capture/address", "/app/capture/address/INQ-2026-0001-q", "/app/capture/file", "/app/capture/saw"], held: ["/app/held"], archive: [`/app/archive/${SHA}`],
                 "open-file": [`/app/open-file/${SHA}`], inbox: ["/app/inbox", "/app/inbox/KNOCK-2026-10-03-9c1f0a2b"] };
 const VALUES = {
   heldcaptures: { ok: true, held: [{ bundle_id: "INFO-1", title: "T", project: "P", age_days: 1, eligible: false, class: "contested",
@@ -27,8 +27,11 @@ const VALUES = {
                  summary: { filed: 1, already_held: 0, not_filed: 0, folders: 0, waiting: 0 },
                  entries: [{ index: 1, name: "a.pdf", state: "filed", sha256: SHA, bundle: "INFO-2026-0002-a" }] },
   gradenote: { ok: true, note: "A note." },
+  opencaptures: { ok: true, captures: [{ session: "S-1", locator: "https://x.example/a", primary_sha: SHA, started: "2026-10-01T00:00:00Z", outstanding: 2 }], truncated: false },
+  search: { hits: [{ bundle_id: "INQ-2026-0001-q", title: "Q?" }] },
+  captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
 };
-const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] },
+const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
                 archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
 const READS = Object.keys(VALUES);
 
@@ -60,7 +63,7 @@ test("R8 every act names one op OPS holds and a member's session reaches, the re
 
 test("R8 after an act the screen reads again what it changed (every read, or none on a screen with none)", () => {
   for (const s of SCREENS) {
-    const reads = Object.keys(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} }));
+    const reads = Object.keys(s.reads({ subject: s.id === "capture" ? "address" : SHA, me: MEMBER, data: {}, ui: {} }));
     for (const a of s.acts) {
       if (reads.length) assert.equal(a.rereads, undefined, `${s.id} ${a.op} reads everything again`);
       else assert.deepEqual([...(a.rereads || [])], [], `${s.id} ${a.op}`);
@@ -143,7 +146,7 @@ test("R9 no act or read records which member opened which file: every request is
       assert.ok(ours.has(r.op), `request ${r.op} is one of the screens' ops`);
       for (const k of [...Object.keys(r.query).filter((x) => x !== "op"), ...Object.keys(r.body && typeof r.body === "object" ? r.body : {})])
         assert.ok(!["member", "viewer", "by", "author", "who", "opened_by", "session", "token"].includes(k), `${r.op} names ${k}`);
-      if (["threatof", "originalstate", "verdictnotes", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold"].includes(r.op))
+      if (["threatof", "originalstate", "verdictnotes", "captureaccounts", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold"].includes(r.op))
         assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
     }
     /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and

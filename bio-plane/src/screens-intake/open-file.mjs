@@ -12,6 +12,8 @@ function openFileReads(view) {
   return { threat: { op: "threatof", query: q }, state: { op: "originalstate", query: q },
            notes: { op: "verdictnotes", query: q, empty: (v) => !v || !Array.isArray(v.notes) || !v.notes.length },
            findings: { op: "scanfindings", query: { limit: 1000 } },
+           /* R36 (U12b): who captured it, to tell a file the viewer added from one the team's Civicsmith fetched */
+           accounts: { op: "captureaccounts", query: q },
            ...(view.me && view.me.administer === true ? { status: { op: "scanstatus", query: {} } } : {}) };
 }
 
@@ -25,12 +27,21 @@ function renderOpenFile(cs, view) {
   const U = view.ui || {}, D = view.data || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   const refused = U.refused ? `<p class="cs-state" data-state="failed" role="alert">${cs.esc(U.refused)}</p>` : "";
+  /* R36 (DEC-289 (1); file-safety R6): a file the viewer added (her member id is among the capture's actors) and which the
+     team's Civicsmith did not fetch; its checks are said in words and the original never opens before a check */
+  const actors = D.accounts && D.accounts.state === "ok" && D.accounts.value && Array.isArray(D.accounts.value.actors) ? D.accounts.value.actors : [];
+  const addedBy = view.me && view.me.member ? actors.some((x) => x && String(x.actor || "").replace(/^member:/, "") === view.me.member) : false;
   const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row"><span>${cs.w("screen.open-file.note.line",
       { tool: n.tool || "", engine: [n.engine, n.engine_version].filter(Boolean).join(" "), result: n.result || "" })}</span>`
       + (n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "") + "</div>").join("")}</div>`,
-    { empty: "screen.open-file.checks.none" });
+    { empty: addedBy ? "screen.open-file.check.notyet" : "screen.open-file.checks.none" });
   const safeDrawn = (s) => {
     if (!s) return "";
+    /* R36 (file-safety R45): the safe view of a plain-text file is drawn as text, each line a paragraph that wraps within the
+       column; nothing in it is run or followed, the cut said when the file was longer */
+    if (s.kind === "text") return said("screen.open-file.safetext") + `<div class="mk-passage" data-safetext="1">`
+      + String(s.text ?? "").split(/\r\n|\r|\n/).map((l) => `<p>${cs.esc(l)}</p>`).join("") + "</div>"
+      + (s.truncated ? said("screen.open-file.safetext.cut") : "");
     if (s.kind === "data") return (Array.isArray(s.sheets) ? s.sheets : []).map((sh) => `<h3>${cs.w("screen.open-file.safe.sheet", { name: sh.name || "" })}</h3>`
       + `<table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
       + (Array.isArray(sh.cells) ? sh.cells : []).map((c) => `<tr><td>${cs.esc(c.ref ?? "")}</td><td>${cs.esc(c.value ?? "")}</td></tr>`).join("")
@@ -42,12 +53,14 @@ function renderOpenFile(cs, view) {
     const held = !!t.scan_hold || o.why === "SCAN_HOLD";
     const kind = held ? "held" : t.threat === "low" ? "low" : "high";
     const reasons = (Array.isArray(t.reasons) ? t.reasons : []).map((r) => r && (r.translation || r.code)).filter(Boolean);
+    const yours = kind === "high" && addedBy && (Array.isArray(t.reasons) ? t.reasons : []).some((r) => r && r.code === "source_not_fetched");
     let out = `<div class="row"><span class="cs-risk" data-risk="${kind}" tabindex="0">${cs.w(`screen.open-file.risk.${kind}`)}</span>`
-      + `<span class="mk-small">${cs.w(`screen.open-file.risk.${kind}.means`)}</span></div>`
-      + (reasons.length ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "");
+      + `<span class="mk-small">${cs.w(yours ? "screen.open-file.high.yours" : `screen.open-file.risk.${kind}.means`)}</span></div>`
+      + (reasons.length && !yours ? `<p class="mk-small">${cs.w("screen.open-file.why", { reasons: reasons.join("; ") })}</p>` : "");
     const safe = cs.sec("screen.open-file.safe", `<p class="mk-small">${cs.w("screen.open-file.safe.about")} `
       + `${cs.mark("origin", "machine")} ${cs.w("screen.open-file.safe.origin")}. ${cs.w("screen.open-file.safe.cite")}</p>`
-      + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>` + safeDrawn(U.safe));
+      + `<div class="mk-acts">${cs.act("safeview", { tone: kind === "low" ? undefined : "primary" })}</div>`
+      + (U.safeRefused ? `<p class="cs-state" data-state="failed" role="alert">${U.safeRefused.key ? cs.w(U.safeRefused.key) : cs.esc(U.safeRefused.text)}</p>` : "") + safeDrawn(U.safe));
     const deep = U.deeper || t.latest_deeper;
     const deeper = cs.sec("screen.open-file.deeper", `<p class="mk-small">${cs.w("screen.open-file.deeper.about")}</p>`
       + (deep && deep.state ? `<p class="mk-small">${cs.w("screen.open-file.deeper.state", { state: cs.w(`screen.open-file.deeper.${deep.state === "done" ? "done"
@@ -59,6 +72,7 @@ function renderOpenFile(cs, view) {
     } else if (kind === "high") {
       const warned = o.may_open === true && o.path === "warned";
       out += (o.may_open === true && o.path === "deeper" ? `<div class="mk-acts">${cs.act("openoriginal", { tone: "primary", data: { override: "1" } })}</div>` : "")
+        + (yours ? `<h2>${cs.w("screen.open-file.next.head")}</h2><p class="mk-note">${cs.w("screen.open-file.next.yours")}</p>` : "")
         + safe + deeper + cs.sec("screen.open-file.checks", notes)
         + (warned ? cs.sec("screen.open-file.warn", `<div class="cs-dialog"><b>${cs.w("screen.open-file.warn.title")}</b>`
           + `<p class="ends">${cs.w("screen.open-file.warn.ends")}</p>`
@@ -68,7 +82,7 @@ function renderOpenFile(cs, view) {
           + `<div class="mk-acts">${cs.act("openwithwarning")}</div></div>`) : "")
         + refused
         + `<p class="mk-small muted">${cs.w("screen.open-file.warn.notoffered")}</p>`
-        + (o.may_open !== true && o.why ? said("screen.open-file.closed", { why: o.why }) : "");
+        + (o.may_open !== true && o.why && !yours ? said("screen.open-file.closed", { why: o.why }) : "");
     } else {
       const names = [];
       if (D.findings && D.findings.state === "ok")
@@ -86,7 +100,7 @@ function renderOpenFile(cs, view) {
   }), {});
   /* R17: the scanners' counts are drawn only when one is above zero (a failed read is still drawn failed) */
   const idle = D.status && D.status.state === "ok" && D.status.value && !(D.status.value.queued > 0 || D.status.value.overdue > 0 || D.status.value.held > 0);
-  const status = D.status && !idle ? cs.sec("screen.open-file.status", cs.state(D.status, (s) => `<p class="mk-small">${cs.w("screen.open-file.status.line",
+  const status = D.status && !idle && !addedBy ? cs.sec("screen.open-file.status", cs.state(D.status, (s) => `<p class="mk-small">${cs.w("screen.open-file.status.line",
     { parts: [["queued", s.queued], ["overdue", s.overdue], ["held", s.held]].filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.open-file.status.${k}`, { count: n })).join(", ") })}</p>`)) : "";
   return head + body + status;
 }
@@ -123,8 +137,18 @@ async function sendSafeView(view, el, cs) {
   /* a spreadsheet's safe view is a JSON answer (file-safety R11), which the download hands back unsaved */
   const j = (got && got.answer) || {};
   const a = j && typeof j === "object" && j.result && typeof j.result === "object" ? j.result : j;
+  cs.set("safeRefused", null);
   if (a && a.kind === "data" && a.ok !== false) { cs.set("refused", null); cs.set("safe", a); return null; }
-  if (!got || !got.ok) { cs.set("refused", (a && (a.translation || a.reason || a.code)) || ""); return null; }
+  /* R36 (file-safety R45): a plain-text file's safe view is its own characters, drawn as text */
+  if (a && a.kind === "text" && a.ok !== false) { cs.set("refused", null); cs.set("safe", { kind: "text", text: String(a.text ?? ""), truncated: a.truncated === true }); return null; }
+  /* R36: the safe view draws its result or its refusal, never nothing: `NO_SAFE_VIEW` by its key, another refusal in its own
+     words, an answer with none as the shell's "could not be read" */
+  if (!got || !got.ok) {
+    cs.set("safe", null);
+    const code = a && (a.code || a.reason), words = a && (a.translation || "");
+    cs.set("safeRefused", code === "NO_SAFE_VIEW" ? { key: "refusal.NO_SAFE_VIEW" } : words ? { text: words } : { key: "shell.unread" });
+    return null;
+  }
   cs.set("refused", null);
   cs.set("safe", { kind: "pdf" });
   return null;
