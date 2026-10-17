@@ -1865,7 +1865,7 @@ __export(checks_exports, {
 });
 
 // src/setup-words/rows.mjs
-var WORDS_COMMIT = "ca65e133b4";
+var WORDS_COMMIT = "7681b63a0d";
 var WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
   ["weight.reasoned.name", "Reasoned", null, "Reasoned: asks for your reason, which becomes part of the record.", true],
@@ -2974,7 +2974,6 @@ var WORD_ROWS = Object.freeze([
   ["queue.muted.title", "Muted", "DEC-240: queue R14 mute", null, false],
   ["queue.muted.help", "What you have stopped from reaching your queue. Only you see it. Turning one back on brings new items from then on.", "DEC-240", null, false],
   ["queue.muted.kind", "{kind}, in {project}", "DEC-240", null, false],
-  ["queue.muted.case", "Everything from {project}", "DEC-240", null, false],
   ["queue.muted.by", "muted by you, {date}", "DEC-240", null, false],
   ["queue.muted.unmute", "Turn back on", "DEC-240: queuemute with unmute (queue R19, R20)", null, false],
   ["published.check.title", "Check a file you hold", "DEC-240: P1, verify (public-read R1)", null, false],
@@ -7796,10 +7795,6 @@ var WORD_ROWS = Object.freeze([
   ["label.timeprecisions.second", "To the second", "DEC-318: civil-time PRECISIONS", null, false],
   ["label.timeprecisions.edtf", "Partly known: a month, a year, or about", "DEC-318: civil-time PRECISIONS: an EDTF date", null, false],
   ["screen.find-in.valid.zone", "Counted in your team's time zone: {zone}.", "DEC-318: R47: the zone is the team's, civil-time R23", null, false],
-  ["label.personfactkinds.office", "Office", "DEC-318: people: a person fact of office (the line kind)", null, false],
-  ["label.personfactkinds.name", "Name", "DEC-318: people PERSON_FACT_KINDS", null, false],
-  ["label.personfactkinds.birth", "Birth", "DEC-318: people PERSON_FACT_KINDS", null, false],
-  ["label.personfactkinds.death", "Death", "DEC-318: people PERSON_FACT_KINDS", null, false],
   ["refusal.BAD_VALIDITY", "Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.", "DEC-318: R47: recordpersonfact refuses BAD_VALIDITY", null, false],
   ["screen.find-in.flow.help", "Asked only for an actual payment: who paid it, who received it, how much and on what day.", "DEC-318: R48 (3): the flow step's fields", null, false],
   ["findin.fieldneeded", "Fill in {field} first: it is needed to record this. Nothing was recorded.", "DEC-318: R48's control, in capture.fieldneeded's form", null, false],
@@ -7807,7 +7802,6 @@ var WORD_ROWS = Object.freeze([
   ["screen.find-in.sheet", "A match in a sheet", "DEC-318: R48 (8)", null, false],
   ["screen.find-in.bounds.summary", "When the bounds can't be read", "DEC-318: R47: the refusal fold", null, false],
   ["screen.find-in.empty.summary", "A required field left empty", "DEC-318: R48's control: the refusal fold", null, false],
-  ["screen.find-in.recorded.office", "{name} holds the office of {office}, from {from}", "DEC-318: findin.recorded {fact} for an office fact", null, false],
   ["screen.person.facts.undetermined", "{reason} \xB7 from {document}", "DEC-319: R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first", null, false],
   ["screen.person.facts.source", "from {document}", "DEC-319: R32 (2): where an undetermined fact was read", null, false],
   ["screen.person.facts.withdrawn", "Withdrawn facts \xB7 {n}", "DEC-319: R32 (2): withdrawn facts apart", null, false],
@@ -7895,6 +7889,33 @@ var WORD_ROWS = Object.freeze([
   ["case-account.document.left_out.other", "{n} comments were left out. A reviewer left out may file a response in the case's docket.", "DEC-327: the signed body; frozen (K1333)", null, true],
   ["case-account.document.reviewer.unknown", "(a reviewer)", "DEC-327: the signed body; frozen (K1333)", null, true],
   ["case-account.document.date.unknown", "(an unrecorded date)", "DEC-327: the signed body; frozen (K1333)", null, true],
+  ["screen.timeline.datekind.entered", "Entered in the record", "DEC-328: B300 (1): screens-investigate R33 (5), screens-daily R48 (1)", null, false],
+  ["screen.timeline.datekind.hearing", "A hearing", "DEC-328: B300 (1)", null, false],
+  ["screen.timeline.datekind.period_covered", "The period it covers", "DEC-328: B300 (1)", null, false],
+  ["screen.timeline.datekind.edited", "Edited", "DEC-328: B300 (1)", null, false],
+  ["queue.muted.item", "This item only: {item}", "DEC-328: B300 (2): a single muted item (queue R55)", null, false],
+  ["queue.muted.by.undated", "muted by you, before Civicsmith kept the date", "DEC-328: B300 (2): a kind muted before T50, at null", null, false],
+  ["queue.kind.watched-changed", "Things you watch that changed", "DEC-328: B300 (3): queue R57", null, false],
+  ["screen.find-in.fact.office", "That someone holds an office is recorded as a position, from the office's own records, not as a fact here.", "DEC-328: B300 (4): an office is a holds line, not a person fact", null, false],
+  ["screen.find-in.recorded.fact", "{kind} for {name}: {value}", "DEC-328: findin.recorded {fact} for a person fact", null, false],
+  ["installer.remove.progress", "Deleted: {what}.", "DEC-328: B300 (7): the removal, one line per deletion (installer R62-R73)", null, false],
+  ["installer.remove.refused.remains", "The removal stopped before it finished. Still in this account: {remaining}. Nothing more was deleted; remove again to finish.", "DEC-328: B300 (7): the refusal naming what remains", null, false],
+  ["installer.fact.unknown", "Not known: {reason}.", "DEC-328: B300 (7): a fact a silent or older copy does not answer", null, false],
+  ["installer.fact.unknown.silent", "this copy didn't answer", "DEC-328: {reason} for a silent copy", null, false],
+  ["installer.fact.unknown.older", "this copy is older than the release that reports it", "DEC-328: {reason} for an older copy", null, false],
+  ["installer.holdings.projects.one", "1 project", 'DEC-328: {holdings}, joined with ", "', null, false],
+  ["installer.holdings.projects.other", "{n} projects", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.documents.one", "1 document", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.documents.other", "{n} documents", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.published.one", "1 published case", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.published.other", "{n} published cases", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.members.one", "1 member", "DEC-328: {holdings}", null, false],
+  ["installer.holdings.members.other", "{n} members", "DEC-328: {holdings}", null, false],
+  ["installer.update.stopped.noanswer", "Stopped: the new version didn't answer once it was uploaded, so your team's Civicsmith was put back on release {version}. Nothing else changed. Try again; if it stops again, the stop names the step and what to do.", "DEC-328: B300 (7)", null, false],
+  ["installer.update.stopped.foreign", "Stopped: something still running in this account isn't part of this release, so it was left alone. Nothing was changed. Ask whoever added it, or remove it in Cloudflare, then try again.", "DEC-328: B300 (7): an image still running is not the release's", null, false],
+  ["installer.partial.completed", "Finished what an earlier run left half done: {what}.", "DEC-328: B300 (7)", null, false],
+  ["installer.partial.rolledback", "Undid what an earlier run left half done: {what}. Nothing of it remains.", "DEC-328: B300 (7)", null, false],
+  ["queue.muted.unmute.item.help", "Lets this item reach your queue again, from now on.", "DEC-328: B300 (2)", null, false],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false],
@@ -20491,19 +20512,19 @@ function rangeUnitFor(sheetName2, a, b, sheets, grid = null) {
 }
 function splitTopLevel(s, sep) {
   const out = [];
-  let depth = 0, quoted5 = false, cur = "";
+  let depth = 0, quoted6 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted5 && s[i + 1] === "'") {
+      if (quoted6 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted5 = !quoted5;
-    } else if (!quoted5 && ch === "(") depth++;
-    else if (!quoted5 && ch === ")") depth--;
-    else if (!quoted5 && depth === 0 && ch === sep) {
+      quoted6 = !quoted6;
+    } else if (!quoted6 && ch === "(") depth++;
+    else if (!quoted6 && ch === ")") depth--;
+    else if (!quoted6 && depth === 0 && ch === sep) {
       out.push(cur);
       cur = "";
       continue;
@@ -23636,17 +23657,17 @@ function odsStructure(parts) {
 }
 function splitUnquoted(s, sepRe) {
   const out = [];
-  let quoted5 = false, cur = "";
+  let quoted6 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted5 && s[i + 1] === "'") {
+      if (quoted6 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted5 = !quoted5;
-    } else if (!quoted5 && sepRe.test(ch)) {
+      quoted6 = !quoted6;
+    } else if (!quoted6 && sepRe.test(ch)) {
       out.push(cur);
       cur = "";
       continue;
@@ -39158,7 +39179,7 @@ var Membership = class _Membership {
       this.sql.exec(`DELETE FROM handle_check_window WHERE win < ?`, est.win - 1);
       const h = String(handle ?? "").trim();
       const shown3 = h.slice(0, 80);
-      const words24 = (k, names2 = []) => ({ key: k, en: keyed(k, names2) });
+      const words23 = (k, names2 = []) => ({ key: k, en: keyed(k, names2) });
       if (!_Membership.HANDLE_PATTERN.test(h))
         return {
           ok: true,
@@ -39166,7 +39187,7 @@ var Membership = class _Membership {
           state: "not_allowed",
           problems: _Membership.#handleProblems(h),
           suggestion: null,
-          words: words24("handle.characters")
+          words: words23("handle.characters")
         };
       if (this.#heldByAnother(h, self))
         return {
@@ -39175,9 +39196,9 @@ var Membership = class _Membership {
           state: "taken",
           problems: [],
           suggestion: this.#suggestion(h, self),
-          words: words24("handle.taken", ["handle", "group", "suggestion"])
+          words: words23("handle.taken", ["handle", "group", "suggestion"])
         };
-      return { ok: true, handle: shown3, state: "free", problems: [], suggestion: null, words: words24("handle.free", ["handle", "group"]) };
+      return { ok: true, handle: shown3, state: "free", problems: [], suggestion: null, words: words23("handle.free", ["handle", "group"]) };
     } catch {
       return { ..._Membership.#INVITE_MISS };
     }
@@ -45283,12 +45304,12 @@ var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
 var TESTIMONY_MAX_BYTES = 128 * 1024;
 var TESTIMONY_FORMAT = "bio-testimony/1";
-function testimonyBytes({ id, observedAt, words: words24 }) {
+function testimonyBytes({ id, observedAt, words: words23 }) {
   return `${TESTIMONY_FORMAT}
 id: ${id}
 observed_at: ${observedAt}
 
-${words24}`;
+${words23}`;
 }
 function observerRef(testimonyId) {
   return `observer:${testimonyId}`;
@@ -46561,7 +46582,7 @@ var Provenance = class {
     return null;
   }
   /** op=testify — A MEMBER RECORDS A FIRSTHAND OBSERVATION. */
-  testify({ words: words24 = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
+  testify({ words: words23 = null, observedAt = null, title = null, author = null, claimedAuthor = null } = {}) {
     const refusal39 = rowRefusal3(TESTIMONY_CHECKS);
     const who4 = typeof author === "string" ? author.trim() : "";
     if (!who4 || isMachineIdentity(who4))
@@ -46574,7 +46595,7 @@ var Provenance = class {
         "TESTIMONY_AUTHOR_SUPPLIED",
         `the request names an author (${JSON.stringify(claimedAuthor).slice(0, 60)}). The author of an observation is the signed-in member, stamped by the plane, and is never taken from the request`
       );
-    const text8 = typeof words24 === "string" ? words24 : "";
+    const text8 = typeof words23 === "string" ? words23 : "";
     const bytes2 = new TextEncoder().encode(text8);
     const recorded = secondOf(this.#now());
     const obs = typeof observedAt === "string" ? observedAt.trim() : "";
@@ -50919,10 +50940,10 @@ function conflictsAbout(view, key2) {
   const cs = view && Array.isArray(view.conflicts) ? view.conflicts : [];
   return cs.filter((c) => c && typeof c.at === "string" && (c.at === key2 || c.at.startsWith(`${key2}.`) || c.at.startsWith(`${key2}[`)));
 }
-function missing(view, key2, words24) {
+function missing(view, key2, words23) {
   const c = conflictsAbout(view, key2);
-  if (c.length) return no("FACT_WITHHELD", `${words24} is withheld: the active profiles disagree on it (${c.map((x) => x.at).join(", ")})`);
-  return no("FACT_ABSENT", `${words24} is not held by the jurisdiction view`);
+  if (c.length) return no("FACT_WITHHELD", `${words23} is withheld: the active profiles disagree on it (${c.map((x) => x.at).join(", ")})`);
+  return no("FACT_ABSENT", `${words23} is not held by the jurisdiction view`);
 }
 var officeWords = (o) => o === null || o === void 0 ? "every office" : typeof o === "string" ? o : o && o.venue ? `the venue of ${o.venue}` : String(o);
 function namesOffice(entry4, office) {
@@ -64465,7 +64486,7 @@ var Extraction = class _Extraction {
    *  rule and index nothing. No reading, history, reference, name term or text-source row is written, because no
    *  reader ran over the words, and R24's listeners are not called; R62's are, and a throw from one fails the write.
    *  A request naming no bundle or capture writes nothing and answers `written: 0`. */
-  indexTestimony({ bundleId = null, captureSha = null, words: words24 = null, author = null } = {}) {
+  indexTestimony({ bundleId = null, captureSha = null, words: words23 = null, author = null } = {}) {
     if (typeof bundleId !== "string" || !bundleId || typeof captureSha !== "string" || !captureSha)
       return {
         offered: 0,
@@ -64483,7 +64504,7 @@ var Extraction = class _Extraction {
         why: say("extraction.why.authored_observation_indexed")
       };
     return this.core.transact(() => {
-      const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words24, seq: 0 }], null);
+      const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words23, seq: 0 }], null);
       for (const l2 of this.#indexListeners)
         l2.fn({ bundleId, captureSha, indexed, author, container: "document" });
       return indexed;
@@ -77411,7 +77432,7 @@ function compileReporters(data) {
   if (!isObj10(data)) return null;
   if (DATA2.has(data)) return DATA2.get(data);
   const exact2 = /* @__PURE__ */ new Map(), lookup2 = /* @__PURE__ */ new Map();
-  let words24 = 1;
+  let words23 = 1;
   const put2 = (map, k, reporter, edition) => {
     if (!map.has(k)) map.set(k, /* @__PURE__ */ new Map());
     map.get(k).set(`${reporter}\0${edition ?? ""}`, { reporter, edition: typeof edition === "string" ? edition : null });
@@ -77420,7 +77441,7 @@ function compileReporters(data) {
     if (typeof spelling !== "string" || !spelling.trim() || typeof reporter !== "string" || !reporter) return;
     put2(exact2, spelling.trim(), reporter, edition);
     put2(lookup2, spellingKey(spelling), reporter, edition);
-    words24 = Math.max(words24, spelling.trim().replace(/\.(?=\S)/g, ". ").split(/\s+/).length);
+    words23 = Math.max(words23, spelling.trim().replace(/\.(?=\S)/g, ". ").split(/\s+/).length);
   };
   try {
     const variants2 = isObj10(data.VARIANTS) ? data.VARIANTS : Array.isArray(data.REPORTERS) ? null : data;
@@ -77439,7 +77460,7 @@ function compileReporters(data) {
   } catch {
     lookup2.clear();
   }
-  const out = lookup2.size ? { exact: exact2, lookup: lookup2, words: words24 } : null;
+  const out = lookup2.size ? { exact: exact2, lookup: lookup2, words: words23 } : null;
   DATA2.set(data, out);
   return out;
 }
@@ -77451,16 +77472,16 @@ function findCitations(t2, data) {
   const found3 = [];
   VOLUME.lastIndex = 0;
   for (let m; m = VOLUME.exec(t2); ) {
-    const words24 = [];
+    const words23 = [];
     WORD2.lastIndex = m.index + m[0].length;
-    for (let w; words24.length <= data.words && (w = WORD2.exec(t2)); ) words24.push({ start: w.index + w[0].length - w[1].length, end: WORD2.lastIndex, s: w[1] });
-    for (let k = Math.min(data.words, words24.length - 1); k >= 1; k--) {
-      const page2 = PAGE.exec(words24[k].s);
+    for (let w; words23.length <= data.words && (w = WORD2.exec(t2)); ) words23.push({ start: w.index + w[0].length - w[1].length, end: WORD2.lastIndex, s: w[1] });
+    for (let k = Math.min(data.words, words23.length - 1); k >= 1; k--) {
+      const page2 = PAGE.exec(words23[k].s);
       if (!page2) continue;
-      const variant = t2.slice(words24[0].start, words24[k - 1].end);
+      const variant = t2.slice(words23[0].start, words23[k - 1].end);
       const hit = data.exact.get(variant) ?? data.lookup.get(spellingKey(variant));
       if (!hit) continue;
-      let end2 = words24[k].start + page2[0].length;
+      let end2 = words23[k].start + page2[0].length;
       const pin = PIN.exec(t2.slice(end2, end2 + 32));
       const c = { volume: Number(m[0]), variant, page: Number(page2[0]), entries: [...hit.values()], start: m.index };
       if (pin) {
@@ -81165,7 +81186,7 @@ var Themes = class _Themes {
   #targetFor(target, note, viewer) {
     const refusal39 = (code, detail, extra) => _Themes.#refusal(code, detail, extra);
     const t2 = typeof target === "string" ? target.trim() : "";
-    const words24 = typeof note === "string" && note.trim() ? note : null;
+    const words23 = typeof note === "string" && note.trim() ? note : null;
     let kind2 = null, bundleId = null;
     if (BUNDLE_ID_RE.test(t2)) {
       const b = this.k.record.bundleInfo(t2);
@@ -81187,13 +81208,13 @@ var Themes = class _Themes {
         t2 ? `nothing you can see answers to ${t2.slice(0, 80)}: name a document by its record id or a passage by its content id` : `pass target=<a document's record id, or a passage's content id>`,
         { target: t2 || null }
       );
-    if (words24 && bytes(words24) > CAPTURE_TEXT_UNIT_CAP)
+    if (words23 && bytes(words23) > CAPTURE_TEXT_UNIT_CAP)
       return refusal39(
         "THEME_REASON_TOO_LONG",
-        `${bytes(words24)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused rather than cut`,
+        `${bytes(words23)} B of note, over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to. Refused rather than cut`,
         { limit: CAPTURE_TEXT_UNIT_CAP }
       );
-    return { ok: true, target: t2, kind: kind2, bundleId, note: words24 };
+    return { ok: true, target: t2, kind: kind2, bundleId, note: words23 };
   }
   /** R39 (`op=themedeclare`): `declarer` is the control plane's stamp. */
   declare({ name: name3 = null, test: test2 = null, declarer = null, administer = null } = {}) {
@@ -81740,19 +81761,19 @@ var StepSources = class {
         extent_refusal: bad2.code ?? null,
         detail: `the passage is not named by an extent the record can read: ${bad2.detail || bad2.code}`
       };
-    const words24 = typeof basis === "string" ? basis.trim() : "";
-    if (!words24)
+    const words23 = typeof basis === "string" ? basis.trim() : "";
+    if (!words23)
       return {
         ok: false,
         reason: "STEP_SOURCE_NO_BASIS",
         detail: "an attached source carries its basis: what the passage states about this step, in your words"
       };
-    if (words24.length > STEP_SOURCE_BASIS_MAX)
+    if (words23.length > STEP_SOURCE_BASIS_MAX)
       return {
         ok: false,
         reason: "STEP_SOURCE_BASIS_TOO_LONG",
         limit: STEP_SOURCE_BASIS_MAX,
-        detail: `${words24.length} characters of basis, over ${STEP_SOURCE_BASIS_MAX}; refused rather than cut`
+        detail: `${words23.length} characters of basis, over ${STEP_SOURCE_BASIS_MAX}; refused rather than cut`
       };
     const key2 = canonicalExtent2(ext);
     const held3 = this.#one(`SELECT * FROM step_sources WHERE relation_id=? AND capture_sha=? AND extent=? AND withdrawn_at IS NULL
@@ -81773,7 +81794,7 @@ var StepSources = class {
       sha2,
       home2.bundle_id,
       key2,
-      words24,
+      words23,
       who4,
       at49
     );
@@ -83042,15 +83063,15 @@ var Connections = class _Connections {
     const add2 = edges.filter((e2) => !held3.has(e2.to));
     if (!add2.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
-    const quoted5 = (v) => cut3(String(v || "").replace(/["\\\n\r]/g, ""), 400);
+    const quoted6 = (v) => cut3(String(v || "").replace(/["\\\n\r]/g, ""), 400);
     let text8 = spliceReferences2(md.text, add2.map((e2) => ({
       rel: "links_to",
       target: e2.to,
       status: "confirmed",
       asserted_by: "source",
-      address: quoted5(e2.address),
+      address: quoted6(e2.address),
       verdict: LINK_VERDICTS.includes(e2.verdict) ? e2.verdict : "undetermined",
-      note: quoted5(e2.address)
+      note: quoted6(e2.address)
     })));
     if (!text8) return {
       ok: false,
@@ -83151,18 +83172,18 @@ Changes: links_to edges added to ${add2.map((e2) => e2.to).join(", ")}, each the
         reason: "CONNECTION_ASSERT_NOT_A_MEMBER",
         detail: who4 ? `'${cut3(who4, 60)}' is a machine credential; asserting a connection is a member's act, in their name` : "this act names no member; the plane stamps the member from the credential that asked"
       };
-    const words24 = typeof basis === "string" ? basis.trim() : "";
-    if (!words24) return {
+    const words23 = typeof basis === "string" ? basis.trim() : "";
+    if (!words23) return {
       ok: false,
       reason: "CONNECTION_ASSERT_NO_BASIS",
       detail: "a member's connection carries its basis: why these two documents are connected"
     };
-    if (words24.length > ASSERT_BASIS_MAX)
+    if (words23.length > ASSERT_BASIS_MAX)
       return {
         ok: false,
         reason: "CONNECTION_ASSERT_BASIS_TOO_LONG",
         limit: ASSERT_BASIS_MAX,
-        detail: `${words24.length} characters of basis, over ${ASSERT_BASIS_MAX}; refused rather than cut`
+        detail: `${words23.length} characters of basis, over ${ASSERT_BASIS_MAX}; refused rather than cut`
       };
     const x = str3(a), y = str3(b);
     for (const id of [x, y])
@@ -83200,7 +83221,7 @@ Changes: links_to edges added to ${add2.map((e2) => e2.to).join(", ")}, each the
       hi,
       who4,
       who4,
-      words24,
+      words23,
       at49
     );
     const row12 = this.#one(
@@ -85387,10 +85408,10 @@ var ObservationLog = class _ObservationLog {
     return { ok: true, row: row12 };
   }
   /** R14 — op=lead, THE ACT. `author` is the control plane's stamp and never the caller's. */
-  lead({ words: words24 = null, locator = null, author = null } = {}) {
+  lead({ words: words23 = null, locator = null, author = null } = {}) {
     const refusal39 = _ObservationLog.leadRefusal;
     const who4 = typeof author === "string" ? author.trim() : "";
-    const typed = typeof words24 === "string" ? words24 : "";
+    const typed = typeof words23 === "string" ? words23 : "";
     const where = typeof locator === "string" && locator.trim() ? locator : null;
     const bytes2 = (s) => new TextEncoder().encode(s).length;
     if (!who4 || isMachineIdentity(who4))
@@ -86876,10 +86897,10 @@ function bareAtom(atom) {
   if (atom) atom.bare = true;
   return atom;
 }
-function textAtom(column, value, quoted5, ctx) {
+function textAtom(column, value, quoted6, ctx) {
   let v = value;
   let prefix = false;
-  if (!quoted5 && v.endsWith("*") && v.length > 1) {
+  if (!quoted6 && v.endsWith("*") && v.length > 1) {
     prefix = true;
     v = v.slice(0, -1);
   }
@@ -87043,9 +87064,9 @@ function available(name3, f17, ctx) {
 }
 function closedWord(name3, f17, raw, ctx) {
   if (raw === "" || raw === "*") return true;
-  const words24 = MONEY_WORDS[f17.words].map((w) => String(w).toLowerCase());
-  if (words24.includes(raw.toLowerCase())) return true;
-  drop(ctx, `${name3}: ${JSON.stringify(raw)} is not one of money's ${f17.words} (${words24.join(", ")}); dropped`);
+  const words23 = MONEY_WORDS[f17.words].map((w) => String(w).toLowerCase());
+  if (words23.includes(raw.toLowerCase())) return true;
+  drop(ctx, `${name3}: ${JSON.stringify(raw)} is not one of money's ${f17.words} (${words23.join(", ")}); dropped`);
   return false;
 }
 var span2 = (col, lo, hi) => ({ op: "meta", col, cmp: "span", ops: [lo[0], hi[0]], value: [lo[1], hi[1]] });
@@ -88975,7 +88996,7 @@ function facetOf(k, eventId3, viewer, view) {
     const text8 = c.content_id ? k.passageText(c.content_id) : null;
     return { capture_sha: c.capture_sha, extent: json2(c.extent), words: typeof text8 === "string" && text8.trim() ? cut4(text8.trim()) : null };
   };
-  const quoted5 = (c) => c.withheld ? word("events.text.document_see") : c.words ? `\u201C${c.words}\u201D` : word("events.text.cited_passage_words");
+  const quoted6 = (c) => c.withheld ? word("events.text.document_see") : c.words ? `\u201C${c.words}\u201D` : word("events.text.cited_passage_words");
   const parts = (view && view.participants || []).filter((p3) => !p3.superseded);
   const who4 = (role) => {
     const p3 = parts.find((x) => x.role === role);
@@ -89004,7 +89025,7 @@ function facetOf(k, eventId3, viewer, view) {
   } else {
     const reason2 = u.reason_stated ? cite(u.reason) : "none";
     const outcome = { value: u.outcome, extent: cite(u.outcome_cite) };
-    const why2 = reason2 === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted5(reason2)}`;
+    const why2 = reason2 === "none" ? word("events.text.reason_stated") : `stated reason: ${quoted6(reason2)}`;
     Object.assign(facet, { stated_reason: reason2, outcome });
     if (u.kind === "discretion") facet.says = word("events.says.discretion_used", { by, date, why: why2 });
     else {
@@ -89015,8 +89036,8 @@ function facetOf(k, eventId3, viewer, view) {
         by,
         date,
         why: why2,
-        scope: quoted5(scope),
-        conditions: conditions.length ? `conditions: ${conditions.map(quoted5).join("; ")}` : word("events.text.conditions_stated"),
+        scope: quoted6(scope),
+        conditions: conditions.length ? `conditions: ${conditions.map(quoted6).join("; ")}` : word("events.text.conditions_stated"),
         expiry: expiry ? `expires ${expiry.value}` : word("events.text.expiry_stated")
       });
     }
@@ -97616,9 +97637,9 @@ var keyed2 = (key2, vars) => hasWord(key2) ? word(key2, vars) : null;
 function ownerWords(kind2, issuerLabel) {
   return kind2 === "policy" && issuerLabel ? word("standard.policy.owner", { issuer: issuerLabel }) : null;
 }
-function forceWords({ force, holderLabel = null, criteria: criteria2 = null, words: words24 = null }) {
+function forceWords({ force, holderLabel = null, criteria: criteria2 = null, words: words23 = null }) {
   const head = force === "discretionary" ? word("label.standardforce.discretionary", { holder: holderLabel || word("standard.discretion.holder.none") }) : keyed2(`label.standardforce.${force}`);
-  const out = { force: head, beside: words24 };
+  const out = { force: head, beside: words23 };
   if (force === "discretionary")
     out.criteria = word(criteria2 === "none" ? "label.standardcriteria.none" : "label.standardcriteria.stated");
   return out;
@@ -99925,7 +99946,7 @@ var Standards = class {
       newer: this.content.passageNotice({ contentId, viewer })
     }));
     const withheld = (a.access === "reading_room" || a.access === "paywalled") && !isMemberViewer(viewer);
-    const quoted5 = a.requires.map((contentId) => ({
+    const quoted6 = a.requires.map((contentId) => ({
       content_id: contentId,
       text: withheld ? null : this.content.passageText(contentId)
     }));
@@ -99934,7 +99955,7 @@ var Standards = class {
       ok: true,
       ...a,
       texts,
-      requires_quoted: quoted5,
+      requires_quoted: quoted6,
       in_force_through: through,
       ...withheld ? { text_withheld: textWithheldWords() } : {},
       says: { ...a.says, note: noteWords() }
@@ -100582,14 +100603,14 @@ var Standards = class {
   #forceAnswer(f17, viewer) {
     const w = this.#one(`SELECT * FROM standard_force_withdrawals WHERE force_id=?`, f17.force_id);
     const holder3 = f17.holder ? this.#entity(f17.holder, viewer) : null;
-    let words24 = null;
+    let words23 = null;
     try {
-      words24 = this.content.passageText(f17.citation);
+      words23 = this.content.passageText(f17.citation);
     } catch {
-      words24 = null;
+      words23 = null;
     }
     const row12 = this.#row(f17.standard_id);
-    if (row12 && (row12.access === "reading_room" || row12.access === "paywalled") && !isMemberViewer(viewer)) words24 = null;
+    if (row12 && (row12.access === "reading_room" || row12.access === "paywalled") && !isMemberViewer(viewer)) words23 = null;
     return {
       id: f17.force_id,
       standard: f17.standard_id,
@@ -100604,7 +100625,7 @@ var Standards = class {
       at: f17.at,
       proposal: f17.proposal_id ?? null,
       withdrawn: w ? { by: w.withdrawn_by, at: w.withdrawn_at, reason: w.reason } : null,
-      says: forceWords({ force: f17.force, holderLabel: holder3 ? holder3.label : f17.holder, criteria: f17.criteria, words: words24 })
+      says: forceWords({ force: f17.force, holderLabel: holder3 ? holder3.label : f17.holder, criteria: f17.criteria, words: words23 })
     };
   }
   /** R35: a proposed force, stored apart, labelled through `proposalLabel(proposer, "standard")`, R9's way; never a
@@ -106997,13 +107018,13 @@ var Duties = class _Duties {
     const m = this.content.mint({ bundleId: home2.bundleId, captureSha: sha2, extent: c.extent, mintedBy: str9(by) });
     if (!m || m.ok === false || !said7(m.content_id))
       return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: m || null };
-    let words24 = null;
+    let words23 = null;
     try {
-      words24 = this.content.passageText(m.content_id);
+      words23 = this.content.passageText(m.content_id);
     } catch {
-      words24 = null;
+      words23 = null;
     }
-    return { ok: true, words: words24, cite: { capture_sha: sha2, extent: clone4(c.extent), content_id: m.content_id } };
+    return { ok: true, words: words23, cite: { capture_sha: sha2, extent: clone4(c.extent), content_id: m.content_id } };
   }
   /** R30 (T45; Actions D7; v0.2 rule 16): a proposal (R2) of one duty from a body's reply (`promise`) or a report
    *  (`required_response`), arising in its held capture (R4), quoting an extent of it word for word. A promise is the
@@ -108278,13 +108299,13 @@ var MONTHS3 = ["january", "february", "march", "april", "may", "june", "july", "
 var MONTH_RE = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
 var monthOf = (w) => MONTHS3.findIndex((m) => m.startsWith(w.toLowerCase().slice(0, 3))) + 1;
 var pad2 = (n2) => String(n2).padStart(2, "0");
-function reviewDay(words24) {
-  if (typeof words24 !== "string" || !words24.trim()) return { ok: false, why: "the passage holds no words to read a date from" };
+function reviewDay(words23) {
+  if (typeof words23 !== "string" || !words23.trim()) return { ok: false, why: "the passage holds no words to read a date from" };
   const found3 = /* @__PURE__ */ new Set();
-  for (const m of words24.matchAll(/(?<![\d-])(\d{4})-(\d{2})-(\d{2})(?![\d-])/g)) found3.add(`${m[1]}-${m[2]}-${m[3]}`);
-  for (const m of words24.matchAll(new RegExp(`\\b${MONTH_RE}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`, "gi")))
+  for (const m of words23.matchAll(/(?<![\d-])(\d{4})-(\d{2})-(\d{2})(?![\d-])/g)) found3.add(`${m[1]}-${m[2]}-${m[3]}`);
+  for (const m of words23.matchAll(new RegExp(`\\b${MONTH_RE}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`, "gi")))
     found3.add(`${m[3]}-${pad2(monthOf(m[1]))}-${pad2(Number(m[2]))}`);
-  for (const m of words24.matchAll(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+${MONTH_RE}\\.?,?\\s+(\\d{4})\\b`, "gi")))
+  for (const m of words23.matchAll(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+${MONTH_RE}\\.?,?\\s+(\\d{4})\\b`, "gi")))
     found3.add(`${m[3]}-${pad2(monthOf(m[2]))}-${pad2(Number(m[1]))}`);
   const dates = [...found3];
   if (dates.length === 0) return { ok: false, why: "the words state no whole calendar date (a day, its month and its year)" };
@@ -108301,8 +108322,8 @@ var CYCLE_WORDS = [
   [/\bquarterly\b/i, "MONTHLY", 3],
   [/\bmonthly\b/i, "MONTHLY", 1]
 ];
-function reviewCycle(words24) {
-  if (typeof words24 !== "string" || !words24.trim()) return { ok: false, why: "the passage holds no words to read a cycle from" };
+function reviewCycle(words23) {
+  if (typeof words23 !== "string" || !words23.trim()) return { ok: false, why: "the passage holds no words to read a cycle from" };
   const found3 = /* @__PURE__ */ new Set();
   const num3 = `(\\d{1,3}|${Object.keys(NUMBER_WORDS).join("|")})`;
   const add2 = (n2, unit) => {
@@ -108314,10 +108335,10 @@ function reviewCycle(words24) {
     else if (u.startsWith("week")) found3.add(`FREQ=WEEKLY;INTERVAL=${k}`);
     else found3.add(k % 7 === 0 ? `FREQ=WEEKLY;INTERVAL=${k / 7}` : `DAYS:${k}`);
   };
-  for (const m of words24.matchAll(new RegExp(`\\b(?:every|each)\\s+${num3}\\s+(years?|months?|weeks?|days?)\\b`, "gi"))) add2(m[1], m[2]);
-  for (const m of words24.matchAll(new RegExp(`\\b(?:every|each)\\s+(year|month|week)\\b`, "gi"))) add2(1, m[1]);
-  for (const m of words24.matchAll(new RegExp(`\\b${num3}[- ](year|month|week|day)\\s+(?:review\\s+|revision\\s+)?(?:cycle|interval|period)`, "gi"))) add2(m[1], m[2]);
-  for (const [re, freq, n2] of CYCLE_WORDS) if (re.test(words24)) found3.add(`FREQ=${freq};INTERVAL=${n2}`);
+  for (const m of words23.matchAll(new RegExp(`\\b(?:every|each)\\s+${num3}\\s+(years?|months?|weeks?|days?)\\b`, "gi"))) add2(m[1], m[2]);
+  for (const m of words23.matchAll(new RegExp(`\\b(?:every|each)\\s+(year|month|week)\\b`, "gi"))) add2(1, m[1]);
+  for (const m of words23.matchAll(new RegExp(`\\b${num3}[- ](year|month|week|day)\\s+(?:review\\s+|revision\\s+)?(?:cycle|interval|period)`, "gi"))) add2(m[1], m[2]);
+  for (const [re, freq, n2] of CYCLE_WORDS) if (re.test(words23)) found3.add(`FREQ=${freq};INTERVAL=${n2}`);
   const all = [...found3];
   if (all.length === 0) return { ok: false, why: "the words state no revision cycle in whole years, months, weeks or days" };
   if (all.length > 1) return { ok: false, why: "the words state more than one revision cycle" };
@@ -110302,10 +110323,10 @@ var People = class _People {
   #directoryLook(e2, today2, viewer) {
     const ent = this.#entity(e2.entity_id) || {};
     const name3 = ent.label ?? null;
-    const words24 = [name3, ...Array.isArray(ent.aliases) ? ent.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : []].filter(filled7).map((s) => s.trim().replace(/\s+/g, " ").toLowerCase());
+    const words23 = [name3, ...Array.isArray(ent.aliases) ? ent.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : []].filter(filled7).map((s) => s.trim().replace(/\s+/g, " ").toLowerCase());
     if (e2.kind !== "person") {
       const noteBy = filled7(ent.declared_by) ? ent.declared_by : null;
-      return { name: name3, words: words24, posts: [], today: {
+      return { name: name3, words: words23, posts: [], today: {
         kind: e2.kind,
         sector: ent.sector ?? null,
         note: ent.note ?? null,
@@ -110330,8 +110351,8 @@ var People = class _People {
         }
       posts.push({ line_id: lineId2(l2), title: _People.#title(l2), capacity: l2.capacity ?? null, office, body });
     }
-    for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled7(s)) words24.push(s.trim().replace(/\s+/g, " ").toLowerCase());
-    return { name: name3, words: words24, posts, today: { posts } };
+    for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled7(s)) words23.push(s.trim().replace(/\s+/g, " ").toLowerCase());
+    return { name: name3, words: words23, posts, today: { posts } };
   }
   /* ===================================================================== *
    * STAFFING (R18, R19)
@@ -113762,10 +113783,10 @@ var Retrieval = class _Retrieval {
     const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
     if (unknown.length)
       return no9("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
-    const words24 = typeof term === "string" ? term.trim() : "";
-    if (wanted.includes("term") && !words24) return no9("NO_TERM", "the kind term finds a name or term as written, and none was given");
-    if (words24.length > FIND_TERM_MAX)
-      return no9("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words24.length });
+    const words23 = typeof term === "string" ? term.trim() : "";
+    if (wanted.includes("term") && !words23) return no9("NO_TERM", "the kind term finds a name or term as written, and none was given");
+    if (words23.length > FIND_TERM_MAX)
+      return no9("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words23.length });
     const n2 = Number(limit);
     const cap = limit == null || limit === "" || !Number.isFinite(n2) ? FIND_ITEMS_DEFAULT : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n2)));
     const after2 = typeof cursor === "string" && cursor ? cursor : null;
@@ -113775,7 +113796,7 @@ var Retrieval = class _Retrieval {
     const found3 = this.finder.find({
       captures: page2,
       kinds: wanted,
-      term: words24,
+      term: words23,
       limit: cap,
       viewer,
       whole: after2 === null && next === null
@@ -123860,14 +123881,14 @@ var Inquiry = class _Inquiry {
     try {
       if (typeof subject === "string" && subject.trim()) ids.add(subject.trim());
       for (const m of (typeof text8 === "string" ? text8 : "").matchAll(ENTITY_ID_IN_TEXT)) ids.add(m[0]);
-      const words24 = (typeof text8 === "string" ? text8 : "").normalize("NFC").split(/\s+/).filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
-      const trimmed2 = words24.map((x) => x.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""));
+      const words23 = (typeof text8 === "string" ? text8 : "").normalize("NFC").split(/\s+/).filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      const trimmed2 = words23.map((x) => x.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""));
       const ents = this.entities;
       const tried = /* @__PURE__ */ new Set();
       if (ents && typeof ents.entitiesByAlias === "function")
-        for (let i = 0; i < words24.length; i++)
-          for (let n2 = 1; n2 <= PERSON_NAME_WORDS_MAX && i + n2 <= words24.length; n2++)
-            for (const run2 of /* @__PURE__ */ new Set([trimmed2.slice(i, i + n2).filter(Boolean).join(" "), words24.slice(i, i + n2).join(" ")])) {
+        for (let i = 0; i < words23.length; i++)
+          for (let n2 = 1; n2 <= PERSON_NAME_WORDS_MAX && i + n2 <= words23.length; n2++)
+            for (const run2 of /* @__PURE__ */ new Set([trimmed2.slice(i, i + n2).filter(Boolean).join(" "), words23.slice(i, i + n2).join(" ")])) {
               const key2 = run2.toLowerCase();
               if (!run2 || tried.has(key2)) continue;
               tried.add(key2);
@@ -133519,8 +133540,8 @@ function entryFieldFindings(entries, i, facts) {
     const outcome = typeof e2.outcome === "string" ? e2.outcome.trim() : "";
     if (e2.direction !== "received" || !outcome)
       out.push(coded(`${at49} carries the office's status with no outcome: the office's own wording is quoted beside a received entry's outcome, never in its place (R22)`, "OFFICE_STATUS_WITHOUT_OUTCOME", ["record the outcome, then quote the office's status beside it"]));
-    const words24 = e2.office_words;
-    if (!writable(words24, FIELD_TEXT_MAX))
+    const words23 = e2.office_words;
+    if (!writable(words23, FIELD_TEXT_MAX))
       out.push(coded(
         `${at49}.office_words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters with no quotation mark, backslash or line break (R22)`,
         "OFFICE_STATUS_WITHOUT_OUTCOME",
@@ -133955,32 +133976,32 @@ var RECORDS_LAW_FENCE_CHECKS = {
     translation: "Which stages a records request asks the records for is a statement a member makes and answers for. The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself."
   }
 };
-var ACTION_GRAMMAR_WORDS = Object.freeze({
-  "refusal.DETERMINATION_NOT_NONCOMPLIANT": "An action that claims a breach rests on a determination that the act broke a standard, and this determination found no such breach. Nothing was written.",
-  "refusal.OVERRIDE_NO_GROUND": "Acting before a determination needs one of two grounds: a legal deadline would pass first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
-  "refusal.COPIED_IS_ADDRESSEE": "The office the action is addressed to can't also be copied. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organizations acting with your group. Nothing was written.",
-  "refusal.PARTNERS_REFUSED": "Each partner is a named organization, listed once. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PRESS_TERMS": "Only a member sets the terms of talking to the press. Nothing was written.",
-  "refusal.PRESS_TERMS_NOT_PRESS": "Press terms apply only to an action with the press. Nothing was written.",
-  "refusal.PRESS_TERMS_REFUSED": "Press terms are on the record, on background or off the record, with any embargo as a real time and a note of at most 500 characters. Nothing was written.",
-  "refusal.RECEIPT_NOT_ON_SENT": "Only something sent can be received or served. Nothing was written.",
-  "refusal.OFFICE_STATUS_UNKNOWN": "That isn't one of the statuses this kind of reply takes in your places' rules. Choose one of them. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_REPLY_OWED": "Only a member says that no reply is owed, with a reason. Nothing was written.",
-  "refusal.NO_REPLY_OWED": "This action owes no reply, so a missing reply isn't recorded on it. Nothing was written.",
-  "refusal.FOUND_ELSEWHERE_NEEDS_CAPTURE": "A reply found elsewhere is captured first, so others can read it. Capture it, then record it. Nothing was written.",
-  "refusal.STAGE_NOT_IN_LAW": "This records law has no such stage. Choose one of the stages it has. Nothing was written.",
-  "refusal.FOLLOWS_ACTION_REWRITTEN": "Which action this one follows is set once, when it starts. Nothing was written.",
-  "refusal.FOLLOWS_ACTION_SELF": "An action can't follow itself. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_SCOPE": "Only a member makes an action confidential or not. Nothing was written.",
-  "refusal.SCOPE_NO_REASON": "Say why. Your reason is kept with the change. Nothing was written.",
-  "refusal.SCOPE_UNCHANGED": "The action is already that. Nothing was changed.",
-  "refusal.MACHINE_CANNOT_RECORD_PROMISE": "Only a member records a promise your group made to a person. Nothing was written.",
-  "refusal.PROMISE_REFUSED": "A promise is an embargo, anonymity or another promise, said in at most 500 characters; ending one names a promise that stands. Nothing was written.",
-  "refusal.FOUND_ELSEWHERE_REFUSED": "A reply found elsewhere was found in the press, a report, a decision, a public statement or elsewhere, with a note of at most 500 characters. Nothing was written.",
-  "refusal.SPEAKER_REFUSED": "Only a member who sent or spoke can be named as the speaker. Nothing was written.",
-  "refusal.FOLLOWS_ACTION_REFUSED": "Name the earlier action this one follows. Nothing was written."
-});
+var ACTION_GRAMMAR_WORDS = Object.freeze(Object.fromEntries([
+  "DETERMINATION_NOT_NONCOMPLIANT",
+  "OVERRIDE_NO_GROUND",
+  "COPIED_IS_ADDRESSEE",
+  "MACHINE_CANNOT_SET_PARTNERS",
+  "PARTNERS_REFUSED",
+  "MACHINE_CANNOT_SET_PRESS_TERMS",
+  "PRESS_TERMS_NOT_PRESS",
+  "PRESS_TERMS_REFUSED",
+  "RECEIPT_NOT_ON_SENT",
+  "OFFICE_STATUS_UNKNOWN",
+  "MACHINE_CANNOT_SET_REPLY_OWED",
+  "NO_REPLY_OWED",
+  "FOUND_ELSEWHERE_NEEDS_CAPTURE",
+  "STAGE_NOT_IN_LAW",
+  "FOLLOWS_ACTION_REWRITTEN",
+  "FOLLOWS_ACTION_SELF",
+  "MACHINE_CANNOT_SET_SCOPE",
+  "SCOPE_NO_REASON",
+  "SCOPE_UNCHANGED",
+  "MACHINE_CANNOT_RECORD_PROMISE",
+  "PROMISE_REFUSED",
+  "FOUND_ELSEWHERE_REFUSED",
+  "SPEAKER_REFUSED",
+  "FOLLOWS_ACTION_REFUSED"
+].map((code) => [`refusal.${code}`, word(`refusal.${code}`)])));
 var ACTION_CATALOGUE_CHECKS = {
   /* T34-87 (DEC-149, K1811): the translation says "your group's Civicsmith" where it said "this instance"; a changed
      translation, awaiting T35's stamp (plan Rules (5) 4). */
@@ -134019,7 +134040,7 @@ var ACTION_CATALOGUE_CHECKS = {
      C-115.2 and escalation's C-116.11 give way to it. */
   NO_SUCH_ACTION: {
     check: "C-117.2",
-    where: "src/actions/index.mjs noSuchAction > is-no-such-action",
+    where: "src/action-records/index.mjs noSuchAction > is-no-such-action",
     translation: "No action answers to that here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way."
   },
   /* R3 (N237, K351): the projection reads at most 500 legs and 500 correspondence entries of one action. */
@@ -134276,7 +134297,7 @@ var ACTION_CATALOGUE_CHECKS = {
   MACHINE_CANNOT_SET_COPIED: {
     check: "C-117.58",
     where: "src/actions/index.mjs #t45Fields > is-machine-set-copied",
-    translation: "Which other offices are copied on an action is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in to state them yourself."
+    translation: word("refusal.MACHINE_CANNOT_SET_COPIED")
   }
 };
 
@@ -139973,8 +139994,8 @@ var Contradiction = class _Contradiction {
     return this.#acts(row12.candidate).find((a) => a.act_id === id);
   }
   /** op=contradictiondismiss — R31: a lead is dismissed, with one of three reasons. */
-  dismiss({ candidate = null, reason: reason2 = null, words: words24 = null, viewer = null, author = null, at: at49 = null } = {}) {
-    const g = this.#actRefusals({ candidate, author, viewer, texts: { reason: reason2, words: words24 } });
+  dismiss({ candidate = null, reason: reason2 = null, words: words23 = null, viewer = null, author = null, at: at49 = null } = {}) {
+    const g = this.#actRefusals({ candidate, author, viewer, texts: { reason: reason2, words: words23 } });
     if (g.refusal) return g.refusal;
     const { row: row12, view } = g;
     const closed = _Contradiction.#closed(view);
@@ -139995,7 +140016,7 @@ var Contradiction = class _Contradiction {
       act: "dismiss",
       author: author.trim(),
       reason: reason2,
-      words: typeof words24 === "string" && words24.trim() ? words24.trim() : null,
+      words: typeof words23 === "string" && words23.trim() ? words23.trim() : null,
       at: at49
     }));
     return {
@@ -140080,8 +140101,8 @@ var Contradiction = class _Contradiction {
       const acc2 = this.#acceptance(row12, view, accepted, coords);
       if (acc2.refusal) return acc2.refusal;
       const allAccepted = coords.every((c) => acc2.basis[c].basis === "accepted");
-      const words24 = typeof explanation === "string" && explanation.trim() ? explanation.trim() : null;
-      if (!words24 && !allAccepted)
+      const words23 = typeof explanation === "string" && explanation.trim() ? explanation.trim() : null;
+      if (!words23 && !allAccepted)
         return _Contradiction.#refuse("CLARIFY_NO_EXPLANATION", "explain in your own words how the two differ");
       const items = Array.isArray(evidence) ? evidence : [];
       const bad2 = this.#evidenceRefusal(row12, items, viewer);
@@ -140095,14 +140116,14 @@ var Contradiction = class _Contradiction {
           choice,
           author: who4,
           coordinates: coords,
-          explanation: words24,
+          explanation: words23,
           evidence: items,
           qualifiers: Object.keys(quals).length ? quals : null,
           acceptance: acc2.basis,
           standing: acc2.standing,
           at: at49
         });
-        const defects = row12.key === "K4" && coords.includes("subject") ? this.#reportDefects(row12, words24, who4) : null;
+        const defects = row12.key === "K4" && coords.includes("subject") ? this.#reportDefects(row12, words23, who4) : null;
         if (defects && defects.refusal) return defects.refusal;
         return {
           ok: true,
@@ -140112,7 +140133,7 @@ var Contradiction = class _Contradiction {
           ...evidenced ? { kind: "dissolved" } : {},
           qualifier_standing: evidenced ? "evidenced" : "hypothesis",
           act: act3,
-          ...words24 ? {} : { own_words: false, says_words: "no words of the member's own were given: each respect recorded was the accepted recommendation" },
+          ...words23 ? {} : { own_words: false, says_words: "no words of the member's own were given: each respect recorded was the accepted recommendation" },
           ...defects ? { defects: defects.reports } : {},
           says: evidenced ? "the member found the two differ in the respects named, on the evidence named: the contradiction is resolved as dissolved, and neither side was changed" : "the member explained how the two differ without evidence: the mark softens and does not clear, and any duty stays"
         };
@@ -140169,11 +140190,11 @@ var Contradiction = class _Contradiction {
     };
   }
   /** K4 `subject` (R32): report a defect on each established resolution that paired the two sides. */
-  #reportDefects(row12, words24, who4) {
+  #reportDefects(row12, words23, who4) {
     const e2 = this.#e();
     const entity2 = row12.a?.context?.entity_id ?? null;
     if (!e2 || typeof e2.reportResolutionDefect !== "function" || !entity2) return { reports: [] };
-    const reason2 = words24 || `a member found these two sides differ in subject (contradiction ${row12.candidate}); no words of their own were given`;
+    const reason2 = words23 || `a member found these two sides differ in subject (contradiction ${row12.candidate}); no words of their own were given`;
     const reports = [];
     for (const side of [row12.a, row12.b]) {
       const cap = side.capture_sha ?? this.#one(`SELECT capture_sha FROM content WHERE content_id=?`, side.content_id)?.capture_sha;
@@ -140805,10 +140826,10 @@ var Contradiction = class _Contradiction {
   }
   /** op=contradictionoptin — R51, R52: a project asks to resolve the conflict; the opt-in that leaves every party opted
    *  in records the reveal in the same act. */
-  optIn({ candidate = null, project = null, words: words24 = null, viewer = null, author = null, at: at49 = null } = {}) {
+  optIn({ candidate = null, project = null, words: words23 = null, viewer = null, author = null, at: at49 = null } = {}) {
     const g = this.#partyRefusals({ candidate, project, viewer, author });
     if (g.refusal) return g.refusal;
-    const over = this.#overCap({ words: words24 });
+    const over = this.#overCap({ words: words23 });
     if (over) return over;
     const { row: row12 } = g;
     const who4 = author.trim();
@@ -140846,7 +140867,7 @@ var Contradiction = class _Contradiction {
           row12.b_bundle_id
         );
       };
-      put2("optin", { project: g.project, author: who4, words: typeof words24 === "string" && words24.trim() ? words24.trim() : null });
+      put2("optin", { project: g.project, author: who4, words: typeof words23 === "string" && words23.trim() ? words23.trim() : null });
       const parties = this.#parties(row12);
       const now = this.#optins(row12.candidate);
       let revealed = !!now.revealed;
@@ -141566,8 +141587,8 @@ function movesCited(m, n2, moves) {
 }
 function movedDetail(ref, n2, m, group2, kase) {
   const what = m.kind === "edition" ? `published edition ${m.edition}` : m.edition === "all" ? "withdrew every edition" : `withdrew edition ${m.edition}`;
-  const words24 = m.kind === "edition" ? m.what_changed : m.reason;
-  return `this leg rests on another group's finding ${ref} at edition ${n2}${kase ? `, of case ${kase}` : ""}${group2 ? ` by ${group2}` : ""}, and its publisher ${what} (docket entry ${m.seq ?? "unnumbered"}${m.date ? `, dated ${m.date}` : ""}${words24 ? `: "${words24}"` : ""}).${m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""}${m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : ""} The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still stands is the members' to decide.`;
+  const words23 = m.kind === "edition" ? m.what_changed : m.reason;
+  return `this leg rests on another group's finding ${ref} at edition ${n2}${kase ? `, of case ${kase}` : ""}${group2 ? ` by ${group2}` : ""}, and its publisher ${what} (docket entry ${m.seq ?? "unnumbered"}${m.date ? `, dated ${m.date}` : ""}${words23 ? `: "${words23}"` : ""}).${m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""}${m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : ""} The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still stands is the members' to decide.`;
 }
 var Reevaluation = class {
   #deps;
@@ -147107,8 +147128,8 @@ function chainHtml(finding6, facts, accepted, member2, depth, seen) {
     if (l2.kind === "inquiry") return `<li>${esc2(head)}${chainHtml(target, facts, accepted, member2, depth + 1, next)}</li>`;
     return li(head);
   }));
-  const quoted5 = facts.passages(finding6);
-  const passageHtml = quoted5.length ? `<p>${esc2(`The passages ${finding6} relies on:`)}</p>${quoted5.map((q10) => `<blockquote class="quote">${esc2(said8(q10.quoted, ""))}<br><small>${esc2(`In the document captured as ${said8(q10.capture_sha)}, at ${extentWords(q10.extent)} (content ${said8(q10.content_id)}).`)}</small></blockquote>`).join("")}` : "";
+  const quoted6 = facts.passages(finding6);
+  const passageHtml = quoted6.length ? `<p>${esc2(`The passages ${finding6} relies on:`)}</p>${quoted6.map((q10) => `<blockquote class="quote">${esc2(said8(q10.quoted, ""))}<br><small>${esc2(`In the document captured as ${said8(q10.capture_sha)}, at ${extentWords(q10.extent)} (content ${said8(q10.content_id)}).`)}</small></blockquote>`).join("")}` : "";
   return legHtml + passageHtml;
 }
 var valueWords = (v, none = "not stated") => v === null || v === void 0 ? none : typeof v === "string" ? v : (() => {
@@ -155411,7 +155432,7 @@ var Publication = class {
       }
     }
     const held3 = new Set((Array.isArray(s.texts) ? s.texts : []).map((t2) => t2 && t2.content_id));
-    const quoted5 = new Map((Array.isArray(s.requires_quoted) ? s.requires_quoted : []).map((q10) => [q10.content_id, q10.text ?? null]));
+    const quoted6 = new Map((Array.isArray(s.requires_quoted) ? s.requires_quoted : []).map((q10) => [q10.content_id, q10.text ?? null]));
     const ids = [.../* @__PURE__ */ new Set([...named3.filter((c) => held3.has(c)), ...requires && Array.isArray(s.requires) ? s.requires : []])];
     const name3 = body ? this.#entityName(body) : null;
     return {
@@ -155424,7 +155445,7 @@ var Publication = class {
       access: s.access ?? null,
       body,
       binds,
-      passages: ids.map((c) => ({ content: c, text: quoted5.has(c) ? quoted5.get(c) : null })),
+      passages: ids.map((c) => ({ content: c, text: quoted6.has(c) ? quoted6.get(c) : null })),
       label: binds ? `Standard \xB7 binds ${name3}` : body ? `Benchmark \xB7 not binding on ${name3}` : "Benchmark \xB7 not binding",
       access_words: ACCESS_WORDS[s.access] ?? null
     };
@@ -173120,13 +173141,13 @@ var Steps = class _Steps {
     if (!ACCEPTANCE_FORMS.includes(form)) return refuse16("STEP_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
     const bad2 = this.#mayAccept(pr, a);
     if (bad2) return bad2;
-    const words24 = form === "as_proposed" ? pr.work : work;
-    if (!filled8(words24) || chars(words24.trim()) > WORK_MAX) return refuse16("STEP_NO_WORK", `the work is 1\u2013${WORK_MAX} characters`);
+    const words23 = form === "as_proposed" ? pr.work : work;
+    if (!filled8(words23) || chars(words23.trim()) > WORK_MAX) return refuse16("STEP_NO_WORK", `the work is 1\u2013${WORK_MAX} characters`);
     if (form === "own_instead" && (!filled8(reason2) || chars(reason2) > REASON_MAX11)) return refuse16("STEP_BAD_TEXT", `say why it is set aside, in 1\u2013${REASON_MAX11} characters`);
     const place9 = pr.place_kind === "project" ? { project: pr.project_id } : pr.place_kind === "group" ? { group: true } : { questions: this.#proposalRefs(pr.proposal_id) };
     const at49 = this.#at();
     return this.#record.transact(() => {
-      const made3 = this.#create({ place: place9, work: words24.trim(), byWhen: null, project, creator: { actor: a, viewer: a.viewer } });
+      const made3 = this.#create({ place: place9, work: words23.trim(), byWhen: null, project, creator: { actor: a, viewer: a.viewer } });
       if (!made3 || made3.ok !== true) return made3;
       const acceptance = acceptanceRecord({ proposal: String(pr.proposal_id), form, by: a.by, at: at49, kind: "step" });
       this.#sql.exec(
@@ -177415,10 +177436,10 @@ function judge2(args) {
   const reliedOn = new Set(passages.filter((p3) => str33(p3.finding) && str33(p3.content_id)).map((p3) => p3.content_id));
   for (const r of copyrighted) {
     const caps3 = new Set((r.captures || []).map(shaKey).filter(Boolean));
-    const quoted5 = [];
-    for (const q10 of r.passages || []) if (isObj38(q10) && str33(q10.content)) quoted5.push(q10.content);
-    for (const p3 of passages) if (str33(p3.content_id) && caps3.has(shaKey(p3.capture_sha))) quoted5.push(p3.content_id);
-    for (const content of quoted5) if (!reliedOn.has(content)) refuse31({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
+    const quoted6 = [];
+    for (const q10 of r.passages || []) if (isObj38(q10) && str33(q10.content)) quoted6.push(q10.content);
+    for (const p3 of passages) if (str33(p3.content_id) && caps3.has(shaKey(p3.capture_sha))) quoted6.push(p3.content_id);
+    for (const content of quoted6) if (!reliedOn.has(content)) refuse31({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
   }
   const members3 = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
   const legs = gradingFactsOf(fm) || {};
@@ -177433,8 +177454,8 @@ function judge2(args) {
     if (!rows4.length || rows4.some((r) => r.binds !== false)) continue;
     const c = rowOf19(conclusions, finding6);
     const found3 = [.../* @__PURE__ */ new Set([...wordsIn([c.claim, c.claim_detail]), ...caseWords])];
-    const words24 = NONCONFORMING_WORDS.filter((w) => found3.includes(w));
-    for (const standard2 of [...new Set(rows4.map((r) => r.standard))]) for (const word3 of words24)
+    const words23 = NONCONFORMING_WORDS.filter((w) => found3.includes(w));
+    for (const standard2 of [...new Set(rows4.map((r) => r.standard))]) for (const word3 of words23)
       refuse31({ code: "BENCHMARK_CALLED_NONCONFORMING", finding: finding6, standard: standard2, word: word3 });
   }
   const out = refusals.length ? { ok: false, refusals } : { ok: true };
@@ -178382,16 +178403,16 @@ function namesIn(t2) {
   for (const m of text8.matchAll(/[A-Z][A-Za-z'’-]*(?:\s+(?:of|the|and|for|de|van|von|du|la)\s+[A-Z][A-Za-z'’-]*|\s+[A-Z][A-Za-z'’-]*)*/g)) {
     const before3 = text8.slice(0, m.index);
     if (before3 && /[A-Za-z0-9]$/.test(before3)) continue;
-    let words24 = m[0].split(/\s+/);
+    let words23 = m[0].split(/\s+/);
     const starts = !before3.trim() || /[.!?:;]\s*$/.test(before3) || /["“«(]\s*$/.test(before3);
-    if (starts && (SENTENCE_OPENERS.has(words24[0]) || words24.length === 1)) {
-      words24 = words24.slice(1);
-      while (words24.length && /^[a-z]/.test(words24[0])) words24 = words24.slice(1);
+    if (starts && (SENTENCE_OPENERS.has(words23[0]) || words23.length === 1)) {
+      words23 = words23.slice(1);
+      while (words23.length && /^[a-z]/.test(words23[0])) words23 = words23.slice(1);
     }
-    words24 = words24.filter((w) => !/\d/.test(w));
-    while (words24.length && NOT_NAMES.has(words24[0])) words24 = words24.slice(1);
-    while (words24.length && NOT_NAMES.has(words24.at(-1))) words24 = words24.slice(0, -1);
-    if (words24.length) out.push(words24.join(" "));
+    words23 = words23.filter((w) => !/\d/.test(w));
+    while (words23.length && NOT_NAMES.has(words23[0])) words23 = words23.slice(1);
+    while (words23.length && NOT_NAMES.has(words23.at(-1))) words23 = words23.slice(0, -1);
+    if (words23.length) out.push(words23.join(" "));
   }
   return [...new Set(out)];
 }
@@ -182258,11 +182279,11 @@ function basesListed(list6) {
     if (ref === void 0)
       return bad2(`${at49}.ref`, `${at49}.ref ${REF_WORDS[d.basis]}`);
     if (d.words != null && typeof d.words !== "string") return bad2(`${at49}.words`, `${at49}.words is the owner's words, a string`);
-    const words24 = typeof d.words === "string" ? d.words.trim() || null : null;
-    if (words24 !== null && (words24.length > WORDS_MAX4 || /["\\\r\n]/.test(words24)))
+    const words23 = typeof d.words === "string" ? d.words.trim() || null : null;
+    if (words23 !== null && (words23.length > WORDS_MAX4 || /["\\\r\n]/.test(words23)))
       return bad2(`${at49}.words`, `${at49}.words is at most ${WORDS_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
     const person2 = d.person.trim();
-    if (!byPerson.has(person2)) byPerson.set(person2, { person: person2, ord: i, basis: d.basis, ref, words: words24 });
+    if (!byPerson.has(person2)) byPerson.set(person2, { person: person2, ord: i, basis: d.basis, ref, words: words23 });
   }
   return { ok: true, byPerson };
 }
@@ -182523,10 +182544,10 @@ function flagsListed(list6) {
     if (!flag2) return bad2(`flagsDisclosed[${i}]`, `flagsDisclosed[${i}] is not {flag, words?} naming a flag`);
     if (d.words != null && typeof d.words !== "string")
       return bad2(`flagsDisclosed[${i}].words`, `flagsDisclosed[${i}].words is the owner's words, a string`);
-    const words24 = typeof d.words === "string" ? d.words.trim() || null : null;
-    if (words24 !== null && (words24.length > COMPLETENESS_MAX || /["\\\r\n]/.test(words24)))
+    const words23 = typeof d.words === "string" ? d.words.trim() || null : null;
+    if (words23 !== null && (words23.length > COMPLETENESS_MAX || /["\\\r\n]/.test(words23)))
       return bad2(`flagsDisclosed[${i}].words`, `flagsDisclosed[${i}].words is at most ${COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
-    if (!byFlag.has(flag2)) byFlag.set(flag2, { flag: flag2, ord: i, words: words24 });
+    if (!byFlag.has(flag2)) byFlag.set(flag2, { flag: flag2, ord: i, words: words23 });
   }
   return { ok: true, byFlag };
 }
@@ -182669,8 +182690,8 @@ function carriesBodyLines(method, materials, group2) {
     ""
   ];
 }
-var sentence = (words24) => {
-  const s = String(words24);
+var sentence = (words23) => {
+  const s = String(words23);
   return /[.!?…]$/.test(s) ? s : `${s}.`;
 };
 function acceptedBodyLines(accepted) {
@@ -183328,8 +183349,8 @@ var CaseDisclosures = class {
         photos.push({ ...entry4, state: null, marks: null, copy: null, refused: null, words: null, unread: true });
         continue;
       }
-      const words24 = p3.state === "unchecked" ? PHOTO_UNCHECKED_WORDS : p3.refused ? PHOTO_NOT_COVERABLE_WORDS : p3.copy ? photoLabel(p3.state === "marked").label : null;
-      photos.push({ ...entry4, state: p3.state, marks: p3.marks, copy: p3.copy, refused: p3.refused, words: words24, unread: false });
+      const words23 = p3.state === "unchecked" ? PHOTO_UNCHECKED_WORDS : p3.refused ? PHOTO_NOT_COVERABLE_WORDS : p3.copy ? photoLabel(p3.state === "marked").label : null;
+      photos.push({ ...entry4, state: p3.state, marks: p3.marks, copy: p3.copy, refused: p3.refused, words: words23, unread: false });
     }
     return { photos, unchecked: photos.filter((p3) => p3.state === "unchecked").length };
   }
@@ -183693,8 +183714,8 @@ var CaseDisclosures = class {
     }
     const contacts = this.#contactValues(persons, viewer);
     for (const d of basisOf2.values()) {
-      const words24 = d.words ? d.words.toLowerCase() : "";
-      if (words24 && contacts.some((v) => words24.includes(v)))
+      const words23 = d.words ? d.words.toLowerCase() : "";
+      if (words23 && contacts.some((v) => words23.includes(v)))
         return { refusals: [{
           ok: false,
           reason: "BAD_COMPLETENESS",
@@ -183910,10 +183931,10 @@ var CaseDisclosures = class {
         return bad2(`tensionsDisclosed[${i}]`, `tensionsDisclosed[${i}] is not {candidate, words?} naming a candidate`);
       if (d.words != null && typeof d.words !== "string")
         return bad2(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is the owner's words, a string`);
-      const words24 = typeof d.words === "string" ? d.words.trim() || null : null;
-      if (words24 !== null && (words24.length > COMPLETENESS_MAX2 || /["\\\r\n]/.test(words24)))
+      const words23 = typeof d.words === "string" ? d.words.trim() || null : null;
+      if (words23 !== null && (words23.length > COMPLETENESS_MAX2 || /["\\\r\n]/.test(words23)))
         return bad2(`tensionsDisclosed[${i}].words`, `tensionsDisclosed[${i}].words is at most ${COMPLETENESS_MAX2} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
-      if (!byCandidate.has(candidate)) byCandidate.set(candidate, { candidate, ord: i, words: words24 });
+      if (!byCandidate.has(candidate)) byCandidate.set(candidate, { candidate, ord: i, words: words23 });
     }
     return { ok: true, byCandidate };
   }
@@ -184678,8 +184699,8 @@ var CaseAccount = class {
         draft: named3.trim(),
         detail: word("refusal.NO_SUCH_ACCOUNT_DRAFT")
       };
-    const words24 = (t2) => String(t2 ?? "").replace(/\s+/g, " ").trim();
-    const unchanged = words24(d.text) === words24(sentences.map((x) => x.text).join(" "));
+    const words23 = (t2) => String(t2 ?? "").replace(/\s+/g, " ").trim();
+    const unchanged = words23(d.text) === words23(sentences.map((x) => x.text).join(" "));
     const form = given6 === "own_instead" ? "own_instead" : unchanged ? "as_proposed" : given6 ?? "edited";
     if (form === "as_proposed")
       return refusal23(SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR, {
@@ -185232,7 +185253,7 @@ var CaseAccount = class {
       detail: word("refusal.BAD_ACCOUNT_DRAFT")
     });
     if (kind2 !== "case_account" && kind2 !== "account_check") return bad2("kind");
-    let words24 = null, flagged = null;
+    let words23 = null, flagged = null;
     if (kind2 === "case_account") {
       const length = typeof text8 === "string" ? [...text8].length : null;
       if (length === null || !text8.trim() || length > ACCOUNT_DRAFT_MAX) return bad2("text");
@@ -185244,7 +185265,7 @@ var CaseAccount = class {
           allowed: ACCOUNT_FRAMINGS,
           detail: word("refusal.BAD_ACCOUNT_FRAMING")
         };
-      words24 = text8;
+      words23 = text8;
     } else {
       if (!Array.isArray(flags2) || !flags2.length || flags2.length > ACCOUNT_SENTENCES_MAX) return bad2("flags");
       flagged = [];
@@ -185285,7 +185306,7 @@ var CaseAccount = class {
         seen.caseId,
         kind2,
         kind2 === "case_account" ? framing : null,
-        words24,
+        words23,
         flagged ? JSON.stringify(flagged) : null,
         r,
         by,
@@ -185299,7 +185320,7 @@ var CaseAccount = class {
           case: seen.caseId,
           kind: kind2,
           framing: kind2 === "case_account" ? framing : null,
-          text: words24,
+          text: words23,
           flags: flagged,
           run: r,
           label,
@@ -191553,14 +191574,18 @@ __export(checks_exports53, {
   refusal: () => refusal28
 });
 var at29 = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
-var CONFORMANCE_WORDS = Object.freeze({
-  "refusal.DETERMINATION_NOT_ADOPTABLE": "Another group's determination is never adopted as yours. Read its findings, and make your own determination from them. Nothing was written.",
-  "refusal.MACHINE_CANNOT_LINK_CURE": "Only a member links a later act as what corrected an earlier one. Nothing was written.",
-  "refusal.CURE_TARGET_NOT_NONCOMPLIANT": "Only an act found noncompliant with this standard can be corrected by a later one, and this one wasn't. Nothing was written.",
-  "refusal.CURE_NOT_COMPLIANT": "The later act must be found compliant with the same standard to count as the correction, and it isn't. Nothing was written.",
-  "refusal.CURE_OTHER_OFFICE": "Only a later act of the same office can correct this one, and this act is another office's. Nothing was written.",
-  "refusal.CURE_NOT_LATER": "The correcting act must come after the act it corrects, and this one doesn't, or their order isn't known. Nothing was written."
-});
+var TAKEN_CODES = Object.freeze([
+  "NO_FINDINGS",
+  "DETERMINATION_NOT_ADOPTABLE",
+  "MACHINE_CANNOT_LINK_CURE",
+  "CURE_TARGET_NOT_NONCOMPLIANT",
+  "CURE_NOT_COMPLIANT",
+  "CURE_OTHER_OFFICE",
+  "CURE_NOT_LATER"
+]);
+var CONFORMANCE_WORDS = Object.freeze(Object.fromEntries(
+  TAKEN_CODES.map((code) => [`refusal.${code}`, word(`refusal.${code}`)])
+));
 var words5 = (code) => CONFORMANCE_WORDS[`refusal.${code}`];
 var CONFORMANCE_CHECKS = Object.freeze({
   MACHINE_CANNOT_DETERMINE: {
@@ -191601,7 +191626,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   NO_FINDINGS: {
     check: "C-113.6",
     where: at29("#pinFindings", "is-finding-named"),
-    translation: "A determination rests on at least one finding: one your group published, one checked and held for publication, or another group's finding your group has accepted. Name the findings it rests on. Nothing was written."
+    translation: words5("NO_FINDINGS")
   },
   FINDING_NOT_PUBLISHED: {
     check: "C-113.7",
@@ -192040,8 +192065,8 @@ var MEASURE_SAYS = "What the office does, measured: the calculation's result wit
 var measureWords = (calc) => `what the office does, as measured by ${calc}`;
 var ACT_RE2 = idPattern("ACT");
 var ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never stronger than that edition.";
-var SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this edition was imported, so they read undetermined";
-var SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they were read at import, current then, never as of the edition's signing";
+var SOURCE_FACTS_UNRECORDED = word("case-import.group_fields_none");
+var SOURCE_DECLARATION_SAYS = word("case-import.group_fields_label");
 var VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
 var MOVE_PAGES_MAX = 50;
 var VOID_SCAN_BATCHES = 50;
@@ -193170,11 +193195,11 @@ var Conformance = class _Conformance {
         return refusal28("STANDARD_NOT_BINDING", b.binds === false ? `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record the comparison as a benchmark (below, slower than, or above). Nothing was written.` : `whether ${x.standard} binds ${b.body ?? "the body"} is undetermined (${b.why ?? "not recorded"}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.`, { standard: x.standard, body: b.body, binds: b.binds });
     }
     const said12 = (Array.isArray(questions) ? questions : []).map((x) => isObj42(x) ? x.question : x);
-    const worded2 = this.#benchmarkWords([
+    const worded3 = this.#benchmarkWords([
       ...r.rows.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
       ...s.standards.map((x) => ({ standard: x.standard, texts: said12 }))
     ], bindings);
-    if (worded2) return worded2;
+    if (worded3) return worded3;
     const qs = this.#readQuestions(questions, s.standards.map((x) => x.outcome), author);
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
@@ -193491,7 +193516,17 @@ var Conformance = class _Conformance {
         edition_date: null,
         accepted_at: x.accepted_at ?? null,
         accepted_by: x.accepted_by ?? null,
-        ...declared2 ? { identity: declared2.identity, stake: declared2.stake, identity_label: SOURCE_DECLARATION_SAYS } : { identity: null, stake: "undetermined", identity_says: SOURCE_FACTS_UNRECORDED },
+        ...declared2 ? {
+          identity: declared2.identity,
+          stake: declared2.stake,
+          matter_stake: declared2.matter_stake,
+          identity_label: SOURCE_DECLARATION_SAYS
+        } : {
+          identity: null,
+          stake: "undetermined",
+          matter_stake: "undetermined",
+          identity_says: SOURCE_FACTS_UNRECORDED
+        },
         says: ACCEPTED_SAYS
       }, live: live7, hidden });
       const moves = once("moves", () => this.#allMoves());
@@ -193528,13 +193563,14 @@ var Conformance = class _Conformance {
     }
     return { pins, causes };
   }
-  /* R32, R39 (N951): the source group's identity and declared stake for an accepted edition, mapped field by field from
+  /* R32, R39 (N951), R41 (T50; N933): the source group's identity, declared stake and matter stake for an accepted edition, mapped field by field from
      the `group_fields` `case-import.importedCase` (its R4) answers for that edition, read as `viewer` (R4 answers a
      viewer who is not an active member as if no import exists). `identity` is `{group, name, domain,
      domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none; a
-     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
+     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; `matter_stake` (R41) is `group_fields.matter_stake` as answered, null when the source
+     recorded none (an edition imported before T50); nothing is composed and no `identity` key is expected of the answer. Null when
      `group_fields` is null, the import cannot be read, or the read throws (the caller then answers identity null, stake
-     undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
+     undetermined, matter_stake undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
   #sourceFacts(imp, ed, viewer, once) {
     const facts = once(`imp:${imp}:${ed}:${viewer}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer }));
     const e2 = isObj42(facts) && facts !== THREW && facts.ok !== false && isObj42(facts.edition) ? facts.edition : null;
@@ -193549,7 +193585,8 @@ var Conformance = class _Conformance {
         domain_verified_at: field3("domain_verified_at"),
         read_at: field3("read_at")
       },
-      stake: Object.hasOwn(gf, "stake") && gf.stake !== void 0 ? gf.stake : "undetermined"
+      stake: Object.hasOwn(gf, "stake") && gf.stake !== void 0 ? gf.stake : "undetermined",
+      matter_stake: field3("matter_stake")
     };
   }
   /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be
@@ -194060,11 +194097,11 @@ var Conformance = class _Conformance {
     }
     const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj42(x) ? x : { question: x }).map((x) => ({ question: text5(x.question), inquiry: str42(x.inquiry) })).filter((x) => x.question);
     const bindings = this.#bindings(stds, theAct, viewer);
-    const worded2 = this.#benchmarkWords([
+    const worded3 = this.#benchmarkWords([
       ...rs.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
       ...stds.map((sid) => ({ standard: sid, texts: qs.map((x) => x.question) }))
     ], bindings);
-    if (worded2) return worded2;
+    if (worded3) return worded3;
     const held3 = [...bindings.entries()].map(([standard2, b]) => ({
       standard: standard2,
       body: b.body,
@@ -196161,7 +196198,7 @@ var Consequences = class {
    * ===================================================================== */
   /** R9: a member records a part addressed or not, with evidence and a reason. */
   addressedRecord(args = {}) {
-    const { id = null, state = null, evidence = null, reason: reason2 = null, words: words24 = void 0, author = null, viewer = null } = args;
+    const { id = null, state = null, evidence = null, reason: reason2 = null, words: words23 = void 0, author = null, viewer = null } = args;
     if (machine(author))
       return refuse18("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
     const who4 = viewer ?? str43(author);
@@ -196182,11 +196219,11 @@ var Consequences = class {
     if ([...reason2.trim()].length > STATEMENT_MAX2)
       return refuse18("ADDRESSED_BAD_REASON", `a reason is at most ${STATEMENT_MAX2} characters.${NOTHING}`);
     const figureKey = redressFigureKey(args);
-    if (figureKey || Array.isArray(words24) && words24.some((x) => typeof x === "string" && x.includes("%")))
+    if (figureKey || Array.isArray(words23) && words23.some((x) => typeof x === "string" && x.includes("%")))
       return refuse18("ADDRESSED_NO_PERCENTAGE", `${figureKey ? `"${figureKey}" states` : "a % in words states"} redress as a figure; say it in words, with evidence.${NOTHING}`, figureKey ? { key: figureKey } : {});
     let plain20 = null;
-    if (words24 !== void 0 && words24 !== null) {
-      const list6 = Array.isArray(words24) ? words24 : null;
+    if (words23 !== void 0 && words23 !== null) {
+      const list6 = Array.isArray(words23) ? words23 : null;
       const why2 = state !== "addressed" ? "plain words are carried only by a part recorded addressed" : !list6 ? "words are a list" : list6.some((x) => !ADDRESSED_WORDS.includes(x)) ? `each word is one of ${ADDRESSED_WORDS.join(", ")}` : new Set(list6).size !== list6.length ? "each word is given once" : list6.length > ADDRESSED_WORDS_MAX ? `at most ${ADDRESSED_WORDS_MAX} words` : null;
       if (why2) return refuse18("ADDRESSED_WORD_REFUSED", `${why2}.${NOTHING}`);
       plain20 = [...list6];
@@ -203016,6 +203053,17 @@ CREATE TABLE IF NOT EXISTS action_promises (
   at           TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq)
 );
+
+-- R17 (T50; N933): THE ACTION'S OWN STAKE, each statement appended with who made it and when; the latest is the stake,
+-- NULL clears it and the action then falls back to its project's. by is the member's id; a reader names her by handle.
+CREATE TABLE IF NOT EXISTS action_stakes (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  stake        TEXT,             -- 1 to 1,000 characters on one line, or NULL (cleared)
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
 `;
 var ACTION_RECORDS_TABLES = Object.freeze([
   "action_law_proposals",
@@ -203023,7 +203071,8 @@ var ACTION_RECORDS_TABLES = Object.freeze([
   "action_seeks_proposals",
   "action_receipts",
   "action_scopes",
-  "action_promises"
+  "action_promises",
+  "action_stakes"
 ]);
 function migrateActionRecords(sql) {
   const bare5 = ACTION_RECORDS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
@@ -203068,6 +203117,45 @@ function withRow5(r) {
 }
 var refuse19 = (code, detail, extra) => withRow5({ ok: false, reason: code, detail, ...extra || {} });
 var findingsOf = (list6) => list6.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.code ? { code: x.code } : {}, ...x.repairs ? { repairs: x.repairs } : {} }));
+var NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
+var NO_SUCH_ACTION_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
+function noSuchAction(actionId, extra = null) {
+  let own11 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own11 = Object.entries(extra).filter(([k]) => !NO_SUCH_ACTION_FIXED.has(k));
+  } catch {
+    own11 = [];
+  }
+  let action2 = null;
+  try {
+    action2 = actionId === void 0 || actionId === null ? null : String(actionId);
+  } catch {
+    action2 = null;
+  }
+  const row12 = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_ACTION",
+    code: "NO_SUCH_ACTION",
+    check: row12.check,
+    translation: row12.translation,
+    action: action2,
+    ...Object.fromEntries(own11),
+    detail: NO_SUCH_ACTION_DETAIL
+  };
+}
+var worded = (code, detail, extra) => ({
+  ok: false,
+  reason: code,
+  code,
+  translation: word(`refusal.${code}`),
+  detail,
+  ...extra || {}
+});
+var ACTION_QUESTION_MAX = 500;
+var quoted4 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
+var rand12 = (n2) => Math.random().toString(36).slice(2, 2 + n2).padEnd(n2, "0");
 var RESERVED = ["ok", "reason", "code", "check", "translation"];
 function correspondRefusal(reason2, fields, detail, extra) {
   const own11 = {};
@@ -203131,12 +203219,13 @@ var ActionRecords = class {
     membership = null,
     progressions = null,
     standards = null,
+    promotion = null,
     now = null,
     env = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, progressions, standards };
+    this.#deps = { host, membership, progressions, standards, promotion };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -203162,6 +203251,10 @@ var ActionRecords = class {
   /* R9: the held standards (`standardRead`, its R5). */
   get standards() {
     return this.#reach("standards", (h) => standardsOf(h));
+  }
+  /* R19: the one write path (`promote`, its R1 to R20). */
+  get promotion() {
+    return this.#reach("promotion", (h) => promotionOf(h, { record: this.record, membership: this.membership }));
   }
   /** R16: the correspondence entry's site, reached on the instance `actions` creates (its R101). The two pure judgments are
    *  the module's own functions, answered unchanged; the third reads the register. */
@@ -203221,10 +203314,15 @@ var ActionRecords = class {
   #visibleAction(id, viewer) {
     const gate = viewerPredicate(viewer);
     return this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      `SELECT b.bundle_id, b.object_type, b.current_state, b.project FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
       id,
       ...gate.args
     );
+  }
+  /* R18: the action the viewer may see, or null for an absent one, an invisible one and a bundle that is no action alike. */
+  #seenAction(id, viewer) {
+    const b = this.#visibleAction(id, viewer);
+    return b && normalizeType(b.object_type) === "action" ? b : null;
   }
   /* ================================================================ the single-site judgments (R7–R10) */
   /** R7 (was `actions` R18, its list-shape clause) — D-149: WHAT A WELL-FORMED LIST OF GOVERNING LAWS IS, decided in
@@ -203400,16 +203498,7 @@ var ActionRecords = class {
     const read3 = this.lawEntries(laws);
     if (!read3.ok) return read3;
     const entries = read3.entries;
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return {
-        ok: false,
-        reason: "NOT_AN_ACTION",
-        target,
-        object_type: b.object_type,
-        detail: "governing laws belong to an action: they are the laws its request is made under."
-      };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     for (const e2 of entries) {
       if (!e2.standard) continue;
       const r = this.standardSeen(e2.standard, viewer ?? who4);
@@ -203454,10 +203543,7 @@ var ActionRecords = class {
     const why2 = typeof basis === "string" ? basis.trim() : "";
     if (!why2 || why2.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why2))
       return refuse19("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const at49 = stampInstant("second", this.#nowMs(null));
     this.sql.exec(
       `INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
@@ -203488,10 +203574,7 @@ var ActionRecords = class {
     const who4 = String(proposer ?? "").trim();
     if (!who4) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const held3 = this.#heldFm(target) || {};
     let list6 = seeks;
     if (typeof list6 === "string") {
@@ -203626,9 +203709,7 @@ var ActionRecords = class {
           target,
           detail: `${name3} is ${need ? "1" : "0"} to ${name3 === "account" ? NOTE_MAX4 : RECEIPT_TEXT_MAX} characters`
         };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     const ledger = (this.#heldFm(target) || {}).correspondence;
     const n2 = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
     const entry4 = Array.isArray(ledger) && Number.isInteger(n2) ? ledger[n2] : void 0;
@@ -203709,9 +203790,7 @@ var ActionRecords = class {
     if (!why2) return refuse19("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's reason. Nothing was written.", { target });
     if (why2.length > NOTE_MAX4 || /["\\\r\n]/.test(why2))
       return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX4} characters with no quote, backslash or line break` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     if (this.confidential(target) === !!want)
       return refuse19("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was written.`, { target, confidential: !!want });
     const at49 = stampInstant("second", this.#nowMs(null));
@@ -203768,9 +203847,7 @@ var ActionRecords = class {
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     if (!kinds3.includes(k) || !t2 || t2.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
       return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds3.join(", ")}, the text 1 to ${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
     if (endsAt !== null && !this.promisesOf(target).standing.some((p3) => p3.seq === endsAt))
       return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
     const at49 = stampInstant("second", this.#nowMs(null));
@@ -203810,6 +203887,153 @@ var ActionRecords = class {
       standing: notes2.filter((p3) => !ended.has(p3.seq)),
       ended: notes2.filter((p3) => ended.has(p3.seq)).map((p3) => ({ ...p3, ended_by: ended.get(p3.seq) }))
     };
+  }
+  /* ================================================================ the action's own stake (R17) */
+  /** R17 (T50; N933; K3230; Action rule 9; v0.2 rule 21; D28 (d); `project-roster` R31, R32): a member who may see the
+   *  action states its own stake, apart from its project's: what this one action adds to the team's and the project's
+   *  stakes, in the member's words. `stake: null` clears it and the action falls back to its project's (`filings` R60).
+   *  Each statement is appended `{stake, by, at}`, never edited. Both stake codes are `project-roster`'s, asked through
+   *  its `stakeFault` and never copied (one code, one site). Refusals in order, each writing nothing. */
+  actionStake({ target, stake, viewer = null, author = null } = {}) {
+    const who4 = String(author ?? "").trim();
+    const by = !who4 || isMachineIdentity(who4) ? "" : who4.replace(/^member:/, "");
+    const fault = stakeFault({ by, stake, of: "action" });
+    const faulted = () => {
+      const { project, ...rest } = fault;
+      return { ...rest, target: target ?? null };
+    };
+    if (fault && fault.reason === "MACHINE_CANNOT_SET_STAKE") return faulted();
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (fault) return faulted();
+    if (!this.#seenAction(target, viewer)) return noSuchAction(target);
+    const text8 = stake === null ? null : stake.trim();
+    const at49 = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_stakes WHERE bundle_id=?`, target).n;
+      this.sql.exec(`INSERT INTO action_stakes (bundle_id, seq, stake, by, at) VALUES (?,?,?,?,?)`, target, seq, text8, by, at49);
+    });
+    return { ok: true, target, ...this.stakeOf(target), weight: "single" };
+  }
+  /* R17: a member's handle as a reader sees it, the founder's own as membership names her (its R144); the id itself where
+     membership holds no handle for it, and null for a founder who holds none. */
+  #handleOf(id) {
+    const m = this.membership;
+    try {
+      if (id === "admin") {
+        const h = m && typeof m.founderHandle === "function" ? m.founderHandle() : null;
+        return typeof h === "string" && h ? h : null;
+      }
+      return (m && typeof m.memberFacts === "function" ? m.memberFacts(id)?.handle : null) ?? id;
+    } catch {
+      return id;
+    }
+  }
+  /** R17 (as `project-roster` R32 answers a project's): the action's own stake `{stake, set_by, set_at, history}`, history
+   *  oldest first, each `{stake, set_by, set_at}`, `set_by` a handle (the founder as `membership.founderHandle()`); `stake:
+   *  null` with none; `"undetermined"` for a record that cannot be read, never `null`. Asks no viewer (its callers gate by
+   *  sight, as R5's `scopeOf` does), writes nothing, never throws. */
+  stakeOf(id) {
+    const none = { stake: null, set_by: null, set_at: null, history: [] };
+    try {
+      if (typeof id !== "string" || !id) return none;
+      const rows4 = this.#rows(`SELECT stake, by, at FROM action_stakes WHERE bundle_id=? ORDER BY seq`, id);
+      if (rows4.some((r) => r.stake !== null && typeof r.stake !== "string")) return { ...none, stake: "undetermined" };
+      const history = rows4.map((r) => ({ stake: r.stake, set_by: this.#handleOf(r.by), set_at: r.at }));
+      const last = history.at(-1);
+      return last ? { stake: last.stake, set_by: last.set_by, set_at: last.set_at, history } : none;
+    } catch {
+      return { ...none, stake: "undetermined" };
+    }
+  }
+  /* ================================================================ a question opened from an action (R19) */
+  /** R19 (T50; N1093; K3317; DEC-239; UX-DESIGN U233; `conformance` R6's way): a member who may see an action opens a
+   *  question in the action's project with the action carried as its reference (`derived_from`, noting who opened it),
+   *  never as a leg: the action is where the question comes from, not evidence in it. The member writes the question;
+   *  nothing is filled from the action, and the action's document, legs and state are untouched. The question is made
+   *  through `promote` (state `open`, titled from the question), so the project's fence and every `promotion` refusal are
+   *  promotion's, answered as its own; a caller who has not joined the project is refused before it, by membership's own
+   *  position check (`projectAuthority`). */
+  actionInquiry({ action: action2, question = "", viewer = null, author = null } = {}) {
+    const who4 = String(author ?? "").trim();
+    const asked6 = typeof question === "string" ? question.trim() : "";
+    if (!who4 || isMachineIdentity(who4))
+      return worded("MACHINE_CANNOT_OPEN_FROM_ACTION", "a question is opened from an action by a member; a machine credential may not open one. Nothing was written.", { action: action2 ?? null });
+    if (!action2) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass action=<action id>" };
+    if (!asked6 || asked6.length > ACTION_QUESTION_MAX || /[\r\n\u2028\u2029]/.test(asked6))
+      return worded("ACTION_INQUIRY_NO_QUESTION", `the question is 1 to ${ACTION_QUESTION_MAX} characters on one line. Nothing was written.`, { action: action2, max: ACTION_QUESTION_MAX });
+    const b = this.#seenAction(action2, viewer);
+    if (!b) return noSuchAction(action2);
+    const project = typeof b.project === "string" ? b.project.trim() : "";
+    if (!project)
+      return worded("ACTION_NO_PROJECT", "this action belongs to no project, so there is nowhere to open a question from it. Nothing was written.", { action: action2 });
+    const denied = this.membership ? this.membership.projectAuthority(project, who4, "joined", "actioninquiry") : null;
+    if (denied) return denied;
+    const at49 = stampInstant("second", this.#nowMs(null));
+    let id = null;
+    const out = this.record.transact(() => {
+      id = `${this.record.allocId("INQ", at49.slice(0, 4)).id}-question`;
+      const title = deriveInquiryTitle(asked6) ?? asked6.slice(0, 120);
+      const md = [
+        "---",
+        `id: ${id}`,
+        "object_type: inquiry",
+        "schema: inquiry@1",
+        `title: ${quoted4(title)}`,
+        "current_state: open",
+        "prior_state: null",
+        `created: ${quoted4(at49)}`,
+        `last_updated: ${quoted4(at49)}`,
+        `project: ${project}`,
+        "produced_by:",
+        "  mode: human",
+        "  capability_tier: session",
+        "references:",
+        "  - rel: derived_from",
+        `    target: ${action2}`,
+        "    status: confirmed",
+        `    note: ${quoted4(`opened from this action by ${who4}`)}`,
+        "state_history: []",
+        "annotations_open: 0",
+        "reeval_pending:",
+        "  flag: false",
+        "  since: null",
+        "  source: null",
+        "visuals: []",
+        "surfaced_by: human",
+        'disposition_reason: ""',
+        "---",
+        "",
+        "## Question",
+        "",
+        asked6,
+        "",
+        "## What It Rests On",
+        "",
+        "## Conclusion",
+        "",
+        "## What Would Falsify This",
+        "",
+        "## Session Log",
+        "",
+        `### Session ${at49} | Opened | ${who4}`,
+        `Changes: opened by ${who4} from the action ${action2} in the project ${project}.`,
+        "",
+        "## Review Notes",
+        ""
+      ].join("\n");
+      return this.promotion.promote({
+        bundleId: id,
+        base: null,
+        snapKey: `${at49.replace(/[-:]/g, "")}_${rand12(4)}`,
+        author: who4,
+        files: [{ path: "bundle.md", text: md }],
+        meta: { object_type: "inquiry", current_state: "open", created: at49, last_updated: at49 },
+        actorIdentity: who4,
+        actorViewer: viewer
+      });
+    });
+    if (!out || !out.ok) return out || { ok: false, reason: "PROMOTION_FAILED" };
+    return { ok: true, inquiry: out.bundleId ?? id, action: action2, project };
   }
 };
 for (const m of ["actionLawsPropose", "actionRiskPropose", "actionSeeksPropose", "actionReceipt", "actionScope", "actionPromise"]) {
@@ -203903,6 +204127,20 @@ function actionRecordsOps(r, url, body) {
       ends: q10("ends") ?? b.ends ?? null,
       viewer: q10("viewer"),
       author: q10("author")
+    }),
+    /* R17, R19 (T50): the action's own stake (the exact word `null` in the query, or `null` in the body, clears it; a
+       missing one is malformed), and a question opened from an action; the stamps the control plane's, from the query. */
+    actionstake: () => r.actionStake({
+      target: q10("target") || b.target,
+      viewer: q10("viewer"),
+      author: q10("author"),
+      stake: url.searchParams.has("stake") ? q10("stake") === "null" ? null : q10("stake") : b.stake
+    }),
+    actioninquiry: () => r.actionInquiry({
+      action: q10("action") || b.action,
+      question: q10("question") ?? b.question ?? "",
+      viewer: q10("viewer"),
+      author: q10("author")
     })
   };
 }
@@ -203956,34 +204194,6 @@ function withRow6(r) {
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row12.check, translation: r.translation ?? row12.translation };
 }
 var refuse20 = (code, detail, extra) => withRow6({ ok: false, reason: code, detail, ...extra || {} });
-var NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
-var NO_SUCH_ACTION_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
-function noSuchAction(actionId, extra = null) {
-  let own11 = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own11 = Object.entries(extra).filter(([k]) => !NO_SUCH_ACTION_FIXED.has(k));
-  } catch {
-    own11 = [];
-  }
-  let action2 = null;
-  try {
-    action2 = actionId === void 0 || actionId === null ? null : String(actionId);
-  } catch {
-    action2 = null;
-  }
-  const row12 = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
-  return {
-    ok: false,
-    reason: "NO_SUCH_ACTION",
-    code: "NO_SUCH_ACTION",
-    check: row12.check,
-    translation: row12.translation,
-    action: action2,
-    ...Object.fromEntries(own11),
-    detail: NO_SUCH_ACTION_DETAIL
-  };
-}
 var CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your group by member id, and this one names none. Nothing was written.";
 var CONTACT_NOT_A_MEMBER_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "detail"]);
 function contactNotAMember(extra = null) {
@@ -206698,6 +206908,9 @@ Changes: responds_to edge added to ${actionId}.
       governing_laws: governingLawsOf(fm),
       /* R25 (T47; N961): the proposals stored apart are `action-records`' (its R1–R3), read through it. */
       governing_laws_proposals: this.records.lawProposalsFor(row12.bundle_id),
+      /* R105 (T50; N933; `action-records` R17): the action's own stake, apart from its project's: `{stake, set_by, set_at,
+         history}`, `stake: null` when it states none, `"undetermined"` when unreadable. */
+      own_stake: this.records.stakeOf(row12.bundle_id),
       risk_tier_proposals: this.records.riskProposalsFor(row12.bundle_id),
       /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
       seeks: seeksOf(fm),
@@ -206822,7 +207035,9 @@ Changes: responds_to edge added to ${actionId}.
               edition_date: b.edition_date ?? null,
               accepted_at: b.accepted_at ?? null,
               identity: b.identity ?? null,
-              stake: b.stake ?? "undetermined"
+              stake: b.stake ?? "undetermined",
+              /* R105 (T50; N933; `conformance` R41): the source's matter stake as the finding's basis answers it. */
+              matter_stake: b.matter_stake ?? null
             });
           }
         }
@@ -206991,9 +207206,7 @@ Changes: responds_to edge added to ${actionId}.
   /** R29: one action's block (R25) for a viewer. */
   actionRead({ id, viewer = null, now = null } = {}) {
     const b = id ? this.#visibleAction(id, viewer) : null;
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id ?? null };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target: id, object_type: b.object_type };
+    if (!b || normalizeType(b.object_type) !== "action") return noSuchAction(id ?? null);
     const fm = this.#heldFm(id) || {};
     const d = this.derived({ bundle_id: id }, now, viewer);
     let project = null;
@@ -209445,14 +209658,14 @@ var ActionClocks = class {
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
     const ext = { target: a.id };
-    const words24 = (k2, v, need) => {
+    const words23 = (k2, v, need) => {
       const t2 = v === null || v === void 0 ? "" : String(v).trim();
       if (!t2) return need ? clockEntryRefused(k2, `${k2} is required: 1 to ${CLOCK_TEXT_MAX} characters. Nothing was written.`, ext) : null;
       if (t2.length > CLOCK_TEXT_MAX) return clockEntryRefused(k2, `${k2} is at most ${CLOCK_TEXT_MAX} characters. Nothing was written.`, ext);
       return null;
     };
     for (const [k2, v] of [["text", text8], ["description", description], ["basis", basis]]) {
-      const r = words24(k2, v, true);
+      const r = words23(k2, v, true);
       if (r) return r;
     }
     if (!isDay2(String(date ?? ""))) return clockEntryRefused("date", `date '${String(date ?? "").slice(0, 20)}' is not a calendar day written YYYY-MM-DD. Nothing was written.`, ext);
@@ -209462,7 +209675,7 @@ var ActionClocks = class {
     if (!CLOCK_OWED_BY2.includes(owed)) return clockEntryRefused("owed_by", `owed_by is one of ${CLOCK_OWED_BY2.join(", ")}. Nothing was written.`, ext);
     const own11 = {};
     const field3 = (name3, v, need) => {
-      const r = words24(name3, v, need);
+      const r = words23(name3, v, need);
       if (r) return r;
       if (v !== null && v !== void 0 && String(v).trim()) own11[name3] = String(v).trim();
       return null;
@@ -210017,8 +210230,8 @@ __export(checks_exports58, {
 var at33 = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 var FILING_TEMPLATES_WORDS = Object.freeze({
   "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
-  /* R33 (T48): moved from `filings`' `FILINGS_WORDS` (its R51) verbatim; `rfc.quoting` itself is not read (K2953) */
-  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written."
+  /* R33 (T48; by key since T50, N1130): `words.json`'s word, read through setup-words (DEC-260) */
+  "refusal.RFC_QUOTING_MISSING": word("refusal.RFC_QUOTING_MISSING")
 });
 var FILING_TEMPLATE_CHECKS = Object.freeze({
   /* ---- moved from filings (C-115) ---- */
@@ -210504,14 +210717,15 @@ function blankUnknownRefusal(text8, extra = null, why2 = "") {
     { ...extra && typeof extra === "object" ? extra : {}, blank: unknown }
   );
 }
-var RFC_QUOTING_SENTENCE = "Your reply may be quoted unless it says otherwise.";
+var RFC_QUOTING_KEY = "filing-templates.rfc_quoting_sentence";
+var RFC_QUOTING_SENTENCE = word(RFC_QUOTING_KEY);
 var RFC_KIND = PRODUCT_KINDS.find((k) => k === "request_for_comment");
 function rfcQuotingRefusal(text8, extra = null) {
   if (typeof text8 === "string" && text8.includes(RFC_QUOTING_SENTENCE)) return null;
   return refuse22(
     "RFC_QUOTING_MISSING",
     "a request for comment carries the sentence that the reply may be quoted unless it says otherwise",
-    { ...extra && typeof extra === "object" ? extra : {}, sentence: RFC_QUOTING_SENTENCE, key: "rfc.quoting" }
+    { ...extra && typeof extra === "object" ? extra : {}, sentence: RFC_QUOTING_SENTENCE, key: RFC_QUOTING_KEY }
   );
 }
 function templateHandle(name3) {
@@ -213458,6 +213672,21 @@ function actionHoldsOps(h, url, body) {
   };
 }
 
+// src/filings/words.mjs
+var READ = /* @__PURE__ */ new Set();
+function word2(key2, vars = {}) {
+  const out = word(key2, vars);
+  READ.add(key2);
+  return out;
+}
+var WORDS_OWED = Object.freeze([
+  "stake.inmatter",
+  "stake.source.action",
+  "stake.source.project",
+  "stake.unreadable",
+  "state.undetermined"
+]);
+
 // src/filings/schema.mjs
 var FILINGS_SCHEMA = `
 -- R5: A DRAFT, prepared from the record and stored apart from the action. One
@@ -213678,261 +213907,250 @@ function migrateFilings(sql) {
 var checks_exports60 = {};
 __export(checks_exports60, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
-  FILINGS_WORDS: () => FILINGS_WORDS,
   rowOf: () => rowOf15
 });
 var at35 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
-var FILINGS_WORDS = Object.freeze({
-  "refusal.CONTRADICTED_HELD": "The record contradicts a sentence in this text. Rewrite it, or release it with a reason, before approving. Nothing was written.",
-  "refusal.SELF_BENEFIT_ASK": "A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
-  "refusal.NOT_A_PARTNER": "That organization isn't one of this action's partners. Add it as a partner first. Nothing was written.",
-  "refusal.JOINT_FINGERPRINT_MISMATCH": "The partner's copy isn't the same text your group approved. They sign the same words, or none. Nothing was written.",
-  "refusal.SAME_APPROVER": "The second approval comes from a member other than the one who approved first. Nothing was written.",
-  "refusal.ASSERTION_UNRESOLVED": "A sentence that reads as saying the body broke a rule is still open. Rewrite it, confirm the act only asks, or treat the act as a breach claim. Nothing was written.",
-  "refusal.ASSERTION_RESOLUTION_REFUSED": 'Each answer names one sentence that was pointed out, once; "it only asks" needs your own words, and a breach claim takes none. Nothing was written.'
-});
-var word2 = (code) => FILINGS_WORDS[`refusal.${code}`];
 var FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
     check: "C-115.1",
     where: at35("filingPrepare", "is-filing-prepare"),
-    translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
+    translation: word2("refusal.FILING_NO_PREPARER")
   },
   ACTION_CLOSED: {
     check: "C-115.3",
     where: at35("#closed", "is-action-closed"),
-    translation: "The action is resolved or abandoned, so nothing is prepared for it."
+    translation: word2("refusal.ACTION_CLOSED")
   },
   FILING_TIER_UNDETERMINED: {
     check: "C-115.4",
     where: at35("filingPrepare", "is-filing-prepare"),
-    translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
+    translation: word2("refusal.FILING_TIER_UNDETERMINED")
   },
   TIER3_COUNSEL_PACKET: {
     check: "C-115.5",
     where: at35("filingPrepare", "is-filing-prepare"),
-    translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
+    translation: word2("refusal.TIER3_COUNSEL_PACKET")
   },
   MACHINE_CANNOT_APPROVE: {
     check: "C-115.7",
     where: at35("filingApprove", "is-filing-approve"),
-    translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
+    translation: word2("refusal.MACHINE_CANNOT_APPROVE")
   },
   NO_SUCH_FILING: {
     check: "C-115.8",
     where: at35("#noFiling", "is-no-such-filing"),
-    translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
+    translation: word2("refusal.NO_SUCH_FILING")
   },
   ALREADY_APPROVED: {
     check: "C-115.9",
     where: at35("#alreadyApproved", "is-already-approved"),
-    translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
+    translation: word2("refusal.ALREADY_APPROVED")
   },
   FILING_STALE: {
     check: "C-115.10",
     where: at35("filingApprove", "is-filing-approve"),
-    translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
+    translation: word2("refusal.FILING_STALE")
   },
   STILL_UNFILLED: {
     check: "C-115.11",
     where: at35("filingApprove", "is-filing-approve"),
-    translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
+    translation: word2("refusal.STILL_UNFILLED")
   },
   TEXT_UNWRITABLE: {
     check: "C-115.12",
     where: at35("#unwritable", "is-text-unwritable"),
-    translation: "The text is empty, too long, or not readable as text, so it cannot be prepared or recorded as approved."
+    translation: word2("refusal.TEXT_UNWRITABLE")
   },
   MACHINE_CANNOT_FILE: {
     check: "C-115.13",
     where: at35("filingRecordSent", "is-filing-sent"),
-    translation: "Only a named member can record that a filing was sent. Your group's Civicsmith sends nothing itself."
+    translation: word2("refusal.MACHINE_CANNOT_FILE")
   },
   NOT_APPROVED: {
     check: "C-115.14",
     where: at35("filingRecordSent", "is-filing-sent"),
-    translation: "A member approves the draft before it is recorded as sent."
+    translation: word2("refusal.NOT_APPROVED")
   },
   ALREADY_SENT: {
     check: "C-115.15",
     where: at35("filingRecordSent", "is-filing-sent"),
-    translation: "This draft is already recorded as sent, and that record stands."
+    translation: word2("refusal.ALREADY_SENT")
   },
   MACHINE_CANNOT_NAME_COUNSEL: {
     check: "C-115.16",
     where: at35("counselPacket", "is-counsel-packet"),
-    translation: "Only a named member can name the group's counsel and assemble a packet for them."
+    translation: word2("refusal.MACHINE_CANNOT_NAME_COUNSEL")
   },
   NO_COUNSEL: {
     check: "C-115.18",
     where: at35("counselPacket", "is-counsel-packet"),
-    translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
+    translation: word2("refusal.NO_COUNSEL")
   },
   NO_SUCH_PACKET: {
     check: "C-115.20",
     where: at35("#noPacket", "is-no-such-packet"),
-    translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
+    translation: word2("refusal.NO_SUCH_PACKET")
   },
   MACHINE_CANNOT_EXPORT: {
     check: "C-115.21",
     where: at35("counselPacketExport", "is-packet-export"),
-    translation: "Only a named member can hand a counsel packet to counsel."
+    translation: word2("refusal.MACHINE_CANNOT_EXPORT")
   },
   NO_THEORY: {
     check: "C-115.22",
     where: at35("theoryPropose", "is-theory-propose"),
-    translation: "State the candidate theory, and any remedy, in words that are not too long."
+    translation: word2("refusal.NO_THEORY")
   },
   THEORY_NO_STANDARDS: {
     check: "C-115.23",
     where: at35("theoryPropose", "is-theory-propose"),
-    translation: "A candidate theory names the standards it rests on."
+    translation: word2("refusal.THEORY_NO_STANDARDS")
   },
   THEORY_STANDARD_UNREADABLE: {
     check: "C-115.24",
     where: at35("theoryPropose", "is-theory-propose"),
-    translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
+    translation: word2("refusal.THEORY_STANDARD_UNREADABLE")
   },
   THEORY_WHY_REFUSED: {
     check: "C-115.25",
     where: at35("theoryPropose", "is-theory-propose"),
-    translation: "Say why the theory is proposed, in at most 1,000 characters."
+    translation: word2("refusal.THEORY_WHY_REFUSED")
   },
   DETERMINATION_UNREADABLE: {
     check: "C-115.26",
     where: at35("availableActions", "is-available-actions"),
-    translation: "No determination can be read here, so the actions available against its offices cannot be listed."
+    translation: word2("refusal.DETERMINATION_UNREADABLE")
   },
   THEORY_NO_PROPOSER: {
     check: "C-115.27",
     where: at35("theoryPropose", "is-theory-propose"),
-    translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
+    translation: word2("refusal.THEORY_NO_PROPOSER")
   },
   /* T18 (K608, K613 (3)): R23's communications; R26's template library (its rows .31–.33, .35–.38 moved to
      `filing-templates` in T21, K921, K922). */
   COMMUNICATION_NO_PREPARER: {
     check: "C-115.28",
     where: at35("communicationPrepare", "is-communication-prepare"),
-    translation: "Nobody is named as the one preparing this communication. Every draft names who prepared it."
+    translation: word2("refusal.COMMUNICATION_NO_PREPARER")
   },
   COMMUNICATION_TEXT_REFUSED: {
     check: "C-115.29",
     where: at35("communicationPrepare", "is-communication-prepare"),
-    translation: "The communication's words are empty, too long, or not readable as text."
+    translation: word2("refusal.COMMUNICATION_TEXT_REFUSED")
   },
   COMMUNICATION_PURPOSE_REFUSED: {
     check: "C-115.30",
     where: at35("communicationPrepare", "is-communication-prepare"),
-    translation: "Say what the communication is for, in at most 500 characters."
+    translation: word2("refusal.COMMUNICATION_PURPOSE_REFUSED")
   },
   TEMPLATE_FROM_UNAPPROVED: {
     check: "C-115.34",
     where: at35("templateSave", "is-template-save"),
-    translation: "A template is drafted from a draft a member has approved. Approve the draft first."
+    translation: word2("refusal.TEMPLATE_FROM_UNAPPROVED")
   },
   TEMPLATE_KIND_MISMATCH: {
     check: "C-115.39",
     where: at35("#kindMismatch", "is-template-kind-mismatch"),
-    translation: "The template named is written for another kind of action. Name one written for this kind."
+    translation: word2("refusal.TEMPLATE_KIND_MISMATCH")
   },
   TEMPLATE_NOT_NAMED: {
     check: "C-115.40",
     where: at35("filingPrepare", "is-template-not-named"),
-    translation: "The jurisdiction profile holds no file template for this kind: name a template, or write the words."
+    translation: word2("refusal.TEMPLATE_NOT_NAMED")
   },
   /* T21 (K921, K922, K924): R28's and R31's templates. */
   TEMPLATE_USE_BRIEF: {
     check: "C-115.41",
     where: at35("filingPrepare", "is-template-use-brief"),
-    translation: "The template named is a briefing to counsel: it serves a counsel packet, never a filing."
+    translation: word2("refusal.TEMPLATE_USE_BRIEF")
   },
   TEMPLATE_USE_FILE: {
     check: "C-115.42",
     where: at35("counselPacket", "is-template-use-file"),
-    translation: "The template named is wording the group files in its own name: a counsel packet's briefing takes a brief template."
+    translation: word2("refusal.TEMPLATE_USE_FILE")
   },
   TEMPLATE_AND_TEXT: {
     check: "C-115.43",
     where: at35("filingPrepare", "is-filing-prepare"),
-    translation: "Name a template or write the words, not both."
+    translation: word2("refusal.TEMPLATE_AND_TEXT")
   },
   /* T22 (DEC-88, K1025): R8's reason, a new row, taken by 1.53.0. */
   PACKET_NO_REASON: {
     check: "C-115.44",
     where: at35("counselPacket", "is-counsel-packet"),
-    translation: "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
+    translation: word2("refusal.PACKET_NO_REASON")
   },
   /* T45 (K2780, K2791): the record check, the chance to fix, quoting, joint texts, second approval, the assertion gate,
      "as myself" (R34, R36, R38, R40, R42–R44); R23's chosen findings; the marks stated at preparation. T46 (R51): eight
-     translate by `FILINGS_WORDS`, read by key; `SECOND_APPROVAL_NEEDED` keeps its own until its sentence and R42 agree. */
+     translate by `words.json`'s `refusal.<CODE>`, read by key (T50: every row of the family, `SECOND_APPROVAL_NEEDED` too). */
   CONTRADICTED_HELD: {
     check: "C-115.45",
     where: at35("#outwardRefusal", "is-contradicted-held"),
-    translation: word2("CONTRADICTED_HELD")
+    translation: word2("refusal.CONTRADICTED_HELD")
   },
   SELF_BENEFIT_ASK: {
     check: "C-115.46",
     where: at35("#outwardRefusal", "is-self-benefit-ask"),
-    translation: word2("SELF_BENEFIT_ASK")
+    translation: word2("refusal.SELF_BENEFIT_ASK")
   },
   /* C-115.47 `RFC_QUOTING_MISSING` is `filing-templates`' row since T48 (R57; its R33): refused at R6 through its
      `rfcQuotingRefusal`, answered as it gives it. */
   NOT_A_PARTNER: {
     check: "C-115.48",
     where: at35("jointSignatory", "is-joint-signatory"),
-    translation: word2("NOT_A_PARTNER")
+    translation: word2("refusal.NOT_A_PARTNER")
   },
   JOINT_FINGERPRINT_MISMATCH: {
     check: "C-115.49",
     where: at35("jointSignatory", "is-joint-signatory"),
-    translation: word2("JOINT_FINGERPRINT_MISMATCH")
+    translation: word2("refusal.JOINT_FINGERPRINT_MISMATCH")
   },
   SECOND_APPROVAL_NEEDED: {
     check: "C-115.50",
     where: at35("filingRecordSent", "is-filing-sent"),
-    translation: "Your project asks a second member to approve this act before it is sent, and no second member has yet."
+    translation: word2("refusal.SECOND_APPROVAL_NEEDED")
   },
   SAME_APPROVER: {
     check: "C-115.51",
     where: at35("filingSecondApprove", "is-second-approve"),
-    translation: word2("SAME_APPROVER")
+    translation: word2("refusal.SAME_APPROVER")
   },
   ASSERTION_UNRESOLVED: {
     check: "C-115.52",
     where: at35("#outwardRefusal", "is-assertion-unresolved"),
-    translation: word2("ASSERTION_UNRESOLVED")
+    translation: word2("refusal.ASSERTION_UNRESOLVED")
   },
   ASSERTION_RESOLUTION_REFUSED: {
     check: "C-115.53",
     where: at35("#outwardRefusal", "is-assertion-resolution-refused"),
-    translation: word2("ASSERTION_RESOLUTION_REFUSED")
+    translation: word2("refusal.ASSERTION_RESOLUTION_REFUSED")
   },
   NOT_THE_GROUPS_ACT: {
     check: "C-115.54",
     where: at35("#notTheGroups", "is-not-the-groups-act"),
-    translation: "These are your own notes, prepared as yourself: they are not the group's act, so they are never approved or recorded as sent by the group."
+    translation: word2("refusal.NOT_THE_GROUPS_ACT")
   },
   NO_SUCH_BUNDLE: {
     check: "C-115.55",
     where: at35("communicationPrepare", "is-communication-from"),
-    translation: "A finding or inquiry named to draft from is not one you can read here. One you may not see answers the same as one that does not exist."
+    translation: word2("refusal.NO_SUCH_BUNDLE")
   },
   FILING_MARK_REFUSED: {
     check: "C-115.56",
     where: at35("#marks", "is-filing-mark-refused"),
-    translation: "Something you marked about this text (whose voice it is, its audience, its language, the sentences about the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared."
+    translation: word2("refusal.FILING_MARK_REFUSED")
   },
   /* T47 (DEC-209 (3), (4); K3100): R54's venue reference at sending and R55's member's own fills, the family's next
      numbers in the requirements' order. */
   SENT_REFERENCE_MALFORMED: {
     check: "C-115.57",
     where: at35("filingRecordSent", "is-sent-reference-malformed"),
-    translation: "The venue's reference for this sending is one line of 1 to 100 characters, as the venue gave it. Nothing was recorded."
+    translation: word2("refusal.SENT_REFERENCE_MALFORMED")
   },
   FILL_UNKNOWN_BLANK: {
     check: "C-115.58",
     where: at35("#fills", "is-fill-unknown-blank"),
-    translation: "You filled in a blank the text does not have. Fill only the blanks the text names. Nothing was prepared."
+    translation: word2("refusal.FILL_UNKNOWN_BLANK")
   }
 });
 function rowOf15(code) {
@@ -213941,7 +214159,7 @@ function rowOf15(code) {
 
 // src/filings/dates.mjs
 var DATE_RE7 = /^(\d{4})-(\d{2})-(\d{2})$/;
-var COUNTED_FROM = "counted from the day after the start event";
+var COUNTED_FROM = word2("filings.counted_day_start");
 function realDate(v) {
   const m = DATE_RE7.exec(String(v ?? ""));
   if (!m) return null;
@@ -213959,13 +214177,13 @@ function deadlineDate({
   factOf = null
 } = {}) {
   const from = realDate(start);
-  if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
+  if (!from) return { state: "undetermined", why: word2("filings.why.start_event_recorded") };
   if (!Number.isInteger(days) || days < 0)
-    return { state: "undetermined", why: "the rule states no whole number of days (the profiles may disagree on it)" };
+    return { state: "undetermined", why: word2("filings.why.rule_states_whole") };
   if (count2 !== "calendar" && count2 !== "business")
-    return { state: "undetermined", why: "the rule states no count (calendar or business days), so no date is computed" };
+    return { state: "undetermined", why: word2("filings.why.rule_states_count") };
   if (count2 === "business" && days > 2600)
-    return { state: "undetermined", why: "the count runs past ten years" };
+    return { state: "undetermined", why: word2("filings.why.count_runs_past") };
   const v = view && typeof view === "object" ? view : {};
   const c = computeDeadline(
     { ...rule && typeof rule === "object" ? rule : {}, starts: "filed", days, count: count2 },
@@ -213977,50 +214195,19 @@ function deadlineDate({
   if (!c.date)
     return {
       state: "undetermined",
-      why: count2 === "business" ? `${c.why.replace(/^the count reaches (\d{4})/, "the business-day count reaches into $1")} (or withholds, the active profiles disagreeing), so it is not counted` : c.why,
+      why: count2 === "business" ? word2("filings.why.withholds_active_profiles", { why: c.why }) : c.why,
       ...calendar2
     };
   return {
     state: "determined",
     date: c.date,
-    counted: count2 === "calendar" ? `${days} calendar days, ${COUNTED_FROM}` : `${days} business days on the profile's holiday calendar, ${COUNTED_FROM}`,
+    counted: count2 === "calendar" ? `${days} calendar days, ${COUNTED_FROM}` : word2("filings.business_days_profile", { days, counted_from: COUNTED_FROM }),
     ...calendar2
   };
 }
 
 // src/filings/outward.mjs
-var KEYED = Object.freeze({
-  /* R35 */
-  "prepared.rests.held": "Rests on findings checked for publication on {date}, not yet published.",
-  "prepared.rests.accepted": "Rests on findings of {group} (edition of {date}), accepted by us on {date_accepted}.",
-  /* R10 */
-  "packet.privileged": "Privileged and confidential: prepared for counsel",
-  "packet.privileged.warning": "This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. Share it only with your lawyer.",
-  /* R39 */
-  "filings.election.notice": "This names a pending measure or candidate. {fact} ({citation})",
-  /* R45 */
-  "recognition.staff_public": "This thanks staff by name in public. Check that they are willing to be named.",
-  /* the pointers: R34, R39, R38, R48 */
-  "pointer.record.supported": "Supported by the record: {findings}",
-  "pointer.record.unsupported": "The record doesn't support this sentence. You may still send it.",
-  "pointer.record.contradicted": "The record contradicts this sentence. It is held until you rewrite it, or release it with a reason.",
-  "pointer.position": "Reads as a policy position: remove it, or comment as yourself.",
-  "pointer.selfbenefit": "Asks for something for your group: rewrite it before approving.",
-  "pointer.staff": "Names staff below the official responsible (the assistant's reading).",
-  "pointer.staff.notrun": "Staff names weren't checked: the assistant is off.",
-  /* R44 */
-  "voice.group": "For the group",
-  "voice.group.means": "Approved and sent as your group's act.",
-  "voice.self": "As myself",
-  "voice.self.means": "Your own notes for speaking as yourself. It is not the group's act, and it is never recorded as sent or published.",
-  /* R42 */
-  "filings.secondapproval.given": "Second approval given by {member} on {date}.",
-  /* kept in T46 (R52) */
-  "phrasing.no_list": "Nothing could be pointed out: no phrasing list is held for this language.",
-  "filings.review_copy.no_embargo": "No embargo is stated for this copy.",
-  "filings.review_copy.terms": "Review copy. Embargoed until {embargo}; for release at {release}."
-});
-var keyed4 = (key2, fill = {}) => KEYED[key2].replace(/\{(\w+)\}/g, (_, n2) => fill[n2] ?? `{${n2}}`);
+var keyed4 = (key2, fill = {}) => word2(key2, fill);
 function sentencesOf(text8) {
   return String(text8 ?? "").split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
 }
@@ -214029,7 +214216,7 @@ var VERDICTS = Object.freeze(["supported", "unsupported", "contradicted", "undet
 function verdictsOf(judged, answer2, cites) {
   const out = /* @__PURE__ */ new Map();
   if (!answer2 || answer2.ok !== true || !Array.isArray(answer2.departures)) {
-    for (const i of judged) out.set(i, { verdict: "undetermined", why: "the record check could not be run, so this sentence is not judged" });
+    for (const i of judged) out.set(i, { verdict: "undetermined", code: "RECORD_CHECK_UNREAD" });
     return out;
   }
   for (const i of judged) out.set(i, { verdict: "supported", by: cites });
@@ -214055,39 +214242,63 @@ function askAllowed(sentence2, allowed) {
 }
 function groundWords(g) {
   if (!g || typeof g !== "object") return null;
-  if (g.kind === "legal_deadline") return `a legal deadline, ${g.citation ?? "its citation not stated"}, falling on ${g.date ?? "a date not stated"}`;
-  if (g.kind === "irreversible_act") return `an imminent irreversible act, ${g.what ?? "what is not stated"}, at ${g.when ?? "a time not stated"}`;
+  if (g.kind === "legal_deadline")
+    return word2("filings.legal_deadline_falling", {
+      citation: g.citation ?? word2("filings.citation_stated"),
+      date: g.date ?? word2("filings.date_stated")
+    });
+  if (g.kind === "irreversible_act")
+    return word2("filings.imminent_irreversible_act", { what: g.what ?? word2("filings.stated"), when: g.when ?? word2("filings.time_stated") });
   return null;
 }
-var OVERRIDE_HEAD = "Rests on an unestablished premise:";
+var OVERRIDE_HEAD = word2("filings.rests_unestablished_premise");
 function overrideDisclosure(o) {
   const g = groundWords(o.ground);
-  return `${OVERRIDE_HEAD} ${o.reason}${g ? `; on the ground of ${g}` : ""} (stated by ${o.by ?? "an author the record does not name"} at ${o.at ?? "a time the record does not state"})`;
+  return word2("filings.stated_by_at", {
+    override_head: OVERRIDE_HEAD,
+    reason: o.reason,
+    grade: g ? word2("filings.ground", { grade: g }) : "",
+    by: o.by ?? word2("filings.author_record_name"),
+    at: o.at ?? word2("filings.date_record_state")
+  });
+}
+function matterWords(m, { source: source2 = false } = {}) {
+  if (m == null) return null;
+  const s = m && typeof m === "object" ? m.stake : m;
+  if (s === null || s === void 0) return null;
+  const head = word2("stake.inmatter");
+  if (s === "undetermined") return `${head}: ${word2("stake.unreadable")}`;
+  if (!source2 || !m || typeof m !== "object") return `${head}: ${s}`;
+  const key2 = m.source === "action" ? "stake.source.action" : "stake.source.project";
+  const date = typeof m.set_at === "string" && m.set_at ? m.set_at.slice(0, 10) : word2("filings.date_record_state");
+  return `${head}: ${s} (${word2(key2, { who: m.set_by || word2("filings.author_record_name"), date })})`;
 }
 function identityWords(d) {
   const id = d.identity && typeof d.identity === "object" ? d.identity : null;
   const name3 = id ? [id.name ?? id.display_name, id.domain].filter(Boolean).join(", ") : "";
   const stake = d.stake == null ? "none declared" : String(d.stake);
-  return `Its public identity: ${name3 || "undetermined"}. Its declared stake: ${stake}.`;
+  const matter2 = matterWords(d.matter_stake);
+  const head = word2("filings.public_identity_declared", { name: name3 || "undetermined", stake });
+  return matter2 ? `${head} ${matter2}.` : head;
 }
 function disclosureLines(disclosures, override) {
   const list6 = Array.isArray(disclosures) ? disclosures.filter((d) => d && typeof d === "object") : null;
   if (!list6) return override ? [{ key: "filings.override", kind: "override", text: overrideDisclosure(override) }] : [];
   return list6.map((d) => {
     if (d.kind === "checked_held")
-      return { key: "prepared.rests.held", kind: d.kind, text: keyed4("prepared.rests.held", { date: d.checked_at ?? "a date not stated" }) };
+      return { key: "prepared.rests.held", kind: d.kind, text: word2("prepared.rests.held", { date: d.checked_at ?? word2("filings.date_stated") }) };
     if (d.kind === "accepted")
       return {
         key: "prepared.rests.accepted",
         kind: d.kind,
-        text: `${keyed4("prepared.rests.accepted", {
-          group: d.group ?? "a group not named",
-          date: d.edition_date ?? "a date not stated",
-          date_accepted: d.accepted_at ?? "a date not stated"
+        text: `${word2("prepared.rests.accepted", {
+          group: d.group ?? word2("filings.group_named"),
+          date: d.edition_date ?? word2("filings.date_stated"),
+          date_accepted: d.accepted_at ?? word2("filings.date_stated")
         })} ${identityWords(d)}`
       };
     if (d.kind === "override") return { key: "filings.override", kind: d.kind, text: overrideDisclosure({ ...override || {}, ...d }) };
-    return { key: `filings.disclosure.${d.kind}`, kind: d.kind ?? null, text: `Disclosed: ${JSON.stringify(d)}` };
+    return { key: `filings.disclosure.${d.kind}`, kind: d.kind ?? null, text: word2("filings.disclosed", { date: JSON.stringify(d) }) };
   });
 }
 
@@ -214100,10 +214311,15 @@ var THEORY_TEXT_MAX = 2e3;
 var COUNSEL_FIELD_MAX = 200;
 var PACKET_REASON_MAX = 2e3;
 var CHRONOLOGY_MAX = 500;
-var LANE_WORDS = Object.freeze({ world: "what they did", ours: "what we did" });
+var LANE_WORDS = Object.freeze({ world: word2("screen.timeline.lane.world"), ours: word2("screen.timeline.lane.ours") });
+var ASK_WHAT = Object.freeze({
+  requirement: word2("filings.standard_requirement"),
+  consequence: word2("filings.remedy_recorded_consequence"),
+  route: word2("filings.route_profile_names")
+});
 var SENT_REFERENCE_MAX = 100;
 var FILINGS_FOR_MAX = 200;
-var counselMarking = (counsel) => counsel && counsel.name ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.` : "Prepared for the group's own review. Not legal advice. Not for filing.";
+var counselMarking = (counsel) => counsel && counsel.name ? word2("filings.prepared_review_legal", { name: counsel.name, organization: counsel.organisation }) : word2("filings.prepared_group_review");
 var COMMUNICATION_PURPOSE_MAX = 500;
 var COMMUNICATION_PURPOSES = Object.freeze(["document_infraction", "chance_to_fix"]);
 var AUDIENCES2 = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
@@ -214118,32 +214334,36 @@ var TEMPLATES_NAMED_MAX = 20;
 var INBAND_RULE = "---- in-band ----";
 function inbandBlock(q10) {
   const f17 = q10.floors || {};
+  const matter2 = q10.group ? matterWords(q10.group.matter_stake, { source: true }) : null;
   return [
     INBAND_RULE,
-    `Format: ${q10.format}.`,
-    `Hash: sha256 ${q10.hash.sha256} over ${q10.hash.over} (${q10.hash.bytes} bytes; ${q10.hash.canonical}).`,
-    `Date: ${q10.date ?? "undetermined"}. Author: ${q10.author ?? "undetermined"}.`,
-    `Floors: capture ${f17.capture ?? "none"}, connection ${f17.connection ?? "none"}. ${f17.detail ?? ""}`.trimEnd(),
-    ...q10.group ? [groupLine(q10.group)] : [],
+    word2("filings.format", { format: q10.format }),
+    word2("filings.hash_sha_bytes", { sha256: q10.hash.sha256, over: q10.hash.over, bytes: q10.hash.bytes, canonical: q10.hash.canonical }),
+    word2("filings.date_author", { date: q10.date ?? "undetermined", author: q10.author ?? "undetermined" }),
+    word2("filings.floors_capture_connection", { capture: f17.capture ?? "none", connection: f17.connection ?? "none", detail: f17.detail ?? "" }).trimEnd(),
+    ...q10.group ? [groupLine(q10.group), ...matter2 ? [`${matter2}.`] : []] : [],
     JSON.stringify(q10),
     ""
   ].join("\n");
 }
 function groupLine(g) {
   const who4 = [g.name, g.domain].filter(Boolean).join(", ");
-  return `Group: ${who4 || "its public identity undetermined"}. Declared stake: ${g.stake == null ? "none declared" : g.stake}.`;
+  return word2("filings.group_declared_stake", {
+    who: who4 || word2("filings.public_identity_undetermined"),
+    stake: g.stake == null ? "none declared" : g.stake
+  });
 }
-var COUNSEL_SENTENCE = "Such an action requires competent counsel: no template is offered for it, and the group names counsel to evaluate it.";
+var COUNSEL_SENTENCE = word2("filings.action_requires_competent");
 var TIER_WORDS = Object.freeze({
-  1: "Tier 1: a member may prepare and file it from the record's template.",
-  2: "Tier 2: a member may prepare it from the record's template; legal review is recommended before filing.",
-  3: "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the group names.",
-  undetermined: "The risk tier is undetermined: neither the profile nor a member has stated it."
+  1: word2("filings.tier_member_prepare"),
+  2: word2("filings.tier_member_prepare_record"),
+  3: word2("filings.tier_requires_competent"),
+  undetermined: word2("filings.risk_tier_undetermined")
 });
 var COUNSEL_OFFER = Object.freeze(["counsel_packet"]);
 var CLOSED2 = Object.freeze(["resolved", "abandoned"]);
 var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
-var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
+var DRAFT_SAYS = word2("filings.draft_prepared_record");
 var str47 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var json12 = (v) => JSON.stringify(v ?? null);
 var parse11 = (s) => {
@@ -214178,7 +214398,8 @@ var SERVICES2 = Object.freeze([
   "holdNoticePrepare",
   "templatesForAction",
   "approvedUnsent",
-  "filingRead"
+  "filingRead",
+  "stakeAtPreparation"
 ]);
 var Filings = class _Filings {
   #deps;
@@ -214331,10 +214552,10 @@ var Filings = class _Filings {
   #view() {
     const ids = this.#call(() => this.profiles());
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, conflicts: [], why: "your group's Civicsmith has no active jurisdiction profile" };
+      return { view: null, conflicts: [], why: word2("filings.why.group_civicsmith_active") };
     const lf = this.#profilesGiven ? null : this.localFacts;
     const c = lf && typeof lf.governingView === "function" ? this.#call(() => lf.governingView()) : combine(ids);
-    if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
+    if (!c || !c.ok) return { view: null, conflicts: [], why: word2("filings.why.active_jurisdiction_profiles") };
     return { view: c.view, conflicts: c.conflicts || [], why: null };
   }
   /* An action the viewer may see, as actions' read answers it (its R29), or null: absent, invisible and not an action
@@ -214364,8 +214585,33 @@ var Filings = class _Filings {
       partners: Array.isArray(a.partners) ? a.partners.filter(isObj46) : [],
       press_terms: isObj46(a.press_terms) ? a.press_terms : null,
       breach: a.breach === true,
-      project: this.#bundleProject(target)
+      project: this.#bundleProject(target),
+      /* T50 (R60): the action's own stake as its read answers it (`actions` R105: `{stake, set_by, set_at, history}`);
+         undefined while its read answers none, "undetermined" in a form it cannot read */
+      own_stake: a.own_stake == null ? void 0 : isObj46(a.own_stake) ? { stake: a.own_stake.stake === void 0 ? null : a.own_stake.stake, set_by: a.own_stake.set_by ?? null, set_at: a.own_stake.set_at ?? null } : { stake: "undetermined", set_by: null, set_at: null }
     };
+  }
+  /** R60 (T50; N933): the stake shown for an action: its own (`own_stake`) when one is set, otherwise its project's
+   *  (`public-read.groupFields({project})`'s `matter_stake`, its R36), otherwise none. Answers `{stake, set_by, set_at,
+   *  source: "action" | "project"}` or null. A source that cannot be read answers `{stake: "undetermined", ...}` with its
+   *  own `source`, never the other source and never null: an unread stake is not none. `project` is the project the
+   *  action's record names, else the one given (the determination's it rests on). This is the only site of the rule. */
+  #matterStake(a, project = null) {
+    const own11 = a.own_stake;
+    if (own11 && own11.stake !== null) {
+      const s = typeof own11.stake === "string" ? own11.stake.trim() : null;
+      return s && own11.stake !== "undetermined" ? { stake: s, set_by: own11.set_by ?? null, set_at: own11.set_at ?? null, source: "action" } : { stake: "undetermined", set_by: null, set_at: null, source: "action" };
+    }
+    const id = str47(a.project) || str47(project);
+    if (!id) return null;
+    const unread = { stake: "undetermined", set_by: null, set_at: null, source: "project" };
+    const p3 = this.publicRead;
+    const g = p3 && typeof p3.groupFields === "function" ? this.#call(() => p3.groupFields({ project: id })) : null;
+    if (!isObj46(g)) return unread;
+    const m = g.matter_stake;
+    if (m == null) return null;
+    if (!isObj46(m) || typeof m.stake !== "string" || !m.stake.trim() || m.stake === "undetermined") return unread;
+    return { stake: m.stake, set_by: m.set_by ?? null, set_at: m.set_at ?? null, source: "project" };
   }
   /* R10, R42 (T45): the project the action belongs to, as record-core holds it for its bundle (its R34); null when it
      names none, and the project of the determination it rests on is read in its place (`#projectOf`). */
@@ -214389,7 +214635,7 @@ var Filings = class _Filings {
      module answers actions' read (K248: refused, never passed). The code is actions' (its R43; N217, K275): its row, its
      fixed sentence; where no module answers the read, `why` says so as an extra field (K351). */
   #noAction(id) {
-    return noSuchAction(str47(id), this.actions && typeof this.actions.actionRead === "function" ? void 0 : { why: "no module answers an action's read here, so no action is readable" });
+    return noSuchAction(str47(id), this.actions && typeof this.actions.actionRead === "function" ? void 0 : { why: word2("filings.why.module_answers_action") });
   }
   /* R6, R7, R19: the one answer for a draft that is absent or whose action the viewer may not see. */
   #noFiling(id) {
@@ -214458,9 +214704,10 @@ var Filings = class _Filings {
   /* Why the act has no single day, in words (R3's `act_date`, R9's deadlines). */
   static #actDayWhy(act2) {
     const w = act2.when;
-    if (isObj46(act2.period)) return "the determination states the act over a period, so no single day starts it";
-    if (!w || w === "undetermined") return `the act's event ${w === "undetermined" ? "has an undetermined date" : "is placed nowhere: no record dates it"}`;
-    return "the act's event is dated only within a band, so no single day starts it";
+    if (isObj46(act2.period)) return word2("filings.determination_states_act");
+    if (!w || w === "undetermined")
+      return word2("filings.act_event", { words: word2(w === "undetermined" ? "filings.undetermined_date" : "filings.placed_nowhere_record") });
+    return word2("filings.act_event_dated");
   }
   /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
    *  exists that the viewer may not see. */
@@ -214485,13 +214732,13 @@ var Filings = class _Filings {
   }
   /* standards R7, read as `{state, why}` whatever its spelling. */
   #inForce(id, date) {
-    if (!date) return { state: "undetermined", why: "the act's date is not a single day, so which standard was in force is not asked" };
+    if (!date) return { state: "undetermined", why: word2("filings.why.act_date_single") };
     if (!this.standards || typeof this.standards.inForce !== "function")
-      return { state: "undetermined", why: "no module answers whether a standard was in force" };
+      return { state: "undetermined", why: word2("filings.why.module_answers_whether") };
     const r = this.#call(() => this.standards.inForce(id, date));
     if (typeof r === "string") return { state: r, why: null };
     if (isObj46(r) && str47(r.state)) return { state: r.state, why: r.why ?? null };
-    return { state: "undetermined", why: "whether the standard was in force could not be read" };
+    return { state: "undetermined", why: word2("filings.why.whether_standard_force") };
   }
   /** The governing tier (Terms, R2; K102): the stricter of the kind's tier in the profile and the action's own;
    *  `undetermined` when the action's is; the action's alone when the profile gives the kind none, stated so. */
@@ -214501,19 +214748,17 @@ var Filings = class _Filings {
     const withheld = v.conflicts.some((c) => c.at === `action_kinds[${action2.kind}].tier`);
     const base2 = { action_tier: action2.risk_tier, kind_tier: kindTier };
     if (action2.risk_tier === "undetermined")
-      return {
-        tier: "undetermined",
-        ...base2,
-        says: "the action's risk tier is undetermined, and it is never read as 1: a member states it first"
-      };
+      return { tier: "undetermined", ...base2, says: word2("filings.says.action_risk_tier") };
     if (kindTier === null)
       return {
         tier: action2.risk_tier,
         ...base2,
-        says: `${withheld ? "the active profiles disagree on this kind's tier, so none is given" : v.view ? "the profile gives this kind no tier" : v.why}; the action's own tier alone governs`
+        says: word2("filings.says.action_tier_alone", {
+          withheld: withheld ? word2("filings.says.active_profiles_disagree") : v.view ? word2("filings.says.profile_gives_kind") : v.why
+        })
       };
     const tier = Math.max(kindTier, action2.risk_tier);
-    return { tier, ...base2, says: `the stricter of the kind's tier in the profile (${kindTier}) and the action's (${action2.risk_tier}) governs` };
+    return { tier, ...base2, says: word2("filings.says.stricter_kind_tier", { kind_tier: kindTier, risk_tier: action2.risk_tier }) };
   }
   /* ---------------------------------------------------------------- R1–R5: filingPrepare */
   /* R3: every blank's value and source, or why it has none. `det` the determination (null), `hidden` whether one the
@@ -214523,24 +214768,24 @@ var Filings = class _Filings {
     const none = (why2) => ({ why: why2 });
     const cp = action2.counterparty;
     const arm = !cp ? null : cp.state === "named" ? str47(cp.kind) || "office" : str47(cp.state);
-    const cpWhy = !cp ? "the action states no counterparty" : cp.state === "undetermined" ? "the action's counterparty is undetermined" : "the action's counterparty names no such part";
-    const notHeld2 = (part) => none(arm === "audience" ? `the action is addressed to an audience, which holds no ${part}` : arm === "office" ? `the action is addressed to an office, which holds no ${part}` : cp && cp.state === "named" ? `the action is addressed to a ${arm}, whose arm holds no ${part}` : cpWhy);
-    const held3 = (v, part) => str47(v) ? { value: str47(v), source: action2.id } : none(`the action's addressee states no ${part}`);
+    const cpWhy = !cp ? word2("filings.action_states_counterparty") : cp.state === "undetermined" ? word2("filings.action_counterparty_undetermined") : word2("filings.action_counterparty_names");
+    const notHeld2 = (part) => none(arm === "audience" ? word2("filings.action_addressed_audience", { part }) : arm === "office" ? word2("filings.action_addressed_office", { part }) : cp && cp.state === "named" ? word2("filings.action_addressed_arm", { arm, part }) : cpWhy);
+    const held3 = (v, part) => str47(v) ? { value: str47(v), source: action2.id } : none(word2("filings.action_addressee_states", { part }));
     const named3 = cp && cp.state === "named";
     out.counterparty_role = named3 ? held3(str47(cp.role) || str47(cp.name), "role") : arm === "audience" ? notHeld2("role") : none(cpWhy);
     out.counterparty_body = arm === "office" ? held3(cp.body, "body") : named3 || arm === "audience" ? notHeld2("body") : none(cpWhy);
     out.counterparty_organisation = named3 && arm !== "office" ? held3(cp.organisation, "organisation") : named3 || arm === "audience" ? notHeld2("organisation") : none(cpWhy);
     out.counterparty_description = arm === "audience" ? held3(cp.description, "description") : named3 ? notHeld2("description") : none(cpWhy);
-    const detWhy = hidden ? "the determination the action rests on is not one you may see" : !this.conformance ? "no module answers determinations here, so the record's value cannot be read" : "the action rests on no live determination, so the record holds no value for it";
+    const detWhy = hidden ? word2("filings.determination_action_rests") : !this.conformance ? word2("filings.module_answers_determinations") : word2("filings.action_rests_live");
     if (det) {
       const act2 = det.act || {};
       const evId = str47(act2.event);
       const ev = det.event;
-      out.act = str47(act2.description) ? { value: str47(act2.description), source: det.id } : evId && ev && str47(ev.kind) ? { value: `the ${ev.kind} recorded as ${evId}`, source: evId } : evId ? none("the act's event is not one you may see") : none("the determination states no act");
+      out.act = str47(act2.description) ? { value: str47(act2.description), source: det.id } : evId && ev && str47(ev.kind) ? { value: word2("filings.recorded", { kind: ev.kind, ev_id: evId }), source: evId } : evId ? none(word2("filings.act_event_see")) : none(word2("filings.the_determination_states_no_act"));
       const period = isObj46(act2.period) ? act2.period : null;
       const day2 = _Filings.#actDay(act2);
-      out.act_date = day2 ? { value: day2, source: str47(act2.at) ? det.id : evId } : period && (str47(period.from) || str47(period.to)) ? { value: `${str47(period.from) || "undetermined"} to ${str47(period.to) || "undetermined"}`, source: det.id } : none(`${_Filings.#actDayWhy(act2)}, so the act's date is undetermined`);
-      const cut10 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
+      out.act_date = day2 ? { value: day2, source: str47(act2.at) ? det.id : evId } : period && (str47(period.from) || str47(period.to)) ? { value: `${str47(period.from) || "undetermined"} to ${str47(period.to) || "undetermined"}`, source: det.id } : none(word2("filings.act_date_undetermined", { act: _Filings.#actDayWhy(act2) }));
+      const cut10 = word2("filings.finding_standard_determination");
       const cites = [], srcs = [];
       let withheld = false;
       for (const s of det.standards) {
@@ -214552,23 +214797,23 @@ var Filings = class _Filings {
         cites.push(str47(r.cite));
         srcs.push(s.id);
       }
-      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut10) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
+      out.standards = withheld ? none(word2("filings.standard_determination_names")) : det.withheld ? none(cut10) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none(word2("filings.determination_names_standard"));
       const fs = det.findings;
       out.findings = det.withheld ? none(cut10) : fs.length ? {
         value: fs.map((f17) => `${f17.id} (case ${f17.case ?? "undetermined"}, edition ${f17.edition ?? "undetermined"})`).join("; "),
         source: fs.map((f17) => `${f17.id}@${f17.case ?? "?"}/${f17.edition ?? "?"}`).join(", ")
-      } : none("the determination names no finding");
+      } : none(word2("filings.determination_names_finding"));
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
     const gl = action2.governing_laws;
     const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l2) => str47(isObj46(l2) ? l2.citation : l2)).filter(Boolean) : [];
-    out.governing_laws = laws.length ? { value: laws.join("; "), source: action2.id } : none("no member has stated the action's governing laws, so they are undetermined");
-    out.law = action2.law ? { value: action2.law, source: action2.id } : none("the action states no law it is made under, so it is undetermined");
+    out.governing_laws = laws.length ? { value: laws.join("; "), source: action2.id } : none(word2("filings.member_stated_action"));
+    out.law = action2.law ? { value: action2.law, source: action2.id } : none(word2("filings.action_states_law"));
     const clock2 = action2.clock.filter((c) => str47(c.date) && str47(c.basis));
-    out.clock = clock2.length ? { value: clock2.map((c) => `${c.date}: ${str47(c.text) || str47(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action2.id } : none("the action holds no clock entry with a date and a basis");
+    out.clock = clock2.length ? { value: clock2.map((c) => `${c.date}: ${str47(c.text) || str47(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action2.id } : none(word2("filings.action_holds_clock"));
     const venue = entry4 && isObj46(entry4.venue) ? entry4.venue : null;
     const vsrc = venue ? `profile:${venue.profile || entry4.profile}/action_kinds/${entry4.kind}/venue` : null;
-    out.venue = venue && str47(venue.name) ? { value: str47(venue.name), source: vsrc } : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
-    out.venue_how = venue && str47(venue.how) ? { value: str47(venue.how), source: vsrc } : none("the profile gives no means of filing");
+    out.venue = venue && str47(venue.name) ? { value: str47(venue.name), source: vsrc } : none(word2("filings.profile_gives_kind"));
+    out.venue_how = venue && str47(venue.how) ? { value: str47(venue.how), source: vsrc } : none(word2("filings.profile_gives_means"));
     out.group = this.#group();
     out.date = { value: when.slice(0, 10), source: `clock:${when}` };
     return out;
@@ -214579,20 +214824,22 @@ var Filings = class _Filings {
   #group() {
     const SOURCE = "fact:producingGroup";
     const read3 = this.producingGroup || (this.promotion && typeof this.promotion.fact === "function" ? () => this.promotion.fact("producingGroup") : null);
-    if (!read3) return { why: "no promotion module is reachable here to answer the fact producingGroup, so the producing group is undetermined" };
+    if (!read3) return { why: word2("filings.why.promotion_module_reachable") };
     let g;
     try {
       g = read3();
     } catch {
-      return { why: "the producing group could not be read (its reader failed), so it is undetermined" };
+      return { why: word2("filings.why.producing_group_read") };
     }
     if (isObj46(g) && "ok" in g) {
       if (g.ok !== true)
-        return { why: `no module answers the fact producingGroup (${g.reason === "FACT_FAILED" ? "its provider failed" : "no provider is registered"}), so the producing group is undetermined` };
+        return { why: word2("filings.why.module_answers_fact", {
+          reason: word2(g.reason === "FACT_FAILED" ? "filings.why.provider_failed" : "filings.why.provider_registered")
+        }) };
       g = g.value;
     }
     const v = str47(g);
-    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded" };
+    return v ? { value: v, source: SOURCE } : { why: word2("filings.why.producing_group_recorded") };
   }
   /* R1, R8, R23: the one answer for an action that is resolved or abandoned: nothing is prepared for it. */
   #closed(a) {
@@ -214615,7 +214862,7 @@ var Filings = class _Filings {
     const blanks = [], unfilled = [];
     for (const n2 of names2) {
       const own11 = fills && fills.values.has(n2) ? { value: fills.values.get(n2), source: fills.source, label: fills.label } : null;
-      const val5 = own11 || (!Object.prototype.hasOwnProperty.call(FILING_BLANKS, n2) ? { why: "filings fills no blank by this name, so the record holds no value for it" } : values[n2] || { why: "the record holds no value for this blank: the member fills it in (fills)" });
+      const val5 = own11 || (!Object.prototype.hasOwnProperty.call(FILING_BLANKS, n2) ? { why: word2("filings.why.filings_fills_blank") } : values[n2] || { why: word2("filings.why.record_holds_value") });
       if (val5 && "value" in val5) blanks.push({ name: n2, value: val5.value, source: val5.source, ...val5.label ? { label: val5.label } : {} });
       else unfilled.push({ name: n2, why: val5.why });
     }
@@ -214651,7 +214898,7 @@ var Filings = class _Filings {
         kind: "member_fill",
         by: who4,
         machine_work: isMachineIdentity(who4),
-        says: "the preparer's own value for this blank, written at preparation: not read from the record"
+        says: word2("filings.says.preparer_value_blank")
       }
     } };
   }
@@ -214710,7 +214957,7 @@ var Filings = class _Filings {
     if (!Array.isArray(v.profiles)) return null;
     const givers2 = entry4 ? [entry4.profile, ...Array.isArray(entry4.bases) ? entry4.bases.map((b) => b.profile) : []].filter(Boolean) : [];
     if (givers2.some((p3) => v.profiles.includes(p3))) return null;
-    return givers2.length ? `This template was not written for ${givers2[0]}, the jurisdiction this action's kind comes from: it was written for ${v.profiles.join(", ")}.` : `This template was not written for this action's jurisdiction (no active profile gives its kind): it was written for ${v.profiles.join(", ")}.`;
+    return givers2.length ? word2("filings.template_written_jurisdiction", { givers: givers2[0], profiles: v.profiles.join(", ") }) : word2("filings.template_written_action", { profiles: v.profiles.join(", ") });
   }
   /** R1–R5, R24, R25, R28, R29: a draft pre-filled from the record into an offered version of a template the preparer
    *  names (`filing-templates`, the latest approved by default), into the member's own words (`text`), or, naming
@@ -214833,7 +215080,7 @@ ${body}`;
         body = `${unfilledMarker("advisory")}
 
 ${body}`;
-        unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles disagree), so it is undetermined; a member writes one in before the draft can be approved" });
+        unfilled.unshift({ name: "advisory", why: word2("filings.why.profile_gives_advisory") });
       }
     }
     const disclosure2 = _Filings.#disclosure(a);
@@ -214844,7 +215091,7 @@ ${body}`;
       name: entry4.venue.name ?? null,
       how: entry4.venue.how ?? null,
       source: `profile:${entry4.venue.profile || entry4.profile}/action_kinds/${entry4.kind}/venue`
-    } : { state: "undetermined", why: "the profile gives this kind no venue" };
+    } : { state: "undetermined", why: word2("filings.why.profile_gives_kind") };
     const standard2 = this.#venueStandard(v, a.kind);
     const facts = det ? det.findings.map((f17) => this.#fact(f17)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard2);
@@ -214914,7 +215161,7 @@ ${body}`;
           ...used.default ? { default: true } : {},
           ...used.updated_by ? {
             updated_by: used.updated_by,
-            says: `version ${used.number} is updated by ${used.updated_by}`
+            says: word2("filings.says.version_updated", { number: used.number, updated_by: used.updated_by })
           } : {}
         } } : {},
         ...notFor ? { not_written_for: notFor } : {},
@@ -215004,7 +215251,7 @@ ${body}`;
     const mf = _Filings.#fills(fills, assembled ? "" : text8, who4, { action: a.id });
     if (!mf.ok) return mf;
     const own11 = mf.fills ? [...new Set(blanksOf(text8).blanks)].filter((n2) => mf.fills.values.has(n2)).map((n2) => ({ name: n2, value: mf.fills.values.get(n2), source: mf.fills.source, label: mf.fills.label })) : [];
-    const words24 = mf.fills ? text8.replace(BLANK_RE2, (m, n2) => mf.fills.values.has(n2) ? mf.fills.values.get(n2) : m) : text8;
+    const words23 = mf.fills ? text8.replace(BLANK_RE2, (m, n2) => mf.fills.values.has(n2) ? mf.fills.values.get(n2) : m) : text8;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const v = this.#view();
@@ -215014,7 +215261,7 @@ ${body}`;
     const facts = [...matters, ...fromFacts.filter((f17) => !matters.some((x) => x.finding === f17.finding))];
     const rfc = _Filings.#isRfc(a, mk.marks, why2);
     const parts = assembled ? this.#assembled(why2, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
-    let content = parts ? parts.map((x) => x.text).join("\n") : words24;
+    let content = parts ? parts.map((x) => x.text).join("\n") : words23;
     if (rfc && !content.includes(RFC_QUOTING_SENTENCE)) content = `${content}
 
 ${RFC_QUOTING_SENTENCE}`;
@@ -215032,7 +215279,7 @@ ${body}`;
         claim: f17.claim && (f17.claim.conclusion || f17.claim.question) || null,
         source: f17.source
       })),
-      label: { kind: "machine", machine_work: true, says: "the claims are assembled by the machine from the findings chosen: a proposal" }
+      label: { kind: "machine", machine_work: true, says: word2("filings.says.claims_assembled_machine") }
     } : null;
     const outward = this.#outward(content, {
       a,
@@ -215095,7 +215342,7 @@ ${body}`;
         ...review ? { review_copy: review } : {},
         ..._Filings.#voiceSays(mk.marks.voice),
         evidence: false,
-        says: "a draft communication: nobody has approved or sent it, and nothing is sent until a member approves it and sends it by their own hand"
+        says: word2("filings.says.draft_communication_nobody")
       };
     });
   }
@@ -215108,64 +215355,69 @@ ${body}`;
   #assembled(purpose, a, det, hidden, v, facts, marks2, viewer, when) {
     const entry4 = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
     const val5 = this.#values(a, det, hidden, entry4, viewer, when);
-    const part = (name3, x, words24) => "value" in x ? { part: name3, text: words24(x.value), source: x.source } : { part: name3, text: `${name3[0].toUpperCase()}${name3.slice(1)}: undetermined, because ${x.why}.`, source: null, undetermined: true };
+    const unread = (x) => word2("state.undetermined", { reason: x.why });
+    const part = (name3, x, words23) => "value" in x ? { part: name3, text: words23(x.value, false), source: x.source } : { part: name3, text: words23(unread(x), true), source: null, undetermined: true };
     const office = [val5.counterparty_role.value, val5.counterparty_body.value].filter(Boolean).join(", ");
     const out = [];
-    out.push(part("the act", val5.act, (w) => `The act: ${w}${office ? `, by ${office}` : ""}.`));
-    out.push(part("the standard", val5.standards, (w) => `The standard it is measured against: ${w}.`));
+    out.push(part("the act", val5.act, (w, none) => word2("filings.act", { words: w, office: office && !none ? `, by ${office}` : "" })));
+    out.push(part("the standard", val5.standards, (w) => word2("filings.standard_measured_against", { words: w })));
     if (purpose === "document_infraction") {
       const standard2 = this.#venueStandard(v, a.kind);
       const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard2);
       for (const f17 of facts) {
         const g = f17.grade && f17.grade.pair ? Object.entries(f17.grade.pair).map(([k, x]) => `${k} ${x && x.grade ? x.grade : "undetermined"}`).join(", ") : "undetermined";
-        out.push({ part: "a point", text: `Point: ${f17.claim && (f17.claim.conclusion || f17.claim.question) || f17.finding} (finding ${f17.finding}, ${f17.kind}; grade ${g}).`, source: f17.source });
+        out.push({ part: "a point", text: word2("filings.point_finding_grade", { claim: f17.claim && (f17.claim.conclusion || f17.claim.question) || f17.finding, finding: f17.finding, kind: f17.kind, grade: g }), source: f17.source });
       }
       for (const e2 of exhibits)
         out.push({
           part: "evidence",
-          text: `Evidence: ${e2.locator ?? e2.sha256} (capture grade ${e2.grade && e2.grade.grade ? e2.grade.grade : "undetermined"}).`,
+          text: word2("filings.evidence_capture_grade", { locator: e2.locator ?? e2.sha256, grade: e2.grade && e2.grade.grade ? e2.grade.grade : "undetermined" }),
           source: e2.sha256
         });
       const unsure = [
-        ...facts.filter((f17) => f17.kind === "unpublished").map((f17) => `finding ${f17.finding} is not published`),
-        ...exhibits.filter((e2) => !(e2.grade && e2.grade.grade)).map((e2) => `the grade of ${e2.locator ?? e2.sha256}`)
+        ...facts.filter((f17) => f17.kind === "unpublished").map((f17) => word2("filings.finding_published", { finding: f17.finding })),
+        ...exhibits.filter((e2) => !(e2.grade && e2.grade.grade)).map((e2) => word2("filings.grade", { locator: e2.locator ?? e2.sha256 }))
       ];
       out.push({
         part: "still uncertain",
-        text: unsure.length ? `Still uncertain: ${unsure.join("; ")}.` : "Still uncertain: nothing the record marks undetermined.",
+        text: unsure.length ? word2("filings.uncertain", { unsure: unsure.join("; ") }) : word2("filings.uncertain_nothing_record"),
         source: null
       });
       if (marks2.audience === "violating_party") {
         const c = a.clock.find((x) => realDate(x.date) && str47(x.basis) && (x.status ?? "pending") === "pending");
-        out.push(c ? { part: "a time for review and response", text: `We invite your review and response by ${c.date} (${c.basis}).`, source: `${a.id}/clock` } : {
+        out.push(c ? { part: "a time for review and response", text: word2("filings.invite_review_response", { date: c.date, basis: c.basis }), source: `${a.id}/clock` } : {
           part: "a time for review and response",
-          text: "A time for review and response: undetermined, because the action's clock states none.",
+          text: word2("filings.time_review_response_undetermined"),
           source: null,
           undetermined: true
         });
       }
       return out;
     }
-    const asks2 = this.#allowedAsks(det, v.view, viewer).filter((x) => x.what !== "a route the profile names");
-    const requires = asks2.filter((x) => x.what === "the standard's requirement");
+    const asks2 = this.#allowedAsks(det, v.view, viewer).filter((x) => x.what !== ASK_WHAT.route);
+    const requires = asks2.filter((x) => x.what === ASK_WHAT.requirement);
     out.push(requires.length ? {
       part: "correcting the act",
-      text: `Correcting the act would look like this: ${requires.map((r) => r.words).join("; ")}.`,
+      text: word2("filings.correcting_act_look", { requires: requires.map((r) => r.words).join("; ") }),
       source: requires.map((r) => r.source).join(", ")
-    } : { part: "correcting the act", text: "Correcting the act: undetermined, because no determination states what the standard requires.", source: null, undetermined: true });
-    const harm = asks2.filter((x) => x.what === "remedy of a recorded consequence");
+    } : { part: "correcting the act", text: word2("filings.correcting_act_undetermined"), source: null, undetermined: true });
+    const harm = asks2.filter((x) => x.what === ASK_WHAT.consequence);
     out.push(harm.length ? {
       part: "remedying the harm",
-      text: `Remedying its harm would look like this: remedy for ${harm.map((r) => r.words).join("; ")}.`,
+      text: word2("filings.remedying_harm_look", { harm: harm.map((r) => r.words).join("; ") }),
       source: harm.map((r) => r.source).join(", ")
-    } : { part: "remedying the harm", text: "Remedying its harm: no consequence of the act is recorded.", source: null });
+    } : { part: "remedying the harm", text: word2("filings.remedying_harm_consequence"), source: null });
     const law = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.find((d) => d.applies_to === a.kind && !d.defends) : null;
     const window = a.clock.find((x) => realDate(x.date) && x.basis_kind === "window");
     out.push(law ? {
       part: "a time",
-      text: `The time the law allows: ${law.days ?? law.amount ?? "a period"} ${law.count ?? law.units ?? "days"} (${law.citation ?? "its citation not stated"}).`,
+      text: word2("filings.time_law_allows", {
+        days: law.days ?? law.amount ?? "a period",
+        count: law.count ?? law.units ?? "days",
+        citation: law.citation ?? word2("filings.citation_stated")
+      }),
       source: `profile:${law.profile}/deadlines/${law.rule}`
-    } : window ? { part: "a time", text: `The time we set: by ${window.date} (${window.basis}).`, source: `${a.id}/clock` } : { part: "a time", text: "A time: undetermined, because neither the profile nor the action's clock states one.", source: null, undetermined: true });
+    } : window ? { part: "a time", text: word2("filings.time_set", { date: window.date, basis: window.basis ?? word2("filings.stated") }), source: `${a.id}/clock` } : { part: "a time", text: word2("filings.time_undetermined_profile"), source: null, undetermined: true });
     return out;
   }
   /* ---------------------------------------------------------------- T45: what an outward text is checked for */
@@ -215261,17 +215513,22 @@ ${body}`;
       if (it.verdict === "supported")
         it.pointer = {
           key: "pointer.record.supported",
-          text: keyed4("pointer.record.supported", { findings: (it.by || []).join(", ") || "nothing it names" })
+          text: keyed4("pointer.record.supported", { findings: (it.by || []).join(", ") || word2("filings.nothing_names") })
         };
       else if (it.verdict === "unsupported" || it.verdict === "contradicted")
-        it.pointer = { key: `pointer.record.${it.verdict}`, text: KEYED[`pointer.record.${it.verdict}`] };
+        it.pointer = { key: `pointer.record.${it.verdict}`, text: keyed4(`pointer.record.${it.verdict}`) };
     }
     const count2 = (k) => items.filter((i) => i.verdict === k).length;
     return {
       state: judged.length && (!answer2 || answer2.ok !== true) ? "undetermined" : "read",
       items,
       cites: refs.map((c) => c.ref),
-      says: `${count2("supported")} supported, ${count2("unsupported")} not supported by the record (pointed out, never refused), ${count2("contradicted")} contradicted by it (held back unless a member releases it with a reason)${count2("undetermined") ? `, ${count2("undetermined")} not judged` : ""}; questions are never flagged`
+      says: word2("filings.says.supported_supported_record", {
+        supported: count2("supported"),
+        unsupported: count2("unsupported"),
+        contradicted: count2("contradicted"),
+        count: count2("undetermined") ? `, ${count2("undetermined")} not judged` : ""
+      })
     };
   }
   /* R39, R43, R38: action-grammar's `pointOut` (its R18) for one phrasing kind over the sentences, in the member's
@@ -215279,10 +215536,10 @@ ${body}`;
      "nothing found". */
   #pointOut(sentences, kind2, language, view) {
     const fn = this.grammar && this.grammar.pointOut;
-    if (typeof fn !== "function") return { state: "undetermined", why: "no module answers the phrasing lists here" };
-    if (!language) return { state: "undetermined", why: "no_list", says: "no language is stated for the draft, so no list is read" };
+    if (typeof fn !== "function") return { state: "undetermined", why: word2("filings.why.module_answers_phrasing") };
+    if (!language) return { state: "undetermined", why: "no_list", says: word2("filings.says.language_stated_draft") };
     const r = this.#call(() => fn({ sentences, language, kind: kind2, ...view ? { view } : {} }));
-    return isObj46(r) && str47(r.state) ? r : { state: "undetermined", why: "the phrasing lists could not be read" };
+    return isObj46(r) && str47(r.state) ? r : { state: "undetermined", why: word2("filings.why.phrasing_lists_read") };
   }
   /* R43, R48: the assistant's `textcheck` sentences of one reading, each matched to a sentence of R34's split by its
      verbatim `quote` (K2824), never by its index, and labelled machine work; a quote no sentence holds is listed apart. */
@@ -215295,7 +215552,7 @@ ${body}`;
         ...index2 >= 0 ? { index: index2 } : {},
         quote: x.quote,
         ...x.why ? { why: x.why } : {},
-        label: { kind: "machine", machine_work: true, says: "pointed out by the assistant: machine work, a proposal" }
+        label: { kind: "machine", machine_work: true, says: word2("filings.says.pointed_assistant_machine") }
       });
     }
     return { items, unmatched };
@@ -215307,12 +215564,12 @@ ${body}`;
     const cdet = det && this.conformance ? this.#call(() => this.conformance.determinationRead({ id: det.id, viewer })) : null;
     for (const s of cdet && Array.isArray(cdet.standards) ? cdet.standards : [])
       for (const r of Array.isArray(s.rows) ? s.rows : [])
-        if (isObj46(r) && str47(r.requires)) out.push({ what: "the standard's requirement", words: str47(r.requires), source: str47(s.standard) });
+        if (isObj46(r) && str47(r.requires)) out.push({ what: ASK_WHAT.requirement, words: str47(r.requires), source: str47(s.standard) });
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function" ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     for (const p3 of cons && Array.isArray(cons.parts) ? cons.parts : [])
-      if (isObj46(p3.affected) && str47(p3.affected.description)) out.push({ what: "remedy of a recorded consequence", words: str47(p3.affected.description), source: p3.id });
+      if (isObj46(p3.affected) && str47(p3.affected.description)) out.push({ what: ASK_WHAT.consequence, words: str47(p3.affected.description), source: p3.id });
     for (const k of view && Array.isArray(view.action_kinds) ? view.action_kinds : [])
-      if (str47(k.label)) out.push({ what: "a route the profile names", words: str47(k.label), source: `profile:${k.profile}/action_kinds/${k.kind}` });
+      if (str47(k.label)) out.push({ what: ASK_WHAT.route, words: str47(k.label), source: `profile:${k.profile}/action_kinds/${k.kind}` });
     return out;
   }
   /* R39, R45, R49: the notices shown once with a draft, never refusing: the election notice (a pending measure or a
@@ -215329,8 +215586,8 @@ ${body}`;
           kind: "election",
           key: "filings.election.notice",
           text: keyed4("filings.election.notice", {
-            fact: str47(f17.statement) || str47(f17.key) || "The governing view states the rule without words.",
-            citation: str47(f17.citation) || "its citation not stated"
+            fact: str47(f17.statement) || str47(f17.key) || word2("filings.governing_view_states"),
+            citation: str47(f17.citation) || word2("filings.citation_stated")
           }),
           fact: f17.key ?? null,
           citation: f17.citation ?? null,
@@ -215341,14 +215598,14 @@ ${body}`;
         out.push({
           kind: "election",
           key: "filings.election.notice",
-          text: keyed4("filings.election.notice", { fact: "The governing view holds no rule for it.", citation: "its citation undetermined" }),
+          text: keyed4("filings.election.notice", { fact: word2("filings.governing_view_holds"), citation: word2("filings.citation_undetermined") }),
           citation: null,
-          says: "the governing view holds no campaign-spending rule, so its citation is undetermined"
+          says: word2("filings.says.governing_view_holds")
         });
     }
     const entry4 = view && Array.isArray(view.action_kinds) ? view.action_kinds.find((k) => k.kind === a.kind) : null;
     if (entry4 && entry4.shape === "recognition")
-      out.push({ kind: "reminder", key: "recognition.staff_public", text: KEYED["recognition.staff_public"] });
+      out.push({ kind: "reminder", key: "recognition.staff_public", text: keyed4("recognition.staff_public") });
     for (const f17 of facts)
       if (Array.isArray(f17.applies_to) && f17.applies_to.includes(a.kind))
         out.push({
@@ -215377,17 +215634,17 @@ ${body}`;
       assertion_machine: _Filings.#machine(sentences, textcheck, "assertion"),
       own_benefit_ask: _Filings.#pointer(ownBenefit, "pointer.selfbenefit"),
       ...marks2.voice === "group" ? { position: _Filings.#pointer(this.#pointOut(sentences, "position", lang, view), "pointer.position") } : {},
-      staff_named: textcheck ? _Filings.#pointer(_Filings.#machine(sentences, textcheck, "staff_named"), "pointer.staff", "items") : { items: [], ran: false, key: "pointer.staff.notrun", says: KEYED["pointer.staff.notrun"] }
+      staff_named: textcheck ? _Filings.#pointer(_Filings.#machine(sentences, textcheck, "staff_named"), "pointer.staff", "items") : { items: [], ran: false, key: "pointer.staff.notrun", says: keyed4("pointer.staff.notrun") }
     };
     if (purpose === "chance_to_fix") {
       const allowed = this.#allowedAsks(det, view, viewer);
       out.asks = sentences.flatMap((s, index2) => {
         if (!asks(s)) return [];
         const ok3 = askAllowed(s, allowed);
-        return [ok3 ? { index: index2, allowed: ok3 } : { index: index2, pointed: true, says: "this sentence asks for something the standard, a recorded consequence or a profile route does not name" }];
+        return [ok3 ? { index: index2, allowed: ok3 } : { index: index2, pointed: true, says: word2("filings.says.sentence_asks_something") }];
       });
     }
-    if (assertion.state !== "read") out.no_list = { key: "phrasing.no_list", text: KEYED["phrasing.no_list"], why: assertion.why ?? null };
+    if (assertion.state !== "read") out.no_list = { key: "phrasing.no_list", text: keyed4("phrasing.no_list"), why: assertion.why ?? null };
     return out;
   }
   /* R38, R39, R48, R52 (T46): each sentence a reading points out answers its pointer, `words.json`'s words read by key
@@ -215395,7 +215652,7 @@ ${body}`;
      read (undetermined) is answered as it came. */
   static #pointer(r, key2, list6 = "pointed") {
     if (!isObj46(r) || !Array.isArray(r[list6])) return r;
-    return { ...r, [list6]: r[list6].map((p3) => isObj46(p3) ? { ...p3, pointer: { key: key2, text: KEYED[key2] } } : p3) };
+    return { ...r, [list6]: r[list6].map((p3) => isObj46(p3) ? { ...p3, pointer: { key: key2, text: keyed4(key2) } } : p3) };
   }
   /* R43: the pointed sentences R19 reads: the phrasing list's and the assistant's, unioned by sentence. */
   static #assertionPointed(o) {
@@ -215542,8 +215799,8 @@ ${body}`;
     if (voice !== "group" && voice !== "self") return {};
     return { voice_says: {
       key: `voice.${voice}.means`,
-      text: KEYED[`voice.${voice}.means`],
-      voice: { key: `voice.${voice}`, text: KEYED[`voice.${voice}`] }
+      text: keyed4(`voice.${voice}.means`),
+      voice: { key: `voice.${voice}`, text: keyed4(`voice.${voice}`) }
     } };
   }
   /* R40, R37: whether a text is a request for comment: an action of the product kind `request_for_comment`, or a
@@ -215558,12 +215815,12 @@ ${body}`;
     if (!press) return null;
     const t2 = a.press_terms;
     const embargo = t2 && str47(t2.embargo_until), release2 = t2 && str47(t2.release_at);
-    if (!embargo && !release2) return { embargo_until: null, release_at: null, key: "filings.review_copy.no_embargo", text: KEYED["filings.review_copy.no_embargo"] };
+    if (!embargo && !release2) return { embargo_until: null, release_at: null, key: "filings.review_copy.no_embargo", text: keyed4("filings.review_copy.no_embargo") };
     return {
       embargo_until: embargo,
       release_at: release2,
       key: "filings.review_copy.terms",
-      text: keyed4("filings.review_copy.terms", { embargo: embargo ?? "a time not stated", release: release2 ?? "a time not stated" })
+      text: keyed4("filings.review_copy.terms", { embargo: embargo ?? word2("filings.time_stated"), release: release2 ?? word2("filings.time_stated") })
     };
   }
   /* R6: what a draft read, so its staleness is stated by name. */
@@ -215582,18 +215839,21 @@ ${body}`;
   #staleness(draft) {
     const was = parse11(draft.basis) || {};
     const a = this.#action(draft.action_id, MACHINE_READER);
-    if (!a) return ["the action is no longer held"];
+    if (!a) return [word2("filings.action_longer_held")];
     const changed = [];
     const gov = this.governingTier(a);
-    if (gov.tier !== was.tier) changed.push(`the governing tier (was ${was.tier}, now ${gov.tier})`);
+    if (gov.tier !== was.tier) changed.push(word2("filings.governing_tier", { tier: was.tier, tier_2: gov.tier }));
     if (json12(a.counterparty ?? null) !== json12(was.counterparty ?? null)) changed.push("the counterparty");
     const then = was.determination ? this.#det(was.determination, MACHINE_READER) : null;
     const now = this.#restsOn(a, MACHINE_READER).det;
     if (was.determination && (!then || !then.live))
-      changed.push(`the determination ${was.determination} was superseded${then && then.superseded_by ? ` by ${then.superseded_by}` : ""}`);
-    else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push("the determination the action rests on");
+      changed.push(word2("filings.determination_superseded", {
+        determination: was.determination,
+        then: then && then.superseded_by ? ` by ${then.superseded_by}` : ""
+      }));
+    else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push(word2("filings.the_determination_the_action_rests"));
     const laws = a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null;
-    if (json12(laws) !== json12(was.governing_laws ?? null)) changed.push("the governing laws");
+    if (json12(laws) !== json12(was.governing_laws ?? null)) changed.push(word2("filings.governing_laws"));
     return changed;
   }
   /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). A
@@ -215714,12 +215974,14 @@ ${body}`;
 
 ${body}` : body;
     const review = isObj46(marks2.review_copy) ? marks2.review_copy : null;
+    const project = str47(a.project) || (parse11(d.basis) || {}).project || null;
     const { bytes: bytes2, inband } = await this.#stamped(face2, {
       what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`,
       date: at49,
       author: who4,
       project: (parse11(d.basis) || {}).project ?? null,
-      review
+      review,
+      stake: { project, matter: this.#matterStake(a, project) }
     });
     const again = this.#alreadyApproved(d.filing_id);
     if (again) return again;
@@ -215744,7 +216006,7 @@ ${body}` : body;
       resolutions: gate.resolutions,
       ...gate.breach ? { breach_claim: true } : {},
       ...checked.no_list ? { no_list: checked.no_list } : {},
-      says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it by the venue's own means and records that it was sent"
+      says: word2("filings.says.approved_member_named")
     };
   }
   /* ---------------------------------------------------------------- R59: filingRead */
@@ -215866,7 +216128,7 @@ ${body}` : body;
       return this.#noAction(d.action_id);
     const now = this.#when();
     const review = isObj46((parse11(d.marks) || {}).review_copy) ? parse11(d.marks).review_copy : null;
-    const asReview = review && str47(review.release_at) && String(at49 ?? "") < str47(review.release_at) ? { review_copy: true, release_at: review.release_at, says: `recorded as the review copy: sent before its release time, ${review.release_at}` } : null;
+    const asReview = review && str47(review.release_at) && String(at49 ?? "") < str47(review.release_at) ? { review_copy: true, release_at: review.release_at, says: word2("filings.says.recorded_review_copy", { release_at: review.release_at }) } : null;
     const out = this.record.transact(() => {
       const c = this.actions.actionCorrespond({
         target: d.action_id,
@@ -215909,7 +216171,7 @@ ${body}` : body;
       reference: ref,
       proposed: this.#proposed(d, who4, viewer),
       ...asReview ? { review_copy: asReview } : {},
-      says: "recorded as sent by the member named. No action state moved and no clock entry was written: `proposed` is what a member may choose next"
+      says: word2("filings.says.recorded_sent_member")
     };
   }
   /* R7: the next state a member may choose, and the clock entries action-clocks offers for the kind's deadlines that
@@ -215932,9 +216194,9 @@ ${body}` : body;
       };
     });
     return {
-      next_state: next ? { to: next, from: state, says: `a member may move the action from ${state} to ${next} (op=actionmove); nothing moved it` } : { to: null, from: state, says: "no next state follows from recording the sending; the action's state stays as a member left it" },
+      next_state: next ? { to: next, from: state, says: word2("filings.says.member_move_action", { state, next }) } : { to: null, from: state, says: word2("filings.says.next_state_follows") },
       clocks,
-      clocks_says: clocks.length ? "clock entries offered for the kind's deadlines that start at filing or receipt; a member states one by a revision of the action" : "the profile gives this kind no deadline that starts at filing or receipt"
+      clocks_says: clocks.length ? word2("filings.clock_entries_offered") : word2("filings.profile_gives_kind_deadline")
     };
   }
   /* ---------------------------------------------------------------- T45: R36, R41, R42, R47 */
@@ -215998,7 +216260,7 @@ ${body}` : body;
       at: at49,
       approved_by: ap.approved_by,
       given: _Filings.#secondGiven(who4, at49),
-      says: "approved a second time by the member named; a member records the sending by their own hand"
+      says: word2("filings.says.approved_second_time")
     };
   }
   /* R42, R52 (T46): the sentence a recorded second approval answers, `words.json`'s `filings.secondapproval.given` read by
@@ -216006,7 +216268,7 @@ ${body}` : body;
   static #secondGiven(member2, at49) {
     return {
       key: "filings.secondapproval.given",
-      text: keyed4("filings.secondapproval.given", { member: member2, date: String(at49 ?? "").slice(0, 10) || "a date not stated" })
+      text: keyed4("filings.secondapproval.given", { member: member2, date: String(at49 ?? "").slice(0, 10) || word2("filings.date_stated") })
     };
   }
   /** R36: a member records that a partner organisation approved the same text in its own copy, by its own act:
@@ -216063,7 +216325,7 @@ ${body}` : body;
       account: how,
       recorded_by: who4,
       at: at49,
-      says: "the partner approved the same text in its own copy, by its own act; no shared plan is made"
+      says: word2("filings.says.partner_approved_text")
     };
   }
   /** R47 (Actions v0.2 rule 12): for a hold in place (`action-holds` R2, at an action, an entry or a project), a plain
@@ -216081,20 +216343,19 @@ ${body}` : body;
       ...str47(place9.project) ? { project: str47(place9.project) } : {}
     } : {};
     if (!h || typeof h.holdsOf !== "function")
-      return { ...holdNotInPlace(p3), why: "no module answers holds here, so no hold is read as in place" };
+      return { ...holdNotInPlace(p3), why: word2("filings.why.module_answers_holds") };
     const r = this.#call(() => h.holdsOf({ ...p3, viewer }));
-    if (!r || r.ok === false) return r || { ...holdNotInPlace(p3), why: "the hold could not be read" };
+    if (!r || r.ok === false) return r || { ...holdNotInPlace(p3), why: word2("filings.why.hold_read") };
     const list6 = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
     const latest3 = list6.length ? list6[list6.length - 1] : null;
     if (!latest3 || latest3.hold !== "in_place")
       return holdNotInPlace(p3);
-    const where = p3.project ? `the project ${p3.project}` : Number.isInteger(p3.ord) ? `entry ${p3.ord} of the action ${p3.target}` : `the action ${p3.target}`;
-    const kinds3 = "documents, letters and emails, messages, notes, recordings, photographs and files, in any form and on any device";
+    const where = p3.project ? `the project ${p3.project}` : Number.isInteger(p3.ord) ? word2("filings.entry_action", { ord: p3.ord, target: p3.target ?? word2("filings.stated") }) : `the action ${p3.target}`;
     const lines2 = [
-      "Litigation hold notice.",
-      `A hold is in place on ${where}, since ${latest3.at ?? "a date the record does not state"}.`,
-      `The reason, as stated: ${latest3.reason ?? "no reason is recorded"}.`,
-      `Keep, outside Civicsmith, every ${kinds3} that concern it. Do not delete, alter or discard any of them until a member tells you the hold is released.`
+      word2("filings.litigation_hold_notice"),
+      word2("filings.hold_place", { where, at: latest3.at ?? word2("filings.date_record_state") }),
+      word2("filings.reason_stated", { reason: latest3.reason ?? word2("filings.reason_recorded") }),
+      word2("filings.keep_outside_civicsmith", { kinds: word2("filings.documents_letters_emails") })
     ];
     const sources = [{ part: "the place", source: p3.project || p3.target }, { part: "the reason and the date", source: `hold:${p3.project || p3.target}${Number.isInteger(p3.ord) ? `#${p3.ord}` : ""}` }];
     const at49 = this.#when();
@@ -216121,9 +216382,31 @@ ${body}` : body;
         prepared_by: who4,
         at: at49,
         evidence: false,
-        says: "a notice prepared from the record: it names no recipient and records no one's compliance; a member sends it by their own hand and records the sending (op=holdnoticesent)"
+        says: word2("filings.says.notice_prepared_record")
       };
     });
+  }
+  /** R62 (T50; N933, K3230; Action v0.2 rule 13; D28's guards inform and never block): what the preparation screen's
+   *  question reads, `{higher_stakes, governing_tier, group_stake, matter_stake, project}`. `higher_stakes` is true when
+   *  the governing tier (Terms) is 2 or 3, or is undetermined (never read as Tier 1); `group_stake` is `groupFields()`'s
+   *  `stake`; `matter_stake` is R60's answer. It writes nothing and refuses, delays or changes nothing: no preparation,
+   *  approval or sending depends on its answer. `NO_SUCH_ACTION` as R1. */
+  stakeAtPreparation({ action: action2 = null, viewer = null } = {}) {
+    const a = this.#action(action2, viewer);
+    if (!a) return this.#noAction(action2);
+    const gov = this.governingTier(a);
+    const p3 = this.publicRead;
+    const g = p3 && typeof p3.groupFields === "function" ? this.#call(() => p3.groupFields()) : null;
+    const project = str47(a.project) || (this.#restsOn(a, viewer).det || {}).project || null;
+    return {
+      ok: true,
+      action: a.id,
+      higher_stakes: gov.tier !== 1,
+      governing_tier: gov.tier,
+      group_stake: isObj46(g) ? g.stake ?? null : "undetermined",
+      matter_stake: this.#matterStake(a, project),
+      project: str47(project)
+    };
   }
   /** R41 (Actions v0.2 rule 11): templates are offered only after the act is chosen: the offered `file` versions
    *  (`filing-templates` R14, R25) for this action's kind at a governing tier of 1 or 2, latest first. It takes an
@@ -216139,7 +216422,7 @@ ${body}` : body;
         kind: a.kind,
         governing: gov,
         versions: [],
-        says: gov.tier === 3 ? "the governing tier is 3: no file template is offered; counsel is briefed by a counsel packet" : "the governing tier is undetermined: a member states it first, and no template is offered until then"
+        says: gov.tier === 3 ? word2("filings.says.governing_tier_file") : word2("filings.says.governing_tier_undetermined")
       };
     const t2 = this.filingTemplates;
     const list6 = t2 && typeof t2.templatesFor === "function" ? this.#call(() => t2.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
@@ -216151,7 +216434,7 @@ ${body}` : body;
         governing: gov,
         versions: [],
         read: false,
-        says: "the group's templates could not be read here, so none is offered"
+        says: word2("filings.says.group_templates_read")
       };
     const versions = list6.templates.filter((x) => (x.use ?? "file") === "file").flatMap((x) => (x.versions || []).map((y) => ({
       template: x.id,
@@ -216171,7 +216454,7 @@ ${body}` : body;
       governing: gov,
       versions,
       ...list6.truncated ? { truncated: true } : {},
-      says: "the file templates offered for this action's kind, latest first"
+      says: word2("filings.says.file_templates_offered")
     };
   }
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
@@ -216197,7 +216480,7 @@ ${body}` : body;
       source: source2
     };
     if (typeof text8 !== "string")
-      return { ...base2, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
+      return { ...base2, claim: { state: "undetermined", why: word2("filings.why.finding_published_bytes") }, citations: [] };
     let fm = null;
     try {
       fm = parseFrontmatter(text8).data;
@@ -216213,7 +216496,7 @@ ${body}` : body;
       claim: {
         question: str47(fm && fm.title),
         conclusion,
-        ...conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }
+        ...conclusion ? {} : { conclusion_why: word2("filings.published_finding_states") }
       },
       citations: legs.map((l2) => ({
         target: str47(l2.target),
@@ -216244,14 +216527,14 @@ ${body}` : body;
         edition: last.edition,
         version_sha: last.version_sha,
         kind: "published",
-        grade: last.strength ? { pair: last.strength, source: `${target}@${last.case}/${last.edition}` } : { state: "undetermined", why: "the edition states no frozen pair" }
+        grade: last.strength ? { pair: last.strength, source: `${target}@${last.case}/${last.edition}` } : { state: "undetermined", why: word2("filings.why.edition_states_frozen") }
       });
     const cc = this.caseCheck;
     const held3 = cc && typeof cc.heldFindingVersions === "function" ? this.#call(() => cc.heldFindingVersions({ finding: target })) : null;
     const h = held3 && held3.ok !== false && Array.isArray(held3.items) && held3.items.length ? held3.items[held3.items.length - 1] : null;
     const f17 = this.#call(() => this.record.readFile(target, "bundle.md"));
     const s = this.strength && typeof this.strength.inquiryStrength === "function" ? this.#call(() => this.strength.inquiryStrength({ id: target, viewer })) : null;
-    const grade2 = s && s.ok !== false && (s.capture || s.connection) ? { pair: { capture: s.capture ?? null, connection: s.connection ?? null }, source: `strength:${target}` } : { state: "undetermined", why: "the finding's grade could not be read" };
+    const grade2 = s && s.ok !== false && (s.capture || s.connection) ? { pair: { capture: s.capture ?? null, connection: s.connection ?? null }, source: `strength:${target}` } : { state: "undetermined", why: word2("filings.why.finding_grade_read") };
     if (h) {
       const pinned = h.version_sha ? this.#call(() => this.record.textAtSha(target, h.version_sha)) : null;
       return {
@@ -216279,7 +216562,7 @@ ${body}` : body;
       version_sha: null,
       kind: "accepted",
       accepted: { group: r.group ?? null, import: r.import ?? null, accepted_at: r.acceptance.at ?? null, accepted_by: r.acceptance.by ?? null },
-      grade: r.pair ? { pair: r.pair, source: `accepted:${r.import ?? ref}` } : { state: "undetermined", why: "the source edition states no pair" },
+      grade: r.pair ? { pair: r.pair, source: `accepted:${r.import ?? ref}` } : { state: "undetermined", why: word2("filings.why.source_edition_states") },
       claim: { question: null, conclusion: str47(r.result) || null },
       citations: [],
       source: `accepted:${str47(ref)}${r.edition != null ? `@${r.edition}` : ""}`
@@ -216296,11 +216579,11 @@ ${body}` : body;
       if (l2.kind && !["rests_on", "advances"].includes(l2.kind)) continue;
       const inq = this.#findingRead(l2.target, viewer);
       if (!inq) continue;
-      facts.push({ ...inq, matter: inq.finding, determined: false, says: "not determined: no member has made a determination on it" });
+      facts.push({ ...inq, matter: inq.finding, determined: false, says: word2("filings.says.determined_member_made") });
       for (const c of inq.citations || []) {
         const f17 = c.target && c.target !== inq.finding ? this.#findingRead(c.target, viewer) || this.#acceptedRead(c.target, c.edition ?? null, viewer) : null;
         if (f17 && !facts.some((x) => x.finding === f17.finding))
-          facts.push({ ...f17, matter: inq.finding, determined: false, says: "a finding the inquiry holds, not determined" });
+          facts.push({ ...f17, matter: inq.finding, determined: false, says: word2("filings.says.finding_inquiry_holds") });
       }
     }
     return { facts, determined: false };
@@ -216345,7 +216628,7 @@ ${body}` : body;
         sha256: sha2,
         cited_by: [...new Set(from)].sort(),
         locator: loc ? loc.retrieval_locator || loc.address : reg ? `${reg.bundle_id}/${reg.path}` : null,
-        ...loc || reg ? {} : { locator_why: "the record holds no address or register row for this capture" },
+        ...loc || reg ? {} : { locator_why: word2("filings.record_holds_address") },
         captured_at: loc ? loc.first_retrieved : reg ? reg.registered : null,
         home: reg ? reg.bundle_id : null,
         attestations,
@@ -216360,14 +216643,14 @@ ${body}` : body;
   #attestations(sha2) {
     const a = this.attestation;
     if (!a || typeof a.attestationsOf !== "function")
-      return { items: [], undetermined: "no module answers a capture's attestations here, so they are undetermined" };
+      return { items: [], undetermined: word2("filings.module_answers_capture") };
     const att = this.#call(() => a.attestationsOf(sha2));
-    return att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: "the attestations could not be read" };
+    return att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: word2("filings.attestations_read") };
   }
   /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
   #grade(sha2) {
     const g = this.provenance && typeof this.provenance.captureGrade === "function" ? this.#call(() => this.provenance.captureGrade(sha2)) : null;
-    if (!isObj46(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
+    if (!isObj46(g)) return { grade: null, determined: false, why: word2("filings.why.capture_grade_read") };
     return {
       grade: g.grade ?? null,
       route: g.route ?? null,
@@ -216379,21 +216662,23 @@ ${body}` : body;
   /* R25 (`jurisdictions` R39): a capture is co-attested when the record holds both its trusted timestamp (an RFC 3161
      token, or the daemon era's `timestamp`) and its co-archive; undetermined when its attestations cannot be read. */
   static #coattested(att) {
-    if (att.undetermined) return { coattested: null, coattested_why: `whether it is co-attested is undetermined: ${att.undetermined}` };
+    if (att.undetermined) return { coattested: null, coattested_why: word2("filings.whether_attested_undetermined", { undetermined: att.undetermined }) };
     const kinds3 = new Set(att.items.map((x) => x && x.kind));
     const stamp4 = kinds3.has("rfc3161") || kinds3.has("timestamp"), archive = kinds3.has("co_archive");
     return {
       coattested: stamp4 && archive,
-      ...stamp4 && archive ? {} : { coattested_why: `the record holds ${stamp4 ? "a trusted timestamp but no co-archive" : archive ? "a co-archive but no trusted timestamp" : "neither a trusted timestamp nor a co-archive"} for it` }
+      ...stamp4 && archive ? {} : { coattested_why: word2("filings.record_holds", {
+        stamp: word2(stamp4 ? "filings.trusted_timestamp_archive" : archive ? "filings.archive_trusted_timestamp" : "filings.neither_a_trusted_timestamp_nor")
+      }) }
     };
   }
   /* R25: the venue's standard of evidence for a kind (`jurisdictions` R39), or undetermined with why. */
   #venueStandard(v, kind2) {
-    const none = (why2) => ({ state: "undetermined", why: `${why2}, so the venue's standard is undetermined and the grades are shown alone` });
+    const none = (why2) => ({ state: "undetermined", why: word2("filings.why.venue_standard_undetermined", { why: why2 }) });
     if (!v.view) return none(v.why);
-    if (v.conflicts.some((c) => c.at === `action_kinds[${kind2}].evidence`)) return none("the active profiles give different evidence standards for this kind");
+    if (v.conflicts.some((c) => c.at === `action_kinds[${kind2}].evidence`)) return none(word2("filings.active_profiles_give"));
     const entry4 = Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === kind2) : null;
-    if (!entry4 || !isObj46(entry4.evidence)) return none("the profile states no standard of evidence for this kind's venue");
+    if (!entry4 || !isObj46(entry4.evidence)) return none(word2("filings.profile_states_standard"));
     const ev = entry4.evidence;
     const list6 = (l2) => Array.isArray(l2) ? l2.filter(isObj46).map((x) => ({ grade: x.grade, ...x.coattested ? { coattested: true } : {} })) : [];
     return {
@@ -216410,11 +216695,7 @@ ${body}` : body;
     if (standard2.state !== "stated") return { state: "undetermined", flagged: false, why: standard2.why };
     const letter2 = grade2.grade;
     if (!BASIS_GRADES.includes(letter2))
-      return {
-        state: "undetermined",
-        flagged: false,
-        why: "the exhibit's capture grade is not measured, so it is not read against the venue's standard"
-      };
+      return { state: "undetermined", flagged: false, why: word2("filings.why.exhibit_capture_grade") };
     const rank7 = (g) => BASIS_GRADES.indexOf(g);
     const co = (e2) => !e2.coattested ? true : coattested === true ? true : coattested === null ? null : false;
     const contest = standard2.contestable.find((e2) => e2.grade === letter2 && co(e2) === true);
@@ -216422,20 +216703,16 @@ ${body}` : body;
       state: "contestable",
       flagged: true,
       at: contest,
-      says: `the venue admits grade ${letter2}, and the profile marks it contestable: the opposition may contest it`
+      says: word2("filings.says.venue_admits_grade", { letter: letter2 })
     };
     const fits = standard2.accepts.filter((e2) => BASIS_GRADES.includes(e2.grade) && rank7(letter2) <= rank7(e2.grade));
-    if (fits.some((e2) => co(e2) === true)) return { state: "accepted", flagged: false, says: "within the grades the venue accepts" };
+    if (fits.some((e2) => co(e2) === true)) return { state: "accepted", flagged: false, says: word2("filings.says.within_grades_venue") };
     if (fits.some((e2) => co(e2) === null))
-      return {
-        state: "undetermined",
-        flagged: false,
-        why: "the venue accepts this grade only co-attested, and whether the exhibit is co-attested is undetermined"
-      };
+      return { state: "undetermined", flagged: false, why: word2("filings.why.venue_accepts_grade") };
     return {
       state: "below",
       flagged: true,
-      says: fits.length ? "the venue accepts this grade only co-attested, and the exhibit is not co-attested" : "below every grade the venue accepts"
+      says: fits.length ? word2("filings.says.venue_accepts_grade") : word2("filings.says.below_grade_venue")
     };
   }
   /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
@@ -216447,14 +216724,14 @@ ${body}` : body;
       let start;
       const act2 = det ? det.act || {} : {};
       if (r.starts === "act")
-        start = _Filings.#actDay(act2) ? { event: "act", date: _Filings.#actDay(act2), source: str47(act2.at) ? det.id : str47(act2.event) } : { event: "act", state: "undetermined", why: det ? `${_Filings.#actDayWhy(act2)}, so no single day starts the count` : "no live determination states the act" };
+        start = _Filings.#actDay(act2) ? { event: "act", date: _Filings.#actDay(act2), source: str47(act2.at) ? det.id : str47(act2.event) } : { event: "act", state: "undetermined", why: det ? word2("filings.why.single_day_starts", { act: _Filings.#actDayWhy(act2) }) : word2("filings.why.live_determination_states") };
       else if (r.starts === "received" || r.starts === "filed") {
         const e2 = first(r.starts === "received" ? "received" : "sent");
-        start = e2 ? { event: r.starts, date: String(e2.at).slice(0, 10), source: `${a.id}#${e2.ord}` } : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
+        start = e2 ? { event: r.starts, date: String(e2.at).slice(0, 10), source: `${a.id}#${e2.ord}` } : { event: r.starts, state: "undetermined", why: word2("filings.why.action_correspondence_holds", { starts: r.starts === "received" ? "received" : "sent" }) };
       } else start = {
         event: r.starts ?? null,
         state: "undetermined",
-        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds"
+        why: r.starts === "known" ? word2("filings.why.record_holds_date") : word2("filings.why.rule_names_start")
       };
       const date = deadlineDate({
         start: start.date ?? null,
@@ -216496,11 +216773,11 @@ ${body}` : body;
     const add2 = (id, is, source2) => {
       if (id && !set.some((x) => x.id === id)) set.push({ id, is, source: source2 });
     };
-    add2(isObj46(act2.event) ? str47(act2.event.event_id) || str47(act2.event.id) : str47(act2.event), "the act's event", det && det.id);
+    add2(isObj46(act2.event) ? str47(act2.event.event_id) || str47(act2.event.id) : str47(act2.event), word2("filings.the_act_s_event"), det && det.id);
     const cp = isObj46(a.counterparty) ? str47(a.counterparty.entity_id) : null;
     const actor = isObj46(act2.actor) ? str47(act2.actor.entity_id) : null;
-    add2(cp || actor, "the counterparty office", cp ? a.id : det && det.id);
-    for (const f17 of facts) add2(f17.subject_entity, "an entity a finding concerns", f17.source);
+    add2(cp || actor, word2("filings.counterparty_office"), cp ? a.id : det && det.id);
+    for (const f17 of facts) add2(f17.subject_entity, word2("filings.entity_finding_concerns"), f17.source);
     const from = _Filings.#actDay(act2) || (isObj46(act2.period) ? realDate(act2.period.from) : null);
     const to = at49.slice(0, 10);
     const base2 = {
@@ -216509,23 +216786,23 @@ ${body}` : body;
       set,
       from,
       to,
-      ...from ? {} : { from_says: "the act states no date, so the chronology reads from the earliest event of the set" }
+      ...from ? {} : { from_says: word2("filings.act_states_date") }
     };
     const empty2 = (says) => ({ ...base2, lanes: {
       world: { label: LANE_WORDS.world, items: [], placed_nowhere: [], truncated: false },
       ours: { label: LANE_WORDS.ours, sources: [] }
     }, events: [], says });
     if (!set.length)
-      return empty2("the record names no act event, counterparty office or subject entity for this action, so the timeline has no set to read");
+      return empty2(word2("filings.record_names_act"));
     const t2 = this.events;
     if (!t2 || typeof t2.timeline !== "function")
-      return { ...empty2("no module answers the timeline here, so the chronology is undetermined"), unread: true };
+      return { ...empty2(word2("filings.module_answers_timeline")), unread: true };
     const ids = set.map((x) => x.id);
     const read3 = (who4, o) => this.#call(() => t2.timeline({ set: ids, limit: CHRONOLOGY_MAX, viewer: who4, ...o }));
     const dated = read3(viewer, { from, to });
     if (!dated || dated.ok === false || !dated.world)
       return {
-        ...empty2(`the timeline could not be read${dated && dated.reason ? ` (${dated.reason})` : ""}, so the chronology is undetermined`),
+        ...empty2(word2("filings.timeline_read_chronology", { dated: dated && dated.reason ? ` (${dated.reason})` : "" })),
         unread: true
       };
     const lane = (r) => [...r.world.items || [], ...r.world.placed_nowhere || []];
@@ -216539,12 +216816,12 @@ ${body}` : body;
       truncated: !!dated.world.truncated,
       ...hidden ? { out_of_view: true } : {}
     };
-    if (world.truncated) world.says = `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`;
-    const ours = { label: LANE_WORDS.ours, sources: (dated.ours && Array.isArray(dated.ours.sources) ? dated.ours.sources : []).map((s) => s.error ? { source: s.source, error: s.error, says: "this source could not be read, so its acts are not listed" } : {
+    if (world.truncated) world.says = word2("filings.says.events_lane_lists", { chronology_max: CHRONOLOGY_MAX });
+    const ours = { label: LANE_WORDS.ours, sources: (dated.ours && Array.isArray(dated.ours.sources) ? dated.ours.sources : []).map((s) => s.error ? { source: s.source, error: s.error, says: word2("filings.says.source_read_acts") } : {
       source: s.source,
       items: (s.items || []).map((x) => ({ ...x, source: `${s.source}:${x.ref}` })),
       truncated: !!s.truncated,
-      ...s.truncated ? { says: `more acts than the ${CHRONOLOGY_MAX} this source lists are held: it is truncated` } : {}
+      ...s.truncated ? { says: word2("filings.says.acts_source_lists", { chronology_max: CHRONOLOGY_MAX }) } : {}
     }) };
     const events = [...world.items, ...world.placed_nowhere].map((i) => {
       const r = typeof t2.readEvent === "function" ? this.#call(() => t2.readEvent({ eventId: i.event_id, viewer })) : null;
@@ -216555,7 +216832,7 @@ ${body}` : body;
       ...base2,
       lanes: { world, ours },
       events,
-      says: "what they did (the world's events) and what we did (the group's own acts, each source apart) are answered apart, each in its own order, never interleaved into one list"
+      says: word2("filings.says.world_events_group")
     };
   }
   /* R8 (T35, N653; K1739, K2019): a standard whose access, as `standards` holds it (its R41), is not `free` (for kind
@@ -216580,17 +216857,17 @@ ${body}` : body;
       if (str47(c.content_id) && textIds2.has(str47(c.content_id))) rely(str47(c.content_id), { finding_leg: c.target ?? null, source: f17.source });
     const passages = [...relied.entries()].map(([cid, by]) => ({ content_id: cid, ...this.#quote(cid, viewer), relied_on_by: by }));
     const access = str47(r.access) || "undetermined";
-    const words24 = isObj46(r.says) && str47(r.says.access);
+    const words23 = isObj46(r.says) && str47(r.says.access);
     return {
       designation: str47(r.designation),
       edition: str47(r.edition),
-      ...str47(r.edition) ? {} : { edition_says: "the record states no edition of this standard" },
+      ...str47(r.edition) ? {} : { edition_says: word2("filings.record_states_edition") },
       adoption: this.#adoption(r.id ?? s.id, act2, viewer),
       access,
-      access_says: words24 ? `${words24}: only the passages relied on are carried, never the whole text` : "how this standard's text can be read is not stated, so it is carried as not free: only the passages relied on, never the whole text",
+      access_says: words23 ? word2("filings.passages_relied_carried", { words: words23 }) : word2("filings.standard_text_read"),
       requires,
       passages,
-      says: passages.length ? "only the passages the determination's comparison and the findings rely on are carried, each quoted" : "no passage of its text is relied on by a comparison row or a finding, so none is carried"
+      says: passages.length ? word2("filings.says.passages_determination_comparison") : word2("filings.says.passage_text_relied")
     };
   }
   /* R8: one relied-on passage's words (`content.passageText`, its R46), or null with why; a passage whose document the
@@ -216598,25 +216875,25 @@ ${body}` : body;
   #quote(cid, viewer) {
     const c = this.content;
     const row12 = c && typeof c.contentRow === "function" ? this.#call(() => c.contentRow(cid)) : null;
-    if (!row12) return { text: null, text_why: "the record holds no passage by this content id" };
+    if (!row12) return { text: null, text_why: word2("filings.record_holds_passage") };
     if (str47(row12.bundle_id) && typeof c.sees === "function" && !this.#call(() => c.sees(row12.bundle_id, viewer)))
-      return { text: null, text_why: "the passage is not one you may see" };
+      return { text: null, text_why: word2("filings.passage_see") };
     if (row12.extent_kind === "document")
-      return { text: null, text_why: "the passage cited is the whole document, so it is not quoted: only passages relied on travel" };
+      return { text: null, text_why: word2("filings.passage_cited_whole") };
     const t2 = typeof c.passageText === "function" ? this.#call(() => c.passageText(cid)) : null;
-    return typeof t2 === "string" ? { text: t2 } : { text: null, text_why: "the passage's words are not held as text here" };
+    return typeof t2 === "string" ? { text: t2 } : { text: null, text_why: word2("filings.passage_words_held") };
   }
   /* R8: the edition the act's body had adopted on the act's day (`standards.editionInForce`, its R40), or undetermined
      with why. */
   #adoption(id, act2, viewer) {
     const day2 = _Filings.#actDay(act2);
     const body = isObj46(act2.actor) ? str47(act2.actor.body) : null;
-    if (!day2) return { state: "undetermined", why: "the act has no single day, so which edition was adopted is not asked" };
-    if (!body) return { state: "undetermined", why: "the determination names no body, so no adoption is read" };
+    if (!day2) return { state: "undetermined", why: word2("filings.why.act_single_day") };
+    if (!body) return { state: "undetermined", why: word2("filings.why.determination_names_body") };
     const s = this.standards;
-    if (!s || typeof s.editionInForce !== "function") return { state: "undetermined", why: "no module answers a standard's adoptions here" };
+    if (!s || typeof s.editionInForce !== "function") return { state: "undetermined", why: word2("filings.why.module_answers_standard") };
     const e2 = this.#call(() => s.editionInForce({ standard: id, body, date: day2, viewer }));
-    if (!isObj46(e2) || e2.ok === false) return { state: "undetermined", why: "the adoptions could not be read" };
+    if (!isObj46(e2) || e2.ok === false) return { state: "undetermined", why: word2("filings.why.adoptions_read") };
     const a = isObj46(e2.adoption) ? e2.adoption : null;
     return {
       state: e2.state ?? "undetermined",
@@ -216666,27 +216943,27 @@ ${body}` : body;
     }));
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function" ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts, det ? det.withheld ? unseen : {} : { says: facts.length ? "no determination is held: each matter's support is set out as it stands, each finding with its kind and grade, not determined" : "no determination is held, and the action names no inquiry it rests on, so no finding is set out" }),
+      facts: section("Facts", facts, det ? det.withheld ? unseen : {} : { says: facts.length ? word2("filings.says.determination_held_matter") : word2("filings.says.determination_held_action") }),
       chronology: privileged ? { ...chronology, privileged } : chronology,
       exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts, events), standard2), {
         venue_standard: standard2,
-        says: standard2.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; an exhibit below it, or at a grade the profile marks contestable, is flagged, and nothing is refused for its grade" : "each exhibit's capture grade and co-attestation, shown alone: the venue's standard is undetermined"
+        says: standard2.state === "stated" ? word2("filings.says.exhibit_capture_grade") : word2("filings.says.exhibit_capture_grade_attestation")
       }),
-      standards: section("Standards", standards, det ? det.withheld || refused5 ? unseen : {} : { says: "no determination is held, so no standard is set out" }),
+      standards: section("Standards", standards, det ? det.withheld || refused5 ? unseen : {} : { says: word2("filings.says.determination_held_standard") }),
       theories: section(
-        "Candidate theories and remedies",
+        word2("filings.candidate_theories_remedies"),
         theories,
-        { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion" : "no candidate theory or remedy has been proposed for this action" }
+        { says: theories.length ? word2("filings.says.candidate_counsel_weigh") : word2("filings.says.candidate_theory_remedy") }
       ),
       deadlines: section(
         "Deadlines",
         this.#deadlines(v, a, det, viewer),
-        { says: v.view ? `each date is computed only from a recorded start event (${COUNTED_FROM}), else undetermined with why` : `${v.why}, so no claim deadline is known` }
+        { says: v.view ? word2("filings.says.date_computed_recorded", { counted_from: COUNTED_FROM }) : word2("filings.says.claim_deadline_known", { why: v.why }) }
       ),
       consequences: section(
-        "Consequences of the breach",
+        word2("filings.consequences_breach"),
         cons && cons.ok !== false ? [{ recorded: cons, source: det.id }] : [],
-        { says: !det ? "no determination is held, so no breach consequence is recorded against one" : cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states" : "the consequences could not be read, so they are undetermined" }
+        { says: !det ? word2("filings.says.determination_held_breach") : cons && cons.ok !== false ? word2("filings.says.recorded_part_state") : word2("filings.says.consequences_read_undetermined") }
       ),
       /* R9 (T45): a defence packet's three sections */
       ...purpose === "defence" ? this.#defenceSections(a, det, facts, v, viewer, section, challenged) : {}
@@ -216723,7 +217000,7 @@ ${body}` : body;
       for (const q10 of [{ action: a.id }, ...a.project ? [{ project: a.project }] : []]) {
         const r = this.#call(() => h.pressureFor({ ...q10, limit: PRESSURE_MAX, viewer }));
         if (!r || r.ok === false) {
-          pressureSays = "the pressure recorded could not be read in full";
+          pressureSays = word2("filings.pressure_recorded_read");
           continue;
         }
         for (const x of Array.isArray(r.items) ? r.items : []) {
@@ -216735,9 +217012,9 @@ ${body}` : body;
             source: str47(where.pressure) ?? (str47(where.action) ? `${where.action}#${where.ord ?? "?"}` : a.id)
           });
         }
-        if (r.truncated) pressureSays = `more than the ${PRESSURE_MAX} pressure items read are held: the list is truncated`;
+        if (r.truncated) pressureSays = word2("filings.pressure_items_read", { pressure_max: PRESSURE_MAX });
       }
-    } else pressureSays = "no module answers the pressure recorded on actions here, so it is undetermined";
+    } else pressureSays = word2("filings.module_answers_pressure");
     const cases = new Set(facts.map((f17) => f17.case).filter(Boolean));
     const dk = this.docket;
     if (dk && typeof dk.docketPressureMarks === "function") {
@@ -216745,7 +217022,7 @@ ${body}` : body;
       for (let n2 = 0; n2 < 20; n2++) {
         const r = this.#call(() => dk.docketPressureMarks({ kind: "legal", ...after2 ? { after: after2 } : {} }));
         if (!r || r.ok === false) {
-          pressureSays = "the docket's legal marks could not be read, so they are undetermined";
+          pressureSays = word2("filings.docket_legal_marks");
           break;
         }
         for (const m of r.marks || []) {
@@ -216759,19 +217036,19 @@ ${body}` : body;
         if (!r.cursor) break;
         after2 = r.cursor;
       }
-    } else pressureSays = pressureSays || "no module answers the docket's marks here, so they are undetermined";
+    } else pressureSays = pressureSays || word2("filings.module_answers_docket");
     return {
-      challenged: section("Challenged statements", statements, {
-        says: statements.length ? "each statement of the group that is challenged, as a member names it, with the findings and sources it rests on" : "no member has named a challenged statement",
+      challenged: section(word2("filings.challenged_statements"), statements, {
+        says: statements.length ? word2("filings.says.statement_group_challenged") : word2("filings.says.member_named_challenged"),
         ...hidden ? { out_of_view: true } : {}
       }),
-      pressure: section("Pressure received", pressure, {
-        says: pressureSays || (pressure.length ? "each pressure mark and record, and each legal mark on the case's docket, with its date" : "no pressure is recorded on this action, its project or its case's docket")
+      pressure: section(word2("filings.pressure_received"), pressure, {
+        says: pressureSays || (pressure.length ? word2("filings.says.pressure_mark_record") : word2("filings.says.pressure_recorded_action"))
       }),
       defence_deadlines: section(
-        "Defence deadlines",
+        word2("filings.defense_deadlines"),
         this.#deadlines(v, a, det, viewer, true),
-        { says: v.view ? `each deadline that applies to a defence; its date only from a recorded start event (${COUNTED_FROM}), else undetermined with why` : `${v.why}, so no defence deadline is known` }
+        { says: v.view ? word2("filings.says.deadline_applies_defense", { counted_from: COUNTED_FROM }) : word2("filings.says.defense_deadline_known", { why: v.why }) }
       )
     };
   }
@@ -216906,7 +217183,7 @@ ${body}` : body;
     const { det, hidden } = this.#restsOn(a, viewer);
     const marking = counselMarking(c);
     const project = a.project || (det ? det.project : null);
-    const privileged = this.#counselMatter(project) ? { key: "packet.privileged", text: KEYED["packet.privileged"], warning: { key: "packet.privileged.warning", text: KEYED["packet.privileged.warning"] } } : null;
+    const privileged = this.#counselMatter(project) ? { key: "packet.privileged", text: keyed4("packet.privileged"), warning: { key: "packet.privileged.warning", text: keyed4("packet.privileged.warning") } } : null;
     const at49 = this.#when();
     const sections = this.#assemble(a, det, viewer, marking, at49, {
       purpose: goal,
@@ -216985,7 +217262,7 @@ ${filled21.text}` : filled21.text,
       template: _Filings.#templateOf(used),
       record_check: check2.record_check,
       ...notFor ? { not_written_for: notFor } : {},
-      says: "the group's briefing to counsel, filled from the record from a brief template; it is not a filing and cannot be filed as it stands"
+      says: word2("filings.says.group_briefing_counsel")
     };
   }
   /* R10 (T45): whether a project is a counsel matter (`project-roster.projectScope`, its R23); with no project or no
@@ -217009,7 +217286,9 @@ ${filled21.text}` : filled21.text,
       ...privileged ? { privileged } : {},
       ...purpose ? { purpose } : {},
       fileable: false,
-      says: `prepared ${counsel && counsel.name ? "for counsel's review" : "for the group's own review, no counsel named"} from the record; it is never published and is not in a form that can be filed`
+      says: word2("filings.says.prepared_record_published", {
+        counsel: word2(counsel && counsel.name ? "filings.says.counsel_review" : "filings.says.group_review_counsel")
+      })
     };
   }
   /* A packet's versions the viewer may see, through its action and the project each version draws on (R11, R19;
@@ -217029,20 +217308,20 @@ ${filled21.text}` : filled21.text,
     if (!isObj46(stored2) || !str47(stored2.id) || stored2.version == null) return stored2 ?? null;
     const t2 = this.filingTemplates;
     const r = t2 && typeof t2.templateRead === "function" ? this.#call(() => t2.templateRead({ template: stored2.id, version: stored2.version, viewer })) : null;
-    if (!r || r.ok === false) return { ...stored2, read: false, says: "the template is not readable here now" };
+    if (!r || r.ok === false) return { ...stored2, read: false, says: word2("filings.says.template_readable") };
     const ver = r.version || {};
     const retired = r.template && r.template.retired ? r.template.retired : null;
     const flags2 = [
       ...ver.updated_by ? [{
         flag: "updated",
         by: ver.updated_by,
-        says: `prepared from version ${stored2.version}, since updated by version ${String(ver.updated_by).split("@").pop()}`
+        says: word2("filings.says.prepared_version_updated", { version: stored2.version, updated_by: String(ver.updated_by).split("@").pop() })
       }] : [],
       ...retired ? [{
         flag: "retired",
         reason: retired.reason ?? null,
         at: retired.at ?? null,
-        says: `prepared from a template since retired: ${retired.reason ?? "no reason stated"}`
+        says: word2("filings.says.prepared_template_retired", { reason: retired.reason ?? word2("filings.says.reason_stated") })
       }] : []
     ];
     return {
@@ -217104,12 +217383,12 @@ ${filled21.text}` : filled21.text,
     const priv = (p3) => p3 ? [p3.text, p3.warning ? p3.warning.text : null].filter(Boolean).flatMap((t2) => [t2, ""]) : [];
     const lines2 = [
       ...v.disclosure ? [v.disclosure, ""] : [],
-      `# Counsel packet ${v.id}, version ${v.version}`,
+      word2("filings.counsel_packet_version", { id: v.id, version: v.version }),
       "",
       v.marking,
       "",
       ...priv(v.privileged),
-      `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`,
+      word2("filings.action_assembled", { action: v.action, assembled_by: v.head.assembled_by, at: v.head.at }),
       ""
     ];
     const item3 = (x) => `- ${JSON.stringify(x)}`;
@@ -217130,7 +217409,7 @@ ${filled21.text}` : filled21.text,
       }
       lines2.push("");
     }
-    lines2.push("## Manifest of exhibits", "", v.marking, "", ...priv(v.privileged));
+    lines2.push(word2("filings.manifest_exhibits"), "", v.marking, "", ...priv(v.privileged));
     for (const e2 of v.sections && v.sections.exhibits ? v.sections.exhibits.items : []) lines2.push(`- ${e2.sha256}`);
     lines2.push("");
     return lines2.join("\n");
@@ -217145,7 +217424,7 @@ ${filled21.text}` : filled21.text,
   }
   /* R22: bytes leaving the instance: `face` (the text a member approved or the packet's rendering, R24's disclosure
      first where it applies), then the in-band block, its hash over `face` by the one hasher (`inbandQuartet`). */
-  async #stamped(face2, { what, date, author, project, review = null }) {
+  async #stamped(face2, { what, date, author, project, review = null, stake = null }) {
     const subject = review ? { text: face2, embargo_until: review.embargo_until ?? null, release_at: review.release_at ?? null } : face2;
     const { quartet } = await inbandQuartet({
       subject,
@@ -217153,18 +217432,21 @@ ${filled21.text}` : filled21.text,
       date,
       author,
       bar: this.#bar(project),
-      group: this.#groupFields()
+      group: this.#groupFields(stake)
     });
     return { bytes: `${face2}
 ${inbandBlock(quartet)}`, inband: quartet };
   }
-  /* R22 (T45): the group's public identity and declared stake (`public-read.groupFields`, its R34), passed as the
-     quartet's `group`, outside what its hash covers (so a joint text's fingerprint, R36, is computed without them); with
-     no module answering, null, and the quartet carries no group. */
-  #groupFields() {
+  /* R22 (T45), R61 (T50): the group's public identity and declared stake (`public-read.groupFields`, its R34, for the
+     action's project, its R36), passed as the quartet's `group`, outside what its hash covers (so a joint text's
+     fingerprint, R36, is computed without them). `stake` is {project, matter}: the action's project and R60's answer,
+     which stands as `matter_stake` beside the team's own `stake`, never in its place. With no module answering, null,
+     and the quartet carries no group. */
+  #groupFields(stake = null) {
     const p3 = this.publicRead;
-    const g = p3 && typeof p3.groupFields === "function" ? this.#call(() => p3.groupFields()) : null;
-    return isObj46(g) ? g : null;
+    const project = stake && str47(stake.project) ? str47(stake.project) : null;
+    const g = p3 && typeof p3.groupFields === "function" ? this.#call(() => p3.groupFields(project ? { project } : {})) : null;
+    return isObj46(g) ? { ...g, matter_stake: stake ? stake.matter ?? null : g.matter_stake ?? null } : null;
   }
   /** R11, R22: hands a member the packet's bytes, carrying the in-band quartet, and records who exported which version,
    *  when and for which counsel, with the digest of the bytes handed over. */
@@ -217181,9 +217463,17 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const at49 = this.#when();
     const row12 = this.#one(`SELECT basis FROM counsel_packets WHERE packet_id=? AND version=?`, read3.id, read3.version);
     const project = (parse11(row12 && row12.basis) || {}).project ?? null;
+    const a = this.#action(read3.action, viewer);
+    const stakeProject = a && str47(a.project) || project;
     const { bytes: bytes2, inband } = await this.#stamped(
       _Filings.render(read3),
-      { what: `counsel packet ${read3.id} version ${read3.version}`, date: at49, author: who4, project }
+      {
+        what: `counsel packet ${read3.id} version ${read3.version}`,
+        date: at49,
+        author: who4,
+        project,
+        stake: { project: stakeProject, matter: a ? this.#matterStake(a, stakeProject) : null }
+      }
     );
     const sha2 = sha256HexSync(bytes2);
     this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha, inband)
@@ -217337,7 +217627,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       ok: true,
       items,
       truncated: truncated6,
-      says: items.length ? "approved and not yet recorded as sent, oldest approval first" : "no approved draft or communication you may see waits to be recorded as sent"
+      says: items.length ? word2("filings.says.approved_recorded_sent") : word2("filings.says.approved_draft_communication")
     };
   }
   /* ---------------------------------------------------------------- R14: candidate theories */
@@ -217405,7 +217695,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           at: at49
         },
         evidence: false,
-        says: "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next counsel packet version as a candidate"
+        says: word2("filings.says.candidate_theory_remedy_stored")
       };
     });
   }
@@ -217478,7 +217768,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
         const orgs = (Array.isArray(v.view.legal_organisations) ? v.view.legal_organisations : []).filter((o) => Array.isArray(o.evaluates) && o.evaluates.includes(k.kind)).map((o) => ({ name: o.name, contacts: o.contacts, source: `profile:${o.profile}/legal_organisations` }));
         out.counsel = COUNSEL_SENTENCE;
         out.legal_organisations = orgs;
-        if (!orgs.length) out.legal_organisations_says = "the profile names no legal organisation equipped to evaluate this kind";
+        if (!orgs.length) out.legal_organisations_says = word2("filings.profile_names_legal");
       }
       return out;
     });
@@ -217497,7 +217787,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
             body: actor.body ?? null,
             in_profile: !!match,
             ...match ? { level: match.level ?? null, elected: match.elected ?? null } : {},
-            says: match ? "an office of the active profile" : "not an office the active profile lists; the kinds are the profile's all the same"
+            says: match ? word2("filings.says.office_active_profile") : word2("filings.says.office_active_profile_lists")
           },
           ...tier3 ? { tier3: {
             standards: d.standards.filter((s) => s.outcome === "noncompliant").map((s) => s.id),
@@ -217508,7 +217798,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
           ...d.withheld ? { out_of_view: true } : {}
         };
       }),
-      says: !v.view ? `${v.why}, so no kind is listed` : dets.length ? "the kinds a group may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block" : "no live determination rests on this case's findings, so no action is listed against an office"
+      says: !v.view ? word2("filings.says.kind_listed", { why: v.why }) : dets.length ? word2("filings.says.kinds_group_pursue") : word2("filings.says.live_determination_rests")
     };
   }
   /** R21: R15's block for one determination, for `escalation` (its R8). */
@@ -217551,7 +217841,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
         edition,
         ...b,
         determinations_read: false,
-        says: "no module answers determinations here, so whether one rests on this case is undetermined and no action is listed against an office"
+        says: word2("filings.says.module_answers_determinations")
       };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
@@ -217663,6 +217953,7 @@ function filingsOps(f17, url, body) {
     }),
     filingsfor: () => f17.filingsFor({ action: q10("action"), viewer: q10("viewer") }),
     filingread: () => f17.filingRead({ filing: b.filing ?? q10("filing"), viewer: q10("viewer") }),
+    stakeatpreparation: () => f17.stakeAtPreparation({ action: q10("action") ?? b.action ?? null, viewer: q10("viewer") }),
     theorypropose: () => f17.theoryPropose({
       packet: b.packet ?? null,
       action: b.action ?? null,
@@ -218283,7 +218574,7 @@ var instantMs2 = (v) => {
 };
 var iso = (ms6) => stampInstant("second", ms6);
 var dayOf4 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null;
-var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
+var quoted5 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 var DRAFTED_BY = "system";
 function overdueSince(text8, date, nowMs, place9) {
   const past = (t2) => (actionFacts(text8, t2, place9) || {}).clock_overdue === true;
@@ -218308,7 +218599,7 @@ function eventWhenWords(w, why2) {
 }
 function consequenceSentence(p3) {
   const aff = isObj47(p3.affected) ? p3.affected : {};
-  const who4 = str48(aff.description) ? `${quoted4(aff.description)}${str48(aff.kind) ? ` (${str48(aff.kind)})` : ""}` : "what the record does not state (undetermined)";
+  const who4 = str48(aff.description) ? `${quoted5(aff.description)}${str48(aff.kind) ? ` (${str48(aff.kind)})` : ""}` : "what the record does not state (undetermined)";
   const m = isObj47(p3.measure) ? p3.measure : null;
   const amount = !m || p3.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj47(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
   const measure = amount === null ? `its measure is undetermined${isObj47(p3.undetermined) && str48(p3.undetermined.why) ? ` (${str48(p3.undetermined.why)})` : ""}` : `its measure is ${amount} ${str48(m.unit)}${str48(m.currency) ? ` (${str48(m.currency)})` : ""}`;
@@ -219734,7 +220025,7 @@ var Escalation = class _Escalation {
     const eventWhen = act2.when !== void 0 && act2.when !== null ? act2.when : ev ? ev.when ?? null : null;
     const when = str48(act2.at) ? `on ${str48(act2.at)}` : isObj47(act2.period) && str48(act2.period.from) && str48(act2.period.to) ? `from ${str48(act2.period.from)} to ${str48(act2.period.to)}` : str48(act2.event) || ev ? eventWhenWords(eventWhen, ev && str48(ev.why) ? str48(ev.why) : null) : "at a date the record does not state (undetermined)";
     const kind2 = str48(act2.kind) || (ev ? str48(ev.kind) : "");
-    const what = str48(act2.description) ? quoted4(act2.description) : str48(act2.event) ? `the event ${str48(act2.event)}${kind2 ? ` (${kind2})` : ""}` : "its description could not be read (undetermined)";
+    const what = str48(act2.description) ? quoted5(act2.description) : str48(act2.event) ? `the event ${str48(act2.event)}${kind2 ? ` (${kind2})` : ""}` : "its description could not be read (undetermined)";
     say7(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${what}, by ${actor}, ${when}.`);
     const held3 = Array.isArray(d.standards) ? d.standards.filter(isObj47) : [];
     for (const standard2 of pursued) {
@@ -219744,7 +220035,7 @@ var Escalation = class _Escalation {
         say7(standard2, `Standard ${standard2} is breached: its basis in the determination could not be read (undetermined).`);
         continue;
       }
-      const basis = rows4.map((r) => `it requires ${str48(r.requires) ? quoted4(r.requires) : "what the record does not state (undetermined)"}; the act did ${str48(r.did) ? quoted4(r.did) : "what the record does not state (undetermined)"} (reading: ${str48(r.reading) || "undetermined"}${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
+      const basis = rows4.map((r) => `it requires ${str48(r.requires) ? quoted5(r.requires) : "what the record does not state (undetermined)"}; the act did ${str48(r.did) ? quoted5(r.did) : "what the record does not state (undetermined)"} (reading: ${str48(r.reading) || "undetermined"}${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
       const force = st.in_force === "in_force" ? "It was in force at the act's date." : `Whether it was in force at the act's date is undetermined${str48(st.in_force_why) ? ` (${str48(st.in_force_why)})` : ""}.`;
       say7(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str48(st.disagreement) ? ` The determination states: ${str48(st.disagreement)}.` : ""}`);
     }
@@ -219765,7 +220056,7 @@ var Escalation = class _Escalation {
         for (const c of clock2) {
           const what2 = str48(c.text) || str48(c.description);
           const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
-          say7(id, `Action ${id}'s clock entry ${what2 ? quoted4(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted4(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
+          say7(id, `Action ${id}'s clock entry ${what2 ? quoted5(what2) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str48(c.basis) ? quoted5(c.basis) : "the record does not state (undetermined)"}, ${str48(c.status) || "its status undetermined"}.`);
           if (c.status === "pending" && date) {
             let past = null;
             try {
@@ -220327,19 +220618,20 @@ var PLAN_WORDS = Object.freeze({
   "refusal.PLAN_NOT_OPEN": "Only an open plan can be paused. Nothing was changed.",
   "refusal.PLAN_NOT_PAUSED": "Only a paused plan can be resumed. Nothing was changed.",
   "refusal.DOCUMENT_FIRST_NO_REASON": "Acting before what happened is documented needs your reason: why you are acting first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn't in that form. Give it, or document what happened first. Nothing was written.",
-  "plan.close.lessons": "What would your group do differently next time? (optional, at most 4,000 characters)"
+  "plan.close.lessons": "What would your team do differently next time? (optional, at most 4,000 characters)",
+  "refusal.PLAN_NO_TITLE": "A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
 });
 var ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
     check: "C-124.1",
     where: at37("machineCannotPlan", "is-plan-member"),
-    translation: "An action plan is the group's own working material, and only a member opens it, changes what it is about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written."
+    translation: "An action plan is the team's own working material, and only a member opens it, changes what it is about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written."
   },
   PLAN_NO_TITLE: {
     check: "C-124.2",
     where: at37("planOpen", "is-plan-titled"),
-    translation: "A plan needs a title of 1 to 200 characters, with no quotation mark, backslash or line break. Nothing was written."
+    translation: PLAN_WORDS["refusal.PLAN_NO_TITLE"]
   },
   PLAN_NO_SUBJECT: {
     check: "C-124.3",
@@ -220415,7 +220707,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   ADDRESSEE_REFUSED: {
     check: "C-124.17",
     where: at37("#optionFields", "is-option-addressee"),
-    translation: "An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience. It is never a private individual. Nothing was written."
+    translation: "An addressee is an office by its role and body, a reporter or outlet, an organisation or another civic organization by role and organisation, or a described audience. It is never a private individual. Nothing was written."
   },
   DATE_REFUSED: {
     check: "C-124.18",
@@ -220497,7 +220789,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   PHASE_OPTION_NOT_CHOSEN: {
     check: "C-124.33",
     where: at37("#scenarioPhases", "is-phase-option-chosen"),
-    translation: "A phase holds only options the group has chosen. Choose the option first. Nothing was written."
+    translation: "A phase holds only options the team has chosen. Choose the option first. Nothing was written."
   },
   PHASE_CYCLE: {
     check: "C-124.34",
@@ -220512,7 +220804,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   MACHINE_CANNOT_JUDGE: {
     check: "C-124.36",
     where: at37("checkpointRecord", "is-judge-member"),
-    translation: "Whether a checkpoint's condition was met is the group's own judgement. An assistant may not make it. Nothing was written."
+    translation: "Whether a checkpoint's condition was met is the team's own judgement. An assistant may not make it. Nothing was written."
   },
   CHECKPOINT_REFUSED: {
     check: "C-124.37",
@@ -220533,12 +220825,12 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   MACHINE_CANNOT_START: {
     check: "C-124.40",
     where: at37("optionStart", "is-start-member"),
-    translation: "Starting an option creates an action the group takes in the world, and only a member does that. Nothing was written."
+    translation: "Starting an option creates an action the team takes in the world, and only a member does that. Nothing was written."
   },
   OPTION_NOT_CHOSEN: {
     check: "C-124.41",
     where: at37("optionStart", "is-start-chosen"),
-    translation: "Only an option the group has chosen is started. Choose it first. Nothing was written."
+    translation: "Only an option the team has chosen is started. Choose it first. Nothing was written."
   },
   OPTION_STARTED: {
     check: "C-124.42",
@@ -220619,7 +220911,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   PLAN_PROVIDER_UNAVAILABLE: {
     check: "C-124.57",
     where: at37("refuseProviderUnavailable", "is-provider-present"),
-    translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not in your group's Civicsmith yet, so the plan is not answered in part. Nothing was written."
+    translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not in your team's Civicsmith yet, so the plan is not answered in part. Nothing was written."
   },
   /* ---- R39, R40, R42, R20 (T45): scenarios set aside, the paused state, document first, the close ---- */
   NO_SUCH_SCENARIO: {
@@ -220660,7 +220952,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   CLOSE_NOTE_TOO_LONG: {
     check: "C-124.65",
     where: at37("planClose", "is-close-note"),
-    translation: "A closing note on what the group would do differently is at most 4,000 characters. Nothing was written."
+    translation: "A closing note on what the team would do differently is at most 4,000 characters. Nothing was written."
   }
 });
 function refusal32(code, detail, extra) {
@@ -220918,7 +221210,7 @@ function unbranched(p3, phases2) {
 
 // src/action-plans/index.mjs
 var CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
-var DISCLOSURE = (run2, skill) => `Suggested by the assistant (machine work) in run ${run2}, under skill version ${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
+var DISCLOSURE = (run2, skill) => `Suggested by the assistant (machine work) in run ${run2}, under skill version ${skill ?? "undetermined"}. It is not the team's decision; it becomes an option only when a member adopts it.`;
 var PROPOSAL_SAYS6 = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only when a member adopts it, in their own words for any reason the plan asks.";
 var CHECK_SAYS = "a check informs; it never refuses or changes anything.";
 var OFFER_WORDS = Object.freeze({
@@ -222231,7 +222523,7 @@ var ActionPlans = class {
     if (r.fault === "malformed")
       return refusal32("PHASE_MALFORMED", `phase ${r.index ?? "list"} is not a phase this scenario can hold: ${r.detail}. Nothing was written.`, at49);
     if (r.fault === "not_chosen")
-      return refusal32("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the group has not chosen: ${r.detail}. Nothing was written.`, at49);
+      return refusal32("PHASE_OPTION_NOT_CHOSEN", `phase ${r.index} holds an option the team has not chosen: ${r.detail}. Nothing was written.`, at49);
     if (r.fault === "branch")
       return refusal32("BRANCH_UNKNOWN", `phase ${r.index} names a phase or a matter this scenario does not hold: ${r.detail}. Nothing was written.`, at49);
     return refusal32(
@@ -222458,7 +222750,7 @@ var ActionPlans = class {
     const first = this.#documentFirst(p3, opt, viewer);
     const givenWhy = whyFirst !== void 0 && whyFirst !== null && whyFirst !== "";
     if (first.length && !givenWhy || givenWhy && !isLine(whyFirst, REASON_MAX15))
-      return done(refusal32("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the group before the infraction it serves is documented; say why it goes first, in 1 to ${REASON_MAX15} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: REASON_MAX15, matters: first.length }));
+      return done(refusal32("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the team before the infraction it serves is documented; say why it goes first, in 1 to ${REASON_MAX15} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: REASON_MAX15, matters: first.length }));
     const at49 = this.now();
     const doc = actionDocument({
       fields: opt.fields,
@@ -223024,7 +223316,7 @@ var ActionPlans = class {
         out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
       const hypothetical = ((held3.get(o.id) || o).subjects || []).every((s) => s.kind === "inquiry");
       if (outward(o) && hypothetical)
-        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the group and rests only on suspected matters: nothing it serves is determined yet` });
+        out.push({ check: "outward_on_hypothesis", option: o.id, says: `${o.id} addresses someone outside the team and rests only on suspected matters: nothing it serves is determined yet` });
       if (o.lobbying && o.enforces) {
         let superseded = false;
         if (o.enforces.standard) {
@@ -223079,7 +223371,7 @@ var ActionPlans = class {
             check: "no_hostile_branch",
             scenario: sc.scenario,
             phase: ph.id,
-            says: `phase ${ph.id} addresses someone outside the group and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere`
+            says: `phase ${ph.id} addresses someone outside the team and has no branch for a hostile response (a refusal, obstruction or retaliation): give it a checkpoint whose not_met judgement leads somewhere`
           });
       }
     }
@@ -223335,7 +223627,7 @@ function decisionsOf(history) {
   }
   return out;
 }
-var MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: "marked by the plan's re-examination (machine work) after a response was recorded; it decides nothing, and what the group chose changes only by a member's act" });
+var MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: "marked by the plan's re-examination (machine work) after a response was recorded; it decides nothing, and what the team chose changes only by a member's act" });
 function causeOf(c) {
   if (typeof c === "string") {
     const m = /^([^#\s]{1,120})#(\d{1,6})$/.exec(c);
@@ -223653,85 +223945,68 @@ function actionPlansOps(m, url, body) {
 // src/action-replies/checks.mjs
 var checks_exports63 = {};
 __export(checks_exports63, {
-  ACTION_REPLY_CHECKS: () => ACTION_REPLY_CHECKS,
-  ACTION_REPLY_WORDS: () => ACTION_REPLY_WORDS,
-  fillWords: () => fillWords4
+  ACTION_REPLY_CHECKS: () => ACTION_REPLY_CHECKS
 });
-var ACTION_REPLY_WORDS = Object.freeze({
-  "refusal.MACHINE_CANNOT_RECORD_BEARING": "Only a member lays out a reply claim by claim. The assistant may propose a layout for you to check. Nothing was written.",
-  "refusal.BEARING_NOT_RFC": "A reply is laid out claim by claim only for a request for comment, once its reply is received. Nothing was written.",
-  "refusal.BEARING_REFUSED": "Lay out from 1 to 50 claims, each one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. {item} isn't. Nothing was written.",
-  "refusal.MACHINE_CANNOT_LINK": "Only a member records what arose from a reply. Nothing was written.",
-  "refusal.AROSE_FROM_NOT_A_RESPONSE": "Only a received reply can be what something arose from. Nothing was written.",
-  "refusal.AROSE_FROM_LINKED": "That link is already recorded. Nothing was written."
-});
-function fillWords4(key2, fill = {}) {
-  const en = ACTION_REPLY_WORDS[key2];
-  if (typeof en !== "string" || !en) throw new Error(`action-replies: ${key2} is not one of this module's words (words.json)`);
-  return en.replace(/\{([a-z_]+)\}/g, (m, k) => Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m);
-}
-var words7 = (key2) => fillWords4(key2);
 var ACTION_REPLY_CHECKS = {
   /* R1, R4 (v0.2 rule 1): laying out a reply claim by claim is a member's act; a machine may only propose one. */
   MACHINE_CANNOT_RECORD_BEARING: {
     check: "C-150.1",
     where: "src/action-replies/index.mjs actionReplyBearing > is-machine-bearing",
-    translation: words7("refusal.MACHINE_CANNOT_RECORD_BEARING")
+    translation: word("refusal.MACHINE_CANNOT_RECORD_BEARING")
   },
   /* R1: only a reply received to a request for comment is laid out claim by claim. */
   BEARING_NOT_RFC: {
     check: "C-150.2",
     where: "src/action-replies/index.mjs #bearingTarget > is-bearing-rfc",
-    translation: words7("refusal.BEARING_NOT_RFC")
+    translation: word("refusal.BEARING_NOT_RFC")
   },
   /* R1 (action-grammar R24): each claim is one the request put, once, with one of the three bearings. R9 (T47; DEC-199):
      the row holds the sentence with `{item}` for the screen; the refusal answers it filled with the item named. */
   BEARING_REFUSED: {
     check: "C-150.3",
     where: "src/action-replies/index.mjs #bearingShape > is-bearing-shape",
-    translation: words7("refusal.BEARING_REFUSED")
+    translation: word("refusal.BEARING_REFUSED", { item: "{item}" })
   },
   /* R2, R4 (v0.2 rule 1): linking what arose from a response is a member's act. */
   MACHINE_CANNOT_LINK: {
     check: "C-150.4",
     where: "src/action-replies/index.mjs aroseFromLink > is-machine-link",
-    translation: words7("refusal.MACHINE_CANNOT_LINK")
+    translation: word("refusal.MACHINE_CANNOT_LINK")
   },
   /* R2: a matter or project arises from a response, a reply the group received. */
   AROSE_FROM_NOT_A_RESPONSE: {
     check: "C-150.5",
     where: "src/action-replies/index.mjs aroseFromLink > is-arose-response",
-    translation: words7("refusal.AROSE_FROM_NOT_A_RESPONSE")
+    translation: word("refusal.AROSE_FROM_NOT_A_RESPONSE")
   },
   /* R2: the same link is recorded once; a link is never edited. */
   AROSE_FROM_LINKED: {
     check: "C-150.6",
     where: "src/action-replies/index.mjs aroseFromLink > is-arose-linked",
-    translation: words7("refusal.AROSE_FROM_LINKED")
+    translation: word("refusal.AROSE_FROM_LINKED")
   },
   /* R2 (J1 (d)): what arose is a project, or a plan's matter, named in the form each takes. */
   AROSE_FROM_REFUSED: {
     check: "C-150.7",
     where: "src/action-replies/index.mjs #arising > is-arising-shape",
-    translation: "What arose from the response is named as a project, or as a plan with one of its matters, each by its id. This request named neither in that form, so nothing was linked."
+    translation: word("refusal.AROSE_FROM_REFUSED")
   },
   /* R10, R4 (T48; N880; Actions D13, H17): what a reply says about being quoted is a member's record. The translations of
-     C-150.8 to .10 are BOB's drafts in DEC-83's form (`words.json` holds no key yet: an ASK to UX-DESIGN); they wait for
-     T49's promotion stamp (plan rule 5 (2)). */
+     C-150.8 to .10 are read by key (`refusal.<CODE>`, DEC-232's words in `words.json`; T50 N1116). */
   MACHINE_CANNOT_RECORD_QUOTING: {
     check: "C-150.8",
     where: "src/action-replies/index.mjs actionReplyQuoting > is-machine-quoting",
-    translation: "Only a member records what a reply says about being quoted. Nothing was written."
+    translation: word("refusal.MACHINE_CANNOT_RECORD_QUOTING")
   },
   QUOTING_NOT_RFC: {
     check: "C-150.9",
     where: "src/action-replies/index.mjs #quotingTarget > is-quoting-rfc",
-    translation: "Only a reply received to a request for comment can ask not to be quoted. Nothing was written."
+    translation: word("refusal.QUOTING_NOT_RFC")
   },
   QUOTING_REFUSED: {
     check: "C-150.10",
     where: "src/action-replies/index.mjs #quotingShape > is-quoting-shape",
-    translation: "Say whether the reply may be quoted, and when it may not, give the reply's own words that say so, on one line of at most 500 characters. Nothing was written."
+    translation: word("refusal.QUOTING_REFUSED")
   }
 };
 
@@ -223811,10 +224086,10 @@ function withRow11(r) {
 var refuse24 = (code, detail, extra) => withRow11({ ok: false, reason: code, detail, ...extra || {} });
 var CLAIM_SHOWN_MAX = 60;
 function bearingItem(claims, index2) {
-  if (index2 === null) return "The list of claims";
+  if (index2 === null) return word("action-replies.list_claims");
   const c = Array.isArray(claims) ? claims[index2] : void 0;
   const claim = c && typeof c === "object" && !Array.isArray(c) && typeof c.claim === "string" ? c.claim.trim() : "";
-  return claim ? `Claim ${index2 + 1} (${claim.slice(0, CLAIM_SHOWN_MAX)})` : `Claim ${index2 + 1}`;
+  return claim ? word("action-replies.claim", { index: index2 + 1, claim: claim.slice(0, CLAIM_SHOWN_MAX) }) : word("action-replies.claim_2", { index: index2 + 1 });
 }
 function ordOf5(v) {
   if (typeof v === "number" && Number.isInteger(v) && v >= 0) return v;
@@ -223875,7 +224150,8 @@ var ActionReplies = class _ActionReplies {
   #at() {
     return stampInstant("second", this.#nowMs());
   }
-  /* The action as `actions` answers it to `viewer` (its R29): absent and invisible alike `NO_SUCH_BUNDLE` (R4). */
+  /* The action as `actions` answers it to `viewer` (its R29, R106): an absent, invisible or non-action id alike is
+     `NO_SUCH_ACTION` (`actions` R43, `action-records` R18), the same bytes for the three (R4). */
   #action(target, viewer) {
     let a = null;
     try {
@@ -223883,13 +224159,7 @@ var ActionReplies = class _ActionReplies {
     } catch {
       a = null;
     }
-    if (!a) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (a.ok === false) return {
-      ok: false,
-      reason: a.reason === "NOT_AN_ACTION" ? "NOT_AN_ACTION" : "NO_SUCH_BUNDLE",
-      target,
-      ...a.reason === "NOT_AN_ACTION" ? { object_type: a.object_type ?? null } : {}
-    };
+    if (!a || a.ok === false) return noSuchAction(target);
     return a;
   }
   /* The ledger entry at `ord`, or null. */
@@ -223920,9 +224190,9 @@ var ActionReplies = class _ActionReplies {
   }
   /* R10: `quotable` a boolean; `words` (the reply's own, one line, no quote or backslash) given with `false`. Null for
      `words` when withdrawn. */
-  #quotingShape(quotable2, words24, target) {
-    const given6 = words24 !== void 0 && words24 !== null;
-    const w = typeof words24 === "string" ? words24.trim() : null;
+  #quotingShape(quotable2, words23, target) {
+    const given6 = words23 !== void 0 && words23 !== null;
+    const w = typeof words23 === "string" ? words23.trim() : null;
     const wordsOk = w !== null && w.length >= 1 && w.length <= QUOTING_WORDS_MAX && !/["\\\r\n\u2028\u2029]/.test(w);
     if (typeof quotable2 !== "boolean" || quotable2 === false && !wordsOk || given6 && !wordsOk)
       return refuse24("QUOTING_REFUSED", "quotable is true or false, and with false the reply's own words that say so", { target });
@@ -223941,7 +224211,7 @@ var ActionReplies = class _ActionReplies {
         target,
         item: item3,
         /* R9: DEC-199's sentence, read by key, its `{item}` filled; never answered unfilled */
-        translation: fillWords4("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item3) ? item3 : null) }),
+        translation: word("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item3) ? item3 : null) }),
         findings: errs.map((f17) => ({
           check: f17.check,
           detail: f17.message ?? f17.detail ?? null,
@@ -223991,7 +224261,7 @@ var ActionReplies = class _ActionReplies {
       at: at49,
       layout: seq,
       weight: "single",
-      says: "the reply is laid out claim by claim as this member read it. A later layout appends; this one stays."
+      says: word("action-replies.says.reply_laid_claim")
     };
   }
   /** R1: a proposed layout, stored apart; any credential may propose, a proposer's restatement replacing its own. */
@@ -224027,19 +224297,19 @@ var ActionReplies = class _ActionReplies {
       proposal: { ...bearingProposalLabel(who4), at: at49, claims: s.claims },
       layout: latest3,
       evidence: false,
-      says: "this is a proposed layout of the reply and not the reply's layout; it changed nothing. " + (latest3 ? "The layout a member stated stands beside it." : "No member has laid the reply out.")
+      says: word("action-replies.says.proposed_layout_reply", { value: latest3 ? word("action-replies.says.layout_member_stated") : word("action-replies.says.member_laid_reply") })
     };
   }
   /** R10: a member records that the reply at `ord` says it may not be quoted (`quotable: false`, with its own `words`), or
    *  withdraws that record (`quotable: true`). Appended, never edited; the latest per entry stands. A declaration. */
-  actionReplyQuoting({ target, ord = null, quotable: quotable2 = null, words: words24 = null, author = null, viewer = null } = {}) {
+  actionReplyQuoting({ target, ord = null, quotable: quotable2 = null, words: words23 = null, author = null, viewer = null } = {}) {
     const who4 = typeof author === "string" ? author.trim() : "";
     if (!who4 || isMachineIdentity(who4))
       return refuse24("MACHINE_CANNOT_RECORD_QUOTING", "what a reply says about being quoted is recorded by a member");
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const t2 = this.#bearingTarget(target, ord, viewer, true);
     if (t2.ok === false) return t2;
-    const s = this.#quotingShape(quotable2, words24, target);
+    const s = this.#quotingShape(quotable2, words23, target);
     if (s.ok === false) return s;
     const at49 = this.#at();
     const w = this.record.transact(() => {
@@ -224064,7 +224334,7 @@ var ActionReplies = class _ActionReplies {
       by: who4,
       at: at49,
       weight: "single",
-      says: s.quotable ? "the record that this reply asks not to be quoted is withdrawn. Nothing else changed." : "this reply is recorded as asking not to be quoted, in its own words. Nothing else changed."
+      says: word(s.quotable ? "action-replies.says.record_reply_asks" : "action-replies.says.reply_recorded_asking")
     };
   }
   /* R10: an entry's latest quoting record, or null when none is held. */
@@ -224224,7 +224494,7 @@ var ActionReplies = class _ActionReplies {
         if (CLOSED_STATES.includes(it.state)) continue;
         const a = this.actions.actionRead({ id: it.id, viewer });
         if (!a || a.ok === false) {
-          if (a && (a.reason === "NO_SUCH_BUNDLE" || a.reason === "NOT_AN_ACTION")) continue;
+          if (a && a.reason === "NO_SUCH_ACTION") continue;
           throw new Error(`action-replies: the request ${it.id} could not be read`);
         }
         if (CLOSED_STATES.includes(a.current_state)) continue;
@@ -224244,7 +224514,7 @@ var ActionReplies = class _ActionReplies {
     const asked6 = sent ? dayOf6(sent.at) : null;
     if (!asked6) return null;
     const cp = a.counterparty && typeof a.counterparty === "object" ? a.counterparty : {};
-    const whom = counterpartyName(cp) || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null) || "an addressee not yet named";
+    const whom = counterpartyName(cp) || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null) || word("action-replies.addressee_named");
     const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf6(c.date));
     const received = ledger.filter((e2) => e2.direction === "received").map((e2) => e2.ord);
     let answers2 = null;
@@ -224509,7 +224779,7 @@ var CITATION_MAX3 = 200;
 var PROCEDURE_CONDUCT_LISTS = Object.freeze(["op_form", "party"]);
 var esc6 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 var wordRe = (w) => new RegExp(`(?<![A-Za-z0-9])${esc6(w)}${/[A-Za-z0-9]$/.test(w) ? "(?![A-Za-z0-9])" : ""}`, "i");
-var LIST_RES = Object.freeze(Object.entries(CONDUCT_LISTS).flatMap(([list6, words24]) => words24.map((word3) => Object.freeze({ list: list6, word: word3, re: wordRe(word3) }))));
+var LIST_RES = Object.freeze(Object.entries(CONDUCT_LISTS).flatMap(([list6, words23]) => words23.map((word3) => Object.freeze({ list: list6, word: word3, re: wordRe(word3) }))));
 var PROCEDURE_RES = Object.freeze(LIST_RES.filter((x) => PROCEDURE_CONDUCT_LISTS.includes(x.list)));
 var OPENER_RES = LOOK_FOR_OPENERS.map((o) => new RegExp(`^${esc6(o)}(?![A-Za-z0-9])`, "i"));
 var CONTROL = /[\u0000-\u001f\u007f]/;
@@ -226569,8 +226839,8 @@ function policySeries(ctx) {
     const cite = s.cite && typeof s.cite.re === "string" ? s.cite : null;
     const flags2 = String(cite && cite.flags || "").replace(/[^iu]/g, "");
     const numSrc = cite ? groupSource(cite.re, "number") : null;
-    const words24 = s.series.label.trim().split(/\s+/).map(escapeRe);
-    const label = compile6(`^[ \\t]*(?:${words24.join("[ \\t]+")}|${words24.join("(?:[ \\t]+[^\\n]*)?\\n[ \\t]*")})(?![A-Za-z])`, "gim");
+    const words23 = s.series.label.trim().split(/\s+/).map(escapeRe);
+    const label = compile6(`^[ \\t]*(?:${words23.join("[ \\t]+")}|${words23.join("(?:[ \\t]+[^\\n]*)?\\n[ \\t]*")})(?![A-Za-z])`, "gim");
     const number = numSrc ? compile6(`^[ \\t:.,#\u2013\u2014-]*(?:No\\.?|Number)?[ \\t:#]*\\n?[ \\t]*(${numSrc})(?![A-Za-z0-9])`, "i" + flags2.replace("i", "")) : null;
     if (!label) continue;
     out.push({
@@ -226625,9 +226895,9 @@ function linesOf3(raw) {
 var FURNITURE2 = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3}|[ivxlc]{1,6}|.*\bTOC\b.*|TABLE OF CONTENTS?)\s*$/i;
 var OUTLINE = /^\s*(?:[IVXL]{1,6}|[A-Z]|\d{1,2}|[a-z])[.)][ \t]+\S/;
 var isBody = (t2) => {
-  const words24 = t2.trim().split(/\s+/);
+  const words23 = t2.trim().split(/\s+/);
   const letters = t2.replace(/[^A-Za-z]/g, "");
-  return words24.length >= 8 && letters.length >= 30 && t2.replace(/[^a-z]/g, "").length / letters.length >= 0.7;
+  return words23.length >= 8 && letters.length >= 30 && t2.replace(/[^a-z]/g, "").length / letters.length >= 0.7;
 };
 var caps = (t2) => {
   const letters = t2.replace(/[^A-Za-z]/g, "");
@@ -230336,7 +230606,7 @@ function foundExtentBag(extent) {
 var isObj53 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var given3 = (v) => v !== null && v !== void 0 && String(v).trim() !== "";
 var rowOf16 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
-var rand12 = (n2) => [...crypto.getRandomValues(new Uint8Array(n2))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand13 = (n2) => [...crypto.getRandomValues(new Uint8Array(n2))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Citation = class {
   /* R13: each citing object's citations, parsed once per version of its bytes (keyed by its `bundleSha`); memory, not a
      row (R6). */
@@ -230415,7 +230685,7 @@ var Citation = class {
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand12(4)}`,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand13(4)}`,
       author: author || "member",
       files: [{ path: "bundle.md", text: text8, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
@@ -232043,10 +232313,10 @@ function factsOf3(sentence2) {
   const bare5 = s.replace(QUOTE_RE, " ");
   for (const m of bare5.matchAll(FIGURE_RE2)) facts.push({ kind: "figure", value: figure2(m[0]) });
   for (const m of bare5.matchAll(MONTH_RE2)) facts.push({ kind: "date", value: m[1].toLowerCase() });
-  const words24 = [...bare5.matchAll(WORD_RE)].map((m) => m[0]);
-  words24.forEach((w, i) => {
+  const words23 = [...bare5.matchAll(WORD_RE)].map((m) => m[0]);
+  words23.forEach((w, i) => {
     if (!/^[A-ZÀ-Þ]/.test(w) || w === "I" || MONTHS7.includes(w.toLowerCase())) return;
-    if (i === 0 && !(words24[1] && /^[A-ZÀ-Þ]/.test(words24[1]) && words24[1] !== "I")) return;
+    if (i === 0 && !(words23[1] && /^[A-ZÀ-Þ]/.test(words23[1]) && words23[1] !== "I")) return;
     facts.push({ kind: "name", value: w.replace(/['’]s$/, "") });
   });
   return facts;
@@ -235109,13 +235379,13 @@ function setFind(self, { author, owner, question, find: find2, cadence, ends }) 
       };
     want.scope = { ids };
   }
-  const words24 = typeof question === "string" && question.trim() ? question : null;
+  const words23 = typeof question === "string" && question.trim() ? question : null;
   const r = self.record.transact(() => {
     const a = self.record.allocId("STQ", now.slice(0, 4));
     if (!a || !a.id) return { ok: false, reason: "MINT_EXHAUSTED", detail: "no standing-question id could be allocated" };
     self.sql.exec(`INSERT INTO standing_questions (stq_id, author, question, form_json, find_json, cadence, ends, created_at, next_due)
-                   VALUES (?,?,?,?,?,?,?,?,NULL)`, a.id, stamp4, words24 ?? "", json15(null), json15(want), cadence, ends, now);
-    return { ok: true, id: a.id, question: words24, find: want, cadence, ends, created_at: now };
+                   VALUES (?,?,?,?,?,?,?,?,NULL)`, a.id, stamp4, words23 ?? "", json15(null), json15(want), cadence, ends, now);
+    return { ok: true, id: a.id, question: words23, find: want, cadence, ends, created_at: now };
   });
   if (r && r.ok) self.tellStanding(r.id, today(self, now));
   return r;
@@ -239419,12 +239689,12 @@ var registered4 = (kind2) => {
 var provisional = (v) => ({ word: plainWord(v), provisional: true });
 var keyed5 = (key2, vars) => hasWord(key2) ? word(key2, vars) : null;
 function vocabulary2(values, wordOf = () => null) {
-  const words24 = {};
+  const words23 = {};
   for (const v of values) {
     const w = wordOf(v);
-    words24[v] = w ? { word: w } : provisional(v);
+    words23[v] = w ? { word: w } : provisional(v);
   }
-  return { values, words: words24 };
+  return { values, words: words23 };
 }
 var slug2 = (v) => String(v).replace(/ /g, "_");
 var labelWord = (set) => (v) => keyed5(`label.${set}.${slug2(v)}`);
@@ -239458,14 +239728,14 @@ function composedVocabularies() {
     const kinds3 = kinds();
     out.line_kinds = vocabulary2(kinds3, lineKindWord);
     out.line_capacities = vocabulary2(capacities(), labelWord("linecapacities"));
-    const values = {}, words24 = {};
+    const values = {}, words23 = {};
     for (const k of kinds3) {
       const rs = roles(k);
       if (!rs || !rs.length) continue;
       values[k] = rs;
-      words24[k] = vocabulary2(rs, labelWord(`lineroles.${k}`)).words;
+      words23[k] = vocabulary2(rs, labelWord(`lineroles.${k}`)).words;
     }
-    out.line_roles = { values, words: words24 };
+    out.line_roles = { values, words: words23 };
   }
   if (composed.has("money")) {
     out.money_kinds = vocabulary2(kinds2(), labelWord("moneykinds"));
@@ -239476,12 +239746,12 @@ function composedVocabularies() {
   }
   if (composed.has("people")) out.identity_claim_kinds = vocabulary2(CLAIM_KINDS, (k) => labelWord("identityclaimkinds")(k) ?? registered4(k));
   if (reg.length) {
-    const values = [], words24 = {};
+    const values = [], words23 = {};
     for (const o of reg) for (const k of o.kinds) {
       values.push(k.kind);
-      words24[k.kind] = { word: connectionWord(k.kind, k.word), class: k.class, owner: o.owner, group: CONNECTION_GROUPS[k.kind] ?? null };
+      words23[k.kind] = { word: connectionWord(k.kind, k.word), class: k.class, owner: o.owner, group: CONNECTION_GROUPS[k.kind] ?? null };
     }
-    out.connection_kinds = { values, words: words24 };
+    out.connection_kinds = { values, words: words23 };
   }
   return out;
 }
@@ -245576,14 +245846,14 @@ __export(checks_exports68, {
   NAMESPACE_CHECKS: () => NAMESPACE_CHECKS,
   OPERATOR_FENCE_CHECKS: () => OPERATOR_FENCE_CHECKS
 });
-function worded(rows4) {
+function worded2(rows4) {
   for (const code of Object.keys(rows4)) {
     const vars = code === "DOOR_RATE_LIMITED" ? { minutes: "{minutes}" } : {};
     Object.defineProperty(rows4[code], "translation", { enumerable: true, get: () => word(`refusal.${code}`, vars) });
   }
   return rows4;
 }
-var ADMISSION_CHECKS = worded({
+var ADMISSION_CHECKS = worded2({
   /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
      do rather than what happened, because a person reading this has not yet done
      anything wrong — they have simply not said who they are. */
@@ -245722,7 +245992,7 @@ var ADMISSION_CHECKS = worded({
     where: "src/admission/index.mjs admit > is-admission"
   }
 });
-var NAMESPACE_CHECKS = worded({
+var NAMESPACE_CHECKS = worded2({
   NAMESPACE_UNKNOWN: {
     check: "C-78.1",
     where: "src/admission/index.mjs namespaceGate > is-namespace-gate"
@@ -245746,7 +246016,7 @@ var NAMESPACE_CHECKS = worded({
     where: "src/admission/index.mjs confinedNamespaceGate > is-confined-namespace-gate"
   }
 });
-var AI_SCOPE_CHECKS = worded({
+var AI_SCOPE_CHECKS = worded2({
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
   /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
      gate BY REFUSING. It is one code because it answers one question — is this
@@ -245800,7 +246070,7 @@ var AI_SCOPE_CHECKS = worded({
     where: "src/admission/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration"
   }
 });
-var OPERATOR_FENCE_CHECKS = worded({
+var OPERATOR_FENCE_CHECKS = worded2({
   /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
      the same doctrine rather than a new one: *the credential that delivers an
      act decides when the record changes, and the record names the actor.* A
@@ -245821,7 +246091,7 @@ var OPERATOR_FENCE_CHECKS = worded({
     where: "src/admission/index.mjs bearerFence > is-operator-governance-act"
   }
 });
-var GROUP_IDENTITY_FENCE_CHECKS = worded({
+var GROUP_IDENTITY_FENCE_CHECKS = worded2({
   /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
      administrator's own signed-in session, and the record names who set each one. */
   GROUP_IDENTITY_NEEDS_SESSION: {
@@ -249243,13 +249513,13 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
         `form is one of ${ACCEPTANCE_FORMS.join(", ")}`,
         { forms: [...ACCEPTANCE_FORMS] }
       );
-    const words24 = typeof edit3 === "string" ? edit3.trim() : "";
-    if (form === "as_proposed" && edit3 !== null && edit3 !== void 0 && words24 !== "")
+    const words23 = typeof edit3 === "string" ? edit3.trim() : "";
+    if (form === "as_proposed" && edit3 !== null && edit3 !== void 0 && words23 !== "")
       return this.#refuse(
         "ACCEPT_AS_PROPOSED_TAKES_NO_WORDS",
         `as_proposed records the proposal's meaning as proposed; words of her own are edited or own_instead`
       );
-    if (form !== "as_proposed" && (words24 === "" || words24.length > ACCEPT_WORDS_MAX))
+    if (form !== "as_proposed" && (words23 === "" || words23.length > ACCEPT_WORDS_MAX))
       return this.#refuse(
         "ACCEPT_NEEDS_HER_WORDS",
         `${form} records her own words of what it means: 1 to ${ACCEPT_WORDS_MAX} characters`,
@@ -249264,7 +249534,7 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
     const when = at49 || stampInstant("second", this.now());
     const record = acceptanceRecord({ proposal: id, form, by: who4, at: when, kind: seen.kind });
     const r = seen.row;
-    const meaning = form === "as_proposed" ? seen.kind === "passage" ? `${r.label || r.ref}${r.quote ? `: "${r.quote}"` : ""}` : `${r.to_kind} ${r.to_id}${r.role ? ` (${r.role})` : ""}, by ${r.how} (${r.grounds}): "${r.quote}"` : words24;
+    const meaning = form === "as_proposed" ? seen.kind === "passage" ? `${r.label || r.ref}${r.quote ? `: "${r.quote}"` : ""}` : `${r.to_kind} ${r.to_id}${r.role ? ` (${r.role})` : ""}, by ${r.how} (${r.grounds}): "${r.quote}"` : words23;
     const meaningOf = form === "as_proposed" ? "proposal" : "member";
     this.sql.exec(
       `INSERT INTO proposal_acceptances (proposal, kind, bundle_id, form, accepted_by, at, meaning, meaning_of)
@@ -253859,10 +254129,10 @@ ${about ?? ""}`, g.actor.viewer);
   /** R16: `firsthandAccount({words, observedAt, title?, by})`: a member who was present records it through the built
    *  `testify` path (`provenance` R28), testimony graded and labelled as hers; this module grades nothing and keeps
    *  nothing of it. */
-  firsthandAccount({ words: words24 = null, observedAt = null, title = null, by = null } = {}) {
+  firsthandAccount({ words: words23 = null, observedAt = null, title = null, by = null } = {}) {
     const a = this.#actor(by);
     if (!a || a.machine) return refuse26("INVESTIGATION_MEMBER_ONLY", "a firsthand account is a person's own word");
-    const r = this.#provenance.testify({ words: words24, observedAt, title, author: by });
+    const r = this.#provenance.testify({ words: words23, observedAt, title, author: by });
     if (!r || r.ok !== true) return r;
     const handle = this.#handle(a.member);
     return { ...r, label: `${handle ?? "a member"}'s own firsthand account: testimony, resting on her word` };
@@ -253949,18 +254219,18 @@ ${about ?? ""}`, g.actor.viewer);
     if (g.refusal) return g.refusal;
     if (p3.status !== "proposed") return refuse26("PLAN_DECIDED", `this proposal was ${p3.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(p3.proposal_id) });
     if (!ACCEPTANCE_FORMS.includes(form)) return refuse26("PLAN_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
-    const words24 = form === "as_proposed" ? p3.text : text8;
-    if (!filled17(words24) || chars2(words24.trim()) > PLAN_MAX) return refuse26("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
+    const words23 = form === "as_proposed" ? p3.text : text8;
+    if (!filled17(words23) || chars2(words23.trim()) > PLAN_MAX) return refuse26("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
     if (reason2 !== null && reason2 !== void 0 && (!filled17(reason2) || chars2(reason2) > REASON_MAX17)) return refuse26("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX17} characters`);
     const at49 = this.#at();
     return this.#record.transact(() => {
       let made3;
       if (p3.kind === "step") {
-        const r = this.#steps.stepCreate({ place: p3.question_id ? { questions: [p3.question_id] } : { project: p3.project_id }, work: words24.trim(), project: p3.project_id, by });
+        const r = this.#steps.stepCreate({ place: p3.question_id ? { questions: [p3.question_id] } : { project: p3.project_id }, work: words23.trim(), project: p3.project_id, by });
         if (!r || r.ok !== true) return r;
         made3 = r.step;
       } else {
-        const r = this.#openQuestion(words24.trim(), p3, by, a.viewer, at49);
+        const r = this.#openQuestion(words23.trim(), p3, by, a.viewer, at49);
         if (!r || r.ok !== true) return r;
         made3 = r.bundleId;
       }
@@ -256102,9 +256372,9 @@ var Monitoring = class {
       const current2 = byId.get(versions[at49].bundle_id);
       const newer = [...new Set(versions.slice(at49 + 1).map((v) => v.bundle_id))].filter((id) => home2.get(id) !== addr);
       const authored = members3.filter((m) => m.monitor_frequency != null && m.monitor_frequency !== "");
-      const words24 = new Set(authored.map((m) => m.monitor_frequency));
+      const words23 = new Set(authored.map((m) => m.monitor_frequency));
       const governs = current2.monitor_frequency != null && current2.monitor_frequency !== "" ? current2.monitor_frequency : null;
-      const disagrees = words24.size > 1 || words24.size === 1 && governs !== [...words24][0];
+      const disagrees = words23.size > 1 || words23.size === 1 && governs !== [...words23][0];
       rows4.push({
         bundle_id: current2.bundle_id,
         monitor_last_checked: last(members3),
@@ -256389,13 +256659,13 @@ var Monitoring = class {
     if (!this.#ownsSourceAt(rows4, member2))
       return frequencyRefusal("NOT_A_SOURCE_OWNER", `${member2} owns no project that holds a monitored document at this address, and only such an owner sets its frequency. Nothing was written.`);
     const custom = reason2 === CUSTOM_REASON;
-    const words24 = typeof reasonText === "string" ? reasonText.trim() : "";
-    if (!(custom || typeof reason2 === "string" && Object.prototype.hasOwnProperty.call(ADDRESS_FREQUENCY_REASONS, reason2)) || custom && (!words24 || words24.length > FREQUENCY_REASON_MAX))
+    const words23 = typeof reasonText === "string" ? reasonText.trim() : "";
+    if (!(custom || typeof reason2 === "string" && Object.prototype.hasOwnProperty.call(ADDRESS_FREQUENCY_REASONS, reason2)) || custom && (!words23 || words23.length > FREQUENCY_REASON_MAX))
       return frequencyRefusal("FREQUENCY_NO_REASON", `the reason must be one of ${Object.keys(ADDRESS_FREQUENCY_REASONS).join(", ")}, or ${CUSTOM_REASON} with the member's own words of 1 to ${FREQUENCY_REASON_MAX} characters. Nothing was written.`);
     const at49 = stampInstant("second", this.now());
     const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_frequency WHERE address_norm = ?`, norm3).n;
     this.sql.exec(`INSERT INTO monitor_address_frequency (address_norm, seq, address, frequency, reason, reason_text, author, at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked6, frequency, reason2, custom ? words24 : null, member2, at49);
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, norm3, seq, asked6, frequency, reason2, custom ? words23 : null, member2, at49);
     const history = this.#rows(`SELECT * FROM monitor_address_frequency WHERE address_norm = ? ORDER BY seq`, norm3).map(settingView);
     return {
       ok: true,
@@ -257779,8 +258049,8 @@ var Monitoring = class {
     if (newerSeen.length) out.newer_unmonitored = newerSeen;
     if (disagreement && typeof disagreement === "object") {
       const authored = (disagreement.authored || []).filter((a) => a && sees(a.bundle));
-      const words24 = new Set(authored.map((a) => a.frequency));
-      if (words24.size > 1 || words24.size === 1 && disagreement.governs !== [...words24][0])
+      const words23 = new Set(authored.map((a) => a.frequency));
+      if (words23.size > 1 || words23.size === 1 && disagreement.governs !== [...words23][0])
         out.disagreement = { ...disagreement, authored };
     }
     return out;
@@ -260202,12 +260472,12 @@ function variants(ctx) {
   return out;
 }
 function readBodyName(name3, ctx) {
-  const words24 = typeof name3 === "string" ? name3 : "";
+  const words23 = typeof name3 === "string" ? name3 : "";
   const found3 = /* @__PURE__ */ new Set();
-  let base2 = words24;
+  let base2 = words23;
   for (const { marker, re } of markers(ctx)) {
     re.lastIndex = 0;
-    if (!re.test(words24)) continue;
+    if (!re.test(words23)) continue;
     found3.add(marker);
     re.lastIndex = 0;
     base2 = base2.replace(re, " ");
@@ -260216,13 +260486,13 @@ function readBodyName(name3, ctx) {
   let organisation = null;
   for (const { organisation: o, re } of variants(ctx)) {
     re.lastIndex = 0;
-    if (re.test(words24)) {
+    if (re.test(words23)) {
       organisation = o;
       break;
     }
   }
   return {
-    base: found3.size ? base2 : words24.replace(/\s+/g, " ").trim(),
+    base: found3.size ? base2 : words23.replace(/\s+/g, " ").trim(),
     markers: [...found3],
     status: found3.has("cancelled") ? "cancelled" : null,
     meeting_kind: found3.has("special") ? "special" : found3.has("concurrent") ? "concurrent" : null,
@@ -267027,23 +267297,23 @@ var InstanceSetup = class _InstanceSetup {
       asked6 = INTERFACE_WORDS.filter((w) => !shown3.has(w.key));
     }
     const names2 = this.#localNames(tag2);
-    const offered_official = [], words24 = [];
+    const offered_official = [], words23 = [];
     for (const w of asked6) {
-      if (!Array.isArray(keys) && words24.length >= TRANSLATION_DRAFT_MAX) break;
+      if (!Array.isArray(keys) && words23.length >= TRANSLATION_DRAFT_MAX) break;
       const n2 = _InstanceSetup.#officialFor(w, names2);
       if (n2) {
         offered_official.push({ key: w.key, ...n2 });
         continue;
       }
-      words24.push({ key: w.key, en: w.en, note: w.note, means: w.means, protected: w.protected });
+      words23.push({ key: w.key, en: w.en, note: w.note, means: w.means, protected: w.protected });
     }
-    if (!words24.length)
+    if (!words23.length)
       return { refused: refusal36(
         "TRANSLATION_NOTHING_TO_DRAFT",
         `every word asked for is ${asked6.length ? "an official name, shown as it is" : "translated already"} in ${tag2}, so there is nothing to draft. Nothing was sent.`,
         { language: tag2, offered_official }
       ) };
-    return { direction, tag: tag2, words: words24, offered_official };
+    return { direction, tag: tag2, words: words23, offered_official };
   }
   /* The keys that have an adoption standing now in `tag` (shown or awaiting): a word that is not `missing`. */
   #shownAdoptions(tag2) {
@@ -267113,12 +267383,12 @@ var InstanceSetup = class _InstanceSetup {
     direction = void 0,
     keys = void 0,
     key: key2 = null,
-    words: words24 = null,
+    words: words23 = null,
     draft = null,
     not_drafted = null,
     by = null
   } = {}) {
-    const asked6 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words24) ? words24.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
+    const asked6 = direction === "to_language" && (keys === void 0 || keys === null) && Array.isArray(words23) ? words23.map((w) => w && typeof w.key === "string" ? w.key : null).filter(Boolean) : keys;
     const req = this.#draftRequest({ language, direction, keys: asked6, key: key2, by });
     if (req.refused) return req.refused;
     const unavailable = (why2) => draftUnavailable(`${why2} Nothing was saved.`);
@@ -267127,7 +267397,7 @@ var InstanceSetup = class _InstanceSetup {
     if (req.direction === "to_english") {
       if (!draft || typeof draft !== "object" || draft.key !== req.key || typeof draft.english !== "string" || !draft.english.trim())
         return unavailable("the assistant did not answer a reading of this word back into English.");
-      const sent = Array.isArray(words24) && words24[0] && words24[0].key === req.key && typeof words24[0].text === "string" ? words24[0].text : req.words[0].text;
+      const sent = Array.isArray(words23) && words23[0] && words23[0].key === req.key && typeof words23[0].text === "string" ? words23[0].text : req.words[0].text;
       this.#sql.exec(
         `INSERT INTO translation_readings (language, key, text_sha256, by_member, by_name, at) VALUES (?, ?, ?, ?, ?, ?)`,
         req.tag,
@@ -267383,7 +267653,7 @@ var InstanceSetup = class _InstanceSetup {
       if (speaker) return speaker;
       const hist = new Map(this.#languageHistories(tag2).map((h) => [h.key, h]));
       const counts = { missing: 0, shown: 0, awaiting: 0 };
-      const words24 = INTERFACE_WORDS.map((w) => {
+      const words23 = INTERFACE_WORDS.map((w) => {
         const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
         const c = _InstanceSetup.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
         counts[c.state] += 1;
@@ -267446,7 +267716,7 @@ var InstanceSetup = class _InstanceSetup {
           marks: g.marks.filter((r) => r.act_n === c.actN).map((r) => ({ note: r.note, by: r.by_member, by_name: r.by_name, at: r.at }))
         };
       });
-      return { ok: true, language: tag2, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag2), words: words24 };
+      return { ok: true, language: tag2, words_commit: INTERFACE_WORDS_COMMIT, counts, local_names: this.#localNames(tag2), words: words23 };
     } catch (e2) {
       return {
         ok: false,
@@ -267778,8 +268048,8 @@ var InstanceSetup = class _InstanceSetup {
   /* R89: whether the text a group recorded as who holds the hosting account names `id`, by the member's id or handle as a
      whole word (the record is free text, so this is the one exact reading it allows). */
   #namesMember(text8, id) {
-    const words24 = new Set(String(text8 ?? "").toLowerCase().split(/[^\p{L}\p{N}_:.-]+/u).filter(Boolean));
-    return [id, this.#nameOf(id)].some((x) => typeof x === "string" && x && words24.has(x.toLowerCase()));
+    const words23 = new Set(String(text8 ?? "").toLowerCase().split(/[^\p{L}\p{N}_:.-]+/u).filter(Boolean));
+    return [id, this.#nameOf(id)].some((x) => typeof x === "string" && x && words23.has(x.toLowerCase()));
   }
   /** R89, in-process, for `machinery-producers` R12 through the plane's composition: `{ok, running, ready, decisions}`
    *  for the newest release ready to install, naming no viewer: `ready` as `updateNotice` answers it (with `decision`),
@@ -270226,7 +270496,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
   const local = store("localStorage"), tab = store("sessionStorage");
   const BASE = new Map(D.words);
   let SHOWN = /* @__PURE__ */ new Map();
-  let wordsRead = false, wordsRetry = false;
+  let wordsRead2 = false, wordsRetry = false;
   const esc7 = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const soft = (s) => String(s == null ? "" : s).split(/(\s+)/).map((t2) => t2.length > 24 ? t2.match(/[\s\S]{1,16}/g).map(esc7).join("<wbr>") : esc7(t2)).join("");
   const unesc = (s) => String(s).replace(/&(amp|lt|gt|quot|#39);/g, (m, e2) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[e2]);
@@ -271335,7 +271605,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
         return showFront();
       }
     }
-    if (signedAlready && !wordsRead && wordsRetry) {
+    if (signedAlready && !wordsRead2 && wordsRetry) {
       wordsRetry = false;
       loadWords();
     }
@@ -271367,7 +271637,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
       UNREACHED = false;
       ME = who4.value;
       await loadWords();
-      wordsRetry = !wordsRead;
+      wordsRetry = !wordsRead2;
       armIdle();
       Promise.all([loadFrame(), loadReach()]);
       return "ok";
@@ -271862,7 +272132,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     const s = slotOf(ai);
     if (s) s.innerHTML = inner;
   }
-  const refusalHtml = (words24) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words24 + "</span></span>";
+  const refusalHtml = (words23) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words23 + "</span></span>";
   function press(btn) {
     const ai = btn.getAttribute("data-ai");
     const [k, i] = String(ai).split(":");
@@ -271895,8 +272165,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     if (!req) return;
     if (req.refuse) return besideAct(ai, refusalHtml(w(req.refuse, req.fills)));
     if (extra.own) {
-      const words24 = req.raw !== void 0 ? (req.query || {})[d.spec.reasonField] : (req.body || {})[d.spec.reasonField];
-      if (!(typeof words24 === "string" && words24.trim())) return besideAct(ai, refusalHtml(w("shell.reason.needed")));
+      const words23 = req.raw !== void 0 ? (req.query || {})[d.spec.reasonField] : (req.body || {})[d.spec.reasonField];
+      if (!(typeof words23 === "string" && words23.trim())) return besideAct(ai, refusalHtml(w("shell.reason.needed")));
     }
     if (extra.reason !== void 0) {
       if (req.raw !== void 0) req.query = Object.assign({}, req.query, { [d.spec.reasonField || "reason"]: extra.reason });
@@ -271911,8 +272181,8 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
     }
     if (a.kind !== "ok") {
       if (a.kind === "silent" && !S4 && !inst.pub) return;
-      const words24 = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
-      return besideAct(ai, refusalHtml(words24));
+      const words23 = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
+      return besideAct(ai, refusalHtml(words23));
     }
     if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") {
       for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = "";
@@ -272317,7 +272587,7 @@ function shellProgram(D, SCREENS11, win, GUIDE3) {
   async function loadWords() {
     const a = await call("interfacewords");
     if (a.kind !== "ok" || !a.value || !Array.isArray(a.value.words)) return;
-    wordsRead = true;
+    wordsRead2 = true;
     const shown3 = /* @__PURE__ */ new Map();
     for (const x of a.value.words) if (x && typeof x.key === "string" && typeof x.text === "string" && x.text && x.fallback === false) shown3.set(x.key, x.text);
     SHOWN = shown3;
@@ -272762,9 +273032,9 @@ var definedClasses = () => DEFINED || (DEFINED = stylesheetClasses(ASSET_FILES["
 function classLiterals(src) {
   const out = /* @__PURE__ */ new Set();
   const take = (body, closed) => {
-    const words24 = body.split(/\s+/).filter(Boolean);
-    if (!closed && words24.length && /[-_]$/.test(words24[words24.length - 1])) words24.pop();
-    for (const c of words24) if (/^-?[_a-zA-Z][\w-]*$/.test(c)) out.add(c);
+    const words23 = body.split(/\s+/).filter(Boolean);
+    if (!closed && words23.length && /[-_]$/.test(words23[words23.length - 1])) words23.pop();
+    for (const c of words23) if (/^-?[_a-zA-Z][\w-]*$/.test(c)) out.add(c);
   };
   for (const m of String(src).matchAll(/\bclass=(\\?)(["'])([^"'`$\\<>{}]*)(.)/g)) {
     const [, , q10, body, end2] = m;
@@ -275607,7 +275877,7 @@ var translations = {
     const grant = admin ? cs.act("translationgrant", { data: { revoke: "" } }) : "";
     if (grant) out.push(cs.sec(S4 + "grant.heading", `${cs.field("tr-member", S4 + "grant.member", { fills: { language: nameOf4(lang) }, autocomplete: "off" })}<input type="checkbox" id="tr-revoke"><label for="tr-revoke">${W2(S4 + "grant.revoke")}</label>${grant}`));
     out.push(cs.sec(S4 + "words.heading", cs.state(data.words, (v) => {
-      const words24 = Array.isArray(v.words) ? v.words : [];
+      const words23 = Array.isArray(v.words) ? v.words : [];
       const c = v.counts || {};
       const read3 = ui.readings || {};
       let h = Number(c.shown || 0) + Number(c.awaiting || 0) + Number(c.missing || 0) > 0 ? `<p data-state="counts">${W2(S4 + "counts", { shown: Number(c.shown || 0), awaiting: Number(c.awaiting || 0), missing: Number(c.missing || 0) })}</p>` : "";
@@ -275615,7 +275885,7 @@ var translations = {
         id: "words",
         pick: !!view.reachable,
         cols: [S4 + "col.en", S4 + "col.state", S4 + "col.text"],
-        items: words24,
+        items: words23,
         key: (x) => x.key,
         name: (x) => E2(x.en),
         cells: (x) => [
@@ -275665,8 +275935,8 @@ var translations = {
       rereads: ["words", "shown"],
       send(view, el, cs) {
         const k = el.dataset.key, fid = "tr-t-" + String(k).replace(/[^A-Za-z0-9_-]/g, "_");
-        const words24 = view.data && view.data.words && view.data.words.value ? view.data.words.value.words || [] : [];
-        const w = words24.find((x) => x.key === k) || {};
+        const words23 = view.data && view.data.words && view.data.words.value ? view.data.words.value.words || [] : [];
+        const w = words23.find((x) => x.key === k) || {};
         const drafts = Array.isArray(w.drafts) ? w.drafts : [];
         const i = drafts.findIndex((d, j) => cs.value(fid + "-d" + j) === true);
         const typed = String(cs.value(fid) || "").trim();
@@ -277027,14 +277297,14 @@ async function doneUpload(view, answer2, cs) {
   cs.set("uploaded", { name: name3, existed: false, bundleId: made3.bundleId, title: name3, filed });
 }
 function sendTestify(view, el, cs) {
-  const words24 = String(cs.value("ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
+  const words23 = String(cs.value("ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
   const when = String(cs.value("ci-when") || "").trim();
-  const missing2 = [!words24 && "screen.capture.saw.words", !where && "screen.capture.saw.where", !when && "screen.capture.saw.when"].filter(Boolean);
+  const missing2 = [!words23 && "screen.capture.saw.words", !where && "screen.capture.saw.where", !when && "screen.capture.saw.when"].filter(Boolean);
   if (missing2.length) return { refuse: "screen.capture.saw.missing", fills: { fields: { html: missing2.map((k) => cs.w(k)).join(", ") } } };
   const at49 = Date.parse(when);
   if (!Number.isFinite(at49) || at49 > (cs.now ? cs.now() : Date.now())) return { refuse: "screen.capture.saw.badwhen" };
   const plain20 = (s) => s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-  return { body: { words: `${words24}
+  return { body: { words: `${words23}
 
 ${plain20(cs.w("screen.capture.saw.wherein", { where }))}`, observedAt: new Date(at49).toISOString().split(".")[0] + "Z" } };
 }
@@ -278013,7 +278283,7 @@ function sourceItems() {
 
 // src/screens-daily/item-words.mjs
 function itemWords() {
-  const KEYED2 = [
+  const KEYED = [
     "question-find",
     "step-later-found",
     "step-date-due",
@@ -278042,9 +278312,9 @@ function itemWords() {
   const keyOf7 = function(it) {
     if (typeof it.word === "string") {
       const m = /^queue\.(.+)\.summary$/.exec(it.word);
-      if (m && KEYED2.indexOf(m[1]) >= 0) return m[1];
+      if (m && KEYED.indexOf(m[1]) >= 0) return m[1];
     }
-    return KEYED2.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
+    return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
   };
   const open = function(it) {
     const s = it && it.subject || {};
@@ -278069,7 +278339,7 @@ function itemWords() {
     if (typeof out.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(out.date)) out.date = { html: cs.date(out.date) };
     return out;
   };
-  const words24 = function(cs, it) {
+  const words23 = function(cs, it) {
     const k = keyOf7(it);
     const fills = it.fills && typeof it.fills === "object" ? dated(cs, it.fills) : {};
     if (k === "action-clock-overdue.theirs") {
@@ -278083,7 +278353,7 @@ function itemWords() {
     if (!ref) return { summary: bare5 ? "" : cs.esc(own11), detail };
     return { summary: ref + (bare5 || own11 === titleOf5(it) ? "" : ' <span class="muted">' + cs.esc(own11) + "</span>"), detail };
   };
-  return { keyOf: keyOf7, words: words24, subject, open, titleOf: titleOf5 };
+  return { keyOf: keyOf7, words: words23, subject, open, titleOf: titleOf5 };
 }
 
 // src/screens-daily/start-project.mjs
@@ -278250,15 +278520,15 @@ var home = Object.freeze({
         const g = src.draw(cs, it, null);
         return cs.row(mark, g.list + '<span class="meta">' + g.detail + "</span>", "", "");
       }
-      let words24, open;
+      let words23, open;
       if (it.kind === "update-ready") {
         const d = detailOf(it);
         const security2 = (d.security !== void 0 ? d.security : it.security) === true;
-        words24 = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security2 ? cs.w("home.update.security") : "" });
+        words23 = cs.w("home.update.ready", { version: String(d.version || it.version || ""), security: security2 ? cs.w("home.update.security") : "" });
         open = '<a class="cs-btn" data-tone="quiet" data-nav href="/app/updates">' + cs.w("queue.update.see") + "</a>";
       } else {
         const wd = iw.words(cs, it);
-        words24 = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
+        words23 = wd.summary + (wd.detail ? '<span class="meta">' + wd.detail + "</span>" : "");
         open = actsOf(it);
         if (!open) {
           const to = iw.open(it);
@@ -278270,7 +278540,7 @@ var home = Object.freeze({
         const a = it.assignee && it.assignee !== "unassigned" ? String(it.assignee) : "";
         whose = '<span class="muted">' + (it.assignee_role === "admin" ? cs.w("screen.home.move.admin") : a ? cs.w("screen.home.move.member", { who: a }) : cs.w("screen.home.move.anyone")) + "</span> ";
       }
-      return cs.row(mark, words24 + '<span class="meta">' + whose + open + "</span>", it.due ? cs.due(String(it.due), "") : "", "");
+      return cs.row(mark, words23 + '<span class="meta">' + whose + open + "</span>", it.due ? cs.due(String(it.due), "") : "", "");
     };
     const block2 = function(key2, list6, group2) {
       return cs.sec(key2, cs.sheet(src.fold(list6).map(function(it) {
@@ -278510,9 +278780,9 @@ var home = Object.freeze({
           cs.wizard(el.dataset.script, el.dataset.version === "" || isNaN(v) ? el.dataset.version : v);
           return null;
         }
-        const words24 = String(cs.value("home-words") || "").trim();
-        if (!words24) return { refuse: "screen.home.wordsfirst" };
-        cs.set("words", words24);
+        const words23 = String(cs.value("home-words") || "").trim();
+        if (!words23) return { refuse: "screen.home.wordsfirst" };
+        cs.set("words", words23);
         return { query: {} };
       }
     },
@@ -280649,7 +280919,7 @@ var acts2 = [
     }
   }
 ];
-var words8 = Object.freeze([
+var words7 = Object.freeze([
   "screen.project.name",
   "screen.project.purpose",
   "screen.projectai.name",
@@ -280768,7 +281038,7 @@ var words8 = Object.freeze([
   ].map((k) => "screen.project." + k)
 ]);
 function projectScreen(parts) {
-  return Object.freeze({ id: "project", reads, place, render: render2, acts: acts2, words: words8, parts });
+  return Object.freeze({ id: "project", reads, place, render: render2, acts: acts2, words: words7, parts });
 }
 
 // src/screens-inquiry/question.mjs
@@ -281043,8 +281313,8 @@ function render3(cs, view) {
       /* the passage by its own words where the inquiry or the reading shown holds them (K3402) */
       (() => {
         const r = shown3 && Array.isArray(shown3.legs) ? shown3.legs.find((x) => String(x.target_id || x.target) === target) : null;
-        const words24 = l2.words || r && r.words;
-        return words24 ? `<span class="rec">\u201C${cs.esc(words24)}\u201D</span>` : "";
+        const words23 = l2.words || r && r.words;
+        return words23 ? `<span class="rec">\u201C${cs.esc(words23)}\u201D</span>` : "";
       })() + `<span class="mk-small">${cs.ref("document", target, legTitle(l2), [legTitle(l2)])}` + (severed ? ` \xB7 <span data-leg="severed">${why2 ? W2("screen.question.leg.severed.why", { why: why2 }) : W2("screen.question.leg.severed")}</span>` : "") + "</span>" + line2,
       isLive ? cs.act("sever", { label: "act.sever.label.question", data: { target } }) : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : ""
     );
@@ -281443,7 +281713,7 @@ var acts3 = [
     }
   }
 ];
-var words9 = Object.freeze([
+var words8 = Object.freeze([
   "screen.question.name",
   "screen.question.purpose",
   ...[
@@ -281621,7 +281891,7 @@ var words9 = Object.freeze([
   "dock.withheld.CREDENTIAL_RECORD_SILENT"
 ]);
 function questionScreen(parts) {
-  return Object.freeze({ id: "question", reads: reads2, place: place2, render: render3, acts: acts3, words: words9, parts });
+  return Object.freeze({ id: "question", reads: reads2, place: place2, render: render3, acts: acts3, words: words8, parts });
 }
 
 // src/screens-inquiry/document.mjs
@@ -282068,7 +282338,7 @@ var acts4 = [
     }
   }
 ];
-var words10 = Object.freeze([
+var words9 = Object.freeze([
   "screen.document.name",
   "screen.document.purpose",
   ...[
@@ -282157,7 +282427,7 @@ var words10 = Object.freeze([
   ].map((k) => "screen.document." + k)
 ]);
 function documentScreen(parts) {
-  return Object.freeze({ id: "document", reads: reads3, place: place3, render: render4, acts: acts4, words: words10, parts });
+  return Object.freeze({ id: "document", reads: reads3, place: place3, render: render4, acts: acts4, words: words9, parts });
 }
 
 // src/screens-inquiry/assistant.mjs
@@ -282350,7 +282620,7 @@ var acts5 = [
         return !a || a.ok === false || !r || r.ok === false || r.started === false || r.dispatched === false || !!r.withheld;
       };
       const P = view.parts || {};
-      const words24 = P.refusals || {};
+      const words23 = P.refusals || {};
       const withheldKeys = P.withheld || [];
       const sayRefusal = (op, a) => {
         const r = res(a) || {};
@@ -282368,7 +282638,7 @@ var acts5 = [
           date: r.date || (kept.set_at ? { html: cs.date(String(kept.set_at), { year: true }) } : ""),
           reason: kept.reason || r.why || r.detail || code
         };
-        const html = r.withheld && withheldKeys.includes(code) ? cs.w("dock.withheld." + code) : words24[code] ? cs.w(words24[code], fills) : r.withheld ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>` : r.translation ? cs.esc(r.translation) : cs.w("screen.assistant.dispatch.unknown", { reason: code });
+        const html = r.withheld && withheldKeys.includes(code) ? cs.w("dock.withheld." + code) : words23[code] ? cs.w(words23[code], fills) : r.withheld ? cs.w("dock.withheld.other") + ` <span class="mk-small" data-reference="withheld">${cs.esc(code)}</span>` : r.translation ? cs.esc(r.translation) : cs.w("screen.assistant.dispatch.unknown", { reason: code });
         cs.set("said", { op, code, html });
       };
       const dispatch2 = (run3) => cs.call("airundispatch", { body: { run: run3 } }).then((x) => {
@@ -282442,7 +282712,7 @@ var acts5 = [
     }
   }
 ];
-var words11 = Object.freeze([
+var words10 = Object.freeze([
   "screen.assistant.name",
   "screen.assistant.purpose",
   ...["airunopen", "suggest", "airunclose"].map((op) => "act." + op + ".label.assistant"),
@@ -282481,7 +282751,7 @@ var ASSISTANT_SCREEN = Object.freeze({
   reads: reads4,
   render: render5,
   acts: acts5,
-  words: words11,
+  words: words10,
   parts: Object.freeze({
     ...aiUsageBars ? { aiUsageBars } : {},
     bounds: MODE_BOUNDS,
@@ -282724,7 +282994,7 @@ var PANEL2 = [
   "ai.refused.switchvalue",
   ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f17) => `ai.limitfield.${f17}`)
 ];
-var words12 = Object.freeze([
+var words11 = Object.freeze([
   "screen.projectai.name",
   ...[
     "projectkeyset",
@@ -282778,7 +283048,7 @@ var PROJECTAI_SCREEN = Object.freeze({
   place: place4,
   render: render6,
   acts: acts6,
-  words: words12,
+  words: words11,
   parts: Object.freeze({ aiPanel: aiPanel2, aiPanelSend: aiPanelSend2, later: later2 })
 });
 
@@ -282805,8 +283075,8 @@ var STEP_CODES = [
   "WIZARD_RECORDING_CARRIES_VALUES"
 ];
 function stepRefusal(r, cs) {
-  const words24 = r && typeof r.translation === "string" && r.translation ? cs.esc(r.translation) : cs.esc(r && (r.detail || r.code) || "");
-  return r && r.step !== null && r.step !== void 0 && r.step !== "" ? cs.w("screen.wizards.refusal.step", { step: String(r.step), words: { html: words24 } }) : words24;
+  const words23 = r && typeof r.translation === "string" && r.translation ? cs.esc(r.translation) : cs.esc(r && (r.detail || r.code) || "");
+  return r && r.step !== null && r.step !== void 0 && r.step !== "" ? cs.w("screen.wizards.refusal.step", { step: String(r.step), words: { html: words23 } }) : words23;
 }
 var REFUSALS4 = Object.freeze(Object.fromEntries(STEP_CODES.map((c) => [c, stepRefusal])));
 var LIBRARY_STATES = Object.freeze(["offered", "draft", "submitted", "withdrawn", "retired", "broken", "proposed"]);
@@ -283429,14 +283699,14 @@ var guide = {
     if (run2 && run2.loading) return `<div class="cs-wizard"><p class="cs-state" data-state="loading" role="status">${W2(G2 + "loading")}</p></div>`;
     if (run2) {
       const n2 = run2.steps.length, i = run2.i, step = run2.steps[i] || {};
-      const words24 = P.stepWords(cs, view, run2, i);
+      const words23 = P.stepWords(cs, view, run2, i);
       const d = step.draft && typeof step.draft === "object" ? step.draft : null;
       const draft = ui.draft && ui.draft.i === i ? ui.draft : null;
       const out = [
         `<div class="cs-wizard" data-guide-state="running">`,
         `<span class="step">${P.nameOf(cs, view, run2.id, run2.name)} \xB7 ${W2("guide.step", { i: String(i + 1), n: String(n2) })}</span>`,
-        `<span class="what">${words24.what}</span>`,
-        words24.why ? `<span class="why">${words24.why}</span>` : ""
+        `<span class="what">${words23.what}</span>`,
+        words23.why ? `<span class="why">${words23.why}</span>` : ""
       ];
       if (run2.doorScript) out.push(`<p class="mk-note" data-guide-elsewhere>${W2("wizard.guide.elsewhere", { link: { html: `<button type="button" class="cs-ref" data-guide="elsewhere" data-level="2" data-tip="${E2("<b>" + W2("screen.elsewhere.name") + '</b><span class="more">' + W2("screen.elsewhere.purpose") + "</span>")}">${W2("wizard.guide.elsewhere_link")}</button>` } })}</p>`);
       if (run2.parent) out.push(`<p class="mk-note" data-guide-trip>${W2("guide.sidetrip", { wizard: { html: P.nameOf(cs, view, run2.id, run2.name) } })}</p>`);
@@ -283692,8 +283962,8 @@ var GUIDE2 = Object.freeze({ ...guide, ops: GUIDE_OPS, acts: freezeActs(guide.ac
 var PARTS4 = Object.freeze({
   /** A refusal drawn in words beside what it answers (interface-shell R13): its translation, else the code. */
   said(cs, f17) {
-    const words24 = f17 && f17.translation ? cs.esc(f17.translation) : cs.w("state.failed", { reason: f17 && f17.code || cs.w("shell.noanswer") });
-    return `<p class="cs-gap" data-gap="refused" role="alert" data-refusal="${cs.esc(f17 && f17.code || "")}">${words24}</p>`;
+    const words23 = f17 && f17.translation ? cs.esc(f17.translation) : cs.w("state.failed", { reason: f17 && f17.code || cs.w("shell.noanswer") });
+    return `<p class="cs-gap" data-gap="refused" role="alert" data-refusal="${cs.esc(f17 && f17.code || "")}">${words23}</p>`;
   },
   /** A read made as the screen draws, once per key: its outcome, in R10's four states, kept in the screen's memory
    *  (`view.ui.later`) and drawn on arrival. A refusal (the plane's `ok: false` or explore's `refused`) is `failed`. */
@@ -284097,7 +284367,7 @@ var PEOPLE_KEYS = [
   "screen.people.add.note.help",
   "screen.people.add.empty"
 ];
-var words13 = [
+var words12 = [
   "screen.people.name",
   "screen.people.purpose",
   "act.search.label.people",
@@ -284111,7 +284381,7 @@ var words13 = [
   "state.failed",
   ...PEOPLE_KEYS
 ];
-var PEOPLE_SCREEN = Object.freeze({ id: "people", reads: reads6, render: render7, acts: acts7, words: words13, parts: PARTS4 });
+var PEOPLE_SCREEN = Object.freeze({ id: "people", reads: reads6, render: render7, acts: acts7, words: words12, parts: PARTS4 });
 
 // src/screens-investigate/graphwords.mjs
 var GRAPH_SHARED = Object.freeze([
@@ -284366,7 +284636,7 @@ var PERSON_KEYS = [
   "screen.person.expunge.empty",
   "screen.person.expunge.noorder"
 ];
-var words14 = [
+var words13 = [
   "screen.person.name",
   "screen.person.purpose",
   ...["person", "explore", "recordpersonfact", "identityclaim", "withdrawidentityclaim", "followregister"].flatMap((op) => ["act." + op + ".label.person", "act." + op + ".does"]),
@@ -284389,7 +284659,7 @@ var words14 = [
   "state.failed",
   ...PERSON_KEYS
 ];
-var PERSON_SCREEN = Object.freeze({ id: "person", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads7, render: render8, acts: acts8, words: words14, parts: PARTS4 });
+var PERSON_SCREEN = Object.freeze({ id: "person", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads7, render: render8, acts: acts8, words: words13, parts: PARTS4 });
 
 // src/screens-investigate/explore.mjs
 function reads8() {
@@ -284716,7 +284986,7 @@ var EXPLORE_KEYS = [
   "screen.explore.assert.basis",
   "screen.explore.assert.empty"
 ];
-var words15 = [
+var words14 = [
   "screen.explore.name",
   "screen.explore.purpose",
   ...["explore", "explorepreset", "exploreverify", "stepsource", "promote"].flatMap((op) => ["act." + op + ".label.explore", "act." + op + ".does"]),
@@ -284740,7 +285010,7 @@ var words15 = [
   "state.failed",
   ...EXPLORE_KEYS
 ];
-var EXPLORE_SCREEN = Object.freeze({ id: "explore", reads: reads8, render: render9, acts: acts9, words: words15, parts: PARTS4 });
+var EXPLORE_SCREEN = Object.freeze({ id: "explore", reads: reads8, render: render9, acts: acts9, words: words14, parts: PARTS4 });
 
 // src/screens-investigate/timeline.mjs
 function reads9(view) {
@@ -284983,7 +285253,7 @@ var TIMELINE_KEYS = [
   "screen.timeline.relate.empty",
   "screen.timeline.date.empty"
 ];
-var words16 = [
+var words15 = [
   "screen.timeline.name",
   "screen.timeline.purpose",
   ...["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold", "findin"].flatMap((op) => ["act." + op + ".label.timeline", "act." + op + ".does"]),
@@ -285002,7 +285272,7 @@ var words16 = [
   "state.failed",
   ...TIMELINE_KEYS
 ];
-var TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads: reads9, place: place5, render: render10, acts: acts10, words: words16, parts: PARTS4 });
+var TIMELINE_SCREEN = Object.freeze({ id: "timeline", reads: reads9, place: place5, render: render10, acts: acts10, words: words15, parts: PARTS4 });
 
 // src/screens-investigate/money.mjs
 function reads10(view) {
@@ -285490,7 +285760,7 @@ var MONEY_KEYS = [
   "screen.money.g.hunch",
   "screen.money.g.nosource"
 ];
-var words17 = [
+var words16 = [
   "screen.money.name",
   "screen.money.purpose",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"].flatMap((op) => ["act." + op + ".label.money", "act." + op + ".does"]),
@@ -285508,7 +285778,7 @@ var words17 = [
   "state.failed",
   ...MONEY_KEYS
 ];
-var MONEY_SCREEN = Object.freeze({ id: "money", reads: reads10, place: place6, render: render11, acts: acts11, words: words17, parts: PARTS4 });
+var MONEY_SCREEN = Object.freeze({ id: "money", reads: reads10, place: place6, render: render11, acts: acts11, words: words16, parts: PARTS4 });
 
 // src/screens-investigate/calculation.mjs
 function reads11(view) {
@@ -285655,9 +285925,9 @@ var acts12 = [
     reasonField: "words",
     rereads: [],
     send(view, el, cs) {
-      const words24 = String(cs.value("calc-words") || "").trim(), observedAt = String(cs.value("calc-observed") || "").trim();
-      if (!words24 || !/^\d{4}-\d{2}-\d{2}$/.test(observedAt)) return { refuse: "screen.calculation.words.empty" };
-      return { body: { words: words24, observedAt } };
+      const words23 = String(cs.value("calc-words") || "").trim(), observedAt = String(cs.value("calc-observed") || "").trim();
+      if (!words23 || !/^\d{4}-\d{2}-\d{2}$/.test(observedAt)) return { refuse: "screen.calculation.words.empty" };
+      return { body: { words: words23, observedAt } };
     },
     done(view, answer2, cs) {
       const r = answer2 && answer2.result !== void 0 ? answer2.result : answer2;
@@ -285793,7 +286063,7 @@ function renderHelp(cs) {
   const H = "screen.help.";
   return cs.title() + `<p class="mk-sub">${cs.w(H + "sub")}</p>` + ["does", "random", "says", "notsays", "evidence"].map((k) => cs.sec(H + k, `<p>${cs.w(H + k + ".p")}</p>`)).join("");
 }
-var words18 = [
+var words17 = [
   "screen.calculation.name",
   "screen.calculation.purpose",
   ...["calculationcreate", "tabledeclare", "calculationdraw", "addworkbook", "bind", "recordcheck", "calculationaccept", "testify", "spotcheckvisit"].flatMap((op) => ["act." + op + ".label.calculation", "act." + op + ".does"]),
@@ -285812,7 +286082,7 @@ var words18 = [
   "state.failed",
   ...CALCULATION_KEYS
 ];
-var CALCULATION_SCREEN = Object.freeze({ id: "calculation", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads11, place: place7, render: render12, acts: acts12, words: words18, parts: PARTS4 });
+var CALCULATION_SCREEN = Object.freeze({ id: "calculation", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads11, place: place7, render: render12, acts: acts12, words: words17, parts: PARTS4 });
 var HELP_SCREEN = Object.freeze({ id: "help", reads: () => ({}), render: renderHelp, acts: [], words: ["screen.help.name", ...HELP_KEYS2] });
 
 // src/screens-investigate/proceeding.mjs
@@ -286006,7 +286276,7 @@ var PROCEEDING_KEYS = [
   "screen.proceeding.order.empty",
   "screen.proceeding.link.empty"
 ];
-var words19 = [
+var words18 = [
   "screen.proceeding.name",
   "screen.proceeding.purpose",
   "proceeding.dates.title",
@@ -286030,7 +286300,7 @@ var words19 = [
   "state.failed",
   ...PROCEEDING_KEYS
 ];
-var PROCEEDING_SCREEN = Object.freeze({ id: "proceeding", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads12, render: render13, acts: acts13, words: words19, parts: PARTS4 });
+var PROCEEDING_SCREEN = Object.freeze({ id: "proceeding", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads12, render: render13, acts: acts13, words: words18, parts: PARTS4 });
 
 // src/screens-investigate/due-date.mjs
 function reads13(view) {
@@ -286139,7 +286409,7 @@ var DUE_KEYS2 = [
   "screen.due-date.why.help",
   "screen.due-date.queue"
 ];
-var words20 = [
+var words19 = [
   "screen.due-date.name",
   "screen.due-date.purpose",
   ...["clockpropose", "clockadopt", "reminderset"].flatMap((op) => ["act." + op + ".label.due-date", "act." + op + ".does"]),
@@ -286153,7 +286423,7 @@ var words20 = [
   "state.failed",
   ...DUE_KEYS2
 ];
-var DUE_DATE_SCREEN = Object.freeze({ id: "due-date", reads: reads13, render: render14, acts: acts14, words: words20, parts: PARTS4 });
+var DUE_DATE_SCREEN = Object.freeze({ id: "due-date", reads: reads13, render: render14, acts: acts14, words: words19, parts: PARTS4 });
 
 // src/screens-investigate/standard.mjs
 function place8(view) {
@@ -286296,7 +286566,7 @@ var STANDARD_KEYS = [
   "screen.standard.relate.empty",
   "screen.standard.relate.effective"
 ];
-var words21 = [
+var words20 = [
   "screen.standard.name",
   "screen.standard.purpose",
   ...["standarddeclare", "standardadopt", "lawrelate"].flatMap((op) => ["act." + op + ".label.standard", "act." + op + ".does"]),
@@ -286311,7 +286581,7 @@ var words21 = [
   "state.failed",
   ...STANDARD_KEYS
 ];
-var STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads14, place: place8, render: render15, acts: acts15, words: words21, parts: PARTS4 });
+var STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads: reads14, place: place8, render: render15, acts: acts15, words: words20, parts: PARTS4 });
 
 // src/screens-investigate/ties.mjs
 function reads15() {
@@ -286400,7 +286670,7 @@ var TIES_KEYS = [
   "screen.ties.either",
   "screen.ties.add.empty"
 ];
-var words22 = [
+var words21 = [
   "screen.ties.name",
   "screen.ties.purpose",
   ...["declaretie", "withdrawtie"].flatMap((op) => ["act." + op + ".label.ties", "act." + op + ".does"]),
@@ -286409,7 +286679,7 @@ var words22 = [
   "state.failed",
   ...TIES_KEYS
 ];
-var TIES_SCREEN = Object.freeze({ id: "ties", reads: reads15, render: render16, acts: acts16, words: words22, parts: PARTS4 });
+var TIES_SCREEN = Object.freeze({ id: "ties", reads: reads15, render: render16, acts: acts16, words: words21, parts: PARTS4 });
 
 // src/screens-investigate/index.mjs
 var SCREENS7 = Object.freeze([
@@ -286919,8 +287189,8 @@ var PARTS5 = Object.freeze({
       if (view.ui.said) delete view.ui.said[key2];
       return false;
     }
-    const words24 = view.parts.refusalText(cs, f17);
-    view.parts.say(cs, view, key2, words24 || cs.w("state.failed", { reason: String(f17.code || f17.reason || "") }), false);
+    const words23 = view.parts.refusalText(cs, f17);
+    view.parts.say(cs, view, key2, words23 || cs.w("state.failed", { reason: String(f17.code || f17.reason || "") }), false);
     return true;
   },
   /* A date and time the member typed, `YYYY-MM-DD` and `HH:MM`, as `publishat` and `publishatmove` take them; null when
@@ -295144,7 +295414,7 @@ var MachineryProducers = class _MachineryProducers {
     const out = [];
     for (const r of this.#captureRequests.rendersHeld({ viewer }).requests) {
       const row12 = renderHoldReason(r.code);
-      const words24 = row12.translation || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
+      const words23 = row12.translation || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
       const released = r.state === "expired";
       const sinceMs = Date.parse(r.requested_at);
       out.push({
@@ -295153,8 +295423,8 @@ var MachineryProducers = class _MachineryProducers {
         kind: "render-deferred",
         case: this.#conditionHomes([r.target], viewer),
         subject: { kind: "capture_request", id: r.request },
-        summary: released ? `the render of ${r.address} was never performed: it was held until its request expired, and what the page showed is UNDETERMINED` : `a render of ${r.address} is waiting: ${words24}`,
-        detail: released ? `${words24} The request expired at ${r.expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.` : `${words24} The request is held and asked again on every tick until ${r.expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.`,
+        summary: released ? `the render of ${r.address} was never performed: it was held until its request expired, and what the page showed is UNDETERMINED` : `a render of ${r.address} is waiting: ${words23}`,
+        detail: released ? `${words23} The request expired at ${r.expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.` : `${words23} The request is held and asked again on every tick until ${r.expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.`,
         basis: {
           source: "capture_requests",
           request: r.request,
@@ -295289,7 +295559,7 @@ var MachineryProducers = class _MachineryProducers {
       if (!joined2.get(project)) continue;
       const d = c.detail && typeof c.detail === "object" ? c.detail : {};
       const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
-      const words24 = _MachineryProducers.#sweepWords(c.kind, d, title);
+      const words23 = _MachineryProducers.#sweepWords(c.kind, d, title);
       const sinceMs = Date.parse(c.since ?? "");
       out.push({
         id: `CONDITION::${c.kind}::${c.sweep}`,
@@ -295297,8 +295567,8 @@ var MachineryProducers = class _MachineryProducers {
         kind: c.kind,
         case: this.#homesAt([project], viewer, [bundle]),
         subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
-        summary: words24.summary,
-        detail: words24.detail,
+        summary: words23.summary,
+        detail: words23.detail,
         basis: {
           source: "link-sweep.sweepConditions",
           sweep: c.sweep,
@@ -297070,8 +297340,8 @@ ${project || "none"}`;
       hold: "the legal threat"
     };
     const one4 = (x) => `${KIND2[x.kind] || "the item"} ${x.entry} on ${x.subject}${typeof x.date === "string" && x.date ? ` (${x.date.slice(0, 10)})` : ""}`;
-    const words24 = named3.map(one4).join("; ");
-    return more > 0 ? `${words24}; and ${more} more` : words24;
+    const words23 = named3.map(one4).join("; ");
+    return more > 0 ? `${words23}; and ${more} more` : words23;
   }
   /** `watch-keep-or-stop` (R10; N855; Actions D6d; v0.2 rule 17; K2781 (2)): one OBLIGATION per entry
    *  `following.watchQuestions` answers the viewer (its R24), keyed `OBLIGATION::watch-keep-or-stop::<link>`, to that
@@ -299663,10 +299933,10 @@ var QueueProducers = class _QueueProducers {
   /** What one entry seen at a publisher's docket says, quoted: a move's `what_changed` or `reason`, and its signing key
    *  and take-back as R34 and R35 state them. */
   static #entryWords(e2) {
-    const quoted5 = e2.kind === "edition" && typeof e2.what_changed === "string" && e2.what_changed ? ` What changed, in its publisher's words: "${e2.what_changed}".` : e2.kind === "withdrawal" && typeof e2.reason === "string" && e2.reason ? ` The reason, in its publisher's words: "${e2.reason}".` : "";
+    const quoted6 = e2.kind === "edition" && typeof e2.what_changed === "string" && e2.what_changed ? ` What changed, in its publisher's words: "${e2.what_changed}".` : e2.kind === "withdrawal" && typeof e2.reason === "string" && e2.reason ? ` The reason, in its publisher's words: "${e2.reason}".` : "";
     const key2 = e2.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : "";
     const back = e2.taken_back && typeof e2.taken_back === "object" ? ` The publisher has since taken this entry back (entry ${e2.taken_back.seq ?? "unnumbered"}${e2.taken_back.date ? `, dated ${e2.taken_back.date}` : ""}).` : "";
-    return `${quoted5}${key2}${back}`;
+    return `${quoted6}${key2}${back}`;
   }
   /** `cited-newer-edition` and `cited-edition-withdrawn` (R34; reevaluation R33; DEC-101 (3)): one FINDING per
    *  (dependent, move) `reevaluation.citedCaseDependents` answers the viewer (which withholds a hidden dependent and does
@@ -299991,7 +300261,7 @@ var QueueProducers = class _QueueProducers {
       const version = `${x.script}@${x.version}`;
       const withdrawn = kind2 === "wizard-withdrawn";
       const refusal39 = withdrawn && x.refusal && typeof x.refusal === "object" ? x.refusal : null;
-      const words24 = refusal39 && typeof refusal39.translation === "string" && refusal39.translation ? refusal39.translation : null;
+      const words23 = refusal39 && typeof refusal39.translation === "string" && refusal39.translation ? refusal39.translation : null;
       const name3 = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
       const atMs = Date.parse(x.at);
       out.push({
@@ -300006,10 +300276,10 @@ var QueueProducers = class _QueueProducers {
           version: x.version,
           name: x.name ?? null,
           project,
-          ...withdrawn ? { refusal: refusal39 ? { code: refusal39.code ?? null, check: refusal39.check ?? null, translation: words24 } : null } : {}
+          ...withdrawn ? { refusal: refusal39 ? { code: refusal39.code ?? null, check: refusal39.check ?? null, translation: words23 } : null } : {}
         },
         summary: withdrawn ? `the wizard script ${name3} no longer matches the screens and is withdrawn until it is fixed` : `the wizard script ${name3} matches the screens again and is offered again`,
-        detail: withdrawn ? `It is not offered to members while it fails its checks${words24 ? `. The first thing it failed: ${words24}` : ""}. A new version that passes them, approved as before, returns it. This is told once.` : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
+        detail: withdrawn ? `It is not offered to members while it fails its checks${words23 ? `. The first thing it failed: ${words23}` : ""}. A new version that passes them, approved as before, returns it. This is told once.` : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
         basis: {
           source: "wizard-scripts.brokenScripts",
           script: x.script,
@@ -301557,7 +301827,7 @@ function textView(bytes2, more = false) {
 
 // src/file-safety/kinds.mjs
 var RESEMBLES = word(RESEMBLES_KEY);
-var kind = (id, names2, words24) => Object.freeze({ kind: id, names: Object.freeze(names2), words: `${words24} ${RESEMBLES}` });
+var kind = (id, names2, words23) => Object.freeze({ kind: id, names: Object.freeze(names2), words: `${words23} ${RESEMBLES}` });
 var FINDING_KINDS2 = Object.freeze([
   kind(
     "downloader",
@@ -311943,9 +312213,9 @@ var Hypotheses = class _Hypotheses {
     if (p3.state !== "open") return _Hypotheses.#notOpen(p3);
     if (form !== "as_proposed" && !filled20(statement))
       return refuse29("HYPOTHESIS_NO_STATEMENT", `taking up ${form === "edited" ? "edited" : "with your own instead"} states the hypothesis in your own words`);
-    const words24 = form === "as_proposed" ? p3.statement : statement;
+    const words23 = form === "as_proposed" ? p3.statement : statement;
     return this.#record.transact(() => {
-      const h = this.hold({ inquiry: p3.bundle_id, kind: p3.kind, statement: words24, about: parse22(p3.about_json), by });
+      const h = this.hold({ inquiry: p3.bundle_id, kind: p3.kind, statement: words23, about: parse22(p3.about_json), by });
       if (!h || h.ok !== true) return h;
       const acceptance = acceptanceRecord({ proposal: p3.proposal_id, form, by, at: h.at.replace(/\.\d+Z$/, "Z"), kind: "hypothesis" });
       this.#sql.exec(
@@ -312731,7 +313001,7 @@ async function draftOnObject(ctx, env, {
   pack = null,
   direction = null,
   language = null,
-  words: words24 = null,
+  words: words23 = null,
   text: text8 = null,
   matter: matter2 = null,
   audience = null,
@@ -312842,7 +313112,7 @@ async function draftOnObject(ctx, env, {
     language: reading3.language,
     text: reading3.original.text,
     ...reading3.from_language ? { from_language: reading3.from_language } : {}
-  } : op === "writinghelp" ? { op, act: act2, field: field3 } : kind2 === "translation" ? { op, direction, language, words: words24 } : kind2 === "textcheck" ? { op, text: text8 } : kind2 === "infractiondraft" ? { op, matter: matter2, audience } : kind2 === "bearingdraft" ? { op, action: action2, reply } : kind2 === "statusreport" ? { op, plan: plan2, items } : { op };
+  } : op === "writinghelp" ? { op, act: act2, field: field3 } : kind2 === "translation" ? { op, direction, language, words: words23 } : kind2 === "textcheck" ? { op, text: text8 } : kind2 === "infractiondraft" ? { op, matter: matter2, audience } : kind2 === "bearingdraft" ? { op, action: action2, reply } : kind2 === "statusreport" ? { op, plan: plan2, items } : { op };
   const actionDraft = kind2 === "textcheck" || kind2 === "infractiondraft" || kind2 === "bearingdraft" || kind2 === "statusreport";
   const label = untested ? { untested } : {};
   const body = JSON.stringify(kind2 === "translation" || reading3 ? { task, account: account2, ...pack != null ? { pack } : {}, ...label } : actionDraft ? { task, account: account2, ...grant ? { grant } : pack != null ? { pack } : {}, ...records, ...label } : {
@@ -315147,7 +315417,7 @@ var NAME_SRC = `${WORD4}(?:\\s+(?:${PARTICLE}\\s+)?(?:${NICK}\\s+)?${WORD4}){1,3
 var NAME_AT = new RegExp(`^(?:${NAME_SRC})`, "u");
 var NAME_WHOLE = new RegExp(`^(?:${NAME_SRC})$`, "u");
 var NAME_ALL = new RegExp(`(?<![\\p{L}\\p{N}])${NAME_SRC}(?![\\p{L}\\p{N}])`, "gu");
-var words23 = (s) => String(s).replace(/["“”]/g, "").split(/\s+/).filter(Boolean);
+var words22 = (s) => String(s).replace(/["“”]/g, "").split(/\s+/).filter(Boolean);
 var phraseWord = (w) => NOT_NAME_WORDS.has(w.replace(/["“”.,]+/g, "").toLowerCase());
 function cut9(run2) {
   const toks = run2.split(/(\s+)/);
@@ -315249,7 +315519,7 @@ function selfNamingLines(lines2, patterns3) {
   const out = [];
   if (!patterns3.length) return out;
   for (const x of lines2) {
-    if (words23(x.text).length > TITLE_WORDS) continue;
+    if (words22(x.text).length > TITLE_WORDS) continue;
     const kinds3 = /* @__PURE__ */ new Set();
     for (const p3 of patterns3) {
       p3.re.lastIndex = 0;
@@ -315297,12 +315567,12 @@ function statedDate(lines2) {
   return null;
 }
 function isUnitLine(s) {
-  const w = words23(s).map((x) => x.replace(/[^\p{L}]/gu, "").toLowerCase()).filter(Boolean);
+  const w = words22(s).map((x) => x.replace(/[^\p{L}]/gu, "").toLowerCase()).filter(Boolean);
   if (!w.length || w.length > TITLE_WORDS) return false;
   if (UNIT_WORDS.has(w[w.length - 1])) return true;
   return w.length >= 3 && UNIT_WORDS.has(w[0]) && w[1] === "of";
 }
-var wordCount = (s) => words23(s).length;
+var wordCount = (s) => words22(s).length;
 
 // ../roster-reader/staff-roster.mjs
 var ROSTER_FLOOR = 5;
@@ -315397,9 +315667,9 @@ function organisationOf(lines2, selfLines, ctx) {
   const at49 = selfLines.length ? lines2.findIndex((x) => x.offset === selfLines[0].offset) : -1;
   if (at49 > 0 && heading(lines2[at49 - 1])) return { text: withoutContacts(lines2[at49 - 1].text).text, offset: lines2[at49 - 1].offset };
   if (at49 >= 0) {
-    const words24 = rosterWordPatterns(ctx).map((p3) => p3.re);
+    const words23 = rosterWordPatterns(ctx).map((p3) => p3.re);
     let rest = lines2[at49].text;
-    for (const re of words24) rest = rest.replace(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"), " ");
+    for (const re of words23) rest = rest.replace(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"), " ");
     rest = rest.replace(/[\s\-–—:]+$/, "").replace(/\s+/g, " ").trim();
     if (rest.split(" ").length >= 2 && rest.split(" ").some((w) => UNIT_WORDS.has(w.toLowerCase())))
       return { text: rest, offset: lines2[at49].offset };
@@ -316806,8 +317076,8 @@ function wraps(label, next, nextIsRow = false) {
   if (CONNECTOR.test(label)) return true;
   if (typeof next !== "string") return false;
   if (/^[a-z(]/.test(next.trim())) return true;
-  const words24 = label.trim().split(/\s+/);
-  return nextIsRow && words24.length >= 4 && !/:$/.test(label.trim()) && label !== label.toUpperCase() && next.trim().split(/\s+/).length <= 2;
+  const words23 = label.trim().split(/\s+/);
+  return nextIsRow && words23.length >= 4 && !/:$/.test(label.trim()) && label !== label.toUpperCase() && next.trim().split(/\s+/).length <= 2;
 }
 var TOTAL = /\b(?:sub-?)?totals?\b/i;
 var SCALE2 = /\b(in\s+(?:thousands|millions|billions)(?:\s+of\s+dollars)?|in\s+\$?\s?(?:000s|000's))\b/i;
@@ -316822,11 +317092,11 @@ function isSentence(line2) {
 }
 function isProse(line2) {
   const s = String(line2).trim();
-  const words24 = s.split(/\s+/);
-  if (words24.length < 8) return false;
+  const words23 = s.split(/\s+/);
+  if (words23.length < 8) return false;
   if (isSentence(s)) return true;
-  const lower3 = words24.filter((w) => /^[a-z]/.test(w)).length;
-  return lower3 / words24.length >= 0.5;
+  const lower3 = words23.filter((w) => /^[a-z]/.test(w)).length;
+  return lower3 / words23.length >= 0.5;
 }
 
 // ../budget-doctypes/tables.mjs
@@ -317181,15 +317451,15 @@ function sheetRows(sheet) {
 }
 var text7 = (c) => c && c.value !== null && c.value !== void 0 ? String(c.value) : "";
 function findHeader(ctx, rows4) {
-  const words24 = headerWords(ctx);
-  if (!words24.length) return null;
+  const words23 = headerWords(ctx);
+  if (!words23.length) return null;
   for (const r of rows4.slice(0, HEADER_SEARCH_ROWS)) {
     const map = {}, headers = {};
     for (const [col, cell] of r.cells) {
       const h = text7(cell).trim();
       if (!h) continue;
       headers[col] = h;
-      const w = words24.find((x) => x.re.test(h));
+      const w = words23.find((x) => x.re.test(h));
       if (!w) continue;
       (map[w.column] = map[w.column] || []).push(col);
     }
@@ -317198,10 +317468,10 @@ function findHeader(ctx, rows4) {
   return null;
 }
 function headerLineMatches(ctx, line2) {
-  const words24 = headerWords(ctx);
+  const words23 = headerWords(ctx);
   const found3 = /* @__PURE__ */ new Set();
   for (const h of String(line2).split("	")) {
-    const w = words24.find((x) => x.re.test(h.trim()));
+    const w = words23.find((x) => x.re.test(h.trim()));
     if (w) found3.add(w.column);
   }
   return (found3.has("fund") || found3.has("org")) && found3.has("amount");
