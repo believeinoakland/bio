@@ -97,7 +97,7 @@ const DATA_PLANE = {
     case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
   search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
   projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming", members: [{ member: "M-1", handle: "mai" }], activity: [0, 1, 0, 2, 0, 1, 3, 1], lastChange: "2026-10-20T10:00:00Z" }] }),
-  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1" }], cursor: null }),
+  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1", title: "Is it fixed?" }], cursor: null }),
   projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
   startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Check a claim" }],
     doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }, { door: "elsewhere", scripts: [], opens: "elsewhere" }],
@@ -106,7 +106,7 @@ const DATA_PLANE = {
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
 const ROUTES = { home: "/app", elsewhere: "/app/elsewhere", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
-const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
+const DATA = ["Town service line", "Fixes one thing for you.", "311", "the town's website", "2 October 2026", "River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Is it fixed?", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
 
 test("R1–R10, R15 (interface-shell R21): the shell accepts the seven screens and serves them: each route draws its screen under its path", async () => {
   assert.equal(checkScreens(SCREENS), true);

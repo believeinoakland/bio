@@ -5,20 +5,27 @@
    id (`PROJ-…`), a held set's handle (`sel-…`), else a document's capture digest; its second, if any, is the question
    chosen (K3372). Every function is self-contained (interface-shell R21 (1)). */
 import { frontTitle } from "./front-title.mjs";
+import { forms } from "./find-in-forms.mjs";
 
 export const findIn = Object.freeze({
   id: "find-in",
-  parts: { frontTitle },
+  parts: { frontTitle, forms },
 
   reads: function (view) {
     const s = String(view.subject || "").split("/")[0];
     const out = {
-      // The questions a result may be recorded for (R5's optional question): those the member may see.
-      questions: {
+      // The team's time zone, as `factstatus` lists it (R47): the bounds of a person fact are counted in it.
+      zone: { op: "factstatus" },
+    };
+    // R48 (7): the questions a result may be recorded for: the project's own when the scope is a project, else those the member may see.
+    if (s.indexOf("PROJ-") === 0) {
+      out.projectquestions = { op: "projectquestions", query: { project: s, limit: "200" }, empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; } };
+    } else {
+      out.questions = {
         op: "search", query: { q: "type:inquiry", limit: "200" },
         empty: function (v) { return !v || !Array.isArray(v.hits) || v.hits.length === 0; },
-      },
-    };
+      };
+    }
     // R26: a project scope is named by the project's title, read from its document.
     if (s.indexOf("PROJ-") === 0) out.project = { op: "image", query: { id: s } };
     // R38 (K3562): a document's scope is its capture's fingerprint, read from its provenance, never its record id.
@@ -44,16 +51,8 @@ export const findIn = Object.freeze({
     const form = !s ? "" : s.indexOf("PROJ-") === 0 ? "project" : s.indexOf("sel-") === 0 ? "held" : "document";
     const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
     const RECORD = { people: "recordpersonfact", money: "recordfact", dates: "recorddatedfact", events: "recorddatedfact", requirements: "standarddeclare", term: "cite" };
-    // The fields each recording act asks the member, drawn in place in a disclosure with the act and read by its `send`.
-    const FIELDS = {
-      recordpersonfact: [["kind", "screen.find-in.field.kind"], ["value", "screen.find-in.field.value"]],
-      recorddatedfact: [["kind", "screen.find-in.field.kind"], ["value", "screen.find-in.field.date"]],
-      standarddeclare: [["cite", "screen.find-in.field.cite"], ["kind", "screen.find-in.field.kind"], ["issuer", "screen.find-in.field.issuer"], ["reason", "screen.find-in.field.reason"]],
-      recordfact: [["amount", "screen.find-in.field.amount"], ["currency", "screen.find-in.field.currency"], ["kind", "screen.find-in.field.kind"],
-        ["phase", "screen.find-in.field.phase"], ["from", "screen.find-in.field.from"], ["to", "screen.find-in.field.to"]],
-      tabledeclare: [["header", "screen.find-in.field.header"]],
-    };
-    const recordAct = function (op, ki, ii) {
+    // The forms each recording act asks the member (R47, R48), drawn in place in a disclosure with the act and read by its `send`.
+    const recordAct = function (op, ki, ii, it) {
       const f = "fr-" + ki + "-" + ii;
       const button = cs.act(op, { label: "act." + op + ".label.find-in", data: { k: String(ki), i: String(ii), f: f } });
       // R24: "Cite in the question" asks whether the passage supports the question or cuts against it, none preselected.
@@ -64,9 +63,9 @@ export const findIn = Object.freeze({
             return '<label><input type="radio" name="' + f + '-role" id="' + f + "-role-" + r + '" value="' + r + '"> ' + cs.w("screen.findin.cite." + r) + "</label>";
           }).join("") + "</fieldset>" + button + "</details>";
       }
-      if (!button || !FIELDS[op]) return button;
-      return '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.find-in") + "</summary>"
-        + FIELDS[op].map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>";
+      if (!button) return button;
+      const formHtml = view.parts.forms().draw(cs, view, op, f, it);
+      return formHtml ? '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.find-in") + "</summary>" + formHtml + button + "</details>" : button;
     };
     const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.find-in.sub") + "</p>";
     // R21 (interface-shell R61): opened with no scope, "Nothing is here", with the way back.
@@ -92,22 +91,30 @@ export const findIn = Object.freeze({
       + '<p class="mk-small muted">' + cs.w("screen.find-in.lookin.help") + "</p></div>";
     const ticked = ui.kinds && typeof ui.kinds === "object" ? ui.kinds : { people: true, money: true, dates: true, requirements: true };
     const what = '<fieldset class="mk-checks"><legend>' + cs.w("screen.find-in.what") + "</legend>"
-      + KINDS.map(function (k) {
+      + KINDS.filter(function (k) { return k !== "term"; }).map(function (k) {
         return '<label><input type="checkbox" id="findin-kind-' + k + '"' + (ticked[k] ? " checked" : "") + "> " + cs.w("screen.find-in.kind." + k) + "</label>";
       }).join("") + "</fieldset>";
+    // R48 (6): "The name or term" applies when filled and has no tick box.
     const term = cs.field("findin-term", "screen.find-in.term", { value: ui.term || "", help: "screen.find-in.term.help" });
-    const qs = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
-      ? view.data.questions.value.hits : [];
-    // The kit's labelled choice (R21: no hand-made field), its help beneath.
+    // R48 (7): "For which question" offers the project's questions (a project's own, else those the member may see), preselecting the one
+    // the find was opened with, with no "None yet"; when there are none, `screen.document.cite.noquestion` says to open one first.
+    const pq = view.data.projectquestions && view.data.projectquestions.state === "ok" && view.data.projectquestions.value && Array.isArray(view.data.projectquestions.value.items)
+      ? view.data.projectquestions.value.items.map(function (x) { return { bundle_id: String(x.inquiry), title: x.title }; }) : null;
+    const qs = pq || (view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
+      ? view.data.questions.value.hits : []);
     // R39 (K3562): the question the route chose stays chosen, though the list of questions does not name it.
     const routedQ = ui.question && !qs.some(function (h) { return String(h.bundle_id) === String(ui.question); }) ? [{ value: String(ui.question), text: String(ui.question) }] : [];
-    const question = cs.choice("findin-question", "screen.find-in.question",
-      [["", "screen.find-in.question.none"]].concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; })),
-      { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>";
+    // None is preselected unless the find was opened with one: the first line only asks to choose (it is not a "None yet" choice).
+    const options = (ui.question ? [] : [{ value: "", text: cs.w("findin.question.choose") }]).concat(routedQ, qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; }));
+    const question = routedQ.length || qs.length
+      ? cs.choice("findin-question", "findin.question.choose", options, { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>"
+      : '<p class="mk-note">' + cs.w("screen.document.cite.noquestion") + "</p>";
     const acts = '<div class="mk-acts">' + cs.act("findin", { label: "act.findin.label.find-in", tone: "primary" })
       + cs.act("standingquestionset", { label: "act.standingquestionset.label.find-in" }) + "</div>"
       + (ui.keeping ? '<p class="mk-note">' + cs.w("screen.find-in.keeping") + "</p>" : "");
 
+    const fm = view.parts.forms();
+    const recorded = ui.recorded && typeof ui.recorded === "object" ? ui.recorded : {};
     const found = ui.found && typeof ui.found === "object" ? ui.found : null;
     const results = !found ? "" : (Array.isArray(found.kinds) ? found.kinds : []).map(function (k, ki) {
       const items = Array.isArray(k.items) ? k.items : [];
@@ -124,17 +131,37 @@ export const findIn = Object.freeze({
         : cs.sheet(items.map(function (it, ii) {
           const extent = it.extent && typeof it.extent === "object" ? it.extent : {};
           const p = extent.passage !== undefined ? extent.passage : extent.paragraph;
-          // R26: the result by its document's title and its place in it; a document the answer does not title is not named by its digest.
+          // R26, R49: the result by its document's title and its place in it; a document the answer does not title is not named by its digest.
           const dt = typeof it.title === "string" && it.title.trim() ? it.title : it.document && typeof it.document.title === "string" && it.document.title.trim() ? it.document.title : null;
           const where = (dt && it.capture_sha ? cs.ref("document", String(it.capture_sha), dt, []) + " " : "")
             + (p !== undefined ? "<span>" + cs.w("screen.find-in.passage", { n: String(p) }) + "</span>" : "");
+          // R48 (8): a match in a sheet says its sheet and row and draws its cells apart; a formula the file never calculated says so;
+          // a person named in the passage by a held alias says so.
+          const rowOf = function () {
+            if (typeof it.row === "number" || typeof it.row === "string") return String(it.row);
+            const text = Object.keys(extent).map(function (x) { return typeof extent[x] === "string" ? extent[x] : ""; }).join(" ");
+            const m = /[A-Z]+(\d+)/.exec(text);
+            return m ? m[1] : "";
+          };
+          const sheet = typeof it.sheet === "string" && it.sheet ? '<span class="meta">' + cs.w("findin.match.sheet", { sheet: it.sheet, row: rowOf() }) + "</span>"
+            + (Array.isArray(it.cells) ? '<span class="meta">' + it.cells.map(function (c) {
+              return c && c.value === null && c.cached === null ? '<span class="muted">' + cs.w("findin.cell.uncalculated", { cell: String(c.cell || "") }) + "</span>"
+                : "<span>" + cs.esc(String(c && c.value !== undefined && c.value !== null ? c.value : "")) + "</span>";
+            }).join(" · ") + "</span>" : "") : "";
+          const aliased = it.correspondence === "name_in_passage" ? '<span class="meta">' + cs.w("findin.match.nameinpassage") + "</span>" : "";
           const rec = Array.isArray(it.recorded) && it.recorded.length ? it.recorded[0] : null;
           const op = it.table || it.kind === "table" ? "tabledeclare" : RECORD[k.kind];
-          // R39: a passage keeps its cite act beside who recorded it: it is cited into the question chosen, not recorded again.
+          const id = ki + "-" + ii;
+          const ack = recorded[id] && typeof recorded[id] === "object" ? recorded[id] : null;
+          const count = (Array.isArray(it.recorded) ? it.recorded.length : 0) + (ack ? ack.n : 0);
+          // R39, R48 (5): a passage keeps its acts after a fact is recorded from it and says how many facts it has; an already-cited
+          // passage says so. Its cite act stays beside who recorded it: it is cited into the question chosen, not recorded again.
           const right = (rec ? cs.mark("origin", "accepted") + " " + cs.w("screen.find-in.recorded", { who: String(rec.by || rec.member || rec.who || "") }) : "")
-            + (rec && op !== "cite" ? "" : (op ? recordAct(op, ki, ii) : ""));
+            + (op ? recordAct(op, ki, ii, it) : "");
           return cs.row(cs.mark("origin", "search"), '<span class="rec">' + cs.w("screen.find-in.quote", { words: String(it.words || it.as_read || "") }) + "</span>"
-            + '<span class="meta">' + where + "</span>", right, "");
+            + '<span class="meta">' + where + "</span>" + sheet + aliased
+            + (ack ? '<span class="meta" role="status">' + ack.html + "</span>" : "")
+            + (count ? '<span class="meta">' + (count === 1 ? cs.w("passage.facts.count.one") : cs.w("passage.facts.count", { count: String(count) })) + "</span>" : ""), right, "");
         }).join("")) + notRead;
       const more = k.kind === "term" && k.truncated
         ? '<div class="mk-acts">' + cs.act("search", { label: "act.search.label.find-in", data: { term: String(found.term || "") } }) + "</div>" : "";
@@ -146,18 +173,19 @@ export const findIn = Object.freeze({
   },
 
   acts: [
-    // R5: finding records nothing (`findin` is a read, K1468); the answer is kept in the screen's page memory.
+    // R5: finding records nothing (`findin` is a read, K1468); the answer is kept in the screen's page memory. R48 (6): a term, when
+    // filled, is found too, with no tick box for it.
     { op: "findin", label: "act.findin.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const s = String(view.subject || "").split("/")[0];
         if (!s) return { refuse: "screen.find-in.scope.none" };
-        const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
+        const KINDS = ["people", "money", "dates", "requirements", "events"];
         const on = function (id) { const v = cs.value(id); return v === true || v === "on" || v === "true"; };
         const ticked = {};
         const kinds = KINDS.filter(function (k) { ticked[k] = on("findin-kind-" + k); return ticked[k]; });
         const term = String(cs.value("findin-term") || "").trim();
+        if (term) kinds.push("term");
         if (!kinds.length) return { refuse: "screen.find-in.kindsfirst" };
-        if (kinds.indexOf("term") >= 0 && !term) return { refuse: "screen.find-in.termfirst" };
         cs.set("kinds", ticked);
         cs.set("term", term);
         cs.set("question", String(cs.value("findin-question") || ""));
@@ -175,21 +203,24 @@ export const findIn = Object.freeze({
       done: function (view, answer, cs) {
         const a = answer && Array.isArray(answer.kinds) ? answer : (answer && answer.result) || {};
         cs.set("found", { kinds: Array.isArray(a.kinds) ? a.kinds : [], term: (view.ui || {}).term || "", scope: a.scope || null });
+        cs.set("recorded", {});
       } },
     // Keep finding over the scope as documents arrive (answers R15's `find` form); the member's question, if chosen.
     { op: "standingquestionset", label: "act.standingquestionset.label.find-in", rereads: [],
       send: function (view, el, cs) {
         const s = String(view.subject || "").split("/")[0];
         if (!s) return { refuse: "screen.find-in.scope.none" };
-        const KINDS = ["people", "money", "dates", "requirements", "events", "term"];
+        const KINDS = ["people", "money", "dates", "requirements", "events"];
         const on = function (id) { const v = cs.value(id); return v === true || v === "on" || v === "true"; };
         const kinds = KINDS.filter(function (k) { return on("findin-kind-" + k); });
         const term = String(cs.value("findin-term") || "").trim();
+        if (term) kinds.push("term");
         if (!kinds.length) return { refuse: "screen.find-in.kindsfirst" };
-        if (kinds.indexOf("term") >= 0 && !term) return { refuse: "screen.find-in.termfirst" };
         const qid = String(cs.value("findin-question") || "");
-        const qs = view.data.questions && view.data.questions.value && Array.isArray(view.data.questions.value.hits) ? view.data.questions.value.hits : [];
-        const chosen = qs.filter(function (h) { return String(h.bundle_id) === qid; })[0];
+        const hits = view.data.questions && view.data.questions.value && Array.isArray(view.data.questions.value.hits) ? view.data.questions.value.hits : [];
+        const items = view.data.projectquestions && view.data.projectquestions.value && Array.isArray(view.data.projectquestions.value.items)
+          ? view.data.projectquestions.value.items.map(function (x) { return { bundle_id: String(x.inquiry), title: x.title }; }) : [];
+        const chosen = hits.concat(items).filter(function (h) { return String(h.bundle_id) === qid; })[0];
         // R38: as findin, the document's capture's fingerprint, never its record id.
         const pv = view.data && view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value : null;
         let pj = null;
@@ -203,70 +234,99 @@ export const findIn = Object.freeze({
         return { body: { question: chosen ? String(chosen.title || qid) : (term || kinds.join(", ")), find: find, cadence: "weekly", ends: ends } };
       },
       done: function (view, answer, cs) { cs.set("keeping", true); } },
+    // R47, R48: the recording acts, each its form's body from the result's passage (`view.parts.forms`); the result it was drawn on
+    // is kept for the acknowledgement `findin.recorded` (R48 (4)), and the passage keeps its acts and counts its facts.
     { op: "recordpersonfact", label: "act.recordpersonfact.label.find-in",
+      refusals: { BAD_VALIDITY: "refusal.BAD_VALIDITY" },
       send: function (view, el, cs) {
-        const f = {};
-        ["kind", "value", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"]
-          .forEach(function (n) { const v = cs.value(el.dataset.f + "-" + n); f[n] = v === null || v === undefined ? "" : String(v); });
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
-        const body = { person: it.entity || it.person || it.entity_id, kind: String(f.kind || "").trim(), value: String(f.value || it.words || "").trim(),
-          citation: { capture_sha: it.capture_sha, extent: it.extent } };
-        if ((view.ui || {}).question) body.question = view.ui.question;
-        return { body: body };
-      } },
+        view.ui.pending = { k: el.dataset.k, i: el.dataset.i, op: "recordpersonfact", kind: String(cs.value(el.dataset.f + "-kind") || ""), value: String(cs.value(el.dataset.f + "-value") || it.words || "") };
+        return view.parts.forms().body(cs, view, "recordpersonfact", el.dataset.f, it);
+      },
+      done: function (view, answer, cs) { cs.set("recorded", (function () {
+        const p = view.ui.pending || {};
+        const all = Object.assign({}, view.ui.recorded || {});
+        const a = answer && answer.result && typeof answer.result === "object" ? answer.result : answer || {};
+        const id = String(p.k) + "-" + String(p.i);
+        const prev = all[id] ? all[id].n : 0;
+        const name = String(a.name || a.person_name || "");
+        const fact = cs.w("screen.find-in.recorded.fact", { kind: { html: cs.w("screen.person.kind." + (p.kind || "other")) }, name: name, value: p.value || "" });
+        const target = a.person || a.entity || "";
+        const link = target ? cs.ref("person", String(target), cs.w("screen.person.name"), []) : cs.w("screen.person.name");
+        all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: { html: fact }, screen: { html: link } }) };
+        return all;
+      })()); } },
     { op: "recorddatedfact", label: "act.recorddatedfact.label.find-in",
       send: function (view, el, cs) {
-        const f = {};
-        ["kind", "value", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"]
-          .forEach(function (n) { const v = cs.value(el.dataset.f + "-" + n); f[n] = v === null || v === undefined ? "" : String(v); });
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
-        const body = { captureSha: it.capture_sha, extent: it.extent, kind: String(f.kind || "").trim(),
-          value: String(f.value || it.date || it.value || "").trim(), method: "typed" };
-        if ((view.ui || {}).question) body.question = view.ui.question;
-        return { body: body };
-      } },
+        view.ui.pending = { k: el.dataset.k, i: el.dataset.i, op: "recorddatedfact", value: String(cs.value(el.dataset.f + "-value") || it.date || it.value || "") };
+        return view.parts.forms().body(cs, view, "recorddatedfact", el.dataset.f, it);
+      },
+      done: function (view, answer, cs) { cs.set("recorded", (function () {
+        const p = view.ui.pending || {};
+        const all = Object.assign({}, view.ui.recorded || {});
+        const id = String(p.k) + "-" + String(p.i);
+        const prev = all[id] ? all[id].n : 0;
+        all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: '<a class="cs-ref" data-nav href="/app/timeline">' + cs.w("screen.timeline.name") + "</a>" } }) };
+        return all;
+      })()); } },
     // The member's own words why the group holds the city to it are the act's reason (interface-shell R11, K3002).
     { op: "standarddeclare", label: "act.standarddeclare.label.find-in", reasonField: "reason",
       send: function (view, el, cs) {
-        const f = {};
-        ["kind", "value", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"]
-          .forEach(function (n) { const v = cs.value(el.dataset.f + "-" + n); f[n] = v === null || v === undefined ? "" : String(v); });
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
-        return { body: { cite: String(f.cite || "").trim(), kind: String(f.kind || "").trim(), issuer: String(f.issuer || "").trim(),
-          reason: String(f.reason || "").trim(), text: it.content_id ? [String(it.content_id)] : [] } };
-      } },
+        view.ui.pending = { k: el.dataset.k, i: el.dataset.i, op: "standarddeclare", value: String(cs.value(el.dataset.f + "-cite") || "") };
+        return view.parts.forms().body(cs, view, "standarddeclare", el.dataset.f, it);
+      },
+      done: function (view, answer, cs) { cs.set("recorded", (function () {
+        const p = view.ui.pending || {};
+        const all = Object.assign({}, view.ui.recorded || {});
+        const a = answer && answer.result && typeof answer.result === "object" ? answer.result : answer || {};
+        const id = String(p.k) + "-" + String(p.i);
+        const prev = all[id] ? all[id].n : 0;
+        const target = a.standard || a.id || "";
+        all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("standard", String(target), cs.w("screen.standard.name"), []) : cs.w("screen.standard.name") } }) };
+        return all;
+      })()); } },
     { op: "recordfact", label: "act.recordfact.label.find-in",
       send: function (view, el, cs) {
-        const f = {};
-        ["kind", "value", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"]
-          .forEach(function (n) { const v = cs.value(el.dataset.f + "-" + n); f[n] = v === null || v === undefined ? "" : String(v); });
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
-        const body = { amount: String(f.amount || "").trim(), as_read: String(it.as_read || it.words || ""), currency: String(f.currency || "").trim(),
-          sign: "+", precision: "exact", kind: String(f.kind || "").trim(), phase: String(f.phase || "").trim(), basis: "budgetary",
-          period: { from: String(f.from || "").trim(), to: String(f.to || "").trim(), precision: "day" },
-          source: { capture_sha: it.capture_sha, extent: it.extent }, method: "typed" };
-        if ((view.ui || {}).question) body.question = view.ui.question;
-        return { body: body };
-      } },
+        view.ui.pending = { k: el.dataset.k, i: el.dataset.i, op: "recordfact", value: String(cs.value(el.dataset.f + "-amount") || it.amount || "") };
+        return view.parts.forms().body(cs, view, "recordfact", el.dataset.f, it);
+      },
+      done: function (view, answer, cs) { cs.set("recorded", (function () {
+        const p = view.ui.pending || {};
+        const all = Object.assign({}, view.ui.recorded || {});
+        const a = answer && answer.result && typeof answer.result === "object" ? answer.result : answer || {};
+        const id = String(p.k) + "-" + String(p.i);
+        const prev = all[id] ? all[id].n : 0;
+        const target = a.fact || a.id || "";
+        all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: target ? cs.ref("money", String(target), cs.w("screen.money.name"), []) : cs.w("screen.money.name") } }) };
+        return all;
+      })()); } },
     { op: "tabledeclare", label: "act.tabledeclare.label.find-in",
       send: function (view, el, cs) {
-        const f = {};
-        ["kind", "value", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"]
-          .forEach(function (n) { const v = cs.value(el.dataset.f + "-" + n); f[n] = v === null || v === undefined ? "" : String(v); });
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
-        const header = String(f.header || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean);
-        return { body: { source: it.content_id ? String(it.content_id) : { capture_sha: it.capture_sha, extent: it.extent }, header: header } };
-      } },
+        view.ui.pending = { k: el.dataset.k, i: el.dataset.i, op: "tabledeclare", value: String(cs.value(el.dataset.f + "-header") || "") };
+        return view.parts.forms().body(cs, view, "tabledeclare", el.dataset.f, it);
+      },
+      done: function (view, answer, cs) { cs.set("recorded", (function () {
+        const p = view.ui.pending || {};
+        const all = Object.assign({}, view.ui.recorded || {});
+        const id = String(p.k) + "-" + String(p.i);
+        const prev = all[id] ? all[id].n : 0;
+        all[id] = { n: prev + 1, html: cs.w("findin.recorded", { fact: p.value || "", screen: { html: cs.w("screen.find-in.name") } }) };
+        return all;
+      })()); } },
     // Cites the passage in the chosen question (citation's `found` form; every argument in the query).
     { op: "cite", label: "act.cite.label.find-in",
       send: function (view, el, cs) {

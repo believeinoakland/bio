@@ -44,6 +44,12 @@ const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.
 const START = ["project.start.title", "project.start.title.help", "project.start.go", "project.visibility.title", "project.visibility.start.hidden",
   "project.visibility.start.discoverable", "project.visibility.start.later"];
 
+// R47, R48: the lists the recording forms are chosen from (`find-in-forms.mjs`), each worded by key.
+const SEVEN_ZONES = ["America/Los_Angeles", "America/Denver", "America/Phoenix", "America/Chicago", "America/New_York", "America/Anchorage", "Pacific/Honolulu"];
+const DATE_KINDS = ["meeting", "adopted", "effective", "signed", "entered", "issued", "published", "received", "hearing", "period_covered", "edited"];
+const STANDARD_KINDS = ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"];
+const MONEY_KINDS = ["allocation", "balance", "behested", "contribution", "debt", "expenditure", "fee_charged", "gift", "income", "other", "payment", "revenue", "settlement", "transfer"];
+
 const WORDS_OF = {
   home: [...SHARED, "screen.home.name", "screen.home.purpose", "shell.group.unnamed", ...ACTS("home", ["promote", "startfrom", "taskresolve", "adoptversion", "keepversion"]),
     "act.projectjoin.label.home", "act.projectjoin.does",
@@ -106,10 +112,21 @@ const WORDS_OF = {
     "shell.unavailable.nothing.title", "shell.unavailable.home", "screen.findin.cite.supports", "screen.findin.cite.against", "screen.findin.cite.norole",
     "screen.find-in.sub", "screen.find-in.lookin", "screen.find-in.lookin.help", "screen.find-in.scope.document", "screen.find-in.scope.this", "screen.find-in.scope.held", "screen.find-in.scope.project",
     "screen.find-in.scope.none", "screen.find-in.what", ...["people", "money", "dates", "requirements", "events", "term"].map((k) => `screen.find-in.kind.${k}`),
-    "screen.find-in.term", "screen.find-in.term.help", "screen.find-in.question", "screen.find-in.question.help", "screen.find-in.question.none",
-    "screen.find-in.kindsfirst", "screen.find-in.termfirst", "screen.find-in.section", "screen.find-in.termsection", "screen.find-in.nothing", "screen.find-in.notread", "screen.find-in.notread.one",
+    "screen.find-in.term", "screen.find-in.term.help", "screen.find-in.question.help", "findin.question.choose", "screen.document.cite.noquestion",
+    "screen.find-in.kindsfirst", "screen.find-in.section", "screen.find-in.termsection", "screen.find-in.nothing", "screen.find-in.notread", "screen.find-in.notread.one",
     "screen.find-in.quote", "screen.find-in.passage", "screen.find-in.recorded", "screen.find-in.note", "screen.find-in.questionfirst", "screen.find-in.keeping",
-    ...["kind", "value", "date", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header"].map((f) => `screen.find-in.field.${f}`)],
+    ...["kind", "value", "date", "cite", "issuer", "reason", "amount", "currency", "phase", "from", "to", "header", "standardkind", "payee.short"].map((f) => `screen.find-in.field.${f}`),
+    // R47, R48: the recording forms, their lists by key, the acknowledgement, a passage's count and a match's place.
+    "screen.find-in.fact.office", "findin.prefilled", "screen.find-in.valid", "screen.find-in.valid.help", "screen.find-in.valid.from", "screen.find-in.valid.to",
+    "screen.find-in.valid.precision", "screen.find-in.valid.zone", ...["day", "minute", "second", "edtf"].map((p) => `label.timeprecisions.${p}`),
+    ...SEVEN_ZONES.map((z) => `label.timezones.${z}`), "refusal.BAD_VALIDITY",
+    ...["name", "birth", "death", "locality", "address", "contact"].map((k) => `screen.person.kind.${k}`),
+    "screen.timeline.datekind", ...DATE_KINDS.map((k) => `screen.timeline.datekind.${k}`), ...STANDARD_KINDS.map((k) => `screen.standard.kind.${k}`),
+    ...MONEY_KINDS.map((k) => `label.moneykinds.${k}`), ...["proposed", "adopted", "adjusted", "actual"].map((k) => `label.moneyphases.${k}`),
+    ...["assessed", "collected", "encumbered", "incurred", "paid"].map((k) => `label.moneystages.${k}`),
+    "screen.money.f.stage", "money.flow.step", "screen.find-in.flow.help", "screen.money.f.payer", "screen.money.f.payee", "findin.fieldneeded",
+    "findin.recorded", "screen.find-in.recorded.fact", "screen.person.name", "screen.timeline.name", "screen.standard.name", "screen.money.name",
+    "passage.facts.count", "passage.facts.count.one", "findin.match.sheet", "findin.cell.uncalculated", "findin.match.nameinpassage"],
   answers: [...SHARED, "screen.answers.name", "screen.answers.purpose", "screen.finder.words", "screen.finder.none", "screen.finder.wordsfirst", "mark.origin.search.name", "mark.origin.search.means",
     ...ACTS("answers", ["ask", "ruleanswer", "search", "standingquestionset", "standingquestionend"]), "act.search.label.finder",
     "ai.refused.limit", "ai.refused.limit.unjudged", "ai.refused.off", "ai.refused.projectkeptaway", "ai.refused.signinnotconnected", "refusal.ANSWER_MALFORMED",
