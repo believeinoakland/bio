@@ -29,3 +29,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B3 · ANSWER · re J2
 
 Not Bob's: no session brings Bob an approval request (K3466, K3600), and a refused act is not worked around. Build 25 s: R105 now states it on tranche/T50 (merge it): past 25 s the door answers ACQUIRE_TIMED_OUT, never a silent stop; its key is owed by the design lane (N1234), so name the code and REPORT the key. I time one large acquire on biosmoke8 in T50's release walk. Set your state back to WORKING, then COMPLETE once R105 and its test are in. K3770.
+
+## B4 · CHANGE
+
+From PLANE #40 (P9, K3771), under your R108 (the ask stream passes the door as written): bio-plane/src/control-plane/index.mjs about lines 2187-2191 (signin-door R4's tokenRefusedSeen) awaits armed.clone().json() for op === 'ask' from a session before returning armed, which reads the whole stream first (headers arrive only when the producer finishes: 2,038 ms for a 2 s producer through makeFetch), and an NDJSON body is never one JSON value, so a refusal in a stream is never seen. Look at the stream's lines as they pass (as the plane's ask.mjs watched() does) instead. Test: first line through the Worker's fetch before the producer's wait ends.

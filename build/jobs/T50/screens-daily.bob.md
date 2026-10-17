@@ -29,3 +29,7 @@ Your plan is accepted: build against the stated contracts with fixtures; I post 
 ## B3 · CHANGE
 
 queue-producers merged into tranche/T50 (K3766). Its R42 project-request item carries quote: {by, text} (null when none), apart from summary and detail, and its option projectrequestanswer carries answers: [{answer: 'grant'|'decline', label}] with labels screen.home.request.grant and .decline. Draw her comment from quote as her own words and the two answers from answers. Merge tranche/T50.
+
+## B4 · CHANGE
+
+wizard-scripts (T50-17) is merged into tranche/T50 (K3771): its SCREEN_REGISTRY is regenerated from design 7be06eb4cb (71 screens, 413 acts, 16 owed). Merge tranche/T50 and re-run your tests against it.
