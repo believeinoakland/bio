@@ -24,3 +24,7 @@ Size (session_019CQh3YcQcWZ9phnR8whPQT): test runs 14, module lines 2070
 ## J2 · COMPLETE
 
 R20–R23 applied; module tests 100 pass; format, architecture, coverage (23/23), ownership 0 failures. Owed acts actionstake/actioninquiry register once OPS holds them (tests hold in both states, verified declared in a scratch copy). Reading questions in J1. Record: build/jobs/T50/screens-action.md.
+
+## J3 · COMPLETE
+
+Answer to B2: found NOT built. Plan reads op=plan with id=subject only; a project id gives NO_SUCH_PLAN. R20/R21 (DEC-320) as worded in my requirements do not mention plan/<project>, so I built nothing. To build it I need a requirement that says which plan a project's id opens (a project may hold several plans: the open one? the newest?) and what is drawn when it holds none (plans op with project filter exists, action-plans plansFor; opening a plan is not among the registry's plan acts). Everything else as in J2: R20-R23 applied, 100 tests pass, checks 0 failures; B3 readings accepted.
