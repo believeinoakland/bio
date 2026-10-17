@@ -15,9 +15,10 @@
  * A part is matched by a path the edition's item is known by (its path in the manifest, a finding's id) or by its
  * SHA-256. */
 
+import { word } from "../setup-words/index.mjs";
+
 /* R28: the sentence stated wherever withheld bytes would have appeared. */
-export const WITHHELD_SENTENCE = "a court order this group complied with keeps these contents from being served here; "
-  + "the order and the record entry that names it are public (`court_orders`), and nothing was deleted";
+export const WITHHELD_SENTENCE = word("public-read.court_order_group");
 
 const EFFECTS = new Set(["remove", "redact", "seal", "unseal"]);
 const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x) : []);

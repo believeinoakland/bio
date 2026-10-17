@@ -3,6 +3,7 @@
    credential, asks no store and reads nothing of the group's record, so every group and every caller gets the same
    bytes; no other line describing Civicsmith is served on the public path; it names no place and writes nothing.
    Each claim has its negative control. */
+import { word } from "../../../src/setup-words/index.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, publishedSix } from "./fixture.mjs";
@@ -10,8 +11,8 @@ import { creditPage, CIVICSMITH_DESCRIPTION, CIVICSMITH_WHO } from "../../../src
 import { publicReadDoorOp, PUBLIC_READ_DOOR_OPS } from "../../../src/public-read/door.mjs";
 import { PUBLIC_READ_OWN_OPS } from "../../../src/public-read/reads.mjs";
 
-const DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
-const WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+const DESCRIPTION = word("public-read.free_software_groups");
+const WHO = word("public-read.neighborhood_issue_groups");
 const EXPECTED = { ok: true, name: "Civicsmith", description: DESCRIPTION, who: WHO };
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
