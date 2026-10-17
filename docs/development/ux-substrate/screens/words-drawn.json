@@ -7685,6 +7685,12 @@
    "en": "Every correction, withdrawal and court order on this case is listed on its docket.",
    "protected": false,
    "note": "DEC-310: the public page's corrections and orders; 'its docket' links to the docket"
+  },
+  {
+   "key": "screen.connect.check.ifstops",
+   "en": "If the check stops",
+   "protected": false,
+   "note": "DEC-310: screens-settings R41: the failed check, opened"
   }
  ],
  "rewrite": {

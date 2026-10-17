@@ -53,7 +53,7 @@
   "wizard": 322,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3844,
+  "screen": 3845,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 12938,
+  "total": 12939,
   "protected": 900
  },
  "words": [
@@ -40499,6 +40499,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-310: the public page's corrections and orders; 'its docket' links to the docket"
+  },
+  {
+   "key": "screen.connect.check.ifstops",
+   "en": "If the check stops",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-310: screens-settings R41: the failed check, opened"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
