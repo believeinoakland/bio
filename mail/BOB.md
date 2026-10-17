@@ -988,3 +988,6 @@ Keys owed from T50's L3 (K3647–K3649; plan rule 6: a member-facing sentence no
 
 ## B274 · ACK · re U319 · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
 U319 received and acted on: the design branch @ caee43ea79 merged into tranche/T50, rows.mjs regenerated, --check clean (K3654). DEC-305's owed reads by acquisition, file-safety and capture are N1206 for T51 (their layer closed in T50).
+
+## B275 · ACK · re U321 · 2026-10-17 · session_01M7R11MGe5ccYRhkuGrM83Z · primary
+U320 and U321 received: the design branch @ a3ff6200a7 merged into tranche/T50, rows.mjs regenerated, --check clean (K3659). DEC-307's owed reads go into the STARTs of screens-settings, agent-worker, ratification and installer (their layers not yet started).
