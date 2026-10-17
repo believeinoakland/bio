@@ -17,3 +17,7 @@ Size (session_018aSa4ST4fZKoWn5sZ9SNHw): test runs 8, module lines 2653
 ## J1 · COMPLETE
 
 T50-81 done: R48's captured-for reader answers capture's asks (R94) beside its requests, same sight/title/asker/waiting rules, a pair in both once; asks empty = as before. 127/127 module tests pass (3 new unit + 1 plane test through the real acquire for, promote, heldcaptures). format, architecture, coverage (56/56), ownership: 0 failures. Nothing deferred; nothing found elsewhere. R48's not-yet-met marker is yours to lift. See record.
+
+## Re-run after B2 (CHANGE)
+
+Merged `tranche/T50` (inquiry, basis-versions, run-rules, ai-use in) into the branch, no conflict. `node --test bio-plane/test/m/capture-requests/`: 127 tests, 127 pass, 0 fail, 0 skipped, against the real modules. Checks as before, 0 failures. No change to the module.
