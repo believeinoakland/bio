@@ -39,3 +39,12 @@ REPORT J1: T50-8 capture, for the design lane and for the requirement text (deta
 3. acquisition.string.attempt_reported is in capture's reads but unreachable (attest always reports an attempt); held and read by say(), no fixture draws it.
 4. New store routes capturegrade and opencaptures are in captureOps; no ops-map, op-declarations or affordances test went red for them (the users' tests fail test for test as at the base). Their grades, specs and routes are L11's.
 5. doorbell/held.test.mjs imports record-grammar without declaring it in uses (the only architecture failure over every module; doorbell's).
+
+## J2 · COMPLETE
+
+COMPLETE J2: T50-8 capture done on job/T50/capture (record: build/jobs/T50/capture.md).
+R94 recordCapturedFor (table captured_for, purge-declared; once per capture/question/member at the first instant); R83/R77/R79: the reader is handed asks [{question, asker}], this module names none itself; R95 captureGradeOf and op route capturegrade; R73: openCaptures by name from the merged acquisition, liveCaptureSessions and recordCapturedFor on the store handed in, and a route opencaptures. N1079 found met. Plan rule 6: 55 keys through a words.mjs, refusal rows and every listed sentence by key, 'team' for 'group'.
+Run against the real acquisition (B2): acquire with for records once through recordCapturedFor, also when the bytes were held; a daemon's for and a refused for record nothing.
+Own-module fix: t49's clock harness raced a thread-pool digest (about 1 failure in 14 runs); now deterministic, 0 in 40, no assertion weakened.
+Tests: capture 179/179. format, architecture capture, coverage capture (48/48), ownership: 0 failures. The users' tests: the same failures as at the base, test for test.
+Size (session_01Fvr26rxm22dLhkoGV1L8eD): test runs 20, module lines 3518
