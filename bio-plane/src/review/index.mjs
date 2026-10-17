@@ -73,6 +73,8 @@ import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseAccountOf } from "../case-account/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
 import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
@@ -259,15 +261,19 @@ const ROLLBACK = Symbol("review-dry-run");
 export class Review {
   #deps;
   #seeded = false;
+  /* R35: where the governing time zone is read (local-facts R2; jurisdictions R41 as its fallback). */
+  #localFacts; #combine;
 
   constructor({ storage, record, membership, host = null, strength = null, basisVersions = null, publication = null,
                 caseTensions = null, caseAuthoring = null, caseInputs = null, caseAccount = null, ratification = null,
-                caseGrammar: grammar = null, now = null } = {}) {
+                caseGrammar: grammar = null, localFacts = undefined, combine = combineProfiles, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, caseInputs,
                    caseAccount, ratification, caseGrammar: grammar };
+    this.#localFacts = localFacts;
+    this.#combine = typeof combine === "function" ? combine : null;
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
 
@@ -291,6 +297,52 @@ export class Review {
   get caseGrammar() { return this.#deps.caseGrammar || caseGrammar; }
 
   migrate() { migrateReview(this.sql); }
+
+  /** R35: the time zone that governs on this instance, as `retrieval` R69 states it: local-facts' governing value (its
+   *  R2) for the active profiles' `time_zone`, else the profiles' own (`jurisdictions` R41), else null (never UTC in its
+   *  place); two profiles of different zones govern none. Never throws; writes nothing. */
+  #zone() {
+    let ids = null;
+    try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
+    if (!Array.isArray(ids) || !ids.length) return null;
+    const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
+    try {
+      if (this.#localFacts === undefined) {
+        this.#localFacts = null;
+        if (this.#deps.host) this.#localFacts = localFactsOf(this.#deps.host);
+      }
+      const lf = this.#localFacts;
+      if (lf && typeof lf.factStatus === "function") {
+        const zones = new Set();
+        for (const id of ids) {
+          const r = typeof id === "string" ? lf.factStatus({ path: `${id}/time_zone` }) : null;
+          const z = r && r.ok !== false && r.governs ? ok(r.governs.value) : null;
+          if (z) zones.add(z);
+        }
+        if (zones.size === 1) return [...zones][0];
+        if (zones.size > 1) return null;
+      }
+    } catch { /* fall through to the profiles */ }
+    try {
+      const c = this.#combine ? this.#combine(ids) : null;
+      return c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
+    } catch { return null; }
+  }
+
+  /* R12: one id as the given reader may see it: present with its type, state, role and text, or absent with its role. */
+  #finding(raw, roles, gate) {
+    const id = String(raw ?? "").trim();
+    /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
+       written from the answer does not lose it. It discloses nothing the target id beside it does not. */
+    const role = roles && typeof roles === "object" ? roles[id] ?? null : null;
+    const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+                         WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
+    if (!b) return { target: id, present: false, role,
+                     detail: "this draft names a finding its editor cannot read, or one that does not exist." };
+    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+    return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
+             text: md ? md.content : null };
+  }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -621,19 +673,7 @@ export class Review {
     /* R12: THE FINDINGS ARE READ AS THE DRAFT'S EDITOR SEES THEM, for both doors: the grant is the editor's act, so a
        recipient is shown exactly what the editor put in front of them and never a document the editor could not see. */
     const gate = viewerPredicate(`member:${d.updated_by}`);
-    const findings = targets.map((raw) => {
-      const id = String(raw ?? "").trim();
-      /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
-         written from the answer does not lose it. It discloses nothing the target id beside it does not. */
-      const role = params.roles && typeof params.roles === "object" ? params.roles[id] ?? null : null;
-      const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
-                           WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-      if (!b) return { target: id, present: false, role,
-                       detail: "this draft names a finding its editor cannot read, or one that does not exist." };
-      const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
-               text: md ? md.content : null };
-    });
+    const findings = targets.map((raw) => this.#finding(raw, params.roles, gate));
     const gates = this.#gates(d);
     const cap = listCap(limit);
     const commentRows = this.#rows(`SELECT c.comment_id, c.author_kind, c.author, c.grant_id, c.text, c.at,
@@ -651,16 +691,19 @@ export class Review {
     let grantPart;
     if (grant) {
       grantPart = { grant: { grant_id: grant.grant_id, recipient: grant.recipient, issued_by: grant.issued_by,
-                             issued_at: grant.issued_at, until: grant.until ?? null } };
+                             issued_at: grant.issued_at, until: grant.until ?? null,
+                             zone: this.#zone() } };
     } else {
       const lapseAt = this.#when();
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
                                            revoked_by, revoked_at, until FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
+      const zone = this.#zone();
       const grants = grantRows.slice(0, cap).map((g) => {
         const live = !g.revoked_at && !this.#lapsed(g.until, lapseAt)
                      && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
-        return { ...g, live, edition: g.case_id ? g.edition : live ? statedEdition(ident, !!params.newCase) : null };
+        return { ...g, live, zone,
+                 edition: g.case_id ? g.edition : live ? statedEdition(ident, !!params.newCase) : null };
       });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
@@ -790,9 +833,39 @@ export class Review {
                statement_by: d.statement_by ?? null,
                read: `op=reviewcopy&draft=${d.draft_id}` };
     });
+    const { concluded, truncated: concludedTruncated } = this.#concluded(pid, viewer, cap);
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
-             total, limit: cap, truncated: total > drafts.length };
+             total, limit: cap, truncated: total > drafts.length, concluded, concluded_truncated: concludedTruncated };
   }
+
+  /* R36: the questions the project has concluded (ratification R1's `caseConclusionFor` answers `concluded` for the
+     project and the question), each with its findings as R12 reads them for the viewer, oldest conclusion first, at most
+     `cap`. The candidates are the questions the project's own document carries `conclusions` rows for. */
+  #concluded(pid, viewer, cap) {
+    const doc = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);
+    let fm = {};
+    try { fm = doc ? parseFrontmatter(String(doc.content ?? "")).data || {} : {}; } catch { fm = {}; }
+    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];
+    const ids = [...new Set(rows.map((r) => (r && typeof r === "object" ? String(r.inquiry ?? "").trim() : "")).filter(Boolean))];
+    const gate = viewerPredicate(viewer);
+    const found = [];
+    for (const inq of ids) {
+      const b = this.#one(`SELECT b.bundle_id, b.title, b.current_state FROM bundles b
+                           WHERE b.bundle_id=? AND b.object_type='inquiry' AND (${gate.sql})`, inq, ...gate.args);
+      if (!b) continue;
+      const c = this.ratification.caseConclusionFor(pid, inq, viewer, b.current_state);
+      if (!c || c.state !== "concluded" || c.relationship !== "project") continue;
+      found.push({ inquiry: inq, title: b.title ?? null, concluded_at: c.at ?? null, concluded_by: c.by ?? null,
+                   findings: [this.#finding(inq, null, gate)] });
+    }
+    /* by instant, never by string; an unparseable stamp is not ranked and goes last, keeping its order */
+    found.sort((x, y) => {
+      const ux = Number.isNaN(Date.parse(x.concluded_at ?? "")), uy = Number.isNaN(Date.parse(y.concluded_at ?? ""));
+      return ux || uy ? Number(ux) - Number(uy) : instantOrder(x.concluded_at, y.concluded_at);
+    });
+    return { concluded: found.slice(0, cap), truncated: found.length > cap };
+  }
+
   /* ---- T41: approvals before signing (D60; R30–R32) and the review comments a case carries (D61; R33) ---- */
 
   /** R30, R32: the rule in force, the latest set appended, or null when none was ever set or the latest turned it off. */

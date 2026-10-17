@@ -201,7 +201,8 @@ test("R19: a project with no drafts is a stated zero, the whole list and not a r
     const l = w.r.list({ project: Q, viewer, limit });
     assert.deepEqual(w.snapshot(), before, "writes nothing");
     assert.deepEqual(l, { ok: true, kind: "review-drafts", project: Q, drafts: [], count: 0, total: 0,
-                          limit: limit === "1" ? 1 : REVIEW_LIST_MAX, truncated: false }, `${viewer} ${limit}`);
+                          limit: limit === "1" ? 1 : REVIEW_LIST_MAX, truncated: false,
+                          concluded: [], concluded_truncated: false }, `${viewer} ${limit}`);
     assert.notEqual(JSON.stringify(l), DEAD);
   }
   /* the zero is only for those with standing: an outsider still reads the dead answer, the same bytes as a project that holds drafts */

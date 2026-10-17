@@ -19,3 +19,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 L8 merge order: `modules.json`'s (publish-schedule, public-read, ratification, case-checker, case-import, case-account, review); a job that uses no unmerged L8 job merges as soon as it is complete.
 
 Partial reading (Bob, K3678): if you are about to read any document of your reading set only in part, stop at once and post BLOCKED (cause `reading`, naming the document and its size). Prune what you own yourself, keeping every binding word; a build-state document BOB trims or splits and answers with a CHANGE. Then read it whole and continue if your context is under half its window, else post BLOCKED (cause `context`) for a restart. Your layer contract is `build/layers.md`, read whole (K3679).
+
+## B2 · CHANGE
+
+publish-schedule is merged (K3725): its R1 reads the governing zone as retrieval R69 reads it. Merge tranche/T50 into your branch and read R44's zone through it.

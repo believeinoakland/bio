@@ -13,13 +13,13 @@
   "date": 14,
   "queue": 159,
   "transcribe": 19,
-  "capture": 70,
+  "capture": 71,
   "document": 61,
   "question": 79,
   "connection": 34,
   "guide": 7,
   "prepared": 2,
-  "label": 204,
+  "label": 211,
   "project": 52,
   "grouprule": 1,
   "refusal": 1964,
@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3912,
+  "screen": 3919,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -66,7 +66,7 @@
   "shell": 153,
   "settings": 4,
   "entity": 33,
-  "find": 26,
+  "find": 33,
   "risk": 12,
   "law": 8,
   "action": 4,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13060,
+  "total": 13082,
   "protected": 901
  },
  "words": [
@@ -41320,6 +41320,160 @@
    "note": "DEC-320: R21: stake.ask.undetermined in a fold"
   },
   {
+   "key": "capture.forquestion.refused.summary",
+   "en": "A question that isn't the project's",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: screens-intake R29: refusal.BAD_FOR in a fold"
+  },
+  {
+   "key": "find.row.unwatch",
+   "en": "Take off my watch list",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: screens-daily R45: watchitem with on: false"
+  },
+  {
+   "key": "find.secondlook.note",
+   "en": "Why look again",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: R45: secondlook's required note"
+  },
+  {
+   "key": "find.secondlook.note.help",
+   "en": "Your note is required: it says what the second look should check.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-321: R45"
+  },
+  {
+   "key": "label.timezones.America/Los_Angeles",
+   "en": "Pacific Time (Los Angeles)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.America/Denver",
+   "en": "Mountain Time (Denver)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.America/Phoenix",
+   "en": "Arizona Time (Phoenix)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.America/Chicago",
+   "en": "Central Time (Chicago)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.America/New_York",
+   "en": "Eastern Time (New York)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.America/Anchorage",
+   "en": "Alaska Time (Anchorage)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "label.timezones.Pacific/Honolulu",
+   "en": "Hawaii Time (Honolulu)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-settings R45: a zone chosen by name from the IANA list, never shown as a code; other zones take the CLDR exemplar-city name in this form"
+  },
+  {
+   "key": "screen.group.timezone.two.summary",
+   "en": "When two places give different zones",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R45: two active profiles"
+  },
+  {
+   "key": "screen.group.timezone.two",
+   "en": "Your places give different time zones, so none is named as your team's. Correct each place's zone on its own.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R45: each profile asked once"
+  },
+  {
+   "key": "screen.group.timezone.none.summary",
+   "en": "When no time zone is held",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R45: no zone, and no UTC drawn"
+  },
+  {
+   "key": "find.browse.more",
+   "en": "Your team holds more than is shown here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-daily R44: truncated, paged by next"
+  },
+  {
+   "key": "find.browse.showmore",
+   "en": "Show more",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R44: the next page"
+  },
+  {
+   "key": "find.browse.nosince.summary",
+   "en": "Before your first visit to Home",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R44: since null"
+  },
+  {
+   "key": "find.browse.nosince",
+   "en": "“New since you last looked” is offered once you have visited Home: it counts from that visit.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R44: since null draws no new choice"
+  },
+  {
+   "key": "screen.published.corrections.state.none",
+   "en": "none",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: screens-publish R34: the mockup states"
+  },
+  {
+   "key": "screen.published.corrections.state.one",
+   "en": "one",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R34"
+  },
+  {
+   "key": "screen.published.corrections.state.some",
+   "en": "several",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R34"
+  },
+  {
+   "key": "screen.published.corrections.state.undetermined",
+   "en": "can't be counted",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-322: R34: undetermined draws only the docket sentence"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -81123,7 +81277,7 @@
   },
   {
    "key": "act.taskresolve.label.home",
-   "en": "Act on an item",
+   "en": "Open the item",
    "protected": true,
    "source": "registry.json"
   },
@@ -81705,7 +81859,7 @@
   },
   {
    "key": "act.taskresolve.label.queue",
-   "en": "Act on an item",
+   "en": "Open the item",
    "protected": true,
    "source": "registry.json"
   },
@@ -81849,7 +82003,7 @@
   },
   {
    "key": "act.owed_secondlook.label.finder",
-   "en": "Flag for a second look",
+   "en": "Flag for a second look…",
    "protected": true,
    "source": "registry.json"
   },
