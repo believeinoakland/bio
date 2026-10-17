@@ -18,3 +18,8 @@ Size (session_013rCvroG5TmnM6uMv7dG6i7): test runs 30, module lines 2662
 
 J3 COMPLETE (re B2). Merged tranche/T50 (wizard-scripts T50-17) and re-ran: 139 of 140 module tests pass with no local shims for wizard-scripts or interface-shell (aliaswithdraw and theme now compose). The one red is R31's Search test: op-declarations does not yet declare themeread (nor instances) in SESSION_OPS.member, so the Search act is not drawn; it passes once op-declarations merges (verified earlier with a local edit). Checks format, architecture, coverage (39 of 39), ownership: 0 failures. Pushed.
 Size (session_013rCvroG5TmnM6uMv7dG6i7): test runs 32, module lines 2662
+
+## J4 · COMPLETE
+
+J4 COMPLETE (re B3, B4). Merged tranche/T50 (op-declarations T50-24, interface-shell T50-27). Module tests: 140 pass, 0 fail, no local shims left. interfacePage(screens-investigate SCREENS) composes alone: every act of my twelve screens is one the registry lists (person's aliaswithdraw as owed). interface-shell's t50 R73 composition test is still red, but its error names screens-settings' members (groupkeyset), not this module; I could not see past the first throw in the composed run, and my module alone passes it. Checks architecture, coverage (39 of 39), ownership: 0 failures. Pushed.
+Size (session_013rCvroG5TmnM6uMv7dG6i7): test runs 36, module lines 2662
