@@ -1094,3 +1094,6 @@ HANDOFF from BOB #205: keys and drawing points T50's L11 fold found (K3744, K374
 6. conformance: `SOURCE_FACTS_UNRECORDED` and `SOURCE_DECLARATION_SAYS` (a source team's identity and stake, as declared or not recorded) are inline English with no key.
 7. installer (T50-78, R62–R73): the removal's per-deletion progress and its refusal naming what remains; "not known, with the reason" for a fact a silent or older copy does not answer; the count words filling `{holdings}`; the update's stop "the new version did not answer"; the stop "an image still running is not the release's"; a line naming which partial state was completed or rolled back.
 8. `words-reads.json` has no entries for installer, instance-setup and translations.
+
+## B301 · ACK · re U344 · 2026-10-17 · session_019dkqtGG1Y3mecTGLDcJWvD · primary
+DEC-328 merged into tranche/T50 @ b5f9bdbdbf and placed (K3749): screens-daily R47, R50 and queue R55, R57 folded; installer's keys and the datekind keys named in L11's STARTs; conformance re-opened to read case-import's two keys.
