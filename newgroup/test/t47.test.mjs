@@ -10,6 +10,7 @@ import { HOSTING_CONTROL } from "../../bio-plane/src/setup-fleet.mjs";
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { PROFILE_CHOICES, ALLOWED, BEFORE_CLOUDFLARE_CONTROL, STYLESHEET, ASSET_PREFIX, UPDATE_KEEPS, LEFT_OUT, PAGE_CSS } from "../src/ui.mjs";
 import { RELEASE_VERSION } from "../src/release.mjs";
+import { word } from "../src/words.mjs";
 import { pageWorld, req, run, begin, callback, script, realFetch, release, armWith, restoreSigners, SIGNER, bump, VPC_ID, jres } from "./fixture.mjs";
 
 const text = async (path) => (await req(path)).text();
@@ -42,24 +43,31 @@ test("R50 GET / asks only the permanent short name (R41's dialog) and the places
   const choose = section(home, "stage-choose"), before = section(home, "stage-before");
   assert.ok(choose && before, "two stages");
   /* The first stage's asks: the short name and the places, nothing else. */
-  assert.deepEqual(controls(choose), ["input#slug", ...PROFILE_CHOICES.map(() => "input#[profile]")]);
-  assert.match(choose, /<h2>Your group's short name<\/h2>/);
-  assert.match(choose, /<h2>Your group's places<\/h2>/);
+  /* (R72, DEC-257) the places' "none of these" is a choice of its own, `profile-none`. */
+  assert.deepEqual(controls(choose), ["input#slug", ...PROFILE_CHOICES.map(() => "input#[profile]"), "input#profile-none[profile-none]"]);
+  assert.match(choose, /<h2>Your team&#39;s short name<\/h2>/);
+  assert.match(choose, /<h2>Your team(&#39;|')s places<\/h2>/);
   /* What is needed, in one block, before the asks: R23's prerequisites and (T46) the parts the carried release cannot install. */
   assert.equal([...home.matchAll(/<h2>What you need<\/h2>/g)].length, 1, "one block");
   const need = section(home, "need");
   assert.ok(choose.indexOf(need) >= 0 && choose.indexOf(need) < choose.indexOf('id="slug"'), "the block comes before the asks");
-  for (const said of [/Workers Paid plan/, /\$5 a month/, /payment method on the account/, /Workers Containers permission/,
-      /built-in file scanner and safe view/, /files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made/,
-      /member's own Claude subscription/, /used only with an API key: a member's own, or your group's/])
-    assert.match(words(need), said);
+  /* R23, R57: the prerequisites are the design's keys, and the assistant's is a Claude plan with cloud sessions (nothing ties it to a container). */
+  const needWords = words(need);
+  for (const k of ["screen.install.need.cloudflare", "screen.install.cf.containers", "screen.install.need.claude"])
+    assert.ok(needWords.includes(word(k)), k);
+  for (const said of [/Workers Paid plan/, /\$5 a month/, /payment method/, /built-in file scanner and the safe view/,
+      /files are kept and shown but not scanned/, /Claude plan with cloud sessions, which an organi[sz]ation can turn off/])
+    assert.match(needWords, said);
+  assert.doesNotMatch(needWords, /member's own Claude subscription/, "R57: the assistant is not tied to a container");
   if (LEFT_OUT) assert.ok(need.includes(LEFT_OUT), "the parts left out, in the same block");
   /* Before Cloudflare: hidden until the dialog's confirming act; what will be allowed, one plain line per scope R2 asks; R34's words. */
   assert.match(before, /^<div class="ng-stage" id="stage-before" hidden>/);
   assert.match(before, /<h1>Let this installer into your Cloudflare account<\/h1>/);
-  assert.equal(ALLOWED.length, CFG.SCOPES.length, "one line for each scope asked");
+  /* (R72) the design's four lines cover the five scopes: the scripts and the storage share one (`screen.install.cf.programs`). */
+  assert.deepEqual([...ALLOWED], ["programs", "plan", "containers", "join"].map((k) => word("screen.install.cf." + k)));
+  assert.equal(CFG.SCOPES.length, 5);
   const allowed = section(before, "allowed");
-  assert.deepEqual([...allowed.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]), [...ALLOWED]);
+  assert.deepEqual([...allowed.matchAll(/<li>([^<]*)<\/li>/g)].map((m) => m[1]), [...ALLOWED].map(escd));
   assert.ok(!/[a-z]+(?:-[a-z]+)*\.(write|read|bind)\b/.test(words(allowed)), "plain words, never a scope's code");
   const control = section(before, "control-before");
   assert.ok(control.includes(`<h2>${BEFORE_CLOUDFLARE_CONTROL}</h2>`));
@@ -103,7 +111,7 @@ test("R50 GET / asks only the permanent short name (R41's dialog) and the places
 
 /* ------------------------------------------------------------------------------------------- R51 the progress page */
 
-test("R51 the progress page draws one plain line per step as it starts and ends; a stop names the step, what to do, and \"nothing was created\" where R4 holds; the finished panel shows the checks, the one-time password and address once, the probe key behind \"most groups never need it\", and hands over to <address>/app/setup#boot=<password>", async () => {
+test("R51 the progress page draws one plain line per step as it starts and ends; a stop names the step, what to do, and \"nothing was created\" where R4 holds; the finished panel shows the checks, the one-time password and address once, the probe key behind \"most teams never need it\", and hands over to <address>/app/setup#boot=<password>", async () => {
   /* One line per step, drawn as it starts and redrawn as it ends: every step started ends, ok or not, and no step is drawn twice. */
   armWith(SIGNER.line);
   const fine = await run({ slug: "lines-ok", rel: await release({ version: NEXT }) });
@@ -123,15 +131,20 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
 
   /* The stops before `install` (R4): each names the step it stopped at (the line in progress), says nothing was created,
      and says what to do. */
-  const stops = [["auth", { tokenFail: true }], ["acct", { accountsFail: true }], ["fresh", { settingsFail: true }],
-    ["fresh", { pre: { "stop-fresh-taken": [] } }, "stop-fresh-taken"], ["fresh", { preBuckets: ["bio-captures"] }],
+  /* An account lookup that keeps failing is a lasting stop (R66) that names its step and leaves nothing half-installed. */
+  const lasting = await run({ slug: "stop-lasting", settingsFail: true });
+  assert.equal(lasting.page.failed.s, lasting.page.events.find((e) => e.k === "step" && e.id === "fresh").label);
+  assert.match(lasting.page.failed.d, /Nothing is left half-installed/);
+  const stops = [["auth", { tokenFail: true }], ["acct", { accountsFail: true }],
+    ["fresh", { pre: { "stop-fresh-taken": [] } }, "stop-fresh-taken"],
     ["plan", { plan: "free" }], ["plan", { plan: "unknown" }], ["r2", { r2: "refused" }]];
   for (const [step, opts, slug] of stops) {
     const w = await run({ slug: slug || `stop-${step}`, ...opts });
     const label = w.page.events.find((e) => e.k === "step" && e.id === step).label;
     assert.equal(w.page.failed.s, label, `${step}: the stop names its step`);
-    assert.match(w.page.failed.p, /[Nn]othing was created/, `${step}: what happened`);
-    assert.match(w.page.failed.d, /^To continue: \S/, `${step}: what to do`);
+    /* (R66, R70) the design's stops word "nothing was created" in the stop itself or beside it, and what to do in the last line. */
+    assert.match(`${w.page.failed.h} ${w.page.failed.p} ${w.page.failed.d}`, /[Nn]othing was created/, `${step}: what happened`);
+    assert.match(w.page.failed.d, /\S/, `${step}: what to do`);
     assert.equal(w.page.done, null);
   }
   /* Control: a stop after the install (no address) names its step and what to do, and never says nothing was created. */
@@ -146,20 +159,20 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
   assert.equal(url, "https://lines-ok.grp.workers.dev");
   assert.equal(fine.raw.split(boot).length - 1, 1, "the one-time password, once");
   assert.equal([...done.matchAll(/id="out-url"/g)].length, 1, "the address, once");
-  assert.match(done, /<h2>Your one-time password: save it now<\/h2>/);
+  assert.ok(done.includes(`<h2 id="otp-head">${word("screen.install.otp.head")}</h2>`), "R73: the password is introduced as one-time");
   /* The checks: each a line with its outcome in a word; all passed on a confirmed install. */
   const checks = section(done, "checks");
   const rows = [...checks.matchAll(/<div class="cs-row" data-r="([a-z]+)"><span class="mk">([^<]+)<\/span><span>([^<]+)<\/span>/g)];
   assert.equal(rows.length, 4);
   assert.deepEqual(rows.map((r) => r[2]), ["Passed", "Passed", "Passed", "Passed"]);
-  assert.match(rows[0][3], /answers at its address/);
+  assert.equal(rows[0][3], word("screen.install.ready.answers") + ".");
   assert.match(rows[1][3], new RegExp(`Every part runs release ${NEXT.replace(/\./g, "\\.")}`));
   assert.match(rows[2][3], /reads back as release/);
-  assert.match(rows[3][3], /No log on your Cloudflare account records who opens which file/);
+  assert.equal(rows[3][3], word("screen.install.ready.nolog") + ".");
   assert.ok(done.indexOf('id="checks"') < done.indexOf('id="out-boot"'), "the checks, then the password");
-  /* The probe key, folded behind "most groups never need it", closed. */
+  /* The probe key, folded behind "most teams never need it", closed. */
   const probe = section(done, "probe-fold");
-  assert.match(probe, /^<details class="ng-fold" id="probe-fold"><summary>A probe key, for a monitoring service \(most groups never need it\)<\/summary>/);
+  assert.match(probe, /^<details class="ng-fold" id="probe-fold"><summary>A probe key, for a monitoring service \(most teams never need it\)<\/summary>/);
   assert.match(probe, /id="out-probe">[^<]+</);
   assert.ok(!/id="out-probe"/.test(done.replace(probe, "")), "the probe key is nowhere else");
   /* The hand-over: to the setup screen, the password in the fragment, read from the panel at the click. */
@@ -182,14 +195,14 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
 
 /* -------------------------------------------------------------------------------------------- R52 the update page */
 
-test("R52 GET /update draws the version before and after and \"Continue to Cloudflare to update\"; a stop says your group's Civicsmith keeps running as it was", async () => {
+test("R52 GET /update draws the version before and after and \"Continue to Cloudflare to update\"; a stop says your team's Civicsmith keeps running as it was", async () => {
   const upd = await text(UPDATE_PATH);
   const versions = section(upd, "versions");
-  assert.match(words(section(versions, "version-before")), /Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it/);
-  assert.ok(section(versions, "version-after").includes(`release ${NEXT}, the release chosen in your group&#39;s Settings › Updates`));
+  assert.match(words(section(versions, "version-before")), /Your team's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it/);
+  assert.ok(section(versions, "version-after").includes(`release ${NEXT}, the release chosen in your team&#39;s Settings › Updates`));
   assert.match(upd, /<button id="go" class="cs-btn" data-tone="primary">Continue to Cloudflare to update<\/button>/);
   assert.ok(upd.includes(UPDATE_KEEPS));
-  assert.equal(UPDATE_KEEPS, "If a step stops, your group's Civicsmith keeps running as it was.");
+  assert.equal(UPDATE_KEEPS, "If a step stops, your team's Civicsmith keeps running as it was.");
   /* Once read, the version before and after are drawn: on the progress line and the last screen. */
   const planeBase = (slug, v) => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
     { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
@@ -199,12 +212,12 @@ test("R52 GET /update draws the version before and after and \"Continue to Cloud
   restoreSigners();
   assert.equal(w.page.label("up"), `Putting release ${NEXT} in place…`);
   const v = section(w.page.done, "versions");
-  assert.match(words(v), /Before Your group's Civicsmith ran release 0\.70\.0\./);
+  assert.match(words(v), /Before Your team's Civicsmith ran release 0\.70\.0\./);
   assert.match(words(v), new RegExp(`After This update: release ${NEXT.replace(/\./g, "\\.")}, signed by Civicsmith\\.`));
   assert.match(w.page.done, /it ran 0\.70\.0\./);
   /* Control: a version before that could not be read is said so, never guessed. */
   const blind = await run({ slug: "upd-blind", mode: "update", pre: { "upd-blind": planeBase("upd-blind", "0.70.0") }, subdomain: null });
-  assert.match(words(section(blind.page.done, "versions")), /The release your group's Civicsmith ran before could not be read\./);
+  assert.match(words(section(blind.page.done, "versions")), /The release your team's Civicsmith ran before could not be read\./);
   /* Every stop of an update says it keeps running as it was; the install's stops never say so. */
   for (const opts of [{ tokenFail: true }, { accountsFail: true }, {}, { refuseUpdate: true }]) {
     const slug = "upd-stop-" + (Object.keys(opts).join("").toLowerCase() || "none");
@@ -213,8 +226,7 @@ test("R52 GET /update draws the version before and after and \"Continue to Cloud
     assert.ok(s.page.failed, JSON.stringify(opts));
     if (opts.refuseUpdate) {
       /* R55's stop: what stopped it, that it runs as before, and what to do (installer.update.stopped). */
-      assert.match(s.page.failed.p, /runs release 0\.70\.0 as before; nothing changed\.$/);
-      assert.match(s.page.failed.d, /^Try again; /);
+      assert.match(s.page.failed.h, /runs release 0\.70\.0 as before; nothing changed\. Try again; /);
       continue;
     }
     assert.ok(s.page.failed.p.endsWith(UPDATE_KEEPS), `${JSON.stringify(opts)}: ${s.page.failed.p}`);

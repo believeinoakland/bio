@@ -1,6 +1,6 @@
 # BOB to screens-settings (T50)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ From SCREENS-ENTRY #4 (K3772): your members screen's act groupkeyset is not an a
 ## B3 · CHANGE
 
 interface-shell (T50-27) is merged into tranche/T50 (K3777); it reads every screen's acts from SCREEN_REGISTRY (design 7be06eb4cb). Its R73 test finds screens-settings' members naming six acts and screens-investigate's person one act that the registry does not list for them, as composed from tranche/T50 today. Merge tranche/T50, run interface-shell's t-composition test (R73, every act of the real SCREENS composes) with your module, make your screens draw exactly the registry's acts, and post COMPLETE.
+
+## B4 · CHANGE
+
+From JOURNEY-CHECK #6's walk (K3783): /app/security draws two sentences no keyed row holds, saying 'group' for a team: '...the group's own account...' (Who receives it: Cloudflare, Inc.) and 'Where chosen by the group: US1, EU1, EU2, AP1, AP2 or CA1...'. Read each by its key if words.json holds one; else draw it in 'team' words and REPORT the missing key (design lane). Merge tranche/T50, re-run, post COMPLETE.

@@ -1,6 +1,6 @@
 # control-plane (T50)
 
-**Status** · session_013W39qjn8635aB3vuz3De9S · depth 2 · COMPLETE · handled B6
+**Status** · session_013W39qjn8635aB3vuz3De9S · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -71,3 +71,11 @@ B4 needs no change: the defect PLANE #40 saw is the pre-T50 code on tranche/T50.
 ## J5 · REPORT
 
 Merged tranche/T50 (op-declarations, interface-shell, instance-setup) and re-ran: 302 tests, 284 pass, 18 fail. R103 x2 and r53 R53 are now green. The 18 are every test that builds the page (R1/R82, R104, R51 x2, R75 x7, R81 x4, R95 x3): interfacePage throws 'interface-shell: screen members's act groupkeyset is not the registry's for it, nor a named re-point' (checkScreens, interface-shell index.mjs:161), so GET / and /app answer 500. The screen is screens-settings' (members); interface-shell now checks every screen's acts against the design registry and screens-settings has not merged. Nothing in control-plane builds or checks screens, so I change nothing here; they clear when screens-settings (and the later screens) merge. I will re-run after each screen merge on your CHANGE. State stays COMPLETE on the rest.
+
+## B7 (K3778): the real screens
+
+After merging tranche/T50 with every screen job: `node --test test/m/control-plane/`: 302 tests, all pass (R103 ×2 and R53 pass under the merged declarations; the page tests under the merged shell and screens). Of the two `t47-e2e` R81 failures BOB named: (1) Home's busy-project row read, at the merged base, 'Last change … The dark streets'; it passes at my merge of the tranche and I changed nothing for it; (2) the door's script: screens-daily R9/R40 draw a door as a button that starts directly and its scripts only in the opened offer, so the screen is right and the test now presses the door first, then the script, and checks that the script press sends no `startfrom` POST of its own. No requirement of screens-daily is failed.
+
+## J6 · COMPLETE
+
+COMPLETE after B7. Merged tranche/T50: module 302 tests, all pass. Row (1) passes at the merged base with no change of mine; (2) screens-daily is right (R9, R40: a door starts directly, its scripts in the opened offer), so t47-e2e now presses the door first and checks the script press sends no startfrom POST. Record updated.

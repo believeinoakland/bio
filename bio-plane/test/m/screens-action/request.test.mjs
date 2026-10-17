@@ -55,6 +55,15 @@ test("R20: with no office known the request says so and points an administrator 
   assert.ok(!text(known).includes(W("screen.request.nooffice")));
   assert.equal(main(known).querySelector('a[href="/app/places"]'), null);
   assert.deepEqual(ops(known), ["addresseesuggest"]);
+  // B7: opened with no subject, the screen asks nothing (addresseesuggest refuses NO_SUBJECT) and draws its no-office state
+  const bare = await open("/app/request", { ...DATA_PLANE, whoami: ok(ADMIN), addresseesuggest: refused("NO_SUBJECT", "no subject", 400) });
+  assert.equal(bare.byOp("addresseesuggest").length, 0, "no call without a subject");
+  said(bare, "screen.request.nooffice");
+  assert.ok(main(bare).querySelector('a[href="/app/places"]'));
+  assert.deepEqual(ops(bare), []);
+  assert.ok(!main(bare).querySelector('[data-state="failed"]'));
+  // control: with a subject the offices are asked
+  assert.equal(known.byOp("addresseesuggest").length, 1);
   // control: a read that failed is not "no office known"
   const failed = await open(NEW, { ...DATA_PLANE, addresseesuggest: refused("STORE_DID_NOT_ANSWER", null, 502) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));
