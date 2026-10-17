@@ -31,6 +31,9 @@ export const home = Object.freeze({
       doors: { op: "startfrom", empty: list("doors") },
       looked: { op: "lookedsince" },
     };
+    if (view.me && view.me.member && !(view.me.administer === true || (Array.isArray(view.me.capabilities) && view.me.capabilities.indexOf("create_projects") >= 0))) {
+      out.members = { op: "memberlist", empty: list("members") };
+    }
     if (view.me && view.me.administer === true) {
       out.members = { op: "memberlist", empty: list("members") };
       out.boot = { op: "bootstrap" };
@@ -38,7 +41,12 @@ export const home = Object.freeze({
       out.languages = { op: "grouplanguages" };
       out.aiuse = { op: "aiuseovertime", query: { owner: "group" } };
     }
-    if (typeof ui.words === "string" && ui.words.trim()) out.matching = { op: "search", query: { q: ui.words, limit: "10" }, empty: list("hits") };
+    // R42: a member who may not start projects reads the ways into one: the findable projects and her own requests.
+    const caps = view.me && Array.isArray(view.me.capabilities) ? view.me.capabilities : [];
+    if (view.me && view.me.member && !(view.me.administer === true || caps.indexOf("create_projects") >= 0)) {
+      out.directory = { op: "projectdirectory", empty: list("projects") };
+      out.requests = { op: "projectrequests", empty: list("requests") };
+    }
     return out;
   },
 
@@ -47,6 +55,8 @@ export const home = Object.freeze({
     const ui = view.ui || {};
     const me = view.me || {};
     const admin = me.administer === true;
+    // R42: "What happened?" and "Start a project" are for a member who holds `create projects` (every administrator does).
+    const starts = admin || (Array.isArray(me.capabilities) && me.capabilities.indexOf("create_projects") >= 0);
     const data = view.data;
     const ok = function (r) { return r && r.state === "ok" ? r.value : null; };
     const failed = function (r) { return !!r && r.state === "failed"; };
@@ -73,7 +83,8 @@ export const home = Object.freeze({
     // its due date, and, on "Needs the group", whose move it is.
     // An item's options (R3) among Home's registered acts: resolving a task, and adopting or keeping a newer version (its
     // reason asked in place); any other way to act is "Open", its subject's screen.
-    const HOME_ACTS = { taskresolve: "taskresolve", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion", versionkeep: "keepversion" };
+    const HOME_ACTS = { taskresolve: "taskresolve", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion", versionkeep: "keepversion",
+      projectjoin: "projectjoin", projectrequestanswer: "projectrequestanswer" };
     let seq = 0;
     const actsOf = function (it) {
       const ops = [];
@@ -84,7 +95,14 @@ export const home = Object.freeze({
       (Array.isArray(d.acts) ? d.acts : []).forEach(add);
       if (d.instead) add(d.instead);
       return ops.map(function (op) {
-        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "" };
+        const data = { item: String(it.id || ""), notice: d.notice ? String(d.notice) : "",
+          project: it.subject && it.subject.id ? String(it.subject.id) : "", who: it.fills && it.fills.who ? String(it.fills.who) : "" };
+        // R42: an owner answers a request to join with Grant or Decline.
+        if (op === "projectrequestanswer") {
+          return ["grant", "decline"].map(function (a) {
+            return cs.act(op, { label: "screen.home.request." + a, data: Object.assign({ answer: a }, data) });
+          }).join("");
+        }
         if (op !== "adoptversion") return cs.act(op, { label: "act." + op + ".label.home", data: data });
         const f = "ha-" + (seq++);
         const button = cs.act(op, { label: "act." + op + ".label.home", data: Object.assign({ f: f }, data) });
@@ -121,61 +139,68 @@ export const home = Object.freeze({
         whose = '<span class="muted">' + (it.assignee_role === "admin" ? cs.w("screen.home.move.admin")
           : a ? cs.w("screen.home.move.member", { who: a }) : cs.w("screen.home.move.anyone")) + "</span> ";
       }
-      return cs.row(mark, words + '<span class="meta">' + whose + open + "</span>", it.due ? cs.due(String(it.due), "") : "", "");
+      return cs.row(mark, words + '<span class="meta">' + whose + open + "</span>", it.due ? (iw.ours(cs, it) || cs.due(String(it.due), "")) : "", "");
     };
     const block = function (key, list, group) {
       return cs.sec(key, cs.sheet(src.fold(list).map(function (it) { return itemRow(it, group); }).join("")));
     };
 
-    // R23, R11 (DEC-219 (3)): a new group, no project yet and its founder alone in it: that it is ready, its first steps
-    // ("Name your group" first while it has none), and "What happened?", nothing else.
+    // R40, R23, R11 (DEC-219 (3)): a new team, no project yet and its founder alone in it: that it is ready, its first steps
+    // numbered and in order ("Name your team" first while it has no name, the primary button), and "What happened?", nothing else.
+    // The founder counts once, as `members` counts the roster (screens-settings R51; R51 here): her row from `memberlist` when it
+    // lists one, else one more when the team is claimed.
     const members = ok(data.members);
-    const active = members && Array.isArray(members.members) ? members.members.filter(function (m) { return m && m.status === "active"; }).length : null;
+    const roster = members && Array.isArray(members.members) ? members.members : [];
+    const boot0 = ok(data.boot);
+    const founderRow = roster.filter(function (m) { return m && (m.member_id === "admin" || m.founder === true); })[0];
+    const founderIs = boot0 && typeof boot0.claimed === "boolean" ? boot0.claimed || !!founderRow : !!founderRow;
+    const listed = roster.filter(function (m) { return m && m.member_id !== "admin" && m.founder !== true; });
+    const rosterAll = founderIs ? [{ member_id: "admin", handle: founderRow ? founderRow.handle : null, role: "admin", status: "active", founder: true }].concat(listed) : listed;
+    const active = members ? rosterAll.filter(function (m) { return m.status === "active"; }).length : null;
     const fresh = admin && data.projects && data.projects.state === "empty" && !(active !== null && active > 1);
-    const first = cs.sec("screen.home.ready", '<p class="mk-note">' + cs.w("screen.home.nothingyet") + '</p><div class="mk-links">'
-      + (gv && !named ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/group">' + cs.w("home.first.name") + "</a>" : "")
-      + '<a class="cs-btn" data-tone="quiet" data-nav href="/app/members">' + cs.w("screen.home.invite") + "</a>"
-      + '<a class="cs-btn" data-tone="quiet" data-nav href="/app/group-identity">' + cs.w("screen.home.saywho") + "</a></div>");
+    const button = function (href, label, tone) {
+      return '<a class="cs-btn" data-tone="' + tone + '" data-nav href="' + href + '">' + cs.w(label) + "</a>";
+    };
+    const steps = [];
+    if (gv && !named) steps.push({ text: "", act: button("/app/group", "home.first.name", "primary"), now: true });
+    steps.push({ text: "screen.home.first.invite", act: button("/app/members", "screen.home.invite", steps.length ? "quiet" : "primary"), now: !steps.length });
+    steps.push({ text: "screen.home.first.identity", act: button("/app/group-identity", "screen.home.saywho", "quiet") });
+    steps.push({ text: "screen.home.first.project" });
+    const first = cs.sec("home.ready.title", cs.path(steps));
 
-    // R9, R14, R23 (DEC-198 (4), DEC-227 (1)): "What happened?": each door `startfrom` answers as the design's card, the sixth
-    // door last. Pressing a door opens its offer in place (its scripts, each started by `cs.wizard`); the sixth opens
-    // `elsewhere`, starting no script and sending nothing. Beside the doors: the matching work and "Start a project".
+    // R9, R14, R23, R40 (DEC-198 (4), DEC-227 (1)): "What happened?": each door `startfrom` answers is a button that starts
+    // directly: pressing it sends `startfrom` for it and opens its offer in place (its scripts, each started by `cs.wizard`).
+    // The sixth door, "Help for my own situation", opens `elsewhere` like the others open theirs and sends nothing. Only a
+    // member who may start projects is drawn the doors and "Start a project" (R42).
     const dv = ok(data.doors);
     const scripts = {};
     (dv && Array.isArray(dv.scripts) ? dv.scripts : []).forEach(function (s) { if (s && s.id) scripts[String(s.id)] = s; });
     const all = dv && Array.isArray(dv.doors) ? dv.doors.filter(function (x) { return x && x.door; }) : [];
     const away = all.filter(function (x) { return x.door === "elsewhere" || x.opens === "elsewhere"; }).slice(0, 1);
     const five = all.filter(function (x) { return away.indexOf(x) < 0 && Array.isArray(x.scripts) && x.scripts.length; });
-    const m = data.matching;
-    const matching = m && m.state !== "empty" ? '<p class="mk-note" data-front="matching">' + cs.state(m, function (v) {
-      return cs.w("door.front.matching", { items: "" }) + (v.hits || []).map(function (h) {
-        const id = String(h.bundle_id);
-        return " " + cs.ref(String(h.object_type || "").toLowerCase() === "project" || /^PROJ-/.test(id) ? "project" : "document", id, h.title || id, []);
-      }).join(",");
-    }) + "</p>" : "";
-    // R30: "Start a project" opens its form on press: what it is about, who can find it.
-    const start = view.parts.startProject().form(cs, "home", "act.promote.label.home", cs.act("promote", { label: "project.start.go", tone: "primary" }));
-    // R25: a card's title and its description are two elements, and a closed door's summary carries its name.
+    // R30, R40: "Start a project" opens its form on press: what it is about, who can find it.
+    const start = starts ? view.parts.startProject().form(cs, "home", "act.promote.label.home", cs.act("promote", { label: "project.start.go", tone: "primary" })) : "";
+    const startNote = start ? '<p class="mk-small muted">' + cs.w("act.promote.here.home") + "</p>" : "";
+    const opened = typeof ui.door === "string" ? ui.door : "";
     const doorCard = function (x) {
       const k = String(x.door);
-      return '<details class="mk-door" data-door="' + cs.esc(k) + '"><summary aria-label="' + cs.w("door.front." + k + ".name") + '"><b>' + cs.w("door.front." + k + ".name") + "</b><br><span>" + cs.w("door.front." + k + ".hint") + "</span></summary>"
-        + '<span class="mk-acts">' + x.scripts.map(function (id) {
+      return '<div class="mk-door" data-door="' + cs.esc(k) + '"' + (opened === k ? ' data-open="true"' : "") + ">"
+        + cs.act("startfrom", { label: "door.front." + k + ".name", data: { door: k } }) + "<br><span>" + cs.w("door.front." + k + ".hint") + "</span>"
+        + (opened === k ? '<span class="mk-acts">' + x.scripts.map(function (id) {
           const s = scripts[String(id)] || { id: id, name: id };
           return cs.act("startfrom", { label: "screen.home.script", fills: { name: String(s.name || s.id) }, data: { script: String(s.id), version: String(s.version === undefined ? "" : s.version) } });
-        }).join("") + "</span></details>";
+        }).join("") + "</span>" : "") + "</div>";
     };
     const awayCard = away.map(function () {
       return '<a class="mk-door" data-door="elsewhere" data-nav href="/app/elsewhere"><b>' + cs.w("door.front.elsewhere.name") + "</b><br><span>" + cs.w("door.front.elsewhere.hint") + "</span></a>";
     }).join("");
     const front = failed(data.doors)
       ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2">' + cs.w("door.front.head") + "</h2>" + cs.state("doors", null) + "</section>"
-      : five.length || away.length
+      : (starts && five.length) || away.length
         ? '<section class="mk-welcome" data-front="doors"><h2 class="mk-h2" tabindex="0">' + cs.w("door.front.head") + "</h2>"
-          + '<p class="mk-sub">' + cs.w("door.front.intro") + '</p><div class="mk-doors">' + five.map(doorCard).join("") + awayCard + "</div>"
-          + (five.length ? '<div class="mk-search">' + cs.field("home-words", "screen.home.words", { value: ui.words || "" })
-            + '<span class="mk-acts">' + cs.act("startfrom", { label: "act.startfrom.label.home" }) + "</span></div>" + matching : "")
-          + (start ? '<p class="mk-note">' + cs.w("door.front.blank") + "</p>" + start : "") + "</section>"
-        : start ? '<section class="mk-welcome" data-front="start">' + start + "</section>" : "";
+          + (starts ? '<p class="mk-sub">' + cs.w("door.front.intro") + "</p>" : "") + '<div class="mk-doors">' + (starts ? five.map(doorCard).join("") : "") + awayCard + "</div>"
+          + (start ? '<p class="mk-note">' + cs.w("door.front.blank") + "</p>" + start + startNote : "") + "</section>"
+        : start ? '<section class="mk-welcome" data-front="start">' + start + startNote + "</section>" : "";
 
     if (fresh) return heading + first + front;
 
@@ -188,11 +213,16 @@ export const home = Object.freeze({
     // R29: a project the member is invited to is hers to join, as the participants of the project (or `projectlist`, N1118) answer her place.
     const pv0 = ok(data.projects);
     const place = view.parts.participation(cs, view, pv0 && Array.isArray(pv0.projects) ? pv0.projects : []);
+    // R42: a member who may not start projects and is in none reads the ways into one.
+    const inNone = pv0 && Array.isArray(pv0.projects) && !pv0.projects.some(function (p) { return p && (place[String(p.id)] === "joined" || place[String(p.id)] === "leaving"); });
     const invited = !firstVisit && pv0 && Array.isArray(pv0.projects) ? pv0.projects.filter(function (p) { return p && place[String(p.id)] === "invited"; }) : [];
     const mineCount = forMe.length + invited.length;
     const readings = [];
     if (!firstVisit && mineCount) readings.push({ n: mineCount, label: "screen.home.strip.you", screen: "queue" });
     if (forGroup.length) readings.push({ n: forGroup.length, label: "screen.home.strip.group", screen: "queue" });
+    // R50 (3): a team's own passed dates are a reading of their own, opening the queue.
+    const ours = forMe.concat(forGroup).filter(function (it) { return it && it.kind === "action-clock-overdue.ours"; }).length;
+    if (!firstVisit && ours) readings.push({ n: "", label: { key: ours === 1 ? "home.strip.ours_passed.one" : "home.strip.ours_passed.other", fills: { n: String(ours) } }, screen: "queue" });
     const strip = readings.length ? cs.strip(readings) : "";
 
     const queueFailed = failed(data.queue) ? cs.sec("screen.home.needsyou", cs.state("queue", null)) : "";
@@ -204,6 +234,43 @@ export const home = Object.freeze({
     const needsYou = !firstVisit && mineCount
       ? cs.sec("screen.home.needsyou", cs.sheet(joinRows + src.fold(forMe).map(function (it) { return itemRow(it, false); }).join(""))) : "";
     const needsGroup = forGroup.length ? block("screen.home.needsgroup", forGroup, true) : "";
+
+    // R42: "Getting into a project", for a member who may not start projects and is in none: the projects she was invited to,
+    // the findable ones, her open requests, and who to ask; with none of the three, who to ask alone.
+    const joinPart = (function () {
+      if (starts || !inNone) return "";
+      const admins = rosterAll.filter(function (x) { return x && x.status === "active" && x.role === "admin"; }).map(function (x) {
+        return x.handle ? cs.esc(String(x.handle)) : cs.w("member.founder.unnamed");
+      }).join(", ");
+      const ask = { html: admins };
+      const dir = ok(data.directory);
+      const rq = ok(data.requests);
+      const mineOpen = rq && Array.isArray(rq.requests) ? rq.requests.filter(function (r) { return r && r.state === "open"; }) : [];
+      const askedIds = {};
+      mineOpen.forEach(function (r) { askedIds[String(r.project)] = true; });
+      const findable = dir && Array.isArray(dir.projects) ? dir.projects.filter(function (p) { return p && !askedIds[String(p.id)] && !(p.request && p.request.state === "open"); }) : [];
+      const invitedRows = (pv0 && Array.isArray(pv0.projects) ? pv0.projects : []).filter(function (p) { return p && place[String(p.id)] === "invited"; }).map(function (p) {
+        const id = String(p.id);
+        return cs.row(cs.mark("kind", "todo"), cs.w("queue.project-invitation.summary.unnamed", { project: { html: cs.ref("project", id, p.name || id, []) } })
+          + '<span class="meta">' + cs.w("queue.project-invitation.detail") + "</span>" + '<span class="meta">' + cs.act("projectjoin", { label: "act.projectjoin.label.home", data: { project: id } }) + "</span>", "", "");
+      });
+      const findRows = findable.map(function (p) {
+        const id = String(p.id);
+        return cs.row("", cs.ref("project", id, p.name || id, []) + '<span class="meta">' + cs.w("projects.findable.meta") + "</span>"
+          + '<span class="meta">' + cs.act("projectrequest", { label: "act.projectrequest.label.home", data: { project: id } }) + "</span>", "", "");
+      });
+      const askRows = mineOpen.map(function (r) {
+        const id = String(r.project);
+        return cs.row("", cs.ref("project", id, r.name || id, []) + '<span class="meta">' + cs.w("projects.request.asked", { date: { html: cs.date(String(r.asked || "")) } }) + "</span>"
+          + '<span class="meta">' + cs.act("projectrequestwithdraw", { label: "act.projectrequestwithdraw.label.home", data: { project: id } }) + "</span>", "", "");
+      });
+      const failedRead = [data.directory, data.requests].filter(failed).map(function (r) { return cs.state(r, null); }).join("");
+      const rows = invitedRows.concat(findRows, askRows);
+      const body = '<p class="mk-sub">' + cs.w("screen.home.join.lead") + "</p>"
+        + (rows.length ? cs.sheet(rows.join("")) + '<p class="mk-note">' + cs.w("screen.home.join.nocreate", { admins: ask }) + "</p>"
+          : failedRead ? "" : '<p class="mk-note">' + cs.w("screen.home.join.none", { admins: ask }) + "</p>") + failedRead;
+      return cs.sec("screen.home.join.heading", body, { help: "screen.home.join.says" });
+    })();
 
     // Each of the four areas at a glance (DEC-219 (2)): what needs the member in it, its readings, a line of what changed,
     // the area's name its reference. A reading at zero is not drawn, and an area with nothing to show is left out.
@@ -236,11 +303,10 @@ export const home = Object.freeze({
       failed(data.projects) ? [data.projects] : []);
     const action = area("action", "/app/dash-action", actionMine,
       [rd(actionMine, "screen.home.rd.ours", "screen.home.rd.ours"), rd(actionGroup, "screen.home.rd.group", "screen.home.rd.group")], [], []);
-    const roster = members && Array.isArray(members.members) ? members.members : [];
     const people = admin ? area("members", "/app/members", 0,
       [rd(active, "screen.home.rd.member", "screen.home.rd.members"),
-        rd(roster.filter(function (x) { return x && x.status === "active" && x.role === "admin"; }).length, "screen.home.rd.admin", "screen.home.rd.admins"),
-        rd(roster.filter(function (x) { return x && x.status === "invited"; }).length, "screen.home.rd.invited", "screen.home.rd.invited")],
+        rd(rosterAll.filter(function (x) { return x && x.status === "active" && x.role === "admin"; }).length, "screen.home.rd.admin", "screen.home.rd.admins"),
+        rd(rosterAll.filter(function (x) { return x && x.status === "invited"; }).length, "screen.home.rd.invited", "screen.home.rd.invited")],
       [], failed(data.members) ? [data.members] : []) : "";
     let adminArea = "";
     if (admin) {
@@ -282,7 +348,7 @@ export const home = Object.freeze({
         return cs.row("", cs.ref("project", String(p.id), p.name || String(p.id), []), '<span class="muted">' + cs.w("screen.home.since.changed", { date: cs.date(String(p.lastChange)) }) + "</span>", "");
       }).join(""))) : "";
 
-    return strip + heading + queueFailed + needsYou + needsGroup + areas + projects + recent + front;
+    return strip + heading + queueFailed + needsYou + needsGroup + joinPart + areas + projects + recent + front;
   },
 
   acts: [
@@ -300,24 +366,33 @@ export const home = Object.freeze({
     // R29: "Join", a project the member is invited to; the projects are read again, her place in it now joined.
     { op: "projectjoin", label: "act.projectjoin.label.home", rereads: ["projects"],
       send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
-    // R9: "Start from…": a script button starts that script in the wizard runner and sends nothing; the words button keeps
-    // the member's words and re-reads the doors and the work matching them.
+    // R9, R40: a door is a button that starts directly: pressing it sends `startfrom` for it and opens its offer in place; a
+    // script button starts that script in the wizard runner and sends nothing.
     {
       op: "startfrom",
       label: "act.startfrom.label.home",
-      rereads: ["doors", "matching"],
+      rereads: ["doors"],
       send: function (view, el, cs) {
         if (el.dataset.script) {
           const v = Number(el.dataset.version);
           cs.wizard(el.dataset.script, el.dataset.version === "" || isNaN(v) ? el.dataset.version : v);
           return null;
         }
-        const words = String(cs.value("home-words") || "").trim();
-        if (!words) return { refuse: "screen.home.wordsfirst" };
-        cs.set("words", words);
-        return { query: {} };
+        if (!el.dataset.door) return null;
+        cs.set("door", el.dataset.door);
+        return { query: { door: el.dataset.door } };
       },
     },
+    // R42: ask to join a findable project, and withdraw the request; the ways in are read again.
+    { op: "projectrequest", label: "act.projectrequest.label.home", rereads: ["directory", "requests"],
+      send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
+    { op: "projectrequestwithdraw", label: "act.projectrequestwithdraw.label.home", rereads: ["directory", "requests"],
+      send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; } },
+    // R42: an owner answers a request to join, Grant or Decline; the queue is read again.
+    { op: "projectrequestanswer", label: "act.projectrequestanswer.label.home", rereads: ["queue"],
+      send: function (view, el) {
+        return el.dataset.project && el.dataset.who && el.dataset.answer ? { query: { projectId: el.dataset.project, handle: el.dataset.who, answer: el.dataset.answer } } : null;
+      } },
     {
       // R1, R23, R25, R30: a new project, its title the member's and written as its `title`, its visibility the member's
       // choice (hidden unless made findable), its owner the member (the door stamps the owner, control-plane R73).

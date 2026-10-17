@@ -5,7 +5,6 @@
    the queue's `owed:updatelater`, Home's item acts. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -17,21 +16,18 @@ import { nestedTips, accessibleName, controls } from "../interface-shell/harness
 import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const COMMIT = "4664e8efd4";
-const atCommit = (path) => {
-  try { return JSON.parse(execFileSync("git", ["show", `${COMMIT}:${path}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 })); }
-  catch { return JSON.parse(readFileSync(join(ROOT, path), "utf8")); }
-};
-// An owed act (`owed:<op> K…`) is that op once declared (wizard-scripts R13).
-const REGISTRY = atCommit("docs/development/ux-substrate/screens/registry.json").screens
-  .map((r) => ({ ...r, acts: r.acts.map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
+// The registry is the design's (shell R73, N1122): read from the working copy, never a commit. An owed act (`owed:<op> K…`) is
+// that op once declared (wizard-scripts R13) and is drawn only then (interface-shell R12): until `OPS` holds it, it is left out.
+const REGISTRY = JSON.parse(readFileSync(join(ROOT, "docs/development/ux-substrate/screens/registry.json"), "utf8")).screens
+  .map((r) => ({ ...r, acts: r.acts.filter((a) => !String(a.op).startsWith("owed:") || OPS[String(a.op).replace(/^owed:/, "").split(" ")[0]])
+    .map((a) => ({ ...a, op: String(a.op).replace(/^owed:/, "").split(" ")[0] })) }));
 const byId = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
 const SCREEN_IDS = SCREENS.map((s) => s.id);
 // The acts a screen draws are the registry's for it (the owner's declaration, N1073: read, never listed here) less the ones this
 // module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs), with a named re-point
 // of the shell (interface-shell R21: R29's "Join" on Home and Projects, until the registry lists it there).
 // Registered acts this module leaves to other screens (R17: Home's "Vouch for them" and "Read and approve it" open theirs).
-const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"] };
+const ELSEWHERE_DRAWN = { home: ["release", "filingapprove"], queue: ["release", "filingapprove"] };
 const EXPECTED = Object.fromEntries(REGISTRY.filter((r) => SCREEN_IDS.includes(r.id)).map((r) => [r.id,
   [...new Set([...r.acts.map((a) => a.op), ...(RE_POINTS[r.id] || [])])].filter((op) => !(ELSEWHERE_DRAWN[r.id] || []).includes(op))]));
 
@@ -166,7 +162,7 @@ test("R7 (interface-shell R13): each refusal word an act names is a listed word"
 });
 
 test("R7: after an act the screen re-reads what it changed: an act names only its own screen's reads to re-read, or all of them", () => {
-  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "matching"], elsewhere: ["door"], projects: ["projects"], queue: ["queue"], finder: ["search", "selection", "frontier"], "find-in": ["questions"], answers: ["search"] };
+  const readsOf = { home: ["group", "queue", "projects", "doors", "looked", "members", "boot", "places", "languages", "aiuse", "directory", "requests"], elsewhere: ["door"], projects: ["projects", "themes", "directory", "requests"], queue: ["queue", "muted"], finder: ["search", "selection", "frontier", "lookedat", "themes", "theme"], "find-in": ["questions"], answers: ["search"] };
   for (const s of SCREENS) for (const a of s.acts) for (const r of a.rereads || []) assert.ok(readsOf[s.id].includes(r), `${s.id}.${a.op} rereads ${r}`);
   // The queue's acts change the queue: each re-reads all (the item resolved or muted leaves the list, R3).
   for (const a of byId.queue.acts) assert.equal(a.rereads, undefined, a.op);
