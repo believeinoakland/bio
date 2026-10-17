@@ -19,3 +19,17 @@ Cause: needs Bob. T50-25 cannot be built yet, and I am not changing anything I c
 Decision for you: merge `translations` (T50-22) into `tranche/T50`. Then I add its file, do items 4 and 5, and run the tests and checks. If you want items 4 and 5 done now against today's tranche, say so; I will re-run once translations lands.
 
 Waiting on BOB (J1). Nothing for Bob to do until T50-22 merges.
+
+## J2 · REPORT
+
+Items 3–5 of B2 are done and pushed (`job/T50/answer-envelope` @ 128756b02a). The module's tests run 41, pass 41. The checks format, architecture, coverage and ownership pass.
+
+Item 5, pins by key (N1128). The 75 drifted pins were all rows that now read `refusal.<CODE>` from words.json. 73 of them match their key exactly. Two are still inline in action-plans: ADDRESSEE_REFUSED (C-124.17) and MACHINE_CANNOT_JUDGE (C-124.36). I re-pinned all 75 to the owners' rows as they now declare them, and wrote that into `changed.note`. A new test pins each keyed row by its key's sentence.
+
+Item 4, hand-lists (N1073). The moved-rows list in `families.test.mjs` is gone. The test now walks every family in `CHECK_FAMILY_FILES` from its owner's file. The R2 test in `families.test.mjs` still names families by hand. I am not changing that until the translations file is in the list.
+
+Item 3, drift diagnosis. The drift came from ai-accounts' T50-4 (the C-29.x rows), and from action-plans (C-124.17 and C-124.36 inline). The rest was the same kind of move.
+
+Still open: T50-22 (translations) has not merged to `tranche/T50`, so `src/translations/checks.mjs` does not exist. I will add it to `families.mjs` before `src/setup.mjs` when it merges, and then re-run the tests and checks.
+
+Waiting on BOB (J2). Nothing for Bob to do until T50-22 merges.
