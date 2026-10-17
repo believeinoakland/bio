@@ -23,13 +23,31 @@ import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../membership/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { hasWord, word } from "../setup-words/index.mjs";
 import { PROJECT_ROSTER_SCHEMA, PROJECT_ROSTER_TABLES } from "./schema.mjs";
 import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
 export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
+
+/** R31 (T50; `action-records` R17): THE STAKE'S TWO REFUSALS, pure. `null` for a member's stamp and a stake that is
+ *  `null` or trimmed text of 1 to 1,000 characters on one line with no control character; else the one refusal, its
+ *  C-147 row and word by key (`of: "action"` reads `refusal.STAKE_MALFORMED.action`; null while the list lacks it).
+ *  `projectId`, when given, rides on the answer as `projectStakeSet` answers it. */
+export function stakeFault({ by, stake, of = "project", projectId = null } = {}) {
+  const row = (code, detail, translation) => ({ ok: false, reason: code, code, check: PROJECT_SCOPE_CHECKS[code].check,
+    translation, detail, project: projectId ?? null });
+  if (typeof by !== "string" || !by || by.startsWith(MACHINE_CLASS_PREFIX) || !/^[A-Za-z0-9._:-]{1,128}$/.test(by))
+    return row("MACHINE_CANNOT_SET_STAKE", "a stake is a member's own words, set by a signed-in member. Nothing was written.",
+      PROJECT_SCOPE_CHECKS.MACHINE_CANNOT_SET_STAKE.translation);
+  if (stake !== null && ProjectRoster.stakeText(stake) === undefined)
+    return row("STAKE_MALFORMED", "the stake is some text of 1 to 1,000 characters on one line, or null to clear it. "
+      + "Nothing was written.", of === "action"
+      ? (hasWord("refusal.STAKE_MALFORMED.action") ? word("refusal.STAKE_MALFORMED.action") : null)
+      : PROJECT_SCOPE_CHECKS.STAKE_MALFORMED.translation);
+  return null;
+}
 
 export class ProjectRoster {
   constructor({ sql, core = null, membership, clock = null } = {}) {
@@ -669,7 +687,7 @@ export class ProjectRoster {
   static STAKE_MAX = 1000;
 
   /* R31: trimmed text of 1 to 1,000 characters on one line, no control characters; answers it, or undefined. */
-  static #stakeText(stake) {
+  static stakeText(stake) {
     if (typeof stake !== "string") return undefined;
     const t = stake.trim();
     return t.length >= 1 && t.length <= ProjectRoster.STAKE_MAX && !/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(t)
@@ -681,19 +699,15 @@ export class ProjectRoster {
   projectStakeSet({ projectId, stake, by, viewer = null } = {}) {
     { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused) return refused; }
-    const refusal = (code, detail) => ProjectRoster.#scopeRefusal(code, projectId, detail);
     /* DEC-49 REGION is-project-stake-set */
-    if (typeof by !== "string" || !by || by.startsWith(MACHINE_CLASS_PREFIX) || !/^[A-Za-z0-9._:-]{1,128}$/.test(by))
-      return refusal("MACHINE_CANNOT_SET_STAKE", "a project's stake is a member's own words, set by a signed-in member. "
-        + "Nothing was written.");
+    const fault = stakeFault({ by, stake, of: "project", projectId });
+    if (fault && fault.reason === "MACHINE_CANNOT_SET_STAKE") return fault;
     if (!this.#adminAtFull(projectId, by)) {
       const denied = this.m.projectAuthority(projectId, `member:${by}`, "joined", "projectstakeset");
       if (denied) return denied;
     }
-    const text = stake === null ? null : ProjectRoster.#stakeText(stake);
-    if (text === undefined)
-      return refusal("STAKE_MALFORMED", "the stake is some text of 1 to 1,000 characters on one line, or null to clear "
-        + "it. Nothing was written.");
+    if (fault) return fault;
+    const text = stake === null ? null : ProjectRoster.stakeText(stake);
     /* END DEC-49 REGION is-project-stake-set */
     const at = this.#iso();
     this.sql.exec(`INSERT INTO project_stakes (project_id, stake, set_by, at) VALUES (?,?,?,?)`, projectId, text, by, at);

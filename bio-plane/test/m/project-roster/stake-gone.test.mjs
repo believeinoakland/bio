@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { world, V, snapshot } from "./fixture.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
+import { stakeFault } from "../../../src/project-roster/index.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const set = (w, by, stake, projectId = "PROJ-P", viewer = V(by)) => w.r.projectStakeSet({ projectId, stake, by, viewer });
@@ -152,4 +154,25 @@ test("R33 control: a plain member, a participant, an outsider, no viewer, a mach
   w.project("PROJ-M");
   assert.equal(gone(w, V("second"), "PROJ-M").gone, false);
   assert.deepEqual(w.ops(`projectId=PROJ-P&viewer=${encodeURIComponent(V("second"))}`).projectownersgone(), gone(w, V("second")));
+});
+
+test("R31 stakeFault({by, stake, of}) is pure and answers null for a member's stamp and a well-formed stake (1,000 characters included), else the one refusal projectStakeSet answers, each equal", async () => {
+  const w = await stakeWorld();
+  const m = `${MACHINE_CLASS_PREFIX}ai`;
+  /* control: a member's stamp with null, a one-line stake and one of exactly 1,000 characters pass */
+  for (const stake of [null, "ours", "  padded  ", "y".repeat(1000)]) assert.equal(stakeFault({ by: "bob", stake }), null, String(stake).slice(0, 12));
+  assert.equal(stakeFault({ by: "bob", stake: "y".repeat(1000), of: "action" }), null);
+  /* each refusal through stakeFault equals the one projectStakeSet answers */
+  const cases = [[m, "x", V(m)], [null, "x", V("bob")], ["bob", "x".repeat(1001), V("bob")], ["bob", "a\nb", V("bob")], ["bob", "", V("bob")], ["bob", 5, V("bob")]];
+  for (const [by, stake, viewer] of cases) {
+    const viaAct = w.r.projectStakeSet({ projectId: "PROJ-P", stake, by, viewer: by === m ? m : viewer });
+    const fault = stakeFault({ by, stake, projectId: "PROJ-P" });
+    assert.deepEqual(fault, viaAct, `${String(by)} ${String(stake).slice(0, 8)}`);
+    assert.deepEqual(stakeFault({ by, stake }), { ...fault, project: null }, "without a project id");
+  }
+  /* of: 'action' reads its own word by key, null while the list lacks it, never inline English */
+  const a = stakeFault({ by: "bob", stake: "a\nb", of: "action" });
+  assert.equal(a.reason, "STAKE_MALFORMED");
+  assert.equal(a.translation === null, !hasWord("refusal.STAKE_MALFORMED.action"));
+  assert.equal(stakeFault({ by: m, stake: "x", of: "action" }).reason, "MACHINE_CANNOT_SET_STAKE");
 });
