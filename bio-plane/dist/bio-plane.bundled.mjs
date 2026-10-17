@@ -1865,7 +1865,7 @@ __export(checks_exports, {
 });
 
 // src/setup-words/rows.mjs
-var WORDS_COMMIT = "0f87be0014";
+var WORDS_COMMIT = "9a85588ebd";
 var WORD_ROWS = Object.freeze([
   ["weight.reversible.name", "Reversible", null, "Reversible: you can undo this.", true],
   ["weight.reasoned.name", "Reasoned", null, "Reasoned: asks for your reason, which becomes part of the record.", true],
@@ -3767,8 +3767,8 @@ var WORD_ROWS = Object.freeze([
   ["screen.find-in.kind.events", "Events in minutes and agendas", "adopted from screens-daily's own rows", null, false],
   ["screen.find-in.kind.term", "A name or term", "adopted from screens-daily's own rows", null, false],
   ["screen.find-in.term", "The name or term", "adopted from screens-daily's own rows", null, false],
-  ["screen.find-in.term.help", "Matched as Find matches words: as written, in every passage.", "adopted from screens-daily's own rows", null, false],
-  ["screen.find-in.question", "For which question (optional)", "adopted from screens-daily's own rows", null, false],
+  ["screen.find-in.term.help", "Only passages with this name or term are shown, when you fill it in.", "adopted from screens-daily's own rows; DEC-259: reworded", null, false],
+  ["screen.find-in.question", "For which question", "adopted from screens-daily's own rows; DEC-259: reworded", null, false],
   ["screen.find-in.question.help", "Kept with anything you record from here, so others can see why it was looked for.", "adopted from screens-daily's own rows", null, false],
   ["screen.find-in.question.none", "None yet", "adopted from screens-daily's own rows", null, false],
   ["screen.find-in.kindsfirst", "Tick at least one thing to find.", "adopted from screens-daily's own rows", null, false],
@@ -4965,7 +4965,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.proceeding.forum", "The court or tribunal", "adopted from screens-investigate's own rows", null, false],
   ["screen.proceeding.number", "Its number", "adopted from screens-investigate's own rows", null, false],
   ["screen.proceeding.kind", "The kind of proceeding", "adopted from screens-investigate's own rows", null, false],
-  ["screen.proceeding.kind.help", 'As the court names it, for example "civil".', "adopted from screens-investigate's own rows", null, false],
+  ["screen.proceeding.kind.help", "What kind of proceeding this is. It decides which deadlines and steps Civicsmith suggests; you can change it later.", "adopted from screens-investigate's own rows; DEC-259: reworded", null, false],
   ["screen.proceeding.label", "A neutral label", "adopted from screens-investigate's own rows", null, false],
   ["screen.proceeding.label.help", 'How the team refers to it, saying nothing of who is right, for example "the lease rent case".', "adopted from screens-investigate's own rows", null, false],
   ["screen.proceeding.note", "Where its caption comes from", "adopted from screens-investigate's own rows", null, false],
@@ -7786,6 +7786,59 @@ var WORD_ROWS = Object.freeze([
   ["refusal.BAD_ACCOUNT_FRAMING", "Choose how to order the account: in time order, question by question, or rule by rule. Nothing was kept.", "DEC-315: case-account R1", null, false],
   ["refusal.NO_SUCH_ACCOUNT_DRAFT", "No draft of this case's account that you can see has that name. Choose one of the drafts listed, or ask for a new one. Nothing was recorded.", "DEC-315: case-account R4", null, false],
   ["refusal.BAD_ACCOUNT", "The account is missing or can't be read. Write it, then save again. Nothing was recorded.", "DEC-315: case-account R4", null, false],
+  ["screen.find-in.valid", "When it is true", "DEC-318: screens-daily R47: the person fact's validity bounds", null, false],
+  ["screen.find-in.valid.help", "Leave a bound empty when the passage does not state it: it is recorded as not stated, never guessed.", "DEC-318: R47: a bound not stated is null", null, false],
+  ["screen.find-in.valid.from", "True from", "DEC-318: R47 valid.from", null, false],
+  ["screen.find-in.valid.to", "True until", "DEC-318: R47 valid.to", null, false],
+  ["screen.find-in.valid.precision", "How exact the dates are", "DEC-318: R47 valid.precision", null, false],
+  ["label.timeprecisions.day", "To the day", "DEC-318: civil-time PRECISIONS", null, false],
+  ["label.timeprecisions.minute", "To the minute", "DEC-318: civil-time PRECISIONS", null, false],
+  ["label.timeprecisions.second", "To the second", "DEC-318: civil-time PRECISIONS", null, false],
+  ["label.timeprecisions.edtf", "Partly known: a month, a year, or about", "DEC-318: civil-time PRECISIONS: an EDTF date", null, false],
+  ["screen.find-in.valid.zone", "Counted in your team's time zone: {zone}.", "DEC-318: R47: the zone is the team's, civil-time R23", null, false],
+  ["label.personfactkinds.office", "Holds an office", "DEC-318: people: a person fact of office (the line kind)", null, false],
+  ["label.personfactkinds.name", "Name", "DEC-318: people PERSON_FACT_KINDS", null, false],
+  ["label.personfactkinds.birth", "Birth", "DEC-318: people PERSON_FACT_KINDS", null, false],
+  ["label.personfactkinds.death", "Death", "DEC-318: people PERSON_FACT_KINDS", null, false],
+  ["refusal.BAD_VALIDITY", "Those dates can't be recorded: a bound is a date, or left empty when the passage does not state it. Nothing was recorded.", "DEC-318: R47: recordpersonfact refuses BAD_VALIDITY", null, false],
+  ["screen.find-in.flow.help", "Asked for an actual payment, before it is recorded.", "DEC-318: R48 (3): the flow step's fields", null, false],
+  ["findin.fieldneeded", "Fill in {field} first: it is needed to record this. Nothing was sent.", "DEC-318: R48's control, in capture.fieldneeded's form", null, false],
+  ["screen.find-in.field.payee.short", "who received it", "DEC-318: findin.fieldneeded {field} for the payee", null, false],
+  ["screen.find-in.sheet", "A match in a sheet", "DEC-318: R48 (8)", null, false],
+  ["screen.find-in.bounds.summary", "If the bounds can't be read", "DEC-318: R47: the refusal fold", null, false],
+  ["screen.find-in.empty.summary", "A required field left empty", "DEC-318: R48's control: the refusal fold", null, false],
+  ["screen.find-in.recorded.office", "{name} holds the office of {office}, from {from}", "DEC-318: findin.recorded {fact} for an office fact", null, false],
+  ["screen.person.facts.undetermined", "{reason} \xB7 from {document}", "DEC-319: R32 (2): a fact of undetermined validity, marked mark.gap.undetermined; the reason first", null, false],
+  ["screen.person.facts.source", "from {document}", "DEC-319: R32 (2): where an undetermined fact was read", null, false],
+  ["screen.person.facts.withdrawn", "Withdrawn facts \xB7 {n}", "DEC-319: R32 (2): withdrawn facts apart", null, false],
+  ["screen.person.facts.withdrawn.by", "withdrawn by {name} on {date}: {reason}", "DEC-319: R32 (2)", null, false],
+  ["screen.person.claim.kind.same_as", "claimed the same person", "DEC-319: R38: You say, as label.identityclaimkinds.same_as", null, false],
+  ["screen.person.claim.kind.not_same_as", "claimed not the same person", "DEC-319: R38", null, false],
+  ["screen.person.claim.kind.unsure", "unsure whether the same person", "DEC-319: R38", null, false],
+  ["label.claimbases.identifier", "An identifier both records hold", "DEC-319: people CLAIM_BASES; R38: the bases' labels owed to UX-DESIGN", null, false],
+  ["label.claimbases.corroborated_name", "The same name, with another detail that agrees", "DEC-319: people CLAIM_BASES", null, false],
+  ["label.claimbases.name", "The same name only", "DEC-319: people CLAIM_BASES", null, false],
+  ["label.claimbases.testimony", "What I know myself", "DEC-319: people CLAIM_BASES", null, false],
+  ["screen.person.claim.basis.help", "The basis decides the highest grade the claim can earn: an identifier both records hold earns the most, what you know yourself the least.", "DEC-319: R38: Because", null, false],
+  ["screen.person.claim.candidate", "{record} \xB7 agrees: {agrees}; differs: {differs}", "DEC-319: R38: a samepersoncandidates row, what agrees and differs (people R7)", null, false],
+  ["screen.person.claim.empty.summary", "The other record or the reason left empty", "DEC-319: R38: the refusal fold", null, false],
+  ["screen.person.claim.withdraw.reason", "Why you withdraw it", "DEC-319: R38: withdrawidentityclaim's reason", null, false],
+  ["screen.person.state.none", "a person with no connections yet", "DEC-319: R32 (3): the mockup state", null, false],
+  ["screen.proceeding.court.help", "The courts and forums your team holds, from its place and the ones members added.", "DEC-319: R36", null, false],
+  ["screen.proceeding.court.none.summary", "When no court is held yet", "DEC-319: R36: court.none and the form", null, false],
+  ["screen.places.courts", "Courts", "DEC-319: screens-settings R46", null, false],
+  ["screen.places.court.seeded", "from your place's rules", "DEC-319: R46: a forum the place seeds", null, false],
+  ["screen.places.court.added", "added by {name} on {date}", "DEC-319: R46: a court a member added", null, false],
+  ["screen.places.court.done", "Added the court: {name}.", "DEC-319: R46: after the act, by name", null, false],
+  ["screen.timeline.dated.meta", "{precision} \xB7 a dated fact, from {document} \xB7 grade {grade}", "DEC-319: R33 (5): each fact's stated date at its precision, its kind and grade", null, false],
+  ["wizard.subject.none.summary", "With no project to choose", "DEC-320: screens-wizards R17: wizard.subject.none.project in a fold", null, false],
+  ["screen.document.cite.question.help", "Set to the question this document was captured for; this project's questions come first.", "DEC-320: screens-inquiry R61", null, false],
+  ["screen.document.cite.none.summary", "Captured for no question", "DEC-320: R61: nothing preselected, the act says to choose", null, false],
+  ["screen.document.cite.choose", "Choose the question to cite this in first.", "DEC-320: R61: as screen.find-in.questionfirst", null, false],
+  ["screen.request.state.offices", "offices are known", "DEC-320: screens-action R20: the mockup state", null, false],
+  ["screen.request.state.nooffice", "no office is known yet", "DEC-320: R20: the mockup state", null, false],
+  ["stake.unreadable.summary", "When the stake can't be read", "DEC-320: screens-action R21", null, false],
+  ["stake.undetermined.summary", "When the tier can't be told", "DEC-320: R21: stake.ask.undetermined in a fold", null, false],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false],
@@ -13754,7 +13807,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.docket.name", "Docket", null, null, false],
   ["screen.docket.purpose", "The public record of every edition, correction and withdrawal of your team's cases.", null, null, false],
   ["screen.docket-public.name", "A case's docket, from outside", null, null, false],
-  ["screen.docket-public.purpose", "A published case's docket as anyone reads it, with no account: each new edition, correction, withdrawal and court order after publishing, dated and signed.", null, null, false],
+  ["screen.docket-public.purpose", "Lets anyone check what happened to a published case after it was published, without an account. Your team files and posts its entries on its own Docket.", null, null, false],
   ["screen.inbox.name", "Inbox", null, null, false],
   ["screen.inbox.purpose", "Material handed to your team through its doorbell. Move it into the record, or discard it with a reason.", null, null, false],
   ["screen.doorbell.name", "Hand material to the team", null, null, false],
@@ -14032,7 +14085,6 @@ var WORD_ROWS = Object.freeze([
   ["act.search.label.people", "Search people and organizations", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true],
   ["act.explore.label.people", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true],
   ["act.entitycreate.label.people", "Add someone the record follows", null, "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.", true],
-  ["act.person.label.person", "Open the person", null, "Opens this person's page: positions, career and interests, each dated and cited.", true],
   ["act.explore.label.person", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true],
   ["act.recordpersonfact.label.person", "Add a fact from a document", null, "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.", true],
   ["act.identityclaim.label.person", "Say another record is this person", null, 'Says this name refers to a person the record already follows, with how sure you are (a grade) and why. It is shown as a claim, "claimed the same person, grade B, because\u2026"; the records are linked, never merged, and anyone can see the reason or withdraw it with theirs.', true],
@@ -144549,6 +144601,9 @@ var Reevaluation = class {
   /** R15: ADOPT writes a new version of the reference pinned to the newer capture, the old staying readable: for a
    *  basis leg, a new basis version through `basis-versions` (its R28), holding the question's live legs as written with
    *  this one re-pinned (its grade is not carried: it was given to the earlier passage). The live basis is untouched.
+   *  R37: the version's `author` is the adopting member, so it reads as a member's own at `versionAccept` (its R49).
+   *  R38: a refusal of `appendVersion` (a divided question's among them) comes back unchanged with the notice's id, and
+   *  the notice stays open.
    *  The version and the notice's closing land together or neither does. It requires `why`, the member's words on why
    *  the newer version is adopted (DEC-88), asked after the machine refusal and before anything is read for writing;
    *  the why is recorded with the new version (its description and Session Log entry) and on the notice's closure. */
@@ -144650,7 +144705,7 @@ var Reevaluation = class {
     const answer2 = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
         target: r.holder,
-        version: { name: name3, description, relationship: labels2.size > 1 ? "or" : "and" },
+        version: { name: name3, description, relationship: labels2.size > 1 ? "or" : "and", author: who4 },
         grounds,
         legs: vlegs,
         author: who4,
