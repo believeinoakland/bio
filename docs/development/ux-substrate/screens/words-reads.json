@@ -7356,6 +7356,8 @@
     "queue.update.see",
     "queue.watch-keep-or-stop.detail",
     "queue.watch-keep-or-stop.summary",
+    "queue.watched-changed.detail",
+    "queue.watched-changed.summary",
     "refusal.ANSWER_MALFORMED",
     "screen.answers.asread",
     "screen.answers.cadence.weekly",
@@ -7575,14 +7577,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 732,
+    "reads": 734,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 296,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 436
+    "computedKeys": 438
    },
    "unkeyed": [
     {

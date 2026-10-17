@@ -6317,6 +6317,144 @@
    "en": "Sheet {sheet}, row {row}",
    "protected": false,
    "note": "DEC-303: retrieval R83: a sheet match's place"
+  },
+  {
+   "key": "refusal.STAKE_MALFORMED.action",
+   "en": "This action's stake says, in your own words, only what this one action adds to your team's and the project's stakes: some text, at most 1,000 characters, on one line, or nothing to clear it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: action-records R17"
+  },
+  {
+   "key": "refusal.DIVIDED_CANNOT_RESTRUCTURE",
+   "en": "This question was divided, and its smaller questions carry on from this source, so the newer version can't be adopted here. Adopt it in each smaller question that relies on it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: reevaluation R38"
+  },
+  {
+   "key": "screen.review-outside.until.zone",
+   "en": "It is not public: only people with this link can read it, until {date} at {time} ({zone}).",
+   "protected": false,
+   "note": "DEC-304: review R35: the grant's end in the team's own time zone; replaces screen.review-outside.until's UTC"
+  },
+  {
+   "key": "caseimport.stake.unreadable",
+   "en": "The team that sent this case stated a stake in this matter, in a form Civicsmith can't read, so it isn't shown. Ask that team for its statement.",
+   "protected": false,
+   "note": "DEC-304: case-import R25"
+  },
+  {
+   "key": "refusal.COPYRIGHTED_TEXT_CARRIED",
+   "en": "The case carries more of a copyrighted work's text than its findings rely on. Quote only the passages the findings rely on and cite the rest, then check again.",
+   "protected": false,
+   "note": "DEC-304: case-checker R26, a gate"
+  },
+  {
+   "key": "refusal.COPYRIGHTED_PASSAGE_UNRELIED",
+   "en": "The case quotes a passage of a copyrighted work that no finding relies on. Remove the quotation or cite it without quoting, then check again.",
+   "protected": false,
+   "note": "DEC-304: case-checker R26, a gate"
+  },
+  {
+   "key": "refusal.MALFORMED",
+   "en": "Something in this isn't in the form Civicsmith expects, so it couldn't be checked. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: case-checker R26, the general gate"
+  },
+  {
+   "key": "refusal.BENCHMARK_CALLED_NONCONFORMING.finding",
+   "en": "A benchmark does not bind this body, so this finding cannot call the act a violation or nonconforming. Say how it compares: below, slower than, or above. Then check again.",
+   "protected": false,
+   "note": "DEC-304: case-checker R26: a finding's own sentence"
+  },
+  {
+   "key": "refusal.MARK_NO_ITEM",
+   "en": "Say which item to mark. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: following R32"
+  },
+  {
+   "key": "refusal.MARK_NO_SUCH_ITEM",
+   "en": "That item isn't in your team's records, or isn't one you can see. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: following R32"
+  },
+  {
+   "key": "refusal.SECOND_LOOK_NO_NOTE",
+   "en": "Say in a note what the second look should check. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: following R33"
+  },
+  {
+   "key": "refusal.SECOND_LOOK_NOT_OPEN",
+   "en": "That second look is already closed, so it can't be changed. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: following R33"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_OPEN_FROM_ACTION",
+   "en": "Only a member opens a question from an action, and this came from the assistant or another automated credential. Nothing was written.",
+   "protected": true,
+   "note": "DEC-304: action-records R19"
+  },
+  {
+   "key": "refusal.ACTION_INQUIRY_NO_QUESTION",
+   "en": "Write the question to open. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: action-records R19"
+  },
+  {
+   "key": "refusal.ACTION_NO_PROJECT",
+   "en": "This action belongs to no project, so a question can't be opened from it. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: action-records R19"
+  },
+  {
+   "key": "queue.watched-changed.summary",
+   "en": "{what} changed",
+   "protected": false,
+   "note": "DEC-304: notice-producers (T50-82): a watched item changed (DEC-238)"
+  },
+  {
+   "key": "queue.watched-changed.detail",
+   "en": "Something you watch changed on {date}. Open it to see what changed; nothing has been decided.",
+   "protected": false,
+   "note": "DEC-304: DEC-238"
+  },
+  {
+   "key": "ai.run.ending.nothing-written",
+   "en": "it finished its work but wrote nothing",
+   "protected": false,
+   "note": "DEC-304: run-rules R34; after \"The run ended: \""
+  },
+  {
+   "key": "refusal.LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE",
+   "en": "Nothing is recorded as missing at this level: no document there was in scope, so none was looked at. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: run-rules R35"
+  },
+  {
+   "key": "refusal.VERSION_NAME_MALFORMED",
+   "en": "A reading's name is a few plain words on one line. Rename it and try again. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: basis-versions R54"
+  },
+  {
+   "key": "refusal.BAD_READING",
+   "en": "Your reading must say something, in at most 500 characters, and it takes the place of a named reading rather than going beside one. Nothing was written.",
+   "protected": false,
+   "note": "DEC-304: basis-versions R51"
+  },
+  {
+   "key": "ai.progress.reading.ask",
+   "en": "Reading {document}",
+   "protected": false,
+   "note": "DEC-304: agent-worker R113: the assistant's reads while answering, with no total (DEC-298)"
+  },
+  {
+   "key": "ai.reading.levels.disagree",
+   "en": "Two levels of the assistant's reading disagree about {record}: {first} and {second} give different results. Check the record yourself before you rely on either.",
+   "protected": false,
+   "note": "DEC-304: agent-worker R116: on the question page and in the run's result"
   }
  ],
  "rewrite": {
@@ -6466,6 +6604,7 @@
   "stake.none": "No stake of its own beyond the team's",
   "screen.review-copy.until.nozone": "Your team's time zone isn't set, and a review link's end date is counted in it. Set it under Settings, Your team, then share.",
   "refusal.ACCOUNT_MEMBER_NOT_ACTIVE": "Your membership isn't active in your team's Civicsmith just now, so this can't go ahead. Nothing was sent. An administrator can tell you why.",
-  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view."
+  "refusal.NO_SAFE_VIEW": "Your team's Civicsmith makes safe views of documents, presentations, spreadsheets and plain text, and this file is none of them, so it has no safe view.",
+  "refusal.MACHINE_CANNOT_MARK": "Only a member, acting for themselves, marks this: a watch, a second look, or a result from a paid or account-gated service. No assistant, scheduled task or unattended process can. Nothing was written."
  }
 }
