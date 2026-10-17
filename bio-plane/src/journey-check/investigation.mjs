@@ -7,7 +7,7 @@
    live arm through the real sign-in, whose code the person types (R12). */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { settle } from "./walker.mjs";
+import { settle, StepFailed } from "./walker.mjs";
 import { act, control, type, open, requireDrawn } from "./journeys.mjs";
 import { requireWord, requireAnyWord, byWord, wordPattern, word } from "./words.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
@@ -326,17 +326,19 @@ const own = (label) => NO_ASSISTANT + label;
 
 export async function walkUnassisted(walk, page, { base, founder }) {
   walk.journey = "R16 without the assistant (journey 29's search path)";
+  /* a step that fails has said so; the steps after it do not depend on it, so the path is still walked to its conclusion */
+  const stays = (e) => { if (!(e instanceof StepFailed)) throw e; };
   const { project, question } = await projectAndQuestion(walk, page, base, { title: OWN_PROJECT, question: OWN_QUESTION });
   await walk.step(page, own("nothing to conclude on yet: no citation"), async (p) => {
     await p.goto(question); await settle(p);
     await requireWord(p, "question.empty.conclude.own", { within: "#cs-main" });
     if (await p.locator('#cs-main [data-conclude="form"]').count()) throw new Error("the question offers to conclude before a passage is cited");
-  });
+  }).catch(stays);
   await walk.step(page, own("search: look for a source the team already holds"), async (p) => {
     await p.goto(question); await settle(p);
     await act(p, "search");
     await requireDrawn(walk, p, "finder");
-  });
+  }).catch(stays);
   await walk.step(page, own("capture by address, from the question's \"Add a document\""), async (p) => {
     await p.goto(question); await settle(p);
     await follow(p, "question.adddoc");
