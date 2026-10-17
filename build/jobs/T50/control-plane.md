@@ -79,3 +79,7 @@ After merging tranche/T50 with every screen job: `node --test test/m/control-pla
 ## J6 · COMPLETE
 
 COMPLETE after B7. Merged tranche/T50: module 302 tests, all pass. Row (1) passes at the merged base with no change of mine; (2) screens-daily is right (R9, R40: a door starts directly, its scripts in the opened offer), so t47-e2e now presses the door first and checks the script press sends no startfrom POST. Record updated.
+
+## J7 · REPORT
+
+Correction to J6 ('all pass'): the module suite is not stable. Over 5 full runs of test/m/control-plane/ at my merge of tranche/T50: 3 runs 302/302, 2 runs failed with t46-e2e 'R75 end to end: capture uploads...' (the repeat upload of the same bytes answers existed:false, expected true, t46-e2e line 171) and, once of those two, t47-e2e 'R81 end to end: Home draws the group's projects' (the row text, your B7 (1)). Each passes alone and in 3 of 5 full runs, and fails only under the whole suite's parallel load, so the cause is a timing race in the Miniflare end-to-end tests (the first upload's capture row seen late, the project row read before its question count lands), not a requirement failing and not something control-plane's code does between those requests. I have not weakened or skipped either; I have not fixed the race either. If you want it chased, send a CHANGE and I will diagnose in the test harness first (run the e2e files alone under load with --test-concurrency).
