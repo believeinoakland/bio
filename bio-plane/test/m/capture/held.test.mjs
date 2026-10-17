@@ -9,6 +9,7 @@ import { captureOps, ACQUIRE_GRADE_NOTE, READ_LIMIT, REASON_MAX, WITHHELD_QUESTI
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { PER_ITEM_MAX } from "../../../src/record-core/index.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
@@ -94,9 +95,9 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
   assert.deepEqual({ ...one }, { bundle_id: "INFO-1", title: "title INFO-1", project: null,
                                  source: { address: "https://b.example/one", via: "direct", retrieved: "2026-01-01T00:00:00Z" },
                                  collected_since: "2026-01-01T00:00:00Z", age_days: 69,
-                                 eligible: null, eligibility_basis: "no batch-release examination is registered, so eligibility is undetermined",
+                                 eligible: null, eligibility_basis: word("capture.undetermined.batch_release_examination"),
                                  captured_for: null,
-                                 captured_for_basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+                                 captured_for_basis: word("capture.basis.reader_questions_document"),
                                  /* R77 (T47): the fixture's provenance stand-in has no `captureGrade`, so it does not answer */
                                  capture: { sha256: H("1"), grade: null } });
   const three = r.held.find((x) => x.bundle_id === "INFO-3");
@@ -369,7 +370,7 @@ function capturedFor(c, { module = "capture-requests" } = {}) {
 const OPEN = { question: "Q-OPEN", title: "Budget 2024", asker: "member:m1" };
 const SHUT = { question: "Q-SHUT", title: "Old question", asker: "member:m2" };
 const HID = { question: "Q-HID", title: "Secret project question", asker: "member:m1" };
-const UNDETERMINED_FOR = "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined";
+const UNDETERMINED_FOR = word("capture.basis.reader_questions_document");
 
 test("R83 (DEC-141): the captured-for reader is a third reader slot, registered once at start whoever registers it; a second or malformed registration is refused as the other slots' are; it is handed the document, the viewer and the document's captures", async () => {
   const { c } = heldWorld();
@@ -381,7 +382,7 @@ test("R83 (DEC-141): the captured-for reader is a third reader slot, registered 
   assert.equal(c.registerReader("captured-fur", "x", () => ({})).reason, "UNKNOWN_READER");
   await c.heldCaptures({ viewer: "member:m2", project: null, now: NOW });
   const one = calls.find((x) => x.document === "INFO-1");
-  assert.deepEqual(one, { document: "INFO-1", viewer: "member:m2", captures: [H("1")] }, "the bundle id, the viewer and the register's captures");
+  assert.deepEqual(one, { document: "INFO-1", viewer: "member:m2", captures: [H("1")], asks: [] }, "the bundle id, the viewer, the register's captures and the asks R94 recorded for them (none)");
 });
 
 test("R83 R77: a reader that throws, answers a promise, or answers anything but {questions: [...]} with every entry well formed is no answer: captured_for is null and stated undetermined, never a partial list; with no reader registered, likewise", async () => {
@@ -394,7 +395,7 @@ test("R83 R77: a reader that throws, answers a promise, or answers anything but 
     c.registerReader("captured-for", "capture-requests", fn);
     const row = (await c.heldCaptures({ viewer: "member:m1", now: NOW })).held.find((x) => x.bundle_id === "INFO-1");
     assert.equal(row.captured_for, null, String(fn));
-    assert.equal(row.captured_for_basis, "capture-requests did not answer which questions this document was captured for, so they are undetermined");
+    assert.equal(row.captured_for_basis, word("capture.basis.did_answer_questions", { module: "capture-requests" }));
   }
   const { c } = heldWorld();
   const rows = (await c.heldCaptures({ viewer: "member:m1", now: NOW })).held;
@@ -412,7 +413,7 @@ test("R77 R83 (DEC-141 (1)): each held row answers captured_for for the viewer: 
   assert.deepEqual(m1["INFO-3"], { questions: [], withheld: null }, "captured for no question");
   const m2 = await by("member:m2");
   assert.deepEqual(m2["INFO-1"], { questions: [OPEN, SHUT], withheld: WITHHELD_QUESTION }, "the hidden question withheld whole");
-  assert.deepEqual(m2["INFO-2"], { questions: [], withheld: "Captured for a question you may not see" }, "only a hidden question: the sentence alone");
+  assert.deepEqual(m2["INFO-2"], { questions: [], withheld: word("screen.held.withheld") }, "only a hidden question: the sentence alone");
   assert.ok(!JSON.stringify(m2).includes("Q-HID") && !JSON.stringify(m2).includes("Secret"), "no id or title of a hidden question");
   assert.deepEqual(everything(rows), before, "writes nothing");
   /* the reader's own leak is not carried: a not-visible entry's title and asker are never shown */

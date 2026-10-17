@@ -1,12 +1,14 @@
 /* capture, T35 (T35-22) at the module's interface: the DEC-149 rows (plan rule 4: field and identifier names stay; "the
-   plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing; each string
-   named by a test; R15's `archive-unpack` kind. The doorbell's DEC-149 rows and R85 (now doorbell R20) moved with it to
+   plane" and "the instance" go; member-facing text names the thing; each string named by a test; since T50 (N1116,
+   N1160) those sentences are read by key through setup-words and say "team", so each is asserted as `word(key, vars)`,
+   never as English; R15's `archive-unpack` kind. The doorbell's DEC-149 rows and R85 (now doorbell R20) moved with it to
    `doorbell` (T42, K2607). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, governor, network, granted, sha } from "./fixture.mjs";
 import { TASK_KINDS } from "../../../src/capture/index.mjs";
 import { acquireOp } from "../../../src/capture/ops.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../../../src/tsa.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -34,16 +36,16 @@ const scripted = (d, archived, replay = null) => network((url) => {
   return null;
 });
 
-test("R68, DEC-149 M (`#replayMatches`): a co-archive whose locator is no raw replay reads undetermined, \"the archived locator is not a replay your group's Civicsmith can read raw\"", async () => {
+test("R68, DEC-149 M (`#replayMatches`): a co-archive whose locator is no raw replay reads undetermined, with capture.match_basis.archived_locator_replay", async () => {
   const w = reWorld();
   const net = scripted(w.d, "https://web.archive.org/web/2026100712/https://a.example/page");
   let r;
   try { r = await w.c.reattest({ captureSha: w.d, locator: LOCATOR }); } finally { net.restore(); }
   const co = r.late_attestations.find((o) => o.kind === "co_archive");
-  assert.deepEqual([co.matches, co.match_basis], ["undetermined", "the archived locator is not a replay your group's Civicsmith can read raw"]);
+  assert.deepEqual([co.matches, co.match_basis], ["undetermined", word("capture.match_basis.archived_locator_replay")]);
 });
 
-test("R68, DEC-149 M (`#replayMatches`): a replay over 256 MiB reads undetermined, \"the replay is larger than your group's Civicsmith compares\"", async () => {
+test("R68, DEC-149 M (`#replayMatches`): a replay over 256 MiB reads undetermined, with capture.match_basis.replay_larger_group", async () => {
   const w = reWorld();
   const chunk = new Uint8Array(4 << 20);
   let sent = 0;
@@ -52,24 +54,24 @@ test("R68, DEC-149 M (`#replayMatches`): a replay over 256 MiB reads undetermine
   let r;
   try { r = await w.c.reattest({ captureSha: w.d, locator: LOCATOR }); } finally { net.restore(); }
   const co = r.late_attestations.find((o) => o.kind === "co_archive");
-  assert.deepEqual([co.matches, co.match_basis], ["undetermined", "the replay is larger than your group's Civicsmith compares"]);
+  assert.deepEqual([co.matches, co.match_basis], ["undetermined", word("capture.match_basis.replay_larger_group")]);
 });
 
-test("R39, DEC-149 M (`renderAdmit`): a render over the concurrency cap waits, \"<n> renders are running and your group's Civicsmith runs at most <cap> at once\"", () => {
+test("R39, DEC-149 M (`renderAdmit`): a render over the concurrency cap waits, with capture.why.renders_running_group", () => {
   const { c } = fresh();
   const at = "2026-10-07T12:00:00Z";
   assert.equal(c.renderAdmit({ allowanceMs: 10000, reserveMs: 1000, cap: 1, at }).state, "admitted");
   const w = c.renderAdmit({ allowanceMs: 10000, reserveMs: 1000, cap: 1, at });
-  assert.deepEqual([w.state, w.why], ["waiting", "1 renders are running and your group's Civicsmith runs at most 1 at once"]);
+  assert.deepEqual([w.state, w.why], ["waiting", word("capture.why.renders_running_group", { running: 1, cap_n: 1 })]);
 });
 
-test("R73, DEC-149 M (`acquireOp`): op=acquire with no evidence storage answers the storage-absent refusal with \"your group's Civicsmith has no evidence storage configured\"", async () => {
+test("R73, DEC-149 M (`acquireOp`): op=acquire with no evidence storage answers the storage-absent refusal with capture.response.group_civicsmith_evidence", async () => {
   const said = [];
   const storageAbsent = (op, error) => { said.push([op, error]); return json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503); };
   const out = await acquireOp(new Request("https://p/", { method: "POST", body: "{}" }), {}, null,
                               { json, storeSilent, storageAbsent, doAnswer, cls: "member", member: true, sessMember: "m1", storeName: "bio" });
   assert.equal(out.response.status, 503);
-  assert.deepEqual(said, [["acquire", "your group's Civicsmith has no evidence storage configured"]]);
+  assert.deepEqual(said, [["acquire", word("capture.response.group_civicsmith_evidence")]]);
 });
 
 /* ---- R15 (T35; K1940): the `archive-unpack` kind ---- */

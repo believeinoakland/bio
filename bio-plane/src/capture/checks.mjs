@@ -18,7 +18,12 @@
  *
  * R37 (T43; N849, N851; K2609): C-85.1–C-85.5 and C-118.2, .3, .4 and .7 moved with their raisers to `doorbell` (its
  * R21), numbers and translations kept, and are defined in doorbell's table alone; this table holds none of them.
- * C-118's next free number stays this module's to mint: C-118.11. */
+ * C-118's next free number stays this module's to mint: C-118.11.
+ *
+ * T50 (N1116; K3366, K3368): each row's `translation` is words.json's `refusal.<CODE>`, read by key through
+ * `words.mjs`; this module holds no member-facing English. */
+
+import { rowWord } from "./words.mjs";
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
@@ -26,33 +31,27 @@ const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 export const CAPTURE_CHECKS = Object.freeze({
   EVIDENCE_NOT_HELD: Object.freeze({
     check: 'C-118.1', where: at("evidenceAbsent", "is-evidence-held"),
-    translation: 'The record holds no stored copy of a document under this fingerprint.',
+    translation: rowWord("EVIDENCE_NOT_HELD"),
   }),
   NOT_THE_CAPTURING_ACTOR: Object.freeze({
     check: 'C-118.5', where: inIndex("recordCaptureAccount", "is-capturing-actor"),
-    translation: 'An account of how a document was captured is added only by the member who captured it, and that is '
-               + 'not you, or no member captured it. Nothing was written.',
+    translation: rowWord("NOT_THE_CAPTURING_ACTOR"),
   }),
   ACCOUNT_NO_TEXT: Object.freeze({
     check: 'C-118.6', where: inIndex("recordCaptureAccount", "is-account-worded"),
-    translation: 'An account of how you captured a document says what happened in your own words, and this one is '
-               + 'empty. Write it. Nothing was written.',
+    translation: rowWord("ACCOUNT_NO_TEXT"),
   }),
   MACHINE_CANNOT_SET_ASIDE: Object.freeze({
     check: 'C-118.8', where: inIndex("#heldActRefusal", "is-held-act-by-member"),
-    translation: 'Setting held material aside, or bringing it back, is a member\'s own act, and no member made this '
-               + 'request. Nothing was written.',
+    translation: rowWord("MACHINE_CANNOT_SET_ASIDE"),
   }),
   SET_ASIDE_NO_REASON: Object.freeze({
     check: 'C-118.9', where: inIndex("#heldActRefusal", "is-held-act-reasoned"),
-    translation: 'Setting held material aside, or bringing it back, records why, in your own words, and no reason was '
-               + 'given, or it is longer than 2,000 characters. Write one. Nothing was written.',
+    translation: rowWord("SET_ASIDE_NO_REASON"),
   }),
-  /* R86 (T41-8a; K2425 (4), K2434): the next free row of C-118, awaiting T42's stamp (plan rule 4 (2)). Its words are
-     R86's Suggestion's meaning until the UX stream gives its own. */
+  /* R86 (T41-8a; K2425 (4), K2434): the next free row of C-118, awaiting T42's stamp (plan rule 4 (2)). */
   UPLOAD_NO_STATEMENT: Object.freeze({
     check: 'C-118.10', where: inIndex("uploadCapture", "is-upload-stated"),
-    translation: 'A file brought into the record records where it came from, in your own words, and none was given, or '
-               + 'it is longer than 2,000 characters. Write it. Nothing was written.',
+    translation: rowWord("UPLOAD_NO_STATEMENT"),
   }),
 });

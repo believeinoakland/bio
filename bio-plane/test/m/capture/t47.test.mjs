@@ -13,6 +13,7 @@ import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { checkBundle } from "../../../src/record-grammar/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const route = (c, name, qs = "", body = null) => captureOps(c, new URL(`http://x/${name}?${qs}`), body, c.env)[name]();
 const ids = (r) => r.held.map((x) => x.bundle_id);
@@ -281,11 +282,11 @@ test("R90 (T47; N983): op=sourcereach is judged at this module's clock (captureO
   const { c } = await reachWorld(() => JAN20);
   const r = await route(c, "sourcereach", "address=https://gone.example/doc");
   assert.deepEqual([r.known, r.consecutive_failures, r.failing_days, r.fallback_eligible], [true, 2, 19, true]);
-  assert.match(r.basis, /19 days, threshold 14 with at least 2 failures/);
+  assert.equal(r.basis, word("capture.basis.failing_since_days", { first_failure_since: r.first_failure_since, stale_days: 19, days: 14, min_for_age: 2 }));
   /* the control: the same record at a clock five days on from the first failure is not eligible by age */
   const early = await reachWorld(() => Date.parse("2026-01-06T00:00:00Z"));
   const e = await route(early.c, "sourcereach", "address=https://gone.example/doc");
-  assert.deepEqual([e.failing_days, e.fallback_eligible, e.basis], [5, false, "not eligible: the threshold is not met"]);
+  assert.deepEqual([e.failing_days, e.fallback_eligible, e.basis], [5, false, word("capture.basis.eligible_threshold_met")]);
 });
 
 test("R90 (T47; N983): a now in the query or the body is never read: the request answers exactly as the same request without it", async () => {

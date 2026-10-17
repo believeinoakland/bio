@@ -7,6 +7,7 @@ import { fresh, receipt, register, H, bucket, newKey, sshsign, signer, network }
 import { captureOf, captureAccountStatement, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
 import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const A = H("a"), B = H("b"), C = H("c"), D = H("d");
 
@@ -18,13 +19,13 @@ test("R8 R43: each attempt is recorded by kind, governed counted apart, eligibil
   await c.recordSourceOutcome({ addressNorm: addr, outcome: "governed", at: "2026-01-01T00:00:00Z" });
   let r = c.sourceReachability({ addressNorm: addr, now: "2026-01-01T00:00:00Z" });
   assert.equal(r.governed_refusals, 1); assert.equal(r.consecutive_failures, 0); assert.equal(r.fallback_eligible, false);
-  assert.match(r.basis, /DELIBERATELY not counted/);
+  assert.equal(r.basis, word("capture.basis.eligible_governed_refusal", { governed_refusals: 1 }));
   for (const o of ["source_refused", "fetch_failed"]) await c.recordSourceOutcome({ addressNorm: addr, outcome: o, status: 503, at: "2026-01-01T00:00:00Z" });
   assert.equal(c.sourceReachability({ addressNorm: addr, now: "2026-01-02T00:00:00Z" }).fallback_eligible, false, "two failures, one day");
   assert.equal(c.sourceReachability({ addressNorm: addr, now: "2026-01-16T00:00:00Z" }).fallback_eligible, true, "two failures, the first 15 days old");
   await c.recordSourceOutcome({ addressNorm: addr, outcome: "source_refused", status: 404, at: "2026-01-02T00:00:00Z" });
   r = c.sourceReachability({ addressNorm: addr, now: "2026-01-02T00:00:00Z" });
-  assert.equal(r.consecutive_failures, 3); assert.equal(r.fallback_eligible, true); assert.match(r.basis, /3 consecutive failures/);
+  assert.equal(r.consecutive_failures, 3); assert.equal(r.fallback_eligible, true); assert.equal(r.basis, word("capture.basis.consecutive_failures_produced", { consecutive_failures: 3, failures: 3 }));
   await c.recordSourceOutcome({ addressNorm: addr, outcome: "success", status: 200, at: "2026-01-03T00:00:00Z" });
   r = c.sourceReachability({ addressNorm: addr, now: "2026-01-30T00:00:00Z" });
   assert.equal(r.consecutive_failures, 0); assert.equal(r.fallback_eligible, false); assert.equal(r.governed_refusals, 1);
@@ -236,11 +237,14 @@ test("R27: recordLinks replaces a capture's rows; linksTo answers every source a
   const r = c.resolveLinks({ sourceCapture: A });
   const by = Object.fromEntries(r.links.map((l) => [l.link_ref, l]));
   assert.equal(by["https://t.example/x"].verdict, "contemporaneous");
+  assert.equal(by["https://t.example/x"].basis, word("capture.basis.bytes_seen_served"));
   assert.equal(by["https://t.example/x"].target_bundle, "INFO-9", "the target's home");
-  assert.equal(by["https://t.example/self"].verdict, "undetermined"); assert.match(by["https://t.example/self"].basis, /the document itself/);
+  assert.equal(by["https://t.example/self"].verdict, "undetermined"); assert.equal(by["https://t.example/self"].basis, word("capture.basis.link_points_document_itself"));
   assert.equal(by["https://t.example/one"].verdict, "undetermined"); assert.match(by["https://t.example/one"].detail, /one capture/);
-  assert.equal(by["https://t.example/old"].verdict, "undetermined"); assert.match(by["https://t.example/old"].basis, /all predate/);
+  assert.equal(by["https://t.example/one"].basis, word("capture.basis.record_holds_capture_target"));
+  assert.equal(by["https://t.example/old"].verdict, "undetermined"); assert.equal(by["https://t.example/old"].basis, word("capture.basis.record_captures_target"));
   assert.equal(by["https://t.example/new"].verdict, "superseded");
+  assert.equal(by["https://t.example/new"].basis, word("capture.basis.capture_target_postdates"));
   assert.equal(by["https://t.example/none"].resolution, "offsite");
   assert.equal(by["https://t.example/arch"].resolution, "offsite", "archive receipts are not the target's direct receipts");
   assert.equal(by["#top"].resolution, "anchor");
@@ -282,7 +286,7 @@ test("R27 (N133): resolveLinks decides each verdict over the target's direct cap
                    ["contemporaneous", hx(9002), 402], "the bracketing capture first seen earliest, among every capture counted");
   assert.deepEqual([by["https://t.example/pre"].verdict, by["https://t.example/pre"].target_captures], ["undetermined", 300]);
   assert.equal(by["https://t.example/pre"].target_retrieved, day(119), "the last capture before T");
-  assert.match(by["https://t.example/pre"].basis, /all predate/);
+  assert.equal(by["https://t.example/pre"].basis, word("capture.basis.record_captures_target"));
   assert.deepEqual([by["https://t.example/post"].verdict, by["https://t.example/post"].target_retrieved], ["superseded", day(140)], "the first capture after T");
   assert.equal(by["https://t.example/tie"].target_capture, hx(40002), "of two captures first seen together, the later digest is the last before T");
   assert.match(by["https://t.example/tie"].detail, /bracketing captures differ/);
