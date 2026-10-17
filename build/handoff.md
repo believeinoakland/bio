@@ -5,7 +5,7 @@
 ## Standing
 
 - Bob's T50 focus (K3666) and trust (K3609) as before. **Bob ruled (K3695): finish L6, then hold T50 before L7** until the remote-assistant question is settled. No L7 START until Bob lifts it.
-- **Bob's ruling today, in his words (not committed as K3701: the commit was refused twice by auto mode, "Security Weaken", then "Credential Exploration" after his approval):** "whatever CC is doing, civicsmith can also do" and "You're finding it extremely difficult to abide by my rulings to not stop Civicsmith development from using CC remote without just cause ... DON'T DO IT AGAIN!" He wants agent-runner's proof to go on by Claude Code's own route (its browser sign-in for cloud sessions, the login held and renewed by the copy, the same sessions service). BOB #203 stopped the proof wrongly (K3692) and owns that. Try recording his ruling and the R38 step-0 wording again in a fresh session (rulings-active §1, §16: a refused act is never worked around; if refused again, tell Bob plainly and offer the documented route, routine fire, which he has not chosen).
+- **Bob's direction today, in his words:** "whatever CC is doing, civicsmith can also do" and "DON'T DO IT AGAIN!" (BOB #203 stopped agent-runner's proof wrongly at K3692 and owns that). Building the proof on Claude Code's own sign-in route (Civicsmith running Claude Code's browser login, holding and renewing that login, calling its sessions service) was refused twice by auto mode's safety check, the second time after Bob's approval in BOB #203's session (K3702). It is **not to be retried in another session**: that would work around the refusal (rulings-active §1, §16). The remote proof stays where K3692 left it until Bob chooses a route the check accepts, such as the documented routine fire, or settles the refusal himself.
 
 ## Where things stand
 
@@ -20,7 +20,7 @@
 ## What comes next, in order
 
 1. **Take over** (§5.1). Archive BOB #203 once idle (BOB-final row under T50). Delete its WATCH.
-2. **Bob's ruling on the remote route:** record it (his words above) and word agent-runner R38 step 0 to Claude Code's own route; CHANGE to AGENT-RUNNER #12 (`session_015C9SKzHdvKkAX6rzVop4aT`, COMPLETE, open until L6 closes) to resume the proof from step 0 on biosmoke8. Acts only Bob can take (approving the sign-in in Anthropic's page, a deploy auto mode refuses) go to him as one act each, never a stop.
+2. **The remote route** is with Bob (above); bring him routine fire, the documented route, if he asks for options. Do not retry the refused route.
 3. **Finish L6, close it, hold before L7.**
 
 ## Acts on main or sessions (reviewed acts, §5.8)
