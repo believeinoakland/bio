@@ -24,3 +24,26 @@ Gaps for the design lane (no key holds the sentence; kept as inline English, as 
 Plan rule 6 items for a Haiku job:
 - (N1068) "labelled" to "labeled": no member-facing text of this module carries the spelling. The only occurrences are in comments and test titles, which I left.
 - (N1073) hand-lists: the T48 census has no case-account row, and its tests import only the exports of other modules (record-grammar, record-core, membership and others), with no hand-listed ops, rows or words of theirs. Nothing to change.
+
+## J2 · COMPLETE
+
+Job complete for case-account (T50-43), code at `f56c99d9c9` on `job/T50/case-account`.
+
+Entries applied:
+- (N1132; DEC-315, K3707) the words check by key: the three C-153 translations and `ADVOCACY_WORDS` (checks.mjs), the three reviewer-comment sentences (document.mjs), and the `detail` of the four DEC-315 refusals (index.mjs) now read through `word()`. The new test `t50-words.test.mjs` holds that the module's source carries no words.json sentence (with a control) and that `NO_SUCH_ACCOUNT_DRAFT` answers the list's sentence.
+- N1068 and N1073: nothing in this module needed a change; see the REPORT J1.
+
+Deferred, with why: the field-level sentences that no key holds stay as listed in J1 (a design-lane word, not this job's to key).
+
+Tests:
+- `node --test bio-plane/test/m/case-account/*.test.mjs`: tests 43, pass 43, fail 0 (baseline before the change: 1 failing, t46 R16).
+- Dependent modules (`case-authoring`, `control-plane`, `plane` test dirs): tests 733, pass 732, fail 1. The one failure, `plane/roster.test.mjs` R5, R9, R45, fails identically on the branch's HEAD before my change (project-roster's ops), so it is not this job's.
+
+Checks (from `civicos-process`, product `/home/user/bio`):
+- format: 171 modules, 170 requirements files; 0 failures
+- architecture (case-account): 13 product files, 55 relative imports; 0 failures
+- coverage (case-account): 1 modules, 16 of 16 live requirement ids named by a test; 0 failures
+- ownership (`origin/tranche/T50` to HEAD): 8 files changed by case-account; 0 failures
+- `checks/run.mjs` over the whole product: format and architecture 0 failures; coverage 33 failures, all in other modules, none in case-account; channels 0 failures
+
+Size (session_01NHpAEcWRV4sTETBcT8vUTP): test runs 4, module lines 935
