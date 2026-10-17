@@ -3,6 +3,7 @@
    `bounds` gives, or null where not stated; an upper bound (R24) has `start` null and `precision` `upper_bound`. A day is
    never read as its midnight (K1464): it is its whole local day. Sequence is computed here on each read and never stored. */
 import { bounds, compare, isCalendarDate } from "../civil-time/index.mjs";
+import { word } from "../setup-words/index.mjs";
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const MINUTE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
@@ -50,17 +51,16 @@ const dt = (w) => ({ value: w.value, precision: w.precision, zone: w.zone });
 
 /** R31: `before`, `after` or `{undetermined, why}`, comparing two whens; never a guess, never stored. */
 export function sequenceOf(a, b) {
-  if (!a || !b) return { undetermined: true, why: "placed nowhere: an event with no dated attestation has no when" };
+  if (!a || !b) return { undetermined: true, why: word("events.why.placed_nowhere_event") };
   if (a.precision === "upper_bound" || b.precision === "upper_bound" || !a.zone || !b.zone) {
     if (a.end && b.start && a.end <= b.start) return "before";
     if (b.end && a.start && b.end <= a.start) return "after";
-    const why = !a.zone || !b.zone ? "a when held with no zone has no span, so which came first is not settled"
-      : "an upper bound says only \"on or before\", so which came first is not settled";
+    const why = !a.zone || !b.zone ? word("events.text.held_zone_span") : word("events.text.upper_bound_says");
     return { undetermined: true, why };
   }
   const c = compare(dt(a), dt(b));
   if (c === "before" || c === "after") return c;
-  return { undetermined: true, why: c && c.why ? c.why : "the precision held does not settle the order" };
+  return { undetermined: true, why: c && c.why ? c.why : word("events.why.precision_held_settle") };
 }
 
 /** A time a caller names (`from`, `to`, `at`): a day, a minute or an instant, as a span in `zone`; null when absent. */
