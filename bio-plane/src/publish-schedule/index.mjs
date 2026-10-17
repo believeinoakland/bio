@@ -24,6 +24,8 @@
  * factory on the same host unless given; a test passes its own):
  *   storage       the host's `storage.sql` (the same storage as `publication`'s, so both read one table).
  *   record        `transact`, `getSetting("jurisdiction_profiles")` (R1), `declareTable` (R10).
+ *   localFacts    the governing zone (R1): `local-facts`' instance, by default made on the host on first read; a test may
+ *                 pass its own, or null for none.
  *   membership    `isProjectOwner` (R3); `viewerPredicate` and `listenerRefusal` are its exported rules.
  *   publication   `hasCaseStanding` (its R1; R3, R4), `registerWaitingEditions` (its R77; R8).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock). */
@@ -31,6 +33,7 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { PUBLISH_SCHEDULE_DECLARATIONS, migratePublishSchedule } from "./schema.mjs";
 import * as schedule from "./schedule.mjs";
 
@@ -46,12 +49,20 @@ export class PublishSchedule {
   purgeDeclaration = null;  // R10: record-core's answer to this module's declaration, set at creation
   waitingSource = null;     // R8: publication R77's answer to this module's registration, or null when R77 is not offered
 
-  constructor({ storage, record, membership, publication, now = null } = {}) {
+  #localFacts = () => null;
+
+  constructor({ storage, record, membership, publication, localFacts = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.publication = publication;
+    if (typeof localFacts === "function") this.#localFacts = localFacts;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
+  }
+
+  /** R1: `local-facts`' instance, which answers the governing zone (its R2), or null when none is made. */
+  localFacts() {
+    try { return this.#localFacts(); } catch { return null; }
   }
 
   migrate() { migratePublishSchedule(this.sql); }
@@ -97,7 +108,7 @@ export class PublishSchedule {
   publishAtMove(a) { return schedule.publishAtMove(this, a); }
   publishAtCancel(a) { return schedule.publishAtCancel(this, a); }
   scheduledEditions(a) { return schedule.scheduledEditions(this, a); }
-  /** R1: the group's time zone as R1 reads it, or null. */
+  /** R1: the group's time zone as R1 reads it (local-facts first, then the profiles), or null. */
   groupZone() { return schedule.groupZone(this); }
   /** R7 (N681): the case's waiting edition, or null, for `case-authoring` (its R58, R59). */
   waitingEditionOf(caseId) { return schedule.waitingEditionOf(this, caseId); }
@@ -127,7 +138,10 @@ export function publishScheduleOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const publication = d.publication || publicationOf(host, { record, membership });
-    ps = new PublishSchedule({ storage, record, membership, publication, now: d.now });
+    /* R1: the governing zone is local-facts' (its R2), made on first read as retrieval R69 makes it; a test passes its own. */
+    const localFacts = d.localFacts !== undefined ? () => d.localFacts
+                                                  : () => localFactsOf(host, { storage, record, membership });
+    ps = new PublishSchedule({ storage, record, membership, publication, localFacts, now: d.now });
     instances.set(host, ps);
     ps.migrate();
     /* R10: the declaration's answer is kept, so a refused one (TABLE_DECLARED: nothing declared) is seen. */
