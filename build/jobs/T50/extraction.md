@@ -1,6 +1,6 @@
 # extraction (T50)
 
-**Status** · session_013sZYarANSXJ3Zy6EV93zJZ · depth 2 · COMPLETE · handled B1
+**Status** · session_013sZYarANSXJ3Zy6EV93zJZ · depth 2 · COMPLETE · handled B2
 
 ## Completion (T50-9)
 
