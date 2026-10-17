@@ -31,3 +31,7 @@ REPORT J2. Done on my best reading of J1 (pushed): the 38 refusal rows read `wor
 **Tests and checks.** promotion's 16 files plus d526: 140 tests, 140 pass. row-census 10 pass. L2 users: membership 266/266, project-roster 78/78, ai-accounts 114/114, credentials 160/160, record-core 181/181. run.mjs: format 1 failure and architecture 1 failure (the fixture, above); coverage 25 failures, none promotion's; ownership 0 failures.
 
 Size (session_01EYfi6HexhiJUBBmLxaSMur): test runs 14, module lines 3957
+
+## J3 · COMPLETE
+
+COMPLETE J3: T50-6 done on job/T50/promotion: stamp 1.77.0, ROW_CENSUS 1909 rows 962db2b0... (2 arrived, 68 changed, 0 retired; ai-accounts' moves and L2's rows included); N1116 (38 refusal rows and the two says by key); R39/R45/R46 green from modules.json. Promotion + d526 140/140, census 10/10, L2 users green. For you: modules.json promotion tests -> row-census-1.77.0.jsonl. Stale: plane bundle, program.mjs, newgroup release (layer close). Details in build/jobs/T50/promotion.md.
