@@ -88,15 +88,10 @@ test("R2: CHECK_FAMILIES holds each code once, the first source's translated row
       if (hit.length) { if (kept.translation) assert.ok(hit.some((r) => r === kept) || !hit.some((r) => r.translation), code); break; }
     }
   }
-  const moved = [
-    ["../../../src/textchain.mjs", "TEXT_CHAIN_CHECKS"], ["../../../src/connections/checks.mjs", "CONNECTION_CHOICE_CHECKS"],
-    ["../../../src/content/checks.mjs", "TRANSCRIBE_CHECKS"], ["../../../src/action-clocks/checks.mjs", "ACTION_CLOCK_CHECKS"],
-    ["../../../src/monitoring/checks.mjs", "MONITORING_CHECKS"], ["../../../src/action-plans/checks.mjs", "ACTION_PLAN_CHECKS"],
-    ["../../../src/setup.mjs", "INSTANCE_SETUP_CHECKS"], ["../../../src/run-rules/checks.mjs", "AI_RUN_OWN_CHECKS"],
-    ["../../../src/acquisition/checks.mjs", "ACQUISITION_CHECKS"]];
-  for (const [file, fam] of moved) {
-    const rows = (await import(file))[fam];
-    assert.ok(rows && Object.keys(rows).length, `${file} ${fam}`);
+  /* N1073 (K3268): every family is read from its owner's own file, as the list names it, never hand-listed here */
+  for (const [file, ns] of M.CHECK_FAMILY_FILES) for (const fam of Object.keys(ns).filter((k) => isFamily(k, ns[k]))) {
+    const rows = ns[fam];
+    assert.ok(Object.keys(rows).length, `${file} ${fam}`);
     for (const [code, row] of Object.entries(rows)) if (row.translation)
       assert.ok(M.dec49Row(code), `${fam}.${code} reaches the wire`);
   }

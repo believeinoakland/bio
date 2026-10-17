@@ -120,3 +120,19 @@ test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RA
   /* negative control: T45's pin of C-124.30 would read red */
   assert.notDeepEqual([M.dec49Row("SCENARIO_OUT_OF_RANGE").check, digest(M.dec49Row("SCENARIO_OUT_OF_RANGE").translation)], ["C-124.30", "13524823f3e8dd74"]);
 });
+
+test("R7, N1128 (K3765): a row that reads its words by key is pinned by that key's sentence, so a re-word of the words moves the pin with it; a row whose words are still inline keeps its digest (negative control: a row that reads a key, reworded, is seen)", async () => {
+  const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+  const en = (code) => WORDS.find((w) => w.key === `refusal.${code}`)?.en;
+  let keyed = 0;
+  for (const code of Object.keys(SNAP.rows)) {
+    const sentence = en(code);
+    if (sentence === undefined || M.dec49Row(code).translation !== sentence) continue;
+    keyed++;
+    assert.deepEqual([M.dec49Row(code).check, digest(sentence)], SNAP.rows[code], `${code} is pinned by its key`);
+  }
+  assert.ok(keyed >= 70, String(keyed));
+  /* negative control: a sentence the row reads from its key, changed, is no longer its pin */
+  const [one] = Object.keys(SNAP.rows).filter((c) => en(c) !== undefined && M.dec49Row(c).translation === en(c));
+  assert.notDeepEqual([M.dec49Row(one).check, digest(en(one) + " ")], SNAP.rows[one]);
+});
