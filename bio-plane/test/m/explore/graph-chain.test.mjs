@@ -23,7 +23,7 @@ test("R21 the connection graph: a centre with a person one ring out and an organ
   assert.equal(g.centre, A);
   assert.deepEqual(g.at, AT);
   assert.equal(g.rings, 2, "two rings by default");
-  assert.deepEqual(g.nodes, [{ id: A, ring: 0, id_kind: "ENT" }, { id: B, ring: 1, id_kind: "ENT" }, { id: C, ring: 2, id_kind: "ENT" }]);
+  assert.deepEqual(g.nodes, [A, B, C].map((id, ring) => ({ id, ring, id_kind: "ENT", label: null, entity_kind: null })));
   assert.deepEqual(g.steps.map((s) => [s.id, s.from, s.to, s.kind, s.word, s.class]), [["a-b", A, B, "line:belongs_to", "belongs to", "evidentiary"], ["b-c", B, C, "line:seat_on", "seat on", "evidentiary"]]);
   assert.deepEqual(g.steps.map((s) => s.grade), [person.grade, org.grade], "each step's grade as its owner answered it");
   assert.deepEqual(g.steps.map((s) => s.evidence), [person.evidence, org.evidence], "each step's citation as its owner answered it");
@@ -83,7 +83,7 @@ test("R21 R2 R3 it is the one walk to depth `rings`: each step once even when re
   assert.equal(new Set(g.steps.map((s) => s.id)).size, g.steps.length);
   assert.deepEqual(g.steps.map((s) => s.id).sort(), ["s1", "s2", "s3", "s4", "s5"], "D reached from both B and C: both steps answered");
   assert.equal(g.nodes.filter((n) => n.id === D).length, 1, "a node reached from both ends once");
-  assert.deepEqual(g.nodes.find((n) => n.id === evt(1)), { id: evt(1), ring: 1, id_kind: "EVT" }, "the id's kind as the id grammar reads it");
+  assert.deepEqual(g.nodes.find((n) => n.id === evt(1)), { id: evt(1), ring: 1, id_kind: "EVT", label: null, entity_kind: null }, "the id's kind as the id grammar reads it");
   assert.equal(g.visited, walked.visited);
   assert.deepEqual(g.stopped.filter((s) => s.why === "ring").map((s) => s.node), [D]);
   // Kinds limit the walk as R2's do.
@@ -321,6 +321,56 @@ test("R24 R7 a source the viewer may not see leaves the declared step a lead and
   const other = conn("step_source", A, B, { id: "SRC-2026-0002", relation: "REL-2026-0042" });
   const r = make([rel, other]).x.explore({ from: A, at: AT, viewer: V, kinds: ["member_of"] });
   assert.deepEqual([r.paths.map(ids), r.paths[0].label], [["REL-2026-0001"], "lead"]);
+});
+
+const labelling = (table, calls = []) => ({ labelsOf: ({ ids, viewer }) => { calls.push({ ids: [...ids], viewer }); return Object.fromEntries(ids.map((id) => [id, table[id] ?? null])); } });
+
+test("R25 a centre with a person one ring out joined by a step_source step answers the person's label, the step's attached_by and at, and the organisation two rings out label null when unnamed; every node carries label and entity_kind, the kind only for an ENT- node", () => {
+  const src = Object.assign(conn("step_source", A, B, { id: "SRC-2026-0001", relation: "REL-2026-0001" }), { attached_by: "member:bo", at: "2026-02-10T09:00:00Z" });
+  const rel = conn("member_of", A, B, { id: "REL-2026-0001" });
+  const seat = conn("line:seat_on", B, C, { id: "b-c" });
+  const calls = [];
+  const { x } = make([rel, src, seat], { ctx: { entities: labelling({ [A]: { label: "Alice Alder", kind: "person" }, [B]: { label: "Bo Birch", kind: "person" } }, calls) } });
+  const g = x.neighbourhood({ centre: A, at: AT, viewer: V });
+  assert.deepEqual(g.nodes.map((n) => [n.id, n.ring, n.label, n.entity_kind]), [[A, 0, "Alice Alder", "person"], [B, 1, "Bo Birch", "person"], [C, 2, null, null]]);
+  const s = g.steps.find((q) => q.kind === "step_source");
+  assert.equal(s.attached_by, "member:bo");
+  assert.equal(s.at, "2026-02-10T09:00:00Z");
+  assert.equal(calls.length, 1, "one bounded read");
+  assert.deepEqual([calls[0].ids, calls[0].viewer], [[A, B, C], V]);
+  // Control: a step of another kind carries neither key.
+  const other = g.steps.find((q) => q.kind === "line:seat_on");
+  assert.ok(!("attached_by" in other) && !("at" in other));
+  // A node's label is never its id; an id the read answers as its own name is no name.
+  const same = make([seat], { ctx: { entities: labelling({ [B]: { label: B, kind: "person" } }) } }).x.neighbourhood({ centre: B, at: AT, viewer: V });
+  assert.equal(same.nodes[0].label, null);
+  // A node that is not an entity record carries label null and entity_kind null, and is not read.
+  const rows = [conn("line:belongs_to", A, evt(7), { id: "a-e" })];
+  const calls2 = [];
+  const h = make(rows, { ctx: { entities: labelling({ [A]: { label: "Alice Alder", kind: "person" } }, calls2) } }).x.neighbourhood({ centre: A, at: AT, viewer: V });
+  assert.deepEqual(h.nodes.map((n) => [n.id, n.label, n.entity_kind]), [[A, "Alice Alder", "person"], [evt(7), null, null]]);
+  assert.deepEqual(calls2[0].ids, [A]);
+  // No entities reader: names are absent, never invented.
+  const bare = make(rows).x.neighbourhood({ centre: A, at: AT, viewer: V });
+  assert.deepEqual(bare.nodes.map((n) => [n.label, n.entity_kind]), [[null, null], [null, null]]);
+});
+
+test("R25 R7 a hidden step leaves nodes, steps, visited and the names read as if absent; more than 500 entity nodes are read in bounded reads", () => {
+  const open = conn("line:belongs_to", A, B, { id: "a-b" });
+  const fenced = conn("line:seat_on", A, C, { id: "a-c", seen_by: ["carol"] });
+  const table = { [A]: { label: "Alice Alder", kind: "person" }, [B]: { label: "Bo Birch", kind: "person" }, [C]: { label: "Cy Cedar", kind: "institution" } };
+  const callsA = [], callsB = [];
+  const withHidden = make([open, fenced], { ctx: { entities: labelling(table, callsA) } }).x.neighbourhood({ centre: A, at: AT, viewer: V });
+  const without = make([open], { ctx: { entities: labelling(table, callsB) } }).x.neighbourhood({ centre: A, at: AT, viewer: V });
+  assert.deepEqual(strip(withHidden), strip(without));
+  assert.ok(!JSON.stringify(withHidden).includes("Cy Cedar") && !JSON.stringify(callsA).includes(C));
+  assert.deepEqual(callsA, callsB);
+  const wide = Array.from({ length: 700 }, (_, i) => conn("line:belongs_to", A, ent(100 + i), { id: `w-${i}` }));
+  const calls = [];
+  const g = make(wide, { ctx: { entities: labelling({}, calls) }, opts: { lines: { noHub: true, pageSize: 1000 } } }).x.neighbourhood({ centre: A, at: AT, viewer: V, rings: 1 });
+  assert.equal(g.nodes.length, 701);
+  assert.ok(calls.length >= 2 && calls.every((c) => c.ids.length <= 500));
+  assert.equal(calls.reduce((n, c) => n + c.ids.length, 0), 701);
 });
 
 test("R14 exploreOps gains exploregraph, and exploreverify reads chain from the body; the viewer from the query string only", () => {

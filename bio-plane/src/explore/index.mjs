@@ -14,6 +14,7 @@ import { timelineOver } from './timeline.mjs';
 import { neighbourhood } from './graph.mjs';
 import { eventsOf } from '../events/index.mjs';
 import { moneyOf } from '../money/index.mjs';
+import { entitiesOf } from '../entities/index.mjs';
 
 export { exploreOps } from './ops.mjs';
 export { PRESET_RULES, OVERLAP_SENTENCE } from './presets.mjs';
@@ -29,14 +30,15 @@ export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;
 /**
  * The explore instance for one host (K1563 (1)): `host` is passed to every owner's `neighbours` unchanged. `deps`:
  * `registry` the owner registry (the plane's default when absent); `events` and `money` the instances whose
- * `timeline` and `moneyOf` R13 composes (by default `eventsOf(host)` and `moneyOf(host)`, reached on first use); `now` a clock in milliseconds; `budget_ms` lowers the budget, never raises it.
+ * `timeline` and `moneyOf` R13 composes (by default `eventsOf(host)` and `moneyOf(host)`, reached on first use), `entities` the instance whose `labelsOf` names R25's nodes (by default `entitiesOf(host)`); `now` a clock in milliseconds; `budget_ms` lowers the budget, never raises it.
  * @param {any} [host]
- * @param {{registry?: any, events?: any, money?: any, now?: () => number, budget_ms?: number}} [deps]
+ * @param {{registry?: any, events?: any, money?: any, entities?: any, now?: () => number, budget_ms?: number}} [deps]
  */
 export function exploreOf(host, deps = {}) {
   const budget = typeof deps.budget_ms === 'number' && deps.budget_ms > 0 ? Math.min(deps.budget_ms, TIME_BUDGET_MS) : TIME_BUDGET_MS;
   const c = { host, registry: deps.registry ?? defaultRegistry, now: deps.now ?? (() => performance.now()), budget_ms: budget,
-    events: deps.events ?? (host ? () => eventsOf(host) : undefined), money: deps.money ?? (host ? () => moneyOf(host) : undefined) };
+    events: deps.events ?? (host ? () => eventsOf(host) : undefined), money: deps.money ?? (host ? () => moneyOf(host) : undefined),
+    entities: deps.entities ?? (host ? () => entitiesOf(host) : undefined) };
   return Object.freeze({
     /** explore({from, to?, kinds?, at, depth?, sortBy?, scope?, viewer}) (R1–R9). */
     explore(arg) {
