@@ -42,3 +42,7 @@ B2 handled: merged tranche/T50 (wizard-scripts T50-17, regenerated SCREEN_REGIST
 ## J3 · COMPLETE
 
 B3 handled: plan dropped from the kinds asked a project (opens as today; control test added). Merged tranche/T50 (wizard-scripts, op-grades). Found on that merge: op-grades made wizarddraft ask no reason, so a copy with no name was sent empty; it now keeps its original's name. Module tests 52/52; format, architecture, coverage 17/17, ownership: 0 failures.
+
+## B4, B5 handled
+
+Merged `tranche/T50` with op-declarations, interface-shell and instance-setup; module tests 52/52 against the real shell. `standin.mjs` is kept: it is the shell's contract for the guide (J2, J3) driven directly, used by the guide's unit tests; every guide behaviour that crosses the shell (R2, R3, R5, R6, R7, R15, R17) also has a test over the real served page (`page.test.mjs`, `t50.test.mjs`). Say if BOB wants those unit tests moved onto the page.
