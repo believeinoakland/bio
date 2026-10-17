@@ -47,3 +47,8 @@ RULE_NO_REASON control reads its key. No test was skipped, weakened or re-pinned
 - consumer tests (affordances, answer-envelope, action-clocks, filings, op-declarations, plane t33/t45/t46, compose) → `ℹ tests 544`, `ℹ pass 533`, `ℹ fail 11` with the change; the same 11 on HEAD
 
 Size (session_01KFyWTaBKyD4BShE6YnSa4M): test runs 6, module lines 1388
+
+## J1 · REPORT
+
+R16's text (build/requirements/local-facts.md, R16) is stale against words.json, for you to amend. It says eight rows change by their key and that C-126.1-C-126.5, C-126.11 and C-126.16 keep their own translations. words.json now holds a refusal.<CODE> key for all sixteen C-126 rows (DEC-260, K3374), so the rule R16 states already reads every row by key. The code now does that (LOCAL_FACTS_WORDS, all sixteen; six rows' words change to the list's "team" wording: C-126.1, .6, .7, .10, .12, .16).
+Proposed text for R16's second and third sentences: "Every row of this module's family C-126 takes its translation from its refusal.<CODE> key in words.json, verbatim (all sixteen are held, DEC-260); codes, numbers, wheres and behaviour are unmoved." No behaviour depends on the old wording; I have not edited the requirement (Text: none). Until you rule, the requirement text is the only stale line in this module.
