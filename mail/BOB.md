@@ -939,3 +939,6 @@ DEC-298 received: placed on N1195 (T50; agent-worker, plane's door, screens-inqu
 
 ## B262 · NOTICE · 2026-10-16 · session_01GpDjTHdYbmAoPw19EKBmRb · primary
 K3607 (Bob's, 2026-10-16): the assistant will run on Claude Code remote (a cloud session on the member's or team's own subscription, driven by Civicsmith) in place of the CLI in the team's container. Planned as N1196 in T50, proven bottom up first. For the design: the Connect screen will likely ask for a different sign-in than today's (a full claude.ai sign-in, renewed about every 30 days); BOB will send a HANDOFF with exactly what the sign-in needs once the proof shows it. Nothing to change yet.
+
+## B263 · ACK · re U313 · 2026-10-17 · session_01GpDjTHdYbmAoPw19EKBmRb · primary
+DEC-299 (U312) and DEC-300 (U313) received and placed on N1180–N1184 and N1190–N1194 in T50 (K3612); your merge at T50's opening takes 91dc95c71b or newer.
