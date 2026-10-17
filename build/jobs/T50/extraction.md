@@ -22,3 +22,7 @@ Size (session_013sZYarANSXJ3Zy6EV93zJZ): test runs 12, module lines 3325
 ## J1 · COMPLETE
 
 T50-9 extraction complete. R71/R72: pageTranscribe/pageTranscribeOp take the door's trace and memberRef and hand them to transcription(...) only as non-empty strings; N1066 pins and key-leak/deployable arms done; keep-away refusal now keeps its own 4xx status (flaw fixed). Words folded to keys (plan rule 6), which turned the module's 4 inherited reds green. Extraction tests 184/184; format, architecture, coverage (52/52), ownership all 0 failures. Reported, not invented: a few sentences no key holds (reextraction.candidates says 'group', readingFor's text_provenance/history whys, calibrationDrift and drift.mjs whys, migrated.*.why); R75's 'interim requestfault word' clause can be retired (K2919 conformed). Details in build/jobs/T50/extraction.md.
+
+## J2 · COMPLETE · re B2
+
+CHANGE B2 handled: merged tranche/T50 (with reading-pipeline T50-58) into job/T50/extraction; extraction tests 184/184, format/architecture/coverage (52/52) 0 failures. No code change needed.
