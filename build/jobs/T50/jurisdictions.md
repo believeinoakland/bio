@@ -1,6 +1,6 @@
 # jurisdictions (T50)
 
-**Status** · session_019Bem78Zxtf5vd3m5JjJU8n · depth 2 · NEEDS BOB · handled B2
+**Status** · session_019Bem78Zxtf5vd3m5JjJU8n · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
