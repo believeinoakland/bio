@@ -38,3 +38,7 @@ B2 handled: merged tranche/T50 (wizard-scripts T50-17, regenerated SCREEN_REGIST
 ## B3 (K3772) handled
 
 `plan` is no longer a kind the guide asks a project for (it opens as today; N1237 restores it in T51); the R17 tests now use `timeline`, and a control shows `plan` opening unasked. Finding 3 above is therefore closed. Found on the merge of `op-grades`: `wizarddraft` no longer asks a reason, so a copy with no name typed was sent with an empty name; it now keeps its original's name (library.mjs). Module tests 52/52.
+
+## J3 · COMPLETE
+
+B3 handled: plan dropped from the kinds asked a project (opens as today; control test added). Merged tranche/T50 (wizard-scripts, op-grades). Found on that merge: op-grades made wizarddraft ask no reason, so a copy with no name was sent empty; it now keeps its original's name. Module tests 52/52; format, architecture, coverage 17/17, ownership: 0 failures.
