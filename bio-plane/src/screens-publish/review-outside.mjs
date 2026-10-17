@@ -30,10 +30,11 @@ export const REVIEW_OUTSIDE = Object.freeze({
     if (!copy) { out.push(cs.state("copy", function () { return ""; })); return out.join(""); }
     const g = copy.grant || {};
     const until = typeof g.until === "string" && g.until ? g.until : null; // R18: the recipient's own grant part
-    // R18 (K3295): the instant's date and time with UTC named, until `review` carries the group's zone.
-    const at = until ? new Date(until) : null;
-    out.push('<p class="mk-sub">' + cs.w(until ? "screen.review-outside.until" : "screen.review-outside.untilstopped",
-      { date: { html: until ? cs.date(until) : "" }, time: at && !isNaN(at.getTime()) ? at.toISOString().slice(11, 16) : "" }) + "</p>");
+    // R18, R27 (K3295): the end day in the team's zone, its date, time and zone as the copy's grant part carries them (`review`
+    // R35); no UTC is drawn in its place, and with no zone held no end is stated.
+    const zone = typeof g.zone === "string" ? g.zone : "";
+    const line = until ? P.untilIn(cs, view, until, zone) : cs.w("screen.review-outside.untilstopped");
+    if (line) out.push('<p class="mk-sub" data-link-end>' + line + "</p>");
     out.push('<p class="mk-note">' + cs.w("screen.review-outside.comments.go") + "</p>");
     const a = copy.authored || {};
     const draftTitle = { fills: { case: c.identity || "", edition: String(c.edition || "") } };

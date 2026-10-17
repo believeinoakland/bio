@@ -64,6 +64,18 @@ export const PUBLISHED = Object.freeze({
     if (timeline.length) out.push(cs.sec("screen.published.timeline", cs.sheet(timeline.map(function (t) {
       return cs.row("", '<span class="rec">' + cs.esc(t.what || t.summary || t.title || "") + "</span>", t.at || t.date ? cs.date(t.at || t.date) : "");
     }).join(""))));
+    // R33, R34, R36 (DEC-310 (6), DEC-313): "Corrections and orders", read from the edition's own answer: none, one or several
+    // since it was published, each with the newest; a docket that could not be read is never "none" and never a count.
+    const co = e.corrections && typeof e.corrections === "object" ? e.corrections : {};
+    const kind = co.last && ["edition", "withdrawal", "court-order"].includes(co.last.kind) ? co.last.kind : "";
+    const many = typeof co.count === "number" && co.count > 0 && !co.undetermined && !!kind;
+    const docket = '<a class="cs-ref" href="/app/docket-public/' + encodeURIComponent(caseId) + '" data-nav data-level="1" data-tip="' + cs.esc("<b>" + cs.w("shell.card.docket") + "</b>") + '" data-docket-public>';
+    const sentence = cs.w("screen.published.corrections");
+    const linked = sentence.includes("its docket") ? sentence.replace("its docket", docket + "its docket</a>") : docket + sentence + "</a>"; // the words "its docket" are the door
+    out.push(cs.sec("screen.published.corrections.heading", (typeof co.count === "number" && co.count === 0 && !co.undetermined ? "<p>" + cs.w("screen.published.corrections.none") + "</p>"
+      : many ? "<p>" + cs.w(co.count === 1 ? "screen.published.corrections.some.one" : "screen.published.corrections.some", { count: String(co.count),
+        kind: cs.w("screen.published.corrections.kind." + kind), date: { html: co.last.date ? cs.date(co.last.date) : "" } }) + "</p>" : "")
+      + "<p>" + linked + "</p>"));
     const people = Array.isArray(e.people) ? e.people : e.lens && Array.isArray(e.lens.people) ? e.lens.people : [];
     out.push(P.sec(cs, "screen.published.people", people.length ? cs.sheet(people.map(function (p) {
       return cs.row("", '<span class="rec">' + cs.esc(p.shown || p.name || p.title || "") + "</span>", p.reason ? '<span class="meta">' + cs.esc(p.reason) + "</span>" : "");
@@ -123,8 +135,14 @@ export const PUBLISHED = Object.freeze({
         };
         let i = -1;
         if (published && e) {
+          // R36: the read by that hash is waited for; one that failed or was not answered is drawn failed, never as "no" or
+          // "elsewhere". `NOT_PUBLISHED` is its answer for a file the findings rest on, which the edition's parts then name.
           let c = null;
           try { c = P.value(await cs.call("publishedcase", { query: { sha256: typed } })); } catch (x) { c = null; }
+          if (!c || (c.ok === false && String(c.code || c.reason || "") !== "NOT_PUBLISHED")) {
+            P.say(cs, view, "check", cs.w("shell.unread"), false);
+            return { stay: true };
+          }
           if (c && c.ok !== false && String(c.caseId) === String(e.caseId) && String(c.edition) === String(e.edition)) {
             const pinned = (Array.isArray(c.findings) ? c.findings : []).find(function (f) { return String(f.version_sha || "").toLowerCase() === typed; });
             i = at(pinned ? pinned.bundle_id : c.asked);

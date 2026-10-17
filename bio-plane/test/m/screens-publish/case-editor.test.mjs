@@ -23,9 +23,9 @@ test("R1 the readiness ladder: Draft, Internally checked, Externally compliant, 
   assert.deepEqual(main(p).querySelectorAll("[data-rung]").map((r) => r.getAttribute("data-rung")), ["draft", "internal", "external", "distributed"]);
   assert.equal(rung(p, "internal").className, "on", "casecheck held: internally checked");
   assert.equal(rung(p, "external").className, "on", "the copy's gates passed");
-  assert.ok(rung(p, "distributed").textContent.includes(word("screen.case-editor.rung.notyet")));
+  assert.ok(rung(p, "distributed").textContent.includes(word("case.ladder.notyet")));
   p = await open(PATH, { plane: { casecheck: ok({ state: "none" }), reviewcopy: ok({ ...(plane().reviewcopy.json.result), gates: "undetermined" }) } });
-  for (const k of ["internal", "external", "distributed"]) assert.ok(rung(p, k).textContent.includes(word("screen.case-editor.rung.notyet")), k);
+  for (const k of ["internal", "external", "distributed"]) assert.ok(rung(p, k).textContent.includes(word("case.ladder.notyet")), k);
 });
 
 test("R1 the scope, what it leaves out with each acknowledgement and its reason, the people named with their reason or that it is missing, what changed", async () => {

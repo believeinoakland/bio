@@ -1,8 +1,9 @@
-/* The case editor (registry screen `case-editor`; R1): Projects › <project> › Case. A project's case drafts, and the one
- * chosen: its readiness ladder, its scope, what it leaves out with each acknowledgement, the people it names with their
- * reasons, and what changed since the last edition. Its subject is the project, or `<project>/<draft>` for one draft
- * (the newest otherwise). Every function is self-contained (interface-shell R21 (1)): it refers only to its parameters,
- * the kit `cs` and the module's `parts`. */
+/* The case editor (registry screen `case-editor`; R1, R28, R31, R34, R35): Projects › <project> › Case. A project's case
+ * drafts, and the one chosen: its readiness ladder, its scope, what it leaves out with each acknowledgement, the people it
+ * names with their reasons, what changed since the last edition, and the account. A project with no draft draws a first
+ * case (R31): the concluded questions to take in, ticked, then the scope. Its subject is the project, or `<project>/<draft>`
+ * for one draft (the newest otherwise). Every function is self-contained (interface-shell R21 (1)): it refers only to its
+ * parameters, the kit `cs` and the module's `parts`. */
 import { PARTS } from "./parts.mjs";
 
 export const CASE_EDITOR = Object.freeze({
@@ -32,42 +33,68 @@ export const CASE_EDITOR = Object.freeze({
     const P = view.parts;
     const parts = String(view.subject || "").split("/");
     const project = parts[0];
+    const projectTitle = P.titleOf(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null, project);
     const d = view.data.drafts;
+    const settled = !!d && (d.state === "ok" || d.state === "empty");
     const drafts = d && d.state === "ok" && Array.isArray(d.value.drafts) ? d.value.drafts : [];
     const chosen = drafts.find(function (x) { return x.draft_id === parts[1]; }) || drafts[drafts.length - 1] || null;
     view.ui.draft = chosen;
     const out = [];
     const caseOf = chosen && chosen.case ? chosen.case : null;
+    // R28: a draft that names no case is titled by its project, never by the derivation prose its identity then holds.
+    const named = !!(caseOf && caseOf.case_id && caseOf.identity);
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
-    out.push(cs.title(caseOf && caseOf.identity ? caseOf.identity + (edition ? " · " + edition : "") : null, { thing: "case" }));
+    out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
+      : chosen ? P.plain(cs.w("case.draft.untitled", { project: projectTitle })) : null, { thing: "case" }));
+    if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
+
+    // R28: who prepared it is the member's handle, never the sign-in name when the handle is known.
+    const handleOf = function (x, id) {
+      if (x[id + "_handle"]) return String(x[id + "_handle"]);
+      const m = x[id], me = view.me || {};
+      return m && me.member === m && me.handle ? me.handle : m || "";
+    };
 
     // Every draft of the project, each opening its own editor; the chosen one marked. With none, the screen's one empty
     // state, which names the first step (R20).
-    out.push(d && d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", cs.state("drafts", function (v) {
-      return cs.sheet(v.drafts.map(function (x) {
-        const c = x.case || {};
-        const name = c.identity ? c.identity : x.draft_id;
-        const link = '<a href="/app/case-editor/' + encodeURIComponent(project + "/" + x.draft_id) + '" data-nav'
-          + (chosen && x.draft_id === chosen.draft_id ? ' aria-current="true"' : "") + ">" + cs.esc(name) + "</a>";
-        return cs.row("", link, c.edition ? '<span class="meta">' + cs.w("screen.case-editor.edition", { n: String(c.edition) }) + "</span>" : "",
-          cs.w("screen.case-editor.preparedby", { who: x.updated_by || x.created_by || "" }));
-      }).join(""));
-    })));
+    out.push(d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", cs.sheet(drafts.map(function (x) {
+      const c = x.case || {};
+      const name = c.case_id && c.identity ? cs.esc(c.identity) : cs.w("case.draft.untitled", { project: projectTitle });
+      const link = '<a href="/app/case-editor/' + encodeURIComponent(project + "/" + x.draft_id) + '" data-nav'
+        + (chosen && x.draft_id === chosen.draft_id ? ' aria-current="true"' : "") + ">" + name + "</a>";
+      return cs.row("", link, c.edition ? '<span class="meta">' + cs.w("screen.case-editor.edition", { n: String(c.edition) }) + "</span>" : "",
+        cs.w("screen.case-editor.preparedby", { who: x.updated_by ? handleOf(x, "updated_by") : handleOf(x, "created_by") }));
+    }).join(""))));
+
+    // R31: a project's first case (state b): the concluded questions to take in, each ticked, then the scope.
+    const scope = function (authored) {
+      return cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help" })
+        + cs.field("ce-statement", "screen.case-editor.statement.label", { area: true, rec: true, value: authored.statement || "" })
+        + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
+        + P.said(view, "help-scope") + P.said(view, "casedraft");
+    };
+    if (!chosen) {
+      const concluded = d.value && Array.isArray(d.value.concluded) ? d.value.concluded : [];
+      view.ui.concluded = concluded.map(function (q) { return q.inquiry; });
+      out.push(cs.sec("screen.case-editor.whatgoesin", concluded.length
+        ? cs.checks("ce-targets", "screen.case-editor.whatgoesin", concluded.map(function (q) {
+          return { value: q.inquiry, on: true, text: [q.title || q.inquiry, q.concluded_at ? cs.date(q.concluded_at) : "", Number(q.findings) > 0 ? String(q.findings) : ""].filter(Boolean).join(" · ") };
+        }))
+        : P.fold(cs, "screen.case-editor.noconcluded.summary", "<p>" + cs.w("screen.case-editor.noconcluded") + "</p>"), { help: "screen.case-editor.whatgoesin.note" }));
+      out.push(cs.sec("screen.case-editor.scope", scope({})));
+      return out.join("");
+    }
 
     // A new draft, or this one changed: its scope and what it says (`casedraft`, R1), with writing help under the scope.
-    const copy = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
-    const authored = copy && copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
-    out.push(cs.sec("screen.case-editor.scope", cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help" })
-      + cs.field("ce-statement", "screen.case-editor.statement.label", { area: true, rec: true, value: authored.statement || "" })
-      + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
-      + P.said(view, "help-scope") + P.said(view, "casedraft")));
-    if (!chosen) return out.join("");
+    const copy = P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } });
+    const authored = copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
+    out.push(cs.sec("screen.case-editor.scope", scope(authored)));
 
-    // The readiness ladder: each rung "not yet evaluated" until its check answers (R1).
+    // The readiness ladder: each rung "not yet checked" until its check answers (R1, R28).
     const check = caseOf && caseOf.case_id ? P.later(cs, view, "check", "casecheck", { query: { case: caseOf.case_id, edition: edition } }) : null;
     const doc = caseOf && caseOf.case_id && edition ? P.later(cs, view, "document", "casedocument", { query: { case: caseOf.case_id, edition: edition } }) : null;
     const held = check && check.state === "ok" ? check.value.state : null;
-    const gates = copy && copy.state === "ok" ? copy.value.gates : null;
+    const gates = copy.state === "ok" ? copy.value.gates : null;
     const distributed = (held === "published") || (doc && doc.state === "ok" && !!doc.value.published_at);
     const rungs = [
       ["draft", true],
@@ -76,14 +103,14 @@ export const CASE_EDITOR = Object.freeze({
       ["distributed", distributed ? true : null],
     ];
     out.push(cs.sec("screen.case-editor.ladder", '<ol class="cs-ladder" data-ladder="ready">' + rungs.map(function (r) {
-      const said = r[1] === true ? "" : r[1] === false ? cs.w("screen.case-editor.rung.notmet") : cs.w("screen.case-editor.rung.notyet");
+      const said = r[1] === true ? "" : r[1] === false ? cs.w("screen.case-editor.rung.notmet") : cs.w("case.ladder.notyet");
       return '<li data-rung="' + r[0] + '" class="' + (r[1] === true ? "on" : "") + '">' + cs.w("screen.case-editor.rung." + r[0])
         + (said ? ' <span class="meta">' + said + "</span>" : "") + "</li>";
-    }).join("") + "</ol>" + (check ? cs.state(check, function () { return ""; }) : "")));
+    }).join("") + '</ol><p class="muted" data-ladder-note>' + cs.w("screen.case-editor.tip.distributed") + "</p>" + (check ? cs.state(check, function () { return ""; }) : "")));
 
     // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1); not drawn when
     // it names nothing it leaves out and nobody has acknowledged (R20).
-    out.push(P.sec(cs, "screen.case-editor.leavesout", copy ? cs.state(copy, function (v) {
+    out.push(P.sec(cs, "screen.case-editor.leavesout", cs.state(copy, function (v) {
       const ex = Array.isArray(v.authored && v.authored.excluded) ? v.authored.excluded : v.authored && v.authored.excluded ? [v.authored.excluded] : [];
       const acks = v.statement_acknowledgements && Array.isArray(v.statement_acknowledgements.acknowledgements) ? v.statement_acknowledgements.acknowledgements : [];
       if (!ex.length && !acks.length) return "";
@@ -96,10 +123,10 @@ export const CASE_EDITOR = Object.freeze({
         }).join("")) : "")
         + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
         + '<div class="mk-acts">' + cs.act("statementack") + "</div>" + P.said(view, "statementack");
-    }) : ""));
+    })));
 
     // The people it names, each with its reason or that the reason is missing (R1; `attribute`).
-    out.push(P.sec(cs, "screen.case-editor.people", copy ? cs.state(copy, function (v) {
+    out.push(P.sec(cs, "screen.case-editor.people", cs.state(copy, function (v) {
       const obs = Array.isArray(v.observations) ? v.observations : [];
       if (!obs.length) return "";
       return cs.sheet(obs.map(function (o, i) {
@@ -111,7 +138,7 @@ export const CASE_EDITOR = Object.freeze({
         return cs.row("", '<span class="rec">' + cs.esc(o.observation) + "</span>" + (level ? " · " + level : "") + " · " + why, "",
           fields + cs.act("attribute", { data: { observation: o.observation, index: String(i) } }));
       }).join("")) + P.said(view, "attribute");
-    }) : ""));
+    })));
 
     // What changed since the last edition: the member's words, the drafts labeled machine work, writing help (R1).
     // The section is "What changed since Edition {n}": drawn for an edition that has one before it.
@@ -130,6 +157,35 @@ export const CASE_EDITOR = Object.freeze({
           }).join(""));
         }), { fills: { n: String(before) } }));
     }
+
+    // R35 (DEC-315): "The account", on a drafted case: the member's own words, the assistant's draft and flags drawn as
+    // machine work when it may run, the earlier drafts, and "Prepare the draft", which saves the account.
+    if (caseOf && caseOf.case_id) {
+      const drawn = P.later(cs, view, "account", "accountdrafts", { query: { case: caseOf.case_id } },
+        function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; });
+      const all = drawn.state === "ok" ? drawn.value.drafts : [];
+      const proposed = view.ui.accountDraft || all.filter(function (x) { return x.kind !== "account_check"; }).pop() || null;
+      const flags = (view.ui.accountFlags || all.filter(function (x) { return x.kind === "account_check"; }).reduce(function (a, x) { return a.concat(x.flags || []); }, []));
+      const mine = Array.isArray(authored.account) ? authored.account.map(function (s) { return typeof s === "string" ? s : s && s.text || ""; }) : [];
+      const draftRow = function (x) {
+        return cs.row(cs.mark("origin", "machine"), '<span class="rec">' + cs.esc(x.text || "") + "</span>",
+          x.framing ? '<span class="meta">' + cs.w("case-account.framing." + x.framing) + "</span>" : "", x.at ? cs.date(x.at) : "");
+      };
+      out.push(cs.sec("screen.case-editor.account", (view.reachable
+        ? cs.choice("ce-framing", "screen.case-editor.account.order", ["time_order", "by_question", "by_rule"].map(function (f) { return [f, "case-account.framing." + f]; }), { value: "time_order" })
+          + '<div class="mk-acts">' + cs.act("accountpropose") + "</div>" + P.said(view, "accountpropose")
+        : "")
+        + (proposed ? cs.sheet(draftRow(proposed)) + '<p class="mk-note">' + cs.w("screen.case-editor.account.use") + "</p><p class=\"muted\">" + cs.w("screen.case-editor.account.notasis") + "</p>" : "")
+        + (flags.length ? '<ul class="mk-list" data-account-flags>' + flags.map(function (f) {
+          const sentence = f.sentence || mine[Number(f.ord) - 1] || "";
+          return "<li>" + cs.w("screen.case-editor.account.flagged", { sentence: sentence }) + '<br><span class="meta">' + cs.esc(f.text || "") + "</span></li>";
+        }).join("") + "</ul>" : "")
+        + cs.field("ce-account", "screen.case-editor.account", { area: true, rec: true, value: mine.join("\n") })
+        + '<div class="mk-acts">' + cs.act("accountdrafts") + cs.act("casedraft", { tone: "primary", data: { account: "1" } }) + "</div>"
+        + (view.ui.accountEarlier ? cs.sheet(view.ui.accountEarlier.map(draftRow).join("")) : "")
+        + P.said(view, "accountdrafts") + P.said(view, "account"), { help: "screen.case-editor.account.help" }));
+      out.push(P.listed(cs, drawn, function () { return ""; }));
+    }
     if (doc) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");
   },
@@ -137,6 +193,9 @@ export const CASE_EDITOR = Object.freeze({
   acts: [
     {
       // R1: "Prepare the draft": a new draft of the project, or the chosen one changed, with the member's scope and words.
+      // R31: a first case sends the project and the ticked concluded questions as `targets`, with no `caseId` and no
+      // `newCase`; none ticked sends nothing and says so in place. R35: from the account's own button it also saves the
+      // account, a sentence a line, and names the assistant's draft it began as.
       op: "casedraft", label: "act.casedraft.label.case-editor",
       send: function (view, el, cs) {
         const scope = String(cs.value("ce-scope") || "").trim();
@@ -144,9 +203,30 @@ export const CASE_EDITOR = Object.freeze({
         if (!scope) return { refuse: "screen.case-editor.scope.needed" };
         const body = { scope: scope };
         if (statement) body.statement = statement;
-        if (view.ui.draft) body.draft = view.ui.draft.draft_id; else body.project = String(view.subject || "").split("/")[0];
+        if (view.ui.draft) body.draft = view.ui.draft.draft_id;
+        else {
+          const ticked = cs.value("ce-targets");
+          const targets = (Array.isArray(ticked) ? ticked : []).filter(function (id) { return (view.ui.concluded || []).includes(id); });
+          if (!targets.length) {
+            view.parts.say(cs, view, "casedraft", cs.w("capture.fieldneeded", { field: { html: cs.w("screen.case-editor.whatgoesin") } }), false);
+            return null;
+          }
+          body.project = String(view.subject || "").split("/")[0];
+          body.targets = targets;
+        }
+        const account = view.ui.draft && el && el.dataset && el.dataset.account === "1" ? String(cs.value("ce-account") || "") : "";
+        if (account.trim()) {
+          body.account = account.split("\n").map(function (t) { return t.trim(); }).filter(Boolean).map(function (t) { return { text: t, cites: [] }; });
+          const began = view.ui.accountDraft && view.ui.accountDraft.id;
+          if (began) body.accountDraft = began;
+        }
         return { body: body };
       },
+      // R35 (DEC-326): the account that cannot be read is said in its fold, in the refusal's own words.
+      refusals: { BAD_ACCOUNT: function (r, cs) {
+        return '<details class="mk-details" open data-fold="screen.case-editor.account.refused.summary"><summary>' + cs.w("screen.case-editor.account.refused.summary")
+          + "</summary>" + cs.w("refusal.BAD_ACCOUNT") + "</details>";
+      } },
       done: function (view, answer, cs) {
         if (view.parts.refused(cs, view, "casedraft", answer)) return; // D29: a refusal inside a success is not success
         view.parts.forget(view);
@@ -208,6 +288,40 @@ export const CASE_EDITOR = Object.freeze({
         const r = view.parts.value(answer) || {};
         view.parts.say(cs, view, "help-" + which, cs.w("screen.case-editor.help.draft") + ' <span class="rec">' + cs.esc(r.text || "") + "</span>"
           + (r.untested ? " " + cs.w("ai.label.untested.writinghelp") : ""));
+        return { stay: true };
+      },
+    },
+    {
+      // R35: the assistant's draft of the account, in the framing the member chose, drawn as machine work; the member
+      // takes it into her own words, and the draft is never sent back as the account.
+      op: "accountpropose", label: "act.accountpropose.label.case-editor",
+      send: function (view, el, cs) {
+        const c = view.ui.draft && view.ui.draft.case;
+        if (!c || !c.case_id) return null;
+        return { query: { case: c.case_id }, body: { kind: "case_account", framing: String(cs.value("ce-framing") || "time_order") } };
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "accountpropose", answer)) return { stay: true }; // D29
+        const r = view.parts.value(answer) || {};
+        if (r.draft && typeof r.draft === "object") {
+          if (r.draft.kind === "account_check") view.ui.accountFlags = (view.ui.accountFlags || []).concat(r.draft.flags || []);
+          else view.ui.accountDraft = r.draft;
+        }
+        view.parts.forget(view);
+        return { stay: true };
+      },
+    },
+    {
+      // R35: "See its earlier drafts": the case's drafts of its account, each labeled machine work.
+      op: "accountdrafts", label: "act.accountdrafts.label.case-editor",
+      send: function (view) {
+        const c = view.ui.draft && view.ui.draft.case;
+        return c && c.case_id ? { query: { case: c.case_id } } : null;
+      },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "accountdrafts", answer)) return { stay: true }; // D29
+        const r = view.parts.value(answer) || {};
+        view.ui.accountEarlier = (Array.isArray(r.drafts) ? r.drafts : []).filter(function (x) { return x.kind !== "account_check"; });
         return { stay: true };
       },
     },
