@@ -534,10 +534,10 @@ test("R33 (T47) that a machine never records a receipt, sets a scope or records 
     r.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: M, author: M })].every((x) => x.ok));
 });
 
-test("R36 (T47) this module's tables are action_basis, correspondence, action_quotes, action_overrides and action_field_history; the six moved are action-records', created and declared at this module's creation; each purges with the action", async () => {
+test("R36 (T47) this module's tables are action_basis, correspondence, action_quotes, action_overrides and action_field_history; the seven moved are action-records' (T50: action_stakes, its R17), created and declared at this module's creation; each purges with the action", async () => {
   const { ACTION_RECORDS_TABLES } = await import("../../../src/action-records/index.mjs");
   assert.deepEqual([...actions.ACTIONS_TABLES], ["action_basis", "correspondence", "action_quotes", "action_overrides", "action_field_history"]);
-  const moved = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises"];
+  const moved = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises", "action_stakes"];
   assert.deepEqual([...ACTION_RECORDS_TABLES].sort(), [...moved].sort());
   for (const t of moved) assert.ok(!actions.ACTIONS_TABLES.includes(t), t);
   const w = world();
