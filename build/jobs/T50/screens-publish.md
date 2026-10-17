@@ -53,3 +53,7 @@ T50-34 is applied: R25–R36 (the imported list and whose stake a case states; t
 Module tests: 112 of 112 with interface-shell's two features applied locally as stand-ins (not committed); without them seven of my tests are red, by name: R88 (`docket-public` in the public frame) and R80 (`cs.checks` over record data), both interface-shell's, red until it merges. The registry from wizard-scripts (merged) already serves `docket-public` and the account acts. Format, architecture, coverage (36 of 36) and ownership: 0 failures; `checks/run.mjs`: none on this module.
 
 For the design lane and others (details in my record): no key for the findings count beside a concluded question or for the link words "its docket"; `words-reads.json` lacks the T50 keys for this module; `casedrafts` rows carry member ids only (I read `*_handle` if added).
+
+## J3 · REPORT
+
+Merged tranche/T50 (wizard-scripts registry) and re-ran: 112 tests, 105 pass; the same seven fail, all on interface-shell not yet merged (R88 docket-public in the public frame, R80 cs.checks over record data), as named in my completion record. Nothing else changed.
