@@ -170,7 +170,7 @@ Also folded before L11's START (K3720): DEC-318 (screens-daily R47, R48 read the
 
 ## Count
 
-**84 job ids, 77 jobs** (T50-81 capture-requests added at L3's fold, K3627; T50-82–T50-84 at L7–L10's, K3635) (T50-48, T50-49 dropped in T49, K3407; ids T50-54 to T50-80 new at the fold; T50-79 admission and T50-80 screens-action are the review's): L1 3, L2 5, L3 4, L4 2, L5 8, L6 13, L7 1, L8 7, L9 8, L10 2, L11 25. Models: default 2 (T50-64, T50-28), Haiku 14, Sonnet the rest.
+**84 job ids, 77 jobs** (T50-81 capture-requests added at L3's fold, K3627; T50-82–T50-84 at L7–L10's, K3635) (T50-48, T50-49 dropped in T49, K3407; ids T50-54 to T50-80 new at the fold; T50-79 admission and T50-80 screens-action are the review's): L1 3, L2 5, L3 4, L4 2, L5 8, L6 13, L7 1, L8 7, L9 8, L10 2, L11 29 (K3752: the Count missed four L11 ids). Models: default 2 (T50-64, T50-28), Haiku 14, Sonnet the rest.
 
 ## BOB's acts (no job)
 
