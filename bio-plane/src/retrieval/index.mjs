@@ -39,6 +39,7 @@ import { eventsOf } from "../events/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf } from "../people/index.mjs";
+import { Browser } from "./browse.mjs";
 import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
          FIND_TERM_MAX, RECORDED_BY_MODULES } from "./findin.mjs";
 
@@ -52,6 +53,8 @@ export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_I
          matchRequirements, cutWords, RECORDED_BY_MODULES, RECORDED_BY_LIMIT, RECORDED_NONE_REGISTERED } from "./findin.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
+export { FIND_ROW_CELLS_MAX } from "./findin.mjs";
+export { BROWSE_KINDS, BROWSE_ONLY, BROWSE_LIMIT_DEFAULT, BROWSE_LIMIT_MAX, BROWSE_MARKS_MAX } from "./browse.mjs";
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
 
 /* ---- S-10 step 5: selections ----
@@ -133,6 +136,7 @@ export class Retrieval {
   #selectionListeners = [];     // R52: {module, fn, seq}
   #fields = [];                 // R62: {module, field, table, key, col, seq}
   #recordedBy = [];             // R76: {module, fn, seq}
+  #browseMarks = null;          // R86: {module, fn}
   /* R61, R62: the second argument of every `compile` this module runs: the projection through this module's own
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
@@ -177,6 +181,7 @@ export class Retrieval {
       [m, recorders && typeof recorders === "object" && recorders[m] !== undefined ? recorders[m] : undefined]));
     this.frontierReader = new Frontier(this);
     this.finder = new Finder(this);
+    this.browser = new Browser(this);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -403,6 +408,20 @@ export class Retrieval {
     this.#recordedBy.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
   }
+
+  /** R86 (N1092; DEC-238 S23 "A"; K31's pattern, as R52, R76): the one later module (`following`) that holds a member's
+   *  watches and the team's second-look flags registers its read once at start: `fn({viewer, only, limit})` answers
+   *  `{items, truncated}` (the ids marked) and `fn({viewer, ids})` answers `{watched, flagged}` for those ids. A malformed
+   *  registration, or a second whoever makes it (the slot takes one), is refused by membership's `listenerRefusal`. */
+  registerBrowseMarks(module, fn) {
+    const refused = listenerRefusal(this.#browseMarks, module, fn);
+    if (refused) return refused;
+    this.#browseMarks = { module, fn };
+    return { ok: true, module };
+  }
+
+  /** R85, R86: the registered read of marks, or null. */
+  browseMarks() { return this.#browseMarks; }
 
   /** R73, R76: the reads a find calls, in order: `events`, `standards`, `money` and `people`'s `recordedBy`, then each
    *  registered one. `read` is null, with why, for a module whose instance offers none; `registered` says which. */
@@ -1586,9 +1605,11 @@ export class Retrieval {
     const next = remaining.length > page.length ? page[page.length - 1].capture_sha : null;
     const found = this.finder.find({ captures: page, kinds: wanted, term: words, limit: cap, viewer,
                                      whole: after === null && next === null });
+    /* R80, R81: each match names its document and, held, its content row. */
+    this.finder.annotate(found, page, viewer);
     /* R73, R76 (N715): who recorded each match, through the recording modules' reads by capture. */
     const recorded = this.finder.recorded(found, page, viewer);
-    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length },
+    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length, title: resolved.title ?? null },
              kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next,
              recorded_read: recorded.read, recorded_not_read: recorded.not_read };
   }
@@ -1638,7 +1659,14 @@ export class Retrieval {
     }
     const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id }))
       .sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0));
-    return { ok: true, captures };
+    /* R80: a capture's title is the title of the bundle R73 attributes it to, a project's its own; a set has none. */
+    const titleOf = (id) => {
+      const row = id ? this.#one(`SELECT title FROM bundles WHERE bundle_id = ?`, id) : null;
+      return row && typeof row.title === "string" && row.title.trim() ? row.title : null;
+    };
+    const title = form === "capture" ? titleOf(captures[0] ? captures[0].bundle_id : null)
+      : form === "project" ? titleOf(String(value).trim()) : null;
+    return { ok: true, captures, title };
   }
 
   /** R74's `term`, through the compiler (R28): a compile with this module's relations and zone. */
@@ -1665,6 +1693,9 @@ export class Retrieval {
       return typeof v === "string" && v ? v.split("-")[0].toLowerCase() : null;
     } catch { return null; }
   }
+
+  /** R85, R86: `op=browse` (`browse.mjs`). */
+  browse(args = {}) { return this.browser.read(args); }
 
   /** R35–R50: `op=frontier` (`frontier.mjs`). */
   frontier(args = {}) { return this.frontierReader.read(args); }
@@ -1810,6 +1841,12 @@ export function retrievalRoutes(r, url, body) {
     file: () => r.readFile({ id: q.get("id"), path: q.get("path"), viewer: q.get("viewer") }),
     /* R73: "Find in this" (`owed:findin`): the scope, kinds, term, limit and cursor from the body (or the query, the
        scope as JSON and the kinds comma-separated); the viewer and owner the control plane's stamps. */
+    /* R85: "Browse" (`owed:browse`): what the viewer may see, newest first, with no words; the viewer the control plane's stamp. */
+    browse: () => {
+      const b = body && typeof body === "object" ? body : {};
+      return r.browse({ kinds: b.kinds ?? q.get("kinds"), only: b.only ?? q.get("only"), since: b.since ?? q.get("since"),
+                        after: b.after ?? q.get("after"), limit: b.limit ?? q.get("limit"), viewer: q.get("viewer") });
+    },
     findin: () => {
       const b = body && typeof body === "object" ? body : {};
       const scopeQ = (() => { try { return q.has("scope") ? JSON.parse(q.get("scope")) : null; } catch { return undefined; } })();

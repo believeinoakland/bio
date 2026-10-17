@@ -58,7 +58,7 @@ function corpus(recorders = quiet(), opts = {}) {
 const find = (w, args) => w.retrieval.findIn({ viewer: V("vera"), ...args });
 const kindOf = (ans, k) => ans.kinds.find((x) => x.kind === k);
 
-test("R73 (N715): each match carries recorded — every item of the four reads whose extent is the same as, narrower than or wider than the match's, with its module, record, kind, field, relation, by, at and withdrawn; a disjoint one is not; recorded: [] when none", () => {
+test("R73 (N715; T50 N1191 (d)): each match carries recorded — every item of the four reads whose extent is the same as or narrower than the match's, with its module, record, kind, field, relation, by, at and withdrawn; a wider one (a whole-document fact) and a disjoint one are not; recorded: [] when none", () => {
   const rec = quiet();
   const a = { sha: world().cap("a.pdf", "a bytes").sha };
   const at = "2026-10-08T01:00:00Z";
@@ -76,12 +76,11 @@ test("R73 (N715): each match carries recorded — every item of the four reads w
   const ofA = money.find((m) => m.capture_sha === a.sha), ofB = money.find((m) => m.capture_sha === b.sha);
   assert.deepEqual(ofA.recorded.map((x) => [x.module, x.record, x.kind, x.field, x.relation, x.by, x.at, x.withdrawn]), [
     ["events", "EV-1", "dated_fact", "extent", "same", V("ann"), at, false],
-    ["standards", "STD-1", "standard", "text", "wider", V("ann"), at, false],
     ["money", "MF-1", "money_fact", "source", "narrower", V("vera"), at, true]]);
   assert.deepEqual(ofB.recorded, [], "nothing recorded from b");
   const req = kindOf(ans, "requirements").items[0];
-  assert.deepEqual(req.recorded.map((x) => [x.record, x.relation]), [["EV-2", "same"], ["STD-1", "wider"]],
-    "page 1's requirement: its own fact and the whole document, never page 0's");
+  assert.deepEqual(req.recorded.map((x) => [x.record, x.relation]), [["EV-2", "same"]],
+    "page 1's requirement: its own fact, never page 0's and never the whole document's");
   assert.ok([...money, req].every((m) => !("recorded_truncated" in m)));
   assert.deepEqual(ans.recorded_read, ["events", "standards", "money", "people"]);
 });
