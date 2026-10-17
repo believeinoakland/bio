@@ -37,3 +37,7 @@ Tests: entities 118/118; format, architecture, coverage (56/56), ownership 0 fai
 REPORT items in my record: sentences no key holds (the name; R47's kind words); no keys/rows for UNKNOWN_FORUM_KIND and FORUM_KIND_NOT_FOR_KIND.
 
 **CHANGE B3 (K3677).** `aliasesOf` now answers exactly `{ok, aliases, limit, truncated, next}` (I had also `kinds` and `count`; dropped); an unrecognised viewer `aliases: []`. Tests adjusted; entities 118/118; architecture, coverage (56/56), ownership 0 failures.
+
+## J3 · COMPLETE
+
+COMPLETE J3: B3 applied. aliasesOf answers exactly {ok, aliases, limit, truncated, next} (dropped my extra kinds/count); unrecognised viewer aliases: []. tranche/T50 merged; entities 118/118; architecture, coverage 56/56, ownership 0 failures.
