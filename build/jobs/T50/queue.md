@@ -43,3 +43,7 @@ Size (session_016Aha62MHvicFq7HrjZjQZz): test runs 9, module lines 3214
 Found outside queue (T50-21; details in my record):
 1. answer-envelope R7's hash pins: queue's C-33.27 KIND_NOT_PERSONAL and C-33.50 NO_PROJECT_SCOPE now read refusal.KIND_NOT_PERSONAL / refusal.NO_PROJECT_SCOPE from words.json, whose sentences differ from the old inline ones ("group" is "team"; "no team's list" is "no project's list"). The other five queue refusals are word for word unchanged. The two pins stay red until T50-25 re-pins them; answer-envelope merges before queue, so the order of that re-pin is BOB's.
 2. For the design lane: queue's catalogue sentences (QUEUE_*_KINDS, one per kind, 'op=… — LIVE: …') are developer-facing, published only as op=affordances vocabularies; no screen draws them, so they stay inline. If the design lane wants them keyed, that is a new list of keys. Tell me if so.
+
+## J2 · COMPLETE
+
+T50-21 queue complete on job/T50/queue @ 0c6888ed16 (+ mail commits): R55, R56, R57 met, plan rule 6 done in my module. queue tests 164/164 (11 new in t50.test.mjs); format, architecture, coverage (47 of 47), ownership: 0 failures. Four rulings of mine for R55 are in the record (rows for an unseen case left out; list takes no sort or limit; a repeated mute keeps its first instant; the instant is a muted_at column on queue_state, so no new table). Dependents' failures are not queue's (list in the record). queue-producers R41/R42 and notice-producers R24 are not on the branch: the new kinds are tested with stub producers.
