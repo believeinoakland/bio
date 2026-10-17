@@ -26,3 +26,7 @@ Partial reading (Bob, K3678): if you are about to read any document of your read
 ## B2 · CHANGE
 
 interface-shell (T50-27) and instance-setup (T50-23) are merged into tranche/T50 (K3777). Merge tranche/T50, re-run your tests against the real shell (remove any stand-in), and post COMPLETE; screens merge next, screens-settings first.
+
+## B3 · CHANGE
+
+Every L11 job but installer (restarted, running) and control-plane (one test re-opened) is merged into tranche/T50 (K3778): all screens, interface-shell, queue, queue-producers, plane. The composed interface builds (interface-shell 166/166). Merge tranche/T50 and re-walk the local arm. For each failure that remains, REPORT it by the module that owns it, with the step and the words or answer seen (in particular: any 'group' still drawn on /app pages, the shell's sign-out key, and queue's NO_SUCH_KIND for project-invitation). Then post COMPLETE; you merge last. K3779.
