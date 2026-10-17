@@ -57,12 +57,12 @@ test("R1 R4 refusals in order, each writing nothing: machine author, no target, 
       "C-150.1", ACTION_REPLY_CHECKS.MACHINE_CANNOT_RECORD_BEARING.translation], String(author));
   }
   assert.equal(code({ target: null, claims: bad }), "NO_TARGET");
-  assert.equal(code({ target: "ACTN-2026-0099-none", claims: bad }), "NO_SUCH_BUNDLE");
+  assert.equal(code({ target: "ACTN-2026-0099-none", claims: bad }), "NO_SUCH_ACTION");
   const hidden = w.r.actionReplyBearing({ target: RFC, ord: 1, claims: bad, author: M, viewer: "nobody" });
   const absent = w.r.actionReplyBearing({ target: "ACTN-2026-0099-none", ord: 1, claims: bad, author: M, viewer: "nobody" });
-  assert.deepEqual([hidden.reason, absent.reason], ["NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE"], "invisible answered as absent");
+  assert.deepEqual([hidden.reason, absent.reason], ["NO_SUCH_ACTION", "NO_SUCH_ACTION"], "invisible answered as absent");
   assert.deepEqual(Object.keys(hidden).sort(), Object.keys(absent).sort());
-  assert.equal(code({ target: INFO, claims: bad }), "NOT_AN_ACTION");
+  assert.equal(code({ target: INFO, claims: bad }), "NO_SUCH_ACTION");
   /* another kind, an entry not received, an entry that does not exist, and no position */
   for (const [target, ord] of [[REQ, 1], [RFC, 0], [RFC, 7], [RFC, null], [RFC, "x"], [RFC2, 0]]) {
     const r = w.r.actionReplyBearing({ target, ord, claims: bad, author: M, viewer: M });
@@ -122,7 +122,7 @@ test("R1 R4 actionBearingPropose: any credential proposes, stored apart and labe
                                                  proposer: MACHINE, viewer: MACHINE, ...args });
   assert.equal(pr({ proposer: "" }).reason, "NO_AUTHOR");
   assert.equal(pr({ target: null }).reason, "NO_TARGET");
-  assert.equal(pr({ viewer: "nobody" }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(pr({ viewer: "nobody" }).reason, "NO_SUCH_ACTION");
   assert.equal(pr({ ord: 0 }).reason, "BEARING_NOT_RFC");
   assert.equal(pr({ claims: [{ claim: INQ3, bearing: "new_evidence" }] }).reason, "BEARING_REFUSED");
   assert.deepEqual(w.counts(), before);
@@ -135,7 +135,7 @@ test("R4 a machine never records a layout; every read answers an invisible actio
   assert.equal(w.r.actionBearingPropose({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "new_evidence" }], proposer: MACHINE, viewer: MACHINE }).ok, true);
   const hidden = w.r.bearingsOf({ target: RFC, viewer: "nobody" });
   const absent = w.r.bearingsOf({ target: "ACTN-2026-0099-none", viewer: "nobody" });
-  assert.deepEqual([hidden.reason, absent.reason], ["NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE"]);
+  assert.deepEqual([hidden.reason, absent.reason], ["NO_SUCH_ACTION", "NO_SUCH_ACTION"]);
   const declared = w.record.declaredTables().filter((d) => d.module === "action-replies");
   assert.deepEqual(declared.map((d) => [d.name, d.purge]).sort(),
     [["action_arose_from", "clear"], ["action_bearing_proposals", "clear"], ["action_reply_bearings", "clear"], ["action_reply_quoting", "clear"]]);
