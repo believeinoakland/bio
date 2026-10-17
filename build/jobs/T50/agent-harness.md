@@ -1,3 +1,20 @@
 # agent-harness (T50)
 
 **Status** · session_01VB7aNzqCDcGRLaxhz6h5yc · depth 2 · WORKING · handled B1
+
+## Record
+
+**Entries applied (T50-66):** R18 and R19, both in `agent-harness/src/harness.mjs`. R17 not built: it waits on BOB's CHANGE saying agent-runner R38's proof passed (BOB's note 1).
+- **R18.** `levelsWithoutScope(state)` (new, pure) and `emptyLevelCandidates` skipping those levels. `scope` and `disagreed` are in `RESUMABLE`, restored by `resumeFrom` and kept by `publishableState`'s restart. `scope` is not in `JUDGEABLE`; a judgement naming it leaves it as set. It asks `run-rules`' `levelEmptyHolds` (R35; imported from `run-rules/index.mjs`).
+- **R19.** `JUDGEABLE` gains `disagreements`, applied at `compose` only. A malformed list is refused by key (`disagreements[10]`, `disagreements[i].levels`, `.record`, `.<extra key>`) at any step. `disagreementsToSettle` and `disagreementKey` are new. `advance` settles the pairs when the step leaves `compose` (also for a close), at most 10 in all; nothing else about the pass moves.
+- Tests: the R4 test for `JUDGEABLE` amended; R13/R14 fixtures given a `scope`; R8's `ARGS` has rows for the three new exports; seven new tests name R18 and R19.
+
+**Dependency not yet on the tranche branch:** `levelEmptyHolds` is run-rules' R35 and was not merged at my start. I ran the tests against a temporary local stub of it (never committed). The committed code imports it; until run-rules' job is merged into `tranche/T50`, `agent-harness`' tests fail at import. After BOB's CHANGE: merge `tranche/T50`, re-run the module's tests and the checks.
+
+**Deferred:** R17 (above).
+
+**Found in another module:** `agent-worker` must set `scope` per level from the plane's statement and state each `disagreementsToSettle` pair (its R113+). `emptyLevelCandidates` now composes none for a level with no `scope` entry, so a shell that does not set it writes no `level-empty` candidates. Bundles that input this module's files (`agent-worker`'s) are stale until regenerated at layer close (BOB).
+
+**Tests and checks (with the stub in place for the tests):** `node --test agent-harness/test/`: 55 tests, 55 pass, 0 fail. `checks/format.mjs`: 0 failures. `checks/architecture.mjs agent-harness`: 0 failures. `checks/coverage.mjs agent-harness`: R17 named by no test (expected, not yet met). `checks/ownership.mjs agent-harness tranche/T50`: 0 failures. `checks/run.mjs`: architecture 0 failures; the coverage failures are other modules' (inherited), plus R17.
+
+Size (session_01VB7aNzqCDcGRLaxhz6h5yc): test runs 4, module lines 1,300

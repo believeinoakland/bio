@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R16 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R19 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -270,10 +270,10 @@ test("R4: a judgement naming pass, maxPasses, step, budget, mode, bound, run, st
   assert.equal(r.state.target, undefined);
 });
 
-test("R4: only targets, reports, candidates, queue, adjusted, submission, level, observed, governed, condition are applied", () => {
+test("R4: only targets, reports, candidates, queue, adjusted, submission, level, observed, governed, condition (and, at compose, disagreements, R19) are applied", () => {
   assert.deepEqual(JUDGEABLE, ["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed",
-    "governed", "condition"]);
-  const all = Object.fromEntries(JUDGEABLE.map((k, i) => [k, `v${i}`]));
+    "governed", "condition", "disagreements"]);
+  const all = Object.fromEntries(JUDGEABLE.filter((k) => k !== "disagreements").map((k, i) => [k, `v${i}`]));
   const a = applyJudgement({ step: "plan", pass: 1 }, { ...all, whimsy: 2, bytes: "doc" });
   assert.equal(a.ok, true);
   assert.deepEqual(a.state, { step: "plan", pass: 1, ...all });
@@ -514,7 +514,11 @@ const ARGS = {
   adjustedFrom: [{ a: 1 }, { a: 2 }], advance: [{ step: "dedup", pass: 1, submission: { a: 1 } }, { step: "next-pass" }],
   applyJudgement: [{ step: "plan" }, { targets: ["t"] }], applyPlanJudgement: [{ step: "compose" }, { candidates: [{ summary: "s" }] }],
   canonical: [{ b: [1, { c: 2 }], a: null }], earlierPlans: [{ plans: [{ id: "P1", project: "J" }, { id: "P2", project: "K" }] }, "J", "P0"],
-  emptyLevelCandidates: [{ reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:1", summary: "none" }] }, "INQ-1"],
+  emptyLevelCandidates: [{ reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:1", summary: "none" }],
+                          scope: { document: { reads: 1, documents: 3 } } }, "INQ-1"],
+  levelsWithoutScope: [{ reports: [{ level: "content", state: "LOOKED_ABSENT" }], scope: { content: { reads: 1, documents: 0 } } }],
+  disagreementsToSettle: [{ disagreements: [{ record: "REC-1", levels: ["meaning", "content"] }], disagreed: [] }],
+  disagreementKey: [{ record: "REC-1", levels: ["content", "meaning"] }],
   flowFor: ["plan"], gateStep: [{ mode: "investigate" }], nextPlanStep: [{ step: "dedup", pass: 0, queue: [{ summary: "a" }] }],
   nextStep: [{ step: "submit", pass: 0, maxPasses: 3, refusal: { code: "X" } }], passLimit: [0],
   planAdvance: [{ step: "dedup", pass: 0 }, { step: "close", pass_done: true }], planDedup: [[{ summary: "a" }, { summary: "a" }], { options: [] }],
@@ -645,9 +649,12 @@ test("R12: at most 50 subjects, the first 50 in order, and the list is held by v
   assert.notEqual(made.contracts[0].subjects, made.contracts[1].subjects);
 });
 
+/* R18: a scope in which each named level was read once and held documents (the plane's four-level statement, set by the shell) */
+const scopeOf = (levels, documents = 3) => Object.fromEntries(levels.map((l) => [l, { reads: 1, documents }]));
+
 /* ============================================================ R13: the empty-level description */
 test("R13: an empty-level candidate's description names the target as \"this question\", never its record id", () => {
-  const state = { reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:4", summary: "none" }] };
+  const state = { reports: [{ level: "document", state: "LOOKED_ABSENT", observed_at: "log:4", summary: "none" }], scope: scopeOf(LEVELS) };
   const [made] = HARNESS.emptyLevelCandidates(state, "INQ-2026-0042");
   assert.equal(made.target, "INQ-2026-0042");
   assert.match(made.description, /this question/);
@@ -657,14 +664,15 @@ test("R13: an empty-level candidate's description names the target as \"this que
 test("R13: control: the name stays level-empty-<level> for every empty level, and each description still says where its search is written", () => {
   const levels = ["meaning", "content", "document", "internet"];
   const reports = levels.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary: "" }));
-  const made = HARNESS.emptyLevelCandidates({ reports }, "INQ-2026-0042");
+  const made = HARNESS.emptyLevelCandidates({ reports, scope: scopeOf(LEVELS) }, "INQ-2026-0042");
   assert.deepEqual(made.map((c) => c.name), ["level-empty-meaning", "level-empty-content", "level-empty-documents", "level-empty-internet"]);
   made.forEach((c, i) => assert.ok(c.description.includes(reports[i].observed_at), c.name));
 });
 
 test("R14: an empty-level candidate's description holds neither a record id nor the sub-session's summary", () => {
   const summary = "nothing in INQ-2026-0002 or INFO-2026-0006-council-minutes";
-  const state = { reports: LEVELS.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary })) };
+  const state = { reports: LEVELS.map((level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary })),
+                  scope: scopeOf(LEVELS) };
   const made = HARNESS.emptyLevelCandidates(state, "INQ-2026-0002");
   assert.equal(made.length, LEVELS.length);
   for (const c of made) {
@@ -676,7 +684,7 @@ test("R14: an empty-level candidate's description holds neither a record id nor 
 
 test("R14: control: the name stays level-empty-<level> and the report's summary is left untouched in the state", () => {
   const reports = [{ level: "internet", state: "LOOKED_ABSENT", observed_at: "log:9", summary: "see INQ-2026-0002" }];
-  const [made] = HARNESS.emptyLevelCandidates({ reports }, "INQ-2026-0002");
+  const [made] = HARNESS.emptyLevelCandidates({ reports, scope: scopeOf(LEVELS) }, "INQ-2026-0002");
   assert.equal(made.name, "level-empty-internet");
   assert.equal(reports[0].summary, "see INQ-2026-0002");
 });
@@ -767,4 +775,118 @@ test("R16: control: advance counts composed, kept and written, and the counts su
   assert.equal(s.wrote, 1);
   const back = HARNESS.resumeFrom(HARNESS.resumableState({ ...s, step: "next-pass" })).state;
   assert.deepEqual([back.composed, back.kept, back.wrote], [2, 1, 1]);
+});
+
+/* ============================================================ R18: no absence for a level with nothing in scope */
+const absent = (level) => ({ level, state: "LOOKED_ABSENT", observed_at: `log:${level}`, summary: "" });
+
+test("R18: content reported empty with documents 0 and document reported empty with documents 3 give the one level-empty-documents candidate", () => {
+  const state = { reports: [absent("content"), absent("document")],
+                  scope: { content: { reads: 1, documents: 0 }, document: { reads: 2, documents: 3 } } };
+  assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1").map((c) => c.name), ["level-empty-documents"]);
+  const without = HARNESS.levelsWithoutScope(state);
+  assert.deepEqual(without.map((x) => x.level), ["content"]);
+  /* run-rules R35's answer, carried whole */
+  assert.deepEqual([without[0].holds, without[0].code, without[0].check],
+    [false, "LEVEL_EMPTY_NO_DOCUMENT_IN_SCOPE", "C-22.31"]);
+  assert.equal(typeof without[0].translation, "string");
+});
+
+test("R18: a level reported empty with no read at all gives none, whatever the scope says of its documents", () => {
+  for (const scope of [undefined, null, {}, { document: undefined }, { document: { reads: 0, documents: 5 } }, { document: {} },
+                       { document: { reads: 1 } }, { document: { reads: 1, documents: "3" } }, "scope"]) {
+    const state = { reports: [absent("document")], scope };
+    assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1"), [], JSON.stringify(scope));
+    assert.deepEqual(HARNESS.levelsWithoutScope(state).map((x) => x.level), ["document"], JSON.stringify(scope));
+  }
+});
+
+test("R18: control: a level whose scope holds a document (the statement over its reads) keeps its candidate, and only LOOKED_ABSENT levels are asked", () => {
+  const state = { reports: [absent("meaning"), { level: "content", state: "LOOKED_INDETERMINATE", observed_at: "log:c" },
+                            { level: "internet", state: "PRESENT", observed_at: "log:i", citations: [{ address: "a" }] }],
+                  scope: { meaning: { reads: 2, documents: 2 }, content: { reads: 1, documents: 0 }, internet: { reads: 1, documents: 0 } } };
+  assert.deepEqual(HARNESS.levelsWithoutScope(state), []);
+  assert.deepEqual(HARNESS.emptyLevelCandidates(state, "INQ-1").map((c) => c.name), ["level-empty-meaning"]);
+  /* each of the four levels is decided by its own scope */
+  const all = { reports: LEVELS.map(absent), scope: { meaning: { reads: 1, documents: 0 }, content: { reads: 1, documents: 1 } } };
+  assert.deepEqual(HARNESS.emptyLevelCandidates(all, "INQ-1").map((c) => c.name), ["level-empty-content"]);
+});
+
+test("R18: scope is in RESUMABLE and survives a segment break and a restart under the state ceiling, and no judgement sets it", () => {
+  assert.ok(HARNESS.RESUMABLE.includes("scope"));
+  const scope = { document: { reads: 1, documents: 3 } };
+  const s = { step: "compose", pass: 1, scope };
+  assert.deepEqual(HARNESS.resumableState(s).scope, scope);
+  assert.deepEqual(HARNESS.resumeFrom(HARNESS.resumableState(s)).state.scope, scope);
+  assert.deepEqual(HARNESS.publishableState({ ...s, queue: ["x".repeat(500)] }, 300).state.scope, scope);
+  assert.equal(JUDGEABLE.includes("scope"), false);
+  const a = applyJudgement({ step: "compose", scope }, { scope: { document: { reads: 9, documents: 9 } }, candidates: [] });
+  assert.deepEqual(a.state.scope, scope, "a judgement naming scope leaves it as the shell set it");
+});
+
+/* ============================================================ R19: a level disagreement named once */
+const pair = (record, a = "meaning", b = "content") => ({ record, levels: [a, b] });
+
+test("R19: a judgement naming two pairs lists both; after the step, the same two named in the next pass list none and no pass is entered because of them", () => {
+  const two = [pair("REC-1"), pair("REC-2", "content", "document")];
+  let s = { step: "compose", pass: 0, maxPasses: 3, mode: "check", candidates: [] };
+  const a = applyJudgement(s, { disagreements: two });
+  assert.equal(a.ok, true);
+  s = a.state;
+  assert.deepEqual(HARNESS.disagreementsToSettle(s), two);
+  const d = nextStep(s);
+  assert.equal(d.step, "dedup");
+  s = advance(s, d);
+  assert.deepEqual(HARNESS.disagreementsToSettle(s), []);
+  assert.equal(s.disagreed.length, 2);
+  assert.deepEqual([s.passAdded, s.pass, s.maxPasses], [undefined, 0, 3], "a pair changes neither passAdded nor the pass limit");
+  /* the next pass names the same two (one with its levels the other way round): none to settle, and the pass was not opened by them */
+  const run = walk({ mode: "check", maxPasses: 3, disagreed: s.disagreed },
+    [{ targets: [] }, { reports: [] }, { disagreements: [pair("REC-1", "content", "meaning"), two[1]] }, { queue: [] }]);
+  assert.equal(run.state.disagreed.length, 2);
+  assert.deepEqual(HARNESS.disagreementsToSettle({ disagreements: [two[0], two[1]], disagreed: run.state.disagreed }), []);
+  assert.deepEqual(run.trace.filter((x) => x.startsWith("next-pass>")), ["next-pass>close"], "added nothing, so no further pass");
+  assert.deepEqual([run.bound, run.state.pass], ["completed", 1]);
+});
+
+test("R19: it is applied at compose only, resumable as disagreed, and at most 10 pairs are settled in all", () => {
+  assert.ok(JUDGEABLE.includes("disagreements") && HARNESS.RESUMABLE.includes("disagreed"));
+  for (const step of ["plan", "collect", "dedup", "adjust"])
+    assert.equal("disagreements" in applyJudgement({ step }, { disagreements: [pair("REC-1")] }).state, false, step);
+  const kept = applyJudgement({ step: "compose" }, { disagreements: [pair("REC-1")] }).state;
+  assert.deepEqual(kept.disagreements, [pair("REC-1")]);
+  const back = HARNESS.resumeFrom(HARNESS.resumableState({ step: "dedup", pass: 1, disagreed: ["k1", "k2"] })).state;
+  assert.deepEqual(back.disagreed, ["k1", "k2"]);
+  assert.deepEqual(HARNESS.publishableState({ step: "dedup", pass: 1, disagreed: ["k1"], queue: ["x".repeat(500)] }, 300).state.disagreed, ["k1"]);
+  /* ten settled in all: the eleventh, named later, is not listed, whatever the pass */
+  let s = { step: "compose", pass: 0, disagreements: Array.from({ length: 10 }, (_, i) => pair(`REC-${i}`)) };
+  assert.equal(HARNESS.disagreementsToSettle(s).length, 10);
+  s = advance(s, { step: "dedup" });
+  assert.deepEqual(HARNESS.disagreementsToSettle({ ...s, disagreements: [pair("REC-10")] }), []);
+  /* a duplicate within one list is listed once; a close from compose settles them too */
+  const dup = { step: "compose", disagreements: [pair("R"), pair("R", "content", "meaning")] };
+  assert.equal(HARNESS.disagreementsToSettle(dup).length, 1);
+  assert.equal(advance(dup, { step: "close" }).disagreed.length, 1);
+});
+
+test("R19: control: an eleventh pair, a pair naming one level twice and a pair with an empty record are refused, naming the key", () => {
+  const eleven = Array.from({ length: 11 }, (_, i) => pair(`REC-${i}`));
+  const refused = (d) => applyJudgement({ step: "compose" }, { disagreements: d });
+  const a = refused(eleven);
+  assert.deepEqual([a.ok, a.overreach, a.state], [false, ["disagreements[10]"], undefined]);
+  assert.deepEqual(refused([pair("R", "meaning", "meaning")]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([pair("  ")]).overreach, ["disagreements[0].record"]);
+  assert.deepEqual(refused([pair("")]).overreach, ["disagreements[0].record"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning", "gossip"] }]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning"] }]).overreach, ["disagreements[0].levels"]);
+  assert.deepEqual(refused([{ record: "R", levels: ["meaning", "content"], note: "free text" }]).overreach, ["disagreements[0].note"]);
+  assert.deepEqual(refused("REC-1").overreach, ["disagreements"]);
+  assert.deepEqual(refused([null]).overreach, ["disagreements[0]"]);
+  /* refused at any step, and through a driven run at the step that took it, nothing applied */
+  assert.equal(applyJudgement({ step: "plan" }, { disagreements: eleven }).ok, false);
+  const r = walk({ mode: "check", maxPasses: 3 }, [{ targets: [] }, { reports: [] }, { disagreements: eleven }]);
+  assert.deepEqual(r.refused, { step: "compose", fields: ["disagreements[10]"] });
+  assert.equal(r.state.disagreements, undefined);
+  /* ten is the most that is accepted */
+  assert.equal(refused(eleven.slice(0, 10)).ok, true);
 });
