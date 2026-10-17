@@ -33,3 +33,7 @@ Size (session_012b5v7Ekpv3CAbBibj4BTrH): test runs 16, module lines 4193
 T50-2 membership complete: R146-R151 applied, record on job/T50/membership. 264 module tests pass; coverage 111/111; ownership 0. Architecture fails only because modules.json membership.uses lacks setup-words (BOB's file). Interface notes in my record: reach readers are read by instance viewerGate/hiddenBundlesFor; new generated order.mjs for the manifest; module is ~4,190 lines incl. generator (split T51).
 
 Size (session_012b5v7Ekpv3CAbBibj4BTrH), after B2: test runs 20, module lines 4206
+
+## J2 · COMPLETE
+
+B2 applied: R152 memberStatusSince built (status_at column, set by every status-changing write). 267 tests pass, coverage 112/112, architecture 0 failures, ownership 0. Ready to merge.
