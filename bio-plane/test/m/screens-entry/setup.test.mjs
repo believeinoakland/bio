@@ -488,6 +488,8 @@ test("R22 the drawing's five states over a fake plane: unclaimed, just claimed, 
   has(e, "screen.setup.lede"); assert.equal(all(e.tree, (x) => x.tag === "details" && "open" in x.attrs).length, 1);
   const a = await claimed();
   has(a, "screen.setup.after"); has(a, "screen.setup.claimed", { group: said("screen.entry.group"), handle: HANDLE });
+  // the claimed state marked as the release walk finds it (journey-check)
+  assert.equal(all(summaryOf(a, "claim"), (x) => x.attrs["data-state"] === "claimed").length, 1);
   const b = await open("setup", { me: OLD_FOUNDER, table: plane() });
   assert.deepEqual(all(b.tree, (x) => x.tag === "h1").map((x) => x.children.map((c) => c.text).join("")), [word("founder.handle.title")]);
   assert.equal(all(b.tree, (x) => x.attrs["data-part"]).length, 0);

@@ -186,7 +186,7 @@ export const setup = {
         : held && held.held === false ? `<p class="mk-note">${W(S + "codes.intro")}</p><div class="mk-acts">${cs.act("recoverycodesissue")}</div>` : "";
     // R17: the claim's next step names the team (its name, or "Your team") and the handle she chose
     const claimed = W(S + "claimed", { group: named || { html: W("screen.entry.group") }, handle: me.handle });
-    out.push("<div>" + part(1, "claim", S + "claim", S + "part.claim.why", "done", codes || `<p>${claimed}</p>`, { open: !!codes || !!ui.claimedHere, why: claimed, skip: false }));
+    out.push("<div>" + part(1, "claim", S + "claim", S + "part.claim.why", "done", codes || `<p>${claimed}</p>`, { open: !!codes || !!ui.claimedHere, why: `<span data-state="claimed">${claimed}</span>`, skip: false }));
 
     // 2 Your team: R14, the name first, saying where it shows; the website only if the team has one
     const site = choice("su-site", id.domain ? "yes" : "no");
