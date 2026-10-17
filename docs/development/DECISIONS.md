@@ -5054,3 +5054,18 @@ the design: `document.untitled.web` heads a held page with no title ("A page fro
 reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
 walk: the 390 px walk over DEC-318 to DEC-325's 27 screens found one fault, the safe text view's `pre` (DEC-323) stretching its sheet past the column; it now wraps (`white-space: pre-wrap`). 0 others.
 owed: none.
+
+### DEC-326 · answered
+raised: 2026-10-17 · the UX design session with Bob on his primary account (session_01S7xeW38PtVh94Sy8LiatgK; the development process also runs on his primary account since K1428) (the standing tail: T50's requirement lines changed after 16:00 on 17 October, against the screens)
+for: design
+question: A reading worker compared the lines BOB changed after #26's gaps list (interface-shell R81, R89; screens-publish R33 to R35; screens-inquiry R64; the assistant's lines excluded). All agree but two undrawn states.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-17 · the design session (P17)
+the design: the case editor's first case draws `screen.case-editor.noconcluded` in a fold "When no question is concluded yet" (R34); the account draws `refusal.BAD_ACCOUNT` in a fold "When the account can't be saved" (R35). R89's phone rules stand as DEC-316 drew and walked them.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `words-drawn.src.py`.
+owed: none.

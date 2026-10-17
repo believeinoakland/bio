@@ -53,7 +53,7 @@
   "wizard": 323,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3921,
+  "screen": 3923,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -222,7 +222,7 @@
   "rail": 17,
   "tab": 2,
   "column": 39,
-  "total": 13091,
+  "total": 13093,
   "protected": 901
  },
  "words": [
@@ -41535,6 +41535,20 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-323: screens-settings R51"
+  },
+  {
+   "key": "screen.case-editor.noconcluded.summary",
+   "en": "When no question is concluded yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-326: R34"
+  },
+  {
+   "key": "screen.case-editor.account.refused.summary",
+   "en": "When the account can't be saved",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-326: R35, refusal.BAD_ACCOUNT"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

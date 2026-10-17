@@ -1863,6 +1863,10 @@ w323('home.strip.ours_passed.opens', 'Opens your queue at this item.', False, 's
 w323('document.image.unread.summary', 'When the document is a single picture', False, 'screens-inquiry R55')
 w323('member.founder.unnamed.summary', 'Before the founder chooses a handle', False, 'screens-settings R51')
 # --- end DEC-323
+# --- DEC-326 (screens-publish R34, R35: two states the newer lines name)
+W.append(dict(key='screen.case-editor.noconcluded.summary', en='When no question is concluded yet', protected=False, note='DEC-326: R34'))
+W.append(dict(key='screen.case-editor.account.refused.summary', en="When the account can't be saved", protected=False, note='DEC-326: R35, refusal.BAD_ACCOUNT'))
+# --- end DEC-326
 REWRITE.update({'screen.find-in.question': 'For which question', 'screen.find-in.term.help': 'Only passages with this name or term are shown, when you fill it in.'})  # DEC-318: R48 (6), (7)
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

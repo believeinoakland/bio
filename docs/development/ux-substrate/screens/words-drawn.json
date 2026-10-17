@@ -8573,6 +8573,18 @@
    "en": "Before the founder chooses a handle",
    "protected": false,
    "note": "DEC-323: screens-settings R51"
+  },
+  {
+   "key": "screen.case-editor.noconcluded.summary",
+   "en": "When no question is concluded yet",
+   "protected": false,
+   "note": "DEC-326: R34"
+  },
+  {
+   "key": "screen.case-editor.account.refused.summary",
+   "en": "When the account can't be saved",
+   "protected": false,
+   "note": "DEC-326: R35, refusal.BAD_ACCOUNT"
   }
  ],
  "rewrite": {
